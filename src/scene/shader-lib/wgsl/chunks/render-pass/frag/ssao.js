@@ -41,6 +41,15 @@ export default /* wgsl */`
         return vec3f((0.5 - uv) * vec2f(uniform.uAspect, 1.0) * linearDepth, linearDepth);
     }
 
+    // snap the uv to the center of the depth texture texel it falls into, so that the
+    // reconstructed view-space position matches the surface point the depth was rendered at.
+    // Without this, when the AO resolution is lower than the depth resolution, positions are
+    // reconstructed slightly off the true surface, causing self-occlusion banding artifacts.
+    fn snapToDepthTexelCenter(uv: vec2f) -> vec2f {
+        let size: vec2f = vec2f(textureDimensions(uSceneDepthMap, 0));
+        return (floor(uv * size) + vec2f(0.5)) / size;
+    }
+
     fn faceNormal(dpdx: vec3f, dpdy: vec3f) -> vec3f {
         return normalize(cross(dpdx, dpdy));
     }
@@ -58,8 +67,8 @@ export default /* wgsl */`
     //       are essentially equivalent to textureGather (which we don't have on ES3.0),
     //       and this is executed just once.
     fn computeViewSpaceNormalDepth(position: vec3f, uv: vec2f) -> vec3f {
-        let uvdx: vec2f = uv + vec2f(uniform.uInvResolution.x, 0.0);
-        let uvdy: vec2f = uv + vec2f(0.0, uniform.uInvResolution.y);
+        let uvdx: vec2f = snapToDepthTexelCenter(uv + vec2f(uniform.uInvResolution.x, 0.0));
+        let uvdy: vec2f = snapToDepthTexelCenter(uv + vec2f(0.0, uniform.uInvResolution.y));
         let px: vec3f = computeViewSpacePositionFromDepth(uvdx, -getLinearScreenDepth(uvdx));
         let py: vec3f = computeViewSpacePositionFromDepth(uvdy, -getLinearScreenDepth(uvdy));
         let dpdx: vec3f = px - position;
@@ -114,7 +123,7 @@ export default /* wgsl */`
 
         let ssRadius: f32 = max(1.0, tap.z * ssDiskRadius); // at least 1 pixel screen-space radius
 
-        let uvSamplePos: vec2f = uv + (ssRadius * tap.xy) * uniform.uInvResolution;
+        let uvSamplePos: vec2f = snapToDepthTexelCenter(uv + (ssRadius * tap.xy) * uniform.uInvResolution);
 
         // TODO: level is not used, but could be used with mip-mapped depth texture
         let level: f32 = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, uniform.uMaxLevel);
@@ -167,9 +176,9 @@ export default /* wgsl */`
     fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         var output: FragmentOutput;
 
-        let uv: vec2f = input.uv0; // interpolated to pixel center
+        let uv: vec2f = snapToDepthTexelCenter(input.uv0);
 
-        let depth: f32 = -getLinearScreenDepth(input.uv0);
+        let depth: f32 = -getLinearScreenDepth(uv);
         let origin: vec3f = computeViewSpacePositionFromDepth(uv, depth);
         let normal: vec3f = computeViewSpaceNormalDepth(origin, uv);
 
