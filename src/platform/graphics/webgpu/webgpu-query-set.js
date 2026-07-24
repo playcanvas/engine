@@ -87,6 +87,7 @@ class WebgpuQuerySet {
 
             // the mapping fails when the device is lost - the buffer cannot be used, no results
             if (!mapped) {
+                stagingBuffer.destroy();
                 return null;
             }
 

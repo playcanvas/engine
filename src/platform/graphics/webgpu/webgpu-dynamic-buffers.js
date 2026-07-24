@@ -83,10 +83,13 @@ class WebgpuDynamicBuffers extends DynamicBuffers {
                 const stagingBuffer = this.pendingStagingBuffers[i];
                 device.mapBufferAsync(stagingBuffer.buffer, GPUMapMode.WRITE).then((mapped) => {
                     // the mapping fails when the device is lost, and can also complete after the
-                    // device has been destroyed - in either case the buffer cannot be reused
+                    // device has been destroyed - in either case the buffer cannot be reused, so
+                    // destroy it to release its memory and vram tracking
                     if (mapped && this.stagingBuffers) {
                         stagingBuffer.onAvailable();
                         this.stagingBuffers.push(stagingBuffer);
+                    } else {
+                        stagingBuffer.destroy(device);
                     }
                 });
             }
