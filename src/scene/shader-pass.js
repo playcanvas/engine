@@ -85,7 +85,9 @@ class ShaderPassInfo {
             this.defines.set('DEPTH_PICK_PASS', '');
         }
 
-        this.defines.set(`${keyword}_PASS`, '');
+        if (keyword) {
+            this.defines.set(`${keyword}_PASS`, '');
+        }
         this.defines.set(`${this.name.toUpperCase()}_PASS`, '');
     }
 }
