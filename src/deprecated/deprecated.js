@@ -260,8 +260,8 @@ _removeTint('sheenTint');
 _removeTint('diffuseTint');
 _removeTint('emissiveTint');
 _removeTint('ambientTint');
+_removeTint('specularTint');
 
-_defineAlias('specularTint', 'specularMapTint');
 _defineAlias('aoVertexColor', 'aoMapVertexColor');
 _defineAlias('diffuseVertexColor', 'diffuseMapVertexColor');
 _defineAlias('specularVertexColor', 'specularMapVertexColor');

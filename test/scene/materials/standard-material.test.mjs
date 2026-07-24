@@ -265,7 +265,6 @@ describe('StandardMaterial', function () {
         expect(material.specularMapTiling.x).to.equal(1);
         expect(material.specularMapTiling.y).to.equal(1);
         expect(material.specularMapUv).to.equal(0);
-        expect(material.specularTint).to.equal(false);
         expect(material.specularVertexColor).to.equal(false);
         expect(material.specularVertexColorChannel).to.equal('rgb');
 
@@ -326,6 +325,99 @@ describe('StandardMaterial', function () {
 
     });
 
+    describe('#update()', function () {
+
+        const addVariant = (material) => {
+            const variant = {};
+            material.variants.set(1, variant);
+            return variant;
+        };
+
+        it('does not invalidate shaders when color properties are read', function () {
+            const material = new StandardMaterial();
+            material.update();
+            const variant = addVariant(material);
+
+            const colors = [
+                material.ambient,
+                material.diffuse,
+                material.specular,
+                material.emissive,
+                material.sheen,
+                material.attenuation
+            ];
+            material.update();
+
+            expect(colors).to.have.length(6);
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('does not invalidate shaders when uniform-only colors are assigned or mutated', function () {
+            const material = new StandardMaterial();
+            material.update();
+            const variant = addVariant(material);
+
+            material.diffuse = new Color(0.25, 0.5, 0.75);
+            const emissive = material.emissive;
+            emissive.set(0.75, 0.5, 0.25);
+            material.update();
+
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('does not invalidate shaders while updating color uniforms', function () {
+            const material = new StandardMaterial();
+            material.update();
+            const variant = addVariant(material);
+
+            material.diffuse.set(0.5, 0.25, 0.75);
+            material.updateUniforms();
+
+            const uniform = material.getParameter('material_diffuse').data;
+            expect(uniform[0]).to.be.closeTo(Math.pow(0.5, 2.2), 1e-6);
+            expect(uniform[1]).to.be.closeTo(Math.pow(0.25, 2.2), 1e-6);
+            expect(uniform[2]).to.be.closeTo(Math.pow(0.75, 2.2), 1e-6);
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('invalidates shaders when an in-place specular change enables specular shading', function () {
+            const material = new StandardMaterial();
+            const specular = material.specular;
+            material.update();
+            addVariant(material);
+
+            specular.set(0.25, 0.5, 0.75);
+            material.update();
+
+            expect(material.variants.size).to.equal(0);
+        });
+
+        it('does not invalidate shaders when specular remains non-black', function () {
+            const material = new StandardMaterial();
+            material.specular.set(0.25, 0.5, 0.75);
+            material.update();
+            const variant = addVariant(material);
+
+            material.specular.set(0.75, 0.5, 0.25);
+            material.update();
+
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('does not invalidate shaders when the specular color becomes white', function () {
+            const material = new StandardMaterial();
+            material.specular.set(0.25, 0.5, 0.75);
+            material.update();
+            const variant = addVariant(material);
+
+            material.specular.set(1, 1, 1);
+            material.update();
+
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+    });
+
     describe('shader generation', function () {
 
         it('includes dual-source blending usage in the shader key', function () {
@@ -336,6 +428,28 @@ describe('StandardMaterial', function () {
             const dualSourceKey = standard.generateKey(options);
 
             expect(dualSourceKey).to.not.equal(regularKey);
+        });
+
+        it('applies the specular constant only when specular color is used', function () {
+            const options = new StandardMaterialOptions();
+            options.useSpecularColor = true;
+            options.litOptions.useSpecular = true;
+            const defines = new Map();
+
+            standard.prepareFragmentDefines(options, defines, { isForward: true });
+
+            expect(defines.has('STD_SPECULAR_CONSTANT')).to.equal(true);
+        });
+
+        it('does not apply the specular constant to the reflection-only path', function () {
+            const options = new StandardMaterialOptions();
+            options.useSpecularColor = true;
+            options.litOptions.useSpecular = false;
+            const defines = new Map();
+
+            standard.prepareFragmentDefines(options, defines, { isForward: true });
+
+            expect(defines.has('STD_SPECULAR_CONSTANT')).to.equal(false);
         });
 
     });

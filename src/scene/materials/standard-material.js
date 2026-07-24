@@ -40,6 +40,10 @@ let _params = new Set();
 
 const _tempColor = new Color();
 
+const isBlack = (color) => {
+    return color.r === 0 && color.g === 0 && color.b === 0;
+};
+
 /**
  * @callback UpdateShaderCallback
  * Callback used by {@link StandardMaterial#onUpdateShader}.
@@ -100,10 +104,6 @@ const _tempColor = new Color();
  * @property {Color} specular The specular color of the material. This color value is 3-component
  * (RGB), where each component is between 0 and 1. Defines surface reflection/specular color.
  * Affects specular intensity and tint.
- * @property {boolean} specularTint Force inclusion of the constant `specular` color when
- * compositing with `specularMap` and/or specular vertex colors. Defaults to `false`. Setting
- * this to `true` is rarely needed - the constant is automatically applied whenever `specular`
- * differs from white. Provided as an explicit override.
  * @property {Texture|null} specularMap The specular map of the material (default is null).
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
@@ -112,8 +112,7 @@ const _tempColor = new Color();
  * @property {number} specularMapRotation Controls the 2D rotation (in degrees) of the specular map.
  * @property {string} specularMapChannel Color channels of the specular map to use. Can be "r", "g",
  * "b", "a", "rgb" or any swizzled combination.
- * @property {boolean} specularVertexColor Use mesh vertex colors for specular. If specularMap or
- * are specularTint are set, they'll be multiplied by vertex colors.
+ * @property {boolean} specularVertexColor Multiply specular by the mesh vertex colors.
  * @property {string} specularVertexColorChannel Vertex color channels to use for specular. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} specularityFactorTint Force inclusion of the constant `specularityFactor`
@@ -553,6 +552,14 @@ class StandardMaterial extends Material {
     userAttributes = new Map();
 
     /**
+     * Whether the specular color was black at the last update.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _specularIsBlack;
+
+    /**
      * A custom function that will be called after all shader generator properties are collected
      * and before shader code is generated. This function will receive an object with shader
      * generator settings (based on current material and scene properties), that you can change and
@@ -607,6 +614,7 @@ class StandardMaterial extends Material {
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
         this.reset();
+        this._specularIsBlack = isBlack(this._specular);
     }
 
     reset() {
@@ -641,6 +649,22 @@ class StandardMaterial extends Material {
         this.userAttributes = new Map(source.userAttributes);
 
         return this;
+    }
+
+    /**
+     * @override
+     */
+    update() {
+        const specularIsBlack = isBlack(this._specular);
+        if (this._specularIsBlack !== specularIsBlack) {
+            this._specularIsBlack = specularIsBlack;
+            // This is intentionally conservative: another material property might already force
+            // specular shading, in which case this transition only changes a uniform. We can avoid
+            // that redundant variant clear later by tracking the derived useSpecular state here.
+            this._dirtyShader = true;
+        }
+
+        super.update();
     }
 
     /**
@@ -716,21 +740,12 @@ class StandardMaterial extends Material {
 
         this._setParameter('material_ambient', getUniform('ambient'));
         this._setParameter('material_diffuse', getUniform('diffuse'));
+        this._setParameter('material_specular', getUniform('specular'));
         this._setParameter('material_aoIntensity', this.aoIntensity);
-
-        // The constant specular color / specularity factor is uploaded whenever it differs from the
-        // multiplicative identity (white / 1), so that it always composites with the corresponding
-        // map. The legacy tint flags remain as explicit overrides. This must stay in sync with
-        // StandardMaterialOptionsBuilder.
-        const specularNotWhite = this.specular.r !== 1 || this.specular.g !== 1 || this.specular.b !== 1;
-        const useSpecularConstant = !this.specularMap || this.specularTint || specularNotWhite;
 
         if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
-            }
-            if (useSpecularConstant) {
-                this._setParameter('material_specular', getUniform('specular'));
             }
             if (!this.specularityFactorMap || this.specularityFactorTint || this.specularityFactor !== 1) {
                 this._setParameter('material_specularityFactor', this.specularityFactor);
@@ -740,10 +755,6 @@ class StandardMaterial extends Material {
             this._setParameter('material_sheenGloss', this.sheenGloss);
 
             this._setParameter('material_refractionIndex', this.refractionIndex);
-        } else {
-            if (useSpecularConstant) {
-                this._setParameter('material_specular', getUniform('specular'));
-            }
         }
 
         if (this.enableGGXSpecular) {
@@ -760,7 +771,7 @@ class StandardMaterial extends Material {
         this._setParameter('material_gloss', this.gloss);
 
         Debug.call(() => {
-            if (this.emissiveMap && this.emissive.r === 0 && this.emissive.g === 0 && this.emissive.b === 0) {
+            if (this.emissiveMap && this._emissive.r === 0 && this._emissive.g === 0 && this._emissive.b === 0) {
                 Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
             }
         });
@@ -1083,19 +1094,12 @@ function _defineColor(name, defaultValue) {
     defineProp({
         name: name,
         defaultValue: defaultValue,
-        getterFunc: function () {
-            // HACK: since we can't detect whether a user is going to set a color property
-            // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
-            // the worst and flag the shader as dirty.
-            // This means currently animating a material color is horribly slow.
-            this._dirtyShader = true;
-            return this[`_${name}`];
-        }
+        dirtyShaderFunc: () => false
     });
 
     defineUniform(name, (material, device, scene) => {
         const uniform = material._allocUniform(name, () => new Float32Array(3));
-        const color = material[name];
+        const color = material[`_${name}`];
 
         // uniforms are always in linear space
         _tempColor.linear(color);
@@ -1228,7 +1232,6 @@ function _defineMaterialProps() {
         return uniform;
     });
 
-    _defineFlag('specularTint', false);
     _defineFlag('specularityFactorTint', false);
     _defineFlag('useMetalness', false);
     _defineFlag('useMetalnessSpecularColor', false);

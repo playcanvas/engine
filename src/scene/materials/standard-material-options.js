@@ -24,11 +24,6 @@ class StandardMaterialOptions {
     forceUv1 = false;
 
     /**
-     * Defines if {@link StandardMaterial#specular} constant should affect specular color.
-     */
-    specularTint = false;
-
-    /**
      * Defines if {@link StandardMaterial#metalness} constant should affect metalness value.
      */
     metalnessTint = false;

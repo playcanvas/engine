@@ -309,6 +309,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.dirLightMap && options.litOptions.useSpecular, 'STD_LIGHTMAP_DIR', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
+        fDefineSet(options.useSpecularColor && options.litOptions.useSpecular, 'STD_SPECULAR_CONSTANT', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
         fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
     }

@@ -165,7 +165,6 @@ const STANDARD_MAT_PROPS = [
     ['specularMapRotation', 'number'],
     ['specularMapTiling', 'Vec2'],
     ['specularMapUv', 'number'],
-    ['specularTint', 'boolean'],
     ['specularVertexColor', 'boolean'],
     ['specularVertexColorChannel', 'string'],
     ['specularityFactor', 'number'],
