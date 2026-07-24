@@ -7,6 +7,25 @@ import { Debug } from '../../../core/debug.js';
  * @import { Vec3 } from '../../../core/math/vec3.js'
  */
 
+// Bake scales within this tolerance of unity are treated as unscaled. The world scale of a
+// rotated but unscaled entity is extracted from its world matrix, so it carries float noise -
+// without the tolerance such entities would needlessly bypass the triangle data cache
+const UNIT_SCALE_TOLERANCE = 1e-5;
+
+/**
+ * Returns whether a bake scale is close enough to unity to be ignored.
+ *
+ * @param {Vec3|null} scale - The bake scale, or null.
+ * @returns {boolean} True if the scale is null or within tolerance of (1, 1, 1).
+ */
+function isUnitScale(scale) {
+    return !scale || (
+        Math.abs(scale.x - 1) <= UNIT_SCALE_TOLERANCE &&
+        Math.abs(scale.y - 1) <= UNIT_SCALE_TOLERANCE &&
+        Math.abs(scale.z - 1) <= UNIT_SCALE_TOLERANCE
+    );
+}
+
 /**
  * Writes a position/rotation pair into the world's cached btTransform and returns it.
  *
@@ -33,12 +52,20 @@ function getTransform(world, position, rotation) {
  * cache is keyed by the source id so sources sharing geometry share triangle data - source
  * data accessors are only read on a cache miss.
  *
+ * Only unscaled triangle data enters the cache: an id can be shared by sources with different
+ * bake scales, so baked-scale data would leak one component's scale into another's shape and
+ * make a rebuild after a scale change return stale geometry. Scaled builds are appended to
+ * ownedTriMeshes instead, and are destroyed with the shape that owns them.
+ *
  * @param {AmmoPhysicsWorld} world - The owning world.
  * @param {PhysicsMeshSource} source - The geometry source.
+ * @param {object[]} ownedTriMeshes - Receives the built trimesh when it cannot be cached.
  * @returns {object} The btTriangleMesh.
  */
-function getTriMesh(world, source) {
-    let triMesh = world._triMeshCache.get(source.id);
+function getTriMesh(world, source, ownedTriMeshes) {
+    const bakeScale = isUnitScale(source.bakeScale) ? null : source.bakeScale;
+
+    let triMesh = bakeScale ? null : world._triMeshCache.get(source.id);
     if (!triMesh) {
         const positions = source.positions;
         const stride = source.stride;
@@ -51,14 +78,17 @@ function getTriMesh(world, source) {
         let i1, i2, i3;
 
         triMesh = new Ammo.btTriangleMesh();
-        world._triMeshCache.set(source.id, triMesh);
+        if (bakeScale) {
+            ownedTriMeshes.push(triMesh);
+        } else {
+            world._triMeshCache.set(source.id, triMesh);
+        }
 
         const vertexCache = new Map();
         Debug.assert(typeof triMesh.getIndexedMeshArray === 'function', 'Ammo.js version is too old, please update to a newer Ammo.');
         const indexedArray = triMesh.getIndexedMeshArray();
         indexedArray.at(0).m_numTriangles = numTriangles;
 
-        const bakeScale = source.bakeScale;
         const sx = bakeScale ? bakeScale.x : 1;
         const sy = bakeScale ? bakeScale.y : 1;
         const sz = bakeScale ? bakeScale.z : 1;
@@ -144,9 +174,10 @@ function createHullChild(world, compound, source) {
  * @param {AmmoPhysicsWorld} world - The owning world.
  * @param {object} compound - The btCompoundShape to add to.
  * @param {PhysicsMeshSource} source - The geometry source.
+ * @param {object[]} ownedTriMeshes - Receives trimeshes owned by the compound.
  */
-function createTriMeshChild(world, compound, source) {
-    const triMesh = getTriMesh(world, source);
+function createTriMeshChild(world, compound, source, ownedTriMeshes) {
+    const triMesh = getTriMesh(world, source, ownedTriMeshes);
 
     const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, true /* useQuantizedAabbCompression */);
 
@@ -224,14 +255,22 @@ const shapeFactories = {
     mesh: (world, desc) => {
         const shape = new Ammo.btCompoundShape();
 
+        // triangle data built with a baked scale is private to this shape - it stays out of
+        // the shared cache and is destroyed with the shape
+        const ownedTriMeshes = [];
+
         const sources = desc.sources;
         for (let i = 0; i < sources.length; i++) {
             const source = sources[i];
             if (source.convexHull) {
                 createHullChild(world, shape, source);
             } else {
-                createTriMeshChild(world, shape, source);
+                createTriMeshChild(world, shape, source, ownedTriMeshes);
             }
+        }
+
+        if (ownedTriMeshes.length > 0) {
+            shape._ownedTriMeshes = ownedTriMeshes;
         }
 
         if (desc.scale) {
@@ -267,11 +306,19 @@ function createShape(world, desc) {
  */
 function destroyShape(shape) {
     // mesh shapes own their sub-shapes (compound children are owned by other components,
-    // and the cached triangle data outlives the shape)
+    // and cached triangle data outlives the shape)
     if (shape._shapeType === 'mesh') {
         const numShapes = shape.getNumChildShapes();
         for (let i = 0; i < numShapes; i++) {
             Ammo.destroy(shape.getChildShape(i));
+        }
+
+        // triangle data built with a baked scale is owned by the shape, not the cache
+        const ownedTriMeshes = shape._ownedTriMeshes;
+        if (ownedTriMeshes) {
+            for (let i = 0; i < ownedTriMeshes.length; i++) {
+                Ammo.destroy(ownedTriMeshes[i]);
+            }
         }
     }
 
