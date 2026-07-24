@@ -30,6 +30,10 @@ varying mediump vec4 gaussianColor;
     #include "pickPS"
 #endif
 
+#ifdef SHADOW_PASS
+    #include "shadowCasterPS"
+#endif
+
 #ifdef GSPLAT_USER_VARYINGS
     #include "gsplatUserVaryingsPS"
 #endif
@@ -71,7 +75,8 @@ void main(void) {
 
     #elif SHADOW_PASS
 
-        gl_FragColor = vec4(gl_FragCoord.z, 0.0, 0.0, 1.0);
+        // output data for the shadow type being rendered
+        gl_FragColor = getShadowOutput();
 
     #elif PREPASS_PASS
 
