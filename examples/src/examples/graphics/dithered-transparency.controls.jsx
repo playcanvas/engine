@@ -7,7 +7,15 @@ import {
     SelectInput
 } from '@playcanvas/pcui/react';
 
-import { DITHER_BAYER8, DITHER_BLUENOISE, DITHER_IGNNOISE, DITHER_NONE } from 'playcanvas';
+import {
+    DITHER_BAYER2,
+    DITHER_BAYER4,
+    DITHER_BAYER8,
+    DITHER_BAYER16,
+    DITHER_BLUENOISE,
+    DITHER_IGNNOISE,
+    DITHER_NONE
+} from 'playcanvas';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -47,7 +55,10 @@ export function Controls({ observer }) {
                         type='string'
                         options={[
                             { v: DITHER_NONE, t: 'None' },
+                            { v: DITHER_BAYER2, t: 'Bayer2' },
+                            { v: DITHER_BAYER4, t: 'Bayer4' },
                             { v: DITHER_BAYER8, t: 'Bayer8' },
+                            { v: DITHER_BAYER16, t: 'Bayer16' },
                             { v: DITHER_BLUENOISE, t: 'BlueNoise' },
                             { v: DITHER_IGNNOISE, t: 'IGNNoise' }
                         ]}
@@ -60,7 +71,10 @@ export function Controls({ observer }) {
                         type='string'
                         options={[
                             { v: DITHER_NONE, t: 'None' },
+                            { v: DITHER_BAYER2, t: 'Bayer2' },
+                            { v: DITHER_BAYER4, t: 'Bayer4' },
                             { v: DITHER_BAYER8, t: 'Bayer8' },
+                            { v: DITHER_BAYER16, t: 'Bayer16' },
                             { v: DITHER_BLUENOISE, t: 'BlueNoise' },
                             { v: DITHER_IGNNOISE, t: 'IGNNoise' }
                         ]}
