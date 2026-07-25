@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js';
+import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS, TRANSFORM_FEEDBACK_INTERLEAVED, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
@@ -141,7 +141,7 @@ class TransformFeedback {
      * Defaults to {@link TRANSFORM_FEEDBACK_INTERLEAVED}.
      * @returns {Shader} A shader to use in the process() function.
      */
-    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings, feedbackVaryingsMode) {
+    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings, feedbackVaryingsMode = TRANSFORM_FEEDBACK_INTERLEAVED) {
         return new Shader(graphicsDevice, ShaderDefinitionUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
