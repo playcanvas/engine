@@ -134,13 +134,19 @@ class TransformFeedback {
      * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_" or feedbackVaryings.
      * @param {string} name - Unique name for caching the shader.
      * @param {string[]} [feedbackVaryings] - A list of shader output variable names that will be captured.
+     * @param {number} [feedbackVaryingsMode] - Specifies how transform feedback varyings
+     * are written into GPU buffers. Use {@link TRANSFORM_FEEDBACK_INTERLEAVED} to pack all captured
+     * varyings into a single buffer, or {@link TRANSFORM_FEEDBACK_SEPARATE} to store each varying
+     * in its own buffer. This setting is only effective when useTransformFeedback property is enabled.
+     * Defaults to {@link TRANSFORM_FEEDBACK_INTERLEAVED}.
      * @returns {Shader} A shader to use in the process() function.
      */
-    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings) {
+    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings, feedbackVaryingsMode) {
         return new Shader(graphicsDevice, ShaderDefinitionUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
             feedbackVaryings,
+            feedbackVaryingsMode,
             useTransformFeedback: true,
             fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
         }));
