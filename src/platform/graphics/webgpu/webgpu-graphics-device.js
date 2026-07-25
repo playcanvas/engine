@@ -1435,6 +1435,33 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Map a GPUBuffer for reading or writing, handling the rejection which happens when the
+     * device is lost, or when the buffer is destroyed while the mapping is pending. In those
+     * cases the buffer cannot be used, and the returned promise resolves with false instead of
+     * rejecting. Any other rejection is unexpected and is asserted in debug builds.
+     *
+     * @param {GPUBuffer} buffer - The buffer to map.
+     * @param {number} mode - GPUMapMode.READ or GPUMapMode.WRITE.
+     * @returns {Promise<boolean>} A promise that resolves with true when the buffer is mapped,
+     * or false when the mapping failed.
+     * @private
+     */
+    mapBufferAsync(buffer, mode) {
+
+        // mapAsync rejects when the device is already lost, so do not even call it
+        if (this.contextLost) {
+            return Promise.resolve(false);
+        }
+
+        return buffer.mapAsync(mode).then(() => true, (error) => {
+            // AbortError is expected when the device is lost or the buffer is destroyed while
+            // the mapping is pending; anything else indicates incorrect use of the mapping API
+            Debug.assert(error.name === 'AbortError', 'GPUBuffer.mapAsync failed', error);
+            return false;
+        });
+    }
+
+    /**
      * Read a content of a storage buffer.
      *
      * @param {WebgpuBuffer} storageBuffer - The storage buffer.
@@ -1475,7 +1502,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             const read = () => {
 
-                destBuffer?.mapAsync(GPUMapMode.READ).then(() => {
+                this.mapBufferAsync(destBuffer, GPUMapMode.READ).then((mapped) => {
+
+                    if (!mapped) {
+                        stagingBuffer.destroy(this);
+                        reject(new Error('Failed to map a staging buffer for reading, most likely because the device was lost.'));
+                        return;
+                    }
 
                     // copy data to a buffer
                     data ??= new Uint8Array(size);

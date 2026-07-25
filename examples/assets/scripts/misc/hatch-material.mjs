@@ -40,24 +40,31 @@ const createHatchMaterial = (device, textures) => {
             // Functions added: getModelMatrix, getLocalPosition
             #include "transformCoreVS"
 
-            // include code for normal shader functionality provided by the engine. It automatically
-            // declares vertex_normal attribute, and handles skinning and morphing if necessary.
-            // Functions added: getNormalMatrix, getLocalNormal
-            #include "normalCoreVS"
-
             // add additional attributes we need
             attribute vec2 aUv0;
 
-            // engine supplied uniforms
-            uniform vec3 view_position;
-
-            // out custom uniforms
-            uniform vec3 uLightDir;
-            uniform float uMetalness;
-
             // variables we pass to the fragment shader
             varying vec2 uv0;
-            varying float brightness;
+
+            // lighting is not needed in the shadow pass
+            #ifndef SHADOW_PASS
+
+                // include code for normal shader functionality provided by the engine. It automatically
+                // declares vertex_normal attribute, and handles skinning and morphing if necessary.
+                // Functions added: getNormalMatrix, getLocalNormal
+                #include "normalCoreVS"
+
+                // engine supplied uniforms
+                uniform vec3 view_position;
+
+                // out custom uniforms
+                uniform vec3 uLightDir;
+                uniform float uMetalness;
+
+                // variables we pass to the fragment shader
+                varying float brightness;
+
+            #endif
 
             void main(void)
             {
@@ -66,21 +73,25 @@ const createHatchMaterial = (device, textures) => {
                 vec3 localPos = getLocalPosition(vertex_position.xyz);
                 vec4 worldPos = modelMatrix * vec4(localPos, 1.0);
 
-                // use functionality from normalCore to get the world normal, which includes skinning and morphing as needed
-                mat3 normalMatrix = getNormalMatrix(modelMatrix);
-                vec3 localNormal = getLocalNormal(vertex_normal);
-                vec3 worldNormal = normalize(normalMatrix * localNormal);
+                #ifndef SHADOW_PASS
 
-                // simple wrap-around diffuse lighting using normal and light direction
-                float diffuse = brightness = dot(worldNormal, uLightDir) * 0.5 + 0.5;
+                    // use functionality from normalCore to get the world normal, which includes skinning and morphing as needed
+                    mat3 normalMatrix = getNormalMatrix(modelMatrix);
+                    vec3 localNormal = getLocalNormal(vertex_normal);
+                    vec3 worldNormal = normalize(normalMatrix * localNormal);
 
-                // a simple specular lighting
-                vec3 viewDir = normalize(view_position - worldPos.xyz);
-                vec3 reflectDir = reflect(-uLightDir, worldNormal);
-                float specular = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
+                    // simple wrap-around diffuse lighting using normal and light direction
+                    float diffuse = dot(worldNormal, uLightDir) * 0.5 + 0.5;
 
-                // combine the lighting
-                brightness = diffuse * (1.0 - uMetalness) + specular * uMetalness;
+                    // a simple specular lighting
+                    vec3 viewDir = normalize(view_position - worldPos.xyz);
+                    vec3 reflectDir = reflect(-uLightDir, worldNormal);
+                    float specular = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
+
+                    // combine the lighting
+                    brightness = diffuse * (1.0 - uMetalness) + specular * uMetalness;
+
+                #endif
 
                 // Pass the texture coordinates
                 uv0 = aUv0;
@@ -97,24 +108,31 @@ const createHatchMaterial = (device, textures) => {
             // Functions added: getModelMatrix, getLocalPosition
             #include "transformCoreVS"
 
-            // include code for normal shader functionality provided by the engine. It automatically
-            // declares vertex_normal attribute, and handles skinning and morphing if necessary.
-            // Functions added: getNormalMatrix, getLocalNormal
-            #include "normalCoreVS"
-
             // add additional attributes we need
             attribute aUv0: vec2f;
 
-            // engine supplied uniforms
-            uniform view_position: vec3f;
-
-            // out custom uniforms
-            uniform uLightDir: vec3f;
-            uniform uMetalness: f32;
-
             // variables we pass to the fragment shader
             varying uv0: vec2f;
-            varying brightness: f32;
+
+            // lighting is not needed in the shadow pass
+            #ifndef SHADOW_PASS
+
+                // include code for normal shader functionality provided by the engine. It automatically
+                // declares vertex_normal attribute, and handles skinning and morphing if necessary.
+                // Functions added: getNormalMatrix, getLocalNormal
+                #include "normalCoreVS"
+
+                // engine supplied uniforms
+                uniform view_position: vec3f;
+
+                // out custom uniforms
+                uniform uLightDir: vec3f;
+                uniform uMetalness: f32;
+
+                // variables we pass to the fragment shader
+                varying brightness: f32;
+
+            #endif
 
             @vertex
             fn vertexMain(input: VertexInput) -> VertexOutput
@@ -126,21 +144,25 @@ const createHatchMaterial = (device, textures) => {
                 let localPos: vec3f = getLocalPosition(vertex_position.xyz);
                 let worldPos: vec4f = modelMatrix * vec4f(localPos, 1.0);
 
-                // use functionality from normalCore to get the world normal, which includes skinning and morphing as needed
-                let normalMatrix: mat3x3f = getNormalMatrix(modelMatrix);
-                let localNormal: vec3f = getLocalNormal(vertex_normal);
-                let worldNormal: vec3f = normalize(normalMatrix * localNormal);
+                #ifndef SHADOW_PASS
 
-                // simple wrap-around diffuse lighting using normal and light direction
-                let diffuse: f32 = dot(worldNormal, uniform.uLightDir) * 0.5 + 0.5;
+                    // use functionality from normalCore to get the world normal, which includes skinning and morphing as needed
+                    let normalMatrix: mat3x3f = getNormalMatrix(modelMatrix);
+                    let localNormal: vec3f = getLocalNormal(vertex_normal);
+                    let worldNormal: vec3f = normalize(normalMatrix * localNormal);
 
-                // a simple specular lighting
-                let viewDir: vec3f = normalize(uniform.view_position - worldPos.xyz);
-                let reflectDir: vec3f = reflect(-uniform.uLightDir, worldNormal);
-                let specular: f32 = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
+                    // simple wrap-around diffuse lighting using normal and light direction
+                    let diffuse: f32 = dot(worldNormal, uniform.uLightDir) * 0.5 + 0.5;
 
-                // combine the lighting
-                output.brightness = diffuse * (1.0 - uniform.uMetalness) + specular * uniform.uMetalness;
+                    // a simple specular lighting
+                    let viewDir: vec3f = normalize(uniform.view_position - worldPos.xyz);
+                    let reflectDir: vec3f = reflect(-uniform.uLightDir, worldNormal);
+                    let specular: f32 = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
+
+                    // combine the lighting
+                    output.brightness = diffuse * (1.0 - uniform.uMetalness) + specular * uniform.uMetalness;
+
+                #endif
 
                 // Pass the texture coordinates
                 output.uv0 = aUv0;
@@ -161,16 +183,44 @@ const createHatchMaterial = (device, textures) => {
             // this gives us for functionality: addFog
             #include "fogPS"
 
-            varying float brightness;
+            #ifdef SHADOW_PASS
+                // this gives us shadow pass functionality: getShadowOutput
+                #include "shadowCasterPS"
+            #endif
+
             varying vec2 uv0;
+
+            #ifndef SHADOW_PASS
+                varying float brightness;
+            #endif
 
             uniform sampler2DArray uDiffuseMap;
             uniform float uDensity;
             uniform float uNumTextures;
             uniform vec3 uColor;
 
+            #ifdef CUTOUT
+                // texture used to discard fragments based on its alpha channel
+                uniform sampler2D uCutoutMap;
+            #endif
+
             void main(void)
             {
+                #ifdef CUTOUT
+                    // discard fragments based on the alpha channel of the cutout texture, making
+                    // both the rendered mesh and its shadow transparent in those areas
+                    if (texture2D(uCutoutMap, uv0).a < 0.5) {
+                        discard;
+                    }
+                #endif
+
+                #ifdef SHADOW_PASS
+
+                    // output shadow data for the rendered shadow type
+                    gl_FragColor = getShadowOutput();
+
+                #else
+
                 #ifdef TOON
 
                     // just a simple toon shader - no texture sampling
@@ -193,6 +243,8 @@ const createHatchMaterial = (device, textures) => {
                 vec3 toneMapped = toneMap(fogged);
                 gl_FragColor.rgb = gammaCorrectOutput(toneMapped);
                 gl_FragColor.a = 1.0;
+
+                #endif
             }
         `,
         fragmentWGSL: /* wgsl */ `
@@ -205,8 +257,16 @@ const createHatchMaterial = (device, textures) => {
             // this gives us for functionality: addFog
             #include "fogPS"
 
-            varying brightness: f32;
+            #ifdef SHADOW_PASS
+                // this gives us shadow pass functionality: getShadowOutput
+                #include "shadowCasterPS"
+            #endif
+
             varying uv0: vec2f;
+
+            #ifndef SHADOW_PASS
+                varying brightness: f32;
+            #endif
 
             var uDiffuseMap: texture_2d_array<f32>;
             var uDiffuseMapSampler: sampler;
@@ -214,10 +274,32 @@ const createHatchMaterial = (device, textures) => {
             uniform uNumTextures: f32;
             uniform uColor: vec3f;
 
+            #ifdef CUTOUT
+                // texture used to discard fragments based on its alpha channel
+                var uCutoutMap: texture_2d<f32>;
+                var uCutoutMapSampler: sampler;
+            #endif
+
             @fragment
             fn fragmentMain(input: FragmentInput) -> FragmentOutput
             {
                 var output: FragmentOutput;
+
+                #ifdef CUTOUT
+                    // discard fragments based on the alpha channel of the cutout texture, making
+                    // both the rendered mesh and its shadow transparent in those areas
+                    if (textureSample(uCutoutMap, uCutoutMapSampler, input.uv0).a < 0.5) {
+                        discard;
+                    }
+                #endif
+
+                #ifdef SHADOW_PASS
+
+                    // output shadow data for the rendered shadow type
+                    output.color = getShadowOutput();
+
+                #else
+
                 var colorLinear: half3;
 
                 #ifdef TOON
@@ -241,6 +323,8 @@ const createHatchMaterial = (device, textures) => {
                 let fogged: vec3f = addFog(vec3f(colorLinear));
                 let toneMapped: vec3f = toneMap(fogged);
                 output.color = vec4f(gammaCorrectOutput(toneMapped), 1.0);
+
+                #endif
 
                 return output;
             }

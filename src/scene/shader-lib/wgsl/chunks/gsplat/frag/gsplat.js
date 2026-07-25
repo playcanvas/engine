@@ -37,6 +37,10 @@ varying gaussianColor: half4;
     #include "pickPS"
 #endif
 
+#ifdef SHADOW_PASS
+    #include "shadowCasterPS"
+#endif
+
 #ifdef GSPLAT_USER_VARYINGS
     #include "gsplatUserVaryingsPS"
 #endif
@@ -79,7 +83,8 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #elif SHADOW_PASS
 
-        output.color = vec4f(input.position.z, 0.0, 0.0, 1.0);
+        // output data for the shadow type being rendered
+        output.color = getShadowOutput();
 
     #elif PREPASS_PASS
 

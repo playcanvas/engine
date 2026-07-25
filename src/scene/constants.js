@@ -1063,11 +1063,32 @@ export const SKYTYPE_DOME = 'dome';
 export const DITHER_NONE = 'none';
 
 /**
+ * Opacity is dithered using a Bayer 2 matrix.
+ *
+ * @category Graphics
+ */
+export const DITHER_BAYER2 = 'bayer2';
+
+/**
+ * Opacity is dithered using a Bayer 4 matrix.
+ *
+ * @category Graphics
+ */
+export const DITHER_BAYER4 = 'bayer4';
+
+/**
  * Opacity is dithered using a Bayer 8 matrix.
  *
  * @category Graphics
  */
 export const DITHER_BAYER8 = 'bayer8';
+
+/**
+ * Opacity is dithered using a Bayer 16 matrix.
+ *
+ * @category Graphics
+ */
+export const DITHER_BAYER16 = 'bayer16';
 
 /**
  * Opacity is dithered using a blue noise.
@@ -1085,7 +1106,10 @@ export const DITHER_IGNNOISE = 'ignnoise';
 
 export const ditherNames = {
     [DITHER_NONE]: 'NONE',
+    [DITHER_BAYER2]: 'BAYER2',
+    [DITHER_BAYER4]: 'BAYER4',
     [DITHER_BAYER8]: 'BAYER8',
+    [DITHER_BAYER16]: 'BAYER16',
     [DITHER_BLUENOISE]: 'BLUENOISE',
     [DITHER_IGNNOISE]: 'IGNNOISE'
 };

@@ -223,7 +223,10 @@ const lights = lightBaseAzimuths.map((azimuth, i) => {
         shadowDistance: 20,
         shadowIntensity: 0.5,
         shadowResolution: 2048,
-        shadowType: SHADOW_PCF5_16F
+        shadowType: SHADOW_PCF5_16F,
+        vsmBlurSize: 16,
+        penumbraSize: 0.04,
+        penumbraFalloff: 5
     });
     light.setEulerAngles(55, azimuth, 0);
     app.root.addChild(light);
@@ -238,6 +241,15 @@ data.on('numLights:set', () => {
     });
 });
 data.set('numLights', 2);
+
+// Shadow type used by all lights
+data.on('shadowType:set', () => {
+    const shadowType = data.get('shadowType');
+    lights.forEach((light) => {
+        light.light.shadowType = shadowType;
+    });
+});
+data.set('shadowType', SHADOW_PCF5_16F);
 
 // Rotate all lights together (same direction), preserving each light's fixed azimuth offset;
 // also advance the custom-shader animation time.
