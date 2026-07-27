@@ -19,6 +19,14 @@ class VertexBuffer {
     usage = BUFFER_STATIC;
 
     /**
+     * Lazily evaluated cache of {@link VertexBuffer#vaoKeyPart}.
+     *
+     * @type {string|null}
+     * @private
+     */
+    _vaoKeyPart = null;
+
+    /**
      * Create a new VertexBuffer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
@@ -60,6 +68,23 @@ class VertexBuffer {
         }
 
         this.device.buffers.add(this);
+    }
+
+    /**
+     * This buffer's contribution to the key of the device's vertex array object cache. It identifies
+     * both the buffer and its format, and is delimited so that the parts of several buffers can be
+     * concatenated without ambiguity.
+     *
+     * Evaluated lazily, as it is only needed by buffers taking part in a draw which uses more than
+     * one vertex buffer, and most buffers never do. The format of a vertex buffer never changes, so
+     * the value is safe to cache.
+     *
+     * @type {string}
+     * @ignore
+     */
+    get vaoKeyPart() {
+        this._vaoKeyPart ??= `${this.id}_${this.format.renderingHash}_`;
+        return this._vaoKeyPart;
     }
 
     /**
