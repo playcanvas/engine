@@ -13,6 +13,16 @@ fn getShadowOutput() -> vec4f {
 
     #if SHADOW_TYPE == VSM_16F || SHADOW_TYPE == VSM_32F
 
+        // Rasterization of degenerate triangles, which animated meshes can generate, can supply
+        // depth outside of the [0, 1] range or even NaN. The exponential warp below turns those
+        // into huge values, which the VSM blur then spreads over a large area, generating visible
+        // artifacts. Note that the depth range is not clipped for other shadow types, as they
+        // either store the depth using the depth buffer, which clamps it, or the error is limited
+        // to the individual texels and so is not noticeable.
+        if (!(depth >= 0.0 && depth <= 1.0)) {
+            discard;
+        }
+
         // exponential warp of the depth, stored with its square
         #if SHADOW_TYPE == VSM_32F
             let exponent: f32 = 15.0;
