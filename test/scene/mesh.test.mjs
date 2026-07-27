@@ -72,6 +72,17 @@ describe('Mesh', function () {
             expect(afterUpdate).to.deep.equal(beforeUpdate);
         });
 
+        it('copies only the used part of a partially set stream into a typed array', function () {
+            const mesh = new Mesh(device);
+
+            // stage 4 vertices worth of positions, but use only the first 2
+            mesh.setPositions(new Float32Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 3, 2);
+
+            const positions = new Float32Array(6);
+            expect(mesh.getPositions(positions)).to.equal(2);
+            expect(Array.from(positions)).to.deep.equal([1, 2, 3, 4, 5, 6]);
+        });
+
         it('copies only the used part of a partially set stream', function () {
             const mesh = new Mesh(device);
 

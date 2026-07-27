@@ -32,6 +32,25 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 
 let id = 0;
 
+/**
+ * Helper function copying the specified number of values from src, which can be an array or a typed
+ * array, into a typed array destination. A typed array source uses the faster TypedArray#set path.
+ *
+ * @param {Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} dst -
+ * The typed array to copy the values to.
+ * @param {NumericArray} src - The values to copy.
+ * @param {number} numValues - The number of values to copy.
+ */
+const copyToTypedArray = (dst, src, numValues) => {
+    if (ArrayBuffer.isView(src)) {
+        dst.set(numValues === src.length ? src : src.subarray(0, numValues));
+    } else {
+        for (let i = 0; i < numValues; i++) {
+            dst[i] = src[i];
+        }
+    }
+};
+
 // Helper class used to store vertex / index data streams and related properties, when mesh is programmatically modified
 class GeometryData {
     constructor() {
@@ -677,10 +696,7 @@ class Mesh extends RefCountedObject {
                 if (ArrayBuffer.isView(data)) {
                     // destination data is typed array, copy as much of the data as it can hold
                     Debug.assert(data.length >= copyCount, `Destination array is too small to receive all ${semantic} data.`);
-                    const numValues = Math.min(data.length, copyCount);
-                    for (let i = 0; i < numValues; i++) {
-                        data[i] = stream.data[i];
-                    }
+                    copyToTypedArray(data, stream.data, Math.min(data.length, copyCount));
                 } else {
                     // destination data is array
                     data.length = 0;
@@ -855,10 +871,7 @@ class Mesh extends RefCountedObject {
             if (ArrayBuffer.isView(indices)) {
                 // destination data is typed array, copy as much of the data as it can hold
                 Debug.assert(indices.length >= count, 'Destination array is too small to receive all index data.');
-                const numValues = Math.min(indices.length, count);
-                for (let i = 0; i < numValues; i++) {
-                    indices[i] = streamIndices[i];
-                }
+                copyToTypedArray(indices, streamIndices, Math.min(indices.length, count));
             } else {
                 // destination data is array
                 indices.length = 0;
