@@ -246,8 +246,9 @@ class IndexBuffer {
         const count = this.numIndices;
 
         if (ArrayBuffer.isView(data)) {
-            // destination data is typed array
-            data.set(indices);
+            // destination data is typed array, copy as much of the data as it can hold
+            Debug.assert(data.length >= count, 'Destination array is too small to receive all index data.');
+            data.set(data.length >= count ? indices : indices.subarray(0, data.length));
         } else {
             // data is array, copy right amount manually
             data.length = 0;
