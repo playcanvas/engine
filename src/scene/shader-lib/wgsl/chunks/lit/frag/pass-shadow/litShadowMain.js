@@ -13,6 +13,12 @@ export default /* wgsl */`
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
+    // protect against rasterization of degenerate triangles of animated meshes, which can generate
+    // out of range / NaN depth - VSM blur would smear those into large visible artifacts
+    if (!(input.position.z >= 0.0 && input.position.z <= 1.0)) {
+        discard;
+    }
+
     #include "litUserMainStartPS"
 
     var output: FragmentOutput;
@@ -37,15 +43,24 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     #endif
 
     #if SHADOW_TYPE == VSM_16F || SHADOW_TYPE == VSM_32F
-        #if SHADOW_TYPE == VSM_32F
-            var exponent: f32 = 15.0;
-        #else
-            var exponent: f32 = 5.54;
-        #endif
 
-        var depth_vsm = 2.0 * depth - 1.0;
-        depth_vsm = exp(exponent * depth_vsm);
-        output.color = vec4f(depth_vsm, depth_vsm * depth_vsm, 1.0, 1.0);
+        let warpD: f32 = 2.0 * depth - 1.0;
+
+        #if SHADOW_TYPE == VSM_32F
+
+            // EVSM4 - a positive and a negative exponential warp, each with its second moment.
+            // Note: these exponents must match those used by the shadowEVSM chunk.
+            let warpPos: f32 = exp(15.0 * warpD);
+            let warpNeg: f32 = exp(-5.0 * warpD);
+            output.color = vec4f(warpPos, warpPos * warpPos, -warpNeg, warpNeg * warpNeg);
+
+        #else
+
+            // EVSM2 - a single exponential warp with its second moment, z stores the coverage
+            let warpPos: f32 = exp(5.54 * warpD);
+            output.color = vec4f(warpPos, warpPos * warpPos, 1.0, 1.0);
+
+        #endif
     #else
         #if SHADOW_TYPE == PCSS_32F
             output.color = vec4f(depth, 0.0, 0.0, 1.0);

@@ -9,15 +9,16 @@ uniform vec2 pixelOffset;
 #endif
 
 void main(void) {
-    vec3 moments = vec3(0.0);
+    // all four channels are filtered, as VSM_32F (EVSM4) stores moments in all of them
+    vec4 moments = vec4(0.0);
     vec2 uv = vUv0 - pixelOffset * (float({SAMPLES}) * 0.5);
     for (int i = 0; i < {SAMPLES}; i++) {
         vec4 c = texture2D(source, uv + pixelOffset * float(i));
 
         #ifdef GAUSS
-            moments += c.xyz * weight[i];
+            moments += c * weight[i];
         #else
-            moments += c.xyz;
+            moments += c;
         #endif
     }
 
@@ -25,6 +26,6 @@ void main(void) {
         moments *= 1.0 / float({SAMPLES});
     #endif
 
-    gl_FragColor = vec4(moments.x, moments.y, moments.z, 1.0);
+    gl_FragColor = moments;
 }
 `;

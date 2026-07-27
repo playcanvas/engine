@@ -11,17 +11,29 @@ vec4 getShadowOutput() {
     // rasterized depth
     float depth = gl_FragCoord.z;
 
+    // protect against rasterization of degenerate triangles of animated meshes, which can generate
+    // out of range / NaN depth - VSM blur would smear those into large visible artifacts
+    if (!(depth >= 0.0 && depth <= 1.0)) discard;
+
     #if SHADOW_TYPE == VSM_16F || SHADOW_TYPE == VSM_32F
 
-        // exponential warp of the depth, stored with its square
+        float d = 2.0 * depth - 1.0;
+
         #if SHADOW_TYPE == VSM_32F
-            float exponent = 15.0;
+
+            // EVSM4 - a positive and a negative exponential warp, each with its second moment.
+            // Note: these exponents must match those used by the shadowEVSM chunk.
+            float pos = exp(15.0 * d);
+            float neg = exp(-5.0 * d);
+            return vec4(pos, pos * pos, -neg, neg * neg);
+
         #else
-            float exponent = 5.54;
+
+            // EVSM2 - a single exponential warp with its second moment, z stores the coverage
+            float pos = exp(5.54 * d);
+            return vec4(pos, pos * pos, 1.0, 1.0);
+
         #endif
-        depth = 2.0 * depth - 1.0;
-        depth = exp(exponent * depth);
-        return vec4(depth, depth * depth, 1.0, 1.0);
 
     #elif SHADOW_TYPE == PCSS_32F
 

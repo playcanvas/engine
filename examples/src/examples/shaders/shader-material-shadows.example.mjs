@@ -36,7 +36,7 @@ import {
     PIXELFORMAT_RGBA8,
     RESOLUTION_AUTO,
     RenderComponentSystem,
-    SHADOW_PCF3_32F,
+    SHADOW_VSM_32F,
     ScriptComponentSystem,
     ScriptHandler,
     StandardMaterial,
@@ -263,8 +263,9 @@ const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.4, 0.45, 0.5)
 });
-camera.setLocalPosition(-61.48, 51.94, 58.48);
-camera.setLocalEulerAngles(-23.69, -49.15, 0);
+// TEMPORARY: artifact repro view
+camera.setLocalPosition(4.86, 52.59, 13.26);
+camera.setLocalEulerAngles(-77.76, 5.54, 0);
 
 // Add orbit camera script to the camera
 camera.addComponent('script');
@@ -279,14 +280,69 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
+// TEMPORARY: debug helpers for finding VSM artifact repro poses.
+// Collect the animated entities, and allow the animation to be paused / scrubbed.
+const animEntities = [bitmojiEntity, morphEntity];
+
+// Set the animation of all animated entities to the given time, and refresh their pose
+const setAnimTime = (time) => {
+    animEntities.forEach((entity) => {
+        const layer = entity.anim.baseLayer;
+        const wasPlaying = entity.anim.playing;
+        entity.anim.playing = true;
+        layer.activeStateCurrentTime = time % layer.activeStateDuration;
+        entity.anim.update(0);
+        entity.anim.playing = wasPlaying;
+    });
+};
+
+// TEMPORARY: log the animation time and camera orientation once a second
+let logTimer = 0;
+app.on('update', (dt) => {
+    // keep the scrubber in sync with the playing animation
+    if (!data.get('settings.paused')) {
+        data.set('settings.animTime', +bitmojiEntity.anim.baseLayer.activeStateCurrentTime.toFixed(3));
+    }
+
+    logTimer += dt;
+    if (logTimer > 1) {
+        logTimer = 0;
+        const t = bitmojiEntity.anim.baseLayer.activeStateCurrentTime;
+        const p = camera.getPosition();
+        const e = camera.getEulerAngles();
+        console.log(`animTime: ${t} camera pos: (${p.x}, ${p.y}, ${p.z}) euler: (${e.x}, ${e.y}, ${e.z})`);
+    }
+});
+
 // Handle UI changes
 data.on('*:set', (path, value) => {
     if (path === 'settings.shadowType') {
         light.light.shadowType = value;
     }
+    if (path === 'settings.paused') {
+        // pause / resume the animation playback
+        animEntities.forEach((entity) => {
+            entity.anim.playing = !value;
+        });
+    }
+    if (path === 'settings.animTime' && data.get('settings.paused')) {
+        // scrubbing is only applied while paused
+        setAnimTime(value);
+    }
 });
 
 // Initial values
+// TEMPORARY: start paused at the artifact repro pose, using VSM_32F
+const reproTime = 1.12;
 data.set('settings', {
-    shadowType: SHADOW_PCF3_32F
+    shadowType: SHADOW_VSM_32F,
+    paused: true,
+    animTime: reproTime
 });
+
+// apply the initial paused state and pose (the bulk data.set above does not fire per-property events)
+light.light.shadowType = SHADOW_VSM_32F;
+animEntities.forEach((entity) => {
+    entity.anim.playing = false;
+});
+setAnimTime(reproTime);

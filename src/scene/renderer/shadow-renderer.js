@@ -17,6 +17,7 @@ import {
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
     SHADOWCAMERA_NAME,
     SHADOWUPDATE_NONE,
+    SHADOW_VSM_32F,
     shadowTypeInfo
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -121,7 +122,19 @@ class ShadowRenderer {
 
         // don't clear the color buffer if rendering a depth map
         if (isVsm) {
-            shadowCam.clearColor = new Color(0, 0, 0, 0);
+            if (shadowType === SHADOW_VSM_32F) {
+
+                // EVSM4 stores moments in all four channels, and so has no channel left to store the
+                // coverage in. Instead the map is cleared to the warped depth of the far plane, which
+                // represents an occluder behind any receiver and so does not generate a shadow.
+                // Note: these exponents must match those used by the shadow caster and shadowEVSM chunks.
+                const pos = Math.exp(15.0);
+                const neg = Math.exp(-5.0);
+                shadowCam.clearColor = new Color(pos, pos * pos, -neg, neg * neg);
+
+            } else {
+                shadowCam.clearColor = new Color(0, 0, 0, 0);
+            }
         } else {
             shadowCam.clearColor = new Color(1, 1, 1, 1);
         }

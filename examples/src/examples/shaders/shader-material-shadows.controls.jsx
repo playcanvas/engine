@@ -1,4 +1,11 @@
-import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    Panel,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
 
 import {
     SHADOW_PCF1_16F,
@@ -41,6 +48,26 @@ export function Controls({ observer }) {
                             { v: SHADOW_VSM_32F, t: 'VSM_32F' },
                             { v: SHADOW_PCSS_32F, t: 'PCSS_32F' }
                         ]}
+                    />
+                </LabelGroup>
+            </Panel>
+            {/* TEMPORARY: animation scrubbing, to help find artifact repro poses */}
+            <Panel headerText='Animation (debug)'>
+                <LabelGroup text='Pause'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.paused' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Time'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.animTime' }}
+                        min={0}
+                        max={2.57}
+                        step={0.001}
+                        precision={3}
                     />
                 </LabelGroup>
             </Panel>
