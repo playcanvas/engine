@@ -2,6 +2,12 @@ export default /* wgsl */`
 uniform view_position: vec3f;
 
 // magnopus patched
+#ifdef LOD_PASS
+uniform lod_level: i32;
+#endif
+// end magnopus patched
+
+// magnopus patched
 #ifdef MAG_STEREO_TEXTURE
 // Set by the engine but not declared anywhere else
 uniform view_index: f32;

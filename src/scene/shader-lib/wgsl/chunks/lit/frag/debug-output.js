@@ -3,6 +3,20 @@ export default /* wgsl */`
 output.color = vec4(gammaCorrectOutput(dAlbedo), 1.0);
 #endif
 
+// magnopus patched - start
+#ifdef LOD_PASS
+if (uniform.lod_level == 0) {
+  output.color = vec4f(1.0, 0.0, 0.0, 1.0);
+} else if (uniform.lod_level == 1) {
+  output.color = vec4f(1.0, 1.0, 0.0, 1.0);
+} else if (uniform.lod_level == 2) {
+  output.color = vec4f(0.0, 1.0, 1.0, 1.0);
+} else if (uniform.lod_level == 3) {
+  output.color = vec4f(0.0, 0.0, 1.0, 1.0);
+}
+#endif
+// magnopus patched - end
+
 #ifdef DEBUG_UV0_PASS
 output.color = vec4f(litArgs_albedo , 1.0);
 #endif

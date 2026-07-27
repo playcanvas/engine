@@ -3,7 +3,7 @@ export default /* glsl */`
 gl_FragColor = vec4(gammaCorrectOutput(dAlbedo), 1.0);
 #endif
 
-// magnopus patched
+// magnopus patched - start
 #ifdef LOD_PASS
 if (lod_level == 0) {
   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
@@ -15,6 +15,7 @@ if (lod_level == 0) {
   gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);
 }
 #endif
+// magnopus patched - end
 
 #ifdef DEBUG_UV0_PASS
 gl_FragColor = vec4(litArgs_albedo , 1.0);
