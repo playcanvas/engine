@@ -1787,11 +1787,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const useCache = vertexBuffers.length > 1;
         if (useCache) {
 
-            // generate unique key for the vertex buffers
+            // generate unique key for the vertex buffers - each part identifies both the buffer and
+            // its format, and is delimited, so distinct buffer lists cannot generate the same key
             key = '';
             for (let i = 0; i < vertexBuffers.length; i++) {
-                const vertexBuffer = vertexBuffers[i];
-                key += vertexBuffer.id + vertexBuffer.format.renderingHash;
+                key += vertexBuffers[i].vaoKeyPart;
             }
 
             // try to get VAO from cache
@@ -1846,7 +1846,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // unbind any array buffer
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-            // add it to cache
+            // add it to cache. Note that entries are not removed when one of the vertex buffers is
+            // destroyed - the cache only retains the vertex array object itself, not the buffers, and
+            // the number of buffers taking part in multi-buffer draws is small, so pruning per
+            // destroyed buffer is not considered worth the cost. The cache is released in full when
+            // the device is destroyed or the context is lost.
             if (useCache) {
                 this._vaoMap.set(key, vao);
             }
