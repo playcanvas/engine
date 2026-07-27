@@ -167,7 +167,6 @@ for (let x = 0; x < resolution - 1; x++) {
 function updateMesh(mesh, initAll) {
     // Set updated positions and normal each frame
     mesh.setPositions(positions);
-    // @ts-ignore engine-tsd
     mesh.setNormals(calculateNormals(positions, indexArray));
 
     // Update mesh Uvs and Indices only one time, as they do not change each frame
