@@ -391,7 +391,7 @@ class BoundingBox {
     /**
      * Compute the min and max bounding values to encapsulate all specified vertices.
      *
-     * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the
+     * @param {ArrayLike<number>} vertices - The vertices used to compute the new size for the
      * AABB.
      * @param {Vec3} min - Stored computed min value.
      * @param {Vec3} max - Stored computed max value.
@@ -426,7 +426,7 @@ class BoundingBox {
     /**
      * Compute the size of the AABB to encapsulate all specified vertices.
      *
-     * @param {number[]|Float32Array} vertices - The vertices used to compute the new size for the
+     * @param {ArrayLike<number>} vertices - The vertices used to compute the new size for the
      * AABB.
      * @param {number} [numVerts] - Number of vertices to use from the beginning of vertices array.
      * All vertices are used if not specified.

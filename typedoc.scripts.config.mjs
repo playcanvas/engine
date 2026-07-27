@@ -38,6 +38,7 @@ const engineSymbols = {
         'CameraComponent',
         'CameraFrame',
         'Color',
+        'ContainerResource',
         'Entity',
         'EventHandle',
         'EventHandler',
@@ -50,6 +51,7 @@ const engineSymbols = {
         'MeshInstance',
         'Quat',
         'RenderTarget',
+        'Scene',
         'Script',
         'ScriptComponent',
         'Shader',
@@ -58,6 +60,7 @@ const engineSymbols = {
         'Texture',
         'Vec2',
         'Vec3',
+        'VertexBuffer',
         'XrInputSource'
     ],
     interfaces: [],
@@ -68,7 +71,8 @@ const engineSymbols = {
     functions: [],
     // Class.member references, mapped to lowercased anchors on the class page
     members: [
-        'EventHandle.off'
+        'EventHandle.off',
+        'Scene.ambientLight'
     ]
 };
 
