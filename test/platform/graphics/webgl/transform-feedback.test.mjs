@@ -5,7 +5,7 @@ import { BUFFER_GPUDYNAMIC, SEMANTIC_POSITION, TYPE_FLOAT32 } from '../../../../
 import { VertexBuffer } from '../../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../../src/platform/graphics/vertex-format.js';
 import { WebglGraphicsDevice } from '../../../../src/platform/graphics/webgl/webgl-graphics-device.js';
-import { mockWebgl2Canvas } from '../../../canvas-webgl-mock.js';
+import { mockWebgl2Canvas } from '../../../canvas-webgl-mock.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('WebglGraphicsDevice#transformFeedback', function () {
