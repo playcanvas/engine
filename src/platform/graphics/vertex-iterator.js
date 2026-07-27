@@ -363,7 +363,8 @@ class VertexIterator {
      * only part of the data gets copied out (typed arrays ignore read/write out of range).
      *
      * @param {string} semantic - The semantic of the vertex element to read.
-     * @param {number[]|ArrayBufferView} data - The array to receive the data.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} data -
+     * The array to receive the data.
      * @returns {number} The number of vertices read.
      * @ignore
      */
@@ -374,6 +375,10 @@ class VertexIterator {
             count = this.vertexBuffer.numVertices;
             let i;
             const numComponents = element.numComponents;
+            const copyCount = count * numComponents;
+
+            Debug.assert(!ArrayBuffer.isView(data) || data.length >= copyCount,
+                `Destination array is too small to receive all ${semantic} data.`);
 
             if (this.vertexBuffer.getFormat().interleaved) {
 
@@ -390,12 +395,12 @@ class VertexIterator {
                 }
             } else {
                 if (ArrayBuffer.isView(data)) {
-                    // destination data is typed array
-                    data.set(element.array);
+                    // destination data is typed array, copy as much of the data as it can hold
+                    // note: element.array is exactly copyCount long, so it only needs a subarray when it does not fit
+                    data.set(data.length >= copyCount ? element.array : element.array.subarray(0, data.length));
                 } else {
                     // destination data is array
                     data.length = 0;
-                    const copyCount = count * numComponents;
                     for (i = 0; i < copyCount; i++) {
                         data[i] = element.array[i];
                     }

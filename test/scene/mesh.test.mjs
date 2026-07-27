@@ -10,6 +10,21 @@ const POSITIONS = [
 ];
 const INDICES = [0, 1, 2];
 
+// runs the function with console.error suppressed, and returns the number of debug asserts it fired
+const withAssertCount = (fn) => {
+    const error = console.error;
+    let count = 0;
+    console.error = () => {
+        count++;
+    };
+    try {
+        fn();
+    } finally {
+        console.error = error;
+    }
+    return count;
+};
+
 describe('Mesh', function () {
 
     let device;
@@ -55,6 +70,43 @@ describe('Mesh', function () {
             const afterUpdate = [];
             expect(mesh.getPositions(afterUpdate)).to.equal(3);
             expect(afterUpdate).to.deep.equal(beforeUpdate);
+        });
+
+        it('copies only the used part of a partially set stream', function () {
+            const mesh = new Mesh(device);
+
+            // stage 4 vertices worth of positions, but use only the first 2
+            mesh.setPositions(new Float32Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]), 3, 2);
+
+            const beforeUpdate = [];
+            expect(mesh.getPositions(beforeUpdate)).to.equal(2);
+            expect(beforeUpdate).to.deep.equal([1, 2, 3, 4, 5, 6]);
+
+            mesh.update();
+
+            const afterUpdate = [];
+            expect(mesh.getPositions(afterUpdate)).to.equal(2);
+            expect(afterUpdate).to.deep.equal(beforeUpdate);
+        });
+
+        it('copies partial data into a typed array which is too small', function () {
+            const mesh = new Mesh(device);
+            mesh.setPositions(POSITIONS);
+
+            const positions = new Float32Array(4);
+            expect(withAssertCount(() => mesh.getPositions(positions))).to.equal(1);
+            expect(Array.from(positions)).to.deep.equal([0, 0, 0, 1]);
+        });
+
+        it('copies partial data into a typed array which is too small after the mesh is updated', function () {
+            const mesh = new Mesh(device);
+            mesh.setPositions(POSITIONS);
+            mesh.setIndices(INDICES);
+            mesh.update();
+
+            const positions = new Float32Array(4);
+            expect(withAssertCount(() => mesh.getPositions(positions))).to.equal(1);
+            expect(Array.from(positions)).to.deep.equal([0, 0, 0, 1]);
         });
     });
 

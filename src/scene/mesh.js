@@ -27,7 +27,7 @@ import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './
 /**
  * A writable array of numbers - either a JavaScript array or any numeric typed array.
  *
- * @typedef {number[]|Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} NumericArray
+ * @typedef {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} NumericArray
  */
 
 let id = 0;
@@ -673,14 +673,19 @@ class Mesh extends RefCountedObject {
                 done = true;
                 count = this._geometryData.vertexCount;
 
+                const copyCount = count * stream.componentCount;
                 if (ArrayBuffer.isView(data)) {
-                    // destination data is typed array
-                    data.set(stream.data);
+                    // destination data is typed array, copy as much of the data as it can hold
+                    Debug.assert(data.length >= copyCount, `Destination array is too small to receive all ${semantic} data.`);
+                    const numValues = Math.min(data.length, copyCount);
+                    for (let i = 0; i < numValues; i++) {
+                        data[i] = stream.data[i];
+                    }
                 } else {
                     // destination data is array
                     data.length = 0;
-                    for (let i = 0, il = stream.data.length; i < il; i++) {
-                        data.push(stream.data[i]);
+                    for (let i = 0; i < copyCount; i++) {
+                        data[i] = stream.data[i];
                     }
                 }
             }
@@ -848,13 +853,17 @@ class Mesh extends RefCountedObject {
             count = this._geometryData.indexCount;
 
             if (ArrayBuffer.isView(indices)) {
-                // destination data is typed array
-                indices.set(streamIndices);
+                // destination data is typed array, copy as much of the data as it can hold
+                Debug.assert(indices.length >= count, 'Destination array is too small to receive all index data.');
+                const numValues = Math.min(indices.length, count);
+                for (let i = 0; i < numValues; i++) {
+                    indices[i] = streamIndices[i];
+                }
             } else {
                 // destination data is array
                 indices.length = 0;
-                for (let i = 0, il = streamIndices.length; i < il; i++) {
-                    indices.push(streamIndices[i]);
+                for (let i = 0; i < count; i++) {
+                    indices[i] = streamIndices[i];
                 }
             }
         } else {
