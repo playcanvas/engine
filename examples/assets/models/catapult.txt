@@ -1,0 +1,8 @@
+Model Information:
+* title:	Сatapult
+* source:	https://sketchfab.com/3d-models/atapult-1c33623dbe0049b98be97a750f27b51b
+* author:	AlexJJ (https://sketchfab.com/AlexJJ)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
