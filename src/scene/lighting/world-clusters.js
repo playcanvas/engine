@@ -72,7 +72,8 @@ class WorldClusters {
 
     /**
      * The lights stored in the cluster structure. The index of a light in this array matches its
-     * index in the lights texture, and the index 0 is reserved for 'no light'.
+     * index in the lights texture, and the index 0 is reserved for 'no light'. This is the array
+     * used internally by the clustering and must not be modified.
      *
      * @type {ClusterLight[]}
      */

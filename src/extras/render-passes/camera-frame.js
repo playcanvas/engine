@@ -585,12 +585,13 @@ class CameraFrame {
             Debug.warnOnce('CameraFrame.volumetricFog.light needs to be a directional light, the effect is disabled.');
             return false;
         }
-        const localLights = volumetricFog.localOmniLights || volumetricFog.localSpotLights;
-        if (!volumetricFog.light && !localLights) {
-            return false;
-        }
+        let localLights = volumetricFog.localOmniLights || volumetricFog.localSpotLights;
         if (localLights && !cameraComponent.system.app.scene.clusteredLightingEnabled) {
             Debug.warnOnce('CameraFrame.volumetricFog local lights require clustered lighting to be enabled, the local lights are ignored.');
+            localLights = false;
+        }
+        if (!volumetricFog.light && !localLights) {
+            return false;
         }
         if (cameraComponent.projection !== PROJECTION_PERSPECTIVE) {
             Debug.warnOnce('CameraFrame.volumetricFog is only supported on perspective cameras, the effect is disabled.');
