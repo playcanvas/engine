@@ -463,8 +463,8 @@ app.root.addChild(terrain);
 // --------------------------------------------------------------------------------------------
 // trees and rocks on the slopes, which cast the long shadows and light shafts that sell the sunset
 
-// every tree and rock is merged into one mesh. A forest this size would otherwise be hundreds of
-// draw calls, tripled again by the shadow cascades
+// every tree and rock is merged into one mesh. A forest this size would otherwise be hundreds of draw
+// calls, and again as many for the shadow map and the depth prepass
 const coneGeometry = new ConeGeometry({ baseRadius: 0.5, height: 1, heightSegments: 1, capSegments: 8 });
 const cylinderGeometry = new CylinderGeometry({ radius: 0.5, height: 1, heightSegments: 1, capSegments: 6 });
 const rockGeometry = new SphereGeometry({ radius: 0.5, latitudeBands: 5, longitudeBands: 7 });
@@ -617,8 +617,12 @@ sun.addComponent('light', {
     shadowBias: 0.3,
     normalOffsetBias: 0.2,
     shadowDistance: 320,
-    numCascades: 3,
-    cascadeDistribution: 0.7,
+
+    // One cascade rather than three. Cascades buy texel density close to the camera, but each one is
+    // another full pass over every caster in the scene, and the volumetric fog samples the map once
+    // per marching step on top of that - the shafts and the long raking shadows are what this scene
+    // wants from the sun, and both come from the map's coverage rather than its sharpness
+    numCascades: 1,
     shadowResolution: 2048
 });
 app.root.addChild(sun);
@@ -2321,12 +2325,20 @@ app.on('update', (dt) => {
 
 data.set('data', {
     reloadTime: RELOAD_TIME_DEFAULT,
+    shadows: true,
     volumetricFog: true,
     boulderLights: true
 });
 
 data.on('data.reloadTime:set', (value) => {
     reloadTime = value;
+});
+
+data.on('data.shadows:set', (value) => {
+    // the whole shadow pass goes with it, as the sun is the only light in the scene that casts. The
+    // volumetric fog checks the light every frame and drops its shadow sampling to match, so the shafts
+    // turn into an even haze rather than disappearing
+    sun.light.castShadows = value;
 });
 
 data.on('data.volumetricFog:set', (value) => {

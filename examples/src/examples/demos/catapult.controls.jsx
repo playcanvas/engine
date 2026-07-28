@@ -30,6 +30,9 @@ export function Controls({ observer }) {
                     precision={2}
                 />
             </LabelGroup>
+            <LabelGroup text='Shadows'>
+                <BooleanInput type='toggle' binding={binding()} link={link('shadows')} />
+            </LabelGroup>
             <LabelGroup text='Volumetric Fog'>
                 <BooleanInput type='toggle' binding={binding()} link={link('volumetricFog')} />
             </LabelGroup>
