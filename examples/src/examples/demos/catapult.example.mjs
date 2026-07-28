@@ -685,7 +685,7 @@ catapult.findComponents('render').forEach((render) => {
 // only the firing animation is used. The layer stays paused and the game scrubs it a frame at a time,
 // which is what lets the swing keep its own timing independently of the reload
 const animations = assets.catapult.resource.animations;
-const fireTrack = (animations.find(animation => animation.resource.name.includes('Shot')) ?? animations[0]).resource;
+const fireTrack = (animations.find((animation) => animation.resource.name.includes('Shot')) ?? animations[0]).resource;
 
 catapult.addComponent('anim', { activate: false });
 catapult.anim.assignAnimation('Fire', fireTrack, undefined, 1, false);
@@ -1111,7 +1111,7 @@ for (let i = 0; i < 4; i++) {
  * @param {number} [duration] - How long the fireball takes to grow and fade, in seconds.
  */
 const spawnFlash = (x, y, z, size = EXPLOSION_SIZE, duration = EXPLOSION_DURATION) => {
-    const explosion = explosions.find(item => item.age < 0) ?? explosions[0];
+    const explosion = explosions.find((item) => item.age < 0) ?? explosions[0];
     explosion.age = 0;
     explosion.size = size;
     explosion.duration = duration;
@@ -1162,7 +1162,7 @@ const explode = (x, y, z) => {
  * @param {Vec3} velocity - How fast, and in which direction.
  */
 const launchBoulder = (position, velocity) => {
-    const boulder = boulders.find(item => !item.active) ?? boulders[0];
+    const boulder = boulders.find((item) => !item.active) ?? boulders[0];
     boulder.active = true;
     boulder.position.copy(position);
     boulder.velocity.copy(velocity);
@@ -1583,13 +1583,13 @@ const aimAt = (x, y) => {
 
     // beyond the angle's flat trajectory limit there is no solution, so ask for the shortest shot
     aimPower =
-        reach > 0.01 ?
-            math.clamp(
-                Math.sqrt((GRAVITY * distance * distance) / (2 * cosPitch * cosPitch * reach)),
-                LAUNCH_POWER_MIN,
-                LAUNCH_POWER_MAX
-            ) :
-            LAUNCH_POWER_MIN;
+        reach > 0.01
+            ? math.clamp(
+                  Math.sqrt((GRAVITY * distance * distance) / (2 * cosPitch * cosPitch * reach)),
+                  LAUNCH_POWER_MIN,
+                  LAUNCH_POWER_MAX
+              )
+            : LAUNCH_POWER_MIN;
 };
 
 /**
