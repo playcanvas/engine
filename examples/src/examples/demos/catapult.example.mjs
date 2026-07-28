@@ -18,6 +18,7 @@
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
 
 import {
+    ADDRESS_CLAMP_TO_EDGE,
     AnimComponentSystem,
     AppBase,
     AppOptions,
@@ -29,10 +30,12 @@ import {
     ConeGeometry,
     ContainerHandler,
     CylinderGeometry,
+    ELEMENTTYPE_IMAGE,
     ELEMENTTYPE_TEXT,
     ElementComponentSystem,
     Entity,
     FILLMODE_FILL_WINDOW,
+    FILTER_LINEAR,
     FontHandler,
     KEY_SPACE,
     Keyboard,
@@ -44,6 +47,7 @@ import {
     Mesh,
     MeshInstance,
     Mouse,
+    PIXELFORMAT_RGBA8,
     PRIMITIVE_TRIANGLES,
     Quat,
     RESOLUTION_AUTO,
@@ -55,6 +59,7 @@ import {
     SphereGeometry,
     StandardMaterial,
     TONEMAP_NEUTRAL,
+    Texture,
     TextureHandler,
     TouchDevice,
     Vec2,
@@ -767,6 +772,13 @@ let fireClock = -1;
 // seconds since the catapult was overrun, which sequences the aftermath, or minus one while it stands
 let overrunClock = -1;
 
+// display state - how many shots have been taken, how visible the hint still is, and the countdown on
+// the call out for the last formation wiped out
+let shotsFired = 0;
+let hintAlpha = 1;
+let flashClock = -1;
+let flashedScore = 0;
+
 /**
  * Shots that have been fired but whose boulder has not left the arm yet.
  *
@@ -1403,6 +1415,7 @@ const fire = () => {
     }
 
     reloadTimer = reloadTime;
+    shotsFired++;
 
     // the shot is locked in when the lever is pulled, so moving the pointer during the swing does
     // not bend the boulder's path. Several can be in the air at once, so each waits its own turn to
@@ -1465,6 +1478,12 @@ const restart = () => {
     gameOver = false;
     reloadTimer = 0;
     fireClock = -1;
+
+    // a fresh player gets the hint back
+    shotsFired = 0;
+    hintAlpha = 1;
+    flashClock = -1;
+    flashedScore = 0;
 
     // rebuild the machine and give the player its sights back
     overrunClock = -1;
@@ -1647,6 +1666,32 @@ app.touch.on('touchend', () => (gameOver ? restart() : fire()));
 // --------------------------------------------------------------------------------------------
 // the heads up display
 
+// The readouts sit low and centered rather than in the top corners. In the examples browser the top
+// left is under the description panel and the top right is under the controls, and the bottom corners
+// hold the frame counter and the asset credits - the band just above the middle of the bottom edge is
+// the only part of the frame that is reliably clear.
+const PANEL_WIDTH = 520;
+const PANEL_HEIGHT = 84;
+const PANEL_CORNER = 14;
+
+// clear of the asset credits, which the examples browser prints along the bottom edge
+const PANEL_BOTTOM = 100;
+const HINT_BOTTOM = 68;
+
+// the hint has done its job once the player has fired a few times, so it fades away rather than sitting
+// there for the rest of the game
+const HINT_SHOTS = 3;
+const HINT_FADE = 3;
+
+// how long a wiped out formation is called out for
+const FLASH_DURATION = 1.4;
+
+const COLOR_READOUT = new Color(1, 0.95, 0.85);
+const COLOR_ALERT = new Color(1, 0.38, 0.26);
+const COLOR_CHARGING = new Color(1, 0.62, 0.2);
+const COLOR_READY = new Color(0.62, 0.95, 0.62);
+const _readoutColor = new Color();
+
 const screen = new Entity('Hud');
 screen.addComponent('screen', {
     referenceResolution: new Vec2(1280, 720),
@@ -1657,6 +1702,88 @@ screen.addComponent('screen', {
 app.root.addChild(screen);
 
 /**
+ * Builds the rounded, softly shaded panel the readouts sit on. It is generated at exactly the size it
+ * is drawn at, so the corners stay crisp instead of being stretched, and it is white so that the
+ * element color is free to tint it.
+ *
+ * @param {number} width - The width in pixels.
+ * @param {number} height - The height in pixels.
+ * @param {number} radius - The corner radius in pixels.
+ * @returns {Texture} The panel texture.
+ */
+const createPanelTexture = (width, height, radius) => {
+    const pixels = new Uint8Array(width * height * 4);
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            // how far outside the rounded rectangle this pixel is, which is the distance to the corner
+            // circle once it is past both of the straight edges
+            const dx = Math.max(radius - x, x - (width - 1 - radius), 0);
+            const dy = Math.max(radius - y, y - (height - 1 - radius), 0);
+            const outside = Math.hypot(dx, dy) - radius;
+            const edge = math.clamp(0.5 - outside, 0, 1);
+
+            // heavier along the bottom, so the panel reads as lit from above rather than as a flat card
+            const shade = 0.72 + 0.28 * (y / (height - 1));
+            const alpha = Math.round(255 * edge * shade);
+            const offset = (y * width + x) * 4;
+
+            // premultiplied white, which is what the element material expects
+            pixels[offset] = alpha;
+            pixels[offset + 1] = alpha;
+            pixels[offset + 2] = alpha;
+            pixels[offset + 3] = alpha;
+        }
+    }
+
+    const texture = new Texture(app.graphicsDevice, {
+        name: 'HudPanel',
+        width: width,
+        height: height,
+        format: PIXELFORMAT_RGBA8,
+        mipmaps: false,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
+        levels: [pixels]
+    });
+    texture.upload();
+    return texture;
+};
+
+/**
+ * Adds a block of color to the display. Children are drawn in the order they are added, so the
+ * backdrop goes in first and the text on top of it.
+ *
+ * @param {Vec4} anchor - Where on the screen it is anchored.
+ * @param {number} x - The horizontal offset from the anchor.
+ * @param {number} y - The vertical offset from the anchor.
+ * @param {number} width - The width of the block.
+ * @param {number} height - The height of the block.
+ * @param {Color} color - The color of the block.
+ * @param {number} opacity - How solid the block is.
+ * @param {Texture|null} [texture] - An optional shape to draw instead of a plain rectangle.
+ * @returns {Entity} The image entity.
+ */
+const addImage = (anchor, x, y, width, height, color, opacity, texture = null) => {
+    const entity = new Entity('Image');
+    entity.addComponent('element', {
+        anchor: anchor,
+        pivot: new Vec2(0.5, 0.5),
+        width: width,
+        height: height,
+        color: color,
+        opacity: opacity,
+        texture: texture ?? undefined,
+        type: ELEMENTTYPE_IMAGE
+    });
+    entity.setLocalPosition(x, y, 0);
+    screen.addChild(entity);
+    return entity;
+};
+
+/**
  * Adds a line of text to the display.
  *
  * @param {Vec4} anchor - Where on the screen it is anchored.
@@ -1664,17 +1791,19 @@ app.root.addChild(screen);
  * @param {number} x - The horizontal offset from the anchor.
  * @param {number} y - The vertical offset from the anchor.
  * @param {number} fontSize - The size of the text.
+ * @param {number} [spacing] - How far the letters are tracked apart.
  * @returns {Entity} The text entity.
  */
-const addText = (anchor, pivot, x, y, fontSize) => {
+const addText = (anchor, pivot, x, y, fontSize, spacing = 1) => {
     const entity = new Entity('Text');
     entity.addComponent('element', {
         anchor: anchor,
         pivot: pivot,
         fontAsset: assets.font.id,
         fontSize: fontSize,
+        spacing: spacing,
         text: '',
-        color: new Color(1, 0.95, 0.85),
+        color: COLOR_READOUT,
         outlineColor: new Color(0, 0, 0, 0.9),
         outlineThickness: 0.6,
         type: ELEMENTTYPE_TEXT
@@ -1684,18 +1813,56 @@ const addText = (anchor, pivot, x, y, fontSize) => {
     return entity;
 };
 
-// The readouts sit low and centered, either side of the middle, rather than in the top corners. In the
-// examples browser the top left is under the description panel and the top right is under the controls,
-// and the bottom corners hold the frame counter and the asset credits - the band above the hint line is
-// the only part of the frame that is reliably clear.
-const scoreText = addText(new Vec4(0.5, 0, 0.5, 0), new Vec2(1, 0), -24, 82, 26);
-const statusText = addText(new Vec4(0.5, 0, 0.5, 0), new Vec2(0, 0), 24, 82, 26);
-const messageText = addText(new Vec4(0.5, 0, 0.5, 0), new Vec2(0.5, 0), 0, 40, 22);
+const BOTTOM = new Vec4(0.5, 0, 0.5, 0);
+const MIDDLE = new Vec4(0.5, 0.5, 0.5, 0.5);
+const CENTER = new Vec2(0.5, 0.5);
+const COLUMN = PANEL_WIDTH * 0.25;
+
+// the whole screen is dipped in a dark red as the machine goes up, which sells the ending far better
+// than the banner alone. It goes in first so that everything else stays legible on top of it
+const scrim = addImage(new Vec4(0, 0, 1, 1), 0, 0, 0, 0, new Color(0.1, 0.01, 0), 0);
+scrim.element.margin = new Vec4(0, 0, 0, 0);
+scrim.enabled = false;
+
+addImage(
+    BOTTOM,
+    0,
+    PANEL_BOTTOM + PANEL_HEIGHT * 0.5,
+    PANEL_WIDTH,
+    PANEL_HEIGHT,
+    new Color(0.02, 0.02, 0.03),
+    0.42,
+    createPanelTexture(PANEL_WIDTH, PANEL_HEIGHT, PANEL_CORNER)
+);
+
+// a hairline between the two readouts, and the reload track along the foot of the panel
+addImage(BOTTOM, 0, PANEL_BOTTOM + 48, 1, 46, Color.WHITE, 0.14);
+addImage(BOTTOM, 0, PANEL_BOTTOM + 12, PANEL_WIDTH - 60, 3, Color.WHITE, 0.14);
+const reloadFill = addImage(BOTTOM, 0, PANEL_BOTTOM + 12, PANEL_WIDTH - 60, 3, COLOR_READY, 0.9);
+reloadFill.element.pivot = new Vec2(0, 0.5);
+reloadFill.setLocalPosition(-(PANEL_WIDTH - 60) * 0.5, PANEL_BOTTOM + 12, 0);
+
+// each readout is a quiet tracked label with the number itself carrying the weight. The tracking has to
+// stay modest - it multiplies the advance of every glyph, so a wide setting runs the two labels together
+const scoreLabel = addText(BOTTOM, CENTER, -COLUMN, PANEL_BOTTOM + 62, 12, 1.6);
+const statusLabel = addText(BOTTOM, CENTER, COLUMN, PANEL_BOTTOM + 62, 12, 1.6);
+const scoreText = addText(BOTTOM, CENTER, -COLUMN, PANEL_BOTTOM + 34, 32);
+const statusText = addText(BOTTOM, CENTER, COLUMN, PANEL_BOTTOM + 34, 32);
+scoreLabel.element.text = 'GROUPS DESTROYED';
+statusLabel.element.text = 'ENEMIES LEFT';
+scoreLabel.element.opacity = 0.55;
+statusLabel.element.opacity = 0.55;
+
+// the tally is a warm gold, leaving plain white to the count that turns red as the enemy closes in
+scoreText.element.color = new Color(1, 0.86, 0.6);
+
+const messageText = addText(BOTTOM, CENTER, 0, HINT_BOTTOM, 20);
+const flashText = addText(BOTTOM, CENTER, 0, PANEL_BOTTOM + PANEL_HEIGHT + 26, 22, 2.4);
+flashText.element.color = new Color(1, 0.78, 0.35);
 
 // the game over banner, spread across the middle of the screen
-const bannerText = addText(new Vec4(0.5, 0.5, 0.5, 0.5), new Vec2(0.5, 0.5), 0, 0, 90);
-bannerText.element.spacing = 1.5;
-bannerText.element.color = new Color(1, 0.32, 0.22);
+const bannerText = addText(MIDDLE, CENTER, 0, 0, 90, 1.5);
+bannerText.element.color = COLOR_ALERT;
 
 // --------------------------------------------------------------------------------------------
 // the game
@@ -1711,6 +1878,82 @@ const enemyCount = () => {
         count += groups[i].members.length;
     }
     return count;
+};
+
+/**
+ * How far up the valley the closest formation has come.
+ *
+ * @returns {number} The z of the nearest formation, or the spawn line if the valley is empty.
+ */
+const nearestGroupZ = () => {
+    let z = SPAWN_Z;
+    for (let i = 0; i < groups.length; i++) {
+        z = Math.max(z, groups[i].z);
+    }
+    return z;
+};
+
+/**
+ * Refreshes the display. Everything here is driven off the game state rather than being set when it
+ * changes, which keeps the fades and the countdowns in one place.
+ *
+ * @param {number} dt - The time step.
+ */
+const updateHud = (dt) => {
+    scoreText.element.text = `${score}`;
+    statusText.element.text = `${enemyCount()}`;
+
+    // the enemy count runs from bone white to alarm red as the nearest formation closes on the machine,
+    // so the number itself carries the warning
+    _readoutColor.lerp(COLOR_READOUT, COLOR_ALERT, smoothRamp(BREACH_Z - 60, BREACH_Z, nearestGroupZ()));
+    statusText.element.color = _readoutColor;
+
+    // the track fills as the crew winds the arm back, and sits full and green while a shot is ready
+    const charge = reloadTimer > 0 ? 1 - reloadTimer / Math.max(0.001, reloadTime) : 1;
+    reloadFill.element.width = Math.max(1, (PANEL_WIDTH - 60) * charge);
+    reloadFill.element.color = charge >= 1 ? COLOR_READY : COLOR_CHARGING;
+
+    // a formation going down is called out above the panel, drifting up as it fades
+    if (score !== flashedScore) {
+        flashedScore = score;
+        flashClock = 0;
+        flashText.element.text = 'FORMATION DESTROYED';
+    }
+    if (flashClock >= 0) {
+        flashClock += dt;
+        const left = 1 - flashClock / FLASH_DURATION;
+        flashText.element.opacity = math.clamp(left * 2.5, 0, 1);
+        flashText.setLocalPosition(0, PANEL_BOTTOM + PANEL_HEIGHT + 26 + (1 - left) * 16, 0);
+        if (left <= 0) {
+            flashClock = -1;
+            flashText.element.text = '';
+        }
+    }
+
+    // the banner waits until the machine has actually gone, so it does not cover the explosion, and
+    // then settles into place as the screen dips into red
+    const ending = overrunClock >= OVERRUN_EXPLOSION_DURATION * 0.35;
+    bannerText.element.text = ending ? 'OVERRUN' : '';
+    scrim.enabled = ending;
+    if (ending) {
+        const enter = math.clamp((overrunClock - OVERRUN_EXPLOSION_DURATION * 0.35) / 0.4, 0, 1);
+        const eased = 1 - (1 - enter) * (1 - enter);
+        const scale = math.lerp(1.4, 1, eased);
+        bannerText.setLocalScale(scale, scale, 1);
+        bannerText.element.opacity = eased;
+        scrim.element.opacity = eased * 0.5;
+    }
+
+    // the hint retires once the player has clearly got the idea, but the restart prompt always shows
+    let message = 'Move to aim, click to fire';
+    let visible = shotsFired < HINT_SHOTS ? 1 : 0;
+    if (gameOver) {
+        message = 'Click to try again';
+        visible = 1;
+    }
+    hintAlpha = math.lerp(hintAlpha, visible, math.clamp(dt * HINT_FADE, 0, 1));
+    messageText.element.text = message;
+    messageText.element.opacity = hintAlpha;
 };
 
 /**
@@ -1965,19 +2208,7 @@ app.on('update', (dt) => {
     // last, so that a blast landing this frame is felt on this frame, and after the aim was solved
     applyCameraShake(dt);
 
-    scoreText.element.text = `GROUPS DESTROYED  ${score}`;
-    statusText.element.text = `ENEMIES  ${enemyCount()}`;
-
-    // the banner waits until the machine has actually gone, so it does not cover the explosion
-    bannerText.element.text = overrunClock >= OVERRUN_EXPLOSION_DURATION * 0.35 ? 'OVERRUN' : '';
-
-    let message = 'Move to aim, click to fire';
-    if (gameOver) {
-        message = 'Click to try again';
-    } else if (reloadTimer > 0) {
-        message = 'Reloading...';
-    }
-    messageText.element.text = message;
+    updateHud(dt);
 });
 
 // --------------------------------------------------------------------------------------------
