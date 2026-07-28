@@ -19,6 +19,7 @@ import {
     SCALEMODE_BLEND,
     SPRITE_RENDERMODE_SIMPLE,
     SPRITE_RENDERMODE_SLICED,
+    SPRITE_RENDERMODE_TILED,
     ScreenComponentSystem,
     Sprite,
     TextureAtlas,
@@ -194,13 +195,18 @@ app.on('update', (_dt) => {
 });
 
 // Apply UI changes
-data.on('*:set', (/** @type {string} */ path, value) => {
-    if (path === 'data.sliced') {
-        panel.element.sprite.renderMode = value ? SPRITE_RENDERMODE_SLICED : SPRITE_RENDERMODE_SIMPLE;
+data.on('*:set', (/** @type {string} */ path) => {
+    if (path === 'data.sliced' || path === 'data.tiled') {
+        const tiled = data.get('data.tiled');
+        const sliced = data.get('data.sliced');
+        panel.element.sprite.renderMode = tiled ?
+            SPRITE_RENDERMODE_TILED :
+            (sliced ? SPRITE_RENDERMODE_SLICED : SPRITE_RENDERMODE_SIMPLE);
     }
 });
 
 // Set initial values
 data.set('data', {
-    sliced: true
+    sliced: true,
+    tiled: false
 });
