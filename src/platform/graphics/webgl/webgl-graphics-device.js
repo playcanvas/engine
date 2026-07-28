@@ -1080,7 +1080,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.boundVao = null;
         this.activeFramebuffer = null;
         this.feedback = null;
-        this.transformFeedbackBuffer = null;
+
+        /** @type {VertexBuffer[]|null} */
+        this.transformFeedbackBuffers = null;
 
         this.textureUnit = 0;
         this.initTextureUnits(this.maxCombinedTextures);
@@ -2048,9 +2050,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (this.transformFeedbackBuffer) {
-                    // Enable TF, start writing to out buffer
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.impl.bufferId);
+                const transformFeedbackBuffers = this.transformFeedbackBuffers;
+                if (transformFeedbackBuffers) {
+                    // Enable TF, start writing to out buffers
+                    for (let i = 0; i < transformFeedbackBuffers.length; i++) {
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, transformFeedbackBuffers[i].impl.bufferId);
+                    }
                     gl.beginTransformFeedback(gl.POINTS);
                 }
 
@@ -2104,10 +2109,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (this.transformFeedbackBuffer) {
+                if (transformFeedbackBuffers) {
                     // disable TF
                     gl.endTransformFeedback();
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+                    for (let i = 0; i < transformFeedbackBuffers.length; i++) {
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, null);
+                    }
                 }
 
                 this._drawCallsPerFrame++;
@@ -2418,25 +2425,37 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Sets the output vertex buffer. It will be written to by a shader with transform feedback
-     * varyings.
+     * Sets the output vertex buffers. They will be written to by a shader with transform feedback
+     * varyings. A shader created with {@link TRANSFORM_FEEDBACK_INTERLEAVED} captures all varyings
+     * into a single buffer, and so expects one buffer. A shader created with
+     * {@link TRANSFORM_FEEDBACK_SEPARATE} captures each varying into its own buffer, and so expects
+     * one buffer per varying, in declaration order.
      *
-     * @param {VertexBuffer} tf - The output vertex buffer.
+     * @param {VertexBuffer[]|null} buffers - The output vertex buffers, or null to disable transform
+     * feedback.
      * @ignore
      */
-    setTransformFeedbackBuffer(tf) {
-        if (this.transformFeedbackBuffer !== tf) {
-            this.transformFeedbackBuffer = tf;
+    setTransformFeedbackBuffers(buffers) {
 
-            const gl = this.gl;
-            if (tf) {
-                if (!this.feedback) {
-                    this.feedback = gl.createTransformFeedback();
-                }
+        Debug.call(() => {
+            buffers?.forEach((buffer, index) => {
+                Debug.assert(buffer, `Transform feedback buffer at index ${index} is null - a buffer is required for every varying the shader captures.`);
+            });
+        });
+
+        const gl = this.gl;
+        const active = buffers?.length ? buffers : null;
+        const wasActive = this.transformFeedbackBuffers !== null;
+
+        this.transformFeedbackBuffers = active;
+
+        if (active) {
+            if (!wasActive) {
+                this.feedback ??= gl.createTransformFeedback();
                 gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
-            } else {
-                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
             }
+        } else if (wasActive) {
+            gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
         }
     }
 

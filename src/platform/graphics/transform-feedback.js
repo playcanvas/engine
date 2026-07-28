@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS } from './constants.js';
+import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS, TRANSFORM_FEEDBACK_INTERLEAVED, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
@@ -125,6 +125,10 @@ class TransformFeedback {
             usage: usage,
             data: inputBuffer.storage
         });
+
+        // the device takes the output buffers as an array - store it, to avoid allocating one on
+        // every step
+        this._outputBuffers = [this._outputBuffer];
     }
 
     /**
@@ -134,13 +138,19 @@ class TransformFeedback {
      * @param {string} vertexCode - Vertex shader code. Should contain output variables starting with "out_" or feedbackVaryings.
      * @param {string} name - Unique name for caching the shader.
      * @param {string[]} [feedbackVaryings] - A list of shader output variable names that will be captured.
+     * @param {number} [feedbackVaryingsMode] - Specifies how transform feedback varyings
+     * are written into GPU buffers. Use {@link TRANSFORM_FEEDBACK_INTERLEAVED} to pack all captured
+     * varyings into a single buffer, or {@link TRANSFORM_FEEDBACK_SEPARATE} to store each varying
+     * in its own buffer. This setting is only effective when useTransformFeedback property is enabled.
+     * Defaults to {@link TRANSFORM_FEEDBACK_INTERLEAVED}.
      * @returns {Shader} A shader to use in the process() function.
      */
-    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings) {
+    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings, feedbackVaryingsMode = TRANSFORM_FEEDBACK_INTERLEAVED) {
         return new Shader(graphicsDevice, ShaderDefinitionUtils.createDefinition(graphicsDevice, {
             name,
             vertexCode,
             feedbackVaryings,
+            feedbackVaryingsMode,
             useTransformFeedback: true,
             fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
         }));
@@ -169,12 +179,21 @@ class TransformFeedback {
 
         DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
 
+        // This helper manages a single output buffer, so it can only run a shader which captures all
+        // of its varyings into one. A shader using TRANSFORM_FEEDBACK_SEPARATE needs a buffer per
+        // varying, which has to be bound directly on the device instead.
+        if (shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE) {
+            Debug.errorOnce('TransformFeedback supports only TRANSFORM_FEEDBACK_INTERLEAVED shaders, which capture all varyings into a single output buffer. For TRANSFORM_FEEDBACK_SEPARATE, bind one buffer per varying using GraphicsDevice.setTransformFeedbackBuffers().');
+            DebugGraphics.popGpuMarker(device);
+            return;
+        }
+
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
         device.updateBegin();
         device.setVertexBuffer(this._inputBuffer);
         device.setRaster(false);
-        device.setTransformFeedbackBuffer(this._outputBuffer);
+        device.setTransformFeedbackBuffers(this._outputBuffers);
         device.setShader(shader);
         device.draw({
             type: PRIMITIVE_POINTS,
@@ -183,7 +202,7 @@ class TransformFeedback {
             count: this._inputBuffer.numVertices,
             indexed: false
         });
-        device.setTransformFeedbackBuffer(null);
+        device.setTransformFeedbackBuffers(null);
         device.setRaster(true);
         device.updateEnd();
         device.setRenderTarget(oldRt);

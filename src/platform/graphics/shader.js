@@ -9,6 +9,7 @@ import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { TRANSFORM_FEEDBACK_INTERLEAVED, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { UniformBufferFormat } from './uniform-buffer-format.js'
  */
@@ -67,6 +68,11 @@ class Shader {
      * @param {string[]} [definition.feedbackVaryings] - A list of shader output variable
      * names that will be captured when using transform feedback. This setting is only effective
      * if the useTransformFeedback property is enabled.
+     * @param {number} [definition.feedbackVaryingsMode] - Specifies how transform feedback varyings
+     * are written into GPU buffers. Use {@link TRANSFORM_FEEDBACK_INTERLEAVED} to pack all captured
+     * varyings into a single buffer, or {@link TRANSFORM_FEEDBACK_SEPARATE} to store each varying
+     * in its own buffer. This setting is only effective when useTransformFeedback property is enabled.
+     * Defaults to {@link TRANSFORM_FEEDBACK_INTERLEAVED}.
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
