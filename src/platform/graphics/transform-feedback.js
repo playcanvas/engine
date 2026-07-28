@@ -13,7 +13,7 @@ import { ShaderDefinitionUtils } from './shader-definition-utils.js';
  * Gives a vertex buffer its role in a {@link TransformFeedback}. At least one of the two properties
  * must be specified.
  *
- * @typedef {object} TransformFeedbackBuffer
+ * @typedef {object} TransformFeedbackStream
  * @property {VertexBuffer} [input] - A buffer read by the shader as a vertex stream.
  * @property {VertexBuffer} [output] - A buffer written by transform feedback.
  */
@@ -90,7 +90,7 @@ class TransformFeedback {
     /**
      * Create a new TransformFeedback instance.
      *
-     * @param {VertexBuffer|TransformFeedbackBuffer[]} inputBuffer - The input vertex buffer, or an
+     * @param {VertexBuffer|TransformFeedbackStream[]} inputBuffer - The input vertex buffer, or an
      * array of buffer descriptors when more than one buffer takes part. Each descriptor gives a
      * buffer one of three roles:
      *
