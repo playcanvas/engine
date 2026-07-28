@@ -197,11 +197,13 @@ app.on('update', (_dt) => {
 // Apply UI changes
 data.on('*:set', (/** @type {string} */ path) => {
     if (path === 'data.sliced' || path === 'data.tiled') {
-        const tiled = data.get('data.tiled');
-        const sliced = data.get('data.sliced');
-        panel.element.sprite.renderMode = tiled ?
-            SPRITE_RENDERMODE_TILED :
-            (sliced ? SPRITE_RENDERMODE_SLICED : SPRITE_RENDERMODE_SIMPLE);
+        let renderMode = SPRITE_RENDERMODE_SIMPLE;
+        if (data.get('data.tiled')) {
+            renderMode = SPRITE_RENDERMODE_TILED;
+        } else if (data.get('data.sliced')) {
+            renderMode = SPRITE_RENDERMODE_SLICED;
+        }
+        panel.element.sprite.renderMode = renderMode;
     }
 });
 
