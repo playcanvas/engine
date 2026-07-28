@@ -124,6 +124,14 @@ class Ssao {
     blurEnabled = true;
 
     /**
+     * Whether the sampling is randomized. Useful instead of the blur when TAA is enabled, which
+     * resolves the noise over time and keeps more of the detail.
+     *
+     * @visibleif {type !== 'none'}
+     */
+    randomize = false;
+
+    /**
      * @range [0, 1]
      * @visibleif {type !== 'none'}
      * @precision 3
@@ -474,14 +482,53 @@ class VolumetricFog {
     enabled = false;
 
     /**
-     * The entity with the directional light providing the scattered light. The volumetric fog
-     * is only rendered when a light is specified.
+     * The entity with the directional light providing the scattered light. Leave it unset to light
+     * the fog by the local lights and the ambient term alone.
      *
      * @attribute
      * @visibleif {enabled}
      * @type {Entity}
      */
     light = null;
+
+    /**
+     * Whether the omni lights scatter light in the fog. Requires clustered lighting, which is
+     * enabled by default. An omni light fills its whole range, so it typically covers much more of
+     * the screen than a spot light and costs more.
+     *
+     * @visibleif {enabled}
+     */
+    localOmniLights = false;
+
+    /**
+     * Whether the spot lights scatter light in the fog, forming visible beams. Requires clustered
+     * lighting, which is enabled by default.
+     *
+     * @visibleif {enabled}
+     */
+    localSpotLights = false;
+
+    /**
+     * The intensity of the light scattering of the omni and the spot lights. A narrow beam crosses
+     * only a short part of each view ray, and so typically needs a much larger value than the
+     * directional light's intensity below.
+     *
+     * @visibleif {enabled && (localOmniLights || localSpotLights)}
+     * @range [0, 100]
+     * @precision 2
+     * @step 0.1
+     */
+    localIntensity = 1;
+
+    /**
+     * The number of raymarching steps taken inside the volume of each omni and spot light.
+     *
+     * @visibleif {enabled && (localOmniLights || localSpotLights)}
+     * @range [2, 64]
+     * @precision 0
+     * @step 1
+     */
+    localSteps = 12;
 
     /**
      * @attribute
@@ -511,6 +558,19 @@ class VolumetricFog {
      * @step 0.001
      */
     heightFalloff = 0.05;
+
+    /**
+     * How quickly the fog absorbs the light passing through it, without affecting how much light it
+     * scatters. A value of 1 is physically consistent, where distant fog and light shafts fade out
+     * exponentially with the density. Lower it to keep them visible further away while the fog
+     * itself stays as bright.
+     *
+     * @visibleif {enabled}
+     * @range [0, 2]
+     * @precision 2
+     * @step 0.05
+     */
+    extinction = 1;
 
     /**
      * @visibleif {enabled}
@@ -698,6 +758,8 @@ class CameraFrame extends Script {
         const dstSsao = cf.ssao;
         dstSsao.type = ssao.type;
         if (ssao.type !== SsaoType.NONE) {
+            dstSsao.blurEnabled = ssao.blurEnabled;
+            dstSsao.randomize = ssao.randomize;
             dstSsao.intensity = ssao.intensity;
             dstSsao.radius = ssao.radius;
             dstSsao.samples = ssao.samples;
@@ -789,10 +851,15 @@ class CameraFrame extends Script {
         dstVolumetricFog.enabled = volumetricFog.enabled;
         if (volumetricFog.enabled) {
             dstVolumetricFog.light = volumetricFog.light?.light ?? null;
+            dstVolumetricFog.localOmniLights = volumetricFog.localOmniLights;
+            dstVolumetricFog.localSpotLights = volumetricFog.localSpotLights;
+            dstVolumetricFog.localIntensity = volumetricFog.localIntensity;
+            dstVolumetricFog.localSteps = volumetricFog.localSteps;
             dstVolumetricFog.tint.copy(volumetricFog.tint);
             dstVolumetricFog.density = volumetricFog.density;
             dstVolumetricFog.heightBase = volumetricFog.heightBase;
             dstVolumetricFog.heightFalloff = volumetricFog.heightFalloff;
+            dstVolumetricFog.extinction = volumetricFog.extinction;
             dstVolumetricFog.anisotropy = volumetricFog.anisotropy;
             dstVolumetricFog.intensity = volumetricFog.intensity;
             dstVolumetricFog.ambientColor.copy(volumetricFog.ambientColor);
@@ -809,4 +876,4 @@ class CameraFrame extends Script {
     }
 }
 
-export { CameraFrame, Rendering, Ssao, Bloom, Grading, ColorLUT, Vignette, Fringing, ColorEnhance, Taa, Dof };
+export { CameraFrame, Rendering, Ssao, Bloom, Grading, ColorLUT, Vignette, Fringing, ColorEnhance, Taa, Dof, VolumetricFog };
