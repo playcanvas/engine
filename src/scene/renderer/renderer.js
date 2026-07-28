@@ -670,6 +670,8 @@ class Renderer {
         if (!this.viewUniformFormat) {
 
             // format of the view uniform buffer
+            // note: 'textureBias' is deliberately not part of this, as the tiled nine-slice mode
+            // declares a global constant of that name in the shader, which would collide with it
             const uniforms = [
                 new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
@@ -682,7 +684,6 @@ class Renderer {
                 new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
                 new UniformFormat('view_index', UNIFORMTYPE_UINT)
             ];
 
