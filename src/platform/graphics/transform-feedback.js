@@ -199,10 +199,9 @@ class TransformFeedback {
     _createOutputBuffer(inputBuffer, usage) {
 
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
-
-            Debug.warnOnce(`Vertex buffer ${inputBuffer.id} supplied to TransformFeedback was created with usage ${inputBuffer.usage} instead of BUFFER_GPUDYNAMIC, so its contents are being re-uploaded to change it. Create buffers used by transform feedback with BUFFER_GPUDYNAMIC to avoid this.`, inputBuffer);
-
-            // have to recreate input buffer with other usage
+            // Supplying a buffer with another usage is supported - "any VertexBuffer, either
+            // manually created, or from a Mesh" - so adopt it by re-uploading its contents to
+            // change the usage. This is a one-time cost at construction.
             const gl = this.device.gl;
             gl.bindBuffer(gl.ARRAY_BUFFER, inputBuffer.impl.bufferId);
             gl.bufferData(gl.ARRAY_BUFFER, inputBuffer.storage, gl.DYNAMIC_COPY);
