@@ -177,6 +177,14 @@ const CAMERA_HEIGHT = 16;
 const CAMERA_YAW_RANGE = 18;
 const CAMERA_EASE = 5;
 
+// Touch aiming lifts the aim point above the finger, so that the target is not hidden under the
+// fingertip while it is being dragged onto it. The lift comes in over the first few tens of pixels of
+// movement, which leaves a plain tap aiming at exactly the spot it landed on - a tap is over before the
+// finger is in the way of anything, and having the aim jump away from a tap would be far worse.
+const TOUCH_LIFT = 80;
+const TOUCH_LIFT_START = 8;
+const TOUCH_LIFT_FULL = 48;
+
 // A blast knocks the camera about, by this many world units at point blank, falling off to nothing at
 // this distance away from it. A hit at the far end of the valley should not be felt at all.
 const SHAKE_STRENGTH = 1.4;
@@ -752,9 +760,18 @@ let gameOver = false;
 let aimYaw = 0;
 let aimPower = (LAUNCH_POWER_MIN + LAUNCH_POWER_MAX) * 0.5;
 
-// where the pointer last was, in canvas pixels, or minus one before it has ever moved
+// where the pointer last was, in canvas pixels, or minus one before it has ever moved. On touch this is
+// the lifted aim point rather than the finger itself
 let pointerX = -1;
 let pointerY = -1;
+
+// touch aiming state - the ground point the finger picked, which the aim stays pinned to, where the
+// finger itself is, and how far it has travelled during this touch, which brings the lift in
+let touchAiming = false;
+let touchFingerX = -1;
+let touchFingerY = -1;
+let touchTravel = 0;
+const touchAimPoint = new Vec3();
 
 // the eased camera state, trailing the aim
 let cameraYaw = 0;
@@ -1544,39 +1561,23 @@ const raycastTerrain = (start, direction, out) => {
 };
 
 /**
- * Aims at whatever the pointer is over. The ground under the cursor is found by raycasting the height
- * field, and the shot that lands there is then solved for - the catapult releases at a fixed angle, so
- * only the launch speed has to be worked out. The player therefore points at a spot rather than
- * learning what some arbitrary screen position means.
+ * Aims at a point on the ground. The catapult releases at a fixed angle, so only the launch speed has
+ * to be worked out.
  *
- * @param {number} x - The pointer's x coordinate, in canvas pixels.
- * @param {number} y - The pointer's y coordinate, in canvas pixels.
+ * @param {Vec3} point - The point on the ground to land the shot on.
  */
-const aimAt = (x, y) => {
-    const component = camera.camera;
-    component.screenToWorld(x, y, component.nearClip, _rayStart);
-    component.screenToWorld(x, y, component.farClip, _rayEnd);
-    _rayDirection.sub2(_rayEnd, _rayStart).normalize();
-
-    const hit = raycastTerrain(_rayStart, _rayDirection, _aimPoint);
-
-    // turn the machine towards the point, or just along the cursor's heading when it is pointed at the
-    // sky. launchVelocity fires along (sin(aimYaw), -cos(aimYaw)), so inverting that gives the angle
-    const dx = hit ? _aimPoint.x - CATAPULT_POSITION.x : _rayDirection.x;
-    const dz = hit ? _aimPoint.z - CATAPULT_POSITION.z : _rayDirection.z;
+const aimAtPoint = (point) => {
+    // turn the machine towards the point. launchVelocity fires along (sin(aimYaw), -cos(aimYaw)), so
+    // inverting that gives the angle
+    const dx = point.x - CATAPULT_POSITION.x;
+    const dz = point.z - CATAPULT_POSITION.z;
     aimYaw = math.clamp(Math.atan2(dx, -dz) * math.RAD_TO_DEG, -LAUNCH_YAW_RANGE, LAUNCH_YAW_RANGE);
-
-    // pointing off the end of the world throws as far as the machine can
-    if (!hit) {
-        aimPower = LAUNCH_POWER_MAX;
-        return;
-    }
 
     // for a fixed release angle, the speed needed to pass through a point at horizontal distance d and
     // relative height h is v = sqrt(g * d^2 / (2 * cos(pitch)^2 * (d * tan(pitch) - h)))
     launchPosition(launchPoint);
-    const distance = Math.hypot(_aimPoint.x - launchPoint.x, _aimPoint.z - launchPoint.z);
-    const rise = _aimPoint.y - launchPoint.y;
+    const distance = Math.hypot(point.x - launchPoint.x, point.z - launchPoint.z);
+    const rise = point.y - launchPoint.y;
     const pitch = LAUNCH_PITCH * math.DEG_TO_RAD;
     const cosPitch = Math.cos(pitch);
     const reach = distance * Math.tan(pitch) - rise;
@@ -1590,6 +1591,62 @@ const aimAt = (x, y) => {
                   LAUNCH_POWER_MAX
               )
             : LAUNCH_POWER_MIN;
+};
+
+/**
+ * Aims at whatever the pointer is over, by raycasting the height field under it. The player therefore
+ * points at a spot rather than learning what some arbitrary screen position means.
+ *
+ * @param {number} x - The pointer's x coordinate, in canvas pixels.
+ * @param {number} y - The pointer's y coordinate, in canvas pixels.
+ * @returns {boolean} True if the pointer was over the ground, false if it was pointed at the sky.
+ */
+const aimAt = (x, y) => {
+    const component = camera.camera;
+    component.screenToWorld(x, y, component.nearClip, _rayStart);
+    component.screenToWorld(x, y, component.farClip, _rayEnd);
+    _rayDirection.sub2(_rayEnd, _rayStart).normalize();
+
+    if (!raycastTerrain(_rayStart, _rayDirection, _aimPoint)) {
+        // pointing off the end of the world turns along the cursor's heading and throws as far as the
+        // machine can
+        aimYaw = math.clamp(
+            Math.atan2(_rayDirection.x, -_rayDirection.z) * math.RAD_TO_DEG,
+            -LAUNCH_YAW_RANGE,
+            LAUNCH_YAW_RANGE
+        );
+        aimPower = LAUNCH_POWER_MAX;
+        return false;
+    }
+
+    aimAtPoint(_aimPoint);
+    return true;
+};
+
+/**
+ * Aims from a touch. The ground point under the finger is found once, here, and the aim then stays
+ * pinned to it - solving it afresh every frame would slide the aim away from the spot that was touched
+ * as the camera swings round to follow, which reads as the shot missing on its own.
+ *
+ * The aim also sits above the finger once the touch starts to drag, so that the target is not underneath
+ * the fingertip while it is being placed on it.
+ *
+ * @param {{ x: number, y: number }} touch - The touch to aim from.
+ */
+const aimFromTouch = (touch) => {
+    const lift = TOUCH_LIFT * smoothRamp(TOUCH_LIFT_START, TOUCH_LIFT_FULL, touchTravel);
+
+    touchFingerX = touch.x;
+    touchFingerY = touch.y;
+    pointerX = touch.x;
+    pointerY = Math.max(4, touch.y - lift);
+
+    // solved right away rather than on the next frame, so that a tap shorter than a frame still fires
+    // the shot it asked for instead of the one before it
+    touchAiming = aimAt(pointerX, pointerY);
+    if (touchAiming) {
+        touchAimPoint.copy(_aimPoint);
+    }
 };
 
 /**
@@ -1651,17 +1708,35 @@ const applyCameraShake = (dt) => {
 app.mouse.on('mousemove', (event) => {
     pointerX = event.x;
     pointerY = event.y;
+
+    // a mouse on a machine that also has a touch screen takes the aim back off the last touch
+    touchAiming = false;
+    touchFingerX = -1;
 });
 app.mouse.on('mousedown', () => (gameOver ? restart() : fire()));
+
 app.touch.on('touchstart', (event) => {
-    pointerX = event.touches[0].x;
-    pointerY = event.touches[0].y;
+    touchTravel = 0;
+    aimFromTouch(event.touches[0]);
 });
 app.touch.on('touchmove', (event) => {
-    pointerX = event.touches[0].x;
-    pointerY = event.touches[0].y;
+    const touch = event.touches[0];
+
+    // the lift comes in with how far the finger has been dragged in total, rather than with how far it
+    // is from where it started, so that it never sinks back under the fingertip
+    touchTravel += Math.hypot(touch.x - touchFingerX, touch.y - touchFingerY);
+    aimFromTouch(touch);
 });
-app.touch.on('touchend', () => (gameOver ? restart() : fire()));
+app.touch.on('touchend', () => {
+    // the aim stays where the finger left it, but there is no longer a finger to point out
+    touchFingerX = -1;
+
+    if (gameOver) {
+        restart();
+    } else {
+        fire();
+    }
+});
 
 // --------------------------------------------------------------------------------------------
 // the heads up display
@@ -1691,6 +1766,7 @@ const COLOR_ALERT = new Color(1, 0.38, 0.26);
 const COLOR_CHARGING = new Color(1, 0.62, 0.2);
 const COLOR_READY = new Color(0.62, 0.95, 0.62);
 const _readoutColor = new Color();
+const _leaderAnchor = new Vec4();
 
 const screen = new Entity('Hud');
 screen.addComponent('screen', {
@@ -1824,6 +1900,15 @@ const scrim = addImage(new Vec4(0, 0, 1, 1), 0, 0, 0, 0, new Color(0.1, 0.01, 0)
 scrim.element.margin = new Vec4(0, 0, 0, 0);
 scrim.enabled = false;
 
+// A thread from the fingertip up to the aim point, so that the aim sitting above the finger reads as
+// deliberate. Only ever seen on a touch screen. Its ends are anchors rather than positions, which spares
+// having to convert touch pixels into the screen's own units - the anchor is stretched vertically
+// between the two, so the margins carry the height and only the width is a size
+const touchLeader = addImage(new Vec4(0.5, 0.4, 0.5, 0.6), 0, 0, 2, 0, Color.WHITE, 0.3);
+touchLeader.element.margin = new Vec4(0, 0, 0, 0);
+touchLeader.element.width = 2;
+touchLeader.enabled = false;
+
 addImage(
     BOTTOM,
     0,
@@ -1907,6 +1992,20 @@ const updateHud = (dt) => {
     // so the number itself carries the warning
     _readoutColor.lerp(COLOR_READOUT, COLOR_ALERT, smoothRamp(BREACH_Z - 60, BREACH_Z, nearestGroupZ()));
     statusText.element.color = _readoutColor;
+
+    // the thread up from the fingertip, drawn only while a touch is dragging the aim about
+    const dragging = touchFingerX >= 0 && touchFingerY - pointerY > 6;
+    touchLeader.enabled = dragging;
+    if (dragging) {
+        const nx = math.clamp(touchFingerX / canvas.clientWidth, 0, 1);
+        _leaderAnchor.set(
+            nx,
+            math.clamp(1 - touchFingerY / canvas.clientHeight, 0, 1),
+            nx,
+            math.clamp(1 - pointerY / canvas.clientHeight, 0, 1)
+        );
+        touchLeader.element.anchor = _leaderAnchor;
+    }
 
     // the track fills as the crew winds the arm back, and sits full and green while a shot is ready
     const charge = reloadTimer > 0 ? 1 - reloadTimer / Math.max(0.001, reloadTime) : 1;
@@ -2145,11 +2244,17 @@ app.on('update', (dt) => {
     updateCamera(dt);
 
     if (!gameOver) {
-        if (pointerX < 0) {
-            pointerX = canvas.clientWidth * 0.5;
-            pointerY = canvas.clientHeight * 0.5;
+        if (touchAiming) {
+            // pinned to the ground the finger picked, so that the camera can swing round to it without
+            // dragging the shot along with it
+            aimAtPoint(touchAimPoint);
+        } else {
+            if (pointerX < 0) {
+                pointerX = canvas.clientWidth * 0.5;
+                pointerY = canvas.clientHeight * 0.5;
+            }
+            aimAt(pointerX, pointerY);
         }
-        aimAt(pointerX, pointerY);
     }
 
     updateCatapultAim();
