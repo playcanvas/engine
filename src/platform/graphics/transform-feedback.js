@@ -125,6 +125,10 @@ class TransformFeedback {
             usage: usage,
             data: inputBuffer.storage
         });
+
+        // the device takes the output buffers as an array - store it, to avoid allocating one on
+        // every step
+        this._outputBuffers = [this._outputBuffer];
     }
 
     /**
@@ -174,23 +178,22 @@ class TransformFeedback {
         const device = this.device;
 
         DebugGraphics.pushGpuMarker(device, 'TransformFeedback');
-        Debug.call(() => {
-            const separateMode = shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE;
-            if (separateMode) {
-                Debug.warnOnce(
-                    'TransformFeedback helper supports only "interleaved" ' +
-                    'varyings mode (single output buffer). For "separate", bind one buffer per varying using ' +
-                    'GraphicsDevice.setTransformFeedbackBuffer(buffer, slot).'
-                );
-            }
-        });
+
+        // This helper manages a single output buffer, so it can only run a shader which captures all
+        // of its varyings into one. A shader using TRANSFORM_FEEDBACK_SEPARATE needs a buffer per
+        // varying, which has to be bound directly on the device instead.
+        if (shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE) {
+            Debug.errorOnce('TransformFeedback supports only TRANSFORM_FEEDBACK_INTERLEAVED shaders, which capture all varyings into a single output buffer. For TRANSFORM_FEEDBACK_SEPARATE, bind one buffer per varying using GraphicsDevice.setTransformFeedbackBuffers().');
+            DebugGraphics.popGpuMarker(device);
+            return;
+        }
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
         device.updateBegin();
         device.setVertexBuffer(this._inputBuffer);
         device.setRaster(false);
-        device.setTransformFeedbackBuffer(this._outputBuffer);
+        device.setTransformFeedbackBuffers(this._outputBuffers);
         device.setShader(shader);
         device.draw({
             type: PRIMITIVE_POINTS,
@@ -199,7 +202,7 @@ class TransformFeedback {
             count: this._inputBuffer.numVertices,
             indexed: false
         });
-        device.setTransformFeedbackBuffer(null);
+        device.setTransformFeedbackBuffers(null);
         device.setRaster(true);
         device.updateEnd();
         device.setRenderTarget(oldRt);
