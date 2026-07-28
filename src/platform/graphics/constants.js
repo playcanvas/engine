@@ -285,11 +285,15 @@ export const BUFFER_GPUDYNAMIC = 3;
 
 /**
  * Captures all varyings into one interleaved transform feedback buffer.
+ *
+ * @category Graphics
  */
 export const TRANSFORM_FEEDBACK_INTERLEAVED = 0;
 
 /**
  * Captures each varying into its own transform feedback buffer.
+ *
+ * @category Graphics
  */
 export const TRANSFORM_FEEDBACK_SEPARATE = 1;
 

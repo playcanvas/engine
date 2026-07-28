@@ -1780,6 +1780,50 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    /**
+     * Generates the key of the vertex array object cache for the supplied vertex buffers. Each part
+     * identifies both the buffer and its format, and is delimited, so distinct buffer lists cannot
+     * generate the same key.
+     *
+     * @param {VertexBuffer[]} vertexBuffers - The vertex buffers of the draw.
+     * @returns {string} The cache key.
+     * @private
+     */
+    _vertexArrayKey(vertexBuffers) {
+        let key = '';
+        for (let i = 0; i < vertexBuffers.length; i++) {
+            key += vertexBuffers[i].vaoKeyPart;
+        }
+        return key;
+    }
+
+    /**
+     * Removes the cached vertex array object for the supplied vertex buffers, if one exists.
+     *
+     * This is needed by code which exchanges the GPU buffers behind VertexBuffer objects while
+     * leaving the objects themselves in place - see {@link TransformFeedback#process}. A vertex
+     * array object captures the GPU buffers it was built from, and this cache is keyed on the
+     * VertexBuffer objects, so such an exchange is invisible to it and a stale vertex array object
+     * would keep reading the buffers from before the exchange.
+     *
+     * Only has an effect when more than one vertex buffer is supplied - a single vertex buffer stores
+     * its vertex array object on itself, and so it travels with the buffer.
+     *
+     * @param {VertexBuffer[]} vertexBuffers - The vertex buffers whose cached vertex array object
+     * should be removed.
+     * @ignore
+     */
+    removeVertexArrayFromCache(vertexBuffers) {
+        if (vertexBuffers.length > 1) {
+            const key = this._vertexArrayKey(vertexBuffers);
+            const vao = this._vaoMap.get(key);
+            if (vao) {
+                this._vaoMap.delete(key);
+                this.gl.deleteVertexArray(vao);
+            }
+        }
+    }
+
     // function creates VertexArrayObject from list of vertex buffers
     createVertexArray(vertexBuffers) {
 
@@ -1789,12 +1833,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const useCache = vertexBuffers.length > 1;
         if (useCache) {
 
-            // generate unique key for the vertex buffers - each part identifies both the buffer and
-            // its format, and is delimited, so distinct buffer lists cannot generate the same key
-            key = '';
-            for (let i = 0; i < vertexBuffers.length; i++) {
-                key += vertexBuffers[i].vaoKeyPart;
-            }
+            key = this._vertexArrayKey(vertexBuffers);
 
             // try to get VAO from cache
             vao = this._vaoMap.get(key);
@@ -1958,7 +1997,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         }
                     });
 
-                    Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
+                    Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers));
 
                     this.setBuffers(indexBuffer);
                 }

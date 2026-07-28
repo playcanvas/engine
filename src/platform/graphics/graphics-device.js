@@ -1667,26 +1667,25 @@ class GraphicsDevice extends EventHandler {
      * vertex buffers.
      *
      * @param {Shader} shader - The shader to validate.
-     * @param {VertexFormat} vb0Format - The format of the first vertex buffer.
-     * @param {VertexFormat} vb1Format - The format of the second vertex buffer.
+     * @param {(VertexBuffer|null|undefined)[]} vertexBuffers - The vertex buffers of the draw.
      * @protected
      */
-    validateAttributes(shader, vb0Format, vb1Format) {
+    validateAttributes(shader, vertexBuffers) {
 
         Debug.call(() => {
 
             // add all attribute locations from vertex formats to the set
             _tempSet.clear();
-            vb0Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
-            vb1Format?.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+            for (let i = 0; i < vertexBuffers.length; i++) {
+                vertexBuffers[i]?.format.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
+            }
 
             // every location shader needs must be in the vertex buffer
             for (const [location, name] of shader.attributes) {
                 if (!_tempSet.has(location)) {
                     Debug.errorOnce(`Vertex attribute [${name}] at location ${location} required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
                         shader,
-                        vb0Format,
-                        vb1Format
+                        vertexBuffers
                     });
                 }
             }
