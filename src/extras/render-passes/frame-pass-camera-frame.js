@@ -534,7 +534,10 @@ class FramePassCameraFrame extends FramePass {
 
     setupVolumetricFogPass(options) {
         if (options.volumetricFogEnabled) {
-            this.volumetricFogPass = new FramePassVolumetricFog(this.device, this.cameraComponent, this.sceneTexture, this.rt);
+
+            // the scene pass provides the light clusters used by the local lights of the fog
+            this.volumetricFogPass = new FramePassVolumetricFog(this.device, this.cameraComponent,
+                this.sceneTexture, this.rt, this.scenePass);
 
             // when TAA is used, the fog noise pattern changes each frame and TAA resolves it
             this.volumetricFogPass.temporalDither = options.taaEnabled;

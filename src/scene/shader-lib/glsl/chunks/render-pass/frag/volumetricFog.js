@@ -13,6 +13,7 @@ export default /* glsl */`
     uniform vec3 uFogAmbient;
     uniform vec4 uFogParams;        // x: density, y: height base, z: height falloff, w: max distance
     uniform vec4 uFogScatterParams; // x: anisotropy, y: step count, z: temporal noise offset, w: shadow intensity
+    uniform float uFogExtinction;   // scales the absorption without affecting the scattering
 
     #ifdef FOG_SHADOWS
         uniform mat4 uFogShadowMatrixPalette[4];
@@ -102,7 +103,7 @@ export default /* glsl */`
             // accumulate in-scattered light and update transmittance (Beer-Lambert)
             vec3 radiance = sunLight * shadow + uFogAmbient;
             inscatter += transmittance * uFogTint * radiance * (density * dt);
-            transmittance *= exp(-density * dt);
+            transmittance *= exp(-uFogExtinction * density * dt);
 
             if (transmittance < 0.005) break;
         }

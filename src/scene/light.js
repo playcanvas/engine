@@ -142,6 +142,14 @@ class Light {
     shadowDepthState = DepthState.DEFAULT.clone();
 
     /**
+     * A multiplier of the light's contribution to the volumetric fog. Only used by omni and spot
+     * lights, when the volumetric fog renders local lights.
+     *
+     * @type {number}
+     */
+    volumetricScattering = 1;
+
+    /**
      * The flags used for clustered lighting. Stored as a bitfield, updated as properties change to
      * avoid those being updated each frame.
      *
@@ -918,6 +926,9 @@ class Light {
         clone.penumbraSize = this.penumbraSize;
         clone.penumbraFalloff = this.penumbraFalloff;
 
+        // volumetric properties
+        clone.volumetricScattering = this.volumetricScattering;
+
         // Cookies properties
         // clone.cookie = this._cookie;
         // clone.cookieIntensity = this.cookieIntensity;
@@ -1015,7 +1026,7 @@ class Light {
             sphere.center.add2(node.getPosition(), tmpVec);
 
         } else if (this._type === LIGHTTYPE_OMNI) {
-            sphere.center = this._node.getPosition();
+            sphere.center.copy(this._node.getPosition());
             sphere.radius = this.attenuationEnd;
         }
     }

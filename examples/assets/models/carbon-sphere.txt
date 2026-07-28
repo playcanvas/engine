@@ -1,0 +1,15 @@
+Model Information:
+* title:	CARBON 60 SPHERE
+* source:	https://sketchfab.com/3d-models/carbon-60-sphere-5ef45e632eb8431998400ea73ddc51a5
+* author:	Random13 (https://sketchfab.com/Random13)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "CARBON 60 SPHERE" (https://sketchfab.com/3d-models/carbon-60-sphere-5ef45e632eb8431998400ea73ddc51a5) by Random13 (https://sketchfab.com/Random13) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+
+Modifications:
+* Geometry deduplicated, welded, reordered and compressed with Draco using glTF-Transform, reducing
+  the file from 7.7 MB to 0.8 MB.
