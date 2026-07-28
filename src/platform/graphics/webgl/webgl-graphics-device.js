@@ -2479,6 +2479,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         Debug.call(() => {
             buffers?.forEach((buffer, index) => {
                 Debug.assert(buffer, `Transform feedback buffer at index ${index} is null - a buffer is required for every varying the shader captures.`);
+
+                // A vertex buffer only allocates its GPU storage when it is first given data, so a
+                // buffer created without any is still empty here. Transform feedback would fail on
+                // beginTransformFeedback with an error naming neither the buffer nor the cause, so
+                // catch it while the buffer is still identifiable.
+                Debug.assert(buffer?.impl.initialized, `Transform feedback buffer ${buffer?.id} at index ${index} has no GPU storage allocated, so it cannot be written to. A vertex buffer allocates its storage when first given data, so pass initial data when creating a buffer which only transform feedback writes to.`, buffer);
             });
         });
 
