@@ -70,6 +70,16 @@ class WorldClusters {
         this.registerUniforms(device);
     }
 
+    /**
+     * The lights stored in the cluster structure. The index of a light in this array matches its
+     * index in the lights texture, and the index 0 is reserved for 'no light'.
+     *
+     * @type {ClusterLight[]}
+     */
+    get usedLights() {
+        return this._usedLights;
+    }
+
     set maxCellLightCount(count) {
 
         if (count !== this._maxCellLightCount) {

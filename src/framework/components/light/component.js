@@ -59,7 +59,8 @@ const _properties = [
     'penumbraSize',
     'penumbraFalloff',
     'shadowSamples',
-    'shadowBlockerSamples'
+    'shadowBlockerSamples',
+    'volumetricScattering'
 ];
 
 /**
@@ -440,6 +441,27 @@ class LightComponent extends Component {
      */
     get shadowIntensity() {
         return this._light.shadowIntensity;
+    }
+
+    /**
+     * Sets a multiplier of the light's contribution to the volumetric fog, allowing individual
+     * lights to scatter more or less light than the others, or none at all when set to 0. Only
+     * used by omni and spot lights, when {@link CameraFrame} renders volumetric fog with local
+     * lights enabled. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set volumetricScattering(value) {
+        this._light.volumetricScattering = value;
+    }
+
+    /**
+     * Gets the multiplier of the light's contribution to the volumetric fog.
+     *
+     * @type {number}
+     */
+    get volumetricScattering() {
+        return this._light.volumetricScattering;
     }
 
     /**
