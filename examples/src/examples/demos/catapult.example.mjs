@@ -184,13 +184,24 @@ const CAMERA_HEIGHT = 16;
 const CAMERA_YAW_RANGE = 18;
 const CAMERA_EASE = 5;
 
-// Touch aiming lifts the aim point above the finger, so that the target is not hidden under the
-// fingertip while it is being dragged onto it. The lift comes in over the first few tens of pixels of
-// movement, which leaves a plain tap aiming at exactly the spot it landed on - a tap is over before the
-// finger is in the way of anything, and having the aim jump away from a tap would be far worse.
-const TOUCH_LIFT = 80;
-const TOUCH_LIFT_START = 8;
-const TOUCH_LIFT_FULL = 48;
+// Touch aiming is relative, like a trackpad rather than a touchscreen: a finger landing does not move
+// the aim at all, and dragging nudges it along from wherever it already was. Aiming at the spot the
+// finger lands on sounds like the obvious way round, but it means every touch throws the aim across the
+// valley before it can be adjusted, and the target spends the whole drag underneath a fingertip. This
+// gain is how far the aim travels for a given drag, set so that one comfortable thumb sweep crosses the
+// whole battlefield rather than needing several. A blast is wide enough that this is still easily precise
+// enough to place - about a thumb's width of travel covers the kill radius.
+//
+// A tap, on the other hand, shoots straight at the spot it lands on, which is the quicker answer when a
+// formation walks into the open. The slop is how far a finger may wander and still count as a tap.
+const TOUCH_AIM_GAIN = 2.5;
+const TOUCH_TAP_SLOP = 12;
+
+// A touch screen follows every tap with compatibility mouse events - a move and a press at the same spot -
+// meant for pages that only listen for a mouse. Acting on those undoes the tap: the move takes the aim
+// back off the ground point the tap pinned it to, so it wanders off across the valley as the camera swings
+// round, and the press asks for a second shot. Mouse input is therefore ignored for a moment afterwards.
+const MOUSE_AFTER_TOUCH = 0.5;
 
 // A blast knocks the camera about, by this many world units at point blank, falling off to nothing at
 // this distance away from it. A hit at the far end of the valley should not be felt at all.
@@ -785,12 +796,15 @@ let aimPower = (LAUNCH_POWER_MIN + LAUNCH_POWER_MAX) * 0.5;
 let pointerX = -1;
 let pointerY = -1;
 
-// touch aiming state - the ground point the finger picked, which the aim stays pinned to, where the
-// finger itself is, and how far it has travelled during this touch, which brings the lift in
+// touch aiming state - the ground point the aim is pinned to, where the finger went down and where it was
+// last seen, and whether it has moved far enough to count as a drag rather than a tap
 let touchAiming = false;
-let touchFingerX = -1;
-let touchFingerY = -1;
-let touchTravel = 0;
+let touchDragging = false;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchLastX = 0;
+let touchLastY = 0;
+let lastTouchTime = -1;
 const touchAimPoint = new Vec3();
 
 // the eased camera state, trailing the aim
@@ -1535,6 +1549,7 @@ const _rayStart = new Vec3();
 const _rayEnd = new Vec3();
 const _rayDirection = new Vec3();
 const _aimPoint = new Vec3();
+const _screenPoint = new Vec3();
 
 /**
  * Finds where a ray meets the terrain, by walking forward until it passes below the surface and then
@@ -1615,6 +1630,23 @@ const aimAtPoint = (point) => {
 };
 
 /**
+ * Finds the point on the ground under a screen position, without touching the aim, so that a move can be
+ * tried out and thrown away.
+ *
+ * @param {number} x - The screen x coordinate, in canvas pixels.
+ * @param {number} y - The screen y coordinate, in canvas pixels.
+ * @returns {boolean} True if the ground was hit, leaving the point in _aimPoint.
+ */
+const probeGround = (x, y) => {
+    const component = camera.camera;
+    component.screenToWorld(x, y, component.nearClip, _rayStart);
+    component.screenToWorld(x, y, component.farClip, _rayEnd);
+    _rayDirection.sub2(_rayEnd, _rayStart).normalize();
+
+    return raycastTerrain(_rayStart, _rayDirection, _aimPoint);
+};
+
+/**
  * Aims at whatever the pointer is over, by raycasting the height field under it. The player therefore
  * points at a spot rather than learning what some arbitrary screen position means.
  *
@@ -1623,12 +1655,7 @@ const aimAtPoint = (point) => {
  * @returns {boolean} True if the pointer was over the ground, false if it was pointed at the sky.
  */
 const aimAt = (x, y) => {
-    const component = camera.camera;
-    component.screenToWorld(x, y, component.nearClip, _rayStart);
-    component.screenToWorld(x, y, component.farClip, _rayEnd);
-    _rayDirection.sub2(_rayEnd, _rayStart).normalize();
-
-    if (!raycastTerrain(_rayStart, _rayDirection, _aimPoint)) {
+    if (!probeGround(x, y)) {
         // pointing off the end of the world turns along the cursor's heading and throws as far as the
         // machine can
         aimYaw = math.clamp(
@@ -1645,28 +1672,85 @@ const aimAt = (x, y) => {
 };
 
 /**
- * Aims from a touch. The ground point under the finger is found once, here, and the aim then stays
- * pinned to it - solving it afresh every frame would slide the aim away from the spot that was touched
- * as the camera swings round to follow, which reads as the shot missing on its own.
+ * Finds the aim point for a screen position, falling back to where the ray crosses the valley floor when
+ * it passes over the edge of the height field. On a narrow screen the sides of the valley are off the end
+ * of the terrain from where the camera stands, and without this the aim stops well short of the ground a
+ * mouse can reach - the pointer path has always turned along the ray in that case.
  *
- * The aim also sits above the finger once the touch starts to drag, so that the target is not underneath
- * the fingertip while it is being placed on it.
- *
- * @param {{ x: number, y: number }} touch - The touch to aim from.
+ * @param {number} x - The screen x coordinate, in canvas pixels.
+ * @param {number} y - The screen y coordinate, in canvas pixels.
+ * @returns {boolean} True if an aim point was found, leaving it in _aimPoint.
  */
-const aimFromTouch = (touch) => {
-    const lift = TOUCH_LIFT * smoothRamp(TOUCH_LIFT_START, TOUCH_LIFT_FULL, touchTravel);
+const probeAim = (x, y) => {
+    if (probeGround(x, y)) {
+        return true;
+    }
 
-    touchFingerX = touch.x;
-    touchFingerY = touch.y;
-    pointerX = touch.x;
-    pointerY = Math.max(4, touch.y - lift);
+    // a ray heading upwards is pointed at the sky, and there is nothing out there to aim at
+    if (_rayDirection.y >= -0.001) {
+        return false;
+    }
 
-    // solved right away rather than on the next frame, so that a tap shorter than a frame still fires
-    // the shot it asked for instead of the one before it
-    touchAiming = aimAt(pointerX, pointerY);
+    const along = -_rayStart.y / _rayDirection.y;
+    const x0 = math.clamp(_rayStart.x + _rayDirection.x * along, TERRAIN_MIN_X, TERRAIN_MAX_X);
+    const z0 = math.clamp(_rayStart.z + _rayDirection.z * along, TERRAIN_MIN_Z, TERRAIN_MAX_Z);
+    _aimPoint.set(x0, terrainHeight(x0, z0), z0);
+    return true;
+};
+
+/**
+ * Puts the aim on a screen position, and pins it to the ground point found there. Pinning is what keeps
+ * the shot and the ring together: solving the aim afresh every frame would slide it away as the camera
+ * swings round to follow, which reads as the shot missing on its own. Nothing is changed if there is no
+ * ground to be had, so a move can be tried and dropped.
+ *
+ * @param {number} x - The screen x coordinate, in canvas pixels.
+ * @param {number} y - The screen y coordinate, in canvas pixels.
+ * @returns {boolean} True if the aim was moved.
+ */
+const setTouchAim = (x, y) => {
+    if (!probeAim(x, y)) {
+        return false;
+    }
+
+    pointerX = x;
+    pointerY = y;
+    touchAiming = true;
+    touchAimPoint.copy(_aimPoint);
+
+    // solved right away rather than on the next frame, so that a touch ending immediately still fires the
+    // shot it asked for instead of the one before it
+    aimAtPoint(touchAimPoint);
+    return true;
+};
+
+/**
+ * Nudges the aim along by an amount of screen movement, from wherever it already is.
+ *
+ * @param {number} dx - How far to move it horizontally, in canvas pixels.
+ * @param {number} dy - How far to move it vertically, in canvas pixels.
+ */
+const nudgeAim = (dx, dy) => {
+    // the aim is carried as a screen position, so it has to be taken from where the pinned ground point
+    // appears *now* - the camera will have swung since it was set, which moves it on screen
     if (touchAiming) {
-        touchAimPoint.copy(_aimPoint);
+        camera.camera.worldToScreen(touchAimPoint, _screenPoint);
+        pointerX = _screenPoint.x;
+        pointerY = _screenPoint.y;
+    } else if (pointerX < 0) {
+        pointerX = canvas.clientWidth * 0.5;
+        pointerY = canvas.clientHeight * 0.5;
+    }
+
+    const x = math.clamp(pointerX + dx, 0, canvas.clientWidth - 1);
+    const y = math.clamp(pointerY + dy, 0, canvas.clientHeight - 1);
+
+    // A move that would take the aim off the battlefield and into the sky is dropped rather than applied,
+    // which pins the reticle to the far end of the ground instead of letting it fly up into nothing. The
+    // two axes are then tried on their own, so that an aim already pressed up against the far end can
+    // still be slid sideways or brought back - dropping the whole move would strand it there.
+    if (!setTouchAim(x, y) && !setTouchAim(x, pointerY)) {
+        setTouchAim(pointerX, y);
     }
 };
 
@@ -1724,39 +1808,82 @@ const applyCameraShake = (dt) => {
     shake *= Math.max(0, 1 - SHAKE_DECAY * dt);
 };
 
+/**
+ * Whether mouse input should be acted on, which it should not be when it is really a touch screen's
+ * compatibility events arriving just after a tap.
+ *
+ * @returns {boolean} True if the event came from an actual mouse.
+ */
+const realMouse = () => time - lastTouchTime >= MOUSE_AFTER_TOUCH;
+
 // the pointer is only sampled here - the aim itself is re-solved every frame, because the camera
 // moves with it and the ground under the cursor moves with the camera
 app.mouse.on('mousemove', (event) => {
+    if (!realMouse()) {
+        return;
+    }
+
     pointerX = event.x;
     pointerY = event.y;
 
     // a mouse on a machine that also has a touch screen takes the aim back off the last touch
     touchAiming = false;
-    touchFingerX = -1;
 });
-app.mouse.on('mousedown', () => (gameOver ? restart() : fire()));
-
-app.touch.on('touchstart', (event) => {
-    touchTravel = 0;
-    aimFromTouch(event.touches[0]);
-});
-app.touch.on('touchmove', (event) => {
-    const touch = event.touches[0];
-
-    // the lift comes in with how far the finger has been dragged in total, rather than with how far it
-    // is from where it started, so that it never sinks back under the fingertip
-    touchTravel += Math.hypot(touch.x - touchFingerX, touch.y - touchFingerY);
-    aimFromTouch(touch);
-});
-app.touch.on('touchend', () => {
-    // the aim stays where the finger left it, but there is no longer a finger to point out
-    touchFingerX = -1;
+app.mouse.on('mousedown', () => {
+    if (!realMouse()) {
+        return;
+    }
 
     if (gameOver) {
         restart();
     } else {
         fire();
     }
+});
+
+app.touch.on('touchstart', (event) => {
+    lastTouchTime = time;
+
+    // deliberately nothing but remembering where the finger went down. Whether this turns out to be a tap
+    // at that spot or a drag from wherever the aim already is is not known until the finger either moves
+    // or comes back up
+    touchStartX = event.touches[0].x;
+    touchStartY = event.touches[0].y;
+    touchLastX = touchStartX;
+    touchLastY = touchStartY;
+    touchDragging = false;
+});
+app.touch.on('touchmove', (event) => {
+    lastTouchTime = time;
+
+    const touch = event.touches[0];
+
+    // a finger never holds perfectly still, so a little wander is left alone and still counts as a tap.
+    // Once past that it is a drag, and the movement so far is spent on the aim rather than thrown away
+    if (!touchDragging && Math.hypot(touch.x - touchStartX, touch.y - touchStartY) < TOUCH_TAP_SLOP) {
+        return;
+    }
+    touchDragging = true;
+
+    nudgeAim((touch.x - touchLastX) * TOUCH_AIM_GAIN, (touch.y - touchLastY) * TOUCH_AIM_GAIN);
+    touchLastX = touch.x;
+    touchLastY = touch.y;
+});
+app.touch.on('touchend', () => {
+    lastTouchTime = time;
+
+    if (gameOver) {
+        restart();
+        return;
+    }
+
+    // a tap shoots at the spot it landed on, which is the quickest way to answer a formation that has just
+    // walked into the open. A drag has already placed the aim, so it fires wherever that ended up
+    if (!touchDragging) {
+        setTouchAim(touchStartX, touchStartY);
+    }
+
+    fire();
 });
 
 // --------------------------------------------------------------------------------------------
@@ -1787,7 +1914,6 @@ const COLOR_ALERT = new Color(1, 0.38, 0.26);
 const COLOR_CHARGING = new Color(1, 0.62, 0.2);
 const COLOR_READY = new Color(0.62, 0.95, 0.62);
 const _readoutColor = new Color();
-const _leaderAnchor = new Vec4();
 
 const screen = new Entity('Hud');
 screen.addComponent('screen', {
@@ -1921,15 +2047,6 @@ const scrim = addImage(new Vec4(0, 0, 1, 1), 0, 0, 0, 0, new Color(0.1, 0.01, 0)
 scrim.element.margin = new Vec4(0, 0, 0, 0);
 scrim.enabled = false;
 
-// A thread from the fingertip up to the aim point, so that the aim sitting above the finger reads as
-// deliberate. Only ever seen on a touch screen. Its ends are anchors rather than positions, which spares
-// having to convert touch pixels into the screen's own units - the anchor is stretched vertically
-// between the two, so the margins carry the height and only the width is a size
-const touchLeader = addImage(new Vec4(0.5, 0.4, 0.5, 0.6), 0, 0, 2, 0, Color.WHITE, 0.3);
-touchLeader.element.margin = new Vec4(0, 0, 0, 0);
-touchLeader.element.width = 2;
-touchLeader.enabled = false;
-
 addImage(
     BOTTOM,
     0,
@@ -2013,20 +2130,6 @@ const updateHud = (dt) => {
     // so the number itself carries the warning
     _readoutColor.lerp(COLOR_READOUT, COLOR_ALERT, smoothRamp(BREACH_Z - 60, BREACH_Z, nearestGroupZ()));
     statusText.element.color = _readoutColor;
-
-    // the thread up from the fingertip, drawn only while a touch is dragging the aim about
-    const dragging = touchFingerX >= 0 && touchFingerY - pointerY > 6;
-    touchLeader.enabled = dragging;
-    if (dragging) {
-        const nx = math.clamp(touchFingerX / canvas.clientWidth, 0, 1);
-        _leaderAnchor.set(
-            nx,
-            math.clamp(1 - touchFingerY / canvas.clientHeight, 0, 1),
-            nx,
-            math.clamp(1 - pointerY / canvas.clientHeight, 0, 1)
-        );
-        touchLeader.element.anchor = _leaderAnchor;
-    }
 
     // the track fills as the crew winds the arm back, and sits full and green while a shot is ready
     const charge = reloadTimer > 0 ? 1 - reloadTimer / Math.max(0.001, reloadTime) : 1;
