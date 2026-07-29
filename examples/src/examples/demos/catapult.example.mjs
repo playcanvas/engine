@@ -69,7 +69,8 @@ import {
     WideLineRenderer,
     calculateNormals,
     createGraphicsDevice,
-    math
+    math,
+    platform
 } from 'playcanvas';
 import { ProceduralSky } from 'playcanvas/scripts/esm/sky/procedural-sky.mjs';
 import { VatCharacters } from 'playcanvas/scripts/esm/vat/vat-characters.mjs';
@@ -81,6 +82,12 @@ window.focus();
 
 // --------------------------------------------------------------------------------------------
 // tuning constants
+
+// The three effects that carry the sunset - the sun's shadows, the fog the light shafts are marched
+// through, and a light inside every burning boulder - are between them most of the frame, and more than
+// a lot of phones have to give. They start switched off on a mobile device, and the control panel still
+// offers all three to anyone who wants to see what theirs can do.
+const EFFECTS_ON = !platform.mobile;
 
 // the terrain covers the whole playable valley, generated as a single height field mesh
 const TERRAIN_MIN_X = -215;
@@ -612,7 +619,7 @@ const sun = new Entity('Sun');
 sun.addComponent('light', {
     type: 'directional',
     intensity: 2.8,
-    castShadows: true,
+    castShadows: EFFECTS_ON,
     shadowType: SHADOW_PCF3_32F,
     shadowBias: 0.3,
     normalOffsetBias: 0.2,
@@ -660,7 +667,7 @@ cameraFrame.rendering.sharpness = 0.4;
 cameraFrame.bloom.intensity = 0.07;
 cameraFrame.bloom.blurLevel = 12;
 cameraFrame.volumetricFog.light = sun.light;
-cameraFrame.volumetricFog.enabled = true;
+cameraFrame.volumetricFog.enabled = EFFECTS_ON;
 cameraFrame.volumetricFog.tint = new Color(1, 0.72, 0.42);
 cameraFrame.volumetricFog.density = 0.0017;
 
@@ -1052,6 +1059,7 @@ for (let i = 0; i < 40; i++) {
         falloffMode: LIGHTFALLOFF_INVERSESQUARED,
         castShadows: false
     });
+    light.enabled = EFFECTS_ON;
     entity.addChild(light);
 
     boulders.push({
@@ -2325,9 +2333,9 @@ app.on('update', (dt) => {
 
 data.set('data', {
     reloadTime: RELOAD_TIME_DEFAULT,
-    shadows: true,
-    volumetricFog: true,
-    boulderLights: true
+    shadows: EFFECTS_ON,
+    volumetricFog: EFFECTS_ON,
+    boulderLights: EFFECTS_ON
 });
 
 data.on('data.reloadTime:set', (value) => {
