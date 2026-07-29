@@ -215,6 +215,11 @@ const FIRE_RETURN_START = 1.7;
 const FIRE_ANIMATION_LENGTH = 2.87;
 const RELOAD_TIME_DEFAULT = 1.1;
 
+// how many steps the volumetric fog is marched in, which the control panel drives. Half of the engine's
+// own default of 24 - the fog here is thin and even, so the banding a short march leaves does not show,
+// and every step is another shadow map tap for every pixel of the fog buffer
+const FOG_STEPS_DEFAULT = 12;
+
 const assets = {
     catapult: new Asset('catapult', 'container', { url: './assets/models/catapult.glb' }),
     font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
@@ -663,9 +668,10 @@ const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 cameraFrame.rendering.sharpness = 0.4;
 // enough bloom that the burning boulders and the blast fireballs throw a real glow, without hazing
-// the sunset sky behind them
+// the sunset sky behind them. Each blur level is a downsample and an upsample pass of its own, and the
+// glow here is tight around small bright things rather than a wide wash, so it does not need many
 cameraFrame.bloom.intensity = 0.07;
-cameraFrame.bloom.blurLevel = 12;
+cameraFrame.bloom.blurLevel = 4;
 cameraFrame.volumetricFog.light = sun.light;
 cameraFrame.volumetricFog.enabled = EFFECTS_ON;
 cameraFrame.volumetricFog.tint = new Color(1, 0.72, 0.42);
@@ -680,7 +686,10 @@ cameraFrame.volumetricFog.intensity = 1.25;
 cameraFrame.volumetricFog.ambientColor = new Color(0.9, 0.42, 0.2);
 cameraFrame.volumetricFog.ambientIntensity = 0.04;
 cameraFrame.volumetricFog.maxDistance = 340;
-cameraFrame.volumetricFog.steps = 24;
+
+// the control panel offers the whole 4 to 128 range the engine accepts. This is the dial that decides
+// what the shafts cost, and the march runs at half resolution on top of it
+cameraFrame.volumetricFog.steps = FOG_STEPS_DEFAULT;
 cameraFrame.volumetricFog.scale = 0.5;
 cameraFrame.update();
 
@@ -2335,6 +2344,7 @@ data.set('data', {
     reloadTime: RELOAD_TIME_DEFAULT,
     shadows: EFFECTS_ON,
     volumetricFog: EFFECTS_ON,
+    fogSteps: FOG_STEPS_DEFAULT,
     boulderLights: EFFECTS_ON
 });
 
@@ -2354,6 +2364,11 @@ data.on('data.volumetricFog:set', (value) => {
 
     // the fog settings are only pushed to the render pass by update(), so changing one without
     // calling it has no effect at all
+    cameraFrame.update();
+});
+
+data.on('data.fogSteps:set', (value) => {
+    cameraFrame.volumetricFog.steps = value;
     cameraFrame.update();
 });
 

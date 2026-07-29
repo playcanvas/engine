@@ -36,6 +36,15 @@ export function Controls({ observer }) {
             <LabelGroup text='Volumetric Fog'>
                 <BooleanInput type='toggle' binding={binding()} link={link('volumetricFog')} />
             </LabelGroup>
+            <LabelGroup text='Fog Samples'>
+                <SliderInput
+                    binding={binding()}
+                    link={link('fogSteps')}
+                    min={4}
+                    max={128}
+                    precision={0}
+                />
+            </LabelGroup>
             <LabelGroup text='Boulder Lights'>
                 <BooleanInput type='toggle' binding={binding()} link={link('boulderLights')} />
             </LabelGroup>
