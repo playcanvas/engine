@@ -22,10 +22,13 @@ uniform float font_pxrange;      // number of texels of SDF spread (inside <-> o
 
 vec4 applyMsdf(vec4 color) {
 
-    // Convert to linear space before processing
+    // The incoming color is in gamma space, premultiplied by alpha. Un-premultiply before the
+    // gamma decode (the decode is only valid on straight color), then re-premultiply so the
+    // compositing below stays premultiplied.
     // TODO: ideally this would receive the color in linear space, but that would require larger changes
     // on the engine side, with the way premultiplied alpha is handled as well.
-    color.rgb = gammaCorrectInput(color.rgb);
+    float srcAlpha = max(color.a, 0.0001);
+    color.rgb = gammaCorrectInput(color.rgb / srcAlpha) * srcAlpha;
 
     // sample the field
     vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
@@ -58,8 +61,10 @@ vec4 applyMsdf(vec4 color) {
     vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
     tcolor = mix(scolor, tcolor, outline);
 
-    // Convert back to gamma space before returning
-    tcolor.rgb = gammaCorrectOutput(tcolor.rgb);
+    // Convert back to gamma space: encode the straight (un-premultiplied) color and re-premultiply.
+    // Encoding the premultiplied product would overshoot at partial coverage (gamma(c * a) > gamma(c) * a),
+    // drawing a bright halo around glyphs under premultiplied-alpha blending (#9122).
+    tcolor.rgb = gammaCorrectOutput(tcolor.rgb / max(tcolor.a, 0.0001)) * tcolor.a;
     
     return tcolor;
 }
