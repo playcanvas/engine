@@ -35,10 +35,13 @@ fn applyMsdf(color_in: vec4f) -> vec4f {
         var shadow_offsetValue = shadow_offset;
     #endif
 
-    // Convert to linear space before processing
+    // The incoming color is in gamma space, premultiplied by alpha. Un-premultiply before the
+    // gamma decode (the decode is only valid on straight color), then re-premultiply so the
+    // compositing below stays premultiplied.
     // TODO: ideally this would receive the color in linear space, but that would require larger changes
     // on the engine side, with the way premultiplied alpha is handled as well.
-    var color = vec4f(gammaCorrectInputVec3(color_in.rgb), color_in.a);
+    let srcAlpha: f32 = max(color_in.a, 0.0001);
+    var color = vec4f(gammaCorrectInputVec3(color_in.rgb / srcAlpha) * srcAlpha, color_in.a);
 
     // sample the field
     let tsample: vec3f = textureSample(texture_msdfMap, texture_msdfMapSampler, vUv0).rgb;
@@ -74,8 +77,10 @@ fn applyMsdf(color_in: vec4f) -> vec4f {
     let scolor: vec4f = select(tcolor, scolor_shadow, shadow > outline);
     tcolor = mix(scolor, tcolor, outline);
 
-    // Convert back to gamma space before returning
-    tcolor = vec4f(gammaCorrectOutput(tcolor.rgb), tcolor.a);
+    // Convert back to gamma space: encode the straight (un-premultiplied) color and re-premultiply.
+    // Encoding the premultiplied product would overshoot at partial coverage (gamma(c * a) > gamma(c) * a),
+    // drawing a bright halo around glyphs under premultiplied-alpha blending (#9122).
+    tcolor = vec4f(gammaCorrectOutput(tcolor.rgb / max(tcolor.a, 0.0001)) * tcolor.a, tcolor.a);
 
     return tcolor;
 }
