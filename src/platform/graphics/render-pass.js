@@ -264,19 +264,27 @@ class RenderPass extends FramePass {
      *
      * @param {Color|undefined} color - The color to clear to, or undefined to preserve the existing
      * content.
+     * @param {number} [index] - The index of the color attachment to modify. When not specified,
+     * all color attachments are modified.
      */
-    setClearColor(color) {
+    setClearColor(color, index) {
 
-        // in case of MRT, we clear all color buffers.
         // TODO: expose per color buffer clear parameters on the camera, and copy them here.
         const count = this.colorArrayOps.length;
-        for (let i = 0; i < count; i++) {
+        Debug.assert(index === undefined || (index >= 0 && index < count),
+            `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);
+
+        const start = index ?? 0;
+        const end = index === undefined ? count : index + 1;
+        for (let i = start; i < end; i++) {
             const colorOps = this.colorArrayOps[i];
-            if (color) {
-                colorOps.clearValue.copy(color);
-                colorOps.clearValueLinear.linear(color);
+            if (colorOps) {
+                if (color) {
+                    colorOps.clearValue.copy(color);
+                    colorOps.clearValueLinear.linear(color);
+                }
+                colorOps.clear = !!color;
             }
-            colorOps.clear = !!color;
         }
     }
 
