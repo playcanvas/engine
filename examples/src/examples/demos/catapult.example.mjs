@@ -1042,7 +1042,7 @@ const landCharacter = (index) => {
 const boulderMaterial = new StandardMaterial();
 boulderMaterial.diffuse = new Color(0.09, 0.06, 0.05);
 boulderMaterial.emissive = new Color(1, 0.35, 0.08);
-boulderMaterial.emissiveIntensity = 30;
+boulderMaterial.emissiveIntensity = 60;
 boulderMaterial.useMetalness = true;
 boulderMaterial.metalness = 0;
 boulderMaterial.gloss = 0.4;
