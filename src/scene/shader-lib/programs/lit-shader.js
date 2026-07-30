@@ -138,8 +138,9 @@ class LitShader {
 
             userChunkMap.forEach((chunk, chunkName) => {
 
-                // extract attribute names from the used chunk
-                Debug.assert(chunk);
+                // extract attribute names from the used chunk. An empty chunk is valid - it is how a
+                // chunk gets blanked out - so only a missing one is a mistake
+                Debug.assert(typeof chunk === 'string', `Shader chunk [${chunkName}] is not a string.`);
                 for (const a in builtinAttributes) {
                     if (builtinAttributes.hasOwnProperty(a) && chunk.indexOf(a) >= 0) {
                         this.attributes[a] = builtinAttributes[a];
