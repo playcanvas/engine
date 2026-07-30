@@ -9,6 +9,11 @@
 // only, so its overlay turns red. Both attachments are then displayed side by side - left is
 // attachment 0, right is attachment 1.
 //
+// The example also demonstrates per-attachment clear colors, specified using
+// RenderPass#setClearColor with an attachment index - a standalone clear-only render pass clears
+// attachment 0 to dark blue and attachment 1 to dark green, visible as the border around each
+// panel, and the camera renders on top without clearing.
+//
 // When the device does not support independent blending (the OES_draw_buffers_indexed extension is
 // unavailable on WebGL2), the blend state of attachment 0 is used for all attachments and the two
 // halves render identically.
@@ -34,6 +39,7 @@ import {
     PROJECTION_ORTHOGRAPHIC,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    RenderPass,
     RenderTarget,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL,
@@ -182,9 +188,24 @@ overlay.setLocalEulerAngles(90, 0, 0);
 overlay.setLocalScale(1.2, 1, 1.2);
 app.root.addChild(overlay);
 
+// The attachments are cleared by a standalone clear-only render pass, using a different clear
+// color per attachment, specified using the attachment index of setClearColor. The clear colors
+// stay visible as the border around each panel, as the quads do not cover the full attachment.
+const clearPass = new RenderPass(device);
+clearPass.name = 'PerAttachmentClear';
+clearPass.init(renderTarget);
+clearPass.setClearColor(new Color(0, 0, 0.25, 1), 0);
+clearPass.setClearColor(new Color(0, 0.25, 0, 1), 1);
+
+// execute the clear before the cameras render each frame
+app.on('prerender', () => clearPass.render());
+
+// The camera renders on top of the cleared attachments, without clearing the color itself. It
+// renders before the main camera, so that the displayed attachments contain this frame's result.
 const offscreenCamera = new Entity('Offscreen Camera');
 offscreenCamera.addComponent('camera', {
-    clearColor: new Color(0, 0, 0, 1),
+    clearColorBuffer: false,
+    priority: -1,
     projection: PROJECTION_ORTHOGRAPHIC,
     orthoHeight: 1,
     layers: [offscreenLayer.id],

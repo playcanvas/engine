@@ -5,6 +5,7 @@ import { Color } from '../../../core/math/color.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_NONE,
+    isIntegerPixelFormat,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
@@ -62,6 +63,18 @@ const _attachmentBlendState = new BlendState();
 
 // maximum number of color attachments a BlendState can describe
 const maxBlendAttachments = 8;
+
+// reused storage for the clear color of an individual attachment, to avoid allocations
+const _attachmentClearValue = new Float32Array(4);
+
+// reused options for the render pass clears, to avoid allocations. The fields not covered by the
+// flags are ignored by the clear call.
+const _clearOptions = {
+    flags: 0,
+    color: [0, 0, 0, 1],
+    depth: 1,
+    stencil: 0
+};
 
 /**
  * Returns the number of channels for 8-bit normalized formats that require RGBA readback.
@@ -1390,32 +1403,67 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.setViewport(0, 0, width, height);
         this.setScissor(0, 0, width, height);
 
-        // clear the render target
-        const colorOps = renderPass.colorOps;
+        // set up the clear of the depth and stencil, which are shared by all color attachments
         const depthStencilOps = renderPass.depthStencilOps;
-        if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
+        let clearFlags = 0;
 
-            let clearFlags = 0;
-            const clearOptions = {};
+        if (depthStencilOps.clearDepth) {
+            clearFlags |= CLEARFLAG_DEPTH;
+            _clearOptions.depth = depthStencilOps.clearDepthValue;
+        }
 
-            if (colorOps?.clear) {
-                clearFlags |= CLEARFLAG_COLOR;
-                clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
+        if (depthStencilOps.clearStencil) {
+            clearFlags |= CLEARFLAG_STENCIL;
+            _clearOptions.stencil = depthStencilOps.clearStencilValue;
+        }
+
+        // a single color attachment is cleared by the same clear call
+        const colorBufferCount = rt._colorBuffers?.length ?? 0;
+        const colorOps = renderPass.colorOps;
+        if (colorBufferCount <= 1 && colorOps?.clear) {
+            clearFlags |= CLEARFLAG_COLOR;
+            const { clearValue } = colorOps;
+            const color = _clearOptions.color;
+            color[0] = clearValue.r;
+            color[1] = clearValue.g;
+            color[2] = clearValue.b;
+            color[3] = clearValue.a;
+        }
+
+        if (clearFlags !== 0) {
+            _clearOptions.flags = clearFlags;
+            this.clear(_clearOptions);
+        }
+
+        // Multiple color attachments are cleared individually using clearBufferfv, as the
+        // non-indexed gl.clear applies a single clear color to all draw buffers. This applies
+        // their own clear colors, and preserves the content of the attachments which do not
+        // clear. Note that clearBufferfv is affected by the color write masks, including the
+        // per-attachment ones, and so these are reset first.
+        if (colorBufferCount > 1) {
+            const gl = this.gl;
+            const { colorArrayOps } = renderPass;
+            let writeMasksReset = false;
+            for (let i = 0; i < colorBufferCount; i++) {
+                const colorOps = colorArrayOps[i];
+                if (colorOps?.clear) {
+
+                    Debug.assert(!isIntegerPixelFormat(rt._colorBuffers[i].format),
+                        'Clearing an integer color attachment of a render pass is not supported.', rt);
+
+                    if (!writeMasksReset) {
+                        this.setBlendState(BlendState.NOBLEND);
+                        writeMasksReset = true;
+                    }
+
+                    const { clearValue } = colorOps;
+                    _attachmentClearValue[0] = clearValue.r;
+                    _attachmentClearValue[1] = clearValue.g;
+                    _attachmentClearValue[2] = clearValue.b;
+                    _attachmentClearValue[3] = clearValue.a;
+                    gl.clearBufferfv(gl.COLOR, i, _attachmentClearValue);
+                }
             }
-
-            if (depthStencilOps.clearDepth) {
-                clearFlags |= CLEARFLAG_DEPTH;
-                clearOptions.depth = depthStencilOps.clearDepthValue;
-            }
-
-            if (depthStencilOps.clearStencil) {
-                clearFlags |= CLEARFLAG_STENCIL;
-                clearOptions.stencil = depthStencilOps.clearStencilValue;
-            }
-
-            // clear it
-            clearOptions.flags = clearFlags;
-            this.clear(clearOptions);
         }
 
         Debug.call(() => {
