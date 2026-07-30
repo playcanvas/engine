@@ -360,6 +360,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureHalfFloatRenderable = true;
         this.supportsImageBitmap = true;
 
+        // WebGPU specifies the blend state per color target, and so this is always supported
+        this.supportsIndependentBlending = true;
+
         // WebGPU currently only supports 1 and 4 samples
         this.samples = this.backBufferAntialias ? 4 : 1;
 

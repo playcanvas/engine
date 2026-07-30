@@ -57,6 +57,12 @@ import { getBuiltInTexture } from '../built-in-textures.js';
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
 
+// reused destination for BlendState#getAttachment, to avoid allocations
+const _attachmentBlendState = new BlendState();
+
+// maximum number of color attachments a BlendState can describe
+const maxBlendAttachments = 8;
+
 /**
  * Returns the number of channels for 8-bit normalized formats that require RGBA readback.
  * WebGL2's readPixels only guarantees RGBA/UNSIGNED_BYTE support, so these formats
@@ -892,6 +898,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extFloatBlend = this.getExtension('EXT_float_blend');
         this.extBlendFuncExtended = this.getExtension('WEBGL_blend_func_extended');
         this.supportsDualSourceBlending = !!this.extBlendFuncExtended;
+        this.extDrawBuffersIndexed = this.getExtension('OES_draw_buffers_indexed');
+        this.supportsIndependentBlending = !!this.extDrawBuffersIndexed;
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
@@ -2606,43 +2614,123 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    /**
+     * Applies a blend state to all draw buffers.
+     *
+     * @param {BlendState} blendState - The blend state to apply. Only the state of its attachment 0
+     * is used, as the non-indexed entry points apply to all draw buffers.
+     * @param {BlendState} [prevState] - The currently applied state, used to skip the calls which
+     * would not change anything. When not specified, all state is set.
+     * @private
+     */
+    applyBlendState(blendState, prevState) {
+        const gl = this.gl;
+
+        // state values to set
+        const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
+
+        // enable blend
+        if (!prevState || prevState.blend !== blend) {
+            if (blend) {
+                gl.enable(gl.BLEND);
+            } else {
+                gl.disable(gl.BLEND);
+            }
+        }
+
+        // blend ops
+        if (!prevState || prevState.colorOp !== colorOp || prevState.alphaOp !== alphaOp) {
+            const glBlendEquation = this.glBlendEquation;
+            gl.blendEquationSeparate(glBlendEquation[colorOp], glBlendEquation[alphaOp]);
+        }
+
+        // blend factors
+        if (!prevState || prevState.colorSrcFactor !== colorSrcFactor || prevState.colorDstFactor !== colorDstFactor ||
+            prevState.alphaSrcFactor !== alphaSrcFactor || prevState.alphaDstFactor !== alphaDstFactor) {
+
+            gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+                this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+        }
+
+        // color write
+        if (!prevState || prevState.allWrite !== blendState.allWrite) {
+            gl.colorMask(blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+        }
+    }
+
+    /**
+     * Applies a blend state to a single draw buffer, using the indexed entry points of the
+     * OES_draw_buffers_indexed extension. The state is always set in full, as the caller has just
+     * overwritten the state of all draw buffers.
+     *
+     * @param {number} index - The index of the draw buffer.
+     * @param {BlendState} blendState - The blend state to apply.
+     * @private
+     */
+    applyBlendStateIndexed(index, blendState) {
+        const gl = this.gl;
+        const ext = this.extDrawBuffersIndexed;
+
+        // state values to set
+        const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
+
+        if (blend) {
+            ext.enableiOES(gl.BLEND, index);
+        } else {
+            ext.disableiOES(gl.BLEND, index);
+        }
+
+        const glBlendEquation = this.glBlendEquation;
+        ext.blendEquationSeparateiOES(index, glBlendEquation[colorOp], glBlendEquation[alphaOp]);
+
+        ext.blendFuncSeparateiOES(index, this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+            this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+
+        ext.colorMaskiOES(index, blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+    }
+
     setBlendState(blendState) {
         Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
             'Dual-source blending is not supported by this graphics device.');
 
         const currentBlendState = this.blendState;
         if (!currentBlendState.equals(blendState)) {
-            const gl = this.gl;
 
-            // state values to set
-            const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
+            // when either the new or the currently applied state uses independent blending, the
+            // state of the individual draw buffers needs to be set explicitly
+            if ((blendState.hasAttachmentOverrides || currentBlendState.hasAttachmentOverrides) &&
+                this.supportsIndependentBlending) {
 
-            // enable blend
-            if (currentBlendState.blend !== blend) {
-                if (blend) {
-                    gl.enable(gl.BLEND);
-                } else {
-                    gl.disable(gl.BLEND);
+                // Apply attachment 0 to all draw buffers using the non-indexed entry points, which
+                // by definition affect every one of them. This is a single set of calls which
+                // covers attachment 0, every attachment inheriting it, and any stale independent
+                // state a previous draw has left behind. Setting each attachment individually
+                // instead would need a set of indexed calls per attachment, as a change of
+                // attachment 0 also changes all the attachments which inherit it.
+                blendState.getAttachment(0, _attachmentBlendState);
+                this.applyBlendState(_attachmentBlendState);
+                const attachment0Key = _attachmentBlendState.key;
+
+                // and then re-apply just the attachments which differ from attachment 0
+                if (blendState.hasAttachmentOverrides) {
+                    const count = Math.min(maxBlendAttachments, this.maxColorAttachments);
+                    for (let i = 1; i < count; i++) {
+                        blendState.getAttachment(i, _attachmentBlendState);
+                        if (_attachmentBlendState.key !== attachment0Key) {
+                            this.applyBlendStateIndexed(i, _attachmentBlendState);
+                        }
+                    }
                 }
-            }
 
-            // blend ops
-            if (currentBlendState.colorOp !== colorOp || currentBlendState.alphaOp !== alphaOp) {
-                const glBlendEquation = this.glBlendEquation;
-                gl.blendEquationSeparate(glBlendEquation[colorOp], glBlendEquation[alphaOp]);
-            }
+            } else {
 
-            // blend factors
-            if (currentBlendState.colorSrcFactor !== colorSrcFactor || currentBlendState.colorDstFactor !== colorDstFactor ||
-                currentBlendState.alphaSrcFactor !== alphaSrcFactor || currentBlendState.alphaDstFactor !== alphaDstFactor) {
+                Debug.call(() => {
+                    if (blendState.hasAttachmentOverrides) {
+                        Debug.warnOnce('BlendState uses independent blending, but the device does not support it (the OES_draw_buffers_indexed extension is not available). The blend state of the attachment 0 is used for all attachments.');
+                    }
+                });
 
-                gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
-                    this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
-            }
-
-            // color write
-            if (currentBlendState.allWrite !== blendState.allWrite) {
-                this.gl.colorMask(blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+                this.applyBlendState(blendState, currentBlendState);
             }
 
             // update internal state

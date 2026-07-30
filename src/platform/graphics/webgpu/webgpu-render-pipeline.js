@@ -6,11 +6,11 @@ import { WebgpuVertexBufferLayout } from './webgpu-vertex-buffer-layout.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuPipeline } from './webgpu-pipeline.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import { BlendState } from '../blend-state.js';
 import { bindGroupNames, PRIMITIVE_LINESTRIP, PRIMITIVE_TRISTRIP } from '../constants.js';
 
 /**
  * @import { BindGroupFormat } from '../bind-group-format.js'
- * @import { BlendState } from '../blend-state.js'
  * @import { DepthState } from '../depth-state.js'
  * @import { RenderTarget } from '../render-target.js'
  * @import { Shader } from '../shader.js'
@@ -20,6 +20,19 @@ import { bindGroupNames, PRIMITIVE_LINESTRIP, PRIMITIVE_TRISTRIP } from '../cons
  */
 
 let _pipelineId = 0;
+
+// reused destination for BlendState#getAttachment, to avoid allocations
+const _attachmentBlendState = new BlendState();
+
+// Assembles the WebGPU color write mask of the supplied blend state.
+const getWriteMask = (blendState) => {
+    let writeMask = 0;
+    if (blendState.redWrite) writeMask |= GPUColorWrite.RED;
+    if (blendState.greenWrite) writeMask |= GPUColorWrite.GREEN;
+    if (blendState.blueWrite) writeMask |= GPUColorWrite.BLUE;
+    if (blendState.alphaWrite) writeMask |= GPUColorWrite.ALPHA;
+    return writeMask;
+};
 
 const _primitiveTopology = [
     'point-list',       // PRIMITIVE_POINTS
@@ -372,24 +385,14 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             Debug.assert(colorAttachments.length === 1,
                 'Dual-source blending requires exactly one color attachment.');
         }
-        if (colorAttachments.length > 0) {
-
-            // the same write mask is used by all color buffers, to match the WebGL behavior
-            let writeMask = 0;
-            if (blendState.redWrite) writeMask |= GPUColorWrite.RED;
-            if (blendState.greenWrite) writeMask |= GPUColorWrite.GREEN;
-            if (blendState.blueWrite) writeMask |= GPUColorWrite.BLUE;
-            if (blendState.alphaWrite) writeMask |= GPUColorWrite.ALPHA;
-
-            // the same blend state is used by all color buffers, to match the WebGL behavior
-            const blend = this.getBlend(blendState);
-
-            colorAttachments.forEach((attachment) => {
-                desc.fragment.targets.push({
-                    format: attachment.format,
-                    writeMask: writeMask,
-                    blend: blend
-                });
+        // each color attachment uses its own blend state - without per-target overrides these all
+        // resolve to the state of the target 0
+        for (let i = 0; i < colorAttachments.length; i++) {
+            const attachmentState = blendState.getAttachment(i, _attachmentBlendState);
+            desc.fragment.targets.push({
+                format: colorAttachments[i].format,
+                writeMask: getWriteMask(attachmentState),
+                blend: this.getBlend(attachmentState)
             });
         }
 
