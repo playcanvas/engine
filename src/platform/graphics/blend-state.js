@@ -1,9 +1,12 @@
 import { Debug } from '../../core/debug.js';
 import { BitPacking } from '../../core/math/bit-packing.js';
+import { StringIds } from '../../core/string-ids.js';
 import {
     BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
     BLENDMODE_SRC1_COLOR, BLENDMODE_ONE_MINUS_SRC1_ALPHA
 } from '../../platform/graphics/constants.js';
+
+const stringIds = new StringIds();
 
 // masks (to only keep relevant bits)
 const opMask = 0b111;
@@ -26,7 +29,27 @@ const blendShift = 30;              // 30 (1 bit)
 const allWriteMasks = 0b1111;
 const allWriteShift = redWriteShift;
 
+// Bit 31 of attachment0 flags the presence of per-attachment overrides, making attachment0 negative.
+// This allows a single compare to detect them, and partitions the key space so an interned
+// per-attachment key can never collide with the raw attachment0 value of a state without overrides.
+const overridesBit = 1 << 31;
+
+// attachment0 with the overrides flag removed - the plain 31 bit blend state
+const stateMask = 0x7fffffff;
+
+// maximum number of color attachments a blend state can describe, matching the maximum supported
+// by the graphics APIs
+const maxAttachments = 8;
+
 const usesSecondarySource = factor => factor >= BLENDMODE_SRC1_COLOR && factor <= BLENDMODE_ONE_MINUS_SRC1_ALPHA;
+
+// True if any blend factor of the supplied packed state uses the secondary fragment output.
+const stateUsesSecondarySource = state => (
+    usesSecondarySource(BitPacking.get(state, colorSrcFactorShift, factorMask)) ||
+    usesSecondarySource(BitPacking.get(state, colorDstFactorShift, factorMask)) ||
+    usesSecondarySource(BitPacking.get(state, alphaSrcFactorShift, factorMask)) ||
+    usesSecondarySource(BitPacking.get(state, alphaDstFactorShift, factorMask))
+);
 
 /**
  * BlendState is a descriptor that defines how output of fragment shader is written and blended
@@ -36,15 +59,47 @@ const usesSecondarySource = factor => factor >= BLENDMODE_SRC1_COLOR && factor <
  * For the best performance, do not modify blend state after it has been created, but create
  * multiple blend states and assign them to the material or graphics device as needed.
  *
+ * By default the blend state applies to all color attachments of the render target. When multiple
+ * color attachments are used, individual attachments can be given an independent blend state using
+ * {@link BlendState#setAttachment}. This requires {@link GraphicsDevice#supportsIndependentBlending} -
+ * on devices without support, the state of the attachment 0 is used for all attachments.
+ *
  * @category Graphics
  */
 class BlendState {
     /**
-     * Bit field representing the blend state for render target 0.
+     * Bit field representing the blend state for attachment 0. Bit 31 additionally flags the
+     * presence of per-attachment overrides.
      *
      * @private
      */
-    target0 = 0;
+    attachment0 = 0;
+
+    /**
+     * Per-attachment blend states, indexed directly by the attachment index. Slot 0 is unused and
+     * always zero, as attachment 0 is stored in `attachment0`. A slot value of zero means the
+     * attachment follows attachment 0. Allocated lazily, only when an override is set.
+     *
+     * @type {Int32Array|null}
+     * @private
+     */
+    _attachments = null;
+
+    /**
+     * Interned key of a state with per-attachment overrides. Unused by states without overrides,
+     * which use attachment0 as their key directly.
+     *
+     * @private
+     */
+    _key = 0;
+
+    /**
+     * True when `_key` needs re-evaluating. Set by all attachment 0 mutations, and only relevant
+     * when per-attachment overrides are present.
+     *
+     * @private
+     */
+    _keyDirty = false;
 
     /**
      * Create a new BlendState instance.
@@ -114,7 +169,8 @@ class BlendState {
      * @type {boolean}
      */
     set blend(value) {
-        this.target0 = BitPacking.set(this.target0, value ? 1 : 0, blendShift);
+        this.attachment0 = BitPacking.set(this.attachment0, value ? 1 : 0, blendShift);
+        this._keyDirty = true;
     }
 
     /**
@@ -123,19 +179,21 @@ class BlendState {
      * @type {boolean}
      */
     get blend() {
-        return BitPacking.all(this.target0, blendShift);
+        return BitPacking.all(this.attachment0, blendShift);
     }
 
     setColorBlend(op, srcFactor, dstFactor) {
-        this.target0 = BitPacking.set(this.target0, op, colorOpShift, opMask);
-        this.target0 = BitPacking.set(this.target0, srcFactor, colorSrcFactorShift, factorMask);
-        this.target0 = BitPacking.set(this.target0, dstFactor, colorDstFactorShift, factorMask);
+        this.attachment0 = BitPacking.set(this.attachment0, op, colorOpShift, opMask);
+        this.attachment0 = BitPacking.set(this.attachment0, srcFactor, colorSrcFactorShift, factorMask);
+        this.attachment0 = BitPacking.set(this.attachment0, dstFactor, colorDstFactorShift, factorMask);
+        this._keyDirty = true;
     }
 
     setAlphaBlend(op, srcFactor, dstFactor) {
-        this.target0 = BitPacking.set(this.target0, op, alphaOpShift, opMask);
-        this.target0 = BitPacking.set(this.target0, srcFactor, alphaSrcFactorShift, factorMask);
-        this.target0 = BitPacking.set(this.target0, dstFactor, alphaDstFactorShift, factorMask);
+        this.attachment0 = BitPacking.set(this.attachment0, op, alphaOpShift, opMask);
+        this.attachment0 = BitPacking.set(this.attachment0, srcFactor, alphaSrcFactorShift, factorMask);
+        this.attachment0 = BitPacking.set(this.attachment0, dstFactor, alphaDstFactorShift, factorMask);
+        this._keyDirty = true;
     }
 
     setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite) {
@@ -146,64 +204,178 @@ class BlendState {
     }
 
     get colorOp() {
-        return BitPacking.get(this.target0, colorOpShift, opMask);
+        return BitPacking.get(this.attachment0, colorOpShift, opMask);
     }
 
     get colorSrcFactor() {
-        return BitPacking.get(this.target0, colorSrcFactorShift, factorMask);
+        return BitPacking.get(this.attachment0, colorSrcFactorShift, factorMask);
     }
 
     get colorDstFactor() {
-        return BitPacking.get(this.target0, colorDstFactorShift, factorMask);
+        return BitPacking.get(this.attachment0, colorDstFactorShift, factorMask);
     }
 
     get alphaOp() {
-        return BitPacking.get(this.target0, alphaOpShift, opMask);
+        return BitPacking.get(this.attachment0, alphaOpShift, opMask);
     }
 
     get alphaSrcFactor() {
-        return BitPacking.get(this.target0, alphaSrcFactorShift, factorMask);
+        return BitPacking.get(this.attachment0, alphaSrcFactorShift, factorMask);
     }
 
     get alphaDstFactor() {
-        return BitPacking.get(this.target0, alphaDstFactorShift, factorMask);
+        return BitPacking.get(this.attachment0, alphaDstFactorShift, factorMask);
     }
 
     set redWrite(value) {
-        this.target0 = BitPacking.set(this.target0, value ? 1 : 0, redWriteShift);
+        this.attachment0 = BitPacking.set(this.attachment0, value ? 1 : 0, redWriteShift);
+        this._keyDirty = true;
     }
 
     get redWrite() {
-        return BitPacking.all(this.target0, redWriteShift);
+        return BitPacking.all(this.attachment0, redWriteShift);
     }
 
     set greenWrite(value) {
-        this.target0 = BitPacking.set(this.target0, value ? 1 : 0, greenWriteShift);
+        this.attachment0 = BitPacking.set(this.attachment0, value ? 1 : 0, greenWriteShift);
+        this._keyDirty = true;
     }
 
     get greenWrite() {
-        return BitPacking.all(this.target0, greenWriteShift);
+        return BitPacking.all(this.attachment0, greenWriteShift);
     }
 
     set blueWrite(value) {
-        this.target0 = BitPacking.set(this.target0, value ? 1 : 0, blueWriteShift);
+        this.attachment0 = BitPacking.set(this.attachment0, value ? 1 : 0, blueWriteShift);
+        this._keyDirty = true;
     }
 
     get blueWrite() {
-        return BitPacking.all(this.target0, blueWriteShift);
+        return BitPacking.all(this.attachment0, blueWriteShift);
     }
 
     set alphaWrite(value) {
-        this.target0 = BitPacking.set(this.target0, value ? 1 : 0, alphaWriteShift);
+        this.attachment0 = BitPacking.set(this.attachment0, value ? 1 : 0, alphaWriteShift);
+        this._keyDirty = true;
     }
 
     get alphaWrite() {
-        return BitPacking.all(this.target0, alphaWriteShift);
+        return BitPacking.all(this.attachment0, alphaWriteShift);
     }
 
     get allWrite() {
         // return a number with all 4 bits, for fast compare
-        return BitPacking.get(this.target0, allWriteShift, allWriteMasks);
+        return BitPacking.get(this.attachment0, allWriteShift, allWriteMasks);
+    }
+
+    /**
+     * Gets whether any color attachment has been given an independent blend state using
+     * {@link BlendState#setAttachment}.
+     *
+     * @type {boolean}
+     */
+    get hasAttachmentOverrides() {
+        return this.attachment0 < 0;
+    }
+
+    /**
+     * Assigns an independent blend state to the specified color attachment. The blend state of the
+     * supplied source is copied, and so subsequent changes to either the source or to attachment 0 do
+     * not affect it. An attachment which has not been assigned an independent state instead follows
+     * attachment 0.
+     *
+     * Note that this requires {@link GraphicsDevice#supportsIndependentBlending} - on devices
+     * without support, the state of attachment 0 is used for all attachments.
+     *
+     * @param {number} index - The index of the color attachment, in 1 to 7 range. Attachment 0 is
+     * configured using the other functions and properties of this class.
+     * @param {BlendState|null} src - The blend state to copy from, or null to make the attachment
+     * follow attachment 0 again.
+     * @example
+     * // attachment 1 keeps the blending of attachment 0, but does not write any channels
+     * const state = material.blendState.clone();
+     * const noWrite = state.clone();
+     * noWrite.setColorWrite(false, false, false, false);
+     * state.setAttachment(1, noWrite);
+     */
+    setAttachment(index, src) {
+        Debug.assert(index >= 1 && index < maxAttachments,
+            `BlendState#setAttachment index ${index} is out of range, it must be in 1 to ${maxAttachments - 1} range. Attachment 0 is configured using the other functions of the class.`);
+        Debug.assert(!src || !src.hasAttachmentOverrides,
+            'BlendState#setAttachment source must not have per-attachment overrides of its own, as only its attachment 0 state is used.');
+        Debug.assert(!src || (src.attachment0 & stateMask) !== 0,
+            'BlendState#setAttachment source must not be a blend state with all properties set to zero, as this value is reserved to mean the attachment follows attachment 0.');
+
+        this._attachments ??= new Int32Array(maxAttachments);
+        this._attachments[index] = src ? (src.attachment0 & stateMask) : 0;
+        this._attachmentsUpdated();
+    }
+
+    /**
+     * Removes the independent blend state of the specified color attachment, making it follow
+     * attachment 0 again.
+     *
+     * @param {number} index - The index of the color attachment, in 1 to 7 range.
+     */
+    clearAttachment(index) {
+        this.setAttachment(index, null);
+    }
+
+    /**
+     * Stores the blend state of the specified color attachment in the supplied blend state. When
+     * the attachment does not have an independent blend state, the state of attachment 0 is stored.
+     *
+     * @param {number} index - The index of the color attachment, in 0 to 7 range.
+     * @param {BlendState} dst - The blend state to store the result in. This avoids allocations, as
+     * a single instance can be reused.
+     * @returns {BlendState} The supplied dst, for chaining.
+     */
+    getAttachment(index, dst) {
+        Debug.assert(index >= 0 && index < maxAttachments,
+            `BlendState#getAttachment index ${index} is out of range, it must be in 0 to ${maxAttachments - 1} range.`);
+
+        // the overrides flag is the authority - the per-attachment values are ignored without it, as
+        // they can be stale after a copy from a state which has no overrides. Slot 0 is always
+        // zero, and so index 0 correctly falls through to attachment0.
+        const state = this.hasAttachmentOverrides ? this._attachments[index] : 0;
+        dst.attachment0 = state !== 0 ? state : (this.attachment0 & stateMask);
+        return dst;
+    }
+
+    /**
+     * Refreshes the overrides flag and the interned key after the per-attachment states have changed.
+     *
+     * @private
+     */
+    _attachmentsUpdated() {
+        const attachments = this._attachments;
+        let overrides = false;
+        for (let i = 1; i < maxAttachments; i++) {
+            if (attachments[i] !== 0) {
+                overrides = true;
+                break;
+            }
+        }
+
+        this.attachment0 = overrides ? (this.attachment0 | overridesBit) : (this.attachment0 & stateMask);
+
+        // evaluate the key immediately - this way the normal lifecycle never leaves a state with
+        // overrides needing a lazy evaluation, which would fail on a frozen instance
+        if (overrides) {
+            this._evalKey();
+        } else {
+            this._keyDirty = false;
+        }
+    }
+
+    /**
+     * Assigns a unique key to the combination of attachment 0 and the per-attachment states.
+     *
+     * @private
+     */
+    _evalKey() {
+        this._key = overridesBit | stringIds.get(`${this.attachment0}-${this._attachments.join('-')}`);
+        this._keyDirty = false;
     }
 
     /**
@@ -213,8 +385,20 @@ class BlendState {
      * @ignore
      */
     get usesDualSourceBlending() {
-        return usesSecondarySource(this.colorSrcFactor) || usesSecondarySource(this.colorDstFactor) ||
-            usesSecondarySource(this.alphaSrcFactor) || usesSecondarySource(this.alphaDstFactor);
+        if (stateUsesSecondarySource(this.attachment0)) {
+            return true;
+        }
+
+        if (this.hasAttachmentOverrides) {
+            const attachments = this._attachments;
+            for (let i = 1; i < maxAttachments; i++) {
+                if (attachments[i] !== 0 && stateUsesSecondarySource(attachments[i])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -224,7 +408,17 @@ class BlendState {
      * @returns {BlendState} Self for chaining.
      */
     copy(rhs) {
-        this.target0 = rhs.target0;
+        this.attachment0 = rhs.attachment0;
+
+        // per-attachment states are only copied when the source has them - the overrides flag is the
+        // authority on whether they are used, and so stale values are harmless
+        if (rhs.hasAttachmentOverrides) {
+            this._attachments ??= new Int32Array(maxAttachments);
+            this._attachments.set(rhs._attachments);
+        }
+
+        this._key = rhs._key;
+        this._keyDirty = rhs._keyDirty;
         return this;
     }
 
@@ -239,7 +433,15 @@ class BlendState {
     }
 
     get key() {
-        return this.target0;
+        // without per-attachment overrides, attachment0 is a unique key on its own
+        if (this.attachment0 >= 0) {
+            return this.attachment0;
+        }
+
+        if (this._keyDirty) {
+            this._evalKey();
+        }
+        return this._key;
     }
 
     /**
@@ -249,7 +451,7 @@ class BlendState {
      * @returns {boolean} True if the blend states are equal and false otherwise.
      */
     equals(rhs) {
-        return this.target0 === rhs.target0;
+        return this.key === rhs.key;
     }
 
     /**

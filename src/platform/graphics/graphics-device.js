@@ -492,6 +492,17 @@ class GraphicsDevice extends EventHandler {
     supportsDualSourceBlending = false;
 
     /**
+     * True if the device supports independent blending, which allows each color attachment of a
+     * render target to use its own blend state and color write mask, specified using
+     * {@link BlendState#setAttachment}. When false, the state of the attachment 0 is used for all
+     * attachments.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsIndependentBlending = false;
+
+    /**
      * True if the device supports 16-bit floating-point types in shaders (WebGPU only). When
      * supported, shaders can use native WGSL types: `f16`, `vec2h`, `vec3h`, `vec4h`, `mat2x2h`,
      * `mat3x3h`, `mat4x4h`. For convenience, PlayCanvas also provides type aliases (`half`,
