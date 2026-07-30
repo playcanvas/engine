@@ -5,7 +5,7 @@ import { Color } from '../../../core/math/color.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_NONE,
-    isIntegerPixelFormat,
+    isIntegerPixelFormat, pixelFormatInfo,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
@@ -64,8 +64,11 @@ const _attachmentBlendState = new BlendState();
 // maximum number of color attachments a BlendState can describe
 const maxBlendAttachments = 8;
 
-// reused storage for the clear color of an individual attachment, to avoid allocations
+// reused storage for the clear color of an individual attachment, to avoid allocations. The typed
+// array matching the format class of the attachment is used.
 const _attachmentClearValue = new Float32Array(4);
+const _attachmentClearValueInt = new Int32Array(4);
+const _attachmentClearValueUint = new Uint32Array(4);
 
 // reused options for the render pass clears, to avoid allocations. The fields not covered by the
 // flags are ignored by the clear call.
@@ -1417,10 +1420,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
             _clearOptions.stencil = depthStencilOps.clearStencilValue;
         }
 
-        // a single color attachment is cleared by the same clear call
+        // A single color attachment of a float / normalized format is cleared by the same clear
+        // call. Integer formats cannot be cleared by gl.clear (the results are undefined), and use
+        // the per-attachment path below instead.
         const colorBufferCount = rt._colorBuffers?.length ?? 0;
         const colorOps = renderPass.colorOps;
-        if (colorBufferCount <= 1 && colorOps?.clear) {
+        const useClearBuffers = colorBufferCount > 1 ||
+            (colorBufferCount === 1 && isIntegerPixelFormat(rt._colorBuffers[0].format));
+        if (!useClearBuffers && colorOps?.clear) {
             clearFlags |= CLEARFLAG_COLOR;
             const { clearValue } = colorOps;
             const color = _clearOptions.color;
@@ -1435,12 +1442,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.clear(_clearOptions);
         }
 
-        // Multiple color attachments are cleared individually using clearBufferfv, as the
-        // non-indexed gl.clear applies a single clear color to all draw buffers. This applies
-        // their own clear colors, and preserves the content of the attachments which do not
-        // clear. Note that clearBufferfv is affected by the color write masks, including the
-        // per-attachment ones, and so these are reset first.
-        if (colorBufferCount > 1) {
+        // The remaining color attachments are cleared individually using clearBuffer functions,
+        // as the non-indexed gl.clear applies a single clear color to all draw buffers, and does
+        // not support integer formats. This applies their own clear colors, uses the clearBuffer
+        // function matching the format class of each attachment, and preserves the content of the
+        // attachments which do not clear. Note that the clearBuffer functions are affected by the
+        // color write masks, including the per-attachment ones, and so these are reset first.
+        if (useClearBuffers) {
             const gl = this.gl;
             const { colorArrayOps } = renderPass;
             let writeMasksReset = false;
@@ -1448,20 +1456,27 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const colorOps = colorArrayOps[i];
                 if (colorOps?.clear) {
 
-                    Debug.assert(!isIntegerPixelFormat(rt._colorBuffers[i].format),
-                        'Clearing an integer color attachment of a render pass is not supported.', rt);
-
                     if (!writeMasksReset) {
                         this.setBlendState(BlendState.NOBLEND);
                         writeMasksReset = true;
                     }
 
                     const { clearValue } = colorOps;
-                    _attachmentClearValue[0] = clearValue.r;
-                    _attachmentClearValue[1] = clearValue.g;
-                    _attachmentClearValue[2] = clearValue.b;
-                    _attachmentClearValue[3] = clearValue.a;
-                    gl.clearBufferfv(gl.COLOR, i, _attachmentClearValue);
+                    const formatInfo = pixelFormatInfo.get(rt._colorBuffers[i].format);
+                    const clearValueArray = formatInfo?.isUint ? _attachmentClearValueUint :
+                        (formatInfo?.isInt ? _attachmentClearValueInt : _attachmentClearValue);
+                    clearValueArray[0] = clearValue.r;
+                    clearValueArray[1] = clearValue.g;
+                    clearValueArray[2] = clearValue.b;
+                    clearValueArray[3] = clearValue.a;
+
+                    if (formatInfo?.isUint) {
+                        gl.clearBufferuiv(gl.COLOR, i, clearValueArray);
+                    } else if (formatInfo?.isInt) {
+                        gl.clearBufferiv(gl.COLOR, i, clearValueArray);
+                    } else {
+                        gl.clearBufferfv(gl.COLOR, i, clearValueArray);
+                    }
                 }
             }
         }

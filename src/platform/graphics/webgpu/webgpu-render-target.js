@@ -1,5 +1,6 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
+import { pixelFormatInfo } from '../constants.js';
 import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
@@ -540,6 +541,22 @@ class WebgpuRenderTarget {
             colorAttachment.clearValue = srgb ? colorOps.clearValueLinear : colorOps.clearValue;
             colorAttachment.loadOp = colorOps.clear ? 'clear' : 'load';
             colorAttachment.storeOp = colorOps.store ? 'store' : 'discard';
+
+            // integer formats require the clear value components to be integers representable in
+            // the format, otherwise WebGPU generates a validation error
+            Debug.call(() => {
+                if (colorOps.clear) {
+                    const formatInfo = pixelFormatInfo.get(renderTarget.getColorBuffer(i)?.format);
+                    if (formatInfo?.isInt === true || formatInfo?.isUint === true) {
+                        const { r, g, b, a } = colorOps.clearValue;
+                        const integers = Number.isInteger(r) && Number.isInteger(g) && Number.isInteger(b) && Number.isInteger(a);
+                        const unsigned = formatInfo.isUint !== true || (r >= 0 && g >= 0 && b >= 0 && a >= 0);
+                        if (!integers || !unsigned) {
+                            Debug.errorOnce(`Render target '${renderTarget.name}' has an integer format color attachment ${i} (${formatInfo.name}), and its clear value components must be ${formatInfo.isUint ? 'non-negative ' : ''}integers, but are [${r}, ${g}, ${b}, ${a}].`);
+                        }
+                    }
+                }
+            });
 
             // a transient (memoryless) attachment must be cleared on load and discarded on store.
             // The frame-graph store-on-no-clear optimization can flip these post-authoring (e.g. a

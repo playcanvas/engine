@@ -14,6 +14,10 @@
 // attachment 0 to dark blue and attachment 1 to dark green, visible as the border around each
 // panel, and the camera renders on top without clearing.
 //
+// Additionally, an unsigned integer format render target is cleared to a marker value, verifying
+// the clear support of integer formats. The small indicator panel below the two attachments
+// samples it and shows green when it contains the expected value, and red otherwise.
+//
 // When the device does not support independent blending (the OES_draw_buffers_indexed extension is
 // unavailable on WebGL2), the blend state of attachment 0 is used for all attachments and the two
 // halves render identically.
@@ -35,14 +39,18 @@ import {
     FILLMODE_FILL_WINDOW,
     FILTER_NEAREST,
     Layer,
+    PIXELFORMAT_R32U,
     PIXELFORMAT_RGBA8,
     PROJECTION_ORTHOGRAPHIC,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RenderPass,
     RenderTarget,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL,
+    ShaderMaterial,
     StandardMaterial,
     Texture,
     createGraphicsDevice
@@ -197,8 +205,44 @@ clearPass.init(renderTarget);
 clearPass.setClearColor(new Color(0, 0, 0.25, 1), 0);
 clearPass.setClearColor(new Color(0, 0.25, 0, 1), 1);
 
-// execute the clear before the cameras render each frame
-app.on('prerender', () => clearPass.render());
+// ------ Clear of an unsigned integer format render target ------
+
+// the expected marker value the indicator panel tests for
+const UINT_CLEAR_VALUE = 12648430;
+
+const uintTexture = new Texture(device, {
+    name: 'uintClear',
+    width: 4,
+    height: 4,
+    format: PIXELFORMAT_R32U,
+    mipmaps: false,
+    minFilter: FILTER_NEAREST,
+    magFilter: FILTER_NEAREST
+});
+
+const uintRenderTarget = new RenderTarget({
+    name: 'UintRT',
+    colorBuffer: uintTexture,
+    depth: false
+});
+
+app.on('destroy', () => {
+    uintRenderTarget.destroyTextureBuffers();
+    uintRenderTarget.destroy();
+});
+
+// a clear-only render pass storing the marker value in the texture. For integer formats, the
+// clear color components are the raw integer values.
+const uintClearPass = new RenderPass(device);
+uintClearPass.name = 'UintClear';
+uintClearPass.init(uintRenderTarget);
+uintClearPass.setClearColor(new Color(UINT_CLEAR_VALUE, 0, 0, 0));
+
+// execute the clears before the cameras render each frame
+app.on('prerender', () => {
+    clearPass.render();
+    uintClearPass.render();
+});
 
 // The camera renders on top of the cleared attachments, without clearing the color itself. It
 // renders before the main camera, so that the displayed attachments contain this frame's result.
@@ -248,6 +292,81 @@ const createDisplay = (name, texture, x) => {
 createDisplay('Display 0', attachment0, -PANEL_X);
 createDisplay('Display 1', attachment1, PANEL_X);
 
+// ------ Indicator panel testing the integer clear value ------
+
+// the indicator sits below the two panels
+const INDICATOR_SIZE = 0.25;
+const INDICATOR_Y = -(PANEL_SIZE + INDICATOR_SIZE) * 0.5 - 0.1;
+
+// samples the unsigned integer texture and shows green when it contains the expected clear value
+const uintMaterial = new ShaderMaterial({
+    uniqueName: 'UintClearIndicator',
+    vertexGLSL: /* glsl */ `
+        attribute vec4 aPosition;
+        attribute vec2 aUv0;
+        uniform mat4 matrix_model;
+        uniform mat4 matrix_viewProjection;
+        varying vec2 vUv0;
+        void main() {
+            vUv0 = aUv0;
+            gl_Position = matrix_viewProjection * matrix_model * aPosition;
+        }
+    `,
+    fragmentGLSL: /* glsl */ `
+        varying vec2 vUv0;
+        uniform highp usampler2D uintMap;
+        void main() {
+            uint value = texture(uintMap, vUv0).r;
+            gl_FragColor = value == ${UINT_CLEAR_VALUE}u ? vec4(0.2, 0.55, 0.25, 1.0) : vec4(0.7, 0.15, 0.15, 1.0);
+        }
+    `,
+    vertexWGSL: /* wgsl */ `
+        attribute aPosition: vec4f;
+        attribute aUv0: vec2f;
+        uniform matrix_model: mat4x4f;
+        uniform matrix_viewProjection: mat4x4f;
+        varying vUv0: vec2f;
+        @vertex
+        fn vertexMain(input: VertexInput) -> VertexOutput {
+            var output: VertexOutput;
+            output.position = uniform.matrix_viewProjection * uniform.matrix_model * input.aPosition;
+            output.vUv0 = input.aUv0;
+            return output;
+        }
+    `,
+    fragmentWGSL: /* wgsl */ `
+        varying vUv0: vec2f;
+        var uintMap: texture_2d<u32>;
+        @fragment
+        fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+            var output: FragmentOutput;
+            let dims = vec2i(textureDimensions(uintMap));
+            let coords = min(vec2i(input.vUv0 * vec2f(dims)), dims - vec2i(1));
+            let value = textureLoad(uintMap, coords, 0).r;
+            output.color = select(vec4f(0.7, 0.15, 0.15, 1.0), vec4f(0.2, 0.55, 0.25, 1.0), value == ${UINT_CLEAR_VALUE}u);
+            return output;
+        }
+    `,
+    attributes: {
+        aPosition: SEMANTIC_POSITION,
+        aUv0: SEMANTIC_TEXCOORD0
+    }
+});
+uintMaterial.setParameter('uintMap', uintTexture);
+uintMaterial.cull = CULLFACE_NONE;
+uintMaterial.update();
+
+const indicator = new Entity('Uint Clear Indicator');
+indicator.addComponent('render', {
+    type: 'plane',
+    material: uintMaterial,
+    layers: [worldLayer.id]
+});
+indicator.setLocalPosition(0, INDICATOR_Y, 0);
+indicator.setLocalEulerAngles(90, 0, 0);
+indicator.setLocalScale(INDICATOR_SIZE, 1, INDICATOR_SIZE);
+app.root.addChild(indicator);
+
 const camera = new Entity('Camera');
 camera.addComponent('camera', {
     clearColor: new Color(0.02, 0.02, 0.02),
@@ -258,16 +377,16 @@ camera.addComponent('camera', {
 camera.setLocalPosition(0, 0, 5);
 app.root.addChild(camera);
 
-// Keep both panels fully visible at any canvas aspect ratio. An orthographic camera sees a
-// 2 * orthoHeight tall and 2 * orthoHeight * aspect wide area, so the height is chosen as whichever
-// of the two constraints is tighter, with a small margin around the content.
+// Keep the panels and the indicator fully visible at any canvas aspect ratio. An orthographic
+// camera sees a 2 * orthoHeight tall and 2 * orthoHeight * aspect wide area, so the height is
+// chosen as whichever of the two constraints is tighter, with a small margin around the content.
 const contentWidth = PANEL_SIZE * 2 + PANEL_GAP;
-const contentHeight = PANEL_SIZE;
+const contentHalfHeight = -INDICATOR_Y + INDICATOR_SIZE * 0.5;
 const MARGIN = 1.06;
 
 const fitCamera = () => {
     const aspect = device.width / device.height;
-    camera.camera.orthoHeight = Math.max(contentWidth / (2 * aspect), contentHeight * 0.5) * MARGIN;
+    camera.camera.orthoHeight = Math.max(contentWidth / (2 * aspect), contentHalfHeight) * MARGIN;
 };
 
 fitCamera();
