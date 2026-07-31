@@ -819,13 +819,20 @@ class GSplatComponent extends Component {
     }
 
     onBeforeRemove() {
+        // removing a component does not disable it first, so undo what onEnable set up
+        if (this.enabled && this.entity.enabled) {
+            this.onDisable();
+        }
+
         this.destroyInstance();
 
         this.asset = null;
         this._assetReference.id = null;
 
         this.entity.off('remove', this.onRemoveChild, this);
+        this.entity.off('removehierarchy', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
+        this.entity.off('inserthierarchy', this.onInsertChild, this);
     }
 
     onLayersChanged(oldComp, newComp) {
