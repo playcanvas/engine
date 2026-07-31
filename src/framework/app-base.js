@@ -114,6 +114,11 @@ let app = null;
  * {@link ResourceHandler}s yourself. This facilitates
  * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
  * your application.
+ *
+ * `new AppBase(canvas)` only constructs the instance and its root entity. You must then call
+ * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
+ * `componentSystems` and `resourceHandlers` before adding components or calling
+ * {@link AppBase#start}. {@link Application} assembles those options for you.
  */
 class AppBase extends EventHandler {
     /**

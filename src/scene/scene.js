@@ -28,6 +28,13 @@ import { getDefaultMaterial } from './materials/default-material.js';
  * A scene is a graphical representation of an environment. It manages the scene hierarchy, all
  * graphical objects, lights, and scene-wide properties.
  *
+ * Tone mapping and gamma correction are configured per camera, not on the scene: use
+ * {@link CameraComponent#toneMapping} and {@link CameraComponent#gammaCorrection}. `Scene` has no
+ * such properties and no deprecation shim, so assigning to them silently does nothing. Fog remains
+ * scene-wide, but {@link Scene#fog} is a read-only {@link FogParams} object rather than a mode
+ * constant — set its `type`, `color`, `start` and `end` — and {@link CameraComponent#fog} can
+ * override it for a single camera.
+ *
  * @category Graphics
  */
 class Scene extends EventHandler {
