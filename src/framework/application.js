@@ -97,6 +97,11 @@ import { XrManager } from './xr/xr-manager.js';
  * The component systems this class registers are listed on the constructor below. That list
  * doubles as a migration checklist, as it maps each component name to the system you would need
  * to register yourself.
+ *
+ * {@link AppBase#keyboard}, {@link AppBase#mouse}, {@link AppBase#touch},
+ * {@link AppBase#gamepads} and {@link AppBase#elementInput} stay `null` unless the matching device
+ * is passed to this constructor, so a game that reads input must construct with, for example,
+ * `{ keyboard: new Keyboard(window), mouse: new Mouse(canvas), touch: new TouchDevice(canvas) }`.
  */
 class Application extends AppBase {
     /**

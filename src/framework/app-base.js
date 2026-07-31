@@ -117,6 +117,11 @@ let app = null;
  *
  * It is the preferred entry point for new code - {@link Application} is a convenience subclass
  * that registers everything for you, and is expected to be deprecated in a future release.
+ *
+ * `new AppBase(canvas)` only constructs the instance and its root entity. You must then call
+ * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
+ * `componentSystems` and `resourceHandlers` before adding components or calling
+ * {@link AppBase#start}. {@link Application} assembles those options for you.
  */
 class AppBase extends EventHandler {
     /**
