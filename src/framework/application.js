@@ -70,6 +70,11 @@ import { XrManager } from './xr/xr-manager.js';
  * {@link ComponentSystem}s and {@link ResourceHandler}s implemented in the PlayCanvas Engine. This
  * makes app setup simple but results in the full engine being included when bundling your
  * application.
+ *
+ * {@link AppBase#keyboard}, {@link AppBase#mouse}, {@link AppBase#touch},
+ * {@link AppBase#gamepads} and {@link AppBase#elementInput} stay `null` unless the matching device
+ * is passed to this constructor, so a game that reads input must construct with, for example,
+ * `{ keyboard: new Keyboard(window), mouse: new Mouse(canvas), touch: new TouchDevice(canvas) }`.
  */
 class Application extends AppBase {
     /**
