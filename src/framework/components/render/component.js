@@ -329,7 +329,9 @@ class RenderComponent extends Component {
      */
     set meshInstances(value) {
         Debug.assert(Array.isArray(value), 'MeshInstances set to a Render component must be an array.');
-        this.destroyMeshInstances();
+
+        // don't notify the anim component yet, it's notified once the new mesh instances are in place
+        this._destroyMeshInstances();
 
         this._meshInstances = value;
 
@@ -354,6 +356,8 @@ class RenderComponent extends Component {
                 this.addToLayers();
             }
         }
+
+        this._rebindAnim();
     }
 
     /**
@@ -762,6 +766,17 @@ class RenderComponent extends Component {
 
     /** @private */
     destroyMeshInstances() {
+        this._destroyMeshInstances();
+        this._rebindAnim();
+    }
+
+    /**
+     * Destroys the mesh instances without notifying an anim component. Used by the meshInstances
+     * setter, which notifies once the replacement mesh instances are in place.
+     *
+     * @private
+     */
+    _destroyMeshInstances() {
         const meshInstances = this._meshInstances;
         if (meshInstances) {
             this.removeFromLayers();
@@ -773,6 +788,21 @@ class RenderComponent extends Component {
                 meshInstances[i].destroy();
             }
             this._meshInstances.length = 0;
+        }
+    }
+
+    /**
+     * Notifies an anim component on the same entity that the set of mesh instances has changed, so
+     * that it re-resolves the animation targets referencing them - morph target weights and
+     * animated material textures. Without this, morph animations are silently dropped when the
+     * render asset loads after the animation was bound, and keep driving destroyed morph instances
+     * after the asset is unloaded. See #5225.
+     *
+     * @private
+     */
+    _rebindAnim() {
+        if (!this.entity._destroying) {
+            this.entity.anim?.rebind();
         }
     }
 

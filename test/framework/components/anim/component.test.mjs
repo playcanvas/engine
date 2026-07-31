@@ -1,8 +1,16 @@
 import { expect } from 'chai';
 
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
 import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../../../../src/framework/anim/controller/constants.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
 import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { MeshInstance } from '../../../../src/scene/mesh-instance.js';
+import { Mesh } from '../../../../src/scene/mesh.js';
+import { MorphInstance } from '../../../../src/scene/morph-instance.js';
+import { MorphTarget } from '../../../../src/scene/morph-target.js';
+import { Morph } from '../../../../src/scene/morph.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -78,6 +86,87 @@ describe('AnimComponent', function () {
             expect(clone.anim.layers.length).to.equal(1);
             expect(clone.anim.findAnimationLayer('Base').states).to.have.members(['START', 'Idle']);
             expect(clone.anim.playable).to.equal(true);
+        });
+    });
+
+    describe('morph target weights', function () {
+
+        const MORPH_TARGET = 'Blink';
+
+        // mesh instances carrying a single named morph target, as a loaded render asset produces
+        const createMeshInstances = (entity) => {
+            const mesh = Mesh.fromGeometry(app.graphicsDevice, {
+                positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                indices: [0, 1, 2]
+            });
+            mesh.morph = new Morph([new MorphTarget({
+                name: MORPH_TARGET,
+                deltaPositions: new Float32Array([0, 0, 0, 0, 1, 0, 0, 0, 0]),
+                defaultWeight: 0
+            })], app.graphicsDevice);
+
+            const meshInstance = new MeshInstance(mesh, app.systems.render.defaultMaterial, entity);
+            meshInstance.morphInstance = new MorphInstance(mesh.morph);
+            return [meshInstance];
+        };
+
+        // a track with a single morph weight curve ramping from 0 to 1 over its duration, encoded
+        // the way the glb parser encodes them
+        const morphTrack = (entityName) => {
+            const curve = new AnimCurve([{
+                entityPath: [entityName],
+                component: 'graph',
+                propertyPath: [`weight.name.${MORPH_TARGET}`]
+            }], 0, 0, INTERPOLATION_LINEAR);
+
+            return new AnimTrack('Morph', 1, [new AnimData(1, [0, 1])], [new AnimData(1, [0, 1])], [curve]);
+        };
+
+        const weight = entity => entity.render.meshInstances[0].morphInstance.getWeight(MORPH_TARGET);
+
+        // Regression test for https://github.com/playcanvas/engine/issues/5225
+        it('are animated when mesh instances are created after the animation is bound', function () {
+            const entity = new Entity('model', app);
+            app.root.addChild(entity);
+
+            // a render component whose asset has not loaded yet, so it has no mesh instances
+            entity.addComponent('render', { type: 'asset' });
+            entity.addComponent('anim', { activate: true });
+            entity.anim.assignAnimation('Morph', morphTrack('model'));
+
+            // frames tick while the asset is still loading - the anim controller binds its curves
+            // here, when there is no morph instance to bind the weight curve to
+            app.systems.anim.onAnimationUpdate(0.1);
+
+            // the asset arrives and mesh instances are created
+            entity.render.meshInstances = createMeshInstances(entity);
+
+            app.systems.anim.onAnimationUpdate(0.4);
+
+            expect(weight(entity)).to.be.closeTo(0.5, 1e-5);
+        });
+
+        // Regression test for https://github.com/playcanvas/engine/issues/5225
+        it('are animated after mesh instances are replaced', function () {
+            const entity = new Entity('model', app);
+            app.root.addChild(entity);
+
+            entity.addComponent('render', { type: 'asset' });
+            entity.render.meshInstances = createMeshInstances(entity);
+            entity.addComponent('anim', { activate: true });
+            entity.anim.assignAnimation('Morph', morphTrack('model'));
+
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(weight(entity)).to.be.closeTo(0.5, 1e-5);
+
+            // an asset unload and reload destroys the morph instances the animation was bound to
+            // and creates replacements
+            entity.render.destroyMeshInstances();
+            entity.render.meshInstances = createMeshInstances(entity);
+
+            // clip time is cumulative, so this samples the track at 0.75
+            expect(() => app.systems.anim.onAnimationUpdate(0.25)).to.not.throw();
+            expect(weight(entity)).to.be.closeTo(0.75, 1e-5);
         });
     });
 });
