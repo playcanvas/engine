@@ -45,6 +45,7 @@ import { WebglUploadStream } from './webgl-upload-stream.js';
 import { WebglXrBridge } from './webgl-xr-bridge.js';
 import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
 import { BlendState } from '../blend-state.js';
+import { validateClearValues } from '../render-pass.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
@@ -1451,6 +1452,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (useClearBuffers) {
             const gl = this.gl;
             const { colorArrayOps } = renderPass;
+
+            // integer formats require the clear value components to be integers representable in
+            // the format, as they would otherwise be silently truncated by the typed array
+            Debug.call(() => validateClearValues(renderPass));
+
             let writeMasksReset = false;
             for (let i = 0; i < colorBufferCount; i++) {
                 const colorOps = colorArrayOps[i];
