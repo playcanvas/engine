@@ -2613,6 +2613,12 @@ class ElementComponent extends Component {
     }
 
     onBeforeRemove() {
+        // removing a component does not disable it first, so undo what onEnable set up. This runs
+        // before the image / text elements are destroyed below, as onDisable uses them.
+        if (this.enabled && this.entity.enabled) {
+            this.onDisable();
+        }
+
         this.entity.off('insert', this._onInsert, this);
         this._unpatch();
         if (this._image) {

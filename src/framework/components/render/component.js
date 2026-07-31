@@ -812,6 +812,11 @@ class RenderComponent extends Component {
     }
 
     onBeforeRemove() {
+        // removing a component does not disable it first, so undo what onEnable set up
+        if (this.enabled && this.entity.enabled) {
+            this.onDisable();
+        }
+
         this.destroyMeshInstances();
 
         this.asset = null;
@@ -824,7 +829,9 @@ class RenderComponent extends Component {
         }
 
         this.entity.off('remove', this.onRemoveChild, this);
+        this.entity.off('removehierarchy', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
+        this.entity.off('inserthierarchy', this.onInsertChild, this);
     }
 
     onLayersChanged(oldComp, newComp) {
