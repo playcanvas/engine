@@ -1185,7 +1185,10 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Controls how the canvas fills the window and resizes when the window changes.
+     * Controls how the canvas fills the window. The canvas is sized when this is called and on
+     * every {@link AppBase#resizeCanvas}; the engine installs no window `resize` listener of its
+     * own, so call `resizeCanvas` from your own handler to keep the window-relative modes tracking
+     * the window.
      *
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *

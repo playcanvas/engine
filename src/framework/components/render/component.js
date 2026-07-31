@@ -636,7 +636,10 @@ class RenderComponent extends Component {
 
     /**
      * Sets the material {@link Material} that will be used to render the component. The material
-     * is ignored for renders of type 'asset'.
+     * is ignored for renders of type 'asset' — which is the type every entity produced by
+     * `instantiateRenderEntity` carries, so this setter has no effect on models loaded from a
+     * container. For those, assign `material` on each entry of
+     * {@link RenderComponent#meshInstances} instead.
      *
      * @type {Material}
      */

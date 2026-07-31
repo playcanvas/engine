@@ -554,6 +554,10 @@ class Asset extends EventHandler {
      * Take a callback which is called as soon as the asset is loaded. If the asset is already
      * loaded the callback is called straight away.
      *
+     * The callback fires on success only. A failed load still marks the asset as loaded, but fires
+     * `error` rather than `load`, so this callback never runs — listen for the `error` event as
+     * well whenever a failure has to be handled, and never await this callback alone.
+     *
      * @param {AssetReadyCallback} callback - The function called when the asset is ready. Passed
      * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.

@@ -250,6 +250,8 @@ const isBlack = (color) => {
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be
  * "r", "g", "b" or "a".
  * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
+ * Materials imported from glTF enable {@link StandardMaterial#glossInvert}, which reverses this:
+ * on those materials gloss holds roughness, so 0 is shiny and 1 is rough.
  * @property {Texture|null} glossMap Gloss map (default is null). If specified, will be multiplied
  * by normalized gloss value and/or vertex colors.
  * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
