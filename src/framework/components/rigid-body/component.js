@@ -59,6 +59,11 @@ const _vecB = new Vec3();
  * console.log(entity.rigidbody.mass);
  * ```
  *
+ * For player movement, `playcanvas/scripts/esm/first-person-controller.mjs` and
+ * `playcanvas/scripts/esm/third-person-controller.mjs` ship complete rigidbody character
+ * controllers with capsule collision, damped ground and air movement, sprinting, jumping and
+ * camera control. Attach one instead of driving the body by hand.
+ *
  * Relevant Engine API examples:
  *
  * - [Falling shapes](https://playcanvas.github.io/#/physics/falling-shapes)

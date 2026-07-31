@@ -766,6 +766,10 @@ class GamePad {
 /**
  * Input handler for accessing GamePad input.
  *
+ * For frame-accumulated input deltas rather than raw pad state, see {@link GamepadSource},
+ * {@link KeyboardMouseSource} and {@link MultiTouchSource}, which feed {@link InputController}s
+ * such as {@link OrbitController}, {@link FlyController} and {@link FocusController}.
+ *
  * @category Input
  */
 class GamePads extends EventHandler {

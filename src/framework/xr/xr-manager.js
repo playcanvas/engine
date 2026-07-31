@@ -49,6 +49,12 @@ import { DEVICETYPE_WEBGPU } from '../../platform/graphics/constants.js';
  * The {@link AppBase} class automatically creates an instance of this class and makes it available
  * as {@link AppBase#xr}.
  *
+ * Ready-made XR building blocks ship under `playcanvas/scripts/esm/xr/`: `xr-session.mjs` for
+ * session lifecycle and camera rig transforms, `xr-controllers.mjs` for WebXR controller and hand
+ * models, `xr-navigation.mjs` for teleportation, smooth locomotion and turning,
+ * `xr-manipulation.mjs` for two-handed drag, rotate and scale of the world, and `xr-menu.mjs` for
+ * hand-tracked and controller-driven 3D menus.
+ *
  * @category XR
  */
 class XrManager extends EventHandler {

@@ -447,7 +447,10 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Sets the environment lighting atlas.
+     * Sets the environment lighting atlas, an octahedral atlas of prefiltered mip levels. To build
+     * one from an equirectangular or cubemap source, use `EnvLighting.generateLightingSource`
+     * followed by `EnvLighting.generateAtlas`; a raw HDR texture assigned here will not light the
+     * scene correctly.
      *
      * @type {Texture|null}
      */
@@ -623,6 +626,11 @@ class Scene extends EventHandler {
 
     /**
      * Sets the base cubemap texture used as the scene's skybox when skyboxMip is 0. Defaults to null.
+     *
+     * For a sky that needs no cubemap asset, `playcanvas/scripts/esm/sky/procedural-sky.mjs`
+     * renders an analytic daylight sky and keeps a directional light aligned with the sun so
+     * direct lighting and shadows match. Related scene-dressing scripts ship alongside it:
+     * `water.mjs`, `grid.mjs`, `shadow-catcher.mjs` and `blurred-planar-reflection.mjs`.
      *
      * @type {Texture|null}
      */
