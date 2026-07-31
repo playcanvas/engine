@@ -309,7 +309,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.dirLightMap && options.litOptions.useSpecular, 'STD_LIGHTMAP_DIR', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
-        fDefineSet(options.useSpecularColor && options.litOptions.useSpecular, 'STD_SPECULAR_CONSTANT', '');
+        fDefineSet(options.useSpecularColor && (options.litOptions.useSpecular || options.litOptions.useRefraction), 'STD_SPECULAR_CONSTANT', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
         fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
     }
@@ -374,6 +374,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             if (options.litOptions.useRefraction) {
                 this._addMapDefines(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping);
                 this._addMapDefines(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping);
+
+                // refraction needs ior, which is otherwise handled by the metalness path
+                if (!options.litOptions.useMetalness) {
+                    this._addMapDefines(fDefines, 'ior', 'iorPS', options, litShader.chunks, textureMapping);
+                }
             }
 
             // iridescence
@@ -382,8 +387,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMapDefines(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping);
             }
 
-            // specularity & glossiness
-            if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections) {
+            // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+            if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections || options.litOptions.useRefraction) {
                 if (options.litOptions.useSheen) {
                     this._addMapDefines(fDefines, 'sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding);
                     this._addMapDefines(fDefines, 'sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping);

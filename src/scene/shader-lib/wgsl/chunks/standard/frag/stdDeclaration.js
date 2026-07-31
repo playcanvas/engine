@@ -24,6 +24,11 @@ export default /* wgsl */`
         #ifdef LIT_REFRACTION
             var<private> dTransmission: f32;
             var<private> dThickness: f32;
+
+            // ior, unless it is declared by the metalness path below
+            #ifndef LIT_METALNESS
+                var<private> dIor: f32;
+            #endif
         #endif
 
         #ifdef LIT_SCENE_COLOR
@@ -107,8 +112,8 @@ export default /* wgsl */`
             var<private> dAnisotropyRotation: vec2f;
         #endif
 
-        // specularity & glossiness
-        #ifdef LIT_SPECULAR_OR_REFLECTION
+        // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+        #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
 
             // sheen
             #ifdef LIT_SHEEN

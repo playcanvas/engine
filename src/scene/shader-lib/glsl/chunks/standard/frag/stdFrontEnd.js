@@ -34,6 +34,11 @@ export default /* glsl */`
         #ifdef LIT_REFRACTION
             #include "transmissionPS"
             #include "thicknessPS"
+
+            // ior, unless it is included by the metalness path below
+            #ifndef LIT_METALNESS
+                #include "iorPS"
+            #endif
         #endif
 
         // iridescence
@@ -42,8 +47,8 @@ export default /* glsl */`
             #include "iridescenceThicknessPS"
         #endif
 
-        // specularity & glossiness
-        #ifdef LIT_SPECULAR_OR_REFLECTION
+        // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+        #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
 
             // sheen
             #ifdef LIT_SHEEN
@@ -143,6 +148,12 @@ export default /* glsl */`
                 getThickness();
                 litArgs_thickness = dThickness;
 
+                // ior, unless it is handled by the metalness path below
+                #ifndef LIT_METALNESS
+                    getIor();
+                    litArgs_ior = dIor;
+                #endif
+
                 #ifdef LIT_DISPERSION
                     litArgs_dispersion = material_dispersion;
                 #endif
@@ -156,8 +167,8 @@ export default /* glsl */`
                 litArgs_iridescence_thickness = dIridescenceThickness;
             #endif
 
-            // specularity & glossiness
-            #ifdef LIT_SPECULAR_OR_REFLECTION
+            // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+            #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
 
                 // sheen
                 #ifdef LIT_SHEEN
