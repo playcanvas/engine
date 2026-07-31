@@ -1,6 +1,7 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
 import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
+import { validateClearValues } from '../render-pass.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
@@ -531,6 +532,10 @@ class WebgpuRenderTarget {
     setupForRenderPass(renderPass, renderTarget) {
 
         Debug.assert(this.renderPassDescriptor);
+
+        // integer formats require the clear value components to be integers representable in the
+        // format, otherwise WebGPU generates a validation error
+        Debug.call(() => validateClearValues(renderPass));
 
         const count = this.renderPassDescriptor.colorAttachments?.length ?? 0;
         for (let i = 0; i < count; ++i) {

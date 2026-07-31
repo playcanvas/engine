@@ -10,6 +10,42 @@ import { FramePass } from './frame-pass.js';
  * @import { Texture } from './texture.js'
  */
 
+/**
+ * Reports the clear values of integer format color attachments which are not representable in
+ * their format. The components of the clear color of an integer format attachment are the raw
+ * integer values, and so a non-integer value would be silently truncated by WebGL, and generates a
+ * validation error on WebGPU.
+ *
+ * @param {RenderPass} renderPass - The render pass to validate.
+ * @ignore
+ */
+const validateClearValues = (renderPass) => {
+    Debug.call(() => {
+
+        const renderTarget = renderPass.renderTarget;
+        const count = renderPass.colorArrayOps.length;
+        for (let i = 0; i < count; i++) {
+
+            const colorOps = renderPass.colorArrayOps[i];
+            if (!colorOps?.clear) {
+                continue;
+            }
+
+            const formatInfo = pixelFormatInfo.get(renderTarget?.getColorBuffer(i)?.format);
+            if (formatInfo?.isInt !== true && formatInfo?.isUint !== true) {
+                continue;
+            }
+
+            const { r, g, b, a } = colorOps.clearValue;
+            const integers = Number.isInteger(r) && Number.isInteger(g) && Number.isInteger(b) && Number.isInteger(a);
+            const unsigned = formatInfo.isUint !== true || (r >= 0 && g >= 0 && b >= 0 && a >= 0);
+            if (!integers || !unsigned) {
+                Debug.errorOnce(`Render pass '${renderPass.name}' clears the integer format color attachment ${i} (${formatInfo.name}) of render target '${renderTarget?.name}' to [${r}, ${g}, ${b}, ${a}], but the components must be ${formatInfo.isUint ? 'non-negative ' : ''}integers.`, renderPass);
+            }
+        }
+    });
+};
+
 class ColorAttachmentOps {
     /**
      * A color used to clear the color attachment when the clear is enabled, specified in sRGB space.
@@ -414,4 +450,4 @@ class RenderPass extends FramePass {
     // #endif
 }
 
-export { RenderPass };
+export { RenderPass, validateClearValues };
