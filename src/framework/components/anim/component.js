@@ -561,6 +561,21 @@ class AnimComponent extends Component {
     }
 
     /**
+     * Tests whether the given entity is part of the hierarchy this component animates. The binders
+     * resolve their targets within the root bone when one is assigned, and within this component's
+     * entity otherwise, so anything they bind - including the mesh instances backing morph target
+     * weights and animated material textures - belongs to an entity at or below that root.
+     *
+     * @param {Entity} entity - The entity to test.
+     * @returns {boolean} True if the entity is part of the animated hierarchy.
+     * @ignore
+     */
+    animatesEntity(entity) {
+        const graph = this._rootBone || this.entity;
+        return graph === entity || graph.isAncestorOf(entity);
+    }
+
+    /**
      * Finds an {@link AnimComponentLayer} in this component.
      *
      * @param {string} name - The name of the anim component layer to find.

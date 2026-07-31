@@ -4,6 +4,7 @@ import { AnimComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Component } from '../component.js'
  */
 
 /**
@@ -31,6 +32,7 @@ class AnimComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.app.systems.on('animationUpdate', this.onAnimationUpdate, this);
+        this.app.systems.on('meshInstancesChange', this.onMeshInstancesChange, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -100,6 +102,30 @@ class AnimComponentSystem extends ComponentSystem {
         }
     }
 
+    /**
+     * Rebinds every component animating a hierarchy which contains the entity whose mesh instances
+     * changed. Anim targets which reference mesh instances - morph target weights and animated
+     * material textures - are resolved once and then cached, so they have to be re-resolved when the
+     * mesh instances they point at are created or destroyed. Disabled components are included, as
+     * they keep their bindings and are not rebound when re-enabled.
+     *
+     * @param {Component} component - The component whose mesh instances changed.
+     * @private
+     */
+    onMeshInstancesChange(component) {
+        const components = this.store;
+
+        for (const id in components) {
+            if (components.hasOwnProperty(id)) {
+                const animComponent = components[id].entity.anim;
+
+                if (animComponent.animatesEntity(component.entity)) {
+                    animComponent.rebind();
+                }
+            }
+        }
+    }
+
     cloneComponent(entity, clone) {
         let masks;
         // If the component animates from the components entity, any layer mask hierarchy should be
@@ -146,6 +172,7 @@ class AnimComponentSystem extends ComponentSystem {
         super.destroy();
 
         this.app.systems.off('animationUpdate', this.onAnimationUpdate, this);
+        this.app.systems.off('meshInstancesChange', this.onMeshInstancesChange, this);
     }
 }
 

@@ -112,9 +112,9 @@ describe('AnimComponent', function () {
 
         // a track with a single morph weight curve ramping from 0 to 1 over its duration, encoded
         // the way the glb parser encodes them
-        const morphTrack = (entityName) => {
+        const morphTrack = (entityPath) => {
             const curve = new AnimCurve([{
-                entityPath: [entityName],
+                entityPath,
                 component: 'graph',
                 propertyPath: [`weight.name.${MORPH_TARGET}`]
             }], 0, 0, INTERPOLATION_LINEAR);
@@ -132,7 +132,7 @@ describe('AnimComponent', function () {
             // a render component whose asset has not loaded yet, so it has no mesh instances
             entity.addComponent('render', { type: 'asset' });
             entity.addComponent('anim', { activate: true });
-            entity.anim.assignAnimation('Morph', morphTrack('model'));
+            entity.anim.assignAnimation('Morph', morphTrack(['model']));
 
             // frames tick while the asset is still loading - the anim controller binds its curves
             // here, when there is no morph instance to bind the weight curve to
@@ -154,7 +154,7 @@ describe('AnimComponent', function () {
             entity.addComponent('render', { type: 'asset' });
             entity.render.meshInstances = createMeshInstances(entity);
             entity.addComponent('anim', { activate: true });
-            entity.anim.assignAnimation('Morph', morphTrack('model'));
+            entity.anim.assignAnimation('Morph', morphTrack(['model']));
 
             app.systems.anim.onAnimationUpdate(0.5);
             expect(weight(entity)).to.be.closeTo(0.5, 1e-5);
@@ -167,6 +167,90 @@ describe('AnimComponent', function () {
             // clip time is cumulative, so this samples the track at 0.75
             expect(() => app.systems.anim.onAnimationUpdate(0.25)).to.not.throw();
             expect(weight(entity)).to.be.closeTo(0.75, 1e-5);
+        });
+
+        // The layout instantiateRenderEntity produces for an imported character: the anim component
+        // on the root, render components on mesh descendants. The binder resolves targets throughout
+        // the animated hierarchy, so a descendant's mesh instances must reach the owning component.
+        const createHierarchy = (rootBone) => {
+            const root = new Entity('root', app);
+            const child = new Entity('model', app);
+            root.addChild(child);
+            app.root.addChild(root);
+
+            child.addComponent('render', { type: 'asset' });
+            root.addComponent('anim', { activate: true, rootBone });
+            root.anim.assignAnimation('Morph', morphTrack(['root', 'model']));
+
+            return child;
+        };
+
+        // Regression test for https://github.com/playcanvas/engine/issues/5225
+        it('are animated when a descendant creates mesh instances after the animation is bound', function () {
+            const child = createHierarchy();
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            child.render.meshInstances = createMeshInstances(child);
+            app.systems.anim.onAnimationUpdate(0.4);
+
+            expect(weight(child)).to.be.closeTo(0.5, 1e-5);
+        });
+
+        // Regression test for https://github.com/playcanvas/engine/issues/5225
+        it('are animated after a descendant replaces its mesh instances', function () {
+            const child = createHierarchy();
+            child.render.meshInstances = createMeshInstances(child);
+
+            app.systems.anim.onAnimationUpdate(0.5);
+            expect(weight(child)).to.be.closeTo(0.5, 1e-5);
+
+            child.render.destroyMeshInstances();
+            child.render.meshInstances = createMeshInstances(child);
+
+            expect(() => app.systems.anim.onAnimationUpdate(0.25)).to.not.throw();
+            expect(weight(child)).to.be.closeTo(0.75, 1e-5);
+        });
+
+        it('are animated when the animated hierarchy is a root bone', function () {
+            // the root bone is resolved by guid, so the entity has to be in the scene already
+            const root = new Entity('root', app);
+            const bones = new Entity('bones', app);
+            const child = new Entity('model', app);
+            bones.addChild(child);
+            root.addChild(bones);
+            app.root.addChild(root);
+
+            child.addComponent('render', { type: 'asset' });
+            root.addComponent('anim', { activate: true, rootBone: bones });
+            root.anim.assignAnimation('Morph', morphTrack(['bones', 'model']));
+
+            app.systems.anim.onAnimationUpdate(0.1);
+            child.render.meshInstances = createMeshInstances(child);
+            app.systems.anim.onAnimationUpdate(0.4);
+
+            expect(weight(child)).to.be.closeTo(0.5, 1e-5);
+        });
+
+        it('are left alone when the changed entity is outside the animated hierarchy', function () {
+            const animated = new Entity('animated', app);
+            const unrelated = new Entity('unrelated', app);
+            app.root.addChild(animated);
+            app.root.addChild(unrelated);
+
+            animated.addComponent('anim', { activate: true });
+            animated.anim.assignAnimation('Morph', morphTrack(['animated']));
+            unrelated.addComponent('render', { type: 'asset' });
+
+            let rebinds = 0;
+            const rebind = animated.anim.rebind.bind(animated.anim);
+            animated.anim.rebind = () => {
+                rebinds++;
+                rebind();
+            };
+
+            unrelated.render.meshInstances = createMeshInstances(unrelated);
+
+            expect(rebinds).to.equal(0);
         });
     });
 });
