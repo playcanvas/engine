@@ -20,7 +20,10 @@ class PostEffectEntry {
 }
 
 /**
- * Used to manage multiple post effects for a camera.
+ * Used to manage multiple post effects for a camera. This is the legacy post-processing path. For
+ * new work use {@link CameraFrame}, which implements bloom, SSAO, depth of field, TAA, volumetric
+ * fog and tone mapping as one HDR pipeline; `playcanvas/scripts/esm/camera-frame.mjs` wraps it as
+ * an attachable script.
  *
  * @category Graphics
  */

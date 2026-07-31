@@ -75,7 +75,11 @@ const delayedStartStats = new Set([
 /**
  * MiniStats is a small graphical overlay that displays realtime performance metrics. By default,
  * it shows CPU and GPU utilization, frame timings and draw call count. It can also be configured
- * to display additional graphs based on data collected into {@link AppBase#stats}.
+ * to display additional graphs based on data collected into `AppBase#stats`.
+ *
+ * Detailed per-frame sub-timings — render, script, anim and physics — are only populated in the
+ * profiler build; import from `'playcanvas/profiler'` to obtain them. In other builds those
+ * counters read zero.
  */
 class MiniStats {
     /**
