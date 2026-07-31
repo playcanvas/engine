@@ -1337,6 +1337,10 @@ class GraphNode extends EventHandler {
      * Add a new child to the child list and update the parent value of the child node.
      * If the node already had a parent, it is removed from its child list.
      *
+     * The child keeps its existing local transform, which is now interpreted relative to the new
+     * parent, so a node placed in world space before being added will appear to move. Set the
+     * transform after adding, or re-apply the world placement with {@link GraphNode#setPosition}.
+     *
      * @param {GraphNode} node - The new child to add.
      * @example
      * const e = new Entity(app);
@@ -1473,6 +1477,10 @@ class GraphNode extends EventHandler {
     /**
      * Remove the node from the child list and update the parent value of the child.
      *
+     * This detaches the node without disabling it: the removed subtree still reports
+     * `enabled === true`, and its lights, cameras, scripts and sounds keep running. Set
+     * `enabled = false` to deactivate a node, or destroy the entity to remove it outright.
+     *
      * @param {GraphNode} child - The node to remove.
      * @example
      * const child = this.entity.children[0];
@@ -1590,6 +1598,11 @@ class GraphNode extends EventHandler {
 
     /**
      * Reorients the graph node so that the negative z-axis points towards the target.
+     *
+     * The up vector must not be parallel to the direction from the node to the target. When it is —
+     * looking straight up or down with the default up vector, or at the node's own position — the
+     * basis is degenerate and the node is left unrotated, with nothing reported. Pass a different
+     * up vector in those cases.
      *
      * @overload
      * @param {number} x - X-component of the world space coordinate to look at.
