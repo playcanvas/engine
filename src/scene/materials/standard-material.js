@@ -819,6 +819,11 @@ class StandardMaterial extends Material {
             this._setParameter('material_refraction', this.refraction);
         }
 
+        // refraction needs ior, which is otherwise uploaded by the metalness path above
+        if (!this.useMetalness && (this.refraction > 0 || this.refractionMap)) {
+            this._setParameter('material_refractionIndex', this.refractionIndex);
+        }
+
         if (this.dispersion > 0) {
             this._setParameter('material_dispersion', this.dispersion);
         }

@@ -160,6 +160,7 @@ class LitShader {
         this.needsNormal =
             this.lighting ||
             this.reflections ||
+            options.useRefraction ||
             options.useSpecular ||
             options.ambientSH ||
             options.useHeights ||
