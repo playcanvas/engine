@@ -1059,10 +1059,11 @@ class SpriteComponent extends Component {
     }
 
     _onLayersChanged(oldComp, newComp) {
-        oldComp.off('add', this._onLayerAdded, this);
-        oldComp.off('remove', this._onLayerRemoved, this);
-        newComp.on('add', this._onLayerAdded, this);
-        newComp.on('remove', this._onLayerRemoved, this);
+        // store the new handles, so that onDisable can unsubscribe from the current composition
+        this._evtLayerAdded?.off();
+        this._evtLayerAdded = newComp.on('add', this._onLayerAdded, this);
+        this._evtLayerRemoved?.off();
+        this._evtLayerRemoved = newComp.on('remove', this._onLayerRemoved, this);
 
         if (this.enabled && this.entity.enabled) {
             this.addToLayers();
