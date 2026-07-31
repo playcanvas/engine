@@ -329,7 +329,9 @@ class RenderComponent extends Component {
      */
     set meshInstances(value) {
         Debug.assert(Array.isArray(value), 'MeshInstances set to a Render component must be an array.');
-        this.destroyMeshInstances();
+
+        // don't notify yet, the change is announced once the new mesh instances are in place
+        this._destroyMeshInstances();
 
         this._meshInstances = value;
 
@@ -354,6 +356,8 @@ class RenderComponent extends Component {
                 this.addToLayers();
             }
         }
+
+        this._onMeshInstancesChanged();
     }
 
     /**
@@ -762,6 +766,17 @@ class RenderComponent extends Component {
 
     /** @private */
     destroyMeshInstances() {
+        this._destroyMeshInstances();
+        this._onMeshInstancesChanged();
+    }
+
+    /**
+     * Destroys the mesh instances without firing a change notification. Used by the meshInstances
+     * setter, which notifies once the replacement mesh instances are in place.
+     *
+     * @private
+     */
+    _destroyMeshInstances() {
         const meshInstances = this._meshInstances;
         if (meshInstances) {
             this.removeFromLayers();
@@ -773,6 +788,25 @@ class RenderComponent extends Component {
                 meshInstances[i].destroy();
             }
             this._meshInstances.length = 0;
+        }
+    }
+
+    /**
+     * Fires a notification that the set of mesh instances has changed, so that systems which
+     * reference them can re-resolve. An anim component binds morph target weights and animated
+     * material textures to specific mesh instances, and unlike a model component - which owns its
+     * mesh instances on a private graph node hierarchy under its own entity - a render hierarchy is
+     * a public entity hierarchy, so the anim component driving these mesh instances can live on any
+     * ancestor entity. The notification is therefore broadcast rather than delivered directly. See
+     * #5225.
+     *
+     * @private
+     */
+    _onMeshInstancesChanged() {
+        if (!this.entity._destroying) {
+            // the systems registry is torn down before assets are unloaded when the app is
+            // destroyed, and by then there is nothing left to notify
+            this.system.app.systems?.fire('meshInstancesChange', this);
         }
     }
 
