@@ -148,7 +148,8 @@ class GSplatOctree {
                         file: this.files[lodData.file].url || '',
                         fileIndex: lodData.file,
                         offset: lodData.offset || 0,
-                        count: lodData.count || 0
+                        count: lodData.count || 0,
+                        error: nodeData.errors?.[i]
                     });
 
                     // record LOD level for the file index
@@ -159,7 +160,8 @@ class GSplatOctree {
                         file: '',
                         fileIndex: -1,
                         offset: 0,
-                        count: 0
+                        count: 0,
+                        error: nodeData.errors?.[i]
                     });
                 }
             }
@@ -238,7 +240,8 @@ class GSplatOctree {
             // This is a leaf node with LOD data
             leafNodes.push({
                 lods: node.lods,
-                bound: node.bound
+                bound: node.bound,
+                errors: node.errors
             });
         } else if (node.children) {
             // This is a branch node, recurse into children
