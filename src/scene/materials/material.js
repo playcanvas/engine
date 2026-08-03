@@ -368,8 +368,8 @@ class Material {
     }
 
     /**
-     * @deprecated Material.chunks has been removed, please use Material.getShaderChunks instead.
-     * For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
+     * @deprecated Use Material.getShaderChunks instead. For example:
+     * material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
      * @ignore
      */
     set chunks(value) {
@@ -378,8 +378,8 @@ class Material {
     }
 
     /**
-     * @deprecated Material.chunks has been removed, please use Material.getShaderChunks instead.
-     * For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
+     * @deprecated Use Material.getShaderChunks instead. For example:
+     * material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
      * @ignore
      */
     get chunks() {

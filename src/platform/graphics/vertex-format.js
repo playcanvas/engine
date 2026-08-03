@@ -237,8 +237,7 @@ class VertexFormat {
     }
 
     /**
-     * @deprecated VertexFormat.defaultInstancingFormat was removed. Use
-     * VertexFormat.getDefaultInstancingFormat(graphicsDevice).
+     * @deprecated Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).
      * @ignore
      */
     static get defaultInstancingFormat() {

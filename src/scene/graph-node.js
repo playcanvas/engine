@@ -399,7 +399,7 @@ class GraphNode extends EventHandler {
     // ---- deprecated block start ----
 
     /**
-     * @deprecated GraphNode#getChildren is deprecated. Use GraphNode#children instead.
+     * @deprecated Use GraphNode#children instead.
      * @ignore
      */
     getChildren() {
@@ -408,7 +408,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @deprecated GraphNode#getName is deprecated. Use GraphNode#name instead.
+     * @deprecated Use GraphNode#name instead.
      * @ignore
      */
     getName() {
@@ -417,7 +417,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @deprecated GraphNode#getPath is deprecated. Use GraphNode#path instead.
+     * @deprecated Use GraphNode#path instead.
      * @ignore
      */
     getPath() {
@@ -426,7 +426,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @deprecated GraphNode#getRoot is deprecated. Use GraphNode#root instead.
+     * @deprecated Use GraphNode#root instead.
      * @ignore
      */
     getRoot() {
@@ -435,7 +435,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @deprecated GraphNode#getParent is deprecated. Use GraphNode#parent instead.
+     * @deprecated Use GraphNode#parent instead.
      * @ignore
      */
     getParent() {
@@ -444,7 +444,7 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @deprecated GraphNode#setName is deprecated. Use GraphNode#name instead.
+     * @deprecated Use GraphNode#name instead.
      * @ignore
      */
     setName(name) {

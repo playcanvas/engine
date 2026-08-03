@@ -913,7 +913,7 @@ class Scene extends EventHandler {
     // ---- deprecated block start ----
 
     /**
-     * @deprecated Scene#defaultMaterial is deprecated.
+     * @deprecated No replacement is available.
      * @ignore
      */
     get defaultMaterial() {
@@ -922,7 +922,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogColor is deprecated. Use Scene#fog.color instead.
+     * @deprecated Use Scene#fog.color instead.
      * @ignore
      */
     set fogColor(value) {
@@ -931,7 +931,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogColor is deprecated. Use Scene#fog.color instead.
+     * @deprecated Use Scene#fog.color instead.
      * @ignore
      */
     get fogColor() {
@@ -940,7 +940,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogEnd is deprecated. Use Scene#fog.end instead.
+     * @deprecated Use Scene#fog.end instead.
      * @ignore
      */
     set fogEnd(value) {
@@ -949,7 +949,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogEnd is deprecated. Use Scene#fog.end instead.
+     * @deprecated Use Scene#fog.end instead.
      * @ignore
      */
     get fogEnd() {
@@ -958,7 +958,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogStart is deprecated. Use Scene#fog.start instead.
+     * @deprecated Use Scene#fog.start instead.
      * @ignore
      */
     set fogStart(value) {
@@ -967,7 +967,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogStart is deprecated. Use Scene#fog.start instead.
+     * @deprecated Use Scene#fog.start instead.
      * @ignore
      */
     get fogStart() {
@@ -976,7 +976,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogDensity is deprecated. Use Scene#fog.density instead.
+     * @deprecated Use Scene#fog.density instead.
      * @ignore
      */
     set fogDensity(value) {
@@ -985,7 +985,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#fogDensity is deprecated. Use Scene#fog.density instead.
+     * @deprecated Use Scene#fog.density instead.
      * @ignore
      */
     get fogDensity() {
@@ -994,7 +994,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     set skyboxPrefiltered128(value) {
@@ -1004,7 +1004,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     get skyboxPrefiltered128() {
@@ -1013,7 +1013,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     set skyboxPrefiltered64(value) {
@@ -1023,7 +1023,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     get skyboxPrefiltered64() {
@@ -1032,7 +1032,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     set skyboxPrefiltered32(value) {
@@ -1042,7 +1042,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     get skyboxPrefiltered32() {
@@ -1051,7 +1051,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     set skyboxPrefiltered16(value) {
@@ -1061,7 +1061,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     get skyboxPrefiltered16() {
@@ -1070,7 +1070,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     set skyboxPrefiltered8(value) {
@@ -1080,7 +1080,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     get skyboxPrefiltered8() {
@@ -1089,7 +1089,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     set skyboxPrefiltered4(value) {
@@ -1099,7 +1099,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * @deprecated Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @deprecated Use Scene#prefilteredCubemaps instead.
      * @ignore
      */
     get skyboxPrefiltered4() {
