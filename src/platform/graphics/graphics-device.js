@@ -952,7 +952,7 @@ class GraphicsDevice extends EventHandler {
     // ---- deprecated block start ----
 
     /**
-     * @deprecated GraphicsDevice#boneLimit is deprecated and the limit has been removed.
+     * @deprecated The limit has been removed.
      * @ignore
      */
     get boneLimit() {
@@ -961,7 +961,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#webgl2 is deprecated, use GraphicsDevice#isWebGL2 instead.
+     * @deprecated Use GraphicsDevice#isWebGL2 instead.
      * @ignore
      */
     get webgl2() {
@@ -970,7 +970,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get textureFloatHighPrecision() {
@@ -979,7 +979,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#extBlendMinmax is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get extBlendMinmax() {
@@ -988,7 +988,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#extTextureHalfFloat is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get extTextureHalfFloat() {
@@ -997,7 +997,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#extTextureLod is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get extTextureLod() {
@@ -1006,7 +1006,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#textureHalfFloatFilterable is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get textureHalfFloatFilterable() {
@@ -1015,7 +1015,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#supportsMrt is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get supportsMrt() {
@@ -1024,7 +1024,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#supportsVolumeTextures is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get supportsVolumeTextures() {
@@ -1033,7 +1033,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#supportsInstancing is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get supportsInstancing() {
@@ -1042,7 +1042,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#textureHalfFloatUpdatable is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get textureHalfFloatUpdatable() {
@@ -1051,7 +1051,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#extTextureFloat is deprecated as it is always true
+     * @deprecated Always returns true.
      * @ignore
      */
     get extTextureFloat() {
@@ -1060,7 +1060,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#extStandardDerivatives is deprecated as it is always true.
+     * @deprecated Always returns true.
      * @ignore
      */
     get extStandardDerivatives() {
@@ -1069,8 +1069,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setBlendFunction is deprecated, use GraphicsDevice.setBlendState
-     * instead.
+     * @deprecated Use GraphicsDevice.setBlendState instead.
      * @ignore
      */
     setBlendFunction(blendSrc, blendDst) {
@@ -1083,8 +1082,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setBlendFunctionSeparate is deprecated, use
-     * GraphicsDevice.setBlendState instead.
+     * @deprecated Use GraphicsDevice.setBlendState instead.
      * @ignore
      */
     setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
@@ -1097,8 +1095,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setBlendEquation is deprecated, use GraphicsDevice.setBlendState
-     * instead.
+     * @deprecated Use GraphicsDevice.setBlendState instead.
      * @ignore
      */
     setBlendEquation(blendEquation) {
@@ -1111,8 +1108,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setBlendEquationSeparate is deprecated, use
-     * GraphicsDevice.setBlendState instead.
+     * @deprecated Use GraphicsDevice.setBlendState instead.
      * @ignore
      */
     setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
@@ -1125,8 +1121,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setColorWrite is deprecated, use GraphicsDevice.setBlendState
-     * instead.
+     * @deprecated Use GraphicsDevice.setBlendState instead.
      * @ignore
      */
     setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite) {
@@ -1142,8 +1137,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setBlending is deprecated, use GraphicsDevice.setBlendState
-     * instead.
+     * @deprecated Use GraphicsDevice.setBlendState instead.
      * @ignore
      */
     setBlending(blending) {
@@ -1154,8 +1148,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setDepthWrite is deprecated, use GraphicsDevice.setDepthState
-     * instead.
+     * @deprecated Use GraphicsDevice.setDepthState instead.
      * @ignore
      */
     setDepthWrite(write) {
@@ -1166,8 +1159,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setDepthFunc is deprecated, use GraphicsDevice.setDepthState
-     * instead.
+     * @deprecated Use GraphicsDevice.setDepthState instead.
      * @ignore
      */
     setDepthFunc(func) {
@@ -1178,8 +1170,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * @deprecated GraphicsDevice#setDepthTest is deprecated, use GraphicsDevice.setDepthState
-     * instead.
+     * @deprecated Use GraphicsDevice.setDepthState instead.
      * @ignore
      */
     setDepthTest(test) {

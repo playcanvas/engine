@@ -474,7 +474,7 @@ class Vec3 {
     }
 
     /**
-     * @deprecated Vec3#scale is deprecated. Use Vec3#mulScalar instead.
+     * @deprecated Use Vec3#mulScalar instead.
      * @ignore
      */
     scale(scalar) {
