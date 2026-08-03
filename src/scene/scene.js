@@ -912,133 +912,196 @@ class Scene extends EventHandler {
 
     // ---- deprecated block start ----
 
-    /** @deprecated Scene#defaultMaterial is deprecated. @ignore */
+    /**
+     * @deprecated Scene#defaultMaterial is deprecated.
+     * @ignore
+     */
     get defaultMaterial() {
         Debug.deprecated('Scene#defaultMaterial is deprecated.');
         return getDefaultMaterial(this.device);
     }
 
-    /** @deprecated Scene#fogColor is deprecated. Use Scene#fog.color instead. @ignore */
+    /**
+     * @deprecated Scene#fogColor is deprecated. Use Scene#fog.color instead.
+     * @ignore
+     */
     set fogColor(value) {
         Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
         this.fog.color = value;
     }
 
-    /** @deprecated Scene#fogColor is deprecated. Use Scene#fog.color instead. @ignore */
+    /**
+     * @deprecated Scene#fogColor is deprecated. Use Scene#fog.color instead.
+     * @ignore
+     */
     get fogColor() {
         Debug.deprecated('Scene#fogColor is deprecated. Use Scene#fog.color instead.');
         return this.fog.color;
     }
 
-    /** @deprecated Scene#fogEnd is deprecated. Use Scene#fog.end instead. @ignore */
+    /**
+     * @deprecated Scene#fogEnd is deprecated. Use Scene#fog.end instead.
+     * @ignore
+     */
     set fogEnd(value) {
         Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
         this.fog.end = value;
     }
 
-    /** @deprecated Scene#fogEnd is deprecated. Use Scene#fog.end instead. @ignore */
+    /**
+     * @deprecated Scene#fogEnd is deprecated. Use Scene#fog.end instead.
+     * @ignore
+     */
     get fogEnd() {
         Debug.deprecated('Scene#fogEnd is deprecated. Use Scene#fog.end instead.');
         return this.fog.end;
     }
 
-    /** @deprecated Scene#fogStart is deprecated. Use Scene#fog.start instead. @ignore */
+    /**
+     * @deprecated Scene#fogStart is deprecated. Use Scene#fog.start instead.
+     * @ignore
+     */
     set fogStart(value) {
         Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
         this.fog.start = value;
     }
 
-    /** @deprecated Scene#fogStart is deprecated. Use Scene#fog.start instead. @ignore */
+    /**
+     * @deprecated Scene#fogStart is deprecated. Use Scene#fog.start instead.
+     * @ignore
+     */
     get fogStart() {
         Debug.deprecated('Scene#fogStart is deprecated. Use Scene#fog.start instead.');
         return this.fog.start;
     }
 
-    /** @deprecated Scene#fogDensity is deprecated. Use Scene#fog.density instead. @ignore */
+    /**
+     * @deprecated Scene#fogDensity is deprecated. Use Scene#fog.density instead.
+     * @ignore
+     */
     set fogDensity(value) {
         Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
         this.fog.density = value;
     }
 
-    /** @deprecated Scene#fogDensity is deprecated. Use Scene#fog.density instead. @ignore */
+    /**
+     * @deprecated Scene#fogDensity is deprecated. Use Scene#fog.density instead.
+     * @ignore
+     */
     get fogDensity() {
         Debug.deprecated('Scene#fogDensity is deprecated. Use Scene#fog.density instead.');
         return this.fog.density;
     }
 
-    /** @deprecated Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     set skyboxPrefiltered128(value) {
         Debug.deprecated('Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.');
         this._prefilteredCubemaps[0] = value;
         this.updateShaders = true;
     }
 
-    /** @deprecated Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     get skyboxPrefiltered128() {
         Debug.deprecated('Scene#skyboxPrefiltered128 is deprecated. Use Scene#prefilteredCubemaps instead.');
         return this._prefilteredCubemaps[0];
     }
 
-    /** @deprecated Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     set skyboxPrefiltered64(value) {
         Debug.deprecated('Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.');
         this._prefilteredCubemaps[1] = value;
         this.updateShaders = true;
     }
 
-    /** @deprecated Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     get skyboxPrefiltered64() {
         Debug.deprecated('Scene#skyboxPrefiltered64 is deprecated. Use Scene#prefilteredCubemaps instead.');
         return this._prefilteredCubemaps[1];
     }
 
-    /** @deprecated Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     set skyboxPrefiltered32(value) {
         Debug.deprecated('Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.');
         this._prefilteredCubemaps[2] = value;
         this.updateShaders = true;
     }
 
-    /** @deprecated Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     get skyboxPrefiltered32() {
         Debug.deprecated('Scene#skyboxPrefiltered32 is deprecated. Use Scene#prefilteredCubemaps instead.');
         return this._prefilteredCubemaps[2];
     }
 
-    /** @deprecated Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     set skyboxPrefiltered16(value) {
         Debug.deprecated('Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.');
         this._prefilteredCubemaps[3] = value;
         this.updateShaders = true;
     }
 
-    /** @deprecated Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     get skyboxPrefiltered16() {
         Debug.deprecated('Scene#skyboxPrefiltered16 is deprecated. Use Scene#prefilteredCubemaps instead.');
         return this._prefilteredCubemaps[3];
     }
 
-    /** @deprecated Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     set skyboxPrefiltered8(value) {
         Debug.deprecated('Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.');
         this._prefilteredCubemaps[4] = value;
         this.updateShaders = true;
     }
 
-    /** @deprecated Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     get skyboxPrefiltered8() {
         Debug.deprecated('Scene#skyboxPrefiltered8 is deprecated. Use Scene#prefilteredCubemaps instead.');
         return this._prefilteredCubemaps[4];
     }
 
-    /** @deprecated Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     set skyboxPrefiltered4(value) {
         Debug.deprecated('Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.');
         this._prefilteredCubemaps[5] = value;
         this.updateShaders = true;
     }
 
-    /** @deprecated Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead. @ignore */
+    /**
+     * @deprecated Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.
+     * @ignore
+     */
     get skyboxPrefiltered4() {
         Debug.deprecated('Scene#skyboxPrefiltered4 is deprecated. Use Scene#prefilteredCubemaps instead.');
         return this._prefilteredCubemaps[5];

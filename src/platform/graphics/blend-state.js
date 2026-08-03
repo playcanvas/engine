@@ -462,7 +462,10 @@ class BlendState {
      */
     static NOBLEND = Object.freeze(new BlendState());
 
-    /** @deprecated BlendState.DEFAULT is deprecated. Use BlendState.NOBLEND instead. @ignore */
+    /**
+     * @deprecated BlendState.DEFAULT is deprecated. Use BlendState.NOBLEND instead.
+     * @ignore
+     */
     static get DEFAULT() {
         Debug.deprecated('BlendState.DEFAULT is deprecated. Use BlendState.NOBLEND instead.');
         return BlendState.NOBLEND;

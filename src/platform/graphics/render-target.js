@@ -832,7 +832,12 @@ class RenderTarget {
         return success;
     }
 
-    /** @deprecated RenderTarget#flipY is deprecated, use the "origin" option of the RenderTarget constructor instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM. @ignore */
+    /**
+     * @deprecated RenderTarget#flipY is deprecated, use the "origin" option of the RenderTarget
+     * constructor instead. Typical migration: flipY: !device.isWebGPU -> origin:
+     * RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.
+     * @ignore
+     */
     set flipY(value) {
         Debug.deprecated('RenderTarget#flipY is deprecated, use the "origin" option of the RenderTarget constructor instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.');
         this._flipY = value;
