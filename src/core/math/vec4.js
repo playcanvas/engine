@@ -451,7 +451,7 @@ class Vec4 {
     }
 
     /**
-     * @deprecated Vec4#scale is deprecated. Use Vec4#mulScalar instead.
+     * @deprecated Use Vec4#mulScalar instead.
      * @ignore
      */
     scale(scalar) {

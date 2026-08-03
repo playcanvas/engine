@@ -954,7 +954,7 @@ class Texture {
     }
 
     /**
-     * @deprecated Texture#rgbm is deprecated. Use Texture#type instead.
+     * @deprecated Use Texture#type instead.
      * @ignore
      */
     set rgbm(value) {
@@ -963,7 +963,7 @@ class Texture {
     }
 
     /**
-     * @deprecated Texture#rgbm is deprecated. Use Texture#type instead.
+     * @deprecated Use Texture#type instead.
      * @ignore
      */
     get rgbm() {
@@ -972,7 +972,7 @@ class Texture {
     }
 
     /**
-     * @deprecated Texture#swizzleGGGR is deprecated. Use Texture#type instead.
+     * @deprecated Use Texture#type instead.
      * @ignore
      */
     set swizzleGGGR(value) {
@@ -981,7 +981,7 @@ class Texture {
     }
 
     /**
-     * @deprecated Texture#swizzleGGGR is deprecated. Use Texture#type instead.
+     * @deprecated Use Texture#type instead.
      * @ignore
      */
     get swizzleGGGR() {

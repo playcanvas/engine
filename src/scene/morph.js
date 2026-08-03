@@ -264,7 +264,7 @@ class Morph extends RefCountedObject {
     // ---- deprecated block start ----
 
     /**
-     * @deprecated Morph#getTarget is deprecated. Use Morph#targets instead.
+     * @deprecated Use Morph#targets instead.
      * @ignore
      */
     getTarget(index) {

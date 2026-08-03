@@ -439,7 +439,7 @@ class Vec2 {
     }
 
     /**
-     * @deprecated Vec2#scale is deprecated. Use Vec2#mulScalar instead.
+     * @deprecated Use Vec2#mulScalar instead.
      * @ignore
      */
     scale(scalar) {
