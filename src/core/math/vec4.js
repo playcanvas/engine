@@ -452,6 +452,8 @@ class Vec4 {
 
     /**
      * @deprecated Use Vec4#mulScalar instead.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec4} Self for chaining.
      * @ignore
      */
     scale(scalar) {

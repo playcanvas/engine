@@ -475,6 +475,8 @@ class Vec3 {
 
     /**
      * @deprecated Use Vec3#mulScalar instead.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec3} Self for chaining.
      * @ignore
      */
     scale(scalar) {

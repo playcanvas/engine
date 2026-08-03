@@ -1071,6 +1071,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendSrc - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendDst - The blend mode. Can be any of the BLENDMODE_* constants.
      * @ignore
      */
     setBlendFunction(blendSrc, blendDst) {
@@ -1084,6 +1086,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendSrc - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendDst - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendSrcAlpha - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendDstAlpha - The blend mode. Can be any of the BLENDMODE_* constants.
      * @ignore
      */
     setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
@@ -1097,6 +1103,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendEquation - The blend equation. Can be any of the BLENDEQUATION_*
+     * constants.
      * @ignore
      */
     setBlendEquation(blendEquation) {
@@ -1110,6 +1118,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendEquation - The blend equation. Can be any of the BLENDEQUATION_*
+     * constants.
+     * @param {number} blendAlphaEquation - The blend equation. Can be any of the BLENDEQUATION_*
+     * constants.
      * @ignore
      */
     setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
@@ -1123,6 +1135,10 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {boolean} redWrite - True to enable writing of the red channel and false otherwise.
+     * @param {boolean} greenWrite - True to enable writing of the green channel and false otherwise.
+     * @param {boolean} blueWrite - True to enable writing of the blue channel and false otherwise.
+     * @param {boolean} alphaWrite - True to enable writing of the alpha channel and false otherwise.
      * @ignore
      */
     setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite) {
@@ -1139,6 +1155,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {boolean} blending - True to enable blending and false to disable it.
      * @ignore
      */
     setBlending(blending) {
@@ -1150,6 +1167,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setDepthState instead.
+     * @param {boolean} write - True to enable depth writing and false otherwise.
      * @ignore
      */
     setDepthWrite(write) {
@@ -1161,6 +1179,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setDepthState instead.
+     * @param {number} func - The depth testing function. Can be any of the FUNC_* constants.
      * @ignore
      */
     setDepthFunc(func) {
@@ -1172,6 +1191,7 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * @deprecated Use GraphicsDevice.setDepthState instead.
+     * @param {boolean} test - True to enable depth testing and false otherwise.
      * @ignore
      */
     setDepthTest(test) {

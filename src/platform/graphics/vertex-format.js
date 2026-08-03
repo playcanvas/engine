@@ -238,6 +238,7 @@ class VertexFormat {
 
     /**
      * @deprecated Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).
+     * @returns {null} Always null.
      * @ignore
      */
     static get defaultInstancingFormat() {
