@@ -32,9 +32,12 @@ export default [
                     definedTags: [...new Set([...esmScriptTags, 'alpha', 'beta', 'category', 'import'])]
                 }
             ],
-            // a deprecated member is documented only to carry the @deprecated marker into the type
-            // declarations - requiring @param/@returns there would publish types for API we are
-            // steering callers away from, so exempt those blocks
+            // JSDoc is the type source here, so adding @param/@returns to a member that had no
+            // block overwrites the signature tsc inferred for it: `scale(scalar: any)` in
+            // playcanvas.d.ts becomes `scale(scalar: number)`. A @deprecated block on a legacy
+            // member exists only to carry the marker into the declarations and must leave the
+            // published signature alone, so it is exempt from both rules. `inheritdoc` is the
+            // plugin's own default, preserved here.
             'jsdoc/require-param': ['error', { exemptedBy: ['deprecated', 'inheritdoc'] }],
             'jsdoc/require-returns': ['error', { exemptedBy: ['deprecated', 'inheritdoc'] }]
         }
