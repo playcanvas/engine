@@ -473,7 +473,10 @@ class Vec3 {
         return this;
     }
 
-    /** @deprecated Vec3#scale is deprecated. Use Vec3#mulScalar instead. @ignore */
+    /**
+     * @deprecated Vec3#scale is deprecated. Use Vec3#mulScalar instead.
+     * @ignore
+     */
     scale(scalar) {
         Debug.deprecated('Vec3#scale is deprecated. Use Vec3#mulScalar instead.');
         return this.mulScalar(scalar);
