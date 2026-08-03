@@ -450,6 +450,7 @@ class Vec4 {
         return this;
     }
 
+    /** @deprecated Vec4#scale is deprecated. Use Vec4#mulScalar instead. @ignore */
     scale(scalar) {
         Debug.deprecated('Vec4#scale is deprecated. Use Vec4#mulScalar instead.');
         return this.mulScalar(scalar);
