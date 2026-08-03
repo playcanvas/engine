@@ -436,6 +436,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @deprecated Use GraphNode#parent instead.
+     * @returns {GraphNode|null} The parent node, or null if this node has no parent.
      * @ignore
      */
     getParent() {
@@ -445,6 +446,7 @@ class GraphNode extends EventHandler {
 
     /**
      * @deprecated Use GraphNode#name instead.
+     * @param {string} name - The name to set.
      * @ignore
      */
     setName(name) {

@@ -318,6 +318,7 @@ class Material {
     /**
      * @deprecated Use Material.getShaderChunks instead. For example:
      * material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
+     * @type {Object<string, string>}
      * @ignore
      */
     set chunks(value) {
@@ -328,6 +329,7 @@ class Material {
     /**
      * @deprecated Use Material.getShaderChunks instead. For example:
      * material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
+     * @type {Object<string, string>}
      * @ignore
      */
     get chunks() {

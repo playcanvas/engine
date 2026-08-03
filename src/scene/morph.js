@@ -265,6 +265,8 @@ class Morph extends RefCountedObject {
 
     /**
      * @deprecated Use Morph#targets instead.
+     * @param {number} index - The index of the morph target.
+     * @returns {MorphTarget} The morph target at the given index.
      * @ignore
      */
     getTarget(index) {
