@@ -678,8 +678,10 @@ class VolumetricFog {
  * of field and volumetric fog.
  *
  * Attach the script to an entity with a camera component and adjust the attribute groups to
- * configure the post-processing stack. Every group except `rendering` is gated by its own
- * `enabled` flag, which defaults to false.
+ * configure the post-processing stack. Most groups are gated by their own `enabled` flag, which
+ * defaults to false. Three are not: `rendering` is always applied, `ssao` is gated by its `type`
+ * (`SsaoType.NONE` by default) and `colorLUT` by its `texture` (null by default) — setting
+ * `enabled` on those two does nothing.
  *
  * Set the fields on the groups after creating the script. Do not pass a group through the
  * `properties` argument of {@link ScriptComponent#create}: that assignment is shallow, so it

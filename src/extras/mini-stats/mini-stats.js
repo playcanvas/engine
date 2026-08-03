@@ -77,9 +77,11 @@ const delayedStartStats = new Set([
  * it shows CPU and GPU utilization, frame timings and draw call count. It can also be configured
  * to display additional graphs based on data collected into `AppBase#stats`.
  *
- * Detailed per-frame sub-timings — render, script, anim and physics — are only populated in the
- * profiler build; import from `'playcanvas/profiler'` to obtain them. In other builds those
- * counters read zero.
+ * The detailed per-frame sub-timings — script, anim, physics and gsplat sort — are measured in
+ * every build. The render timing is the exception: its start timestamp is only recorded in the
+ * debug and profiler builds, so in the release build the render graph reports the time elapsed
+ * since page load rather than a frame time. Import from `'playcanvas/debug'` or
+ * `'playcanvas/profiler'` for a meaningful render figure.
  */
 class MiniStats {
     /**

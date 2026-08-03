@@ -1601,8 +1601,8 @@ class GraphNode extends EventHandler {
      *
      * The up vector must not be parallel to the direction from the node to the target. When it is —
      * looking straight up or down with the default up vector, or at the node's own position — the
-     * basis is degenerate and the node is left unrotated, with nothing reported. Pass a different
-     * up vector in those cases.
+     * basis is degenerate and the node's rotation is reset to identity, discarding whatever
+     * rotation it already had, with nothing reported. Pass a different up vector in those cases.
      *
      * @overload
      * @param {number} x - X-component of the world space coordinate to look at.

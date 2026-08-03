@@ -1153,8 +1153,12 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 3D world space to 2D screen space.
      *
-     * A returned `z` of zero or less means the point is behind the camera and the x and y values
-     * are not meaningful. For DOM labels anchored to world positions,
+     * The returned `z` is the unnormalized clip space depth, not a behind-the-camera flag: it also
+     * goes negative for points in front of a perspective camera that are nearer than twice the
+     * near clip, and for an orthographic camera it is negative across the whole near half of the
+     * depth range. To reject points behind the camera, test the view space depth instead - pass
+     * the world position through {@link CameraComponent#viewMatrix} and discard it when the
+     * resulting `z` is zero or greater. For DOM labels anchored to world positions,
      * `playcanvas/scripts/esm/annotations.mjs` provides `Annotation` and `AnnotationManager`,
      * which handle behind-camera rejection and occlusion fading.
      *
