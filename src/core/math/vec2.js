@@ -440,6 +440,8 @@ class Vec2 {
 
     /**
      * @deprecated Use Vec2#mulScalar instead.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec2} Self for chaining.
      * @ignore
      */
     scale(scalar) {
