@@ -398,31 +398,37 @@ class GraphNode extends EventHandler {
 
     // ---- deprecated block start ----
 
+    /** @deprecated GraphNode#getChildren is deprecated. Use GraphNode#children instead. @ignore */
     getChildren() {
         Debug.deprecated('GraphNode#getChildren is deprecated. Use GraphNode#children instead.');
         return this.children;
     }
 
+    /** @deprecated GraphNode#getName is deprecated. Use GraphNode#name instead. @ignore */
     getName() {
         Debug.deprecated('GraphNode#getName is deprecated. Use GraphNode#name instead.');
         return this.name;
     }
 
+    /** @deprecated GraphNode#getPath is deprecated. Use GraphNode#path instead. @ignore */
     getPath() {
         Debug.deprecated('GraphNode#getPath is deprecated. Use GraphNode#path instead.');
         return this.path;
     }
 
+    /** @deprecated GraphNode#getRoot is deprecated. Use GraphNode#root instead. @ignore */
     getRoot() {
         Debug.deprecated('GraphNode#getRoot is deprecated. Use GraphNode#root instead.');
         return this.root;
     }
 
+    /** @deprecated GraphNode#getParent is deprecated. Use GraphNode#parent instead. @ignore */
     getParent() {
         Debug.deprecated('GraphNode#getParent is deprecated. Use GraphNode#parent instead.');
         return this.parent;
     }
 
+    /** @deprecated GraphNode#setName is deprecated. Use GraphNode#name instead. @ignore */
     setName(name) {
         Debug.deprecated('GraphNode#setName is deprecated. Use GraphNode#name instead.');
         this.name = name;

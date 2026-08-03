@@ -31,7 +31,12 @@ export default [
                     // extra tags, which this override would otherwise drop by replacing the rule
                     definedTags: [...new Set([...esmScriptTags, 'alpha', 'beta', 'category', 'import'])]
                 }
-            ]
+            ],
+            // a deprecated member is documented only to carry the @deprecated marker into the type
+            // declarations - requiring @param/@returns there would publish types for API we are
+            // steering callers away from, so exempt those blocks
+            'jsdoc/require-param': ['error', { exemptedBy: ['deprecated', 'inheritdoc'] }],
+            'jsdoc/require-returns': ['error', { exemptedBy: ['deprecated', 'inheritdoc'] }]
         }
     },
     {
