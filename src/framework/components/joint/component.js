@@ -1195,9 +1195,15 @@ class JointComponent extends Component {
 
         // tear the constraint down synchronously when either body leaves the simulation, before
         // the underlying native body can be destroyed
-        this._evtBodyTeardown.push(rigidbodyA.on('simulationdisabled', this._onBodyLost, this), rigidbodyA.on('beforeremove', this._onBodyLost, this));
+        this._evtBodyTeardown.push(
+            rigidbodyA.on('simulationdisabled', this._onBodyLost, this),
+            rigidbodyA.on('beforeremove', this._onBodyLost, this)
+        );
         if (rigidbodyB) {
-            this._evtBodyTeardown.push(rigidbodyB.on('simulationdisabled', this._onBodyLost, this), rigidbodyB.on('beforeremove', this._onBodyLost, this));
+            this._evtBodyTeardown.push(
+                rigidbodyB.on('simulationdisabled', this._onBodyLost, this),
+                rigidbodyB.on('beforeremove', this._onBodyLost, this)
+            );
         }
     }
 

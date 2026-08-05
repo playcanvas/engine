@@ -17,7 +17,10 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
     pointCache(i, j) {
         const pointKey = `${i}${j}`;
         if (!this._pointCache[pointKey]) {
-            this._pointCache[pointKey] = new Vec2((this._children[j].pointLength - this._children[i].pointLength) / ((this._children[j].pointLength + this._children[i].pointLength) / 2), Vec2.angleRad(this._children[i].point, this._children[j].point) * 2.0);
+            this._pointCache[pointKey] = new Vec2(
+                (this._children[j].pointLength - this._children[i].pointLength) / ((this._children[j].pointLength + this._children[i].pointLength) / 2),
+                Vec2.angleRad(this._children[i].point, this._children[j].point) * 2.0
+            );
         }
         return this._pointCache[pointKey];
     }

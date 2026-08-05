@@ -226,7 +226,8 @@ class GSplatWorkBuffer {
      */
     _createRenderTargets() {
         // Work buffer does not support instance-level streams
-        Debug.assert(this.format.instanceStreams.length === 0, 'Work buffer format does not support instance-level streams (GSPLAT_STREAM_INSTANCE)');
+        Debug.assert(this.format.instanceStreams.length === 0,
+            'Work buffer format does not support instance-level streams (GSPLAT_STREAM_INSTANCE)');
 
         // Destroy existing render targets
         this.renderTarget?.destroy();

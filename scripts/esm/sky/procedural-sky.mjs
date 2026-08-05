@@ -860,7 +860,9 @@ class ProceduralSky extends Script {
 
         // sun intensity
         const zenithCos = Math.max(-1, Math.min(1, sunY));
-        scope.resolve('procSkySunE').setValue(SKY_EE * Math.max(0, 1.0 - Math.exp(-((SKY_CUTOFF - Math.acos(zenithCos)) / SKY_STEEPNESS))));
+        scope.resolve('procSkySunE').setValue(
+            SKY_EE * Math.max(0, 1.0 - Math.exp(-((SKY_CUTOFF - Math.acos(zenithCos)) / SKY_STEEPNESS)))
+        );
     }
 
     /**

@@ -473,7 +473,11 @@ class FirstPersonController extends Script {
         applyDeadZone(rightStick, this.gamePadDeadZoneLow, this.gamePadDeadZoneHigh);
 
         // update state
-        this._state.axis.add(v.set((key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]), (key[keyCode.E] - key[keyCode.Q]), (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])));
+        this._state.axis.add(v.set(
+            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
+            (key[keyCode.E] - key[keyCode.Q]),
+            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
+        ));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }

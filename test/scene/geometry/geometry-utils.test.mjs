@@ -51,7 +51,12 @@ describe('calculateTangents', function () {
 
     it('generates the same tangents from typed arrays', function () {
         const normals = calculateNormals(POSITIONS, INDICES);
-        const tangents = calculateTangents(new Float32Array(POSITIONS), new Float32Array(normals), new Float32Array(UVS), new Uint16Array(INDICES));
+        const tangents = calculateTangents(
+            new Float32Array(POSITIONS),
+            new Float32Array(normals),
+            new Float32Array(UVS),
+            new Uint16Array(INDICES)
+        );
 
         expect(tangents).to.deep.equal(calculateTangents(POSITIONS, normals, UVS, INDICES));
     });

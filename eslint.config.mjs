@@ -23,8 +23,6 @@ export default [
             }
         },
         rules: {
-            'function-call-argument-newline': ['error', 'never'],
-            'function-paren-newline': ['error', 'never'],
             'import/order': 'off',
             'jsdoc/check-tag-names': [
                 'error',

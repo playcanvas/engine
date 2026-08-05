@@ -130,9 +130,12 @@ class ParticleGPUUpdater {
         texIN = emitter.beenReset ? emitter.particleTexStart : texIN;
         const texOUT = emitter.swapTex ? emitter.particleTexIN : emitter.particleTexOUT;
         this.constantParticleTexIN.setValue(texIN);
-        drawQuadWithShader(device, emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT, !isOnStop ?
-            (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
-            emitter.shaderParticleUpdateOnStop);
+        drawQuadWithShader(
+            device,
+            emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
+            !isOnStop ?
+                (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
+                emitter.shaderParticleUpdateOnStop);
 
         // this.constantParticleTexOUT.setValue(texOUT);
 

@@ -107,14 +107,24 @@ class GSplatSogIterator {
                     const g = sh0.codebook[sh0_data[i * 4 + 1]];
                     const b = sh0.codebook[sh0_data[i * 4 + 2]];
                     const a = sh0_data[i * 4 + 3] / 255;
-                    c.set(0.5 + r * SH_C0, 0.5 + g * SH_C0, 0.5 + b * SH_C0, a);
+                    c.set(
+                        0.5 + r * SH_C0,
+                        0.5 + g * SH_C0,
+                        0.5 + b * SH_C0,
+                        a
+                    );
                 } else {
                     const r = lerp(sh0.mins[0], sh0.maxs[0], sh0_data[i * 4 + 0] / 255);
                     const g = lerp(sh0.mins[1], sh0.maxs[1], sh0_data[i * 4 + 1] / 255);
                     const b = lerp(sh0.mins[2], sh0.maxs[2], sh0_data[i * 4 + 2] / 255);
                     const a = lerp(sh0.mins[3], sh0.maxs[3], sh0_data[i * 4 + 3] / 255);
 
-                    c.set(0.5 + r * SH_C0, 0.5 + g * SH_C0, 0.5 + b * SH_C0, 1.0 / (1.0 + Math.exp(-a)));
+                    c.set(
+                        0.5 + r * SH_C0,
+                        0.5 + g * SH_C0,
+                        0.5 + b * SH_C0,
+                        1.0 / (1.0 + Math.exp(-a))
+                    );
                 }
             }
 
@@ -222,9 +232,17 @@ class GSplatSogData {
 
         const map = v => Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
 
-        result.center.set((map(mins[0]) + map(maxs[0])) * 0.5, (map(mins[1]) + map(maxs[1])) * 0.5, (map(mins[2]) + map(maxs[2])) * 0.5);
+        result.center.set(
+            (map(mins[0]) + map(maxs[0])) * 0.5,
+            (map(mins[1]) + map(maxs[1])) * 0.5,
+            (map(mins[2]) + map(maxs[2])) * 0.5
+        );
 
-        result.halfExtents.set((map(maxs[0]) - map(mins[0])) * 0.5, (map(maxs[1]) - map(mins[1])) * 0.5, (map(maxs[2]) - map(mins[2])) * 0.5);
+        result.halfExtents.set(
+            (map(maxs[0]) - map(mins[0])) * 0.5,
+            (map(maxs[1]) - map(mins[1])) * 0.5,
+            (map(maxs[2]) - map(mins[2])) * 0.5
+        );
     }
 
     getCenters() {
@@ -241,7 +259,11 @@ class GSplatSogData {
 
         const map = v => Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
 
-        result.set((map(mins[0]) + map(maxs[0])) * 0.5, (map(mins[1]) + map(maxs[1])) * 0.5, (map(mins[2]) + map(maxs[2])) * 0.5);
+        result.set(
+            (map(mins[0]) + map(maxs[0])) * 0.5,
+            (map(mins[1]) + map(maxs[1])) * 0.5,
+            (map(mins[2]) + map(maxs[2])) * 0.5
+        );
     }
 
     get isSog() {

@@ -415,7 +415,12 @@ function loadMeshAsset(system, component, id, property) {
 function recreateMeshShapes(system, component) {
     if (component._renderAsset || component._asset) {
         if (component.enabled && component.entity.enabled) {
-            loadMeshAsset(system, component, component._renderAsset || component._asset, component._renderAsset ? 'render' : 'model');
+            loadMeshAsset(
+                system,
+                component,
+                component._renderAsset || component._asset,
+                component._renderAsset ? 'render' : 'model'
+            );
             return;
         }
     }

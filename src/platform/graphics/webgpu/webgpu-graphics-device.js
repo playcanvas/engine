@@ -476,10 +476,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
         const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
             Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
-        Debug.log(`WEBGPU${this.gpuAdapter?.info ?
-            ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
-            ''
-        } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`);
+        Debug.log(
+            `WEBGPU${this.gpuAdapter?.info ?
+                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
+        );
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
@@ -935,7 +937,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 Debug.call(() => this.validateAttributes(this.shader, [vb0, vb1]));
 
                 // render pipeline
-                pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget, this.bindGroupFormats, this.blendState, this.depthState, this.cullMode, this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace);
+                pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+                    this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace);
                 Debug.assert(pipeline);
 
                 if (this.pipeline !== pipeline) {
@@ -1018,7 +1022,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setBlendState(blendState) {
-        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending, 'Dual-source blending is not supported by this graphics device.');
+        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.');
 
         this.blendState.copy(blendState);
     }

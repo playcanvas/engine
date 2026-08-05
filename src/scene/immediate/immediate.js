@@ -134,7 +134,8 @@ class Immediate {
     // shader used to display texture
     getTextureShaderDesc(encoding) {
         const decodeFunc = ChunkUtils.decodeFunc(encoding);
-        return this.getShaderDesc(`textureShader-${encoding}`, /* glsl */ `
+        return this.getShaderDesc(`textureShader-${encoding}`,
+        /* glsl */ `
             #include "gammaPS"
             varying vec2 uv0;
             uniform sampler2D colorMap;
@@ -159,7 +160,8 @@ class Immediate {
 
     // shader used to display infilterable texture sampled using texelFetch
     getUnfilterableTextureShaderDesc() {
-        return this.getShaderDesc('textureShaderUnfilterable', /* glsl */ `
+        return this.getShaderDesc('textureShaderUnfilterable',
+        /* glsl */ `
             varying vec2 uv0;
             uniform highp sampler2D colorMap;
             void main (void) {
@@ -182,7 +184,8 @@ class Immediate {
 
     // shader used to display depth texture
     getDepthTextureShaderDesc() {
-        return this.getShaderDesc('depthTextureShader', /* glsl */ `
+        return this.getShaderDesc('depthTextureShader',
+        /* glsl */ `
             #include "screenDepthPS"
             #include "gammaPS"
             varying vec2 uv0;
@@ -257,7 +260,20 @@ class Immediate {
             mulPoint(max.x, max.y, min.z); mulPoint(max.x, max.y, max.z);
             mulPoint(max.x, min.y, min.z); mulPoint(max.x, min.y, max.z);
         } else {
-            tempPoints.push(min.x, min.y, min.z, min.x, max.y, min.z, min.x, max.y, min.z, max.x, max.y, min.z, max.x, max.y, min.z, max.x, min.y, min.z, max.x, min.y, min.z, min.x, min.y, min.z, min.x, min.y, max.z, min.x, max.y, max.z, min.x, max.y, max.z, max.x, max.y, max.z, max.x, max.y, max.z, max.x, min.y, max.z, max.x, min.y, max.z, min.x, min.y, max.z, min.x, min.y, min.z, min.x, min.y, max.z, min.x, max.y, min.z, min.x, max.y, max.z, max.x, max.y, min.z, max.x, max.y, max.z, max.x, min.y, min.z, max.x, min.y, max.z);
+            tempPoints.push(
+                min.x, min.y, min.z, min.x, max.y, min.z,
+                min.x, max.y, min.z, max.x, max.y, min.z,
+                max.x, max.y, min.z, max.x, min.y, min.z,
+                max.x, min.y, min.z, min.x, min.y, min.z,
+                min.x, min.y, max.z, min.x, max.y, max.z,
+                min.x, max.y, max.z, max.x, max.y, max.z,
+                max.x, max.y, max.z, max.x, min.y, max.z,
+                max.x, min.y, max.z, min.x, min.y, max.z,
+                min.x, min.y, min.z, min.x, min.y, max.z,
+                min.x, max.y, min.z, min.x, max.y, max.z,
+                max.x, max.y, min.z, max.x, max.y, max.z,
+                max.x, min.y, min.z, max.x, min.y, max.z
+            );
         }
 
         const batch = this.getBatch(layer, depthTest);

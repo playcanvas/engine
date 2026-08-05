@@ -180,7 +180,8 @@ class WorldClusters {
             const { x: width, y: height } = TextureUtils.calcTextureSize(totalPixels, tmpSize, this.maxCellLightCount);
 
             // if the texture is allowed size
-            Debug.assert(width <= maxTextureSize && height <= maxTextureSize, 'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
+            Debug.assert(width <= maxTextureSize && height <= maxTextureSize,
+                'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
 
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;

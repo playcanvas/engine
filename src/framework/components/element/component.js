@@ -2180,7 +2180,8 @@ class ElementComponent extends Component {
             } else {
                 // transform element hierarchy
                 if (this._parent.element) {
-                    element._screenToWorld.mul2(this._parent.element._modelTransform, element._anchorTransform);
+                    element._screenToWorld.mul2(this._parent.element._modelTransform,
+                        element._anchorTransform);
                 } else {
                     element._screenToWorld.copy(element._anchorTransform);
                 }
@@ -2211,7 +2212,8 @@ class ElementComponent extends Component {
                     depthOffset.set(0, 0, this.localPosition.z);
 
                     const pivotOffset = vecB;
-                    pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth, element._absBottom + element._pivot.y * element.calculatedHeight, 0);
+                    pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth,
+                        element._absBottom + element._pivot.y * element.calculatedHeight, 0);
 
                     matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
                     matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
@@ -2505,7 +2507,8 @@ class ElementComponent extends Component {
             resy = res.y / scale;
         }
 
-        this._localAnchor.set(this._anchor.x * resx, this._anchor.y * resy, this._anchor.z * resx, this._anchor.w * resy);
+        this._localAnchor.set(this._anchor.x * resx, this._anchor.y * resy, this._anchor.z * resx,
+            this._anchor.w * resy);
     }
 
     // internal - apply offset x,y to local position and find point in world space
@@ -2853,7 +2856,13 @@ class ElementComponent extends Component {
             if (overflowX > 0 || overflowY > 0) {
                 const ha = this.alignment.x;
                 const va = this.alignment.y;
-                hitCorners = this._calcScreenCorners(this._absLeft - ha * overflowX, this._absBottom - va * overflowY, this._absRight + (1 - ha) * overflowX, this._absTop + (1 - va) * overflowY, tmpCorners);
+                hitCorners = this._calcScreenCorners(
+                    this._absLeft - ha * overflowX,
+                    this._absBottom - va * overflowY,
+                    this._absRight + (1 - ha) * overflowX,
+                    this._absTop + (1 - va) * overflowY,
+                    tmpCorners
+                );
             }
         }
 

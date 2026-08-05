@@ -1,4 +1,5 @@
-export const ABSOLUTE_URL = new RegExp('^' + // beginning of the url
+export const ABSOLUTE_URL = new RegExp(
+    '^' + // beginning of the url
     '\\s*' +  // ignore leading spaces (some browsers trim the url automatically, but we can't assume that)
     '(?:' +  // beginning of a non-captured regex group
         // `{protocol}://`
@@ -16,7 +17,9 @@ export const ABSOLUTE_URL = new RegExp('^' + // beginning of the url
 
         // Blob data
         '|blob:' +
-    ')', 'i'); // non case-sensitive flag
+    ')',
+    'i' // non case-sensitive flag
+);
 
 /**
  * Asset type name for animation.

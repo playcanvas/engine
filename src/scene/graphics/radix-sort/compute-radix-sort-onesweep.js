@@ -411,7 +411,10 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         // b_passHist in the lookback loop and spin on FLAG_NOT_READY.
         // In practice maxPerDim is 65535 and PART_SIZE = 3840, so this
         // only triggers past ~250M elements.
-        Debug.assert(currentThreadBlocks <= maxPerDim, `ComputeRadixSortOneSweep: threadBlocks (${currentThreadBlocks}) exceeds maxComputeWorkgroupsPerDimension (${maxPerDim}). Binning requires an exact 1D dispatch.`);
+        Debug.assert(
+            currentThreadBlocks <= maxPerDim,
+            `ComputeRadixSortOneSweep: threadBlocks (${currentThreadBlocks}) exceeds maxComputeWorkgroupsPerDimension (${maxPerDim}). Binning requires an exact 1D dispatch.`
+        );
         Compute.calcDispatchSize(currentThreadBlocks, this._binningDispatchSize, maxPerDim);
 
         const histBlocks = Math.max(1, Math.ceil(elementCount / G_HIST_PART_SIZE));

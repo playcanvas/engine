@@ -636,7 +636,10 @@ class GSplatWorld {
             });
         }
 
-        const newState = new GSplatWorldState(this._device, this._lastWorldStateVersion, splats, this._allocator, this._allocationMap);
+        const newState = new GSplatWorldState(
+            this._device, this._lastWorldStateVersion, splats,
+            this._allocator, this._allocationMap
+        );
 
         // increment ref count for all resources in new state
         for (const splat of newState.splats) {
@@ -1005,7 +1008,10 @@ class GSplatWorld {
 
         // Batch render color updates for nodes that exceeded angle thresholds
         if (_changedColorAllocIds.size > 0) {
-            this._workBuffer.renderColor(_splatsWithSH, camera, this.getDebugColors(), _changedColorAllocIds);
+            this._workBuffer.renderColor(
+                _splatsWithSH, camera, this.getDebugColors(),
+                _changedColorAllocIds
+            );
             _changedColorAllocIds.clear();
         }
         _splatsWithSH.length = 0;

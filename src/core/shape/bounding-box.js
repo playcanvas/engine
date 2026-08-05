@@ -318,7 +318,11 @@ class BoundingBox {
         const c = this.center;
         const h = this.halfExtents;
 
-        return result.set(Math.max(c.x - h.x, Math.min(point.x, c.x + h.x)), Math.max(c.y - h.y, Math.min(point.y, c.y + h.y)), Math.max(c.z - h.z, Math.min(point.z, c.z + h.z)));
+        return result.set(
+            Math.max(c.x - h.x, Math.min(point.x, c.x + h.x)),
+            Math.max(c.y - h.y, Math.min(point.y, c.y + h.y)),
+            Math.max(c.z - h.z, Math.min(point.z, c.z + h.z))
+        );
     }
 
     /**
@@ -371,9 +375,17 @@ class BoundingBox {
             }
         }
 
-        this.center.set(d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z, d[13] + my0 * ac.x + my1 * ac.y + my2 * ac.z, d[14] + mz0 * ac.x + mz1 * ac.y + mz2 * ac.z);
+        this.center.set(
+            d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,
+            d[13] + my0 * ac.x + my1 * ac.y + my2 * ac.z,
+            d[14] + mz0 * ac.x + mz1 * ac.y + mz2 * ac.z
+        );
 
-        this.halfExtents.set(Math.abs(mx0) * ar.x + Math.abs(mx1) * ar.y + Math.abs(mx2) * ar.z, Math.abs(my0) * ar.x + Math.abs(my1) * ar.y + Math.abs(my2) * ar.z, Math.abs(mz0) * ar.x + Math.abs(mz1) * ar.y + Math.abs(mz2) * ar.z);
+        this.halfExtents.set(
+            Math.abs(mx0) * ar.x + Math.abs(mx1) * ar.y + Math.abs(mx2) * ar.z,
+            Math.abs(my0) * ar.x + Math.abs(my1) * ar.y + Math.abs(my2) * ar.z,
+            Math.abs(mz0) * ar.x + Math.abs(mz1) * ar.y + Math.abs(mz2) * ar.z
+        );
     }
 
     /**

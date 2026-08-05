@@ -505,7 +505,10 @@ class GamePad {
         if (synthesizedButtonsMap) {
             Object.entries(synthesizedButtonsMap).forEach((button) => {
                 const { axis, max, min } = button[1];
-                buttons[buttonsIndexes[button[0]]] = () => new GamePadButton(Math.abs(math.clamp(this._axes[axis] ?? 0, min, max)), Math.abs(math.clamp(this._previousAxes[axis] ?? 0, min, max)));
+                buttons[buttonsIndexes[button[0]]] = () => new GamePadButton(
+                    Math.abs(math.clamp(this._axes[axis] ?? 0, min, max)),
+                    Math.abs(math.clamp(this._previousAxes[axis] ?? 0, min, max))
+                );
             });
         }
 
@@ -649,25 +652,27 @@ class GamePad {
             const strongMagnitude = options?.strongMagnitude ?? intensity;
             const weakMagnitude = options?.weakMagnitude ?? intensity;
 
-            const results = await Promise.all(actuators.map(async (actuator) => {
-                if (!actuator) {
-                    return true;
-                }
+            const results = await Promise.all(
+                actuators.map(async (actuator) => {
+                    if (!actuator) {
+                        return true;
+                    }
 
-                if (actuator.playEffect) {
-                    return actuator.playEffect(actuator.type, {
-                        duration,
-                        startDelay,
-                        strongMagnitude,
-                        weakMagnitude
-                    });
-                } else if (actuator.pulse) {
-                    await sleep(startDelay);
-                    return actuator.pulse(intensity, duration);
-                }
+                    if (actuator.playEffect) {
+                        return actuator.playEffect(actuator.type, {
+                            duration,
+                            startDelay,
+                            strongMagnitude,
+                            weakMagnitude
+                        });
+                    } else if (actuator.pulse) {
+                        await sleep(startDelay);
+                        return actuator.pulse(intensity, duration);
+                    }
 
-                return false;
-            }));
+                    return false;
+                })
+            );
 
             return results.some(r => r === true || r === 'complete');
         }
@@ -1033,7 +1038,9 @@ class GamePads extends EventHandler {
      * @returns {Promise<boolean[]>} Return a Promise resulting in an array of booleans defining if the pulse was successfully completed for every gamepads.
      */
     pulseAll(intensity, duration, options) {
-        return Promise.all(this.current.map(pad => pad.pulse(intensity, duration, options)));
+        return Promise.all(
+            this.current.map(pad => pad.pulse(intensity, duration, options))
+        );
     }
 
     /**

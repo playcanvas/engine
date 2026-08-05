@@ -42,7 +42,9 @@ describe('BlendState', function () {
         });
 
         it('full parameters', function () {
-            const bs = new BlendState(true, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE, false, false, false, false);
+            const bs = new BlendState(true, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
+                BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE,
+                false, false, false, false);
             expect(bs.blend).to.equal(true);
             expect(bs.colorOp).to.equal(BLENDEQUATION_MIN);
             expect(bs.colorSrcFactor).to.equal(BLENDMODE_ONE);
@@ -57,7 +59,8 @@ describe('BlendState', function () {
         });
 
         it('dual-source factors', function () {
-            const bs = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE_MINUS_SRC1_ALPHA);
+            const bs = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR,
+                BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE_MINUS_SRC1_ALPHA);
 
             expect(bs.colorDstFactor).to.equal(BLENDMODE_SRC1_COLOR);
             expect(bs.alphaDstFactor).to.equal(BLENDMODE_ONE_MINUS_SRC1_ALPHA);

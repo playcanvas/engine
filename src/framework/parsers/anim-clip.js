@@ -36,9 +36,20 @@ class AnimClipParser {
             return new AnimData(output.components, output.data);
         });
         const curves = data.curves.map((curve) => {
-            return new AnimCurve([curve.path], curve.inputIndex, curve.outputIndex, curve.interpolation);
+            return new AnimCurve(
+                [curve.path],
+                curve.inputIndex,
+                curve.outputIndex,
+                curve.interpolation
+            );
         });
-        return new AnimTrack(name, duration, inputs, outputs, curves);
+        return new AnimTrack(
+            name,
+            duration,
+            inputs,
+            outputs,
+            curves
+        );
     }
 }
 

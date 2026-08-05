@@ -263,7 +263,11 @@ class WebgpuXrBridge {
         const width = xrCamera.width;
         const height = xrCamera.height;
 
-        encoder.copyTextureToTexture({ texture: src }, { texture: dst }, [width, height, 1]);
+        encoder.copyTextureToTexture(
+            { texture: src },
+            { texture: dst },
+            [width, height, 1]
+        );
     }
 
     /**

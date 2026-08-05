@@ -342,11 +342,19 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const isStereo = xrViewCount === 2;
         this.setStereo(isStereo);
 
-        const sortedIndices = this.sortAndProjectForCamera(world, worldState, cameraNode, viewportWidth, viewportHeight, Math.max(ALPHA_VISIBILITY_THRESHOLD, params.alphaClipForward), false, isStereo, params);
+        const sortedIndices = this.sortAndProjectForCamera(
+            world, worldState, cameraNode, viewportWidth, viewportHeight,
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, params.alphaClipForward), false, isStereo, params
+        );
 
         if (!sortedIndices) return false;
 
-        this.setHybridSortedRendering(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (this.projector.projCache), /** @type {StorageBuffer} */ (this.intervalCompaction.numSplatsBuffer));
+        this.setHybridSortedRendering(
+            this.indirectDrawSlot,
+            sortedIndices,
+            /** @type {StorageBuffer} */ (this.projector.projCache),
+            /** @type {StorageBuffer} */ (this.intervalCompaction.numSplatsBuffer)
+        );
         return true;
     }
 
@@ -362,10 +370,21 @@ class GSplatHybridRenderer extends GSplatRenderer {
     preparePickingView(world, worldState, pickParams) {
         // pickMode writes pcId into the cache only when the work buffer actually carries that stream.
         const pickMode = !!world.workBuffer.format.getStream('pcId');
-        const sortedIndices = this.sortAndProjectForCamera(world, worldState, pickParams.cameraNode, pickParams.width, pickParams.height, Math.max(ALPHA_VISIBILITY_THRESHOLD, pickParams.alphaClip), pickMode, false, pickParams);
+        const sortedIndices = this.sortAndProjectForCamera(
+            world, worldState, pickParams.cameraNode, pickParams.width, pickParams.height,
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, pickParams.alphaClip), pickMode, false, pickParams
+        );
         if (!sortedIndices) return null;
 
-        return this.prepareForPicking(this.indirectDrawSlot, sortedIndices, /** @type {StorageBuffer} */ (this.projector.projCache), /** @type {StorageBuffer} */ (this.intervalCompaction.numSplatsBuffer), pickParams.alphaClip, pickParams.alphaClipForward, pickParams.cameraNode);
+        return this.prepareForPicking(
+            this.indirectDrawSlot,
+            sortedIndices,
+            /** @type {StorageBuffer} */ (this.projector.projCache),
+            /** @type {StorageBuffer} */ (this.intervalCompaction.numSplatsBuffer),
+            pickParams.alphaClip,
+            pickParams.alphaClipForward,
+            pickParams.cameraNode
+        );
     }
 
     /**
@@ -445,7 +464,13 @@ class GSplatHybridRenderer extends GSplatRenderer {
             userCacheWords: params.varyings.words
         });
 
-        projector.writeIndirectArgs(this.indirectDrawSlot, this.indirectDispatchSlot + 1, /** @type {StorageBuffer} */ (ic.numSplatsBuffer), /** @type {StorageBuffer} */ (ic.sortElementCountBuffer), sortIndirectInfo);
+        projector.writeIndirectArgs(
+            this.indirectDrawSlot,
+            this.indirectDispatchSlot + 1,
+            /** @type {StorageBuffer} */ (ic.numSplatsBuffer),
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            sortIndirectInfo
+        );
 
         // Workaround for a device hang on Windows/NVIDIA (Dawn/D3D12): in the picking path, the
         // sort's indirect dispatch args written above (by the interval compaction and projector
@@ -461,7 +486,16 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this.device.submit();
         }
 
-        return gpuSorter.sortIndirect(/** @type {StorageBuffer} */ (projector.sortKeys), elementCount, roundedNumBits, this.indirectDispatchSlot + 1, /** @type {StorageBuffer} */ (ic.sortElementCountBuffer), undefined, false, true); // destructiveKeys: projector overwrites sortKeys each frame before the sort
+        return gpuSorter.sortIndirect(
+            /** @type {StorageBuffer} */ (projector.sortKeys),
+            elementCount,
+            roundedNumBits,
+            this.indirectDispatchSlot + 1,
+            /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
+            undefined,
+            false,
+            true  // destructiveKeys: projector overwrites sortKeys each frame before the sort
+        );
     }
 
     /**
@@ -517,7 +551,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
         fp.update(this.resolveFisheye(params.fisheye), cam.fov, cam.projectionMatrix);
 
         if (fp.enabled) {
-            world.workBuffer.frustumCuller.setFisheyeData(cameraNode.getPosition(), cameraNode.forward, fp.maxTheta);
+            world.workBuffer.frustumCuller.setFisheyeData(
+                cameraNode.getPosition(),
+                cameraNode.forward,
+                fp.maxTheta
+            );
         }
     }
 

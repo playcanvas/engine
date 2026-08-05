@@ -82,7 +82,15 @@ describe('AnimController', function () {
             }
         };
         const consumedTriggers = new Set();
-        controller = new AnimController(animEvaluator, states, transitions, true, /* activate */ null, /* event handler */ name => parameters[name], name => consumedTriggers.add(name));
+        controller = new AnimController(
+            animEvaluator,
+            states,
+            transitions,
+            true, // activate
+            null, // event handler
+            name => parameters[name],
+            name => consumedTriggers.add(name)
+        );
         // add tracks
         const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
         const inputs = [new AnimData(1, [0, 1, 2])];

@@ -207,12 +207,17 @@ class GSplatComponent extends Component {
         super(system, entity);
 
         // gsplat asset reference
-        this._assetReference = new AssetReference('asset', this, system.app.assets, {
-            add: this._onGSplatAssetAdded,
-            load: this._onGSplatAssetLoad,
-            remove: this._onGSplatAssetRemove,
-            unload: this._onGSplatAssetUnload
-        }, this);
+        this._assetReference = new AssetReference(
+            'asset',
+            this,
+            system.app.assets, {
+                add: this._onGSplatAssetAdded,
+                load: this._onGSplatAssetLoad,
+                remove: this._onGSplatAssetRemove,
+                unload: this._onGSplatAssetUnload
+            },
+            this
+        );
 
         // handle events when the entity is directly (or indirectly as a child of sub-hierarchy)
         // added or removed from the parent

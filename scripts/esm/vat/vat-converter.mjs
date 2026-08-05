@@ -314,7 +314,10 @@ function sampleAnimations(entity, tracks, layout) {
 
     // the bounds the positions are quantized over, which is also what the shader dequantizes with
     const bounds = new BoundingBox();
-    bounds.setMinMax(new Vec3((min.x + offset[0]) * scale, (min.y + offset[1]) * scale, (min.z + offset[2]) * scale), new Vec3((max.x + offset[0]) * scale, (max.y + offset[1]) * scale, (max.z + offset[2]) * scale));
+    bounds.setMinMax(
+        new Vec3((min.x + offset[0]) * scale, (min.y + offset[1]) * scale, (min.z + offset[2]) * scale),
+        new Vec3((max.x + offset[0]) * scale, (max.y + offset[1]) * scale, (max.z + offset[2]) * scale)
+    );
 
     const boundsMin = [bounds.getMin().x, bounds.getMin().y, bounds.getMin().z];
     const boundsSize = [

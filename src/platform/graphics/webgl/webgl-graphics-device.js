@@ -1286,7 +1286,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const w = source ? source.width : dest ? dest.width : this.width;
         const h = source ? source.height : dest ? dest.height : this.height;
 
-        gl.blitFramebuffer(0, 0, w, h, 0, 0, w, h, (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0), gl.NEAREST);
+        gl.blitFramebuffer(0, 0, w, h,
+            0, 0, w, h,
+            (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
+            gl.NEAREST);
 
         // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
         this.renderTarget = prevRt;
@@ -2064,8 +2067,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         if (this.blendState.usesDualSourceBlending) {
                             const isBackbuffer = !this.renderTarget || this.renderTarget === this.backBuffer;
                             const colorAttachmentCount = isBackbuffer ? 1 : (this.renderTarget._colorBuffers?.length ?? 0);
-                            Debug.assert(shader.definition.useDualSourceBlending, 'A BlendState using secondary source factors requires a dual-source blending shader.');
-                            Debug.assert(colorAttachmentCount === 1, 'Dual-source blending requires exactly one color attachment.');
+                            Debug.assert(shader.definition.useDualSourceBlending,
+                                'A BlendState using secondary source factors requires a dual-source blending shader.');
+                            Debug.assert(colorAttachmentCount === 1,
+                                'Dual-source blending requires exactly one color attachment.');
                         }
                     });
 
@@ -2449,7 +2454,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Use caller's buffer or allocate output buffer in the user's expected format
         const ArrayType = getPixelFormatArrayType(texture._format);
-        const outputData = options.data ?? new ArrayType(TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT);
+        const outputData = options.data ?? new ArrayType(
+            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
+        );
 
         // For formats requiring RGBA readback, allocate a larger RGBA buffer
         const readBuffer = needsRgbaReadback ?
@@ -2710,7 +2717,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (!prevState || prevState.colorSrcFactor !== colorSrcFactor || prevState.colorDstFactor !== colorDstFactor ||
             prevState.alphaSrcFactor !== alphaSrcFactor || prevState.alphaDstFactor !== alphaDstFactor) {
 
-            gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor], this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+            gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+                this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
         }
 
         // color write
@@ -2744,13 +2752,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const glBlendEquation = this.glBlendEquation;
         ext.blendEquationSeparateiOES(index, glBlendEquation[colorOp], glBlendEquation[alphaOp]);
 
-        ext.blendFuncSeparateiOES(index, this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor], this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+        ext.blendFuncSeparateiOES(index, this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+            this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
 
         ext.colorMaskiOES(index, blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
     }
 
     setBlendState(blendState) {
-        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending, 'Dual-source blending is not supported by this graphics device.');
+        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.');
 
         const currentBlendState = this.blendState;
         if (!currentBlendState.equals(blendState)) {

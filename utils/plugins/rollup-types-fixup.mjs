@@ -217,7 +217,8 @@ const REPLACEMENTS = [{
 
         const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
         return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
-    }).join('')}`);
+    }).join('')}`
+            );
         },
         footer: `
 import { Color } from '../../core/math/color.js';

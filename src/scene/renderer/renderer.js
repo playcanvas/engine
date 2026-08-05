@@ -208,7 +208,8 @@ class Renderer {
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
-            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer, this._shadowRendererLocal, this.lightTextureAtlas);
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
+                this._shadowRendererLocal, this.lightTextureAtlas);
         }
 
         // format of the view uniform buffer

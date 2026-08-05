@@ -91,7 +91,8 @@ class ShaderDefinitionUtils {
         Debug.assert(!options.vertexIncludes || options.vertexIncludes instanceof Map);
         Debug.assert(!options.fragmentDefines || options.fragmentDefines instanceof Map);
         Debug.assert(!options.fragmentIncludes || options.fragmentIncludes instanceof Map);
-        Debug.assert(!options.useDualSourceBlending || device.supportsDualSourceBlending, 'Dual-source blending is not supported by this graphics device.');
+        Debug.assert(!options.useDualSourceBlending || device.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.');
 
         // Normalize fragmentOutputTypes to an array
         const normalizedOutputTypes = (options) => {
@@ -130,7 +131,11 @@ class ShaderDefinitionUtils {
         const getDefinesWgsl = (isVertex, options) => {
 
             // Enable directives must come before all global declarations
-            let code = ShaderDefinitionUtils.getWGSLEnables(device, isVertex ? 'vertex' : 'fragment', !isVertex && options.useDualSourceBlending);
+            let code = ShaderDefinitionUtils.getWGSLEnables(
+                device,
+                isVertex ? 'vertex' : 'fragment',
+                !isVertex && options.useDualSourceBlending
+            );
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {

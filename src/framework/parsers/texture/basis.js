@@ -23,7 +23,13 @@ class BasisParser extends TextureParser {
         const device = this.device;
 
         const transcode = (data) => {
-            const basisModuleFound = basisTranscode(device, url.load, data, callback, { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 });
+            const basisModuleFound = basisTranscode(
+                device,
+                url.load,
+                data,
+                callback,
+                { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
+            );
 
             if (!basisModuleFound) {
                 callback(`Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`);

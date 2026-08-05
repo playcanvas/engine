@@ -227,7 +227,10 @@ const string = {
         return args.map((codePoint) => {
             if (codePoint > 0xFFFF) {
                 codePoint -= 0x10000;
-                return String.fromCharCode((codePoint >> 10) + 0xD800, (codePoint % 0x400) + 0xDC00);
+                return String.fromCharCode(
+                    (codePoint >> 10) + 0xD800,
+                    (codePoint % 0x400) + 0xDC00
+                );
             }
             return String.fromCharCode(codePoint);
         }).join('');

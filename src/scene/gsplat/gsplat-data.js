@@ -75,7 +75,12 @@ class SplatIterator {
             }
 
             if (c) {
-                c.set(0.5 + cr[i] * SH_C0, 0.5 + cg[i] * SH_C0, 0.5 + cb[i] * SH_C0, activated ? ca[i] : sigmoid(ca[i]));
+                c.set(
+                    0.5 + cr[i] * SH_C0,
+                    0.5 + cg[i] * SH_C0,
+                    0.5 + cb[i] * SH_C0,
+                    activated ? ca[i] : sigmoid(ca[i])
+                );
             }
         };
     }

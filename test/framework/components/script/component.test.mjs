@@ -2935,7 +2935,9 @@ describe('ScriptComponent', function () {
         a.addComponent('script', { enabled: true });
         a.script.create(TestScript);
 
-        expect(Debug._loggedMessages.has('The Script class "TestScript" must have a static "scriptName" property: `TestScript.scriptName = "testScript";`. This will be an error in future versions of PlayCanvas.')).to.equal(true);
+        expect(Debug._loggedMessages.has(
+            'The Script class "TestScript" must have a static "scriptName" property: `TestScript.scriptName = "testScript";`. This will be an error in future versions of PlayCanvas.'
+        )).to.equal(true);
     });
 
     it('correctly registers an ESM script with its scriptName', function () {

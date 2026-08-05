@@ -437,7 +437,11 @@ class WebgpuShaderProcessorWGSL {
         const resourcesData = WebgpuShaderProcessorWGSL.processResources(device, parsedResources, shaderDefinition.processingOptions, shader);
 
         // generate fragment output struct
-        const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(fragmentExtracted.src, device.maxColorAttachments, shaderDefinition.useDualSourceBlending);
+        const fOutput = WebgpuShaderProcessorWGSL.generateFragmentOutputStruct(
+            fragmentExtracted.src,
+            device.maxColorAttachments,
+            shaderDefinition.useDualSourceBlending
+        );
 
         // inject the call to the function which copies the shader input globals
         vertexExtracted.src = WebgpuShaderProcessorWGSL.copyInputs(vertexExtracted.src, shader);
@@ -939,7 +943,12 @@ class WebgpuShaderProcessorWGSL {
 
         // fragment input: data-driven detection of optional built-ins, with sentinel fallback
         // to guarantee a non-empty FragmentInput struct (which is invalid WGSL).
-        const usedBuiltins = ensureNonEmptyStruct(detectUsedBuiltins(FRAGMENT_BUILTINS, source, entryInputName, device), FRAGMENT_BUILTINS, device, block.length > 0);
+        const usedBuiltins = ensureNonEmptyStruct(
+            detectUsedBuiltins(FRAGMENT_BUILTINS, source, entryInputName, device),
+            FRAGMENT_BUILTINS,
+            device,
+            block.length > 0
+        );
         block += renderBuiltinStructFields(usedBuiltins);
 
         return `
@@ -1026,7 +1035,8 @@ class WebgpuShaderProcessorWGSL {
                 const location = semanticToLocation[semantic];
                 Debug.assert(location !== undefined, `Semantic ${semantic} used by the attribute ${name} is not known - make sure it's one of the supported semantics.`);
 
-                Debug.assert(!usedLocations.hasOwnProperty(location), `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
+                Debug.assert(!usedLocations.hasOwnProperty(location),
+                    `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
 
                 // build a map of used attributes
@@ -1062,7 +1072,12 @@ class WebgpuShaderProcessorWGSL {
 
         // vertex input: data-driven detection of optional built-ins, with sentinel fallback
         // to guarantee a non-empty VertexInput struct (which is invalid WGSL).
-        const usedBuiltins = ensureNonEmptyStruct(detectUsedBuiltins(VERTEX_BUILTINS, source, entryInputName, device), VERTEX_BUILTINS, device, blockAttributes.length > 0);
+        const usedBuiltins = ensureNonEmptyStruct(
+            detectUsedBuiltins(VERTEX_BUILTINS, source, entryInputName, device),
+            VERTEX_BUILTINS,
+            device,
+            blockAttributes.length > 0
+        );
 
         return `
             struct VertexInput {

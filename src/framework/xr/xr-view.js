@@ -245,7 +245,11 @@ class XrView extends RenderView {
 
         // matrices: WebXR provides both the view-to-world (transform.matrix) and world-to-view
         // (transform.inverse.matrix) matrices, so both are passed to avoid recomputing the inverse
-        this.setView(this._xrView.projectionMatrix, this._xrView.transform.matrix, this._xrView.transform.inverse.matrix);
+        this.setView(
+            this._xrView.projectionMatrix,
+            this._xrView.transform.matrix,
+            this._xrView.transform.inverse.matrix
+        );
 
         this._updateTextureColor();
         this._updateDepth(frame);
@@ -311,7 +315,11 @@ class XrView extends RenderView {
         // update texture
         if (this._depthInfo) {
             if (gpu) {
-                this._manager.xrBridge?.syncCameraDepthTexture(this._depthInfo, this._textureDepth, this._manager.views.depthPixelFormat ?? PIXELFORMAT_R32F);
+                this._manager.xrBridge?.syncCameraDepthTexture(
+                    this._depthInfo,
+                    this._textureDepth,
+                    this._manager.views.depthPixelFormat ?? PIXELFORMAT_R32F
+                );
             } else {
                 // cpu
                 this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);

@@ -254,9 +254,23 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
             const isFirstPass = pass === 0 && !hasInitialValues;
             const isLastPass = skipLastPassKeyWrite && pass === numPasses - 1;
 
-            const histogramShader = this._createShader(`RadixSort4bit-Histogram${suffix}-${bitOffset}`, radixSort4bitSource, bitOffset, false, false, this._histogramBindGroupFormat);
+            const histogramShader = this._createShader(
+                `RadixSort4bit-Histogram${suffix}-${bitOffset}`,
+                radixSort4bitSource,
+                bitOffset,
+                false,
+                false,
+                this._histogramBindGroupFormat
+            );
 
-            const reorderShader = this._createShader(`RadixSort4bit-Reorder${suffix}-${bitOffset}`, radixSortReorderSource, bitOffset, isFirstPass, isLastPass, this._reorderBindGroupFormat);
+            const reorderShader = this._createShader(
+                `RadixSort4bit-Reorder${suffix}-${bitOffset}`,
+                radixSortReorderSource,
+                bitOffset,
+                isFirstPass,
+                isLastPass,
+                this._reorderBindGroupFormat
+            );
 
             const histogramCompute = new Compute(this.device, histogramShader, `RadixSort4bit-Histogram${suffix}-${bitOffset}`);
             const reorderCompute = new Compute(this.device, reorderShader, `RadixSort4bit-Reorder${suffix}-${bitOffset}`);

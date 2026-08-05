@@ -78,19 +78,35 @@ const screenToWorld = (camera, dx, dy, dz, out = new Vec3()) => {
     const { width, height } = system.app.graphicsDevice.clientRect;
 
     // normalize deltas to device coord space
-    out.set(-(dx / width) * 2, (dy / height) * 2, 0);
+    out.set(
+        -(dx / width) * 2,
+        (dy / height) * 2,
+        0
+    );
 
     // calculate half size of the view frustum at the current distance
     const halfSize = tmpV2.set(0, 0, 0);
     if (projection === PROJECTION_PERSPECTIVE) {
         const halfSlice = dz * Math.tan(0.5 * fov * math.DEG_TO_RAD);
         if (horizontalFov) {
-            halfSize.set(halfSlice, halfSlice / aspectRatio, 0);
+            halfSize.set(
+                halfSlice,
+                halfSlice / aspectRatio,
+                0
+            );
         } else {
-            halfSize.set(halfSlice * aspectRatio, halfSlice, 0);
+            halfSize.set(
+                halfSlice * aspectRatio,
+                halfSlice,
+                0
+            );
         }
     } else {
-        halfSize.set(orthoHeight * aspectRatio, orthoHeight, 0);
+        halfSize.set(
+            orthoHeight * aspectRatio,
+            orthoHeight,
+            0
+        );
     }
 
     // scale by device coord space
@@ -721,7 +737,11 @@ class CameraControls extends Script {
         applyDeadZone(rightStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
 
         // update state
-        this._state.axis.add(tmpV1.set((key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]), (key[keyCode.E] - key[keyCode.Q]), (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])));
+        this._state.axis.add(tmpV1.set(
+            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
+            (key[keyCode.E] - key[keyCode.Q]),
+            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
+        ));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }

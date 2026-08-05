@@ -84,8 +84,20 @@ class FocusController extends InputController {
         frame.read();
 
         // smoothing
-        this._rootPose.lerp(this._rootPose, this._targetRootPose, damp(this.focusDamping, dt), damp(this.focusDamping, dt), 1);
-        this._childPose.lerp(this._childPose, this._targetChildPose, damp(this.focusDamping, dt), 1, 1);
+        this._rootPose.lerp(
+            this._rootPose,
+            this._targetRootPose,
+            damp(this.focusDamping, dt),
+            damp(this.focusDamping, dt),
+            1
+        );
+        this._childPose.lerp(
+            this._childPose,
+            this._targetChildPose,
+            damp(this.focusDamping, dt),
+            1,
+            1
+        );
 
         // calculate final pose
         rotation.setFromEulerAngles(this._rootPose.angles)

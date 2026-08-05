@@ -202,7 +202,9 @@ class UsdzExporter extends CoreExporter {
 
                     // async convert them to blog and then to array buffer
                     // eslint-disable-next-line no-promise-executor-return
-                    return new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(blob => blob.arrayBuffer());
+                    return new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
+                        blob => blob.arrayBuffer()
+                    );
                 }
 
                 // ignore it if we cannot convert it

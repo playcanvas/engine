@@ -338,7 +338,8 @@ class WebgpuTexture {
     uploadImmediate(device, texture) {
 
         if (texture._needsUpload || texture._needsMipmapsUpload) {
-            Debug.assert(!device.insideRenderPass, `Texture.upload() for "${texture.name}" was called while inside a render pass, which is not currently supported. ` +
+            Debug.assert(!device.insideRenderPass,
+                `Texture.upload() for "${texture.name}" was called while inside a render pass, which is not currently supported. ` +
                 'Move texture updates to the before() or after() function of the RenderPass.');
             this.uploadData(device);
 
@@ -567,7 +568,8 @@ class WebgpuTexture {
 
         // data sizes
         const byteSize = TextureUtils.calcLevelGpuSize(width, height, 1, texture.format);
-        Debug.assert(byteSize === data.byteLength, `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
+        Debug.assert(byteSize === data.byteLength,
+            `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
         const formatInfo = pixelFormatInfo.get(texture.format);
         Debug.assert(formatInfo);
@@ -706,7 +708,11 @@ class WebgpuTexture {
         device._uploadDirtyTextures();
 
         const commandEncoder = device.getCommandEncoder();
-        commandEncoder.copyTextureToTexture({ texture: source.impl.gpuTexture, mipLevel: sourceMipLevel, origin: [sx, sy, face] }, { texture: this.gpuTexture, mipLevel: destMipLevel, origin: [dx, dy, face] }, { width: w, height: h, depthOrArrayLayers: 1 });
+        commandEncoder.copyTextureToTexture(
+            { texture: source.impl.gpuTexture, mipLevel: sourceMipLevel, origin: [sx, sy, face] },
+            { texture: this.gpuTexture, mipLevel: destMipLevel, origin: [dx, dy, face] },
+            { width: w, height: h, depthOrArrayLayers: 1 }
+        );
 
         return true;
     }

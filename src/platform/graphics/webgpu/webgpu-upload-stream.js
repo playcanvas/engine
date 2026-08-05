@@ -157,7 +157,8 @@ class WebgpuUploadStream {
         // the command buffer is eventually submitted.
         if (this.pendingStagingBuffers.length > 0) {
             // @ts-ignore - submitVersion is available on WebgpuGraphicsDevice
-            Debug.assert(device.submitVersion !== this._lastUploadSubmitVersion, 'UploadStream: each instance can only upload once per submit. A previous staging ' +
+            Debug.assert(device.submitVersion !== this._lastUploadSubmitVersion,
+                'UploadStream: each instance can only upload once per submit. A previous staging ' +
                 'buffer copy has not been submitted yet. This causes WebGPU "buffer used in submit ' +
                 'while mapped" errors. Ensure the caller defers uploads to one per frame.');
         }
@@ -188,7 +189,11 @@ class WebgpuUploadStream {
 
         // Copy from staging to storage buffer (GPU-side)
         // @ts-ignore - getCommandEncoder is available on WebgpuGraphicsDevice
-        device.getCommandEncoder().copyBufferToBuffer(buffer, 0, target.impl.buffer, byteOffset, byteSize);
+        device.getCommandEncoder().copyBufferToBuffer(
+            buffer, 0,
+            target.impl.buffer, byteOffset,
+            byteSize
+        );
 
         // Track for recycling
         this.pendingStagingBuffers.push(buffer);

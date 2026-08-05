@@ -316,7 +316,12 @@ class Picker {
         const ndcDepth = isOrtho ? linearDepth : (far * linearDepth / (linearDepth * (far - near) + near));
 
         // unproject to world space using the captured matrix
-        const deviceCoord = new Vec4((x / this.width) * 2 - 1, (1 - y / this.height) * 2 - 1, ndcDepth * 2 - 1, 1.0);
+        const deviceCoord = new Vec4(
+            (x / this.width) * 2 - 1,
+            (1 - y / this.height) * 2 - 1,
+            ndcDepth * 2 - 1,
+            1.0
+        );
         invViewProj.transformVec4(deviceCoord, deviceCoord);
         deviceCoord.mulScalar(1.0 / deviceCoord.w);
 

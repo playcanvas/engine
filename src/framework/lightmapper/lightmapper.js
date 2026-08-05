@@ -193,7 +193,11 @@ class Lightmapper {
             this.worldClusters.name = 'ClusterLightmapper';
 
             // render pass for clustered local light shadows
-            this.shadowLocalClusteredPass = new RenderPassShadowLocalClustered(device, this.renderer.shadowRenderer, this.renderer._shadowRendererLocal);
+            this.shadowLocalClusteredPass = new RenderPassShadowLocalClustered(
+                device,
+                this.renderer.shadowRenderer,
+                this.renderer._shadowRendererLocal
+            );
         }
     }
 
@@ -866,7 +870,13 @@ class Lightmapper {
                     const faceCount = light.numShadowFaces;
                     const applyVsm = light._type === LIGHTTYPE_SPOT;
                     for (let face = 0; face < faceCount; face++) {
-                        const renderPass = new RenderPassShadowLocalNonClustered(this.device, this.renderer.shadowRenderer, light, face, applyVsm);
+                        const renderPass = new RenderPassShadowLocalNonClustered(
+                            this.device,
+                            this.renderer.shadowRenderer,
+                            light,
+                            face,
+                            applyVsm
+                        );
                         renderPass.render();
                     }
                 }
@@ -1096,7 +1106,9 @@ class Lightmapper {
                             this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                         }
 
-                        const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera, clusteredLightingEnabled ? this.worldClusters : null, rcv, lightArray);
+                        const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
+                            clusteredLightingEnabled ? this.worldClusters : null,
+                            rcv, lightArray);
                         renderPass.init(tempRT);
                         renderPass.colorOps.clear = true;
                         renderPass.colorOps.clearValue.copy(this.camera.clearColor);

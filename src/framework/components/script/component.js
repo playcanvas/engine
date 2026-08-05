@@ -989,7 +989,14 @@ class ScriptComponent extends Component {
 
                 if (attribute.type === 'entity') {
                     // entity attributes
-                    this._resolveEntityScriptAttribute(attribute, attributeName, oldAttributes[attributeName], useGuid, newAttributesRaw || newAttributes, duplicatedIdsMap);
+                    this._resolveEntityScriptAttribute(
+                        attribute,
+                        attributeName,
+                        oldAttributes[attributeName],
+                        useGuid,
+                        newAttributesRaw || newAttributes,
+                        duplicatedIdsMap
+                    );
                 } else if (attribute.type === 'json' && Array.isArray(attribute.schema)) {
                     // json attributes
                     const oldValue = oldAttributes[attributeName];
@@ -1003,10 +1010,24 @@ class ScriptComponent extends Component {
 
                         if (attribute.array) {
                             for (let j = 0; j < oldValue.length; j++) {
-                                this._resolveEntityScriptAttribute(field, field.name, oldValue[j][field.name], useGuid, newJsonValue[j], duplicatedIdsMap);
+                                this._resolveEntityScriptAttribute(
+                                    field,
+                                    field.name,
+                                    oldValue[j][field.name],
+                                    useGuid,
+                                    newJsonValue[j],
+                                    duplicatedIdsMap
+                                );
                             }
                         } else {
-                            this._resolveEntityScriptAttribute(field, field.name, oldValue[field.name], useGuid, newJsonValue, duplicatedIdsMap);
+                            this._resolveEntityScriptAttribute(
+                                field,
+                                field.name,
+                                oldValue[field.name],
+                                useGuid,
+                                newJsonValue,
+                                duplicatedIdsMap
+                            );
                         }
                     }
                 }

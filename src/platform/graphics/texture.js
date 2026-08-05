@@ -1124,9 +1124,17 @@ class Texture {
         options.face ??= 0;
         options.mode ??= TEXTURELOCK_WRITE;
 
-        Debug.assert(this._lockedMode === TEXTURELOCK_NONE, 'The texture is already locked. Call `texture.unlock()` before attempting to lock again.', this);
+        Debug.assert(
+            this._lockedMode === TEXTURELOCK_NONE,
+            'The texture is already locked. Call `texture.unlock()` before attempting to lock again.',
+            this
+        );
 
-        Debug.assert(options.mode === TEXTURELOCK_READ || options.mode === TEXTURELOCK_WRITE, 'Cannot lock a texture with TEXTURELOCK_NONE. To unlock a texture, call `texture.unlock()`.', this);
+        Debug.assert(
+            options.mode === TEXTURELOCK_READ || options.mode === TEXTURELOCK_WRITE,
+            'Cannot lock a texture with TEXTURELOCK_NONE. To unlock a texture, call `texture.unlock()`.',
+            this
+        );
 
         this._lockedMode = options.mode;
         this._lockedLevel = options.level;

@@ -226,7 +226,11 @@ class GSplatProjector {
         this.device = device;
 
         this.binWeightsUtil = new GSplatSortBinWeights();
-        this.binWeightsBuffer = new StorageBuffer(device, GSplatSortBinWeights.NUM_BINS * 2 * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
+        this.binWeightsBuffer = new StorageBuffer(
+            device,
+            GSplatSortBinWeights.NUM_BINS * 2 * 4,
+            BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST
+        );
         DebugHelper.setName(this.binWeightsBuffer, 'GsplatProjector.binWeights');
 
         // 4 B counter, cleared every frame on the GPU via clear().
@@ -784,7 +788,11 @@ class GSplatProjector {
         // sortElementCount[0]; sizing the dispatch for the full capacity (a CPU-known
         // upper bound) avoids needing an extra indirect-args dispatch for this pass.
         const workgroupCount = Math.ceil(totalCapacity / PROJECTOR_WORKGROUP_SIZE);
-        Compute.calcDispatchSize(workgroupCount, _dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        Compute.calcDispatchSize(
+            workgroupCount,
+            _dispatchSize,
+            this.device.limits.maxComputeWorkgroupsPerDimension || 65535
+        );
         compute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
         this.device.computeDispatch([compute], 'GSplatProjector');
     }

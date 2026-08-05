@@ -19,7 +19,11 @@ describe('VertexBuffer', function () {
         device = null;
     });
 
-    const createBuffer = (semantic, components) => new VertexBuffer(device, new VertexFormat(device, [{ semantic: semantic, components: components, type: TYPE_FLOAT32 }]), 4);
+    const createBuffer = (semantic, components) => new VertexBuffer(
+        device,
+        new VertexFormat(device, [{ semantic: semantic, components: components, type: TYPE_FLOAT32 }]),
+        4
+    );
 
     describe('#vaoKeyPart', function () {
 

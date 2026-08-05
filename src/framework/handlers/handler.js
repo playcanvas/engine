@@ -132,7 +132,8 @@ class ResourceHandler {
      * app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
      */
     addParser(parser, decider) {
-        Debug.assert(parser && typeof parser.canParse === 'function', 'ResourceHandler#addParser: the parser must implement canParse(context). The (parser, decider) ' +
+        Debug.assert(parser && typeof parser.canParse === 'function',
+            'ResourceHandler#addParser: the parser must implement canParse(context). The (parser, decider) ' +
             'form was removed - move the decider logic into the parser\'s canParse(context) method.');
         if (decider !== undefined) {
             Debug.removed('ResourceHandler#addParser(parser, decider): the "decider" argument was removed. ' +
@@ -275,7 +276,8 @@ class ResourceHandler {
             return;
         }
 
-        Debug.assert(typeof parser.load === 'function', `ResourceHandler('${this.handlerType}'): the selected parser has no load(url, callback, asset) ` +
+        Debug.assert(typeof parser.load === 'function',
+            `ResourceHandler('${this.handlerType}'): the selected parser has no load(url, callback, asset) ` +
             'method. Pre-fetch parsers that implement parse(data, ...) must be used by a handler that ' +
             'overrides load().');
         parser.load(url, callback, asset);

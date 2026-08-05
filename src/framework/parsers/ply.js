@@ -599,12 +599,16 @@ class PlyParser {
                 const totalLength = parseInt(response.headers.get('content-length') ?? '0', 10);
                 let totalReceived = 0;
 
-                const data = await readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter, (bytes) => {
-                    totalReceived += bytes;
-                    if (asset) {
-                        asset.fire('progress', totalReceived, totalLength);
+                const data = await readPly(
+                    response.body.getReader(),
+                    asset.data.elementFilter ?? defaultElementFilter,
+                    (bytes) => {
+                        totalReceived += bytes;
+                        if (asset) {
+                            asset.fire('progress', totalReceived, totalLength);
+                        }
                     }
-                });
+                );
 
                 // allow application to process the data
                 asset.fire('load:data', data);

@@ -392,7 +392,12 @@ class AmmoPhysicsWorld extends PhysicsWorld {
                 const point = rayCallback.get_m_hitPointWorld();
                 const normal = rayCallback.get_m_hitNormalWorld();
 
-                result = new RaycastResult(body.entity, new Vec3(point.x(), point.y(), point.z()), new Vec3(normal.x(), normal.y(), normal.z()), rayCallback.get_m_closestHitFraction());
+                result = new RaycastResult(
+                    body.entity,
+                    new Vec3(point.x(), point.y(), point.z()),
+                    new Vec3(normal.x(), normal.y(), normal.z()),
+                    rayCallback.get_m_closestHitFraction()
+                );
             }
         }
 
@@ -436,7 +441,12 @@ class AmmoPhysicsWorld extends PhysicsWorld {
 
                     const point = points.at(i);
                     const normal = normals.at(i);
-                    const result = new RaycastResult(body.entity, new Vec3(point.x(), point.y(), point.z()), new Vec3(normal.x(), normal.y(), normal.z()), hitFractions.at(i));
+                    const result = new RaycastResult(
+                        body.entity,
+                        new Vec3(point.x(), point.y(), point.z()),
+                        new Vec3(normal.x(), normal.y(), normal.z()),
+                        hitFractions.at(i)
+                    );
 
                     results.push(result);
                 }

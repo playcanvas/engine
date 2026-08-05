@@ -30,7 +30,11 @@ function intersectPlanes(p1, p2, p3, out) {
     _c31.cross(p3.normal, p1.normal);
     _c12.cross(p1.normal, p2.normal);
     const invDenom = -1.0 / denom;
-    out.set((p1.distance * _c23.x + p2.distance * _c31.x + p3.distance * _c12.x) * invDenom, (p1.distance * _c23.y + p2.distance * _c31.y + p3.distance * _c12.y) * invDenom, (p1.distance * _c23.z + p2.distance * _c31.z + p3.distance * _c12.z) * invDenom);
+    out.set(
+        (p1.distance * _c23.x + p2.distance * _c31.x + p3.distance * _c12.x) * invDenom,
+        (p1.distance * _c23.y + p2.distance * _c31.y + p3.distance * _c12.y) * invDenom,
+        (p1.distance * _c23.z + p2.distance * _c31.z + p3.distance * _c12.z) * invDenom
+    );
     return isFinite(out.x) && isFinite(out.y) && isFinite(out.z);
 }
 

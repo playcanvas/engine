@@ -299,9 +299,12 @@ class BlendState {
      * state.setAttachment(1, noWrite);
      */
     setAttachment(index, src) {
-        Debug.assert(index >= 1 && index < maxAttachments, `BlendState#setAttachment index ${index} is out of range, it must be in 1 to ${maxAttachments - 1} range. Attachment 0 is configured using the other functions of the class.`);
-        Debug.assert(!src || !src.hasAttachmentOverrides, 'BlendState#setAttachment source must not have per-attachment overrides of its own, as only its attachment 0 state is used.');
-        Debug.assert(!src || (src.attachment0 & stateMask) !== 0, 'BlendState#setAttachment source must not be a blend state with all properties set to zero, as this value is reserved to mean the attachment follows attachment 0.');
+        Debug.assert(index >= 1 && index < maxAttachments,
+            `BlendState#setAttachment index ${index} is out of range, it must be in 1 to ${maxAttachments - 1} range. Attachment 0 is configured using the other functions of the class.`);
+        Debug.assert(!src || !src.hasAttachmentOverrides,
+            'BlendState#setAttachment source must not have per-attachment overrides of its own, as only its attachment 0 state is used.');
+        Debug.assert(!src || (src.attachment0 & stateMask) !== 0,
+            'BlendState#setAttachment source must not be a blend state with all properties set to zero, as this value is reserved to mean the attachment follows attachment 0.');
 
         this._attachments ??= new Int32Array(maxAttachments);
         this._attachments[index] = src ? (src.attachment0 & stateMask) : 0;
@@ -328,7 +331,8 @@ class BlendState {
      * @returns {BlendState} The supplied dst, for chaining.
      */
     getAttachment(index, dst) {
-        Debug.assert(index >= 0 && index < maxAttachments, `BlendState#getAttachment index ${index} is out of range, it must be in 0 to ${maxAttachments - 1} range.`);
+        Debug.assert(index >= 0 && index < maxAttachments,
+            `BlendState#getAttachment index ${index} is out of range, it must be in 0 to ${maxAttachments - 1} range.`);
 
         // the overrides flag is the authority - the per-attachment values are ignored without it, as
         // they can be stale after a copy from a state which has no overrides. Slot 0 is always

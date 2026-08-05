@@ -48,7 +48,18 @@ class AnimState {
         this._loop = loop;
         this._hasAnimations = false;
         if (blendTree) {
-            this._blendTree = this._createTree(blendTree.type, this, null, name, 1.0, blendTree.parameter ? [blendTree.parameter] : blendTree.parameters, blendTree.children, blendTree.syncAnimations, this._createTree, this._controller.findParameter);
+            this._blendTree = this._createTree(
+                blendTree.type,
+                this,
+                null,
+                name,
+                1.0,
+                blendTree.parameter ? [blendTree.parameter] : blendTree.parameters,
+                blendTree.children,
+                blendTree.syncAnimations,
+                this._createTree,
+                this._controller.findParameter
+            );
         } else {
             this._blendTree = new AnimNode(this, null, name, 1.0, speed);
         }

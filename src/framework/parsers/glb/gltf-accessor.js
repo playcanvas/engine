@@ -193,7 +193,9 @@ class GltfAccessor {
 
                     result = new dataType(storage);
                 } else {
-                    result = new dataType(bufferView.buffer, bufferView.byteOffset + (gltfAccessor.byteOffset || 0), gltfAccessor.count * numComponents);
+                    result = new dataType(bufferView.buffer,
+                        bufferView.byteOffset + (gltfAccessor.byteOffset || 0),
+                        gltfAccessor.count * numComponents);
                 }
             } else {
                 result = new dataType(gltfAccessor.count * numComponents);
@@ -242,7 +244,10 @@ class GltfAccessor {
             max = dequantizeArray([], max, ctype);
         }
 
-        return new BoundingBox(new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5), new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5));
+        return new BoundingBox(
+            new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
+            new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
+        );
     }
 }
 

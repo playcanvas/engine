@@ -74,79 +74,82 @@ function UnifiedSortWorker() {
                 const intervalEnd = intervalsArray[i + 1] * 3;
 
                 // Process each center in this interval using the provided function
-                compactIdx = processSplatFn(centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer);
+                compactIdx = processSplatFn(centers, params, intervalStart, intervalEnd, compactIdx,
+                    invBinRange, minDist, range, distances, countBuffer);
             }
         }
     };
 
     const evaluateSortKeysLinear = (sortParams, minDist, range, distances, countBuffer, centersData) => {
-        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData, (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
-            // camera related params
-            const { transformedDirection, offset, scale } = params;
-            const dx = transformedDirection.x;
-            const dy = transformedDirection.y;
-            const dz = transformedDirection.z;
+        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
+            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
+                // camera related params
+                const { transformedDirection, offset, scale } = params;
+                const dx = transformedDirection.x;
+                const dy = transformedDirection.y;
+                const dz = transformedDirection.z;
 
-            // pre-calculate camera related constants
-            const sdx = dx * scale;
-            const sdy = dy * scale;
-            const sdz = dz * scale;
-            const add = offset - minDist;
+                // pre-calculate camera related constants
+                const sdx = dx * scale;
+                const sdy = dy * scale;
+                const sdz = dz * scale;
+                const add = offset - minDist;
 
-            // Process each center in this interval
-            for (let srcIndex = intervalStart; srcIndex < intervalEnd; srcIndex += 3) {
-                const x = centers[srcIndex];
-                const y = centers[srcIndex + 1];
-                const z = centers[srcIndex + 2];
+                // Process each center in this interval
+                for (let srcIndex = intervalStart; srcIndex < intervalEnd; srcIndex += 3) {
+                    const x = centers[srcIndex];
+                    const y = centers[srcIndex + 1];
+                    const z = centers[srcIndex + 2];
 
-                const dist = x * sdx + y * sdy + z * sdz + add;
+                    const dist = x * sdx + y * sdy + z * sdz + add;
 
-                // Bin-based mapping
-                const d = dist * invBinRange;
-                const bin = d >>> 0;
-                const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
+                    // Bin-based mapping
+                    const d = dist * invBinRange;
+                    const bin = d >>> 0;
+                    const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
 
-                distances[compactIdx++] = sortKey;
-                countBuffer[sortKey]++;
-            }
+                    distances[compactIdx++] = sortKey;
+                    countBuffer[sortKey]++;
+                }
 
-            return compactIdx;
-        });
+                return compactIdx;
+            });
     };
 
     const evaluateSortKeysRadial = (sortParams, minDist, range, distances, countBuffer, centersData) => {
-        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData, (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
-            // camera related params
-            const { transformedPosition, scale } = params;
+        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
+            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
+                // camera related params
+                const { transformedPosition, scale } = params;
 
-            // camera position in local space
-            const cx = transformedPosition.x;
-            const cy = transformedPosition.y;
-            const cz = transformedPosition.z;
+                // camera position in local space
+                const cx = transformedPosition.x;
+                const cy = transformedPosition.y;
+                const cz = transformedPosition.z;
 
-            // Process each center in this interval
-            for (let srcIndex = intervalStart; srcIndex < intervalEnd; srcIndex += 3) {
-                const dx = centers[srcIndex] - cx;
-                const dy = centers[srcIndex + 1] - cy;
-                const dz = centers[srcIndex + 2] - cz;
+                // Process each center in this interval
+                for (let srcIndex = intervalStart; srcIndex < intervalEnd; srcIndex += 3) {
+                    const dx = centers[srcIndex] - cx;
+                    const dy = centers[srcIndex + 1] - cy;
+                    const dz = centers[srcIndex + 2] - cz;
 
-                const distSq = dx * dx + dy * dy + dz * dz;
-                // World-space radial distance from camera
-                const dist = Math.sqrt(distSq) * scale;
+                    const distSq = dx * dx + dy * dy + dz * dz;
+                    // World-space radial distance from camera
+                    const dist = Math.sqrt(distSq) * scale;
 
-                // Invert distance so far objects get small keys (rendered first, back-to-front)
-                const invertedDist = range - dist;
-                // Bin-based mapping
-                const d = invertedDist * invBinRange;
-                const bin = d >>> 0;
-                const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
+                    // Invert distance so far objects get small keys (rendered first, back-to-front)
+                    const invertedDist = range - dist;
+                    // Bin-based mapping
+                    const d = invertedDist * invBinRange;
+                    const bin = d >>> 0;
+                    const sortKey = (binBase[bin] + binDivider[bin] * (d - bin)) >>> 0;
 
-                distances[compactIdx++] = sortKey;
-                countBuffer[sortKey]++;
-            }
+                    distances[compactIdx++] = sortKey;
+                    countBuffer[sortKey]++;
+                }
 
-            return compactIdx;
-        });
+                return compactIdx;
+            });
     };
 
     const countingSort = (bucketCount, countBuffer, numVertices, distances, order) => {

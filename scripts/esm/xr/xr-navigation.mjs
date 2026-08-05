@@ -615,7 +615,11 @@ class XrNavigation extends Script {
 
         for (let i = 0; i <= segments; i++) {
             const t = (tFlight * i) / segments;
-            this._arcPoints[i].set(origin.x + vx * t, origin.y + vy * t - 0.5 * g * t * t, origin.z + vz * t);
+            this._arcPoints[i].set(
+                origin.x + vx * t,
+                origin.y + vy * t - 0.5 * g * t * t,
+                origin.z + vz * t
+            );
         }
 
         if (this.castRay) {

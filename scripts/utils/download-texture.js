@@ -39,7 +39,9 @@ function constructPngUrl(data, width, height) {
         do {
             var block = data.slice(i, i + 65535);
             var len = block.length;
-            compressed += String.fromCharCode(((i += block.length) === data.length) << 0, len & 255, len >>> 8, ~len & 255, (~len >>> 8) & 255);
+            compressed += String.fromCharCode(
+                ((i += block.length) === data.length) << 0,
+                len & 255, len >>> 8, ~len & 255, (~len >>> 8) & 255);
             compressed += block;
         } while (i < data.length);
         return compressed + hton(adler(data));
@@ -89,7 +91,9 @@ function download(url, filename) {
     // create a "fake" click-event to trigger the download
     if (document.createEvent) {
         var e = document.createEvent('MouseEvents');
-        e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        e.initMouseEvent('click', true, true, window,
+            0, 0, 0, 0, 0, false, false, false,
+            false, 0, null);
 
         lnk.dispatchEvent(e);
     } else if (lnk.fireEvent) {

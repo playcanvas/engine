@@ -438,7 +438,9 @@ class GSplatInfo {
         let subDrawCount = 0;
 
         for (let i = 0; i < numIntervals; i++) {
-            subDrawCount = this.appendSubDraws(subDrawData, subDrawCount, intervals[i * 2], intervals[i * 2 + 1] - intervals[i * 2], this.intervalOffsets[i], textureWidth);
+            subDrawCount = this.appendSubDraws(subDrawData, subDrawCount,
+                intervals[i * 2], intervals[i * 2 + 1] - intervals[i * 2],
+                this.intervalOffsets[i], textureWidth);
         }
 
         this.subDrawCount = subDrawCount;

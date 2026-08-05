@@ -124,7 +124,13 @@ class AnimController {
         this._findParameter = findParameter;
         this._consumeTrigger = consumeTrigger;
         for (let i = 0; i < states.length; i++) {
-            this._states[states[i].name] = new AnimState(this, states[i].name, states[i].speed, states[i].loop, states[i].blendTree);
+            this._states[states[i].name] = new AnimState(
+                this,
+                states[i].name,
+                states[i].speed,
+                states[i].loop,
+                states[i].blendTree
+            );
             this._stateNames.push(states[i].name);
         }
         this._transitions = transitions.map((transition) => {

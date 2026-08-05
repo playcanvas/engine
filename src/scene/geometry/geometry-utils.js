@@ -132,8 +132,12 @@ const calculateTangents = (positions, normals, uvs, indices) => {
             tdir.set(1, 0, 0);
         } else {
             const r = 1 / area;
-            sdir.set((t2 * x1 - t1 * x2) * r, (t2 * y1 - t1 * y2) * r, (t2 * z1 - t1 * z2) * r);
-            tdir.set((s1 * x2 - s2 * x1) * r, (s1 * y2 - s2 * y1) * r, (s1 * z2 - s2 * z1) * r);
+            sdir.set((t2 * x1 - t1 * x2) * r,
+                (t2 * y1 - t1 * y2) * r,
+                (t2 * z1 - t1 * z2) * r);
+            tdir.set((s1 * x2 - s2 * x1) * r,
+                (s1 * y2 - s2 * y1) * r,
+                (s1 * z2 - s2 * z1) * r);
         }
 
         tan1[i1 * 3 + 0] += sdir.x;

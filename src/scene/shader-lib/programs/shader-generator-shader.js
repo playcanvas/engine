@@ -112,7 +112,10 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         // includes - default chunks
         const shaderLanguage = wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
-        const sharedIncludes = MapUtils.merge(ShaderChunks.get(device, shaderLanguage), options.shaderChunks[shaderLanguage]);
+        const sharedIncludes = MapUtils.merge(
+            ShaderChunks.get(device, shaderLanguage),
+            options.shaderChunks[shaderLanguage]
+        );
 
         this.createAttributesDefinition(definitionOptions, options);
         this.createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl);

@@ -38,7 +38,13 @@ class FramePassDepthGrab extends FramePass {
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
 
         // allocate texture buffer
-        const texture = Texture.createDataTexture2D(device, _depthUniformName, sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width, sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height, format);
+        const texture = Texture.createDataTexture2D(
+            device,
+            _depthUniformName,
+            sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
+            sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
+            format
+        );
 
         if (renderTarget) {
 

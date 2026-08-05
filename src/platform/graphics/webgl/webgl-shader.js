@@ -407,7 +407,9 @@ class WebglShader {
             const shortName = blockName.startsWith('ub_') ? blockName.substring(3) : blockName;
             const bindGroupIndex = bindGroupNames.indexOf(shortName);
 
-            Debug.assert(bindGroupIndex >= 0, `Shader [${shader.label}] declares an unsupported uniform block [${blockName}] - user uniform buffers are not supported.`, shader);
+            Debug.assert(bindGroupIndex >= 0,
+                `Shader [${shader.label}] declares an unsupported uniform block [${blockName}] - user uniform buffers are not supported.`,
+                shader);
 
             const bindingPoint = bindGroupIndex >= 0 ? bindGroupIndex : i;
             gl.uniformBlockBinding(glProgram, i, bindingPoint);

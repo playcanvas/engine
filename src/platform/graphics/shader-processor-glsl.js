@@ -433,7 +433,8 @@ class ShaderProcessorGLSL {
                 const location = semanticToLocation[semantic];
                 Debug.assert(location !== undefined, `Semantic ${semantic} used by the attribute ${name} is not known - make sure it's one of the supported semantics.`);
 
-                Debug.assert(!usedLocations.hasOwnProperty(location), `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
+                Debug.assert(!usedLocations.hasOwnProperty(location),
+                    `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
 
                 // build a map of used attributes

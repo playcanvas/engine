@@ -51,7 +51,10 @@ class VirtualJoystick {
         if (v.length() > this._range) {
             v.normalize().mulScalar(this._range);
         }
-        this._value.set(math.clamp(v.x / this._range, -1, 1), math.clamp(v.y / this._range, -1, 1));
+        this._value.set(
+            math.clamp(v.x / this._range, -1, 1),
+            math.clamp(v.y / this._range, -1, 1)
+        );
         const { x: bx, y: by } = this._position;
         return [bx, by, bx + v.x, by + v.y];
     }

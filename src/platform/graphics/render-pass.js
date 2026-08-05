@@ -307,7 +307,8 @@ class RenderPass extends FramePass {
 
         // TODO: expose per color buffer clear parameters on the camera, and copy them here.
         const count = this.colorArrayOps.length;
-        Debug.assert(index === undefined || (index >= 0 && index < count), `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);
+        Debug.assert(index === undefined || (index >= 0 && index < count),
+            `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);
 
         const start = index ?? 0;
         const end = index === undefined ? count : index + 1;
@@ -403,7 +404,8 @@ class RenderPass extends FramePass {
                 `${mipLevel > 0 ? ` mipLevel: ${mipLevel}` : ''}`;
 
             const indexString = this._skipStart ? '++' : index.toString().padEnd(2, ' ');
-            Debug.trace(TRACEID_RENDER_PASS, `${indexString}: ${this.name.padEnd(20, ' ')}` +
+            Debug.trace(TRACEID_RENDER_PASS,
+                `${indexString}: ${this.name.padEnd(20, ' ')}` +
                         `${this.executeEnabled ? '' : ' DISABLED '}${
                             rtInfo.padEnd(30)}`);
 
@@ -416,7 +418,8 @@ class RenderPass extends FramePass {
                             `${colorOps.resolve ? 'resolve ' : ''}` +
                             `${colorOps.genMipmaps ? 'mipmaps ' : ''}` +
                             ` [format: ${colorFormat}]` +
-                            ` ${colorOps.clear ? `[clear: ${colorOps.clearValue.toString(true, true)}]` : ''}`);
+                            ` ${colorOps.clear ? `[clear: ${colorOps.clearValue.toString(true, true)}]` : ''}`
+                );
             }
 
             if (this.depthStencilOps) {
@@ -429,7 +432,8 @@ class RenderPass extends FramePass {
                                 `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}` +
                                 `${this.depthStencilOps.resolveDepth ? ' resolve' : ''}` +
                                 `${depthFormat}` +
-                                `${this.depthStencilOps.clearDepth ? ` [clear: ${this.depthStencilOps.clearDepthValue}]` : ''}`);
+                                `${this.depthStencilOps.clearDepth ? ` [clear: ${this.depthStencilOps.clearDepthValue}]` : ''}`
+                    );
                 }
 
                 if (hasStencil) {
@@ -437,7 +441,8 @@ class RenderPass extends FramePass {
                                 `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
                                 `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}` +
                                 `${depthFormat}` +
-                                `${this.depthStencilOps.clearStencil ? ` [clear: ${this.depthStencilOps.clearStencilValue}]` : ''}`);
+                                `${this.depthStencilOps.clearStencil ? ` [clear: ${this.depthStencilOps.clearStencilValue}]` : ''}`
+                    );
                 }
             }
         }

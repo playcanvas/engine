@@ -289,7 +289,12 @@ class GltfExporter extends CoreExporter {
                 // generate buffer view per element
                 const bufferViewIndices = [];
                 for (const element of format.elements) {
-                    const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset, element.size);
+                    const bufferViewIndex = addBufferView(
+                        ARRAY_BUFFER,
+                        element.size * format.vertexCount,
+                        offset + element.offset,
+                        element.size
+                    );
                     bufferViewIndices.push(bufferViewIndex);
                 }
                 resources.bufferViewMap.set(buffer, bufferViewIndices);
@@ -936,42 +941,44 @@ class GltfExporter extends CoreExporter {
             const isRGBA = isCanvasTransparent(canvas) || !resources.compressableTexture.has(texture);
             const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
-            promises.push(this.getBlob(canvas, mimeType)
-            .then((blob) => {
-                const reader = new FileReader();
-                reader.readAsArrayBuffer(blob);
+            promises.push(
+                this.getBlob(canvas, mimeType)
+                .then((blob) => {
+                    const reader = new FileReader();
+                    reader.readAsArrayBuffer(blob);
 
-                return new Promise((resolve) => {
-                    reader.onloadend = () => {
-                        resolve(reader);
+                    return new Promise((resolve) => {
+                        reader.onloadend = () => {
+                            resolve(reader);
+                        };
+                    });
+                })
+                .then((reader) => {
+                    const buffer = this.getPaddedArrayBuffer(reader.result);
+
+                    GltfExporter.writeBufferView(resources, json, buffer);
+                    resources.buffers.push(buffer);
+
+                    const bufferView = resources.bufferViewMap.get(buffer);
+
+                    json.images[i] = {
+                        mimeType: mimeType,
+                        bufferView: bufferView[0]
                     };
-                });
-            })
-            .then((reader) => {
-                const buffer = this.getPaddedArrayBuffer(reader.result);
 
-                GltfExporter.writeBufferView(resources, json, buffer);
-                resources.buffers.push(buffer);
+                    json.samplers[i] = {
+                        minFilter: getFilter(texture.minFilter),
+                        magFilter: getFilter(texture.magFilter),
+                        wrapS: getWrap(texture.addressU),
+                        wrapT: getWrap(texture.addressV)
+                    };
 
-                const bufferView = resources.bufferViewMap.get(buffer);
-
-                json.images[i] = {
-                    mimeType: mimeType,
-                    bufferView: bufferView[0]
-                };
-
-                json.samplers[i] = {
-                    minFilter: getFilter(texture.minFilter),
-                    magFilter: getFilter(texture.magFilter),
-                    wrapS: getWrap(texture.addressU),
-                    wrapT: getWrap(texture.addressV)
-                };
-
-                json.textures[i] = {
-                    sampler: i,
-                    source: i
-                };
-            }));
+                    json.textures[i] = {
+                        sampler: i,
+                        source: i
+                    };
+                })
+            );
         }
 
         return Promise.all(promises);
@@ -1083,7 +1090,10 @@ class GltfExporter extends CoreExporter {
             const jsonPaddingLength = (4 - (jsonDataLength & 3)) & 3;
 
             const binaryHeaderLength = 8;
-            const binaryDataLength = json.buffers.reduce((total, buffer) => math.roundUp(total + buffer.byteLength, 4), 0);
+            const binaryDataLength = json.buffers.reduce(
+                (total, buffer) => math.roundUp(total + buffer.byteLength, 4),
+                0
+            );
 
             let totalLength = headerLength + jsonHeaderLength + jsonDataLength + jsonPaddingLength;
             if (binaryDataLength > 0) {

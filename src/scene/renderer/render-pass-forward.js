@@ -295,7 +295,8 @@ class RenderPassForward extends RenderPass {
             }
 
             const renderTarget = step.renderTarget ?? device.backBuffer;
-            renderer.renderForwardLayer(cameraComponent.camera, renderTarget, layer, transparent, shaderPass, options);
+            renderer.renderForwardLayer(cameraComponent.camera, renderTarget, layer, transparent,
+                shaderPass, options);
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
@@ -339,7 +340,8 @@ class RenderPassForward extends RenderPass {
                 }${enabled ? ' ENABLED' : ' DISABLED'
                 }${(` Meshes: ${layer.meshInstances.length}`).padEnd(5, ' ')
                 }${step.firstCameraUse ? ' CAM-FIRST' : ''
-                }${step.lastCameraUse ? ' CAM-LAST' : ''}`);
+                }${step.lastCameraUse ? ' CAM-LAST' : ''}`
+                );
             });
         }
     }

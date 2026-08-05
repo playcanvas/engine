@@ -377,7 +377,8 @@ class VertexIterator {
             const numComponents = element.numComponents;
             const copyCount = count * numComponents;
 
-            Debug.assert(!ArrayBuffer.isView(data) || data.length >= copyCount, `Destination array is too small to receive all ${semantic} data.`);
+            Debug.assert(!ArrayBuffer.isView(data) || data.length >= copyCount,
+                `Destination array is too small to receive all ${semantic} data.`);
 
             if (this.vertexBuffer.getFormat().interleaved) {
 

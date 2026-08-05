@@ -1545,7 +1545,9 @@ class GraphNode extends EventHandler {
                     let tmatrix = parent.worldTransform;
                     if (parent.scaleCompensation) {
                         scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
-                        scaleCompensatePosTransform.setTRS(parent.worldTransform.getTranslation(scaleCompensatePos), scaleCompensateRot2, scaleCompensateScaleForParent);
+                        scaleCompensatePosTransform.setTRS(parent.worldTransform.getTranslation(scaleCompensatePos),
+                            scaleCompensateRot2,
+                            scaleCompensateScaleForParent);
                         tmatrix = scaleCompensatePosTransform;
                     }
                     tmatrix.transformPoint(this.localPosition, scaleCompensatePos);

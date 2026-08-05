@@ -504,8 +504,10 @@ class RotateGizmo extends TransformGizmo {
             const baseColor = this._theme.shapeHover[axis];
             const startColor = color.copy(baseColor);
             startColor.a *= 0.3;
-            this._guideAngleLines[0].draw(gizmoPos, v1.copy(this._guideAngleStart).add(gizmoPos), this._scale, startColor);
-            this._guideAngleLines[1].draw(gizmoPos, v1.copy(this._guideAngleEnd).add(gizmoPos), this._scale, baseColor);
+            this._guideAngleLines[0].draw(gizmoPos, v1.copy(this._guideAngleStart).add(gizmoPos),
+                this._scale, startColor);
+            this._guideAngleLines[1].draw(gizmoPos, v1.copy(this._guideAngleEnd).add(gizmoPos),
+                this._scale, baseColor);
             this._guideAngleLines[0].entity.enabled = true;
             this._guideAngleLines[1].entity.enabled = true;
         } else {
@@ -694,7 +696,11 @@ class RotateGizmo extends TransformGizmo {
                 this._camera.worldToScreen(gizmoPos, v2);
                 if (axis === 'f' || facingDot > 1 - RING_FACING_EPSILON) {
                     // determine which size of the ring the mouse is on to flip rotation direction
-                    v1.set(this._screenStartPos.y >= v2.y ? 1 : -1, this._screenStartPos.x >= v2.x ? -1 : 1, 0).normalize();
+                    v1.set(
+                        this._screenStartPos.y >= v2.y ? 1 : -1,
+                        this._screenStartPos.x >= v2.x ? -1 : 1,
+                        0
+                    ).normalize();
                 } else {
                     // calculate projection vector in world space for rotation axis
                     const projDir = v1.cross(plane.normal, facingDir).normalize();

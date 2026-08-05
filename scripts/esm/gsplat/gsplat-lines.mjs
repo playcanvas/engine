@@ -441,8 +441,16 @@ class GSplatLines extends Script {
 
         // Build bounding box from min/max, expanded by max thickness
         const aabb = this._tempBox;
-        aabb.center.set((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
-        aabb.halfExtents.set((maxX - minX) * 0.5 + maxThickness, (maxY - minY) * 0.5 + maxThickness, (maxZ - minZ) * 0.5 + maxThickness);
+        aabb.center.set(
+            (minX + maxX) * 0.5,
+            (minY + maxY) * 0.5,
+            (minZ + maxZ) * 0.5
+        );
+        aabb.halfExtents.set(
+            (maxX - minX) * 0.5 + maxThickness,
+            (maxY - minY) * 0.5 + maxThickness,
+            (maxZ - minZ) * 0.5 + maxThickness
+        );
 
         // Update container
         this._container.aabb = aabb;

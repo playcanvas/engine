@@ -208,7 +208,8 @@ class Render2d {
         this.material = material;
         material.cull = CULLFACE_NONE;
         material.depthState = DepthState.NODEPTH;
-        material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
+        material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+            BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
         material.update();
 
         this.meshInstance = new MeshInstance(this.mesh, material, new GraphNode('MiniStatsMesh'));

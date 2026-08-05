@@ -229,7 +229,8 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         // pipeline
         const cacheEntry = new CacheEntry();
         cacheEntry.hashes = new Uint32Array(lookupHashes);
-        cacheEntry.pipeline = this.create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace);
+        cacheEntry.pipeline = this.create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState,
+            depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace);
 
         // add to cache
         if (cacheEntries) {
@@ -379,8 +380,10 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         const colorAttachments = renderTarget.impl.colorAttachments;
         if (blendState.usesDualSourceBlending) {
-            Debug.assert(shader.definition.useDualSourceBlending, 'A BlendState using secondary source factors requires a dual-source blending shader.');
-            Debug.assert(colorAttachments.length === 1, 'Dual-source blending requires exactly one color attachment.');
+            Debug.assert(shader.definition.useDualSourceBlending,
+                'A BlendState using secondary source factors requires a dual-source blending shader.');
+            Debug.assert(colorAttachments.length === 1,
+                'Dual-source blending requires exactly one color attachment.');
         }
         // each color attachment uses its own blend state - without per-target overrides these all
         // resolve to the state of the target 0

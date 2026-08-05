@@ -437,7 +437,11 @@ const createTemplateMesh = (device) => {
 
     for (let side = -1; side <= 1; side += 2) {
         const base = positions.length / 3;
-        positions.push(0, 0, 3, 0, side, 4, 0, side, 5);
+        positions.push(
+            0, 0, 3,
+            0, side, 4,
+            0, side, 5
+        );
         indices.push(base, base + 1, base + 2);
     }
 
@@ -616,7 +620,11 @@ class WideLineRenderer {
         this.material.depthWrite = this._depthWrite;
         this.material.update();
 
-        this.meshInstance = new MeshInstance(createTemplateMesh(this.device), this.material, new GraphNode('WideLineRenderer'));
+        this.meshInstance = new MeshInstance(
+            createTemplateMesh(this.device),
+            this.material,
+            new GraphNode('WideLineRenderer')
+        );
         this.meshInstance.cull = false;
         this.meshInstance.pick = false;
         this.meshInstance.visible = false;

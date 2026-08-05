@@ -518,7 +518,13 @@ class TextElement {
                         outlinePaletteMap[outlineHash] = outline;
 
                         _tempColor.linear(color);
-                        this._outlinePalette.push(Math.round(_tempColor.r * 255), Math.round(_tempColor.g * 255), Math.round(_tempColor.b * 255), Math.round(_tempColor.a * 255), Math.round(thickness * 255));
+                        this._outlinePalette.push(
+                            Math.round(_tempColor.r * 255),
+                            Math.round(_tempColor.g * 255),
+                            Math.round(_tempColor.b * 255),
+                            Math.round(_tempColor.a * 255),
+                            Math.round(thickness * 255)
+                        );
                     }
                 }
 
@@ -550,15 +556,18 @@ class TextElement {
                         color = this._shadowColor;
                     }
 
-                    const offset = vec2Tmp.set(!Number.isNaN(offX) ?
-                        offX :
-                        !Number.isNaN(off) ?
-                            off :
-                            this._shadowOffset.x, !Number.isNaN(offY) ?
-                        offY :
-                        !Number.isNaN(off) ?
-                            off :
-                            this._shadowOffset.y);
+                    const offset = vec2Tmp.set(
+                        !Number.isNaN(offX) ?
+                            offX :
+                            !Number.isNaN(off) ?
+                                off :
+                                this._shadowOffset.x,
+                        !Number.isNaN(offY) ?
+                            offY :
+                            !Number.isNaN(off) ?
+                                off :
+                                this._shadowOffset.y
+                    );
 
                     const shadowHash = getColorOffsetHash(color, offset);
 
@@ -571,7 +580,14 @@ class TextElement {
                         shadowPaletteMap[shadowHash] = shadow;
 
                         _tempColor.linear(color);
-                        this._shadowPalette.push(Math.round(_tempColor.r * 255), Math.round(_tempColor.g * 255), Math.round(_tempColor.b * 255), Math.round(_tempColor.a * 255), Math.round(offset.x * 127), Math.round(offset.y * 127));
+                        this._shadowPalette.push(
+                            Math.round(_tempColor.r * 255),
+                            Math.round(_tempColor.g * 255),
+                            Math.round(_tempColor.b * 255),
+                            Math.round(_tempColor.a * 255),
+                            Math.round(offset.x * 127),
+                            Math.round(offset.y * 127)
+                        );
                     }
                 }
 
@@ -1352,9 +1368,16 @@ class TextElement {
                 } else {
                     it.element[SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
                     it.element[SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
-                    it.element[SEMANTIC_COLOR].set(this._meshInfo[i].colors[v * 4 + 0], this._meshInfo[i].colors[v * 4 + 1], this._meshInfo[i].colors[v * 4 + 2], this._meshInfo[i].colors[v * 4 + 3]);
-                    it.element[SEMANTIC_ATTR8].set(this._meshInfo[i].outlines[v * 3 + 0], this._meshInfo[i].outlines[v * 3 + 1], this._meshInfo[i].outlines[v * 3 + 2]);
-                    it.element[SEMANTIC_ATTR9].set(this._meshInfo[i].shadows[v * 3 + 0], this._meshInfo[i].shadows[v * 3 + 1], this._meshInfo[i].shadows[v * 3 + 2]);
+                    it.element[SEMANTIC_COLOR].set(this._meshInfo[i].colors[v * 4 + 0],
+                        this._meshInfo[i].colors[v * 4 + 1],
+                        this._meshInfo[i].colors[v * 4 + 2],
+                        this._meshInfo[i].colors[v * 4 + 3]);
+                    it.element[SEMANTIC_ATTR8].set(this._meshInfo[i].outlines[v * 3 + 0],
+                        this._meshInfo[i].outlines[v * 3 + 1],
+                        this._meshInfo[i].outlines[v * 3 + 2]);
+                    it.element[SEMANTIC_ATTR9].set(this._meshInfo[i].shadows[v * 3 + 0],
+                        this._meshInfo[i].shadows[v * 3 + 1],
+                        this._meshInfo[i].shadows[v * 3 + 2]);
                 }
                 it.next();
             }

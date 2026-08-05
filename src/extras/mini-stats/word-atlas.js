@@ -94,7 +94,15 @@ class WordAtlas {
         const p = this.placements.get(word);
         if (p) {
             const padding = 1;
-            render2d.quad(x + p.l - padding, y - p.d + padding, p.w + padding * 2, p.h + padding * 2, p.x - padding, this.texture.height - p.y - p.h - padding, undefined, undefined, this.texture, 1);
+            render2d.quad(x + p.l - padding,
+                y - p.d + padding,
+                p.w + padding * 2,
+                p.h + padding * 2,
+                p.x - padding,
+                this.texture.height - p.y - p.h - padding,
+                undefined, undefined,
+                this.texture,
+                1);
             return p.w;
         }
 
@@ -112,7 +120,15 @@ class WordAtlas {
             const charPlacement = this.placements.get(char);
             if (charPlacement) {
                 const padding = 1;
-                render2d.quad(x + totalWidth + charPlacement.l - padding, y - charPlacement.d + padding, charPlacement.w + padding * 2, charPlacement.h + padding * 2, charPlacement.x - padding, this.texture.height - charPlacement.y - charPlacement.h - padding, undefined, undefined, this.texture, 1);
+                render2d.quad(x + totalWidth + charPlacement.l - padding,
+                    y - charPlacement.d + padding,
+                    charPlacement.w + padding * 2,
+                    charPlacement.h + padding * 2,
+                    charPlacement.x - padding,
+                    this.texture.height - charPlacement.y - charPlacement.h - padding,
+                    undefined, undefined,
+                    this.texture,
+                    1);
                 totalWidth += charPlacement.w;
             }
         }

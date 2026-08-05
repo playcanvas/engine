@@ -870,11 +870,19 @@ class ThirdPersonController extends Script {
         // mutates a TARGET distance which the actual cameraDistance smoothly
         // lerps toward each frame in _updateController, giving a glide-zoom.
         if (wheel[0] !== 0) {
-            this._targetCameraDistance = math.clamp(this._targetCameraDistance + wheel[0] * this.zoomSpeed, this.cameraDistanceMin, this.cameraDistanceMax);
+            this._targetCameraDistance = math.clamp(
+                this._targetCameraDistance + wheel[0] * this.zoomSpeed,
+                this.cameraDistanceMin,
+                this.cameraDistanceMax
+            );
         }
 
         // update state
-        this._state.axis.add(v.set((key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]), 0, (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])));
+        this._state.axis.add(v.set(
+            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
+            0,
+            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
+        ));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }

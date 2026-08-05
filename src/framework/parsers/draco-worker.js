@@ -242,7 +242,8 @@ function DracoWorker(jsUrl, wasmUrl) {
 
             if (!hasNormals && attribute.attribute_type() === POSITION_ATTRIBUTE) {
                 // generate normals just after position
-                const normals = generateNormals(wrap(src, attribute.data_type()), shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices));
+                const normals = generateNormals(wrap(src, attribute.data_type()),
+                    shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices));
 
                 // pack normals
                 for (let j = 0; j < mesh.num_points(); ++j) {

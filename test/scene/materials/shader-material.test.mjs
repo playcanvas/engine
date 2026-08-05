@@ -103,7 +103,9 @@ describe('Material', function () {
             const material = new ShaderMaterial();
 
             expect(material.dirty).to.equal(undefined);
-            expect(removed.calledOnceWithExactly('Material#dirty has been removed. Call Material#update() after modifying material properties.')).to.equal(true);
+            expect(removed.calledOnceWithExactly(
+                'Material#dirty has been removed. Call Material#update() after modifying material properties.'
+            )).to.equal(true);
         });
 
         it('clears dirty shader variants immediately', function () {

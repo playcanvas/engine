@@ -317,7 +317,8 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
 
         // in-scattered light is added to the fog texture, the transmittance it stores in alpha is
         // written by the directional pass and is preserved
-        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE, BLENDEQUATION_ADD, BLENDMODE_ZERO, BLENDMODE_ONE);
+        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE,
+            BLENDEQUATION_ADD, BLENDMODE_ZERO, BLENDMODE_ONE);
 
         const scope = device.scope;
         this.cameraPosId = scope.resolve('uVolCameraPos');
@@ -431,7 +432,12 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         const projection = camera.projectionMatrix;
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         for (let i = 0; i < 8; i++) {
-            _tempCorner.set(_tempVec3.x + ((i & 1) ? radius : -radius), _tempVec3.y + ((i & 2) ? radius : -radius), _tempVec3.z + ((i & 4) ? radius : -radius), 1);
+            _tempCorner.set(
+                _tempVec3.x + ((i & 1) ? radius : -radius),
+                _tempVec3.y + ((i & 2) ? radius : -radius),
+                _tempVec3.z + ((i & 4) ? radius : -radius),
+                1
+            );
 
             projection.transformVec4(_tempCorner, _tempProjected);
             const x = _tempProjected.x / _tempProjected.w;
@@ -607,7 +613,8 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         this.marchParamsId.setValue(this._marchParams);
 
         // render state, shared by all the lights
-        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
+        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace,
+            this.stencilFront, this.stencilBack);
 
         // a quad per light, covering the screen space bounds of its volume. Index 0 of the cluster
         // lights is reserved for 'no light'.
@@ -651,7 +658,8 @@ class RenderPassVolumetricFogCombine extends RenderPassShaderQuad {
         });
 
         // scene.rgb * fog.a + fog.rgb, scene alpha is preserved
-        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC_ALPHA, BLENDEQUATION_ADD, BLENDMODE_ZERO, BLENDMODE_ONE);
+        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC_ALPHA,
+            BLENDEQUATION_ADD, BLENDMODE_ZERO, BLENDMODE_ONE);
 
         this.fogTextureId = device.scope.resolve('uFogTexture');
         this.fogTextureSizeId = device.scope.resolve('uFogTextureSize');

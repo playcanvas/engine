@@ -700,7 +700,11 @@ class XrManipulation extends Script {
 
         this._grabTarget.setPosition(tmpSolvedPos);
         this._grabTarget.setRotation(tmpQuatB);
-        this._grabTarget.setLocalScale(this._targetScale0.x * scaleRel, this._targetScale0.y * scaleRel, this._targetScale0.z * scaleRel);
+        this._grabTarget.setLocalScale(
+            this._targetScale0.x * scaleRel,
+            this._targetScale0.y * scaleRel,
+            this._targetScale0.z * scaleRel
+        );
 
         // Whenever the applied transform deviated from the raw solve, rebase the grab
         // reference on it: releasing a clamp responds immediately and degenerate headings
@@ -759,7 +763,11 @@ class XrManipulation extends Script {
 
         this._grabTarget.setPosition(tmpSolvedPos);
         this._grabTarget.setRotation(tmpQuatB);
-        this._grabTarget.setLocalScale(curScale.x * scaleRatio, curScale.y * scaleRatio, curScale.z * scaleRatio);
+        this._grabTarget.setLocalScale(
+            curScale.x * scaleRatio,
+            curScale.y * scaleRatio,
+            curScale.z * scaleRatio
+        );
     }
 }
 

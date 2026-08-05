@@ -193,7 +193,8 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
             // Assert that registry doesn't already have an asset for this URL
             // If it does, there's a code ownership issue - GSplatAssetLoader should be the only
             // creator of gsplat assets with these URLs
-            Debug.assert(!this._registry.getByUrl(url), `Asset with URL ${url} already exists in registry but not tracked by GSplatAssetLoader`);
+            Debug.assert(!this._registry.getByUrl(url),
+                `Asset with URL ${url} already exists in registry but not tracked by GSplatAssetLoader`);
 
             this._registry.add(asset);
 

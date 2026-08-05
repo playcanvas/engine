@@ -220,7 +220,9 @@ class WebgpuRenderTarget {
         // The descriptor already carries the runtime's intended `format` (e.g. an sRGB view
         // format over a linear texture) along with the per-eye slice selection — merging an
         // override on top would discard the runtime's chosen format.
-        const view = gpuTexture.createView(xrSlice ? xrViewDesc : { format: viewFormat });
+        const view = gpuTexture.createView(
+            xrSlice ? xrViewDesc : { format: viewFormat }
+        );
         DebugHelper.setLabel(view, xrSlice ? 'Framebuffer.xrColorTextureView' : 'Framebuffer.contextColorTextureView');
 
         // use it as render buffer or resolve target

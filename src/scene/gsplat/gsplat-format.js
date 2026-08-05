@@ -212,9 +212,11 @@ class GSplatFormat {
         if (this._hash === undefined) {
             const streamsStr = serializeStreams(this.streams);
             const extraStr = serializeStreams(this._extraStreams);
-            this._hash = hashCode(streamsStr +
+            this._hash = hashCode(
+                streamsStr +
                 extraStr +
-                this._read);
+                this._read
+            );
         }
         return this._hash;
     }

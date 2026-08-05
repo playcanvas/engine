@@ -860,7 +860,15 @@ class ForwardRenderer extends Renderer {
         const flipFaces = !!(camera._flipFaces ^ renderTarget?.flipY);
 
         const forwardDrawCalls = this._forwardDrawCalls;
-        this.renderForward(camera, renderTarget, visible, splitLights, shaderPass, options.drawCallback ?? null, layer, flipFaces, viewUniformFormat);
+        this.renderForward(camera,
+            renderTarget,
+            visible,
+            splitLights,
+            shaderPass,
+            options.drawCallback ?? null,
+            layer,
+            flipFaces,
+            viewUniformFormat);
 
         if (layer) {
             layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;

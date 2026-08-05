@@ -675,7 +675,8 @@ class GSplatOctreeInstance {
         const effectiveBase = lodBaseDistance * budgetScale;
         const effectiveMult = Math.max(1.2, lodMultiplier * Math.pow(budgetScale, -0.2));
 
-        return this.evaluateNodeLods(cameraNode, maxLod, effectiveBase, effectiveMult, rangeMin, rangeMax, params, uniformScale, true, globalMaxDistanceForBuckets);
+        return this.evaluateNodeLods(cameraNode, maxLod, effectiveBase, effectiveMult,
+            rangeMin, rangeMax, params, uniformScale, true, globalMaxDistanceForBuckets);
     }
 
     /**

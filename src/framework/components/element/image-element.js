@@ -510,10 +510,18 @@ class ImageElement {
             const borderWidthScale = 2 / frameData.rect.z;
             const borderHeightScale = 2 / frameData.rect.w;
 
-            this._innerOffset.set(frameData.border.x * borderWidthScale, frameData.border.y * borderHeightScale, frameData.border.z * borderWidthScale, frameData.border.w * borderHeightScale);
+            this._innerOffset.set(
+                frameData.border.x * borderWidthScale,
+                frameData.border.y * borderHeightScale,
+                frameData.border.z * borderWidthScale,
+                frameData.border.w * borderHeightScale
+            );
 
             const tex = this.sprite.atlas.texture;
-            this._atlasRect.set(frameData.rect.x / tex.width, frameData.rect.y / tex.height, frameData.rect.z / tex.width, frameData.rect.w / tex.height);
+            this._atlasRect.set(frameData.rect.x / tex.width,
+                frameData.rect.y / tex.height,
+                frameData.rect.z / tex.width,
+                frameData.rect.w / tex.height);
 
             // scale: apply PPU
             const ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;

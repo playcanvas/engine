@@ -632,7 +632,8 @@ describe('BlockAllocator', function () {
             for (let i = 1; i < blockList.length; i++) {
                 const prev = blockList[i - 1];
                 const curr = blockList[i];
-                expect(curr.offset).to.be.at.least(prev.offset + prev.size, `overlap at blocks offset=${prev.offset}+${prev.size} and offset=${curr.offset}`);
+                expect(curr.offset).to.be.at.least(prev.offset + prev.size,
+                    `overlap at blocks offset=${prev.offset}+${prev.size} and offset=${curr.offset}`);
             }
         });
 

@@ -1,7 +1,6 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-
 import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, TypeScript as ts, UnionType } from 'typedoc';
 
 /**

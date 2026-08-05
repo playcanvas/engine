@@ -356,7 +356,15 @@ class AnimComponent extends Component {
         const layerIndex = this._layers.length;
         const animBinder = new AnimComponentBinder(this, graph, name, mask, layerIndex);
         const animEvaluator = new AnimEvaluator(animBinder);
-        const controller = new AnimController(animEvaluator, states, transitions, this._activate, this, this.findParameter, this.consumeTrigger);
+        const controller = new AnimController(
+            animEvaluator,
+            states,
+            transitions,
+            this._activate,
+            this,
+            this.findParameter,
+            this.consumeTrigger
+        );
         this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = layerIndex;
         return this._layers[layerIndex];

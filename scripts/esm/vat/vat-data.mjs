@@ -389,7 +389,11 @@ export function createVatMesh(device, data) {
         positions[i * 3 + 2] = min.z + (vat[texel + 2] / 65535) * size.z * 2;
 
         const packed = vat[texel + 3];
-        octDecode(((packed & 0xff) / 255) * 2 - 1, ((packed >> 8) / 255) * 2 - 1, normal);
+        octDecode(
+            ((packed & 0xff) / 255) * 2 - 1,
+            ((packed >> 8) / 255) * 2 - 1,
+            normal
+        );
         normals[i * 3] = normal.x;
         normals[i * 3 + 1] = normal.y;
         normals[i * 3 + 2] = normal.z;

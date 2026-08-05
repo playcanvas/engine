@@ -433,7 +433,11 @@ export class AnnotationManager extends Script {
 
         material.opacity = opacity;
         material.alphaTest = 0.01;
-        material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
+        material.blendState = new BlendState(
+            true,
+            BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+            BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE
+        );
 
         material.depthTest = depthTest;
         material.depthWrite = depthWrite;
@@ -936,7 +940,9 @@ export class AnnotationManager extends Script {
             // Remove layers from camera
             if (this._camera && this._camera.camera) {
                 const layerIds = this._layers.map(layer => layer.id);
-                this._camera.camera.layers = this._camera.camera.layers.filter(id => !layerIds.includes(id));
+                this._camera.camera.layers = this._camera.camera.layers.filter(
+                    id => !layerIds.includes(id)
+                );
             }
 
             // Remove layers from scene

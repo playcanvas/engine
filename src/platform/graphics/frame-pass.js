@@ -150,7 +150,8 @@ class FramePass {
     log(device, index = 0) {
         if (Tracing.get(TRACEID_RENDER_PASS)) {
             const indexString = index.toString().padEnd(2, ' ');
-            Debug.trace(TRACEID_RENDER_PASS, `${indexString}: ${this.name.padEnd(20, ' ')}` +
+            Debug.trace(TRACEID_RENDER_PASS,
+                `${indexString}: ${this.name.padEnd(20, ' ')}` +
                 `${this.executeEnabled ? '' : ' DISABLED '}`);
         }
     }

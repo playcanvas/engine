@@ -47,11 +47,13 @@ class WebgpuBuffer {
             usage: this.usageFlags
         });
 
-        DebugHelper.setLabel(this.buffer, this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
-            this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
-                this.usageFlags & GPUBufferUsage.UNIFORM ? 'UniformBuffer' :
-                    this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
-                        '');
+        DebugHelper.setLabel(this.buffer,
+            this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
+                this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
+                    this.usageFlags & GPUBufferUsage.UNIFORM ? 'UniformBuffer' :
+                        this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
+                            ''
+        );
     }
 
     /**

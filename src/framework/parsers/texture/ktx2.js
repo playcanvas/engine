@@ -123,12 +123,18 @@ class Ktx2Parser extends TextureParser {
 
         if (header.supercompressionScheme === 1 || colorModel === KHRConstants.KHR_DF_MODEL_UASTC) {
             // assume for now all super compressed images are basis
-            const basisModuleFound = basisTranscode(this.device, url.load, arraybuffer, callback, {
-                isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
-                isKTX2: true,
-                // a six-face ktx2 file is a cubemap
-                isCubemap: header.faceCount === 6
-            });
+            const basisModuleFound = basisTranscode(
+                this.device,
+                url.load,
+                arraybuffer,
+                callback,
+                {
+                    isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
+                    isKTX2: true,
+                    // a six-face ktx2 file is a cubemap
+                    isCubemap: header.faceCount === 6
+                }
+            );
 
             if (!basisModuleFound) {
                 callback(`Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`);

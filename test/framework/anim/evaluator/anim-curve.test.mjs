@@ -4,7 +4,12 @@ import { INTERPOLATION_CUBIC } from '../../../../src/framework/anim/constants.js
 import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
 
 describe('AnimCurve', function () {
-    const animCurve = new AnimCurve(['path/to/entity1', 'path/to/entity2'], 1, 2, INTERPOLATION_CUBIC);
+    const animCurve = new AnimCurve(
+        ['path/to/entity1', 'path/to/entity2'],
+        1,
+        2,
+        INTERPOLATION_CUBIC
+    );
 
     describe('#constructor', function () {
 

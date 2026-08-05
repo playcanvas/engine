@@ -202,7 +202,11 @@ const cloneTexture = (texture) => {
 
 // given a texture asset, clone it
 const cloneTextureAsset = (src) => {
-    const result = new Asset(`${src.name}_clone`, src.type, src.file, src.data, src.options);
+    const result = new Asset(`${src.name}_clone`,
+        src.type,
+        src.file,
+        src.data,
+        src.options);
     result.loaded = true;
     result.resource = cloneTexture(src.resource);
     src.registry.add(result);
@@ -272,7 +276,9 @@ const createVertexBufferInternal = (device, sourceDesc) => {
 
     if (isCorrectlyInterleaved) {
         // copy data
-        sourceArray = new Uint32Array(positionDesc.buffer, positionDesc.offset, numVertices * vertexBuffer.format.size / 4);
+        sourceArray = new Uint32Array(positionDesc.buffer,
+            positionDesc.offset,
+            numVertices * vertexBuffer.format.size / 4);
         targetArray.set(sourceArray);
     } else {
         let targetStride, sourceStride;
@@ -820,7 +826,12 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
         if (curveData.morphCurve) {
             continue;
         }
-        curves.push(new AnimCurve(curveData.paths, inputMap[curveData.input], outputMap[curveData.output], curveData.interpolation));
+        curves.push(new AnimCurve(
+            curveData.paths,
+            inputMap[curveData.input],
+            outputMap[curveData.output],
+            curveData.interpolation
+        ));
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
@@ -869,7 +880,12 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
         duration = Math.max(duration, data.length === 0 ? 0 : data[data.length - 1]);
     }
 
-    return new AnimTrack(gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : (`animation_${animationIndex}`), duration, inputs, outputs, curves);
+    return new AnimTrack(
+        gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : (`animation_${animationIndex}`),
+        duration,
+        inputs,
+        outputs,
+        curves);
 };
 
 const tempMat = new Mat4();
@@ -1533,13 +1549,17 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
                 }
 
                 return new Promise((resolve, reject) => {
-                    http.get(ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri), { cache: true, responseType: 'arraybuffer', retry: false }, (err, result) => {
-                        if (err) {
-                            reject(err);
-                        } else {
-                            resolve(new Uint8Array(result));
+                    http.get(
+                        ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
+                        { cache: true, responseType: 'arraybuffer', retry: false },
+                        (err, result) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                resolve(new Uint8Array(result));
+                            }
                         }
-                    });
+                    );
                 });
             }
 
@@ -1708,7 +1728,9 @@ const createBufferViews = (gltf, buffers, options) => {
 
             // convert buffer to typed array
             return buffers[gltfBufferView.buffer].then((buffer) => {
-                return new Uint8Array(buffer.buffer, buffer.byteOffset + (gltfBufferView.byteOffset || 0), gltfBufferView.byteLength);
+                return new Uint8Array(buffer.buffer,
+                    buffer.byteOffset + (gltfBufferView.byteOffset || 0),
+                    gltfBufferView.byteLength);
             });
         });
 

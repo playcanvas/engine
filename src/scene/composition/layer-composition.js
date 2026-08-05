@@ -225,7 +225,8 @@ class LayerComposition extends EventHandler {
 
                                 // add render action to describe rendering step
                                 const isTransparent = this.subLayerList[j];
-                                lastRenderAction = this.addRenderAction(renderActionCount, layer, isTransparent, camera, cameraFirstRenderAction, postProcessMarked);
+                                lastRenderAction = this.addRenderAction(renderActionCount, layer, isTransparent, camera,
+                                    cameraFirstRenderAction, postProcessMarked);
                                 renderActionCount++;
                                 cameraFirstRenderAction = false;
                             }
@@ -374,7 +375,8 @@ class LayerComposition extends EventHandler {
                         (enabled ? ' ENABLED ' : ' DISABLED') +
                         (` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`).padEnd(30, ' ')
                     } Clear: ${clear
-                    }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`);
+                    }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
+                    );
                 }
             }
         }

@@ -143,7 +143,11 @@ class WebglUploadStream {
         }
 
         // Full-buffer upload (texImage2D allocates fresh storage each call).
-        gl.texImage2D(gl.TEXTURE_2D, 0, impl._glInternalFormat, target.width, target.height, 0, impl._glFormat, impl._glPixelType, src);
+        gl.texImage2D(
+            gl.TEXTURE_2D, 0, impl._glInternalFormat,
+            target.width, target.height, 0,
+            impl._glFormat, impl._glPixelType, src
+        );
 
         // Keep engine texture state consistent: storage exists now.
         impl._glCreated = true;

@@ -152,7 +152,8 @@ class XrLightEstimation extends EventHandler {
 
         this._lightProbeRequested = true;
 
-        this._manager.session.requestLightProbe().then((lightProbe) => {
+        this._manager.session.requestLightProbe(
+        ).then((lightProbe) => {
             const wasRequested = this._lightProbeRequested;
             this._lightProbeRequested = false;
 

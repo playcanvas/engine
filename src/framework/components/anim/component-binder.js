@@ -80,13 +80,21 @@ class AnimComponentBinder extends DefaultAnimBinder {
         switch (path.component) {
             case 'entity':
                 entity = this._getEntityFromHierarchy(path.entityPath);
-                targetPath = AnimBinder.encode(entity.path, 'entity', path.propertyPath);
+                targetPath = AnimBinder.encode(
+                    entity.path,
+                    'entity',
+                    path.propertyPath
+                );
                 propertyComponent = entity;
                 break;
             case 'graph':
                 propertyComponent = this.findNode(path);
                 if (!propertyComponent) return null;
-                targetPath = AnimBinder.encode(propertyComponent.path, 'graph', path.propertyPath);
+                targetPath = AnimBinder.encode(
+                    propertyComponent.path,
+                    'graph',
+                    path.propertyPath
+                );
                 break;
             default:
                 entity = this._getEntityFromHierarchy(path.entityPath);
@@ -94,7 +102,11 @@ class AnimComponentBinder extends DefaultAnimBinder {
                 if (!propertyComponent) {
                     return null;
                 }
-                targetPath = AnimBinder.encode(entity.path, path.component, path.propertyPath);
+                targetPath = AnimBinder.encode(
+                    entity.path,
+                    path.component,
+                    path.propertyPath
+                );
                 break;
         }
 

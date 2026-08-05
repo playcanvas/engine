@@ -138,7 +138,8 @@ class TransformFeedback {
         Debug.assert(!descriptors || descriptors.length > 0, 'TransformFeedback requires at least one buffer.');
         Debug.call(() => {
             descriptors?.forEach((descriptor, index) => {
-                Debug.assert(descriptor?.input || descriptor?.output, `TransformFeedback buffer descriptor at index ${index} specifies neither an input nor an output buffer.`);
+                Debug.assert(descriptor?.input || descriptor?.output,
+                    `TransformFeedback buffer descriptor at index ${index} specifies neither an input nor an output buffer.`);
             });
         });
 
@@ -165,7 +166,8 @@ class TransformFeedback {
 
             Debug.call(() => {
                 const vb = input ?? output;
-                Debug.assert(vb.format.interleaved || vb.format.elements.length <= 1, 'A vertex buffer used by TransformFeedback needs to be interleaved.');
+                Debug.assert(vb.format.interleaved || vb.format.elements.length <= 1,
+                    'A vertex buffer used by TransformFeedback needs to be interleaved.');
             });
 
             // create the matching output buffer when only an input was given by the single buffer
@@ -260,9 +262,11 @@ class TransformFeedback {
         Debug.call(() => {
             const separate = shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE;
             const expected = separate ? (shader.definition.feedbackVaryings?.length ?? 0) : 1;
-            Debug.assert(expected === this._outputBuffers.length, separate ?
-                `A shader using TRANSFORM_FEEDBACK_SEPARATE captures each varying into its own buffer, so it needs ${expected} output buffers, but ${this._outputBuffers.length} were supplied.` :
-                `A shader using TRANSFORM_FEEDBACK_INTERLEAVED captures all varyings into a single buffer, but ${this._outputBuffers.length} output buffers were supplied.`);
+            Debug.assert(expected === this._outputBuffers.length,
+                separate ?
+                    `A shader using TRANSFORM_FEEDBACK_SEPARATE captures each varying into its own buffer, so it needs ${expected} output buffers, but ${this._outputBuffers.length} were supplied.` :
+                    `A shader using TRANSFORM_FEEDBACK_INTERLEAVED captures all varyings into a single buffer, but ${this._outputBuffers.length} output buffers were supplied.`
+            );
 
         });
 

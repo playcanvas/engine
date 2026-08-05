@@ -662,7 +662,13 @@ class Mesh extends RefCountedObject {
         this._geometryData._changeVertexCount(vertexCount, semantic);
         this._geometryData.vertexStreamsUpdated = true;
 
-        this._geometryData.vertexStreamDictionary[semantic] = new GeometryVertexStream(data, componentCount, dataType, dataTypeNormalize, asInt);
+        this._geometryData.vertexStreamDictionary[semantic] = new GeometryVertexStream(
+            data,
+            componentCount,
+            dataType,
+            dataTypeNormalize,
+            asInt
+        );
     }
 
     /**

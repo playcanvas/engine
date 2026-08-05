@@ -476,9 +476,17 @@ function createCalculator(orientation) {
                 element[b.calculatedSize] = sizesThisLine[elementIndex][b.size];
 
                 if (options.orientation === ORIENTATION_HORIZONTAL) {
-                    element.entity.setLocalPosition(positionsThisLine[elementIndex][a.axis], positionsThisLine[elementIndex][b.axis], element.entity.getLocalPosition().z);
+                    element.entity.setLocalPosition(
+                        positionsThisLine[elementIndex][a.axis],
+                        positionsThisLine[elementIndex][b.axis],
+                        element.entity.getLocalPosition().z
+                    );
                 } else {
-                    element.entity.setLocalPosition(positionsThisLine[elementIndex][b.axis], positionsThisLine[elementIndex][a.axis], element.entity.getLocalPosition().z);
+                    element.entity.setLocalPosition(
+                        positionsThisLine[elementIndex][b.axis],
+                        positionsThisLine[elementIndex][a.axis],
+                        element.entity.getLocalPosition().z
+                    );
                 }
             }
         }
@@ -492,7 +500,12 @@ function createCalculator(orientation) {
         const yOffset = (availableSpace.y - layoutHeight) * options.alignment.y + options.padding.y;
 
         return {
-            bounds: new Vec4(xOffset, yOffset, layoutWidth, layoutHeight)
+            bounds: new Vec4(
+                xOffset,
+                yOffset,
+                layoutWidth,
+                layoutHeight
+            )
         };
     }
 

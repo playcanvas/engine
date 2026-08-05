@@ -180,12 +180,17 @@ class RenderComponent extends Component {
         // the entity that represents the root bone if this render component has skinned meshes
 
         // render asset reference
-        this._assetReference = new AssetReference('asset', this, system.app.assets, {
-            add: this._onRenderAssetAdded,
-            load: this._onRenderAssetLoad,
-            remove: this._onRenderAssetRemove,
-            unload: this._onRenderAssetUnload
-        }, this);
+        this._assetReference = new AssetReference(
+            'asset',
+            this,
+            system.app.assets, {
+                add: this._onRenderAssetAdded,
+                load: this._onRenderAssetLoad,
+                remove: this._onRenderAssetRemove,
+                unload: this._onRenderAssetUnload
+            },
+            this
+        );
 
         this._material = system.defaultMaterial;
 
@@ -630,12 +635,19 @@ class RenderComponent extends Component {
 
         for (let i = 0; i < value.length; i++) {
             if (!this._materialReferences[i]) {
-                this._materialReferences.push(new AssetReference(i, this, this.system.app.assets, {
-                    add: this._onMaterialAdded,
-                    load: this._onMaterialLoad,
-                    remove: this._onMaterialRemove,
-                    unload: this._onMaterialUnload
-                }, this));
+                this._materialReferences.push(
+                    new AssetReference(
+                        i,
+                        this,
+                        this.system.app.assets, {
+                            add: this._onMaterialAdded,
+                            load: this._onMaterialLoad,
+                            remove: this._onMaterialRemove,
+                            unload: this._onMaterialUnload
+                        },
+                        this
+                    )
+                );
             }
 
             if (value[i]) {

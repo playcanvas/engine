@@ -38,7 +38,8 @@ class WebgpuCompute {
         } = shader.impl;
 
         // caller uniform buffers are bound into the caller bind group, so the format is required
-        Debug.assert(!computeUniformBufferFormats || computeBindGroupFormat, 'Compute shader specifies computeUniformBufferFormats but no computeBindGroupFormat to bind them into', shader);
+        Debug.assert(!computeUniformBufferFormats || computeBindGroupFormat,
+            'Compute shader specifies computeUniformBufferFormats but no computeBindGroupFormat to bind them into', shader);
 
         // ordered, gapless array of bind group formats (array index === bind group index)
         const formats = [];

@@ -73,7 +73,11 @@ class GSplatInstance {
             this.orderBuffer = new StorageBuffer(device, numSplats * 4, BUFFERUSAGE_COPY_DST);
             DebugHelper.setName(this.orderBuffer, 'GsplatInstance.order');
         } else {
-            this.orderTexture = resource.streams.createTexture('splatOrder', PIXELFORMAT_R32U, dims);
+            this.orderTexture = resource.streams.createTexture(
+                'splatOrder',
+                PIXELFORMAT_R32U,
+                dims
+            );
         }
 
         if (options.material) {

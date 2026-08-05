@@ -467,7 +467,8 @@ class ParticleEmitter {
     resetWorldBounds() {
         if (!this.node) return;
 
-        this.worldBoundsNoTrail.setFromTransformedAabb(this.localBounds, this.localSpace ? Mat4.IDENTITY : this.node.getWorldTransform());
+        this.worldBoundsNoTrail.setFromTransformedAabb(
+            this.localBounds, this.localSpace ? Mat4.IDENTITY : this.node.getWorldTransform());
 
         this.worldBoundsTrail[0].copy(this.worldBoundsNoTrail);
         this.worldBoundsTrail[1].copy(this.worldBoundsNoTrail);
@@ -519,7 +520,8 @@ class ParticleEmitter {
                 accumZ[j] = z;
             }
             for (let j = 0; j < 2; j++) {
-                accumW[j] += stepWeight * Math.sqrt(wVels[j][index * 3 + 0] * wVels[j][index * 3 + 0] +
+                accumW[j] += stepWeight * Math.sqrt(
+                    wVels[j][index * 3 + 0] * wVels[j][index * 3 + 0] +
                     wVels[j][index * 3 + 1] * wVels[j][index * 3 + 1] +
                     wVels[j][index * 3 + 2] * wVels[j][index * 3 + 2]);
             }
@@ -575,7 +577,8 @@ class ParticleEmitter {
         this.resetWorldBounds();
 
         if (this.node) {
-            this.worldBounds.setFromTransformedAabb(this.localBounds, this.localSpace ? Mat4.IDENTITY : this.node.getWorldTransform());
+            this.worldBounds.setFromTransformedAabb(
+                this.localBounds, this.localSpace ? Mat4.IDENTITY : this.node.getWorldTransform());
 
             this.worldBoundsTrail[0].copy(this.worldBounds);
             this.worldBoundsTrail[1].copy(this.worldBounds);
@@ -875,7 +878,13 @@ class ParticleEmitter {
                 elements.push({ semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 });
             }
         } else {
-            elements.push({ semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 }, { semantic: SEMANTIC_ATTR1, components: 4, type: TYPE_FLOAT32 }, { semantic: SEMANTIC_ATTR2, components: 4, type: TYPE_FLOAT32 }, { semantic: SEMANTIC_ATTR3, components: 1, type: TYPE_FLOAT32 }, { semantic: SEMANTIC_ATTR4, components: this.useMesh ? 4 : 2, type: TYPE_FLOAT32 });
+            elements.push(
+                { semantic: SEMANTIC_ATTR0, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR1, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR2, components: 4, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR3, components: 1, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_ATTR4, components: this.useMesh ? 4 : 2, type: TYPE_FLOAT32 }
+            );
         }
 
         return elements;

@@ -25,14 +25,21 @@ class GlbContainerParser {
             if (err) {
                 callback(err);
             } else {
-                GlbParser.parse(this._getUrlWithoutParams(url.original), path.extractPath(url.load), result, this._device, asset.registry, asset.options, (err, result) => {
-                    if (err) {
-                        callback(err);
-                    } else {
-                        // return everything
-                        callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
-                    }
-                });
+                GlbParser.parse(
+                    this._getUrlWithoutParams(url.original),
+                    path.extractPath(url.load),
+                    result,
+                    this._device,
+                    asset.registry,
+                    asset.options,
+                    (err, result) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            // return everything
+                            callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
+                        }
+                    });
             }
         }, asset, this.handler.maxRetries);
     }

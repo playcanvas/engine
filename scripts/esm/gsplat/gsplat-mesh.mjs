@@ -451,8 +451,16 @@ class GSplatMesh extends Script {
 
         // Build bounding box from min/max, expanded by splat size
         const aabb = this._tempBox;
-        aabb.center.set((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
-        aabb.halfExtents.set((maxX - minX) * 0.5 + splatSize, (maxY - minY) * 0.5 + splatSize, (maxZ - minZ) * 0.5 + splatSize);
+        aabb.center.set(
+            (minX + maxX) * 0.5,
+            (minY + maxY) * 0.5,
+            (minZ + maxZ) * 0.5
+        );
+        aabb.halfExtents.set(
+            (maxX - minX) * 0.5 + splatSize,
+            (maxY - minY) * 0.5 + splatSize,
+            (maxZ - minZ) * 0.5 + splatSize
+        );
 
         // Update container
         this._container.aabb = aabb;
