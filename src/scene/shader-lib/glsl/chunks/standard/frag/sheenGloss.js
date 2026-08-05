@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform float material_sheenGloss;
 
 void getSheenGlossiness() {

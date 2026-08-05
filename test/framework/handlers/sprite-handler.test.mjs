@@ -5,7 +5,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('SpriteHandler', function () {
-
     let app;
 
     beforeEach(function () {
@@ -20,7 +19,6 @@ describe('SpriteHandler', function () {
     });
 
     it('loads from filesystem', function (done) {
-
         const atlasAsset = new Asset('Red Atlas', 'textureatlas', {
             url: '/test/assets/sprites/red-atlas.json'
         });
@@ -34,30 +32,41 @@ describe('SpriteHandler', function () {
 
         app.assets.load(atlasAsset);
 
-        atlasAsset.on('load', function () {
-            app.assets.load(spriteAsset);
+        atlasAsset.on(
+            'load',
+            function () {
+                app.assets.load(spriteAsset);
 
-            spriteAsset.ready(function (asset) {
-                expect(asset.resource.atlas).to.exist;
+                spriteAsset.ready(function (asset) {
+                    expect(asset.resource.atlas).to.exist;
 
-                expect(asset.loaded).to.be.true;
+                    expect(asset.loaded).to.be.true;
 
-                expect(asset.data.renderMode).to.equal(0);
-                expect(asset.data.pixelsPerUnit).to.equal(100);
-                expect(asset.data.textureAtlasAsset).to.equal(atlasAsset.id);
-                expect(asset.data.frameKeys[0]).to.equal(0);
-                done();
-            }, this);
+                    expect(asset.data.renderMode).to.equal(0);
+                    expect(asset.data.pixelsPerUnit).to.equal(100);
+                    expect(asset.data.textureAtlasAsset).to.equal(atlasAsset.id);
+                    expect(asset.data.frameKeys[0]).to.equal(0);
+                    done();
+                }, this);
 
-            spriteAsset.on('error', function (err) {
+                spriteAsset.on(
+                    'error',
+                    function (err) {
+                        done(err);
+                    },
+                    this
+                );
+            },
+            this
+        );
+
+        atlasAsset.on(
+            'error',
+            function (err) {
                 done(err);
-            }, this);
-
-        }, this);
-
-        atlasAsset.on('error', function (err) {
-            done(err);
-        }, this);
+            },
+            this
+        );
     });
 
     it('loads from asset data', function (done) {
@@ -66,10 +75,10 @@ describe('SpriteHandler', function () {
         });
 
         const spriteAsset = new Asset('Red Sprite', 'sprite', null, {
-            'renderMode': 0,
-            'pixelsPerUnit': 100,
-            'textureAtlasAsset': atlasAsset.id,
-            'frameKeys': [0]
+            renderMode: 0,
+            pixelsPerUnit: 100,
+            textureAtlasAsset: atlasAsset.id,
+            frameKeys: [0]
         });
 
         app.assets.add(atlasAsset);
@@ -77,30 +86,40 @@ describe('SpriteHandler', function () {
 
         app.assets.load(atlasAsset);
 
-        atlasAsset.on('load', function () {
-            app.assets.load(spriteAsset);
+        atlasAsset.on(
+            'load',
+            function () {
+                app.assets.load(spriteAsset);
 
-            spriteAsset.ready(function (asset) {
-                expect(asset.resource.atlas).to.exist;
+                spriteAsset.ready(function (asset) {
+                    expect(asset.resource.atlas).to.exist;
 
-                expect(asset.loaded).to.be.true;
+                    expect(asset.loaded).to.be.true;
 
-                expect(asset.data.renderMode).to.equal(0);
-                expect(asset.data.pixelsPerUnit).to.equal(100);
-                expect(asset.data.textureAtlasAsset).to.equal(atlasAsset.id);
-                expect(asset.data.frameKeys[0]).to.equal(0);
-                done();
-            }, this);
+                    expect(asset.data.renderMode).to.equal(0);
+                    expect(asset.data.pixelsPerUnit).to.equal(100);
+                    expect(asset.data.textureAtlasAsset).to.equal(atlasAsset.id);
+                    expect(asset.data.frameKeys[0]).to.equal(0);
+                    done();
+                }, this);
 
-            spriteAsset.on('error', function (err) {
+                spriteAsset.on(
+                    'error',
+                    function (err) {
+                        done(err);
+                    },
+                    this
+                );
+            },
+            this
+        );
+
+        atlasAsset.on(
+            'error',
+            function (err) {
                 done(err);
-            }, this);
-
-        }, this);
-
-        atlasAsset.on('error', function (err) {
-            done(err);
-        }, this);
+            },
+            this
+        );
     });
-
 });

@@ -3,9 +3,7 @@ import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import {
-    LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE
-} from '../constants.js';
+import { LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE } from '../constants.js';
 import { ShadowMap } from './shadow-map.js';
 import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js';
 
@@ -30,10 +28,7 @@ const _cascadeRadii = [0, 0, 0, 0];
 const center = new Vec3();
 const shadowCamView = new Mat4();
 
-const aabbPoints = [
-    new Vec3(), new Vec3(), new Vec3(), new Vec3(),
-    new Vec3(), new Vec3(), new Vec3(), new Vec3()
-];
+const aabbPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
 // evaluate depth range the aabb takes in the space of the camera
 const _depthRange = { min: 0, max: 0 };
@@ -81,7 +76,6 @@ class ShadowRendererDirectional {
     // early in the frame (before mesh culling), unlike cull() which sets up the per-cascade
     // shadow cameras and culls casters.
     prepareShadowMap(light) {
-
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
 
@@ -92,8 +86,10 @@ class ShadowRendererDirectional {
 
     // cull directional shadow map. prepareShadowMap(light) must have been called first.
     cull(light, comp, camera, casters = null) {
-
-        Debug.assert(light._shadowMap, 'ShadowRendererDirectional.cull requires prepareShadowMap() to have been called for the light first.');
+        Debug.assert(
+            light._shadowMap,
+            'ShadowRendererDirectional.cull requires prepareShadowMap() to have been called for the light first.'
+        );
 
         // generate splits for the cascades
         const nearDist = camera._nearClip;
@@ -107,7 +103,6 @@ class ShadowRendererDirectional {
         // can use a stable cross-cascade union AABB rather than each cascade's own jumpy
         // visible-caster bounds.
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
-
             // if manually controlling cascade rendering and the cascade does not render this frame
             if (shadowUpdateOverrides?.[cascade] === SHADOWUPDATE_NONE) {
                 break;
@@ -163,7 +158,7 @@ class ShadowRendererDirectional {
 
             // transform the sphere's center into the center of the shadow map, pixel aligned.
             // this makes the shadow map stable and avoids shimmering on the edges when the camera moves
-            const sizeRatio = 0.25 * light._shadowResolution / radius;
+            const sizeRatio = (0.25 * light._shadowResolution) / radius;
             const x = Math.ceil(center.dot(up) * sizeRatio) / sizeRatio;
             const y = Math.ceil(center.dot(right) * sizeRatio) / sizeRatio;
 
@@ -267,10 +262,8 @@ class ShadowRendererDirectional {
 
     // function to generate frustum split distances
     generateSplitDistances(light, nearDist, farDist) {
-
         light._shadowCascadeDistances.fill(farDist);
         for (let i = 1; i < light.numCascades; i++) {
-
             //  lerp between linear and logarithmic distance, called practical split distance
             const fraction = i / light.numCascades;
             const linearDist = nearDist + (farDist - nearDist) * fraction;
@@ -289,12 +282,10 @@ class ShadowRendererDirectional {
      * required, or null otherwise.
      */
     getLightRenderPass(light, camera) {
-
         Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
 
         let renderPass = null;
         if (this.shadowRenderer.needsShadowRendering(light)) {
-
             // shadow cascades have more faces rendered within a singe render pass
             const faceCount = light.numShadowFaces;
             const shadowUpdateOverrides = light.shadowUpdateOverrides;
@@ -303,7 +294,6 @@ class ShadowRendererDirectional {
             let allCascadesRendering = true;
             let shadowCamera;
             for (let face = 0; face < faceCount; face++) {
-
                 if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE) {
                     allCascadesRendering = false;
                 }
@@ -311,7 +301,13 @@ class ShadowRendererDirectional {
                 shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
             }
 
-            renderPass = new RenderPassShadowDirectional(this.device, this.shadowRenderer, light, camera, allCascadesRendering);
+            renderPass = new RenderPassShadowDirectional(
+                this.device,
+                this.shadowRenderer,
+                light,
+                camera,
+                allCascadesRendering
+            );
 
             // setup render pass using any of the cameras, they all have the same pass related properties
             this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);

@@ -13,7 +13,7 @@ class BlendEffect extends pc.PostEffect {
     constructor(graphicsDevice) {
         super(graphicsDevice);
 
-        const fshader = /* glsl */`
+        const fshader = /* glsl */ `
             uniform float uMixRatio;
             uniform sampler2D uColorBuffer;
             uniform sampler2D uBlendMap;
@@ -92,11 +92,19 @@ Blend.prototype.initialize = function () {
         queue.removeEffect(this.effect);
     });
 
-    this.on('attr:mixRatio', function (value) {
-        this.effect.mixRatio = value;
-    }, this);
+    this.on(
+        'attr:mixRatio',
+        function (value) {
+            this.effect.mixRatio = value;
+        },
+        this
+    );
 
-    this.on('attr:blendMap', function (value) {
-        this.effect.blendMap = value ? value.resource : null;
-    }, this);
+    this.on(
+        'attr:blendMap',
+        function (value) {
+            this.effect.blendMap = value ? value.resource : null;
+        },
+        this
+    );
 };

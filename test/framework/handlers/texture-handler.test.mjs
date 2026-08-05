@@ -10,7 +10,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('TextureHandler (parser selection)', function () {
-
     let app;
 
     beforeEach(function () {

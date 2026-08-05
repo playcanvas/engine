@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 // Make splat spherical by setting uniform scale
 // Use size = 0.0 to hide the splat
 void gsplatMakeSpherical(inout vec3 scale, float size) {

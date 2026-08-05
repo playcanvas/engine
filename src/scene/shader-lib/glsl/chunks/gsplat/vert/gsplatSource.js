@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 attribute vec3 vertex_position;         // xy: cornerUV, z: render order offset within instance
 
 uniform uint numSplats;                 // total number of splats

@@ -1,6 +1,12 @@
 import {
-    Script, Texture, math,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, FILTER_NEAREST, ADDRESS_CLAMP_TO_EDGE, WORKBUFFER_UPDATE_ONCE
+    Script,
+    Texture,
+    math,
+    PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGBA32F,
+    FILTER_NEAREST,
+    ADDRESS_CLAMP_TO_EDGE,
+    WORKBUFFER_UPDATE_ONCE
 } from 'playcanvas';
 
 /**
@@ -278,7 +284,7 @@ class GSplatTrees extends Script {
      * @param {{ center: Vec3, radius: number }[]} spheres - The tree spheres.
      */
     setSpheres(spheres) {
-        this._spheres = spheres.map(s => ({ center: s.center.clone(), radius: s.radius }));
+        this._spheres = spheres.map((s) => ({ center: s.center.clone(), radius: s.radius }));
         this._rebuild();
     }
 
@@ -380,7 +386,10 @@ class GSplatTrees extends Script {
             maxZ = Math.max(maxZ, s.center.z + s.radius);
         }
         if (count === 0) {
-            minX = 0; maxX = 1; minZ = 0; maxZ = 1;
+            minX = 0;
+            maxX = 1;
+            minZ = 0;
+            maxZ = 1;
         }
 
         // grid dimensions - aim for roughly a handful of spheres per cell

@@ -17,7 +17,6 @@ class RenderPassShadowLocalClustered extends RenderPass {
     }
 
     update(localLights) {
-
         // prepare render targets / shadow cameras for rendering
         const shadowLights = this.shadowRendererLocal.shadowLights;
         const shadowCamera = this.shadowRendererLocal.prepareLights(shadowLights, localLights);
@@ -27,7 +26,6 @@ class RenderPassShadowLocalClustered extends RenderPass {
         this.enabled = count > 0;
 
         if (count) {
-
             // setup render pass using any of the cameras, they all have the same pass related properties
             // Note that the render pass is set up to not clear the render target, as individual shadow maps clear it
             this.shadowRenderer.setupRenderPass(this, shadowCamera, false);
@@ -35,7 +33,6 @@ class RenderPassShadowLocalClustered extends RenderPass {
     }
 
     execute() {
-
         const shadowLights = this.shadowRendererLocal.shadowLights;
         const count = shadowLights.length;
         for (let i = 0; i < count; i++) {

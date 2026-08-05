@@ -1,5 +1,5 @@
 // Spherical Harmonics for compressed GSplat format
-export default /* glsl */`
+export default /* glsl */ `
 #if SH_BANDS > 0
 
 vec4 unpack8888s(in uint bits) {

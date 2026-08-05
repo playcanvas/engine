@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef STD_THICKNESS_CONSTANT
 uniform material_thickness: f32;
 #endif

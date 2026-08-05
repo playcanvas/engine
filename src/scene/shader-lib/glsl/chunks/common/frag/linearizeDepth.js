@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 #ifndef LINEARIZE_DEPTH
 #define LINEARIZE_DEPTH

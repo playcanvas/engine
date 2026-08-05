@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     #ifdef BLOOM
         var bloomTexture: texture_2d<f32>;
         var bloomTextureSampler: sampler;

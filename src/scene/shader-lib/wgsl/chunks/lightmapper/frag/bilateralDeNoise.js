@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 // bilateral filter, based on https://www.shadertoy.com/view/4dfGDH# and
 // http://people.csail.mit.edu/sparis/bf_course/course_notes.pdf
 

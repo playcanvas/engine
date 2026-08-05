@@ -20,7 +20,6 @@ describe('GSplatComponent', function () {
     });
 
     describe('#addComponent', function () {
-
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('gsplat');
@@ -50,11 +49,9 @@ describe('GSplatComponent', function () {
             expect(e.gsplat.lodRangeMin).to.equal(2);
             expect(e.gsplat.lodRangeMax).to.equal(7);
         });
-
     });
 
     describe('#properties', function () {
-
         it('clamps lodBaseDistance to a minimum of 0.1', function () {
             const e = new Entity();
             e.addComponent('gsplat');
@@ -68,11 +65,9 @@ describe('GSplatComponent', function () {
             e.gsplat.lodMultiplier = 1;
             expect(e.gsplat.lodMultiplier).to.equal(1.2);
         });
-
     });
 
     describe('#parameters', function () {
-
         it('marks the placement dirty on setParameter and deleteParameter', function () {
             const e = new Entity();
             e.addComponent('gsplat');
@@ -90,11 +85,9 @@ describe('GSplatComponent', function () {
             expect(e.gsplat.getParameter('uTest')).to.be.undefined;
             expect(placement.dirtyVersion).to.be.above(v1);
         });
-
     });
 
     describe('#cloneComponent', function () {
-
         it('copies LOD properties to the clone', function () {
             const e = new Entity();
             e.addComponent('gsplat', {
@@ -113,6 +106,5 @@ describe('GSplatComponent', function () {
             expect(clone.gsplat.lodRangeMin).to.equal(3);
             expect(clone.gsplat.lodRangeMax).to.equal(6);
         });
-
     });
 });

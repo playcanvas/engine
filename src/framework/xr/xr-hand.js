@@ -22,10 +22,34 @@ const vecC = new Vec3();
 if (platform.browser && window.XRHand) {
     fingerJointIds = [
         ['thumb-metacarpal', 'thumb-phalanx-proximal', 'thumb-phalanx-distal', 'thumb-tip'],
-        ['index-finger-metacarpal', 'index-finger-phalanx-proximal', 'index-finger-phalanx-intermediate', 'index-finger-phalanx-distal', 'index-finger-tip'],
-        ['middle-finger-metacarpal', 'middle-finger-phalanx-proximal', 'middle-finger-phalanx-intermediate', 'middle-finger-phalanx-distal', 'middle-finger-tip'],
-        ['ring-finger-metacarpal', 'ring-finger-phalanx-proximal', 'ring-finger-phalanx-intermediate', 'ring-finger-phalanx-distal', 'ring-finger-tip'],
-        ['pinky-finger-metacarpal', 'pinky-finger-phalanx-proximal', 'pinky-finger-phalanx-intermediate', 'pinky-finger-phalanx-distal', 'pinky-finger-tip']
+        [
+            'index-finger-metacarpal',
+            'index-finger-phalanx-proximal',
+            'index-finger-phalanx-intermediate',
+            'index-finger-phalanx-distal',
+            'index-finger-tip'
+        ],
+        [
+            'middle-finger-metacarpal',
+            'middle-finger-phalanx-proximal',
+            'middle-finger-phalanx-intermediate',
+            'middle-finger-phalanx-distal',
+            'middle-finger-tip'
+        ],
+        [
+            'ring-finger-metacarpal',
+            'ring-finger-phalanx-proximal',
+            'ring-finger-phalanx-intermediate',
+            'ring-finger-phalanx-distal',
+            'ring-finger-tip'
+        ],
+        [
+            'pinky-finger-metacarpal',
+            'pinky-finger-phalanx-proximal',
+            'pinky-finger-phalanx-intermediate',
+            'pinky-finger-phalanx-distal',
+            'pinky-finger-tip'
+        ]
     ];
 }
 
@@ -221,7 +245,8 @@ class XrHand extends EventHandler {
         }
 
         // emulate squeeze events by folding all 4 fingers
-        const squeezing = this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
+        const squeezing =
+            this._fingerIsClosed(1) && this._fingerIsClosed(2) && this._fingerIsClosed(3) && this._fingerIsClosed(4);
 
         if (squeezing) {
             if (!this._inputSource._squeezing) {

@@ -34,13 +34,11 @@ class SkinInstanceCache {
     // returns cached or creates a skin instance for the skin and a rootBone, to be used by render component
     // on the specified entity
     static createCachedSkinInstance(skin, rootBone, entity) {
-
         // try and get skin instance from the cache
         let skinInst = SkinInstanceCache.getCachedSkinInstance(skin, rootBone);
 
         // don't have skin instance for this skin
         if (!skinInst) {
-
             skinInst = new SkinInstance(skin);
             skinInst.resolve(rootBone, entity);
 
@@ -54,15 +52,13 @@ class SkinInstanceCache {
     // returns already created skin instance from skin, for use on the rootBone
     // ref count of existing skinInstance is increased
     static getCachedSkinInstance(skin, rootBone) {
-
         let skinInstance = null;
 
         // get an array of cached object for the rootBone
         const cachedObjArray = SkinInstanceCache._skinInstanceCache.get(rootBone);
         if (cachedObjArray) {
-
             // find matching skin
-            const cachedObj = cachedObjArray.find(element => element.skin === skin);
+            const cachedObj = cachedObjArray.find((element) => element.skin === skin);
             if (cachedObj) {
                 cachedObj.incRefCount();
                 skinInstance = cachedObj.skinInstance;
@@ -74,7 +70,6 @@ class SkinInstanceCache {
 
     // adds skin instance to the cache, and increases ref count on it
     static addCachedSkinInstance(skin, rootBone, skinInstance) {
-
         // get an array for the rootBone
         let cachedObjArray = SkinInstanceCache._skinInstanceCache.get(rootBone);
         if (!cachedObjArray) {
@@ -83,7 +78,7 @@ class SkinInstanceCache {
         }
 
         // find entry for the skin
-        let cachedObj = cachedObjArray.find(element => element.skin === skin);
+        let cachedObj = cachedObjArray.find((element) => element.skin === skin);
         if (!cachedObj) {
             cachedObj = new SkinInstanceCachedObject(skin, skinInstance);
             cachedObjArray.push(cachedObj);
@@ -94,19 +89,15 @@ class SkinInstanceCache {
 
     // removes skin instance from the cache. This decreases ref count, and when that reaches 0 it gets destroyed
     static removeCachedSkinInstance(skinInstance) {
-
         if (skinInstance) {
             const rootBone = skinInstance.rootBone;
             if (rootBone) {
-
                 // an array for boot bone
                 const cachedObjArray = SkinInstanceCache._skinInstanceCache.get(rootBone);
                 if (cachedObjArray) {
-
                     // actual skin instance
-                    const cachedObjIndex = cachedObjArray.findIndex(element => element.skinInstance === skinInstance);
+                    const cachedObjIndex = cachedObjArray.findIndex((element) => element.skinInstance === skinInstance);
                     if (cachedObjIndex >= 0) {
-
                         // dec ref on the object
                         const cachedObj = cachedObjArray[cachedObjIndex];
                         cachedObj.decRefCount();

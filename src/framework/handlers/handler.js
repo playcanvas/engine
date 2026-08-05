@@ -132,12 +132,14 @@ class ResourceHandler {
      * app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
      */
     addParser(parser, decider) {
-        Debug.assert(parser && typeof parser.canParse === 'function',
-            'ResourceHandler#addParser: the parser must implement canParse(context). The (parser, decider) ' +
-            'form was removed - move the decider logic into the parser\'s canParse(context) method.');
+        Debug.assert(
+            parser && typeof parser.canParse === 'function',
+            "ResourceHandler#addParser: the parser must implement canParse(context). The (parser, decider) form was removed - move the decider logic into the parser's canParse(context) method."
+        );
         if (decider !== undefined) {
-            Debug.removed('ResourceHandler#addParser(parser, decider): the "decider" argument was removed. ' +
-                'Implement canParse(context) on the parser instead.');
+            Debug.removed(
+                'ResourceHandler#addParser(parser, decider): the "decider" argument was removed. Implement canParse(context) on the parser instead.'
+            );
         }
 
         // refuse a non-conforming parser in release builds too (the assert above is stripped) - if it
@@ -198,11 +200,15 @@ class ResourceHandler {
             return;
         }
 
-        http.get(url.load, {
-            responseType,
-            retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
-        }, callback);
+        http.get(
+            url.load,
+            {
+                responseType,
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
+            },
+            callback
+        );
     }
 
     /**
@@ -215,7 +221,7 @@ class ResourceHandler {
      * @ignore
      */
     _makeContext(url, asset) {
-        const original = (url && typeof url === 'object') ? url.original : url;
+        const original = url && typeof url === 'object' ? url.original : url;
         const clean = original ? original.split('?')[0] : '';
         return {
             url: original ?? null,
@@ -276,10 +282,10 @@ class ResourceHandler {
             return;
         }
 
-        Debug.assert(typeof parser.load === 'function',
-            `ResourceHandler('${this.handlerType}'): the selected parser has no load(url, callback, asset) ` +
-            'method. Pre-fetch parsers that implement parse(data, ...) must be used by a handler that ' +
-            'overrides load().');
+        Debug.assert(
+            typeof parser.load === 'function',
+            `ResourceHandler('${this.handlerType}'): the selected parser has no load(url, callback, asset) method. Pre-fetch parsers that implement parse(data, ...) must be used by a handler that overrides load().`
+        );
         parser.load(url, callback, asset);
     }
 

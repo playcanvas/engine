@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     #ifdef SSAO
         #define SSAO_TEXTURE
     #endif

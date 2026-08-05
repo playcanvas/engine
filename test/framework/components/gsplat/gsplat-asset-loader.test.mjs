@@ -69,7 +69,6 @@ describe('GSplatAssetLoader', function () {
     };
 
     describe('#load', function () {
-
         it('retries indefinitely when a previous load was cancelled with no resource', function () {
             const url = 'http://example.com/chunk.json';
 
@@ -141,11 +140,9 @@ describe('GSplatAssetLoader', function () {
             resolveWithResource({ ok: true });
             expect(loader.getResource(url)).to.deep.equal({ ok: true });
         });
-
     });
 
     describe('#hasFailed', function () {
-
         it('returns false while a load is in progress, cancelled, or never attempted', function () {
             const url = 'http://example.com/chunk.json';
             expect(loader.hasFailed(url)).to.equal(false);
@@ -175,11 +172,9 @@ describe('GSplatAssetLoader', function () {
 
             expect(loader.hasFailed(url)).to.equal(true);
         });
-
     });
 
     describe('cancellation while in flight', function () {
-
         it('does not warn or error when a load is cancelled before it resolves (routine LOD churn)', function () {
             const url = 'http://example.com/chunk.json';
             const warnSpy = spy(console, 'warn');
@@ -207,6 +202,5 @@ describe('GSplatAssetLoader', function () {
             loader.load(url);
             expect(loadCalls).to.equal(2);
         });
-
     });
 });

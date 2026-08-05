@@ -55,15 +55,15 @@ class AnimEvaluator {
             for (let j = 0; j < paths.length; ++j) {
                 const path = paths[j];
                 const resolved = binder.resolve(path);
-                let target = targets[resolved && resolved.targetPath || null];
+                let target = targets[(resolved && resolved.targetPath) || null];
 
                 // create new target if it doesn't exist yet
                 if (!target && resolved) {
                     target = {
-                        target: resolved,           // resolved target instance
-                        value: [],                  // storage for calculated value
-                        curves: 0,                  // number of curves driving this target
-                        blendCounter: 0             // per-frame number of blends (used to identify first blend)
+                        target: resolved, // resolved target instance
+                        value: [], // storage for calculated value
+                        curves: 0, // number of curves driving this target
+                        blendCounter: 0 // per-frame number of blends (used to identify first blend)
                     };
 
                     for (let k = 0; k < target.target.components; ++k) {
@@ -79,7 +79,10 @@ class AnimEvaluator {
                             } else {
                                 type = AnimTargetValue.TYPE_VEC3;
                             }
-                            binder.animComponent.targets[resolved.targetPath] = new AnimTargetValue(binder.animComponent, type);
+                            binder.animComponent.targets[resolved.targetPath] = new AnimTargetValue(
+                                binder.animComponent,
+                                type
+                            );
                         }
                         binder.animComponent.targets[resolved.targetPath].layerCounter++;
                         binder.animComponent.targets[resolved.targetPath].setMask(binder.layerIndex, 1);

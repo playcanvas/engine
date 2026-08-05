@@ -92,12 +92,14 @@ describe('TextElement', function () {
             header: {
                 version: 1
             },
-            data: [{
-                info: {
-                    locale: locale
-                },
-                messages: messages
-            }]
+            data: [
+                {
+                    info: {
+                        locale: locale
+                    },
+                    messages: messages
+                }
+            ]
         };
 
         return data;
@@ -129,7 +131,6 @@ describe('TextElement', function () {
         element.text = 'abcde fghij';
         assertLineContents(['abcde fghij']);
     });
-
 
     it('does not break onto multiple lines if the autoWidth is set to true', function () {
         element.fontAsset = fontAsset;
@@ -172,33 +173,21 @@ describe('TextElement', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcde fghij klmno pqrst uvwxyz';
-        assertLineContents([
-            'abcde fghij ',
-            'klmno pqrst ',
-            'uvwxyz'
-        ]);
+        assertLineContents(['abcde fghij ', 'klmno pqrst ', 'uvwxyz']);
     });
 
     it('breaks individual words if they are too long to fit onto a line by themselves (single word case)', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcdefghijklmnopqrstuvwxyz';
-        assertLineContents([
-            'abcdefghijklm',
-            'nopqrstuvwxy',
-            'z'
-        ]);
+        assertLineContents(['abcdefghijklm', 'nopqrstuvwxy', 'z']);
     });
 
     it('breaks individual words if they are too long to fit onto a line by themselves (multi word case)', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcdefgh ijklmnopqrstuvwxyz';
-        assertLineContents([
-            'abcdefgh ',
-            'ijklmnopqrstu',
-            'vwxyz'
-        ]);
+        assertLineContents(['abcdefgh ', 'ijklmnopqrstu', 'vwxyz']);
     });
 
     it('breaks individual characters onto separate lines if the width is really constrained', function () {
@@ -206,41 +195,21 @@ describe('TextElement', function () {
 
         element.width = 1;
         element.text = 'abcdef ghijkl';
-        assertLineContents([
-            'a',
-            'b',
-            'c',
-            'd',
-            'e',
-            'f ',
-            'g',
-            'h',
-            'i',
-            'j',
-            'k',
-            'l'
-        ]);
+        assertLineContents(['a', 'b', 'c', 'd', 'e', 'f ', 'g', 'h', 'i', 'j', 'k', 'l']);
     });
 
     it('does not include whitespace at the end of a line in width calculations', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcdefgh        i';
-        assertLineContents([
-            'abcdefgh        ',
-            'i'
-        ]);
+        assertLineContents(['abcdefgh        ', 'i']);
     });
 
     it('breaks words on hypens', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde fghij-',
-            'klm nopqr ',
-            'stuvwxyz'
-        ]);
+        assertLineContents(['abcde fghij-', 'klm nopqr ', 'stuvwxyz']);
     });
 
     it('keeps hyphenated word segments together when wrapping them', function () {
@@ -248,45 +217,28 @@ describe('TextElement', function () {
 
         element.width = 150;
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde ',
-            'fghij-klm ',
-            'nopqr ',
-            'stuvwxyz'
-        ]);
+        assertLineContents(['abcde ', 'fghij-klm ', 'nopqr ', 'stuvwxyz']);
     });
 
     it('splits lines on \\n', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcde\nfghij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
     });
 
     it('splits lines on \\r', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcde\rfghij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
     });
 
     it('splits lines on multiple \\n', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcde\n\n\nfg\nhij';
-        assertLineContents([
-            'abcde',
-            '',
-            '',
-            'fg',
-            'hij'
-        ]);
+        assertLineContents(['abcde', '', '', 'fg', 'hij']);
     });
 
     it('does not break beyond 1 line if maxLines is equal to 1', function () {
@@ -294,35 +246,23 @@ describe('TextElement', function () {
         element.maxLines = 1;
         element.text = 'abcde fghij klmno pqrst uvwxyz';
         // long contents
-        assertLineContents([
-            'abcde fghij klmno pqrst uvwxyz'
-        ]);
+        assertLineContents(['abcde fghij klmno pqrst uvwxyz']);
         // multiple new lines
         element.text = 'abcde\n\n\nfg\nhij';
-        assertLineContents([
-            'abcdefghij'
-        ]);
+        assertLineContents(['abcdefghij']);
         // \r chars
         element.text = 'abcde\rfghij';
-        assertLineContents([
-            'abcdefghij'
-        ]);
+        assertLineContents(['abcdefghij']);
         // hyphens
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde fghij-klm nopqr stuvwxyz'
-        ]);
+        assertLineContents(['abcde fghij-klm nopqr stuvwxyz']);
         // whitespace at end of line
         element.text = 'abcdefgh        i';
-        assertLineContents([
-            'abcdefgh        i'
-        ]);
+        assertLineContents(['abcdefgh        i']);
         // individual characters
         element.width = 1;
         element.text = 'abcdef ghijkl';
-        assertLineContents([
-            'abcdef ghijkl'
-        ]);
+        assertLineContents(['abcdef ghijkl']);
     });
 
     it('breaks remaining text in last line when maxLines limit is reached', function () {
@@ -330,41 +270,23 @@ describe('TextElement', function () {
         element.maxLines = 2;
         element.text = 'abcde fghij klmno pqrst uvwxyz';
         // long contents
-        assertLineContents([
-            'abcde fghij ',
-            'klmno pqrst uvwxyz'
-        ]);
+        assertLineContents(['abcde fghij ', 'klmno pqrst uvwxyz']);
         // multiple new lines
         element.text = 'abcde\n\n\nfg\nhij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
         // \r chars
         element.text = 'abcde\rfghij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
         // hyphens
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde fghij-',
-            'klm nopqr stuvwxyz'
-        ]);
+        assertLineContents(['abcde fghij-', 'klm nopqr stuvwxyz']);
         // whitespace at end of line
         element.text = 'abcdefgh        i';
-        assertLineContents([
-            'abcdefgh        ',
-            'i'
-        ]);
+        assertLineContents(['abcdefgh        ', 'i']);
         // individual characters
         element.width = 1;
         element.text = 'abcdef ghijkl';
-        assertLineContents([
-            'a',
-            'bcdef ghijkl'
-        ]);
+        assertLineContents(['a', 'bcdef ghijkl']);
     });
 
     it('rtl - breaks onto multiple lines if individual lines are too long', function () {
@@ -374,11 +296,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcde fghij klmno pqrst uvwxyz';
-        assertLineContents([
-            'abcde fghij ',
-            'klmno pqrst ',
-            'uvwxyz'
-        ]);
+        assertLineContents(['abcde fghij ', 'klmno pqrst ', 'uvwxyz']);
     });
 
     it('rtl - breaks individual words if they are too long to fit onto a line by themselves (single word case)', function () {
@@ -388,11 +306,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcdefghijklmnopqrstuvwxyz';
-        assertLineContents([
-            'abcdefghijklm',
-            'nopqrstuvwxy',
-            'z'
-        ]);
+        assertLineContents(['abcdefghijklm', 'nopqrstuvwxy', 'z']);
     });
 
     it('rtl - breaks individual words if they are too long to fit onto a line by themselves (multi word case)', function () {
@@ -401,11 +315,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcdefgh ijklmnopqrstuvwxyz';
-        assertLineContents([
-            'abcdefgh ',
-            'ijklmnopqrstu',
-            'vwxyz'
-        ]);
+        assertLineContents(['abcdefgh ', 'ijklmnopqrstu', 'vwxyz']);
     });
 
     it('rtl - breaks individual characters onto separate lines if the width is really constrained', function () {
@@ -415,20 +325,7 @@ describe('TextElement', function () {
 
         element.width = 1;
         element.text = 'abcdef ghijkl';
-        assertLineContents([
-            'a',
-            'b',
-            'c',
-            'd',
-            'e',
-            'f ',
-            'g',
-            'h',
-            'i',
-            'j',
-            'k',
-            'l'
-        ]);
+        assertLineContents(['a', 'b', 'c', 'd', 'e', 'f ', 'g', 'h', 'i', 'j', 'k', 'l']);
     });
 
     it('rtl - does not include whitespace at the end of a line in width calculations', function () {
@@ -437,10 +334,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcdefgh        i';
-        assertLineContents([
-            'abcdefgh        ',
-            'i'
-        ]);
+        assertLineContents(['abcdefgh        ', 'i']);
     });
 
     it('rtl - breaks words on hypens', function () {
@@ -449,11 +343,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde fghij-',
-            'klm nopqr ',
-            'stuvwxyz'
-        ]);
+        assertLineContents(['abcde fghij-', 'klm nopqr ', 'stuvwxyz']);
     });
 
     it('rtl - keeps hyphenated word segments together when wrapping them', function () {
@@ -463,12 +353,7 @@ describe('TextElement', function () {
 
         element.width = 150;
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde ',
-            'fghij-klm ',
-            'nopqr ',
-            'stuvwxyz'
-        ]);
+        assertLineContents(['abcde ', 'fghij-klm ', 'nopqr ', 'stuvwxyz']);
     });
 
     it('rtl - splits lines on \\n', function () {
@@ -477,10 +362,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcde\nfghij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
     });
 
     it('rtl - splits lines on \\r', function () {
@@ -489,10 +371,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcde\rfghij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
     });
 
     it('rtl - splits lines on multiple \\n', function () {
@@ -501,13 +380,7 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcde\n\n\nfg\nhij';
-        assertLineContents([
-            'abcde',
-            '',
-            '',
-            'fg',
-            'hij'
-        ]);
+        assertLineContents(['abcde', '', '', 'fg', 'hij']);
     });
 
     it('rtl - does not break beyond 1 line if maxLines is equal to 1', function () {
@@ -517,38 +390,26 @@ describe('TextElement', function () {
         element.maxLines = 1;
         element.text = 'abcde fghij klmno pqrst uvwxyz';
         // long contents
-        assertLineContents([
-            'abcde fghij klmno pqrst uvwxyz'
-        ]);
+        assertLineContents(['abcde fghij klmno pqrst uvwxyz']);
         // multiple new lines
         element.text = 'abcde\n\n\nfg\nhij';
-        assertLineContents([
-            'abcdefghij'
-        ]);
+        assertLineContents(['abcdefghij']);
         // \r chars
         registerRtlHandler('\r');
         element.text = 'abcde\rfghij';
-        assertLineContents([
-            'abcdefghij'
-        ]);
+        assertLineContents(['abcdefghij']);
 
         registerRtlHandler('\n');
         // hyphens
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde fghij-klm nopqr stuvwxyz'
-        ]);
+        assertLineContents(['abcde fghij-klm nopqr stuvwxyz']);
         // whitespace at end of line
         element.text = 'abcdefgh        i';
-        assertLineContents([
-            'abcdefgh        i'
-        ]);
+        assertLineContents(['abcdefgh        i']);
         // individual characters
         element.width = 1;
         element.text = 'abcdef ghijkl';
-        assertLineContents([
-            'abcdef ghijkl'
-        ]);
+        assertLineContents(['abcdef ghijkl']);
     });
 
     it('rtl breaks remaining text in last line when maxLines limit is reached', function () {
@@ -558,43 +419,25 @@ describe('TextElement', function () {
         element.maxLines = 2;
         element.text = 'abcde fghij klmno pqrst uvwxyz';
         // long contents
-        assertLineContents([
-            'abcde fghij ',
-            'klmno pqrst uvwxyz'
-        ]);
+        assertLineContents(['abcde fghij ', 'klmno pqrst uvwxyz']);
         // multiple new lines
         element.text = 'abcde\n\n\nfg\nhij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
         // \r chars
         registerRtlHandler('\r');
         element.text = 'abcde\rfghij';
-        assertLineContents([
-            'abcde',
-            'fghij'
-        ]);
+        assertLineContents(['abcde', 'fghij']);
         // hyphens
         registerRtlHandler('\n');
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
-        assertLineContents([
-            'abcde fghij-',
-            'klm nopqr stuvwxyz'
-        ]);
+        assertLineContents(['abcde fghij-', 'klm nopqr stuvwxyz']);
         // whitespace at end of line
         element.text = 'abcdefgh        i';
-        assertLineContents([
-            'abcdefgh        ',
-            'i'
-        ]);
+        assertLineContents(['abcdefgh        ', 'i']);
         // individual characters
         element.width = 1;
         element.text = 'abcdef ghijkl';
-        assertLineContents([
-            'a',
-            'bcdef ghijkl'
-        ]);
+        assertLineContents(['a', 'bcdef ghijkl']);
     });
 
     it('rtl and ltr text end up with the same width', function () {
@@ -700,8 +543,8 @@ describe('TextElement', function () {
         const width = element.calculatedWidth;
         const textWidth = element._text.width;
         element.autoFitWidth = true;
-        expect(element.fontSize).to.equal(Math.floor(32 * width / textWidth));
-        expect(element._text._scaledLineHeight).to.equal(32 * element.fontSize / element.maxFontSize);
+        expect(element.fontSize).to.equal(Math.floor((32 * width) / textWidth));
+        expect(element._text._scaledLineHeight).to.equal((32 * element.fontSize) / element.maxFontSize);
     });
 
     it('does not reduce font size when width is larger then the element width and autoFitWidth is false', function () {
@@ -1164,7 +1007,6 @@ describe('TextElement', function () {
         }
     });
 
-
     it('cloned text component is complete', function () {
         const e = new Entity();
 
@@ -1209,7 +1051,6 @@ describe('TextElement', function () {
         expect(e.element.fontAsset).to.equal(null);
     });
 
-
     it('Offscreen element is culled', function () {
         const canvasWidth = app.graphicsDevice.width;
 
@@ -1243,7 +1084,7 @@ describe('TextElement', function () {
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
-        e.translateLocal(canvasWidth + (100 / 2) + 0.001, 0, 0);
+        e.translateLocal(canvasWidth + 100 / 2 + 0.001, 0, 0);
 
         app.update(0.1);
         app.render();
@@ -1255,7 +1096,6 @@ describe('TextElement', function () {
         app.update(0.1);
         app.render();
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
-
     });
 
     it('Offscreen autowidth element is culled', function () {
@@ -1291,7 +1131,7 @@ describe('TextElement', function () {
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
-        e.translateLocal(canvasWidth + (e.element.width / 2) + 0.001, 0, 0);
+        e.translateLocal(canvasWidth + e.element.width / 2 + 0.001, 0, 0);
 
         app.update(0.1);
         app.render();
@@ -1357,7 +1197,6 @@ describe('TextElement', function () {
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.false;
     });
 
-
     it('Offscreen rotated element is culled', function () {
         const screen = new Entity();
         screen.addComponent('screen', {
@@ -1383,7 +1222,7 @@ describe('TextElement', function () {
         app.root.addChild(camera);
 
         // move just off screen (when rotated 45°)
-        e.translateLocal(300 + (50 * Math.sqrt(2)), 0, 0);
+        e.translateLocal(300 + 50 * Math.sqrt(2), 0, 0);
         e.rotateLocal(0, 0, 45);
 
         // update transform
@@ -1705,15 +1544,11 @@ describe('TextElement', function () {
 
         element.text = 'text element [color="#ff0000"]in red[/color] or not';
 
-        assertLineContents([
-            'text element in red or not'
-        ]);
+        assertLineContents(['text element in red or not']);
 
         const w = [255, 255, 255];
         const r = [255, 0, 0];
-        assertLineColors([
-            w, w, w, w, w, w, w, w, w, w, w, w, w, r, r, r, r, r, r, w, w, w, w, w, w, w
-        ]);
+        assertLineColors([w, w, w, w, w, w, w, w, w, w, w, w, w, r, r, r, r, r, r, w, w, w, w, w, w, w]);
     });
 
     it('text markup color without closing tag', function () {
@@ -1722,9 +1557,7 @@ describe('TextElement', function () {
         element.autoWidth = true;
 
         element.text = 'text element [color="#ff0000"]in red or not';
-        assertLineContents([
-            'text element [color="#ff0000"]in red or not'
-        ]);
+        assertLineContents(['text element [color="#ff0000"]in red or not']);
 
         assertLineColors(new Array(43).fill([255, 255, 255]));
     });
@@ -1735,9 +1568,7 @@ describe('TextElement', function () {
         element.autoWidth = true;
 
         element.text = 'text element \\[color="#ff0000"]in red or not';
-        assertLineContents([
-            'text element [color="#ff0000"]in red or not'
-        ]);
+        assertLineContents(['text element [color="#ff0000"]in red or not']);
 
         assertLineColors(new Array(43).fill([255, 255, 255]));
     });
@@ -1751,11 +1582,10 @@ describe('TextElement', function () {
         element.shadowColor = new Color(1, 1, 0, 1);
         element.shadowOffset = new Vec2(0.5, -1);
 
-        element.text = 'text [shadow color="#00ff00bb" offset="1"]element[/shadow] [shadow color="#ff0000"]in red[/shadow] [shadow offset="1"]or[/shadow] not';
+        element.text =
+            'text [shadow color="#00ff00bb" offset="1"]element[/shadow] [shadow color="#ff0000"]in red[/shadow] [shadow offset="1"]or[/shadow] not';
 
-        assertLineContents([
-            'text element in red or not'
-        ]);
+        assertLineContents(['text element in red or not']);
 
         // (r, g, b, a, offsetx, offsety)
         const d1 = [255, 255, 0, 255, 64, -127];
@@ -1764,11 +1594,32 @@ describe('TextElement', function () {
         const d2 = [255, 255, 0, 255, 127, 127];
 
         assertLineShadowParams([
-            d1, d1, d1, d1, d1,
-            g, g, g, g, g, g, g, d1,
-            r, r, r, r, r, r, d1,
-            d2, d2, d1,
-            d1, d1, d1
+            d1,
+            d1,
+            d1,
+            d1,
+            d1,
+            g,
+            g,
+            g,
+            g,
+            g,
+            g,
+            g,
+            d1,
+            r,
+            r,
+            r,
+            r,
+            r,
+            r,
+            d1,
+            d2,
+            d2,
+            d1,
+            d1,
+            d1,
+            d1
         ]);
     });
 
@@ -1781,11 +1632,10 @@ describe('TextElement', function () {
         element.outlineColor = new Color(1, 1, 0, 1);
         element.outlineThickness = 1;
 
-        element.text = 'text [outline color="#00ff00bb" thickness="0.5"]element[/outline] [outline color="#ff0000"]in red[/outline] [outline thickness="1"]or[/outline] not';
+        element.text =
+            'text [outline color="#00ff00bb" thickness="0.5"]element[/outline] [outline color="#ff0000"]in red[/outline] [outline thickness="1"]or[/outline] not';
 
-        assertLineContents([
-            'text element in red or not'
-        ]);
+        assertLineContents(['text element in red or not']);
 
         // (r, g, b, a, thickness)
         const d1 = [255, 255, 0, 255, 255];
@@ -1794,11 +1644,32 @@ describe('TextElement', function () {
         const d2 = [255, 255, 0, 255, 255];
 
         assertLineOutlineParams([
-            d1, d1, d1, d1, d1,
-            g, g, g, g, g, g, g, d1,
-            r, r, r, r, r, r, d1,
-            d2, d2, d1,
-            d1, d1, d1
+            d1,
+            d1,
+            d1,
+            d1,
+            d1,
+            g,
+            g,
+            g,
+            g,
+            g,
+            g,
+            g,
+            d1,
+            r,
+            r,
+            r,
+            r,
+            r,
+            r,
+            d1,
+            d2,
+            d2,
+            d1,
+            d1,
+            d1,
+            d1
         ]);
     });
 
@@ -1808,14 +1679,9 @@ describe('TextElement', function () {
         element.autoWidth = true;
 
         element.text = 'abcd efgh [tag attr1="1" attr2="2"]ijkl[/tag] mnop';
-        assertLineContents([
-            'abcd efgh ijkl mnop'
-        ]);
+        assertLineContents(['abcd efgh ijkl mnop']);
 
         const w = [255, 255, 255];
-        assertLineColors([
-            w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w
-        ]);
+        assertLineColors([w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w]);
     });
-
 });

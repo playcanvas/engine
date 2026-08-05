@@ -53,9 +53,23 @@ class ProgramLibrary {
 
         const defaultCameraShaderParams = new CameraShaderParams();
         standardMaterial.shaderOptBuilder.updateRef(
-            this._defaultStdMatOption, {}, defaultCameraShaderParams, standardMaterial, null, [], SHADER_FORWARD, null);
+            this._defaultStdMatOption,
+            {},
+            defaultCameraShaderParams,
+            standardMaterial,
+            null,
+            [],
+            SHADER_FORWARD,
+            null
+        );
         standardMaterial.shaderOptBuilder.updateMinRef(
-            this._defaultStdMatOptionMin, {}, standardMaterial, null, SHADER_SHADOW, null);
+            this._defaultStdMatOptionMin,
+            {},
+            standardMaterial,
+            null,
+            SHADER_SHADOW,
+            null
+        );
 
         device.on('destroy:shader', (shader) => {
             this.removeFromCache(shader);
@@ -113,7 +127,9 @@ class ProgramLibrary {
             }
 
             if (this._precached) {
-                Debug.log(`ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`);
+                Debug.log(
+                    `ProgramLibrary#getProgram: Cache miss for shader ${name} key ${key} after shaders precaching`
+                );
             }
 
             const device = this._device;
@@ -152,7 +168,6 @@ class ProgramLibrary {
         // do we have final processed shader
         let processedShader = this.getCachedShader(totalKey);
         if (!processedShader) {
-
             // get generated shader
             const generatedShaderDef = this.generateShaderDefinition(generator, name, generationKey, options);
             Debug.assert(generatedShaderDef);
@@ -240,7 +255,8 @@ class ProgramLibrary {
         text += '\n];\n';
         text += 'pc.getProgramLibrary(device).precompile(shaders);\n';
         text += `if (pc.version != \"${version}\" || pc.revision != \"${revision}\")\n`;
-        text += '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
+        text +=
+            '\tconsole.warn(\"precompile-shaders.js: engine version mismatch, rebuild shaders lib with current engine\");';
 
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
@@ -283,15 +299,15 @@ class ProgramLibrary {
 
     _getDefaultStdMatOptions(pass) {
         const shaderPassInfo = ShaderPass.get(this._device).getByIndex(pass);
-        return (pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow) ?
-            this._defaultStdMatOptionMin : this._defaultStdMatOption;
+        return pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow
+            ? this._defaultStdMatOptionMin
+            : this._defaultStdMatOption;
     }
 
     precompile(cache) {
         if (cache) {
             const shaders = new Array(cache.length);
             for (let i = 0; i < cache.length; i++) {
-
                 // default options for the standard materials are not stored, and so they are inserted
                 // back into the loaded options
                 if (cache[i].name === 'standard') {

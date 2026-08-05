@@ -3,29 +3,85 @@ import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
 import {
-    CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
+    CLEARFLAG_COLOR,
+    CLEARFLAG_DEPTH,
+    CLEARFLAG_STENCIL,
     CULLFACE_NONE,
-    isIntegerPixelFormat, pixelFormatInfo,
-    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
+    isIntegerPixelFormat,
+    pixelFormatInfo,
+    FILTER_NEAREST,
+    FILTER_LINEAR,
+    FILTER_NEAREST_MIPMAP_NEAREST,
+    FILTER_NEAREST_MIPMAP_LINEAR,
+    FILTER_LINEAR_MIPMAP_NEAREST,
+    FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
-    PIXELFORMAT_R8, PIXELFORMAT_RG8, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R8,
+    PIXELFORMAT_RG8,
+    PIXELFORMAT_RGB8,
+    PIXELFORMAT_RGBA8,
     STENCILOP_KEEP,
-    UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
-    UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2,
-    UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
-    UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
-    UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
-    UNIFORMTYPE_UINT, UNIFORMTYPE_UVEC2, UNIFORMTYPE_UVEC3, UNIFORMTYPE_UVEC4, UNIFORMTYPE_ITEXTURE2D, UNIFORMTYPE_UTEXTURE2D,
-    UNIFORMTYPE_ITEXTURECUBE, UNIFORMTYPE_UTEXTURECUBE, UNIFORMTYPE_ITEXTURE3D, UNIFORMTYPE_UTEXTURE3D, UNIFORMTYPE_ITEXTURE2D_ARRAY,
-    UNIFORMTYPE_UTEXTURE2D_ARRAY, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY,
-    UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY,
-    UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
-    semanticToLocation, getPixelFormatArrayType,
+    UNIFORMTYPE_BOOL,
+    UNIFORMTYPE_INT,
+    UNIFORMTYPE_FLOAT,
+    UNIFORMTYPE_VEC2,
+    UNIFORMTYPE_VEC3,
+    UNIFORMTYPE_VEC4,
+    UNIFORMTYPE_IVEC2,
+    UNIFORMTYPE_IVEC3,
+    UNIFORMTYPE_IVEC4,
+    UNIFORMTYPE_BVEC2,
+    UNIFORMTYPE_BVEC3,
+    UNIFORMTYPE_BVEC4,
+    UNIFORMTYPE_MAT2,
+    UNIFORMTYPE_MAT3,
+    UNIFORMTYPE_MAT4,
+    UNIFORMTYPE_TEXTURE2D,
+    UNIFORMTYPE_TEXTURECUBE,
+    UNIFORMTYPE_FLOATARRAY,
+    UNIFORMTYPE_TEXTURE2D_SHADOW,
+    UNIFORMTYPE_TEXTURECUBE_SHADOW,
+    UNIFORMTYPE_TEXTURE3D,
+    UNIFORMTYPE_VEC2ARRAY,
+    UNIFORMTYPE_VEC3ARRAY,
+    UNIFORMTYPE_VEC4ARRAY,
+    UNIFORMTYPE_UINT,
+    UNIFORMTYPE_UVEC2,
+    UNIFORMTYPE_UVEC3,
+    UNIFORMTYPE_UVEC4,
+    UNIFORMTYPE_ITEXTURE2D,
+    UNIFORMTYPE_UTEXTURE2D,
+    UNIFORMTYPE_ITEXTURECUBE,
+    UNIFORMTYPE_UTEXTURECUBE,
+    UNIFORMTYPE_ITEXTURE3D,
+    UNIFORMTYPE_UTEXTURE3D,
+    UNIFORMTYPE_ITEXTURE2D_ARRAY,
+    UNIFORMTYPE_UTEXTURE2D_ARRAY,
+    UNIFORMTYPE_INTARRAY,
+    UNIFORMTYPE_UINTARRAY,
+    UNIFORMTYPE_BOOLARRAY,
+    UNIFORMTYPE_IVEC2ARRAY,
+    UNIFORMTYPE_BVEC2ARRAY,
+    UNIFORMTYPE_UVEC2ARRAY,
+    UNIFORMTYPE_IVEC3ARRAY,
+    UNIFORMTYPE_BVEC3ARRAY,
+    UNIFORMTYPE_UVEC3ARRAY,
+    UNIFORMTYPE_IVEC4ARRAY,
+    UNIFORMTYPE_BVEC4ARRAY,
+    UNIFORMTYPE_UVEC4ARRAY,
+    UNIFORMTYPE_MAT4ARRAY,
+    semanticToLocation,
+    getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
     DEVICETYPE_WEBGL2,
-    TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
-    TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
+    TEXPROPERTY_MIN_FILTER,
+    TEXPROPERTY_MAG_FILTER,
+    TEXPROPERTY_ADDRESS_U,
+    TEXPROPERTY_ADDRESS_V,
+    TEXPROPERTY_ADDRESS_W,
+    TEXPROPERTY_COMPARE_ON_READ,
+    TEXPROPERTY_COMPARE_FUNC,
+    TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
@@ -201,8 +257,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         };
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
-        const ua = (typeof navigator !== 'undefined') && navigator.userAgent;
-        this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
+        const ua = typeof navigator !== 'undefined' && navigator.userAgent;
+        this.forceDisableMultisampling =
+            ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
         if (this.forceDisableMultisampling) {
             options.antialias = false;
             Debug.log('Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4');
@@ -210,16 +267,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // #5856 - turn off antialiasing on Firefox running on Windows / Android
         if (platform.browserName === 'firefox') {
-            const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
+            const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
             const match = ua.match(/Firefox\/(\d+(\.\d+)*)/);
             const firefoxVersion = match ? match[1] : null;
             if (firefoxVersion) {
                 const version = parseFloat(firefoxVersion);
-                const disableAntialias = (platform.name === 'windows' && (version >= 120 || version === 115)) ||
-                                         (platform.name === 'android' && version >= 132);
+                const disableAntialias =
+                    (platform.name === 'windows' && (version >= 120 || version === 115)) ||
+                    (platform.name === 'android' && version >= 132);
                 if (disableAntialias) {
                     options.antialias = false;
-                    Debug.log(`Antialiasing has been turned off due to rendering issues on Firefox ${platform.name} platform version ${firefoxVersion}`);
+                    Debug.log(
+                        `Antialiasing has been turned off due to rendering issues on Firefox ${platform.name} platform version ${firefoxVersion}`
+                    );
                 }
             }
         }
@@ -285,19 +345,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.UNSIGNED_INT_SAMPLER_2D_ARRAY
         ]);
 
-        this.glAddress = [
-            gl.REPEAT,
-            gl.CLAMP_TO_EDGE,
-            gl.MIRRORED_REPEAT
-        ];
+        this.glAddress = [gl.REPEAT, gl.CLAMP_TO_EDGE, gl.MIRRORED_REPEAT];
 
-        this.glBlendEquation = [
-            gl.FUNC_ADD,
-            gl.FUNC_SUBTRACT,
-            gl.FUNC_REVERSE_SUBTRACT,
-            gl.MIN,
-            gl.MAX
-        ];
+        this.glBlendEquation = [gl.FUNC_ADD, gl.FUNC_SUBTRACT, gl.FUNC_REVERSE_SUBTRACT, gl.MIN, gl.MAX];
 
         this.glBlendFunctionColor = [
             gl.ZERO,
@@ -339,27 +389,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extBlendFuncExtended?.ONE_MINUS_SRC1_ALPHA_WEBGL
         ];
 
-        this.glComparison = [
-            gl.NEVER,
-            gl.LESS,
-            gl.EQUAL,
-            gl.LEQUAL,
-            gl.GREATER,
-            gl.NOTEQUAL,
-            gl.GEQUAL,
-            gl.ALWAYS
-        ];
+        this.glComparison = [gl.NEVER, gl.LESS, gl.EQUAL, gl.LEQUAL, gl.GREATER, gl.NOTEQUAL, gl.GEQUAL, gl.ALWAYS];
 
-        this.glStencilOp = [
-            gl.KEEP,
-            gl.ZERO,
-            gl.REPLACE,
-            gl.INCR,
-            gl.INCR_WRAP,
-            gl.DECR,
-            gl.DECR_WRAP,
-            gl.INVERT
-        ];
+        this.glStencilOp = [gl.KEEP, gl.ZERO, gl.REPLACE, gl.INCR, gl.INCR_WRAP, gl.DECR, gl.DECR_WRAP, gl.INVERT];
 
         this.glClearFlag = [
             0,
@@ -372,17 +404,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.STENCIL_BUFFER_BIT | gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT
         ];
 
-        this.glCull = [
-            0,
-            gl.BACK,
-            gl.FRONT,
-            gl.FRONT_AND_BACK
-        ];
+        this.glCull = [0, gl.BACK, gl.FRONT, gl.FRONT_AND_BACK];
 
-        this.glFrontFace = [
-            gl.CCW,
-            gl.CW
-        ];
+        this.glFrontFace = [gl.CCW, gl.CW];
 
         this.glFilter = [
             gl.NEAREST,
@@ -415,43 +439,43 @@ class WebglGraphicsDevice extends GraphicsDevice {
         ];
 
         this.pcUniformType = {};
-        this.pcUniformType[gl.BOOL]         = UNIFORMTYPE_BOOL;
-        this.pcUniformType[gl.INT]          = UNIFORMTYPE_INT;
-        this.pcUniformType[gl.FLOAT]        = UNIFORMTYPE_FLOAT;
-        this.pcUniformType[gl.FLOAT_VEC2]   = UNIFORMTYPE_VEC2;
-        this.pcUniformType[gl.FLOAT_VEC3]   = UNIFORMTYPE_VEC3;
-        this.pcUniformType[gl.FLOAT_VEC4]   = UNIFORMTYPE_VEC4;
-        this.pcUniformType[gl.INT_VEC2]     = UNIFORMTYPE_IVEC2;
-        this.pcUniformType[gl.INT_VEC3]     = UNIFORMTYPE_IVEC3;
-        this.pcUniformType[gl.INT_VEC4]     = UNIFORMTYPE_IVEC4;
-        this.pcUniformType[gl.BOOL_VEC2]    = UNIFORMTYPE_BVEC2;
-        this.pcUniformType[gl.BOOL_VEC3]    = UNIFORMTYPE_BVEC3;
-        this.pcUniformType[gl.BOOL_VEC4]    = UNIFORMTYPE_BVEC4;
-        this.pcUniformType[gl.FLOAT_MAT2]   = UNIFORMTYPE_MAT2;
-        this.pcUniformType[gl.FLOAT_MAT3]   = UNIFORMTYPE_MAT3;
-        this.pcUniformType[gl.FLOAT_MAT4]   = UNIFORMTYPE_MAT4;
-        this.pcUniformType[gl.SAMPLER_2D]   = UNIFORMTYPE_TEXTURE2D;
+        this.pcUniformType[gl.BOOL] = UNIFORMTYPE_BOOL;
+        this.pcUniformType[gl.INT] = UNIFORMTYPE_INT;
+        this.pcUniformType[gl.FLOAT] = UNIFORMTYPE_FLOAT;
+        this.pcUniformType[gl.FLOAT_VEC2] = UNIFORMTYPE_VEC2;
+        this.pcUniformType[gl.FLOAT_VEC3] = UNIFORMTYPE_VEC3;
+        this.pcUniformType[gl.FLOAT_VEC4] = UNIFORMTYPE_VEC4;
+        this.pcUniformType[gl.INT_VEC2] = UNIFORMTYPE_IVEC2;
+        this.pcUniformType[gl.INT_VEC3] = UNIFORMTYPE_IVEC3;
+        this.pcUniformType[gl.INT_VEC4] = UNIFORMTYPE_IVEC4;
+        this.pcUniformType[gl.BOOL_VEC2] = UNIFORMTYPE_BVEC2;
+        this.pcUniformType[gl.BOOL_VEC3] = UNIFORMTYPE_BVEC3;
+        this.pcUniformType[gl.BOOL_VEC4] = UNIFORMTYPE_BVEC4;
+        this.pcUniformType[gl.FLOAT_MAT2] = UNIFORMTYPE_MAT2;
+        this.pcUniformType[gl.FLOAT_MAT3] = UNIFORMTYPE_MAT3;
+        this.pcUniformType[gl.FLOAT_MAT4] = UNIFORMTYPE_MAT4;
+        this.pcUniformType[gl.SAMPLER_2D] = UNIFORMTYPE_TEXTURE2D;
         this.pcUniformType[gl.SAMPLER_CUBE] = UNIFORMTYPE_TEXTURECUBE;
-        this.pcUniformType[gl.UNSIGNED_INT]         = UNIFORMTYPE_UINT;
-        this.pcUniformType[gl.UNSIGNED_INT_VEC2]    = UNIFORMTYPE_UVEC2;
-        this.pcUniformType[gl.UNSIGNED_INT_VEC3]    = UNIFORMTYPE_UVEC3;
-        this.pcUniformType[gl.UNSIGNED_INT_VEC4]    = UNIFORMTYPE_UVEC4;
+        this.pcUniformType[gl.UNSIGNED_INT] = UNIFORMTYPE_UINT;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC2] = UNIFORMTYPE_UVEC2;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC3] = UNIFORMTYPE_UVEC3;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC4] = UNIFORMTYPE_UVEC4;
 
-        this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = UNIFORMTYPE_TEXTURE2D_SHADOW;
+        this.pcUniformType[gl.SAMPLER_2D_SHADOW] = UNIFORMTYPE_TEXTURE2D_SHADOW;
         this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = UNIFORMTYPE_TEXTURECUBE_SHADOW;
-        this.pcUniformType[gl.SAMPLER_2D_ARRAY]    = UNIFORMTYPE_TEXTURE2D_ARRAY;
-        this.pcUniformType[gl.SAMPLER_3D]          = UNIFORMTYPE_TEXTURE3D;
+        this.pcUniformType[gl.SAMPLER_2D_ARRAY] = UNIFORMTYPE_TEXTURE2D_ARRAY;
+        this.pcUniformType[gl.SAMPLER_3D] = UNIFORMTYPE_TEXTURE3D;
 
-        this.pcUniformType[gl.INT_SAMPLER_2D]           = UNIFORMTYPE_ITEXTURE2D;
-        this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURE2D;
+        this.pcUniformType[gl.INT_SAMPLER_2D] = UNIFORMTYPE_ITEXTURE2D;
+        this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D] = UNIFORMTYPE_UTEXTURE2D;
 
-        this.pcUniformType[gl.INT_SAMPLER_CUBE]         = UNIFORMTYPE_ITEXTURECUBE;
-        this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURECUBE;
+        this.pcUniformType[gl.INT_SAMPLER_CUBE] = UNIFORMTYPE_ITEXTURECUBE;
+        this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D] = UNIFORMTYPE_UTEXTURECUBE;
 
-        this.pcUniformType[gl.INT_SAMPLER_3D]           = UNIFORMTYPE_ITEXTURE3D;
-        this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_3D]  = UNIFORMTYPE_UTEXTURE3D;
+        this.pcUniformType[gl.INT_SAMPLER_3D] = UNIFORMTYPE_ITEXTURE3D;
+        this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_3D] = UNIFORMTYPE_UTEXTURE3D;
 
-        this.pcUniformType[gl.INT_SAMPLER_2D_ARRAY]     = UNIFORMTYPE_ITEXTURE2D_ARRAY;
+        this.pcUniformType[gl.INT_SAMPLER_2D_ARRAY] = UNIFORMTYPE_ITEXTURE2D_ARRAY;
         this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D_ARRAY] = UNIFORMTYPE_UTEXTURE2D_ARRAY;
 
         this.targetToSlot = {};
@@ -476,7 +500,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniform.value = value;
             }
         };
-        this.commitFunction[UNIFORMTYPE_VEC2]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_VEC2] = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
             scopeY = value[1];
@@ -486,7 +510,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[1] = scopeY;
             }
         };
-        this.commitFunction[UNIFORMTYPE_VEC3]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_VEC3] = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
             scopeY = value[1];
@@ -498,13 +522,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[2] = scopeZ;
             }
         };
-        this.commitFunction[UNIFORMTYPE_VEC4]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_VEC4] = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
             scopeY = value[1];
             scopeZ = value[2];
             scopeW = value[3];
-            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
+            if (
+                uniformValue[0] !== scopeX ||
+                uniformValue[1] !== scopeY ||
+                uniformValue[2] !== scopeZ ||
+                uniformValue[3] !== scopeW
+            ) {
                 gl.uniform4fv(uniform.locationId, value);
                 uniformValue[0] = scopeX;
                 uniformValue[1] = scopeY;
@@ -542,7 +571,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
             scopeY = value[1];
             scopeZ = value[2];
             scopeW = value[3];
-            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
+            if (
+                uniformValue[0] !== scopeX ||
+                uniformValue[1] !== scopeY ||
+                uniformValue[2] !== scopeZ ||
+                uniformValue[3] !== scopeW
+            ) {
                 gl.uniform4iv(uniform.locationId, value);
                 uniformValue[0] = scopeX;
                 uniformValue[1] = scopeY;
@@ -551,25 +585,25 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
         };
         this.commitFunction[UNIFORMTYPE_BVEC4] = this.commitFunction[UNIFORMTYPE_IVEC4];
-        this.commitFunction[UNIFORMTYPE_MAT2]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_MAT2] = function (uniform, value) {
             gl.uniformMatrix2fv(uniform.locationId, false, value);
         };
-        this.commitFunction[UNIFORMTYPE_MAT3]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_MAT3] = function (uniform, value) {
             gl.uniformMatrix3fv(uniform.locationId, false, value);
         };
-        this.commitFunction[UNIFORMTYPE_MAT4]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_MAT4] = function (uniform, value) {
             gl.uniformMatrix4fv(uniform.locationId, false, value);
         };
         this.commitFunction[UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
             gl.uniform1fv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_VEC2ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_VEC2ARRAY] = function (uniform, value) {
             gl.uniform2fv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_VEC3ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_VEC3ARRAY] = function (uniform, value) {
             gl.uniform3fv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_VEC4ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_VEC4ARRAY] = function (uniform, value) {
             gl.uniform4fv(uniform.locationId, value);
         };
 
@@ -579,7 +613,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniform.value = value;
             }
         };
-        this.commitFunction[UNIFORMTYPE_UVEC2]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_UVEC2] = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
             scopeY = value[1];
@@ -589,7 +623,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[1] = scopeY;
             }
         };
-        this.commitFunction[UNIFORMTYPE_UVEC3]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_UVEC3] = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
             scopeY = value[1];
@@ -607,7 +641,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
             scopeY = value[1];
             scopeZ = value[2];
             scopeW = value[3];
-            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
+            if (
+                uniformValue[0] !== scopeX ||
+                uniformValue[1] !== scopeY ||
+                uniformValue[2] !== scopeZ ||
+                uniformValue[3] !== scopeW
+            ) {
                 gl.uniform4uiv(uniform.locationId, value);
                 uniformValue[0] = scopeX;
                 uniformValue[1] = scopeY;
@@ -624,31 +663,31 @@ class WebglGraphicsDevice extends GraphicsDevice {
         };
         this.commitFunction[UNIFORMTYPE_BOOLARRAY] = this.commitFunction[UNIFORMTYPE_INTARRAY];
 
-        this.commitFunction[UNIFORMTYPE_IVEC2ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_IVEC2ARRAY] = function (uniform, value) {
             gl.uniform2iv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_UVEC2ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_UVEC2ARRAY] = function (uniform, value) {
             gl.uniform2uiv(uniform.locationId, value);
         };
         this.commitFunction[UNIFORMTYPE_BVEC2ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC2ARRAY];
 
-        this.commitFunction[UNIFORMTYPE_IVEC3ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_IVEC3ARRAY] = function (uniform, value) {
             gl.uniform3iv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_UVEC3ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_UVEC3ARRAY] = function (uniform, value) {
             gl.uniform3uiv(uniform.locationId, value);
         };
         this.commitFunction[UNIFORMTYPE_BVEC3ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC3ARRAY];
 
-        this.commitFunction[UNIFORMTYPE_IVEC4ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_IVEC4ARRAY] = function (uniform, value) {
             gl.uniform4iv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_UVEC4ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_UVEC4ARRAY] = function (uniform, value) {
             gl.uniform4uiv(uniform.locationId, value);
         };
         this.commitFunction[UNIFORMTYPE_BVEC4ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC4ARRAY];
 
-        this.commitFunction[UNIFORMTYPE_MAT4ARRAY]  = function (uniform, value) {
+        this.commitFunction[UNIFORMTYPE_MAT4ARRAY] = function (uniform, value) {
             gl.uniformMatrix4fv(uniform.locationId, false, value);
         };
 
@@ -714,10 +753,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     updateBackbuffer() {
-
-        const resolutionChanged = this.canvas.width !== this.backBufferSize.x || this.canvas.height !== this.backBufferSize.y;
+        const resolutionChanged =
+            this.canvas.width !== this.backBufferSize.x || this.canvas.height !== this.backBufferSize.y;
         if (this._defaultFramebufferChanged || resolutionChanged) {
-
             // if the default framebuffer changes (entering or exiting XR for example)
             if (this._defaultFramebufferChanged) {
                 this.updateBackbufferFormat(this._defaultFramebuffer);
@@ -765,7 +803,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * on WebGL: every uniform buffer is bound as a whole buffer from offset zero (see below).
      */
     setBindGroup(index, bindGroup, offsets) {
-
         // WebGL2 has no bind group object, so we bind each of the bind group's uniform buffers to a
         // uniform buffer binding point directly. The bind group index is used as the binding point,
         // matching the uniform block linking done in WebglShader, and relies on a single uniform
@@ -780,7 +817,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // all uniform buffers in the group would bind to the same point (index), so only a single
         // uniform buffer per bind group is supported (matches the uniform block linking in WebglShader)
-        Debug.assert(buffers.length <= 1, `Bind group at index ${index} has ${buffers.length} uniform buffers, but WebGL2 supports a single uniform buffer per bind group.`, bindGroup);
+        Debug.assert(
+            buffers.length <= 1,
+            `Bind group at index ${index} has ${buffers.length} uniform buffers, but WebGL2 supports a single uniform buffer per bind group.`,
+            bindGroup
+        );
 
         for (let i = 0; i < buffers.length; i++) {
             gl.bindBufferBase(gl.UNIFORM_BUFFER, index, buffers[i].bufferId);
@@ -845,12 +886,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
             const vertexShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT);
 
             const fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
-            const fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT);
+            const fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(
+                gl.FRAGMENT_SHADER,
+                gl.MEDIUM_FLOAT
+            );
 
-            if (vertexShaderPrecisionHighpFloat && vertexShaderPrecisionMediumpFloat && fragmentShaderPrecisionHighpFloat && fragmentShaderPrecisionMediumpFloat) {
-
-                const highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
-                const mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
+            if (
+                vertexShaderPrecisionHighpFloat &&
+                vertexShaderPrecisionMediumpFloat &&
+                fragmentShaderPrecisionHighpFloat &&
+                fragmentShaderPrecisionMediumpFloat
+            ) {
+                const highpAvailable =
+                    vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
+                const mediumpAvailable =
+                    vertexShaderPrecisionMediumpFloat.precision > 0 &&
+                    fragmentShaderPrecisionMediumpFloat.precision > 0;
 
                 if (!highpAvailable) {
                     if (mediumpAvailable) {
@@ -880,7 +931,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // lazy evaluation as this is not typically used
         if (!this._extDisjointTimerQuery) {
             // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than EXT_disjoint_timer_query_webgl2
-            this._extDisjointTimerQuery = this.getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            this._extDisjointTimerQuery = this.getExtension(
+                'EXT_disjoint_timer_query_webgl2',
+                'EXT_disjoint_timer_query'
+            );
         }
         return this._extDisjointTimerQuery;
     }
@@ -917,7 +971,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.supportsDualSourceBlending = !!this.extBlendFuncExtended;
         this.extDrawBuffersIndexed = this.getExtension('OES_draw_buffers_indexed');
         this.supportsIndependentBlending = !!this.extDrawBuffersIndexed;
-        this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
+        this.extTextureFilterAnisotropic = this.getExtension(
+            'EXT_texture_filter_anisotropic',
+            'WEBKIT_EXT_texture_filter_anisotropic'
+        );
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
         this.extMultiDraw = this.getExtension('WEBGL_multi_draw');
@@ -926,8 +983,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // compressed textures
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
         this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
-        this.extCompressedTexturePVRTC = this.getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
-        this.extCompressedTextureS3TC = this.getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+        this.extCompressedTexturePVRTC = this.getExtension(
+            'WEBGL_compressed_texture_pvrtc',
+            'WEBKIT_WEBGL_compressed_texture_pvrtc'
+        );
+        this.extCompressedTextureS3TC = this.getExtension(
+            'WEBGL_compressed_texture_s3tc',
+            'WEBKIT_WEBGL_compressed_texture_s3tc'
+        );
         this.extCompressedTextureS3TC_SRGB = this.getExtension('WEBGL_compressed_texture_s3tc_srgb');
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
@@ -981,8 +1044,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Example UA matches: Starting 'SM' and any combination of letters or numbers:
         // Mozilla/5.0 (Linux, Android 12; SM-G970F Build/SP1A.210812.016; wv)
         const samsungModelRegex = /SM-[a-zA-Z0-9]+/;
-        this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex)) &&
-            !(this.unmaskedRenderer.match(maliRendererRegex));
+        this.supportsGpuParticles =
+            !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex)) &&
+            !this.unmaskedRenderer.match(maliRendererRegex);
 
         ext = this.extTextureFilterAnisotropic;
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
@@ -1042,16 +1106,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.stencilFuncFront = this.stencilFuncBack = FUNC_ALWAYS;
         this.stencilRefFront = this.stencilRefBack = 0;
-        this.stencilMaskFront = this.stencilMaskBack = 0xFF;
-        gl.stencilFunc(gl.ALWAYS, 0, 0xFF);
+        this.stencilMaskFront = this.stencilMaskBack = 0xff;
+        gl.stencilFunc(gl.ALWAYS, 0, 0xff);
 
         this.stencilFailFront = this.stencilFailBack = STENCILOP_KEEP;
         this.stencilZfailFront = this.stencilZfailBack = STENCILOP_KEEP;
         this.stencilZpassFront = this.stencilZpassBack = STENCILOP_KEEP;
-        this.stencilWriteMaskFront = 0xFF;
-        this.stencilWriteMaskBack = 0xFF;
+        this.stencilWriteMaskFront = 0xff;
+        this.stencilWriteMaskBack = 0xff;
         gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
-        gl.stencilMask(0xFF);
+        gl.stencilMask(0xff);
 
         this.alphaToCoverage = false;
         this.raster = true;
@@ -1119,7 +1183,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     loseContext() {
-
         super.loseContext();
 
         // release shaders
@@ -1139,7 +1202,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     restoreContext() {
-
         this.initializeExtensions();
         this.initializeCapabilities();
 
@@ -1162,7 +1224,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the viewport in pixels.
      */
     setViewport(x, y, w, h) {
-        if ((this.vx !== x) || (this.vy !== y) || (this.vw !== w) || (this.vh !== h)) {
+        if (this.vx !== x || this.vy !== y || this.vw !== w || this.vh !== h) {
             this.gl.viewport(x, y, w, h);
             this.vx = x;
             this.vy = y;
@@ -1180,7 +1242,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {number} h - The height of the scissor rectangle in pixels.
      */
     setScissor(x, y, w, h) {
-        if ((this.sx !== x) || (this.sy !== y) || (this.sw !== w) || (this.sh !== h)) {
+        if (this.sx !== x || this.sy !== y || this.sw !== w || this.sh !== h) {
             this.gl.scissor(x, y, w, h);
             this.sx = x;
             this.sy = y;
@@ -1241,29 +1303,30 @@ class WebglGraphicsDevice extends GraphicsDevice {
             if (!dest) {
                 // copying to backbuffer
                 if (!source._colorBuffer) {
-                    Debug.error('Can\'t copy empty color buffer to backbuffer');
+                    Debug.error("Can't copy empty color buffer to backbuffer");
                     return false;
                 }
             } else if (source) {
                 // copying to render target
                 if (!source._colorBuffer || !dest._colorBuffer) {
-                    Debug.error('Can\'t copy color buffer, because one of the render targets doesn\'t have it');
+                    Debug.error("Can't copy color buffer, because one of the render targets doesn't have it");
                     return false;
                 }
                 if (source._colorBuffer._format !== dest._colorBuffer._format) {
-                    Debug.error('Can\'t copy render targets of different color formats');
+                    Debug.error("Can't copy render targets of different color formats");
                     return false;
                 }
             }
         }
         if (depth && source) {
-            if (!source._depth) {   // when depth is automatic, we cannot test the buffer nor its format
+            if (!source._depth) {
+                // when depth is automatic, we cannot test the buffer nor its format
                 if (!source._depthBuffer || !dest._depthBuffer) {
-                    Debug.error('Can\'t copy depth buffer, because one of the render targets doesn\'t have it');
+                    Debug.error("Can't copy depth buffer, because one of the render targets doesn't have it");
                     return false;
                 }
                 if (source._depthBuffer._format !== dest._depthBuffer._format) {
-                    Debug.error('Can\'t copy render targets of different depth formats');
+                    Debug.error("Can't copy render targets of different depth formats");
                     return false;
                 }
             }
@@ -1286,10 +1349,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const w = source ? source.width : dest ? dest.width : this.width;
         const h = source ? source.height : dest ? dest.height : this.height;
 
-        gl.blitFramebuffer(0, 0, w, h,
-            0, 0, w, h,
+        gl.blitFramebuffer(
+            0,
+            0,
+            w,
+            h,
+            0,
+            0,
+            w,
+            h,
             (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
-            gl.NEAREST);
+            gl.NEAREST
+        );
 
         // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
         this.renderTarget = prevRt;
@@ -1330,13 +1401,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // wrap the source in a render target so it can be read from a framebuffer (mip level and
         // face are selected by the render target). Reuse a caller-supplied one if provided, as an
         // optimization for high-frequency copies.
-        const sourceRenderTarget = options.sourceRenderTarget ?? new RenderTarget({
-            name: 'TextureCopySource',
-            colorBuffer: source,
-            depth: false,
-            face: face,
-            mipLevel: sourceMipLevel
-        });
+        const sourceRenderTarget =
+            options.sourceRenderTarget ??
+            new RenderTarget({
+                name: 'TextureCopySource',
+                colorBuffer: source,
+                depth: false,
+                face: face,
+                mipLevel: sourceMipLevel
+            });
 
         const prevRt = this.renderTarget;
 
@@ -1391,7 +1464,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     startRenderPass(renderPass) {
-
         // set up render target
         const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
@@ -1426,8 +1498,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // the per-attachment path below instead.
         const colorBufferCount = rt._colorBuffers?.length ?? 0;
         const colorOps = renderPass.colorOps;
-        const useClearBuffers = colorBufferCount > 1 ||
-            (colorBufferCount === 1 && isIntegerPixelFormat(rt._colorBuffers[0].format));
+        const useClearBuffers =
+            colorBufferCount > 1 || (colorBufferCount === 1 && isIntegerPixelFormat(rt._colorBuffers[0].format));
         if (!useClearBuffers && colorOps?.clear) {
             clearFlags |= CLEARFLAG_COLOR;
             const { clearValue } = colorOps;
@@ -1461,7 +1533,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             for (let i = 0; i < colorBufferCount; i++) {
                 const colorOps = colorArrayOps[i];
                 if (colorOps?.clear) {
-
                     if (!writeMasksReset) {
                         this.setBlendState(BlendState.NOBLEND);
                         writeMasksReset = true;
@@ -1469,8 +1540,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                     const { clearValue } = colorOps;
                     const formatInfo = pixelFormatInfo.get(rt._colorBuffers[i].format);
-                    const clearValueArray = formatInfo?.isUint ? _attachmentClearValueUint :
-                        (formatInfo?.isInt ? _attachmentClearValueInt : _attachmentClearValue);
+                    const clearValueArray = formatInfo?.isUint
+                        ? _attachmentClearValueUint
+                        : formatInfo?.isInt
+                          ? _attachmentClearValueInt
+                          : _attachmentClearValue;
                     clearValueArray[0] = clearValue.r;
                     clearValueArray[1] = clearValue.g;
                     clearValueArray[2] = clearValue.b;
@@ -1504,7 +1578,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     endRenderPass(renderPass) {
-
         DebugGraphics.pushGpuMarker(this, 'END-PASS');
 
         this.unbindVertexArray();
@@ -1512,7 +1585,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const target = this.renderTarget;
         const colorBufferCount = renderPass.colorArrayOps.length;
         if (target) {
-
             // invalidate buffers to stop them being written to on tiled architectures
             invalidateAttachments.length = 0;
             const gl = this.gl;
@@ -1538,7 +1610,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             if (invalidateAttachments.length > 0) {
-
                 // invalidate the whole buffer
                 // TODO: we could handle viewport invalidation as well
                 if (renderPass.fullSizeClearRect) {
@@ -1566,7 +1637,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 if (colorOps.genMipmaps) {
                     const colorBuffer = target._colorBuffers[i];
                     if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
-
                         DebugGraphics.pushGpuMarker(this, `MIPS${i}`);
 
                         this.activeTexture(this.maxCombinedTextures - 1);
@@ -1582,7 +1652,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
 
         DebugGraphics.popGpuMarker(this);
-        DebugGraphics.popGpuMarker(this);   // pop the pass-start marker
+        DebugGraphics.popGpuMarker(this); // pop the pass-start marker
     }
 
     set defaultFramebuffer(value) {
@@ -1642,7 +1712,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     updateEnd() {
-
         DebugGraphics.pushGpuMarker(this, 'UPDATE-END');
 
         this.unbindVertexArray();
@@ -1803,7 +1872,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.texParameteri(target, gl.TEXTURE_WRAP_R, this.glAddress[texture._addressW]);
         }
         if (flags & TEXPROPERTY_COMPARE_ON_READ) {
-            gl.texParameteri(target, gl.TEXTURE_COMPARE_MODE, texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE);
+            gl.texParameteri(
+                target,
+                gl.TEXTURE_COMPARE_MODE,
+                texture._compareOnRead ? gl.COMPARE_REF_TO_TEXTURE : gl.NONE
+            );
         }
         if (flags & TEXPROPERTY_COMPARE_FUNC) {
             gl.texParameteri(target, gl.TEXTURE_COMPARE_FUNC, this.glComparison[texture._compareFunc]);
@@ -1811,7 +1884,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (flags & TEXPROPERTY_ANISOTROPY) {
             const ext = this.extTextureFilterAnisotropic;
             if (ext) {
-                gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy));
+                gl.texParameterf(
+                    target,
+                    ext.TEXTURE_MAX_ANISOTROPY_EXT,
+                    math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy)
+                );
             }
         }
     }
@@ -1824,14 +1901,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     setTexture(texture, textureUnit) {
-
         const impl = texture.impl;
         if (!impl._glTexture) {
             impl.initialize(this, texture);
         }
 
         if (impl.dirtyParameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
-
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
 
@@ -1903,13 +1978,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     // function creates VertexArrayObject from list of vertex buffers
     createVertexArray(vertexBuffers) {
-
         let key, vao;
 
         // only use cache when more than 1 vertex buffer, otherwise it's unique
         const useCache = vertexBuffers.length > 1;
         if (useCache) {
-
             key = this._vertexArrayKey(vertexBuffers);
 
             // try to get VAO from cache
@@ -1918,7 +1991,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // need to create new vao
         if (!vao) {
-
             // create VA object
             const gl = this.gl;
             vao = gl.createVertexArray();
@@ -1929,7 +2001,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             let locZero = false;
             for (let i = 0; i < vertexBuffers.length; i++) {
-
                 // bind buffer
                 const vertexBuffer = vertexBuffers[i];
                 gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer.impl.bufferId);
@@ -1947,7 +2018,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     if (e.asInt) {
                         gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
                     } else {
-                        gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                        gl.vertexAttribPointer(
+                            loc,
+                            e.numComponents,
+                            this.glType[e.dataType],
+                            e.normalize,
+                            e.stride,
+                            e.offset
+                        );
                     }
 
                     gl.enableVertexAttribArray(loc);
@@ -1974,7 +2052,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             if (!locZero) {
-                Debug.warn('No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15');
+                Debug.warn(
+                    'No vertex attribute is mapped to location 0, which might cause compatibility issues on Safari on MacOS - please use attribute SEMANTIC_POSITION or SEMANTIC_ATTR15'
+                );
             }
         }
 
@@ -1995,7 +2075,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // create VAO for specified vertex buffers
         if (this.vertexBuffers.length === 1) {
-
             // single VB keeps its VAO
             const vertexBuffer = this.vertexBuffers[0];
             Debug.assert(vertexBuffer.device === this, 'The VertexBuffer was not created using current GraphicsDevice');
@@ -2022,7 +2101,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     _multiDrawLoopFallback(mode, primitive, indexBuffer, numInstances, drawCommands) {
-
         const gl = this.gl;
 
         if (primitive.indexed) {
@@ -2054,7 +2132,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
-
         const shader = this.shader;
         if (shader) {
             this.activateShader();
@@ -2066,11 +2143,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     Debug.call(() => {
                         if (this.blendState.usesDualSourceBlending) {
                             const isBackbuffer = !this.renderTarget || this.renderTarget === this.backBuffer;
-                            const colorAttachmentCount = isBackbuffer ? 1 : (this.renderTarget._colorBuffers?.length ?? 0);
-                            Debug.assert(shader.definition.useDualSourceBlending,
-                                'A BlendState using secondary source factors requires a dual-source blending shader.');
-                            Debug.assert(colorAttachmentCount === 1,
-                                'Dual-source blending requires exactly one color attachment.');
+                            const colorAttachmentCount = isBackbuffer
+                                ? 1
+                                : (this.renderTarget._colorBuffers?.length ?? 0);
+                            Debug.assert(
+                                shader.definition.useDualSourceBlending,
+                                'A BlendState using secondary source factors requires a dual-source blending shader.'
+                            );
+                            Debug.assert(
+                                colorAttachmentCount === 1,
+                                'Dual-source blending requires exactly one color attachment.'
+                            );
                         }
                     });
 
@@ -2086,23 +2169,35 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     const sampler = samplers[i];
                     let samplerValue = sampler.scopeId.value;
                     if (!samplerValue) {
-
                         const samplerName = sampler.scopeId.name;
-                        Debug.assert(samplerName !== 'texture_grabPass', 'Engine provided texture with sampler name \'texture_grabPass\' is not longer supported, use \'uSceneColorMap\' instead');
-                        Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
+                        Debug.assert(
+                            samplerName !== 'texture_grabPass',
+                            "Engine provided texture with sampler name 'texture_grabPass' is not longer supported, use 'uSceneColorMap' instead"
+                        );
+                        Debug.assert(
+                            samplerName !== 'uDepthMap',
+                            "Engine provided texture with sampler name 'uDepthMap' is not longer supported, use 'uSceneDepthMap' instead"
+                        );
 
                         if (samplerName === 'uSceneDepthMap') {
-                            Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(
+                                `A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`
+                            );
                             samplerValue = getBuiltInTexture(this, 'white');
                         }
                         if (samplerName === 'uSceneColorMap') {
-                            Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
+                            Debug.errorOnce(
+                                `A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`
+                            );
                             samplerValue = getBuiltInTexture(this, 'pink');
                         }
 
                         // missing generic texture
                         if (!samplerValue) {
-                            Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`, shader);
+                            Debug.errorOnce(
+                                `Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`,
+                                shader
+                            );
                             samplerValue = getBuiltInTexture(this, 'pink');
                         }
                     }
@@ -2116,7 +2211,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                             // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
                             if (this.renderTarget._samples < 2) {
                                 if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
-                                    Debug.error('Trying to bind current color buffer as a texture', { renderTarget: this.renderTarget, texture });
+                                    Debug.error('Trying to bind current color buffer as a texture', {
+                                        renderTarget: this.renderTarget,
+                                        texture
+                                    });
                                 } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
                                     Debug.error('Trying to bind current depth buffer as a texture', { texture });
                                 }
@@ -2129,7 +2227,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                             sampler.slot = textureUnit;
                         }
                         textureUnit++;
-                    } else { // Array
+                    } else {
+                        // Array
                         sampler.array.length = 0;
                         const numTextures = samplerValue.length;
                         for (let j = 0; j < numTextures; j++) {
@@ -2152,7 +2251,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     const programVersion = scopeId.versionObject.version;
 
                     // Check the value is valid
-                    if (uniformVersion.globalId !== programVersion.globalId || uniformVersion.revision !== programVersion.revision) {
+                    if (
+                        uniformVersion.globalId !== programVersion.globalId ||
+                        uniformVersion.revision !== programVersion.revision
+                    ) {
                         uniformVersion.globalId = programVersion.globalId;
                         uniformVersion.revision = programVersion.revision;
 
@@ -2161,7 +2263,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         if (value !== null && value !== undefined) {
                             this.commitFunction[uniform.dataType](uniform, value);
                         } else {
-                            Debug.warnOnce(`Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`);
+                            Debug.warnOnce(
+                                `Shader [${shader.label}] requires uniform [${uniform.scopeId.name}] which has not been set, while rendering [${DebugGraphics.toString()}]`
+                            );
                         }
                     }
                 }
@@ -2178,7 +2282,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const mode = this.glPrimitive[primitive.type];
                 const count = primitive.count;
 
-                if (drawCommands) { // multi-draw path
+                if (drawCommands) {
+                    // multi-draw path
 
                     // multi-draw extension is supported
                     if (this.extMultiDraw) {
@@ -2187,15 +2292,49 @@ class WebglGraphicsDevice extends GraphicsDevice {
                             const format = indexBuffer.impl.glFormat;
 
                             if (numInstances > 0) {
-                                this.extMultiDraw.multiDrawElementsInstancedWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, impl.glInstanceCounts, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawElementsInstancedWEBGL(
+                                    mode,
+                                    impl.glCounts,
+                                    0,
+                                    format,
+                                    impl.glOffsetsBytes,
+                                    0,
+                                    impl.glInstanceCounts,
+                                    0,
+                                    drawCommands.count
+                                );
                             } else {
-                                this.extMultiDraw.multiDrawElementsWEBGL(mode, impl.glCounts, 0, format, impl.glOffsetsBytes, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawElementsWEBGL(
+                                    mode,
+                                    impl.glCounts,
+                                    0,
+                                    format,
+                                    impl.glOffsetsBytes,
+                                    0,
+                                    drawCommands.count
+                                );
                             }
                         } else {
                             if (numInstances > 0) {
-                                this.extMultiDraw.multiDrawArraysInstancedWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, impl.glInstanceCounts, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawArraysInstancedWEBGL(
+                                    mode,
+                                    impl.glOffsetsBytes,
+                                    0,
+                                    impl.glCounts,
+                                    0,
+                                    impl.glInstanceCounts,
+                                    0,
+                                    drawCommands.count
+                                );
                             } else {
-                                this.extMultiDraw.multiDrawArraysWEBGL(mode, impl.glOffsetsBytes, 0, impl.glCounts, 0, drawCommands.count);
+                                this.extMultiDraw.multiDrawArraysWEBGL(
+                                    mode,
+                                    impl.glOffsetsBytes,
+                                    0,
+                                    impl.glCounts,
+                                    0,
+                                    drawCommands.count
+                                );
                             }
                         }
                     } else {
@@ -2204,7 +2343,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 } else {
                     if (primitive.indexed) {
-                        Debug.assert(indexBuffer.device === this, 'The IndexBuffer was not created using current GraphicsDevice');
+                        Debug.assert(
+                            indexBuffer.device === this,
+                            'The IndexBuffer was not created using current GraphicsDevice'
+                        );
 
                         const format = indexBuffer.impl.glFormat;
                         const offset = primitive.base * indexBuffer.bytesPerIndex;
@@ -2305,7 +2447,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 const a = color[3];
 
                 const c = this.clearColor;
-                if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
+                if (r !== c.r || g !== c.g || b !== c.b || a !== c.a) {
                     this.gl.clearColor(r, g, b, a);
                     this.clearColor.set(r, g, b, a);
                 }
@@ -2333,9 +2475,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     this.clearStencil = stencil;
                 }
 
-                gl.stencilMask(0xFF);
-                this.stencilWriteMaskFront = 0xFF;
-                this.stencilWriteMaskBack = 0xFF;
+                gl.stencilMask(0xff);
+                this.stencilWriteMaskFront = 0xff;
+                this.stencilWriteMaskBack = 0xff;
             }
 
             // Clear the frame buffer
@@ -2435,17 +2577,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     readTextureAsync(texture, x, y, width, height, options) {
-
         const face = options.face ?? 0;
         const mipLevel = options.mipLevel ?? 0;
 
         // create a temporary render target if needed
-        const renderTarget = options.renderTarget ?? new RenderTarget({
-            colorBuffer: texture,
-            depth: false,
-            face: face,
-            mipLevel: mipLevel
-        });
+        const renderTarget =
+            options.renderTarget ??
+            new RenderTarget({
+                colorBuffer: texture,
+                depth: false,
+                face: face,
+                mipLevel: mipLevel
+            });
         Debug.assert(renderTarget.colorBuffer === texture);
 
         // Check if this format requires RGBA readback (WebGL only guarantees RGBA/UNSIGNED_BYTE)
@@ -2454,14 +2597,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Use caller's buffer or allocate output buffer in the user's expected format
         const ArrayType = getPixelFormatArrayType(texture._format);
-        const outputData = options.data ?? new ArrayType(
-            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
-        );
+        const outputData =
+            options.data ??
+            new ArrayType(
+                TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
+            );
 
         // For formats requiring RGBA readback, allocate a larger RGBA buffer
-        const readBuffer = needsRgbaReadback ?
-            new Uint8Array(width * height * 4) :
-            outputData;
+        const readBuffer = needsRgbaReadback ? new Uint8Array(width * height * 4) : outputData;
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
@@ -2475,29 +2618,30 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new Promise((resolve, reject) => {
             const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback);
 
-            readPromise.then((data) => {
+            readPromise
+                .then((data) => {
+                    // return if the device was destroyed
+                    if (this._destroyed) return;
 
-                // return if the device was destroyed
-                if (this._destroyed) return;
-
-                // destroy RT if we created it
-                if (!options.renderTarget) {
-                    renderTarget.destroy();
-                }
-
-                // Extract channels from RGBA data if needed
-                if (needsRgbaReadback) {
-                    const pixelCount = width * height;
-                    for (let i = 0; i < pixelCount; i++) {
-                        for (let c = 0; c < rgbaChannels; c++) {
-                            outputData[i * rgbaChannels + c] = data[i * 4 + c];
-                        }
+                    // destroy RT if we created it
+                    if (!options.renderTarget) {
+                        renderTarget.destroy();
                     }
-                    resolve(outputData);
-                } else {
-                    resolve(data);
-                }
-            }).catch(reject);
+
+                    // Extract channels from RGBA data if needed
+                    if (needsRgbaReadback) {
+                        const pixelCount = width * height;
+                        for (let i = 0; i < pixelCount; i++) {
+                            for (let c = 0; c < rgbaChannels; c++) {
+                                outputData[i * rgbaChannels + c] = data[i * 4 + c];
+                            }
+                        }
+                        resolve(outputData);
+                    } else {
+                        resolve(data);
+                    }
+                })
+                .catch(reject);
         });
     }
 
@@ -2552,16 +2696,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     setTransformFeedbackBuffers(buffers) {
-
         Debug.call(() => {
             buffers?.forEach((buffer, index) => {
-                Debug.assert(buffer, `Transform feedback buffer at index ${index} is null - a buffer is required for every varying the shader captures.`);
+                Debug.assert(
+                    buffer,
+                    `Transform feedback buffer at index ${index} is null - a buffer is required for every varying the shader captures.`
+                );
 
                 // A vertex buffer only allocates its GPU storage when it is first given data, so a
                 // buffer created without any is still empty here. Transform feedback would fail on
                 // beginTransformFeedback with an error naming neither the buffer nor the cause, so
                 // catch it while the buffer is still identifiable.
-                Debug.assert(buffer?.impl.initialized, `Transform feedback buffer ${buffer?.id} at index ${index} has no GPU storage allocated, so it cannot be written to. A vertex buffer allocates its storage when first given data, so pass initial data when creating a buffer which only transform feedback writes to.`, buffer);
+                Debug.assert(
+                    buffer?.impl.initialized,
+                    `Transform feedback buffer ${buffer?.id} at index ${index} has no GPU storage allocated, so it cannot be written to. A vertex buffer allocates its storage when first given data, so pass initial data when creating a buffer which only transform feedback writes to.`,
+                    buffer
+                );
             });
         });
 
@@ -2613,8 +2763,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     setStencilFunc(func, ref, mask) {
-        if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
-            this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
+        if (
+            this.stencilFuncFront !== func ||
+            this.stencilRefFront !== ref ||
+            this.stencilMaskFront !== mask ||
+            this.stencilFuncBack !== func ||
+            this.stencilRefBack !== ref ||
+            this.stencilMaskBack !== mask
+        ) {
             this.gl.stencilFunc(this.glComparison[func], ref, mask);
             this.stencilFuncFront = this.stencilFuncBack = func;
             this.stencilRefFront = this.stencilRefBack = ref;
@@ -2643,8 +2799,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     setStencilOperation(fail, zfail, zpass, writeMask) {
-        if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
-            this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
+        if (
+            this.stencilFailFront !== fail ||
+            this.stencilZfailFront !== zfail ||
+            this.stencilZpassFront !== zpass ||
+            this.stencilFailBack !== fail ||
+            this.stencilZfailBack !== zfail ||
+            this.stencilZpassBack !== zpass
+        ) {
             this.gl.stencilOp(this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
             this.stencilFailFront = this.stencilFailBack = fail;
             this.stencilZfailFront = this.stencilZfailBack = zfail;
@@ -2659,7 +2821,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
-            this.gl.stencilOpSeparate(this.gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+            this.gl.stencilOpSeparate(
+                this.gl.FRONT,
+                this.glStencilOp[fail],
+                this.glStencilOp[zfail],
+                this.glStencilOp[zpass]
+            );
             this.stencilFailFront = fail;
             this.stencilZfailFront = zfail;
             this.stencilZpassFront = zpass;
@@ -2672,7 +2839,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
         if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
-            this.gl.stencilOpSeparate(this.gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
+            this.gl.stencilOpSeparate(
+                this.gl.BACK,
+                this.glStencilOp[fail],
+                this.glStencilOp[zfail],
+                this.glStencilOp[zpass]
+            );
             this.stencilFailBack = fail;
             this.stencilZfailBack = zfail;
             this.stencilZpassBack = zpass;
@@ -2714,11 +2886,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         // blend factors
-        if (!prevState || prevState.colorSrcFactor !== colorSrcFactor || prevState.colorDstFactor !== colorDstFactor ||
-            prevState.alphaSrcFactor !== alphaSrcFactor || prevState.alphaDstFactor !== alphaDstFactor) {
-
-            gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
-                this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+        if (
+            !prevState ||
+            prevState.colorSrcFactor !== colorSrcFactor ||
+            prevState.colorDstFactor !== colorDstFactor ||
+            prevState.alphaSrcFactor !== alphaSrcFactor ||
+            prevState.alphaDstFactor !== alphaDstFactor
+        ) {
+            gl.blendFuncSeparate(
+                this.glBlendFunctionColor[colorSrcFactor],
+                this.glBlendFunctionColor[colorDstFactor],
+                this.glBlendFunctionAlpha[alphaSrcFactor],
+                this.glBlendFunctionAlpha[alphaDstFactor]
+            );
         }
 
         // color write
@@ -2752,24 +2932,37 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const glBlendEquation = this.glBlendEquation;
         ext.blendEquationSeparateiOES(index, glBlendEquation[colorOp], glBlendEquation[alphaOp]);
 
-        ext.blendFuncSeparateiOES(index, this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
-            this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+        ext.blendFuncSeparateiOES(
+            index,
+            this.glBlendFunctionColor[colorSrcFactor],
+            this.glBlendFunctionColor[colorDstFactor],
+            this.glBlendFunctionAlpha[alphaSrcFactor],
+            this.glBlendFunctionAlpha[alphaDstFactor]
+        );
 
-        ext.colorMaskiOES(index, blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+        ext.colorMaskiOES(
+            index,
+            blendState.redWrite,
+            blendState.greenWrite,
+            blendState.blueWrite,
+            blendState.alphaWrite
+        );
     }
 
     setBlendState(blendState) {
-        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
-            'Dual-source blending is not supported by this graphics device.');
+        Debug.assert(
+            !blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.'
+        );
 
         const currentBlendState = this.blendState;
         if (!currentBlendState.equals(blendState)) {
-
             // when either the new or the currently applied state uses independent blending, the
             // state of the individual draw buffers needs to be set explicitly
-            if ((blendState.hasAttachmentOverrides || currentBlendState.hasAttachmentOverrides) &&
-                this.supportsIndependentBlending) {
-
+            if (
+                (blendState.hasAttachmentOverrides || currentBlendState.hasAttachmentOverrides) &&
+                this.supportsIndependentBlending
+            ) {
                 // Apply attachment 0 to all draw buffers using the non-indexed entry points, which
                 // by definition affect every one of them. This is a single set of calls which
                 // covers attachment 0, every attachment inheriting it, and any stale independent
@@ -2790,12 +2983,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         }
                     }
                 }
-
             } else {
-
                 Debug.call(() => {
                     if (blendState.hasAttachmentOverrides) {
-                        Debug.warnOnce('BlendState uses independent blending, but the device does not support it (the OES_draw_buffers_indexed extension is not available). The blend state of the attachment 0 is used for all attachments.');
+                        Debug.warnOnce(
+                            'BlendState uses independent blending, but the device does not support it (the OES_draw_buffers_indexed extension is not available). The blend state of the attachment 0 is used for all attachments.'
+                        );
                     }
                 });
 
@@ -2818,7 +3011,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setBlendColor(r, g, b, a) {
         const c = this.blendColor;
-        if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
+        if (r !== c.r || g !== c.g || b !== c.b || a !== c.a) {
             this.gl.blendColor(r, g, b, a);
             c.set(r, g, b, a);
         }
@@ -2828,22 +3021,34 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (stencilFront || stencilBack) {
             this.setStencilTest(true);
             if (stencilFront === stencilBack) {
-
                 // identical front/back stencil
                 this.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                this.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
-
+                this.setStencilOperation(
+                    stencilFront.fail,
+                    stencilFront.zfail,
+                    stencilFront.zpass,
+                    stencilFront.writeMask
+                );
             } else {
-
                 // front
                 stencilFront ??= StencilParameters.DEFAULT;
                 this.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
-                this.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+                this.setStencilOperationFront(
+                    stencilFront.fail,
+                    stencilFront.zfail,
+                    stencilFront.zpass,
+                    stencilFront.writeMask
+                );
 
                 // back
                 stencilBack ??= StencilParameters.DEFAULT;
                 this.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
-                this.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
+                this.setStencilOperationBack(
+                    stencilBack.fail,
+                    stencilBack.zfail,
+                    stencilBack.zpass,
+                    stencilBack.writeMask
+                );
             }
         } else {
             this.setStencilTest(false);
@@ -2884,7 +3089,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // depth bias
             const { depthBias, depthBiasSlope } = depthState;
             if (depthBias || depthBiasSlope) {
-
                 // enable bias
                 if (!this.depthBiasEnabled) {
                     this.depthBiasEnabled = true;
@@ -2893,9 +3097,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 // values
                 gl.polygonOffset(depthBiasSlope, depthBias);
-
             } else {
-
                 // disable bias
                 if (this.depthBiasEnabled) {
                     this.depthBiasEnabled = false;
@@ -2947,7 +3149,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (shader !== this.shader) {
             this.shader = shader;
             this.shaderAsyncCompile = asyncCompile;
-            this.shaderValid = undefined;   // need to run activation / validation
+            this.shaderValid = undefined; // need to run activation / validation
 
             // #if _PROFILER
             this._shaderSwitchesPerFrame++;
@@ -2956,18 +3158,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     activateShader() {
-
         const { shader } = this;
         const { impl } = shader;
         if (this.shaderValid === undefined) {
-
             if (shader.failed) {
                 this.shaderValid = false;
             } else if (!shader.ready) {
-
                 // if the shader is async compiled and can be skipped if not ready
                 if (this.shaderAsyncCompile) {
-
                     // if the shader is linked, finalize it
                     if (impl.isLinked(this)) {
                         if (!impl.finalize(this, shader)) {
@@ -2978,9 +3176,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         // skip the async shader rendering
                         this.shaderValid = false;
                     }
-
                 } else {
-
                     // this cannot be skipped, wait for the shader to be ready
                     if (!impl.finalize(this, shader)) {
                         shader.failed = true;

@@ -64,12 +64,21 @@ function createCalculator(orientation) {
     const b = AXIS_MAPPINGS[OPPOSITE_ORIENTATION[orientation]];
 
     // Calculates the left/top extent of an element based on its position and pivot value
-    function minExtentA(element, size) {return -size[a.size] * element.pivot[a.axis]; }  // eslint-disable-line
-    function minExtentB(element, size) { return -size[b.size] * element.pivot[b.axis]; } // eslint-disable-line
+    function minExtentA(element, size) {
+        return -size[a.size] * element.pivot[a.axis];
+    }
+    function minExtentB(element, size) {
+        return -size[b.size] * element.pivot[b.axis];
+    }
 
     // Calculates the right/bottom extent of an element based on its position and pivot value
-    function maxExtentA(element, size) { return  size[a.size] * (1 - element.pivot[a.axis]); } // eslint-disable-line
-    function maxExtentB(element, size) { return  size[b.size] * (1 - element.pivot[b.axis]); } // eslint-disable-line
+    function maxExtentA(element, size) {
+        return size[a.size] * (1 - element.pivot[a.axis]);
+    }
+    // eslint-disable-next-line no-unused-vars
+    function maxExtentB(element, size) {
+        return size[b.size] * (1 - element.pivot[b.axis]);
+    }
 
     function calculateAll(allElements, layoutOptions) {
         allElements = allElements.filter(shouldIncludeInLayout);
@@ -122,7 +131,7 @@ function createCalculator(orientation) {
         const lines = [[]];
         const sizes = getElementSizeProperties(allElements);
         let runningSize = 0;
-        const allowOverrun = (options[a.fitting] === FITTING_SHRINK);
+        const allowOverrun = options[a.fitting] === FITTING_SHRINK;
 
         for (let i = 0; i < allElements.length; ++i) {
             if (lines[lines.length - 1].length > 0) {
@@ -153,11 +162,13 @@ function createCalculator(orientation) {
     }
 
     function reverseLinesIfRequired(lines) {
-        const reverseAxisA = (options.orientation === ORIENTATION_HORIZONTAL && options.reverseX) ||
-                             (options.orientation === ORIENTATION_VERTICAL   && options.reverseY);
+        const reverseAxisA =
+            (options.orientation === ORIENTATION_HORIZONTAL && options.reverseX) ||
+            (options.orientation === ORIENTATION_VERTICAL && options.reverseY);
 
-        const reverseAxisB = (options.orientation === ORIENTATION_HORIZONTAL && options.reverseY) ||
-                             (options.orientation === ORIENTATION_VERTICAL   && options.reverseX);
+        const reverseAxisB =
+            (options.orientation === ORIENTATION_HORIZONTAL && options.reverseY) ||
+            (options.orientation === ORIENTATION_VERTICAL && options.reverseX);
 
         if (reverseAxisA) {
             for (let lineIndex = 0; lineIndex < lines.length; ++lineIndex) {
@@ -183,7 +194,11 @@ function createCalculator(orientation) {
             const line = lines[lineIndex];
             const sizesThisLine = getElementSizeProperties(line);
             const idealRequiredSpace = calculateTotalSpace(sizesThisLine, a);
-            const fittingAction = determineFittingAction(options[a.fitting], idealRequiredSpace, availableSpace[a.axis]);
+            const fittingAction = determineFittingAction(
+                options[a.fitting],
+                idealRequiredSpace,
+                availableSpace[a.axis]
+            );
 
             if (fittingAction === FITTING_ACTION.APPLY_STRETCHING) {
                 stretchSizesToFitContainer(sizesThisLine, idealRequiredSpace, a);
@@ -313,7 +328,12 @@ function createCalculator(orientation) {
             // Work out how much we ideally want to stretch this element by, based
             // on the amount of space remaining and the fitting proportion value that
             // was specified.
-            const targetIncrease = calculateAdjustment(index, remainingUndershoot, fittingProportions, fittingProportionSums);
+            const targetIncrease = calculateAdjustment(
+                index,
+                remainingUndershoot,
+                fittingProportions,
+                fittingProportionSums
+            );
             const targetSize = sizesThisLine[index][axis.size] + targetIncrease;
 
             // Work out how much we're actually able to stretch this element by,
@@ -354,7 +374,12 @@ function createCalculator(orientation) {
             // value of, say, 0.4, ends up rendering very small when shrinking is
             // being applied. Using the inverse means that the balance of sizes
             // between elements is similar for both the Stretch and Shrink modes.
-            const targetReduction = calculateAdjustment(index, remainingOvershoot, inverseFittingProportions, inverseFittingProportionSums);
+            const targetReduction = calculateAdjustment(
+                index,
+                remainingOvershoot,
+                inverseFittingProportions,
+                inverseFittingProportionSums
+            );
             const targetSize = sizesThisLine[index][axis.size] - targetReduction;
 
             const minSize = sizesThisLine[index][axis.minSize];
@@ -377,7 +402,7 @@ function createCalculator(orientation) {
             return remainingAdjustment;
         }
 
-        return remainingAdjustment * proportion / sumOfRemainingProportions;
+        return (remainingAdjustment * proportion) / sumOfRemainingProportions;
     }
 
     // Calculate base positions based on the element sizes and spacing.
@@ -450,11 +475,12 @@ function createCalculator(orientation) {
             const sizesThisLine = sizes[lineIndex];
             const positionsThisLine = positions[lineIndex];
 
-            const axisAOffset = (availableSpace[a.axis] - line[a.size])  * alignmentA + paddingA;
+            const axisAOffset = (availableSpace[a.axis] - line[a.size]) * alignmentA + paddingA;
             const axisBOffset = (availableSpace[b.axis] - lines[b.size]) * alignmentB + paddingB;
 
             for (let elementIndex = 0; elementIndex < line.length; ++elementIndex) {
-                const withinLineAxisBOffset = (line[b.size] - sizesThisLine[elementIndex][b.size]) * options.alignment[b.axis];
+                const withinLineAxisBOffset =
+                    (line[b.size] - sizesThisLine[elementIndex][b.size]) * options.alignment[b.axis];
 
                 positionsThisLine[elementIndex][a.axis] += axisAOffset;
                 positionsThisLine[elementIndex][b.axis] += axisBOffset + withinLineAxisBOffset;
@@ -500,12 +526,7 @@ function createCalculator(orientation) {
         const yOffset = (availableSpace.y - layoutHeight) * options.alignment.y + options.padding.y;
 
         return {
-            bounds: new Vec4(
-                xOffset,
-                yOffset,
-                layoutWidth,
-                layoutHeight
-            )
+            bounds: new Vec4(xOffset, yOffset, layoutWidth, layoutHeight)
         };
     }
 
@@ -517,13 +538,13 @@ function createCalculator(orientation) {
 
         for (let i = 0; i < elements.length; ++i) {
             const element = elements[i];
-            const minWidth  = Math.max(getProperty(element, 'minWidth'), 0);
+            const minWidth = Math.max(getProperty(element, 'minWidth'), 0);
             const minHeight = Math.max(getProperty(element, 'minHeight'), 0);
-            const maxWidth  = Math.max(getProperty(element, 'maxWidth'), minWidth);
+            const maxWidth = Math.max(getProperty(element, 'maxWidth'), minWidth);
             const maxHeight = Math.max(getProperty(element, 'maxHeight'), minHeight);
-            const width  = clamp(getProperty(element, 'width'), minWidth, maxWidth);
+            const width = clamp(getProperty(element, 'width'), minWidth, maxWidth);
             const height = clamp(getProperty(element, 'height'), minHeight, maxHeight);
-            const fitWidthProportion  = getProperty(element, 'fitWidthProportion');
+            const fitWidthProportion = getProperty(element, 'fitWidthProportion');
             const fitHeightProportion = getProperty(element, 'fitHeightProportion');
 
             sizeProperties.push({
@@ -549,7 +570,12 @@ function createCalculator(orientation) {
         const layoutChildComponent = element.entity.layoutchild;
 
         // First attempt to get the value from the element's LayoutChildComponent, if present.
-        if (layoutChildComponent && layoutChildComponent.enabled && layoutChildComponent[propertyName] !== undefined && layoutChildComponent[propertyName] !== null) {
+        if (
+            layoutChildComponent &&
+            layoutChildComponent.enabled &&
+            layoutChildComponent[propertyName] !== undefined &&
+            layoutChildComponent[propertyName] !== null
+        ) {
             return layoutChildComponent[propertyName];
         } else if (element[propertyName] !== undefined) {
             return element[propertyName];
@@ -606,11 +632,11 @@ function createCalculator(orientation) {
         items.forEach(assignIndex);
 
         return items
-        .slice()
-        .sort((itemA, itemB) => {
-            return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
-        })
-        .map(getIndex);
+            .slice()
+            .sort((itemA, itemB) => {
+                return descending ? itemB[orderBy] - itemA[orderBy] : itemA[orderBy] - itemB[orderBy];
+            })
+            .map(getIndex);
     }
 
     function assignIndex(item, index) {

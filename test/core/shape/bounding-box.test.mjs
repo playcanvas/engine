@@ -4,9 +4,7 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 
 describe('BoundingBox', function () {
-
     describe('#containsPoint', function () {
-
         it('returns true for point at center', function () {
             const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
             const point = new Vec3(0, 0, 0);
@@ -121,11 +119,9 @@ describe('BoundingBox', function () {
             expect(box.containsPoint(new Vec3(0, 5.1, 0))).to.equal(false);
             expect(box.containsPoint(new Vec3(0, 0, 10.1))).to.equal(false);
         });
-
     });
 
     describe('#closestPoint', function () {
-
         it('returns the point itself when inside the box', function () {
             const box = new BoundingBox(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
             const point = new Vec3(0.5, 0.5, 0.5);
@@ -295,7 +291,5 @@ describe('BoundingBox', function () {
             expect(result.y).to.equal(1);
             expect(result.z).to.equal(0);
         });
-
     });
-
 });

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 #ifdef LIT_AMBIENT_SOURCE == AMBIENTSH
     uniform vec3 ambientSH[9];

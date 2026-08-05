@@ -1,4 +1,9 @@
-import { CULLFACE_FRONT, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import {
+    CULLFACE_FRONT,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
+} from '../../platform/graphics/constants.js';
 import { LAYERID_SKYBOX, SKYTYPE_INFINITE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -37,7 +42,6 @@ class SkyMesh {
      * @param {string} type - The type of the sky. One of the SKYTYPE_* constants.
      */
     constructor(device, scene, node, texture, type) {
-
         const material = new ShaderMaterial({
             uniqueName: 'SkyMaterial',
             vertexGLSL: ShaderChunks.get(device, SHADERLANGUAGE_GLSL).get('skyboxVS'),
@@ -70,7 +74,6 @@ class SkyMesh {
 
         const skyLayer = scene.layers.getLayerById(LAYERID_SKYBOX);
         if (skyLayer) {
-
             const mesh = SkyGeometry.create(device, type);
             const meshInstance = new MeshInstance(mesh, material, node);
             this.meshInstance = meshInstance;

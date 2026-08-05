@@ -54,8 +54,7 @@ class PhysicsJoint {
      *
      * @param {number} impulse - The break impulse threshold.
      */
-    setBreakImpulse(impulse) {
-    }
+    setBreakImpulse(impulse) {}
 
     /**
      * Returns whether the joint broke during simulation, or null when the backend cannot

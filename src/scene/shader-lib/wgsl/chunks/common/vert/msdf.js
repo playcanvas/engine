@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 attribute vertex_outlineParameters: vec3f;
 attribute vertex_shadowParameters: vec3f;
 

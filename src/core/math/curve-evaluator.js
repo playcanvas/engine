@@ -67,7 +67,7 @@ class CurveEvaluator {
             result = this._p0;
         } else {
             // calculate normalized t
-            const t = (this._recip === 0) ? 0 : (time - this._left) * this._recip;
+            const t = this._recip === 0 ? 0 : (time - this._left) * this._recip;
 
             if (type === CURVE_LINEAR) {
                 // linear
@@ -127,7 +127,7 @@ class CurveEvaluator {
                 this._left = keys[index][0];
                 this._right = keys[index + 1][0];
                 const diff = 1.0 / (this._right - this._left);
-                this._recip = (isFinite(diff) ? diff : 0);
+                this._recip = isFinite(diff) ? diff : 0;
                 this._p0 = keys[index][1];
                 this._p1 = keys[index + 1][1];
                 if (this._curve.type === CURVE_SPLINE) {
@@ -151,23 +151,24 @@ class CurveEvaluator {
         let d;
 
         if (index === 0) {
-            a = [keys[0][0] + (keys[0][0] - keys[1][0]),
-                keys[0][1] + (keys[0][1] - keys[1][1])];
+            a = [keys[0][0] + (keys[0][0] - keys[1][0]), keys[0][1] + (keys[0][1] - keys[1][1])];
         } else {
             a = keys[index - 1];
         }
 
         if (index === keys.length - 2) {
-            d = [keys[index + 1][0] + (keys[index + 1][0] - keys[index][0]),
-                keys[index + 1][1] + (keys[index + 1][1] - keys[index][1])];
+            d = [
+                keys[index + 1][0] + (keys[index + 1][0] - keys[index][0]),
+                keys[index + 1][1] + (keys[index + 1][1] - keys[index][1])
+            ];
         } else {
             d = keys[index + 2];
         }
 
         if (this._curve.type === CURVE_SPLINE) {
             // calculate tangent scale (due to non-uniform knot spacing)
-            const s1_ = 2 * (c[0] - b[0]) / (c[0] - a[0]);
-            const s2_ = 2 * (c[0] - b[0]) / (d[0] - b[0]);
+            const s1_ = (2 * (c[0] - b[0])) / (c[0] - a[0]);
+            const s2_ = (2 * (c[0] - b[0])) / (d[0] - b[0]);
 
             this._m0 = this._curve.tension * (isFinite(s1_) ? s1_ : 0) * (c[1] - a[1]);
             this._m1 = this._curve.tension * (isFinite(s2_) ? s2_ : 0) * (d[1] - b[1]);
@@ -202,10 +203,7 @@ class CurveEvaluator {
         const twot = t + t;
         const omt = 1 - t;
         const omt2 = omt * omt;
-        return p0 * ((1 + twot) * omt2) +
-               m0 * (t * omt2) +
-               p1 * (t2 * (3 - twot)) +
-               m1 * (t2 * (t - 1));
+        return p0 * ((1 + twot) * omt2) + m0 * (t * omt2) + p1 * (t2 * (3 - twot)) + m1 * (t2 * (t - 1));
     }
 }
 

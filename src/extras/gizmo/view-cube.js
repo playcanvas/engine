@@ -89,11 +89,7 @@ class ViewCube extends EventHandler {
         // container
         this.dom = document.createElement('div');
         this.dom.id = 'view-cube-container';
-        this.dom.style.cssText = [
-            'position: absolute',
-            'margin: auto',
-            'pointer-events: none'
-        ].join(';');
+        this.dom.style.cssText = ['position: absolute', 'margin: auto', 'pointer-events: none'].join(';');
         document.body.appendChild(this.dom);
 
         this.anchor = anchor ?? this._anchor;

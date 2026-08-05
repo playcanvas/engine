@@ -35,14 +35,13 @@ describe('Component teardown', function () {
      * that these components bind in onEnable.
      */
     const hasLayerSubscriptions = () => {
-        return app.scene.hasEvent('set:layers') ||
-            app.scene.layers.hasEvent('add') ||
-            app.scene.layers.hasEvent('remove');
+        return (
+            app.scene.hasEvent('set:layers') || app.scene.layers.hasEvent('add') || app.scene.layers.hasEvent('remove')
+        );
     };
 
     LAYER_SUBSCRIBERS.forEach((type) => {
         describe(`${type} component`, function () {
-
             it('unsubscribes from scene and layer events when removed while enabled', function () {
                 const e = new Entity();
                 app.root.addChild(e);
@@ -94,7 +93,6 @@ describe('Component teardown', function () {
                 expect(composition.hasEvent('add')).to.equal(false);
                 expect(composition.hasEvent('remove')).to.equal(false);
             });
-
         });
     });
 });

@@ -88,10 +88,12 @@ class Font {
 
         // check if we need to migrate to version 2
         if (!this._data.version || this._data.version < 2) {
-            this._data.info.maps = [{
-                width: this._data.info.width,
-                height: this._data.info.height
-            }];
+            this._data.info.maps = [
+                {
+                    width: this._data.info.width,
+                    height: this._data.info.height
+                }
+            ];
 
             if (this._data.chars) {
                 for (const key in this._data.chars) {

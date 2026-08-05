@@ -32,14 +32,10 @@ class BoxShape extends Shape {
         this._size = args.size ?? this._size;
 
         // intersect
-        this.triData = [
-            new TriData(new BoxGeometry(), 2)
-        ];
+        this.triData = [new TriData(new BoxGeometry(), 2)];
 
         // render
-        this._createRenderComponent(this.entity, [
-            Mesh.fromGeometry(this.device, new BoxGeometry())
-        ]);
+        this._createRenderComponent(this.entity, [Mesh.fromGeometry(this.device, new BoxGeometry())]);
 
         // update transform
         this._update();

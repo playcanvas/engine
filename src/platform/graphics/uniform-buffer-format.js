@@ -2,14 +2,42 @@ import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import {
     uniformTypeToName,
-    UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_UINT, UNIFORMTYPE_VEC2,
-    UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_UVEC2, UNIFORMTYPE_IVEC3,
-    UNIFORMTYPE_IVEC4, UNIFORMTYPE_BVEC2, UNIFORMTYPE_BVEC3, UNIFORMTYPE_UVEC3, UNIFORMTYPE_BVEC4,
-    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_UVEC4,
-    UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY, UNIFORMTYPE_MAT4ARRAY, UNIFORMTYPE_INTARRAY,
-    UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY, UNIFORMTYPE_UVEC2ARRAY,
-    UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY,
-    UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY
+    UNIFORMTYPE_BOOL,
+    UNIFORMTYPE_INT,
+    UNIFORMTYPE_FLOAT,
+    UNIFORMTYPE_UINT,
+    UNIFORMTYPE_VEC2,
+    UNIFORMTYPE_VEC3,
+    UNIFORMTYPE_VEC4,
+    UNIFORMTYPE_IVEC2,
+    UNIFORMTYPE_UVEC2,
+    UNIFORMTYPE_IVEC3,
+    UNIFORMTYPE_IVEC4,
+    UNIFORMTYPE_BVEC2,
+    UNIFORMTYPE_BVEC3,
+    UNIFORMTYPE_UVEC3,
+    UNIFORMTYPE_BVEC4,
+    UNIFORMTYPE_MAT4,
+    UNIFORMTYPE_MAT2,
+    UNIFORMTYPE_MAT3,
+    UNIFORMTYPE_FLOATARRAY,
+    UNIFORMTYPE_UVEC4,
+    UNIFORMTYPE_VEC2ARRAY,
+    UNIFORMTYPE_VEC3ARRAY,
+    UNIFORMTYPE_VEC4ARRAY,
+    UNIFORMTYPE_MAT4ARRAY,
+    UNIFORMTYPE_INTARRAY,
+    UNIFORMTYPE_UINTARRAY,
+    UNIFORMTYPE_BOOLARRAY,
+    UNIFORMTYPE_IVEC2ARRAY,
+    UNIFORMTYPE_UVEC2ARRAY,
+    UNIFORMTYPE_BVEC2ARRAY,
+    UNIFORMTYPE_IVEC3ARRAY,
+    UNIFORMTYPE_UVEC3ARRAY,
+    UNIFORMTYPE_BVEC3ARRAY,
+    UNIFORMTYPE_IVEC4ARRAY,
+    UNIFORMTYPE_UVEC4ARRAY,
+    UNIFORMTYPE_BVEC4ARRAY
 } from './constants.js';
 
 /**
@@ -31,14 +59,13 @@ uniformTypeToNumComponents[UNIFORMTYPE_BOOL] = 1;
 uniformTypeToNumComponents[UNIFORMTYPE_BVEC2] = 2;
 uniformTypeToNumComponents[UNIFORMTYPE_BVEC3] = 3;
 uniformTypeToNumComponents[UNIFORMTYPE_BVEC4] = 4;
-uniformTypeToNumComponents[UNIFORMTYPE_MAT2] = 8;    // 2 x vec4
-uniformTypeToNumComponents[UNIFORMTYPE_MAT3] = 12;   // 3 x vec4
-uniformTypeToNumComponents[UNIFORMTYPE_MAT4] = 16;   // 4 x vec4
+uniformTypeToNumComponents[UNIFORMTYPE_MAT2] = 8; // 2 x vec4
+uniformTypeToNumComponents[UNIFORMTYPE_MAT3] = 12; // 3 x vec4
+uniformTypeToNumComponents[UNIFORMTYPE_MAT4] = 16; // 4 x vec4
 uniformTypeToNumComponents[UNIFORMTYPE_UINT] = 1;
 uniformTypeToNumComponents[UNIFORMTYPE_UVEC2] = 2;
 uniformTypeToNumComponents[UNIFORMTYPE_UVEC3] = 3;
 uniformTypeToNumComponents[UNIFORMTYPE_UVEC4] = 4;
-
 
 /**
  * A class storing description of an individual uniform, stored inside a uniform buffer.
@@ -113,7 +140,6 @@ class UniformFormat {
      * a single element (not an array).
      */
     constructor(name, type, count = 0) {
-
         // just a name
         this.shortName = name;
 
@@ -127,32 +153,67 @@ class UniformFormat {
 
         this.updateType = type;
         if (count > 0) {
-
             switch (type) {
-                case UNIFORMTYPE_FLOAT: this.updateType = UNIFORMTYPE_FLOATARRAY; break;
-                case UNIFORMTYPE_INT: this.updateType = UNIFORMTYPE_INTARRAY; break;
-                case UNIFORMTYPE_UINT: this.updateType = UNIFORMTYPE_UINTARRAY; break;
-                case UNIFORMTYPE_BOOL: this.updateType = UNIFORMTYPE_BOOLARRAY; break;
+                case UNIFORMTYPE_FLOAT:
+                    this.updateType = UNIFORMTYPE_FLOATARRAY;
+                    break;
+                case UNIFORMTYPE_INT:
+                    this.updateType = UNIFORMTYPE_INTARRAY;
+                    break;
+                case UNIFORMTYPE_UINT:
+                    this.updateType = UNIFORMTYPE_UINTARRAY;
+                    break;
+                case UNIFORMTYPE_BOOL:
+                    this.updateType = UNIFORMTYPE_BOOLARRAY;
+                    break;
 
-                case UNIFORMTYPE_VEC2: this.updateType = UNIFORMTYPE_VEC2ARRAY; break;
-                case UNIFORMTYPE_IVEC2: this.updateType = UNIFORMTYPE_IVEC2ARRAY; break;
-                case UNIFORMTYPE_UVEC2: this.updateType = UNIFORMTYPE_UVEC2ARRAY; break;
-                case UNIFORMTYPE_BVEC2: this.updateType = UNIFORMTYPE_BVEC2ARRAY; break;
+                case UNIFORMTYPE_VEC2:
+                    this.updateType = UNIFORMTYPE_VEC2ARRAY;
+                    break;
+                case UNIFORMTYPE_IVEC2:
+                    this.updateType = UNIFORMTYPE_IVEC2ARRAY;
+                    break;
+                case UNIFORMTYPE_UVEC2:
+                    this.updateType = UNIFORMTYPE_UVEC2ARRAY;
+                    break;
+                case UNIFORMTYPE_BVEC2:
+                    this.updateType = UNIFORMTYPE_BVEC2ARRAY;
+                    break;
 
-                case UNIFORMTYPE_VEC3: this.updateType = UNIFORMTYPE_VEC3ARRAY; break;
-                case UNIFORMTYPE_IVEC3: this.updateType = UNIFORMTYPE_IVEC3ARRAY; break;
-                case UNIFORMTYPE_UVEC3: this.updateType = UNIFORMTYPE_UVEC3ARRAY; break;
-                case UNIFORMTYPE_BVEC3: this.updateType = UNIFORMTYPE_BVEC3ARRAY; break;
+                case UNIFORMTYPE_VEC3:
+                    this.updateType = UNIFORMTYPE_VEC3ARRAY;
+                    break;
+                case UNIFORMTYPE_IVEC3:
+                    this.updateType = UNIFORMTYPE_IVEC3ARRAY;
+                    break;
+                case UNIFORMTYPE_UVEC3:
+                    this.updateType = UNIFORMTYPE_UVEC3ARRAY;
+                    break;
+                case UNIFORMTYPE_BVEC3:
+                    this.updateType = UNIFORMTYPE_BVEC3ARRAY;
+                    break;
 
-                case UNIFORMTYPE_VEC4: this.updateType = UNIFORMTYPE_VEC4ARRAY; break;
-                case UNIFORMTYPE_IVEC4: this.updateType = UNIFORMTYPE_IVEC4ARRAY; break;
-                case UNIFORMTYPE_UVEC4: this.updateType = UNIFORMTYPE_UVEC4ARRAY; break;
-                case UNIFORMTYPE_BVEC4: this.updateType = UNIFORMTYPE_BVEC4ARRAY; break;
+                case UNIFORMTYPE_VEC4:
+                    this.updateType = UNIFORMTYPE_VEC4ARRAY;
+                    break;
+                case UNIFORMTYPE_IVEC4:
+                    this.updateType = UNIFORMTYPE_IVEC4ARRAY;
+                    break;
+                case UNIFORMTYPE_UVEC4:
+                    this.updateType = UNIFORMTYPE_UVEC4ARRAY;
+                    break;
+                case UNIFORMTYPE_BVEC4:
+                    this.updateType = UNIFORMTYPE_BVEC4ARRAY;
+                    break;
 
-                case UNIFORMTYPE_MAT4: this.updateType = UNIFORMTYPE_MAT4ARRAY; break;
+                case UNIFORMTYPE_MAT4:
+                    this.updateType = UNIFORMTYPE_MAT4ARRAY;
+                    break;
 
                 default:
-                    Debug.error(`Uniform array of type ${uniformTypeToName[type]} is not supported when processing uniform '${name}'.`);
+                    Debug.error(
+                        `Uniform array of type ${uniformTypeToName[type]} is not supported when processing uniform '${name}'.`
+                    );
                     Debug.call(() => {
                         this.invalid = true;
                     });
@@ -186,7 +247,6 @@ class UniformFormat {
     // std140 rules: https://registry.khronos.org/OpenGL/specs/gl/glspec45.core.pdf#page=159
     // TODO: this supports limited subset of functionality, arrays and arrays of structs are not supported.
     calculateOffset(offset) {
-
         // Note: vec3 has the same alignment as vec4
         let alignment = this.byteSize <= 8 ? this.byteSize : 16;
 

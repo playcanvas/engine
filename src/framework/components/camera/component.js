@@ -199,10 +199,12 @@ class CameraComponent extends Component {
      * @returns {number} The id of the shader pass.
      */
     setShaderPass(name) {
-        const shaderPass =  ShaderPass.get(this.system.app.graphicsDevice);
-        const shaderPassInfo = name ? shaderPass.allocate(name, {
-            isForward: true
-        }) : null;
+        const shaderPass = ShaderPass.get(this.system.app.graphicsDevice);
+        const shaderPassInfo = name
+            ? shaderPass.allocate(name, {
+                  isForward: true
+              })
+            : null;
         this._camera.shaderPassInfo = shaderPassInfo;
 
         return shaderPassInfo.index;
@@ -962,10 +964,11 @@ class CameraComponent extends Component {
      * @type {RenderTarget}
      */
     set renderTarget(value) {
-
         Debug.call(() => {
             if (this._camera.framePasses.length > 0) {
-                Debug.warn(`Setting a render target on the camera ${this.entity.name} after the frame passes is not supported, set it up first.`);
+                Debug.warn(
+                    `Setting a render target on the camera ${this.entity.name} after the frame passes is not supported, set it up first.`
+                );
             }
         });
 
@@ -1057,9 +1060,8 @@ class CameraComponent extends Component {
      * @private
      */
     _enableDepthLayer(value) {
-        const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
+        const hasDepthLayer = this.layers.find((layerId) => layerId === LAYERID_DEPTH);
         if (hasDepthLayer) {
-
             /** @type {Layer} */
             const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
 
@@ -1087,7 +1089,9 @@ class CameraComponent extends Component {
         Debug.assert(this._renderSceneColorMap >= 0);
         const ok = this._enableDepthLayer(enabled);
         if (!ok) {
-            Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
+            Debug.warnOnce(
+                'CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.'
+            );
         }
 
         this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
@@ -1106,10 +1110,16 @@ class CameraComponent extends Component {
         Debug.assert(this._renderSceneDepthMap >= 0);
         const ok = this._enableDepthLayer(enabled);
         if (!ok) {
-            Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
+            Debug.warnOnce(
+                'CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.'
+            );
         }
 
-        this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
+        this.camera._enableRenderPassDepthGrab(
+            this.system.app.graphicsDevice,
+            this.system.app.renderer,
+            this.renderSceneDepthMap
+        );
         this.system.app.scene.layers.markDirty();
     }
 

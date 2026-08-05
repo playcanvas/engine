@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 varying vUv0: vec2f;
 var source: texture_2d<f32>;
 var sourceSampler: sampler;

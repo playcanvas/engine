@@ -2,10 +2,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Debug } from '../../core/debug.js';
 import { SEMANTIC_POSITION, CULLFACE_NONE } from '../../platform/graphics/constants.js';
-import {
-    BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD,
-    SHADOWCAMERA_NAME
-} from '../constants.js';
+import { BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD, SHADOWCAMERA_NAME } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -158,7 +155,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @param {Layer} layer - The layer to add mesh instances to.
      * @param {GSplatWorkBuffer} workBuffer - The work buffer (kept for parent compatibility;
      * the hybrid renderer does not bind work-buffer textures itself).
-     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch] -
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch]
      * Manager-owned shared scratch; forwarded to the interval compaction (shared with the shadow cull).
      */
     constructor(device, node, cameraNode, layer, workBuffer, scratch = null) {
@@ -221,7 +218,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
     }
 
     destroy() {
-        if (this.renderMode && (this.renderMode & GSPLAT_FORWARD)) {
+        if (this.renderMode && this.renderMode & GSPLAT_FORWARD) {
             this.layer.removeMeshInstances([this.meshInstance], true);
         }
         this.gpuSorter?.destroy();
@@ -305,7 +302,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
     _ensureGpuPipeline() {
         if (!this.gpuSorter) this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
         if (!this.projector) this.projector = new GSplatProjector(this.device);
-        if (!this.intervalCompaction) this.intervalCompaction = new GSplatIntervalCompaction(this.device, this._scratch);
+        if (!this.intervalCompaction)
+            this.intervalCompaction = new GSplatIntervalCompaction(this.device, this._scratch);
     }
 
     /**
@@ -330,21 +328,30 @@ class GSplatHybridRenderer extends GSplatRenderer {
         // viewport directly, which is correct for both side-by-side single-texture and
         // multi-pass per-eye-view layouts — preferred over inferring from target.width.
         const xrView = sceneCam.xrActive ? (sceneCam.xrViews[0] ?? null) : null;
-        const viewportWidth = Math.floor((xrView ? xrView.viewport.z : (rt ? rt.width : this.device.width)) * rect.z);
-        const viewportHeight = Math.floor((xrView ? xrView.viewport.w : (rt ? rt.height : this.device.height)) * rect.w);
+        const viewportWidth = Math.floor((xrView ? xrView.viewport.z : rt ? rt.width : this.device.width) * rect.z);
+        const viewportHeight = Math.floor((xrView ? xrView.viewport.w : rt ? rt.height : this.device.height) * rect.w);
 
         // Stereo XR: project both eyes in a single projector pass (GSPLAT_XR variant). Requires
         // exactly 2 parallel-axis views. Keep the VS define in sync with the projector variant.
         const xrViewCount = sceneCam.xrActive ? sceneCam.xrViews.length : 0;
         if (xrViewCount > 2) {
-            Debug.errorOnce(`GSplatHybridRenderer: the hybrid GPU-sort renderer supports at most 2 XR views (stereo), but the session has ${xrViewCount}. Additional views will not render correctly.`);
+            Debug.errorOnce(
+                `GSplatHybridRenderer: the hybrid GPU-sort renderer supports at most 2 XR views (stereo), but the session has ${xrViewCount}. Additional views will not render correctly.`
+            );
         }
         const isStereo = xrViewCount === 2;
         this.setStereo(isStereo);
 
         const sortedIndices = this.sortAndProjectForCamera(
-            world, worldState, cameraNode, viewportWidth, viewportHeight,
-            Math.max(ALPHA_VISIBILITY_THRESHOLD, params.alphaClipForward), false, isStereo, params
+            world,
+            worldState,
+            cameraNode,
+            viewportWidth,
+            viewportHeight,
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, params.alphaClipForward),
+            false,
+            isStereo,
+            params
         );
 
         if (!sortedIndices) return false;
@@ -371,8 +378,15 @@ class GSplatHybridRenderer extends GSplatRenderer {
         // pickMode writes pcId into the cache only when the work buffer actually carries that stream.
         const pickMode = !!world.workBuffer.format.getStream('pcId');
         const sortedIndices = this.sortAndProjectForCamera(
-            world, worldState, pickParams.cameraNode, pickParams.width, pickParams.height,
-            Math.max(ALPHA_VISIBILITY_THRESHOLD, pickParams.alphaClip), pickMode, false, pickParams
+            world,
+            worldState,
+            pickParams.cameraNode,
+            pickParams.width,
+            pickParams.height,
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, pickParams.alphaClip),
+            pickMode,
+            false,
+            pickParams
         );
         if (!sortedIndices) return null;
 
@@ -404,7 +418,17 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @returns {StorageBuffer|null} The sorted cache indices, or null if no work was dispatched.
      * @private
      */
-    sortAndProjectForCamera(world, worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, pickMode, isStereo, params) {
+    sortAndProjectForCamera(
+        world,
+        worldState,
+        cameraNode,
+        viewportWidth,
+        viewportHeight,
+        alphaClip,
+        pickMode,
+        isStereo,
+        params
+    ) {
         const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return null;
 
@@ -424,7 +448,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const fisheyeProj = this.fisheyeProj;
         const numIntervals = worldState.totalIntervals;
         const totalActiveSplats = worldState.totalActiveSplats;
-        this.intervalCompaction.dispatchCompact(world.workBuffer.frustumCuller, numIntervals, totalActiveSplats, fisheyeProj.enabled);
+        this.intervalCompaction.dispatchCompact(
+            world.workBuffer.frustumCuller,
+            numIntervals,
+            totalActiveSplats,
+            fisheyeProj.enabled
+        );
 
         this.allocateAndWriteIntervalIndirectArgs(numIntervals);
 
@@ -494,7 +523,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             undefined,
             false,
-            true  // destructiveKeys: projector overwrites sortKeys each frame before the sort
+            true // destructiveKeys: projector overwrites sortKeys each frame before the sort
         );
     }
 
@@ -551,11 +580,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         fp.update(this.resolveFisheye(params.fisheye), cam.fov, cam.projectionMatrix);
 
         if (fp.enabled) {
-            world.workBuffer.frustumCuller.setFisheyeData(
-                cameraNode.getPosition(),
-                cameraNode.forward,
-                fp.maxTheta
-            );
+            world.workBuffer.frustumCuller.setFisheyeData(cameraNode.getPosition(), cameraNode.forward, fp.maxTheta);
         }
     }
 
@@ -585,9 +610,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
             // Check all 8 corners of the local-space AABB
             for (let i = 0; i < 8; i++) {
-                _tmpV.x = (i & 1) ? aabbMax.x : aabbMin.x;
-                _tmpV.y = (i & 2) ? aabbMax.y : aabbMin.y;
-                _tmpV.z = (i & 4) ? aabbMax.z : aabbMin.z;
+                _tmpV.x = i & 1 ? aabbMax.x : aabbMin.x;
+                _tmpV.y = i & 2 ? aabbMax.y : aabbMin.y;
+                _tmpV.z = i & 4 ? aabbMax.z : aabbMin.z;
 
                 modelMat.transformPoint(_tmpV, _tmpV);
 
@@ -727,7 +752,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
         }
         // canonical (unflipped) projection - matches the projector cache; the raster-time flip
         // (projectionFlipY) is applied to the output position only and does not affect depth
-        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, this.device.isWebGPU)).invert();
+        _invProjMat
+            .copy(
+                Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, this.device.isWebGPU)
+            )
+            .invert();
         const d = _invProjMat.data;
         dst[0] = -d[2];
         dst[1] = -d[6];
@@ -808,7 +837,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
                 keysToDelete.push(key);
             }
         });
-        keysToDelete.forEach(key => this._material.setDefine(key, undefined));
+        keysToDelete.forEach((key) => this._material.setDefine(key, undefined));
 
         // Add/update defines from the source. setDefine is conditional — it only flips
         // _definesDirty when the value actually changed, so unchanged entries stay cheap.
@@ -847,8 +876,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
      */
     _updateIdDefines(material) {
         const hasPcId = !!this.workBuffer.format.getStream('pcId');
-        const changed = material.getDefine('GSPLAT_UNIFIED_ID') !== hasPcId ||
-            material.getDefine('PICK_CUSTOM_ID') !== hasPcId;
+        const changed =
+            material.getDefine('GSPLAT_UNIFIED_ID') !== hasPcId || material.getDefine('PICK_CUSTOM_ID') !== hasPcId;
         material.setDefine('GSPLAT_UNIFIED_ID', hasPcId);
         material.setDefine('PICK_CUSTOM_ID', hasPcId);
         return changed;
@@ -886,7 +915,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const thisCamera = this.cameraNode.camera;
         meshInstance.isVisibleFunc = (camera) => {
             const renderMode = this.renderMode ?? 0;
-            if (thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD)) {
+            if (thisCamera.camera === camera && renderMode & GSPLAT_FORWARD) {
                 return true;
             }
             // Hybrid renderer never participates in shadow casting.

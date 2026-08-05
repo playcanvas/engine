@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 uniform material_emissive: vec3f;
 uniform material_emissiveIntensity: f32;
 

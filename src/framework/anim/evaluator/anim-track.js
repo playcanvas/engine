@@ -19,7 +19,6 @@ class AnimTrack {
      */
     static EMPTY = Object.freeze(new AnimTrack('empty', Number.MAX_VALUE, [], [], []));
 
-
     /**
      * Create a new AnimTrack instance.
      *
@@ -84,7 +83,6 @@ class AnimTrack {
     get curves() {
         return this._curves;
     }
-
 
     /**
      * Sets the animation events that will fire during the playback of this anim track.

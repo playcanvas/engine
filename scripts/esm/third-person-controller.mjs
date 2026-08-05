@@ -74,7 +74,7 @@ const applyDeadZone = (stick, low, high) => {
  * @returns {number} The interpolated angle in degrees.
  */
 const lerpAngle = (from, to, alpha) => {
-    const delta = (((to - from) % 360) + 540) % 360 - 180;
+    const delta = ((((to - from) % 360) + 540) % 360) - 180;
     return from + delta * alpha;
 };
 
@@ -878,11 +878,13 @@ class ThirdPersonController extends Script {
         }
 
         // update state
-        this._state.axis.add(v.set(
-            (key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
-            0,
-            (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])
-        ));
+        this._state.axis.add(
+            v.set(
+                key[keyCode.D] - key[keyCode.A] + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
+                0,
+                key[keyCode.W] - key[keyCode.S] + (key[keyCode.UP] - key[keyCode.DOWN])
+            )
+        );
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }

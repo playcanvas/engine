@@ -152,18 +152,24 @@ class XrHitTest extends EventHandler {
 
             // enabledFeatures - is not available, requires alternative way to check feature availability
 
-            this.manager.session.requestReferenceSpace(XRSPACE_VIEWER).then((referenceSpace) => {
-                this.manager.session.requestHitTestSource({
-                    space: referenceSpace
-                }).then((hitTestSource) => {
-                    hitTestSource.cancel();
+            this.manager.session
+                .requestReferenceSpace(XRSPACE_VIEWER)
+                .then((referenceSpace) => {
+                    this.manager.session
+                        .requestHitTestSource({
+                            space: referenceSpace
+                        })
+                        .then((hitTestSource) => {
+                            hitTestSource.cancel();
 
-                    if (this.manager.active) {
-                        this._available = true;
-                        this.fire('available');
-                    }
-                }).catch(() => { });
-            }).catch(() => {});
+                            if (this.manager.active) {
+                                this._available = true;
+                                this.fire('available');
+                            }
+                        })
+                        .catch(() => {});
+                })
+                .catch(() => {});
         }
     }
 
@@ -277,39 +283,48 @@ class XrHitTest extends EventHandler {
         const callback = options.callback;
 
         if (options.spaceType) {
-            this.manager.session.requestReferenceSpace(options.spaceType).then((referenceSpace) => {
-                if (!this.manager.session) {
-                    const err = new Error('XR Session is not started (2)');
-                    if (callback) callback(err);
-                    this.fire('error', err);
-                    return;
-                }
+            this.manager.session
+                .requestReferenceSpace(options.spaceType)
+                .then((referenceSpace) => {
+                    if (!this.manager.session) {
+                        const err = new Error('XR Session is not started (2)');
+                        if (callback) callback(err);
+                        this.fire('error', err);
+                        return;
+                    }
 
-                this.manager.session.requestHitTestSource({
-                    space: referenceSpace,
-                    entityTypes: options.entityTypes || undefined,
-                    offsetRay: xrRay
-                }).then((xrHitTestSource) => {
-                    this._onHitTestSource(xrHitTestSource, false, options.inputSource, callback);
-                }).catch((ex) => {
+                    this.manager.session
+                        .requestHitTestSource({
+                            space: referenceSpace,
+                            entityTypes: options.entityTypes || undefined,
+                            offsetRay: xrRay
+                        })
+                        .then((xrHitTestSource) => {
+                            this._onHitTestSource(xrHitTestSource, false, options.inputSource, callback);
+                        })
+                        .catch((ex) => {
+                            if (callback) callback(ex);
+                            this.fire('error', ex);
+                        });
+                })
+                .catch((ex) => {
                     if (callback) callback(ex);
                     this.fire('error', ex);
                 });
-            }).catch((ex) => {
-                if (callback) callback(ex);
-                this.fire('error', ex);
-            });
         } else {
-            this.manager.session.requestHitTestSourceForTransientInput({
-                profile: options.profile,
-                entityTypes: options.entityTypes || undefined,
-                offsetRay: xrRay
-            }).then((xrHitTestSource) => {
-                this._onHitTestSource(xrHitTestSource, true, options.inputSource, callback);
-            }).catch((ex) => {
-                if (callback) callback(ex);
-                this.fire('error', ex);
-            });
+            this.manager.session
+                .requestHitTestSourceForTransientInput({
+                    profile: options.profile,
+                    entityTypes: options.entityTypes || undefined,
+                    offsetRay: xrRay
+                })
+                .then((xrHitTestSource) => {
+                    this._onHitTestSource(xrHitTestSource, true, options.inputSource, callback);
+                })
+                .catch((ex) => {
+                    if (callback) callback(ex);
+                    this.fire('error', ex);
+                });
         }
     }
 

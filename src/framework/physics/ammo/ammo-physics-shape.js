@@ -54,7 +54,10 @@ function getTriMesh(world, source) {
         world._triMeshCache.set(source.id, triMesh);
 
         const vertexCache = new Map();
-        Debug.assert(typeof triMesh.getIndexedMeshArray === 'function', 'Ammo.js version is too old, please update to a newer Ammo.');
+        Debug.assert(
+            typeof triMesh.getIndexedMeshArray === 'function',
+            'Ammo.js version is too old, please update to a newer Ammo.'
+        );
         const indexedArray = triMesh.getIndexedMeshArray();
         indexedArray.at(0).m_numTriangles = numTriangles;
 
@@ -133,7 +136,7 @@ function createHullChild(world, compound, source) {
     Ammo.destroy(point);
 
     hull.recalcLocalAabb();
-    hull.setMargin(0.01);   // Note: default margin is 0.04
+    hull.setMargin(0.01); // Note: default margin is 0.04
 
     compound.addChildShape(getTransform(world, source.position, source.rotation), hull);
 }
@@ -183,9 +186,12 @@ const shapeFactories = {
         const radius = desc.radius;
         const height = Math.max(desc.height - 2 * radius, 0);
         switch (desc.axis) {
-            case 0: return new Ammo.btCapsuleShapeX(radius, height);
-            case 2: return new Ammo.btCapsuleShapeZ(radius, height);
-            default: return new Ammo.btCapsuleShape(radius, height);
+            case 0:
+                return new Ammo.btCapsuleShapeX(radius, height);
+            case 2:
+                return new Ammo.btCapsuleShapeZ(radius, height);
+            default:
+                return new Ammo.btCapsuleShape(radius, height);
         }
     },
 
@@ -215,9 +221,12 @@ const shapeFactories = {
 
     cone: (world, desc) => {
         switch (desc.axis) {
-            case 0: return new Ammo.btConeShapeX(desc.radius, desc.height);
-            case 2: return new Ammo.btConeShapeZ(desc.radius, desc.height);
-            default: return new Ammo.btConeShape(desc.radius, desc.height);
+            case 0:
+                return new Ammo.btConeShapeX(desc.radius, desc.height);
+            case 2:
+                return new Ammo.btConeShapeZ(desc.radius, desc.height);
+            default:
+                return new Ammo.btConeShape(desc.radius, desc.height);
         }
     },
 

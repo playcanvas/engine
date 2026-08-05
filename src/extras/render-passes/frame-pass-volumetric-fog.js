@@ -4,9 +4,18 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC_ALPHA, BLENDMODE_ZERO,
-    FILTER_LINEAR, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8,
-    SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
+    ADDRESS_CLAMP_TO_EDGE,
+    BLENDEQUATION_ADD,
+    BLENDMODE_ONE,
+    BLENDMODE_SRC_ALPHA,
+    BLENDMODE_ZERO,
+    FILTER_LINEAR,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
@@ -42,11 +51,11 @@ const _tempRect = new Vec4();
 
 // cookie channel mask matching the channel selection of the light
 const _cookieChannelMasks = {
-    'rrr': [1, 0, 0, 0],
-    'ggg': [0, 1, 0, 0],
-    'bbb': [0, 0, 1, 0],
-    'aaa': [0, 0, 0, 1],
-    'rgb': [1, 1, 1, 0]
+    rrr: [1, 0, 0, 0],
+    ggg: [0, 1, 0, 0],
+    bbb: [0, 0, 1, 0],
+    aaa: [0, 0, 0, 1],
+    rgb: [1, 1, 1, 0]
 };
 
 // mask assigned for a light which does not use a cookie, as the uniform is still declared
@@ -142,7 +151,6 @@ class RenderPassVolumetricFog extends RenderPassShaderQuad {
      * comparison, false when it stores depth in a color texture (PCSS / VSM).
      */
     updateShaderVariant(shadows, pcf) {
-
         const depthMapLinear = this.cameraComponent.shaderParams.sceneDepthMapLinear;
         const key = `${shadows}-${pcf}-${depthMapLinear}`;
         if (this._variantKey !== key) {
@@ -164,7 +172,6 @@ class RenderPassVolumetricFog extends RenderPassShaderQuad {
     }
 
     execute() {
-
         const { light } = this;
         const camera = this.cameraComponent.camera;
         const node = camera._node;
@@ -317,8 +324,15 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
 
         // in-scattered light is added to the fog texture, the transmittance it stores in alpha is
         // written by the directional pass and is preserved
-        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE,
-            BLENDEQUATION_ADD, BLENDMODE_ZERO, BLENDMODE_ONE);
+        this.blendState = new BlendState(
+            true,
+            BLENDEQUATION_ADD,
+            BLENDMODE_ONE,
+            BLENDMODE_ONE,
+            BLENDEQUATION_ADD,
+            BLENDMODE_ZERO,
+            BLENDMODE_ONE
+        );
 
         const scope = device.scope;
         this.cameraPosId = scope.resolve('uVolCameraPos');
@@ -363,7 +377,6 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
      * @param {boolean} cookies - True if the lights can sample the cookie atlas.
      */
     updateShaderVariant(shadows, cookies) {
-
         const depthMapLinear = this.cameraComponent.shaderParams.sceneDepthMapLinear;
         const key = `${shadows}-${cookies}-${depthMapLinear}`;
         if (this._variantKey !== key) {
@@ -415,7 +428,6 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
      * @private
      */
     _evalLightRect(light, camera, rect) {
-
         // the bounding sphere of the light volume in the view space
         light.getBoundingSphere(_tempSphere);
         const radius = _tempSphere.radius;
@@ -430,12 +442,15 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         // project the corners of the view space bounds of the sphere - all of them are in front of
         // the near plane, and so the perspective divide is safe
         const projection = camera.projectionMatrix;
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let minX = Infinity,
+            minY = Infinity,
+            maxX = -Infinity,
+            maxY = -Infinity;
         for (let i = 0; i < 8; i++) {
             _tempCorner.set(
-                _tempVec3.x + ((i & 1) ? radius : -radius),
-                _tempVec3.y + ((i & 2) ? radius : -radius),
-                _tempVec3.z + ((i & 4) ? radius : -radius),
+                _tempVec3.x + (i & 1 ? radius : -radius),
+                _tempVec3.y + (i & 2 ? radius : -radius),
+                _tempVec3.z + (i & 4 ? radius : -radius),
                 1
             );
 
@@ -463,7 +478,6 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
      * @private
      */
     _setupLight(light, shadows, cookies) {
-
         const camera = this.cameraComponent.camera;
         const isSpot = light._type === LIGHTTYPE_SPOT;
 
@@ -531,13 +545,13 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         // neither - the shader ignores the values in that case, but leaving a declared uniform unset
         // is reported as an error.
         if (shadows || cookies) {
-
             const lightRenderData = hasShadowMap ? light.getRenderData(null, 0) : null;
 
             // the projection matrix of a spot light transforms the world space position to the
             // atlas slot of the light, and is shared by the shadow map and the cookie
             if (isSpot) {
-                const matrix = lightRenderData?.shadowMatrix ??
+                const matrix =
+                    lightRenderData?.shadowMatrix ??
                     (useCookie ? LightCamera.evalSpotCookieMatrix(light) : Mat4.IDENTITY);
                 this.lightProjMatrixId.setValue(matrix.data);
             } else {
@@ -555,16 +569,17 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         }
 
         if (cookies) {
-            this.lightCookieChannelId.setValue(useCookie ?
-                (_cookieChannelMasks[light._cookieChannel] ?? _cookieChannelMasks.rgb) :
-                _cookieChannelMaskNone);
+            this.lightCookieChannelId.setValue(
+                useCookie
+                    ? (_cookieChannelMasks[light._cookieChannel] ?? _cookieChannelMasks.rgb)
+                    : _cookieChannelMaskNone
+            );
         }
 
         return true;
     }
 
     execute() {
-
         const clusters = this._getLightClusters();
         if (!clusters || !this.quadRender) {
             return;
@@ -613,8 +628,14 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
         this.marchParamsId.setValue(this._marchParams);
 
         // render state, shared by all the lights
-        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace,
-            this.stencilFront, this.stencilBack);
+        this.device.setDrawStates(
+            this.blendState,
+            this.depthState,
+            this.cullMode,
+            this.frontFace,
+            this.stencilFront,
+            this.stencilBack
+        );
 
         // a quad per light, covering the screen space bounds of its volume. Index 0 of the cluster
         // lights is reserved for 'no light'.
@@ -625,8 +646,8 @@ class RenderPassVolumetricFogLocal extends RenderPassShaderQuad {
             const light = lights[i].light;
 
             // the two light types are enabled separately, and a light can opt out of the fog
-            const enabled = light?.volumetricScattering > 0 &&
-                (light._type === LIGHTTYPE_SPOT ? spotLights : omniLights);
+            const enabled =
+                light?.volumetricScattering > 0 && (light._type === LIGHTTYPE_SPOT ? spotLights : omniLights);
 
             if (enabled && this._setupLight(light, shadowsEnabled, cookiesEnabled)) {
                 this.quadRender.render();
@@ -658,8 +679,15 @@ class RenderPassVolumetricFogCombine extends RenderPassShaderQuad {
         });
 
         // scene.rgb * fog.a + fog.rgb, scene alpha is preserved
-        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC_ALPHA,
-            BLENDEQUATION_ADD, BLENDMODE_ZERO, BLENDMODE_ONE);
+        this.blendState = new BlendState(
+            true,
+            BLENDEQUATION_ADD,
+            BLENDMODE_ONE,
+            BLENDMODE_SRC_ALPHA,
+            BLENDEQUATION_ADD,
+            BLENDMODE_ZERO,
+            BLENDMODE_ONE
+        );
 
         this.fogTextureId = device.scope.resolve('uFogTexture');
         this.fogTextureSizeId = device.scope.resolve('uFogTextureSize');
@@ -667,7 +695,6 @@ class RenderPassVolumetricFogCombine extends RenderPassShaderQuad {
     }
 
     execute() {
-
         const { fogTexture } = this;
         this.fogTextureId.setValue(fogTexture);
 
@@ -859,7 +886,8 @@ class FramePassVolumetricFog extends FramePass {
         ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set('volumetricFogLocalVS', wgslVolumetricFogLocalVS);
 
         // reduced resolution texture storing in-scattered light (rgb) and transmittance (a)
-        const format = device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true, 1) ?? PIXELFORMAT_RGBA8;
+        const format =
+            device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true, 1) ?? PIXELFORMAT_RGBA8;
         this.fogTexture = new Texture(device, {
             name: 'VolumetricFogTexture',
             width: 4,
@@ -901,7 +929,7 @@ class FramePassVolumetricFog extends FramePass {
     }
 
     destroy() {
-        this.beforePasses.forEach(pass => pass.destroy());
+        this.beforePasses.forEach((pass) => pass.destroy());
         this.beforePasses.length = 0;
         this.fogPass = null;
         this.localPass = null;
@@ -984,7 +1012,6 @@ class FramePassVolumetricFog extends FramePass {
         const { localOmniLights, localSpotLights } = this;
         localPass.enabled = (localOmniLights || localSpotLights) && scene.clusteredLightingEnabled;
         if (localPass.enabled) {
-
             const { shadowsEnabled, cookiesEnabled } = scene.lighting;
             localPass.updateShaderVariant(shadowsEnabled, cookiesEnabled);
 

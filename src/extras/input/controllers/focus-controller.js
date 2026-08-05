@@ -70,8 +70,10 @@ class FocusController extends InputController {
     }
 
     complete() {
-        return this._targetRootPose.equalsApprox(this._rootPose, EPSILON) &&
-               this._targetChildPose.equalsApprox(this._childPose, EPSILON);
+        return (
+            this._targetRootPose.equalsApprox(this._rootPose, EPSILON) &&
+            this._targetChildPose.equalsApprox(this._childPose, EPSILON)
+        );
     }
 
     /**
@@ -91,18 +93,13 @@ class FocusController extends InputController {
             damp(this.focusDamping, dt),
             1
         );
-        this._childPose.lerp(
-            this._childPose,
-            this._targetChildPose,
-            damp(this.focusDamping, dt),
-            1,
-            1
-        );
+        this._childPose.lerp(this._childPose, this._targetChildPose, damp(this.focusDamping, dt), 1, 1);
 
         // calculate final pose
-        rotation.setFromEulerAngles(this._rootPose.angles)
-        .transformVector(this._childPose.position, position)
-        .add(this._rootPose.position);
+        rotation
+            .setFromEulerAngles(this._rootPose.angles)
+            .transformVector(this._childPose.position, position)
+            .add(this._rootPose.position);
         return this._pose.set(position, this._rootPose.angles, this._childPose.position.length());
     }
 

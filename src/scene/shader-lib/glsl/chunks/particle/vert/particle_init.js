@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 attribute vec4 particle_vertexData; // XYZ = particle position, W = particle ID + random factor
 
 #if defined(USE_MESH)

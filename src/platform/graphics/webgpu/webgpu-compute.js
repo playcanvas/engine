@@ -32,14 +32,19 @@ class WebgpuCompute {
         DebugGraphics.pushGpuMarker(device, `Compute:${compute.name}`);
 
         const {
-            computeBindGroupFormat, computeUniformBufferFormats,
-            computeReflectedBindGroupFormat, computeReflectedUniformBufferFormat,
+            computeBindGroupFormat,
+            computeUniformBufferFormats,
+            computeReflectedBindGroupFormat,
+            computeReflectedUniformBufferFormat,
             computeReflectedGroupIndex
         } = shader.impl;
 
         // caller uniform buffers are bound into the caller bind group, so the format is required
-        Debug.assert(!computeUniformBufferFormats || computeBindGroupFormat,
-            'Compute shader specifies computeUniformBufferFormats but no computeBindGroupFormat to bind them into', shader);
+        Debug.assert(
+            !computeUniformBufferFormats || computeBindGroupFormat,
+            'Compute shader specifies computeUniformBufferFormats but no computeBindGroupFormat to bind them into',
+            shader
+        );
 
         // ordered, gapless array of bind group formats (array index === bind group index)
         const formats = [];
@@ -87,16 +92,14 @@ class WebgpuCompute {
     }
 
     destroy() {
-
-        this.uniformBuffers.forEach(ub => ub.destroy());
+        this.uniformBuffers.forEach((ub) => ub.destroy());
         this.uniformBuffers.length = 0;
 
-        this.bindGroups.forEach(bindGroup => bindGroup.destroy());
+        this.bindGroups.forEach((bindGroup) => bindGroup.destroy());
         this.bindGroups.length = 0;
     }
 
     updateBindGroup() {
-
         // bind group data
         for (let i = 0; i < this.bindGroups.length; i++) {
             const bindGroup = this.bindGroups[i];
@@ -106,7 +109,6 @@ class WebgpuCompute {
     }
 
     dispatch(x, y, z) {
-
         // bind groups
         const device = this.compute.device;
         for (let i = 0; i < this.bindGroups.length; i++) {
@@ -126,7 +128,10 @@ class WebgpuCompute {
                 gpuBuffer = indirectBuffer.impl.buffer;
             } else {
                 // built-in buffer - validate frame stamp
-                Debug.assert(indirectFrameStamp === device.renderVersion, 'Indirect dispatch slot must be set each frame using setupIndirectDispatch()');
+                Debug.assert(
+                    indirectFrameStamp === device.renderVersion,
+                    'Indirect dispatch slot must be set each frame using setupIndirectDispatch()'
+                );
                 gpuBuffer = device.indirectDispatchBuffer.impl.buffer;
             }
             const offset = indirectSlotIndex * _indirectDispatchEntryByteSize;

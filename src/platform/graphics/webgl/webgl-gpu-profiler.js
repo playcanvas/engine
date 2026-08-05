@@ -19,7 +19,7 @@ class FrameQueriesInfo {
     queries = [];
 
     destroy(gl) {
-        this.queries.forEach(query => gl.deleteQuery(query));
+        this.queries.forEach((query) => gl.deleteQuery(query));
         this.queries = null;
     }
 }
@@ -62,9 +62,9 @@ class WebglGpuProfiler extends GpuProfiler {
     }
 
     destroy() {
-        this.freeQueries.forEach(query => this.device.gl.deleteQuery(query));
-        this.frameQueries.forEach(query => this.device.gl.deleteQuery(query));
-        this.previousFrameQueries.forEach(frameQueriesInfo => frameQueriesInfo.destroy(this.device.gl));
+        this.freeQueries.forEach((query) => this.device.gl.deleteQuery(query));
+        this.frameQueries.forEach((query) => this.device.gl.deleteQuery(query));
+        this.previousFrameQueries.forEach((frameQueriesInfo) => frameQueriesInfo.destroy(this.device.gl));
 
         this.freeQueries = null;
         this.frameQueries = null;
@@ -90,9 +90,7 @@ class WebglGpuProfiler extends GpuProfiler {
     }
 
     start(name) {
-
         if (this.ext) {
-
             const slot = this.getSlot(name);
             const query = this.getQuery();
             this.frameQueries[slot] = query;
@@ -105,14 +103,12 @@ class WebglGpuProfiler extends GpuProfiler {
     }
 
     end(slot) {
-
         if (slot !== undefined) {
             this.device.gl.endQuery(this.ext.TIME_ELAPSED_EXT);
         }
     }
 
     frameStart() {
-
         this.processEnableRequest();
 
         if (this._enabled) {
@@ -127,9 +123,7 @@ class WebglGpuProfiler extends GpuProfiler {
     }
 
     request() {
-
         if (this._enabled) {
-
             const ext = this.ext;
             const gl = this.device.gl;
             const renderVersion = this.device.renderVersion;
@@ -156,7 +150,6 @@ class WebglGpuProfiler extends GpuProfiler {
 
                 // valid results
                 if (available && !disjoint) {
-
                     // remove the oldest frame from the list
                     this.previousFrameQueries.shift();
 

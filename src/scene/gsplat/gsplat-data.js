@@ -144,12 +144,12 @@ class GSplatData {
 
     // access a named property
     getProp(name, elementName = 'vertex') {
-        return this.getElement(elementName)?.properties.find(p => p.name === name)?.storage;
+        return this.getElement(elementName)?.properties.find((p) => p.name === name)?.storage;
     }
 
     // access the named element
     getElement(name) {
-        return this.elements.find(e => e.name === name);
+        return this.elements.find((e) => e.name === name);
     }
 
     // add a new property
@@ -244,7 +244,6 @@ class GSplatData {
      * @returns {boolean} - Whether the calculation was successful.
      */
     calcAabbExact(result, pred) {
-
         const p = new Vec3();
         const r = new Quat();
         const s = new Vec3();
@@ -396,9 +395,9 @@ class GSplatData {
             const Part1By2 = (x) => {
                 x &= 0x000003ff;
                 x = (x ^ (x << 16)) & 0xff0000ff;
-                x = (x ^ (x <<  8)) & 0x0300f00f;
-                x = (x ^ (x <<  4)) & 0x030c30c3;
-                x = (x ^ (x <<  2)) & 0x09249249;
+                x = (x ^ (x << 8)) & 0x0300f00f;
+                x = (x ^ (x << 4)) & 0x030c30c3;
+                x = (x ^ (x << 2)) & 0x09249249;
                 return x;
             };
 

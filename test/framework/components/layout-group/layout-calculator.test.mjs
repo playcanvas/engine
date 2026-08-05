@@ -3,7 +3,12 @@ import { expect } from 'chai';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
-import { FITTING_BOTH, FITTING_NONE, FITTING_SHRINK, FITTING_STRETCH } from '../../../../src/framework/components/layout-group/constants.js';
+import {
+    FITTING_BOTH,
+    FITTING_NONE,
+    FITTING_SHRINK,
+    FITTING_STRETCH
+} from '../../../../src/framework/components/layout-group/constants.js';
 import { LayoutCalculator } from '../../../../src/framework/components/layout-group/layout-calculator.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/scene/constants.js';
@@ -288,7 +293,7 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 100, 150, 250, 270]);
-        assertValues('y', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
     });
 
     it('lays children out vertically when orientation is ORIENTATION_VERTICAL', function () {
@@ -297,11 +302,11 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0,   0,   0,   0,   0]);
+        assertValues('x', [0, 0, 0, 0, 0]);
         assertValues('y', [0, 100, 150, 250, 270]);
     });
 
-    it('takes into account each element\'s pivot when calculating horizontal positions', function () {
+    it("takes into account each element's pivot when calculating horizontal positions", function () {
         elements = mixedWidthElements;
         options.orientation = ORIENTATION_HORIZONTAL;
 
@@ -311,10 +316,10 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [50, 110, 150, 250, 270], { approx: true });
-        assertValues('y', [10,  10,   0,   0,   0], { approx: true });
+        assertValues('y', [10, 10, 0, 0, 0], { approx: true });
     });
 
-    it('takes into account each element\'s pivot when calculating vertical positions', function () {
+    it("takes into account each element's pivot when calculating vertical positions", function () {
         elements = mixedHeightElements;
         options.orientation = ORIENTATION_VERTICAL;
 
@@ -323,7 +328,7 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [10,  10,   0,   0,   0], { approx: true });
+        assertValues('x', [10, 10, 0, 0, 0], { approx: true });
         assertValues('y', [50, 110, 150, 250, 270], { approx: true });
     });
 
@@ -375,9 +380,9 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 100, 150, 250, 270]);
-        assertValues('y', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [100,  50, 100,  20,  30]);
+        assertValues('calculatedWidth', [100, 50, 100, 20, 30]);
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -390,9 +395,9 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 100, 150, 250, 270]);
-        assertValues('y', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [100,  50, 100,  20,  30]);
+        assertValues('calculatedWidth', [100, 50, 100, 20, 30]);
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -405,9 +410,9 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 120, 210, 320, 350]);
-        assertValues('y', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [120,  90, 110,  30,  50], { approx: true });
+        assertValues('calculatedWidth', [120, 90, 110, 30, 50], { approx: true });
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -420,13 +425,13 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 200, 300, 500, 540]);
-        assertValues('y', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [200, 100, 200,  40,  60], { approx: true });
+        assertValues('calculatedWidth', [200, 100, 200, 40, 60], { approx: true });
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_STRETCH distributes additional space among remaining elements when one element\'s maxWidth is very small', function () {
+    it("{ wrap: false } FITTING_STRETCH distributes additional space among remaining elements when one element's maxWidth is very small", function () {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_STRETCH;
@@ -441,11 +446,11 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 277.556, 577.556, 578.556, 722.370], { approx: true });
-        assertValues('y', [0,       0,       0,       0,       0]);
+        assertValues('x', [0, 277.556, 577.556, 578.556, 722.37], { approx: true });
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [277.555, 300,   1, 143.815, 277.630], { approx: true });
-        assertValues('calculatedHeight', [100, 100, 100,     100,     100]);
+        assertValues('calculatedWidth', [277.555, 300, 1, 143.815, 277.63], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: false } FITTING_STRETCH includes spacing and padding in calculations', function () {
@@ -460,10 +465,10 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [20, 196.667, 306.667, 450, 500], { approx: true });
-        assertValues('y', [0,       0,       0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [166.667, 100, 133.333,  40,  60], { approx: true });
-        assertValues('calculatedHeight', [100, 100,     100, 100, 100]);
+        assertValues('calculatedWidth', [166.667, 100, 133.333, 40, 60], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: false } FITTING_SHRINK uses natural widths when total is less than container size', function () {
@@ -475,9 +480,9 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 100, 150, 250, 270]);
-        assertValues('y', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [100,  50, 100,  20,  30]);
+        assertValues('calculatedWidth', [100, 50, 100, 20, 30]);
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -490,10 +495,10 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 98, 146.5, 244.25, 262]);
-        assertValues('y', [0,  0,     0,      0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [98, 48.5, 97.75, 17.75,  28]);
-        assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
+        assertValues('calculatedWidth', [98, 48.5, 97.75, 17.75, 28]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: false } FITTING_SHRINK does not make any elements smaller than their minWidth when reducing widths', function () {
@@ -505,13 +510,13 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 60, 85, 140, 150]);
-        assertValues('y', [0,  0,  0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [60,  25,  55,  10,  15]);
+        assertValues('calculatedWidth', [60, 25, 55, 10, 15]);
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
-    it('{ wrap: false } FITTING_SHRINK distributes additional size reduction among remaining elements when one element\'s minWidth is very large', function () {
+    it("{ wrap: false } FITTING_SHRINK distributes additional size reduction among remaining elements when one element's minWidth is very large", function () {
         elements = mixedWidthElementsWithLayoutChildComponents;
         options.orientation = ORIENTATION_HORIZONTAL;
         options.widthFitting = FITTING_SHRINK;
@@ -526,10 +531,10 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 58.71, 77.742, 137.742, 138.742], { approx: true });
-        assertValues('y', [0,     0,      0,       0,       0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [58.71, 19.032,  60,   1,   1], { approx: true });
-        assertValues('calculatedHeight', [100,    100, 100, 100, 100]);
+        assertValues('calculatedWidth', [58.71, 19.032, 60, 1, 1], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: false } FITTING_SHRINK includes spacing and padding in calculations', function () {
@@ -544,10 +549,10 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [20, 110, 155, 242.5, 262.5]);
-        assertValues('y', [0,   0,   0,     0,     0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [80,  35, 77.5,  10,  15]);
-        assertValues('calculatedHeight', [100, 100,  100, 100, 100]);
+        assertValues('calculatedWidth', [80, 35, 77.5, 10, 15]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: false } FITTING_BOTH stretches elements proportionally when natural widths are less than container size', function () {
@@ -559,9 +564,9 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 120, 210, 320, 350]);
-        assertValues('y', [0,   0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [120,  90, 110,  30,  50], { approx: true });
+        assertValues('calculatedWidth', [120, 90, 110, 30, 50], { approx: true });
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -574,10 +579,10 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 98, 146.5, 244.25, 262]);
-        assertValues('y', [0,  0,     0,      0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
 
-        assertValues('calculatedWidth', [98, 48.5, 97.75, 17.75,  28]);
-        assertValues('calculatedHeight', [100,  100,   100,   100, 100]);
+        assertValues('calculatedWidth', [98, 48.5, 97.75, 17.75, 28]);
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: false } can reverse elements on the x axis', function () {
@@ -590,7 +595,7 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [200, 150, 50, 30, 0]);
-        assertValues('y', [0,     0,  0,  0, 0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
     });
 
     it('{ wrap: false } can reverse elements on the y axis', function () {
@@ -602,7 +607,7 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0,     0,  0,  0, 0]);
+        assertValues('x', [0, 0, 0, 0, 0]);
         assertValues('y', [200, 150, 50, 30, 0]);
     });
 
@@ -617,7 +622,7 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [-40,  60, 110, 210, 230]);
+        assertValues('x', [-40, 60, 110, 210, 230]);
         assertValues('y', [150, 150, 150, 150, 150]);
     });
 
@@ -632,7 +637,7 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [-20,  80, 130, 230, 250]);
+        assertValues('x', [-20, 80, 130, 230, 250]);
         assertValues('y', [300, 300, 300, 300, 300]);
     });
 
@@ -645,7 +650,7 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 0, 100, 200, 220]);
-        assertValues('y', [0, 0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
     });
 
     it('{ wrap: true } FITTING_NONE does not adjust the size or position of elements to match the container size', function () {
@@ -657,10 +662,10 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 100, 150,   0,  20]);
-        assertValues('y', [0,   0,   0, 100, 100]);
+        assertValues('x', [0, 100, 150, 0, 20]);
+        assertValues('y', [0, 0, 0, 100, 100]);
 
-        assertValues('calculatedWidth', [100,  50, 100,  20,  30]);
+        assertValues('calculatedWidth', [100, 50, 100, 20, 30]);
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -675,10 +680,10 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 100, 150,   0,  20]);
-        assertValues('y', [0,   0,   0, 200, 200]);
+        assertValues('x', [0, 100, 150, 0, 20]);
+        assertValues('y', [0, 0, 0, 200, 200]);
 
-        assertValues('calculatedWidth', [100,  50, 100,  20,  30]);
+        assertValues('calculatedWidth', [100, 50, 100, 20, 30]);
         assertValues('calculatedHeight', [100, 100, 200, 100, 100]);
     });
 
@@ -691,10 +696,10 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 100, 150,   0,  20]);
-        assertValues('y', [0,   0,   0, 100, 100]);
+        assertValues('x', [0, 100, 150, 0, 20]);
+        assertValues('y', [0, 0, 0, 100, 100]);
 
-        assertValues('calculatedWidth', [100,  50, 100,  20,  30]);
+        assertValues('calculatedWidth', [100, 50, 100, 20, 30]);
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -711,10 +716,10 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [20, 130,  20, 130, 160]);
-        assertValues('y', [0,    0, 115, 115, 115]);
+        assertValues('x', [20, 130, 20, 130, 160]);
+        assertValues('y', [0, 0, 115, 115, 115]);
 
-        assertValues('calculatedWidth', [100,  50, 100,  20,  30]);
+        assertValues('calculatedWidth', [100, 50, 100, 20, 30]);
         assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
@@ -734,8 +739,8 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 120, 240, 360,   0]);
-        assertValues('y', [0,    0,  0,   0, 100]);
+        assertValues('x', [0, 120, 240, 360, 0]);
+        assertValues('y', [0, 0, 0, 0, 100]);
     });
 
     it('{ wrap: true } FITTING_STRETCH stretches elements proportionally when natural widths are less than container size', function () {
@@ -747,11 +752,11 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
-        assertValues('y', [0,       0,       0, 100, 100]);
+        assertValues('x', [0, 104.286, 162.857, 0, 40], { approx: true });
+        assertValues('y', [0, 0, 0, 100, 100]);
 
-        assertValues('calculatedWidth', [104.286, 58.571, 102.143,  40,  60], { approx: true });
-        assertValues('calculatedHeight', [100,    100,     100, 100, 100]);
+        assertValues('calculatedWidth', [104.286, 58.571, 102.143, 40, 60], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: true } FITTING_SHRINK stretches elements proportionally when natural widths are less than container size', function () {
@@ -763,11 +768,11 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 98.75, 147.917, 246.458,   0], { approx: true });
-        assertValues('y', [0,     0,       0,       0, 100]);
+        assertValues('x', [0, 98.75, 147.917, 246.458, 0], { approx: true });
+        assertValues('y', [0, 0, 0, 0, 100]);
 
-        assertValues('calculatedWidth', [98.75, 49.167, 98.542, 18.542,  30], { approx: true });
-        assertValues('calculatedHeight', [100,    100,    100,    100, 100]);
+        assertValues('calculatedWidth', [98.75, 49.167, 98.542, 18.542, 30], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: true } FITTING_BOTH stretches elements proportionally when natural widths are less than container size', function () {
@@ -779,11 +784,11 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [0, 104.286, 162.857,   0,  40], { approx: true });
-        assertValues('y', [0,       0,       0, 100, 100]);
+        assertValues('x', [0, 104.286, 162.857, 0, 40], { approx: true });
+        assertValues('y', [0, 0, 0, 100, 100]);
 
-        assertValues('calculatedWidth', [104.286, 58.571, 102.143,  40,  60], { approx: true });
-        assertValues('calculatedHeight', [100,    100,     100, 100, 100]);
+        assertValues('calculatedWidth', [104.286, 58.571, 102.143, 40, 60], { approx: true });
+        assertValues('calculatedHeight', [100, 100, 100, 100, 100]);
     });
 
     it('{ wrap: true } can reverse elements on the x axis', function () {
@@ -796,8 +801,8 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [150, 100,  0,  30,   0]);
-        assertValues('y', [0,   0,  0, 100, 100]);
+        assertValues('x', [150, 100, 0, 30, 0]);
+        assertValues('y', [0, 0, 0, 100, 100]);
     });
 
     it('{ wrap: true } can reverse elements on the y axis', function () {
@@ -825,8 +830,8 @@ describe('LayoutCalculator', function () {
 
         calculate();
 
-        assertValues('x', [150, 100,   0, 30, 0]);
-        assertValues('y', [100, 100, 100,  0, 0]);
+        assertValues('x', [150, 100, 0, 30, 0]);
+        assertValues('y', [100, 100, 100, 0, 0]);
     });
 
     it('{ wrap: true } can align to [1, 0.5]', function () {
@@ -875,7 +880,6 @@ describe('LayoutCalculator', function () {
         calculate();
 
         assertValues('x', [0, 0, 100, 200, 220]);
-        assertValues('y', [0, 0,   0,   0,   0]);
+        assertValues('y', [0, 0, 0, 0, 0]);
     });
-
 });

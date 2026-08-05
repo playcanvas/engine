@@ -1,6 +1,6 @@
 // procedural Bayer matrix, based on: https://www.shadertoy.com/view/Mlt3z8
 
-export default /* glsl */`
+export default /* glsl */ `
 // 2x2 bayer matrix [1 2][3 0], p in [0,1]
 float bayer2(vec2 p) {
     return mod(2.0 * p.y + p.x + 1.0, 4.0);

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 vec3 combineColor(vec3 albedo, vec3 sheenSpecularity, float clearcoatSpecularity) {
     vec3 ret = vec3(0);
 #ifdef LIT_OLD_AMBIENT

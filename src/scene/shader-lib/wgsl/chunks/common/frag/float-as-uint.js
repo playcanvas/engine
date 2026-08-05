@@ -2,7 +2,7 @@
 // precision. The float value is encoded to RGBA8 and decoded back to float. Used as a fallback
 // for platforms that do not support float textures but need to render to a float texture (without
 // filtering)
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #ifndef FLOAT_AS_UINT
 #define FLOAT_AS_UINT

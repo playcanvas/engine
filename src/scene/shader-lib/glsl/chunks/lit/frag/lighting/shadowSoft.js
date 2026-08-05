@@ -1,5 +1,5 @@
 // Soft directional shadows PCSS - with and without blocker search.
-export default /* glsl */`
+export default /* glsl */ `
 
 highp float fractSinRand(const in vec2 uv) {
     const float PI = 3.141592653589793;

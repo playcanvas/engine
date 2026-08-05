@@ -11,7 +11,7 @@ class EdgeDetectEffect extends pc.PostEffect {
     constructor(graphicsDevice) {
         super(graphicsDevice);
 
-        const fshader = /* glsl */`
+        const fshader = /* glsl */ `
             uniform sampler2D uColorBuffer;
             varying vec2 vUv0;
             uniform vec2 uResolution;
@@ -103,9 +103,13 @@ EdgeDetect.prototype.initialize = function () {
     this.effect.intensity = this.intensity;
     this.effect.color = this.color;
 
-    this.on('attr', function (name, value) {
-        this.effect[name] = value;
-    }, this);
+    this.on(
+        'attr',
+        function (name, value) {
+            this.effect[name] = value;
+        },
+        this
+    );
 
     var queue = this.entity.camera.postEffects;
 

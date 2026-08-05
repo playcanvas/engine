@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef GSPLAT_USER_VARYINGS
     #include "gsplatUserVaryingsVS"
 #endif

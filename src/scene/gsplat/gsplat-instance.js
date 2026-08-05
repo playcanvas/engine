@@ -1,7 +1,12 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { BUFFERUSAGE_COPY_DST, CULLFACE_NONE, SEMANTIC_POSITION, PIXELFORMAT_R32U } from '../../platform/graphics/constants.js';
+import {
+    BUFFERUSAGE_COPY_DST,
+    CULLFACE_NONE,
+    SEMANTIC_POSITION,
+    PIXELFORMAT_R32U
+} from '../../platform/graphics/constants.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { GSplatSorter } from './gsplat-sorter.js';
@@ -73,11 +78,7 @@ class GSplatInstance {
             this.orderBuffer = new StorageBuffer(device, numSplats * 4, BUFFERUSAGE_COPY_DST);
             DebugHelper.setName(this.orderBuffer, 'GsplatInstance.order');
         } else {
-            this.orderTexture = resource.streams.createTexture(
-                'splatOrder',
-                PIXELFORMAT_R32U,
-                dims
-            );
+            this.orderTexture = resource.streams.createTexture('splatOrder', PIXELFORMAT_R32U, dims);
         }
 
         if (options.material) {
@@ -117,7 +118,9 @@ class GSplatInstance {
             this.sorter = new GSplatSorter(device, options.scene);
             this.sorter.init(orderTarget, numSplats, centers, chunks);
         } else {
-            Debug.warnOnce(`Skipping gsplat resource id ${resource.id} on the non-unified rendering path — no centers buffer. Scene#gsplatCentersEnabled needs to be true.`);
+            Debug.warnOnce(
+                `Skipping gsplat resource id ${resource.id} on the non-unified rendering path — no centers buffer. Scene#gsplatCentersEnabled needs to be true.`
+            );
         }
     }
 
@@ -202,7 +205,10 @@ class GSplatInstance {
             invModelMat.transformVector(cameraDirection, cameraDirection);
 
             // sort if the camera has changed
-            if (!cameraPosition.equalsApprox(this.lastCameraPosition) || !cameraDirection.equalsApprox(this.lastCameraDirection)) {
+            if (
+                !cameraPosition.equalsApprox(this.lastCameraPosition) ||
+                !cameraDirection.equalsApprox(this.lastCameraDirection)
+            ) {
                 this.lastCameraPosition.copy(cameraPosition);
                 this.lastCameraDirection.copy(cameraDirection);
                 this.sorter.setCamera(cameraPosition, cameraDirection);
@@ -211,7 +217,6 @@ class GSplatInstance {
     }
 
     update() {
-
         // Apply deferred sort results (at most one GPU upload per frame).
         const count = this.sorter?.applyPendingSorted() ?? -1;
         if (count >= 0) {
@@ -220,7 +225,6 @@ class GSplatInstance {
         }
 
         if (this.cameras.length > 0) {
-
             // sort by the first camera it's visible for
             // TODO: extend to support multiple cameras
             const camera = this.cameras[0];

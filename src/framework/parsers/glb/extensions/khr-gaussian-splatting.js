@@ -31,13 +31,19 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
 
     Debug.call(() => {
         if (primitive.mode !== 0) {
-            Debug.warn(`glTF ${extensionName} extension is used on a primitive with non-POINTS mode ${primitive.mode}.`);
+            Debug.warn(
+                `glTF ${extensionName} extension is used on a primitive with non-POINTS mode ${primitive.mode}.`
+            );
         }
         if (extensionData.kernel !== undefined && extensionData.kernel !== 'ellipse') {
-            Debug.warn(`glTF ${extensionName} extension uses unsupported kernel '${extensionData.kernel}', rendering as 'ellipse'.`);
+            Debug.warn(
+                `glTF ${extensionName} extension uses unsupported kernel '${extensionData.kernel}', rendering as 'ellipse'.`
+            );
         }
         if (extensionData.colorSpace === 'lin_rec709_display') {
-            Debug.warn(`glTF ${extensionName} extension uses colorSpace '${extensionData.colorSpace}' which is not supported, colors are treated as srgb_rec709_display.`);
+            Debug.warn(
+                `glTF ${extensionName} extension uses colorSpace '${extensionData.colorSpace}' which is not supported, colors are treated as srgb_rec709_display.`
+            );
         }
     });
 
@@ -61,7 +67,9 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
     const sh0 = readAttribute(`${extensionName}:SH_DEGREE_0_COEF_0`);
 
     if (!numSplats || !positions || !rotations || !scales || !opacities || !sh0) {
-        Debug.error(`glTF ${extensionName} primitive is missing required attributes or their data is invalid, the primitive is skipped.`);
+        Debug.error(
+            `glTF ${extensionName} primitive is missing required attributes or their data is invalid, the primitive is skipped.`
+        );
         return null;
     }
 
@@ -118,7 +126,9 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
                 const name = `${extensionName}:SH_DEGREE_${d}_COEF_${c}`;
                 const source = readAttribute(name);
                 if (!source) {
-                    Debug.error(`glTF ${extensionName} primitive has an invalid ${name} attribute, the primitive is skipped.`);
+                    Debug.error(
+                        `glTF ${extensionName} primitive has an invalid ${name} attribute, the primitive is skipped.`
+                    );
                     return null;
                 }
                 rest[k] = GltfAccessor.extractComponent(source, 3, 0, numSplats);
@@ -132,11 +142,13 @@ const createGSplatData = (primitive, accessors, bufferViews) => {
         }
     }
 
-    const data = new GSplatData([{
-        name: 'vertex',
-        count: numSplats,
-        properties
-    }]);
+    const data = new GSplatData([
+        {
+            name: 'vertex',
+            count: numSplats,
+            properties
+        }
+    ]);
 
     // the extension stores linear scale and post-sigmoid opacity
     data.activated = true;

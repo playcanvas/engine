@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 float _getShadowPCF5x5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {
     // http://the-witness.net/news/2013/09/shadow-mapping-summary-part-1/
 

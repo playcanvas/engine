@@ -33,21 +33,21 @@ function toKeyCode(s) {
 }
 
 const _keyCodeToKeyIdentifier = {
-    '9': 'Tab',
-    '13': 'Enter',
-    '16': 'Shift',
-    '17': 'Control',
-    '18': 'Alt',
-    '27': 'Escape',
+    9: 'Tab',
+    13: 'Enter',
+    16: 'Shift',
+    17: 'Control',
+    18: 'Alt',
+    27: 'Escape',
 
-    '37': 'Left',
-    '38': 'Up',
-    '39': 'Right',
-    '40': 'Down',
+    37: 'Left',
+    38: 'Up',
+    39: 'Right',
+    40: 'Down',
 
-    '46': 'Delete',
+    46: 'Delete',
 
-    '91': 'Win'
+    91: 'Win'
 };
 
 /**
@@ -239,7 +239,7 @@ class Keyboard extends EventHandler {
         // Convert to hex and add leading 0's
         let hex = keyCode.toString(16).toUpperCase();
         const length = hex.length;
-        for (let count = 0; count < (4 - length); count++) {
+        for (let count = 0; count < 4 - length; count++) {
             hex = `0${hex}`;
         }
 
@@ -364,7 +364,7 @@ class Keyboard extends EventHandler {
         const keyCode = toKeyCode(key);
         const id = this.toKeyIdentifier(keyCode);
 
-        return !!(this._keymap[id]);
+        return !!this._keymap[id];
     }
 
     /**
@@ -377,7 +377,7 @@ class Keyboard extends EventHandler {
         const keyCode = toKeyCode(key);
         const id = this.toKeyIdentifier(keyCode);
 
-        return (!!(this._keymap[id]) && !!!(this._lastmap[id]));
+        return !!this._keymap[id] && !!!this._lastmap[id];
     }
 
     /**
@@ -390,7 +390,7 @@ class Keyboard extends EventHandler {
         const keyCode = toKeyCode(key);
         const id = this.toKeyIdentifier(keyCode);
 
-        return (!!!(this._keymap[id]) && !!(this._lastmap[id]));
+        return !!!this._keymap[id] && !!this._lastmap[id];
     }
 }
 

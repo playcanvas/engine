@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 var<private> dNormalMatrix: mat3x3f;
 
 fn getNormal() -> vec3f {

@@ -1,5 +1,5 @@
 // main shader of the lit fragment shader
-export default /* glsl */`
+export default /* glsl */ `
 
 #include "varyingsPS"
 #include "litUserDeclarationPS"

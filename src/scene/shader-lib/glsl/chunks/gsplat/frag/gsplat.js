@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 #ifndef DITHER_NONE
     #include "bayerPS"

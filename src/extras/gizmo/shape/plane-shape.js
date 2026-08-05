@@ -60,14 +60,10 @@ class PlaneShape extends Shape {
         this._gap = args.gap ?? this._gap;
 
         // intersect
-        this.triData = [
-            new TriData(new PlaneGeometry())
-        ];
+        this.triData = [new TriData(new PlaneGeometry())];
 
         // render
-        this._createRenderComponent(this.entity, [
-            Mesh.fromGeometry(this.device, new PlaneGeometry())
-        ]);
+        this._createRenderComponent(this.entity, [Mesh.fromGeometry(this.device, new PlaneGeometry())]);
 
         // update transform
         this._update();

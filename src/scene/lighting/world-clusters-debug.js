@@ -24,7 +24,6 @@ class WorldClustersDebug {
     static colorHigh = new Vec3(40, 0, 0);
 
     static render(worldClusters, scene) {
-
         const device = scene.device;
         const cells = worldClusters.cells;
         const lightsBuffer = worldClusters.lightsBuffer;
@@ -55,13 +54,42 @@ class WorldClustersDebug {
         };
 
         // generate grid lines
-        renderCellLines(cells.x, cells.z, boundsMin.x, cellDelta.x, boundsMin.z, cellDelta.z, boundsMin.y, boundsMax.y, 0);
-        renderCellLines(cells.x, cells.y, boundsMin.x, cellDelta.x, boundsMin.y, cellDelta.y, boundsMin.z, boundsMax.z, 1);
-        renderCellLines(cells.y, cells.z, boundsMin.y, cellDelta.y, boundsMin.z, cellDelta.z, boundsMin.x, boundsMax.x, 2);
+        renderCellLines(
+            cells.x,
+            cells.z,
+            boundsMin.x,
+            cellDelta.x,
+            boundsMin.z,
+            cellDelta.z,
+            boundsMin.y,
+            boundsMax.y,
+            0
+        );
+        renderCellLines(
+            cells.x,
+            cells.y,
+            boundsMin.x,
+            cellDelta.x,
+            boundsMin.y,
+            cellDelta.y,
+            boundsMin.z,
+            boundsMax.z,
+            1
+        );
+        renderCellLines(
+            cells.y,
+            cells.z,
+            boundsMin.y,
+            cellDelta.y,
+            boundsMin.z,
+            cellDelta.z,
+            boundsMin.x,
+            boundsMax.x,
+            2
+        );
 
         // render grid lines
         if (gridPositions.length) {
-
             // update colors only when needed
             const numVerts = gridPositions.length / 3;
             if (numVerts !== gridColors.length / 4) {
@@ -102,12 +130,10 @@ class WorldClustersDebug {
         for (let x = 0; x < cells.x; x++) {
             for (let z = 0; z < cells.z; z++) {
                 for (let y = 0; y < cells.y; y++) {
-
                     const clusterIndex = x + divX * (z + y * divZ);
                     const count = counts[clusterIndex];
 
                     if (count > 0) {
-
                         // cube corners
                         min.x = boundsMin.x + step.x * x;
                         min.y = boundsMin.y + step.y * y;
@@ -166,7 +192,6 @@ class WorldClustersDebug {
             mesh.setIndices(indices);
             mesh.update(PRIMITIVE_TRIANGLES, false);
 
-
             if (!WorldClustersDebug.meshInstance) {
                 const material = new StandardMaterial();
                 material.useLighting = false;
@@ -186,7 +211,13 @@ class WorldClustersDebug {
 
             // render
             const meshInstance = WorldClustersDebug.meshInstance;
-            scene.immediate.drawMesh(meshInstance.material, meshInstance.node.worldTransform, null, meshInstance, scene.defaultDrawLayer);
+            scene.immediate.drawMesh(
+                meshInstance.material,
+                meshInstance.node.worldTransform,
+                null,
+                meshInstance,
+                scene.defaultDrawLayer
+            );
         }
     }
 }

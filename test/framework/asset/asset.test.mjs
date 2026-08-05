@@ -5,7 +5,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Asset', function () {
-
     let app;
 
     beforeEach(function () {
@@ -20,18 +19,17 @@ describe('Asset', function () {
     });
 
     const DEFAULT_LOCALE_FALLBACKS = {
-        'en': 'en-US',
-        'es': 'en-ES',
-        'zh': 'zh-CN',
-        'fr': 'fr-FR',
-        'de': 'de-DE',
-        'it': 'it-IT',
-        'ru': 'ru-RU',
-        'ja': 'ja-JP'
+        en: 'en-US',
+        es: 'en-ES',
+        zh: 'zh-CN',
+        fr: 'fr-FR',
+        de: 'de-DE',
+        it: 'it-IT',
+        ru: 'ru-RU',
+        ja: 'ja-JP'
     };
 
     describe('#getLocalizedAssetId', function () {
-
         it('should return null if no localizations exist', function () {
             const asset = new Asset('asset', 'font');
             asset.id = 1000;
@@ -124,7 +122,5 @@ describe('Asset', function () {
 
             expect(asset.getLocalizedAssetId('zh-SG')).to.equal(2);
         });
-
     });
-
 });

@@ -16,12 +16,14 @@ class AssetFile {
     // Compare this AssetFile with another. Returns true if they have the same data
     // and false otherwise.
     equals(other) {
-        return this.url === other.url &&
+        return (
+            this.url === other.url &&
             this.filename === other.filename &&
             this.hash === other.hash &&
             this.size === other.size &&
             this.opt === other.opt &&
-            this.contents === other.contents;
+            this.contents === other.contents
+        );
     }
 }
 

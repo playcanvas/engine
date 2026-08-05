@@ -1,5 +1,11 @@
 import { Vec3 } from '../../../core/math/vec3.js';
-import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_DEPTH, LAYERID_WORLD, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
+import {
+    BLEND_NORMAL,
+    EMITTERSHAPE_BOX,
+    LAYERID_DEPTH,
+    LAYERID_WORLD,
+    PARTICLEORIENTATION_SCREEN
+} from '../../../scene/constants.js';
 import { Mesh } from '../../../scene/mesh.js';
 import { ParticleEmitter } from '../../../scene/particle-system/particle-emitter.js';
 import { Asset } from '../../asset/asset.js';

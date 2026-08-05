@@ -1,5 +1,5 @@
 // Declarations for Container GSplat format
-export default /* wgsl */`
+export default /* wgsl */ `
 // Format-provided declarations (textures, load functions, uniforms)
 #include "gsplatContainerDeclarationsVS"
 

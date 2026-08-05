@@ -107,7 +107,6 @@ class RenderPassDofBlur extends RenderPassShaderQuad {
     }
 
     execute() {
-
         if (!this.shader) {
             this.createShader();
         }

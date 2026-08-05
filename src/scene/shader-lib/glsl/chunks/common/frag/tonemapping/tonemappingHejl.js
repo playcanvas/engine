@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 vec3 toneMap(vec3 color) {
     color *= getExposure();
     const float  A = 0.22, B = 0.3, C = .1, D = 0.2, E = .01, F = 0.3;

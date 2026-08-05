@@ -183,9 +183,9 @@ class GSplatImage extends Script {
                 // Calculate position on XZ plane, centered at origin
                 // X goes from -0.5 to +0.5
                 // Z goes from -0.5 to +0.5 (flip Y to get correct orientation)
-                const x = (px / maxDim) - 0.5;
+                const x = px / maxDim - 0.5;
                 const y = 0;
-                const z = -((py / maxDim) - 0.5);
+                const z = -(py / maxDim - 0.5);
 
                 // Write center data (RGBA32F: x, y, z, size)
                 centerData[splatIndex * 4 + 0] = x;

@@ -4,9 +4,7 @@ import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-gra
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('GraphicsDevice', function () {
-
     describe('#constructor', function () {
-
         it('does not throw with a mock canvas lacking getBoundingClientRect', function () {
             const device = new NullGraphicsDevice({ id: 'mock' });
             expect(device.clientRect.width).to.equal(0);
@@ -22,7 +20,6 @@ describe('GraphicsDevice', function () {
         });
 
         describe('with a DOM canvas', function () {
-
             beforeEach(function () {
                 jsdomSetup();
             });

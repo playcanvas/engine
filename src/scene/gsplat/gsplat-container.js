@@ -101,7 +101,7 @@ class GSplatContainer extends GSplatResourceBase {
         const gsplatData = {
             numSplats: maxSplats,
             getCenters: () => null,
-            calcAabb: box => box.copy(aabb)
+            calcAabb: (box) => box.copy(aabb)
         };
         super(device, gsplatData, { prepareCenters: false });
 

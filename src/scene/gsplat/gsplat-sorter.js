@@ -56,9 +56,12 @@ class GSplatSorter extends EventHandler {
             const oldOrder = this.orderData;
 
             // send previous buffer to worker for reuse
-            this.worker.postMessage({
-                order: oldOrder
-            }, [oldOrder]);
+            this.worker.postMessage(
+                {
+                    order: oldOrder
+                },
+                [oldOrder]
+            );
 
             // Store result for deferred GPU upload. Only the latest result is kept,
             // avoiding redundant uploads when multiple worker messages arrive between frames.
@@ -80,9 +83,13 @@ class GSplatSorter extends EventHandler {
             });
             this.worker.on('message', messageHandler);
         } else {
-            this.worker = new Worker(URL.createObjectURL(new Blob([workerSource], {
-                type: 'application/javascript'
-            })));
+            this.worker = new Worker(
+                URL.createObjectURL(
+                    new Blob([workerSource], {
+                        type: 'application/javascript'
+                    })
+                )
+            );
             this.worker.addEventListener('message', messageHandler);
         }
     }
@@ -150,16 +157,22 @@ class GSplatSorter extends EventHandler {
                 centers[dst + 2] = this.centers[src + 2];
             }
 
-            this.worker.postMessage({
-                centers: centers.buffer,
-                mapping: mapping.buffer
-            }, [centers.buffer, mapping.buffer]);
+            this.worker.postMessage(
+                {
+                    centers: centers.buffer,
+                    mapping: mapping.buffer
+                },
+                [centers.buffer, mapping.buffer]
+            );
         } else {
             const centers = this.centers.slice();
-            this.worker.postMessage({
-                centers: centers.buffer,
-                mapping: null
-            }, [centers.buffer]);
+            this.worker.postMessage(
+                {
+                    centers: centers.buffer,
+                    mapping: null
+                },
+                [centers.buffer]
+            );
         }
     }
 

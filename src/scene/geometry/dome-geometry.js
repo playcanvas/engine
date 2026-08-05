@@ -49,7 +49,6 @@ class DomeGeometry extends SphereGeometry {
      * });
      */
     constructor(opts = {}) {
-
         // create a sphere geometry
         const radius = 0.5; // the math and constants are based on a unit sphere
         const latitudeBands = opts.latitudeBands ?? 16;
@@ -68,14 +67,12 @@ class DomeGeometry extends SphereGeometry {
 
         const positions = this.positions;
         for (let i = 0; i < positions.length; i += 3) {
-
             const x = positions[i] / radius;
             let y = positions[i + 1] / radius;
             const z = positions[i + 2] / radius;
 
             // flatten the lower hemisphere
             if (y < 0) {
-
                 // scale vertices on the bottom
                 y *= 0.3;
 

@@ -115,7 +115,7 @@ class CircleGeometry extends Geometry {
         this.positions = positions;
         this.normals = normals;
         this.uvs = uvs;
-        this.uvs1 = uvs;    // UV1 = UV0 for circle
+        this.uvs1 = uvs; // UV1 = UV0 for circle
         this.indices = indices;
 
         if (opts.calculateTangents) {

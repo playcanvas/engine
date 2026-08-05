@@ -29,7 +29,6 @@ class WebglShaderProcessorGLSL extends ShaderProcessorGLSL {
      * @returns {{ vshader: string, fshader: string }} The processed shader sources.
      */
     static run(device, shaderDefinition, shader) {
-
         // extract only the uniform lines, leaving attributes / varyings / outs in the source for
         // the gles3 compatibility macros to handle
         const vertexExtracted = WebglShaderProcessorGLSL.extract(shaderDefinition.vshader, true);
@@ -60,7 +59,6 @@ class WebglShaderProcessorGLSL extends ShaderProcessorGLSL {
      * @returns {string} The generated GLSL.
      */
     static processUniformsGL2(uniforms, processingOptions) {
-
         let code = '';
 
         // view uniform buffer block - generated from the full view format, so its std140 layout

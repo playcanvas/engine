@@ -1,5 +1,5 @@
 // Spherical Harmonics for uncompressed GSplat format
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #if SH_BANDS > 0
 

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
     // global texture bias for standard textures
     #if LIT_NONE_SLICE_MODE == TILED

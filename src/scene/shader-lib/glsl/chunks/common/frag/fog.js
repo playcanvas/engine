@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 float dBlendModeFogFactor = 1.0;
 

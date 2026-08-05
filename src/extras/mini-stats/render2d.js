@@ -1,5 +1,8 @@
 import {
-    BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_ONE,
+    BLENDEQUATION_ADD,
+    BLENDMODE_SRC_ALPHA,
+    BLENDMODE_ONE_MINUS_SRC_ALPHA,
+    BLENDMODE_ONE,
     BUFFER_STATIC,
     BUFFER_STREAM,
     CULLFACE_NONE,
@@ -21,9 +24,9 @@ import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 
 // Graph colors for MiniStats
-const graphColorDefault = '1.0, 0.412, 0.380';  // Pastel Red
-const graphColorGpu = '0.467, 0.867, 0.467';    // Pastel Green
-const graphColorCpu = '0.424, 0.627, 0.863';    // Little Boy Blue
+const graphColorDefault = '1.0, 0.412, 0.380'; // Pastel Red
+const graphColorGpu = '0.467, 0.867, 0.467'; // Pastel Green
+const graphColorCpu = '0.424, 0.627, 0.863'; // Little Boy Blue
 
 // Background colors for MiniStats graphs
 const mainBackgroundColor = '0.0, 0.0, 0.0';
@@ -208,8 +211,15 @@ class Render2d {
         this.material = material;
         material.cull = CULLFACE_NONE;
         material.depthState = DepthState.NODEPTH;
-        material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-            BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
+        material.blendState = new BlendState(
+            true,
+            BLENDEQUATION_ADD,
+            BLENDMODE_SRC_ALPHA,
+            BLENDMODE_ONE_MINUS_SRC_ALPHA,
+            BLENDEQUATION_ADD,
+            BLENDMODE_ONE,
+            BLENDMODE_ONE
+        );
         material.update();
 
         this.meshInstance = new MeshInstance(this.mesh, material, new GraphNode('MiniStatsMesh'));
@@ -245,12 +255,39 @@ class Render2d {
         const u1 = (u + (uw ?? w)) / tw;
         const v1 = (v + (uh ?? h)) / th;
 
-        this.data.set([
-            x0, y0, wordFlag, u0, v0, 0, 0,
-            x1, y0, wordFlag, u1, v0, 1, 0,
-            x1, y1, wordFlag, u1, v1, 1, 1,
-            x0, y1, wordFlag, u0, v1, 0, 1
-        ], 4 * 7 * this.quads);
+        this.data.set(
+            [
+                x0,
+                y0,
+                wordFlag,
+                u0,
+                v0,
+                0,
+                0,
+                x1,
+                y0,
+                wordFlag,
+                u1,
+                v0,
+                1,
+                0,
+                x1,
+                y1,
+                wordFlag,
+                u1,
+                v1,
+                1,
+                1,
+                x0,
+                y1,
+                wordFlag,
+                u0,
+                v1,
+                0,
+                1
+            ],
+            4 * 7 * this.quads
+        );
 
         this.quads++;
         this.prim.count += 6;
@@ -265,7 +302,6 @@ class Render2d {
     }
 
     render(app, layer, graphTexture, wordsTexture, clr, height) {
-
         // set vertex data (swap storage)
         this.buffer.setData(this.data.buffer);
 

@@ -1,6 +1,6 @@
 // vertex shader internally used to apply morph targets in textures into a final texture containing
 // blended morph targets
-export default /* glsl */`
+export default /* glsl */ `
     attribute vec2 vertex_position;
     varying vec2 uv0;
     void main(void) {

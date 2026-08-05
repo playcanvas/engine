@@ -8,7 +8,9 @@ import { Vec4 } from '../../../core/math/vec4.js';
 import {
     FUNC_EQUAL,
     PRIMITIVE_TRISTRIP,
-    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
+    SEMANTIC_POSITION,
+    SEMANTIC_NORMAL,
+    SEMANTIC_TEXCOORD0,
     STENCILOP_DECREMENT,
     TYPE_FLOAT32
 } from '../../../platform/graphics/constants.js';
@@ -16,8 +18,11 @@ import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
 import { DeviceCache } from '../../../platform/graphics/device-cache.js';
 import {
-    LAYER_HUD, LAYER_WORLD,
-    SPRITE_RENDERMODE_SIMPLE, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
+    LAYER_HUD,
+    LAYER_WORLD,
+    SPRITE_RENDERMODE_SIMPLE,
+    SPRITE_RENDERMODE_SLICED,
+    SPRITE_RENDERMODE_TILED
 } from '../../../scene/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Mesh } from '../../../scene/mesh.js';
@@ -200,7 +205,12 @@ class ImageRenderable {
             } else {
                 this.unmaskMeshInstance.drawOrder = this.meshInstance.drawOrder + this._element.getMaskOffset();
             }
-            Debug.trace(TRACEID_ELEMENT, 'setDrawOrder: ', this.unmaskMeshInstance.name, this.unmaskMeshInstance.drawOrder);
+            Debug.trace(
+                TRACEID_ELEMENT,
+                'setDrawOrder: ',
+                this.unmaskMeshInstance.name,
+                this.unmaskMeshInstance.drawOrder
+            );
         }
     }
 
@@ -363,8 +373,7 @@ class ImageElement {
         this._element.off('screen:set:resolution', this._onResolutionChange, this);
     }
 
-    _onResolutionChange(res) {
-    }
+    _onResolutionChange(res) {}
 
     _onParentResizeOrPivotChange() {
         if (this._renderable.mesh) {
@@ -379,7 +388,6 @@ class ImageElement {
     _onScreenChange(screen, previous) {
         if (screen) {
             this._updateMaterial(screen.screen.screenSpace);
-
         } else {
             this._updateMaterial(false);
         }
@@ -389,22 +397,30 @@ class ImageElement {
         this._renderable.setDrawOrder(order);
 
         if (this.mask && this._element.screen) {
-            this._element.screen.screen.once('syncdraworder', function () {
-                this._renderable.setUnmaskDrawOrder();
-            }, this);
+            this._element.screen.screen.once(
+                'syncdraworder',
+                function () {
+                    this._renderable.setUnmaskDrawOrder();
+                },
+                this
+            );
         }
     }
 
     // Returns true if we are using a material
     // other than the default materials
     _hasUserMaterial() {
-        return !!this._materialAsset ||
-               (!!this._material &&
-                this._system.defaultImageMaterials.indexOf(this._material) === -1);
+        return (
+            !!this._materialAsset ||
+            (!!this._material && this._system.defaultImageMaterials.indexOf(this._material) === -1)
+        );
     }
 
     _use9Slicing() {
-        return this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED);
+        return (
+            this.sprite &&
+            (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)
+        );
     }
 
     _updateMaterial(screenSpace) {
@@ -435,21 +451,41 @@ class ImageElement {
 
         // content of the vertex buffer for 4 vertices, rendered as a tristrip
         const vertexData = new Float32Array([
-            w, 0, 0,                        // position
-            0, 0, 1,                        // normal
-            r.x + r.z, 1.0 - r.y,           // uv
+            w,
+            0,
+            0, // position
+            0,
+            0,
+            1, // normal
+            r.x + r.z,
+            1.0 - r.y, // uv
 
-            w, h, 0,                        // position
-            0, 0, 1,                        // normal
-            r.x + r.z, 1.0 - (r.y + r.w),   // uv
+            w,
+            h,
+            0, // position
+            0,
+            0,
+            1, // normal
+            r.x + r.z,
+            1.0 - (r.y + r.w), // uv
 
-            0, 0, 0,                        // position
-            0, 0, 1,                        // normal
-            r.x, 1.0 - r.y,                 // uv
+            0,
+            0,
+            0, // position
+            0,
+            0,
+            1, // normal
+            r.x,
+            1.0 - r.y, // uv
 
-            0, h, 0,                        // position
-            0, 0, 1,                        // normal
-            r.x, 1.0 - (r.y + r.w)          // uv
+            0,
+            h,
+            0, // position
+            0,
+            0,
+            1, // normal
+            r.x,
+            1.0 - (r.y + r.w) // uv
         ]);
 
         // per device cached vertex format, to share it by all vertex buffers
@@ -486,8 +522,10 @@ class ImageElement {
         if (element.fitMode !== FITMODE_STRETCH && this._targetAspectRatio > 0) {
             const actualRatio = element.calculatedWidth / element.calculatedHeight;
             // check which coordinate must change in order to preserve the source aspect ratio
-            if ((element.fitMode === FITMODE_CONTAIN && actualRatio > this._targetAspectRatio) ||
-                (element.fitMode === FITMODE_COVER && actualRatio < this._targetAspectRatio)) {
+            if (
+                (element.fitMode === FITMODE_CONTAIN && actualRatio > this._targetAspectRatio) ||
+                (element.fitMode === FITMODE_COVER && actualRatio < this._targetAspectRatio)
+            ) {
                 // use 'height' to re-calculate width
                 w = element.calculatedHeight * this._targetAspectRatio;
             } else {
@@ -503,8 +541,10 @@ class ImageElement {
         // force update meshInstance aabb
         if (this._renderable) this._renderable.forceUpdateAabb();
 
-        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)) {
-
+        if (
+            this.sprite &&
+            (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)
+        ) {
             // calculate inner offset from the frame's border
             const frameData = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
             const borderWidthScale = 2 / frameData.rect.z;
@@ -518,10 +558,12 @@ class ImageElement {
             );
 
             const tex = this.sprite.atlas.texture;
-            this._atlasRect.set(frameData.rect.x / tex.width,
+            this._atlasRect.set(
+                frameData.rect.x / tex.width,
                 frameData.rect.y / tex.height,
                 frameData.rect.z / tex.width,
-                frameData.rect.w / tex.height);
+                frameData.rect.w / tex.height
+            );
 
             // scale: apply PPU
             const ppu = this._pixelsPerUnit !== null ? this._pixelsPerUnit : this.sprite.pixelsPerUnit;
@@ -529,7 +571,10 @@ class ImageElement {
             const scaleMulY = frameData.rect.w / ppu;
 
             // scale borders if necessary instead of overlapping
-            this._outerScale.set(Math.max(w, this._innerOffset.x * scaleMulX), Math.max(h, this._innerOffset.y * scaleMulY));
+            this._outerScale.set(
+                Math.max(w, this._innerOffset.x * scaleMulX),
+                Math.max(h, this._innerOffset.y * scaleMulY)
+            );
 
             let scaleX = scaleMulX;
             let scaleY = scaleMulY;
@@ -635,7 +680,9 @@ class ImageElement {
         if (this._sprite && this._sprite.atlas) {
             // take mesh from sprite
             mesh = this._sprite.meshes[this.spriteFrame];
-            nineSlice = this._sprite.renderMode === SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === SPRITE_RENDERMODE_TILED;
+            nineSlice =
+                this._sprite.renderMode === SPRITE_RENDERMODE_SLICED ||
+                this._sprite.renderMode === SPRITE_RENDERMODE_TILED;
 
             // re-calculate aspect ratio from sprite frame
             const frameData = this._sprite.atlas.frames[this._sprite.frameKeys[this._spriteFrame]];
@@ -708,13 +755,9 @@ class ImageElement {
         asset.off('remove', this._onMaterialRemove, this);
     }
 
-    _onMaterialChange() {
+    _onMaterialChange() {}
 
-    }
-
-    _onMaterialRemove() {
-
-    }
+    _onMaterialRemove() {}
 
     _onTextureAdded(asset) {
         this._system.app.assets.off(`add:${asset.id}`, this._onTextureAdded, this);
@@ -747,13 +790,9 @@ class ImageElement {
         this.texture = asset.resource;
     }
 
-    _onTextureChange(asset) {
+    _onTextureChange(asset) {}
 
-    }
-
-    _onTextureRemove(asset) {
-
-    }
+    _onTextureRemove(asset) {}
 
     // When sprite asset is added bind it
     _onSpriteAssetAdded(asset) {
@@ -812,8 +851,7 @@ class ImageElement {
         this._onSpriteAssetLoad(asset);
     }
 
-    _onSpriteAssetRemove(asset) {
-    }
+    _onSpriteAssetRemove(asset) {}
 
     // Hook up event handlers on sprite asset
     _bindSprite(sprite) {
@@ -933,7 +971,6 @@ class ImageElement {
     }
 
     set color(value) {
-
         // #if _DEBUG
         if (this._color === value) {
             Debug.warn('Setting element.color to itself will have no effect');
@@ -994,11 +1031,7 @@ class ImageElement {
             w = value[3];
         }
 
-        if (x === this._rect.x &&
-            y === this._rect.y &&
-            z === this._rect.z &&
-            w === this._rect.w
-        ) {
+        if (x === this._rect.x && y === this._rect.y && z === this._rect.z && w === this._rect.w) {
             return;
         }
 
@@ -1036,7 +1069,9 @@ class ImageElement {
         if (!value) {
             const screenSpace = this._element._isScreenSpace();
             if (this.mask) {
-                value = screenSpace ? this._system.defaultScreenSpaceImageMaskMaterial : this._system.defaultImageMaskMaterial;
+                value = screenSpace
+                    ? this._system.defaultScreenSpaceImageMaskMaterial
+                    : this._system.defaultImageMaskMaterial;
             } else {
                 value = screenSpace ? this._system.defaultScreenSpaceImageMaterial : this._system.defaultImageMaterial;
             }
@@ -1121,7 +1156,6 @@ class ImageElement {
         this._texture = value;
 
         if (value) {
-
             // clear sprite asset if texture is set
             if (this._spriteAsset) {
                 this.spriteAsset = null;
@@ -1336,10 +1370,13 @@ class ImageElement {
         if (this._pixelsPerUnit === value) return;
 
         this._pixelsPerUnit = value;
-        if (this._sprite && (this._sprite.renderMode === SPRITE_RENDERMODE_SLICED || this._sprite.renderMode === SPRITE_RENDERMODE_TILED)) {
+        if (
+            this._sprite &&
+            (this._sprite.renderMode === SPRITE_RENDERMODE_SLICED ||
+                this._sprite.renderMode === SPRITE_RENDERMODE_TILED)
+        ) {
             this._updateSprite();
         }
-
     }
 
     get pixelsPerUnit() {

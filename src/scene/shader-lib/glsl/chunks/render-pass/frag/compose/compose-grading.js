@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #ifdef GRADING
         uniform vec3 brightnessContrastSaturation;
         uniform vec3 tint;

@@ -32,16 +32,17 @@ class SphereShape extends Shape {
         this._radius = args.radius ?? this._radius;
 
         // intersect
-        this.triData = [
-            new TriData(new SphereGeometry(), 2)
-        ];
+        this.triData = [new TriData(new SphereGeometry(), 2)];
 
         // render
         this._createRenderComponent(this.entity, [
-            Mesh.fromGeometry(this.device, new SphereGeometry({
-                latitudeBands: 32,
-                longitudeBands: 32
-            }))
+            Mesh.fromGeometry(
+                this.device,
+                new SphereGeometry({
+                    latitudeBands: 32,
+                    longitudeBands: 32
+                })
+            )
         ]);
 
         // update transform

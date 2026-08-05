@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     uniform material_clearCoatGloss: f32;
 
 fn getClearCoatGlossiness() {

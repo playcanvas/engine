@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #ifndef _ENVATLAS_INCLUDED_
 #define _ENVATLAS_INCLUDED_

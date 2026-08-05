@@ -1,10 +1,24 @@
 import { Debug } from '../../core/debug.js';
 import {
-    BINDGROUP_MESH, uniformTypeToName, semanticToLocation,
-    SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
-    SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
-    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16, SAMPLETYPE_INT, SAMPLETYPE_UINT,
+    BINDGROUP_MESH,
+    uniformTypeToName,
+    semanticToLocation,
+    SHADERSTAGE_VERTEX,
+    SHADERSTAGE_FRAGMENT,
+    SAMPLETYPE_FLOAT,
+    SAMPLETYPE_DEPTH,
+    SAMPLETYPE_UNFILTERABLE_FLOAT,
+    TEXTUREDIMENSION_2D,
+    TEXTUREDIMENSION_2D_ARRAY,
+    TEXTUREDIMENSION_CUBE,
+    TEXTUREDIMENSION_3D,
+    TYPE_FLOAT32,
+    TYPE_INT8,
+    TYPE_INT16,
+    TYPE_INT32,
+    TYPE_FLOAT16,
+    SAMPLETYPE_INT,
+    SAMPLETYPE_UINT,
     BINDGROUP_MESH_UB,
     UNUSED_UNIFORM_NAME,
     UNIFORMTYPE_FLOAT,
@@ -60,7 +74,6 @@ const textureDimensionInfo = {
 
 class UniformLine {
     constructor(line, shader) {
-
         // example: `lowp vec4 tints[2 * 4]`
         this.line = line;
 
@@ -81,7 +94,6 @@ class UniformLine {
 
         // array of uniforms
         if (line.includes('[')) {
-
             const rest = words.join(' ');
             const match = ARRAY_IDENTIFIER.exec(rest);
             Debug.assert(match);
@@ -90,11 +102,12 @@ class UniformLine {
             this.arraySize = Number(match[2]);
             if (isNaN(this.arraySize)) {
                 shader.failed = true;
-                Debug.error(`Only numerically specified uniform array sizes are supported, this uniform is not supported: '${line}'`, shader);
+                Debug.error(
+                    `Only numerically specified uniform array sizes are supported, this uniform is not supported: '${line}'`,
+                    shader
+                );
             }
-
         } else {
-
             // simple uniform
             this.name = words.shift();
             this.arraySize = 0;
@@ -128,7 +141,6 @@ class ShaderProcessorGLSL {
      * @returns {object} - The processed shader data.
      */
     static run(device, shaderDefinition, shader) {
-
         /** @type {Map<string, number>} */
         const varyingMap = new Map();
 
@@ -138,13 +150,22 @@ class ShaderProcessorGLSL {
 
         // VS - convert a list of attributes to a shader block with fixed locations
         const attributesMap = new Map();
-        const attributesBlock = ShaderProcessorGLSL.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, attributesMap, shaderDefinition.processingOptions);
+        const attributesBlock = ShaderProcessorGLSL.processAttributes(
+            vertexExtracted.attributes,
+            shaderDefinition.attributes,
+            attributesMap,
+            shaderDefinition.processingOptions
+        );
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = ShaderProcessorGLSL.processVaryings(vertexExtracted.varyings, varyingMap, true);
 
         // FS - convert a list of varyings to a shader block
-        const fragmentVaryingsBlock = ShaderProcessorGLSL.processVaryings(fragmentExtracted.varyings, varyingMap, false);
+        const fragmentVaryingsBlock = ShaderProcessorGLSL.processVaryings(
+            fragmentExtracted.varyings,
+            varyingMap,
+            false
+        );
 
         // FS - convert a list of outputs to a shader block
         const outBlock = ShaderProcessorGLSL.processOuts(fragmentExtracted.outs);
@@ -155,18 +176,27 @@ class ShaderProcessorGLSL {
         const uniforms = Array.from(new Set(concatUniforms));
 
         // parse uniform lines
-        const parsedUniforms = uniforms.map(line => new UniformLine(line, shader));
+        const parsedUniforms = uniforms.map((line) => new UniformLine(line, shader));
 
         // validation - as uniforms go to a shared uniform buffer, vertex and fragment versions need to match
         Debug.call(() => {
             const map = new Map();
             parsedUniforms.forEach((uni) => {
                 const existing = map.get(uni.name);
-                Debug.assert(!existing, `Vertex and fragment shaders cannot use the same uniform name with different types: '${existing}' and '${uni.line}'`, shader);
+                Debug.assert(
+                    !existing,
+                    `Vertex and fragment shaders cannot use the same uniform name with different types: '${existing}' and '${uni.line}'`,
+                    shader
+                );
                 map.set(uni.name, uni.line);
             });
         });
-        const uniformsData = ShaderProcessorGLSL.processUniforms(device, parsedUniforms, shaderDefinition.processingOptions, shader);
+        const uniformsData = ShaderProcessorGLSL.processUniforms(
+            device,
+            parsedUniforms,
+            shaderDefinition.processingOptions,
+            shader
+        );
 
         // VS - insert the blocks to the source
         const vBlock = `${attributesBlock}\n${vertexVaryingsBlock}\n${uniformsData.code}`;
@@ -189,7 +219,6 @@ class ShaderProcessorGLSL {
     // 'uniform' lines are extracted - attributes and varyings are left in the source unchanged (the
     // WebGL2 path relies on the gles3 compatibility macros to handle those).
     static extract(src, uniformsOnly = false) {
-
         // collected data
         const attributes = [];
         const varyings = [];
@@ -203,7 +232,6 @@ class ShaderProcessorGLSL {
         // extract relevant parts of the shader
         let match;
         while ((match = KEYWORD.exec(src)) !== null) {
-
             const keyword = match[1];
 
             // in uniforms-only mode, leave attribute / varying lines untouched
@@ -216,7 +244,6 @@ class ShaderProcessorGLSL {
                 case 'varying':
                 case 'uniform':
                 case 'out': {
-
                     // read the line
                     KEYWORD_LINE.lastIndex = match.index;
                     const lineMatch = KEYWORD_LINE.exec(src);
@@ -260,7 +287,7 @@ class ShaderProcessorGLSL {
      * @returns {Array<UniformLine>} The parsed uniform lines.
      */
     static parseUniformLines(uniformLines, shader) {
-        return uniformLines.map(line => new UniformLine(line, shader));
+        return uniformLines.map((line) => new UniformLine(line, shader));
     }
 
     /**
@@ -279,7 +306,6 @@ class ShaderProcessorGLSL {
      * inserted into the shader, as well as generated uniform format structures for the mesh level.
      */
     static processUniforms(device, uniforms, processingOptions, shader) {
-
         // split uniform lines into samplers and the rest
         /** @type {Array<UniformLine>} */
         const uniformLinesSamplers = [];
@@ -299,14 +325,16 @@ class ShaderProcessorGLSL {
             // uniforms not already in supplied uniform buffers go to the mesh buffer
             if (!processingOptions.hasUniform(uniform.name)) {
                 const uniformType = uniformTypeToName.indexOf(uniform.type);
-                Debug.assert(uniformType >= 0, `Uniform type ${uniform.type} is not recognized on line [${uniform.line}]`);
+                Debug.assert(
+                    uniformType >= 0,
+                    `Uniform type ${uniform.type} is not recognized on line [${uniform.line}]`
+                );
                 const uniformFormat = new UniformFormat(uniform.name, uniformType, uniform.arraySize);
                 Debug.assert(!uniformFormat.invalid, `Invalid uniform line: ${uniform.line}`, shader);
                 meshUniforms.push(uniformFormat);
             }
 
             // validate types in else
-
         });
 
         // if we don't have any uniform, add a dummy uniform to avoid empty uniform buffer - WebGPU rendering does not
@@ -322,7 +350,6 @@ class ShaderProcessorGLSL {
         uniformLinesSamplers.forEach((uniform) => {
             // unmatched texture uniforms go to mesh block
             if (!processingOptions.hasTexture(uniform.name)) {
-
                 // sample type
                 // WebGpu does not currently support filtered float format textures, and so we map them to unfilterable type
                 // as we sample them without filtering anyways
@@ -344,11 +371,17 @@ class ShaderProcessorGLSL {
                 const dimension = textureDimensions[uniform.type];
 
                 // TODO: we could optimize visibility to only stages that use any of the data
-                textureFormats.push(new BindTextureFormat(uniform.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, dimension, sampleType));
+                textureFormats.push(
+                    new BindTextureFormat(
+                        uniform.name,
+                        SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT,
+                        dimension,
+                        sampleType
+                    )
+                );
             }
 
             // validate types in else
-
         });
         const meshBindGroupFormat = new BindGroupFormat(device, textureFormats);
 
@@ -394,7 +427,10 @@ class ShaderProcessorGLSL {
                 // store it in the map
                 varyingMap.set(name, index);
             } else {
-                Debug.assert(varyingMap.has(name), `Fragment shader requires varying [${name}] but vertex shader does not generate it.`);
+                Debug.assert(
+                    varyingMap.has(name),
+                    `Fragment shader requires varying [${name}] but vertex shader does not generate it.`
+                );
                 index = varyingMap.get(name);
             }
 
@@ -431,10 +467,15 @@ class ShaderProcessorGLSL {
             if (shaderDefinitionAttributes.hasOwnProperty(name)) {
                 const semantic = shaderDefinitionAttributes[name];
                 const location = semanticToLocation[semantic];
-                Debug.assert(location !== undefined, `Semantic ${semantic} used by the attribute ${name} is not known - make sure it's one of the supported semantics.`);
+                Debug.assert(
+                    location !== undefined,
+                    `Semantic ${semantic} used by the attribute ${name} is not known - make sure it's one of the supported semantics.`
+                );
 
-                Debug.assert(!usedLocations.hasOwnProperty(location),
-                    `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
+                Debug.assert(
+                    !usedLocations.hasOwnProperty(location),
+                    `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`
+                );
                 usedLocations[location] = semantic;
 
                 // build a map of used attributes
@@ -450,8 +491,12 @@ class ShaderProcessorGLSL {
                 const element = processingOptions.getVertexElement(semantic);
                 if (element) {
                     const dataType = element.dataType;
-                    if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize && !element.asInt) {
-
+                    if (
+                        dataType !== TYPE_FLOAT32 &&
+                        dataType !== TYPE_FLOAT16 &&
+                        !element.normalize &&
+                        !element.asInt
+                    ) {
                         const attribNumElements = ShaderProcessorGLSL.getTypeCount(type);
                         const newName = `_private_${name}`;
 
@@ -461,7 +506,8 @@ class ShaderProcessorGLSL {
                         name = newName;
 
                         // new attribute type, based on the vertex format element type, example: vec3 -> ivec3
-                        const isSignedType = dataType === TYPE_INT8 || dataType === TYPE_INT16 || dataType === TYPE_INT32;
+                        const isSignedType =
+                            dataType === TYPE_INT8 || dataType === TYPE_INT16 || dataType === TYPE_INT32;
                         if (attribNumElements === 1) {
                             type = isSignedType ? 'int' : 'uint';
                         } else {
@@ -507,12 +553,12 @@ class ShaderProcessorGLSL {
     static getTexturesShaderDeclaration(bindGroupFormat, bindGroup) {
         let code = '';
         bindGroupFormat.textureFormats.forEach((format) => {
-
             let textureType = textureDimensionInfo[format.textureDimension];
             Debug.assert(textureType, 'Unsupported texture type', format.textureDimension);
             const isArray = textureType === 'texture2DArray';
 
-            const sampleTypePrefix = format.sampleType === SAMPLETYPE_UINT ? 'u' : (format.sampleType === SAMPLETYPE_INT ? 'i' : '');
+            const sampleTypePrefix =
+                format.sampleType === SAMPLETYPE_UINT ? 'u' : format.sampleType === SAMPLETYPE_INT ? 'i' : '';
             textureType = `${sampleTypePrefix}${textureType}`;
 
             // handle texture2DArray by renaming the texture object and defining a replacement macro

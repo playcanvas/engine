@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 attribute vec4 particle_vertexData;   // XYZ = world pos, W = life
 attribute vec4 particle_vertexData2;  // X = angle, Y = scale, Z = alpha, W = velocity.x
 attribute vec4 particle_vertexData3;  // XYZ = particle local pos, W = velocity.y

@@ -154,8 +154,7 @@ class CurveSet {
      * curveSet.remove(curveSet.get(0)); // or remove by reference
      */
     remove(indexOrCurve) {
-        const index = typeof indexOrCurve === 'number' ?
-            indexOrCurve : this.curves.indexOf(indexOrCurve);
+        const index = typeof indexOrCurve === 'number' ? indexOrCurve : this.curves.indexOf(indexOrCurve);
 
         if (index < 0 || index >= this.curves.length) {
             return null;
@@ -254,7 +253,8 @@ class CurveSet {
 
         for (let c = 0; c < numCurves; c++) {
             const ev = new CurveEvaluator(this.curves[c]);
-            for (let i = 0; i < precision; i++) { // quantize graph to table of interpolated values
+            for (let i = 0; i < precision; i++) {
+                // quantize graph to table of interpolated values
                 values[i * numCurves + c] = ev.evaluate(step * i);
             }
         }

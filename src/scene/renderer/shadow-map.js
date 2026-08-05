@@ -1,9 +1,11 @@
 import { Debug } from '../../core/debug.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR, FILTER_NEAREST,
+    FILTER_LINEAR,
+    FILTER_NEAREST,
     FUNC_LESS,
-    PIXELFORMAT_R32F, PIXELFORMAT_R16F,
+    PIXELFORMAT_R32F,
+    PIXELFORMAT_R16F,
     pixelFormatInfo,
     RENDERTARGET_ORIGIN_BOTTOM,
     TEXHINT_SHADOWMAP
@@ -11,16 +13,10 @@ import {
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import {
-    LIGHTTYPE_OMNI,
-    SHADOW_VSM_32F, SHADOW_PCSS_32F,
-    shadowTypeInfo
-} from '../constants.js';
-
+import { LIGHTTYPE_OMNI, SHADOW_VSM_32F, SHADOW_PCSS_32F, shadowTypeInfo } from '../constants.js';
 
 class ShadowMap {
     constructor(texture, targets) {
-
         // the actual texture buffer that is shared by shadow map render targets
         this.texture = texture;
 
@@ -34,7 +30,6 @@ class ShadowMap {
     }
 
     destroy() {
-
         // single texture is shared by all render targets, destroy it once
         if (this.texture) {
             this.texture.destroy();
@@ -49,7 +44,6 @@ class ShadowMap {
     }
 
     static create(device, light) {
-
         let shadowMap = null;
         if (light._type === LIGHTTYPE_OMNI) {
             shadowMap = this.createCubemap(device, light._shadowResolution, light._shadowType);
@@ -75,7 +69,6 @@ class ShadowMap {
     }
 
     static create2dMap(device, size, shadowType) {
-
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
         let format = shadowInfo.format;
@@ -115,7 +108,6 @@ class ShadowMap {
         // written against the WebGL layout, so replicate it on all graphics APIs
         let target = null;
         if (shadowInfo?.pcf) {
-
             // enable hardware PCF when sampling the depth texture
             texture.compareOnRead = true;
             texture.compareFunc = FUNC_LESS;
@@ -138,7 +130,6 @@ class ShadowMap {
     }
 
     static createCubemap(device, size, shadowType) {
-
         const shadowInfo = shadowTypeInfo.get(shadowType);
         Debug.assert(shadowInfo);
         const formatName = pixelFormatInfo.get(shadowInfo.format)?.name;
@@ -169,23 +160,23 @@ class ShadowMap {
 
         const targets = [];
         for (let i = 0; i < 6; i++) {
-
             if (isPcss) {
-
                 // color and depth buffer
-                targets.push(new RenderTarget({
-                    colorBuffer: cubemap,
-                    face: i,
-                    depth: true
-                }));
-
+                targets.push(
+                    new RenderTarget({
+                        colorBuffer: cubemap,
+                        face: i,
+                        depth: true
+                    })
+                );
             } else {
-
                 // depth buffer only
-                targets.push(new RenderTarget({
-                    depthBuffer: cubemap,
-                    face: i
-                }));
+                targets.push(
+                    new RenderTarget({
+                        depthBuffer: cubemap,
+                        face: i
+                    })
+                );
             }
         }
         return new ShadowMap(cubemap, targets);

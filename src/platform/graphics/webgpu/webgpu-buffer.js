@@ -47,12 +47,17 @@ class WebgpuBuffer {
             usage: this.usageFlags
         });
 
-        DebugHelper.setLabel(this.buffer,
-            this.usageFlags & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
-                this.usageFlags & GPUBufferUsage.INDEX ? 'IndexBuffer' :
-                    this.usageFlags & GPUBufferUsage.UNIFORM ? 'UniformBuffer' :
-                        this.usageFlags & GPUBufferUsage.STORAGE ? 'StorageBuffer' :
-                            ''
+        DebugHelper.setLabel(
+            this.buffer,
+            this.usageFlags & GPUBufferUsage.VERTEX
+                ? 'VertexBuffer'
+                : this.usageFlags & GPUBufferUsage.INDEX
+                  ? 'IndexBuffer'
+                  : this.usageFlags & GPUBufferUsage.UNIFORM
+                    ? 'UniformBuffer'
+                    : this.usageFlags & GPUBufferUsage.STORAGE
+                      ? 'StorageBuffer'
+                      : ''
         );
     }
 
@@ -61,7 +66,6 @@ class WebgpuBuffer {
      * @param {*} storage -
      */
     unlock(device, storage) {
-
         const wgpu = device.wgpu;
 
         // offset of getMappedRange must me a multiple of 8

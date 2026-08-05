@@ -2,8 +2,11 @@ import { now } from '../../core/time.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     LIGHTTYPE_DIRECTIONAL,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME,
-    EVENT_PRECULL, EVENT_POSTCULL, EVENT_CULL_END
+    SHADOWUPDATE_NONE,
+    SHADOWUPDATE_THISFRAME,
+    EVENT_PRECULL,
+    EVENT_POSTCULL,
+    EVENT_CULL_END
 } from '../constants.js';
 
 /**
@@ -92,7 +95,6 @@ class Culler {
         for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
             if (drawCall.visible) {
-
                 const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
                     drawCall.visibleThisFrame = true;
@@ -130,7 +132,6 @@ class Culler {
      * @param {Light[]} lights - The lights to cull (typically a layer's lights).
      */
     cullLights(camera, lights) {
-
         const { scene } = this.renderer;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
         const physicalUnits = scene.physicalUnits;
@@ -174,7 +175,6 @@ class Culler {
      * @param {LayerComposition} comp - The layer composition.
      */
     cullShadowmaps(comp) {
-
         const { renderer } = this;
 
         // shadow casters culling for local (point and spot) lights. The shadow-update-mode forcing
@@ -209,7 +209,6 @@ class Culler {
      * result to both before the update mode is changed here.
      */
     consumeOneShotShadows() {
-
         const { renderer } = this;
         const clustered = renderer.scene.clusteredLightingEnabled;
         const shadowRenderer = renderer.shadowRenderer;
@@ -252,7 +251,6 @@ class Culler {
      * @param {LayerComposition} comp - The layer composition.
      */
     collectDirectionalShadowLights(comp) {
-
         const { renderer } = this;
 
         // start with none and collect lights for cameras
@@ -305,7 +303,6 @@ class Culler {
      * @param {LayerComposition} comp - The layer composition.
      */
     updateLightVisibility(comp) {
-
         const { renderer } = this;
         const { scene } = renderer;
 
@@ -406,7 +403,6 @@ class Culler {
      * contract.
      */
     executeMeshInstanceCull() {
-
         const { renderer } = this;
         const { scene } = renderer;
         const cameras = this._cullCameras;
@@ -445,7 +441,6 @@ class Culler {
      * @param {LayerComposition} comp - The layer composition.
      */
     cullComposition(comp) {
-
         // #if _PROFILER
         const cullTime = now();
         // #endif

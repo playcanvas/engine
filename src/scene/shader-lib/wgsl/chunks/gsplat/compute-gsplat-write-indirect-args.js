@@ -11,7 +11,7 @@ import indirectCoreCS from '../common/comp/indirect-core.js';
 import dispatchCoreCS from '../common/comp/dispatch-core.js';
 import sortIndirectArgsCS from '../common/comp/sort-indirect-args.js';
 
-export const computeGsplatWriteIndirectArgsSource = /* wgsl */`
+export const computeGsplatWriteIndirectArgsSource = /* wgsl */ `
 
 ${indirectCoreCS}
 ${dispatchCoreCS}

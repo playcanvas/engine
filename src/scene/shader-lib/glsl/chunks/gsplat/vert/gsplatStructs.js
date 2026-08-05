@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 // Shared splat identification (index, uv) and setSplat() helper
 #include "gsplatSplatVS"

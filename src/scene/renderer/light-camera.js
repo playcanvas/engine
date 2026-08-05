@@ -2,7 +2,14 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { ASPECT_MANUAL, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE } from '../constants.js';
+import {
+    ASPECT_MANUAL,
+    LIGHTTYPE_DIRECTIONAL,
+    LIGHTTYPE_OMNI,
+    LIGHTTYPE_SPOT,
+    PROJECTION_ORTHOGRAPHIC,
+    PROJECTION_PERSPECTIVE
+} from '../constants.js';
 import { Camera } from '../camera.js';
 import { GraphNode } from '../graph-node.js';
 
@@ -23,7 +30,6 @@ class LightCamera {
     ];
 
     static create(device, name, lightType, face) {
-
         const camera = new Camera(device);
         camera.node = new GraphNode(name);
         camera.aspectRatio = 1;
@@ -55,7 +61,6 @@ class LightCamera {
     // temporary camera to calculate spot light cookie view-projection matrix when shadow matrix is not available
     // todo - unify the code with the shadow spot camera
     static evalSpotCookieMatrix(light) {
-
         let cookieCamera = LightCamera._spotCookieCamera;
         if (!cookieCamera) {
             cookieCamera = LightCamera.create(light.device, 'SpotCookieCamera', LIGHTTYPE_SPOT);

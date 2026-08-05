@@ -1,13 +1,17 @@
 import { expect } from 'chai';
 
-import { PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
+import {
+    PIXELFORMAT_RGBA8,
+    RENDERTARGET_ORIGIN_BOTTOM,
+    RENDERTARGET_ORIGIN_NATIVE,
+    RENDERTARGET_ORIGIN_TOP
+} from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('RenderTarget', function () {
-
     /** @type {NullGraphicsDevice} */
     let device;
 
@@ -37,7 +41,6 @@ describe('RenderTarget', function () {
     // NullGraphicsDevice is not a WebGPU device, so origin resolves the same way as on WebGL:
     // 'top' flips, 'bottom' does not
     describe('#constructor: origin option', function () {
-
         it('does not flip when neither origin nor flipY is specified', function () {
             const rt = createRenderTarget();
             expect(rt.flipY).to.be.false;
@@ -86,7 +89,6 @@ describe('RenderTarget', function () {
     // property derives origin bottom (not top). isWebGPU is stubbed on the null device, which is
     // sufficient as the origin resolution only reads that flag.
     describe('#constructor: origin option (WebGPU)', function () {
-
         beforeEach(function () {
             device.isWebGPU = true;
         });
@@ -128,7 +130,6 @@ describe('RenderTarget', function () {
     });
 
     describe('#flipY', function () {
-
         it('deprecated setter still updates the value', function () {
             const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_BOTTOM });
             expect(rt.flipY).to.be.false;
@@ -140,7 +141,6 @@ describe('RenderTarget', function () {
 
     // origin resolution on a non-WebGPU device: flipY true is equivalent to origin top
     describe('#origin', function () {
-
         it('defaults to native', function () {
             const rt = createRenderTarget();
             expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_NATIVE);

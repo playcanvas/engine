@@ -1,5 +1,5 @@
 // uniforms for a light with index {i}, driven by defines
-export default /* wgsl */`
+export default /* wgsl */ `
 #if defined(LIGHT{i})
 
     uniform light{i}_color: vec3f;

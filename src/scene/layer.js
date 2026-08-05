@@ -2,7 +2,11 @@ import { Debug } from '../core/debug.js';
 import { hash32Fnv1a } from '../core/hash.js';
 import {
     LIGHTTYPE_DIRECTIONAL,
-    SORTMODE_BACK2FRONT, SORTMODE_CUSTOM, SORTMODE_FRONT2BACK, SORTMODE_MATERIALMESH, SORTMODE_NONE
+    SORTMODE_BACK2FRONT,
+    SORTMODE_CUSTOM,
+    SORTMODE_FRONT2BACK,
+    SORTMODE_MATERIALMESH,
+    SORTMODE_NONE
 } from './constants.js';
 import { Material } from './materials/material.js';
 
@@ -366,7 +370,6 @@ class Layer {
      * same as properties of the Layer.
      */
     constructor(options = {}) {
-
         if (options.id !== undefined) {
             this.id = options.id;
             layerCounter = Math.max(this.id + 1, layerCounter);
@@ -529,7 +532,6 @@ class Layer {
         if (this._refCounter === 1) {
             this._enabled = false;
             if (this.onDisable) this.onDisable();
-
         } else if (this._refCounter === 0) {
             Debug.warn('Trying to decrement layer counter below 0');
             return;
@@ -603,7 +605,6 @@ class Layer {
      * to cast shadows in this layer. Defaults to false.
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
-
         const destMeshInstances = this.meshInstances;
         const destMeshInstancesSet = this.meshInstancesSet;
 
@@ -626,7 +627,7 @@ class Layer {
         if (_tempMaterials.size > 0) {
             const sceneShaderVer = this._shaderVersion;
             _tempMaterials.forEach((mat) => {
-                if (sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer)  {
+                if (sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) {
                     // skip this for materials not using variants
                     if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
                         // clear shader variants on the material and also on mesh instances that use it
@@ -648,7 +649,6 @@ class Layer {
      * removed mesh instances or if they never did cast shadows before. Defaults to false.
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
-
         const destMeshInstances = this.meshInstances;
         const destMeshInstancesSet = this.meshInstancesSet;
 
@@ -746,7 +746,6 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     addLight(light) {
-
         // if the light is not in the layer already
         const l = light.light;
         if (!this._lightsSet.has(l)) {
@@ -767,7 +766,6 @@ class Layer {
      * @param {LightComponent} light - A {@link LightComponent}.
      */
     removeLight(light) {
-
         const l = light.light;
         if (this._lightsSet.has(l)) {
             this._lightsSet.delete(l);
@@ -785,9 +783,8 @@ class Layer {
      * Removes all lights from this layer.
      */
     clearLights() {
-
         // notify lights
-        this._lightsSet.forEach(light => light.removeLayer(this));
+        this._lightsSet.forEach((light) => light.removeLayer(this));
 
         this._lightsSet.clear();
         this._clusteredLightsSet.clear();
@@ -796,7 +793,6 @@ class Layer {
     }
 
     get splitLights() {
-
         if (this._splitLightsDirty) {
             this._splitLightsDirty = false;
 
@@ -824,13 +820,11 @@ class Layer {
     }
 
     evaluateLightHash(localLights, directionalLights, useIds) {
-
         let hash = 0;
 
         // select local/directional lights based on request
         const lights = this._lights;
         for (let i = 0; i < lights.length; i++) {
-
             const isLocalLight = lights[i].type !== LIGHTTYPE_DIRECTIONAL;
 
             if ((localLights && isLocalLight) || (directionalLights && !isLocalLight)) {
@@ -839,7 +833,6 @@ class Layer {
         }
 
         if (lightKeys.length > 0) {
-
             // sort the keys to make sure the hash is the same for the same set of lights
             lightKeys.sort();
 
@@ -849,7 +842,6 @@ class Layer {
 
         return hash;
     }
-
 
     getLightHash(isClustered) {
         if (this._lightHashDirty) {
@@ -966,7 +958,6 @@ class Layer {
      * @ignore
      */
     sortVisible(camera, transparent) {
-
         const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === SORTMODE_NONE) {
             return;

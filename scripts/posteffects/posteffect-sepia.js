@@ -12,7 +12,7 @@ class SepiaEffect extends pc.PostEffect {
     constructor(graphicsDevice) {
         super(graphicsDevice);
 
-        const fshader = /* glsl */`
+        const fshader = /* glsl */ `
             uniform float uAmount;
             uniform sampler2D uColorBuffer;
 
@@ -67,9 +67,13 @@ Sepia.prototype.initialize = function () {
     this.effect = new SepiaEffect(this.app.graphicsDevice);
     this.effect.amount = this.amount;
 
-    this.on('attr:amount', function (value) {
-        this.effect.amount = value;
-    }, this);
+    this.on(
+        'attr:amount',
+        function (value) {
+            this.effect.amount = value;
+        },
+        this
+    );
 
     var queue = this.entity.camera.postEffects;
     queue.addEffect(this.effect);

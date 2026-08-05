@@ -79,7 +79,6 @@ class RenderComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-
         // copy properties
         const data = {};
         for (let i = 0; i < _properties.length; i++) {
@@ -95,7 +94,7 @@ class RenderComponentSystem extends ComponentSystem {
 
         // clone mesh instances
         const srcMeshInstances = entity.render.meshInstances;
-        const meshes = srcMeshInstances.map(mi => mi.mesh);
+        const meshes = srcMeshInstances.map((mi) => mi.mesh);
         component._onSetMeshes(meshes);
 
         // assign materials

@@ -7,9 +7,7 @@ import { Tags } from '../../src/core/tags.js';
 import { GraphNode } from '../../src/scene/graph-node.js';
 
 describe('GraphNode', function () {
-
     describe('#children', function () {
-
         it('should be an empty array by default', function () {
             const root = new GraphNode();
             expect(root.children).to.be.an('array');
@@ -23,20 +21,16 @@ describe('GraphNode', function () {
             expect(root.children).to.be.an('array').with.lengthOf(1);
             expect(root.children[0]).to.be.an.instanceof(GraphNode);
         });
-
     });
 
     describe('#enabled', function () {
-
         it('should be false by default', function () {
             const root = new GraphNode();
             expect(root.enabled).to.be.false;
         });
-
     });
 
     describe('#graphDepth', function () {
-
         it('should be 0 by default', function () {
             const root = new GraphNode();
             expect(root.graphDepth).to.equal(0);
@@ -57,11 +51,9 @@ describe('GraphNode', function () {
             child.addChild(grandChild);
             expect(grandChild.graphDepth).to.equal(2);
         });
-
     });
 
     describe('#parent', function () {
-
         it('should be null by default', function () {
             const node = new GraphNode();
             expect(node.parent).to.be.null;
@@ -73,12 +65,10 @@ describe('GraphNode', function () {
             parent.addChild(child);
             expect(child.parent).to.equal(parent);
         });
-
     });
 
     describe('#name', function () {
-
-        it('should be an \'Untitled\' by default', function () {
+        it("should be an 'Untitled' by default", function () {
             const node = new GraphNode();
             expect(node.name).to.equal('Untitled');
         });
@@ -93,11 +83,9 @@ describe('GraphNode', function () {
             node.name = 'root';
             expect(node.name).to.equal('root');
         });
-
     });
 
     describe('#path', function () {
-
         it('returns empty string for root node', function () {
             const root = new GraphNode('root');
             expect(root.path).to.equal('');
@@ -118,11 +106,9 @@ describe('GraphNode', function () {
             child.addChild(grandchild);
             expect(grandchild.path).to.equal('child/grandchild');
         });
-
     });
 
     describe('#root', function () {
-
         it('returns itself for root node', function () {
             const root = new GraphNode('root');
             expect(root.root).to.equal(root);
@@ -143,21 +129,17 @@ describe('GraphNode', function () {
             child.addChild(grandchild);
             expect(grandchild.root).to.equal(root);
         });
-
     });
 
     describe('#tags', function () {
-
         it('should be empty by default', function () {
             const node = new GraphNode();
             expect(node.tags).to.be.an.instanceof(Tags);
             expect(node.tags.size).to.equal(0);
         });
-
     });
 
     describe('#constructor()', function () {
-
         it('supports zero arguments', function () {
             const node = new GraphNode();
             expect(node.children).to.be.an('array').with.lengthOf(0);
@@ -186,7 +168,6 @@ describe('GraphNode', function () {
     });
 
     describe('#addChild()', function () {
-
         it('adds a child node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
@@ -195,7 +176,6 @@ describe('GraphNode', function () {
             expect(root.children[0]).to.equal(child);
             expect(child.parent).to.equal(root);
         });
-
     });
 
     describe('#clone', function () {
@@ -208,7 +188,6 @@ describe('GraphNode', function () {
     });
 
     describe('#find()', function () {
-
         it('finds a node by property', function () {
             const root = new GraphNode();
             const child = new GraphNode('Child');
@@ -250,11 +229,9 @@ describe('GraphNode', function () {
             });
             expect(res).to.be.an('array').with.lengthOf(0);
         });
-
     });
 
     describe('#findByName()', function () {
-
         it('finds root by name', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
@@ -275,11 +252,9 @@ describe('GraphNode', function () {
             root.addChild(child);
             expect(root.findByName('not-found')).to.equal(null);
         });
-
     });
 
     describe('#findByPath()', function () {
-
         it('finds a child by path', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
@@ -311,11 +286,9 @@ describe('GraphNode', function () {
             root.addChild(child);
             expect(root.findByPath('not-found')).to.equal(null);
         });
-
     });
 
     describe('#findByTag()', function () {
-
         it('does not search the root node', function () {
             const root = new GraphNode('root');
             root.tags.add('tag');
@@ -368,11 +341,9 @@ describe('GraphNode', function () {
             const result = root.findByTag('not-found');
             expect(result).to.be.an('array').with.lengthOf(0);
         });
-
     });
 
     describe('#findOne()', function () {
-
         it('finds a node by property', function () {
             const root = new GraphNode();
             const child = new GraphNode('Child');
@@ -410,11 +381,9 @@ describe('GraphNode', function () {
             });
             expect(res).to.be.null;
         });
-
     });
 
     describe('#forEach()', function () {
-
         it('iterates over all nodes', function () {
             const root = new GraphNode();
             const child1 = new GraphNode();
@@ -430,11 +399,9 @@ describe('GraphNode', function () {
             expect(visited[1]).to.equal(child1);
             expect(visited[2]).to.equal(child2);
         });
-
     });
 
     describe('#getEulerAngles()', function () {
-
         it('returns the euler angles', function () {
             const node = new GraphNode();
             const angles = node.getEulerAngles();
@@ -443,11 +410,9 @@ describe('GraphNode', function () {
             expect(angles.y).to.equal(0);
             expect(angles.z).to.equal(0);
         });
-
     });
 
     describe('#getLocalScale()', function () {
-
         it('returns the default local scale of a node', function () {
             const node = new GraphNode();
             const scale = node.getLocalScale();
@@ -466,11 +431,9 @@ describe('GraphNode', function () {
             expect(scale.y).to.equal(3);
             expect(scale.z).to.equal(4);
         });
-
     });
 
     describe('#getLocalTransform()', function () {
-
         it('returns an identity matrix for a newly created node', function () {
             const node = new GraphNode();
             const transform = node.getLocalTransform();
@@ -486,11 +449,9 @@ describe('GraphNode', function () {
             const expected = new Float32Array([4, 0, 0, 0, 0, 5, 0, 0, 0, 0, 6, 0, 1, 2, 3, 1]);
             expect(transform.data).to.deep.equal(expected);
         });
-
     });
 
     describe('#getWorldTransform()', function () {
-
         it('returns an identity matrix for a newly created node', function () {
             const node = new GraphNode();
             const transform = node.getWorldTransform();
@@ -530,11 +491,9 @@ describe('GraphNode', function () {
 
             expect(transform.data).to.deep.equal(m1.data);
         });
-
     });
 
     describe('#insertChild()', function () {
-
         it('inserts a single child node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
@@ -569,11 +528,9 @@ describe('GraphNode', function () {
             expect(child1.parent).to.equal(root);
             expect(child2.parent).to.equal(root);
         });
-
     });
 
     describe('#isAncestorOf()', function () {
-
         it('returns true if a parent node is an ancestor of a child node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
@@ -600,11 +557,9 @@ describe('GraphNode', function () {
             const node = new GraphNode();
             expect(node.isAncestorOf(node)).to.be.false;
         });
-
     });
 
     describe('#isDescendantOf()', function () {
-
         it('returns true if a child node is a descendant of a parent node', function () {
             const root = new GraphNode();
             const child = new GraphNode();
@@ -631,11 +586,9 @@ describe('GraphNode', function () {
             const node = new GraphNode();
             expect(node.isDescendantOf(node)).to.be.false;
         });
-
     });
 
     describe('#remove', function () {
-
         it('removes the node from its parent, unparenting it', function () {
             const node = new GraphNode();
             const child = new GraphNode();
@@ -644,11 +597,9 @@ describe('GraphNode', function () {
             expect(node.children).to.be.an('array').with.lengthOf(0);
             expect(child.parent).to.equal(null);
         });
-
     });
 
     describe('#removeChild()', function () {
-
         it('removes a child node', function () {
             const node = new GraphNode();
             const child = new GraphNode();
@@ -657,11 +608,9 @@ describe('GraphNode', function () {
             expect(node.children).to.be.an('array').with.lengthOf(0);
             expect(child.parent).to.equal(null);
         });
-
     });
 
     describe('#reparent()', function () {
-
         it('reparents a child node', function () {
             const node = new GraphNode();
             const child = new GraphNode();
@@ -673,11 +622,9 @@ describe('GraphNode', function () {
             expect(newParent.children[0]).to.equal(child);
             expect(child.parent).to.equal(newParent);
         });
-
     });
 
     describe('#rotate()', function () {
-
         it('leaves rotation unchanged for a zero rotation (number inputs)', function () {
             const node = new GraphNode();
             const anglesPre = node.getEulerAngles().clone();
@@ -724,11 +671,9 @@ describe('GraphNode', function () {
             expect(childAngles.y).to.be.closeTo(0, 0.00001);
             expect(childAngles.z).to.be.closeTo(0, 0.00001);
         });
-
     });
 
     describe('#rotateLocal()', function () {
-
         it('leaves rotation unchanged for a zero rotation (number inputs)', function () {
             const node = new GraphNode();
             const anglesPre = node.getEulerAngles().clone();
@@ -775,11 +720,9 @@ describe('GraphNode', function () {
             expect(childAngles.y).to.be.closeTo(6.883411088035306, 0.00001);
             expect(childAngles.z).to.be.closeTo(9.107997263232027, 0.00001);
         });
-
     });
 
     describe('#translate()', function () {
-
         it('translates hierarchical nodes with number arguments', function () {
             const root = new GraphNode();
             const child = new GraphNode();
@@ -823,11 +766,9 @@ describe('GraphNode', function () {
             expect(pos.y).to.equal(7);
             expect(pos.z).to.equal(9);
         });
-
     });
 
     describe('#translateLocal()', function () {
-
         it('GraphNode: translateLocal in hierarchy', function () {
             const root = new GraphNode('root');
             const child = new GraphNode('child');
@@ -848,7 +789,6 @@ describe('GraphNode', function () {
             expect(pos.y).to.be.closeTo(20, 0.00001);
             expect(pos.z).to.be.closeTo(-30, 0.00001);
         });
-
     });
 
     describe('#setPositionAndRotation()', function () {

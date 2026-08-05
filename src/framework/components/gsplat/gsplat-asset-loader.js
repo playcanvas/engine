@@ -95,7 +95,6 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         this._registry = registry;
     }
 
-
     /**
      * Destroys the asset loader and force-unloads all tracked assets, ignoring ref counts.
      * This is used when the octree resource itself is being destroyed.
@@ -193,8 +192,10 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
             // Assert that registry doesn't already have an asset for this URL
             // If it does, there's a code ownership issue - GSplatAssetLoader should be the only
             // creator of gsplat assets with these URLs
-            Debug.assert(!this._registry.getByUrl(url),
-                `Asset with URL ${url} already exists in registry but not tracked by GSplatAssetLoader`);
+            Debug.assert(
+                !this._registry.getByUrl(url),
+                `Asset with URL ${url} already exists in registry but not tracked by GSplatAssetLoader`
+            );
 
             this._registry.add(asset);
 
@@ -204,7 +205,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
 
         // Attach event listeners
         asset.once('load', () => this._onAssetLoadSuccess(url, asset));
-        asset.once('error', err => this._onAssetLoadError(url, asset, err));
+        asset.once('error', (err) => this._onAssetLoadError(url, asset, err));
 
         // Start loading the asset
         if (!asset.loaded && !asset.loading) {
@@ -266,7 +267,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
             // two 'load' listeners on this asset, double-invoking _onAssetLoadSuccess on the
             // eventual success.
             Debug.warn(`GSplatAssetLoader: Retrying load for ${url} (attempt ${retryCount + 1}/${this.maxRetries})`);
-            asset.once('error', retryErr => this._onAssetLoadError(url, asset, retryErr));
+            asset.once('error', (retryErr) => this._onAssetLoadError(url, asset, retryErr));
             this._registry.load(asset);
         } else {
             // Max retries exceeded

@@ -165,17 +165,27 @@ describe('BundleRegistry', () => {
     });
 
     it('hasUrl() returns true for all font asset urls', function () {
-        const asset = new Asset('asset', 'font', {
-            url: 'test.png'
-        }, {
-            info: {
-                maps: [{
-                    width: 128, height: 128
-                }, {
-                    width: 128, height: 128
-                }]
+        const asset = new Asset(
+            'asset',
+            'font',
+            {
+                url: 'test.png'
+            },
+            {
+                info: {
+                    maps: [
+                        {
+                            width: 128,
+                            height: 128
+                        },
+                        {
+                            width: 128,
+                            height: 128
+                        }
+                    ]
+                }
             }
-        });
+        );
         assetRegistry.add(asset);
 
         const bundleAsset = new Asset('bundle', 'bundle', null, {
@@ -287,5 +297,4 @@ describe('BundleRegistry', () => {
             assetRegistry.fire(`error:${bundleAsset.id}`, 'error');
         });
     });
-
 });

@@ -1,3 +1,3 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #define VERTEXSHADER
 `;

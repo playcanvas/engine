@@ -16,13 +16,18 @@ class JsonAnimationParser {
 
     load(url, callback, asset) {
         const original = typeof url === 'string' ? url : url.original;
-        this.handler.fetch(url, Http.ResponseType.JSON, (err, response) => {
-            if (err) {
-                callback(`Error loading animation resource: ${original} [${err}]`);
-            } else {
-                callback(null, this[`_parseAnimationV${response.animation.version}`](response));
-            }
-        }, asset);
+        this.handler.fetch(
+            url,
+            Http.ResponseType.JSON,
+            (err, response) => {
+                if (err) {
+                    callback(`Error loading animation resource: ${original} [${err}]`);
+                } else {
+                    callback(null, this[`_parseAnimationV${response.animation.version}`](response));
+                }
+            },
+            asset
+        );
     }
 
     _parseAnimationV3(data) {

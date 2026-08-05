@@ -3,7 +3,7 @@
 // on a tone-mapped color buffer after post-processing, but before the UI, and so this is the
 // obvious place to put it to avoid a separate render pass, even though we need to handle running it
 // before the tone-mapping.
-export default /* wgsl */`
+export default /* wgsl */ `
     #ifdef CAS
         uniform sharpness: f32;
 

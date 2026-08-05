@@ -1,4 +1,14 @@
-import { BUTTON_TRANSITION_MODE_TINT, Color, Entity, Quat, Script, Vec2, Vec3, Vec4, XRTARGETRAY_POINTER } from 'playcanvas';
+import {
+    BUTTON_TRANSITION_MODE_TINT,
+    Color,
+    Entity,
+    Quat,
+    Script,
+    Vec2,
+    Vec3,
+    Vec4,
+    XRTARGETRAY_POINTER
+} from 'playcanvas';
 
 /** @import { Asset, XrInputSource } from 'playcanvas' */
 
@@ -249,7 +259,7 @@ class XrMenu extends Script {
      * @type {Color}
      * @attribute
      */
-    hoverColor = new Color(0.30, 0.65, 0.95, 1);
+    hoverColor = new Color(0.3, 0.65, 0.95, 1);
 
     /**
      * Color of menu buttons when pressed/activated.
@@ -811,7 +821,7 @@ class XrMenu extends Script {
      */
     _createNumberRow(item, index, widthPx, heightPx) {
         const gap = heightPx * 0.25;
-        const btn = heightPx;                                       // square +/- buttons
+        const btn = heightPx; // square +/- buttons
         const labelWidth = Math.max(1, widthPx - 2 * btn - 2 * gap);
 
         // Centers, with the row centered at x = 0 (total width = widthPx).
@@ -839,7 +849,7 @@ class XrMenu extends Script {
      */
     _getDefaultFontAsset() {
         // Try to find an existing font in the asset registry
-        const fonts = this.app.assets.filter(asset => asset.type === 'font');
+        const fonts = this.app.assets.filter((asset) => asset.type === 'font');
         if (fonts.length > 0) {
             return fonts[0];
         }
@@ -1256,9 +1266,7 @@ class XrMenu extends Script {
      * @private
      */
     _getAnchor(inputSource) {
-        return inputSource.hand ?
-            this._getPalmAnchor(inputSource) :
-            this._getControllerAnchor(inputSource);
+        return inputSource.hand ? this._getPalmAnchor(inputSource) : this._getControllerAnchor(inputSource);
     }
 
     /**
@@ -1494,8 +1502,13 @@ class XrMenu extends Script {
         // propagates forever and the menu stays invisible for the whole session. Defer (without
         // setting _followInitialized) until the pose is finite, so we snap the instant it's valid.
         const poseValid =
-            Number.isFinite(tmpVec3A.x) && Number.isFinite(tmpVec3A.y) && Number.isFinite(tmpVec3A.z) &&
-            Number.isFinite(camRot.x) && Number.isFinite(camRot.y) && Number.isFinite(camRot.z) && Number.isFinite(camRot.w);
+            Number.isFinite(tmpVec3A.x) &&
+            Number.isFinite(tmpVec3A.y) &&
+            Number.isFinite(tmpVec3A.z) &&
+            Number.isFinite(camRot.x) &&
+            Number.isFinite(camRot.y) &&
+            Number.isFinite(camRot.z) &&
+            Number.isFinite(camRot.w);
         if (!poseValid) {
             return;
         }
@@ -1546,8 +1559,8 @@ class XrMenu extends Script {
                 const tl = corners[3];
 
                 // Width vector (BL -> BR) and height vector (BL -> TL), not normalised.
-                tmpVec3A.sub2(br, bl);              // width vec
-                tmpVec3B.sub2(tl, bl);              // height vec
+                tmpVec3A.sub2(br, bl); // width vec
+                tmpVec3B.sub2(tl, bl); // height vec
                 tmpVec3C.cross(tmpVec3A, tmpVec3B); // plane normal (length = w * h)
 
                 const denom = tmpVec3C.dot(direction);

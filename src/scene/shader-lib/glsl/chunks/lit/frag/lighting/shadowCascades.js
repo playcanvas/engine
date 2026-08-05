@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 // function which selects a shadow projection matrix index based on cascade distances 
 int getShadowCascadeIndex(vec4 shadowCascadeDistances, int shadowCascadeCount) {

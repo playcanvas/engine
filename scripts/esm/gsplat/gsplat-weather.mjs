@@ -171,10 +171,8 @@ class GSplatWeather extends Script {
     }
 
     initialize() {
-        this._format = new GSplatFormat(this.app.graphicsDevice, [
-            { name: 'data', format: PIXELFORMAT_RGBA8 }
-        ], {
-            readGLSL: /* glsl */`
+        this._format = new GSplatFormat(this.app.graphicsDevice, [{ name: 'data', format: PIXELFORMAT_RGBA8 }], {
+            readGLSL: /* glsl */ `
                 uniform float uTime;
                 uniform float uCellSize;
                 uniform vec3 uGridHalf;
@@ -247,7 +245,7 @@ class GSplatWeather extends Script {
 
                 vec4 getRotation() { return vec4(0.0, 0.0, 0.0, 1.0); }
             `,
-            readWGSL: /* wgsl */`
+            readWGSL: /* wgsl */ `
                 uniform uTime: f32;
                 uniform uCellSize: f32;
                 uniform uGridHalf: vec3f;
@@ -394,7 +392,9 @@ class GSplatWeather extends Script {
         this._time += dt;
 
         const cs = this.cellSize;
-        let camX = 0, camY = 0, camZ = 0;
+        let camX = 0,
+            camY = 0,
+            camZ = 0;
 
         if (this.followEntity) {
             const pos = this.followEntity.getPosition();

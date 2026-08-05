@@ -14,7 +14,6 @@ class RenderAction {
     camera = null;
 
     constructor() {
-
         // the layer
         /** @type {Layer|null} */
         this.layer = null;

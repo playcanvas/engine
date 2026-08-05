@@ -19,7 +19,7 @@
 // clipPos via the clipToViewZ uniform = -inverse(matrix_projection)[row 2].
 // This is correct for both perspective and orthographic projections; for
 // perspective it collapses to clip.w, matching the previous behaviour exactly.
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #include "gsplatHelpersVS"
 #include "gsplatOutputVS"

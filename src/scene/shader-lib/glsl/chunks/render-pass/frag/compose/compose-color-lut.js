@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #ifdef COLOR_LUT
         // LUT textures are fixed-size 256x16 "horizontal strip" 2D images representing
         // an unwrapped 16x16x16 3D LUT (Unreal format). The constants below derive from

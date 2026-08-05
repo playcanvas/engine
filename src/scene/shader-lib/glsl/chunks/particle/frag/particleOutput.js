@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 // Writes particle state to the state texture. The fragment output type (vec4 / uvec4) is set via
 // fragmentOutputTypes to match the texture format; when not float-renderable the floats are
 // reinterpreted to their uint bit patterns (RGBA32U), which is lossless.

@@ -1,16 +1,35 @@
 import { Debug } from '../../core/debug.js';
 import {
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
-    FUNC_NEVER, FUNC_LESS, FUNC_EQUAL, FUNC_LESSEQUAL, FUNC_GREATER, FUNC_NOTEQUAL,
-    FUNC_GREATEREQUAL, FUNC_ALWAYS
+    CULLFACE_BACK,
+    CULLFACE_FRONT,
+    CULLFACE_FRONTANDBACK,
+    CULLFACE_NONE,
+    FUNC_NEVER,
+    FUNC_LESS,
+    FUNC_EQUAL,
+    FUNC_LESSEQUAL,
+    FUNC_GREATER,
+    FUNC_NOTEQUAL,
+    FUNC_GREATEREQUAL,
+    FUNC_ALWAYS
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import {
-    SPECOCC_AO, SPECOCC_GLOSSDEPENDENT, SPECOCC_NONE,
-    BLEND_SUBTRACTIVE, BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
-    BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
-    BLEND_MIN, BLEND_MAX
+    SPECOCC_AO,
+    SPECOCC_GLOSSDEPENDENT,
+    SPECOCC_NONE,
+    BLEND_SUBTRACTIVE,
+    BLEND_ADDITIVE,
+    BLEND_NORMAL,
+    BLEND_NONE,
+    BLEND_PREMULTIPLIED,
+    BLEND_MULTIPLICATIVE,
+    BLEND_ADDITIVEALPHA,
+    BLEND_MULTIPLICATIVE2X,
+    BLEND_SCREEN,
+    BLEND_MIN,
+    BLEND_MAX
 } from '../constants.js';
 
 import { standardMaterialParameterTypes, standardMaterialRemovedParameters } from './standard-material-parameters.js';
@@ -22,17 +41,8 @@ class StandardMaterialValidator {
         this.valid = true; // start off valid
 
         this.enumValidators = {
-            occludeSpecular: this._createEnumValidator([
-                SPECOCC_NONE,
-                SPECOCC_AO,
-                SPECOCC_GLOSSDEPENDENT
-            ]),
-            cull: this._createEnumValidator([
-                CULLFACE_NONE,
-                CULLFACE_BACK,
-                CULLFACE_FRONT,
-                CULLFACE_FRONTANDBACK
-            ]),
+            occludeSpecular: this._createEnumValidator([SPECOCC_NONE, SPECOCC_AO, SPECOCC_GLOSSDEPENDENT]),
+            cull: this._createEnumValidator([CULLFACE_NONE, CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK]),
             blendType: this._createEnumValidator([
                 BLEND_SUBTRACTIVE,
                 BLEND_ADDITIVE,
@@ -76,7 +86,7 @@ class StandardMaterialValidator {
         const TYPES = standardMaterialParameterTypes;
         const REMOVED = standardMaterialRemovedParameters;
 
-        const pathMapping = (data.mappingFormat === 'path');
+        const pathMapping = data.mappingFormat === 'path';
 
         for (const key in data) {
             const type = TYPES[key];
@@ -98,7 +108,6 @@ class StandardMaterialValidator {
                         this.setInvalid(key, data);
                     }
                 }
-
             } else if (type === 'number') {
                 if (typeof data[key] !== 'number') {
                     this.setInvalid(key, data);
@@ -141,12 +150,15 @@ class StandardMaterialValidator {
                 if (!(data[key].center && data[key].center instanceof Array && data[key].center.length === 3)) {
                     this.setInvalid(key, data);
                 }
-                if (!(data[key].halfExtents && data[key].halfExtents instanceof Array && data[key].halfExtents.length === 3)) {
+                if (!(
+                    data[key].halfExtents &&
+                    data[key].halfExtents instanceof Array &&
+                    data[key].halfExtents.length === 3
+                )) {
                     this.setInvalid(key, data);
                 }
             } else if (type === 'cubemap') {
                 if (!(typeof data[key] === 'number' || data[key] === null || data[key] === undefined)) {
-
                     if (!(data[key] instanceof Texture && data[key].cubemap)) {
                         this.setInvalid(key, data);
                     }
@@ -161,7 +173,6 @@ class StandardMaterialValidator {
                         this.setInvalid(chunkNames[i], data[key]);
                     }
                 }
-
             } else {
                 console.error(`Unknown material type: ${type}`);
             }
@@ -175,7 +186,7 @@ class StandardMaterialValidator {
 
     _createEnumValidator(values) {
         return function (value) {
-            return (values.indexOf(value) >= 0);
+            return values.indexOf(value) >= 0;
         };
     }
 }

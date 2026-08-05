@@ -141,7 +141,7 @@ class XrLightEstimation extends EventHandler {
             err = new Error('light-estimation is not supported');
         }
 
-        if (!err && this._lightProbe || this._lightProbeRequested) {
+        if ((!err && this._lightProbe) || this._lightProbeRequested) {
             err = new Error('light estimation is already requested');
         }
 
@@ -152,22 +152,24 @@ class XrLightEstimation extends EventHandler {
 
         this._lightProbeRequested = true;
 
-        this._manager.session.requestLightProbe(
-        ).then((lightProbe) => {
-            const wasRequested = this._lightProbeRequested;
-            this._lightProbeRequested = false;
+        this._manager.session
+            .requestLightProbe()
+            .then((lightProbe) => {
+                const wasRequested = this._lightProbeRequested;
+                this._lightProbeRequested = false;
 
-            if (this._manager.active) {
-                if (wasRequested) {
-                    this._lightProbe = lightProbe;
+                if (this._manager.active) {
+                    if (wasRequested) {
+                        this._lightProbe = lightProbe;
+                    }
+                } else {
+                    this.fire('error', new Error('XR session is not active'));
                 }
-            } else {
-                this.fire('error', new Error('XR session is not active'));
-            }
-        }).catch((ex) => {
-            this._lightProbeRequested = false;
-            this.fire('error', ex);
-        });
+            })
+            .catch((ex) => {
+                this._lightProbeRequested = false;
+                this.fire('error', ex);
+            });
     }
 
     /**

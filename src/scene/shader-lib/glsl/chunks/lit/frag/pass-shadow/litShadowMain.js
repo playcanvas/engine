@@ -1,5 +1,5 @@
 // main shader entry point for the lit material for shadow rendering
-export default /* glsl */`
+export default /* glsl */ `
 
 #if LIGHT_TYPE != DIRECTIONAL
     uniform vec3 view_position;

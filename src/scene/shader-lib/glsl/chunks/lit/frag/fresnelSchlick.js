@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 // pow(x, 5) implemented as multiplies to avoid the log2/exp2 pair pow compiles to
 float pow5(float x) {
     float x2 = x * x;

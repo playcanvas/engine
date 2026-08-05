@@ -1,7 +1,18 @@
 import {
-    Color, Entity, Layer, RenderTarget, Script, Texture,
-    ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, GAMMA_NONE, PIXELFORMAT_RGBA16F, PIXELFORMAT_SRGBA8,
-    SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL, TONEMAP_NONE
+    Color,
+    Entity,
+    Layer,
+    RenderTarget,
+    Script,
+    Texture,
+    ADDRESS_CLAMP_TO_EDGE,
+    FILTER_LINEAR,
+    GAMMA_NONE,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_SRGBA8,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL,
+    TONEMAP_NONE
 } from 'playcanvas';
 
 /**
@@ -11,11 +22,11 @@ import {
 // outputPS chunk overrides for the proxy mesh material: keep the lit color in RGB and write 1 to
 // A, marking the pixel as covered by the mesh. The render target clears alpha to 0, so the alpha
 // channel acts as a coverage mask - splats sampling uncovered pixels are left untinted.
-const meshOutputGLSL = /* glsl */`
+const meshOutputGLSL = /* glsl */ `
     gl_FragColor.a = 1.0;
 `;
 
-const meshOutputWGSL = /* wgsl */`
+const meshOutputWGSL = /* wgsl */ `
     output.color = vec4f(output.color.rgb, 1.0);
 `;
 
@@ -23,7 +34,7 @@ const meshOutputWGSL = /* wgsl */`
 // main camera, so each fragment samples it at its own screen position - no matrix, no per-splat
 // flicker at screen edges. The brightness uniform compensates for the gray albedo of the proxy
 // mesh material (2 for 0.5 gray albedo) and allows the overall lighting to be brightened.
-const splatModifyGLSL = /* glsl */`
+const splatModifyGLSL = /* glsl */ `
 uniform sampler2D uRelightMap;
 uniform vec4 uScreenSize;
 uniform float uRelightBlend;
@@ -40,7 +51,7 @@ void modifySplatColor(vec2 gaussianUV, inout vec4 color) {
 }
 `;
 
-const splatModifyWGSL = /* wgsl */`
+const splatModifyWGSL = /* wgsl */ `
 var uRelightMap: texture_2d<f32>;
 var uRelightMapSampler: sampler;
 uniform uScreenSize: vec4f;
@@ -152,8 +163,8 @@ class GSplatRelighting extends Script {
 
         // HDR format with alpha for the relighting texture, with LDR fallback when not
         // renderable / filterable - sRGB to limit banding as the texture stores linear lighting
-        this._format = this.app.graphicsDevice.getRenderableHdrFormat([PIXELFORMAT_RGBA16F], true) ??
-            PIXELFORMAT_SRGBA8;
+        this._format =
+            this.app.graphicsDevice.getRenderableHdrFormat([PIXELFORMAT_RGBA16F], true) ?? PIXELFORMAT_SRGBA8;
 
         // find or create the relighting layer
         let layer = this.app.scene.layers.getLayerByName(this.layerName);

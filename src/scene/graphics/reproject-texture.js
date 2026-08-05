@@ -4,7 +4,8 @@ import { Vec3 } from '../../core/math/vec3.js';
 import {
     FILTER_NEAREST,
     RENDERTARGET_ORIGIN_BOTTOM,
-    TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE,
+    TEXTUREPROJECTION_OCTAHEDRAL,
+    TEXTUREPROJECTION_CUBE,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
@@ -171,8 +172,10 @@ const calculateRequiredSamplesGGX = () => {
         for (let i = 0; i < numSamples; ++i) {
             hemisphereSampleGGX(H, i / numSamples, random.radicalInverse(i), a);
 
-            const NoH = H.z;                                    // since N is (0, 0, 1)
-            L.set(H.x, H.y, H.z).mulScalar(2 * NoH).sub(N);
+            const NoH = H.z; // since N is (0, 0, 1)
+            L.set(H.x, H.y, H.z)
+                .mulScalar(2 * NoH)
+                .sub(N);
 
             validSamples += L.z > 0 ? 1 : 0;
         }
@@ -185,7 +188,7 @@ const calculateRequiredSamplesGGX = () => {
 
     const requiredTable = {};
     numSamples.forEach((numSamples) => {
-        const table = { };
+        const table = {};
         specularPowers.forEach((specularPower) => {
             let requiredSamples = numSamples;
             while (countValidSamplesGGX(requiredSamples, specularPower) < numSamples) {
@@ -220,33 +223,33 @@ const calculateRequiredSamplesGGX = () => {
 // required for the sets of (numSamples, specularPowers) pairs we expect to
 // encounter at runtime.
 const requiredSamplesGGX = {
-    '16': {
-        '2': 26,
-        '8': 20,
-        '32': 17,
-        '128': 16,
-        '512': 16
+    16: {
+        2: 26,
+        8: 20,
+        32: 17,
+        128: 16,
+        512: 16
     },
-    '32': {
-        '2': 53,
-        '8': 40,
-        '32': 34,
-        '128': 32,
-        '512': 32
+    32: {
+        2: 53,
+        8: 40,
+        32: 34,
+        128: 32,
+        512: 32
     },
-    '128': {
-        '2': 214,
-        '8': 163,
-        '32': 139,
-        '128': 130,
-        '512': 128
+    128: {
+        2: 214,
+        8: 163,
+        32: 139,
+        128: 130,
+        512: 128
     },
-    '1024': {
-        '2': 1722,
-        '8': 1310,
-        '32': 1114,
-        '128': 1041,
-        '512': 1025
+    1024: {
+        2: 1722,
+        8: 1310,
+        32: 1114,
+        128: 1041,
+        512: 1025
     }
 };
 
@@ -271,8 +274,10 @@ const generateGGXSamples = (numSamples, specularPower, sourceTotalPixels) => {
     for (let i = 0; i < requiredSamples; ++i) {
         hemisphereSampleGGX(H, i / requiredSamples, random.radicalInverse(i), a);
 
-        const NoH = H.z;                                    // since N is (0, 0, 1)
-        L.set(H.x, H.y, H.z).mulScalar(2 * NoH).sub(N);
+        const NoH = H.z; // since N is (0, 0, 1)
+        L.set(H.x, H.y, H.z)
+            .mulScalar(2 * NoH)
+            .sub(N);
 
         if (L.z > 0) {
             const pdf = D_GGX(Math.min(1, NoH), a) / 4 + 0.001;
@@ -402,16 +407,20 @@ function reprojectTexture(source, target, options = {}) {
 
     // table of distribution -> function name
     const funcNames = {
-        'none': 'reproject',
-        'lambert': 'prefilterSamplesUnweighted',
-        'phong': 'prefilterSamplesUnweighted',
-        'ggx': 'prefilterSamples'
+        none: 'reproject',
+        lambert: 'prefilterSamplesUnweighted',
+        phong: 'prefilterSamplesUnweighted',
+        ggx: 'prefilterSamples'
     };
 
     // extract options
     const specularPower = options.hasOwnProperty('specularPower') ? options.specularPower : 1;
     const face = options.hasOwnProperty('face') ? options.face : null;
-    const distribution = options.hasOwnProperty('distribution') ? options.distribution : (specularPower === 1) ? 'none' : 'phong';
+    const distribution = options.hasOwnProperty('distribution')
+        ? options.distribution
+        : specularPower === 1
+          ? 'none'
+          : 'phong';
 
     const processFunc = funcNames[distribution] || 'reproject';
     const prefilterSamples = processFunc.startsWith('prefilterSamples');
@@ -482,9 +491,11 @@ function reprojectTexture(source, target, options = {}) {
         // set or generate the pre-calculated samples data
         const sourceTotalPixels = source.width * source.height * (source.cubemap ? 6 : 1);
         const samplesTex =
-            (distribution === 'ggx') ? generateGGXSamplesTex(device, numSamples, specularPower, sourceTotalPixels) :
-                ((distribution === 'lambert') ? generateLambertSamplesTex(device, numSamples, sourceTotalPixels) :
-                    generatePhongSamplesTex(device, numSamples, specularPower));
+            distribution === 'ggx'
+                ? generateGGXSamplesTex(device, numSamples, specularPower, sourceTotalPixels)
+                : distribution === 'lambert'
+                  ? generateLambertSamplesTex(device, numSamples, sourceTotalPixels)
+                  : generatePhongSamplesTex(device, numSamples, specularPower);
         device.scope.resolve('samplesTex').setValue(samplesTex);
         device.scope.resolve('samplesTexInverseSize').setValue([1.0 / samplesTex.width, 1.0 / samplesTex.height]);
     }

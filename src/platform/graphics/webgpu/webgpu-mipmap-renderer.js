@@ -82,7 +82,6 @@ class WebgpuMipmapRenderer {
      * @param {WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
      */
     generate(webgpuTexture) {
-
         // ignore texture with no mipmaps
         const textureDescr = webgpuTexture.desc;
         if (textureDescr.mipLevelCount <= 1) {
@@ -114,9 +113,11 @@ class WebgpuMipmapRenderer {
                 fragment: {
                     module: webgpuShader.getFragmentShaderModule(),
                     entryPoint: webgpuShader.fragmentEntryPoint,
-                    targets: [{
-                        format: format
-                    }]
+                    targets: [
+                        {
+                            format: format
+                        }
+                    ]
                 },
                 primitive: {
                     topology: 'triangle-strip'
@@ -127,16 +128,18 @@ class WebgpuMipmapRenderer {
         }
 
         const texture = webgpuTexture.texture;
-        const numFaces = texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1);
+        const numFaces = texture.cubemap ? 6 : texture.array ? texture.arrayLength : 1;
 
         const srcViews = [];
         for (let face = 0; face < numFaces; face++) {
-            srcViews.push(webgpuTexture.createView({
-                dimension: '2d',
-                baseMipLevel: 0,
-                mipLevelCount: 1,
-                baseArrayLayer: face
-            }));
+            srcViews.push(
+                webgpuTexture.createView({
+                    dimension: '2d',
+                    baseMipLevel: 0,
+                    mipLevelCount: 1,
+                    baseArrayLayer: face
+                })
+            );
         }
 
         // loop through each mip level and render the previous level's contents into it.
@@ -145,9 +148,7 @@ class WebgpuMipmapRenderer {
         DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
 
         for (let i = 1; i < textureDescr.mipLevelCount; i++) {
-
             for (let face = 0; face < numFaces; face++) {
-
                 const dstView = webgpuTexture.createView({
                     dimension: '2d',
                     baseMipLevel: i,
@@ -156,23 +157,28 @@ class WebgpuMipmapRenderer {
                 });
 
                 const passEncoder = commandEncoder.beginRenderPass({
-                    colorAttachments: [{
-                        view: dstView,
-                        loadOp: 'clear',
-                        storeOp: 'store'
-                    }]
+                    colorAttachments: [
+                        {
+                            view: dstView,
+                            loadOp: 'clear',
+                            storeOp: 'store'
+                        }
+                    ]
                 });
                 DebugHelper.setLabel(passEncoder, `MipmapRenderer-PassEncoder_${i}`);
 
                 const bindGroup = wgpu.createBindGroup({
                     layout: pipeline.getBindGroupLayout(0),
-                    entries: [{
-                        binding: 0,
-                        resource: this.minSampler
-                    }, {
-                        binding: 1,
-                        resource: srcViews[face]
-                    }]
+                    entries: [
+                        {
+                            binding: 0,
+                            resource: this.minSampler
+                        },
+                        {
+                            binding: 1,
+                            resource: srcViews[face]
+                        }
+                    ]
                 });
 
                 passEncoder.setPipeline(pipeline);

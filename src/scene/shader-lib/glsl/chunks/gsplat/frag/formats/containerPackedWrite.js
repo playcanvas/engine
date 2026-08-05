@@ -1,5 +1,5 @@
 // Write function for packed (large) work buffer format (32 bytes/splat).
-export default /* glsl */`
+export default /* glsl */ `
 void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
     #ifdef GSPLAT_COLOR_UINT
         uint packed_rg = packHalf2x16(color.rg);

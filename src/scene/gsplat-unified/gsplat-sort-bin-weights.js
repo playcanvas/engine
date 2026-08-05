@@ -26,11 +26,11 @@ class GSplatSortBinWeights {
      */
     static get WEIGHT_TIERS() {
         return [
-            { maxDistance: 0, weight: 40.0 },   // Camera bin
-            { maxDistance: 2, weight: 20.0 },   // Adjacent bins
-            { maxDistance: 5, weight: 8.0 },    // Nearby bins
-            { maxDistance: 10, weight: 3.0 },   // Medium distance
-            { maxDistance: Infinity, weight: 1.0 }  // Far bins
+            { maxDistance: 0, weight: 40.0 }, // Camera bin
+            { maxDistance: 2, weight: 20.0 }, // Adjacent bins
+            { maxDistance: 5, weight: 8.0 }, // Nearby bins
+            { maxDistance: 10, weight: 3.0 }, // Medium distance
+            { maxDistance: Infinity, weight: 1.0 } // Far bins
         ];
     }
 
@@ -129,8 +129,8 @@ class GSplatSortBinWeights {
         let accumulated = 0;
         for (let i = 0; i < numBins; i++) {
             const divider = Math.max(1, Math.floor((bitsPerBin[i] / totalWeight) * bucketCount));
-            this.binWeights[i * 2] = accumulated;       // base
-            this.binWeights[i * 2 + 1] = divider;       // divider
+            this.binWeights[i * 2] = accumulated; // base
+            this.binWeights[i * 2 + 1] = divider; // divider
             accumulated += divider;
         }
 

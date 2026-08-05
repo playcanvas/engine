@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     vec4 dirLm = texture2D(texture_dirLightMap, vUv1);
 
     if (bakeDir > 0.5) {

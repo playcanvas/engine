@@ -23,12 +23,7 @@ const getCompressionFormats = (device) => {
 // download basis code and compile the wasm module for use in workers
 const prepareWorkerModules = (config, callback) => {
     const getWorkerBlob = (basisCode) => {
-        const code = [
-            '/* basis */',
-            basisCode,
-            '',
-            `(${BasisWorker.toString()})()\n\n`
-        ].join('\n');
+        const code = ['/* basis */', basisCode, '', `(${BasisWorker.toString()})()\n\n`].join('\n');
         return new Blob([code], { type: 'application/javascript' });
     };
 
@@ -40,7 +35,7 @@ const prepareWorkerModules = (config, callback) => {
                     return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
                 }
             }
-        } catch (e) { }
+        } catch (e) {}
         return false;
     };
 
@@ -81,34 +76,36 @@ const prepareWorkerModules = (config, callback) => {
 
         const compileManual = () => {
             fetchPromise
-            .then(result => result.arrayBuffer())
-            .then(buffer => WebAssembly.compile(buffer))
-            .then((module_) => {
-                if (basisCode) {
-                    sendResponse(basisCode, module_);
-                } else {
-                    module = module_;
-                }
-            })
-            .catch((err) => {
-                callback(err, null);
-            });
+                .then((result) => result.arrayBuffer())
+                .then((buffer) => WebAssembly.compile(buffer))
+                .then((module_) => {
+                    if (basisCode) {
+                        sendResponse(basisCode, module_);
+                    } else {
+                        module = module_;
+                    }
+                })
+                .catch((err) => {
+                    callback(err, null);
+                });
         };
 
         // download and compile wasm module
         if (WebAssembly.compileStreaming) {
             WebAssembly.compileStreaming(fetchPromise)
-            .then((module_) => {
-                if (basisCode) {
-                    sendResponse(basisCode, module_);
-                } else {
-                    module = module_;
-                }
-            })
-            .catch((err) => {
-                Debug.warn(`compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`);
-                compileManual();
-            });
+                .then((module_) => {
+                    if (basisCode) {
+                        sendResponse(basisCode, module_);
+                    } else {
+                        module = module_;
+                    }
+                })
+                .catch((err) => {
+                    Debug.warn(
+                        `compileStreaming() failed for ${config.wasmUrl} (${err}), falling back to arraybuffer download.`
+                    );
+                    compileManual();
+                });
         } else {
             compileManual();
         }
@@ -166,21 +163,19 @@ class BasisQueue {
 
         if (err) {
             for (let i = 0; i < callback.length; ++i) {
-                (callback[i])(err);
+                callback[i](err);
             }
         } else {
             // (re)create typed array from the returned array buffers. cubemap levels are
             // arrays of six face buffers, all other levels are a single image buffer.
-            const TypedArray = (data.format === PIXELFORMAT_RGB565 || data.format === PIXELFORMAT_RGBA4) ?
-                Uint16Array : Uint8Array;
+            const TypedArray =
+                data.format === PIXELFORMAT_RGB565 || data.format === PIXELFORMAT_RGBA4 ? Uint16Array : Uint8Array;
             data.levels = data.levels.map((level) => {
-                return Array.isArray(level) ?
-                    level.map(face => new TypedArray(face)) :
-                    new TypedArray(level);
+                return Array.isArray(level) ? level.map((face) => new TypedArray(face)) : new TypedArray(level);
             });
 
             for (let i = 0; i < callback.length; ++i) {
-                (callback[i])(null, data);
+                callback[i](null, data);
             }
         }
         delete this.callbacks[url];
@@ -212,13 +207,16 @@ class BasisClient {
         if (job.data instanceof ArrayBuffer) {
             transfer.push(job.data);
         }
-        this.worker.postMessage({
-            type: 'transcode',
-            url: job.url,
-            format: job.format,
-            data: job.data,
-            options: job.options
-        }, transfer);
+        this.worker.postMessage(
+            {
+                type: 'transcode',
+                url: job.url,
+                format: job.format,
+                data: job.data,
+                options: job.options
+            },
+            transfer
+        );
         if (this.eager) {
             this.queue.enqueueClient(this);
         }
@@ -295,7 +293,8 @@ function basisInitialize(config) {
         initializing = true;
 
         const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
-        const eagerWorkers = (config.numWorkers === 1) || (config.hasOwnProperty('eagerWorkers') ? config.eagerWorkers : true);
+        const eagerWorkers =
+            config.numWorkers === 1 || (config.hasOwnProperty('eagerWorkers') ? config.eagerWorkers : true);
 
         config.rgbPriority = config.rgbPriority || defaultRgbPriority;
         config.rgbaPriority = config.rgbaPriority || defaultRgbaPriority;
@@ -351,7 +350,4 @@ function basisTranscode(device, url, data, callback, options) {
     return initializing;
 }
 
-export {
-    basisInitialize,
-    basisTranscode
-};
+export { basisInitialize, basisTranscode };

@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 fn sheenD(normal: vec3f, h: vec3f, roughness: f32) -> f32 {
     let PI: f32 = 3.141592653589793;

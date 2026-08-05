@@ -141,7 +141,6 @@ class LayerComposition extends EventHandler {
         }
 
         if (this._dirty) {
-
             this._dirty = false;
 
             // walk the layers and build an array of unique cameras from all layers
@@ -198,17 +197,13 @@ class LayerComposition extends EventHandler {
                 // walk all global sorted list of layers (sublayers) to check if camera renders it
                 // this adds both opaque and transparent sublayers if camera renders the layer
                 for (let j = 0; j < len; j++) {
-
                     const layer = this.layerList[j];
                     const isLayerEnabled = layer.enabled && this.subLayerEnabled[j];
                     if (isLayerEnabled) {
-
                         // if layer needs to be rendered
                         if (layer.cameras.length > 0) {
-
                             // if the camera renders this layer
                             if (camera.layers.indexOf(layer.id) >= 0) {
-
                                 cameraLayers.push(layer);
 
                                 // if this layer is the stop layer for postprocessing
@@ -217,7 +212,6 @@ class LayerComposition extends EventHandler {
 
                                     // the previously added render action is the last post-processed layer
                                     if (lastRenderAction) {
-
                                         // mark it to trigger postprocessing callback
                                         lastRenderAction.triggerPostprocess = true;
                                     }
@@ -225,8 +219,14 @@ class LayerComposition extends EventHandler {
 
                                 // add render action to describe rendering step
                                 const isTransparent = this.subLayerList[j];
-                                lastRenderAction = this.addRenderAction(renderActionCount, layer, isTransparent, camera,
-                                    cameraFirstRenderAction, postProcessMarked);
+                                lastRenderAction = this.addRenderAction(
+                                    renderActionCount,
+                                    layer,
+                                    isTransparent,
+                                    camera,
+                                    cameraFirstRenderAction,
+                                    postProcessMarked
+                                );
                                 renderActionCount++;
                                 cameraFirstRenderAction = false;
                             }
@@ -236,7 +236,6 @@ class LayerComposition extends EventHandler {
 
                 // if the camera renders any layers.
                 if (cameraFirstRenderActionIndex < renderActionCount) {
-
                     // mark the last render action as last one using the camera
                     lastRenderAction.lastCameraUse = true;
                 }
@@ -272,7 +271,6 @@ class LayerComposition extends EventHandler {
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
     addRenderAction(renderActionIndex, layer, isTransparent, camera, cameraFirstRenderAction, postProcessMarked) {
-
         // camera's render target, ignoring depth layer
         let rt = layer.id !== LAYERID_DEPTH ? camera.renderTarget : null;
 
@@ -316,9 +314,7 @@ class LayerComposition extends EventHandler {
     // executes when post-processing camera's render actions were created to propagate rendering to
     // render targets to previous camera as needed
     propagateRenderTarget(startIndex, fromCamera) {
-
         for (let a = startIndex; a >= 0; a--) {
-
             const ra = this._renderActions[a];
             const layer = ra.layer;
 
@@ -341,7 +337,10 @@ class LayerComposition extends EventHandler {
             // camera stack ends when viewport or scissor of the camera changes
             const thisCamera = ra?.camera.camera;
             if (thisCamera) {
-                if (!fromCamera.camera.rect.equals(thisCamera.rect) || !fromCamera.camera.scissorRect.equals(thisCamera.scissorRect)) {
+                if (
+                    !fromCamera.camera.rect.equals(thisCamera.rect) ||
+                    !fromCamera.camera.scissorRect.equals(thisCamera.scissorRect)
+                ) {
                     break;
                 }
             }
@@ -353,7 +352,6 @@ class LayerComposition extends EventHandler {
 
     // logs render action and their properties
     _logRenderActions() {
-
         // #if _DEBUG
         if (Tracing.get(TRACEID_RENDER_ACTION)) {
             Debug.trace(TRACEID_RENDER_ACTION, `Render Actions for composition: ${this.name}`);
@@ -361,21 +359,18 @@ class LayerComposition extends EventHandler {
                 const ra = this._renderActions[i];
                 const camera = ra.camera;
                 if (ra.useCameraPasses) {
-                    Debug.trace(TRACEID_RENDER_ACTION, `${i
-                    }CustomPasses Cam: ${camera ? camera.entity.name : '-'}`);
+                    Debug.trace(TRACEID_RENDER_ACTION, `${i}CustomPasses Cam: ${camera ? camera.entity.name : '-'}`);
                 } else {
                     const layer = ra.layer;
                     const enabled = layer.enabled && this.isEnabled(layer, ra.transparent);
-                    const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
+                    const clear =
+                        (ra.clearColor ? 'Color ' : '..... ') +
+                        (ra.clearDepth ? 'Depth ' : '..... ') +
+                        (ra.clearStencil ? 'Stencil' : '.......');
 
-                    Debug.trace(TRACEID_RENDER_ACTION, `${i +
-                        (` Cam: ${camera ? camera.entity.name : '-'}`).padEnd(22, ' ') +
-                        (` Lay: ${layer.name}`).padEnd(22, ' ') +
-                        (ra.transparent ? ' TRANSP' : ' OPAQUE') +
-                        (enabled ? ' ENABLED ' : ' DISABLED') +
-                        (` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`).padEnd(30, ' ')
-                    } Clear: ${clear
-                    }${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
+                    Debug.trace(
+                        TRACEID_RENDER_ACTION,
+                        `${i + ` Cam: ${camera ? camera.entity.name : '-'}`.padEnd(22, ' ') + ` Lay: ${layer.name}`.padEnd(22, ' ') + (ra.transparent ? ' TRANSP' : ' OPAQUE') + (enabled ? ' ENABLED ' : ' DISABLED') + ` RT: ${ra.renderTarget ? ra.renderTarget.name : '-'}`.padEnd(30, ' ')} Clear: ${clear}${ra.triggerPostprocess ? ' POSTPROCESS' : ''}`
                     );
                 }
             }

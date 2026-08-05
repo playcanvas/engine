@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { WebgpuShaderProcessorWGSL } from '../../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
 
 describe('WebgpuShaderProcessorWGSL', function () {
-
     it('inserts generated declarations after WGSL directives', function () {
         const source = `enable dual_source_blending;
 @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {

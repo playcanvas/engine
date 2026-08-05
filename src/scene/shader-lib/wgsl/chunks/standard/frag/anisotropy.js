@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef LIT_GGX_SPECULAR
     uniform material_anisotropyIntensity: f32;
     uniform material_anisotropyRotation: vec2f;

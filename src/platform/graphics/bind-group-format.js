@@ -2,7 +2,10 @@ import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 import {
     TEXTUREDIMENSION_2D,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
+    SAMPLETYPE_FLOAT,
+    PIXELFORMAT_RGBA8,
+    SHADERSTAGE_COMPUTE,
+    SHADERSTAGE_VERTEX
 } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 
@@ -53,8 +56,7 @@ class BindBaseFormat {
  *
  * @category Graphics
  */
-class BindUniformBufferFormat extends BindBaseFormat {
-}
+class BindUniformBufferFormat extends BindBaseFormat {}
 
 /**
  * A class to describe the format of the storage buffer for {@link BindGroupFormat}.
@@ -88,7 +90,10 @@ class BindStorageBufferFormat extends BindBaseFormat {
 
         // whether the buffer is read-only
         this.readOnly = readOnly;
-        Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), 'Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.');
+        Debug.assert(
+            readOnly || !(visibility & SHADERSTAGE_VERTEX),
+            'Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.'
+        );
     }
 }
 
@@ -133,7 +138,14 @@ class BindTextureFormat extends BindBaseFormat {
      * Defaults to true.
      * @param {string|null} [samplerName] - Optional name of the sampler. Defaults to null.
      */
-    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null) {
+    constructor(
+        name,
+        visibility,
+        textureDimension = TEXTUREDIMENSION_2D,
+        sampleType = SAMPLETYPE_FLOAT,
+        hasSampler = true,
+        samplerName = null
+    ) {
         super(name, visibility);
 
         // TEXTUREDIMENSION_***
@@ -237,7 +249,7 @@ class BindGroupFormat {
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
-     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats -
+     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats
      * An array of bind formats. Note that each entry in the array uses up one slot. The exception
      * is a texture format that has a sampler, which uses up two slots. The slots are allocated
      * sequentially, starting from 0.
@@ -250,7 +262,6 @@ class BindGroupFormat {
 
         let slot = 0;
         formats.forEach((format) => {
-
             // Assign slot. For texture format, we also need to assign a slot for its sampler.
             format.slot = slot++;
             if (format instanceof BindTextureFormat && format.hasSampler) {
@@ -312,7 +323,11 @@ class BindGroupFormat {
 
         this.impl = graphicsDevice.createBindGroupFormatImpl(this);
 
-        Debug.trace(TRACEID_BINDGROUPFORMAT_ALLOC, `Alloc: Id ${this.id}, while rendering [${DebugGraphics.toString()}]`, this);
+        Debug.trace(
+            TRACEID_BINDGROUPFORMAT_ALLOC,
+            `Alloc: Id ${this.id}, while rendering [${DebugGraphics.toString()}]`,
+            this
+        );
     }
 
     /**
@@ -359,4 +374,10 @@ class BindGroupFormat {
     }
 }
 
-export { BindUniformBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat, BindStorageBufferFormat };
+export {
+    BindUniformBufferFormat,
+    BindTextureFormat,
+    BindGroupFormat,
+    BindStorageTextureFormat,
+    BindStorageBufferFormat
+};

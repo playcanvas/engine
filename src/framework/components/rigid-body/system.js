@@ -5,8 +5,11 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { AmmoPhysicsWorld } from '../../physics/ammo/ammo-physics-world.js';
 import { ComponentSystem } from '../system.js';
 import {
-    BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC,
-    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
+    BODYGROUP_TRIGGER,
+    BODYMASK_NOT_STATIC,
+    BODYTYPE_DYNAMIC,
+    BODYTYPE_KINEMATIC,
+    BODYTYPE_STATIC
 } from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { ContactPoint } from './contact-point.js';
@@ -631,10 +634,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // don't fire contact events for triggers
         if (pair.triggerA || pair.triggerB) {
-            const e0Events = e0.collision && (e0.collision.hasEvent('triggerenter') || e0.collision.hasEvent('triggerleave'));
-            const e1Events = e1.collision && (e1.collision.hasEvent('triggerenter') || e1.collision.hasEvent('triggerleave'));
-            const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent('triggerenter') || e0.rigidbody.hasEvent('triggerleave'));
-            const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent('triggerenter') || e1.rigidbody.hasEvent('triggerleave'));
+            const e0Events =
+                e0.collision && (e0.collision.hasEvent('triggerenter') || e0.collision.hasEvent('triggerleave'));
+            const e1Events =
+                e1.collision && (e1.collision.hasEvent('triggerenter') || e1.collision.hasEvent('triggerleave'));
+            const e0BodyEvents =
+                e0.rigidbody && (e0.rigidbody.hasEvent('triggerenter') || e0.rigidbody.hasEvent('triggerleave'));
+            const e1BodyEvents =
+                e1.rigidbody && (e1.rigidbody.hasEvent('triggerenter') || e1.rigidbody.hasEvent('triggerleave'));
 
             // fire triggerenter events for triggers
             if (e0Events) {

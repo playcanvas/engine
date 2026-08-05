@@ -2,7 +2,10 @@ import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
-import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from '../../../../src/framework/components/button/constants.js';
+import {
+    BUTTON_TRANSITION_MODE_SPRITE_CHANGE,
+    BUTTON_TRANSITION_MODE_TINT
+} from '../../../../src/framework/components/button/constants.js';
 import { ELEMENTTYPE_IMAGE } from '../../../../src/framework/components/element/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
@@ -39,7 +42,6 @@ describe('ButtonComponent', function () {
     });
 
     describe('#addComponent', function () {
-
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('button');
@@ -111,11 +113,9 @@ describe('ButtonComponent', function () {
             expect(e.button.hitPadding.equals(new Vec4())).to.equal(true);
             expect(e.button.fadeDuration).to.equal(0);
         });
-
     });
 
     describe('#hoverTint', function () {
-
         it('accepts an [r, g, b, a] array', function () {
             const e = new Entity();
             e.addComponent('button');
@@ -147,11 +147,9 @@ describe('ButtonComponent', function () {
             source.r = 0.9;
             expect(e.button.hoverTint.r).to.be.closeTo(0.1, 1e-6);
         });
-
     });
 
     describe('#hitPadding', function () {
-
         it('accepts an [x, y, z, w] array', function () {
             const e = new Entity();
             e.addComponent('button');
@@ -183,11 +181,9 @@ describe('ButtonComponent', function () {
 
             expect(e.button.hitPadding).to.equal(null);
         });
-
     });
 
     describe('#active', function () {
-
         it('applies the inactive tint to the image element when deactivated', function () {
             const { image, button } = createButton();
             app.root.addChild(button);
@@ -231,11 +227,9 @@ describe('ButtonComponent', function () {
             button.element.fire('click', {});
             expect(clicks).to.equal(1);
         });
-
     });
 
     describe('#transitionMode', function () {
-
         it('restores the default tint and applies the state sprite when switching to sprite mode', function () {
             const { image, button } = createButton({
                 active: false,
@@ -263,11 +257,9 @@ describe('ButtonComponent', function () {
             // the inactive tint remains applied - no reset to the default tint occurred
             expect(image.element.color.r).to.be.closeTo(0.25, 1e-6);
         });
-
     });
 
     describe('#imageEntity', function () {
-
         it('accepts an Entity reference', function () {
             const image = new Entity();
             image.addComponent('element', { type: ELEMENTTYPE_IMAGE });
@@ -324,11 +316,9 @@ describe('ButtonComponent', function () {
             expect(image1.hasEvent('element:add')).to.equal(false);
             expect(image2.hasEvent('element:add')).to.equal(true);
         });
-
     });
 
     describe('#cloneComponent', function () {
-
         it('clones every property', function () {
             const { button } = createButton({
                 enabled: false,
@@ -377,11 +367,9 @@ describe('ButtonComponent', function () {
             expect(cloneImage).to.not.equal(image);
             expect(clone.button.imageEntity).to.equal(cloneImage);
         });
-
     });
 
     describe('resolveDuplicatedEntityReferenceProperties', function () {
-
         it('remaps the image entity through duplicatedIdsMap', function () {
             const image = new Entity();
             image.addComponent('element', { type: ELEMENTTYPE_IMAGE });
@@ -400,7 +388,5 @@ describe('ButtonComponent', function () {
 
             expect(target.button.imageEntity).to.equal(replacement);
         });
-
     });
-
 });

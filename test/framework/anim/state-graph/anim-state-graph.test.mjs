@@ -3,38 +3,36 @@ import { expect } from 'chai';
 import { AnimStateGraph } from '../../../../src/framework/anim/state-graph/anim-state-graph.js';
 
 describe('AnimStateGraph', function () {
-
     describe('#constructor', function () {
-
         it('instantiates correctly with data layers as an object', function () {
             const data = {
-                'layers': {
-                    '0': {
-                        'name': 'Base',
-                        'states': [0, 1],
-                        'transitions': [0]
+                layers: {
+                    0: {
+                        name: 'Base',
+                        states: [0, 1],
+                        transitions: [0]
                     }
                 },
-                'states': {
-                    '0': {
-                        'name': 'START',
-                        'speed': 1
+                states: {
+                    0: {
+                        name: 'START',
+                        speed: 1
                     },
-                    '1': {
-                        'name': 'New State',
-                        'speed': 1,
-                        'loop': true,
-                        'defaultState': true
+                    1: {
+                        name: 'New State',
+                        speed: 1,
+                        loop: true,
+                        defaultState: true
                     }
                 },
-                'transitions': {
-                    '0': {
-                        'from': 0,
-                        'to': 1,
-                        'conditions': {}
+                transitions: {
+                    0: {
+                        from: 0,
+                        to: 1,
+                        conditions: {}
                     }
                 },
-                'parameters': {}
+                parameters: {}
             };
             const animStateGraph = new AnimStateGraph(data);
             expect(animStateGraph).to.be.ok;
@@ -45,31 +43,31 @@ describe('AnimStateGraph', function () {
 
         it('instantiates correctly with data layers as an array', function () {
             const data = {
-                'layers': [
+                layers: [
                     {
-                        'name': 'Base',
-                        'states': [
+                        name: 'Base',
+                        states: [
                             {
-                                'name': 'START',
-                                'speed': 1
+                                name: 'START',
+                                speed: 1
                             },
                             {
-                                'name': 'New State',
-                                'speed': 1,
-                                'loop': true,
-                                'defaultState': true
+                                name: 'New State',
+                                speed: 1,
+                                loop: true,
+                                defaultState: true
                             }
                         ],
-                        'transitions': [
+                        transitions: [
                             {
-                                'from': 0,
-                                'to': 1,
-                                'conditions': {}
+                                from: 0,
+                                to: 1,
+                                conditions: {}
                             }
                         ]
                     }
                 ],
-                'parameters': {}
+                parameters: {}
             };
             const animStateGraph = new AnimStateGraph(data);
             expect(animStateGraph).to.be.ok;
@@ -77,7 +75,5 @@ describe('AnimStateGraph', function () {
             expect(animStateGraph.layers[0].states[0].name).to.equal('START');
             expect(animStateGraph.layers[0].states[1].name).to.equal('New State');
         });
-
     });
-
 });

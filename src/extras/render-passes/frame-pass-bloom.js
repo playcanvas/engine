@@ -98,13 +98,11 @@ class FramePassBloom extends FramePass {
     }
 
     createRenderPasses(numPasses) {
-
         const device = this.device;
 
         // progressive downscale
         let passSourceTexture = this._sourceTexture;
         for (let i = 0; i < numPasses; i++) {
-
             const pass = new RenderPassDownsample(device, passSourceTexture);
             const rt = this.renderTargets[i];
             pass.init(rt, {
@@ -112,7 +110,7 @@ class FramePassBloom extends FramePass {
                 scaleX: 0.5,
                 scaleY: 0.5
             });
-            pass.setClearColor(Color.BLACK);  // clear when down-scaling
+            pass.setClearColor(Color.BLACK); // clear when down-scaling
             this.beforePasses.push(pass);
             passSourceTexture = rt.colorBuffer;
         }
@@ -120,11 +118,10 @@ class FramePassBloom extends FramePass {
         // progressive upscale
         passSourceTexture = this.renderTargets[numPasses - 1].colorBuffer;
         for (let i = numPasses - 2; i >= 0; i--) {
-
             const pass = new RenderPassUpsample(device, passSourceTexture);
             const rt = this.renderTargets[i];
             pass.init(rt);
-            pass.blendState = BlendState.ADDBLEND;  // blend when up-scaling
+            pass.blendState = BlendState.ADDBLEND; // blend when up-scaling
             this.beforePasses.push(pass);
             passSourceTexture = rt.colorBuffer;
         }
@@ -147,7 +144,6 @@ class FramePassBloom extends FramePass {
         const numPasses = math.clamp(maxNumPasses, 1, this.blurLevel);
 
         if (this.renderTargets.length !== numPasses) {
-
             this.destroyRenderPasses();
             this.destroyRenderTargets(1);
             this.createRenderTargets(numPasses);

@@ -43,7 +43,7 @@ class StorageBuffer {
         this.byteSize = byteSize;
         this.bufferUsage = bufferUsage;
 
-        const usage = addStorageUsage ? (BUFFERUSAGE_STORAGE | bufferUsage) : bufferUsage;
+        const usage = addStorageUsage ? BUFFERUSAGE_STORAGE | bufferUsage : bufferUsage;
         this.impl = graphicsDevice.createBufferImpl(usage);
         this.impl.allocate(graphicsDevice, byteSize);
 

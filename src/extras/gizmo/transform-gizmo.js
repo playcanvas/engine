@@ -6,13 +6,7 @@ import { Ray } from '../../core/shape/ray.js';
 import { Plane } from '../../core/shape/plane.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 
-import {
-    COLOR_RED,
-    COLOR_GREEN,
-    COLOR_BLUE,
-    COLOR_GRAY,
-    color4from3
-} from './color.js';
+import { COLOR_RED, COLOR_GREEN, COLOR_BLUE, COLOR_GRAY, color4from3 } from './color.js';
 import { Gizmo } from './gizmo.js';
 import { Debug } from '../../core/debug.js';
 
@@ -237,7 +231,7 @@ class TransformGizmo extends Gizmo {
             this._hoverAxis = '';
             this._hoverIsPlane = false;
             this._selectedAxis = this._getAxis(meshInstance);
-            this._selectedIsPlane =  this._getIsPlane(meshInstance);
+            this._selectedIsPlane = this._getIsPlane(meshInstance);
 
             this._rootStartPos.copy(this.root.getLocalPosition());
             this._rootStartRot.copy(this.root.getRotation());
@@ -245,7 +239,6 @@ class TransformGizmo extends Gizmo {
             this._selectionStartPoint.copy(point);
 
             this.fire(TransformGizmo.EVENT_TRANSFORMSTART, point, x, y);
-
         });
 
         this.on(Gizmo.EVENT_POINTERMOVE, (x, y, meshInstance) => {
@@ -410,12 +403,13 @@ class TransformGizmo extends Gizmo {
      */
     get colorAlpha() {
         return (
-            this._theme.shapeHover.x.a +
-            this._theme.shapeHover.y.a +
-            this._theme.shapeHover.z.a +
-            this._theme.shapeHover.xyz.a +
-            this._theme.shapeHover.f.a
-        ) / 5;
+            (this._theme.shapeHover.x.a +
+                this._theme.shapeHover.y.a +
+                this._theme.shapeHover.z.a +
+                this._theme.shapeHover.xyz.a +
+                this._theme.shapeHover.f.a) /
+            5
+        );
     }
 
     /**
@@ -659,7 +653,7 @@ class TransformGizmo extends Gizmo {
         rot.transformVector(to, to).add(pos);
         if (this._theme.guideOcclusion < 1) {
             const occluded = color.copy(base);
-            occluded.a *= (1 - this._theme.guideOcclusion);
+            occluded.a *= 1 - this._theme.guideOcclusion;
             this._app.drawLine(from, to, occluded, false, this._layer);
         }
         if (base.a !== 0) {
@@ -723,10 +717,12 @@ class TransformGizmo extends Gizmo {
      */
     setTheme(partial) {
         const theme = { ...this._theme, ...partial };
-        if (typeof theme !== 'object' ||
+        if (
+            typeof theme !== 'object' ||
             typeof theme.shapeBase !== 'object' ||
             typeof theme.shapeHover !== 'object' ||
-            typeof theme.guideBase !== 'object') {
+            typeof theme.guideBase !== 'object'
+        ) {
             return;
         }
 

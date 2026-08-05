@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform mat3 spawnBounds;
 uniform vec3 spawnPosInnerRatio;
 

@@ -179,7 +179,7 @@ class AnimationComponent extends Component {
             for (let i = 0; i < assets.length; i++) {
                 // remove the animations of the old assets
                 if (assets[i]) {
-                    const id = (assets[i] instanceof Asset) ? assets[i].id : assets[i];
+                    const id = assets[i] instanceof Asset ? assets[i].id : assets[i];
                     const asset = this.system.app.assets.get(id);
                     if (asset) {
                         const animName = this.animationsIndex[asset.id];
@@ -198,7 +198,7 @@ class AnimationComponent extends Component {
         this._assets = value;
 
         const assetIds = value.map((value) => {
-            return (value instanceof Asset) ? value.id : value;
+            return value instanceof Asset ? value.id : value;
         });
 
         this.loadAnimationAssets(assetIds);
@@ -318,7 +318,6 @@ class AnimationComponent extends Component {
         this.currAnim = name;
 
         if (this.model) {
-
             if (!this.skeleton && !this.animEvaluator) {
                 this._createAnimationController();
             }
@@ -756,14 +755,14 @@ class AnimationComponent extends Component {
                     // skeleton
                     const delta = dt * this.speed;
                     skeleton.addTime(delta);
-                    if (this.speed > 0 && (skeleton._time === skeleton.animation.duration) && !this.loop) {
+                    if (this.speed > 0 && skeleton._time === skeleton.animation.duration && !this.loop) {
                         this.playing = false;
                     } else if (this.speed < 0 && skeleton._time === 0 && !this.loop) {
                         this.playing = false;
                     }
                 }
 
-                if (this.blending && (this.blend === 1)) {
+                if (this.blending && this.blend === 1) {
                     skeleton.animation = this.toSkel.animation;
                 }
 
@@ -774,7 +773,6 @@ class AnimationComponent extends Component {
         // update anim controller
         const animEvaluator = this.animEvaluator;
         if (animEvaluator) {
-
             // force all clips' speed and playing state from the component
             for (let i = 0; i < animEvaluator.clips.length; ++i) {
                 const clip = animEvaluator.clips[i];

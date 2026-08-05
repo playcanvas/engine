@@ -7,7 +7,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AnimationHandler (parser selection)', function () {
-
     let app;
 
     beforeEach(function () {
@@ -43,7 +42,7 @@ describe('AnimationHandler (parser selection)', function () {
             expect(asset.resource).to.exist;
             done();
         });
-        asset.once('error', err => done(new Error(err)));
+        asset.once('error', (err) => done(new Error(err)));
         app.assets.add(asset);
         app.assets.load(asset);
     });
@@ -56,7 +55,7 @@ describe('AnimationHandler (parser selection)', function () {
             expect(asset.resource).to.exist;
             done();
         });
-        asset.once('error', err => done(new Error(err)));
+        asset.once('error', (err) => done(new Error(err)));
         app.assets.add(asset);
         app.assets.load(asset);
     });

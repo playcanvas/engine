@@ -140,9 +140,14 @@ class BoundingBox {
         const bMax = other.getMax();
         const bMin = other.getMin();
 
-        return (aMin.x <= bMax.x) && (aMax.x >= bMin.x) &&
-               (aMin.y <= bMax.y) && (aMax.y >= bMin.y) &&
-               (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
+        return (
+            aMin.x <= bMax.x &&
+            aMax.x >= bMin.x &&
+            aMin.y <= bMax.y &&
+            aMax.y >= bMin.y &&
+            aMin.z <= bMax.z &&
+            aMax.z >= bMin.z
+        );
     }
 
     _intersectsRay(ray, point) {
@@ -288,9 +293,14 @@ class BoundingBox {
         const c = this.center;
         const h = this.halfExtents;
 
-        if (point.x < c.x - h.x || point.x > c.x + h.x ||
-            point.y < c.y - h.y || point.y > c.y + h.y ||
-            point.z < c.z - h.z || point.z > c.z + h.z) {
+        if (
+            point.x < c.x - h.x ||
+            point.x > c.x + h.x ||
+            point.y < c.y - h.y ||
+            point.y > c.y + h.y ||
+            point.z < c.z - h.z ||
+            point.z > c.z + h.z
+        ) {
             return false;
         }
 
@@ -467,12 +477,12 @@ class BoundingBox {
             let val = 0;
 
             if (pn < bMin) {
-                val = (bMin - pn);
+                val = bMin - pn;
                 out += val * val;
             }
 
             if (pn > bMax) {
-                val = (pn - bMax);
+                val = pn - bMax;
                 out += val * val;
             }
 

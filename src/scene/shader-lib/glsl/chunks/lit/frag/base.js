@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform vec3 view_position;
 
 uniform vec3 light_globalAmbient;

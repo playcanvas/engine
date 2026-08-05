@@ -1,13 +1,15 @@
 import { expect } from 'chai';
 
-import { WORKBUFFER_UPDATE_ALWAYS, WORKBUFFER_UPDATE_AUTO, WORKBUFFER_UPDATE_ONCE } from '../../../src/scene/constants.js';
+import {
+    WORKBUFFER_UPDATE_ALWAYS,
+    WORKBUFFER_UPDATE_AUTO,
+    WORKBUFFER_UPDATE_ONCE
+} from '../../../src/scene/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { GSplatPlacement } from '../../../src/scene/gsplat-unified/gsplat-placement.js';
 
 describe('GSplatPlacement', function () {
-
     describe('dirty state', function () {
-
         it('starts with dirtyVersion 0 and AUTO update mode', function () {
             const placement = new GSplatPlacement(null, new GraphNode());
             expect(placement.dirtyVersion).to.equal(0);
@@ -43,6 +45,5 @@ describe('GSplatPlacement', function () {
             placement.workBufferModifier = null;
             expect(placement.dirtyVersion).to.equal(2);
         });
-
     });
 });

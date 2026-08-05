@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef CUBEMAP_ROTATION
 uniform cubeMapRotationMatrix: mat3x3f;
 #endif

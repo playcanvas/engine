@@ -1,6 +1,12 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
-import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_INT, SAMPLETYPE_UINT } from '../constants.js';
+import {
+    SAMPLETYPE_FLOAT,
+    SAMPLETYPE_UNFILTERABLE_FLOAT,
+    SAMPLETYPE_DEPTH,
+    SAMPLETYPE_INT,
+    SAMPLETYPE_UINT
+} from '../constants.js';
 import { WebgpuUtils } from './webgpu-utils.js';
 import { gpuTextureFormats } from './constants.js';
 
@@ -40,7 +46,6 @@ class WebgpuBindGroupFormat {
      * @param {BindGroupFormat} bindGroupFormat - Bind group format.
      */
     constructor(bindGroupFormat) {
-
         /** @type {WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
@@ -79,7 +84,6 @@ class WebgpuBindGroupFormat {
      * @returns {any} Returns the bind group descriptor.
      */
     createDescriptor(bindGroupFormat) {
-
         // all WebGPU bindings:
         // - buffer: GPUBufferBindingLayout, resource type is GPUBufferBinding
         // - sampler: GPUSamplerBindingLayout, resource type is GPUSampler
@@ -93,7 +97,6 @@ class WebgpuBindGroupFormat {
 
         // buffers
         bindGroupFormat.uniformBufferFormats.forEach((bufferFormat) => {
-
             const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
             key += `#${bufferFormat.slot}U:${visibility}`;
 
@@ -102,7 +105,6 @@ class WebgpuBindGroupFormat {
                 visibility: visibility,
 
                 buffer: {
-
                     type: 'uniform', // "uniform", "storage", "read-only-storage"
 
                     // whether this binding requires a dynamic offset
@@ -117,7 +119,6 @@ class WebgpuBindGroupFormat {
 
         // textures
         bindGroupFormat.textureFormats.forEach((textureFormat) => {
-
             const visibility = WebgpuUtils.shaderStage(textureFormat.visibility);
 
             // texture
@@ -169,7 +170,6 @@ class WebgpuBindGroupFormat {
 
         // storage textures
         bindGroupFormat.storageTextureFormats.forEach((textureFormat) => {
-
             const { format, textureDimension } = textureFormat;
             const { read, write } = textureFormat;
             key += `#${textureFormat.slot}ST:${format}-${textureDimension}-${read ? 'r1' : 'r0'}-${write ? 'w1' : 'w0'}`;
@@ -179,7 +179,6 @@ class WebgpuBindGroupFormat {
                 binding: textureFormat.slot,
                 visibility: GPUShaderStage.COMPUTE,
                 storageTexture: {
-
                     // The access mode for this binding, indicating readability and writability.
                     // 'write-only' is always support, 'read-write' and 'read-only' optionally
                     access: read ? (write ? 'read-write' : 'read-only') : 'write-only',
@@ -196,7 +195,6 @@ class WebgpuBindGroupFormat {
 
         // storage buffers
         bindGroupFormat.storageBufferFormats.forEach((bufferFormat) => {
-
             const readOnly = bufferFormat.readOnly;
             const visibility = WebgpuUtils.shaderStage(bufferFormat.visibility);
             key += `#${bufferFormat.slot}SB:${visibility}-${readOnly ? 'ro' : 'rw'}`;
@@ -205,7 +203,6 @@ class WebgpuBindGroupFormat {
                 binding: bufferFormat.slot,
                 visibility: visibility,
                 buffer: {
-
                     // "storage", "read-only-storage"
                     type: readOnly ? 'read-only-storage' : 'storage'
                 }

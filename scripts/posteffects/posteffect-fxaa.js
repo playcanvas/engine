@@ -12,7 +12,7 @@ class FxaaEffect extends pc.PostEffect {
         super(graphicsDevice);
 
         // Shaders
-        const fxaaFrag = /* glsl */`
+        const fxaaFrag = /* glsl */ `
             uniform sampler2D uColorBuffer;
             uniform vec2 uResolution;
 

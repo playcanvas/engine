@@ -1,6 +1,9 @@
 import {
-    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    ADDRESS_CLAMP_TO_EDGE,
+    PIXELFORMAT_RGB8,
+    PIXELFORMAT_RGBA8,
+    TEXTURETYPE_DEFAULT,
+    TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Asset } from '../asset/asset.js';
@@ -76,10 +79,10 @@ class CubemapHandler extends ResourceHandler {
     compareAssetIds(assetIdA, assetIdB) {
         if (assetIdA && assetIdB) {
             if (parseInt(assetIdA, 10) === assetIdA || typeof assetIdA === 'string') {
-                return assetIdA === assetIdB;           // id or url
+                return assetIdA === assetIdB; // id or url
             }
             // else {
-            return assetIdA.url === assetIdB.url;       // file/url structure with url and filename
+            return assetIdA.url === assetIdB.url; // file/url structure with url and filename
         }
         // else {
         return (assetIdA !== null) === (assetIdB !== null);
@@ -154,9 +157,12 @@ class CubemapHandler extends ResourceHandler {
                 });
                 const faceLevels = [];
                 for (mip = 0; mip < faceTextures[0]._levels.length; ++mip) {
-                    faceLevels.push(faceTextures.map((faceTexture) => {  // eslint-disable-line no-loop-func
-                        return faceTexture._levels[mip];
-                    }));
+                    faceLevels.push(
+                        // eslint-disable-next-line no-loop-func
+                        faceTextures.map((faceTexture) => {
+                            return faceTexture._levels[mip];
+                        })
+                    );
                 }
 
                 // Force RGBA8 if we are loading a RGB8 texture due to a bug on M1 Macs Monterey and Chrome not
@@ -225,7 +231,7 @@ class CubemapHandler extends ResourceHandler {
     // convert string id to int
     resolveId(value) {
         const valueInt = parseInt(value, 10);
-        return ((valueInt === value) || (valueInt.toString() === value)) ? valueInt : value;
+        return valueInt === value || valueInt.toString() === value ? valueInt : value;
     }
 
     loadAssets(cubemapAsset, callback) {
@@ -307,30 +313,38 @@ class CubemapHandler extends ResourceHandler {
                     // asynchronous step. this gives the caller (for example the scene loader)
                     // a chance to add the dependent scene texture to registry before we attempt
                     // to get the asset again.
-                    setTimeout(((index, assetId_) => {
-                        const texAsset = registry.get(assetId_);
-                        if (texAsset) {
-                            processTexAsset(index, texAsset);
-                        } else {
-                            onError(index, `failed to find dependent cubemap asset=${assetId_}`);
-                        }
-                    }).bind(null, i, assetId));
+                    setTimeout(
+                        ((index, assetId_) => {
+                            const texAsset = registry.get(assetId_);
+                            if (texAsset) {
+                                processTexAsset(index, texAsset);
+                            } else {
+                                onError(index, `failed to find dependent cubemap asset=${assetId_}`);
+                            }
+                        }).bind(null, i, assetId)
+                    );
                 }
             } else {
                 // assetId is a url or file object and we're responsible for creating it
-                const file = (typeof assetId === 'string') ? {
-                    url: assetId,
-                    filename: assetId
-                } : assetId;
+                const file =
+                    typeof assetId === 'string'
+                        ? {
+                              url: assetId,
+                              filename: assetId
+                          }
+                        : assetId;
 
                 // if the referenced prefiltered texture is not a dds file, then we're loading an
                 // envAtlas. In this case we must specify the correct texture state.
-                const data = file.url.search('.dds') === -1 ? {
-                    type: 'rgbp',
-                    addressu: 'clamp',
-                    addressv: 'clamp',
-                    mipmaps: false
-                } : null;
+                const data =
+                    file.url.search('.dds') === -1
+                        ? {
+                              type: 'rgbp',
+                              addressu: 'clamp',
+                              addressv: 'clamp',
+                              mipmaps: false
+                          }
+                        : null;
 
                 texAsset = new Asset(`${cubemapAsset.name}_part_${i}`, 'texture', file, data);
                 registry.add(texAsset);

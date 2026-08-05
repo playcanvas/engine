@@ -4,8 +4,7 @@ class Version {
     revision = 0;
 
     equals(other) {
-        return this.globalId === other.globalId &&
-               this.revision === other.revision;
+        return this.globalId === other.globalId && this.revision === other.revision;
     }
 
     copy(other) {

@@ -1,7 +1,12 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U,
-    BUFFERUSAGE_COPY_DST, RENDERTARGET_ORIGIN_BOTTOM, SEMANTIC_POSITION, getGlslShaderType
+    ADDRESS_CLAMP_TO_EDGE,
+    PIXELFORMAT_R32U,
+    PIXELFORMAT_RGBA16U,
+    BUFFERUSAGE_COPY_DST,
+    RENDERTARGET_ORIGIN_BOTTOM,
+    SEMANTIC_POSITION,
+    getGlslShaderType
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -70,9 +75,11 @@ class WorkBufferRenderInfo {
         }
 
         // Get custom shader chunks from material (for container support)
-        const fragmentIncludes = material.hasShaderChunks ?
-            (device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl) :
-            undefined;
+        const fragmentIncludes = material.hasShaderChunks
+            ? device.isWebGPU
+                ? material.shaderChunks.wgsl
+                : material.shaderChunks.glsl
+            : undefined;
 
         // Get streams to output - color-only mode uses just dataColor, otherwise all streams
         const outputStreams = colorOnly ? [colorStream] : [...format.streams, ...format.extraStreams];
@@ -226,8 +233,10 @@ class GSplatWorkBuffer {
      */
     _createRenderTargets() {
         // Work buffer does not support instance-level streams
-        Debug.assert(this.format.instanceStreams.length === 0,
-            'Work buffer format does not support instance-level streams (GSPLAT_STREAM_INSTANCE)');
+        Debug.assert(
+            this.format.instanceStreams.length === 0,
+            'Work buffer format does not support instance-level streams (GSPLAT_STREAM_INSTANCE)'
+        );
 
         // Destroy existing render targets
         this.renderTarget?.destroy();

@@ -9,12 +9,7 @@ import { GSplatHybridRendererScratch } from './gsplat-hybrid-renderer-scratch.js
 import { GSplatShadowRenderer } from './gsplat-shadow-renderer.js';
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import {
-    GSPLAT_RENDERER_RASTER_GPU_SORT,
-    GSPLAT_FORWARD,
-    GSPLAT_SHADOW,
-    GSPLAT_DEBUG_AABBS
-} from '../constants.js';
+import { GSPLAT_RENDERER_RASTER_GPU_SORT, GSPLAT_FORWARD, GSPLAT_SHADOW, GSPLAT_DEBUG_AABBS } from '../constants.js';
 import { Color } from '../../core/math/color.js';
 
 /**
@@ -446,7 +441,14 @@ class GSplatManager {
     _syncShadowRenderer() {
         const wantShadow = !!(this.renderMode & GSPLAT_SHADOW) && this.renderer.usesGpuSort;
         if (wantShadow && !this.shadowRenderer) {
-            this.shadowRenderer = new GSplatShadowRenderer(this.device, this.node, this.cameraNode, this.layer, this.world, this._hybridScratch);
+            this.shadowRenderer = new GSplatShadowRenderer(
+                this.device,
+                this.node,
+                this.cameraNode,
+                this.layer,
+                this.world,
+                this._hybridScratch
+            );
         } else if (!wantShadow && this.shadowRenderer) {
             this.shadowRenderer.destroy();
             this.shadowRenderer = null;
@@ -475,7 +477,14 @@ class GSplatManager {
             // in _syncShadowRenderer once no GPU-sort renderer remains (and in destroy()).
             this._hybridScratch ??= new GSplatHybridRendererScratch(this.device);
             // The hybrid renderer creates its own GPU sort resources (radix sorter, projector).
-            this.renderer = new GSplatHybridRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer, this._hybridScratch);
+            this.renderer = new GSplatHybridRenderer(
+                this.device,
+                this.node,
+                this.cameraNode,
+                this.layer,
+                workBuffer,
+                this._hybridScratch
+            );
         } else {
             this.renderer = new GSplatQuadRenderer(this.device, this.node, this.cameraNode, this.layer, workBuffer);
             this.initCpuSorting();
@@ -549,7 +558,13 @@ class GSplatManager {
     _markSortedIfNeeded(worldState) {
         if (!worldState.sortedBefore) {
             // GPU sort always runs interval culling, so upload bounds (updateBounds = true).
-            this.world.markSorted(worldState.version, worldState.totalActiveSplats, this.cameraNode, true, this._markResult);
+            this.world.markSorted(
+                worldState.version,
+                worldState.totalActiveSplats,
+                this.cameraNode,
+                true,
+                this._markResult
+            );
             if (this._markResult.rebuilt) {
                 this.renderer.update(this._markResult.count, this._markResult.textureSize);
             }
@@ -589,7 +604,13 @@ class GSplatManager {
     fireFrameReadyEvent() {
         const ready = this.world.currentVersion === this.world.lastWorldStateVersion && !this.world.awaitingLodUpdate;
         const loadingCount = this.world.pendingLoadCount;
-        this.director.eventHandler.fire('frame:ready', this.cameraNode.camera, this.renderer.layer, ready, loadingCount);
+        this.director.eventHandler.fire(
+            'frame:ready',
+            this.cameraNode.camera,
+            this.renderer.layer,
+            ready,
+            loadingCount
+        );
     }
 
     /**
@@ -637,7 +658,6 @@ class GSplatManager {
     }
 
     update() {
-
         // Reset per-frame buffer-copy stats before any bake. Must precede applyPendingSorted (whose
         // async onSorted may rebuild and accumulate stats).
         this.world.resetFrameStats();
@@ -661,7 +681,6 @@ class GSplatManager {
         // update sorter with new world state
         const lastState = this.world.getState(this.world.lastWorldStateVersion);
         if (lastState) {
-
             // debug render world space bounds for all splats
             Debug.call(() => {
                 if (this.scene.gsplat.debug === GSPLAT_DEBUG_AABBS) {
@@ -669,7 +688,13 @@ class GSplatManager {
                     const scene = this.scene;
                     lastState.splats.forEach((splat) => {
                         tempAabb.setFromTransformedAabb(splat.aabb, splat.node.getWorldTransform());
-                        scene.immediate.drawWireAlignedBox(tempAabb.getMin(), tempAabb.getMax(), _lodColors[splat.lodIndex], true, scene.defaultDrawLayer);
+                        scene.immediate.drawWireAlignedBox(
+                            tempAabb.getMin(),
+                            tempAabb.getMax(),
+                            _lodColors[splat.lodIndex],
+                            true,
+                            scene.defaultDrawLayer
+                        );
                     });
                 }
             });
@@ -681,7 +706,6 @@ class GSplatManager {
                 const payload = this.world.prepareSortParameters(lastState);
                 this.cpuSorter.setSortParameters(payload);
             }
-
         }
 
         // Materialize the work buffer for the render-ready version (full rebuild or incremental).
@@ -834,7 +858,6 @@ class GSplatManager {
             // world-space offset
             modelMat.getTranslation(translation);
             const offset = translation.sub(cameraPosition).dot(cameraDirection);
-
 
             // sorter parameters
             const aabbMin = splat.aabb.getMin();

@@ -21,7 +21,7 @@ MacGPUProfiling.prototype.initialize = function () {
     this.webgpuCanvas.width = 20;
     this.webgpuCanvas.height = 20;
     this.webgpuCanvas.style.position = 'absolute';
-    this.webgpuCanvas.style.top = '20px';  // Adjust position if needed
+    this.webgpuCanvas.style.top = '20px'; // Adjust position if needed
     this.webgpuCanvas.style.left = '20px'; // Adjust position if needed
     document.body.appendChild(this.webgpuCanvas);
 
@@ -79,12 +79,14 @@ MacGPUProfiling.prototype.clearToRed = function () {
 
     // Create a render pass descriptor with a red background
     const renderPassDescriptor = {
-        colorAttachments: [{
-            view: textureView,
-            clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },  // Red background
-            loadOp: 'clear',
-            storeOp: 'store'
-        }]
+        colorAttachments: [
+            {
+                view: textureView,
+                clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }, // Red background
+                loadOp: 'clear',
+                storeOp: 'store'
+            }
+        ]
     };
 
     // render pass

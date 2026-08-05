@@ -27,15 +27,17 @@ class BundleHandler extends ResourceHandler {
     _fetchRetries(url, options, retries = 0) {
         return new Promise((resolve, reject) => {
             const tryFetch = () => {
-                fetch(url, options).then(resolve).catch((err) => {
-                    retries++;
-                    if (retries < this.maxRetries) {
-                        Debug.error(`Bundle failed to load retrying (attempt ${retries}`);
-                        tryFetch();
-                    } else {
-                        reject(err);
-                    }
-                });
+                fetch(url, options)
+                    .then(resolve)
+                    .catch((err) => {
+                        retries++;
+                        if (retries < this.maxRetries) {
+                            Debug.error(`Bundle failed to load retrying (attempt ${retries}`);
+                            tryFetch();
+                        } else {
+                            reject(err);
+                        }
+                    });
             };
             tryFetch();
         });
@@ -49,30 +51,36 @@ class BundleHandler extends ResourceHandler {
             };
         }
 
-        this._fetchRetries(url.load, {
-            mode: 'cors'
-        }, this.maxRetries).then((res) => {
-            const bundle = new Bundle();
-            callback(null, bundle);
+        this._fetchRetries(
+            url.load,
+            {
+                mode: 'cors'
+            },
+            this.maxRetries
+        )
+            .then((res) => {
+                const bundle = new Bundle();
+                callback(null, bundle);
 
-            const untar = new Untar(res, this._assets.prefix);
+                const untar = new Untar(res, this._assets.prefix);
 
-            untar.on('file', (file) => {
-                bundle.addFile(file.name, file.data);
-            });
+                untar.on('file', (file) => {
+                    bundle.addFile(file.name, file.data);
+                });
 
-            untar.on('done', () => {
-                bundle.loaded = true;
-            });
+                untar.on('done', () => {
+                    bundle.loaded = true;
+                });
 
-            untar.on('error', (err) => {
+                untar.on('error', (err) => {
+                    Debug.error(err);
+                    callback(err);
+                });
+            })
+            .catch((err) => {
                 Debug.error(err);
                 callback(err);
             });
-        }).catch((err) => {
-            Debug.error(err);
-            callback(err);
-        });
     }
 
     /**

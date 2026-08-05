@@ -23,7 +23,7 @@ class RefCountedKeyCache {
      * Map storing the cache. They key is a look up key for the object, the value is an instance
      * of the Entry class, which wraps the object with a reference count.
      *
-     * {@type <object, Entry>}
+     * @type {Map<object, Entry>}
      * @private
      */
     cache = new Map();
@@ -69,7 +69,11 @@ class RefCountedKeyCache {
      * @param {object} object - The object to store.
      */
     set(key, object) {
-        Debug.assert(!this.cache.has(key), 'RefCountedKeyCache: Trying to put object with key that already exists in the cache', { key, object });
+        Debug.assert(
+            !this.cache.has(key),
+            'RefCountedKeyCache: Trying to put object with key that already exists in the cache',
+            { key, object }
+        );
         this.cache.set(key, new Entry(object));
     }
 

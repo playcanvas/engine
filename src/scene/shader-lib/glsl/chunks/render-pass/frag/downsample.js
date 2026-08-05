@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform sampler2D sourceTexture;
 uniform vec2 sourceInvResolution;
 varying vec2 uv0;

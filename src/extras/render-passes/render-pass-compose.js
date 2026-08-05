@@ -5,7 +5,12 @@ import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-qu
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 import { hashCode } from '../../core/hash.js';
-import { FILTER_LINEAR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import {
+    FILTER_LINEAR,
+    SEMANTIC_POSITION,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
+} from '../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
 import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
@@ -193,7 +198,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 if (value.minFilter !== FILTER_LINEAR) required.push('minFilter: FILTER_LINEAR');
                 if (value.magFilter !== FILTER_LINEAR) required.push('magFilter: FILTER_LINEAR');
                 if (required.length) {
-                    Debug.warnOnce(`CameraFrame.${slotName}: texture '${value.name ?? ''}' should be configured with: ${required.join('; ')}.`, value);
+                    Debug.warnOnce(
+                        `CameraFrame.${slotName}: texture '${value.name ?? ''}' should be configured with: ${required.join('; ')}.`,
+                        value
+                    );
                 }
             }
         });
@@ -332,7 +340,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
     }
 
     frameUpdate() {
-
         // detect if the render target is srgb vs execute manual srgb conversion
         const rt = this.renderTarget ?? this.device.backBuffer;
         const srgb = rt.isColorBufferSrgb(0);
@@ -342,7 +349,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
             this._shaderDirty = true;
         }
 
-        const shaderChunks = ShaderChunks.get(this.device, this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
+        const shaderChunks = ShaderChunks.get(
+            this.device,
+            this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL
+        );
 
         // detect changes to custom compose chunks and mark shader dirty
         for (const [name, prevValue] of this._customComposeChunks.entries()) {
@@ -365,23 +375,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
             const startHash = hashCode(customChunks.get('composeMainStartPS') ?? '');
             const endHash = hashCode(customChunks.get('composeMainEndPS') ?? '');
 
-            const key =
-                `${this.toneMapping}` +
-                `-${gammaCorrectionName}` +
-                `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
-                `-${this.cocTexture ? 'dof' : 'nodof'}` +
-                `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
-                `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
-                `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
-                `-${this.colorEnhanceEnabled ? 'colorenhance' : 'nocolorenhance'}` +
-                `-${this.colorLUT ? 'colorlut' : 'nocolorlut'}` +
-                `-${this.colorLUT2 ? 'colorlut2' : 'nocolorlut2'}` +
-                `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
-                `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
-                `-${this.taaEnabled ? 'taa' : 'notaa'}` +
-                `-${this.isSharpnessEnabled ? (this._hdrScene ? 'cashdr' : 'cas') : 'nocas'}` +
-                `-${this._debug ?? ''}` +
-                `-decl${declHash}-start${startHash}-end${endHash}`;
+            const key = `${this.toneMapping}-${gammaCorrectionName}-${this.bloomTexture ? 'bloom' : 'nobloom'}-${this.cocTexture ? 'dof' : 'nodof'}-${this.blurTextureUpscale ? 'dofupscale' : ''}-${this.ssaoTexture ? 'ssao' : 'nossao'}-${this.gradingEnabled ? 'grading' : 'nograding'}-${this.colorEnhanceEnabled ? 'colorenhance' : 'nocolorenhance'}-${this.colorLUT ? 'colorlut' : 'nocolorlut'}-${this.colorLUT2 ? 'colorlut2' : 'nocolorlut2'}-${this.vignetteEnabled ? 'vignette' : 'novignette'}-${this.fringingEnabled ? 'fringing' : 'nofringing'}-${this.taaEnabled ? 'taa' : 'notaa'}-${this.isSharpnessEnabled ? (this._hdrScene ? 'cashdr' : 'cas') : 'nocas'}-${this._debug ?? ''}-decl${declHash}-start${startHash}-end${endHash}`;
 
             if (this._key !== key) {
                 this._key = key;
@@ -418,7 +412,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
     }
 
     execute() {
-
         const sceneTex = this.sceneTexture;
         this.sceneTextureId.setValue(sceneTex);
         this.sceneTextureInvResValue[0] = 1.0 / sceneTex.width;
@@ -450,7 +443,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
         }
 
         if (this._colorEnhanceEnabled) {
-            this.colorEnhanceParamsId.setValue([this.colorEnhanceShadows, this.colorEnhanceHighlights, this.colorEnhanceVibrance, this.colorEnhanceDehaze]);
+            this.colorEnhanceParamsId.setValue([
+                this.colorEnhanceShadows,
+                this.colorEnhanceHighlights,
+                this.colorEnhanceVibrance,
+                this.colorEnhanceDehaze
+            ]);
             this.colorEnhanceMidtonesId.setValue(this.colorEnhanceMidtones);
         }
 
@@ -468,7 +466,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
         }
 
         if (this._vignetteEnabled) {
-            this.vignetterParamsId.setValue([this.vignetteInner, this.vignetteOuter, this.vignetteCurvature, this.vignetteIntensity]);
+            this.vignetterParamsId.setValue([
+                this.vignetteInner,
+                this.vignetteOuter,
+                this.vignetteCurvature,
+                this.vignetteIntensity
+            ]);
             this.vignetteColorId.setValue([this.vignetteColor.r, this.vignetteColor.g, this.vignetteColor.b]);
         }
 

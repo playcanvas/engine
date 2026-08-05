@@ -7,15 +7,39 @@ import { Color } from '../../core/math/color.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
     CULLFACE_NONE,
-    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
-    FILTER_LINEAR, FILTER_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST,
-    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR,
-    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4,
-    SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7, TYPE_INT8,
-    TYPE_UINT8, TYPE_INT16, TYPE_UINT16,
-    TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+    INDEXFORMAT_UINT8,
+    INDEXFORMAT_UINT16,
+    INDEXFORMAT_UINT32,
+    ADDRESS_CLAMP_TO_EDGE,
+    ADDRESS_MIRRORED_REPEAT,
+    ADDRESS_REPEAT,
+    FILTER_LINEAR,
+    FILTER_NEAREST,
+    FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR_MIPMAP_NEAREST,
+    FILTER_NEAREST_MIPMAP_LINEAR,
+    FILTER_NEAREST_MIPMAP_NEAREST,
+    SEMANTIC_POSITION,
+    SEMANTIC_NORMAL,
+    SEMANTIC_TANGENT,
+    SEMANTIC_COLOR,
+    SEMANTIC_BLENDINDICES,
+    SEMANTIC_BLENDWEIGHT,
+    SEMANTIC_TEXCOORD0,
+    SEMANTIC_TEXCOORD1,
+    SEMANTIC_TEXCOORD2,
+    SEMANTIC_TEXCOORD3,
+    SEMANTIC_TEXCOORD4,
+    SEMANTIC_TEXCOORD5,
+    SEMANTIC_TEXCOORD6,
+    SEMANTIC_TEXCOORD7,
+    TYPE_INT8,
+    TYPE_UINT8,
+    TYPE_INT16,
+    TYPE_UINT16,
+    TYPE_INT32,
+    TYPE_UINT32,
+    TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
@@ -31,73 +55,110 @@ const ELEMENT_ARRAY_BUFFER = 34963;
 
 const getIndexComponentType = (indexFormat) => {
     switch (indexFormat) {
-        case INDEXFORMAT_UINT8: return 5121;
-        case INDEXFORMAT_UINT16: return 5123;
-        case INDEXFORMAT_UINT32: return 5125;
+        case INDEXFORMAT_UINT8:
+            return 5121;
+        case INDEXFORMAT_UINT16:
+            return 5123;
+        case INDEXFORMAT_UINT32:
+            return 5125;
     }
     return 0;
 };
 
 const getComponentType = (dataType) => {
     switch (dataType) {
-        case TYPE_INT8: return 5120;
-        case TYPE_UINT8: return 5121;
-        case TYPE_INT16: return 5122;
-        case TYPE_UINT16: return 5123;
-        case TYPE_INT32: return 5124;
-        case TYPE_UINT32: return 5125;
-        case TYPE_FLOAT32: return 5126;
+        case TYPE_INT8:
+            return 5120;
+        case TYPE_UINT8:
+            return 5121;
+        case TYPE_INT16:
+            return 5122;
+        case TYPE_UINT16:
+            return 5123;
+        case TYPE_INT32:
+            return 5124;
+        case TYPE_UINT32:
+            return 5125;
+        case TYPE_FLOAT32:
+            return 5126;
     }
     return 0;
 };
 
 const getAccessorType = (componentCount) => {
     switch (componentCount) {
-        case 1: return 'SCALAR';
-        case 2: return 'VEC2';
-        case 3: return 'VEC3';
-        case 4: return 'VEC4';
+        case 1:
+            return 'SCALAR';
+        case 2:
+            return 'VEC2';
+        case 3:
+            return 'VEC3';
+        case 4:
+            return 'VEC4';
     }
     return 0;
 };
 
 const getSemantic = (engineSemantic) => {
     switch (engineSemantic) {
-        case SEMANTIC_POSITION: return 'POSITION';
-        case SEMANTIC_NORMAL: return 'NORMAL';
-        case SEMANTIC_TANGENT: return 'TANGENT';
-        case SEMANTIC_COLOR: return 'COLOR_0';
-        case SEMANTIC_BLENDINDICES: return 'JOINTS_0';
-        case SEMANTIC_BLENDWEIGHT: return 'WEIGHTS_0';
-        case SEMANTIC_TEXCOORD0: return 'TEXCOORD_0';
-        case SEMANTIC_TEXCOORD1: return 'TEXCOORD_1';
-        case SEMANTIC_TEXCOORD2: return 'TEXCOORD_2';
-        case SEMANTIC_TEXCOORD3: return 'TEXCOORD_3';
-        case SEMANTIC_TEXCOORD4: return 'TEXCOORD_4';
-        case SEMANTIC_TEXCOORD5: return 'TEXCOORD_5';
-        case SEMANTIC_TEXCOORD6: return 'TEXCOORD_6';
-        case SEMANTIC_TEXCOORD7: return 'TEXCOORD_7';
+        case SEMANTIC_POSITION:
+            return 'POSITION';
+        case SEMANTIC_NORMAL:
+            return 'NORMAL';
+        case SEMANTIC_TANGENT:
+            return 'TANGENT';
+        case SEMANTIC_COLOR:
+            return 'COLOR_0';
+        case SEMANTIC_BLENDINDICES:
+            return 'JOINTS_0';
+        case SEMANTIC_BLENDWEIGHT:
+            return 'WEIGHTS_0';
+        case SEMANTIC_TEXCOORD0:
+            return 'TEXCOORD_0';
+        case SEMANTIC_TEXCOORD1:
+            return 'TEXCOORD_1';
+        case SEMANTIC_TEXCOORD2:
+            return 'TEXCOORD_2';
+        case SEMANTIC_TEXCOORD3:
+            return 'TEXCOORD_3';
+        case SEMANTIC_TEXCOORD4:
+            return 'TEXCOORD_4';
+        case SEMANTIC_TEXCOORD5:
+            return 'TEXCOORD_5';
+        case SEMANTIC_TEXCOORD6:
+            return 'TEXCOORD_6';
+        case SEMANTIC_TEXCOORD7:
+            return 'TEXCOORD_7';
     }
     return '';
 };
 
 const getFilter = function (filter) {
     switch (filter) {
-        case FILTER_NEAREST: return 9728;
-        case FILTER_LINEAR: return 9729;
-        case FILTER_NEAREST_MIPMAP_NEAREST: return 9984;
-        case FILTER_LINEAR_MIPMAP_NEAREST: return 9985;
-        case FILTER_NEAREST_MIPMAP_LINEAR: return 9986;
-        case FILTER_LINEAR_MIPMAP_LINEAR: return 9987;
+        case FILTER_NEAREST:
+            return 9728;
+        case FILTER_LINEAR:
+            return 9729;
+        case FILTER_NEAREST_MIPMAP_NEAREST:
+            return 9984;
+        case FILTER_LINEAR_MIPMAP_NEAREST:
+            return 9985;
+        case FILTER_NEAREST_MIPMAP_LINEAR:
+            return 9986;
+        case FILTER_LINEAR_MIPMAP_LINEAR:
+            return 9987;
     }
     return 0;
 };
 
 const getWrap = function (wrap) {
     switch (wrap) {
-        case ADDRESS_CLAMP_TO_EDGE: return 33071;
-        case ADDRESS_MIRRORED_REPEAT: return 33648;
-        case ADDRESS_REPEAT: return 10497;
+        case ADDRESS_CLAMP_TO_EDGE:
+            return 33071;
+        case ADDRESS_MIRRORED_REPEAT:
+            return 33648;
+        case ADDRESS_REPEAT:
+            return 10497;
     }
     return 0;
 };
@@ -171,7 +232,6 @@ class GltfExporter extends CoreExporter {
 
         const collectMeshInstances = (meshInstances) => {
             meshInstances.forEach((meshInstance) => {
-
                 // Collect material
                 const material = meshInstance.material;
                 if (materials.indexOf(material) < 0) {
@@ -194,7 +254,7 @@ class GltfExporter extends CoreExporter {
 
                 // collect mesh instances per node
                 const node = meshInstance.node;
-                let nodeMeshInstances = entityMeshInstances.find(e => e.node === node);
+                let nodeMeshInstances = entityMeshInstances.find((e) => e.node === node);
                 if (!nodeMeshInstances) {
                     nodeMeshInstances = { node: node, meshInstances: [] };
                     entityMeshInstances.push(nodeMeshInstances);
@@ -408,7 +468,6 @@ class GltfExporter extends CoreExporter {
     }
 
     writeStandardMaterial(resources, mat, output, json) {
-
         const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
 
@@ -437,7 +496,14 @@ class GltfExporter extends CoreExporter {
         }
 
         // For unlit, use emissiveMap as baseColorTexture source (parser copies diffuseMap to emissiveMap)
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', mat.useLighting ? 'diffuseMap' : 'emissiveMap', json);
+        this.attachTexture(
+            resources,
+            mat,
+            pbr,
+            'baseColorTexture',
+            mat.useLighting ? 'diffuseMap' : 'emissiveMap',
+            json
+        );
         this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
         // Emissive (skip for unlit - emissive holds the baseColor)
@@ -449,7 +515,10 @@ class GltfExporter extends CoreExporter {
         // === Material Extensions ===
 
         // KHR_materials_anisotropy
-        if (mat.enableGGXSpecular && (mat.anisotropyIntensity !== 0 || mat.anisotropyRotation !== 0 || mat.anisotropyMap)) {
+        if (
+            mat.enableGGXSpecular &&
+            (mat.anisotropyIntensity !== 0 || mat.anisotropyRotation !== 0 || mat.anisotropyMap)
+        ) {
             const anisotropyExt = {};
 
             if (mat.anisotropyIntensity !== 0) {
@@ -536,7 +605,14 @@ class GltfExporter extends CoreExporter {
             }
 
             this.attachTexture(resources, mat, iridescenceExt, 'iridescenceTexture', 'iridescenceMap', json);
-            this.attachTexture(resources, mat, iridescenceExt, 'iridescenceThicknessTexture', 'iridescenceThicknessMap', json);
+            this.attachTexture(
+                resources,
+                mat,
+                iridescenceExt,
+                'iridescenceThicknessTexture',
+                'iridescenceThicknessMap',
+                json
+            );
 
             if (Object.keys(iridescenceExt).length > 0) {
                 this.addExtension(json, output, 'KHR_materials_iridescence', iridescenceExt);
@@ -609,7 +685,13 @@ class GltfExporter extends CoreExporter {
         }
 
         // KHR_materials_volume
-        if (mat.useDynamicRefraction && (mat.thickness !== 0 || mat.attenuationDistance !== 0 || !mat.attenuation.equals(Color.WHITE) || mat.thicknessMap)) {
+        if (
+            mat.useDynamicRefraction &&
+            (mat.thickness !== 0 ||
+                mat.attenuationDistance !== 0 ||
+                !mat.attenuation.equals(Color.WHITE) ||
+                mat.thicknessMap)
+        ) {
             const volumeExt = {};
 
             if (mat.thickness !== 0) {
@@ -634,7 +716,6 @@ class GltfExporter extends CoreExporter {
     }
 
     writeMaterials(resources, json) {
-
         if (resources.materials.length > 0) {
             json.materials = resources.materials.map((mat) => {
                 const { name, blendType, cull, alphaTest } = mat;
@@ -705,7 +786,7 @@ class GltfExporter extends CoreExporter {
                     node.camera = resources.cameras.indexOf(entity.camera);
                 }
 
-                const entityMeshInstance = resources.entityMeshInstances.find(e => e.node === entity);
+                const entityMeshInstance = resources.entityMeshInstances.find((e) => e.node === entity);
                 if (entityMeshInstance) {
                     node.mesh = resources.entityMeshInstances.indexOf(entityMeshInstance);
 
@@ -790,17 +871,17 @@ class GltfExporter extends CoreExporter {
 
                 // Check vertex colors
                 if (semantic === 'COLOR_0') {
-                    isUsed = resources.materials.some(material => material.vertexColors);
+                    isUsed = resources.materials.some((material) => material.vertexColors);
                 }
 
                 // Check tangents
                 if (semantic === 'TANGENT') {
-                    isUsed = resources.materials.some(material => material.normalMap);
+                    isUsed = resources.materials.some((material) => material.normalMap);
                 }
 
                 // Check skinning attributes
                 if (semantic === 'JOINTS_0' || semantic === 'WEIGHTS_0') {
-                    isUsed = resources.entityMeshInstances.some(emi => emi.meshInstances.some(mi => mi.mesh.skin));
+                    isUsed = resources.entityMeshInstances.some((emi) => emi.meshInstances.some((mi) => mi.mesh.skin));
                 }
 
                 if (!isUsed) {
@@ -896,7 +977,7 @@ class GltfExporter extends CoreExporter {
 
                 // Find joint nodes by bone names
                 const joints = skin.boneNames.map((boneName) => {
-                    const node = resources.entities.find(entity => entity.name === boneName);
+                    const node = resources.entities.find((entity) => entity.name === boneName);
                     return resources.entities.indexOf(node);
                 });
 
@@ -910,7 +991,6 @@ class GltfExporter extends CoreExporter {
     }
 
     convertTextures(srcTextures, options) {
-
         const textureOptions = {
             maxTextureSize: options.maxTextureSize
         };
@@ -920,7 +1000,7 @@ class GltfExporter extends CoreExporter {
             const promise = this.textureToCanvas(srcTexture, textureOptions);
             promise.then((canvas) => {
                 // eslint-disable-next-line no-promise-executor-return
-                return new Promise(resolve => resolve(canvas));
+                return new Promise((resolve) => resolve(canvas));
             });
             promises.push(promise);
         });
@@ -933,7 +1013,6 @@ class GltfExporter extends CoreExporter {
         const promises = [];
 
         for (let i = 0; i < textureCanvases.length; i++) {
-
             // convert texture data to uri
             const texture = textures[i];
             const canvas = textureCanvases[i];
@@ -943,41 +1022,41 @@ class GltfExporter extends CoreExporter {
 
             promises.push(
                 this.getBlob(canvas, mimeType)
-                .then((blob) => {
-                    const reader = new FileReader();
-                    reader.readAsArrayBuffer(blob);
+                    .then((blob) => {
+                        const reader = new FileReader();
+                        reader.readAsArrayBuffer(blob);
 
-                    return new Promise((resolve) => {
-                        reader.onloadend = () => {
-                            resolve(reader);
+                        return new Promise((resolve) => {
+                            reader.onloadend = () => {
+                                resolve(reader);
+                            };
+                        });
+                    })
+                    .then((reader) => {
+                        const buffer = this.getPaddedArrayBuffer(reader.result);
+
+                        GltfExporter.writeBufferView(resources, json, buffer);
+                        resources.buffers.push(buffer);
+
+                        const bufferView = resources.bufferViewMap.get(buffer);
+
+                        json.images[i] = {
+                            mimeType: mimeType,
+                            bufferView: bufferView[0]
                         };
-                    });
-                })
-                .then((reader) => {
-                    const buffer = this.getPaddedArrayBuffer(reader.result);
 
-                    GltfExporter.writeBufferView(resources, json, buffer);
-                    resources.buffers.push(buffer);
+                        json.samplers[i] = {
+                            minFilter: getFilter(texture.minFilter),
+                            magFilter: getFilter(texture.magFilter),
+                            wrapS: getWrap(texture.addressU),
+                            wrapT: getWrap(texture.addressV)
+                        };
 
-                    const bufferView = resources.bufferViewMap.get(buffer);
-
-                    json.images[i] = {
-                        mimeType: mimeType,
-                        bufferView: bufferView[0]
-                    };
-
-                    json.samplers[i] = {
-                        minFilter: getFilter(texture.minFilter),
-                        magFilter: getFilter(texture.magFilter),
-                        wrapS: getWrap(texture.addressU),
-                        wrapT: getWrap(texture.addressV)
-                    };
-
-                    json.textures[i] = {
-                        sampler: i,
-                        source: i
-                    };
-                })
+                        json.textures[i] = {
+                            sampler: i,
+                            source: i
+                        };
+                    })
             );
         }
 
@@ -1018,10 +1097,8 @@ class GltfExporter extends CoreExporter {
     }
 
     buildJson(resources, options) {
-
         const promises = this.convertTextures(resources.textures, options);
         return Promise.all(promises).then(async (textureCanvases) => {
-
             const json = {
                 asset: {
                     version: '2.0',
@@ -1029,17 +1106,12 @@ class GltfExporter extends CoreExporter {
                 },
                 scenes: [
                     {
-                        nodes: [
-                            0
-                        ]
+                        nodes: [0]
                     }
                 ],
-                images: [
-                ],
-                samplers: [
-                ],
-                textures: [
-                ],
+                images: [],
+                samplers: [],
+                textures: [],
                 scene: 0
             };
 
@@ -1104,13 +1176,13 @@ class GltfExporter extends CoreExporter {
             const glbView = new DataView(glbBuffer);
 
             // GLB header
-            glbView.setUint32(0, 0x46546C67, true);
+            glbView.setUint32(0, 0x46546c67, true);
             glbView.setUint32(4, 2, true);
             glbView.setUint32(8, totalLength, true);
 
             // JSON chunk header
             glbView.setUint32(12, jsonDataLength + jsonPaddingLength, true);
-            glbView.setUint32(16, 0x4E4F534A, true);
+            glbView.setUint32(16, 0x4e4f534a, true);
 
             let offset = headerLength + jsonHeaderLength;
 
@@ -1128,7 +1200,7 @@ class GltfExporter extends CoreExporter {
             if (binaryDataLength > 0) {
                 // Binary chunk header
                 glbView.setUint32(offset, binaryDataLength, true);
-                glbView.setUint32(offset + 4, 0x004E4942, true);
+                glbView.setUint32(offset + 4, 0x004e4942, true);
 
                 offset += binaryHeaderLength;
 

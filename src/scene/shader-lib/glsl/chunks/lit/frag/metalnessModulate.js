@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 vec3 getSpecularModulate(in vec3 specularity, in vec3 albedo, in float metalness, in float f0, in float specularityFactor) {
     // Apply specularityFactor to dielectric F0 only. For metals (metalness=1), F0 is the albedo

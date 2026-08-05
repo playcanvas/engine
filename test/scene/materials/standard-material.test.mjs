@@ -2,7 +2,13 @@ import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
-import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
+import {
+    CUBEPROJ_NONE,
+    DETAILMODE_MUL,
+    DITHER_NONE,
+    FRESNEL_SCHLICK,
+    SPECOCC_AO
+} from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
@@ -10,7 +16,6 @@ import { standard } from '../../../src/scene/shader-lib/programs/standard.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 
 describe('StandardMaterial', function () {
-
     function checkDefaultMaterial(material) {
         expect(material).to.be.an.instanceof(StandardMaterial);
         expect(material).to.be.an.instanceof(Material);
@@ -296,26 +301,21 @@ describe('StandardMaterial', function () {
     }
 
     describe('#constructor()', function () {
-
         it('should create a new instance', function () {
             const material = new StandardMaterial();
             checkDefaultMaterial(material);
         });
-
     });
 
     describe('#clone()', function () {
-
         it('should clone a material', function () {
             const material = new StandardMaterial();
             const clone = material.clone();
             checkDefaultMaterial(clone);
         });
-
     });
 
     describe('#copy()', function () {
-
         it('should copy a material', function () {
             const src = new StandardMaterial();
             const dst = new StandardMaterial();
@@ -404,11 +404,9 @@ describe('StandardMaterial', function () {
             expect(dst._alphaDither).to.equal(null);
             expect(dst.alphaDither).to.equal(0.25);
         });
-
     });
 
     describe('#update()', function () {
-
         const addVariant = (material) => {
             const variant = {};
             material.variants.set(1, variant);
@@ -603,11 +601,9 @@ describe('StandardMaterial', function () {
             expect(material._getMapTransformId('diffuse')).to.not.equal(0);
             expect(material.variants.size).to.equal(0);
         });
-
     });
 
     describe('shader generation', function () {
-
         it('includes dual-source blending usage in the shader key', function () {
             const options = new StandardMaterialOptions();
             const regularKey = standard.generateKey(options);
@@ -639,7 +635,5 @@ describe('StandardMaterial', function () {
 
             expect(defines.has('STD_SPECULAR_CONSTANT')).to.equal(false);
         });
-
     });
-
 });

@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef STD_CLEARCOATNORMAL_TEXTURE
     uniform material_clearCoatBumpiness: f32;
 #endif

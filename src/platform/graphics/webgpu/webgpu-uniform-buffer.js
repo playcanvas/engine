@@ -12,7 +12,6 @@ class WebgpuUniformBuffer extends WebgpuBuffer {
     }
 
     unlock(uniformBuffer) {
-
         const device = uniformBuffer.device;
         super.unlock(device, uniformBuffer.storageInt32.buffer);
     }

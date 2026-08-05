@@ -16,13 +16,11 @@ function mockParser(canParse, extra = {}) {
 }
 
 describe('ResourceHandler (parser registry)', function () {
-
     afterEach(function () {
         restore();
     });
 
     describe('addParser / removeParser / parsers', function () {
-
         it('registers parsers and exposes a read-only copy', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
             const a = mockParser(() => true);
@@ -72,13 +70,15 @@ describe('ResourceHandler (parser registry)', function () {
             // Debug.removed dedupes globally - clear so this assertion is order-independent
             Debug._loggedMessages.clear();
             const errorSpy = stub(console, 'error');
-            handler.addParser(mockParser(() => true), () => true);
+            handler.addParser(
+                mockParser(() => true),
+                () => true
+            );
             expect(errorSpy.called).to.be.true;
         });
     });
 
     describe('parser selection', function () {
-
         it('selects the newest parser whose canParse returns true (override by order)', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
             const first = mockParser(() => true);
@@ -93,8 +93,8 @@ describe('ResourceHandler (parser registry)', function () {
 
         it('selects the parser whose canParse matches the context', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
-            const foo = mockParser(context => context.ext === 'foo');
-            const bar = mockParser(context => context.ext === 'bar');
+            const foo = mockParser((context) => context.ext === 'foo');
+            const bar = mockParser((context) => context.ext === 'bar');
             handler.addParser(foo);
             handler.addParser(bar);
 
@@ -115,7 +115,6 @@ describe('ResourceHandler (parser registry)', function () {
     });
 
     describe('fetch', function () {
-
         it('forwards responseType and retry options to http.get', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
             handler.maxRetries = 3;
@@ -148,17 +147,21 @@ describe('ResourceHandler (parser registry)', function () {
             const getStub = stub(http, 'get');
             const asset = { file: { contents: buffer } };
 
-            handler.fetch({ load: 'x.bin', original: 'x.bin' }, Http.ResponseType.ARRAY_BUFFER, (err, res) => {
-                expect(err).to.equal(null);
-                expect(res).to.equal(buffer);
-                expect(getStub.notCalled).to.be.true;
-                done();
-            }, asset);
+            handler.fetch(
+                { load: 'x.bin', original: 'x.bin' },
+                Http.ResponseType.ARRAY_BUFFER,
+                (err, res) => {
+                    expect(err).to.equal(null);
+                    expect(res).to.equal(buffer);
+                    expect(getStub.notCalled).to.be.true;
+                    done();
+                },
+                asset
+            );
         });
     });
 
     describe('legacy behavior when no parsers are registered', function () {
-
         it('load does nothing (callback not invoked)', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
             const cb = stub();
@@ -174,7 +177,6 @@ describe('ResourceHandler (parser registry)', function () {
     });
 
     describe('open', function () {
-
         it('delegates to the selected parser open when present', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
             const resource = {};
@@ -191,7 +193,6 @@ describe('ResourceHandler (parser registry)', function () {
     });
 
     describe('_makeContext', function () {
-
         it('parses a string url (extension, basename, query stripped, lower-cased)', function () {
             const handler = new ResourceHandler(fakeApp, 'test');
             const context = handler._makeContext('path/To/Model.GLB?v=2');
@@ -218,7 +219,6 @@ describe('ResourceHandler (parser registry)', function () {
     });
 
     describe('model parser canParse', function () {
-
         it('JsonModelParser matches .json only', function () {
             const parser = new JsonModelParser({});
             expect(parser.canParse({ ext: 'json' })).to.be.true;

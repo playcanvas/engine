@@ -1,5 +1,5 @@
 // Write function for packed (large) work buffer format (32 bytes/splat).
-export default /* wgsl */`
+export default /* wgsl */ `
 fn writeSplat(center: vec3f, rotation: vec4f, scale: vec3f, color: vec4f) {
     writeDataColor(color);
     #ifndef GSPLAT_COLOR_ONLY

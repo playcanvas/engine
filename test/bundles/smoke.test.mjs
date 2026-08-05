@@ -1,9 +1,6 @@
 import { expect } from 'chai';
 
-import {
-    ESM_TARGETS, UMD_TARGETS,
-    createAppFrom, loadEsm, loadUmdGlobal, setupDom, teardownDom
-} from './helpers.mjs';
+import { ESM_TARGETS, UMD_TARGETS, createAppFrom, loadEsm, loadUmdGlobal, setupDom, teardownDom } from './helpers.mjs';
 
 // the built bundle can actually boot an application with the null graphics device
 describe('build / smoke', function () {

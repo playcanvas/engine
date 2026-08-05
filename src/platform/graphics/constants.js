@@ -1067,88 +1067,87 @@ export const PIXELFORMAT_RGB10A2U = 75;
  * @ignore
  */
 export const pixelFormatInfo = new Map([
-
     // float formats
-    [PIXELFORMAT_A8,            { name: 'A8', size: 1, ldr: true }],
-    [PIXELFORMAT_R8,            { name: 'R8', size: 1, ldr: true }],
-    [PIXELFORMAT_L8,            { name: 'L8', size: 1, ldr: true }],
-    [PIXELFORMAT_LA8,           { name: 'LA8', size: 2, ldr: true }],
-    [PIXELFORMAT_RG8,           { name: 'RG8', size: 2, ldr: true }],
-    [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2, ldr: true }],
-    [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2, ldr: true }],
-    [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2, ldr: true }],
-    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4, ldr: true }],
-    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4, ldr: true, srgbFormat: PIXELFORMAT_SRGBA8 }],
-    [PIXELFORMAT_R16F,          { name: 'R16F', size: 2 }],
-    [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4 }],
-    [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
-    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8 }],
-    [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
-    [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
-    [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
-    [PIXELFORMAT_RG32F,         { name: 'RG32F', size: 8 }],
-    [PIXELFORMAT_RGB9E5,        { name: 'RGB9E5', size: 4 }],
-    [PIXELFORMAT_RG8S,          { name: 'RG8S', size: 2 }],
-    [PIXELFORMAT_RGBA8S,        { name: 'RGBA8S', size: 4 }],
-    [PIXELFORMAT_RGB10A2,       { name: 'RGB10A2', size: 4 }],
-    [PIXELFORMAT_RGB10A2U,      { name: 'RGB10A2U', size: 4, isUint: true }],
-    [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
-    [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2 }],
-    [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
-    [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
-    [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
-    [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true }],
-    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true }],
-    [PIXELFORMAT_SBGRA8,        { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
+    [PIXELFORMAT_A8, { name: 'A8', size: 1, ldr: true }],
+    [PIXELFORMAT_R8, { name: 'R8', size: 1, ldr: true }],
+    [PIXELFORMAT_L8, { name: 'L8', size: 1, ldr: true }],
+    [PIXELFORMAT_LA8, { name: 'LA8', size: 2, ldr: true }],
+    [PIXELFORMAT_RG8, { name: 'RG8', size: 2, ldr: true }],
+    [PIXELFORMAT_RGB565, { name: 'RGB565', size: 2, ldr: true }],
+    [PIXELFORMAT_RGBA5551, { name: 'RGBA5551', size: 2, ldr: true }],
+    [PIXELFORMAT_RGBA4, { name: 'RGBA4', size: 2, ldr: true }],
+    [PIXELFORMAT_RGB8, { name: 'RGB8', size: 4, ldr: true }],
+    [PIXELFORMAT_RGBA8, { name: 'RGBA8', size: 4, ldr: true, srgbFormat: PIXELFORMAT_SRGBA8 }],
+    [PIXELFORMAT_R16F, { name: 'R16F', size: 2 }],
+    [PIXELFORMAT_RG16F, { name: 'RG16F', size: 4 }],
+    [PIXELFORMAT_RGB16F, { name: 'RGB16F', size: 8 }],
+    [PIXELFORMAT_RGBA16F, { name: 'RGBA16F', size: 8 }],
+    [PIXELFORMAT_RGB32F, { name: 'RGB32F', size: 16 }],
+    [PIXELFORMAT_RGBA32F, { name: 'RGBA32F', size: 16 }],
+    [PIXELFORMAT_R32F, { name: 'R32F', size: 4 }],
+    [PIXELFORMAT_RG32F, { name: 'RG32F', size: 8 }],
+    [PIXELFORMAT_RGB9E5, { name: 'RGB9E5', size: 4 }],
+    [PIXELFORMAT_RG8S, { name: 'RG8S', size: 2 }],
+    [PIXELFORMAT_RGBA8S, { name: 'RGBA8S', size: 4 }],
+    [PIXELFORMAT_RGB10A2, { name: 'RGB10A2', size: 4 }],
+    [PIXELFORMAT_RGB10A2U, { name: 'RGB10A2U', size: 4, isUint: true }],
+    [PIXELFORMAT_DEPTH, { name: 'DEPTH', size: 4 }],
+    [PIXELFORMAT_DEPTH16, { name: 'DEPTH16', size: 2 }],
+    [PIXELFORMAT_DEPTHSTENCIL, { name: 'DEPTHSTENCIL', size: 4 }],
+    [PIXELFORMAT_111110F, { name: '111110F', size: 4 }],
+    [PIXELFORMAT_SRGB8, { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
+    [PIXELFORMAT_SRGBA8, { name: 'SRGBA8', size: 4, ldr: true, srgb: true }],
+    [PIXELFORMAT_BGRA8, { name: 'BGRA8', size: 4, ldr: true }],
+    [PIXELFORMAT_SBGRA8, { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
 
     // compressed formats
-    [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_DXT1_SRGB }],
-    [PIXELFORMAT_DXT3,              { name: 'DXT3', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_DXT3_SRGBA }],
-    [PIXELFORMAT_DXT5,              { name: 'DXT5', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_DXT5_SRGBA }],
-    [PIXELFORMAT_ETC1,              { name: 'ETC1', blockSize: 8, ldr: true }],
-    [PIXELFORMAT_ETC2_RGB,          { name: 'ETC2_RGB', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_ETC2_SRGB }],
-    [PIXELFORMAT_ETC2_RGBA,         { name: 'ETC2_RGBA', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_ETC2_SRGBA }],
-    [PIXELFORMAT_PVRTC_2BPP_RGB_1,  { name: 'PVRTC_2BPP_RGB_1', ldr: true, blockSize: 8 }],
+    [PIXELFORMAT_DXT1, { name: 'DXT1', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_DXT1_SRGB }],
+    [PIXELFORMAT_DXT3, { name: 'DXT3', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_DXT3_SRGBA }],
+    [PIXELFORMAT_DXT5, { name: 'DXT5', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_DXT5_SRGBA }],
+    [PIXELFORMAT_ETC1, { name: 'ETC1', blockSize: 8, ldr: true }],
+    [PIXELFORMAT_ETC2_RGB, { name: 'ETC2_RGB', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_ETC2_SRGB }],
+    [PIXELFORMAT_ETC2_RGBA, { name: 'ETC2_RGBA', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_ETC2_SRGBA }],
+    [PIXELFORMAT_PVRTC_2BPP_RGB_1, { name: 'PVRTC_2BPP_RGB_1', ldr: true, blockSize: 8 }],
     [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', ldr: true, blockSize: 8 }],
-    [PIXELFORMAT_PVRTC_4BPP_RGB_1,  { name: 'PVRTC_4BPP_RGB_1', ldr: true, blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGB_1, { name: 'PVRTC_4BPP_RGB_1', ldr: true, blockSize: 8 }],
     [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', ldr: true, blockSize: 8 }],
-    [PIXELFORMAT_ASTC_4x4,          { name: 'ASTC_4x4', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_ASTC_4x4_SRGB }],
-    [PIXELFORMAT_ATC_RGB,           { name: 'ATC_RGB', blockSize: 8, ldr: true }],
-    [PIXELFORMAT_ATC_RGBA,          { name: 'ATC_RGBA', blockSize: 16, ldr: true }],
-    [PIXELFORMAT_BC6F,              { name: 'BC6H_RGBF', blockSize: 16 }],
-    [PIXELFORMAT_BC6UF,             { name: 'BC6H_RGBUF', blockSize: 16 }],
-    [PIXELFORMAT_BC7,               { name: 'BC7_RGBA', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_BC7_SRGBA }],
+    [PIXELFORMAT_ASTC_4x4, { name: 'ASTC_4x4', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_ASTC_4x4_SRGB }],
+    [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8, ldr: true }],
+    [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16, ldr: true }],
+    [PIXELFORMAT_BC6F, { name: 'BC6H_RGBF', blockSize: 16 }],
+    [PIXELFORMAT_BC6UF, { name: 'BC6H_RGBUF', blockSize: 16 }],
+    [PIXELFORMAT_BC7, { name: 'BC7_RGBA', blockSize: 16, ldr: true, srgbFormat: PIXELFORMAT_BC7_SRGBA }],
 
     // compressed sRGB formats
-    [PIXELFORMAT_DXT1_SRGB,          { name: 'DXT1_SRGB', blockSize: 8, ldr: true, srgb: true }],
-    [PIXELFORMAT_DXT3_SRGBA,         { name: 'DXT3_SRGBA', blockSize: 16, ldr: true, srgb: true }],
-    [PIXELFORMAT_DXT5_SRGBA,         { name: 'DXT5_SRGBA', blockSize: 16, ldr: true, srgb: true }],
-    [PIXELFORMAT_ETC2_SRGB,          { name: 'ETC2_SRGB', blockSize: 8, ldr: true, srgb: true }],
-    [PIXELFORMAT_ETC2_SRGBA,         { name: 'ETC2_SRGBA', blockSize: 16, ldr: true, srgb: true }],
-    [PIXELFORMAT_ASTC_4x4_SRGB,      { name: 'ASTC_4x4_SRGB', blockSize: 16, ldr: true, srgb: true }],
-    [PIXELFORMAT_BC7_SRGBA,          { name: 'BC7_SRGBA', blockSize: 16, ldr: true, srgb: true }],
+    [PIXELFORMAT_DXT1_SRGB, { name: 'DXT1_SRGB', blockSize: 8, ldr: true, srgb: true }],
+    [PIXELFORMAT_DXT3_SRGBA, { name: 'DXT3_SRGBA', blockSize: 16, ldr: true, srgb: true }],
+    [PIXELFORMAT_DXT5_SRGBA, { name: 'DXT5_SRGBA', blockSize: 16, ldr: true, srgb: true }],
+    [PIXELFORMAT_ETC2_SRGB, { name: 'ETC2_SRGB', blockSize: 8, ldr: true, srgb: true }],
+    [PIXELFORMAT_ETC2_SRGBA, { name: 'ETC2_SRGBA', blockSize: 16, ldr: true, srgb: true }],
+    [PIXELFORMAT_ASTC_4x4_SRGB, { name: 'ASTC_4x4_SRGB', blockSize: 16, ldr: true, srgb: true }],
+    [PIXELFORMAT_BC7_SRGBA, { name: 'BC7_SRGBA', blockSize: 16, ldr: true, srgb: true }],
 
     // signed integer formats
-    [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
-    [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
-    [PIXELFORMAT_R32I,     { name: 'R32I', size: 4, isInt: true }],
-    [PIXELFORMAT_RG8I,     { name: 'RG8I', size: 2, isInt: true }],
-    [PIXELFORMAT_RG16I,    { name: 'RG16I', size: 4, isInt: true }],
-    [PIXELFORMAT_RG32I,    { name: 'RG32I', size: 8, isInt: true }],
-    [PIXELFORMAT_RGBA8I,   { name: 'RGBA8I', size: 4, isInt: true }],
-    [PIXELFORMAT_RGBA16I,  { name: 'RGBA16I', size: 8, isInt: true }],
-    [PIXELFORMAT_RGBA32I,  { name: 'RGBA32I', size: 16, isInt: true }],
+    [PIXELFORMAT_R8I, { name: 'R8I', size: 1, isInt: true }],
+    [PIXELFORMAT_R16I, { name: 'R16I', size: 2, isInt: true }],
+    [PIXELFORMAT_R32I, { name: 'R32I', size: 4, isInt: true }],
+    [PIXELFORMAT_RG8I, { name: 'RG8I', size: 2, isInt: true }],
+    [PIXELFORMAT_RG16I, { name: 'RG16I', size: 4, isInt: true }],
+    [PIXELFORMAT_RG32I, { name: 'RG32I', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA8I, { name: 'RGBA8I', size: 4, isInt: true }],
+    [PIXELFORMAT_RGBA16I, { name: 'RGBA16I', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA32I, { name: 'RGBA32I', size: 16, isInt: true }],
 
     // unsigned integer formats
-    [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isUint: true }],
-    [PIXELFORMAT_R16U,     { name: 'R16U', size: 2, isUint: true }],
-    [PIXELFORMAT_R32U,     { name: 'R32U', size: 4, isUint: true }],
-    [PIXELFORMAT_RG8U,     { name: 'RG8U', size: 2, isUint: true }],
-    [PIXELFORMAT_RG16U,    { name: 'RG16U', size: 4, isUint: true }],
-    [PIXELFORMAT_RG32U,    { name: 'RG32U', size: 8, isUint: true }],
-    [PIXELFORMAT_RGBA8U,   { name: 'RGBA8U', size: 4, isUint: true }],
-    [PIXELFORMAT_RGBA16U,  { name: 'RGBA16U', size: 8, isUint: true }],
-    [PIXELFORMAT_RGBA32U,  { name: 'RGBA32U', size: 16, isUint: true }]
+    [PIXELFORMAT_R8U, { name: 'R8U', size: 1, isUint: true }],
+    [PIXELFORMAT_R16U, { name: 'R16U', size: 2, isUint: true }],
+    [PIXELFORMAT_R32U, { name: 'R32U', size: 4, isUint: true }],
+    [PIXELFORMAT_RG8U, { name: 'RG8U', size: 2, isUint: true }],
+    [PIXELFORMAT_RG16U, { name: 'RG16U', size: 4, isUint: true }],
+    [PIXELFORMAT_RG32U, { name: 'RG32U', size: 8, isUint: true }],
+    [PIXELFORMAT_RGBA8U, { name: 'RGBA8U', size: 4, isUint: true }],
+    [PIXELFORMAT_RGBA16U, { name: 'RGBA16U', size: 8, isUint: true }],
+    [PIXELFORMAT_RGBA32U, { name: 'RGBA32U', size: 16, isUint: true }]
 ]);
 
 // update this function when exposing additional compressed pixel formats
@@ -2088,122 +2087,122 @@ export const uniformTypeToName = [
 // Uniform types in WGSL
 export const uniformTypeToNameWGSL = [
     // Uniforms
-    ['bool'],                          // UNIFORMTYPE_BOOL
-    ['i32'],                           // UNIFORMTYPE_INT
-    ['f32'],                           // UNIFORMTYPE_FLOAT
-    ['vec2f', 'vec2<f32>'],            // UNIFORMTYPE_VEC2
-    ['vec3f', 'vec3<f32>'],            // UNIFORMTYPE_VEC3
-    ['vec4f', 'vec4<f32>'],            // UNIFORMTYPE_VEC4
-    ['vec2i', 'vec2<i32>'],            // UNIFORMTYPE_IVEC2
-    ['vec3i', 'vec3<i32>'],            // UNIFORMTYPE_IVEC3
-    ['vec4i', 'vec4<i32>'],            // UNIFORMTYPE_IVEC4
-    ['vec2<bool>'],                    // UNIFORMTYPE_BVEC2
-    ['vec3<bool>'],                    // UNIFORMTYPE_BVEC3
-    ['vec4<bool>'],                    // UNIFORMTYPE_BVEC4
-    ['mat2x2f', 'mat2x2<f32>'],        // UNIFORMTYPE_MAT2
-    ['mat3x3f', 'mat3x3<f32>'],        // UNIFORMTYPE_MAT3
-    ['mat4x4f', 'mat4x4<f32>'],        // UNIFORMTYPE_MAT4
-    ['texture_2d<f32>'],               // UNIFORMTYPE_TEXTURE2D
-    ['texture_cube<f32>'],             // UNIFORMTYPE_TEXTURECUBE
-    ['array<f32>'],                    // UNIFORMTYPE_FLOATARRAY
-    ['texture_depth_2d'],              // UNIFORMTYPE_TEXTURE2D_SHADOW
-    ['texture_depth_cube'],            // UNIFORMTYPE_TEXTURECUBE_SHADOW
-    ['texture_3d<f32>'],               // UNIFORMTYPE_TEXTURE3D
-    ['array<vec2<f32>>'],              // UNIFORMTYPE_VEC2ARRAY
-    ['array<vec3<f32>>'],              // UNIFORMTYPE_VEC3ARRAY
-    ['array<vec4<f32>>'],              // UNIFORMTYPE_VEC4ARRAY
-    ['array<mat4x4<f32>>'],            // UNIFORMTYPE_MAT4ARRAY
-    ['texture_2d_array<f32>'],         // UNIFORMTYPE_TEXTURE2D_ARRAY
+    ['bool'], // UNIFORMTYPE_BOOL
+    ['i32'], // UNIFORMTYPE_INT
+    ['f32'], // UNIFORMTYPE_FLOAT
+    ['vec2f', 'vec2<f32>'], // UNIFORMTYPE_VEC2
+    ['vec3f', 'vec3<f32>'], // UNIFORMTYPE_VEC3
+    ['vec4f', 'vec4<f32>'], // UNIFORMTYPE_VEC4
+    ['vec2i', 'vec2<i32>'], // UNIFORMTYPE_IVEC2
+    ['vec3i', 'vec3<i32>'], // UNIFORMTYPE_IVEC3
+    ['vec4i', 'vec4<i32>'], // UNIFORMTYPE_IVEC4
+    ['vec2<bool>'], // UNIFORMTYPE_BVEC2
+    ['vec3<bool>'], // UNIFORMTYPE_BVEC3
+    ['vec4<bool>'], // UNIFORMTYPE_BVEC4
+    ['mat2x2f', 'mat2x2<f32>'], // UNIFORMTYPE_MAT2
+    ['mat3x3f', 'mat3x3<f32>'], // UNIFORMTYPE_MAT3
+    ['mat4x4f', 'mat4x4<f32>'], // UNIFORMTYPE_MAT4
+    ['texture_2d<f32>'], // UNIFORMTYPE_TEXTURE2D
+    ['texture_cube<f32>'], // UNIFORMTYPE_TEXTURECUBE
+    ['array<f32>'], // UNIFORMTYPE_FLOATARRAY
+    ['texture_depth_2d'], // UNIFORMTYPE_TEXTURE2D_SHADOW
+    ['texture_depth_cube'], // UNIFORMTYPE_TEXTURECUBE_SHADOW
+    ['texture_3d<f32>'], // UNIFORMTYPE_TEXTURE3D
+    ['array<vec2<f32>>'], // UNIFORMTYPE_VEC2ARRAY
+    ['array<vec3<f32>>'], // UNIFORMTYPE_VEC3ARRAY
+    ['array<vec4<f32>>'], // UNIFORMTYPE_VEC4ARRAY
+    ['array<mat4x4<f32>>'], // UNIFORMTYPE_MAT4ARRAY
+    ['texture_2d_array<f32>'], // UNIFORMTYPE_TEXTURE2D_ARRAY
 
     // Unsigned integer uniforms
-    ['u32'],                           // UNIFORMTYPE_UINT
-    ['vec2u', 'vec2<u32>'],            // UNIFORMTYPE_UVEC2
-    ['vec3u', 'vec3<u32>'],            // UNIFORMTYPE_UVEC3
-    ['vec4u', 'vec4<u32>'],            // UNIFORMTYPE_UVEC4
+    ['u32'], // UNIFORMTYPE_UINT
+    ['vec2u', 'vec2<u32>'], // UNIFORMTYPE_UVEC2
+    ['vec3u', 'vec3<u32>'], // UNIFORMTYPE_UVEC3
+    ['vec4u', 'vec4<u32>'], // UNIFORMTYPE_UVEC4
 
     // Integer array uniforms
-    ['array<i32>'],                        // UNIFORMTYPE_INTARRAY
-    ['array<u32>'],                        // UNIFORMTYPE_UINTARRAY
-    ['array<bool>'],                       // UNIFORMTYPE_BOOLARRAY
-    ['array<vec2i>', 'array<vec2<i32>>'],  // UNIFORMTYPE_IVEC2ARRAY
-    ['array<vec2u>', 'array<vec2<u32>>'],  // UNIFORMTYPE_UVEC2ARRAY
+    ['array<i32>'], // UNIFORMTYPE_INTARRAY
+    ['array<u32>'], // UNIFORMTYPE_UINTARRAY
+    ['array<bool>'], // UNIFORMTYPE_BOOLARRAY
+    ['array<vec2i>', 'array<vec2<i32>>'], // UNIFORMTYPE_IVEC2ARRAY
+    ['array<vec2u>', 'array<vec2<u32>>'], // UNIFORMTYPE_UVEC2ARRAY
     ['array<vec2b>', 'array<vec2<bool>>'], // UNIFORMTYPE_BVEC2ARRAY
-    ['array<vec3i>', 'array<vec3<i32>>'],  // UNIFORMTYPE_IVEC3ARRAY
-    ['array<vec3u>', 'array<vec3<u32>>'],  // UNIFORMTYPE_UVEC3ARRAY
+    ['array<vec3i>', 'array<vec3<i32>>'], // UNIFORMTYPE_IVEC3ARRAY
+    ['array<vec3u>', 'array<vec3<u32>>'], // UNIFORMTYPE_UVEC3ARRAY
     ['array<vec3b>', 'array<vec3<bool>>'], // UNIFORMTYPE_BVEC3ARRAY
-    ['array<vec4i>', 'array<vec4<i32>>'],  // UNIFORMTYPE_IVEC4ARRAY
-    ['array<vec4u>', 'array<vec4<u32>>'],  // UNIFORMTYPE_UVEC4ARRAY
+    ['array<vec4i>', 'array<vec4<i32>>'], // UNIFORMTYPE_IVEC4ARRAY
+    ['array<vec4u>', 'array<vec4<u32>>'], // UNIFORMTYPE_UVEC4ARRAY
     ['array<vec4b>', 'array<vec4<bool>>'], // UNIFORMTYPE_BVEC4ARRAY
 
     // Integer texture types
-    ['texture_2d<i32>'],                   // UNIFORMTYPE_ITEXTURE2D
-    ['texture_2d<u32>'],                   // UNIFORMTYPE_UTEXTURE2D
-    ['texture_cube<i32>'],                 // UNIFORMTYPE_ITEXTURECUBE
-    ['texture_cube<u32>'],                 // UNIFORMTYPE_UTEXTURECUBE
-    ['texture_3d<i32>'],                   // UNIFORMTYPE_ITEXTURE3D
-    ['texture_3d<u32>'],                   // UNIFORMTYPE_UTEXTURE3D
-    ['texture_2d_array<i32>'],             // UNIFORMTYPE_ITEXTURE2D_ARRAY
-    ['texture_2d_array<u32>']              // UNIFORMTYPE_UTEXTURE2D_ARRAY
+    ['texture_2d<i32>'], // UNIFORMTYPE_ITEXTURE2D
+    ['texture_2d<u32>'], // UNIFORMTYPE_UTEXTURE2D
+    ['texture_cube<i32>'], // UNIFORMTYPE_ITEXTURECUBE
+    ['texture_cube<u32>'], // UNIFORMTYPE_UTEXTURECUBE
+    ['texture_3d<i32>'], // UNIFORMTYPE_ITEXTURE3D
+    ['texture_3d<u32>'], // UNIFORMTYPE_UTEXTURE3D
+    ['texture_2d_array<i32>'], // UNIFORMTYPE_ITEXTURE2D_ARRAY
+    ['texture_2d_array<u32>'] // UNIFORMTYPE_UTEXTURE2D_ARRAY
 ];
 
 // map version of uniformTypeToNameMapWGSL, allowing type name lookup by type name
 export const uniformTypeToNameMapWGSL = new Map();
 uniformTypeToNameWGSL.forEach((names, index) => {
-    names.forEach(name => uniformTypeToNameMapWGSL.set(name, index));
+    names.forEach((name) => uniformTypeToNameMapWGSL.set(name, index));
 });
 
 // Map to convert uniform type to storage type, used in uniform-buffer.js
 export const uniformTypeToStorage = new Uint8Array([
-    TYPE_INT32,     // UNIFORMTYPE_BOOL
-    TYPE_INT32,     // UNIFORMTYPE_INT
-    TYPE_FLOAT32,   // UNIFORMTYPE_FLOAT
-    TYPE_FLOAT32,   // UNIFORMTYPE_VEC2
-    TYPE_FLOAT32,   // UNIFORMTYPE_VEC3
-    TYPE_FLOAT32,   // UNIFORMTYPE_VEC4
-    TYPE_INT32,     // UNIFORMTYPE_IVEC2
-    TYPE_INT32,     // UNIFORMTYPE_IVEC3
-    TYPE_INT32,     // UNIFORMTYPE_IVEC4
-    TYPE_INT32,     // UNIFORMTYPE_BVEC2
-    TYPE_INT32,     // UNIFORMTYPE_BVEC3
-    TYPE_INT32,     // UNIFORMTYPE_BVEC4
-    TYPE_FLOAT32,   // UNIFORMTYPE_MAT2
-    TYPE_FLOAT32,   // UNIFORMTYPE_MAT3
-    TYPE_FLOAT32,   // UNIFORMTYPE_MAT4
-    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D
-    TYPE_INT32,     // UNIFORMTYPE_TEXTURECUBE
-    TYPE_FLOAT32,   // UNIFORMTYPE_FLOATARRAY
-    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D_SHADOW
-    TYPE_INT32,     // UNIFORMTYPE_TEXTURECUBE_SHADOW
-    TYPE_INT32,     // UNIFORMTYPE_TEXTURE3D
-    TYPE_FLOAT32,   // UNIFORMTYPE_VEC2ARRAY
-    TYPE_FLOAT32,   // UNIFORMTYPE_VEC3ARRAY
-    TYPE_FLOAT32,   // UNIFORMTYPE_VEC4ARRAY
-    TYPE_FLOAT32,   // UNIFORMTYPE_MAT4ARRAY
-    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D_ARRAY
-    TYPE_UINT32,    // UNIFORMTYPE_UINT
-    TYPE_UINT32,    // UNIFORMTYPE_UVEC2
-    TYPE_UINT32,    // UNIFORMTYPE_UVEC3
-    TYPE_UINT32,    // UNIFORMTYPE_UVEC4
-    TYPE_INT32,     // UNIFORMTYPE_INTARRAY
-    TYPE_UINT32,    // UNIFORMTYPE_UINTARRAY
-    TYPE_INT32,     // UNIFORMTYPE_BOOLARRAY
-    TYPE_INT32,     // UNIFORMTYPE_IVEC2ARRAY
-    TYPE_UINT32,    // UNIFORMTYPE_UVEC2ARRAY
-    TYPE_INT32,     // UNIFORMTYPE_BVEC2ARRAY
-    TYPE_INT32,     // UNIFORMTYPE_IVEC3ARRAY
-    TYPE_UINT32,    // UNIFORMTYPE_UVEC3ARRAY
-    TYPE_INT32,     // UNIFORMTYPE_BVEC3ARRAY
-    TYPE_INT32,     // UNIFORMTYPE_IVEC4ARRAY
-    TYPE_UINT32,    // UNIFORMTYPE_UVEC4ARRAY
-    TYPE_INT32,     // UNIFORMTYPE_BVEC4ARRAY
-    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE2D
-    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURE2D
-    TYPE_INT32,     // UNIFORMTYPE_ITEXTURECUBE
-    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURECUBE
-    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE3D
-    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURE3D
-    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE2D_ARRAY
-    TYPE_UINT32     // UNIFORMTYPE_UTEXTURE2D_ARRAY
+    TYPE_INT32, // UNIFORMTYPE_BOOL
+    TYPE_INT32, // UNIFORMTYPE_INT
+    TYPE_FLOAT32, // UNIFORMTYPE_FLOAT
+    TYPE_FLOAT32, // UNIFORMTYPE_VEC2
+    TYPE_FLOAT32, // UNIFORMTYPE_VEC3
+    TYPE_FLOAT32, // UNIFORMTYPE_VEC4
+    TYPE_INT32, // UNIFORMTYPE_IVEC2
+    TYPE_INT32, // UNIFORMTYPE_IVEC3
+    TYPE_INT32, // UNIFORMTYPE_IVEC4
+    TYPE_INT32, // UNIFORMTYPE_BVEC2
+    TYPE_INT32, // UNIFORMTYPE_BVEC3
+    TYPE_INT32, // UNIFORMTYPE_BVEC4
+    TYPE_FLOAT32, // UNIFORMTYPE_MAT2
+    TYPE_FLOAT32, // UNIFORMTYPE_MAT3
+    TYPE_FLOAT32, // UNIFORMTYPE_MAT4
+    TYPE_INT32, // UNIFORMTYPE_TEXTURE2D
+    TYPE_INT32, // UNIFORMTYPE_TEXTURECUBE
+    TYPE_FLOAT32, // UNIFORMTYPE_FLOATARRAY
+    TYPE_INT32, // UNIFORMTYPE_TEXTURE2D_SHADOW
+    TYPE_INT32, // UNIFORMTYPE_TEXTURECUBE_SHADOW
+    TYPE_INT32, // UNIFORMTYPE_TEXTURE3D
+    TYPE_FLOAT32, // UNIFORMTYPE_VEC2ARRAY
+    TYPE_FLOAT32, // UNIFORMTYPE_VEC3ARRAY
+    TYPE_FLOAT32, // UNIFORMTYPE_VEC4ARRAY
+    TYPE_FLOAT32, // UNIFORMTYPE_MAT4ARRAY
+    TYPE_INT32, // UNIFORMTYPE_TEXTURE2D_ARRAY
+    TYPE_UINT32, // UNIFORMTYPE_UINT
+    TYPE_UINT32, // UNIFORMTYPE_UVEC2
+    TYPE_UINT32, // UNIFORMTYPE_UVEC3
+    TYPE_UINT32, // UNIFORMTYPE_UVEC4
+    TYPE_INT32, // UNIFORMTYPE_INTARRAY
+    TYPE_UINT32, // UNIFORMTYPE_UINTARRAY
+    TYPE_INT32, // UNIFORMTYPE_BOOLARRAY
+    TYPE_INT32, // UNIFORMTYPE_IVEC2ARRAY
+    TYPE_UINT32, // UNIFORMTYPE_UVEC2ARRAY
+    TYPE_INT32, // UNIFORMTYPE_BVEC2ARRAY
+    TYPE_INT32, // UNIFORMTYPE_IVEC3ARRAY
+    TYPE_UINT32, // UNIFORMTYPE_UVEC3ARRAY
+    TYPE_INT32, // UNIFORMTYPE_BVEC3ARRAY
+    TYPE_INT32, // UNIFORMTYPE_IVEC4ARRAY
+    TYPE_UINT32, // UNIFORMTYPE_UVEC4ARRAY
+    TYPE_INT32, // UNIFORMTYPE_BVEC4ARRAY
+    TYPE_INT32, // UNIFORMTYPE_ITEXTURE2D
+    TYPE_UINT32, // UNIFORMTYPE_UTEXTURE2D
+    TYPE_INT32, // UNIFORMTYPE_ITEXTURECUBE
+    TYPE_UINT32, // UNIFORMTYPE_UTEXTURECUBE
+    TYPE_INT32, // UNIFORMTYPE_ITEXTURE3D
+    TYPE_UINT32, // UNIFORMTYPE_UTEXTURE3D
+    TYPE_INT32, // UNIFORMTYPE_ITEXTURE2D_ARRAY
+    TYPE_UINT32 // UNIFORMTYPE_UTEXTURE2D_ARRAY
 ]);
 
 /**
@@ -2299,9 +2298,9 @@ export const TEXPROPERTY_ANISOTROPY = 128;
 export const TEXPROPERTY_ALL = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
 
 // indices of commonly used bind groups, sorted from the least commonly changing to avoid internal rebinding
-export const BINDGROUP_VIEW = 0;        // view bind group, textures, samplers and uniforms
-export const BINDGROUP_MESH = 1;        // mesh bind group - textures and samplers
-export const BINDGROUP_MESH_UB = 2;     // mesh bind group - a single uniform buffer
+export const BINDGROUP_VIEW = 0; // view bind group, textures, samplers and uniforms
+export const BINDGROUP_MESH = 1; // mesh bind group - textures and samplers
+export const BINDGROUP_MESH_UB = 2; // mesh bind group - a single uniform buffer
 
 // names of bind groups
 export const bindGroupNames = ['view', 'mesh', 'mesh_ub'];
@@ -2313,19 +2312,28 @@ export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';
 export const UNUSED_UNIFORM_NAME = '_unused_float_uniform';
 
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
-export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Uint16Array];
+export const typedArrayTypes = [
+    Int8Array,
+    Uint8Array,
+    Int16Array,
+    Uint16Array,
+    Int32Array,
+    Uint32Array,
+    Float32Array,
+    Uint16Array
+];
 export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4, 2];
 export const vertexTypesNames = ['INT8', 'UINT8', 'INT16', 'UINT16', 'INT32', 'UINT32', 'FLOAT32', 'FLOAT16'];
 
 // map of typed array to engine TYPE_***
 export const typedArrayToType = {
-    'Int8Array': TYPE_INT8,
-    'Uint8Array': TYPE_UINT8,
-    'Int16Array': TYPE_INT16,
-    'Uint16Array': TYPE_UINT16,
-    'Int32Array': TYPE_INT32,
-    'Uint32Array': TYPE_UINT32,
-    'Float32Array': TYPE_FLOAT32
+    Int8Array: TYPE_INT8,
+    Uint8Array: TYPE_UINT8,
+    Int16Array: TYPE_INT16,
+    Uint16Array: TYPE_UINT16,
+    Int32Array: TYPE_INT32,
+    Uint32Array: TYPE_UINT32,
+    Float32Array: TYPE_FLOAT32
 };
 
 // map of engine INDEXFORMAT_*** to their corresponding typed array constructors and byte sizes
@@ -2335,22 +2343,22 @@ export const typedArrayIndexFormatsByteSize = [1, 2, 4];
 // map of primitive GLSL types to their corresponding WGSL types
 export const primitiveGlslToWgslTypeMap = new Map([
     // floating-point
-    ['float',  'f32'],
-    ['vec2',   'vec2f'],
-    ['vec3',   'vec3f'],
-    ['vec4',   'vec4f'],
+    ['float', 'f32'],
+    ['vec2', 'vec2f'],
+    ['vec3', 'vec3f'],
+    ['vec4', 'vec4f'],
 
     // signed integer
-    ['int',    'i32'],
-    ['ivec2',  'vec2i'],
-    ['ivec3',  'vec3i'],
-    ['ivec4',  'vec4i'],
+    ['int', 'i32'],
+    ['ivec2', 'vec2i'],
+    ['ivec3', 'vec3i'],
+    ['ivec4', 'vec4i'],
 
     // unsigned integer
-    ['uint',   'u32'],
-    ['uvec2',  'vec2u'],
-    ['uvec3',  'vec3u'],
-    ['uvec4',  'vec4u']
+    ['uint', 'u32'],
+    ['uvec2', 'vec2u'],
+    ['uvec3', 'vec3u'],
+    ['uvec4', 'vec4u']
 ]);
 
 /**

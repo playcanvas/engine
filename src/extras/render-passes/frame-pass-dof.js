@@ -2,7 +2,12 @@ import { Color } from '../../core/math/color.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
-import { FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RG8, PIXELFORMAT_R8 } from '../../platform/graphics/constants.js';
+import {
+    FILTER_LINEAR,
+    ADDRESS_CLAMP_TO_EDGE,
+    PIXELFORMAT_RG8,
+    PIXELFORMAT_R8
+} from '../../platform/graphics/constants.js';
 
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { RenderPassCoC } from './render-pass-coc.js';
@@ -106,7 +111,6 @@ class FramePassDof extends FramePass {
     }
 
     setupCocPass(device, cameraComponent, sourceTexture, nearBlur) {
-
         // render full resolution CoC texture, R - far CoC, G - near CoC
         // when near blur is not enabled, we only need format with R channel
         const format = nearBlur ? PIXELFORMAT_RG8 : PIXELFORMAT_R8;
@@ -122,7 +126,6 @@ class FramePassDof extends FramePass {
     }
 
     setupFarPass(device, sourceTexture, scale) {
-
         // Premultiply coc for far blur, to limit the sharp objects leaking into the background
         this.farRt = this.createRenderTarget('FarDofTexture', sourceTexture.format);
         const farPass = new RenderPassDownsample(device, sourceTexture, {
@@ -149,7 +152,6 @@ class FramePassDof extends FramePass {
             resizeSource: nearTexture,
             scaleX: scale,
             scaleY: scale
-
         });
         blurPass.setClearColor(Color.BLACK);
         return blurPass;

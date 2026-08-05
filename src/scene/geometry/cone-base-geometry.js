@@ -56,11 +56,11 @@ class ConeBaseGeometry extends Geometry {
                     u /= 3;
                     uvs1.push(u, 1 - v);
 
-                    if ((i < heightSegments) && (j < capSegments)) {
-                        const first   = ((i))     * (capSegments + 1) + ((j));
-                        const second  = ((i))     * (capSegments + 1) + ((j + 1));
-                        const third   = ((i + 1)) * (capSegments + 1) + ((j));
-                        const fourth  = ((i + 1)) * (capSegments + 1) + ((j + 1));
+                    if (i < heightSegments && j < capSegments) {
+                        const first = i * (capSegments + 1) + j;
+                        const second = i * (capSegments + 1) + (j + 1);
+                        const third = (i + 1) * (capSegments + 1) + j;
+                        const fourth = (i + 1) * (capSegments + 1) + (j + 1);
 
                         indices.push(first, second, third);
                         indices.push(second, fourth, third);
@@ -82,7 +82,7 @@ class ConeBaseGeometry extends Geometry {
 
                 for (let lon = 0; lon <= longitudeBands; lon++) {
                     // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
-                    const phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2;
+                    const phi = (lon * 2 * Math.PI) / longitudeBands - Math.PI / 2;
                     const sinPhi = Math.sin(phi);
                     const cosPhi = Math.cos(phi);
 
@@ -109,7 +109,7 @@ class ConeBaseGeometry extends Geometry {
             offset = (heightSegments + 1) * (capSegments + 1);
             for (let lat = 0; lat < latitudeBands; ++lat) {
                 for (let lon = 0; lon < longitudeBands; ++lon) {
-                    const first  = (lat * (longitudeBands + 1)) + lon;
+                    const first = lat * (longitudeBands + 1) + lon;
                     const second = first + longitudeBands + 1;
 
                     indices.push(offset + first + 1, offset + second, offset + first);
@@ -125,7 +125,7 @@ class ConeBaseGeometry extends Geometry {
 
                 for (let lon = 0; lon <= longitudeBands; lon++) {
                     // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
-                    const phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2;
+                    const phi = (lon * 2 * Math.PI) / longitudeBands - Math.PI / 2;
                     const sinPhi = Math.sin(phi);
                     const cosPhi = Math.cos(phi);
 
@@ -152,7 +152,7 @@ class ConeBaseGeometry extends Geometry {
             offset = (heightSegments + 1) * (capSegments + 1) + (longitudeBands + 1) * (latitudeBands + 1);
             for (let lat = 0; lat < latitudeBands; ++lat) {
                 for (let lon = 0; lon < longitudeBands; ++lon) {
-                    const first  = (lat * (longitudeBands + 1)) + lon;
+                    const first = lat * (longitudeBands + 1) + lon;
                     const second = first + longitudeBands + 1;
 
                     indices.push(offset + first + 1, offset + second, offset + first);

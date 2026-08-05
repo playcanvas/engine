@@ -123,13 +123,15 @@ class GSplatLines extends Script {
         const splatCount = calculateSplatCount(start, end, thickness);
 
         this._primitives.set(handle, {
-            lines: [{
-                start: start.clone(),
-                end: end.clone(),
-                startColor: startColor.clone(),
-                endColor: endColor.clone(),
-                thickness
-            }],
+            lines: [
+                {
+                    start: start.clone(),
+                    end: end.clone(),
+                    startColor: startColor.clone(),
+                    endColor: endColor.clone(),
+                    thickness
+                }
+            ],
             splatCount
         });
 
@@ -265,17 +267,26 @@ class GSplatLines extends Script {
             new Vec3(min.x, min.y, max.z), // 4
             new Vec3(max.x, min.y, max.z), // 5
             new Vec3(max.x, max.y, max.z), // 6: max
-            new Vec3(min.x, max.y, max.z)  // 7
+            new Vec3(min.x, max.y, max.z) // 7
         ];
 
         // 12 edges connecting the corners
         const edges = [
             // Bottom face
-            [0, 1], [1, 2], [2, 3], [3, 0],
+            [0, 1],
+            [1, 2],
+            [2, 3],
+            [3, 0],
             // Top face
-            [4, 5], [5, 6], [6, 7], [7, 4],
+            [4, 5],
+            [5, 6],
+            [6, 7],
+            [7, 4],
             // Vertical edges
-            [0, 4], [1, 5], [2, 6], [3, 7]
+            [0, 4],
+            [1, 5],
+            [2, 6],
+            [3, 7]
         ];
 
         const lines = edges.map(([i, j]) => ({
@@ -379,8 +390,12 @@ class GSplatLines extends Script {
         const centers = this._container.centers;
 
         // Track bounding box min/max
-        let minX = Infinity, minY = Infinity, minZ = Infinity;
-        let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+        let minX = Infinity,
+            minY = Infinity,
+            minZ = Infinity;
+        let maxX = -Infinity,
+            maxY = -Infinity,
+            maxZ = -Infinity;
         let maxThickness = 0;
 
         // Fill texture data
@@ -441,11 +456,7 @@ class GSplatLines extends Script {
 
         // Build bounding box from min/max, expanded by max thickness
         const aabb = this._tempBox;
-        aabb.center.set(
-            (minX + maxX) * 0.5,
-            (minY + maxY) * 0.5,
-            (minZ + maxZ) * 0.5
-        );
+        aabb.center.set((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
         aabb.halfExtents.set(
             (maxX - minX) * 0.5 + maxThickness,
             (maxY - minY) * 0.5 + maxThickness,

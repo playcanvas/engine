@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 #ifdef STD_SPECULAR_CONSTANT
 uniform vec3 material_specular;

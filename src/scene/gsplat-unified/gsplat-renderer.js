@@ -97,8 +97,7 @@ class GSplatRenderer {
         this._workBufferFormatVersion = workBuffer?.format.extraStreamsVersion ?? -1;
     }
 
-    destroy() {
-    }
+    destroy() {}
 
     /**
      * Resolves the effective fisheye strength for this renderer's camera. Fisheye is not supported
@@ -185,8 +184,7 @@ class GSplatRenderer {
      * Called when the work buffer format has changed. Derived classes reconfigure
      * their rendering resources (materials, pipelines, bindings, etc.).
      */
-    onWorkBufferFormatChanged() {
-    }
+    onWorkBufferFormatChanged() {}
 
     /**
      * Updates the renderer with the current splat count and texture size.
@@ -194,8 +192,7 @@ class GSplatRenderer {
      * @param {number} count - The number of visible splats.
      * @param {number} textureSize - The work buffer texture size.
      */
-    update(count, textureSize) {
-    }
+    update(count, textureSize) {}
 
     /**
      * Configures the renderer to use GPU-sorted data for rendering.
@@ -205,20 +202,17 @@ class GSplatRenderer {
      * @param {StorageBuffer} numSplatsBuffer - Buffer containing the visible splat count.
      * @param {number} textureSize - The work buffer texture size.
      */
-    setGpuSortedRendering(drawSlot, sortedIds, numSplatsBuffer, textureSize) {
-    }
+    setGpuSortedRendering(drawSlot, sortedIds, numSplatsBuffer, textureSize) {}
 
     /**
      * Switches the renderer to CPU-sorted rendering mode.
      */
-    setCpuSortedRendering() {
-    }
+    setCpuSortedRendering() {}
 
     /**
      * Binds the current order data (texture or storage buffer) for CPU-sorted rendering.
      */
-    setOrderData() {
-    }
+    setOrderData() {}
 
     /**
      * Per-frame update for the renderer (material syncing, parameter updates).
@@ -227,23 +221,20 @@ class GSplatRenderer {
      * @param {number} [exposure] - Scene exposure value.
      * @param {FogParams} [fogParams] - Fog parameters.
      */
-    frameUpdate(params, exposure, fogParams) {
-    }
+    frameUpdate(params, exposure, fogParams) {}
 
     /**
      * Updates the overdraw visualization mode.
      *
      * @param {object} params - The gsplat parameters.
      */
-    updateOverdrawMode(params) {
-    }
+    updateOverdrawMode(params) {}
 
     /**
      * Invalidates any cached cull/compaction upload state (e.g. after a work-buffer rebuild that
      * may have moved bounds indices). No-op for renderers without a GPU cull pipeline.
      */
-    invalidateCullUpload() {
-    }
+    invalidateCullUpload() {}
 
     /**
      * Prepares the forward view for rendering. Renderers that run their own GPU pipeline (cull +

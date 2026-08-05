@@ -164,8 +164,7 @@ class XrTrackedImage extends EventHandler {
             };
         }
 
-        return createImageBitmap(this._image)
-        .then((bitmap) => {
+        return createImageBitmap(this._image).then((bitmap) => {
             this._bitmap = bitmap;
             return {
                 image: this._bitmap,

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 // convert clip space position into texture coordinates to sample scene grab textures
 vec2 getGrabScreenPos(vec4 clipPos) {

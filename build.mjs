@@ -76,7 +76,7 @@ const hasType = values.type !== undefined;
 const type = values.type;
 const hasFormat = values.format !== undefined;
 const format = values.format;
-const trees = TREE_FLAGS.filter(flag => values[flag]);
+const trees = TREE_FLAGS.filter((flag) => values[flag]);
 
 const pipe = (input, output) => {
     let text = '';
@@ -124,7 +124,7 @@ const run = (cmd, args) => {
             console.error(err.message);
             resolve(1);
         });
-        child.on('close', code => resolve(code ?? 1));
+        child.on('close', (code) => resolve(code ?? 1));
     });
 };
 
@@ -148,7 +148,7 @@ const getTreeTargets = () => {
         return fail(`--format must be one of: ${MODULE_FORMATS.join(', ')}`);
     }
 
-    return (hasFormat ? [format] : MODULE_FORMATS).map(moduleFormat => ({
+    return (hasFormat ? [format] : MODULE_FORMATS).map((moduleFormat) => ({
         buildType,
         moduleFormat
     }));
@@ -183,23 +183,28 @@ const runTreeVisualizers = async (moduleFormat, metafile) => {
 
     await writeFile(metadata, JSON.stringify(metafile));
 
-    const codes = await Promise.all(trees.map(async (flag) => {
-        const output = `${flag}.${suffix}.html`;
-        startLog(metadata, output);
-        const start = performance.now();
-        const code = await run(path.join(BIN_DIR, VISUALIZER), [
-            '--metadata', metadata,
-            '--filename', output,
-            '--template', TREE_TEMPLATES[flag]
-        ]);
-        if (code) {
-            failedLog(output, performance.now() - start);
-            return code;
-        }
-        createdLog(output, performance.now() - start);
+    const codes = await Promise.all(
+        trees.map(async (flag) => {
+            const output = `${flag}.${suffix}.html`;
+            startLog(metadata, output);
+            const start = performance.now();
+            const code = await run(path.join(BIN_DIR, VISUALIZER), [
+                '--metadata',
+                metadata,
+                '--filename',
+                output,
+                '--template',
+                TREE_TEMPLATES[flag]
+            ]);
+            if (code) {
+                failedLog(output, performance.now() - start);
+                return code;
+            }
+            createdLog(output, performance.now() - start);
 
-        return 0;
-    }));
+            return 0;
+        })
+    );
     const code = codes.find(Boolean) ?? 0;
     if (code) {
         return code;
@@ -231,30 +236,32 @@ const buildTreeTarget = async (target) => {
 };
 
 const buildTrees = async () => {
-    const codes = await Promise.all(getTreeTargets().map(target => buildTreeTarget(target)));
+    const codes = await Promise.all(getTreeTargets().map((target) => buildTreeTarget(target)));
 
     return codes.find(Boolean) ?? 0;
 };
 
 const watchTrees = async () => {
-    const watchers = await Promise.all(getTreeTargets().map((target) => {
-        return watchTarget({
-            ...target,
-            sourcemaps: values.sourcemaps,
-            metafile: true,
-            start: startLog,
-            log(path, elapsed, errors) {
-                if (errors) {
-                    failedLog(path, elapsed);
-                    return;
+    const watchers = await Promise.all(
+        getTreeTargets().map((target) => {
+            return watchTarget({
+                ...target,
+                sourcemaps: values.sourcemaps,
+                metafile: true,
+                start: startLog,
+                log(path, elapsed, errors) {
+                    if (errors) {
+                        failedLog(path, elapsed);
+                        return;
+                    }
+                    createdLog(path, elapsed);
+                },
+                end(result) {
+                    return runTreeVisualizers(target.moduleFormat, result.metafile);
                 }
-                createdLog(path, elapsed);
-            },
-            end(result) {
-                return runTreeVisualizers(target.moduleFormat, result.metafile);
-            }
-        });
-    }));
+            });
+        })
+    );
 
     return watchers.flat();
 };
@@ -299,16 +306,18 @@ const buildJS = async () => {
         return 0;
     }
 
-    await Promise.all(targets.map(async (target) => {
-        const output = targetOutput(target.buildType, target.moduleFormat);
-        startLog(INPUT, output);
-        const start = performance.now();
-        await buildTarget({
-            ...target,
-            sourcemaps: values.sourcemaps
-        });
-        createdLog(output, performance.now() - start);
-    }));
+    await Promise.all(
+        targets.map(async (target) => {
+            const output = targetOutput(target.buildType, target.moduleFormat);
+            startLog(INPUT, output);
+            const start = performance.now();
+            await buildTarget({
+                ...target,
+                sourcemaps: values.sourcemaps
+            });
+            createdLog(output, performance.now() - start);
+        })
+    );
 
     return 0;
 };
@@ -319,20 +328,22 @@ const watchJS = async () => {
         return [];
     }
 
-    const watchers = await Promise.all(targets.map((target) => {
-        return watchTarget({
-            ...target,
-            sourcemaps: values.sourcemaps,
-            start: startLog,
-            log(path, elapsed, errors) {
-                if (errors) {
-                    failedLog(path, elapsed);
-                    return;
+    const watchers = await Promise.all(
+        targets.map((target) => {
+            return watchTarget({
+                ...target,
+                sourcemaps: values.sourcemaps,
+                start: startLog,
+                log(path, elapsed, errors) {
+                    if (errors) {
+                        failedLog(path, elapsed);
+                        return;
+                    }
+                    createdLog(path, elapsed);
                 }
-                createdLog(path, elapsed);
-            }
-        });
-    }));
+            });
+        })
+    );
 
     return watchers.flat();
 };

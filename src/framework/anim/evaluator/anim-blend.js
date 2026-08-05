@@ -1,6 +1,6 @@
 class AnimBlend {
     static dot(a, b) {
-        const len  = a.length;
+        const len = a.length;
         let result = 0;
         for (let i = 0; i < len; ++i) {
             result += a[i] * b[i];
@@ -20,7 +20,7 @@ class AnimBlend {
     }
 
     static set(a, b, type) {
-        const len  = a.length;
+        const len = a.length;
 
         if (type === 'quaternion') {
             let l = AnimBlend.dot(b, b);

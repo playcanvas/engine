@@ -298,7 +298,6 @@ class Color {
      * console.log(c.toString());
      */
     toString(alpha, asArray) {
-
         const { r, g, b, a } = this;
 
         // If any component exceeds 1 (HDR), return the color as an array

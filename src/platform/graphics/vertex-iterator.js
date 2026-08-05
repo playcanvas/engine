@@ -137,7 +137,11 @@ class VertexIteratorAccessor {
         if (vertexFormat.interleaved) {
             this.array = new typedArrayTypes[vertexElement.dataType](buffer, vertexElement.offset);
         } else {
-            this.array = new typedArrayTypes[vertexElement.dataType](buffer, vertexElement.offset, vertexFormat.vertexCount * vertexElement.numComponents);
+            this.array = new typedArrayTypes[vertexElement.dataType](
+                buffer,
+                vertexElement.offset,
+                vertexFormat.vertexCount * vertexElement.numComponents
+            );
         }
 
         // BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox, but just the constructor for Opera
@@ -315,9 +319,10 @@ class VertexIterator {
     writeData(semantic, data, numVertices) {
         const element = this.element[semantic];
         if (element) {
-
             if (numVertices > this.vertexBuffer.numVertices) {
-                Debug.error(`NumVertices provided to setData: ${numVertices} is larger than space in VertexBuffer: ${this.vertexBuffer.numVertices}`);
+                Debug.error(
+                    `NumVertices provided to setData: ${numVertices} is larger than space in VertexBuffer: ${this.vertexBuffer.numVertices}`
+                );
 
                 // avoid overwrite
                 numVertices = this.vertexBuffer.numVertices;
@@ -332,7 +337,8 @@ class VertexIterator {
                     element.setFromArray(index, data, i * numComponents);
                     index += element.stride;
                 }
-            } else {    // non-interleaved copy
+            } else {
+                // non-interleaved copy
 
                 // if data contains more  data than needed, copy from its subarray
                 if (data.length > numVertices * numComponents) {
@@ -363,7 +369,7 @@ class VertexIterator {
      * only part of the data gets copied out (typed arrays ignore read/write out of range).
      *
      * @param {string} semantic - The semantic of the vertex element to read.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} data -
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} data
      * The array to receive the data.
      * @returns {number} The number of vertices read.
      * @ignore
@@ -377,11 +383,12 @@ class VertexIterator {
             const numComponents = element.numComponents;
             const copyCount = count * numComponents;
 
-            Debug.assert(!ArrayBuffer.isView(data) || data.length >= copyCount,
-                `Destination array is too small to receive all ${semantic} data.`);
+            Debug.assert(
+                !ArrayBuffer.isView(data) || data.length >= copyCount,
+                `Destination array is too small to receive all ${semantic} data.`
+            );
 
             if (this.vertexBuffer.getFormat().interleaved) {
-
                 // extract data from interleaved buffer by looping over vertices and copying them manually
                 if (Array.isArray(data)) {
                     data.length = 0;

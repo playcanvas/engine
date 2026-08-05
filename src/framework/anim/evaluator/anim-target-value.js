@@ -43,7 +43,7 @@ class AnimTargetValue {
         this.layerCounter = 0;
         this.valueType = type;
         this.dirty = true;
-        this.value = (type === AnimTargetValue.TYPE_QUAT ? [0, 0, 0, 1] : [0, 0, 0]);
+        this.value = type === AnimTargetValue.TYPE_QUAT ? [0, 0, 0, 1] : [0, 0, 0];
         this.baseValue = null;
         this.setter = null;
     }
@@ -54,7 +54,7 @@ class AnimTargetValue {
 
     getWeight(index) {
         if (this.dirty) this.updateWeights();
-        if (this._normalizeWeights && this.totalWeight === 0 || !this.mask[index]) {
+        if ((this._normalizeWeights && this.totalWeight === 0) || !this.mask[index]) {
             return 0;
         } else if (this._normalizeWeights) {
             return this.weights[index] / this.totalWeight;
@@ -99,7 +99,12 @@ class AnimTargetValue {
                 // current value
                 const v = AnimTargetValue.q1.set(this.value[0], this.value[1], this.value[2], this.value[3]);
                 // additive value
-                const aV1 = AnimTargetValue.q2.set(this.baseValue[0], this.baseValue[1], this.baseValue[2], this.baseValue[3]);
+                const aV1 = AnimTargetValue.q2.set(
+                    this.baseValue[0],
+                    this.baseValue[1],
+                    this.baseValue[2],
+                    this.baseValue[3]
+                );
                 const aV2 = AnimTargetValue.q3.set(value[0], value[1], value[2], value[3]);
                 const aV = aV1.invert().mul(aV2);
                 // scale additive value by it's weight
@@ -130,6 +135,4 @@ class AnimTargetValue {
     }
 }
 
-export {
-    AnimTargetValue
-};
+export { AnimTargetValue };

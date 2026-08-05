@@ -1,8 +1,15 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-    SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, lightTypeNames, shadowTypeInfo
+    SHADER_FORWARD,
+    SHADER_PICK,
+    SHADER_SHADOW,
+    SHADER_PREPASS,
+    SHADER_DEPTH_PICK,
+    LIGHTTYPE_DIRECTIONAL,
+    LIGHTTYPE_SPOT,
+    lightTypeNames,
+    shadowTypeInfo
 } from './constants.js';
 
 /**
@@ -40,8 +47,10 @@ class ShaderPassInfo {
      * @param {number} [options.shadowType] - Type of shadow, for example `SHADOW_PCF3_32F`.
      */
     constructor(name, index, options = {}) {
-
-        Debug.assert(/^[a-z]\w*$/i.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
+        Debug.assert(
+            /^[a-z]\w*$/i.test(name),
+            `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`
+        );
 
         this.name = name;
         this.index = index;
@@ -53,7 +62,6 @@ class ShaderPassInfo {
     }
 
     buildShaderDefines() {
-
         let keyword;
         if (this.isShadow) {
             keyword = 'SHADOW';
@@ -70,7 +78,8 @@ class ShaderPassInfo {
                 // - Directional: Always since light has no position
                 // - Spot: If not using VSM
                 // - Point: Never
-                const perspectiveDepth = this.lightType === LIGHTTYPE_DIRECTIONAL || (!shadowInfo.vsm && this.lightType === LIGHTTYPE_SPOT);
+                const perspectiveDepth =
+                    this.lightType === LIGHTTYPE_DIRECTIONAL || (!shadowInfo.vsm && this.lightType === LIGHTTYPE_SPOT);
                 if (perspectiveDepth) this.defines.set('PERSPECTIVE_DEPTH', '');
                 this.defines.set('LIGHT_TYPE', `${lightTypeNames[this.lightType]}`);
                 this.defines.set('SHADOW_TYPE', `${shadowInfo.name}`);
@@ -116,7 +125,6 @@ class ShaderPass {
     nextIndex = 0;
 
     constructor() {
-
         const add = (name, index, options) => {
             const info = this.allocate(name, options);
             Debug.assert(info.index === index);

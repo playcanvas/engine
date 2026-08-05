@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #ifdef GSPLAT_USER_VARYINGS
     #include "gsplatUserVaryingsVS"
 #endif

@@ -1,14 +1,10 @@
 import { expect } from 'chai';
 
-import {
-    FUNC_LESSEQUAL, FUNC_ALWAYS, FUNC_NOTEQUAL
-} from '../../../src/platform/graphics/constants.js';
+import { FUNC_LESSEQUAL, FUNC_ALWAYS, FUNC_NOTEQUAL } from '../../../src/platform/graphics/constants.js';
 import { DepthState } from '../../../src/platform/graphics/depth-state.js';
 
 describe('DepthState', function () {
-
     describe('#constructor', function () {
-
         it('empty', function () {
             const ds = new DepthState();
             expect(ds.func).to.equal(FUNC_LESSEQUAL);
@@ -20,11 +16,9 @@ describe('DepthState', function () {
             expect(ds.func).to.equal(FUNC_NOTEQUAL);
             expect(ds.write).to.equal(false);
         });
-
     });
 
     describe('#test property', function () {
-
         it('test enabled', function () {
             const ds = new DepthState();
             ds.test = true;
@@ -38,7 +32,5 @@ describe('DepthState', function () {
             expect(ds.func).to.equal(FUNC_ALWAYS);
             expect(ds.test).to.equal(false);
         });
-
     });
-
 });

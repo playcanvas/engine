@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     localPos *= particle_vertexData2.y * emitterScale;
     localPos += particlePos;
 

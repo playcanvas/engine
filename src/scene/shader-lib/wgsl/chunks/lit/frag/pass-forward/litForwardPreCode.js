@@ -1,6 +1,6 @@
 // backend shader implementation code which executes prior to the front end code, and contains code
 // which is required by the frontend code.
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #include "basePS"
 #include "sphericalPS"

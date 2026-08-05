@@ -44,18 +44,20 @@ class AnimBlendTree extends AnimNode {
         for (let i = 0; i < children.length; i++) {
             const child = children[i];
             if (child.children) {
-                this._children.push(createTree(
-                    child.type,
-                    state,
-                    this,
-                    child.name,
-                    1.0,
-                    child.parameter ? [child.parameter] : child.parameters,
-                    child.children,
-                    child.syncAnimations,
-                    createTree,
-                    findParameter
-                ));
+                this._children.push(
+                    createTree(
+                        child.type,
+                        state,
+                        this,
+                        child.name,
+                        1.0,
+                        child.parameter ? [child.parameter] : child.parameters,
+                        child.children,
+                        child.syncAnimations,
+                        createTree,
+                        findParameter
+                    )
+                );
             } else {
                 this._children.push(new AnimNode(state, this, child.name, child.point, child.speed));
             }
@@ -91,7 +93,7 @@ class AnimBlendTree extends AnimNode {
     }
 
     getNodeWeightedDuration(i) {
-        return this._children[i].animTrack.duration / this._children[i].speedMultiplier * this._children[i].weight;
+        return (this._children[i].animTrack.duration / this._children[i].speedMultiplier) * this._children[i].weight;
     }
 
     getNodeCount() {

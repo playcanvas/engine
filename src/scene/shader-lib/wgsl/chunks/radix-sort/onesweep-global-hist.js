@@ -37,7 +37,7 @@
 // This is required for GPU-indirect sorting, where numKeys is only known at
 // shader launch time and cannot be padded to a vec4 boundary.
 
-export const onesweepGlobalHistSource = /* wgsl */`
+export const onesweepGlobalHistSource = /* wgsl */ `
 
 @group(0) @binding(0) var<storage, read> b_sort: array<vec4<u32>>;
 @group(0) @binding(1) var<storage, read_write> b_globalHist: array<atomic<u32>>;

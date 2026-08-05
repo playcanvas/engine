@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 fn addLightMap(
     lightmap: vec3f,
     dir: vec3f,

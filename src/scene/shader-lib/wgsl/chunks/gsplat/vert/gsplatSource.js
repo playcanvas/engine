@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 attribute vertex_position: vec3f;         // xy: cornerUV, z: render order offset within instance
 
 #ifdef GSPLAT_INDIRECT_DRAW

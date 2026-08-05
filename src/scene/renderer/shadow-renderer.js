@@ -4,17 +4,15 @@ import { Color } from '../../core/math/color.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-import {
-    SEMANTIC_POSITION,
-    UNIFORMTYPE_MAT4
-} from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, UNIFORMTYPE_MAT4 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import {
     BLUR_GAUSSIAN,
     EVENT_POSTCULL,
     EVENT_PRECULL,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI,
+    LIGHTTYPE_DIRECTIONAL,
+    LIGHTTYPE_OMNI,
     SHADOWCAMERA_NAME,
     SHADOWUPDATE_NONE,
     shadowTypeInfo
@@ -111,7 +109,6 @@ class ShadowRenderer {
 
     // creates shadow camera for a light and sets up its constant properties
     static createShadowCamera(device, shadowType, type, face) {
-
         const shadowCam = LightCamera.create(device, SHADOWCAMERA_NAME, type, face);
 
         const shadowInfo = shadowTypeInfo.get(shadowType);
@@ -136,7 +133,6 @@ class ShadowRenderer {
     }
 
     _cullShadowCastersInternal(meshInstances, visible, camera) {
-
         const numInstances = meshInstances.length;
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
@@ -162,7 +158,6 @@ class ShadowRenderer {
      * @param {MeshInstance[]} [casters] - Optional array of mesh instances to use as casters.
      */
     cullShadowCasters(comp, light, visible, camera, casters) {
-
         // event before culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
         this.renderer.scene?.fire(EVENT_PRECULL, null);
@@ -171,10 +166,9 @@ class ShadowRenderer {
 
         // if the casters are supplied, use them
         if (casters) {
-
             this._cullShadowCastersInternal(casters, visible, camera);
-
-        } else {    // otherwise, get them from the layer composition
+        } else {
+            // otherwise, get them from the layer composition
 
             // for each layer
             const layers = comp.layerList;
@@ -182,7 +176,6 @@ class ShadowRenderer {
             for (let i = 0; i < len; i++) {
                 const layer = layers[i];
                 if (layer._lightsSet.has(light)) {
-
                     // layer can be in the list two times (opaque, transp), add casters only one time
                     if (!tempSet.has(layer)) {
                         tempSet.add(layer);
@@ -215,12 +208,11 @@ class ShadowRenderer {
     }
 
     setupRenderState(device, light) {
-
         // Set standard shadowmap states
         const isClustered = this.renderer.scene.clusteredLightingEnabled;
-        const useShadowSampler = isClustered ?
-            light._isPcf :     // both spot and omni light are using shadow sampler when clustered
-            light._isPcf && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
+        const useShadowSampler = isClustered
+            ? light._isPcf // both spot and omni light are using shadow sampler when clustered
+            : light._isPcf && light._type !== LIGHTTYPE_OMNI; // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
 
         device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
         device.setDepthState(light.shadowDepthState);
@@ -228,7 +220,6 @@ class ShadowRenderer {
     }
 
     dispatchUniforms(light, shadowCam, lightRenderData, face) {
-
         const shadowCamNode = shadowCam._node;
 
         // position / range
@@ -260,13 +251,11 @@ class ShadowRenderer {
      * @returns {number} Index of shadow pass info.
      */
     getShadowPass(light) {
-
         // get shader pass from cache for this light type and shadow type
         const lightType = light._type;
         const shadowType = light._shadowType;
         let shadowPassInfo = this.shadowPassCache[lightType]?.[shadowType];
         if (!shadowPassInfo) {
-
             // new shader pass if not in cache
             const shadowPassName = `ShadowPass_${lightType}_${shadowType}`;
             shadowPassInfo = ShaderPass.get(this.device).allocate(shadowPassName, {
@@ -291,7 +280,6 @@ class ShadowRenderer {
      * @param {Camera} camera - The camera.
      */
     submitCasters(visibleCasters, light, camera) {
-
         const device = this.device;
         const renderer = this.renderer;
         const scene = renderer.scene;
@@ -332,7 +320,13 @@ class ShadowRenderer {
             // Uniforms II (shadow): meshInstance overrides
             meshInstance.setParameters(device);
 
-            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);
+            const shaderInstance = meshInstance.getShaderInstance(
+                shadowPass,
+                0,
+                scene,
+                cameraShaderParams,
+                this.viewUniformFormat
+            );
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
@@ -375,7 +369,9 @@ class ShadowRenderer {
     // applied once per frame in Renderer#consumeOneShotShadows, after the frame graph is built and
     // shadow casters are culled (so build and cull can both read shadowUpdateMode before it changes).
     needsShadowRendering(light) {
-        return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+        return (
+            light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame
+        );
     }
 
     getLightRenderData(light, camera, face) {
@@ -384,7 +380,6 @@ class ShadowRenderer {
     }
 
     setupRenderPass(renderPass, shadowCamera, clearRenderTarget) {
-
         const rt = shadowCamera.renderTarget;
         renderPass.init(rt);
 
@@ -393,10 +388,9 @@ class ShadowRenderer {
 
         // if rendering to depth buffer
         if (rt.depthBuffer) {
-
             renderPass.depthStencilOps.storeDepth = true;
-
-        } else { // rendering to color buffer
+        } else {
+            // rendering to color buffer
 
             renderPass.colorOps.clearValue.copy(shadowCamera.clearColor);
             renderPass.colorOps.clear = clearRenderTarget;
@@ -409,7 +403,6 @@ class ShadowRenderer {
 
     // prepares render target / render target settings to allow render pass to be set up
     prepareFace(light, camera, face) {
-
         const type = light._type;
         const lightRenderData = this.getLightRenderData(light, camera, face);
         const shadowCam = lightRenderData.shadowCamera;
@@ -422,7 +415,6 @@ class ShadowRenderer {
     }
 
     renderFace(light, camera, face, clear) {
-
         const device = this.device;
 
         // #if _PROFILER
@@ -463,10 +455,8 @@ class ShadowRenderer {
     }
 
     renderVsm(light, camera) {
-
         // VSM blur if light supports vsm (directional and spot in general)
         if (light._isVsm && light._vsmBlurSize > 1) {
-
             // in clustered mode, only directional light can be vms
             const isClustered = this.renderer.scene.clusteredLightingEnabled;
             if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
@@ -476,7 +466,6 @@ class ShadowRenderer {
     }
 
     getVsmBlurShader(blurMode, filterSize) {
-
         const cache = this.blurVsmShader;
         let blurShader = cache[blurMode][filterSize];
         if (!blurShader) {
@@ -501,7 +490,6 @@ class ShadowRenderer {
     }
 
     applyVsmBlur(light, camera) {
-
         const device = this.device;
 
         DebugGraphics.pushGpuMarker(device, `VSM ${light._node.name}`);
@@ -548,10 +536,8 @@ class ShadowRenderer {
     }
 
     initViewUniformFormat() {
-
         // view uniforms always go through a uniform buffer (on all backends)
         if (!this.viewUniformFormat) {
-
             // format of the view uniform buffer
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)

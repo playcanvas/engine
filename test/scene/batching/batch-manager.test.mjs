@@ -6,7 +6,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('BatchManager', function () {
-
     let app;
 
     beforeEach(function () {
@@ -75,7 +74,6 @@ describe('BatchManager', function () {
         expect(app.batcher._dirtyGroups[0]).to.equal(this.bg.id);
     });
 
-
     it('prepare: splits batches when castShadow differs', function () {
         const e1 = new Entity();
         e1.addComponent('model', {
@@ -98,7 +96,7 @@ describe('BatchManager', function () {
 
         const layer = app.scene.layers.getLayerById(LAYERID_WORLD);
         expect(layer.meshInstances.length).to.equal(2);
-        const flags = layer.meshInstances.map(mi => mi.castShadow).sort();
+        const flags = layer.meshInstances.map((mi) => mi.castShadow).sort();
         expect(flags).to.deep.equal([false, true]);
     });
 
@@ -117,7 +115,6 @@ describe('BatchManager', function () {
             batchGroupId: this.bg.id
         });
 
-
         e1.model.meshInstances[0].visible = false;
         e2.model.meshInstances[0].visible = false;
 
@@ -127,6 +124,5 @@ describe('BatchManager', function () {
         app.batcher.generate();
 
         expect(app.batcher._batchList.length).to.equal(0);
-
     });
 });

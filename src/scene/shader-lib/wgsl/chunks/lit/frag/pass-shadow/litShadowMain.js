@@ -1,5 +1,5 @@
 // main shader entry point for the lit material for shadow rendering
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #if LIGHT_TYPE != DIRECTIONAL
     uniform view_position: vec3f;

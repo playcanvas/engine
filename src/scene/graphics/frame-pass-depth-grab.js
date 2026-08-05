@@ -28,7 +28,6 @@ class FramePassDepthGrab extends FramePass {
     }
 
     shouldReallocate(targetRT, sourceTexture) {
-
         // need to reallocate if dimensions don't match
         const width = sourceTexture?.width || this.device.width;
         const height = sourceTexture?.height || this.device.height;
@@ -36,7 +35,6 @@ class FramePassDepthGrab extends FramePass {
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
-
         // allocate texture buffer
         const texture = Texture.createDataTexture2D(
             device,
@@ -47,7 +45,6 @@ class FramePassDepthGrab extends FramePass {
         );
 
         if (renderTarget) {
-
             // if reallocating RT size, release previous framebuffer
             renderTarget.destroyFrameBuffers();
 
@@ -61,9 +58,7 @@ class FramePassDepthGrab extends FramePass {
 
             // update cached dimensions
             renderTarget.evaluateDimensions();
-
         } else {
-
             // create new render target with the texture
             renderTarget = new RenderTarget({
                 name: 'DepthGrabRT',
@@ -79,7 +74,6 @@ class FramePassDepthGrab extends FramePass {
     }
 
     releaseRenderTarget(rt) {
-
         if (rt) {
             rt.destroyTextureBuffers();
             rt.destroy();
@@ -87,7 +81,6 @@ class FramePassDepthGrab extends FramePass {
     }
 
     before() {
-
         const camera = this.camera;
         const device = this.device;
         const destinationRt = camera?.renderTarget ?? device.backBuffer;
@@ -110,7 +103,13 @@ class FramePassDepthGrab extends FramePass {
         // allocate / resize existing RT as needed
         if (this.shouldReallocate(this.depthRenderTarget, sourceTexture)) {
             this.releaseRenderTarget(this.depthRenderTarget);
-            this.depthRenderTarget = this.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer);
+            this.depthRenderTarget = this.allocateRenderTarget(
+                this.depthRenderTarget,
+                camera.renderTarget,
+                device,
+                format,
+                useDepthBuffer
+            );
         }
 
         // assign uniform
@@ -119,14 +118,12 @@ class FramePassDepthGrab extends FramePass {
     }
 
     execute() {
-
         const device = this.device;
         DebugGraphics.pushGpuMarker(device, 'GRAB-DEPTH');
 
         // WebGL2 multisampling depth handling: we resolve multi-sampled depth buffer to a single-sampled destination buffer.
         // We could use existing API and resolve depth first and then blit it to destination, but this avoids the extra copy.
         if (device.isWebGL2 && device.renderTarget.samples > 1) {
-
             // multi-sampled buffer
             const src = device.renderTarget.impl._glFrameBuffer;
 
@@ -135,10 +132,14 @@ class FramePassDepthGrab extends FramePass {
             device.renderTarget = dest;
             device.updateBegin();
 
-            this.depthRenderTarget.impl.internalResolve(device, src, dest.impl._glFrameBuffer, this.depthRenderTarget, device.gl.DEPTH_BUFFER_BIT);
-
+            this.depthRenderTarget.impl.internalResolve(
+                device,
+                src,
+                dest.impl._glFrameBuffer,
+                this.depthRenderTarget,
+                device.gl.DEPTH_BUFFER_BIT
+            );
         } else {
-
             // copy depth
             device.copyRenderTarget(device.renderTarget, this.depthRenderTarget, false, true);
         }

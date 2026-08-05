@@ -4,7 +4,8 @@ import { DeviceCache } from '../platform/graphics/device-cache.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR, FILTER_NEAREST,
+    FILTER_LINEAR,
+    FILTER_NEAREST,
     PIXELFORMAT_RGBA16F,
     TEXTURETYPE_DEFAULT
 } from '../platform/graphics/constants.js';
@@ -71,7 +72,6 @@ class AreaLightLuts {
 
     // creates LUT texture used by area lights
     static set(device, ltcMat1, ltcMat2) {
-
         function buildTexture(device, data, format) {
             const texture = AreaLightLuts.createTexture(device, format, 64);
 
@@ -82,7 +82,6 @@ class AreaLightLuts {
         }
 
         function convertToHalfFloat(data) {
-
             const count = data.length;
             const ret = new Uint16Array(count);
             const float2Half = FloatPacking.float2Half;

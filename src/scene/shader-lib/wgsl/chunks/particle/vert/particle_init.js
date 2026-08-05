@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 attribute particle_vertexData: vec4f; // XYZ = particle position, W = particle ID + random factor
 #if defined(USE_MESH)
     #if defined(USE_MESH_UV)

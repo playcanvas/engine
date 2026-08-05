@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #ifdef STD_LIGHTMAP_DIR
     var<private> dLightmapDir: vec3f;

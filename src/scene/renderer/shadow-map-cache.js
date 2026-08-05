@@ -1,6 +1,4 @@
-import {
-    LIGHTTYPE_OMNI
-} from '../constants.js';
+import { LIGHTTYPE_OMNI } from '../constants.js';
 import { ShadowMap } from './shadow-map.js';
 
 // In the normal case where the light renders a shadow, the light has a unique shadow map.
@@ -39,7 +37,6 @@ class ShadowMapCache {
 
     // returns shadow map from the cache, or creates a new one if none available
     get(device, light) {
-
         // get matching shadow buffer from the cache
         const key = this.getKey(light);
         const shadowMaps = this.cache.get(key);

@@ -93,16 +93,16 @@ class BoxGeometry extends Geometry {
             [3, 2, 6], // TOP
             [1, 0, 4], // BOTTOM
             [1, 4, 2], // RIGHT
-            [5, 0, 6]  // LEFT
+            [5, 0, 6] // LEFT
         ];
 
         const faceNormals = [
-            [0,  0,  1], // FRONT
-            [0,  0, -1], // BACK
-            [0,  1,  0], // TOP
-            [0, -1,  0], // BOTTOM
-            [1,  0,  0], // RIGHT
-            [-1,  0,  0]  // LEFT
+            [0, 0, 1], // FRONT
+            [0, 0, -1], // BACK
+            [0, 1, 0], // TOP
+            [0, -1, 0], // BOTTOM
+            [1, 0, 0], // RIGHT
+            [-1, 0, 0] // LEFT
         ];
 
         const sides = {
@@ -151,7 +151,7 @@ class BoxGeometry extends Geometry {
                     v += Math.floor(side / 3) / 3;
                     uvs1.push(u, 1 - v);
 
-                    if ((i < uSegments) && (j < vSegments)) {
+                    if (i < uSegments && j < vSegments) {
                         indices.push(vcounter + vSegments + 1, vcounter + 1, vcounter);
                         indices.push(vcounter + vSegments + 1, vcounter + vSegments + 2, vcounter + 1);
                     }

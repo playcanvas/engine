@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifndef VIEWMATRIX
     #define VIEWMATRIX
     uniform matrix_view: mat4x4f;

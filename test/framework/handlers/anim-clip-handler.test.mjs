@@ -11,16 +11,17 @@ const clipData = {
     duration: 2,
     inputs: [[0, 1]],
     outputs: [{ components: 3, data: [0, 0, 0, 1, 1, 1] }],
-    curves: [{
-        path: { entityPath: ['RootNode'], component: 'graph', propertyPath: ['localPosition'] },
-        inputIndex: 0,
-        outputIndex: 0,
-        interpolation: 1
-    }]
+    curves: [
+        {
+            path: { entityPath: ['RootNode'], component: 'graph', propertyPath: ['localPosition'] },
+            inputIndex: 0,
+            outputIndex: 0,
+            interpolation: 1
+        }
+    ]
 };
 
 describe('AnimClipHandler', function () {
-
     afterEach(function () {
         restore();
     });
@@ -47,7 +48,7 @@ describe('AnimClipHandler', function () {
             callback(null, clipData);
         });
 
-        handler.load({ load: 'blob:1234', original: 'x.json' }, () => { });
+        handler.load({ load: 'blob:1234', original: 'x.json' }, () => {});
         expect(requestOptions.responseType).to.equal(Http.ResponseType.JSON);
     });
 

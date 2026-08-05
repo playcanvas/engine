@@ -1,4 +1,4 @@
 // Base format declarations
-export default /* wgsl */`
+export default /* wgsl */ `
 uniform splatTextureSize: u32;
 `;

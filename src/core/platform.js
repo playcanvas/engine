@@ -16,37 +16,49 @@ const detectPassiveEvents = () => {
     return result;
 };
 
-const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
-const environment = typeof window !== 'undefined' ? 'browser' :
-    typeof global !== 'undefined' ? 'node' : 'worker';
+const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+const environment = typeof window !== 'undefined' ? 'browser' : typeof global !== 'undefined' ? 'node' : 'worker';
 
 // detect platform
-const platformName =
-    (/android/i.test(ua) ? 'android' :
-        (/ip(?:[ao]d|hone)/i.test(ua) ? 'ios' :
-            (/windows/i.test(ua) ? 'windows' :
-                (/mac os/i.test(ua) ? 'osx' :
-                    (/linux/i.test(ua) ? 'linux' :
-                        (/cros/i.test(ua) ? 'cros' : null))))));
+const platformName = /android/i.test(ua)
+    ? 'android'
+    : /ip(?:[ao]d|hone)/i.test(ua)
+      ? 'ios'
+      : /windows/i.test(ua)
+        ? 'windows'
+        : /mac os/i.test(ua)
+          ? 'osx'
+          : /linux/i.test(ua)
+            ? 'linux'
+            : /cros/i.test(ua)
+              ? 'cros'
+              : null;
 
 // detect browser
 const browserName =
-    (environment !== 'browser') ? null :
-        (/Chrome\/|Chromium\/|Edg.*\//.test(ua) ? 'chrome' :  // chrome, chromium, edge
-            (/Safari\//.test(ua) ? 'safari' :                   // safari, ios chrome/firefox
-                (/Firefox\//.test(ua) ? 'firefox' :
-                    'other')));
+    environment !== 'browser'
+        ? null
+        : /Chrome\/|Chromium\/|Edg.*\//.test(ua)
+          ? 'chrome' // chrome, chromium, edge
+          : /Safari\//.test(ua)
+            ? 'safari' // safari, ios chrome/firefox
+            : /Firefox\//.test(ua)
+              ? 'firefox'
+              : 'other';
 
 const xbox = /xbox/i.test(ua);
 // visionOS Safari reports a macOS-style UA (no "visionOS" string) but uniquely has
 // maxTouchPoints > 0 on a "Macintosh" UA without any iPhone/iPad/iPod token.
-const visionos = /Macintosh/i.test(ua) &&
+const visionos =
+    /Macintosh/i.test(ua) &&
     typeof navigator !== 'undefined' &&
     navigator.maxTouchPoints > 0 &&
     !/iPhone|iPad|iPod/i.test(ua);
-const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
-const gamepads = (environment === 'browser') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
-const workers = (typeof Worker !== 'undefined');
+const touch =
+    environment === 'browser' &&
+    ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
+const gamepads = environment === 'browser' && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
+const workers = typeof Worker !== 'undefined';
 const passiveEvents = detectPassiveEvents();
 
 /**
@@ -81,7 +93,8 @@ const platform = {
      *
      * @type {object}
      */
-    global: (typeof globalThis !== 'undefined' && globalThis) ??
+    global:
+        (typeof globalThis !== 'undefined' && globalThis) ??
         (environment === 'browser' && window) ??
         (environment === 'node' && global) ??
         (environment === 'worker' && self),

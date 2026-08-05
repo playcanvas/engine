@@ -32,43 +32,55 @@ function setupDepthPassShaderChunks(device) {
     // GLSL chunks
     const glslChunks = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
 
-    glslChunks.set('litUserDeclarationPS', /* glsl */`
+    glslChunks.set(
+        'litUserDeclarationPS',
+        /* glsl */ `
         #ifdef PLANAR_REFLECTION_DEPTH_PASS
         uniform float planarReflectionPlaneDistance;
         uniform float planarReflectionHeightRange;
         #endif
-    `);
+    `
+    );
 
-    glslChunks.set('litUserMainEndPS', /* glsl */`
+    glslChunks.set(
+        'litUserMainEndPS',
+        /* glsl */ `
         #ifdef PLANAR_REFLECTION_DEPTH_PASS
         float distFromPlane = abs(vPositionW.y + planarReflectionPlaneDistance) / planarReflectionHeightRange;
         gl_FragColor = vec4(distFromPlane, distFromPlane, distFromPlane, 1.0);
         #endif
-    `);
+    `
+    );
 
     // WGSL chunks
     const wgslChunks = ShaderChunks.get(device, SHADERLANGUAGE_WGSL);
 
-    wgslChunks.set('litUserDeclarationPS', /* wgsl */`
+    wgslChunks.set(
+        'litUserDeclarationPS',
+        /* wgsl */ `
         #ifdef PLANAR_REFLECTION_DEPTH_PASS
         uniform planarReflectionPlaneDistance: f32;
         uniform planarReflectionHeightRange: f32;
         #endif
-    `);
+    `
+    );
 
-    wgslChunks.set('litUserMainEndPS', /* wgsl */`
+    wgslChunks.set(
+        'litUserMainEndPS',
+        /* wgsl */ `
         #ifdef PLANAR_REFLECTION_DEPTH_PASS
         let distFromPlane: f32 = abs(vPositionW.y + uniform.planarReflectionPlaneDistance) / uniform.planarReflectionHeightRange;
         output.color = vec4f(distFromPlane, distFromPlane, distFromPlane, 1.0);
         #endif
-    `);
+    `
+    );
 }
 
 // ----------------------
 // GLSL Shaders
 // ----------------------
 
-const vertexShaderGLSL = /* glsl */`
+const vertexShaderGLSL = /* glsl */ `
     attribute vec4 aPosition;
 
     uniform mat4 matrix_model;
@@ -83,7 +95,7 @@ const vertexShaderGLSL = /* glsl */`
     }
 `;
 
-const fragmentShaderGLSL = /* glsl */`
+const fragmentShaderGLSL = /* glsl */ `
     #include "gammaPS"
 
     uniform vec4 uScreenSize;
@@ -188,7 +200,7 @@ const fragmentShaderGLSL = /* glsl */`
 // WGSL Shaders
 // ----------------------
 
-const vertexShaderWGSL = /* wgsl */`
+const vertexShaderWGSL = /* wgsl */ `
     attribute aPosition: vec4f;
 
     uniform matrix_model: mat4x4f;
@@ -206,7 +218,7 @@ const vertexShaderWGSL = /* wgsl */`
     }
 `;
 
-const fragmentShaderWGSL = /* wgsl */`
+const fragmentShaderWGSL = /* wgsl */ `
     #include "gammaPS"
 
     uniform uScreenSize: vec4f;
@@ -613,7 +625,8 @@ class BlurredPlanarReflection extends Script {
 
         if (!colorCamera || !depthCamera) return;
 
-        const needsUpdate = !colorCamera.renderTarget ||
+        const needsUpdate =
+            !colorCamera.renderTarget ||
             colorCamera.renderTarget.width !== width ||
             colorCamera.renderTarget.height !== height;
 

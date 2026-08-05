@@ -43,44 +43,49 @@ const _properties = [
 // returns an opaque backend shape handle, or undefined when no physics backend is installed.
 const collisionImpls = {
     box: {
-        createPhysicalShape: (system, entity, component) => system.physicsWorld?.createShape({
-            type: 'box',
-            halfExtents: component.halfExtents
-        })
+        createPhysicalShape: (system, entity, component) =>
+            system.physicsWorld?.createShape({
+                type: 'box',
+                halfExtents: component.halfExtents
+            })
     },
 
     sphere: {
-        createPhysicalShape: (system, entity, component) => system.physicsWorld?.createShape({
-            type: 'sphere',
-            radius: component.radius
-        })
+        createPhysicalShape: (system, entity, component) =>
+            system.physicsWorld?.createShape({
+                type: 'sphere',
+                radius: component.radius
+            })
     },
 
     capsule: {
-        createPhysicalShape: (system, entity, component) => system.physicsWorld?.createShape({
-            type: 'capsule',
-            axis: component.axis,
-            radius: component.radius,
-            height: component.height
-        })
+        createPhysicalShape: (system, entity, component) =>
+            system.physicsWorld?.createShape({
+                type: 'capsule',
+                axis: component.axis,
+                radius: component.radius,
+                height: component.height
+            })
     },
 
     cylinder: {
-        createPhysicalShape: (system, entity, component) => system.physicsWorld?.createShape({
-            type: 'cylinder',
-            axis: component.axis,
-            radius: component.radius,
-            height: component.height
-        })
+        createPhysicalShape: (system, entity, component) =>
+            system.physicsWorld?.createShape({
+                type: 'cylinder',
+                axis: component.axis,
+                radius: component.radius,
+                height: component.height
+            })
     },
 
     cone: {
-        createPhysicalShape: (system, entity, component) => system.physicsWorld?.createShape({
-            type: 'cone',
-            axis: component.axis,
-            radius: component.radius,
-            height: component.height
-        })
+        createPhysicalShape: (system, entity, component) =>
+            system.physicsWorld?.createShape({
+                type: 'cone',
+                axis: component.axis,
+                radius: component.radius,
+                height: component.height
+            })
     },
 
     mesh: {
@@ -92,9 +97,10 @@ const collisionImpls = {
     },
 
     compound: {
-        createPhysicalShape: (system, entity, component) => system.physicsWorld?.createShape({
-            type: 'compound'
-        })
+        createPhysicalShape: (system, entity, component) =>
+            system.physicsWorld?.createShape({
+                type: 'compound'
+            })
     }
 };
 
@@ -311,7 +317,6 @@ function createMeshShape(system, entity, component) {
     if (!world) return undefined;
 
     if (component._model || component._render) {
-
         const entityTransform = entity.getWorldTransform();
         const scale = entityTransform.getScale();
         const sources = [];
@@ -321,13 +326,31 @@ function createMeshShape(system, entity, component) {
             // bake the entity scale into the vertices
             const meshes = component._render.meshes;
             for (let i = 0; i < meshes.length; i++) {
-                sources.push(createMeshSource(system, meshes[i], null, scale, component._convexHull, component._checkVertexDuplicates));
+                sources.push(
+                    createMeshSource(
+                        system,
+                        meshes[i],
+                        null,
+                        scale,
+                        component._convexHull,
+                        component._checkVertexDuplicates
+                    )
+                );
             }
         } else if (component._model) {
             // scale the whole shape by the entity scale
             const meshInstances = component._model.meshInstances;
             for (let i = 0; i < meshInstances.length; i++) {
-                sources.push(createMeshSource(system, meshInstances[i].mesh, meshInstances[i].node, null, false, component._checkVertexDuplicates));
+                sources.push(
+                    createMeshSource(
+                        system,
+                        meshInstances[i].mesh,
+                        meshInstances[i].node,
+                        null,
+                        false,
+                        component._checkVertexDuplicates
+                    )
+                );
             }
             shapeScale = scale;
         }
@@ -488,9 +511,9 @@ class CollisionComponentSystem extends ComponentSystem {
         // to change the mesh, so remove the conflicting inputs
         let properties = _properties;
         if (data.asset !== undefined) {
-            properties = properties.filter(p => p !== 'model' && p !== 'render');
+            properties = properties.filter((p) => p !== 'model' && p !== 'render');
         } else if (data.model !== undefined) {
-            properties = properties.filter(p => p !== 'asset');
+            properties = properties.filter((p) => p !== 'asset');
         }
 
         // apply the user-supplied properties through the public setters - all
@@ -593,7 +616,10 @@ class CollisionComponentSystem extends ComponentSystem {
      * @ignore
      */
     doRecreatePhysicalShape(component) {
-        Debug.assert(component._type === 'mesh', 'CollisionComponentSystem#doRecreatePhysicalShape: called for a non-mesh collision component.');
+        Debug.assert(
+            component._type === 'mesh',
+            'CollisionComponentSystem#doRecreatePhysicalShape: called for a non-mesh collision component.'
+        );
         doRecreateMeshShape(this, component);
     }
 

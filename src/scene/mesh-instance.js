@@ -8,11 +8,25 @@ import { DrawCommands } from '../platform/graphics/draw-commands.js';
 import { indexFormatByteSize } from '../platform/graphics/constants.js';
 import {
     LAYER_WORLD,
-    MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
+    MASK_AFFECT_DYNAMIC,
+    MASK_BAKE,
+    MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
-    SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
-    SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SHADERDEF_UV0,
+    SHADERDEF_UV1,
+    SHADERDEF_VCOLOR,
+    SHADERDEF_TANGENTS,
+    SHADERDEF_NOSHADOW,
+    SHADERDEF_SKIN,
+    SHADERDEF_SCREENSPACE,
+    SHADERDEF_MORPH_POSITION,
+    SHADERDEF_MORPH_NORMAL,
+    SHADERDEF_BATCH,
+    SHADERDEF_LM,
+    SHADERDEF_DIRLM,
+    SHADERDEF_LMAMBIENT,
+    SHADERDEF_INSTANCING,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT,
     SHADOW_CASCADE_ALL
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
@@ -122,7 +136,6 @@ class ShaderInstance {
      * @returns {BindGroup} - The mesh bind group.
      */
     getBindGroup(device) {
-
         // create bind group
         if (!this.bindGroup) {
             const shader = this.shader;
@@ -144,7 +157,6 @@ class ShaderInstance {
      * @returns {UniformBuffer} - The uniform buffer.
      */
     getUniformBuffer(device) {
-
         // create uniform buffer
         if (!this.uniformBuffer) {
             const shader = this.shader;
@@ -314,7 +326,7 @@ class MeshInstance {
      * // set every pass bit (the default value)
      * meshInstance.shaderPassMask = 0xFFFFFFFF;
      */
-    shaderPassMask = 0xFFFFFFFF;
+    shaderPassMask = 0xffffffff;
 
     /**
      * Read this value in the {@link Scene.EVENT_POSTCULL} event to determine if the object is
@@ -531,12 +543,15 @@ class MeshInstance {
      * this.app.scene.root.addChild(entity);
      */
     constructor(mesh, material, node = null) {
-        Debug.assert(!(mesh instanceof GraphNode), 'Incorrect parameters for MeshInstance\'s constructor. Use new MeshInstance(mesh, material, node)');
+        Debug.assert(
+            !(mesh instanceof GraphNode),
+            "Incorrect parameters for MeshInstance's constructor. Use new MeshInstance(mesh, material, node)"
+        );
 
-        this.node = node;           // The node that defines the transform of the mesh instance
-        this._mesh = mesh;          // The mesh that this instance renders
+        this.node = node; // The node that defines the transform of the mesh instance
+        this._mesh = mesh; // The mesh that this instance renders
         mesh.incRefCount();
-        this.material = material;   // The material with which to render this instance
+        this.material = material; // The material with which to render this instance
 
         if (mesh.vertexBuffer) {
             const format = mesh.vertexBuffer.format;
@@ -609,7 +624,6 @@ class MeshInstance {
      * @type {Mesh}
      */
     set mesh(mesh) {
-
         if (mesh === this._mesh) {
             return;
         }
@@ -665,11 +679,9 @@ class MeshInstance {
 
         // otherwise evaluate local aabb
         if (!localAabb) {
-
             localAabb = _tmpAabb;
 
             if (this.skinInstance) {
-
                 // Initialize local bone AABBs if needed
                 if (!this.mesh.boneAabb) {
                     const morphTargets = this._morphInstance ? this._morphInstance.morph._targets : null;
@@ -682,7 +694,6 @@ class MeshInstance {
 
                 for (let i = 0; i < this.mesh.boneAabb.length; i++) {
                     if (boneUsed[i]) {
-
                         // transform bone AABB by bone matrix
                         _tempBoneAabb.setFromTransformedAabb(this.mesh.boneAabb[i], this.skinInstance.matrices[i]);
 
@@ -698,9 +709,7 @@ class MeshInstance {
                 }
 
                 toWorldSpace = true;
-
             } else if (this.node._aabbVer !== this._aabbVer || this.mesh._aabbVer !== this._aabbMeshVer) {
-
                 // local space bounding box - either from mesh or empty
                 if (this.mesh) {
                     localAabb.center.copy(this.mesh.aabb.center);
@@ -756,7 +765,6 @@ class MeshInstance {
      * @ignore
      */
     getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, sortedLights) {
-
         const shaderDefs = this._shaderDefs;
 
         // unique hash for the required shader
@@ -771,7 +779,6 @@ class MeshInstance {
 
         // cache miss in the shader cache of the mesh instance
         if (!shaderInstance) {
-
             const mat = this._material;
 
             // get the shader from the material
@@ -781,7 +788,6 @@ class MeshInstance {
 
             // cache miss in the material variants
             if (!shaderInstance.shader) {
-
                 // marker to allow us to see the source node for shader alloc
                 DebugGraphics.pushGpuMarker(this.mesh.device, `Node: ${this.node.name}`);
 
@@ -813,7 +819,9 @@ class MeshInstance {
             // handling the hash collision. This is very unlikely but still possible. Check and report
             // if it happens in the debug mode, allowing us to fix the issue.
             if (!array.equals(shaderInstance.hashes, lookupHashes)) {
-                Debug.errorOnce('Hash collision in the shader cache for mesh instance. This is very unlikely but still possible. Please report this issue.');
+                Debug.errorOnce(
+                    'Hash collision in the shader cache for mesh instance. This is very unlikely but still possible. Please report this issue.'
+                );
             }
         });
 
@@ -826,7 +834,6 @@ class MeshInstance {
      * @type {Material}
      */
     set material(material) {
-
         this.clearShaders();
 
         const prevMat = this._material;
@@ -839,7 +846,6 @@ class MeshInstance {
         this._material = material;
 
         if (material) {
-
             // Record that the material is referenced by this mesh instance
             material.addMeshInstanceRef(this);
 
@@ -896,7 +902,9 @@ class MeshInstance {
     set receiveShadow(val) {
         if (this._receiveShadow !== val) {
             this._receiveShadow = val;
-            this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
+            this._updateShaderDefs(
+                val ? this._shaderDefs & ~SHADERDEF_NOSHADOW : this._shaderDefs | SHADERDEF_NOSHADOW
+            );
         }
     }
 
@@ -905,7 +913,7 @@ class MeshInstance {
     }
 
     set batching(val) {
-        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_BATCH) : (this._shaderDefs & ~SHADERDEF_BATCH));
+        this._updateShaderDefs(val ? this._shaderDefs | SHADERDEF_BATCH : this._shaderDefs & ~SHADERDEF_BATCH);
     }
 
     get batching() {
@@ -920,7 +928,7 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
-        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN));
+        this._updateShaderDefs(val ? this._shaderDefs | SHADERDEF_SKIN : this._shaderDefs & ~SHADERDEF_SKIN);
         this._setupSkinUpdate();
     }
 
@@ -940,7 +948,6 @@ class MeshInstance {
      * @type {MorphInstance|null}
      */
     set morphInstance(val) {
-
         // release existing
         this._morphInstance?.destroy();
 
@@ -948,9 +955,16 @@ class MeshInstance {
         this._morphInstance = val;
 
         let shaderDefs = this._shaderDefs;
-        shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
-        shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-        shaderDefs = (val && val.morph.intRenderFormat) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED_INT) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED_INT);
+        shaderDefs =
+            val && val.morph.morphPositions
+                ? shaderDefs | SHADERDEF_MORPH_POSITION
+                : shaderDefs & ~SHADERDEF_MORPH_POSITION;
+        shaderDefs =
+            val && val.morph.morphNormals ? shaderDefs | SHADERDEF_MORPH_NORMAL : shaderDefs & ~SHADERDEF_MORPH_NORMAL;
+        shaderDefs =
+            val && val.morph.intRenderFormat
+                ? shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED_INT
+                : shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED_INT;
         this._updateShaderDefs(shaderDefs);
     }
 
@@ -966,7 +980,9 @@ class MeshInstance {
     set screenSpace(val) {
         if (this._screenSpace !== val) {
             this._screenSpace = val;
-            this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE));
+            this._updateShaderDefs(
+                val ? this._shaderDefs | SHADERDEF_SCREENSPACE : this._shaderDefs & ~SHADERDEF_SCREENSPACE
+            );
         }
     }
 
@@ -989,7 +1005,7 @@ class MeshInstance {
      * @type {number}
      */
     set mask(val) {
-        const toggles = this._shaderDefs & 0x0000FFFF;
+        const toggles = this._shaderDefs & 0x0000ffff;
         this._updateShaderDefs(toggles | (val << 16));
     }
 
@@ -1024,10 +1040,8 @@ class MeshInstance {
     }
 
     destroy() {
-
         const mesh = this.mesh;
         if (mesh) {
-
             // this decreases ref count on the mesh
             this.mesh = null;
 
@@ -1077,10 +1091,8 @@ class MeshInstance {
      * @ignore
      */
     static _prepareRenderStyleForArray(meshInstances, renderStyle) {
-
         if (meshInstances) {
             for (let i = 0; i < meshInstances.length; i++) {
-
                 // switch mesh instance to the requested style
                 meshInstances[i]._renderStyle = renderStyle;
 
@@ -1105,15 +1117,13 @@ class MeshInstance {
      * @ignore
      */
     _isVisible(camera) {
-
         if (this.visible) {
-
             // custom visibility method of MeshInstance
             if (this.isVisibleFunc) {
                 return this.isVisibleFunc(camera);
             }
 
-            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
+            _tempSphere.center = this.aabb.center; // this line evaluates aabb
             _tempSphere.radius = this._aabb.halfExtents.length();
 
             return camera.frustum.containsSphere(_tempSphere) > 0;
@@ -1123,7 +1133,6 @@ class MeshInstance {
     }
 
     updateKey() {
-
         // 31      : sign bit (leave as 0)
         // 30 - 23 : 8 bits for draw bucket - highest priority for sorting
         // 22      : 1 bit for alpha test / coverage, to render them after opaque for GPU efficiency
@@ -1131,7 +1140,7 @@ class MeshInstance {
         const { material } = this;
         this._sortKeyForward =
             (this._drawBucket << 23) |
-            ((material.alphaToCoverage || material.alphaTest) ? 0x400000 : 0) |
+            (material.alphaToCoverage || material.alphaTest ? 0x400000 : 0) |
             (material.id & 0x3fffff);
     }
 
@@ -1169,9 +1178,11 @@ class MeshInstance {
             this.cull = true;
         }
 
-        this._updateShaderDefs(vertexBuffer instanceof VertexBuffer ?
-            (this._shaderDefs | SHADERDEF_INSTANCING) :
-            (this._shaderDefs & ~SHADERDEF_INSTANCING));
+        this._updateShaderDefs(
+            vertexBuffer instanceof VertexBuffer
+                ? this._shaderDefs | SHADERDEF_INSTANCING
+                : this._shaderDefs & ~SHADERDEF_INSTANCING
+        );
     }
 
     /**
@@ -1193,7 +1204,6 @@ class MeshInstance {
         if (slot === -1) {
             this._deleteDrawCommandsKey(key);
         } else {
-
             // lazy map allocation
             this.drawCommands ??= new Map();
 
@@ -1230,7 +1240,6 @@ class MeshInstance {
         if (maxCount === 0) {
             this._deleteDrawCommandsKey(key);
         } else {
-
             // lazy map allocation
             this.drawCommands ??= new Map();
 
@@ -1240,7 +1249,7 @@ class MeshInstance {
                 // determine index size from current mesh index buffer
                 const indexBuffer = this.mesh.indexBuffer?.[0];
                 const indexFormat = indexBuffer?.format;
-                const indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
+                const indexSizeBytes = indexFormat !== undefined ? indexFormatByteSize[indexFormat] : 0;
                 cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
                 this.drawCommands.set(key, cmd);
             }
@@ -1329,7 +1338,6 @@ class MeshInstance {
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
      */
     setParameter(name, data) {
-
         Debug.call(() => {
             if (arguments[2] !== undefined) {
                 Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');

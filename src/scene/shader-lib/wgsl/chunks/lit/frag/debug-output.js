@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef DEBUG_ALBEDO_PASS
 output.color = vec4(gammaCorrectOutput(dAlbedo), 1.0);
 #endif

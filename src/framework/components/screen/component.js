@@ -175,7 +175,7 @@ class ScreenComponent extends Component {
         // the combined scale is 1 for an even blend
         const lx = Math.log2((resolution.x || 1) / referenceResolution.x);
         const ly = Math.log2((resolution.y || 1) / referenceResolution.y);
-        return Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
+        return Math.pow(2, lx * (1 - this._scaleBlend) + ly * this._scaleBlend);
     }
 
     _onResize(width, height) {
@@ -197,12 +197,11 @@ class ScreenComponent extends Component {
         this.system.app.graphicsDevice.off('resizecanvas', this._onResize, this);
         this.fire('remove');
 
-        this._elements.forEach(element => element._onScreenRemove());
+        this._elements.forEach((element) => element._onScreenRemove());
         this._elements.clear();
 
         // remove all events
         this.off();
-
     }
 
     /**
@@ -229,7 +228,7 @@ class ScreenComponent extends Component {
         }
 
         this.fire('set:resolution', this._resolution);
-        this._elements.forEach(element => element._onScreenResize(this._resolution));
+        this._elements.forEach((element) => element._onScreenResize(this._resolution));
     }
 
     /**
@@ -259,7 +258,7 @@ class ScreenComponent extends Component {
         }
 
         this.fire('set:referenceresolution', this._resolution);
-        this._elements.forEach(element => element._onScreenResize(this._resolution));
+        this._elements.forEach((element) => element._onScreenResize(this._resolution));
     }
 
     /**
@@ -293,7 +292,7 @@ class ScreenComponent extends Component {
 
         this.fire('set:screenspace', this._screenSpace);
 
-        this._elements.forEach(element => element._onScreenSpaceChange());
+        this._elements.forEach((element) => element._onScreenSpaceChange());
     }
 
     /**
@@ -356,7 +355,7 @@ class ScreenComponent extends Component {
 
         this.fire('set:scaleblend', this._scaleBlend);
 
-        this._elements.forEach(element => element._onScreenResize(this._resolution));
+        this._elements.forEach((element) => element._onScreenResize(this._resolution));
     }
 
     /**
@@ -376,8 +375,8 @@ class ScreenComponent extends Component {
      * @type {number}
      */
     set priority(value) {
-        Debug.assert(value >= 0 && value <= 0x7F, `Screen priority must be between 0 and 127, got ${value}`);
-        value = math.clamp(value, 0, 0x7F);
+        Debug.assert(value >= 0 && value <= 0x7f, `Screen priority must be between 0 and 127, got ${value}`);
+        value = math.clamp(value, 0, 0x7f);
         if (this._priority === value) {
             return;
         }

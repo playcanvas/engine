@@ -365,7 +365,7 @@ export class AnnotationManager extends Script {
         // Draw dark circle with light border
         const centerX = size / 2;
         const centerY = size / 2;
-        const radius = (size / 2) - 4;
+        const radius = size / 2 - 4;
 
         // Draw main circle
         ctx.beginPath();
@@ -435,8 +435,12 @@ export class AnnotationManager extends Script {
         material.alphaTest = 0.01;
         material.blendState = new BlendState(
             true,
-            BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-            BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE
+            BLENDEQUATION_ADD,
+            BLENDMODE_SRC_ALPHA,
+            BLENDMODE_ONE_MINUS_SRC_ALPHA,
+            BLENDEQUATION_ADD,
+            BLENDMODE_ONE,
+            BLENDMODE_ONE
         );
 
         material.depthTest = depthTest;
@@ -445,11 +449,11 @@ export class AnnotationManager extends Script {
         material.useLighting = false;
 
         material.shaderChunks.glsl.add({
-            'litUserMainEndVS': depthClamp
+            litUserMainEndVS: depthClamp
         });
 
         material.shaderChunks.wgsl.add({
-            'litUserMainEndVS': depthClampWGSL
+            litUserMainEndVS: depthClampWGSL
         });
 
         material.update();
@@ -553,7 +557,7 @@ export class AnnotationManager extends Script {
         const canvas = this.app.graphicsDevice.canvas;
         const screenHeight = canvas.clientHeight;
         const projMatrix = this._camera.camera.projectionMatrix;
-        const worldSize = (this._hotspotSize / screenHeight) * (2 * viewDepth / projMatrix.data[5]);
+        const worldSize = (this._hotspotSize / screenHeight) * ((2 * viewDepth) / projMatrix.data[5]);
 
         annotation.entity.setLocalScale(worldSize, worldSize, worldSize);
     }
@@ -737,9 +741,9 @@ export class AnnotationManager extends Script {
         this._parentDom.appendChild(hotspotDom);
 
         // Listen for annotation attribute changes
-        eventHandles.push(annotation.on('label:set', label => this._onLabelChange(annotation, label)));
-        eventHandles.push(annotation.on('title:set', title => this._onTitleChange(annotation, title)));
-        eventHandles.push(annotation.on('text:set', text => this._onTextChange(annotation, text)));
+        eventHandles.push(annotation.on('label:set', (label) => this._onLabelChange(annotation, label)));
+        eventHandles.push(annotation.on('title:set', (title) => this._onTitleChange(annotation, title)));
+        eventHandles.push(annotation.on('text:set', (text) => this._onTextChange(annotation, text)));
         eventHandles.push(annotation.on('enable', () => this._onAnnotationEnable(annotation)));
         eventHandles.push(annotation.on('disable', () => this._onAnnotationDisable(annotation)));
 
@@ -786,7 +790,7 @@ export class AnnotationManager extends Script {
         }
 
         // Unbind event handles
-        resources.eventHandles.forEach(handle => handle.off());
+        resources.eventHandles.forEach((handle) => handle.off());
         resources.eventHandles.length = 0;
 
         // Remove DOM listeners
@@ -800,7 +804,7 @@ export class AnnotationManager extends Script {
         resources.overlayEntity.destroy();
 
         // Destroy materials
-        resources.materials.forEach(mat => mat.destroy());
+        resources.materials.forEach((mat) => mat.destroy());
         resources.materials.length = 0;
 
         // Destroy texture
@@ -829,10 +833,7 @@ export class AnnotationManager extends Script {
             return layer;
         };
 
-        this._layers = [
-            createLayer('HotspotBase', false),
-            createLayer('HotspotOverlay', true)
-        ];
+        this._layers = [createLayer('HotspotBase', false), createLayer('HotspotOverlay', true)];
 
         // Find camera if not set
         if (this._camera === null) {
@@ -844,17 +845,17 @@ export class AnnotationManager extends Script {
 
         // Add layers to camera
         if (this._camera) {
-            this._camera.camera.layers = [
-                ...this._camera.camera.layers,
-                ...this._layers.map(layer => layer.id)
-            ];
+            this._camera.camera.layers = [...this._camera.camera.layers, ...this._layers.map((layer) => layer.id)];
         }
 
         // Create shared mesh
-        this._mesh = Mesh.fromGeometry(this.app.graphicsDevice, new PlaneGeometry({
-            widthSegments: 1,
-            lengthSegments: 1
-        }));
+        this._mesh = Mesh.fromGeometry(
+            this.app.graphicsDevice,
+            new PlaneGeometry({
+                widthSegments: 1,
+                lengthSegments: 1
+            })
+        );
 
         // Initialize tooltip DOM
         this._tooltipDom = document.createElement('div');
@@ -879,8 +880,8 @@ export class AnnotationManager extends Script {
         document.addEventListener('pointerdown', onDocumentPointerDown);
 
         // Listen for annotation add/remove events on the app
-        const onAnnotationAdd = annotation => this._registerAnnotation(annotation);
-        const onAnnotationRemove = annotation => this._unregisterAnnotation(annotation);
+        const onAnnotationAdd = (annotation) => this._registerAnnotation(annotation);
+        const onAnnotationRemove = (annotation) => this._unregisterAnnotation(annotation);
 
         this.app.on('annotation:add', onAnnotationAdd);
         this.app.on('annotation:remove', onAnnotationRemove);
@@ -939,15 +940,13 @@ export class AnnotationManager extends Script {
 
             // Remove layers from camera
             if (this._camera && this._camera.camera) {
-                const layerIds = this._layers.map(layer => layer.id);
-                this._camera.camera.layers = this._camera.camera.layers.filter(
-                    id => !layerIds.includes(id)
-                );
+                const layerIds = this._layers.map((layer) => layer.id);
+                this._camera.camera.layers = this._camera.camera.layers.filter((id) => !layerIds.includes(id));
             }
 
             // Remove layers from scene
             const { layers } = this.app.scene;
-            this._layers.forEach(layer => layers.remove(layer));
+            this._layers.forEach((layer) => layers.remove(layer));
             this._layers = [];
 
             // Destroy mesh

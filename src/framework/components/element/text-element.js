@@ -4,7 +4,14 @@ import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../platform/graphics/constants.js';
+import {
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    SEMANTIC_COLOR,
+    SEMANTIC_ATTR8,
+    SEMANTIC_ATTR9,
+    TYPE_FLOAT32
+} from '../../../platform/graphics/constants.js';
 import { VertexIterator } from '../../../platform/graphics/vertex-iterator.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
@@ -83,7 +90,8 @@ const ALPHANUMERIC_CHAR = /^[a-z0-9]$/i;
 // AC00—D7AF Hangul Syllables
 // D7B0—D7FF Hangul Jamo Extended-B
 const CJK_CHAR = /^[\u1100-\u11ff]|[\u3000-\u9fff\ua960-\ua97f]|[\uac00-\ud7ff]$/;
-const NO_LINE_BREAK_CJK_CHAR = /^[〕〉》」』】〙〗〟ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻]$/;
+const NO_LINE_BREAK_CJK_CHAR =
+    /^[〕〉》」』】〙〗〟ヽヾーァィゥェォッャュョヮヵヶぁぃぅぇぉっゃゅょゎゕゖㇰㇱㇲㇳㇴㇵㇶㇷㇸㇹㇺㇻㇼㇽㇾㇿ々〻]$/;
 
 // unicode bidi control characters https://en.wikipedia.org/wiki/Unicode_control_characters
 const CONTROL_CHARS = [
@@ -122,14 +130,14 @@ class TextElement {
         this._entity = element.entity;
 
         // public
-        this._text = '';            // the original user-defined text
-        this._symbols = [];         // array of visible symbols with unicode processing and markup removed
-        this._colorPalette = [];    // per-symbol color palette
+        this._text = ''; // the original user-defined text
+        this._symbols = []; // array of visible symbols with unicode processing and markup removed
+        this._colorPalette = []; // per-symbol color palette
         this._outlinePalette = []; // per-symbol outline color/thickness palette
         this._shadowPalette = []; // per-symbol shadow color/offset palette
-        this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
-        this._symbolOutlineParams = null;  // per-symbol outline color/thickness indexes. only set for text with markup.
-        this._symbolShadowParams = null;  // per-symbol shadow color/offset indexes. only set for text with markup.
+        this._symbolColors = null; // per-symbol color indexes. only set for text with markup.
+        this._symbolOutlineParams = null; // per-symbol outline color/thickness indexes. only set for text with markup.
+        this._symbolShadowParams = null; // per-symbol shadow color/offset indexes. only set for text with markup.
         /** @type {string} */
         this._i18nKey = null;
 
@@ -189,7 +197,7 @@ class TextElement {
 
         this._rtlReorder = false;
         this._unicodeConverter = false;
-        this._rtl = false;              // true when the current text is RTL
+        this._rtl = false; // true when the current text is RTL
 
         this._outlineColor = new Color(0, 0, 0, 1);
         this._outlineColorUniform = new Float32Array(4);
@@ -318,7 +326,9 @@ class TextElement {
             if (unicodeConverterFunc) {
                 text = unicodeConverterFunc(text);
             } else {
-                console.warn('Element created with unicodeConverter option but no unicodeConverter function registered');
+                console.warn(
+                    'Element created with unicodeConverter option but no unicodeConverter function registered'
+                );
             }
         }
 
@@ -385,24 +395,18 @@ class TextElement {
         }
 
         const getColorThicknessHash = (color, thickness) => {
-            return `${color.toString(true).toLowerCase()}:${
-                thickness.toFixed(2)
-            }`;
+            return `${color.toString(true).toLowerCase()}:${thickness.toFixed(2)}`;
         };
 
         const getColorOffsetHash = (color, offset) => {
-            return `${color.toString(true).toLowerCase()}:${
-                offset.x.toFixed(2)
-            }:${
-                offset.y.toFixed(2)
-            }`;
+            return `${color.toString(true).toLowerCase()}:${offset.x.toFixed(2)}:${offset.y.toFixed(2)}`;
         };
 
         // resolve color, outline, and shadow tags
         if (tags) {
-            const paletteMap = { };
-            const outlinePaletteMap = { };
-            const shadowPaletteMap = { };
+            const paletteMap = {};
+            const outlinePaletteMap = {};
+            const shadowPaletteMap = {};
 
             // store fallback color in the palette
             // palette colors are stored in linear space, to match the color uniforms used when
@@ -436,12 +440,8 @@ class TextElement {
             this._symbolShadowParams = [];
 
             paletteMap[this._color.toString(false).toLowerCase()] = 0;
-            outlinePaletteMap[
-            getColorThicknessHash(this._outlineColor, this._outlineThickness)
-            ] = 0;
-            shadowPaletteMap[
-            getColorOffsetHash(this._shadowColor, this._shadowOffset)
-            ] = 0;
+            outlinePaletteMap[getColorThicknessHash(this._outlineColor, this._outlineThickness)] = 0;
+            shadowPaletteMap[getColorOffsetHash(this._shadowColor, this._shadowOffset)] = 0;
 
             for (let i = 0, len = this._symbols.length; i < len; ++i) {
                 const tag = tags[i];
@@ -483,14 +483,10 @@ class TextElement {
                 let outline = 0;
 
                 // get markup outline
-                if (
-                    tag &&
-                    tag.outline &&
-                    (tag.outline.attributes.color || tag.outline.attributes.thickness)
-                ) {
-                    let color = tag.outline.attributes.color ?
-                        colorTmp.fromString(tag.outline.attributes.color) :
-                        this._outlineColor;
+                if (tag && tag.outline && (tag.outline.attributes.color || tag.outline.attributes.thickness)) {
+                    let color = tag.outline.attributes.color
+                        ? colorTmp.fromString(tag.outline.attributes.color)
+                        : this._outlineColor;
 
                     let thickness = Number(tag.outline.attributes.thickness);
 
@@ -533,15 +529,17 @@ class TextElement {
                 let shadow = 0;
 
                 // get markup shadow
-                if (tag && tag.shadow && (
-                    tag.shadow.attributes.color ||
-                    tag.shadow.attributes.offset ||
-                    tag.shadow.attributes.offsetX ||
-                    tag.shadow.attributes.offsetY
-                )) {
-                    let color = tag.shadow.attributes.color ?
-                        colorTmp.fromString(tag.shadow.attributes.color) :
-                        this._shadowColor;
+                if (
+                    tag &&
+                    tag.shadow &&
+                    (tag.shadow.attributes.color ||
+                        tag.shadow.attributes.offset ||
+                        tag.shadow.attributes.offsetX ||
+                        tag.shadow.attributes.offsetY)
+                ) {
+                    let color = tag.shadow.attributes.color
+                        ? colorTmp.fromString(tag.shadow.attributes.color)
+                        : this._shadowColor;
 
                     const off = Number(tag.shadow.attributes.offset);
                     const offX = Number(tag.shadow.attributes.offsetX);
@@ -557,16 +555,8 @@ class TextElement {
                     }
 
                     const offset = vec2Tmp.set(
-                        !Number.isNaN(offX) ?
-                            offX :
-                            !Number.isNaN(off) ?
-                                off :
-                                this._shadowOffset.x,
-                        !Number.isNaN(offY) ?
-                            offY :
-                            !Number.isNaN(off) ?
-                                off :
-                                this._shadowOffset.y
+                        !Number.isNaN(offX) ? offX : !Number.isNaN(off) ? off : this._shadowOffset.x,
+                        !Number.isNaN(offY) ? offY : !Number.isNaN(off) ? off : this._shadowOffset.y
                     );
 
                     const shadowHash = getColorOffsetHash(color, offset);
@@ -734,7 +724,6 @@ class TextElement {
     }
 
     _removeMeshInstance(meshInstance) {
-
         meshInstance.destroy();
 
         const idx = this._model.meshInstances.indexOf(meshInstance);
@@ -776,7 +765,6 @@ class TextElement {
                 } else {
                     mi.isVisibleFunc = null;
                 }
-
             }
         }
     }
@@ -833,7 +821,7 @@ class TextElement {
     }
 
     _isValidNextChar(nextchar) {
-        return (nextchar !== null) && !NO_LINE_BREAK_CJK_CHAR.test(nextchar);
+        return nextchar !== null && !NO_LINE_BREAK_CJK_CHAR.test(nextchar);
     }
 
     // char is a CJK character and next character is a CJK boundary
@@ -929,7 +917,7 @@ class TextElement {
             // if auto-fitting then scale the line height
             // according to the current fontSize value relative to the max font size
             if (autoFit) {
-                this._scaledLineHeight = this._lineHeight * this._fontSize / (this._maxFontSize || 0.0001);
+                this._scaledLineHeight = (this._lineHeight * this._fontSize) / (this._maxFontSize || 0.0001);
             } else {
                 this._scaledLineHeight = this._lineHeight;
             }
@@ -983,7 +971,7 @@ class TextElement {
             // in order to wrap lines in the correct order
             for (let i = 0; i < l; i++) {
                 char = this._symbols[i];
-                nextchar = ((i + 1) >= l) ? null : this._symbols[i + 1];
+                nextchar = i + 1 >= l ? null : this._symbols[i + 1];
 
                 // handle line break
                 const isLineBreak = LINE_BREAK_CHAR.test(char);
@@ -1049,7 +1037,7 @@ class TextElement {
                     }
                     dataScale = data.scale || 1;
                     size = (data.width + data.height) / 2;
-                    quadsize = scale * size / dataScale;
+                    quadsize = (scale * size) / dataScale;
                     advance = (data.xadvance + kerning) * scale;
                     x = (data.xoffset - kerning) * scale;
                     y = data.yoffset * scale;
@@ -1059,10 +1047,9 @@ class TextElement {
 
                 const isWhitespace = WHITESPACE_CHAR.test(char);
 
-
                 const meshInfoId = (data && data.map) || 0;
-                const ratio = -this._font.data.info.maps[meshInfoId].width /
-                    this._font.data.info.maps[meshInfoId].height;
+                const ratio =
+                    -this._font.data.info.maps[meshInfoId].width / this._font.data.info.maps[meshInfoId].height;
                 const meshInfo = this._meshInfo[meshInfoId];
 
                 const candidateLineWidth = _x + this._spacing * advance;
@@ -1133,7 +1120,7 @@ class TextElement {
                 meshInfo.positions[quad * 4 * 3 + 7] = top;
                 meshInfo.positions[quad * 4 * 3 + 8] = _z;
 
-                meshInfo.positions[quad * 4 * 3 + 9]  = left;
+                meshInfo.positions[quad * 4 * 3 + 9] = left;
                 meshInfo.positions[quad * 4 * 3 + 10] = top;
                 meshInfo.positions[quad * 4 * 3 + 11] = _z;
 
@@ -1142,7 +1129,9 @@ class TextElement {
                 // scale font size if autoFitWidth is true and the width is larger than the calculated width
                 let fontSize;
                 if (this._shouldAutoFitWidth() && this.width > this._element.calculatedWidth) {
-                    fontSize = Math.floor(this._element.fontSize * this._element.calculatedWidth / (this.width || 0.0001));
+                    fontSize = Math.floor(
+                        (this._element.fontSize * this._element.calculatedWidth) / (this.width || 0.0001)
+                    );
                     fontSize = math.clamp(fontSize, minFont, maxFont);
                     if (fontSize !== this._element.fontSize) {
                         this._fontSize = fontSize;
@@ -1175,7 +1164,11 @@ class TextElement {
                     _xMinusTrailingWhitespace = _x;
                 }
 
-                if (this._isWordBoundary(char) || (this._isValidNextChar(nextchar) && (this._isNextCJKBoundary(char, nextchar) || this._isNextCJKWholeWord(nextchar)))) {
+                if (
+                    this._isWordBoundary(char) ||
+                    (this._isValidNextChar(nextchar) &&
+                        (this._isNextCJKBoundary(char, nextchar) || this._isNextCJKWholeWord(nextchar)))
+                ) {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
@@ -1228,10 +1221,9 @@ class TextElement {
                 // set per-vertex outline parameters
                 if (this._symbolOutlineParams) {
                     const outlineIdx = this._symbolOutlineParams[i] * 5;
-                    outline_color_rg = this._outlinePalette[outlineIdx] +
-                        this._outlinePalette[outlineIdx + 1] * 256;
-                    outline_color_ba = this._outlinePalette[outlineIdx + 2] +
-                        this._outlinePalette[outlineIdx + 3] * 256;
+                    outline_color_rg = this._outlinePalette[outlineIdx] + this._outlinePalette[outlineIdx + 1] * 256;
+                    outline_color_ba =
+                        this._outlinePalette[outlineIdx + 2] + this._outlinePalette[outlineIdx + 3] * 256;
                     outline_thickness = this._outlinePalette[outlineIdx + 4];
                 }
 
@@ -1254,11 +1246,11 @@ class TextElement {
                 // set per-vertex shadow parameters
                 if (this._symbolShadowParams) {
                     const shadowIdx = this._symbolShadowParams[i] * 6;
-                    shadow_color_rg = this._shadowPalette[shadowIdx] +
-                        this._shadowPalette[shadowIdx + 1] * 256;
-                    shadow_color_ba = this._shadowPalette[shadowIdx + 2] +
-                        this._shadowPalette[shadowIdx + 3] * 256;
-                    shadow_offset_xy = (this._shadowPalette[shadowIdx + 4] + 127) +
+                    shadow_color_rg = this._shadowPalette[shadowIdx] + this._shadowPalette[shadowIdx + 1] * 256;
+                    shadow_color_ba = this._shadowPalette[shadowIdx + 2] + this._shadowPalette[shadowIdx + 3] * 256;
+                    shadow_offset_xy =
+                        this._shadowPalette[shadowIdx + 4] +
+                        127 +
                         Math.round(ratio * this._shadowPalette[shadowIdx + 5] + 127) * 256;
                 }
 
@@ -1312,8 +1304,13 @@ class TextElement {
             for (const line in this._meshInfo[i].lines) {
                 const index = this._meshInfo[i].lines[line];
                 const lw = this._lineWidths[parseInt(line, 10)];
-                const hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
-                const voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
+                const hoffset =
+                    -hp * this._element.calculatedWidth +
+                    ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
+                const voffset =
+                    (1 - vp) * this._element.calculatedHeight -
+                    fontMaxY -
+                    (1 - va) * (this._element.calculatedHeight - this.height);
 
                 for (let quad = prevQuad; quad <= index; quad++) {
                     this._meshInfo[i].positions[quad * 4 * 3] += hoffset;
@@ -1335,7 +1332,9 @@ class TextElement {
                         // flip the entire line horizontally
                         for (let vert = 0; vert < 4; ++vert) {
                             this._meshInfo[i].positions[idx + vert * 3] =
-                                this._element.calculatedWidth - this._meshInfo[i].positions[idx + vert * 3] + hoffset * 2;
+                                this._element.calculatedWidth -
+                                this._meshInfo[i].positions[idx + vert * 3] +
+                                hoffset * 2;
                         }
 
                         // flip the character horizontally
@@ -1353,7 +1352,7 @@ class TextElement {
 
             // update vertex buffer
             const numVertices = this._meshInfo[i].count * 4; // number of verts we allocated
-            const vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
+            const vertMax = this._meshInfo[i].quad * 4; // number of verts we need (usually count minus line break characters)
             const it = new VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
             for (let v = 0; v < numVertices; v++) {
                 if (v >= vertMax) {
@@ -1366,18 +1365,31 @@ class TextElement {
                     // shadow
                     it.element[SEMANTIC_ATTR9].set(0, 0, 0, 0);
                 } else {
-                    it.element[SEMANTIC_POSITION].set(this._meshInfo[i].positions[v * 3 + 0], this._meshInfo[i].positions[v * 3 + 1], this._meshInfo[i].positions[v * 3 + 2]);
-                    it.element[SEMANTIC_TEXCOORD0].set(this._meshInfo[i].uvs[v * 2 + 0], this._meshInfo[i].uvs[v * 2 + 1]);
-                    it.element[SEMANTIC_COLOR].set(this._meshInfo[i].colors[v * 4 + 0],
+                    it.element[SEMANTIC_POSITION].set(
+                        this._meshInfo[i].positions[v * 3 + 0],
+                        this._meshInfo[i].positions[v * 3 + 1],
+                        this._meshInfo[i].positions[v * 3 + 2]
+                    );
+                    it.element[SEMANTIC_TEXCOORD0].set(
+                        this._meshInfo[i].uvs[v * 2 + 0],
+                        this._meshInfo[i].uvs[v * 2 + 1]
+                    );
+                    it.element[SEMANTIC_COLOR].set(
+                        this._meshInfo[i].colors[v * 4 + 0],
                         this._meshInfo[i].colors[v * 4 + 1],
                         this._meshInfo[i].colors[v * 4 + 2],
-                        this._meshInfo[i].colors[v * 4 + 3]);
-                    it.element[SEMANTIC_ATTR8].set(this._meshInfo[i].outlines[v * 3 + 0],
+                        this._meshInfo[i].colors[v * 4 + 3]
+                    );
+                    it.element[SEMANTIC_ATTR8].set(
+                        this._meshInfo[i].outlines[v * 3 + 0],
                         this._meshInfo[i].outlines[v * 3 + 1],
-                        this._meshInfo[i].outlines[v * 3 + 2]);
-                    it.element[SEMANTIC_ATTR9].set(this._meshInfo[i].shadows[v * 3 + 0],
+                        this._meshInfo[i].outlines[v * 3 + 2]
+                    );
+                    it.element[SEMANTIC_ATTR9].set(
+                        this._meshInfo[i].shadows[v * 3 + 0],
                         this._meshInfo[i].shadows[v * 3 + 1],
-                        this._meshInfo[i].shadows[v * 3 + 2]);
+                        this._meshInfo[i].shadows[v * 3 + 2]
+                    );
                 }
                 it.next();
             }
@@ -1428,9 +1440,7 @@ class TextElement {
         }
     }
 
-    _onFontRemove(asset) {
-
-    }
+    _onFontRemove(asset) {}
 
     _setTextureParams(mi, texture) {
         if (this._font) {
@@ -1477,19 +1487,19 @@ class TextElement {
         const height = data.info.maps[map].height;
 
         const x = data.chars[char].x;
-        const y =  data.chars[char].y;
+        const y = data.chars[char].y;
 
         const x1 = x;
         const y1 = y;
-        const x2 = (x + data.chars[char].width);
-        const y2 = (y - data.chars[char].height);
-        const edge = 1 - (data.chars[char].height / height);
+        const x2 = x + data.chars[char].width;
+        const y2 = y - data.chars[char].height;
+        const edge = 1 - data.chars[char].height / height;
         return [
             x1 / width,
-            edge - (y1 / height), // bottom left
+            edge - y1 / height, // bottom left
 
-            (x2 / width),
-            edge - (y2 / height)  // top right
+            x2 / width,
+            edge - y2 / height // top right
         ];
     }
 
@@ -1528,8 +1538,7 @@ class TextElement {
     }
 
     _shouldAutoFit() {
-        return this._autoFitWidth && !this._autoWidth ||
-               this._autoFitHeight && !this._autoHeight;
+        return (this._autoFitWidth && !this._autoWidth) || (this._autoFitHeight && !this._autoHeight);
     }
 
     // calculate the number of characters per texture up to, but not including
@@ -1584,7 +1593,7 @@ class TextElement {
 
     set text(value) {
         this._i18nKey = null;
-        const str = value != null && value.toString() || '';
+        const str = (value != null && value.toString()) || '';
         this._setText(str);
     }
 
@@ -1622,9 +1631,7 @@ class TextElement {
         }
         // #endif
 
-        if (this._color.r === r &&
-            this._color.g === g &&
-            this._color.b === b) {
+        if (this._color.r === r && this._color.g === g && this._color.b === b) {
             return;
         }
 
@@ -1642,7 +1649,6 @@ class TextElement {
                 this._updateText();
             }
         } else {
-
             // color uniforms are in linear space
             _tempColor.linear(this._color);
             this._colorUniform[0] = _tempColor.r;
@@ -1952,10 +1958,10 @@ class TextElement {
     }
 
     set outlineColor(value) {
-        const r = (value instanceof Color) ? value.r : value[0];
-        const g = (value instanceof Color) ? value.g : value[1];
-        const b = (value instanceof Color) ? value.b : value[2];
-        const a = (value instanceof Color) ? value.a : value[3];
+        const r = value instanceof Color ? value.r : value[0];
+        const g = value instanceof Color ? value.g : value[1];
+        const b = value instanceof Color ? value.b : value[2];
+        const a = value instanceof Color ? value.a : value[3];
 
         // #if _DEBUG
         if (this._outlineColor === value) {
@@ -1963,10 +1969,12 @@ class TextElement {
         }
         // #endif
 
-        if (this._outlineColor.r === r &&
+        if (
+            this._outlineColor.r === r &&
             this._outlineColor.g === g &&
             this._outlineColor.b === b &&
-            this._outlineColor.a === a) {
+            this._outlineColor.a === a
+        ) {
             return;
         }
 
@@ -2033,10 +2041,10 @@ class TextElement {
     }
 
     set shadowColor(value) {
-        const r = (value instanceof Color) ? value.r : value[0];
-        const g = (value instanceof Color) ? value.g : value[1];
-        const b = (value instanceof Color) ? value.b : value[2];
-        const a = (value instanceof Color) ? value.a : value[3];
+        const r = value instanceof Color ? value.r : value[0];
+        const g = value instanceof Color ? value.g : value[1];
+        const b = value instanceof Color ? value.b : value[2];
+        const a = value instanceof Color ? value.a : value[3];
 
         // #if _DEBUG
         if (this._shadowColor === value) {
@@ -2044,10 +2052,12 @@ class TextElement {
         }
         // #endif
 
-        if (this._shadowColor.r === r &&
+        if (
+            this._shadowColor.r === r &&
             this._shadowColor.g === g &&
             this._shadowColor.b === b &&
-            this._shadowColor.a === a) {
+            this._shadowColor.a === a
+        ) {
             return;
         }
 
@@ -2084,8 +2094,8 @@ class TextElement {
     }
 
     set shadowOffset(value) {
-        const x = (value instanceof Vec2) ? value.x : value[0],
-            y = (value instanceof Vec2) ? value.y : value[1];
+        const x = value instanceof Vec2 ? value.x : value[0],
+            y = value instanceof Vec2 ? value.y : value[1];
         if (this._shadowOffset.x === x && this._shadowOffset.y === y) {
             return;
         }
@@ -2169,7 +2179,7 @@ class TextElement {
         if (this._maxLines === value) return;
         if (value === null && this._maxLines === -1) return;
 
-        this._maxLines = (value === null ? -1 : value);
+        this._maxLines = value === null ? -1 : value;
 
         if (this.font && this._wrapLines) {
             this._updateText();

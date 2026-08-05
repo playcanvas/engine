@@ -13,7 +13,7 @@ class VerticalTiltShiftEffect extends pc.PostEffect {
         super(graphicsDevice);
 
         // Shader author: alteredq / http://alteredqualia.com/
-        const fshader = /* glsl */`
+        const fshader = /* glsl */ `
             uniform sampler2D uColorBuffer;
             uniform float uV;
             uniform float uR;
@@ -76,9 +76,13 @@ VerticalTiltShift.prototype.initialize = function () {
     this.effect = new VerticalTiltShiftEffect(this.app.graphicsDevice);
     this.effect.focus = this.focus;
 
-    this.on('attr:focus', function (value) {
-        this.effect.focus = value;
-    }, this);
+    this.on(
+        'attr:focus',
+        function (value) {
+            this.effect.focus = value;
+        },
+        this
+    );
 
     var queue = this.entity.camera.postEffects;
     queue.addEffect(this.effect);

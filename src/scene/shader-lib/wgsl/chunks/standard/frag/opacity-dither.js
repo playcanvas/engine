@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #if STD_OPACITY_DITHER == BAYER2 || STD_OPACITY_DITHER == BAYER4 || STD_OPACITY_DITHER == BAYER8 || STD_OPACITY_DITHER == BAYER16
     #include "bayerPS"

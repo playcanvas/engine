@@ -25,7 +25,7 @@ class ImmediateBatches {
     }
 
     clear() {
-        this.map.forEach(batch => batch.clear());
+        this.map.forEach((batch) => batch.clear());
     }
 }
 

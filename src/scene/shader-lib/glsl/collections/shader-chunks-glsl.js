@@ -204,8 +204,8 @@ const shaderChunksGLSL = {
     floatAsUintPS,
     fogPS,
     fresnelSchlickPS,
-    frontendCodePS: '',  // empty chunk, supplied by the shader generator
-    frontendDeclPS: '',  // empty chunk, supplied by the shader generator
+    frontendCodePS: '', // empty chunk, supplied by the shader generator
+    frontendDeclPS: '', // empty chunk, supplied by the shader generator
     fullscreenQuadVS,
     gammaPS,
     gles3PS,
@@ -243,14 +243,14 @@ const shaderChunksGLSL = {
     litShaderArgsPS,
     litShaderCorePS,
     litShadowMainPS,
-    litUserDeclarationPS: '',  // empty chunk allowing user to add custom code
-    litUserDeclarationVS: '',  // empty chunk allowing user to add custom code
-    litUserCodePS: '',  // empty chunk allowing user to add custom code
-    litUserCodeVS: '',  // empty chunk allowing user to add custom code
-    litUserMainStartPS: '',  // empty chunk allowing user to add custom code
-    litUserMainStartVS: '',  // empty chunk allowing user to add custom code
-    litUserMainEndPS: '',  // empty chunk allowing user to add custom code
-    litUserMainEndVS: '',  // empty chunk allowing user to add custom code
+    litUserDeclarationPS: '', // empty chunk allowing user to add custom code
+    litUserDeclarationVS: '', // empty chunk allowing user to add custom code
+    litUserCodePS: '', // empty chunk allowing user to add custom code
+    litUserCodeVS: '', // empty chunk allowing user to add custom code
+    litUserMainStartPS: '', // empty chunk allowing user to add custom code
+    litUserMainStartVS: '', // empty chunk allowing user to add custom code
+    litUserMainEndPS: '', // empty chunk allowing user to add custom code
+    litUserMainEndVS: '', // empty chunk allowing user to add custom code
     ltcPS,
     metalnessPS,
     metalnessModulatePS,

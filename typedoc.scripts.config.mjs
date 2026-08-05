@@ -1,4 +1,3 @@
-/* eslint-disable-next-line import/no-unresolved */
 import { OptionDefaults } from 'typedoc';
 
 /**
@@ -64,16 +63,11 @@ const engineSymbols = {
         'XrInputSource'
     ],
     interfaces: [],
-    types: [
-        'HandleEventCallback'
-    ],
+    types: ['HandleEventCallback'],
     variables: [],
     functions: [],
     // Class.member references, mapped to lowercased anchors on the class page
-    members: [
-        'EventHandle.off',
-        'Scene.ambientLight'
-    ]
+    members: ['EventHandle.off', 'Scene.ambientLight']
 };
 
 const playcanvasLinks = {};
@@ -104,10 +98,8 @@ export default {
         allowSyntheticDefaultImports: true,
         checkJs: false
     },
-    excludeTags: [...OptionDefaults.excludeTags, ...ATTRIBUTE_TAGS.filter(t => t !== '@description')],
-    entryPoints: [
-        './scripts/esm'
-    ],
+    excludeTags: [...OptionDefaults.excludeTags, ...ATTRIBUTE_TAGS.filter((t) => t !== '@description')],
+    entryPoints: ['./scripts/esm'],
     entryPointStrategy: 'expand',
     exclude: [
         '**/node_modules/**',
@@ -131,21 +123,18 @@ export default {
     },
     navigationLinks: {
         'Developer Site': 'https://developer.playcanvas.com/',
-        'Blog': 'https://blog.playcanvas.com/',
-        'Discord': 'https://discord.gg/RSaMRzg',
-        'Forum': 'https://forum.playcanvas.com/',
-        'GitHub': 'https://github.com/playcanvas/engine'
+        Blog: 'https://blog.playcanvas.com/',
+        Discord: 'https://discord.gg/RSaMRzg',
+        Forum: 'https://forum.playcanvas.com/',
+        GitHub: 'https://github.com/playcanvas/engine'
     },
     out: 'docs-scripts',
-    plugin: [
-        'typedoc-plugin-mdn-links',
-        'typedoc-plugin-merge-modules'
-    ],
+    plugin: ['typedoc-plugin-mdn-links', 'typedoc-plugin-merge-modules'],
     readme: 'scripts/esm/README.md',
     sidebarLinks: {
-        'Home': '/'
+        Home: '/'
     },
     searchGroupBoosts: {
-        'Classes': 2
+        Classes: 2
     }
 };

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     localPos *= scale * emitterScale;
     localPos += particlePos;
 

@@ -598,8 +598,7 @@ class XrNavigation extends Script {
             // the deepest point that could still pass the distance check - that check measures
             // from the rig position, which sits below the aim origin (the grip), so descend
             // maxTeleportDistance below the rig, not below the origin
-            const fallDepth = this.maxTeleportDistance +
-                Math.max(0, origin.y - this.entity.getPosition().y);
+            const fallDepth = this.maxTeleportDistance + Math.max(0, origin.y - this.entity.getPosition().y);
             tFlight = (vy + Math.sqrt(vy * vy + 2 * g * fallDepth)) / g;
         } else {
             // Closed-form flight time to the navigation plane: larger root of
@@ -615,11 +614,7 @@ class XrNavigation extends Script {
 
         for (let i = 0; i <= segments; i++) {
             const t = (tFlight * i) / segments;
-            this._arcPoints[i].set(
-                origin.x + vx * t,
-                origin.y + vy * t - 0.5 * g * t * t,
-                origin.z + vz * t
-            );
+            this._arcPoints[i].set(origin.x + vx * t, origin.y + vy * t - 0.5 * g * t * t, origin.z + vz * t);
         }
 
         if (this.castRay) {
@@ -851,7 +846,12 @@ class XrNavigation extends Script {
         // Get vertical input from right thumbstick Y axis (negative = up on stick)
         const vertical = -inputSource.gamepad.axes[3];
 
-        const dir = this._snapTrigger(this._verticalSnap, vertical, this.snapVerticalThreshold, this.snapVerticalResetThreshold);
+        const dir = this._snapTrigger(
+            this._verticalSnap,
+            vertical,
+            this.snapVerticalThreshold,
+            this.snapVerticalResetThreshold
+        );
         if (dir) {
             // Check if right grip is held for boost (positive = up, negative = down)
             const boost = inputSource.gamepad.buttons[1]?.pressed;

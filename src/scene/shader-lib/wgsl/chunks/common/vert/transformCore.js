@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
     attribute vertex_position: vec4f;
 

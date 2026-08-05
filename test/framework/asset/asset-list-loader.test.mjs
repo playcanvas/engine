@@ -6,7 +6,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetListLoader', function () {
-
     let app;
     const assetPath = '/test/assets/';
 
@@ -22,16 +21,13 @@ describe('AssetListLoader', function () {
     });
 
     describe('#constructor', function () {
-
         it('instantiates correctly', function () {
             const assetListLoader = new AssetListLoader([], app.assets);
             expect(assetListLoader).to.be.ok;
         });
 
         it('stores a single asset', function () {
-            const assets = [
-                new Asset('model', 'container', { url: `${assetPath}test.glb` })
-            ];
+            const assets = [new Asset('model', 'container', { url: `${assetPath}test.glb` })];
             const assetListLoader = new AssetListLoader(Object.values(assets), app.assets);
             expect(assetListLoader._assets.has(assets[0])).to.equal(true);
         });
@@ -47,28 +43,22 @@ describe('AssetListLoader', function () {
         });
 
         it('stores single copies of duplicated assets', function () {
-            const assets = [
-                new Asset('model', 'container', { url: `${assetPath}test.glb` })
-            ];
+            const assets = [new Asset('model', 'container', { url: `${assetPath}test.glb` })];
             const assetListLoader = new AssetListLoader([assets[0], assets[0]], app.assets);
             expect(assetListLoader._assets.size).to.equal(1);
         });
 
         it('adds the supplied registry to any assets that do not have one', function () {
-            const assets = [
-                new Asset('model', 'container', { url: `${assetPath}test.glb` })
-            ];
+            const assets = [new Asset('model', 'container', { url: `${assetPath}test.glb` })];
             expect(assets[0].registry).to.equal(null);
             const assetListLoader = new AssetListLoader([assets[0], assets[0]], app.assets);
             assetListLoader._assets.forEach((asset) => {
                 expect(asset.registry).to.equal(app.assets);
             });
         });
-
     });
 
     describe('#ready', function () {
-
         it('can return a single loaded asset', (done) => {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
             const assetListLoader = new AssetListLoader([asset], app.assets);
@@ -109,11 +99,9 @@ describe('AssetListLoader', function () {
             });
             assetListLoader.load();
         });
-
     });
 
     describe('#load', function () {
-
         it('can call the ready callback if an asset is already loaded', (done) => {
             const asset = new Asset('model', 'container', { url: `${assetPath}test.glb` });
             const assetListLoader = new AssetListLoader([asset], app.assets);
@@ -315,11 +303,9 @@ describe('AssetListLoader', function () {
             });
             assetListLoader._onError(undefined, assets[0]);
         });
-
     });
 
     describe('#multi-app', function () {
-
         let app2;
 
         beforeEach(function () {
@@ -332,22 +318,18 @@ describe('AssetListLoader', function () {
         });
 
         it('can successfully load assets correctly in multi-app', async () => {
-
-            const loadAssets = () => new Promise((resolve, reject) => {
-                const asset = new Asset('render', 'container', { url: `${assetPath}test.glb` });
-                const assetListLoader = new AssetListLoader([asset], app.assets);
-                assetListLoader.load(() => {
-                    const e = asset.resource.instantiateRenderEntity();
-                    expect(e._app === app).to.be.true;
-                    resolve(e._app);
+            const loadAssets = () =>
+                new Promise((resolve, reject) => {
+                    const asset = new Asset('render', 'container', { url: `${assetPath}test.glb` });
+                    const assetListLoader = new AssetListLoader([asset], app.assets);
+                    assetListLoader.load(() => {
+                        const e = asset.resource.instantiateRenderEntity();
+                        expect(e._app === app).to.be.true;
+                        resolve(e._app);
+                    });
                 });
-            });
 
-            await Promise.all([
-                loadAssets(app),
-                loadAssets(app2)
-            ]);
+            await Promise.all([loadAssets(app), loadAssets(app2)]);
         });
     });
-
 });

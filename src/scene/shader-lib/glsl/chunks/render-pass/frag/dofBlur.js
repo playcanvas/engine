@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #if defined(NEAR_BLUR)
         uniform sampler2D nearTexture;
     #endif

@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 attribute vertex_boneWeights: vec4f;
 attribute vertex_boneIndices: vec4f;

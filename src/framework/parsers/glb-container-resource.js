@@ -46,11 +46,15 @@ class GlbContainerResource {
         if (data.gsplats) {
             for (let i = 0; i < data.gsplats.length; ++i) {
                 const resources = data.gsplats[i];
-                meshGSplats.push(resources ? resources.map((resource) => {
-                    const gsplatAsset = createAsset('gsplat', resource, gsplats.length);
-                    gsplats.push(gsplatAsset);
-                    return gsplatAsset;
-                }) : null);
+                meshGSplats.push(
+                    resources
+                        ? resources.map((resource) => {
+                              const gsplatAsset = createAsset('gsplat', resource, gsplats.length);
+                              gsplats.push(gsplatAsset);
+                              return gsplatAsset;
+                          })
+                        : null
+                );
             }
         }
 
@@ -94,15 +98,22 @@ class GlbContainerResource {
     }
 
     instantiateRenderEntity(options) {
-
         const defaultMaterial = this._defaultMaterial;
         const skinnedMeshInstances = [];
 
-        const createMeshInstance = function (root, entity, mesh, materials, meshDefaultMaterials, skins, gltfNode, nodeInstancingMap) {
-
+        const createMeshInstance = function (
+            root,
+            entity,
+            mesh,
+            materials,
+            meshDefaultMaterials,
+            skins,
+            gltfNode,
+            nodeInstancingMap
+        ) {
             // clone mesh instance
             const materialIndex = meshDefaultMaterials[mesh.id];
-            const material = (materialIndex === undefined) ? defaultMaterial : materials[materialIndex];
+            const material = materialIndex === undefined ? defaultMaterial : materials[materialIndex];
             const meshInstance = new MeshInstance(mesh, material);
 
             // create morph instance
@@ -122,7 +133,6 @@ class GlbContainerResource {
             // if the node is instanced, hook up instancing
             const instData = nodeInstancingMap.get(gltfNode);
             if (instData) {
-
                 const matrices = instData.matrices;
                 const vbFormat = VertexFormat.getDefaultInstancingFormat(mesh.device);
                 const vb = new VertexBuffer(mesh.device, vbFormat, matrices.length / 16, {
@@ -139,7 +149,6 @@ class GlbContainerResource {
 
         // helper function to recursively clone a hierarchy of GraphNodes to Entities
         const cloneHierarchy = (root, node, glb) => {
-
             const entity = new Entity(undefined, this._assets._loader._app);
             node._cloneInternal(entity);
 
@@ -161,7 +170,16 @@ class GlbContainerResource {
                         for (let mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
-                                const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.meshDefaultMaterials, glb.skins, gltfNode, glb.nodeInstancingMap);
+                                const cloneMi = createMeshInstance(
+                                    root,
+                                    entity,
+                                    mesh,
+                                    glb.materials,
+                                    glb.meshDefaultMaterials,
+                                    glb.skins,
+                                    gltfNode,
+                                    glb.nodeInstancingMap
+                                );
 
                                 // add it to list
                                 if (!attachedMi) {
@@ -210,10 +228,16 @@ class GlbContainerResource {
 
             // create render components for mesh instances
             if (attachedMi) {
-                entity.addComponent('render', Object.assign({
-                    type: 'asset',
-                    meshInstances: attachedMi
-                }, options));
+                entity.addComponent(
+                    'render',
+                    Object.assign(
+                        {
+                            type: 'asset',
+                            meshInstances: attachedMi
+                        },
+                        options
+                    )
+                );
 
                 // assign asset id without recreating mesh instances which are already set up with materials
                 entity.render.assignAsset(renderAsset);
@@ -237,7 +261,11 @@ class GlbContainerResource {
 
         // now that the hierarchy is created, create skin instances and resolve bones using the hierarchy
         skinnedMeshInstances.forEach((data) => {
-            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(data.meshInstance.mesh.skin, data.rootBone, data.entity);
+            data.meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(
+                data.meshInstance.mesh.skin,
+                data.rootBone,
+                data.entity
+            );
             data.meshInstance.node.render.rootBone = data.rootBone;
         });
 
@@ -291,7 +319,6 @@ class GlbContainerResource {
 
     // helper function to create a single hierarchy from an array of nodes
     static createSceneHierarchy(sceneNodes, nodeType) {
-
         // create a single root of the hierarchy - either the single scene, or a new Entity parent if multiple scenes
         let root = null;
         if (sceneNodes.length === 1) {
@@ -310,10 +337,9 @@ class GlbContainerResource {
 
     // create a Model from the parsed GLB data structures
     static createModel(glb, defaultMaterial) {
-
         const createMeshInstance = function (model, mesh, skins, skinInstances, materials, node, gltfNode) {
             const materialIndex = glb.meshDefaultMaterials[mesh.id];
-            const material = (materialIndex === undefined) ? defaultMaterial : materials[materialIndex];
+            const material = materialIndex === undefined ? defaultMaterial : materials[materialIndex];
             const meshInstance = new MeshInstance(mesh, material, node);
 
             if (mesh.morph) {

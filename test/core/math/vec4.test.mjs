@@ -3,9 +3,7 @@ import { expect } from 'chai';
 import { Vec4 } from '../../../src/core/math/vec4.js';
 
 describe('Vec4', function () {
-
     describe('#constructor', function () {
-
         it('supports zero arguments', function () {
             const v = new Vec4();
             expect(v.x).to.equal(0);
@@ -29,11 +27,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(3);
             expect(v.w).to.equal(4);
         });
-
     });
 
     describe('#add', function () {
-
         it('adds a vector to another in place', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -52,11 +48,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(6);
             expect(v1.w).to.equal(8);
         });
-
     });
 
     describe('#add2', function () {
-
         it('adds two vectors together and writes result to a third vector', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -76,11 +70,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(6);
             expect(v1.w).to.equal(8);
         });
-
     });
 
     describe('#addScalar', function () {
-
         it('adds a scalar in place', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.addScalar(2);
@@ -89,11 +81,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(5);
             expect(v.w).to.equal(6);
         });
-
     });
 
     describe('#addScaled', function () {
-
         it('adds a scaled vector', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.addScaled(Vec4.ONE, 2);
@@ -102,11 +92,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(5);
             expect(v.w).to.equal(6);
         });
-
     });
 
     describe('#ceil', function () {
-
         it('leaves integers unchanged', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.ceil();
@@ -124,11 +112,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(4);
             expect(v.w).to.equal(5);
         });
-
     });
 
     describe('#clone', function () {
-
         it('clones a vector', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = v1.clone();
@@ -145,11 +131,9 @@ describe('Vec4', function () {
             const b = a.clone();
             expect(b).to.be.an.instanceof(UserVec4);
         });
-
     });
 
     describe('#copy', function () {
-
         it('copies a vector', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4();
@@ -159,11 +143,9 @@ describe('Vec4', function () {
             expect(v2.z).to.equal(3);
             expect(v2.w).to.equal(4);
         });
-
     });
 
     describe('#div', function () {
-
         it('divides a vector by another in place', function () {
             const v1 = new Vec4(12, 12, 12, 12);
             const v2 = new Vec4(4, 3, 2, 1);
@@ -182,11 +164,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(1);
             expect(v1.w).to.equal(1);
         });
-
     });
 
     describe('#div2', function () {
-
         it('divides a vector by another vector and writes the result to a third vector', function () {
             const v1 = new Vec4(12, 12, 12, 12);
             const v2 = new Vec4(4, 3, 2, 1);
@@ -206,11 +186,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(1);
             expect(v1.w).to.equal(1);
         });
-
     });
 
     describe('#divScalar', function () {
-
         it('divides a vector by a scalar in place', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.divScalar(2);
@@ -219,11 +197,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(1.5);
             expect(v.w).to.equal(2);
         });
-
     });
 
     describe('#dot', function () {
-
         it('calculates dot product of two arbitrary non-unit vectors', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -243,11 +219,9 @@ describe('Vec4', function () {
             const v2 = new Vec4(0, 0, 1, 0);
             expect(v1.dot(v2)).to.equal(0);
         });
-
     });
 
     describe('#equals', function () {
-
         it('checks for equality of the same vector', function () {
             const v = new Vec4(1, 2, 3, 4);
             expect(v.equals(v)).to.be.true;
@@ -278,11 +252,9 @@ describe('Vec4', function () {
             const v4 = new Vec4(0.1 + epsilon + Number.EPSILON, 0.2, 0.3, 0.4);
             expect(v1.equalsApprox(v4, epsilon)).to.be.false;
         });
-
     });
 
     describe('#floor', function () {
-
         it('leaves integers unchanged', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.floor();
@@ -300,11 +272,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(3);
             expect(v.w).to.equal(4);
         });
-
     });
 
     describe('#length', function () {
-
         it('calculates the length of a zero length vector', function () {
             const v = new Vec4();
             expect(v.length()).to.equal(0);
@@ -314,11 +284,9 @@ describe('Vec4', function () {
             const v = new Vec4(0, 3, 4, 0);
             expect(v.length()).to.equal(5);
         });
-
     });
 
     describe('#lengthSq', function () {
-
         it('calculates the length squared of a zero length vector', function () {
             const v = new Vec4();
             expect(v.length()).to.equal(0);
@@ -328,11 +296,9 @@ describe('Vec4', function () {
             const v = new Vec4(0, 3, 4, 0);
             expect(v.lengthSq()).to.equal(25);
         });
-
     });
 
     describe('#lerp', function () {
-
         it('linearly interpolates between two vectors with alpha of 0', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -365,11 +331,9 @@ describe('Vec4', function () {
             expect(v3.z).to.equal(7);
             expect(v3.w).to.equal(8);
         });
-
     });
 
     describe('#max', function () {
-
         it('handles left hand larger than right hand', function () {
             const v1 = new Vec4(5, 6, 7, 8);
             const v2 = new Vec4(1, 2, 3, 4);
@@ -389,11 +353,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(7);
             expect(v1.w).to.equal(8);
         });
-
     });
 
     describe('#min', function () {
-
         it('handles left hand larger than right hand', function () {
             const v1 = new Vec4(5, 6, 7, 8);
             const v2 = new Vec4(1, 2, 3, 4);
@@ -413,11 +375,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(3);
             expect(v1.w).to.equal(4);
         });
-
     });
 
     describe('#mul', function () {
-
         it('multiplies a vector by another in place', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -436,11 +396,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(9);
             expect(v1.w).to.equal(16);
         });
-
     });
 
     describe('#mul2', function () {
-
         it('multiplies a vector by another vector and writes the result to a third vector', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -460,11 +418,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(9);
             expect(v1.w).to.equal(16);
         });
-
     });
 
     describe('#mulScalar', function () {
-
         it('multiplies a vector by a scalar in place', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.mulScalar(2);
@@ -473,11 +429,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(6);
             expect(v.w).to.equal(8);
         });
-
     });
 
     describe('#normalize', function () {
-
         it('handles a zero length vector', function () {
             const v = new Vec4();
             v.normalize();
@@ -492,11 +446,9 @@ describe('Vec4', function () {
             v.normalize();
             expect(v.length()).to.be.closeTo(1, 0.00001);
         });
-
     });
 
     describe('#round', function () {
-
         it('leaves integers unchanged', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.round();
@@ -514,11 +466,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(3);
             expect(v.w).to.equal(4);
         });
-
     });
 
     describe('#set', function () {
-
         it('sets a vector to number values', function () {
             const v = new Vec4();
             v.set(1, 2, 3, 4);
@@ -527,11 +477,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(3);
             expect(v.w).to.equal(4);
         });
-
     });
 
     describe('#sub', function () {
-
         it('subtracts a vector from another in place', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -550,11 +498,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(0);
             expect(v1.w).to.equal(0);
         });
-
     });
 
     describe('#sub2', function () {
-
         it('subtracts a vector from another vector and writes the result to a third vector', function () {
             const v1 = new Vec4(1, 2, 3, 4);
             const v2 = new Vec4(5, 6, 7, 8);
@@ -574,11 +520,9 @@ describe('Vec4', function () {
             expect(v1.z).to.equal(0);
             expect(v1.w).to.equal(0);
         });
-
     });
 
     describe('#subScalar', function () {
-
         it('subtracts a scalar from a vector in place', function () {
             const v = new Vec4(1, 2, 3, 4);
             v.subScalar(2);
@@ -587,11 +531,9 @@ describe('Vec4', function () {
             expect(v.z).to.equal(1);
             expect(v.w).to.equal(2);
         });
-
     });
 
     describe('#fromArray', function () {
-
         it('sets a vector from an array', function () {
             const v = new Vec4();
             v.fromArray([1, 2, 3, 4]);
@@ -609,20 +551,16 @@ describe('Vec4', function () {
             expect(v.z).to.equal(3);
             expect(v.w).to.equal(4);
         });
-
     });
 
     describe('#toString', function () {
-
         it('returns a string representation of a vector', function () {
             const v = new Vec4(1, 2, 3, 4);
             expect(v.toString()).to.equal('[1, 2, 3, 4]');
         });
-
     });
 
     describe('#toArray', function () {
-
         it('returns an array representation of a vector', function () {
             const v = new Vec4(1, 2, 3, 4);
             expect(v.toArray()).to.eql([1, 2, 3, 4]);
@@ -634,7 +572,5 @@ describe('Vec4', function () {
             v.toArray(array, 2);
             expect(array).to.eql([0, 0, 1, 2, 3, 4, 0, 0]);
         });
-
     });
-
 });

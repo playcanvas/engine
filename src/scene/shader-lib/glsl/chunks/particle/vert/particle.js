@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 vec3 unpack3NFloats(float src) {
     float r = fract(src);
     float g = fract(src * 256.0);

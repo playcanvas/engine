@@ -1,7 +1,7 @@
 // Compressed GSplat format - work variables, helpers, and read functions
 // packedTexture is auto-generated from GSplatFormat streams
 // chunkTexture uses custom UV calculation and must be declared manually
-export default /* wgsl */`
+export default /* wgsl */ `
 #include "gsplatPackingPS"
 
 // manual texture declaration - uses custom UV, not splatUV

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 mat3 dNormalMatrix;
 
 vec3 getNormal() {

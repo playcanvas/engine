@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 uniform material_iridescenceThicknessMax: f32;
 
 #ifdef STD_IRIDESCENCETHICKNESS_TEXTURE

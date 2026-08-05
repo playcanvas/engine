@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     vec3 moveDir = inVel * stretch;
     vec3 posPrev = particlePos - moveDir;
     posPrev += particlePosMoved;

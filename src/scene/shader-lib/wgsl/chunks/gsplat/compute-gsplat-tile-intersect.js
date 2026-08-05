@@ -12,7 +12,7 @@
 // in the intersection test.
 //   cx = -2 * coeffX,  cy = -coeffXY,  cz = -2 * coeffY
 // To recover evaluation coefficients: coeffX = -cx/2, coeffY = -cz/2, coeffXY = -cy
-export const computeGsplatTileIntersectSource = /* wgsl */`
+export const computeGsplatTileIntersectSource = /* wgsl */ `
 
 struct SplatTileEval {
     radiusFactor: f32,

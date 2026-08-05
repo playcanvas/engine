@@ -18,7 +18,7 @@ class Scanner {
         this._symbols = symbols;
         this._index = 0;
         this._last = 0;
-        this._cur = (this._symbols.length > 0) ? this._symbols[0] : null;
+        this._cur = this._symbols.length > 0 ? this._symbols[0] : null;
         this._buf = [];
         this._mode = 'text';
         this._error = null;
@@ -53,13 +53,21 @@ class Scanner {
 
     // print the scanner output
     debugPrint() {
-        const tokenStrings = ['EOF', 'ERROR', 'TEXT', 'OPEN_BRACKET', 'CLOSE_BRACKET', 'EQUALS', 'STRING', 'IDENTIFIER', 'WHITESPACE'];
+        const tokenStrings = [
+            'EOF',
+            'ERROR',
+            'TEXT',
+            'OPEN_BRACKET',
+            'CLOSE_BRACKET',
+            'EQUALS',
+            'STRING',
+            'IDENTIFIER',
+            'WHITESPACE'
+        ];
         let token = this.read();
         let result = '';
         while (true) {
-            result += `${(result.length > 0 ? '\n' : '') +
-                        tokenStrings[token]
-            } '${this.buf().join('')}'`;
+            result += `${(result.length > 0 ? '\n' : '') + tokenStrings[token]} '${this.buf().join('')}'`;
             if (token === EOF_TOKEN || token === ERROR_TOKEN) {
                 break;
             }
@@ -74,7 +82,7 @@ class Scanner {
         if (this._eof()) {
             return EOF_TOKEN;
         }
-        return (this._mode === 'text') ? this._text() : this._tag();
+        return this._mode === 'text' ? this._text() : this._tag();
     }
 
     // read text block until eof or start of tag
@@ -83,14 +91,14 @@ class Scanner {
             switch (this._cur) {
                 case null:
                     // reached end of input
-                    return (this._buf.length > 0) ? TEXT_TOKEN : EOF_TOKEN;
+                    return this._buf.length > 0 ? TEXT_TOKEN : EOF_TOKEN;
                 case '[':
                     // start of tag mode
                     this._mode = 'tag';
-                    return (this._buf.length > 0) ? TEXT_TOKEN : this._tag();
+                    return this._buf.length > 0 ? TEXT_TOKEN : this._tag();
                 case '\\':
                     // handle escape sequence
-                    this._next();           // skip \
+                    this._next(); // skip \
                     switch (this._cur) {
                         case '[':
                             this._store();
@@ -152,14 +160,14 @@ class Scanner {
     }
 
     _string() {
-        this._next();       // skip "
+        this._next(); // skip "
         while (true) {
             switch (this._cur) {
                 case null:
                     this._error = 'unexpected end of input reading string';
                     return ERROR_TOKEN;
                 case '"':
-                    this._next();           // skip "
+                    this._next(); // skip "
                     return STRING_TOKEN;
                 default:
                     this._store();
@@ -170,15 +178,14 @@ class Scanner {
 
     _identifier() {
         this._store();
-        while (this._cur !== null &&
-                this._isIdentifierSymbol(this._cur)) {
+        while (this._cur !== null && this._isIdentifierSymbol(this._cur)) {
             this._store();
         }
         return IDENTIFIER_TOKEN;
     }
 
     _isIdentifierSymbol(s) {
-        return s.length === 1 && (s.match(IDENTIFIER_REGEX) !== null);
+        return s.length === 1 && s.match(IDENTIFIER_REGEX) !== null;
     }
 
     _eof() {
@@ -188,7 +195,7 @@ class Scanner {
     _next() {
         if (!this._eof()) {
             this._index++;
-            this._cur = (this._index < this._symbols.length) ? this._symbols[this._index] : null;
+            this._cur = this._index < this._symbols.length ? this._symbols[this._index] : null;
         }
         return this._cur;
     }
@@ -247,8 +254,7 @@ class Parser {
 
     // access an error message if the parser failed
     error() {
-        return `Error evaluating markup at #${this._scanner.last().toString()
-        } (${this._scanner.error() || this._error})`;
+        return `Error evaluating markup at #${this._scanner.last().toString()} (${this._scanner.error() || this._error})`;
     }
 
     _parseTag(symbols, tags) {
@@ -282,7 +288,7 @@ class Parser {
         const tag = {
             name: name,
             value: null,
-            attributes: { },
+            attributes: {},
             start: symbols.length,
             end: null
         };
@@ -340,7 +346,7 @@ function merge(target, source) {
         const value = source[key];
         if (value instanceof Object) {
             if (!target.hasOwnProperty(key)) {
-                target[key] = { };
+                target[key] = {};
             }
             merge(target[key], source[key]);
         } else {
@@ -353,10 +359,10 @@ function combineTags(tags) {
     if (tags.length === 0) {
         return null;
     }
-    const result = { };
+    const result = {};
     for (let index = 0; index < tags.length; ++index) {
         const tag = tags[index];
-        const tmp = { };
+        const tmp = {};
         tmp[tag.name] = { value: tag.value, attributes: tag.attributes };
         merge(result, tmp);
     }
@@ -377,7 +383,7 @@ function resolveMarkupTags(tags, numSymbols) {
     }
 
     // make list of tag start/end edges
-    const edges = { };
+    const edges = {};
     for (let index = 0; index < tags.length; ++index) {
         const tag = tags[index];
         if (!edges.hasOwnProperty(tag.start)) {
@@ -406,9 +412,11 @@ function resolveMarkupTags(tags, numSymbols) {
 
     function removeTags(tags) {
         tagStack = tagStack.filter((tag) => {
-            return tags.find((t) => {
-                return t === tag;
-            }) === undefined;
+            return (
+                tags.find((t) => {
+                    return t === tag;
+                }) === undefined
+            );
         });
     }
 

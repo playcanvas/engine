@@ -1,4 +1,10 @@
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import {
+    PIXELFORMAT_DEPTH,
+    PIXELFORMAT_DEPTH16,
+    PIXELFORMAT_R32F,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA32F
+} from '../platform/graphics/constants.js';
 
 /**
  * Subtract the color of the source fragment from the destination fragment and write the result to
@@ -339,7 +345,7 @@ export const SHADOW_PCF5_32F = 4;
  * @deprecated
  * @ignore
  */
-export const SHADOW_PCF5 = 4;  // alias for SHADOW_PCF5_32F for backwards compatibility
+export const SHADOW_PCF5 = 4; // alias for SHADOW_PCF5_32F for backwards compatibility
 
 /**
  * A shadow sampling technique using a 32-bit shadow map that performs a single depth comparison for
@@ -353,7 +359,7 @@ export const SHADOW_PCF1_32F = 5;
  * @deprecated
  * @ignore
  */
-export const SHADOW_PCF1 = 5;  // alias for SHADOW_PCF1_32F for backwards compatibility
+export const SHADOW_PCF1 = 5; // alias for SHADOW_PCF1_32F for backwards compatibility
 
 /**
  * A shadow sampling technique using a 32-bit shadow map that adjusts filter size based on blocker
@@ -397,15 +403,15 @@ export const SHADOW_PCF5_16F = 9;
  * @ignore
  */
 export const shadowTypeInfo = new Map([
-    [SHADOW_PCF1_32F,    { name: 'PCF1_32F', kind: 'PCF1', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF3_32F,    { name: 'PCF3_32F', kind: 'PCF3', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF5_32F,    { name: 'PCF5_32F', kind: 'PCF5', format: PIXELFORMAT_DEPTH, pcf: true }],
-    [SHADOW_PCF1_16F,    { name: 'PCF1_16F', kind: 'PCF1', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF3_16F,    { name: 'PCF3_16F', kind: 'PCF3', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_PCF5_16F,    { name: 'PCF5_16F', kind: 'PCF5', format: PIXELFORMAT_DEPTH16, pcf: true }],
-    [SHADOW_VSM_16F,     { name: 'VSM_16F', kind: 'VSM', format: PIXELFORMAT_RGBA16F, vsm: true }],
-    [SHADOW_VSM_32F,     { name: 'VSM_32F', kind: 'VSM', format: PIXELFORMAT_RGBA32F, vsm: true }],
-    [SHADOW_PCSS_32F,    { name: 'PCSS_32F', kind: 'PCSS', format: PIXELFORMAT_R32F, pcss: true }]
+    [SHADOW_PCF1_32F, { name: 'PCF1_32F', kind: 'PCF1', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF3_32F, { name: 'PCF3_32F', kind: 'PCF3', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF5_32F, { name: 'PCF5_32F', kind: 'PCF5', format: PIXELFORMAT_DEPTH, pcf: true }],
+    [SHADOW_PCF1_16F, { name: 'PCF1_16F', kind: 'PCF1', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF3_16F, { name: 'PCF3_16F', kind: 'PCF3', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_PCF5_16F, { name: 'PCF5_16F', kind: 'PCF5', format: PIXELFORMAT_DEPTH16, pcf: true }],
+    [SHADOW_VSM_16F, { name: 'VSM_16F', kind: 'VSM', format: PIXELFORMAT_RGBA16F, vsm: true }],
+    [SHADOW_VSM_32F, { name: 'VSM_32F', kind: 'VSM', format: PIXELFORMAT_RGBA32F, vsm: true }],
+    [SHADOW_PCSS_32F, { name: 'PCSS_32F', kind: 'PCSS', format: PIXELFORMAT_R32F, pcss: true }]
 ]);
 
 /**
@@ -691,15 +697,7 @@ export const TONEMAP_NEUTRAL = 5;
 export const TONEMAP_NONE = 6;
 
 // names of the tonemaps
-export const tonemapNames = [
-    'LINEAR',
-    'FILMIC',
-    'HEJL',
-    'ACES',
-    'ACES2',
-    'NEUTRAL',
-    'NONE'
-];
+export const tonemapNames = ['LINEAR', 'FILMIC', 'HEJL', 'ACES', 'ACES2', 'NEUTRAL', 'NONE'];
 
 /**
  * No specular occlusion.

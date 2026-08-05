@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 float sheenD(vec3 normal, vec3 h, float roughness) {
     const float PI = 3.141592653589793;

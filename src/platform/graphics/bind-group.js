@@ -131,7 +131,11 @@ class BindGroup {
      */
     setUniformBuffer(name, uniformBuffer) {
         const index = this.format.bufferFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a uniform [${name}] on a bind group with id ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
+        Debug.assert(
+            index !== undefined,
+            `Setting a uniform [${name}] on a bind group with id ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`,
+            this
+        );
         if (this.uniformBuffers[index] !== uniformBuffer) {
             this.uniformBuffers[index] = uniformBuffer;
             this.dirty = true;
@@ -146,7 +150,11 @@ class BindGroup {
      */
     setStorageBuffer(name, storageBuffer) {
         const index = this.format.storageBufferFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a storage buffer [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
+        Debug.assert(
+            index !== undefined,
+            `Setting a storage buffer [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`,
+            this
+        );
         if (this.storageBuffers[index] !== storageBuffer) {
             this.storageBuffers[index] = storageBuffer;
             this.dirty = true;
@@ -161,7 +169,11 @@ class BindGroup {
      */
     setTexture(name, value) {
         const index = this.format.textureFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
+        Debug.assert(
+            index !== undefined,
+            `Setting a texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`,
+            this
+        );
 
         // Get the actual texture for version checking
         const texture = value instanceof TextureView ? value.texture : value;
@@ -187,7 +199,11 @@ class BindGroup {
      */
     setStorageTexture(name, value) {
         const index = this.format.storageTextureFormatsMap.get(name);
-        Debug.assert(index !== undefined, `Setting a storage texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
+        Debug.assert(
+            index !== undefined,
+            `Setting a storage texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`,
+            this
+        );
 
         // Get the actual texture for version checking
         const texture = value instanceof TextureView ? value.texture : value;
@@ -219,7 +235,6 @@ class BindGroup {
      * uniform buffers needs to be updated before calling this method.
      */
     update() {
-
         // TODO: implement faster version of this, which does not call SetTexture, which does a map lookup
         const { textureFormats, storageTextureFormats, storageBufferFormats } = this.format;
 
@@ -230,17 +245,23 @@ class BindGroup {
             // custom error handling for known global textures
             if (!value) {
                 if (textureFormat.name === 'uSceneDepthMap') {
-                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    Debug.errorOnce(
+                        `A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`
+                    );
                     value = getBuiltInTexture(this.device, 'white');
                 }
                 if (textureFormat.name === 'uSceneColorMap') {
-                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
+                    Debug.errorOnce(
+                        `A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`
+                    );
                     value = getBuiltInTexture(this.device, 'pink');
                 }
 
                 // missing generic texture
                 if (!value) {
-                    Debug.errorOnce(`Texture ${textureFormat.name} is required for rendering but was not set. Rendering [${DebugGraphics.toString()}]`);
+                    Debug.errorOnce(
+                        `Texture ${textureFormat.name} is required for rendering but was not set. Rendering [${DebugGraphics.toString()}]`
+                    );
                     value = getBuiltInTexture(this.device, 'pink');
                 }
             }
@@ -251,14 +272,22 @@ class BindGroup {
         for (let i = 0; i < storageTextureFormats.length; i++) {
             const storageTextureFormat = storageTextureFormats[i];
             const value = storageTextureFormat.scopeId.value;
-            Debug.assert(value, `Value was not set when assigning storage texture slot [${storageTextureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
+            Debug.assert(
+                value,
+                `Value was not set when assigning storage texture slot [${storageTextureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`,
+                this
+            );
             this.setStorageTexture(storageTextureFormat.name, value);
         }
 
         for (let i = 0; i < storageBufferFormats.length; i++) {
             const storageBufferFormat = storageBufferFormats[i];
             const value = storageBufferFormat.scopeId.value;
-            Debug.assert(value, `Value was not set when assigning storage buffer slot [${storageBufferFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
+            Debug.assert(
+                value,
+                `Value was not set when assigning storage buffer slot [${storageBufferFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`,
+                this
+            );
             this.setStorageBuffer(storageBufferFormat.name, value);
         }
 

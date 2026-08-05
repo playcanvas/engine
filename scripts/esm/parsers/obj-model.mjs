@@ -36,13 +36,18 @@ class ObjModelParser {
     }
 
     load(url, callback, asset) {
-        this.handler.fetch(url, Http.ResponseType.TEXT, (err, response) => {
-            if (err) {
-                callback(err);
-            } else {
-                this.parse(response, callback);
-            }
-        }, asset);
+        this.handler.fetch(
+            url,
+            Http.ResponseType.TEXT,
+            (err, response) => {
+                if (err) {
+                    callback(err);
+                } else {
+                    this.parse(response, callback);
+                }
+            },
+            asset
+        );
     }
 
     parse(input, callback) {
@@ -57,7 +62,9 @@ class ObjModelParser {
         };
         let group = 'default'; // current group
         const lines = input.split('\n');
-        const verts = [], normals = [], uvs = [];
+        const verts = [],
+            normals = [],
+            uvs = [];
 
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
@@ -94,7 +101,6 @@ class ObjModelParser {
                             parsed[group].normals.push(normals[r[2] * 3], normals[r[2] * 3 + 1], normals[r[2] * 3 + 2]);
                         } // expand normals from indices
                     }
-
                 } else if (parts.length === 5) {
                     // quads
                     const order = [1, 2, 3, 3, 4, 1]; // split quad into to triangles;

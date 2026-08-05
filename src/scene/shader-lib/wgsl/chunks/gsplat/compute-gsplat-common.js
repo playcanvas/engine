@@ -1,4 +1,4 @@
-export const computeGsplatCommonSource = /* wgsl */`
+export const computeGsplatCommonSource = /* wgsl */ `
 
 #include "halfTypesCS"
 

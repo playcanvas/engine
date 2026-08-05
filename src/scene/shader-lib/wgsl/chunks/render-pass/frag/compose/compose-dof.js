@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     #ifdef DOF
         var cocTexture: texture_2d<f32>;
         var cocTextureSampler: sampler;

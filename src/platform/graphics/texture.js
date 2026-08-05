@@ -4,19 +4,41 @@ import { math } from '../../core/math/math.js';
 import {
     isCompressedPixelFormat,
     getPixelFormatArrayType,
-    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
+    ADDRESS_REPEAT,
+    ADDRESS_CLAMP_TO_EDGE,
+    FILTER_LINEAR,
+    FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_LESS,
     PIXELFORMAT_RGBA8,
-    TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
+    TEXHINT_SHADOWMAP,
+    TEXHINT_ASSET,
+    TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
-    TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
-    isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
-    TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
-    TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
+    TEXTUREPROJECTION_NONE,
+    TEXTUREPROJECTION_CUBE,
+    TEXTURETYPE_DEFAULT,
+    TEXTURETYPE_RGBM,
+    TEXTURETYPE_RGBE,
+    TEXTURETYPE_RGBP,
+    TEXTURETYPE_SWIZZLEGGGR,
+    isIntegerPixelFormat,
+    FILTER_NEAREST,
+    TEXTURELOCK_NONE,
+    TEXTURELOCK_READ,
+    TEXPROPERTY_MIN_FILTER,
+    TEXPROPERTY_MAG_FILTER,
+    TEXPROPERTY_ADDRESS_U,
+    TEXPROPERTY_ADDRESS_V,
+    TEXPROPERTY_ADDRESS_W,
+    TEXPROPERTY_COMPARE_ON_READ,
+    TEXPROPERTY_COMPARE_FUNC,
+    TEXPROPERTY_ANISOTROPY,
     TEXPROPERTY_ALL,
-    requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
+    requiresManualGamma,
+    pixelFormatInfo,
+    isSrgbPixelFormat,
+    pixelFormatLinearToGamma,
+    pixelFormatGammaToLinear
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
 import { TextureView } from './texture-view.js';
@@ -278,9 +300,21 @@ class Texture {
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
         Debug.assert(this.device, 'Texture constructor requires a graphicsDevice to be valid');
-        Debug.assert(!options.width || Number.isInteger(options.width), 'Texture width must be an integer number, got', options);
-        Debug.assert(!options.height || Number.isInteger(options.height), 'Texture height must be an integer number, got', options);
-        Debug.assert(!options.depth || Number.isInteger(options.depth), 'Texture depth must be an integer number, got', options);
+        Debug.assert(
+            !options.width || Number.isInteger(options.width),
+            'Texture width must be an integer number, got',
+            options
+        );
+        Debug.assert(
+            !options.height || Number.isInteger(options.height),
+            'Texture height must be an integer number, got',
+            options
+        );
+        Debug.assert(
+            !options.depth || Number.isInteger(options.depth),
+            'Texture depth must be an integer number, got',
+            options
+        );
 
         this.name = options.name ?? '';
 
@@ -347,18 +381,17 @@ class Texture {
 
         this.recreateImpl(upload);
 
-        Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
-            `${this.cubemap ? '[Cubemap]' : ''}` +
-            `${this.volume ? '[Volume]' : ''}` +
-            `${this.array ? '[Array]' : ''}` +
-            `[MipLevels:${this.numLevels}]`, this);
+        Debug.trace(
+            TRACEID_TEXTURE_ALLOC,
+            `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]${this.cubemap ? '[Cubemap]' : ''}${this.volume ? '[Volume]' : ''}${this.array ? '[Array]' : ''}[MipLevels:${this.numLevels}]`,
+            this
+        );
     }
 
     /**
      * Frees resources associated with this texture.
      */
     destroy() {
-
         Debug.trace(TRACEID_TEXTURE_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
 
         const device = this.device;
@@ -431,7 +464,6 @@ class Texture {
     }
 
     recreateImpl(upload = true) {
-
         const { device } = this;
 
         // destroy existing
@@ -464,9 +496,7 @@ class Texture {
      * @ignore
      */
     resize(width, height, depth = 1) {
-
         if (this.width !== width || this.height !== height || this.depth !== depth) {
-
             // destroy texture impl
             const device = this.device;
             this.adjustVramSizeTracking(device._vram, -this._gpuSize);
@@ -501,8 +531,10 @@ class Texture {
      * @ignore
      */
     adjustVramSizeTracking(vram, size) {
-
-        Debug.trace(TRACEID_VRAM_TEXTURE, `${this.id} ${this.name} size: ${size} vram.texture: ${vram.tex} => ${vram.tex + size}`);
+        Debug.trace(
+            TRACEID_VRAM_TEXTURE,
+            `${this.id} ${this.name} size: ${size} vram.texture: ${vram.tex} => ${vram.tex + size}`
+        );
 
         vram.tex += size;
 
@@ -523,11 +555,14 @@ class Texture {
     }
 
     _updateNumLevels() {
-
         const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
         const requestedLevels = this._numLevelsRequested;
         if (requestedLevels !== undefined && requestedLevels > maxLevels) {
-            Debug.warn('Texture#numLevels: requested mip level count is greater than the maximum possible, will be clamped to', maxLevels, this);
+            Debug.warn(
+                'Texture#numLevels: requested mip level count is greater than the maximum possible, will be clamped to',
+                maxLevels,
+                this
+            );
         }
 
         this._numLevels = Math.min(requestedLevels ?? maxLevels, maxLevels);
@@ -563,7 +598,10 @@ class Texture {
     set minFilter(v) {
         if (this._minFilter !== v) {
             if (isIntegerPixelFormat(this._format)) {
-                Debug.warn('Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST', this);
+                Debug.warn(
+                    'Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST',
+                    this
+                );
             } else {
                 this._minFilter = v;
                 this.propertyChanged(TEXPROPERTY_MIN_FILTER);
@@ -591,7 +629,10 @@ class Texture {
     set magFilter(v) {
         if (this._magFilter !== v) {
             if (isIntegerPixelFormat(this._format)) {
-                Debug.warn('Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST', this);
+                Debug.warn(
+                    'Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST',
+                    this
+                );
             } else {
                 this._magFilter = v;
                 this.propertyChanged(TEXPROPERTY_MAG_FILTER);
@@ -669,7 +710,7 @@ class Texture {
      */
     set addressW(addressW) {
         if (!this._volume) {
-            Debug.warn('Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
+            Debug.warn("Texture#addressW: Can't set W addressing mode for a non-3D texture.");
             return;
         }
         if (addressW !== this._addressW) {
@@ -771,9 +812,11 @@ class Texture {
      */
     set mipmaps(v) {
         if (this._mipmaps !== v) {
-
             if (isIntegerPixelFormat(this._format)) {
-                Debug.warn('Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false', this);
+                Debug.warn(
+                    'Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false',
+                    this
+                );
             } else {
                 const oldMipmaps = this._mipmaps;
                 const oldNumLevels = this._numLevels;
@@ -784,7 +827,10 @@ class Texture {
                 // Array textures (and all textures on WebGPU) use immutable storage, so changing
                 // the mip count requires re-creating the texture.
                 if ((this.array || this.device.isWebGPU) && this._numLevels !== oldNumLevels) {
-                    Debug.warn(`Changing mipmaps of texture '${this.name}' requires it to be re-created. This is an expensive operation, and the texture should be created with the desired mipmaps setting to avoid this.`, this);
+                    Debug.warn(
+                        `Changing mipmaps of texture '${this.name}' requires it to be re-created. This is an expensive operation, and the texture should be created with the desired mipmaps setting to avoid this.`,
+                        this
+                    );
                     this.recreateImpl();
                 } else if (this._mipmaps !== oldMipmaps) {
                     this.propertyChanged(TEXPROPERTY_MIN_FILTER);
@@ -994,26 +1040,28 @@ class Texture {
     set srgb(value) {
         const currentSrgb = isSrgbPixelFormat(this.format);
         if (value !== currentSrgb) {
-
             if (value) {
-
                 // switch to sRGB
                 const srgbFormat = pixelFormatLinearToGamma(this.format);
                 if (this._format !== srgbFormat) {
-                    Debug.warn(`Switching format of texture '${this.name}' to sRGB equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(srgbFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
+                    Debug.warn(
+                        `Switching format of texture '${this.name}' to sRGB equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(srgbFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`,
+                        this
+                    );
                     this._format = srgbFormat;
                     this.recreateImpl();
 
                     // update all shaders to respect the encoding of the texture (needed by the standard material)
                     this.device._shadersDirty = true;
                 }
-
             } else {
-
                 // switch to linear
                 const linearFormat = pixelFormatGammaToLinear(this.format);
                 if (this._format !== linearFormat) {
-                    Debug.warn(`Switching format of texture '${this.name}' to linear equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(linearFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`, this);
+                    Debug.warn(
+                        `Switching format of texture '${this.name}' to linear equivalent: ${pixelFormatInfo.get(this.format)?.name} -> ${pixelFormatInfo.get(linearFormat)?.name}. This is an expensive operation, and the texture should be created using the right format to avoid this.`,
+                        this
+                    );
                     this._format = linearFormat;
                     this.recreateImpl();
 
@@ -1169,11 +1217,15 @@ class Texture {
     setSource(source, mipLevel = 0) {
         if (this.device._isHTMLElementInterface(source)) {
             if (!this.device.supportsHtmlTextures) {
-                Debug.error('Texture#setSource: HTML element textures are not supported on this device. Check device.supportsHtmlTextures before calling setSource with an HTML element.');
+                Debug.error(
+                    'Texture#setSource: HTML element textures are not supported on this device. Check device.supportsHtmlTextures before calling setSource with an HTML element.'
+                );
                 return;
             }
             if (this._cubemap || this._volume) {
-                Debug.error('Texture#setSource: HTML element textures can only be used with 2D textures, not cubemaps or volume textures.');
+                Debug.error(
+                    'Texture#setSource: HTML element textures can only be used with 2D textures, not cubemaps or volume textures.'
+                );
                 return;
             }
         }
@@ -1190,10 +1242,13 @@ class Texture {
                 for (let i = 0; i < 6; i++) {
                     const face = source[i];
                     // cubemap becomes invalid if any condition is not satisfied
-                    if (!face ||                  // face is missing
-                        face.width !== width ||   // face is different width
+                    if (
+                        !face || // face is missing
+                        face.width !== width || // face is different width
                         face.height !== height || // face is different height
-                        !this.device._isBrowserInterface(face)) {            // new image bitmap
+                        !this.device._isBrowserInterface(face)
+                    ) {
+                        // new image bitmap
                         invalid = true;
                         break;
                     }
@@ -1391,7 +1446,9 @@ class Texture {
             return false;
         }
         if (source._format !== this._format) {
-            Debug.error(`Texture#copy: source and destination formats must match (source '${source.name}', destination '${this.name}').`);
+            Debug.error(
+                `Texture#copy: source and destination formats must match (source '${source.name}', destination '${this.name}').`
+            );
             return false;
         }
         if (source._compressed || this._compressed) {
@@ -1406,11 +1463,15 @@ class Texture {
         const sourceMipLevel = options.sourceMipLevel ?? 0;
         const destMipLevel = options.destMipLevel ?? 0;
         if (sourceMipLevel < 0 || sourceMipLevel >= source.numLevels) {
-            Debug.error(`Texture#copy: sourceMipLevel ${sourceMipLevel} is out of range (source has ${source.numLevels} levels).`);
+            Debug.error(
+                `Texture#copy: sourceMipLevel ${sourceMipLevel} is out of range (source has ${source.numLevels} levels).`
+            );
             return false;
         }
         if (destMipLevel < 0 || destMipLevel >= this.numLevels) {
-            Debug.error(`Texture#copy: destMipLevel ${destMipLevel} is out of range (destination has ${this.numLevels} levels).`);
+            Debug.error(
+                `Texture#copy: destMipLevel ${destMipLevel} is out of range (destination has ${this.numLevels} levels).`
+            );
             return false;
         }
 
@@ -1432,10 +1493,20 @@ class Texture {
         const sy = options.sourceY ?? 0;
         const dx = options.destX ?? 0;
         const dy = options.destY ?? 0;
-        const w = options.width ?? (sw - sx);
-        const h = options.height ?? (sh - sy);
-        if (w <= 0 || h <= 0 || sx < 0 || sy < 0 || dx < 0 || dy < 0 ||
-            sx + w > sw || sy + h > sh || dx + w > dw || dy + h > dh) {
+        const w = options.width ?? sw - sx;
+        const h = options.height ?? sh - sy;
+        if (
+            w <= 0 ||
+            h <= 0 ||
+            sx < 0 ||
+            sy < 0 ||
+            dx < 0 ||
+            dy < 0 ||
+            sx + w > sw ||
+            sy + h > sh ||
+            dx + w > dw ||
+            dy + h > dh
+        ) {
             Debug.error(`Texture#copy: copy region is out of bounds (source ${sw}x${sh}, destination ${dw}x${dh}).`);
             return false;
         }

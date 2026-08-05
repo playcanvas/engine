@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #ifndef LINEARIZE_DEPTH
 #define LINEARIZE_DEPTH

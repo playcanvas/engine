@@ -381,10 +381,13 @@ class Http {
         // in the options so create a new copy to not affect
         // the original
         if (options.retry) {
-            options = Object.assign({
-                retries: 0,
-                maxRetries: 5
-            }, options);
+            options = Object.assign(
+                {
+                    retries: 0,
+                    maxRetries: 5
+                },
+                options
+            );
         }
 
         // store callback
@@ -546,9 +549,11 @@ class Http {
     }
 
     _isBinaryResponseType(responseType) {
-        return responseType === Http.ResponseType.ARRAY_BUFFER ||
-               responseType === Http.ResponseType.BLOB ||
-               responseType === Http.ResponseType.JSON;
+        return (
+            responseType === Http.ResponseType.ARRAY_BUFFER ||
+            responseType === Http.ResponseType.BLOB ||
+            responseType === Http.ResponseType.JSON
+        );
     }
 
     _onReadyStateChange(method, url, options, xhr) {
@@ -628,7 +633,11 @@ class Http {
         if (options.retry && options.retries < options.maxRetries) {
             options.retries++;
             options.retrying = true; // used to stop retrying when both onError and xhr.onerror are called
-            const retryDelay = math.clamp(Math.pow(2, options.retries) * Http.retryDelay, 0, options.maxRetryDelay || 5000);
+            const retryDelay = math.clamp(
+                Math.pow(2, options.retries) * Http.retryDelay,
+                0,
+                options.maxRetryDelay || 5000
+            );
             console.log(`${method}: ${url} - Error ${xhr.status}. Retrying in ${retryDelay} ms`);
 
             setTimeout(() => {

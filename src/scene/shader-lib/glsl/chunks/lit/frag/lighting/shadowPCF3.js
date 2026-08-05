@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 // ----- Directional/Spot Sampling -----
 
 float _getShadowPCF3x3(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec3 shadowParams) {

@@ -2,12 +2,26 @@ import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 import {
-    pixelFormatInfo, isCompressedPixelFormat, getPixelFormatArrayType,
-    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_DEPTHSTENCIL,
-    SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
-    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR, isIntegerPixelFormat, SAMPLETYPE_INT, SAMPLETYPE_UINT,
+    pixelFormatInfo,
+    isCompressedPixelFormat,
+    getPixelFormatArrayType,
+    ADDRESS_REPEAT,
+    ADDRESS_CLAMP_TO_EDGE,
+    ADDRESS_MIRRORED_REPEAT,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_DEPTHSTENCIL,
+    SAMPLETYPE_UNFILTERABLE_FLOAT,
+    SAMPLETYPE_DEPTH,
+    FILTER_NEAREST,
+    FILTER_LINEAR,
+    FILTER_NEAREST_MIPMAP_NEAREST,
+    FILTER_NEAREST_MIPMAP_LINEAR,
+    FILTER_LINEAR_MIPMAP_NEAREST,
+    FILTER_LINEAR_MIPMAP_LINEAR,
+    isIntegerPixelFormat,
+    SAMPLETYPE_INT,
+    SAMPLETYPE_UINT,
     BUFFERUSAGE_READ,
     BUFFERUSAGE_COPY_DST
 } from '../constants.js';
@@ -94,26 +108,34 @@ class WebgpuTexture {
         this.texture = texture;
 
         this.format = gpuTextureFormats[texture.format];
-        Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} [${pixelFormatInfo.get(texture.format)?.name}] for texture ${texture.name}`, texture);
+        Debug.assert(
+            this.format !== '',
+            `WebGPU does not support texture format ${texture.format} [${pixelFormatInfo.get(texture.format)?.name}] for texture ${texture.name}`,
+            texture
+        );
 
         this.create(texture.device);
     }
 
     create(device) {
-
         const texture = this.texture;
         const wgpu = device.wgpu;
         const numLevels = texture.numLevels;
 
-        Debug.assert(texture.width > 0 && texture.height > 0, `Invalid texture dimensions ${texture.width}x${texture.height} for texture ${texture.name}`, texture);
+        Debug.assert(
+            texture.width > 0 && texture.height > 0,
+            `Invalid texture dimensions ${texture.width}x${texture.height} for texture ${texture.name}`,
+            texture
+        );
 
         // All compressed formats currently supported by the engine (BC, ETC2, ASTC 4x4) use 4x4
         // pixel blocks. If ASTC formats with other block sizes (e.g. 5x4, 6x6, 8x8) are added,
         // this needs to use per-format block dimensions instead of a hardcoded 4.
         if (isCompressedPixelFormat(texture.format) && (texture.width % 4 !== 0 || texture.height % 4 !== 0)) {
-            Debug.error(`Compressed texture '${texture.name}' [${pixelFormatInfo.get(texture.format)?.name}] dimensions ${texture.width}x${texture.height} ` +
-                'are not a multiple of the block size 4. WebGPU requires compressed texture dimensions to be multiples of the block size. ' +
-                `Rounding up to ${math.roundUp(texture.width, 4)}x${math.roundUp(texture.height, 4)}, which may cause minor rendering artifacts.`, texture);
+            Debug.error(
+                `Compressed texture '${texture.name}' [${pixelFormatInfo.get(texture.format)?.name}] dimensions ${texture.width}x${texture.height} are not a multiple of the block size 4. WebGPU requires compressed texture dimensions to be multiples of the block size. Rounding up to ${math.roundUp(texture.width, 4)}x${math.roundUp(texture.height, 4)}, which may cause minor rendering artifacts.`,
+                texture
+            );
             texture._width = math.roundUp(texture.width, 4);
             texture._height = math.roundUp(texture.height, 4);
         }
@@ -122,7 +144,7 @@ class WebgpuTexture {
             size: {
                 width: texture.width,
                 height: texture.height,
-                depthOrArrayLayers: texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1)
+                depthOrArrayLayers: texture.cubemap ? 6 : texture.array ? texture.arrayLength : 1
             },
             format: this.format,
             mipLevelCount: numLevels,
@@ -132,7 +154,10 @@ class WebgpuTexture {
             // TODO: use only required usage flags
             // COPY_SRC - probably only needed on render target textures, to support copyRenderTarget (grab pass needs it)
             // RENDER_ATTACHMENT - needed for mipmap generation
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC |
+            usage:
+                GPUTextureUsage.TEXTURE_BINDING |
+                GPUTextureUsage.COPY_DST |
+                GPUTextureUsage.COPY_SRC |
                 (isCompressedPixelFormat(texture.format) ? 0 : GPUTextureUsage.RENDER_ATTACHMENT) |
                 (texture.storage ? GPUTextureUsage.STORAGE_BINDING : 0)
         };
@@ -140,7 +165,10 @@ class WebgpuTexture {
         WebgpuDebug.validate(device);
 
         this.gpuTexture = wgpu.createTexture(this.desc);
-        DebugHelper.setLabel(this.gpuTexture, `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`);
+        DebugHelper.setLabel(
+            this.gpuTexture,
+            `${texture.name}${texture.cubemap ? '[cubemap]' : ''}${texture.volume ? '[3d]' : ''}`
+        );
 
         WebgpuDebug.end(device, 'Texture creation', {
             desc: this.desc,
@@ -189,7 +217,6 @@ class WebgpuTexture {
      * @private
      */
     getView(device, textureView) {
-
         this.uploadImmediate(device, this.texture);
 
         if (textureView) {
@@ -218,7 +245,6 @@ class WebgpuTexture {
     }
 
     createView(viewDescr) {
-
         const options = viewDescr ?? {};
         const textureDescr = this.desc;
         const texture = this.texture;
@@ -243,7 +269,10 @@ class WebgpuTexture {
         };
 
         const view = this.gpuTexture.createView(desc);
-        DebugHelper.setLabel(view, `${viewDescr ? `CustomView${JSON.stringify(viewDescr)}` : 'DefaultView'}:${this.texture.name}`);
+        DebugHelper.setLabel(
+            view,
+            `${viewDescr ? `CustomView${JSON.stringify(viewDescr)}` : 'DefaultView'}:${this.texture.name}`
+        );
 
         return view;
     }
@@ -260,7 +289,6 @@ class WebgpuTexture {
     getSampler(device, sampleType) {
         let sampler = this.samplers[sampleType];
         if (!sampler) {
-
             const texture = this.texture;
             let label;
 
@@ -277,26 +305,27 @@ class WebgpuTexture {
             }
 
             if (sampleType === SAMPLETYPE_DEPTH || sampleType === SAMPLETYPE_INT || sampleType === SAMPLETYPE_UINT) {
-
                 // depth compare sampling
                 desc.compare = 'less';
                 desc.magFilter = 'linear';
                 desc.minFilter = 'linear';
                 label = 'Compare';
-
             } else if (sampleType === SAMPLETYPE_UNFILTERABLE_FLOAT) {
-
                 desc.magFilter = 'nearest';
                 desc.minFilter = 'nearest';
                 desc.mipmapFilter = 'nearest';
                 label = 'Unfilterable';
-
             } else {
-
                 // if the device cannot filter float textures, force nearest filtering
-                const forceNearest = !device.textureFloatFilterable && (texture.format === PIXELFORMAT_RGBA32F || texture.format === PIXELFORMAT_RGBA16F);
+                const forceNearest =
+                    !device.textureFloatFilterable &&
+                    (texture.format === PIXELFORMAT_RGBA32F || texture.format === PIXELFORMAT_RGBA16F);
 
-                if (forceNearest || this.texture.format === PIXELFORMAT_DEPTHSTENCIL || isIntegerPixelFormat(this.texture.format)) {
+                if (
+                    forceNearest ||
+                    this.texture.format === PIXELFORMAT_DEPTHSTENCIL ||
+                    isIntegerPixelFormat(this.texture.format)
+                ) {
                     desc.magFilter = 'nearest';
                     desc.minFilter = 'nearest';
                     desc.mipmapFilter = 'nearest';
@@ -313,12 +342,11 @@ class WebgpuTexture {
 
             // ensure anisotropic filtering is only set when filtering is correctly
             // set up
-            const allLinear = (desc.minFilter === 'linear' &&
-                               desc.magFilter === 'linear' &&
-                               desc.mipmapFilter === 'linear');
-            desc.maxAnisotropy = allLinear ?
-                math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy) :
-                1;
+            const allLinear =
+                desc.minFilter === 'linear' && desc.magFilter === 'linear' && desc.mipmapFilter === 'linear';
+            desc.maxAnisotropy = allLinear
+                ? math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy)
+                : 1;
 
             sampler = device.wgpu.createSampler(desc);
             DebugHelper.setLabel(sampler, label);
@@ -328,19 +356,18 @@ class WebgpuTexture {
         return sampler;
     }
 
-    loseContext() {
-    }
+    loseContext() {}
 
     /**
      * @param {WebgpuGraphicsDevice} device - The graphics device.
      * @param {Texture} texture - The texture.
      */
     uploadImmediate(device, texture) {
-
         if (texture._needsUpload || texture._needsMipmapsUpload) {
-            Debug.assert(!device.insideRenderPass,
-                `Texture.upload() for "${texture.name}" was called while inside a render pass, which is not currently supported. ` +
-                'Move texture updates to the before() or after() function of the RenderPass.');
+            Debug.assert(
+                !device.insideRenderPass,
+                `Texture.upload() for "${texture.name}" was called while inside a render pass, which is not currently supported. Move texture updates to the before() or after() function of the RenderPass.`
+            );
             this.uploadData(device);
 
             texture._needsUpload = false;
@@ -353,13 +380,14 @@ class WebgpuTexture {
      * device.
      */
     uploadData(device) {
-
         const texture = this.texture;
 
         // If texture dimensions have changed, recreate the GPU texture (for example loading external texture
         // with different dimensions)
         if (this.desc && (this.desc.size.width !== texture.width || this.desc.size.height !== texture.height)) {
-            Debug.warnOnce(`Texture '${texture.name}' is being recreated due to dimension change from ${this.desc.size.width}x${this.desc.size.height} to ${texture.width}x${texture.height}. Consider creating the texture with correct dimensions to avoid recreation.`);
+            Debug.warnOnce(
+                `Texture '${texture.name}' is being recreated due to dimension change from ${this.desc.size.width}x${this.desc.size.height} to ${texture.width}x${texture.height}. Consider creating the texture with correct dimensions to avoid recreation.`
+            );
 
             device.deferDestroy(this.gpuTexture);
             this.create(device);
@@ -369,91 +397,72 @@ class WebgpuTexture {
         }
 
         if (texture._levels) {
-
             // upload texture data if any
             let anyUploads = false;
             let anyLevelMissing = false;
             const requiredMipLevels = texture.numLevels;
             for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
-
                 const mipObject = texture._levels[mipLevel];
                 if (mipObject) {
-
                     if (texture.cubemap) {
-
                         for (let face = 0; face < 6; face++) {
-
                             const faceSource = mipObject[face];
                             if (faceSource) {
                                 if (this.isExternalImage(faceSource)) {
-
                                     this.uploadExternalImage(device, faceSource, mipLevel, face);
                                     anyUploads = true;
-
-                                } else if (ArrayBuffer.isView(faceSource)) { // typed array
+                                } else if (ArrayBuffer.isView(faceSource)) {
+                                    // typed array
 
                                     this.uploadTypedArrayData(device, faceSource, mipLevel, face);
                                     anyUploads = true;
-
                                 } else {
-
                                     Debug.error('Unsupported texture source data for cubemap face', faceSource);
                                 }
                             } else {
                                 anyLevelMissing = true;
                             }
                         }
-
                     } else if (texture._volume) {
-
                         Debug.warn('Volume texture data upload is not supported yet', this.texture);
-
-                    } else if (texture.array) { // texture array
+                    } else if (texture.array) {
+                        // texture array
 
                         if (texture.arrayLength === mipObject.length) {
-
                             for (let index = 0; index < texture._arrayLength; index++) {
                                 const arraySource = mipObject[index];
 
                                 if (this.isExternalImage(arraySource)) {
-
                                     this.uploadExternalImage(device, arraySource, mipLevel, index);
                                     anyUploads = true;
-
-                                } else if (ArrayBuffer.isView(arraySource)) { // typed array
+                                } else if (ArrayBuffer.isView(arraySource)) {
+                                    // typed array
 
                                     this.uploadTypedArrayData(device, arraySource, mipLevel, index);
                                     anyUploads = true;
-
                                 } else {
-
                                     Debug.error('Unsupported texture source data for texture array entry', arraySource);
                                 }
                             }
                         } else {
                             anyLevelMissing = true;
                         }
-
-                    } else { // 2d texture
+                    } else {
+                        // 2d texture
 
                         if (device._isHTMLElementInterface(mipObject) && device.supportsHtmlTextures) {
-
                             // generic HTML element via the HTML-in-Canvas API
                             this.uploadElementImage(device, mipObject, mipLevel, 0);
                             anyUploads = true;
-
                         } else if (this.isExternalImage(mipObject)) {
-
                             this.uploadExternalImage(device, mipObject, mipLevel, 0);
                             anyUploads = true;
-
-                        } else if (ArrayBuffer.isView(mipObject)) { // typed array
+                        } else if (ArrayBuffer.isView(mipObject)) {
+                            // typed array
 
                             this.uploadTypedArrayData(device, mipObject, mipLevel, 0);
                             anyUploads = true;
-
                         } else {
-
                             Debug.error('Unsupported texture source data', mipObject);
                         }
                     }
@@ -462,7 +471,13 @@ class WebgpuTexture {
                 }
             }
 
-            if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format) && !isIntegerPixelFormat(texture.format)) {
+            if (
+                anyUploads &&
+                anyLevelMissing &&
+                texture.mipmaps &&
+                !isCompressedPixelFormat(texture.format) &&
+                !isIntegerPixelFormat(texture.format)
+            ) {
                 device.mipmapRenderer.generate(this);
             }
 
@@ -482,15 +497,20 @@ class WebgpuTexture {
 
     // image types supported by copyExternalImageToTexture
     isExternalImage(image) {
-        return (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) ||
+        return (
+            (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap) ||
             (typeof HTMLVideoElement !== 'undefined' && image instanceof HTMLVideoElement) ||
             (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
-            (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas);
+            (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas)
+        );
     }
 
     uploadExternalImage(device, image, mipLevel, index) {
-
-        Debug.assert(mipLevel < this.desc.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`, this);
+        Debug.assert(
+            mipLevel < this.desc.mipLevelCount,
+            `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`,
+            this
+        );
 
         const src = {
             source: image,
@@ -502,14 +522,14 @@ class WebgpuTexture {
             texture: this.gpuTexture,
             mipLevel: mipLevel,
             origin: [0, 0, index],
-            aspect: 'all',  // can be: "all", "stencil-only", "depth-only"
+            aspect: 'all', // can be: "all", "stencil-only", "depth-only"
             premultipliedAlpha: this.texture._premultiplyAlpha
         };
 
         const copySize = {
             width: this.desc.size.width,
             height: this.desc.size.height,
-            depthOrArrayLayers: 1   // single layer
+            depthOrArrayLayers: 1 // single layer
         };
 
         // submit existing scheduled commands to the queue before copying to preserve the order
@@ -524,14 +544,17 @@ class WebgpuTexture {
 
     // upload a generic HTML element via the HTML-in-Canvas API (copyElementImageToTexture)
     uploadElementImage(device, element, mipLevel, index) {
-
-        Debug.assert(mipLevel < this.desc.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`, this);
+        Debug.assert(
+            mipLevel < this.desc.mipLevelCount,
+            `Accessing mip level ${mipLevel} of texture with ${this.desc.mipLevelCount} mip levels`,
+            this
+        );
 
         const dst = {
             texture: this.gpuTexture,
             mipLevel: mipLevel,
             origin: [0, 0, index],
-            aspect: 'all',  // can be: "all", "stencil-only", "depth-only"
+            aspect: 'all', // can be: "all", "stencil-only", "depth-only"
             premultipliedAlpha: this.texture._premultiplyAlpha
         };
 
@@ -551,7 +574,6 @@ class WebgpuTexture {
     }
 
     uploadTypedArrayData(device, data, mipLevel, index) {
-
         const texture = this.texture;
         const wgpu = device.wgpu;
 
@@ -568,8 +590,11 @@ class WebgpuTexture {
 
         // data sizes
         const byteSize = TextureUtils.calcLevelGpuSize(width, height, 1, texture.format);
-        Debug.assert(byteSize === data.byteLength,
-            `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
+        Debug.assert(
+            byteSize === data.byteLength,
+            `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`,
+            texture
+        );
 
         const formatInfo = pixelFormatInfo.get(texture.format);
         Debug.assert(formatInfo);
@@ -604,7 +629,11 @@ class WebgpuTexture {
                 height: Math.max(4, height)
             };
         } else {
-            Debug.assert(false, `WebGPU does not yet support texture format ${formatInfo.name} for texture ${texture.name}`, texture);
+            Debug.assert(
+                false,
+                `WebGPU does not yet support texture format ${formatInfo.name} for texture ${texture.name}`,
+                texture
+            );
         }
 
         // submit existing scheduled commands to the queue before copying to preserve the order
@@ -615,7 +644,6 @@ class WebgpuTexture {
     }
 
     read(x, y, width, height, options) {
-
         const mipLevel = options.mipLevel ?? 0;
         const face = options.face ?? 0;
         const data = options.data ?? null;
@@ -653,7 +681,7 @@ class WebgpuTexture {
         const copySize = {
             width,
             height,
-            depthOrArrayLayers: 1   // single layer
+            depthOrArrayLayers: 1 // single layer
         };
 
         // copy the GPU texture to the staging buffer
@@ -662,7 +690,6 @@ class WebgpuTexture {
 
         // async read data from the staging buffer to a temporary array
         return device.readBuffer(stagingBuffer, size, null, immediate).then((temp) => {
-
             // determine target buffer - use user's data buffer or allocate new
             const ArrayType = getPixelFormatArrayType(texture.format);
             const targetBuffer = data?.buffer ?? new ArrayBuffer(height * bytesPerRow);
@@ -688,7 +715,6 @@ class WebgpuTexture {
      * @returns {boolean} True if the copy was successful.
      */
     copy(source, options) {
-
         /** @type {WebgpuGraphicsDevice} */
         const device = this.texture.device;
 

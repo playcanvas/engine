@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #ifdef NINESLICED
     vec2 getUv0() {
         vec2 uv = vertex_position.xz;

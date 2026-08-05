@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef PIXELSNAP
     uniform uScreenSize: vec4f;
 #endif

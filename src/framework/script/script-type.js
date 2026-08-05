@@ -58,8 +58,8 @@ class ScriptType extends Script {
     initScript(args) {
         // super does not exist due to the way the class is instantiated
         Script.prototype.initScript.call(this, args);
-        this.__attributes = { };
-        this.__attributesRaw = args.attributes || { }; // need at least an empty object to make sure default attributes are initialized
+        this.__attributes = {};
+        this.__attributesRaw = args.attributes || {}; // need at least an empty object to make sure default attributes are initialized
     }
 
     /**

@@ -65,7 +65,6 @@ class ParticleGPUUpdater {
 
     // This shouldn't change emitter state, only read from it
     update(device, spawnMatrix, extentsInnerRatioUniform, delta, isOnStop) {
-
         DebugGraphics.pushGpuMarker(device, 'ParticleGPU');
 
         const emitter = this._emitter;
@@ -88,7 +87,7 @@ class ParticleGPUUpdater {
         const node = emitter.meshInstance.node;
         const emitterScale = node === null ? Vec3.ONE : node.localScale;
 
-        const emitterPos = (node === null || emitter.localSpace) ? Vec3.ZERO : node.getPosition();
+        const emitterPos = node === null || emitter.localSpace ? Vec3.ZERO : node.getPosition();
         const emitterMatrix = node === null ? Mat4.IDENTITY : node.getWorldTransform();
         if (emitter.emitterShape === EMITTERSHAPE_BOX) {
             spawnMatrix3.setFromMat4(spawnMatrix);
@@ -96,7 +95,9 @@ class ParticleGPUUpdater {
             this.constantSpawnPosInnerRatio.setValue(extentsInnerRatioUniform);
         } else {
             this.constantSpawnBoundsSphere.setValue(emitter.emitterRadius);
-            this.constantSpawnBoundsSphereInnerRatio.setValue((emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius);
+            this.constantSpawnBoundsSphereInnerRatio.setValue(
+                emitter.emitterRadius === 0 ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius
+            );
         }
         this.constantInitialVelocity.setValue(emitter.initialVelocity);
 
@@ -133,14 +134,17 @@ class ParticleGPUUpdater {
         drawQuadWithShader(
             device,
             emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
-            !isOnStop ?
-                (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
-                emitter.shaderParticleUpdateOnStop);
+            !isOnStop
+                ? emitter.loop
+                    ? emitter.shaderParticleUpdateRespawn
+                    : emitter.shaderParticleUpdateNoRespawn
+                : emitter.shaderParticleUpdateOnStop
+        );
 
         // this.constantParticleTexOUT.setValue(texOUT);
 
-        emitter.material.setParameter('particleTexOUT', texIN);// OUT);
-        emitter.material.setParameter('particleTexIN', texOUT);// IN);
+        emitter.material.setParameter('particleTexOUT', texIN); // OUT);
+        emitter.material.setParameter('particleTexIN', texOUT); // IN);
         emitter.beenReset = false;
 
         emitter.swapTex = !emitter.swapTex;

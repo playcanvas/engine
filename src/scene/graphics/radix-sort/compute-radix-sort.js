@@ -83,7 +83,9 @@ class ComputeRadixSort {
             // (non-NVIDIA vendors), so callers can opt in for experimentation
             // on devices where OneSweep has not been validated.
             if (!this._canUseOneSweep(device)) {
-                Debug.warnOnce('ComputeRadixSort: RADIX_SORT_ONESWEEP requested on a device that is not a validated OneSweep target (non-NVIDIA, or minSubgroupSize > 32). OneSweep may hang or produce incorrect results. Consider RADIX_SORT_PORTABLE or RADIX_SORT_AUTO.');
+                Debug.warnOnce(
+                    'ComputeRadixSort: RADIX_SORT_ONESWEEP requested on a device that is not a validated OneSweep target (non-NVIDIA, or minSubgroupSize > 32). OneSweep may hang or produce incorrect results. Consider RADIX_SORT_PORTABLE or RADIX_SORT_AUTO.'
+                );
             }
             this._impl = new ComputeRadixSortOneSweep(device, indirect);
         } else {
@@ -187,10 +189,16 @@ class ComputeRadixSort {
      * {@link sortedIndices}).
      */
     sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite, destructiveKeys = false) {
-        Debug.assert(!this._impl._indirect, 'ComputeRadixSort.sort: this instance was created with indirect:true and only supports sortIndirect');
+        Debug.assert(
+            !this._impl._indirect,
+            'ComputeRadixSort.sort: this instance was created with indirect:true and only supports sortIndirect'
+        );
         Debug.assert(keysBuffer, 'ComputeRadixSort.sort: keysBuffer is required');
         Debug.assert(elementCount > 0, 'ComputeRadixSort.sort: elementCount must be > 0');
-        Debug.assert(numBits % this.radixBits === 0, `ComputeRadixSort.sort: numBits must be a multiple of radixBits (${this.radixBits}), got ${numBits}`);
+        Debug.assert(
+            numBits % this.radixBits === 0,
+            `ComputeRadixSort.sort: numBits must be a multiple of radixBits (${this.radixBits}), got ${numBits}`
+        );
         return this._impl.sort(keysBuffer, elementCount, numBits, initialValues, skipLastPassKeyWrite, destructiveKeys);
     }
 
@@ -221,13 +229,37 @@ class ComputeRadixSort {
      * returns.
      * @returns {StorageBuffer} Sorted values buffer.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys = false) {
-        Debug.assert(this._impl._indirect, 'ComputeRadixSort.sortIndirect: this instance was created without indirect:true');
+    sortIndirect(
+        keysBuffer,
+        maxElementCount,
+        numBits,
+        sortSlotBase,
+        sortElementCountBuffer,
+        initialValues,
+        skipLastPassKeyWrite,
+        destructiveKeys = false
+    ) {
+        Debug.assert(
+            this._impl._indirect,
+            'ComputeRadixSort.sortIndirect: this instance was created without indirect:true'
+        );
         Debug.assert(keysBuffer, 'ComputeRadixSort.sortIndirect: keysBuffer is required');
         Debug.assert(maxElementCount > 0, 'ComputeRadixSort.sortIndirect: maxElementCount must be > 0');
-        Debug.assert(numBits % this.radixBits === 0, `ComputeRadixSort.sortIndirect: numBits must be a multiple of radixBits (${this.radixBits}), got ${numBits}`);
+        Debug.assert(
+            numBits % this.radixBits === 0,
+            `ComputeRadixSort.sortIndirect: numBits must be a multiple of radixBits (${this.radixBits}), got ${numBits}`
+        );
         Debug.assert(sortElementCountBuffer, 'ComputeRadixSort.sortIndirect: sortElementCountBuffer is required');
-        return this._impl.sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys);
+        return this._impl.sortIndirect(
+            keysBuffer,
+            maxElementCount,
+            numBits,
+            sortSlotBase,
+            sortElementCountBuffer,
+            initialValues,
+            skipLastPassKeyWrite,
+            destructiveKeys
+        );
     }
 
     /**
@@ -252,7 +284,10 @@ class ComputeRadixSort {
      * @returns {Uint32Array} Sorter-owned 4-element Uint32 array.
      */
     prepareIndirect() {
-        Debug.assert(this._impl._indirect, 'ComputeRadixSort.prepareIndirect: this instance was created without indirect:true');
+        Debug.assert(
+            this._impl._indirect,
+            'ComputeRadixSort.prepareIndirect: this instance was created without indirect:true'
+        );
         return this._impl.prepareIndirect();
     }
 

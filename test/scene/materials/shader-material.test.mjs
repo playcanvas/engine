@@ -4,15 +4,19 @@ import { restore, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { BlendState } from '../../../src/platform/graphics/blend-state.js';
 import {
-    BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR, BLENDMODE_ZERO,
-    CULLFACE_BACK, FUNC_LESSEQUAL, FRONTFACE_CCW
+    BLENDEQUATION_ADD,
+    BLENDMODE_ONE,
+    BLENDMODE_SRC1_COLOR,
+    BLENDMODE_ZERO,
+    CULLFACE_BACK,
+    FUNC_LESSEQUAL,
+    FRONTFACE_CCW
 } from '../../../src/platform/graphics/constants.js';
 import { BLEND_NONE } from '../../../src/scene/constants.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
 import { shaderGeneratorShader } from '../../../src/scene/shader-lib/programs/shader-generator-shader.js';
 
 describe('Material', function () {
-
     afterEach(function () {
         restore();
     });
@@ -39,37 +43,30 @@ describe('Material', function () {
     }
 
     describe('#constructor()', function () {
-
         it('should create a new instance', function () {
             const material = new ShaderMaterial();
             checkDefaultMaterial(material);
         });
-
     });
 
     describe('#clone()', function () {
-
         it('should clone a material', function () {
             const material = new ShaderMaterial();
             const clone = material.clone();
             checkDefaultMaterial(clone);
         });
-
     });
 
     describe('#copy()', function () {
-
         it('should copy a material', function () {
             const src = new ShaderMaterial();
             const dst = new ShaderMaterial();
             dst.copy(src);
             checkDefaultMaterial(dst);
         });
-
     });
 
     describe('#blendState', function () {
-
         it('clears shader variants when dual-source blending usage changes', function () {
             const material = new ShaderMaterial();
             const dualSource = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR);
@@ -85,11 +82,9 @@ describe('Material', function () {
             material.blendState = BlendState.NOBLEND;
             expect(material.variants.size).to.equal(0);
         });
-
     });
 
     describe('#update()', function () {
-
         it('increments the update version', function () {
             const material = new ShaderMaterial();
 
@@ -103,9 +98,11 @@ describe('Material', function () {
             const material = new ShaderMaterial();
 
             expect(material.dirty).to.equal(undefined);
-            expect(removed.calledOnceWithExactly(
-                'Material#dirty has been removed. Call Material#update() after modifying material properties.'
-            )).to.equal(true);
+            expect(
+                removed.calledOnceWithExactly(
+                    'Material#dirty has been removed. Call Material#update() after modifying material properties.'
+                )
+            ).to.equal(true);
         });
 
         it('clears dirty shader variants immediately', function () {
@@ -171,11 +168,9 @@ describe('Material', function () {
             material.prepareForRender();
             expect(prepareCount).to.equal(2);
         });
-
     });
 
     describe('shader generation', function () {
-
         it('includes dual-source blending usage in the shader key', function () {
             const shaderDesc = { uniqueName: 'DualSource' };
             const options = {
@@ -189,7 +184,5 @@ describe('Material', function () {
 
             expect(dualSourceKey).to.not.equal(regularKey);
         });
-
     });
-
 });

@@ -107,7 +107,7 @@ class FisheyeProjection {
         // Projection-dependent values derived from the camera's projection matrix.
         // Compute X and Y scales independently to avoid the 0/0 singularity at 180° FOV
         // and to correctly handle the non-linear fisheye mapping for non-square aspect ratios.
-        const maxTheta = Math.min(k * Math.PI / 2, 3.13);
+        const maxTheta = Math.min((k * Math.PI) / 2, 3.13);
         const cs = this.cornerScale;
 
         const halfFovX = Math.atan2(1.0, p00);

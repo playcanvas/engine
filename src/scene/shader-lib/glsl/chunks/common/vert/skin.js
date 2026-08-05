@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 attribute vec4 vertex_boneWeights;
 attribute vec4 vertex_boneIndices;

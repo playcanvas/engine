@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     varying uv0: vec2f;
     uniform invViewProj: mat4x4<f32>;
     var blitTexture: texture_cube<f32>;

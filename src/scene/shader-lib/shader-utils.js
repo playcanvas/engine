@@ -90,13 +90,12 @@ class ShaderUtils {
      * @returns {Shader} The newly created shader.
      */
     static createShader(device, options) {
-
         const programLibrary = getProgramLibrary(device);
         let shader = programLibrary.getCachedShader(options.uniqueName);
         if (!shader) {
-
             // use WGSL language on WebGPU: if user provided WGSL code, or if named chunks are used
-            const wgsl = device.isWebGPU &&
+            const wgsl =
+                device.isWebGPU &&
                 (!!options.vertexWGSL || !!options.vertexChunk) &&
                 (!!options.fragmentWGSL || !!options.fragmentChunk);
 
@@ -104,8 +103,16 @@ class ShaderUtils {
             const chunksMap = ShaderChunks.get(device, wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL);
 
             // source code
-            const vertexCode = options.vertexChunk ? chunksMap.get(options.vertexChunk) : (wgsl ? options.vertexWGSL : options.vertexGLSL);
-            const fragmentCode = options.fragmentChunk ? chunksMap.get(options.fragmentChunk) : (wgsl ? options.fragmentWGSL : options.fragmentGLSL);
+            const vertexCode = options.vertexChunk
+                ? chunksMap.get(options.vertexChunk)
+                : wgsl
+                  ? options.vertexWGSL
+                  : options.vertexGLSL;
+            const fragmentCode = options.fragmentChunk
+                ? chunksMap.get(options.fragmentChunk)
+                : wgsl
+                  ? options.fragmentWGSL
+                  : options.fragmentGLSL;
             Debug.assert(vertexCode, 'ShaderUtils.createShader: vertex shader code not provided', options);
             Debug.assert(fragmentCode, 'ShaderUtils.createShader: fragment shader code not provided', options);
 
@@ -113,20 +120,23 @@ class ShaderUtils {
             const fragmentIncludes = MapUtils.merge(chunksMap, options.fragmentIncludes);
             const vertexIncludes = MapUtils.merge(chunksMap, options.vertexIncludes);
 
-            shader = new Shader(device, ShaderDefinitionUtils.createDefinition(device, {
-                name: options.uniqueName,
-                shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
-                attributes: options.attributes,
-                vertexCode: vertexCode,
-                fragmentCode: fragmentCode,
-                useTransformFeedback: options.useTransformFeedback,
-                vertexIncludes: vertexIncludes,
-                vertexDefines: options.vertexDefines,
-                fragmentIncludes: fragmentIncludes,
-                fragmentDefines: options.fragmentDefines,
-                fragmentOutputTypes: options.fragmentOutputTypes,
-                useDualSourceBlending: options.useDualSourceBlending
-            }));
+            shader = new Shader(
+                device,
+                ShaderDefinitionUtils.createDefinition(device, {
+                    name: options.uniqueName,
+                    shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
+                    attributes: options.attributes,
+                    vertexCode: vertexCode,
+                    fragmentCode: fragmentCode,
+                    useTransformFeedback: options.useTransformFeedback,
+                    vertexIncludes: vertexIncludes,
+                    vertexDefines: options.vertexDefines,
+                    fragmentIncludes: fragmentIncludes,
+                    fragmentDefines: options.fragmentDefines,
+                    fragmentOutputTypes: options.fragmentOutputTypes,
+                    useDualSourceBlending: options.useDualSourceBlending
+                })
+            );
             programLibrary.setCachedShader(options.uniqueName, shader);
         }
         return shader;
@@ -141,7 +151,6 @@ class ShaderUtils {
      * @ignore
      */
     static getCoreDefines(material, params) {
-
         // merge both maps, with camera shader params taking precedence
         const defines = new Map(material.defines);
         params.cameraShaderParams.defines.forEach((value, key) => defines.set(key, value));
@@ -162,7 +171,6 @@ class ShaderUtils {
      * @ignore
      */
     static processShader(shader, processingOptions) {
-
         Debug.assert(shader);
         const shaderDefinition = shader.definition;
 
@@ -211,8 +219,15 @@ function createShader(device, vsName, fsName, useTransformFeedback = false, shad
     Debug.removed('createShader has been removed deprecated. Use ShaderUtils.createShader instead.');
 }
 
-function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false, shaderDefinitionOptions = {}) {
-
+function createShaderFromCode(
+    device,
+    vsCode,
+    fsCode,
+    uniqueName,
+    attributes,
+    useTransformFeedback = false,
+    shaderDefinitionOptions = {}
+) {
     Debug.deprecated('createShaderFromCode has been deprecated. Use ShaderUtils.createShader instead.');
 
     // the function signature has changed, fail if called incorrectly
@@ -231,13 +246,16 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, us
     const programLibrary = getProgramLibrary(device);
     let shader = programLibrary.getCachedShader(uniqueName);
     if (!shader) {
-        shader = new Shader(device, ShaderDefinitionUtils.createDefinition(device, {
-            ...shaderDefinitionOptions,
-            name: uniqueName,
-            vertexCode: vsCode,
-            fragmentCode: fsCode,
-            attributes: attributes
-        }));
+        shader = new Shader(
+            device,
+            ShaderDefinitionUtils.createDefinition(device, {
+                ...shaderDefinitionOptions,
+                name: uniqueName,
+                vertexCode: vsCode,
+                fragmentCode: fsCode,
+                attributes: attributes
+            })
+        );
         programLibrary.setCachedShader(uniqueName, shader);
     }
     return shader;

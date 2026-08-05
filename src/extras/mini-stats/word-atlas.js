@@ -4,7 +4,6 @@ import { FILTER_NEAREST } from '../../platform/graphics/constants.js';
 
 class WordAtlas {
     constructor(device, words) {
-
         const initContext = (context) => {
             context.font = '10px "Lucida Console", Monaco, monospace';
             context.textAlign = 'left';
@@ -94,15 +93,18 @@ class WordAtlas {
         const p = this.placements.get(word);
         if (p) {
             const padding = 1;
-            render2d.quad(x + p.l - padding,
+            render2d.quad(
+                x + p.l - padding,
                 y - p.d + padding,
                 p.w + padding * 2,
                 p.h + padding * 2,
                 p.x - padding,
                 this.texture.height - p.y - p.h - padding,
-                undefined, undefined,
+                undefined,
+                undefined,
                 this.texture,
-                1);
+                1
+            );
             return p.w;
         }
 
@@ -113,22 +115,25 @@ class WordAtlas {
 
             // handle spaces specially - they don't render but need width
             if (char === ' ') {
-                totalWidth += 5;  // fixed width for space
+                totalWidth += 5; // fixed width for space
                 continue;
             }
 
             const charPlacement = this.placements.get(char);
             if (charPlacement) {
                 const padding = 1;
-                render2d.quad(x + totalWidth + charPlacement.l - padding,
+                render2d.quad(
+                    x + totalWidth + charPlacement.l - padding,
                     y - charPlacement.d + padding,
                     charPlacement.w + padding * 2,
                     charPlacement.h + padding * 2,
                     charPlacement.x - padding,
                     this.texture.height - charPlacement.y - charPlacement.h - padding,
-                    undefined, undefined,
+                    undefined,
+                    undefined,
                     this.texture,
-                    1);
+                    1
+                );
                 totalWidth += charPlacement.w;
             }
         }

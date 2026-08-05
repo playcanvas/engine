@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #ifdef BLOOM
         uniform sampler2D bloomTexture;
         uniform float bloomIntensity;

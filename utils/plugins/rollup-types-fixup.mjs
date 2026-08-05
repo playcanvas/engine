@@ -194,45 +194,51 @@ const STANDARD_MAT_PROPS = [
     ['useSkybox', 'boolean']
 ];
 
-const REPLACEMENTS = [{
-    path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
-    replacement: {
-        guard: 'set alphaFade(arg: boolean);',
-        transformer: (contents) => {
-
-            // Find the jsdoc block description using eg "@property {Type} {name}"
-            return contents.replace('reset(): void;', `reset(): void;
+const REPLACEMENTS = [
+    {
+        path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
+        replacement: {
+            guard: 'set alphaFade(arg: boolean);',
+            transformer: (contents) => {
+                // Find the jsdoc block description using eg "@property {Type} {name}"
+                return contents.replace(
+                    'reset(): void;',
+                    `reset(): void;
                 ${STANDARD_MAT_PROPS.map((prop) => {
-        const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
-        const typeDescriptionIndex = contents.match(typeDefinition);
-        const typeDescription = typeDescriptionIndex ?
-            contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
-            '';
+                    const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
+                    const typeDescriptionIndex = contents.match(typeDefinition);
+                    const typeDescription = typeDescriptionIndex
+                        ? contents.slice(
+                              typeDescriptionIndex.index + typeDefinition.length,
+                              contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)
+                          )
+                        : '';
 
-        // Strip newlines, asterisks, and tabs from the type description
-        const cleanTypeDescription = typeDescription
-        .trim()
-        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
-        .replace(/\s+/g, ' '); // collapse whitespace
+                    // Strip newlines, asterisks, and tabs from the type description
+                    const cleanTypeDescription = typeDescription
+                        .trim()
+                        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
+                        .replace(/\s+/g, ' '); // collapse whitespace
 
-        const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
-        return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
-    }).join('')}`
-            );
-        },
-        footer: `
+                    const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
+                    return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
+                }).join('')}`
+                );
+            },
+            footer: `
 import { Color } from '../../core/math/color.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Texture } from '../../platform/graphics/texture.js';
 `
-    }
-}, {
-    path: `${TYPES_PATH}/framework/script/script-type.d.ts`,
-    replacement: {
-        guard: 'initialize?(): void;',
-        from: 'get enabled(): boolean;',
-        to: `get enabled(): boolean;
+        }
+    },
+    {
+        path: `${TYPES_PATH}/framework/script/script-type.d.ts`,
+        replacement: {
+            guard: 'initialize?(): void;',
+            from: 'get enabled(): boolean;',
+            to: `get enabled(): boolean;
     /**
      * Called when script is about to run for the first time.
      */
@@ -259,8 +265,9 @@ import { Texture } from '../../platform/graphics/texture.js';
      */
     swap?(old: ScriptType): void;
 `
+        }
     }
-}];
+];
 
 export function fixTypes(root = '.') {
     REPLACEMENTS.forEach((item) => {

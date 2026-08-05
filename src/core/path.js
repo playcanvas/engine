@@ -36,7 +36,7 @@ const path = {
             }
 
             if (one && two && one[one.length - 1] !== path.delimiter && two[0] !== path.delimiter) {
-                result += (path.delimiter + two);
+                result += path.delimiter + two;
             } else {
                 result += two;
             }
@@ -72,7 +72,6 @@ const path = {
             if (i > 0) cleaned.push(path.delimiter);
             cleaned.push(parts[i]);
         }
-
 
         result = cleaned.join('');
         if (!lead && result[0] === path.delimiter) {
@@ -186,12 +185,11 @@ const path = {
             if (path.isRelativePath(pathname)) {
                 if (parts[0] === '.') {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += (i === 0) ? parts[i] : `/${parts[i]}`;
-
+                        result += i === 0 ? parts[i] : `/${parts[i]}`;
                     }
                 } else if (parts[0] === '..') {
                     for (i = 0; i < parts.length - 1; ++i) {
-                        result += (i === 0) ? parts[i] : `/${parts[i]}`;
+                        result += i === 0 ? parts[i] : `/${parts[i]}`;
                     }
                 } else {
                     result = '.';
@@ -201,7 +199,7 @@ const path = {
                 }
             } else {
                 for (i = 0; i < parts.length - 1; ++i) {
-                    result += (i === 0) ? parts[i] : `/${parts[i]}`;
+                    result += i === 0 ? parts[i] : `/${parts[i]}`;
                 }
             }
         }

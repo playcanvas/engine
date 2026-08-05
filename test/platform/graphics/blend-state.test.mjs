@@ -2,15 +2,21 @@ import { expect } from 'chai';
 
 import { BlendState } from '../../../src/platform/graphics/blend-state.js';
 import {
-    BLENDEQUATION_ADD, BLENDEQUATION_MAX, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
-    BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-    BLENDMODE_SRC_ALPHA_SATURATE, BLENDMODE_SRC1_COLOR, BLENDMODE_ONE_MINUS_SRC1_ALPHA
+    BLENDEQUATION_ADD,
+    BLENDEQUATION_MAX,
+    BLENDEQUATION_MIN,
+    BLENDMODE_ONE,
+    BLENDMODE_ZERO,
+    BLENDMODE_ONE_MINUS_DST_COLOR,
+    BLENDMODE_SRC_ALPHA,
+    BLENDMODE_ONE_MINUS_SRC_ALPHA,
+    BLENDMODE_SRC_ALPHA_SATURATE,
+    BLENDMODE_SRC1_COLOR,
+    BLENDMODE_ONE_MINUS_SRC1_ALPHA
 } from '../../../src/platform/graphics/constants.js';
 
 describe('BlendState', function () {
-
     describe('#constructor', function () {
-
         it('empty', function () {
             const bs = new BlendState();
             expect(bs.blend).to.equal(false);
@@ -42,9 +48,19 @@ describe('BlendState', function () {
         });
 
         it('full parameters', function () {
-            const bs = new BlendState(true, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
-                BLENDEQUATION_MAX, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE,
-                false, false, false, false);
+            const bs = new BlendState(
+                true,
+                BLENDEQUATION_MIN,
+                BLENDMODE_ONE,
+                BLENDMODE_ZERO,
+                BLENDEQUATION_MAX,
+                BLENDMODE_ONE_MINUS_DST_COLOR,
+                BLENDMODE_SRC_ALPHA_SATURATE,
+                false,
+                false,
+                false,
+                false
+            );
             expect(bs.blend).to.equal(true);
             expect(bs.colorOp).to.equal(BLENDEQUATION_MIN);
             expect(bs.colorSrcFactor).to.equal(BLENDMODE_ONE);
@@ -59,14 +75,20 @@ describe('BlendState', function () {
         });
 
         it('dual-source factors', function () {
-            const bs = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_SRC1_COLOR,
-                BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE_MINUS_SRC1_ALPHA);
+            const bs = new BlendState(
+                true,
+                BLENDEQUATION_ADD,
+                BLENDMODE_ONE,
+                BLENDMODE_SRC1_COLOR,
+                BLENDEQUATION_ADD,
+                BLENDMODE_ONE,
+                BLENDMODE_ONE_MINUS_SRC1_ALPHA
+            );
 
             expect(bs.colorDstFactor).to.equal(BLENDMODE_SRC1_COLOR);
             expect(bs.alphaDstFactor).to.equal(BLENDMODE_ONE_MINUS_SRC1_ALPHA);
             expect(bs.usesDualSourceBlending).to.equal(true);
         });
-
     });
 
     // reusable destination for getAttachment, mirroring how the backends use it
@@ -84,10 +106,10 @@ describe('BlendState', function () {
     };
 
     // an alpha blended state, used as the attachment 0 of the per-attachment tests
-    const createBase = () => new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA);
+    const createBase = () =>
+        new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA);
 
     describe('#setAttachment', function () {
-
         it('an attachment which was not set follows attachment 0', function () {
             const bs = createBase();
             expect(bs.hasAttachmentOverrides).to.equal(false);
@@ -151,11 +173,9 @@ describe('BlendState', function () {
         it('throws when used on one of the frozen presets', function () {
             expect(() => BlendState.NOBLEND.setAttachment(1, createBase())).to.throw();
         });
-
     });
 
     describe('#clearAttachment', function () {
-
         it('makes the attachment follow attachment 0 again', function () {
             const bs = createBase();
             bs.setAttachment(1, new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE));
@@ -184,11 +204,9 @@ describe('BlendState', function () {
 
             expect(bs.key).to.equal(createBase().key);
         });
-
     });
 
     describe('#key', function () {
-
         it('matches for two identically configured states without overrides', function () {
             expect(createBase().key).to.equal(createBase().key);
         });
@@ -245,11 +263,9 @@ describe('BlendState', function () {
             expect(BlendState.NOBLEND.key).to.equal(key);
             expect(BlendState.ALPHABLEND.key).to.equal(BlendState.ALPHABLEND.key);
         });
-
     });
 
     describe('#equals', function () {
-
         it('compares states without overrides', function () {
             expect(createBase().equals(createBase())).to.equal(true);
             expect(createBase().equals(new BlendState())).to.equal(false);
@@ -273,11 +289,9 @@ describe('BlendState', function () {
             expect(a.equals(createBase())).to.equal(false);
             expect(createBase().equals(a)).to.equal(false);
         });
-
     });
 
     describe('#copy', function () {
-
         it('copies the overrides', function () {
             const additive = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
             const src = createBase();
@@ -316,11 +330,9 @@ describe('BlendState', function () {
             expectSameState(dst.getAttachment(2, scratch), src);
             expect(dst.equals(src)).to.equal(true);
         });
-
     });
 
     describe('#clone', function () {
-
         it('preserves the overrides', function () {
             const additive = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
             const src = createBase();
@@ -340,11 +352,9 @@ describe('BlendState', function () {
 
             expect(src.getAttachment(1, scratch).colorOp).to.equal(BLENDEQUATION_ADD);
         });
-
     });
 
     describe('#usesDualSourceBlending', function () {
-
         it('detects a dual-source factor used by an overridden attachment', function () {
             const bs = createBase();
             expect(bs.usesDualSourceBlending).to.equal(false);
@@ -360,7 +370,5 @@ describe('BlendState', function () {
 
             expect(bs.usesDualSourceBlending).to.equal(false);
         });
-
     });
-
 });

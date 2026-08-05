@@ -4,7 +4,10 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import {
-    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE, isCompressedPixelFormat, PIXELFORMAT_RGBA8,
+    FILTER_LINEAR,
+    ADDRESS_CLAMP_TO_EDGE,
+    isCompressedPixelFormat,
+    PIXELFORMAT_RGBA8,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 
@@ -23,7 +26,7 @@ class CoreExporter {
      * Create a new instance of the exporter.
      */
     // eslint-disable-next-line no-useless-constructor
-    constructor() { }
+    constructor() {}
 
     /**
      * Converts a texture to a canvas.
@@ -37,14 +40,14 @@ class CoreExporter {
      * @ignore
      */
     textureToCanvas(texture, options = {}) {
-
         const image = texture.getSource();
 
-        if ((typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement) ||
+        if (
+            (typeof HTMLImageElement !== 'undefined' && image instanceof HTMLImageElement) ||
             (typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement) ||
             (typeof OffscreenCanvas !== 'undefined' && image instanceof OffscreenCanvas) ||
-            (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap)) {
-
+            (typeof ImageBitmap !== 'undefined' && image instanceof ImageBitmap)
+        ) {
             // texture dimensions
             const { width, height } = this.calcTextureSize(image.width, image.height, options.maxTextureSize);
 
@@ -112,34 +115,34 @@ class CoreExporter {
         drawQuadWithShader(device, renderTarget, shader);
 
         // async read back the pixels of the texture
-        return dstTexture.read(0, 0, width, height, {
-            renderTarget: renderTarget,
-            immediate: true
-        }).then((textureData) => {
+        return dstTexture
+            .read(0, 0, width, height, {
+                renderTarget: renderTarget,
+                immediate: true
+            })
+            .then((textureData) => {
+                dstTexture.destroy();
+                renderTarget.destroy();
 
-            dstTexture.destroy();
-            renderTarget.destroy();
+                const pixels = new Uint8ClampedArray(width * height * 4);
+                pixels.set(textureData);
 
-            const pixels = new Uint8ClampedArray(width * height * 4);
-            pixels.set(textureData);
+                // copy pixels to a canvas
+                const newImage = new ImageData(pixels, width, height);
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const newContext = canvas.getContext('2d');
+                if (!newContext) {
+                    return Promise.resolve(undefined);
+                }
+                newContext.putImageData(newImage, 0, 0);
 
-            // copy pixels to a canvas
-            const newImage = new ImageData(pixels, width, height);
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const newContext = canvas.getContext('2d');
-            if (!newContext) {
-                return Promise.resolve(undefined);
-            }
-            newContext.putImageData(newImage, 0, 0);
-
-            return Promise.resolve(canvas);
-        });
+                return Promise.resolve(canvas);
+            });
     }
 
     calcTextureSize(width, height, maxTextureSize) {
-
         if (maxTextureSize) {
             const scale = Math.min(maxTextureSize / Math.max(width, height), 1);
             width = Math.round(width * scale);

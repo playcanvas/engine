@@ -176,8 +176,7 @@ class WebgpuXrBridge {
                 if (sub?.viewport) {
                     return sub.viewport;
                 }
-            } catch {
-            }
+            } catch {}
         }
         return /** @type {XRViewport} */ ({ x: 0, y: 0, width: 0, height: 0 });
     }
@@ -263,11 +262,7 @@ class WebgpuXrBridge {
         const width = xrCamera.width;
         const height = xrCamera.height;
 
-        encoder.copyTextureToTexture(
-            { texture: src },
-            { texture: dst },
-            [width, height, 1]
-        );
+        encoder.copyTextureToTexture({ texture: src }, { texture: dst }, [width, height, 1]);
     }
 
     /**
@@ -279,7 +274,9 @@ class WebgpuXrBridge {
      */
     syncCameraDepthTexture(depthInfo, _texture, _depthPixelFormat) {
         if (depthInfo?.texture) {
-            Debug.warnOnce('WebXR GPU depth textures are not supported on WebGPU in this engine build; use CPU depth or WebGL until XRGPUBinding exposes depth.');
+            Debug.warnOnce(
+                'WebXR GPU depth textures are not supported on WebGPU in this engine build; use CPU depth or WebGL until XRGPUBinding exposes depth.'
+            );
         }
     }
 

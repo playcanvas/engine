@@ -1,5 +1,5 @@
 // SOG GSplat format - reads directly from source textures (no packed texture step)
-export default /* glsl */`
+export default /* glsl */ `
 // means dequantization (both V1 and V2)
 uniform vec3 means_mins;
 uniform vec3 means_maxs;

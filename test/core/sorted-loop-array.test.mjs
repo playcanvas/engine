@@ -3,9 +3,7 @@ import { expect } from 'chai';
 import { SortedLoopArray } from '../../src/core/sorted-loop-array.js';
 
 describe('SortedLoopArray', function () {
-
     describe('#constructor', function () {
-
         it('creates a new sorted loop array', function () {
             const array = new SortedLoopArray({
                 sortBy: 'priority'
@@ -14,11 +12,9 @@ describe('SortedLoopArray', function () {
             expect(array.items).to.be.an('array');
             expect(array.items.length).to.equal(0);
         });
-
     });
 
     describe('#append()', function () {
-
         it('adds item to array', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.items.length).to.equal(0);
@@ -79,11 +75,9 @@ describe('SortedLoopArray', function () {
             expect(arr.items[1]).to.equal(b);
             expect(arr.items[2]).to.equal(c);
         });
-
     });
 
     describe('#insert()', function () {
-
         it('adds item to array', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.items.length).to.equal(0);
@@ -258,11 +252,9 @@ describe('SortedLoopArray', function () {
             arr.insert({ priority: 1 });
             expect(arr.length).to.equal(1);
         });
-
     });
 
     describe('#remove()', function () {
-
         it('removes item from array', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             expect(arr.items.length).to.equal(0);
@@ -376,11 +368,9 @@ describe('SortedLoopArray', function () {
             arr.remove(c);
             expect(arr.loopIndex).to.equal(1);
         });
-
     });
 
     describe('#sort', function () {
-
         it('sorts items', function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
@@ -419,7 +409,7 @@ describe('SortedLoopArray', function () {
             expect(arr.loopIndex).to.equal(2);
         });
 
-        it('does not update loopIndex if it cannot find element it\'s pointing to', function () {
+        it("does not update loopIndex if it cannot find element it's pointing to", function () {
             const arr = new SortedLoopArray({ sortBy: 'priority' });
             const a = {
                 priority: 1
@@ -436,7 +426,5 @@ describe('SortedLoopArray', function () {
             arr.sort();
             expect(arr.loopIndex).to.equal(-1);
         });
-
     });
-
 });

@@ -1,6 +1,6 @@
 // fragment shader internally used to apply morph targets in textures into a final texture containing
 // blended morph targets
-export default /* wgsl */`
+export default /* wgsl */ `
 
     varying uv0: vec2f;
 

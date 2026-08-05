@@ -15,7 +15,7 @@ class PrimitivesCache {
 
     // destroy all created primitives when the device is destroyed
     destroy(device) {
-        this.map.forEach(primData => primData.mesh.destroy());
+        this.map.forEach((primData) => primData.mesh.destroy());
     }
 }
 
@@ -23,7 +23,6 @@ const _primitivesCache = new DeviceCache();
 
 // returns Primitive data, used by ModelComponent and RenderComponent
 const getShapePrimitive = (device, type) => {
-
     // cache for the device
     const cache = _primitivesCache.get(device, () => {
         return new PrimitivesCache();
@@ -33,32 +32,33 @@ const getShapePrimitive = (device, type) => {
 
     // not in cache, create new
     if (!primData) {
-
         let mesh, area;
         switch (type) {
-
             case 'box':
                 mesh = Mesh.fromGeometry(device, new BoxGeometry());
-                area = { x: 2, y: 2, z: 2, uv: (2.0 / 3) };
+                area = { x: 2, y: 2, z: 2, uv: 2.0 / 3 };
                 break;
 
             case 'capsule':
                 mesh = Mesh.fromGeometry(device, new CapsuleGeometry({ radius: 0.5, height: 2 }));
-                area = { x: (Math.PI * 2), y: Math.PI, z: (Math.PI * 2), uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+                area = { x: Math.PI * 2, y: Math.PI, z: Math.PI * 2, uv: 1.0 / 3 + (1.0 / 3 / 3) * 2 };
                 break;
 
             case 'cone':
                 mesh = Mesh.fromGeometry(device, new ConeGeometry({ baseRadius: 0.5, peakRadius: 0, height: 1 }));
-                area = { x: 2.54, y: 2.54, z: 2.54, uv: (1.0 / 3 + (1.0 / 3) / 3) };
+                area = { x: 2.54, y: 2.54, z: 2.54, uv: 1.0 / 3 + 1.0 / 3 / 3 };
                 break;
 
             case 'cylinder':
                 mesh = Mesh.fromGeometry(device, new CylinderGeometry({ radius: 0.5, height: 1 }));
-                area = { x: Math.PI, y: (0.79 * 2), z: Math.PI, uv: (1.0 / 3 + ((1.0 / 3) / 3) * 2) };
+                area = { x: Math.PI, y: 0.79 * 2, z: Math.PI, uv: 1.0 / 3 + (1.0 / 3 / 3) * 2 };
                 break;
 
             case 'plane':
-                mesh = Mesh.fromGeometry(device, new PlaneGeometry({ halfExtents: new Vec2(0.5, 0.5), widthSegments: 1, lengthSegments: 1 }));
+                mesh = Mesh.fromGeometry(
+                    device,
+                    new PlaneGeometry({ halfExtents: new Vec2(0.5, 0.5), widthSegments: 1, lengthSegments: 1 })
+                );
                 area = { x: 0, y: 1, z: 0, uv: 1 };
                 break;
 
@@ -82,7 +82,6 @@ const getShapePrimitive = (device, type) => {
         primData = { mesh: mesh, area: area };
 
         cache.map.set(type, primData);
-
     }
 
     return primData;

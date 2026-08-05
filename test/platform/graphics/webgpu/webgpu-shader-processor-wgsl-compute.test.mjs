@@ -2,7 +2,8 @@ import { expect } from 'chai';
 
 import {
     SHADERSTAGE_COMPUTE,
-    SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT
+    SAMPLETYPE_FLOAT,
+    SAMPLETYPE_UNFILTERABLE_FLOAT
 } from '../../../../src/platform/graphics/constants.js';
 import { ScopeSpace } from '../../../../src/platform/graphics/scope-space.js';
 import { WebgpuShaderProcessorWGSL } from '../../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
@@ -27,7 +28,6 @@ function run(source, reflectedGroupIndex = 1) {
 }
 
 describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
-
     it('reflects a read_write storage buffer (regex fix)', function () {
         const src = `
             var<storage, read_write> outBuf: array<u32>;
@@ -221,7 +221,9 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
 
         expect(result.cshader).to.contain('@group(0) @binding(0) var inputTexture: texture_2d<f32>;');
         expect(result.cshader).to.contain('@group(0) @binding(1) var inputTexture_sampler: sampler;');
-        expect(result.cshader).to.contain('@group(0) @binding(2) var outputTexture: texture_storage_2d<rgba8unorm, write>;');
+        expect(result.cshader).to.contain(
+            '@group(0) @binding(2) var outputTexture: texture_storage_2d<rgba8unorm, write>;'
+        );
     });
 
     it('reflects the particles-simulation pattern (loose uniforms + rw/ro storage, group 0)', function () {
@@ -238,16 +240,18 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
         const fmt = result.computeBindGroupFormat;
 
         // two storage buffers + one generated uniform buffer
-        expect(fmt.storageBufferFormats.map(f => f.name)).to.have.members(['particles', 'spheres']);
+        expect(fmt.storageBufferFormats.map((f) => f.name)).to.have.members(['particles', 'spheres']);
         expect(fmt.uniformBufferFormats).to.have.lengthOf(1);
 
-        const particlesFmt = fmt.storageBufferFormats.find(f => f.name === 'particles');
-        const spheresFmt = fmt.storageBufferFormats.find(f => f.name === 'spheres');
+        const particlesFmt = fmt.storageBufferFormats.find((f) => f.name === 'particles');
+        const spheresFmt = fmt.storageBufferFormats.find((f) => f.name === 'spheres');
         expect(particlesFmt.readOnly).to.equal(false);
         expect(spheresFmt.readOnly).to.equal(true);
 
         // particles(0), spheres(1), ub_compute(2)
-        expect(result.cshader).to.contain('@group(0) @binding(0) var<storage, read_write> particles : array<Particle>;');
+        expect(result.cshader).to.contain(
+            '@group(0) @binding(0) var<storage, read_write> particles : array<Particle>;'
+        );
         expect(result.cshader).to.contain('@group(0) @binding(1) var<storage, read> spheres : array<Sphere>;');
         expect(result.cshader).to.contain('@group(0) @binding(2) var<uniform> ub_compute');
         expect(result.cshader).to.contain('ub_compute.count');
@@ -267,10 +271,9 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
 
         // reflected resources go to group 1
         const fmt = result.computeBindGroupFormat;
-        expect(fmt.storageBufferFormats.map(f => f.name)).to.include('reflectedIn');
-        expect(fmt.storageBufferFormats.map(f => f.name)).to.not.include('manualOut');
+        expect(fmt.storageBufferFormats.map((f) => f.name)).to.include('reflectedIn');
+        expect(fmt.storageBufferFormats.map((f) => f.name)).to.not.include('manualOut');
         expect(result.cshader).to.contain('@group(1) @binding(0) var<storage, read> reflectedIn : array<u32>;');
         expect(result.cshader).to.contain('ub_compute.scale');
     });
-
 });

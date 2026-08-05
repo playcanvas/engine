@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     #if SH_BANDS == 1
         const SH_COEFFS: i32 = 3;
     #elif SH_BANDS == 2

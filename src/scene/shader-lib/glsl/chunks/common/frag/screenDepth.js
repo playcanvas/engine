@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform highp sampler2D uSceneDepthMap;
 
 #ifndef SCREENSIZE

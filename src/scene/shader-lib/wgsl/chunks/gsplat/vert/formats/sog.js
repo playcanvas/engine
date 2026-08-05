@@ -1,5 +1,5 @@
 // SOG GSplat format - reads directly from source textures (no packed texture step)
-export default /* wgsl */`
+export default /* wgsl */ `
 // means dequantization (both V1 and V2)
 uniform means_mins: vec3f;
 uniform means_maxs: vec3f;

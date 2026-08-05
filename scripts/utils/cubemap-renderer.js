@@ -30,7 +30,6 @@ CubemapRenderer.attributes.add('depth', {
 
 // initialize code called once per entity
 CubemapRenderer.prototype.initialize = function () {
-
     // this entity needs to have camera component as well
     var camera = this.entity.camera;
     if (!camera) {
@@ -70,7 +69,6 @@ CubemapRenderer.prototype.initialize = function () {
     let firstCamera = null;
     let lastCamera = null;
     for (var i = 0; i < 6; i++) {
-
         // render target, connected to cubemap texture face
         var renderTarget = new pc.RenderTarget({
             name: `CubemapRenderer-Face${i}`,

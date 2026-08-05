@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 varying vec4 texCoordsAlphaLife;
 
 uniform sampler2D colorMap;

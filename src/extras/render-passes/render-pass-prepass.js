@@ -1,15 +1,9 @@
-import {
-    PIXELFORMAT_R32F,
-    PIXELFORMAT_RGBA8
-} from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 
-import {
-    LAYERID_DEPTH,
-    SHADER_PREPASS
-} from '../../scene/constants.js';
+import { LAYERID_DEPTH, SHADER_PREPASS } from '../../scene/constants.js';
 import { Color } from '../../core/math/color.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 
@@ -60,11 +54,16 @@ class RenderPassPrepass extends RenderPass {
     }
 
     setupRenderTarget(options) {
-
         const { device } = this;
 
         this.linearDepthFormat = device.textureFloatRenderable ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
-        this.linearDepthTexture = Texture.createDataTexture2D(device, 'SceneLinearDepthTexture', 1, 1, this.linearDepthFormat);
+        this.linearDepthTexture = Texture.createDataTexture2D(
+            device,
+            'SceneLinearDepthTexture',
+            1,
+            1,
+            this.linearDepthFormat
+        );
 
         const renderTarget = new RenderTarget({
             name: 'PrepassRT',
@@ -89,7 +88,6 @@ class RenderPassPrepass extends RenderPass {
     }
 
     execute() {
-
         const { renderer, scene, renderTarget } = this;
         const camera = this.camera.camera;
         const layers = scene.layers.layerList;
@@ -120,7 +118,6 @@ class RenderPassPrepass extends RenderPass {
     }
 
     frameUpdate() {
-
         super.frameUpdate();
 
         // depth clear value set up each frame
@@ -133,7 +130,7 @@ class RenderPassPrepass extends RenderPass {
             const farClip = camera.farClip - Number.MIN_VALUE;
             clearValue = this.linearDepthClearValue;
             if (this.linearDepthFormat === PIXELFORMAT_R32F) {
-                clearValue.r = farClip;  // only R is used
+                clearValue.r = farClip; // only R is used
             } else {
                 FloatPacking.float2RGBA8(farClip, clearValue);
             }

@@ -172,7 +172,8 @@ class ApplicationStats {
         stats.depthMapTime = renderer._depthMapTime;
         stats.forwardTime = renderer._forwardTime;
         const prims = device._primsPerFrame;
-        stats.triangles = prims[PRIMITIVE_TRIANGLES] / 3 +
+        stats.triangles =
+            prims[PRIMITIVE_TRIANGLES] / 3 +
             Math.max(prims[PRIMITIVE_TRISTRIP] - 2, 0) +
             Math.max(prims[PRIMITIVE_TRIFAN] - 2, 0);
         stats.cullTime = renderer._cullTime;

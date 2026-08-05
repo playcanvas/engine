@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     localPos = localPos * scale * uniform.emitterScale;
     localPos = localPos + particlePos;
 

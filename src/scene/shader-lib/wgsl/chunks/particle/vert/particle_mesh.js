@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 var localPos = meshLocalPos;
 let rotResultXY = rotateWithMatrix(localPos.xy, inAngle);
 localPos = vec3f(rotResultXY.rotatedVec, localPos.z);

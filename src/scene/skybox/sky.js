@@ -227,7 +227,6 @@ class Sky {
     }
 
     update() {
-
         // uniforms
         if (this.type !== SKYTYPE_INFINITE) {
             const { center, centerArray } = this;

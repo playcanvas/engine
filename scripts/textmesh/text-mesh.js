@@ -81,10 +81,11 @@ class Polygon {
     }
 
     inside(p) {
-        let count = 0, cur = this.points[this.points.length - 1];
+        let count = 0,
+            cur = this.points[this.points.length - 1];
         this.points.forEach((next) => {
-            const p0 = (cur.y < next.y ? cur : next);
-            const p1 = (cur.y < next.y ? next : cur);
+            const p0 = cur.y < next.y ? cur : next;
+            const p1 = cur.y < next.y ? next : cur;
             if (p0.y < p.y + EPSILON && p1.y > p.y + EPSILON) {
                 if ((p1.x - p0.x) * (p.y - p0.y) > (p.x - p0.x) * (p1.y - p0.y)) {
                     count += 1;
@@ -92,10 +93,9 @@ class Polygon {
             }
             cur = next;
         });
-        return (count % 2) !== 0;
+        return count % 2 !== 0;
     }
 }
-
 
 var TextMesh = pc.createScript('textMesh');
 
@@ -113,11 +113,7 @@ TextMesh.attributes.add('text', {
 TextMesh.attributes.add('alignment', {
     type: 'number',
     default: 0,
-    enum: [
-        { 'Left': 0 },
-        { 'Center': 1 },
-        { 'Right': 2 }
-    ],
+    enum: [{ Left: 0 }, { Center: 1 }, { Right: 2 }],
     title: 'Alignment',
     description: 'Controls whether the text is centered or left or right justified'
 });
@@ -157,10 +153,7 @@ TextMesh.attributes.add('maxCurveSteps', {
 TextMesh.attributes.add('renderStyle', {
     type: 'number',
     default: 0,
-    enum: [
-        { 'Solid': 0 },
-        { 'Wireframe': 1 }
-    ],
+    enum: [{ Solid: 0 }, { Wireframe: 1 }],
     title: 'Render Style',
     description: 'Controls whether the text is rendered as solid or wireframe'
 });
@@ -265,7 +258,7 @@ TextMesh.prototype.parseCommands = function (commands) {
         vertexData.set(coords, vertexCount * 2);
 
         // Add index data
-        earcut(coords, holes).forEach(i => indices.push(i + vertexCount));
+        earcut(coords, holes).forEach((i) => indices.push(i + vertexCount));
         vertexCount += coords.length / 2;
     }
 
@@ -296,8 +289,20 @@ TextMesh.prototype.parseCommands = function (commands) {
             const base = vertices.length / 3;
             const p1 = poly.points[i];
             const p2 = poly.points[i + 1];
-            vertices.push(p1.x * scalar, p1.y * scalar, this.depth, p2.x * scalar, p2.y * scalar, this.depth,
-                p1.x * scalar, p1.y * scalar, 0, p2.x * scalar, p2.y * scalar, 0);
+            vertices.push(
+                p1.x * scalar,
+                p1.y * scalar,
+                this.depth,
+                p2.x * scalar,
+                p2.y * scalar,
+                this.depth,
+                p1.x * scalar,
+                p1.y * scalar,
+                0,
+                p2.x * scalar,
+                p2.y * scalar,
+                0
+            );
             indices.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
         }
     });

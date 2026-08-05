@@ -251,9 +251,9 @@ class GSplatText extends Script {
                 const alpha = a / 255;
 
                 // Calculate position on XZ plane, centered at origin
-                const x = (px / maxDim) - 0.5;
+                const x = px / maxDim - 0.5;
                 const y = 0;
-                const z = -((py / maxDim) - 0.5);
+                const z = -(py / maxDim - 0.5);
 
                 // Write center data (RGBA32F: x, y, z, size)
                 centerData[splatIndex * 4 + 0] = x;

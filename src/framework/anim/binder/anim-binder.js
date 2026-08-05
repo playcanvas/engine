@@ -62,11 +62,7 @@ class AnimBinder {
      * encode(['spotLight'], 'light', ['color', 'r']);
      */
     static encode(entityPath, component, propertyPath) {
-        return `${
-            Array.isArray(entityPath) ? entityPath.join('/') : entityPath
-        }/${component}/${
-            Array.isArray(propertyPath) ? propertyPath.join('/') : propertyPath
-        }`;
+        return `${Array.isArray(entityPath) ? entityPath.join('/') : entityPath}/${component}/${Array.isArray(propertyPath) ? propertyPath.join('/') : propertyPath}`;
     }
 
     /**
@@ -86,18 +82,14 @@ class AnimBinder {
      *
      * @param {string} path - The animation curve path which is no longer driven.
      */
-    unresolve(path) {
-
-    }
+    unresolve(path) {}
 
     /**
      * Called by {@link AnimEvaluator} once a frame after animation updates are done.
      *
      * @param {number} deltaTime - Amount of time that passed in the current update.
      */
-    update(deltaTime) {
-
-    }
+    update(deltaTime) {}
 }
 
 export { AnimBinder };

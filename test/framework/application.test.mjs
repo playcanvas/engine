@@ -17,7 +17,6 @@ import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('Application', function () {
-
     let app;
 
     beforeEach(function () {
@@ -32,7 +31,6 @@ describe('Application', function () {
     });
 
     describe('#constructor', function () {
-
         it('support no options', function () {
             expect(app.assets).to.be.instanceOf(AssetRegistry);
             expect(app.autoRender).to.be.true;
@@ -58,11 +56,9 @@ describe('Application', function () {
             expect(app.touch).to.be.null;
             expect(app.xr).to.be.instanceof(XrManager);
         });
-
     });
 
     describe('#destroy', function () {
-
         it('destroys the application', function () {
             app.destroy();
 
@@ -86,7 +82,5 @@ describe('Application', function () {
 
             app = null;
         });
-
     });
-
 });

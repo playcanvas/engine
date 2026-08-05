@@ -6,7 +6,13 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { LayerRenderStep } from './layer-render-step.js';
-import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD } from '../constants.js';
+import {
+    EVENT_POSTRENDER,
+    EVENT_POSTRENDER_LAYER,
+    EVENT_PRERENDER,
+    EVENT_PRERENDER_LAYER,
+    SHADER_FORWARD
+} from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -100,10 +106,12 @@ class RenderPassForward extends RenderPass {
      * and layer clear flags. Defaults to true.
      */
     addLayer(cameraComponent, layer, transparent, autoClears = true) {
-
         Debug.assert(cameraComponent);
         Debug.assert(this.renderTarget !== undefined, 'Render pass needs to be initialized before adding layers');
-        Debug.assert(cameraComponent.camera.layersSet.has(layer.id), `Camera ${cameraComponent.entity.name} does not render layer ${layer.name}.`);
+        Debug.assert(
+            cameraComponent.camera.layersSet.has(layer.id),
+            `Camera ${cameraComponent.entity.name} does not render layer ${layer.name}.`
+        );
 
         const step = new LayerRenderStep(cameraComponent, layer, transparent, this.renderTarget);
 
@@ -127,7 +135,6 @@ class RenderPassForward extends RenderPass {
             // if this camera uses directional shadow lights
             const shadowDirLights = this.renderer.culler.cameraDirShadowLights.get(camera);
             if (shadowDirLights) {
-
                 for (let l = 0; l < shadowDirLights.length; l++) {
                     const light = shadowDirLights[l];
 
@@ -169,18 +176,18 @@ class RenderPassForward extends RenderPass {
     }
 
     updateClears() {
-
         // based on the first render action
         const step = this.layerRenderSteps[0];
         if (step) {
-
             // set up clear params if the camera covers the full viewport
             const cameraComponent = step.cameraComponent;
             const camera = cameraComponent.camera;
             const fullSizeClearRect = camera.fullSizeClearRect;
 
             this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined);
-            this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
+            this.setClearDepth(
+                fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined
+            );
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }
     }
@@ -226,7 +233,9 @@ class RenderPassForward extends RenderPass {
             Debug.call(() => {
                 const compLayer = layerComposition.getLayerByName(layer.name);
                 if (!compLayer) {
-                    Debug.warnOnce(`Layer ${layer.name} is not found in the scene and will not be rendered. Your render pass setup might need to be updated.`);
+                    Debug.warnOnce(
+                        `Layer ${layer.name} is not found in the scene and will not be rendered. Your render pass setup might need to be updated.`
+                    );
                 }
             });
 
@@ -237,7 +246,6 @@ class RenderPassForward extends RenderPass {
     }
 
     after() {
-
         // onPostRender events
         for (let i = 0; i < this.layerRenderSteps.length; i++) {
             const step = this.layerRenderSteps[i];
@@ -255,21 +263,22 @@ class RenderPassForward extends RenderPass {
      * @param {boolean} firstStep - True if this is the first render step in the render pass.
      */
     renderLayerRenderStep(step, firstStep) {
-
         const { renderer, scene } = this;
         const device = renderer.device;
 
         // layer
         const { layer, transparent, cameraComponent } = step;
 
-        DebugGraphics.pushGpuMarker(this.device, `Camera: ${cameraComponent ? cameraComponent.entity.name : 'Unnamed'}, Layer: ${layer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`);
+        DebugGraphics.pushGpuMarker(
+            this.device,
+            `Camera: ${cameraComponent ? cameraComponent.entity.name : 'Unnamed'}, Layer: ${layer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`
+        );
 
         // #if _PROFILER
         const drawTime = now();
         // #endif
 
         if (cameraComponent) {
-
             // override gamma correction and tone mapping settings
             const originalGammaCorrection = cameraComponent.gammaCorrection;
             const originalToneMapping = cameraComponent.toneMapping;
@@ -295,8 +304,7 @@ class RenderPassForward extends RenderPass {
             }
 
             const renderTarget = step.renderTarget ?? device.backBuffer;
-            renderer.renderForwardLayer(cameraComponent.camera, renderTarget, layer, transparent,
-                shaderPass, options);
+            renderer.renderForwardLayer(cameraComponent.camera, renderTarget, layer, transparent, shaderPass, options);
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
@@ -325,22 +333,15 @@ class RenderPassForward extends RenderPass {
         super.log(device, index);
 
         if (Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
-
             const { layerComposition } = this;
             this.layerRenderSteps.forEach((step, index) => {
-
                 const layer = step.layer;
                 const enabled = layer.enabled && layerComposition.isEnabled(layer, step.transparent);
                 const cameraComponent = step.cameraComponent;
 
-                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    ${index}:${
-                    (` Cam: ${cameraComponent ? cameraComponent.entity.name : '-'}`).padEnd(22, ' ')
-                }${(` Lay: ${layer.name}`).padEnd(22, ' ')
-                }${step.transparent ? ' TRANSP' : ' OPAQUE'
-                }${enabled ? ' ENABLED' : ' DISABLED'
-                }${(` Meshes: ${layer.meshInstances.length}`).padEnd(5, ' ')
-                }${step.firstCameraUse ? ' CAM-FIRST' : ''
-                }${step.lastCameraUse ? ' CAM-LAST' : ''}`
+                Debug.trace(
+                    TRACEID_RENDER_PASS_DETAIL,
+                    `    ${index}:${` Cam: ${cameraComponent ? cameraComponent.entity.name : '-'}`.padEnd(22, ' ')}${` Lay: ${layer.name}`.padEnd(22, ' ')}${step.transparent ? ' TRANSP' : ' OPAQUE'}${enabled ? ' ENABLED' : ' DISABLED'}${` Meshes: ${layer.meshInstances.length}`.padEnd(5, ' ')}${step.firstCameraUse ? ' CAM-FIRST' : ''}${step.lastCameraUse ? ' CAM-LAST' : ''}`
                 );
             });
         }

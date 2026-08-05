@@ -74,17 +74,21 @@ describe('SogParser', function () {
             texture.fire('load', texture);
         });
 
-        parser.load(META_URL, (err, resource) => {
-            expect(err).to.equal(null);
-            expect(resource).to.equal(null);
-            expect(urls).to.deep.equal([
-                'http://localhost:3210/static/assets/splats/means_l.webp',
-                'http://localhost:3210/static/assets/splats/means_u.webp',
-                'http://localhost:3210/static/assets/splats/quats.webp',
-                'http://localhost:3210/static/assets/splats/scales.webp',
-                'http://localhost:3210/static/assets/splats/sh0.webp'
-            ]);
-            done();
-        }, sog);
+        parser.load(
+            META_URL,
+            (err, resource) => {
+                expect(err).to.equal(null);
+                expect(resource).to.equal(null);
+                expect(urls).to.deep.equal([
+                    'http://localhost:3210/static/assets/splats/means_l.webp',
+                    'http://localhost:3210/static/assets/splats/means_u.webp',
+                    'http://localhost:3210/static/assets/splats/quats.webp',
+                    'http://localhost:3210/static/assets/splats/scales.webp',
+                    'http://localhost:3210/static/assets/splats/sh0.webp'
+                ]);
+                done();
+            },
+            sog
+        );
     });
 });

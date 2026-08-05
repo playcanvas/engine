@@ -18,7 +18,6 @@ function createHandler() {
 }
 
 describe('AudioHandler', function () {
-
     afterEach(function () {
         restore();
     });
@@ -74,7 +73,7 @@ describe('AudioHandler', function () {
             callback(null, new ArrayBuffer(8));
         });
 
-        handler.load({ load: 'blob:1234', original: 'x.mp3' }, () => { });
+        handler.load({ load: 'blob:1234', original: 'x.mp3' }, () => {});
         expect(requestOptions.responseType).to.equal(Http.ResponseType.ARRAY_BUFFER);
     });
 

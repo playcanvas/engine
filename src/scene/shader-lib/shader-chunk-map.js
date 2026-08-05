@@ -135,9 +135,9 @@ class ShaderChunkMap extends Map {
 
             // unique key for this chunk map
             this._key = Array.from(this.entries())
-            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-            .map(([k, v]) => `${k}=${hashCode(v)}`)
-            .join(',');
+                .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+                .map(([k, v]) => `${k}=${hashCode(v)}`)
+                .join(',');
         }
 
         return this._key;

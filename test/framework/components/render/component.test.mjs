@@ -21,7 +21,6 @@ describe('RenderComponent', function () {
     });
 
     describe('#onBeforeRemove', function () {
-
         it('unsubscribes from all four entity hierarchy events', function () {
             const e = new Entity();
             app.root.addChild(e);
@@ -67,6 +66,5 @@ describe('RenderComponent', function () {
 
             expect(worldLayer.meshInstances.length).to.equal(0);
         });
-
     });
 });

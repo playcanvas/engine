@@ -3,14 +3,16 @@ import { expect } from 'chai';
 import { Preprocessor } from '../../src/core/preprocessor.js';
 
 describe('Preprocessor', function () {
-
     const includes = new Map([
-        ['inc1', `
+        [
+            'inc1',
+            `
             block1
             #ifdef FEATURE2
                 nested
             #endif
-        `],
+        `
+        ],
         ['inc2', 'block2'],
         ['incLoop', 'inserted{i}\n']
     ]);

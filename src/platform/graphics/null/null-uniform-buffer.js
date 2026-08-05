@@ -4,14 +4,11 @@
  * @ignore
  */
 class NullUniformBuffer {
-    destroy(device) {
-    }
+    destroy(device) {}
 
-    loseContext() {
-    }
+    loseContext() {}
 
-    unlock(uniformBuffer) {
-    }
+    unlock(uniformBuffer) {}
 }
 
 export { NullUniformBuffer };

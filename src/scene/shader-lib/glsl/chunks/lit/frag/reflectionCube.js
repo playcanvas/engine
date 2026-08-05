@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform samplerCube texture_cubeMap;
 uniform float material_reflectivity;
 

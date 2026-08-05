@@ -70,7 +70,7 @@ class XrImageTracking extends EventHandler {
      * estimate the appropriate transformation. Modifying the tracked images list is only possible
      * before an AR session is started.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image -
+     * @param {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap} image
      * Image that is matching real world image as close as possible. Resolution of images should be
      * at least 300x300. High resolution does _not_ improve tracking performance. The color of the
      * image is irrelevant, so grayscale images can be used. Images with too many geometric
@@ -109,16 +109,19 @@ class XrImageTracking extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        this._manager.session.getTrackedImageScores().then((images) => {
-            this._available = true;
+        this._manager.session
+            .getTrackedImageScores()
+            .then((images) => {
+                this._available = true;
 
-            for (let i = 0; i < images.length; i++) {
-                this._images[i]._trackable = images[i] === 'trackable';
-            }
-        }).catch((err) => {
-            this._available = false;
-            this.fire('error', err);
-        });
+                for (let i = 0; i < images.length; i++) {
+                    this._images[i]._trackable = images[i] === 'trackable';
+                }
+            })
+            .catch((err) => {
+                this._available = false;
+                this.fire('error', err);
+            });
     }
 
     /** @private */
@@ -144,13 +147,17 @@ class XrImageTracking extends EventHandler {
      */
     prepareImages(callback) {
         if (this._images.length) {
-            Promise.all(this._images.map((trackedImage) => {
-                return trackedImage.prepare();
-            })).then((bitmaps) => {
-                callback(null, bitmaps);
-            }).catch((err) => {
-                callback(err, null);
-            });
+            Promise.all(
+                this._images.map((trackedImage) => {
+                    return trackedImage.prepare();
+                })
+            )
+                .then((bitmaps) => {
+                    callback(null, bitmaps);
+                })
+                .catch((err) => {
+                    callback(err, null);
+                });
         } else {
             callback(null, null);
         }
@@ -164,7 +171,7 @@ class XrImageTracking extends EventHandler {
         if (!this._available) return;
 
         const results = frame.getImageTrackingResults();
-        const index = { };
+        const index = {};
 
         for (let i = 0; i < results.length; i++) {
             index[results[i].index] = results[i];

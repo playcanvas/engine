@@ -105,7 +105,7 @@ class AssetReference {
      * @type {number}
      */
     set id(value) {
-        if (this.url) throw Error('Can\'t set id and url');
+        if (this.url) throw Error("Can't set id and url");
 
         this._unbind();
 
@@ -131,7 +131,7 @@ class AssetReference {
      * @type {string|null}
      */
     set url(value) {
-        if (this.id) throw Error('Can\'t set id and url');
+        if (this.id) throw Error("Can't set id and url");
 
         this._unbind();
 
@@ -161,7 +161,8 @@ class AssetReference {
         if (this.url) {
             if (this._onAssetLoad) this._evtLoadByUrl = this._registry.on(`load:url:${this.url}`, this._onLoad, this);
             if (this._onAssetAdd) this._evtAddByUrl = this._registry.once(`add:url:${this.url}`, this._onAdd, this);
-            if (this._onAssetRemove) this._evtRemoveByUrl = this._registry.on(`remove:url:${this.url}`, this._onRemove, this);
+            if (this._onAssetRemove)
+                this._evtRemoveByUrl = this._registry.on(`remove:url:${this.url}`, this._onRemove, this);
         }
     }
 

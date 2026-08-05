@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #if LIT_AMBIENT_SOURCE == AMBIENTSH
     uniform ambientSH: array<vec3f, 9>;

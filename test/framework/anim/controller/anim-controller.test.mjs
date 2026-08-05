@@ -13,7 +13,6 @@ import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('AnimController', function () {
-
     let app;
     let controller;
 
@@ -37,36 +36,36 @@ describe('AnimController', function () {
         ];
         const transitions = [
             {
-                'from': 'START',
-                'to': 'Initial State'
+                from: 'START',
+                to: 'Initial State'
             },
             {
-                'from': 'Other State 1',
-                'to': 'Other State 2',
+                from: 'Other State 1',
+                to: 'Other State 2',
                 priority: 2,
-                'conditions': [
+                conditions: [
                     {
-                        'parameterName': 'param',
-                        'predicate': ANIM_LESS_THAN,
-                        'value': 1
+                        parameterName: 'param',
+                        predicate: ANIM_LESS_THAN,
+                        value: 1
                     }
                 ]
             },
             {
-                'from': 'Other State 1',
-                'to': 'Other State 2',
+                from: 'Other State 1',
+                to: 'Other State 2',
                 priority: 1,
-                'conditions': [
+                conditions: [
                     {
-                        'parameterName': 'param',
-                        'predicate': ANIM_LESS_THAN,
-                        'value': 0.25
+                        parameterName: 'param',
+                        predicate: ANIM_LESS_THAN,
+                        value: 0.25
                     }
                 ]
             },
             {
-                'from': 'ANY',
-                'to': 'Other State 2',
+                from: 'ANY',
+                to: 'Other State 2',
                 priority: 3
             }
         ];
@@ -75,10 +74,10 @@ describe('AnimController', function () {
         animBinder.resolve = () => {};
         const animEvaluator = new AnimEvaluator(animBinder);
         const parameters = {
-            'param': {
-                'name': 'param',
-                'type': 'FLOAT',
-                'value': 0.5
+            param: {
+                name: 'param',
+                type: 'FLOAT',
+                value: 0.5
             }
         };
         const consumedTriggers = new Set();
@@ -88,16 +87,31 @@ describe('AnimController', function () {
             transitions,
             true, // activate
             null, // event handler
-            name => parameters[name],
-            name => consumedTriggers.add(name)
+            (name) => parameters[name],
+            (name) => consumedTriggers.add(name)
         );
         // add tracks
         const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];
         const inputs = [new AnimData(1, [0, 1, 2])];
         const outputs = [new AnimData(3, [0, 0, 0, 1, 2, 3, 2, 4, 6])];
-        controller.assignAnimation('Initial State', new AnimTrack('initialStateTrack', 4, inputs, outputs, curves), 1, true);
-        controller.assignAnimation('Other State 1', new AnimTrack('otherState1Track', 4, inputs, outputs, curves), 1, true);
-        controller.assignAnimation('Other State 2', new AnimTrack('otherState2Track', 4, inputs, outputs, curves), 1, true);
+        controller.assignAnimation(
+            'Initial State',
+            new AnimTrack('initialStateTrack', 4, inputs, outputs, curves),
+            1,
+            true
+        );
+        controller.assignAnimation(
+            'Other State 1',
+            new AnimTrack('otherState1Track', 4, inputs, outputs, curves),
+            1,
+            true
+        );
+        controller.assignAnimation(
+            'Other State 2',
+            new AnimTrack('otherState2Track', 4, inputs, outputs, curves),
+            1,
+            true
+        );
     });
 
     afterEach(function () {
@@ -107,15 +121,12 @@ describe('AnimController', function () {
     });
 
     describe('#constructor', function () {
-
         it('instantiates correctly', function () {
             expect(controller).to.be.ok;
         });
-
     });
 
     describe('#_getActiveStateProgressForTime', function () {
-
         it('returns 1 when the controller is in the START state', function () {
             controller.activeState = 'START';
             expect(controller._getActiveStateProgressForTime(0)).to.equal(1);
@@ -145,11 +156,9 @@ describe('AnimController', function () {
             controller.update(0);
             expect(controller._getActiveStateProgressForTime(4)).to.equal(1);
         });
-
     });
 
     describe('#_findTransitionsFromState', function () {
-
         it('returns the transitions for a given state', function () {
             expect(controller._findTransitionsFromState('START').length).to.equal(1);
             expect(controller._findTransitionsFromState('START')[0].to).to.equal('Initial State');
@@ -164,11 +173,9 @@ describe('AnimController', function () {
             expect(controller._findTransitionsFromState('Other State 1')[0].priority).to.equal(1);
             expect(controller._findTransitionsFromState('Other State 1')[1].priority).to.equal(2);
         });
-
     });
 
     describe('#_findTransitionsBetweenStates', function () {
-
         it('returns the transitions between two states', function () {
             expect(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2').length).to.equal(2);
         });
@@ -178,27 +185,35 @@ describe('AnimController', function () {
             expect(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0].priority).to.equal(1);
             expect(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[1].priority).to.equal(2);
         });
-
     });
 
     describe('#_transitionHasConditionsMet', function () {
-
         it('returns true when no conditions are present', function () {
-            expect(controller._transitionHasConditionsMet(controller._findTransitionsBetweenStates('START', 'Initial State')[0])).to.equal(true);
+            expect(
+                controller._transitionHasConditionsMet(
+                    controller._findTransitionsBetweenStates('START', 'Initial State')[0]
+                )
+            ).to.equal(true);
         });
 
         it('returns true when a condition is present and met', function () {
-            expect(controller._transitionHasConditionsMet(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[1])).to.equal(true);
+            expect(
+                controller._transitionHasConditionsMet(
+                    controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[1]
+                )
+            ).to.equal(true);
         });
 
         it('returns false when a condition is present but not met', function () {
-            expect(controller._transitionHasConditionsMet(controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0])).to.equal(false);
+            expect(
+                controller._transitionHasConditionsMet(
+                    controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0]
+                )
+            ).to.equal(false);
         });
-
     });
 
     describe('#_findTransition', function () {
-
         it('returns a transition with the correct from state when from and to are supplied', function () {
             const transition = controller._findTransition('START', 'Initial State');
             expect(transition.from).to.equal('START');
@@ -335,11 +350,9 @@ describe('AnimController', function () {
             const transition = controller._findTransition('START');
             expect(transition.from).to.equal('ANY');
         });
-
     });
 
     describe('#updateStateFromTransition', function () {
-
         it('begins transitions to the destination state', function () {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             controller.updateStateFromTransition(transition);
@@ -398,7 +411,5 @@ describe('AnimController', function () {
             controller.updateStateFromTransition(transition);
             expect(controller._animEvaluator.clips[0].time).to.equal(0);
         });
-
     });
-
 });

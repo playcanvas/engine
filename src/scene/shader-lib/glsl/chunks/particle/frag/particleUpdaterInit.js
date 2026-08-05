@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 varying vec2 vUv0;
 
 #ifdef CAPS_TEXTURE_FLOAT_RENDERABLE

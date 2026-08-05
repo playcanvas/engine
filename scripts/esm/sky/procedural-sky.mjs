@@ -804,8 +804,8 @@ class ProceduralSky extends Script {
      * @private
      */
     _computeSunDir(out) {
-        const el = this.elevation * Math.PI / 180;
-        const az = (this.azimuth + this.rotation) * Math.PI / 180;
+        const el = (this.elevation * Math.PI) / 180;
+        const az = ((this.azimuth + this.rotation) * Math.PI) / 180;
         const cosEl = Math.cos(el);
         return out.set(cosEl * Math.sin(az), Math.sin(el), cosEl * Math.cos(az)).normalize();
     }
@@ -819,7 +819,7 @@ class ProceduralSky extends Script {
      * @private
      */
     _computeMoonDir(out) {
-        const a = this.rotation * Math.PI / 180;
+        const a = (this.rotation * Math.PI) / 180;
         const sin = Math.sin(a);
         const cos = Math.cos(a);
         const { x, y, z } = this.moonDirection;
@@ -844,25 +844,25 @@ class ProceduralSky extends Script {
         // rayleigh
         const sunfade = 1.0 - Math.min(Math.max(1.0 - Math.exp(sunY), 0), 1);
         const rayleighCoeff = this.rayleigh - (1.0 - sunfade);
-        scope.resolve('procSkyBetaR').setValue([
-            SKY_TOTAL_RAYLEIGH[0] * rayleighCoeff,
-            SKY_TOTAL_RAYLEIGH[1] * rayleighCoeff,
-            SKY_TOTAL_RAYLEIGH[2] * rayleighCoeff
-        ]);
+        scope
+            .resolve('procSkyBetaR')
+            .setValue([
+                SKY_TOTAL_RAYLEIGH[0] * rayleighCoeff,
+                SKY_TOTAL_RAYLEIGH[1] * rayleighCoeff,
+                SKY_TOTAL_RAYLEIGH[2] * rayleighCoeff
+            ]);
 
         // mie
         const mieC = 0.434 * (0.2 * this.turbidity * 1e-18) * this.mieCoefficient;
-        scope.resolve('procSkyBetaM').setValue([
-            SKY_MIE_CONST[0] * mieC,
-            SKY_MIE_CONST[1] * mieC,
-            SKY_MIE_CONST[2] * mieC
-        ]);
+        scope
+            .resolve('procSkyBetaM')
+            .setValue([SKY_MIE_CONST[0] * mieC, SKY_MIE_CONST[1] * mieC, SKY_MIE_CONST[2] * mieC]);
 
         // sun intensity
         const zenithCos = Math.max(-1, Math.min(1, sunY));
-        scope.resolve('procSkySunE').setValue(
-            SKY_EE * Math.max(0, 1.0 - Math.exp(-((SKY_CUTOFF - Math.acos(zenithCos)) / SKY_STEEPNESS)))
-        );
+        scope
+            .resolve('procSkySunE')
+            .setValue(SKY_EE * Math.max(0, 1.0 - Math.exp(-((SKY_CUTOFF - Math.acos(zenithCos)) / SKY_STEEPNESS))));
     }
 
     /**
@@ -929,12 +929,7 @@ class ProceduralSky extends Script {
         const ref = Math.abs(src.y) > 0.99 ? Vec3.RIGHT : Vec3.UP;
         tmpX.cross(src, ref).normalize();
         tmpZ.cross(tmpX, src).normalize();
-        sunRotMat.set([
-            tmpX.x, tmpX.y, tmpX.z, 0,
-            src.x, src.y, src.z, 0,
-            tmpZ.x, tmpZ.y, tmpZ.z, 0,
-            0, 0, 0, 1
-        ]);
+        sunRotMat.set([tmpX.x, tmpX.y, tmpX.z, 0, src.x, src.y, src.z, 0, tmpZ.x, tmpZ.y, tmpZ.z, 0, 0, 0, 0, 1]);
         sunRotQuat.setFromMat4(sunRotMat);
         this.sunLight.setRotation(sunRotQuat);
 
@@ -977,7 +972,7 @@ class ProceduralSky extends Script {
         scope.resolve('procSkyStarSize').setValue(this.starSize);
         scope.resolve('procSkyTwilightGlow').setValue(this.twilightGlow);
         scope.resolve('procSkyMoonColor').setValue([this.moonColor.r, this.moonColor.g, this.moonColor.b]);
-        scope.resolve('procSkyMoonSize').setValue(this.moonSize * Math.PI / 180);
+        scope.resolve('procSkyMoonSize').setValue((this.moonSize * Math.PI) / 180);
         scope.resolve('procSkyMoonGlow').setValue(this.moonGlow);
         this._computeMoonDir(tmpMoon);
         scope.resolve('procSkyMoonDir').setValue([-tmpMoon.x, tmpMoon.y, tmpMoon.z]);
@@ -986,7 +981,7 @@ class ProceduralSky extends Script {
 
         // regenerate the lighting only when the sun moved enough or the sky parameters changed
         const params = `${this.rayleigh}|${this.turbidity}|${this.mieCoefficient}|${this.mieDirectionalG}|${this.luminance}|${this.atlasSize}|${this.lightingResolution}`;
-        const cosThreshold = Math.cos(this.lightingThreshold * Math.PI / 180);
+        const cosThreshold = Math.cos((this.lightingThreshold * Math.PI) / 180);
         const moved = this._skyDir.dot(this._bakedDir) < cosThreshold;
         if (moved || params !== this._bakedParams) {
             this._bakeLighting();

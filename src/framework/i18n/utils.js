@@ -1,7 +1,4 @@
-import {
-    DEFAULT_LOCALE,
-    DEFAULT_LOCALE_FALLBACKS
-} from './constants.js';
+import { DEFAULT_LOCALE, DEFAULT_LOCALE_FALLBACKS } from './constants.js';
 
 // Maps locale to function that returns the plural index
 // based on the CLDR rules. See here for reference
@@ -62,22 +59,12 @@ function findAvailableLocale(desiredLocale, availableLocales) {
 }
 
 // Only OTHER
-definePluralFn([
-    'ja',
-    'ko',
-    'th',
-    'vi',
-    'zh',
-    'id'
-], (n) => {
+definePluralFn(['ja', 'ko', 'th', 'vi', 'zh', 'id'], (n) => {
     return 0;
 });
 
 // ONE, OTHER
-definePluralFn([
-    'fa',
-    'hi'
-], (n) => {
+definePluralFn(['fa', 'hi'], (n) => {
     if (n >= 0 && n <= 1) {
         return 0; // one
     }
@@ -86,10 +73,7 @@ definePluralFn([
 });
 
 // from Unicode rules: i = 0..1
-definePluralFn([
-    'fr',
-    'pt'
-], (n) => {
+definePluralFn(['fr', 'pt'], (n) => {
     if (n >= 0 && n < 2) {
         return 0; // one
     }
@@ -98,30 +82,16 @@ definePluralFn([
 });
 
 // danish
-definePluralFn([
-    'da'
-], (n) => {
-    if (n === 1 || !Number.isInteger(n) && n >= 0 && n <= 1) {
+definePluralFn(['da'], (n) => {
+    if (n === 1 || (!Number.isInteger(n) && n >= 0 && n <= 1)) {
         return 0; // one
     }
 
     return 1; // other
 });
 
-definePluralFn([
-    'de',
-    'en',
-    'it',
-    'el',
-    'es',
-    'tr',
-    'fi',
-    'sv',
-    'nb',
-    'no',
-    'ur'
-], (n) => {
-    if (n === 1)  {
+definePluralFn(['de', 'en', 'it', 'el', 'es', 'tr', 'fi', 'sv', 'nb', 'no', 'ur'], (n) => {
+    if (n === 1) {
         return 0; // one
     }
 
@@ -129,10 +99,7 @@ definePluralFn([
 });
 
 // ONE, FEW, MANY, OTHER
-definePluralFn([
-    'ru',
-    'uk'
-], (n) => {
+definePluralFn(['ru', 'uk'], (n) => {
     if (Number.isInteger(n)) {
         const mod10 = n % 10;
         const mod100 = n % 100;
@@ -141,7 +108,7 @@ definePluralFn([
             return 0; // one
         } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
             return 1; // few
-        } else if (mod10 === 0 || mod10 >= 5 && mod10 <= 9 || mod100 >= 11 && mod100 <= 14) {
+        } else if (mod10 === 0 || (mod10 >= 5 && mod10 <= 9) || (mod100 >= 11 && mod100 <= 14)) {
             return 2; // many
         }
     }
@@ -150,9 +117,7 @@ definePluralFn([
 });
 
 // polish
-definePluralFn([
-    'pl'
-], (n) => {
+definePluralFn(['pl'], (n) => {
     if (Number.isInteger(n)) {
         if (n === 1) {
             return 0; // one
@@ -162,7 +127,7 @@ definePluralFn([
 
         if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
             return 1; // few
-        } else if (mod10 >= 0 && mod10 <= 1 || mod10 >= 5 && mod10 <= 9 || mod100 >= 12 && mod100 <= 14) {
+        } else if ((mod10 >= 0 && mod10 <= 1) || (mod10 >= 5 && mod10 <= 9) || (mod100 >= 12 && mod100 <= 14)) {
             return 2; // many
         }
     }
@@ -171,10 +136,8 @@ definePluralFn([
 });
 
 // ZERO, ONE, TWO, FEW, MANY, OTHER
-definePluralFn([
-    'ar'
-], (n) => {
-    if (n === 0)  {
+definePluralFn(['ar'], (n) => {
+    if (n === 0) {
         return 0; // zero
     } else if (n === 1) {
         return 1; // one
@@ -201,9 +164,4 @@ function getPluralFn(lang) {
     return PLURALS[lang] || DEFAULT_PLURAL_FN;
 }
 
-export {
-    replaceLang,
-    getLang,
-    getPluralFn,
-    findAvailableLocale
-};
+export { replaceLang, getLang, getPluralFn, findAvailableLocale };

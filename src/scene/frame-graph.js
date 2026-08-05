@@ -118,7 +118,6 @@ class FrameGraph {
      * @private
      */
     _compilePasses(passes) {
-
         const renderTargetMap = this.renderTargetMap;
 
         for (let i = 0; i < passes.length; i++) {
@@ -130,11 +129,9 @@ class FrameGraph {
 
             // if using a target, or null which represents the default back-buffer
             if (renderTarget !== undefined) {
-
                 // previous pass using the same render target
                 const prevPass = renderTargetMap.get(renderTarget);
                 if (prevPass) {
-
                     // if we use the RT without clearing, make sure the previous pass stores data
                     const count = renderPass.colorArrayOps.length;
                     for (let j = 0; j < count; j++) {
@@ -170,9 +167,11 @@ class FrameGraph {
             }
 
             // do not merge if the second pass clears any of the attachments
-            if (secondPass.depthStencilOps.clearDepth ||
+            if (
+                secondPass.depthStencilOps.clearDepth ||
                 secondPass.depthStencilOps.clearStencil ||
-                secondPass.colorArrayOps.some(colorOps => colorOps.clear)) {
+                secondPass.colorArrayOps.some((colorOps) => colorOps.clear)
+            ) {
                 continue;
             }
 
@@ -205,7 +204,6 @@ class FrameGraph {
             const thisTexture = renderTarget?.colorBuffer;
 
             if (thisTexture?.cubemap) {
-
                 // if previous pass used the same cubemap texture, it does not need mipmaps generated
                 if (lastCubeTexture === thisTexture) {
                     const count = lastCubeRenderPass.colorArrayOps.length;
@@ -216,9 +214,7 @@ class FrameGraph {
 
                 lastCubeTexture = renderTarget.colorBuffer;
                 lastCubeRenderPass = renderPass;
-
             } else if (renderPass.requiresCubemaps) {
-
                 // if the cubemap is required, break the cubemap rendering chain
                 lastCubeTexture = null;
                 lastCubeRenderPass = null;
@@ -229,7 +225,6 @@ class FrameGraph {
     }
 
     render(device) {
-
         this.compile();
 
         const renderPasses = this.renderPasses;

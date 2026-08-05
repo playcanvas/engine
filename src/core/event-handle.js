@@ -92,12 +92,16 @@ class EventHandle {
     }
 
     on(name, callback, scope = this) {
-        Debug.deprecated('Using chaining with EventHandler.on is deprecated, subscribe to an event from EventHandler directly instead.');
+        Debug.deprecated(
+            'Using chaining with EventHandler.on is deprecated, subscribe to an event from EventHandler directly instead.'
+        );
         return this.handler._addCallback(name, callback, scope, false);
     }
 
     once(name, callback, scope = this) {
-        Debug.deprecated('Using chaining with EventHandler.once is deprecated, subscribe to an event from EventHandler directly instead.');
+        Debug.deprecated(
+            'Using chaining with EventHandler.once is deprecated, subscribe to an event from EventHandler directly instead.'
+        );
         return this.handler._addCallback(name, callback, scope, true);
     }
 

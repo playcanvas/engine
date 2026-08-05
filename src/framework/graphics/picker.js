@@ -206,7 +206,10 @@ class Picker {
             return [];
         }
 
-        Debug.assert(typeof x !== 'object', 'Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
+        Debug.assert(
+            typeof x !== 'object',
+            "Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead."
+        );
 
         y = this.renderTarget.height - (y + height);
         const rect = this.sanitizeRect(x, y, width, height);
@@ -245,9 +248,11 @@ class Picker {
         if (!this.renderTarget || !this.renderTarget.colorBuffer) {
             return Promise.resolve([]);
         }
-        return this._readTexture(this.renderTarget.colorBuffer, x, y, width, height, this.renderTarget).then((pixels) => {
-            return this.decodePixels(pixels, this.mapping);
-        });
+        return this._readTexture(this.renderTarget.colorBuffer, x, y, width, height, this.renderTarget).then(
+            (pixels) => {
+                return this.decodePixels(pixels, this.mapping);
+            }
+        );
     }
 
     /**
@@ -313,15 +318,10 @@ class Picker {
         }
 
         // convert linear normalized depth [0,1] to NDC depth [0,1] for unprojection
-        const ndcDepth = isOrtho ? linearDepth : (far * linearDepth / (linearDepth * (far - near) + near));
+        const ndcDepth = isOrtho ? linearDepth : (far * linearDepth) / (linearDepth * (far - near) + near);
 
         // unproject to world space using the captured matrix
-        const deviceCoord = new Vec4(
-            (x / this.width) * 2 - 1,
-            (1 - y / this.height) * 2 - 1,
-            ndcDepth * 2 - 1,
-            1.0
-        );
+        const deviceCoord = new Vec4((x / this.width) * 2 - 1, (1 - y / this.height) * 2 - 1, ndcDepth * 2 - 1, 1.0);
         invViewProj.transformVec4(deviceCoord, deviceCoord);
         deviceCoord.mulScalar(1.0 / deviceCoord.w);
 
@@ -349,7 +349,7 @@ class Picker {
         const intBits = ((pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3]) >>> 0;
 
         // check for white (cleared) depth
-        if (intBits === 0xFFFFFFFF) {
+        if (intBits === 0xffffffff) {
             return null;
         }
 
@@ -372,22 +372,20 @@ class Picker {
     }
 
     decodePixels(pixels, mapping) {
-
         const selection = [];
 
         // when we decode results from async calls, ignore them if the device is no longer valid
         if (this.deviceValid) {
-
             const count = pixels.length;
             for (let i = 0; i < count; i += 4) {
                 const r = pixels[i + 0];
                 const g = pixels[i + 1];
                 const b = pixels[i + 2];
                 const a = pixels[i + 3];
-                const index = (a << 24 | r << 16 | g << 8 | b) >>> 0;
+                const index = ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
 
                 // White is 'no selection
-                if (index !== 0xFFFFFFFF) {
+                if (index !== 0xffffffff) {
                     tempSet.add(mapping.get(index));
                 }
             }
@@ -409,7 +407,6 @@ class Picker {
     }
 
     allocateRenderTarget() {
-
         // TODO: Ideally we'd use a UINT32 texture format and avoid RGBA8 conversion, but WebGL2 does not
         // support clearing render targets of this format, so we'd need a quad based clear solution.
         this.colorBuffer = this.createTexture('pick');
@@ -457,7 +454,6 @@ class Picker {
      * layers of the specified camera will be used.
      */
     prepare(camera, scene, layers) {
-
         if (layers instanceof Layer) {
             layers = [layers];
         }

@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 fn unpack3NFloats(src: f32) -> vec3f {
     let r = fract(src);
     let g = fract(src * 256.0);

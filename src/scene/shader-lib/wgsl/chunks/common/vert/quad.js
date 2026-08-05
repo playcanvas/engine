@@ -1,6 +1,6 @@
 // A simple vertex shader used to render a quad, which requires 'vec2 aPosition' in the vertex
 // buffer, and generates uv coordinates uv0 for use in the fragment shader.
-export default /* wgsl */`
+export default /* wgsl */ `
     attribute aPosition: vec2f;
     varying uv0: vec2f;
     @vertex fn vertexMain(input: VertexInput) -> VertexOutput {

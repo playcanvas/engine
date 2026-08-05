@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 varying vUv0: vec2f;
 
 var particleTexIN: texture_2d<uff>;

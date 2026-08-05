@@ -60,15 +60,18 @@ class GSplatUnifiedSorter extends EventHandler {
             });
             this.worker.on('message', this.onSorted.bind(this));
         } else {
-            this.worker = new Worker(URL.createObjectURL(new Blob([workerSource], {
-                type: 'application/javascript'
-            })));
+            this.worker = new Worker(
+                URL.createObjectURL(
+                    new Blob([workerSource], {
+                        type: 'application/javascript'
+                    })
+                )
+            );
             this.worker.addEventListener('message', this.onSorted.bind(this));
         }
     }
 
     onSorted(message) {
-
         if (this._destroyed) {
             return;
         }
@@ -129,8 +132,8 @@ class GSplatUnifiedSorter extends EventHandler {
      * @param {Float32Array|null} centers - The centers buffer.
      */
     setCenters(id, centers) {
-
-        if (centers) { // add
+        if (centers) {
+            // add
 
             if (!this.centersSet.has(id)) {
                 this.centersSet.add(id);
@@ -139,14 +142,17 @@ class GSplatUnifiedSorter extends EventHandler {
                 const centersBuffer = centers.buffer.slice();
 
                 // post centers to worker
-                this.worker.postMessage({
-                    command: 'addCenters',
-                    id: id,
-                    centers: centersBuffer
-                }, [centersBuffer]);
+                this.worker.postMessage(
+                    {
+                        command: 'addCenters',
+                        id: id,
+                        centers: centersBuffer
+                    },
+                    [centersBuffer]
+                );
             }
-
-        } else { // remove
+        } else {
+            // remove
 
             if (this.centersSet.has(id)) {
                 this.centersSet.delete(id);
@@ -167,7 +173,6 @@ class GSplatUnifiedSorter extends EventHandler {
      * @param {GSplatInfo[]} splats - Array of active splat infos.
      */
     updateCentersForSplats(splats) {
-
         // collect resource IDs from current splats
         for (const splat of splats) {
             const id = splat.resource.id;
@@ -195,7 +200,6 @@ class GSplatUnifiedSorter extends EventHandler {
      * @param {object} payload - The sort parameters payload to send.
      */
     setSortParameters(payload) {
-
         // we have a new version to process
         this.hasNewVersion = true;
 
@@ -217,10 +221,8 @@ class GSplatUnifiedSorter extends EventHandler {
      * @param {boolean} radialSorting - Whether to use radial distance sorting.
      */
     setSortParams(params, radialSorting) {
-
         // only process job requests if we have a new version or no jobs are in flight
         if (this.hasNewVersion || this.jobsInFlight === 0) {
-
             // reuse or allocate new order data
             let orderData = this.availableOrderData.pop();
             if (!orderData) {
@@ -232,14 +234,15 @@ class GSplatUnifiedSorter extends EventHandler {
             this.hasNewVersion = false;
 
             // send job to worker
-            this.worker.postMessage({
-                command: 'sort',
-                sortParams: params,
-                radialSorting: radialSorting,
-                order: orderData.buffer
-            }, [
-                orderData.buffer
-            ]);
+            this.worker.postMessage(
+                {
+                    command: 'sort',
+                    sortParams: params,
+                    radialSorting: radialSorting,
+                    order: orderData.buffer
+                },
+                [orderData.buffer]
+            );
         }
     }
 }

@@ -212,7 +212,6 @@ class LightingParams {
      * @type {boolean}
      */
     set areaLightsEnabled(value) {
-
         // ignore if not supported
         if (this._supportsAreaLights) {
             if (this._areaLightsEnabled !== value) {

@@ -102,5 +102,4 @@ describe('AssetReference', function () {
         app.assets.add(asset);
         app.assets.remove(asset);
     });
-
 });

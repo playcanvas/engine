@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 const A: f32 = 0.15;
 const B: f32 = 0.50;
 const C: f32 = 0.10;

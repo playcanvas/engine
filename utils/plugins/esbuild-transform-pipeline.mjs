@@ -17,13 +17,13 @@ const processJSCC = (source, values, keepLines) => {
 const processShaderChunks = (source) => {
     return source.replace(/\/\* *(glsl|wgsl) *\*\/\s*(`.*?`)/gs, (match, type, code) => {
         return code
-        .trim()
-        .replace(/\r/g, '')
-        .replace(/ {4}/g, '\t')
-        .replace(/[ \t]*\/\/.*/g, '')
-        .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')
-        .concat('\n')
-        .replace(/\n{2,}/g, '\n');
+            .trim()
+            .replace(/\r/g, '')
+            .replace(/ {4}/g, '\t')
+            .replace(/[ \t]*\/\/.*/g, '')
+            .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '')
+            .concat('\n')
+            .replace(/\n{2,}/g, '\n');
     });
 };
 
@@ -41,16 +41,20 @@ const processShaderChunks = (source) => {
  * @param {string} [file] - The file path.
  * @returns {string} The processed source code.
  */
-const applyTransforms = (source, {
-    jsccValues,
-    jsccKeepLines,
-    strip,
-    processShaders,
-    dynamicImportLegacy,
-    dynamicImportSuppress,
-    stripComments,
-    importMetaUrl
-}, file) => {
+const applyTransforms = (
+    source,
+    {
+        jsccValues,
+        jsccKeepLines,
+        strip,
+        processShaders,
+        dynamicImportLegacy,
+        dynamicImportSuppress,
+        stripComments,
+        importMetaUrl
+    },
+    file
+) => {
     source = processJSCC(source, jsccValues, jsccKeepLines);
     if (processShaders) {
         source = processShaderChunks(source);
@@ -103,16 +107,20 @@ const transformPipelinePlugin = ({
         setup(build) {
             build.onLoad({ filter: /\.js$/ }, async (args) => {
                 const source = await fs.promises.readFile(args.path, 'utf8');
-                const contents = applyTransforms(source, {
-                    jsccValues,
-                    jsccKeepLines,
-                    strip,
-                    processShaders,
-                    dynamicImportLegacy,
-                    dynamicImportSuppress,
-                    stripComments,
-                    importMetaUrl
-                }, args.path);
+                const contents = applyTransforms(
+                    source,
+                    {
+                        jsccValues,
+                        jsccKeepLines,
+                        strip,
+                        processShaders,
+                        dynamicImportLegacy,
+                        dynamicImportSuppress,
+                        stripComments,
+                        importMetaUrl
+                    },
+                    args.path
+                );
 
                 return { contents, loader: 'js' };
             });

@@ -6,7 +6,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('MaterialHandler', function () {
-
     let app;
 
     beforeEach(function () {
@@ -34,7 +33,7 @@ describe('MaterialHandler', function () {
             expect(material.diffuse.b).to.equal(0);
             done();
         });
-        asset.on('error', err => done(new Error(err)));
+        asset.on('error', (err) => done(new Error(err)));
 
         app.assets.add(asset);
         app.assets.load(asset);
@@ -53,7 +52,7 @@ describe('MaterialHandler', function () {
             expect(asset.resource.name).to.equal('red-material-name');
             done();
         });
-        asset.on('error', err => done(new Error(err)));
+        asset.on('error', (err) => done(new Error(err)));
 
         app.assets.add(asset);
         app.assets.load(asset);
@@ -73,7 +72,7 @@ describe('MaterialHandler', function () {
             expect(material.diffuse.b).to.equal(0);
             done();
         });
-        asset.on('error', err => done(new Error(err)));
+        asset.on('error', (err) => done(new Error(err)));
 
         app.assets.add(asset);
         app.assets.load(asset);
@@ -91,7 +90,7 @@ describe('MaterialHandler', function () {
             expect(asset.data.mapping_format).to.be.undefined;
             done();
         });
-        asset.on('error', err => done(new Error(err)));
+        asset.on('error', (err) => done(new Error(err)));
 
         app.assets.add(asset);
         app.assets.load(asset);

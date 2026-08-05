@@ -4,7 +4,6 @@
  * @namespace
  */
 const BitPacking = {
-
     /**
      * Sets a value to specified bits of a number.
      *

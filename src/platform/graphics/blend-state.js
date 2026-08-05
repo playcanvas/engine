@@ -2,8 +2,13 @@ import { Debug } from '../../core/debug.js';
 import { BitPacking } from '../../core/math/bit-packing.js';
 import { StringIds } from '../../core/string-ids.js';
 import {
-    BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ZERO, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-    BLENDMODE_SRC1_COLOR, BLENDMODE_ONE_MINUS_SRC1_ALPHA
+    BLENDEQUATION_ADD,
+    BLENDMODE_ONE,
+    BLENDMODE_ZERO,
+    BLENDMODE_SRC_ALPHA,
+    BLENDMODE_ONE_MINUS_SRC_ALPHA,
+    BLENDMODE_SRC1_COLOR,
+    BLENDMODE_ONE_MINUS_SRC1_ALPHA
 } from '../../platform/graphics/constants.js';
 
 const stringIds = new StringIds();
@@ -13,17 +18,17 @@ const opMask = 0b111;
 const factorMask = 0b11111;
 
 // shifts values to where individual parts are stored
-const colorOpShift = 0;             // 00 - 02 (3bits)
-const colorSrcFactorShift = 3;      // 03 - 07 (5bits)
-const colorDstFactorShift = 8;      // 08 - 12 (5bits)
-const alphaOpShift = 13;            // 13 - 15 (3bits)
-const alphaSrcFactorShift = 16;     // 16 - 20 (5bits)
-const alphaDstFactorShift = 21;     // 21 - 25 (5bits)
-const redWriteShift = 26;           // 26 (1 bit)
-const greenWriteShift = 27;         // 27 (1 bit)
-const blueWriteShift = 28;          // 28 (1 bit)
-const alphaWriteShift = 29;         // 29 (1 bit)
-const blendShift = 30;              // 30 (1 bit)
+const colorOpShift = 0; // 00 - 02 (3bits)
+const colorSrcFactorShift = 3; // 03 - 07 (5bits)
+const colorDstFactorShift = 8; // 08 - 12 (5bits)
+const alphaOpShift = 13; // 13 - 15 (3bits)
+const alphaSrcFactorShift = 16; // 16 - 20 (5bits)
+const alphaDstFactorShift = 21; // 21 - 25 (5bits)
+const redWriteShift = 26; // 26 (1 bit)
+const greenWriteShift = 27; // 27 (1 bit)
+const blueWriteShift = 28; // 28 (1 bit)
+const alphaWriteShift = 29; // 29 (1 bit)
+const blendShift = 30; // 30 (1 bit)
 
 // combined values access
 const allWriteMasks = 0b1111;
@@ -41,15 +46,14 @@ const stateMask = 0x7fffffff;
 // by the graphics APIs
 const maxAttachments = 8;
 
-const usesSecondarySource = factor => factor >= BLENDMODE_SRC1_COLOR && factor <= BLENDMODE_ONE_MINUS_SRC1_ALPHA;
+const usesSecondarySource = (factor) => factor >= BLENDMODE_SRC1_COLOR && factor <= BLENDMODE_ONE_MINUS_SRC1_ALPHA;
 
 // True if any blend factor of the supplied packed state uses the secondary fragment output.
-const stateUsesSecondarySource = state => (
+const stateUsesSecondarySource = (state) =>
     usesSecondarySource(BitPacking.get(state, colorSrcFactorShift, factorMask)) ||
     usesSecondarySource(BitPacking.get(state, colorDstFactorShift, factorMask)) ||
     usesSecondarySource(BitPacking.get(state, alphaSrcFactorShift, factorMask)) ||
-    usesSecondarySource(BitPacking.get(state, alphaDstFactorShift, factorMask))
-);
+    usesSecondarySource(BitPacking.get(state, alphaDstFactorShift, factorMask));
 
 /**
  * BlendState is a descriptor that defines how output of fragment shader is written and blended
@@ -154,9 +158,19 @@ class BlendState {
      * @param {boolean} [alphaWrite] - True to enable writing of the alpha channel and false
      * otherwise. Defaults to true.
      */
-    constructor(blend = false, colorOp = BLENDEQUATION_ADD, colorSrcFactor = BLENDMODE_ONE, colorDstFactor = BLENDMODE_ZERO,
-        alphaOp, alphaSrcFactor, alphaDstFactor,
-        redWrite = true, greenWrite = true, blueWrite = true, alphaWrite = true) {
+    constructor(
+        blend = false,
+        colorOp = BLENDEQUATION_ADD,
+        colorSrcFactor = BLENDMODE_ONE,
+        colorDstFactor = BLENDMODE_ZERO,
+        alphaOp,
+        alphaSrcFactor,
+        alphaDstFactor,
+        redWrite = true,
+        greenWrite = true,
+        blueWrite = true,
+        alphaWrite = true
+    ) {
         this.setColorBlend(colorOp, colorSrcFactor, colorDstFactor);
         this.setAlphaBlend(alphaOp ?? colorOp, alphaSrcFactor ?? colorSrcFactor, alphaDstFactor ?? colorDstFactor);
         this.setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite);
@@ -299,15 +313,21 @@ class BlendState {
      * state.setAttachment(1, noWrite);
      */
     setAttachment(index, src) {
-        Debug.assert(index >= 1 && index < maxAttachments,
-            `BlendState#setAttachment index ${index} is out of range, it must be in 1 to ${maxAttachments - 1} range. Attachment 0 is configured using the other functions of the class.`);
-        Debug.assert(!src || !src.hasAttachmentOverrides,
-            'BlendState#setAttachment source must not have per-attachment overrides of its own, as only its attachment 0 state is used.');
-        Debug.assert(!src || (src.attachment0 & stateMask) !== 0,
-            'BlendState#setAttachment source must not be a blend state with all properties set to zero, as this value is reserved to mean the attachment follows attachment 0.');
+        Debug.assert(
+            index >= 1 && index < maxAttachments,
+            `BlendState#setAttachment index ${index} is out of range, it must be in 1 to ${maxAttachments - 1} range. Attachment 0 is configured using the other functions of the class.`
+        );
+        Debug.assert(
+            !src || !src.hasAttachmentOverrides,
+            'BlendState#setAttachment source must not have per-attachment overrides of its own, as only its attachment 0 state is used.'
+        );
+        Debug.assert(
+            !src || (src.attachment0 & stateMask) !== 0,
+            'BlendState#setAttachment source must not be a blend state with all properties set to zero, as this value is reserved to mean the attachment follows attachment 0.'
+        );
 
         this._attachments ??= new Int32Array(maxAttachments);
-        this._attachments[index] = src ? (src.attachment0 & stateMask) : 0;
+        this._attachments[index] = src ? src.attachment0 & stateMask : 0;
         this._attachmentsUpdated();
     }
 
@@ -331,14 +351,16 @@ class BlendState {
      * @returns {BlendState} The supplied dst, for chaining.
      */
     getAttachment(index, dst) {
-        Debug.assert(index >= 0 && index < maxAttachments,
-            `BlendState#getAttachment index ${index} is out of range, it must be in 0 to ${maxAttachments - 1} range.`);
+        Debug.assert(
+            index >= 0 && index < maxAttachments,
+            `BlendState#getAttachment index ${index} is out of range, it must be in 0 to ${maxAttachments - 1} range.`
+        );
 
         // the overrides flag is the authority - the per-attachment values are ignored without it, as
         // they can be stale after a copy from a state which has no overrides. Slot 0 is always
         // zero, and so index 0 correctly falls through to attachment0.
         const state = this.hasAttachmentOverrides ? this._attachments[index] : 0;
-        dst.attachment0 = state !== 0 ? state : (this.attachment0 & stateMask);
+        dst.attachment0 = state !== 0 ? state : this.attachment0 & stateMask;
         return dst;
     }
 
@@ -357,7 +379,7 @@ class BlendState {
             }
         }
 
-        this.attachment0 = overrides ? (this.attachment0 | overridesBit) : (this.attachment0 & stateMask);
+        this.attachment0 = overrides ? this.attachment0 | overridesBit : this.attachment0 & stateMask;
 
         // evaluate the key immediately - this way the normal lifecycle never leaves a state with
         // overrides needing a lazy evaluation, which would fail on a frozen instance
@@ -473,7 +495,21 @@ class BlendState {
      * @type {BlendState}
      * @readonly
      */
-    static NOWRITE = Object.freeze(new BlendState(undefined, undefined, undefined, undefined, undefined, undefined, undefined, false, false, false, false));
+    static NOWRITE = Object.freeze(
+        new BlendState(
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            false,
+            false,
+            false,
+            false
+        )
+    );
 
     /**
      * A blend state that does simple translucency using alpha channel.
@@ -481,7 +517,9 @@ class BlendState {
      * @type {BlendState}
      * @readonly
      */
-    static ALPHABLEND = Object.freeze(new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA));
+    static ALPHABLEND = Object.freeze(
+        new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA)
+    );
 
     /**
      * A blend state that does simple additive blending.

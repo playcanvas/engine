@@ -1,5 +1,5 @@
 // The main code of particle system fragment shader used for rendering
-export default /* glsl */`
+export default /* glsl */ `
     #if NORMAL != NONE
         #if NORMAL == VERTEX
             varying vec3 Normal;

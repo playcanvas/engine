@@ -1,6 +1,6 @@
 // vertex shader internally used to apply morph targets in textures into a final texture containing
 // blended morph targets
-export default /* wgsl */`
+export default /* wgsl */ `
     attribute vertex_position: vec2f;
     varying uv0: vec2f;
 

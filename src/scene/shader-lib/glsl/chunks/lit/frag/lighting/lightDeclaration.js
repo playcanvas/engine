@@ -1,5 +1,5 @@
 // uniforms for a light with index {i}, driven by defines
-export default /* glsl */`
+export default /* glsl */ `
 #if defined(LIGHT{i})
 
     uniform vec3 light{i}_color;

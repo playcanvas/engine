@@ -17,9 +17,9 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 // 1x1 png image containing rgba(1, 2, 3, 63)
 const pngBytes = new Uint8Array([
-    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21,
-    196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 100, 100, 98, 182, 7, 0, 0, 89, 0, 71, 67, 133, 148, 237,
-    0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
+    137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196,
+    137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 100, 100, 98, 182, 7, 0, 0, 89, 0, 71, 67, 133, 148, 237, 0, 0, 0,
+    0, 73, 69, 78, 68, 174, 66, 96, 130
 ]);
 
 const testAlpha = (device, image) => {
@@ -48,16 +48,19 @@ const testAlpha = (device, image) => {
 
 // Test whether ImageBitmap correctly loads PNG alpha data.
 const testImageBitmapAlpha = (device) => {
-    return createImageBitmap(new Blob([pngBytes], {
-        type: 'image/png'
-    }), {
-        premultiplyAlpha: 'none',
-        colorSpaceConversion: 'none'
-    })
-    .then((image) => {
-        return testAlpha(device, image);
-    })
-    .catch(e => false);
+    return createImageBitmap(
+        new Blob([pngBytes], {
+            type: 'image/png'
+        }),
+        {
+            premultiplyAlpha: 'none',
+            colorSpaceConversion: 'none'
+        }
+    )
+        .then((image) => {
+            return testAlpha(device, image);
+        })
+        .catch((e) => false);
 };
 
 // Test whether image element correctly loads PNG alpha data.

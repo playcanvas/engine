@@ -1,7 +1,13 @@
 import { RenderView } from '../../scene/render-view.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
+import {
+    ADDRESS_CLAMP_TO_EDGE,
+    FILTER_LINEAR,
+    FILTER_NEAREST,
+    PIXELFORMAT_RGB8,
+    PIXELFORMAT_R32F
+} from '../../platform/graphics/constants.js';
 
 /**
  * @import { XrManager } from './xr-manager.js'
@@ -113,7 +119,7 @@ class XrView extends RenderView {
 
             this._textureDepth = new Texture(device, {
                 format: this._manager.views.depthPixelFormat,
-                arrayLength: (viewsCount === 1) ? 0 : viewsCount,
+                arrayLength: viewsCount === 1 ? 0 : viewsCount,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,

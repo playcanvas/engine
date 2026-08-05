@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 fn evaluateFogFactorLinear(depth: f32, fogStart: f32, fogEnd: f32) -> f32 {
     return clamp((fogEnd - depth) / (fogEnd - fogStart), 0.0, 1.0);

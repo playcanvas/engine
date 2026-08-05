@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 // texelFetch support and others
 #extension GL_EXT_samplerless_texture_functions : require

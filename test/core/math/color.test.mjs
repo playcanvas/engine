@@ -3,9 +3,7 @@ import { expect } from 'chai';
 import { Color } from '../../../src/core/math/color.js';
 
 describe('Color', function () {
-
     describe('#constructor', function () {
-
         it('supports zero arguments', function () {
             const c = new Color();
             expect(c.r).to.equal(0);
@@ -37,11 +35,9 @@ describe('Color', function () {
             expect(c.b).to.equal(0.3);
             expect(c.a).to.equal(0.4);
         });
-
     });
 
     describe('#clone', function () {
-
         it('clones a color', function () {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = c1.clone();
@@ -58,11 +54,9 @@ describe('Color', function () {
             const b = a.clone();
             expect(b).to.be.an.instanceof(UserColor);
         });
-
     });
 
     describe('#copy', function () {
-
         it('copies a color', function () {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color();
@@ -73,11 +67,9 @@ describe('Color', function () {
             expect(c2.b).to.equal(0.3);
             expect(c2.a).to.equal(0.4);
         });
-
     });
 
     describe('#equals', function () {
-
         it('returns true if colors are equal', function () {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color(0.1, 0.2, 0.3, 0.4);
@@ -89,11 +81,9 @@ describe('Color', function () {
             const c2 = new Color(0.5, 0.6, 0.7, 0.8);
             expect(c1.equals(c2)).to.be.false;
         });
-
     });
 
     describe('#fromString', function () {
-
         it('parses a lower case hex string', function () {
             const c = new Color();
             c.fromString('#ff00ff');
@@ -120,11 +110,9 @@ describe('Color', function () {
             expect(c.b).to.equal(1);
             expect(c.a).to.be.closeTo(0.5019607843137255, 0.0001);
         });
-
     });
 
     describe('#lerp', function () {
-
         it('linearly interpolates between two colors with alpha of 0', function () {
             const c1 = new Color(0.1, 0.2, 0.3, 0.4);
             const c2 = new Color(0.5, 0.6, 0.7, 0.8);
@@ -157,11 +145,9 @@ describe('Color', function () {
             expect(c3.b).to.equal(0.7);
             expect(c3.a).to.equal(0.8);
         });
-
     });
 
     describe('#set', function () {
-
         it('sets a color', function () {
             const c = new Color();
             c.set(0.1, 0.2, 0.3, 0.4);
@@ -170,11 +156,9 @@ describe('Color', function () {
             expect(c.b).to.equal(0.3);
             expect(c.a).to.equal(0.4);
         });
-
     });
 
     describe('#fromArray', function () {
-
         it('sets a color from an array', function () {
             const c = new Color();
             c.fromArray([0.1, 0.2, 0.3, 0.4]);
@@ -192,11 +176,9 @@ describe('Color', function () {
             expect(c.b).to.equal(0.3);
             expect(c.a).to.equal(0.4);
         });
-
     });
 
     describe('#toString', function () {
-
         it('returns a string representation of black (no alpha)', function () {
             expect(Color.BLACK.toString()).to.equal('#000000');
         });
@@ -219,7 +201,6 @@ describe('Color', function () {
             const c = new Color(0.1, 0.2, 0.3, 0.4);
             expect(c.toString(true)).to.equal('#1a334d66');
         });
-
     });
 
     describe('#toArray', function () {
@@ -236,6 +217,5 @@ describe('Color', function () {
             Color.RED.toArray(target, 3, false);
             expect(target).to.eql([0, 0, 0, 1, 0, 0]);
         });
-
     });
 });

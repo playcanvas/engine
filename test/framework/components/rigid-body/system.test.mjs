@@ -19,7 +19,6 @@ describe('RigidBodyComponentSystem', function () {
     });
 
     describe('stored collisions', function () {
-
         // Regression test for https://github.com/playcanvas/engine/issues/5797 - the persistent
         // collisions map is keyed by entity GUID. Reloading the same scene recreates entities with
         // the same GUIDs, so a stale entry referencing a destroyed entity must not survive removal,
@@ -65,7 +64,5 @@ describe('RigidBodyComponentSystem', function () {
             expect(app.systems.rigidbody.collisions[a.guid]).to.be.undefined;
             expect(app.systems.rigidbody.collisions[b.guid]).to.exist;
         });
-
     });
-
 });

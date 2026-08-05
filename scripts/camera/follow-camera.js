@@ -17,7 +17,8 @@ FollowCamera.attributes.add('lerpAmount', {
     max: 1,
     default: 0.99,
     title: 'Lerp Amount',
-    description: 'The amount to lerp the camera towards its desired position over time. The closer it is to 1, the faster the camera will move. Lerping is frame rate independent and will be correct for every frame rate.'
+    description:
+        'The amount to lerp the camera towards its desired position over time. The closer it is to 1, the faster the camera will move. Lerping is frame rate independent and will be correct for every frame rate.'
 });
 
 // initialize code called once per entity
@@ -39,7 +40,7 @@ FollowCamera.prototype.updateTargetPosition = function () {
     // Calculate the target's angle around the world Y axis
     var forward = this.target.forward;
     this.vec.set(-forward.x, 0, -forward.z).normalize();
-    var angle = Math.atan2(this.vec.x, this.vec.z) * 180 / Math.PI;
+    var angle = (Math.atan2(this.vec.x, this.vec.z) * 180) / Math.PI;
 
     // Rebuild the world transform for the target with a rotation limited to the world y axis
     this.quat.setFromEulerAngles(0, angle, 0);

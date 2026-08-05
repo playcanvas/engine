@@ -23,7 +23,7 @@ class Impl {
                     return new WebAssembly.Instance(module) instanceof WebAssembly.Instance;
                 }
             }
-        } catch (e) { }
+        } catch (e) {}
         return false;
     });
 
@@ -42,7 +42,7 @@ class Impl {
 
     // load a wasm module
     static loadWasm(moduleName, config, callback) {
-        const loadUrl = (Impl.wasmSupported() && config.glueUrl && config.wasmUrl) ? config.glueUrl : config.fallbackUrl;
+        const loadUrl = Impl.wasmSupported() && config.glueUrl && config.wasmUrl ? config.glueUrl : config.fallbackUrl;
         if (loadUrl) {
             Impl.loadScript(loadUrl, (err) => {
                 if (err) {
@@ -202,6 +202,4 @@ class WasmModule {
     }
 }
 
-export {
-    WasmModule
-};
+export { WasmModule };

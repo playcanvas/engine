@@ -20,7 +20,7 @@ const extractTextureTransform = (source, material, maps) => {
     if (textureTransform) {
         const offset = textureTransform.offset || zeros;
         const scale = textureTransform.scale || ones;
-        const rotation = textureTransform.rotation ? (-textureTransform.rotation * math.RAD_TO_DEG) : 0;
+        const rotation = textureTransform.rotation ? -textureTransform.rotation * math.RAD_TO_DEG : 0;
 
         const tilingVec = new Vec2(scale[0], scale[1]);
         const offsetVec = new Vec2(offset[0], 1.0 - scale[1] - offset[1]);

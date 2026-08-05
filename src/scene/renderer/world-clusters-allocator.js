@@ -48,7 +48,6 @@ class WorldClustersAllocator {
     }
 
     destroy() {
-
         // empty light cluster
         if (this._empty) {
             this._empty.destroy();
@@ -69,7 +68,6 @@ class WorldClustersAllocator {
     // returns an empty light cluster object to be used when no lights are used
     get empty() {
         if (!this._empty) {
-
             // create cluster structure with no lights
             const empty = new WorldClusters(this.device);
             empty.name = 'ClusterEmpty';
@@ -104,7 +102,6 @@ class WorldClustersAllocator {
             // if the layer has lights used by clusters, and meshes
             const layer = step.layer;
             if (layer.hasClusteredLights && layer.meshInstances.length) {
-
                 // use existing clusters if the lights on the layer are the same
                 const hash = layer.getLightIdHash();
                 const existingStep = this._clusters.get(hash);
@@ -112,7 +109,6 @@ class WorldClustersAllocator {
 
                 // no match, needs new clusters
                 if (!clusters) {
-
                     // use already allocated cluster from last frame, or create a new one
                     clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
                     DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
@@ -133,7 +129,6 @@ class WorldClustersAllocator {
 
     // assign light clusters to layer render steps that need it
     assign(renderPasses) {
-
         // reuse previously allocated clusters
         tempClusterArray.push(...this._allocated);
         this._allocated.length = 0;
@@ -155,12 +150,11 @@ class WorldClustersAllocator {
         }
 
         // delete leftovers
-        tempClusterArray.forEach(item => item.destroy());
+        tempClusterArray.forEach((item) => item.destroy());
         tempClusterArray.length = 0;
     }
 
     update(renderPasses, lighting) {
-
         // assign clusters to layer render steps
         this.assign(renderPasses);
 

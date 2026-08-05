@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     localPos = localPos * input.particle_vertexData2.y * uniform.emitterScale;
     localPos = localPos + particlePos;
 

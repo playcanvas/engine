@@ -297,7 +297,7 @@ class SSAOEffect extends pc.PostEffect {
             }
         `;
 
-        const foutput = /* glsl */`
+        const foutput = /* glsl */ `
             varying vec2 vUv0;
             uniform sampler2D uColorBuffer;
             uniform sampler2D uSSAOBuffer;
@@ -336,7 +336,6 @@ class SSAOEffect extends pc.PostEffect {
             fragmentGLSL: foutput
         });
 
-
         // Uniforms
         this.radius = 4;
         this.brightness = 0;
@@ -349,7 +348,6 @@ class SSAOEffect extends pc.PostEffect {
             this.target.destroyTextureBuffers();
             this.target.destroy();
             this.target = null;
-
         }
 
         if (this.blurTarget) {
@@ -422,7 +420,7 @@ class SSAOEffect extends pc.PostEffect {
         const radius = this.radius;
         const bias = 0.001;
         const peak = 0.1 * radius;
-        const intensity = (peak * 2.0 * 3.141) * 0.125;
+        const intensity = peak * 2.0 * 3.141 * 0.125;
         const projectionScale = 0.5 * device.height;
         const cameraFarClip = this.ssaoScript.entity.camera.farClip;
 
@@ -502,9 +500,13 @@ SSAO.prototype.initialize = function () {
     this.effect.samples = this.samples;
     this.effect.downscale = this.downscale;
 
-    this.on('attr', function (name, value) {
-        this.effect[name] = value;
-    }, this);
+    this.on(
+        'attr',
+        function (name, value) {
+            this.effect[name] = value;
+        },
+        this
+    );
 
     var queue = this.entity.camera.postEffects;
     queue.addEffect(this.effect);

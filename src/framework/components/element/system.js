@@ -197,7 +197,8 @@ class ElementComponentSystem extends ComponentSystem {
             if (data.spriteAsset !== undefined) component.spriteAsset = data.spriteAsset;
             if (data.sprite) component.sprite = data.sprite;
             if (data.spriteFrame !== undefined) component.spriteFrame = data.spriteFrame;
-            if (data.pixelsPerUnit !== undefined && data.pixelsPerUnit !== null) component.pixelsPerUnit = data.pixelsPerUnit;
+            if (data.pixelsPerUnit !== undefined && data.pixelsPerUnit !== null)
+                component.pixelsPerUnit = data.pixelsPerUnit;
             if (data.materialAsset !== undefined) component.materialAsset = data.materialAsset;
             if (data.material) component.material = data.material;
 
@@ -282,16 +283,16 @@ class ElementComponentSystem extends ComponentSystem {
             anchor: source.anchor.clone(),
             pivot: source.pivot.clone(),
             margin: source.margin.clone(),
-            alignment: source.alignment && source.alignment.clone() || source.alignment,
+            alignment: (source.alignment && source.alignment.clone()) || source.alignment,
             autoWidth: source.autoWidth,
             autoHeight: source.autoHeight,
             type: source.type,
-            rect: source.rect && source.rect.clone() || source.rect,
+            rect: (source.rect && source.rect.clone()) || source.rect,
             rtlReorder: source.rtlReorder,
             unicodeConverter: source.unicodeConverter,
             materialAsset: source.materialAsset,
             material: source.material,
-            color: source.color && source.color.clone() || source.color,
+            color: (source.color && source.color.clone()) || source.color,
             opacity: source.opacity,
             textureAsset: source.textureAsset,
             texture: source.texture,
@@ -315,10 +316,10 @@ class ElementComponentSystem extends ComponentSystem {
             fitMode: source.fitMode,
             batchGroupId: source.batchGroupId,
             mask: source.mask,
-            outlineColor: source.outlineColor && source.outlineColor.clone() || source.outlineColor,
+            outlineColor: (source.outlineColor && source.outlineColor.clone()) || source.outlineColor,
             outlineThickness: source.outlineThickness,
-            shadowColor: source.shadowColor && source.shadowColor.clone() || source.shadowColor,
-            shadowOffset: source.shadowOffset && source.shadowOffset.clone() || source.shadowOffset,
+            shadowColor: (source.shadowColor && source.shadowColor.clone()) || source.shadowColor,
+            shadowOffset: (source.shadowOffset && source.shadowOffset.clone()) || source.shadowOffset,
             enableMarkup: source.enableMarkup
         };
 
@@ -332,9 +333,7 @@ class ElementComponentSystem extends ComponentSystem {
     }
 
     getTextElementMaterial(screenSpace, msdf, textAttibutes) {
-        const hash = (screenSpace && (1 << 0)) |
-                          (msdf && (1 << 1)) |
-                 (textAttibutes && (1 << 2));
+        const hash = (screenSpace && 1 << 0) | (msdf && 1 << 1) | (textAttibutes && 1 << 2);
 
         let material = this._defaultTextMaterials[hash];
 
@@ -410,7 +409,8 @@ class ElementComponentSystem extends ComponentSystem {
                 if (nineSliced) {
                     if (!this.defaultScreenSpaceImageMask9SlicedMaterial) {
                         this.defaultScreenSpaceImageMask9SlicedMaterial = this._createBaseImageMaterial();
-                        this.defaultScreenSpaceImageMask9SlicedMaterial.name = 'defaultScreenSpaceImageMask9SlicedMaterial';
+                        this.defaultScreenSpaceImageMask9SlicedMaterial.name =
+                            'defaultScreenSpaceImageMask9SlicedMaterial';
                         this.defaultScreenSpaceImageMask9SlicedMaterial.nineSlicedMode = SPRITE_RENDERMODE_SLICED;
                         this.defaultScreenSpaceImageMask9SlicedMaterial.depthTest = false;
                         this.defaultScreenSpaceImageMask9SlicedMaterial.alphaTest = 1;
@@ -425,8 +425,10 @@ class ElementComponentSystem extends ComponentSystem {
                     return this.defaultScreenSpaceImageMask9SlicedMaterial;
                 } else if (nineSliceTiled) {
                     if (!this.defaultScreenSpaceImageMask9TiledMaterial) {
-                        this.defaultScreenSpaceImageMask9TiledMaterial = this.defaultScreenSpaceImage9TiledMaterial.clone();
-                        this.defaultScreenSpaceImageMask9TiledMaterial.name = 'defaultScreenSpaceImageMask9TiledMaterial';
+                        this.defaultScreenSpaceImageMask9TiledMaterial =
+                            this.defaultScreenSpaceImage9TiledMaterial.clone();
+                        this.defaultScreenSpaceImageMask9TiledMaterial.name =
+                            'defaultScreenSpaceImageMask9TiledMaterial';
                         this.defaultScreenSpaceImageMask9TiledMaterial.nineSlicedMode = SPRITE_RENDERMODE_TILED;
                         this.defaultScreenSpaceImageMask9TiledMaterial.depthTest = false;
                         this.defaultScreenSpaceImageMask9TiledMaterial.alphaTest = 1;

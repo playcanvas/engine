@@ -136,7 +136,7 @@ class SortedLoopArray {
      */
     sort() {
         // get current item pointed to by loopIndex
-        const current = (this.loopIndex >= 0 ? this.items[this.loopIndex] : null);
+        const current = this.loopIndex >= 0 ? this.items[this.loopIndex] : null;
         // sort
         this.items.sort(this._sortHandler);
         // find new loopIndex

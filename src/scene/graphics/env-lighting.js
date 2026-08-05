@@ -2,10 +2,13 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { reprojectTexture } from './reproject-texture.js';
 import {
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBP as RGBA8_TYPE,
+    TEXTURETYPE_DEFAULT,
+    TEXTURETYPE_RGBP as RGBA8_TYPE,
     TEXTUREPROJECTION_EQUIRECT,
     ADDRESS_CLAMP_TO_EDGE,
-    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA32F
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
@@ -24,9 +27,11 @@ const supportsFloat32 = (device) => {
 
 // lighting source should be stored HDR
 const lightingSourcePixelFormat = (device) => {
-    return supportsFloat16(device) ? PIXELFORMAT_RGBA16F :
-        supportsFloat32(device) ? PIXELFORMAT_RGBA32F :
-            PIXELFORMAT_RGBA8;
+    return supportsFloat16(device)
+        ? PIXELFORMAT_RGBA16F
+        : supportsFloat32(device)
+          ? PIXELFORMAT_RGBA32F
+          : PIXELFORMAT_RGBA8;
 };
 
 // runtime lighting can be RGBM
@@ -67,7 +72,12 @@ class EnvLighting {
 
         DebugGraphics.pushGpuMarker(device, 'genSkyboxCubemap');
 
-        const result = createCubemap(device, size || (source.cubemap ? source.width : source.width / 4), PIXELFORMAT_RGBA8, false);
+        const result = createCubemap(
+            device,
+            size || (source.cubemap ? source.width : source.width / 4),
+            PIXELFORMAT_RGBA8,
+            false
+        );
 
         reprojectTexture(source, result, {
             numSamples: 1024
@@ -96,17 +106,19 @@ class EnvLighting {
         DebugGraphics.pushGpuMarker(device, 'genLightingSource');
 
         const format = lightingSourcePixelFormat(device);
-        const result = options?.target || new Texture(device, {
-            name: 'lighting-source',
-            cubemap: true,
-            width: options?.size || 128,
-            height: options?.size || 128,
-            format: format,
-            type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            mipmaps: true
-        });
+        const result =
+            options?.target ||
+            new Texture(device, {
+                name: 'lighting-source',
+                cubemap: true,
+                width: options?.size || 128,
+                height: options?.size || 128,
+                format: format,
+                type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE,
+                mipmaps: true
+            });
 
         // copy into top level
         reprojectTexture(source, result, {
@@ -140,17 +152,19 @@ class EnvLighting {
 
         DebugGraphics.pushGpuMarker(device, 'genAtlas');
 
-        const result = options?.target || new Texture(device, {
-            name: 'envAtlas',
-            width: options?.size || 512,
-            height: options?.size || 512,
-            format: format,
-            type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
-            projection: TEXTUREPROJECTION_EQUIRECT,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            mipmaps: false
-        });
+        const result =
+            options?.target ||
+            new Texture(device, {
+                name: 'envAtlas',
+                width: options?.size || 512,
+                height: options?.size || 512,
+                format: format,
+                type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
+                projection: TEXTUREPROJECTION_EQUIRECT,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE,
+                mipmaps: false
+            });
 
         DebugGraphics.pushGpuMarker(device, 'mipmaps');
 
@@ -230,17 +244,19 @@ class EnvLighting {
 
         DebugGraphics.pushGpuMarker(device, 'genPrefilteredAtlas');
 
-        const result = options?.target || new Texture(device, {
-            name: 'envPrefilteredAtlas',
-            width: options?.size || 512,
-            height: options?.size || 512,
-            format: format,
-            type: type,
-            projection: TEXTUREPROJECTION_EQUIRECT,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            mipmaps: false
-        });
+        const result =
+            options?.target ||
+            new Texture(device, {
+                name: 'envPrefilteredAtlas',
+                width: options?.size || 512,
+                height: options?.size || 512,
+                format: format,
+                type: type,
+                projection: TEXTUREPROJECTION_EQUIRECT,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE,
+                mipmaps: false
+            });
 
         DebugGraphics.pushGpuMarker(device, 'mipmaps');
 
@@ -305,6 +321,4 @@ class EnvLighting {
     }
 }
 
-export {
-    EnvLighting
-};
+export { EnvLighting };

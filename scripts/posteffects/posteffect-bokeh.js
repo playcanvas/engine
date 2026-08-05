@@ -154,9 +154,13 @@ Bokeh.prototype.initialize = function () {
     this.effect.aperture = this.aperture;
     this.effect.focus = this.focus;
 
-    this.on('attr', function (name, value) {
-        this.effect[name] = value;
-    }, this);
+    this.on(
+        'attr',
+        function (name, value) {
+            this.effect[name] = value;
+        },
+        this
+    );
 
     var queue = this.entity.camera.postEffects;
 

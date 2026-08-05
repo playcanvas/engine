@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef DEBUG_LIGHTING_PASS
     litArgs_albedo = vec3f(0.5);
 #endif

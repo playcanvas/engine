@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 // ----- Directional/Spot Sampling -----
 
 fn getShadowPCF1x1(shadowMap: texture_depth_2d, shadowMapSampler: sampler_comparison, shadowCoord: vec3f, shadowParams: vec4f) -> f32 {

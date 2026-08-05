@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 // Anisotropic GGX
 fn calcLightSpecular(gloss: f32, worldNormal: vec3f, viewDir: vec3f, h: vec3f, lightDirNorm: vec3f, tbn: mat3x3f) -> f32 {
     let PI: f32 = 3.141592653589793;

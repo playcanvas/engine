@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef STD_IOR_CONSTANT
     uniform material_refractionIndex: f32;
 #endif

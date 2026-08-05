@@ -36,13 +36,13 @@ class AnimBlendTreeCartesian2D extends AnimBlendTree {
             for (let j = 0; j < this._children.length; j++) {
                 if (i === j) continue;
                 const pipj = this.pointDistanceCache(i, j);
-                const result = math.clamp(1.0 - (AnimBlendTreeCartesian2D._pip.dot(pipj) / pipj.lengthSq()), 0.0, 1.0);
+                const result = math.clamp(1.0 - AnimBlendTreeCartesian2D._pip.dot(pipj) / pipj.lengthSq(), 0.0, 1.0);
                 if (result < minj) minj = result;
             }
             child.weight = minj;
             weightSum += minj;
             if (this._syncAnimations) {
-                weightedDurationSum += child.animTrack.duration / child.absoluteSpeed * child.weight;
+                weightedDurationSum += (child.animTrack.duration / child.absoluteSpeed) * child.weight;
             }
         }
         for (let i = 0; i < this._children.length; i++) {

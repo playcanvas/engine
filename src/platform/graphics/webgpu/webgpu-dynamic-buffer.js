@@ -20,7 +20,9 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
 
         this.buffer = device.wgpu.createBuffer({
             size: size,
-            usage: isStaging ? GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC : GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+            usage: isStaging
+                ? GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC
+                : GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
             mappedAtCreation: isStaging
         });
 
@@ -35,7 +37,6 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
     }
 
     destroy(device) {
-
         device._vram.ub -= this.buffer.size;
 
         this.buffer.destroy();

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #ifndef ENV_ATLAS
     #define ENV_ATLAS
     uniform sampler2D texture_envAtlas;

@@ -1,5 +1,5 @@
 // main shader of the lit vertex shader
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #include "varyingsVS"
 

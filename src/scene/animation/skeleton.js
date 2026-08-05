@@ -146,7 +146,7 @@ class Skeleton {
             const duration = this._animation.duration;
 
             // Check if we can early out
-            if ((this._time === duration) && !this.looping) {
+            if (this._time === duration && !this.looping) {
                 return;
             }
 
@@ -169,11 +169,10 @@ class Skeleton {
                 }
             }
 
-
             // For each animated node...
 
             // keys index offset
-            const offset = (delta >= 0 ? 1 : -1);
+            const offset = delta >= 0 ? 1 : -1;
 
             for (let i = 0; i < nodes.length; i++) {
                 const node = nodes[i];
@@ -190,11 +189,15 @@ class Skeleton {
                 let foundKey = false;
                 if (keys.length !== 1) {
                     // Otherwise, find the keyframe pair for this node
-                    for (let currKeyIndex = this._currKeyIndices[nodeName]; currKeyIndex < keys.length - 1 && currKeyIndex >= 0; currKeyIndex += offset) {
+                    for (
+                        let currKeyIndex = this._currKeyIndices[nodeName];
+                        currKeyIndex < keys.length - 1 && currKeyIndex >= 0;
+                        currKeyIndex += offset
+                    ) {
                         const k1 = keys[currKeyIndex];
                         const k2 = keys[currKeyIndex + 1];
 
-                        if ((k1.time <= this._time) && (k2.time >= this._time)) {
+                        if (k1.time <= this._time && k2.time >= this._time) {
                             const alpha = (this._time - k1.time) / (k2.time - k1.time);
 
                             interpKey._pos.lerp(k1.position, k2.position, alpha);

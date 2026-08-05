@@ -6,7 +6,6 @@ import { VertexBuffer } from '../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
 
 describe('VertexBuffer', function () {
-
     /** @type {NullGraphicsDevice} */
     let device;
 
@@ -19,14 +18,14 @@ describe('VertexBuffer', function () {
         device = null;
     });
 
-    const createBuffer = (semantic, components) => new VertexBuffer(
-        device,
-        new VertexFormat(device, [{ semantic: semantic, components: components, type: TYPE_FLOAT32 }]),
-        4
-    );
+    const createBuffer = (semantic, components) =>
+        new VertexBuffer(
+            device,
+            new VertexFormat(device, [{ semantic: semantic, components: components, type: TYPE_FLOAT32 }]),
+            4
+        );
 
     describe('#vaoKeyPart', function () {
-
         it('encodes both the buffer id and the format hash as separate fields', function () {
             const buffer = createBuffer(SEMANTIC_POSITION, 3);
 
@@ -86,7 +85,7 @@ describe('VertexBuffer', function () {
                 createBuffer(SEMANTIC_ATTR0, 2)
             ];
 
-            const keyOf = list => list.reduce((key, buffer) => key + buffer.vaoKeyPart, '');
+            const keyOf = (list) => list.reduce((key, buffer) => key + buffer.vaoKeyPart, '');
 
             const keys = new Set([
                 keyOf([buffers[0], buffers[1]]),
@@ -98,7 +97,7 @@ describe('VertexBuffer', function () {
 
             expect(keys.size).to.equal(5);
 
-            buffers.forEach(buffer => buffer.destroy());
+            buffers.forEach((buffer) => buffer.destroy());
         });
     });
 });

@@ -552,7 +552,6 @@ class CameraFrame {
     }
 
     updateOptions() {
-
         const { options, rendering, bloom, taa, ssao } = this;
         options.stencil = rendering.stencil;
         options.samples = rendering.samples;
@@ -587,14 +586,18 @@ class CameraFrame {
         }
         let localLights = volumetricFog.localOmniLights || volumetricFog.localSpotLights;
         if (localLights && !cameraComponent.system.app.scene.clusteredLightingEnabled) {
-            Debug.warnOnce('CameraFrame.volumetricFog local lights require clustered lighting to be enabled, the local lights are ignored.');
+            Debug.warnOnce(
+                'CameraFrame.volumetricFog local lights require clustered lighting to be enabled, the local lights are ignored.'
+            );
             localLights = false;
         }
         if (!volumetricFog.light && !localLights) {
             return false;
         }
         if (cameraComponent.projection !== PROJECTION_PERSPECTIVE) {
-            Debug.warnOnce('CameraFrame.volumetricFog is only supported on perspective cameras, the effect is disabled.');
+            Debug.warnOnce(
+                'CameraFrame.volumetricFog is only supported on perspective cameras, the effect is disabled.'
+            );
             return false;
         }
         return true;
@@ -604,11 +607,11 @@ class CameraFrame {
      * Applies any changes made to the properties of this instance.
      */
     update() {
-
         if (!this._enabled) return;
 
         const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao } = this;
+        const { options, renderPassCamera, rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao } =
+            this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();

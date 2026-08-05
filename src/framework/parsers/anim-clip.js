@@ -17,13 +17,18 @@ class AnimClipParser {
 
     load(url, callback, asset) {
         const original = typeof url === 'string' ? url : url.original;
-        this.handler.fetch(url, Http.ResponseType.JSON, (err, response) => {
-            if (err) {
-                callback(`Error loading animation clip resource: ${original} [${err}]`);
-            } else {
-                callback(null, response);
-            }
-        }, asset);
+        this.handler.fetch(
+            url,
+            Http.ResponseType.JSON,
+            (err, response) => {
+                if (err) {
+                    callback(`Error loading animation clip resource: ${original} [${err}]`);
+                } else {
+                    callback(null, response);
+                }
+            },
+            asset
+        );
     }
 
     open(url, data) {
@@ -36,20 +41,9 @@ class AnimClipParser {
             return new AnimData(output.components, output.data);
         });
         const curves = data.curves.map((curve) => {
-            return new AnimCurve(
-                [curve.path],
-                curve.inputIndex,
-                curve.outputIndex,
-                curve.interpolation
-            );
+            return new AnimCurve([curve.path], curve.inputIndex, curve.outputIndex, curve.interpolation);
         });
-        return new AnimTrack(
-            name,
-            duration,
-            inputs,
-            outputs,
-            curves
-        );
+        return new AnimTrack(name, duration, inputs, outputs, curves);
     }
 }
 

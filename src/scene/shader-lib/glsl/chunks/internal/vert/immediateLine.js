@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     attribute vec4 vertex_position;
     attribute vec4 vertex_color;
     uniform mat4 matrix_model;

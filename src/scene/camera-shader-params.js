@@ -59,7 +59,6 @@ class CameraShaderParams {
     }
 
     get defines() {
-
         const defines = this._defines;
 
         if (this._definesDirty) {

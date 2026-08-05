@@ -16,8 +16,8 @@ import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
  */
 const parseZipArchive = (data) => {
     const dataView = new DataView(data);
-    const u16 = offset => dataView.getUint16(offset, true);
-    const u32 = offset => dataView.getUint32(offset, true);
+    const u16 = (offset) => dataView.getUint16(offset, true);
+    const u32 = (offset) => dataView.getUint32(offset, true);
 
     // read the end of central directory record
     const extractEocd = (offset) => {
@@ -236,7 +236,7 @@ class SogBundleParser {
             }
 
             // access bundled meta.json
-            const metaFile = files.find(f => f.filename === 'meta.json');
+            const metaFile = files.find((f) => f.filename === 'meta.json');
             if (!metaFile) {
                 callback('Error: meta.json not found');
                 return;
@@ -252,39 +252,51 @@ class SogBundleParser {
             }
 
             // extract filenames from meta.json
-            const filenames = ['means', 'scales', 'quats', 'sh0', 'shN'].map(key => meta[key]?.files ?? []).flat();
+            const filenames = ['means', 'scales', 'quats', 'sh0', 'shN'].map((key) => meta[key]?.files ?? []).flat();
 
             const promises = [];
             for (const filename of filenames) {
-                const file = files.find(f => f.filename === filename);
+                const file = files.find((f) => f.filename === filename);
                 let texture;
                 if (file) {
                     // file is embedded
-                    texture = new Asset(filename, 'texture', {
-                        url: `${url.load}/${filename}`,
+                    texture = new Asset(
                         filename,
-                        contents: file.data
-                    }, {
-                        mipmaps: false
-                    }, {
-                        crossOrigin: 'anonymous'
-                    });
+                        'texture',
+                        {
+                            url: `${url.load}/${filename}`,
+                            filename,
+                            contents: file.data
+                        },
+                        {
+                            mipmaps: false
+                        },
+                        {
+                            crossOrigin: 'anonymous'
+                        }
+                    );
                 } else {
                     // file doesn't exist in bundle, treat it as a url
-                    const url = (new URL(filename, new URL(filename, window.location.href).toString())).toString();
-                    texture = new Asset(filename, 'texture', {
-                        url,
-                        filename
-                    }, {
-                        mipmaps: false
-                    }, {
-                        crossOrigin: 'anonymous'
-                    });
+                    const url = new URL(filename, new URL(filename, window.location.href).toString()).toString();
+                    texture = new Asset(
+                        filename,
+                        'texture',
+                        {
+                            url,
+                            filename
+                        },
+                        {
+                            mipmaps: false
+                        },
+                        {
+                            crossOrigin: 'anonymous'
+                        }
+                    );
                 }
 
                 const promise = new Promise((resolve, reject) => {
                     texture.on('load', () => resolve(null));
-                    texture.on('error', err => reject(err));
+                    texture.on('error', (err) => reject(err));
                 });
 
                 this.app.assets.add(texture);
@@ -292,7 +304,7 @@ class SogBundleParser {
                 promises.push(promise);
             }
 
-            Object.values(textures).forEach(t => this.app.assets.load(t));
+            Object.values(textures).forEach((t) => this.app.assets.load(t));
 
             await Promise.allSettled(promises);
 
@@ -354,9 +366,9 @@ class SogBundleParser {
             }
 
             const prepareCenters = gsplatCentersEnabledAtLoad;
-            const resource = decompress ?
-                new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
-                new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+            const resource = decompress
+                ? new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters })
+                : new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
 
             // the sog resource now owns the textures in `data` (when decompressing, the
             // decompressed data was copied out instead and the textures stay with the assets)

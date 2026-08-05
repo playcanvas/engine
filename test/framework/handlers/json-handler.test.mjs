@@ -5,7 +5,6 @@ import { JsonHandler } from '../../../src/framework/handlers/json.js';
 import { http } from '../../../src/platform/net/http.js';
 
 describe('JsonHandler', function () {
-
     afterEach(function () {
         restore();
     });

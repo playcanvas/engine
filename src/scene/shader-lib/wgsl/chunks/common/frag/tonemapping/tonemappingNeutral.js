@@ -1,5 +1,5 @@
 // https://modelviewer.dev/examples/tone-mapping
-export default /* wgsl */`
+export default /* wgsl */ `
 fn toneMap(col: vec3f) -> vec3f {
     var color = col * getExposure();
 

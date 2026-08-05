@@ -14,7 +14,7 @@ class HueSaturationEffect extends pc.PostEffect {
         super(graphicsDevice);
 
         // Shader author: tapio / http://tapio.github.com/
-        const fshader = /* glsl */`
+        const fshader = /* glsl */ `
             uniform sampler2D uColorBuffer;
             uniform float uHue;
             uniform float uSaturation;
@@ -92,9 +92,13 @@ HueSaturation.prototype.initialize = function () {
     this.effect.hue = this.hue;
     this.effect.saturation = this.saturation;
 
-    this.on('attr', function (name, value) {
-        this.effect[name] = value;
-    }, this);
+    this.on(
+        'attr',
+        function (name, value) {
+            this.effect[name] = value;
+        },
+        this
+    );
 
     var queue = this.entity.camera.postEffects;
 

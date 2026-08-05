@@ -21,13 +21,11 @@ class WebgpuDynamicBuffers extends DynamicBuffers {
      * Submit all used buffers to the device.
      */
     submit() {
-
         super.submit();
 
         // submit all used buffers
         const count = this.usedBuffers.length;
         if (count) {
-
             const device = this.device;
             const gpuBuffers = this.gpuBuffers;
 

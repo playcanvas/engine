@@ -49,7 +49,7 @@ const math = {
     intToBytes24(i) {
         const r = (i >> 16) & 0xff;
         const g = (i >> 8) & 0xff;
-        const b = (i) & 0xff;
+        const b = i & 0xff;
 
         return [r, g, b];
     },
@@ -67,7 +67,7 @@ const math = {
         const r = (i >> 24) & 0xff;
         const g = (i >> 16) & 0xff;
         const b = (i >> 8) & 0xff;
-        const a = (i) & 0xff;
+        const a = i & 0xff;
 
         return [r, g, b, a];
     },
@@ -92,7 +92,7 @@ const math = {
             g = r[1];
             r = r[0];
         }
-        return ((r << 16) | (g << 8) | b);
+        return (r << 16) | (g << 8) | b;
     },
 
     /**
@@ -192,7 +192,7 @@ const math = {
      * math.powerOfTwo(17); // returns false
      */
     powerOfTwo(x) {
-        return ((x !== 0) && !(x & (x - 1)));
+        return x !== 0 && !(x & (x - 1));
     },
 
     /**
@@ -206,11 +206,11 @@ const math = {
      */
     nextPowerOfTwo(val) {
         val--;
-        val |= (val >> 1);
-        val |= (val >> 2);
-        val |= (val >> 4);
-        val |= (val >> 8);
-        val |= (val >> 16);
+        val |= val >> 1;
+        val |= val >> 2;
+        val |= val >> 4;
+        val |= val >> 8;
+        val |= val >> 16;
         val++;
         return val;
     },

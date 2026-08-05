@@ -97,12 +97,7 @@ class FlyController extends InputController {
         this._targetPose.move(offset);
 
         // smoothing
-        return this._pose.lerp(
-            this._pose,
-            this._targetPose,
-            damp(this.moveDamping, dt),
-            damp(this.rotateDamping, dt)
-        );
+        return this._pose.lerp(this._pose, this._targetPose, damp(this.moveDamping, dt), damp(this.rotateDamping, dt));
     }
 
     destroy() {

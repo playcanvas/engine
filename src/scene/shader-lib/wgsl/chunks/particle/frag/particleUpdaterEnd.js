@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     output.color = getOutput();
     return output;
 }

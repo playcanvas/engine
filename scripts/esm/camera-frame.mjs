@@ -8,27 +8,27 @@ import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /** @enum {number} */
 const ToneMapping = {
-    LINEAR: 0,  // TONEMAP_LINEAR
-    FILMIC: 1,  // TONEMAP_FILMIC
-    HEJL: 2,    // TONEMAP_HEJL
-    ACES: 3,    // TONEMAP_ACES
-    ACES2: 4,   // TONEMAP_ACES2
-    NEUTRAL: 5  // TONEMAP_NEUTRAL
+    LINEAR: 0, // TONEMAP_LINEAR
+    FILMIC: 1, // TONEMAP_FILMIC
+    HEJL: 2, // TONEMAP_HEJL
+    ACES: 3, // TONEMAP_ACES
+    ACES2: 4, // TONEMAP_ACES2
+    NEUTRAL: 5 // TONEMAP_NEUTRAL
 };
 
 /** @enum {string} */
 const SsaoType = {
-    NONE: 'none',           // SSAOTYPE_NONE
-    LIGHTING: 'lighting',   // SSAOTYPE_LIGHTING
-    COMBINE: 'combine'      // SSAOTYPE_COMBINE
+    NONE: 'none', // SSAOTYPE_NONE
+    LIGHTING: 'lighting', // SSAOTYPE_LIGHTING
+    COMBINE: 'combine' // SSAOTYPE_COMBINE
 };
 
 /** @enum {number} */
 const RenderFormat = {
-    RGBA8: 7,       // PIXELFORMAT_RGBA8
-    RG11B10: 18,    // PIXELFORMAT_111110F
-    RGBA16: 12,     // PIXELFORMAT_RGBA16F
-    RGBA32: 14      // PIXELFORMAT_RGBA32F
+    RGBA8: 7, // PIXELFORMAT_RGBA8
+    RG11B10: 18, // PIXELFORMAT_111110F
+    RGBA16: 12, // PIXELFORMAT_RGBA16F
+    RGBA32: 14 // PIXELFORMAT_RGBA32F
 };
 
 /** @enum {string} */
@@ -716,7 +716,6 @@ class CameraFrame extends Script {
     engineCameraFrame;
 
     initialize() {
-
         this.engineCameraFrame = new EngineCameraFrame(this.app, this.entity.camera);
 
         this.on('enable', () => {
@@ -737,9 +736,9 @@ class CameraFrame extends Script {
     }
 
     postUpdate(dt) {
-
         const cf = this.engineCameraFrame;
-        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT, volumetricFog } = this;
+        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT, volumetricFog } =
+            this;
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
@@ -876,4 +875,17 @@ class CameraFrame extends Script {
     }
 }
 
-export { CameraFrame, Rendering, Ssao, Bloom, Grading, ColorLUT, Vignette, Fringing, ColorEnhance, Taa, Dof, VolumetricFog };
+export {
+    CameraFrame,
+    Rendering,
+    Ssao,
+    Bloom,
+    Grading,
+    ColorLUT,
+    Vignette,
+    Fringing,
+    ColorEnhance,
+    Taa,
+    Dof,
+    VolumetricFog
+};

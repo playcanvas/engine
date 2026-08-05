@@ -1,12 +1,19 @@
 import { Debug } from '../../../core/debug.js';
 
 import {
-    ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT,
-    PIXELFORMAT_DXT1, PIXELFORMAT_DXT5,
+    ADDRESS_CLAMP_TO_EDGE,
+    ADDRESS_REPEAT,
+    PIXELFORMAT_DXT1,
+    PIXELFORMAT_DXT5,
     PIXELFORMAT_ETC1,
-    PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_PVRTC_4BPP_RGB_1,
+    PIXELFORMAT_PVRTC_2BPP_RGB_1,
+    PIXELFORMAT_PVRTC_4BPP_RGBA_1,
+    PIXELFORMAT_PVRTC_2BPP_RGBA_1,
+    PIXELFORMAT_RGB8,
+    PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGBA16F,
+    PIXELFORMAT_RGBA32F,
     TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
@@ -39,8 +46,8 @@ class DdsParser extends TextureParser {
 
         const FCC_DXT1 = 827611204; // DXT1
         const FCC_DXT5 = 894720068; // DXT5
-        const FCC_FP16 = 113;       // RGBA16f
-        const FCC_FP32 = 116;       // RGBA32f
+        const FCC_FP16 = 113; // RGBA16f
+        const FCC_FP32 = 116; // RGBA32f
 
         // non standard
         const FCC_ETC1 = 826496069;
@@ -91,7 +98,9 @@ class DdsParser extends TextureParser {
         }
 
         if (!format) {
-            Debug.error(`This DDS pixel format is currently unsupported. Empty texture will be created instead of ${url}.`);
+            Debug.error(
+                `This DDS pixel format is currently unsupported. Empty texture will be created instead of ${url}.`
+            );
             texture = new Texture(device, {
                 width: 4,
                 height: 4,
@@ -132,9 +141,9 @@ class DdsParser extends TextureParser {
                     if (etc1) {
                         mipSize = Math.floor((mipWidth + 3) / 4) * Math.floor((mipHeight + 3) / 4) * 8;
                     } else if (pvrtc2) {
-                        mipSize = Math.max(mipWidth, 16) * Math.max(mipHeight, 8) / 4;
+                        mipSize = (Math.max(mipWidth, 16) * Math.max(mipHeight, 8)) / 4;
                     } else if (pvrtc4) {
-                        mipSize = Math.max(mipWidth, 8) * Math.max(mipHeight, 8) / 2;
+                        mipSize = (Math.max(mipWidth, 8) * Math.max(mipHeight, 8)) / 2;
                     } else {
                         numBlocksAcross = Math.floor((mipWidth + DXT_BLOCK_WIDTH - 1) / DXT_BLOCK_WIDTH);
                         numBlocksDown = Math.floor((mipHeight + DXT_BLOCK_HEIGHT - 1) / DXT_BLOCK_HEIGHT);
@@ -145,9 +154,12 @@ class DdsParser extends TextureParser {
                     mipSize = mipWidth * mipHeight * 4;
                 }
 
-                const mipBuff = format === PIXELFORMAT_RGBA32F ? new Float32Array(data, offset, mipSize) :
-                    (format === PIXELFORMAT_RGBA16F ? new Uint16Array(data, offset, mipSize) :
-                        new Uint8Array(data, offset, mipSize));
+                const mipBuff =
+                    format === PIXELFORMAT_RGBA32F
+                        ? new Float32Array(data, offset, mipSize)
+                        : format === PIXELFORMAT_RGBA16F
+                          ? new Uint16Array(data, offset, mipSize)
+                          : new Uint8Array(data, offset, mipSize);
 
                 if (!isCubemap) {
                     texture._levels[i] = mipBuff;

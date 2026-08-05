@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #include "screenDepthPS"
 
     // needed by the omni light shadow and cookie sampling from the atlas

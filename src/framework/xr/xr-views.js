@@ -1,7 +1,13 @@
 import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { XrView } from './xr-view.js';
-import { XRTYPE_AR, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_F32, XRDEPTHSENSINGFORMAT_R16U } from './constants.js';
+import {
+    XRTYPE_AR,
+    XRDEPTHSENSINGUSAGE_GPU,
+    XRDEPTHSENSINGFORMAT_L8A8,
+    XRDEPTHSENSINGFORMAT_F32,
+    XRDEPTHSENSINGFORMAT_R16U
+} from './constants.js';
 import { PIXELFORMAT_LA8, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH } from '../../platform/graphics/constants.js';
 
 /**

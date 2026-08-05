@@ -66,7 +66,6 @@ class RenderPassCookieRenderer extends RenderPass {
     }
 
     static create(renderTarget, cubeSlotsOffsets) {
-
         Debug.assert(renderTarget);
 
         // prepare a single render pass to render all quads to the render target
@@ -83,7 +82,6 @@ class RenderPassCookieRenderer extends RenderPass {
     }
 
     update(lights) {
-
         // pick lights we need to update the cookies for
         const filteredLights = this._filteredLights;
         this.filter(lights, filteredLights);
@@ -93,7 +91,6 @@ class RenderPassCookieRenderer extends RenderPass {
     }
 
     filter(lights, filteredLights) {
-
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
 
@@ -163,7 +160,6 @@ class RenderPassCookieRenderer extends RenderPass {
     }
 
     execute() {
-
         // render state
         const device = this.device;
         device.setDrawStates();
@@ -192,11 +188,9 @@ class RenderPassCookieRenderer extends RenderPass {
 
             // render it to a viewport of the target
             for (let face = 0; face < faceCount; face++) {
-
                 _viewport.copy(light.atlasViewport);
 
                 if (faceCount > 1) {
-
                     // for cubemap, render to one of the 3x3 sub-areas
                     const smallSize = _viewport.z / 3;
                     const offset = cubeSlotsOffsets[face];

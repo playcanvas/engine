@@ -71,7 +71,7 @@ function octEncode(x, y, z) {
  * @returns {number} The quantized value.
  * @ignore
  */
-const toByte = value => Math.max(0, Math.min(255, Math.round((value * 0.5 + 0.5) * 255)));
+const toByte = (value) => Math.max(0, Math.min(255, Math.round((value * 0.5 + 0.5) * 255)));
 
 /**
  * Converts the animations of a skinned glb into a VAT (Vertex Animation Texture), returned as the
@@ -96,26 +96,19 @@ const toByte = value => Math.max(0, Math.min(255, Math.round((value * 0.5 + 0.5)
  * @returns {Promise<ArrayBuffer>} The generated container.
  */
 export async function convertToVat(app, container, options = {}) {
-
-    const {
-        fps = 10,
-        embedAlbedo = true,
-        albedoMaxSize = 1024,
-        albedoQuality = 0.9,
-        normalize = true
-    } = options;
+    const { fps = 10, embedAlbedo = true, albedoMaxSize = 1024, albedoQuality = 0.9, normalize = true } = options;
 
     const device = app.graphicsDevice;
 
     // the whole character has to be a single mesh, as it is rendered with a single instanced draw
-    const meshes = container.renders.map(render => render.resource.meshes).flat();
+    const meshes = container.renders.map((render) => render.resource.meshes).flat();
     if (meshes.length !== 1) {
         throw new Error(`The glb contains ${meshes.length} meshes, but exactly one is required.`);
     }
 
     const vertexCount = meshes[0].vertexBuffer.numVertices;
 
-    const tracks = container.animations.map(animation => animation.resource);
+    const tracks = container.animations.map((animation) => animation.resource);
     if (tracks.length === 0) {
         throw new Error('The glb does not contain any animations.');
     }
@@ -141,10 +134,14 @@ export async function convertToVat(app, container, options = {}) {
     const { width, height } = vatTextureSize(vertexCount, frameCount);
     if (height > VAT_TEXTURE_LIMIT) {
         const maxVertices = Math.floor(VAT_MAX_TEXELS / frameCount);
-        throw new Error(`The mesh has ${vertexCount} vertices, but at ${frameCount} sampled frames at most ${maxVertices} are supported.`);
+        throw new Error(
+            `The mesh has ${vertexCount} vertices, but at ${frameCount} sampled frames at most ${maxVertices} are supported.`
+        );
     }
     if (width > device.maxTextureSize || height > device.maxTextureSize) {
-        throw new Error(`The animations need a ${width}x${height} texture, but the device supports at most ${device.maxTextureSize}.`);
+        throw new Error(
+            `The animations need a ${width}x${height} texture, but the device supports at most ${device.maxTextureSize}.`
+        );
     }
 
     // instantiate the character so its animations can be evaluated
@@ -178,13 +175,13 @@ export async function convertToVat(app, container, options = {}) {
  * @ignore
  */
 function sampleAnimations(entity, tracks, layout) {
-
     const { vertexCount, animations, frameCount, width, height, fps, normalize } = layout;
 
-    const meshInstance = entity.findComponents('render')
-    .map(render => render.meshInstances)
-    .flat()
-    .find(instance => instance.mesh.skin);
+    const meshInstance = entity
+        .findComponents('render')
+        .map((render) => render.meshInstances)
+        .flat()
+        .find((instance) => instance.mesh.skin);
 
     if (!meshInstance?.skinInstance) {
         throw new Error('The mesh of the glb is not skinned.');
@@ -229,15 +226,13 @@ function sampleAnimations(entity, tracks, layout) {
     let skinUpdateIndex = 0;
 
     animations.forEach((animation, animationIndex) => {
-
         const clip = new AnimClip(tracks[animationIndex], 0, 1, true, true);
         evaluator.addClip(clip);
 
         for (let frame = 0; frame <= animation.frameCount; frame++) {
-
             // the extra frame at the end is a copy of the first frame of the loop
             const loopedFrame = frame % animation.frameCount;
-            clip.time = loopedFrame * animation.duration / animation.frameCount;
+            clip.time = (loopedFrame * animation.duration) / animation.frameCount;
 
             // apply the animation to the hierarchy and evaluate the bone matrices
             evaluator.update(0);
@@ -255,7 +250,6 @@ function sampleAnimations(entity, tracks, layout) {
             const frameOffset = column * vertexCount * 3;
 
             for (let v = 0; v < vertexCount; v++) {
-
                 const px = positions[v * 3];
                 const py = positions[v * 3 + 1];
                 const pz = positions[v * 3 + 2];
@@ -263,8 +257,12 @@ function sampleAnimations(entity, tracks, layout) {
                 const ny = normals[v * 3 + 1];
                 const nz = normals[v * 3 + 2];
 
-                let sx = 0, sy = 0, sz = 0;
-                let tx = 0, ty = 0, tz = 0;
+                let sx = 0,
+                    sy = 0,
+                    sz = 0;
+                let tx = 0,
+                    ty = 0,
+                    tz = 0;
 
                 for (let b = 0; b < 4; b++) {
                     const weight = boneWeights[v * 4 + b];
@@ -287,9 +285,12 @@ function sampleAnimations(entity, tracks, layout) {
                 sampledPositions[frameOffset + v * 3 + 1] = sy;
                 sampledPositions[frameOffset + v * 3 + 2] = sz;
 
-                min.x = Math.min(min.x, sx); max.x = Math.max(max.x, sx);
-                min.y = Math.min(min.y, sy); max.y = Math.max(max.y, sy);
-                min.z = Math.min(min.z, sz); max.z = Math.max(max.z, sz);
+                min.x = Math.min(min.x, sx);
+                max.x = Math.max(max.x, sx);
+                min.y = Math.min(min.y, sy);
+                max.y = Math.max(max.y, sy);
+                min.z = Math.min(min.z, sz);
+                max.z = Math.max(max.z, sz);
 
                 // normals are not affected by the normalization below, so pack them right away -
                 // octahedral in two bytes, which is under a degree of error
@@ -351,7 +352,6 @@ function sampleAnimations(entity, tracks, layout) {
  * @ignore
  */
 async function encodeAlbedo(container, maxSize, quality) {
-
     const texture = container.materials?.[0]?.resource?.diffuseMap;
     const source = texture?.getSource();
     if (!source) {
@@ -385,10 +385,12 @@ async function encodeAlbedo(container, maxSize, quality) {
  * @ignore
  */
 function assemble(data, albedo) {
-
     const chunks = [
         { name: 'vat', bytes: new Uint8Array(data.vat.buffer, data.vat.byteOffset, data.vat.byteLength) },
-        { name: 'indices', bytes: new Uint8Array(data.indices.buffer, data.indices.byteOffset, data.indices.byteLength) },
+        {
+            name: 'indices',
+            bytes: new Uint8Array(data.indices.buffer, data.indices.byteOffset, data.indices.byteLength)
+        },
         { name: 'uvs', bytes: new Uint8Array(data.uvs.buffer, data.uvs.byteOffset, data.uvs.byteLength) }
     ];
     if (albedo) {
@@ -408,7 +410,7 @@ function assemble(data, albedo) {
     });
 
     const accessor = (name) => {
-        const chunk = chunks.find(entry => entry.name === name);
+        const chunk = chunks.find((entry) => entry.name === name);
         return { byteOffset: chunk.byteOffset, byteLength: chunk.bytes.byteLength };
     };
 

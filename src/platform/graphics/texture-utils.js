@@ -1,9 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
-import {
-    pixelFormatInfo,
-    PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1
-} from './constants.js';
+import { pixelFormatInfo, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1 } from './constants.js';
 
 /**
  * @import { Vec2 } from '../../core/math/vec2.js'
@@ -48,7 +45,6 @@ class TextureUtils {
      * @returns {number} The number of bytes of GPU memory required for the texture.
      */
     static calcLevelGpuSize(width, height, depth, format) {
-
         const formatInfo = pixelFormatInfo.get(format);
         Debug.assert(formatInfo !== undefined, `Invalid pixel format ${format}`);
 
@@ -62,8 +58,7 @@ class TextureUtils {
         const blockHeight = Math.floor((height + 3) / 4);
         const blockDepth = Math.floor((depth + 3) / 4);
 
-        if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 ||
-            format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
+        if (format === PIXELFORMAT_PVRTC_2BPP_RGB_1 || format === PIXELFORMAT_PVRTC_2BPP_RGBA_1) {
             blockWidth = Math.max(Math.floor(blockWidth / 2), 1);
         }
 
@@ -88,7 +83,7 @@ class TextureUtils {
             result += TextureUtils.calcLevelGpuSize(width, height, depth, format);
 
             // we're done if mipmaps aren't required or we've calculated the smallest mipmap level
-            if (!mipmaps || ((width === 1) && (height === 1) && (depth === 1))) {
+            if (!mipmaps || (width === 1 && height === 1 && depth === 1)) {
                 break;
             }
             width = Math.max(width >> 1, 1);

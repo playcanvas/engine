@@ -37,7 +37,7 @@ class WebglUploadStream {
     destroy() {
         // @ts-ignore - gl is available on WebglGraphicsDevice
         const gl = this.uploadStream.device.gl;
-        this.availablePBOs.forEach(info => gl.deleteBuffer(info.pbo));
+        this.availablePBOs.forEach((info) => gl.deleteBuffer(info.pbo));
         this.pendingPBOs.forEach((item) => {
             if (item.sync) gl.deleteSync(item.sync);
             gl.deleteBuffer(item.pbo);
@@ -117,7 +117,10 @@ class WebglUploadStream {
      * @private
      */
     uploadDirect(data, target, offset, size) {
-        Debug.assert(offset === 0, 'Direct texture upload with non-zero offset is not supported. Use PBO mode instead.');
+        Debug.assert(
+            offset === 0,
+            'Direct texture upload with non-zero offset is not supported. Use PBO mode instead.'
+        );
 
         const device = this.uploadStream.device;
         // @ts-ignore - gl is available on WebglGraphicsDevice
@@ -144,9 +147,15 @@ class WebglUploadStream {
 
         // Full-buffer upload (texImage2D allocates fresh storage each call).
         gl.texImage2D(
-            gl.TEXTURE_2D, 0, impl._glInternalFormat,
-            target.width, target.height, 0,
-            impl._glFormat, impl._glPixelType, src
+            gl.TEXTURE_2D,
+            0,
+            impl._glInternalFormat,
+            target.width,
+            target.height,
+            0,
+            impl._glFormat,
+            impl._glPixelType,
+            src
         );
 
         // Keep engine texture state consistent: storage exists now.
@@ -174,17 +183,25 @@ class WebglUploadStream {
         this.update(byteSize);
 
         // WebGL requires offset and size aligned to full rows for texSubImage2D
-        Debug.assert(offset % width === 0, `Upload offset (${offset}) must be a multiple of texture width (${width}) for row alignment`);
-        Debug.assert(size % width === 0, `Upload size (${size}) must be a multiple of texture width (${width}) for row alignment`);
+        Debug.assert(
+            offset % width === 0,
+            `Upload offset (${offset}) must be a multiple of texture width (${width}) for row alignment`
+        );
+        Debug.assert(
+            size % width === 0,
+            `Upload size (${size}) must be a multiple of texture width (${width}) for row alignment`
+        );
 
         const startY = offset / width;
         const height = size / width;
 
         // Get or create a PBO (guaranteed to be large enough after update)
-        const pboInfo = this.availablePBOs.pop() ?? (() => {
-            const pbo = gl.createBuffer();
-            return { pbo, size: byteSize };
-        })();
+        const pboInfo =
+            this.availablePBOs.pop() ??
+            (() => {
+                const pbo = gl.createBuffer();
+                return { pbo, size: byteSize };
+            })();
 
         // Orphan + bufferSubData pattern
         gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, pboInfo.pbo);

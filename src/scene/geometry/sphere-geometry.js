@@ -68,13 +68,13 @@ class SphereGeometry extends Geometry {
         const indices = [];
 
         for (let lat = 0; lat <= latitudeBands; lat++) {
-            const theta = lat * Math.PI / latitudeBands;
+            const theta = (lat * Math.PI) / latitudeBands;
             const sinTheta = Math.sin(theta);
             const cosTheta = Math.cos(theta);
 
             for (let lon = 0; lon <= longitudeBands; lon++) {
                 // Sweep the sphere from the positive Z axis to match a 3DS Max sphere
-                const phi = lon * 2 * Math.PI / longitudeBands - Math.PI / 2;
+                const phi = (lon * 2 * Math.PI) / longitudeBands - Math.PI / 2;
                 const sinPhi = Math.sin(phi);
                 const cosPhi = Math.cos(phi);
 
@@ -92,7 +92,7 @@ class SphereGeometry extends Geometry {
 
         for (let lat = 0; lat < latitudeBands; ++lat) {
             for (let lon = 0; lon < longitudeBands; ++lon) {
-                const first  = (lat * (longitudeBands + 1)) + lon;
+                const first = lat * (longitudeBands + 1) + lon;
                 const second = first + longitudeBands + 1;
 
                 indices.push(first + 1, second, first);
@@ -103,7 +103,7 @@ class SphereGeometry extends Geometry {
         this.positions = positions;
         this.normals = normals;
         this.uvs = uvs;
-        this.uvs1 = uvs;    // UV1 = UV0 for sphere
+        this.uvs1 = uvs; // UV1 = UV0 for sphere
         this.indices = indices;
 
         if (opts.calculateTangents) {

@@ -177,7 +177,7 @@ class GSplatResourceBase {
     _actualDestroy() {
         this.streams.destroy();
         this.mesh?.destroy();
-        this.workBufferRenderInfos.forEach(info => info.destroy());
+        this.workBufferRenderInfos.forEach((info) => info.destroy());
         this.workBufferRenderInfos.clear();
     }
 
@@ -267,7 +267,6 @@ class GSplatResourceBase {
      * @ignore
      */
     getWorkBufferRenderInfo(colorOnly, workBufferModifier, formatHash, formatDeclarations, workBufferFormat) {
-
         // configure defines to fetch cached data
         this.configureMaterialDefines(tempMap);
         tempMap.set('GSPLAT_LOD', '');
@@ -293,16 +292,15 @@ class GSplatResourceBase {
         // get or create quad render
         let info = this.workBufferRenderInfos.get(key);
         if (!info) {
-
             const material = new ShaderMaterial();
             this.configureMaterial(material, workBufferModifier, formatDeclarations);
 
             // Inject work buffer output declarations
             const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
             // For color-only mode, only output color stream; otherwise output all streams
-            const outputStreams = colorOnly ?
-                [workBufferFormat.getStream('dataColor')] :
-                [...workBufferFormat.streams, ...workBufferFormat.extraStreams];
+            const outputStreams = colorOnly
+                ? [workBufferFormat.getStream('dataColor')]
+                : [...workBufferFormat.streams, ...workBufferFormat.extraStreams];
             let outputCode = workBufferFormat.getOutputDeclarations(outputStreams);
 
             // In color-only mode, generate no-op stubs for extra streams so user modifiers compile
@@ -339,17 +337,10 @@ class GSplatResourceBase {
         const meshPositions = new Float32Array(12 * splatInstanceSize);
         const meshIndices = new Uint32Array(6 * splatInstanceSize);
         for (let i = 0; i < splatInstanceSize; ++i) {
-            meshPositions.set([
-                -1, -1, i,
-                1, -1, i,
-                1, 1, i,
-                -1, 1, i
-            ], i * 12);
+            meshPositions.set([-1, -1, i, 1, -1, i, 1, 1, i, -1, 1, i], i * 12);
 
             const b = i * 4;
-            meshIndices.set([
-                0 + b, 1 + b, 2 + b, 0 + b, 2 + b, 3 + b
-            ], i * 6);
+            meshIndices.set([0 + b, 1 + b, 2 + b, 0 + b, 2 + b, 3 + b], i * 6);
         }
 
         const mesh = new Mesh(device);
@@ -444,8 +435,7 @@ class GSplatResourceBase {
      * @param {Map<string, string|number|boolean>} defines - The defines map to configure.
      * @ignore
      */
-    configureMaterialDefines(defines) {
-    }
+    configureMaterialDefines(defines) {}
 
     instantiate() {
         Debug.removed('GSplatResource.instantiate is removed. Use gsplat component instead');

@@ -23,11 +23,7 @@ const cpuStatDisplayNames = {
 };
 
 // CPU stats with delayed creation (only shown once non-zero, but never removed)
-const delayedStartStats = new Set([
-    'physicsTime',
-    'animUpdate',
-    'gsplatSort'
-]);
+const delayedStartStats = new Set(['physicsTime', 'animUpdate', 'gsplatSort']);
 
 /**
  * @typedef {object} MiniStatsSizeOptions
@@ -91,9 +87,9 @@ class MiniStats {
         const device = app.graphicsDevice;
 
         // Persistent texture row allocation (must be initialized before initGraphs)
-        this.graphRows = new Map();  // Map<Graph, rowIndex>
-        this.freeRows = [];          // Available rows for reuse
-        this.nextRowIndex = 0;       // Next new row to allocate
+        this.graphRows = new Map(); // Map<Graph, rowIndex>
+        this.freeRows = []; // Available rows for reuse
+        this.nextRowIndex = 0; // Next new row to allocate
 
         // sizes must be set before initGraphs (needed by ensureTextureHeight)
         this.sizes = options.sizes;
@@ -104,9 +100,9 @@ class MiniStats {
         // extract list of words
         const words = new Set(
             ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', ' ']
-            .concat(this.graphs.map(graph => graph.name))
-            .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
-            .filter(item => !!item)
+                .concat(this.graphs.map((graph) => graph.name))
+                .concat(options.stats ? options.stats.map((stat) => stat.unitsName) : [])
+                .filter((item) => !!item)
         );
 
         // always add lowercase and uppercase letters (needed for "max" display and GPU pass names)
@@ -124,7 +120,11 @@ class MiniStats {
         const gpuTimingMinSize = options.gpuTimingMinSize ?? 1;
         const cpuTimingMinSize = options.cpuTimingMinSize ?? 1;
         const vramTimingMinSize = options.vramTimingMinSize ?? 1;
-        if (gpuTimingMinSize < this.sizes.length || cpuTimingMinSize < this.sizes.length || vramTimingMinSize < this.sizes.length) {
+        if (
+            gpuTimingMinSize < this.sizes.length ||
+            cpuTimingMinSize < this.sizes.length ||
+            vramTimingMinSize < this.sizes.length
+        ) {
             const lastWidth = this.sizes[this.sizes.length - 1].width;
             for (let i = 1; i < this.sizes.length - 1; i++) {
                 this.sizes[i].width = lastWidth;
@@ -150,7 +150,11 @@ class MiniStats {
             event.preventDefault();
             if (this._enabled) {
                 this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
-                this.resize(this.sizes[this.activeSizeIndex].width, this.sizes[this.activeSizeIndex].height, this.sizes[this.activeSizeIndex].graphs);
+                this.resize(
+                    this.sizes[this.activeSizeIndex].width,
+                    this.sizes[this.activeSizeIndex].height,
+                    this.sizes[this.activeSizeIndex].graphs
+                );
             }
         });
 
@@ -202,7 +206,7 @@ class MiniStats {
         this.device.off('losecontext', this.loseContext, this);
         this.app.off('postrender', this.postRender, this);
 
-        this.graphs.forEach(graph => graph.destroy());
+        this.graphs.forEach((graph) => graph.destroy());
         this.gpuPassGraphs.clear();
         this.cpuGraphs.clear();
         this.vramGraphs.clear();
@@ -221,10 +225,24 @@ class MiniStats {
      */
     static statPresets = {
         gsplats: [
-            { name: 'GSplats', stats: ['frame.gsplats'], decimalPlaces: 3, multiplier: 1 / 1000000, unitsName: 'M', watermark: 10 }
+            {
+                name: 'GSplats',
+                stats: ['frame.gsplats'],
+                decimalPlaces: 3,
+                multiplier: 1 / 1000000,
+                unitsName: 'M',
+                watermark: 10
+            }
         ],
         gsplatsCopy: [
-            { name: 'GsplatsCopy', stats: ['frame.gsplatBufferCopy'], decimalPlaces: 1, multiplier: 1, unitsName: '%', watermark: 100 }
+            {
+                name: 'GsplatsCopy',
+                stats: ['frame.gsplatBufferCopy'],
+                decimalPlaces: 1,
+                multiplier: 1,
+                unitsName: '%',
+                watermark: 100
+            }
         ]
     };
 
@@ -251,7 +269,6 @@ class MiniStats {
      */
     static getDefaultOptions(extraStats = []) {
         const options = {
-
             // sizes of area to render individual graphs in and spacing between individual graphs
             sizes: [
                 { width: 100, height: 16, spacing: 0, graphs: false },
@@ -325,10 +342,10 @@ class MiniStats {
         };
 
         if (extraStats.length > 0) {
-            const frameIndex = options.stats.findIndex(s => s.name === 'Frame');
+            const frameIndex = options.stats.findIndex((s) => s.name === 'Frame');
             const insertIndex = frameIndex !== -1 ? frameIndex + 1 : options.stats.length;
             // reverse so user-specified order matches visual top-to-bottom order
-            const extra = extraStats.flatMap(name => MiniStats.statPresets[name] ?? []).reverse();
+            const extra = extraStats.flatMap((name) => MiniStats.statPresets[name] ?? []).reverse();
             options.stats.splice(insertIndex, 0, ...extra);
         }
 
@@ -429,7 +446,6 @@ class MiniStats {
         return this._enabled;
     }
 
-
     /**
      * Create the graphs requested by the user and add them to the MiniStats instance.
      *
@@ -446,7 +462,13 @@ class MiniStats {
         if (options.stats) {
             options.stats.forEach((entry) => {
                 if (entry.name === 'VRAM') {
-                    const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
+                    const timer = new StatsTimer(
+                        app,
+                        entry.stats,
+                        entry.decimalPlaces,
+                        entry.unitsName,
+                        entry.multiplier
+                    );
                     const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
                     this.graphs.push(graph);
                 }
@@ -593,7 +615,7 @@ class MiniStats {
      * @private
      */
     loseContext() {
-        this.graphs.forEach(graph => graph.loseContext());
+        this.graphs.forEach((graph) => graph.loseContext());
     }
 
     /**
@@ -610,7 +632,7 @@ class MiniStats {
 
         // check existing sub-stats for removal
         for (const [statName, statData] of subGraphs) {
-            const timing = (stats instanceof Map) ? (stats.get(statName) || 0) : (stats[statName] || 0);
+            const timing = stats instanceof Map ? stats.get(statName) || 0 : stats[statName] || 0;
 
             if (timing > 0) {
                 // update last non-zero frame
@@ -640,8 +662,8 @@ class MiniStats {
         }
 
         // scan for new sub-stats
-        const statsEntries = (stats instanceof Map) ? stats : Object.entries(stats);
-        const mainGraph = this.graphs.find(g => g.name === mainGraphName);
+        const statsEntries = stats instanceof Map ? stats : Object.entries(stats);
+        const mainGraph = this.graphs.find((g) => g.name === mainGraphName);
         for (const [statName, timing] of statsEntries) {
             if (!subGraphs.has(statName)) {
                 // Skip creating graph for auto-hide stats with zero timing
@@ -657,7 +679,7 @@ class MiniStats {
                 if (statPathPrefix === 'frame') {
                     displayName = cpuStatDisplayNames[statName] || statName;
                 }
-                const graphName = `  ${displayName}`;  // indent with 2 spaces
+                const graphName = `  ${displayName}`; // indent with 2 spaces
 
                 // use main graph watermark when available
                 const watermark = mainGraph?.watermark ?? 10.0;
@@ -672,9 +694,9 @@ class MiniStats {
 
                 // Set graph type for background tinting
                 if (statPathPrefix === 'gpu') {
-                    graph.graphType = 0.33;  // GPU sub-graphs
+                    graph.graphType = 0.33; // GPU sub-graphs
                 } else if (statPathPrefix === 'frame') {
-                    graph.graphType = 0.66;  // CPU sub-graphs
+                    graph.graphType = 0.66; // CPU sub-graphs
                 }
 
                 graph.texture = this.texture;
@@ -685,9 +707,9 @@ class MiniStats {
                 graph.enabled = currentSize.graphs;
 
                 // find the main graph index and insert before it (graphs render bottom to top)
-                let mainGraphIndex = this.graphs.findIndex(g => g.name === mainGraphName);
+                let mainGraphIndex = this.graphs.findIndex((g) => g.name === mainGraphName);
                 if (mainGraphIndex === -1) {
-                    mainGraphIndex = 0;  // fallback to start if main graph not found
+                    mainGraphIndex = 0; // fallback to start if main graph not found
                 }
 
                 // find where to insert - right before the main graph, after any existing sub-stats
@@ -736,7 +758,7 @@ class MiniStats {
         }
         this.graphRows.set(graph, row);
         graph.yOffset = row;
-        graph.needsClear = true;  // Will clear on first update()
+        graph.needsClear = true; // Will clear on first update()
         return row;
     }
 
@@ -774,7 +796,7 @@ class MiniStats {
         subGraphs.clear();
 
         if (mainGraphName) {
-            const mainGraph = this.graphs.find(g => g.name === mainGraphName);
+            const mainGraph = this.graphs.find((g) => g.name === mainGraphName);
             if (mainGraph) mainGraph.graphType = graphType;
         }
     }

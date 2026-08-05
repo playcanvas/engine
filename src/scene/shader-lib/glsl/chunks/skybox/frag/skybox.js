@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #define LIT_SKYBOX_INTENSITY
 
     #include "envProcPS"

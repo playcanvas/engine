@@ -1,3 +1,3 @@
-export default /* glsl */`
+export default /* glsl */ `
     vDepth = getLinearDepth(localPos);
 `;

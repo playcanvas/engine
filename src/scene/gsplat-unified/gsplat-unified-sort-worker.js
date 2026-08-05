@@ -1,6 +1,5 @@
 function UnifiedSortWorker() {
-
-    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
+    const myself = (typeof self !== 'undefined' && self) || require('node:worker_threads').parentPort;
 
     // cache of centers for each splat id
     const centersMap = new Map();
@@ -47,7 +46,15 @@ function UnifiedSortWorker() {
 
     // Sort key evaluation iterates only active splats (padding is excluded).
     // The indexMap (built on intervals) provides the work-buffer pixel mapping.
-    const evaluateSortKeysCommon = (sortParams, minDist, range, distances, countBuffer, centersData, processSplatFn) => {
+    const evaluateSortKeysCommon = (
+        sortParams,
+        minDist,
+        range,
+        distances,
+        countBuffer,
+        centersData,
+        processSplatFn
+    ) => {
         const { ids, intervals } = centersData;
 
         // pre-calculate inverse bin range
@@ -74,15 +81,42 @@ function UnifiedSortWorker() {
                 const intervalEnd = intervalsArray[i + 1] * 3;
 
                 // Process each center in this interval using the provided function
-                compactIdx = processSplatFn(centers, params, intervalStart, intervalEnd, compactIdx,
-                    invBinRange, minDist, range, distances, countBuffer);
+                compactIdx = processSplatFn(
+                    centers,
+                    params,
+                    intervalStart,
+                    intervalEnd,
+                    compactIdx,
+                    invBinRange,
+                    minDist,
+                    range,
+                    distances,
+                    countBuffer
+                );
             }
         }
     };
 
     const evaluateSortKeysLinear = (sortParams, minDist, range, distances, countBuffer, centersData) => {
-        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
-            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
+        evaluateSortKeysCommon(
+            sortParams,
+            minDist,
+            range,
+            distances,
+            countBuffer,
+            centersData,
+            (
+                centers,
+                params,
+                intervalStart,
+                intervalEnd,
+                compactIdx,
+                invBinRange,
+                minDist,
+                range,
+                distances,
+                countBuffer
+            ) => {
                 // camera related params
                 const { transformedDirection, offset, scale } = params;
                 const dx = transformedDirection.x;
@@ -113,12 +147,30 @@ function UnifiedSortWorker() {
                 }
 
                 return compactIdx;
-            });
+            }
+        );
     };
 
     const evaluateSortKeysRadial = (sortParams, minDist, range, distances, countBuffer, centersData) => {
-        evaluateSortKeysCommon(sortParams, minDist, range, distances, countBuffer, centersData,
-            (centers, params, intervalStart, intervalEnd, compactIdx, invBinRange, minDist, range, distances, countBuffer) => {
+        evaluateSortKeysCommon(
+            sortParams,
+            minDist,
+            range,
+            distances,
+            countBuffer,
+            centersData,
+            (
+                centers,
+                params,
+                intervalStart,
+                intervalEnd,
+                compactIdx,
+                invBinRange,
+                minDist,
+                range,
+                distances,
+                countBuffer
+            ) => {
                 // camera related params
                 const { transformedPosition, scale } = params;
 
@@ -149,11 +201,11 @@ function UnifiedSortWorker() {
                 }
 
                 return compactIdx;
-            });
+            }
+        );
     };
 
     const countingSort = (bucketCount, countBuffer, numVertices, distances, order) => {
-
         // accumulate counts
         for (let i = 1; i < bucketCount; i++) {
             countBuffer[i] += countBuffer[i - 1];
@@ -164,7 +216,9 @@ function UnifiedSortWorker() {
         const validCount = countBuffer[bucketCount - 1];
         if (validCount !== numVertices && !_warnedSortKeyOverflow) {
             _warnedSortKeyOverflow = true;
-            console.warn(`[SortWorker] ${numVertices - validCount} splats lost due to sortKey overflow. Check resource AABB bounds contain all the splats.`);
+            console.warn(
+                `[SortWorker] ${numVertices - validCount} splats lost due to sortKey overflow. Check resource AABB bounds contain all the splats.`
+            );
         }
 
         // build output array — map through indexMap to get work-buffer pixel indices
@@ -230,9 +284,9 @@ function UnifiedSortWorker() {
 
             // Check all 8 corners of the AABB for max radial distance
             for (let i = 0; i < 8; i++) {
-                const px = (i & 1) ? aabbMax[0] : aabbMin[0];
-                const py = (i & 2) ? aabbMax[1] : aabbMin[1];
-                const pz = (i & 4) ? aabbMax[2] : aabbMin[2];
+                const px = i & 1 ? aabbMax[0] : aabbMin[0];
+                const py = i & 2 ? aabbMax[1] : aabbMin[1];
+                const pz = i & 4 ? aabbMax[2] : aabbMin[2];
 
                 const dx = px - cx;
                 const dy = py - cy;
@@ -257,9 +311,9 @@ function UnifiedSortWorker() {
         const sortStartTime = performance.now();
 
         // distance bounds from AABB projections per splat
-        const { minDist, maxDist } = _radialSort ?
-            computeEffectiveDistanceRangeRadial(sortParams) :
-            computeEffectiveDistanceRangeLinear(sortParams);
+        const { minDist, maxDist } = _radialSort
+            ? computeEffectiveDistanceRangeRadial(sortParams)
+            : computeEffectiveDistanceRangeLinear(sortParams);
 
         const numVertices = centersData.totalActiveSplats;
 
@@ -345,7 +399,6 @@ function UnifiedSortWorker() {
         const msgData = message.data ?? message;
 
         switch (msgData.command) {
-
             // add centers to map
             case 'addCenters': {
                 centersMap.set(msgData.id, new Float32Array(msgData.centers));

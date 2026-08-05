@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 fn toneMap(color: vec3f) -> vec3f {
     let tA: f32 = 2.51;
     let tB: f32 = 0.03;

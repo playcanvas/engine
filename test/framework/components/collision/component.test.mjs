@@ -24,7 +24,6 @@ describe('CollisionComponent', function () {
     });
 
     describe('#addComponent', function () {
-
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('collision');
@@ -178,11 +177,9 @@ describe('CollisionComponent', function () {
 
             expect(e.collision.model).to.equal(model);
         });
-
     });
 
     describe('#asset', function () {
-
         it('normalizes an Asset instance to its id', function () {
             const asset = new Asset('model', 'model');
             app.assets.add(asset);
@@ -232,11 +229,9 @@ describe('CollisionComponent', function () {
             expect(asset1.hasEvent('remove')).to.equal(false);
             expect(asset2.hasEvent('remove')).to.equal(true);
         });
-
     });
 
     describe('#type', function () {
-
         it('changes type', function () {
             const e = new Entity();
             e.addComponent('collision');
@@ -263,11 +258,9 @@ describe('CollisionComponent', function () {
 
             system.changeType = original;
         });
-
     });
 
     describe('shape recreation', function () {
-
         /**
          * Patch the system-level recreatePhysicalShapes dispatcher and count calls.
          *
@@ -359,11 +352,9 @@ describe('CollisionComponent', function () {
             mesh.collision.render = null;
             expect(calls).to.equal(3);
         });
-
     });
 
     describe('compound children', function () {
-
         beforeEach(function () {
             // install the no-op physics backend so the shape lifecycle runs
             app.systems.rigidbody.setPhysicsWorld(new NullPhysicsWorld());
@@ -395,11 +386,9 @@ describe('CollisionComponent', function () {
 
             expect(child.collision._compoundParent).to.equal(null);
         });
-
     });
 
     describe('offsets', function () {
-
         it('applies linear and angular offsets to the shape transform', function () {
             const e = new Entity();
             e.addComponent('collision');
@@ -422,11 +411,9 @@ describe('CollisionComponent', function () {
             expect(e.collision.getShapePosition().equals(e.getPosition())).to.equal(true);
             expect(e.collision.getShapeRotation().equals(e.getRotation())).to.equal(true);
         });
-
     });
 
     describe('#cloneComponent', function () {
-
         it('clones every property', function () {
             const e = new Entity();
             e.addComponent('collision', {
@@ -465,11 +452,9 @@ describe('CollisionComponent', function () {
             expect(c.checkVertexDuplicates).to.equal(false);
             expect(c.shape).to.equal(null);
         });
-
     });
 
     describe('lifecycle', function () {
-
         it('detaches listeners when the component is removed', function () {
             const asset = new Asset('model', 'model');
             app.assets.add(asset);
@@ -507,7 +492,5 @@ describe('CollisionComponent', function () {
             expect(() => e.destroy()).to.not.throw();
             expect(e.collision).to.not.exist;
         });
-
     });
-
 });

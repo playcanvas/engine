@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 var texture_msdfMap: texture_2d<f32>;
 var texture_msdfMapSampler: sampler;
 

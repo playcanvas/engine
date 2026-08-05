@@ -7,7 +7,6 @@ import { GltfAccessor } from '../gltf-accessor.js';
 // converts the TRS accessors of instanced nodes to per-instance matrix arrays, stored on the
 // nodeInstancingMap entries
 const createInstancing = (device, gltf, nodeInstancingMap, bufferViews) => {
-
     const accessors = gltf.accessors;
     nodeInstancingMap.forEach((data, entity) => {
         const attributes = data.ext.attributes;
@@ -30,12 +29,12 @@ const createInstancing = (device, gltf, nodeInstancingMap, bufferViews) => {
             scales = GltfAccessor.getDataFloat32(accessor, bufferViews);
         }
 
-        const instanceCount = (translations ? translations.length / 3 : 0) ||
+        const instanceCount =
+            (translations ? translations.length / 3 : 0) ||
             (rotations ? rotations.length / 4 : 0) ||
             (scales ? scales.length / 3 : 0);
 
         if (instanceCount) {
-
             const matrices = new Float32Array(instanceCount * 16);
             const pos = new Vec3();
             const rot = new Quat();

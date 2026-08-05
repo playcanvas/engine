@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 var means_l: texture_2d<f32>;
 var means_u: texture_2d<f32>;
 

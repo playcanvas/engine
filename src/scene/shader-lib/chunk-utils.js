@@ -1,19 +1,19 @@
 const decodeTable = {
-    'linear': 'decodeLinear',
-    'srgb': 'decodeGamma',
-    'rgbm': 'decodeRGBM',
-    'rgbe': 'decodeRGBE',
-    'rgbp': 'decodeRGBP',
-    'xy': 'unpackNormalXY',
-    'xyz': 'unpackNormalXYZ'
+    linear: 'decodeLinear',
+    srgb: 'decodeGamma',
+    rgbm: 'decodeRGBM',
+    rgbe: 'decodeRGBE',
+    rgbp: 'decodeRGBP',
+    xy: 'unpackNormalXY',
+    xyz: 'unpackNormalXYZ'
 };
 
 const encodeTable = {
-    'linear': 'encodeLinear',
-    'srgb': 'encodeGamma',
-    'rgbm': 'encodeRGBM',
-    'rgbe': 'encodeRGBE',
-    'rgbp': 'encodeRGBP'
+    linear: 'encodeLinear',
+    srgb: 'encodeGamma',
+    rgbm: 'encodeRGBM',
+    rgbe: 'encodeRGBE',
+    rgbp: 'encodeRGBP'
 };
 
 class ChunkUtils {

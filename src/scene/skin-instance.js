@@ -58,7 +58,6 @@ class SkinInstance {
     }
 
     init(device, numBones) {
-
         // texture size - roughly square that fits all bones, width is multiply of 3 to simplify shader math
         const numPixels = numBones * 3;
         let width = Math.ceil(Math.sqrt(numPixels));
@@ -80,7 +79,6 @@ class SkinInstance {
     }
 
     destroy() {
-
         if (this.boneTexture) {
             this.boneTexture.destroy();
             this.boneTexture = null;
@@ -96,7 +94,6 @@ class SkinInstance {
      * @ignore
      */
     resolve(rootBone, entity) {
-
         this.rootBone = rootBone;
 
         // Resolve bone IDs to actual graph nodes of the hierarchy
@@ -108,7 +105,9 @@ class SkinInstance {
             let bone = rootBone.findByName(boneName);
 
             if (!bone) {
-                Debug.error(`Failed to find bone [${boneName}] in the entity hierarchy, RenderComponent on ${entity.name}, rootBone: ${rootBone.name}`);
+                Debug.error(
+                    `Failed to find bone [${boneName}] in the entity hierarchy, RenderComponent on ${entity.name}, rootBone: ${rootBone.name}`
+                );
                 bone = entity;
             }
 
@@ -121,7 +120,6 @@ class SkinInstance {
      * @param {Skin} skin - The skin.
      */
     initSkin(skin) {
-
         this.skin = skin;
 
         // Unique per clone
@@ -141,7 +139,6 @@ class SkinInstance {
     }
 
     _updateMatrices(rootNode, skinUpdateIndex) {
-
         // if not already up to date
         if (this._skinUpdateIndex !== skinUpdateIndex) {
             this._skinUpdateIndex = skinUpdateIndex;
@@ -155,14 +152,12 @@ class SkinInstance {
     }
 
     updateMatrices(rootNode, skinUpdateIndex) {
-
         if (this._updateBeforeCull) {
             this._updateMatrices(rootNode, skinUpdateIndex);
         }
     }
 
     updateMatrixPalette(rootNode, skinUpdateIndex) {
-
         // make sure matrices are up to date
         this._updateMatrices(rootNode, skinUpdateIndex);
 

@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #if defined(STD_AO_TEXTURE) || defined(STD_AO_VERTEX)
     uniform material_aoIntensity: f32;

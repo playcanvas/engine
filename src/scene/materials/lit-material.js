@@ -89,13 +89,20 @@ class LitMaterial extends Material {
 
     /** @ignore */
     getShaderVariant(params) {
-
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunkGLSL = this.shaderChunkGLSL;
         options.shaderChunkWGSL = this.shaderChunkWGSL;
         options.defines = ShaderUtils.getCoreDefines(this, params);
 
-        LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.sortedLights);
+        LitMaterialOptionsBuilder.update(
+            options.litOptions,
+            this,
+            params.scene,
+            params.cameraShaderParams,
+            params.objDefs,
+            params.pass,
+            params.sortedLights
+        );
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
         const library = getProgramLibrary(params.device);
         library.register('lit', lit);

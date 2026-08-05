@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifndef TONEMAP_NO_EXPOSURE_UNIFORM
     #if TONEMAP != NONE
         uniform exposure: f32;

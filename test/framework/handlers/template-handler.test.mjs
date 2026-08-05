@@ -41,7 +41,6 @@ describe('TemplateHandler', function () {
         jsdomTeardown();
     });
 
-
     it('should reparse the new template data', function (done) {
         // For this test case we pretend the data is already loaded
         const file = null;
@@ -73,7 +72,6 @@ describe('TemplateHandler', function () {
 // loading behavior, asserted through the public interface (load + open + openBinary) with a
 // stubbed http layer - a characterization safety net for the handler's parser-registry plumbing
 describe('TemplateHandler (loading)', function () {
-
     afterEach(function () {
         restore();
     });

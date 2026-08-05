@@ -302,22 +302,23 @@ class WebglXrBridge {
                 return;
             }
 
-            device.gl.makeXRCompatible()
-            .then(() => {
-                if (!bridge._session) {
-                    return;
-                }
-                const rs = bridge._session.renderState;
-                bridge.attachPresentation(bridge._session, {
-                    framebufferScaleFactor: bridge._framebufferScaleFactor,
-                    depthNear: rs.depthNear,
-                    depthFar: rs.depthFar,
-                    onBindingError: bridge._onBindingError
+            device.gl
+                .makeXRCompatible()
+                .then(() => {
+                    if (!bridge._session) {
+                        return;
+                    }
+                    const rs = bridge._session.renderState;
+                    bridge.attachPresentation(bridge._session, {
+                        framebufferScaleFactor: bridge._framebufferScaleFactor,
+                        depthNear: rs.depthNear,
+                        depthFar: rs.depthFar,
+                        onBindingError: bridge._onBindingError
+                    });
+                })
+                .catch((ex) => {
+                    eventHandler.fire('error', ex);
                 });
-            })
-            .catch((ex) => {
-                eventHandler.fire('error', ex);
-            });
         }, 0);
     }
 }

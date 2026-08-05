@@ -1,5 +1,6 @@
 import javascriptConfig from '@playcanvas/eslint-config/javascript';
 import { esmScriptTags } from '@playcanvas/eslint-config';
+import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 
 export default [
@@ -13,13 +14,13 @@ export default [
                 ...globals.browser,
                 ...globals.mocha,
                 ...globals.node,
-                'Ammo': 'readonly',
-                'earcut': 'readonly',
-                'opentype': 'readonly',
-                'pc': 'readonly',
-                'TWEEN': 'readonly',
-                'twgsl': 'readonly',
-                'webkitAudioContext': 'readonly'
+                Ammo: 'readonly',
+                earcut: 'readonly',
+                opentype: 'readonly',
+                pc: 'readonly',
+                TWEEN: 'readonly',
+                twgsl: 'readonly',
+                webkitAudioContext: 'readonly'
             }
         },
         rules: {
@@ -27,8 +28,7 @@ export default [
             'jsdoc/check-tag-names': [
                 'error',
                 {
-                    // esmScriptTags (range/step/precision included) plus the shared config's own
-                    // extra tags, which this override would otherwise drop by replacing the rule
+                    // shared tags plus local tags this override would otherwise replace
                     definedTags: [...new Set([...esmScriptTags, 'alpha', 'beta', 'category', 'import'])]
                 }
             ]
@@ -56,11 +56,7 @@ export default [
         }
     },
     {
-        ignores: [
-            'examples/assets/wasm/*',
-            'scripts/textmesh/*.min.js',
-            'src/polyfill/*',
-            'scripts/spine/*'
-        ]
-    }
+        ignores: ['examples/assets/wasm/*', 'scripts/textmesh/*.min.js', 'src/polyfill/*', 'scripts/spine/*']
+    },
+    eslintConfigPrettier
 ];

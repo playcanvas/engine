@@ -98,7 +98,7 @@ function rawToValue(app, args, value, old) {
                 old.r = value[0];
                 old.g = value[1];
                 old.b = value[2];
-                old.a = (value.length === 3) ? 1 : value[3];
+                old.a = value.length === 3 ? 1 : value[3];
 
                 return old;
             } else if (typeof value === 'string' && /#(?:[0-9a-f]{2}){3,4}/i.test(value)) {
@@ -189,7 +189,6 @@ function attributeToValue(app, schema, value, current) {
  * @param {Script} script - A Script instance to assign values on
  */
 export function assignAttributesToScript(app, attributeSchemaMap, data, script) {
-
     if (!data) return;
 
     // Iterate over the schema and assign corresponding data
@@ -201,7 +200,7 @@ export function assignAttributesToScript(app, attributeSchemaMap, data, script) 
         if (dataToAssign === undefined) continue;
 
         // Assign the value to the script based on the attribute schema
-        script[attributeName] =  attributeToValue(app, attributeSchema, dataToAssign, script[attributeName]);
+        script[attributeName] = attributeToValue(app, attributeSchema, dataToAssign, script[attributeName]);
     }
 }
 
@@ -228,9 +227,25 @@ class ScriptAttributes {
     }
 
     static reservedNames = new Set([
-        'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
-        '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
-        '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+        'app',
+        'entity',
+        'enabled',
+        '_enabled',
+        '_enabledOld',
+        '_destroyed',
+        '__attributes',
+        '__attributesRaw',
+        '__scriptType',
+        '__executionOrder',
+        '_callbacks',
+        '_callbackActive',
+        'has',
+        'get',
+        'on',
+        'off',
+        'fire',
+        'once',
+        'hasEvent'
     ]);
 
     /**
@@ -324,12 +339,16 @@ class ScriptAttributes {
      */
     add(name, args) {
         if (!args) {
-            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args parameter is required`);
+            Debug.error(
+                `Cannot add attribute '${name}' to script type '${this.scriptType.name}': args parameter is required`
+            );
             return;
         }
 
         if (!args.type) {
-            Debug.error(`Cannot add attribute '${name}' to script type '${this.scriptType.name}': args.type is required`);
+            Debug.error(
+                `Cannot add attribute '${name}' to script type '${this.scriptType.name}': args.type is required`
+            );
             return;
         }
 

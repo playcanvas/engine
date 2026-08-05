@@ -1,7 +1,11 @@
 import { Debug } from '../../../core/debug.js';
 import { AnimTrack } from '../evaluator/anim-track.js';
 import {
-    ANIM_BLEND_1D, ANIM_BLEND_2D_CARTESIAN, ANIM_BLEND_2D_DIRECTIONAL, ANIM_BLEND_DIRECT, ANIM_CONTROL_STATES
+    ANIM_BLEND_1D,
+    ANIM_BLEND_2D_CARTESIAN,
+    ANIM_BLEND_2D_DIRECTIONAL,
+    ANIM_BLEND_DIRECT,
+    ANIM_CONTROL_STATES
 } from './constants.js';
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
@@ -68,13 +72,53 @@ class AnimState {
     _createTree(type, state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter) {
         switch (type) {
             case ANIM_BLEND_1D:
-                return new AnimBlendTree1D(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
+                return new AnimBlendTree1D(
+                    state,
+                    parent,
+                    name,
+                    point,
+                    parameters,
+                    children,
+                    syncAnimations,
+                    createTree,
+                    findParameter
+                );
             case ANIM_BLEND_2D_CARTESIAN:
-                return new AnimBlendTreeCartesian2D(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
+                return new AnimBlendTreeCartesian2D(
+                    state,
+                    parent,
+                    name,
+                    point,
+                    parameters,
+                    children,
+                    syncAnimations,
+                    createTree,
+                    findParameter
+                );
             case ANIM_BLEND_2D_DIRECTIONAL:
-                return new AnimBlendTreeDirectional2D(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
+                return new AnimBlendTreeDirectional2D(
+                    state,
+                    parent,
+                    name,
+                    point,
+                    parameters,
+                    children,
+                    syncAnimations,
+                    createTree,
+                    findParameter
+                );
             case ANIM_BLEND_DIRECT:
-                return new AnimBlendTreeDirect(state, parent, name, point, parameters, children, syncAnimations, createTree, findParameter);
+                return new AnimBlendTreeDirect(
+                    state,
+                    parent,
+                    name,
+                    point,
+                    parameters,
+                    children,
+                    syncAnimations,
+                    createTree,
+                    findParameter
+                );
         }
 
         Debug.error(`Invalid anim blend type: ${type}`);
@@ -105,7 +149,9 @@ class AnimState {
     }
 
     _updateHasAnimations() {
-        this._hasAnimations = this._animationList.length > 0 && this._animationList.every(animation => animation.animTrack && animation.animTrack !== AnimTrack.EMPTY);
+        this._hasAnimations =
+            this._animationList.length > 0 &&
+            this._animationList.every((animation) => animation.animTrack && animation.animTrack !== AnimTrack.EMPTY);
     }
 
     get name() {
@@ -142,12 +188,12 @@ class AnimState {
     }
 
     get nodeCount() {
-        if (!this._blendTree || (this._blendTree.constructor === AnimNode)) return 1;
+        if (!this._blendTree || this._blendTree.constructor === AnimNode) return 1;
         return this._blendTree.getNodeCount();
     }
 
     get playable() {
-        return (ANIM_CONTROL_STATES.indexOf(this.name) !== -1 || this.animations.length === this.nodeCount);
+        return ANIM_CONTROL_STATES.indexOf(this.name) !== -1 || this.animations.length === this.nodeCount;
     }
 
     get looping() {

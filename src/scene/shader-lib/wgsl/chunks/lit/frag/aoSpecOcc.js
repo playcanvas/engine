@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #if LIT_OCCLUDE_SPECULAR != NONE
     #ifdef LIT_OCCLUDE_SPECULAR_FLOAT

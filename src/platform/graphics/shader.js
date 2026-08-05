@@ -145,7 +145,10 @@ class Shader {
 
         if (definition.cshader) {
             Debug.assert(graphicsDevice.supportsCompute, 'Compute shaders are not supported on this device.');
-            Debug.assert(!definition.vshader && !definition.fshader, 'Vertex and fragment shaders are not supported when creating a compute shader.');
+            Debug.assert(
+                !definition.vshader && !definition.fshader,
+                'Vertex and fragment shaders are not supported when creating a compute shader.'
+            );
 
             // keep reference to unmodified shader in debug mode
             Debug.call(() => {
@@ -169,7 +172,6 @@ class Shader {
                 sourceName: `compute shader for ${this.label}`,
                 stripDefines: true
             });
-
         } else {
             Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
             Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
@@ -196,7 +198,8 @@ class Shader {
             // Strip unused color attachments from fragment shader.
             // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not
             // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
-            const stripUnusedColorAttachments = graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
+            const stripUnusedColorAttachments =
+                graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
 
             // pre-process fragment shader source
             definition.fshader = Preprocessor.run(definition.fshader, definition.fincludes, {
@@ -206,7 +209,10 @@ class Shader {
             });
 
             if (!definition.vshader || !definition.fshader) {
-                Debug.error(`Shader: Failed to create shader ${this.label}. Vertex or fragment shader source is empty.`, this);
+                Debug.error(
+                    `Shader: Failed to create shader ${this.label}. Vertex or fragment shader source is empty.`,
+                    this
+                );
                 this.failed = true;
                 return;
             }

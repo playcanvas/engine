@@ -15,10 +15,12 @@ function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
     if (data.version < 3) {
         if (data.version < 2) {
-            data.info.maps = data.info.maps || [{
-                width: data.info.width,
-                height: data.info.height
-            }];
+            data.info.maps = data.info.maps || [
+                {
+                    width: data.info.width,
+                    height: data.info.height
+                }
+            ];
         }
         data.chars = Object.keys(data.chars || {}).reduce((newChars, key) => {
             const existing = data.chars[key];
@@ -65,28 +67,31 @@ class FontHandler extends ResourceHandler {
         const self = this;
         if (path.getExtension(url.original) === '.json') {
             // load json data then load texture of same name
-            http.get(url.load, {
-                retry: this.maxRetries > 0,
-                maxRetries: this.maxRetries
-            }, (err, response) => {
-                // update asset data
-                if (!err) {
-                    const data = upgradeDataSchema(response);
-                    self._loadTextures(url.load.replace('.json', '.png'), data, (err, textures) => {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            callback(null, {
-                                data: data,
-                                textures: textures
-                            });
-                        }
-                    });
-                } else {
-                    callback(`Error loading font resource: ${url.original} [${err}]`);
+            http.get(
+                url.load,
+                {
+                    retry: this.maxRetries > 0,
+                    maxRetries: this.maxRetries
+                },
+                (err, response) => {
+                    // update asset data
+                    if (!err) {
+                        const data = upgradeDataSchema(response);
+                        self._loadTextures(url.load.replace('.json', '.png'), data, (err, textures) => {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                callback(null, {
+                                    data: data,
+                                    textures: textures
+                                });
+                            }
+                        });
+                    } else {
+                        callback(`Error loading font resource: ${url.original} [${err}]`);
+                    }
                 }
-            });
-
+            );
         } else {
             // upgrade asset data
             if (asset && asset.data) {
@@ -131,7 +136,9 @@ class FontHandler extends ResourceHandler {
             };
 
             const pageUrl = index === 0 ? url : url.replace('.png', `${index}.png`);
-            const pageAsset = textureOptions ? new Asset(pageUrl, 'texture', { url: pageUrl }, null, textureOptions) : null;
+            const pageAsset = textureOptions
+                ? new Asset(pageUrl, 'texture', { url: pageUrl }, null, textureOptions)
+                : null;
             loader.load(pageUrl, 'texture', onLoaded, pageAsset);
         };
 

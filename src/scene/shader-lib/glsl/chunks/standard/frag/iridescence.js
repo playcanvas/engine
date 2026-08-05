@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #ifdef STD_IRIDESCENCE_CONSTANT
 uniform float material_iridescence;
 #endif

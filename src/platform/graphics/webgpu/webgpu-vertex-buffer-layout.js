@@ -1,6 +1,13 @@
 import {
     semanticToLocation,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, TYPE_FLOAT16
+    TYPE_INT8,
+    TYPE_UINT8,
+    TYPE_INT16,
+    TYPE_UINT16,
+    TYPE_INT32,
+    TYPE_UINT32,
+    TYPE_FLOAT32,
+    TYPE_FLOAT16
 } from '../constants.js';
 
 /**
@@ -23,10 +30,10 @@ gpuVertexFormatsNormalized[TYPE_INT8] = 'snorm8';
 gpuVertexFormatsNormalized[TYPE_UINT8] = 'unorm8';
 gpuVertexFormatsNormalized[TYPE_INT16] = 'snorm16';
 gpuVertexFormatsNormalized[TYPE_UINT16] = 'unorm16';
-gpuVertexFormatsNormalized[TYPE_INT32] = 'sint32';     // there is no 32bit normalized signed int
-gpuVertexFormatsNormalized[TYPE_UINT32] = 'uint32';    // there is no 32bit normalized unsigned int
-gpuVertexFormatsNormalized[TYPE_FLOAT32] = 'float32';  // there is no 32bit normalized float
-gpuVertexFormatsNormalized[TYPE_FLOAT16] = 'float16';  // there is no 16bit normalized half-float
+gpuVertexFormatsNormalized[TYPE_INT32] = 'sint32'; // there is no 32bit normalized signed int
+gpuVertexFormatsNormalized[TYPE_UINT32] = 'uint32'; // there is no 32bit normalized unsigned int
+gpuVertexFormatsNormalized[TYPE_FLOAT32] = 'float32'; // there is no 32bit normalized float
+gpuVertexFormatsNormalized[TYPE_FLOAT16] = 'float16'; // there is no 16bit normalized half-float
 
 class WebgpuVertexBufferLayout {
     /**
@@ -43,7 +50,6 @@ class WebgpuVertexBufferLayout {
      * @returns {any[]} - The vertex layout.
      */
     get(vertexFormat0, vertexFormat1 = null) {
-
         const key = this.getKey(vertexFormat0, vertexFormat1);
         let layout = this.cache.get(key);
         if (!layout) {
@@ -63,7 +69,6 @@ class WebgpuVertexBufferLayout {
      * @returns {any[]} - The vertex buffer layout.
      */
     create(vertexFormat0, vertexFormat1) {
-
         // type {GPUVertexBufferLayout[]}
         const layout = [];
 

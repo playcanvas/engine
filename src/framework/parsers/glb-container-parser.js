@@ -21,38 +21,43 @@ class GlbContainerParser {
     }
 
     load(url, callback, asset) {
-        Asset.fetchArrayBuffer(url.load, (err, result) => {
-            if (err) {
-                callback(err);
-            } else {
-                GlbParser.parse(
-                    this._getUrlWithoutParams(url.original),
-                    path.extractPath(url.load),
-                    result,
-                    this._device,
-                    asset.registry,
-                    asset.options,
-                    (err, result) => {
-                        if (err) {
-                            callback(err);
-                        } else {
-                            // return everything
-                            callback(null, new GlbContainerResource(result, asset, this._assets, this._defaultMaterial));
+        Asset.fetchArrayBuffer(
+            url.load,
+            (err, result) => {
+                if (err) {
+                    callback(err);
+                } else {
+                    GlbParser.parse(
+                        this._getUrlWithoutParams(url.original),
+                        path.extractPath(url.load),
+                        result,
+                        this._device,
+                        asset.registry,
+                        asset.options,
+                        (err, result) => {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                // return everything
+                                callback(
+                                    null,
+                                    new GlbContainerResource(result, asset, this._assets, this._defaultMaterial)
+                                );
+                            }
                         }
-                    });
-            }
-        }, asset, this.handler.maxRetries);
+                    );
+                }
+            },
+            asset,
+            this.handler.maxRetries
+        );
     }
 
     open(url, data, asset) {
         return data;
     }
 
-    patch(asset, assets) {
-
-    }
+    patch(asset, assets) {}
 }
 
-export {
-    GlbContainerParser
-};
+export { GlbContainerParser };

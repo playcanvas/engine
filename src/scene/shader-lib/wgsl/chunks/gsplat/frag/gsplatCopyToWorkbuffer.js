@@ -1,5 +1,5 @@
 // fragment shader to copy splats in any supported format to MRT work-buffer
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #define GSPLAT_CENTER_NOPROJ
 

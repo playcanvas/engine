@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 const float A =  0.15;
 const float B =  0.50;
 const float C =  0.10;

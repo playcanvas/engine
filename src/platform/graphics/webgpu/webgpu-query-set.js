@@ -33,7 +33,11 @@ class WebgpuQuerySet {
         // gpu buffer for query results GPU writes to
         this.queryBuffer = wgpu.createBuffer({
             size: this.bytesPerSlot * capacity,
-            usage: GPUBufferUsage.QUERY_RESOLVE | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+            usage:
+                GPUBufferUsage.QUERY_RESOLVE |
+                GPUBufferUsage.STORAGE |
+                GPUBufferUsage.COPY_SRC |
+                GPUBufferUsage.COPY_DST
         });
         DebugHelper.setLabel(this.queryBuffer, 'QueryGpuBuffer');
     }
@@ -84,7 +88,6 @@ class WebgpuQuerySet {
         this.activeStagingBuffer = null;
 
         return this.device.mapBufferAsync(stagingBuffer, GPUMapMode.READ).then((mapped) => {
-
             // the mapping fails when the device is lost - the buffer cannot be used, no results
             if (!mapped) {
                 stagingBuffer.destroy();

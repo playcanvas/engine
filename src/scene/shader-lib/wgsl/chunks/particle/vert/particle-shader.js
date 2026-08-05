@@ -1,5 +1,5 @@
 // The main code of particle system vertex shader
-export default /* wgsl */`
+export default /* wgsl */ `
     #ifdef ANIMTEX
         uniform animTexTilesParams: vec2f;
         uniform animTexParams: vec4f;

@@ -84,7 +84,13 @@ class WebgpuDebug {
             if (count < MAX_DUPLICATES) {
                 const tooMany = count === MAX_DUPLICATES - 1 ? ' (Too many errors, ignoring this one from now)' : '';
                 WebgpuDebug._loggedMessages.set(error.message, count + 1);
-                console.error(`WebGPU ${label} ${header} error: ${error.message}`, tooMany, 'while rendering', marker, ...args);
+                console.error(
+                    `WebGPU ${label} ${header} error: ${error.message}`,
+                    tooMany,
+                    'while rendering',
+                    marker,
+                    ...args
+                );
             }
         }
     }

@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 var sourceTexture: texture_2d<f32>;
 var sourceTextureSampler: sampler;
 uniform sourceInvResolution: vec2f;

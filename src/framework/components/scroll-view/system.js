@@ -90,7 +90,6 @@ class ScrollViewComponentSystem extends ComponentSystem {
             if (component.enabled && entity.enabled) {
                 component.onUpdate();
             }
-
         }
     }
 

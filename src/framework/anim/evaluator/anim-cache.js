@@ -13,16 +13,17 @@ class AnimCache {
      */
     constructor() {
         // these members are calculated per-segment
-        this._left = Infinity;      // time of left knot
-        this._right = -Infinity;    // time of right knot
-        this._len = 0;              // distance between current knots
-        this._recip = 0;            // reciprocal len
-        this._p0 = 0;               // index of the left knot
-        this._p1 = 0;               // index of the right knot
+        this._left = Infinity; // time of left knot
+        this._right = -Infinity; // time of right knot
+        this._len = 0; // distance between current knots
+        this._recip = 0; // reciprocal len
+        this._p0 = 0; // index of the left knot
+        this._p1 = 0; // index of the right knot
 
         // these members are calculated per-time evaluation
-        this._t = 0;                // normalized time
-        this._hermite = {           // hermite weights, calculated on demand
+        this._t = 0; // normalized time
+        this._hermite = {
+            // hermite weights, calculated on demand
             valid: false,
             p0: 0,
             m0: 0,
@@ -64,7 +65,7 @@ class AnimCache {
                     this._right = input[index + 1];
                     this._len = this._right - this._left;
                     const diff = 1.0 / this._len;
-                    this._recip = (isFinite(diff) ? diff : 0);
+                    this._recip = isFinite(diff) ? diff : 0;
                     this._p0 = index;
                     this._p1 = index + 1;
                 }
@@ -72,7 +73,7 @@ class AnimCache {
         }
 
         // calculate normalized time
-        this._t = (this._recip === 0) ? 0 : ((time - this._left) * this._recip);
+        this._t = this._recip === 0 ? 0 : (time - this._left) * this._recip;
         this._hermite.valid = false;
     }
 
@@ -123,16 +124,17 @@ class AnimCache {
                         hermite.m1 = t2 * (t - 1);
                     }
 
-                    const p0 = (this._p0 * 3 + 1) * comp;     // point at k
-                    const m0 = (this._p0 * 3 + 2) * comp;     // out-tangent at k
-                    const p1 = (this._p1 * 3 + 1) * comp;     // point at k + 1
-                    const m1 = (this._p1 * 3 + 0) * comp;     // in-tangent at k + 1
+                    const p0 = (this._p0 * 3 + 1) * comp; // point at k
+                    const m0 = (this._p0 * 3 + 2) * comp; // out-tangent at k
+                    const p1 = (this._p1 * 3 + 1) * comp; // point at k + 1
+                    const m1 = (this._p1 * 3 + 0) * comp; // in-tangent at k + 1
 
                     for (let i = 0; i < comp; ++i) {
-                        result[i] = hermite.p0 * data[p0 + i] +
-                                    hermite.m0 * data[m0 + i] * this._len +
-                                    hermite.p1 * data[p1 + i] +
-                                    hermite.m1 * data[m1 + i] * this._len;
+                        result[i] =
+                            hermite.p0 * data[p0 + i] +
+                            hermite.m0 * data[m0 + i] * this._len +
+                            hermite.p1 * data[p1 + i] +
+                            hermite.m1 * data[m1 + i] * this._len;
                     }
                     break;
                 }

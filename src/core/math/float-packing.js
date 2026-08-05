@@ -43,7 +43,7 @@ class FloatPacking {
 
             // If exponent was 0xff and one mantissa bit was set, it means NaN,
             // not Inf, so make sure we set one mantissa bit too.
-            bits |= ((e === 255) ? 0 : 1) && (x & 0x007fffff);
+            bits |= (e === 255 ? 0 : 1) && x & 0x007fffff;
             return bits;
         }
 
@@ -75,10 +75,10 @@ class FloatPacking {
     static float2RGBA8(value, data) {
         floatView[0] = value;
         const intBits = int32View[0];
-        data.r = ((intBits >> 24) & 0xFF) / 255.0;
-        data.g = ((intBits >> 16) & 0xFF) / 255.0;
-        data.b = ((intBits >> 8) & 0xFF) / 255.0;
-        data.a = (intBits & 0xFF) / 255.0;
+        data.r = ((intBits >> 24) & 0xff) / 255.0;
+        data.g = ((intBits >> 16) & 0xff) / 255.0;
+        data.b = ((intBits >> 8) & 0xff) / 255.0;
+        data.a = (intBits & 0xff) / 255.0;
     }
 }
 

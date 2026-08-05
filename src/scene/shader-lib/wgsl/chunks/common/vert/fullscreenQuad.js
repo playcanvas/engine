@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 attribute vertex_position: vec2f;
 
 varying vUv0: vec2f;

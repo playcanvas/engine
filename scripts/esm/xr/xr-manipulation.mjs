@@ -366,8 +366,12 @@ class XrManipulation extends Script {
      * @private
      */
     _canContinueGrab(inputSource) {
-        return !!inputSource && this._inputSources.has(inputSource) && inputSource.squeezing &&
-            (inputSource.grip || !!inputSource.hand);
+        return (
+            !!inputSource &&
+            this._inputSources.has(inputSource) &&
+            inputSource.squeezing &&
+            (inputSource.grip || !!inputSource.hand)
+        );
     }
 
     /**
@@ -569,8 +573,12 @@ class XrManipulation extends Script {
         // Grab pair maintenance: the pair is fixed until broken; extra squeezing sources are
         // ignored. squeezing is polled - the engine updates it before script update runs. A
         // runtime target swap also ends the grab (the grab state belongs to the old target)
-        if (this._grabbing && (target !== this._grabTarget ||
-            !this._canContinueGrab(this._leftSource) || !this._canContinueGrab(this._rightSource))) {
+        if (
+            this._grabbing &&
+            (target !== this._grabTarget ||
+                !this._canContinueGrab(this._leftSource) ||
+                !this._canContinueGrab(this._rightSource))
+        ) {
             this._endGrab();
         }
 
@@ -763,11 +771,7 @@ class XrManipulation extends Script {
 
         this._grabTarget.setPosition(tmpSolvedPos);
         this._grabTarget.setRotation(tmpQuatB);
-        this._grabTarget.setLocalScale(
-            curScale.x * scaleRatio,
-            curScale.y * scaleRatio,
-            curScale.z * scaleRatio
-        );
+        this._grabTarget.setLocalScale(curScale.x * scaleRatio, curScale.y * scaleRatio, curScale.z * scaleRatio);
     }
 }
 

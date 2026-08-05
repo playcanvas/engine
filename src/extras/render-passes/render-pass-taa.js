@@ -90,7 +90,6 @@ class RenderPassTAA extends RenderPassShaderQuad {
     }
 
     setup() {
-
         // double buffered history render target
         for (let i = 0; i < 2; ++i) {
             this.historyTextures[i] = new Texture(this.device, {
@@ -135,7 +134,6 @@ class RenderPassTAA extends RenderPassShaderQuad {
 
     // called when the parent render pass gets added to the frame graph
     update() {
-
         // swap source and destination history texture
         this.historyIndex = 1 - this.historyIndex;
         this.historyTexture = this.historyTextures[this.historyIndex];

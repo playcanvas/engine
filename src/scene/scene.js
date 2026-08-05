@@ -283,7 +283,10 @@ class Scene extends EventHandler {
     constructor(graphicsDevice) {
         super();
 
-        Debug.assert(graphicsDevice, 'Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.');
+        Debug.assert(
+            graphicsDevice,
+            'Scene constructor takes a GraphicsDevice as a parameter, and it was not provided.'
+        );
         this.device = graphicsDevice;
 
         this._gravity = new Vec3(0, -9.8, 0);
@@ -427,7 +430,6 @@ class Scene extends EventHandler {
      * @type {boolean}
      */
     set clusteredLightingEnabled(value) {
-
         if (this.device.isWebGPU && !value) {
             Debug.warnOnce('WebGPU currently only supports clustered lighting, and this cannot be disabled.');
             return;
@@ -594,7 +596,7 @@ class Scene extends EventHandler {
         const changed = cubemaps.length !== value.length || cubemaps.some((c, i) => c !== value[i]);
 
         if (changed) {
-            const complete = value.length === 6 && value.every(c => !!c);
+            const complete = value.length === 6 && value.every((c) => !!c);
 
             if (complete) {
                 // update env atlas
@@ -742,7 +744,6 @@ class Scene extends EventHandler {
      */
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
-
             const isIdentity = value.equals(Quat.IDENTITY);
             this._skyboxRotation.copy(value);
 
@@ -813,7 +814,11 @@ class Scene extends EventHandler {
         this._skyboxMip = render.skyboxMip ?? 0;
 
         if (render.skyboxRotation) {
-            this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
+            this.skyboxRotation = new Quat().setFromEulerAngles(
+                render.skyboxRotation[0],
+                render.skyboxRotation[1],
+                render.skyboxRotation[2]
+            );
         }
 
         this.sky.applySettings(render);
@@ -903,7 +908,7 @@ class Scene extends EventHandler {
      * @type {number}
      */
     get lightmapPixelFormat() {
-        return this.lightmapHDR && this.device.getRenderableHdrFormat() || PIXELFORMAT_RGBA8;
+        return (this.lightmapHDR && this.device.getRenderableHdrFormat()) || PIXELFORMAT_RGBA8;
     }
 
     // ---- deprecated block start ----

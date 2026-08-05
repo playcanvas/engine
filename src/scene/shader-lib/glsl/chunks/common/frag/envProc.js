@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #ifdef LIT_SKYBOX_INTENSITY
     uniform float skyboxIntensity;
 #endif

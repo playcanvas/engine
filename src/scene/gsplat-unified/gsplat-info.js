@@ -26,7 +26,6 @@ let subDrawDataArray = new Uint32Array(0);
 // Temporary full-range interval used by updateSubDraws when this.intervals is empty
 const _fullRangeInterval = [0, 0];
 
-
 /**
  * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
  * at a point in time and should not hold references back to the source placement. All required
@@ -87,7 +86,6 @@ class GSplatInfo {
      * @type {number[]}
      */
     intervals = [];
-
 
     /**
      * Per-interval pixel offsets in the work buffer. For non-octree splats this has one entry.
@@ -238,9 +236,8 @@ class GSplatInfo {
         // Only octree file splats (with octreeNodes) share the parent's bounds group.
         // Other child placements (e.g. environment) have independent bounds and must
         // use their own allocId.
-        this.parentPlacementId = (octreeNodes && placement.parentPlacement) ?
-            placement.parentPlacement.allocId :
-            placement.allocId;
+        this.parentPlacementId =
+            octreeNodes && placement.parentPlacement ? placement.parentPlacement.allocId : placement.allocId;
         this.numSplats = resource.numSplats;
         this.aabb.copy(placement.aabb);
         this.parameters = placement.parameters;
@@ -298,7 +295,6 @@ class GSplatInfo {
      * @param {Map<number, Vec2>} intervals - Map of node index to inclusive [x, y] intervals.
      */
     updateIntervals(intervals) {
-
         const resource = this.resource;
         this.intervals.length = 0;
         this.intervalAllocIds.length = 0;
@@ -307,7 +303,6 @@ class GSplatInfo {
 
         // If placement has intervals defined
         if (intervals.size > 0) {
-
             // Write half-open intervals, count total splats, and build per-interval allocIds/nodeIndices
             let totalCount = 0;
             let k = 0;
@@ -315,7 +310,7 @@ class GSplatInfo {
             for (const [nodeIndex, interval] of intervals) {
                 this.intervals[k++] = interval.x;
                 this.intervals[k++] = interval.y + 1;
-                totalCount += (interval.y - interval.x + 1);
+                totalCount += interval.y - interval.x + 1;
 
                 if (this.nodeInfos) {
                     this.intervalAllocIds.push(this.nodeInfos[nodeIndex].allocId);
@@ -413,7 +408,6 @@ class GSplatInfo {
      * @param {number} textureWidth - The work buffer texture width.
      */
     updateSubDraws(textureWidth) {
-
         // Use a local full-range interval when none exist, so the instanced draw path
         // always has sub-draws. This must NOT mutate this.intervals because the GPU
         // interval compaction reads this.intervals separately for per-node culling.
@@ -438,9 +432,14 @@ class GSplatInfo {
         let subDrawCount = 0;
 
         for (let i = 0; i < numIntervals; i++) {
-            subDrawCount = this.appendSubDraws(subDrawData, subDrawCount,
-                intervals[i * 2], intervals[i * 2 + 1] - intervals[i * 2],
-                this.intervalOffsets[i], textureWidth);
+            subDrawCount = this.appendSubDraws(
+                subDrawData,
+                subDrawCount,
+                intervals[i * 2],
+                intervals[i * 2 + 1] - intervals[i * 2],
+                this.intervalOffsets[i],
+                textureWidth
+            );
         }
 
         this.subDrawCount = subDrawCount;
@@ -449,7 +448,13 @@ class GSplatInfo {
         const { x: texWidth, y: texHeight } = TextureUtils.calcTextureSize(subDrawCount, tmpSize);
 
         // Create the sub-draw data texture
-        this.subDrawTexture = Texture.createDataTexture2D(this.device, 'subDrawData', texWidth, texHeight, PIXELFORMAT_RGBA32U);
+        this.subDrawTexture = Texture.createDataTexture2D(
+            this.device,
+            'subDrawData',
+            texWidth,
+            texHeight,
+            PIXELFORMAT_RGBA32U
+        );
 
         // Upload sub-draw data
         const texData = this.subDrawTexture.lock();

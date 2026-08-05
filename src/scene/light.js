@@ -6,13 +6,24 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import {
     BLUR_GAUSSIAN,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF1_32F, SHADOW_PCF3_32F, SHADOW_VSM_16F, SHADOW_VSM_32F, SHADOW_PCSS_32F,
-    SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
-    LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR,
+    LIGHTTYPE_DIRECTIONAL,
+    LIGHTTYPE_OMNI,
+    LIGHTTYPE_SPOT,
+    MASK_BAKE,
+    MASK_AFFECT_DYNAMIC,
+    SHADOW_PCF1_32F,
+    SHADOW_PCF3_32F,
+    SHADOW_VSM_16F,
+    SHADOW_VSM_32F,
+    SHADOW_PCSS_32F,
+    SHADOWUPDATE_NONE,
+    SHADOWUPDATE_REALTIME,
+    SHADOWUPDATE_THISFRAME,
+    LIGHTSHAPE_PUNCTUAL,
+    LIGHTFALLOFF_LINEAR,
     shadowTypeInfo,
-    SHADOW_PCF1_16F, SHADOW_PCF3_16F,
+    SHADOW_PCF1_16F,
+    SHADOW_PCF3_16F,
     MASK_AFFECT_LIGHTMAPPED,
     LIGHT_COLOR_DIVIDER
 } from './constants.js';
@@ -39,10 +50,10 @@ const tmpColor = new Color();
 const chanId = { r: 0, g: 1, b: 2, a: 3 };
 
 const lightTypes = {
-    'directional': LIGHTTYPE_DIRECTIONAL,
-    'omni': LIGHTTYPE_OMNI,
-    'point': LIGHTTYPE_OMNI,
-    'spot': LIGHTTYPE_SPOT
+    directional: LIGHTTYPE_DIRECTIONAL,
+    omni: LIGHTTYPE_OMNI,
+    point: LIGHTTYPE_OMNI,
+    spot: LIGHTTYPE_SPOT
 };
 
 // viewport in shadows map for cascades for directional light
@@ -54,11 +65,11 @@ const directionalCascades = [
 ];
 
 const channelMap = {
-    'rrr': 0b0001,
-    'ggg': 0b0010,
-    'bbb': 0b0100,
-    'aaa': 0b1000,
-    'rgb': 0b0111
+    rrr: 0b0001,
+    ggg: 0b0010,
+    bbb: 0b0100,
+    aaa: 0b1000,
+    rgb: 0b0111
 };
 
 let id = 0;
@@ -68,7 +79,6 @@ let id = 0;
  */
 class LightRenderData {
     constructor(camera, face, light) {
-
         // light this data belongs to
         this.light = light;
 
@@ -194,7 +204,7 @@ class Light {
 
         // Light properties (defaults)
         this._type = LIGHTTYPE_DIRECTIONAL;
-        this._color = new Color(0.8, 0.8, 0.8);     // color in sRGB space
+        this._color = new Color(0.8, 0.8, 0.8); // color in sRGB space
         this._intensity = 1;
         this._affectSpecularity = true;
         this._luminance = 0;
@@ -231,8 +241,8 @@ class Light {
         this._outerConeAngle = 45;
 
         // Directional properties
-        this.cascades = null;               // an array of Vec4 viewports per cascade
-        this._shadowMatrixPalette = null;   // a float array, 16 floats per cascade
+        this.cascades = null; // an array of Vec4 viewports per cascade
+        this._shadowMatrixPalette = null; // a float array, 16 floats per cascade
         this._shadowCascadeDistances = null;
         this.numCascades = 1;
         this._cascadeBlend = 0;
@@ -284,11 +294,11 @@ class Light {
 
         // viewport of the cookie texture / shadow in the atlas
         this._atlasViewport = null;
-        this.atlasViewportAllocated = false;    // if true, atlas slot is allocated for the current frame
-        this.atlasVersion = 0;      // version of the atlas for the allocated slot, allows invalidation when atlas recreates slots
-        this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
-        this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
-        this.cookieRenderVersion = -1;  // cookie texture's uploadVersion last rendered into the atlas, used to re-render dynamic (e.g. video) cookies
+        this.atlasViewportAllocated = false; // if true, atlas slot is allocated for the current frame
+        this.atlasVersion = 0; // version of the atlas for the allocated slot, allows invalidation when atlas recreates slots
+        this.atlasSlotIndex = 0; // allocated slot index, used for more persistent slot allocation
+        this.atlasSlotUpdated = false; // true if the atlas slot was reassigned this frame (and content needs to be updated)
+        this.cookieRenderVersion = -1; // cookie texture's uploadVersion last rendered into the atlas, used to re-render dynamic (e.g. video) cookies
 
         this._node = null;
 
@@ -323,7 +333,6 @@ class Light {
     }
 
     releaseRenderData() {
-
         if (this._renderData) {
             this._renderData.length = 0;
         }
@@ -367,8 +376,8 @@ class Light {
     set numCascades(value) {
         if (!this.cascades || this.numCascades !== value) {
             this.cascades = directionalCascades[value - 1];
-            this._shadowMatrixPalette = new Float32Array(4 * 16);   // always 4
-            this._shadowCascadeDistances = new Float32Array(4);     // always 4
+            this._shadowMatrixPalette = new Float32Array(4 * 16); // always 4
+            this._shadowCascadeDistances = new Float32Array(4); // always 4
             this._destroyShadowMap();
             this.updateKey();
         }
@@ -494,8 +503,14 @@ class Light {
         }
 
         // omni light supports PCF1, PCF3 and PCSS only
-        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF1_32F && value !== SHADOW_PCF3_32F &&
-            value !== SHADOW_PCF1_16F && value !== SHADOW_PCF3_16F && value !== SHADOW_PCSS_32F) {
+        if (
+            this._type === LIGHTTYPE_OMNI &&
+            value !== SHADOW_PCF1_32F &&
+            value !== SHADOW_PCF3_32F &&
+            value !== SHADOW_PCF1_16F &&
+            value !== SHADOW_PCF3_16F &&
+            value !== SHADOW_PCSS_32F
+        ) {
             value = SHADOW_PCF3_32F;
         }
 
@@ -829,7 +844,6 @@ class Light {
     // destroys shadow map related resources, called when shadow properties change and resources
     // need to be recreated
     _destroyShadowMap() {
-
         this.releaseRenderData();
 
         if (this._shadowMap) {
@@ -854,7 +868,6 @@ class Light {
 
     // returns LightRenderData with matching camera and face
     getRenderData(camera, face) {
-
         // returns existing
         for (let i = 0; i < this._renderData.length; i++) {
             const current = this._renderData[i];
@@ -955,11 +968,11 @@ class Light {
                 const falloffStart = Math.cos(innerAngle);
 
                 // https://github.com/mmp/pbrt-v4/blob/faac34d1a0ebd24928828fe9fa65b65f7efc5937/src/pbrt/lights.cpp#L1463
-                return (2 * Math.PI * ((1 - falloffStart) + (falloffStart - falloffEnd) / 2.0));
+                return 2 * Math.PI * (1 - falloffStart + (falloffStart - falloffEnd) / 2.0);
             }
             case LIGHTTYPE_OMNI:
                 // https://google.github.io/filament/Filament.md.html#lighting/directlighting/punctuallights/pointlights
-                return (4 * Math.PI);
+                return 4 * Math.PI;
             case LIGHTTYPE_DIRECTIONAL:
                 // https://google.github.io/filament/Filament.md.html#lighting/directlighting/directionallights
                 return 1;
@@ -970,7 +983,6 @@ class Light {
     // Note: this needs to be revisited and simplified
     // Note: vsmBias is not used at all for omni light, even though it is editable in the Editor
     _getUniformBiasValues(lightRenderData) {
-
         const farClip = lightRenderData.shadowCamera._farClip;
 
         switch (this._type) {
@@ -984,7 +996,9 @@ class Light {
                 } else {
                     tmpBiases.bias = this.shadowBias * 20; // approx remap from old bias values
                 }
-                tmpBiases.normalBias = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
+                tmpBiases.normalBias = this._isVsm
+                    ? this.vsmBias / (this.attenuationEnd / 7.0)
+                    : this._normalOffsetBias;
                 break;
             case LIGHTTYPE_DIRECTIONAL:
                 // make bias dependent on far plane because it's not constant for direct light
@@ -1007,7 +1021,6 @@ class Light {
 
     getBoundingSphere(sphere) {
         if (this._type === LIGHTTYPE_SPOT) {
-
             // based on https://bartwronski.com/2017/04/13/cull-that-cone/
             const size = this.attenuationEnd;
             const angle = this._outerConeAngle;
@@ -1024,7 +1037,6 @@ class Light {
             }
 
             sphere.center.add2(node.getPosition(), tmpVec);
-
         } else if (this._type === LIGHTTYPE_OMNI) {
             sphere.center.copy(this._node.getPosition());
             sphere.radius = this.attenuationEnd;
@@ -1043,7 +1055,6 @@ class Light {
             box.halfExtents.set(scl, range * 0.5, scl);
 
             box.setFromTransformedAabb(box, node.getWorldTransform(), true);
-
         } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());
             box.halfExtents.set(this.attenuationEnd, this.attenuationEnd, this.attenuationEnd);
@@ -1068,12 +1079,17 @@ class Light {
     }
 
     _updateLinearColor() {
-
         let intensity = this._intensity;
 
         // To calculate the lux, which is lm/m^2, we need to convert from luminous power
         if (this._usePhysicalUnits) {
-            intensity = this._luminance / Light.getLightUnitConversion(this._type, this._outerConeAngle * math.DEG_TO_RAD, this._innerConeAngle * math.DEG_TO_RAD);
+            intensity =
+                this._luminance /
+                Light.getLightUnitConversion(
+                    this._type,
+                    this._outerConeAngle * math.DEG_TO_RAD,
+                    this._innerConeAngle * math.DEG_TO_RAD
+                );
         }
 
         // Note: This is slightly unconventional, ideally we'd convert color to linear space and then
@@ -1137,24 +1153,24 @@ class Light {
         //  6 -  4 : mask
         //  3      : cast shadows
         let key =
-               (this._type                                << 29) |
-               (this._shadowType                          << 25) |
-               (this._falloffMode                         << 23) |
-               ((this._normalOffsetBias !== 0.0 ? 1 : 0)  << 22) |
-               ((this._cookie ? 1 : 0)                    << 21) |
-               ((this._cookieFalloff ? 1 : 0)             << 20) |
-               (chanId[this._cookieChannel.charAt(0)]     << 18) |
-               ((this._cookieTransform ? 1 : 0)           << 12) |
-               ((this._shape)                             << 10) |
-               ((this.numCascades > 0 ? 1 : 0)            <<  9) |
-               ((this._cascadeBlend > 0 ? 1 : 0)          <<  8) |
-               ((this.affectSpecularity ? 1 : 0)          <<  7) |
-               ((this.mask)                               <<  6) |
-               ((this._castShadows ? 1 : 0)               <<  3);
+            (this._type << 29) |
+            (this._shadowType << 25) |
+            (this._falloffMode << 23) |
+            ((this._normalOffsetBias !== 0.0 ? 1 : 0) << 22) |
+            ((this._cookie ? 1 : 0) << 21) |
+            ((this._cookieFalloff ? 1 : 0) << 20) |
+            (chanId[this._cookieChannel.charAt(0)] << 18) |
+            ((this._cookieTransform ? 1 : 0) << 12) |
+            (this._shape << 10) |
+            ((this.numCascades > 0 ? 1 : 0) << 9) |
+            ((this._cascadeBlend > 0 ? 1 : 0) << 8) |
+            ((this.affectSpecularity ? 1 : 0) << 7) |
+            (this.mask << 6) |
+            ((this._castShadows ? 1 : 0) << 3);
 
         if (this._cookieChannel.length === 3) {
-            key |= (chanId[this._cookieChannel.charAt(1)] << 16);
-            key |= (chanId[this._cookieChannel.charAt(2)] << 14);
+            key |= chanId[this._cookieChannel.charAt(1)] << 16;
+            key |= chanId[this._cookieChannel.charAt(2)] << 14;
         }
 
         if (key !== this.key) {
@@ -1170,26 +1186,27 @@ class Light {
      * Note: this needs to match shader code in clusteredLight.js
      */
     updateClusteredFlags() {
-
         const isDynamic = !!(this.mask & MASK_AFFECT_DYNAMIC);
         const isLightmapped = !!(this.mask & MASK_AFFECT_LIGHTMAPPED);
 
         this.clusteredFlags =
-            ((this.type === LIGHTTYPE_SPOT ? 1 : 0)         << 30) |        // bits 30
-            ((this._shape & 0x3)                            << 28) |        // bits 29 - 28
-            ((this._falloffMode & 0x1)                      << 27) |        // bits 27
-            ((channelMap[this._cookieChannel] ?? 0)         << 23) |        // bits 26 - 23
-            ((isDynamic ? 1 : 0)                            << 22) |        // bits 22
-            ((isLightmapped ? 1 : 0)                        << 21);         // bits 21
+            ((this.type === LIGHTTYPE_SPOT ? 1 : 0) << 30) | // bits 30
+            ((this._shape & 0x3) << 28) | // bits 29 - 28
+            ((this._falloffMode & 0x1) << 27) | // bits 27
+            ((channelMap[this._cookieChannel] ?? 0) << 23) | // bits 26 - 23
+            ((isDynamic ? 1 : 0) << 22) | // bits 22
+            ((isLightmapped ? 1 : 0) << 21); // bits 21
     }
 
     /**
      * Adds per-frame dynamic data to the 32bit flags used by the clustered lighting.
      */
     getClusteredFlags(castShadows, useCookie) {
-        return this.clusteredFlags |
-            ((castShadows ? Math.floor(this.shadowIntensity * 255) : 0) & 0xFF) << 0 |   // bits 7 - 0
-            ((useCookie ? Math.floor(this.cookieIntensity * 255) : 0) & 0xFF) << 8;      // bits 15 - 8
+        return (
+            this.clusteredFlags |
+            (((castShadows ? Math.floor(this.shadowIntensity * 255) : 0) & 0xff) << 0) | // bits 7 - 0
+            (((useCookie ? Math.floor(this.cookieIntensity * 255) : 0) & 0xff) << 8)
+        ); // bits 15 - 8
     }
 
     updateClusterData(updateColor, updateAngles) {

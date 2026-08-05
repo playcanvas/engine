@@ -380,5 +380,4 @@ class GSplatPlacement {
     }
 }
 
-
 export { GSplatPlacement };

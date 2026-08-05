@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #ifdef STD_SPECULAR_CONSTANT
     uniform material_specular: vec3f;

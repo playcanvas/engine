@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     vec2 tileMask = step(vMask, vec2(0.99999));
     vec2 tileSize = 0.5 * (innerOffset.xy + innerOffset.zw);
     vec2 tileScale = vec2(1.0) / (vec2(1.0) - tileSize);

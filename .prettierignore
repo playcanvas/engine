@@ -1,0 +1,4 @@
+examples/assets/wasm
+scripts/spine
+scripts/textmesh/*.min.js
+src/polyfill

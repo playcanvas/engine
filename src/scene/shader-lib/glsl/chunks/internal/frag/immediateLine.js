@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
         #include "gammaPS"
         varying vec4 color;
         void main(void) {

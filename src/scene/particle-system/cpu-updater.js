@@ -75,7 +75,8 @@ class ParticleCPUUpdater {
             }
         } else {
             randomPos.normalize();
-            const spawnBoundsSphereInnerRatio = (emitter.emitterRadius === 0) ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
+            const spawnBoundsSphereInnerRatio =
+                emitter.emitterRadius === 0 ? 0 : emitter.emitterRadiusInner / emitter.emitterRadius;
             const r = rW * (1.0 - spawnBoundsSphereInnerRatio) + spawnBoundsSphereInnerRatio;
             if (!emitter.localSpace) {
                 randomPosTformed.copy(emitterPos).add(randomPos.mulScalar(r * emitter.emitterRadius));
@@ -86,10 +87,14 @@ class ParticleCPUUpdater {
 
         const particleRate = math.lerp(emitter.rate, emitter.rate2, rX);
         const startSpawnTime = -particleRate * i;
-        particleTex[i * particleTexChannels] =     randomPosTformed.x;
+        particleTex[i * particleTexChannels] = randomPosTformed.x;
         particleTex[i * particleTexChannels + 1] = randomPosTformed.y;
         particleTex[i * particleTexChannels + 2] = randomPosTformed.z;
-        particleTex[i * particleTexChannels + 3] = math.lerp(emitter.startAngle * math.DEG_TO_RAD, emitter.startAngle2 * math.DEG_TO_RAD, rX);
+        particleTex[i * particleTexChannels + 3] = math.lerp(
+            emitter.startAngle * math.DEG_TO_RAD,
+            emitter.startAngle2 * math.DEG_TO_RAD,
+            rX
+        );
 
         particleTex[i * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] = startSpawnTime;
     }
@@ -111,7 +116,10 @@ class ParticleCPUUpdater {
         }
 
         // Particle updater emulation
-        emitterPos = (emitter.meshInstance.node === null || emitter.localSpace) ? Vec3.ZERO : emitter.meshInstance.node.getPosition();
+        emitterPos =
+            emitter.meshInstance.node === null || emitter.localSpace
+                ? Vec3.ZERO
+                : emitter.meshInstance.node.getPosition();
         const posCam = emitter.camera ? emitter.camera._node.getPosition() : Vec3.ZERO;
 
         const vertSize = !emitter.useMesh ? 15 : 17;
@@ -122,23 +130,27 @@ class ParticleCPUUpdater {
         for (let i = 0; i < emitter.numParticles; i++) {
             const id = Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * (emitter.useMesh ? 6 : 4) + 3]);
 
-            const rndFactor = particleTex[id * particleTexChannels + 0 + emitter.numParticlesPot * 2 * particleTexChannels];
+            const rndFactor =
+                particleTex[id * particleTexChannels + 0 + emitter.numParticlesPot * 2 * particleTexChannels];
             rndFactor3Vec.x = rndFactor;
-            rndFactor3Vec.y = particleTex[id * particleTexChannels + 1 + emitter.numParticlesPot * 2 * particleTexChannels];
-            rndFactor3Vec.z = particleTex[id * particleTexChannels + 2 + emitter.numParticlesPot * 2 * particleTexChannels];
+            rndFactor3Vec.y =
+                particleTex[id * particleTexChannels + 1 + emitter.numParticlesPot * 2 * particleTexChannels];
+            rndFactor3Vec.z =
+                particleTex[id * particleTexChannels + 2 + emitter.numParticlesPot * 2 * particleTexChannels];
 
-            const particleRate = emitter.rate + (emitter.rate2 - emitter.rate) * rndFactor;// math.lerp(emitter.rate, emitter.rate2, rndFactor);
+            const particleRate = emitter.rate + (emitter.rate2 - emitter.rate) * rndFactor; // math.lerp(emitter.rate, emitter.rate2, rndFactor);
 
             const particleLifetime = emitter.lifetime;
 
-            let life = particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] + delta;
+            let life =
+                particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * particleTexChannels] + delta;
             const nlife = saturate(life / particleLifetime);
 
             let scale = 0;
             let alphaDiv = 0;
             const angle = 0;
 
-            const respawn = (life - delta) <= 0.0 || life >= particleLifetime;
+            const respawn = life - delta <= 0.0 || life >= particleLifetime;
             if (respawn) {
                 this.calcSpawnPosition(particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, id);
             }
@@ -277,7 +289,6 @@ class ParticleCPUUpdater {
                         localVelocityVec.y /= nonUniformScale.y;
                         localVelocityVec.z /= nonUniformScale.z;
                     }
-
                 }
                 if (!emitter.localSpace) {
                     localVelocityVec.add(velocityVec.mul(nonUniformScale));
@@ -292,9 +303,9 @@ class ParticleCPUUpdater {
                 particlePos.copy(particlePosPrev).add(localVelocityVec.mulScalar(delta));
                 particleFinalPos.copy(particlePos);
 
-                particleTex[id * particleTexChannels] =      particleFinalPos.x;
-                particleTex[id * particleTexChannels + 1] =  particleFinalPos.y;
-                particleTex[id * particleTexChannels + 2] =  particleFinalPos.z;
+                particleTex[id * particleTexChannels] = particleFinalPos.x;
+                particleTex[id * particleTexChannels + 1] = particleFinalPos.y;
+                particleTex[id * particleTexChannels + 2] = particleFinalPos.z;
                 particleTex[id * particleTexChannels + 3] += rotSpeed * delta;
 
                 if (emitter.wrap && emitter.wrapBounds) {
@@ -312,7 +323,11 @@ class ParticleCPUUpdater {
                 if (emitter.sort > 0) {
                     if (emitter.sort === 1) {
                         tmpVec3.copy(particleFinalPos).sub(posCam);
-                        emitter.particleDistance[id] = -(tmpVec3.x * tmpVec3.x + tmpVec3.y * tmpVec3.y + tmpVec3.z * tmpVec3.z);
+                        emitter.particleDistance[id] = -(
+                            tmpVec3.x * tmpVec3.x +
+                            tmpVec3.y * tmpVec3.y +
+                            tmpVec3.z * tmpVec3.z
+                        );
                     } else if (emitter.sort === 2) {
                         emitter.particleDistance[id] = life;
                     } else if (emitter.sort === 3) {
@@ -335,7 +350,8 @@ class ParticleCPUUpdater {
                     // dead particles in a single-shot system continue their paths, but marked as invisible.
                     // it is necessary for keeping correct separation between particles, based on emission rate.
                     // dying again in a looped system they will become visible on next respawn.
-                    particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = emitter.loop ? 1 : -1;
+                    particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] =
+                        emitter.loop ? 1 : -1;
                 }
                 if (life < 0 && emitter.loop) {
                     particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = 1;
@@ -384,7 +400,8 @@ class ParticleCPUUpdater {
             const particleDistance = emitter.particleDistance;
             for (let i = 0; i < emitter.numParticles; i++) {
                 vbToSort[i][0] = i;
-                vbToSort[i][1] = particleDistance[Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * vbStride + 3])]; // particle id
+                vbToSort[i][1] =
+                    particleDistance[Math.floor(emitter.vbCPU[i * emitter.numParticleVerts * vbStride + 3])]; // particle id
             }
 
             emitter.vbOld.set(emitter.vbCPU);

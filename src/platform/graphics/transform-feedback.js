@@ -1,5 +1,10 @@
 import { Debug } from '../../core/debug.js';
-import { BUFFER_GPUDYNAMIC, PRIMITIVE_POINTS, TRANSFORM_FEEDBACK_INTERLEAVED, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js';
+import {
+    BUFFER_GPUDYNAMIC,
+    PRIMITIVE_POINTS,
+    TRANSFORM_FEEDBACK_INTERLEAVED,
+    TRANSFORM_FEEDBACK_SEPARATE
+} from './constants.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { Shader } from './shader.js';
@@ -122,13 +127,11 @@ class TransformFeedback {
      * ]);
      */
     constructor(inputBuffer, outputBuffer, usage = BUFFER_GPUDYNAMIC) {
-
         // the descriptor form - this test must precede the legacy usage test below, as an array is
         // not a VertexBuffer
         const descriptors = Array.isArray(inputBuffer) ? inputBuffer : null;
 
         if (!descriptors && outputBuffer !== undefined && !(outputBuffer instanceof VertexBuffer)) {
-
             Debug.deprecated('Such a constructor that takes the second parameter usage is deprecated.');
 
             usage = outputBuffer;
@@ -138,8 +141,10 @@ class TransformFeedback {
         Debug.assert(!descriptors || descriptors.length > 0, 'TransformFeedback requires at least one buffer.');
         Debug.call(() => {
             descriptors?.forEach((descriptor, index) => {
-                Debug.assert(descriptor?.input || descriptor?.output,
-                    `TransformFeedback buffer descriptor at index ${index} specifies neither an input nor an output buffer.`);
+                Debug.assert(
+                    descriptor?.input || descriptor?.output,
+                    `TransformFeedback buffer descriptor at index ${index} specifies neither an input nor an output buffer.`
+                );
             });
         });
 
@@ -148,7 +153,7 @@ class TransformFeedback {
         this.device = (entries[0].input ?? entries[0].output).device;
 
         // buffers read by the shader, in any order - they bind by the semantics of their format
-        this._inputBuffers = entries.filter(entry => entry.input).map(entry => entry.input);
+        this._inputBuffers = entries.filter((entry) => entry.input).map((entry) => entry.input);
 
         // buffers written by transform feedback, in the order of the captured varyings
         this._outputBuffers = [];
@@ -160,14 +165,15 @@ class TransformFeedback {
         this._ownedOutputBuffers = [];
 
         entries.forEach((entry) => {
-
             const input = entry.input;
             let output = entry.output;
 
             Debug.call(() => {
                 const vb = input ?? output;
-                Debug.assert(vb.format.interleaved || vb.format.elements.length <= 1,
-                    'A vertex buffer used by TransformFeedback needs to be interleaved.');
+                Debug.assert(
+                    vb.format.interleaved || vb.format.elements.length <= 1,
+                    'A vertex buffer used by TransformFeedback needs to be interleaved.'
+                );
             });
 
             // create the matching output buffer when only an input was given by the single buffer
@@ -197,7 +203,6 @@ class TransformFeedback {
      * @private
      */
     _createOutputBuffer(inputBuffer, usage) {
-
         if (usage === BUFFER_GPUDYNAMIC && inputBuffer.usage !== usage) {
             // Supplying a buffer with another usage is supported - "any VertexBuffer, either
             // manually created, or from a Mesh" - so adopt it by re-uploading its contents to
@@ -227,22 +232,31 @@ class TransformFeedback {
      * Defaults to {@link TRANSFORM_FEEDBACK_INTERLEAVED}.
      * @returns {Shader} A shader to use in the process() function.
      */
-    static createShader(graphicsDevice, vertexCode, name, feedbackVaryings, feedbackVaryingsMode = TRANSFORM_FEEDBACK_INTERLEAVED) {
-        return new Shader(graphicsDevice, ShaderDefinitionUtils.createDefinition(graphicsDevice, {
-            name,
-            vertexCode,
-            feedbackVaryings,
-            feedbackVaryingsMode,
-            useTransformFeedback: true,
-            fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
-        }));
+    static createShader(
+        graphicsDevice,
+        vertexCode,
+        name,
+        feedbackVaryings,
+        feedbackVaryingsMode = TRANSFORM_FEEDBACK_INTERLEAVED
+    ) {
+        return new Shader(
+            graphicsDevice,
+            ShaderDefinitionUtils.createDefinition(graphicsDevice, {
+                name,
+                vertexCode,
+                feedbackVaryings,
+                feedbackVaryingsMode,
+                useTransformFeedback: true,
+                fragmentCode: 'void main(void) {gl_FragColor = vec4(0.0);}'
+            })
+        );
     }
 
     /**
      * Destroys the transform feedback helper object.
      */
     destroy() {
-        this._ownedOutputBuffers.forEach(buffer => buffer.destroy());
+        this._ownedOutputBuffers.forEach((buffer) => buffer.destroy());
     }
 
     /**
@@ -262,18 +276,18 @@ class TransformFeedback {
         Debug.call(() => {
             const separate = shader.definition.feedbackVaryingsMode === TRANSFORM_FEEDBACK_SEPARATE;
             const expected = separate ? (shader.definition.feedbackVaryings?.length ?? 0) : 1;
-            Debug.assert(expected === this._outputBuffers.length,
-                separate ?
-                    `A shader using TRANSFORM_FEEDBACK_SEPARATE captures each varying into its own buffer, so it needs ${expected} output buffers, but ${this._outputBuffers.length} were supplied.` :
-                    `A shader using TRANSFORM_FEEDBACK_INTERLEAVED captures all varyings into a single buffer, but ${this._outputBuffers.length} output buffers were supplied.`
+            Debug.assert(
+                expected === this._outputBuffers.length,
+                separate
+                    ? `A shader using TRANSFORM_FEEDBACK_SEPARATE captures each varying into its own buffer, so it needs ${expected} output buffers, but ${this._outputBuffers.length} were supplied.`
+                    : `A shader using TRANSFORM_FEEDBACK_INTERLEAVED captures all varyings into a single buffer, but ${this._outputBuffers.length} output buffers were supplied.`
             );
-
         });
 
         const oldRt = device.getRenderTarget();
         device.setRenderTarget(null);
         device.updateBegin();
-        this._inputBuffers.forEach(buffer => device.setVertexBuffer(buffer));
+        this._inputBuffers.forEach((buffer) => device.setVertexBuffer(buffer));
         device.setRaster(false);
         device.setTransformFeedbackBuffers(this._outputBuffers);
         device.setShader(shader);
@@ -295,7 +309,6 @@ class TransformFeedback {
         // and write-only buffers are left alone
         if (swap) {
             this._swapPairs.forEach(({ input, output }) => {
-
                 Debug.call(() => {
                     if (input.format !== output.format) {
                         Debug.warnOnce('Trying to swap buffers with different formats.');

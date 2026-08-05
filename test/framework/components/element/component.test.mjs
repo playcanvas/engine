@@ -20,7 +20,6 @@ describe('ElementComponent', function () {
     });
 
     describe('#constructor', function () {
-
         it('creates a default element component', function () {
             const e = new Entity();
             e.addComponent('element');
@@ -120,7 +119,6 @@ describe('ElementComponent', function () {
             expect(e.element.worldCorners[3].z).to.equal(0);
             expect(e.element.wrapLines).to.equal(null);
         });
-
     });
 
     it('unbinds screen component on reparent', function () {
@@ -180,7 +178,6 @@ describe('ElementComponent', function () {
     });
 
     describe('#type', function () {
-
         it('adds model to layers when type is set to image after entity is in hierarchy', function () {
             // This tests the fix for: https://github.com/playcanvas/engine/issues/1989
             // When entity is added to hierarchy before element type is set, the image should still render
@@ -210,6 +207,5 @@ describe('ElementComponent', function () {
             expect(e.element._text._model).to.not.be.null;
             expect(e.element._addedModels).to.include(e.element._text._model);
         });
-
     });
 });

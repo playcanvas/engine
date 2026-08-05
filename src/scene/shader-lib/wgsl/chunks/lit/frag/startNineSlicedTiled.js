@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
     let tileMask: vec2f = step(vMask, vec2f(0.99999));
     let tileSize: vec2f = 0.5 * (uniform.innerOffset.xy + uniform.innerOffset.zw);
     let tileScale: vec2f = vec2f(1.0) / (vec2f(1.0) - tileSize);

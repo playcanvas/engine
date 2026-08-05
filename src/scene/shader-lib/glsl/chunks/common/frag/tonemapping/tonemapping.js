@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 
 #ifndef TONEMAP_NO_EXPOSURE_UNIFORM
     #if TONEMAP != NONE

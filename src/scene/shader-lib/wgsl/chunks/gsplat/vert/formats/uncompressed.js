@@ -1,6 +1,6 @@
 // Uncompressed GSplat format - work variables, helpers, and read functions
 // Texture declarations and load functions are auto-generated from GSplatFormat streams
-export default /* wgsl */`
+export default /* wgsl */ `
 
 // work values
 var<private> tAw: u32;

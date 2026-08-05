@@ -1,7 +1,5 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U
-} from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
 
@@ -35,9 +33,7 @@ class GSplatCompressedResource extends GSplatResourceBase {
 
         // Define all streams upfront
         // Note: chunkTexture uses different size/UV so we handle it specially
-        const formatStreams = [
-            { name: 'packedTexture', format: PIXELFORMAT_RGBA32U }
-        ];
+        const formatStreams = [{ name: 'packedTexture', format: PIXELFORMAT_RGBA32U }];
 
         // Add SH streams if present
         if (shBands > 0) {

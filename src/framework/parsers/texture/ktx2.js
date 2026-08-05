@@ -29,13 +29,18 @@ class Ktx2Parser extends TextureParser {
     }
 
     load(url, callback, asset) {
-        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, result) => {
-            if (err) {
-                callback(err, result);
-            } else {
-                this.parse(result, url, callback, asset);
-            }
-        }, asset);
+        this.handler.fetch(
+            url,
+            Http.ResponseType.ARRAY_BUFFER,
+            (err, result) => {
+                if (err) {
+                    callback(err, result);
+                } else {
+                    this.parse(result, url, callback, asset);
+                }
+            },
+            asset
+        );
     }
 
     open(url, data, device, textureOptions = {}) {
@@ -69,7 +74,7 @@ class Ktx2Parser extends TextureParser {
 
         // check magic header bits:  '«', 'K', 'T', 'X', ' ', '2', '0', '»', '\r', '\n', '\x1A', '\n'\
         const magic = [rs.readU32be(), rs.readU32be(), rs.readU32be()];
-        if (magic[0] !== 0xAB4B5458 || magic[1] !== 0x203230BB || magic[2] !== 0x0D0A1A0A) {
+        if (magic[0] !== 0xab4b5458 || magic[1] !== 0x203230bb || magic[2] !== 0x0d0a1a0a) {
             Debug.warn('Invalid definition header found in KTX2 file. Expected 0xAB4B5458, 0x203131BB, 0x0D0A1A0A');
             return null;
         }
@@ -123,21 +128,17 @@ class Ktx2Parser extends TextureParser {
 
         if (header.supercompressionScheme === 1 || colorModel === KHRConstants.KHR_DF_MODEL_UASTC) {
             // assume for now all super compressed images are basis
-            const basisModuleFound = basisTranscode(
-                this.device,
-                url.load,
-                arraybuffer,
-                callback,
-                {
-                    isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
-                    isKTX2: true,
-                    // a six-face ktx2 file is a cubemap
-                    isCubemap: header.faceCount === 6
-                }
-            );
+            const basisModuleFound = basisTranscode(this.device, url.load, arraybuffer, callback, {
+                isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0,
+                isKTX2: true,
+                // a six-face ktx2 file is a cubemap
+                isCubemap: header.faceCount === 6
+            });
 
             if (!basisModuleFound) {
-                callback(`Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`);
+                callback(
+                    `Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`
+                );
             }
         } else {
             // TODO: load non-supercompressed formats
@@ -146,6 +147,4 @@ class Ktx2Parser extends TextureParser {
     }
 }
 
-export {
-    Ktx2Parser
-};
+export { Ktx2Parser };

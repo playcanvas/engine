@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
     // global texture bias for standard textures
     // note: unlike GLSL, the tiled nine-slice mode does not force the top mip here, as the chunks

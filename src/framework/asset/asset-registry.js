@@ -242,7 +242,7 @@ class AssetRegistry extends EventHandler {
     list(filters = {}) {
         const assets = Array.from(this._assets);
         if (filters.preload !== undefined) {
-            return assets.filter(asset => asset.preload === filters.preload);
+            return assets.filter((asset) => asset.preload === filters.preload);
         }
         return assets;
     }
@@ -502,7 +502,6 @@ class AssetRegistry extends EventHandler {
                 }
             }
 
-
             this._loader.load(fileUrl, asset.type, _loaded, asset, options);
         } else {
             // asset has no file to load, open it directly
@@ -657,13 +656,19 @@ class AssetRegistry extends EventHandler {
 
         const data = materialAsset.data;
         if (data.mappingFormat !== 'path') {
-            Debug.warn(`Skipping: ${materialAsset.name}, material files must be mappingFormat: "path" to be loaded from URL`);
+            Debug.warn(
+                `Skipping: ${materialAsset.name}, material files must be mappingFormat: "path" to be loaded from URL`
+            );
             callback(null, textures);
             return;
         }
 
         const onTextureLoaded = (err, texture) => {
-            if (err) console.error(`Failed to load material texture for "${materialAsset.name}": ${err?.message ?? err}`, err);
+            if (err)
+                console.error(
+                    `Failed to load material texture for "${materialAsset.name}": ${err?.message ?? err}`,
+                    err
+                );
             textures.push(texture);
             if (textures.length === count) {
                 callback(null, textures);
@@ -747,7 +752,7 @@ class AssetRegistry extends EventHandler {
      * console.log(`Found ${assets.length} assets with a name containing 'monster'`);
      */
     filter(callback) {
-        return Array.from(this._assets).filter(asset => callback(asset));
+        return Array.from(this._assets).filter((asset) => callback(asset));
     }
 
     /**
@@ -787,7 +792,7 @@ class AssetRegistry extends EventHandler {
         if (!items) return [];
         const results = Array.from(items);
         if (!type) return results;
-        return results.filter(asset => asset.type === type);
+        return results.filter((asset) => asset.type === type);
     }
 
     /**
@@ -816,11 +821,11 @@ class AssetRegistry extends EventHandler {
             else if (asset.loading) loadingCount++;
 
             // Determine status string
-            const status = asset.loaded ? 'loaded' : (asset.loading ? 'loading' : 'pending');
+            const status = asset.loaded ? 'loaded' : asset.loading ? 'loading' : 'pending';
 
             // Get URL (skip if same as name to avoid duplication)
             const url = asset.file?.url;
-            const urlPart = (url && url !== asset.name) ? ` ${url}` : '';
+            const urlPart = url && url !== asset.name ? ` ${url}` : '';
 
             Debug.trace(TRACEID_ASSETS, `${index}. ID:${asset.id} [${asset.type}] "${asset.name}" ${status}${urlPart}`);
         });
@@ -828,7 +833,12 @@ class AssetRegistry extends EventHandler {
         // Log summary
         const pendingCount = assets.length - loadedCount - loadingCount;
         Debug.trace(TRACEID_ASSETS, `Status: ${loadedCount} loaded, ${loadingCount} loading, ${pendingCount} pending`);
-        Debug.trace(TRACEID_ASSETS, `Types: ${Object.entries(byType).map(([type, count]) => `${type}:${count}`).join(', ')}`);
+        Debug.trace(
+            TRACEID_ASSETS,
+            `Types: ${Object.entries(byType)
+                .map(([type, count]) => `${type}:${count}`)
+                .join(', ')}`
+        );
         // #endif
     }
 }

@@ -18,7 +18,8 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
         const pointKey = `${i}${j}`;
         if (!this._pointCache[pointKey]) {
             this._pointCache[pointKey] = new Vec2(
-                (this._children[j].pointLength - this._children[i].pointLength) / ((this._children[j].pointLength + this._children[i].pointLength) / 2),
+                (this._children[j].pointLength - this._children[i].pointLength) /
+                    ((this._children[j].pointLength + this._children[i].pointLength) / 2),
                 Vec2.angleRad(this._children[i].point, this._children[j].point) * 2.0
             );
         }
@@ -41,8 +42,15 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
                 if (i === j) continue;
                 const pipj = this.pointCache(i, j);
                 const pjLength = this._children[j].pointLength;
-                AnimBlendTreeDirectional2D._pip.set((pLength - piLength) / ((pjLength + piLength) / 2), Vec2.angleRad(pi, AnimBlendTreeDirectional2D._p) * 2.0);
-                const result = math.clamp(1.0 - Math.abs((AnimBlendTreeDirectional2D._pip.dot(pipj) / pipj.lengthSq())), 0.0, 1.0);
+                AnimBlendTreeDirectional2D._pip.set(
+                    (pLength - piLength) / ((pjLength + piLength) / 2),
+                    Vec2.angleRad(pi, AnimBlendTreeDirectional2D._p) * 2.0
+                );
+                const result = math.clamp(
+                    1.0 - Math.abs(AnimBlendTreeDirectional2D._pip.dot(pipj) / pipj.lengthSq()),
+                    0.0,
+                    1.0
+                );
                 if (result < minj) minj = result;
             }
             child.weight = minj;
@@ -56,7 +64,7 @@ class AnimBlendTreeDirectional2D extends AnimBlendTree {
             child.weight = child._weight / weightSum;
             if (this._syncAnimations) {
                 const weightedChildDuration = (child.animTrack.duration / weightedDurationSum) * weightSum;
-                child.weightedSpeed =  child.absoluteSpeed * weightedChildDuration;
+                child.weightedSpeed = child.absoluteSpeed * weightedChildDuration;
             }
         }
     }

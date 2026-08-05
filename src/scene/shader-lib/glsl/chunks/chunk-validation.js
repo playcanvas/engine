@@ -134,9 +134,9 @@ const removedChunks = {
 
 // compare two "major.minor" semantic version strings and return true if a is a smaller version than b.
 const semverLess = (a, b) => {
-    const aver = a.split('.').map(t => parseInt(t, 10));
-    const bver = b.split('.').map(t => parseInt(t, 10));
-    return (aver[0] < bver[0]) || ((aver[0] === bver[0]) && (aver[1] < bver[1]));
+    const aver = a.split('.').map((t) => parseInt(t, 10));
+    const bver = b.split('.').map((t) => parseInt(t, 10));
+    return aver[0] < bver[0] || (aver[0] === bver[0] && aver[1] < bver[1]);
 };
 
 /**
@@ -147,13 +147,18 @@ const validateUserChunks = (userChunks, userAPIVersion) => {
     for (const chunkName of userChunks.keys()) {
         if (removedChunks.hasOwnProperty(chunkName)) {
             const removedVersion = removedChunks[chunkName];
-            Debug.warnOnce(`Shader chunk '${chunkName}' was removed in API ${removedVersion} and is no longer supported.`);
+            Debug.warnOnce(
+                `Shader chunk '${chunkName}' was removed in API ${removedVersion} and is no longer supported.`
+            );
         } else {
             const engineAPIVersion = chunkVersions[chunkName];
-            const chunkIsOutdated = engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));
+            const chunkIsOutdated =
+                engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));
 
             if (chunkIsOutdated) {
-                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || 'undefined'}. Please update to the latest API: https://developer.playcanvas.com/user-manual/graphics/shaders/migrations/`);
+                Debug.warnOnce(
+                    `Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || 'undefined'}. Please update to the latest API: https://developer.playcanvas.com/user-manual/graphics/shaders/migrations/`
+                );
             }
         }
     }

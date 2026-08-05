@@ -207,7 +207,7 @@ export class VatData {
      * @returns {number} The index of the animation.
      */
     getAnimationIndex(name) {
-        return this.animations.findIndex(animation => animation.name === name);
+        return this.animations.findIndex((animation) => animation.name === name);
     }
 }
 
@@ -219,7 +219,6 @@ export class VatData {
  * @ignore
  */
 function readContainer(buffer) {
-
     const view = new DataView(buffer);
     if (buffer.byteLength < 20 || view.getUint32(0, true) !== VAT_MAGIC) {
         throw new Error('Not a VAT container - the magic number does not match.');
@@ -262,7 +261,6 @@ function readContainer(buffer) {
  * @ignore
  */
 export function writeContainer(json, bin) {
-
     const jsonChunk = pad4(new TextEncoder().encode(JSON.stringify(json)), 0x20);
     const binChunk = pad4(bin, 0);
 
@@ -301,7 +299,6 @@ export function writeContainer(json, bin) {
  * @returns {VatData} The parsed data.
  */
 export function parseVat(buffer) {
-
     const { json, bin: blob } = readContainer(buffer);
 
     if (blob.byteLength < json.binary.byteLength) {
@@ -309,7 +306,11 @@ export function parseVat(buffer) {
     }
 
     const view = (accessor, Type) => {
-        return new Type(blob.buffer, blob.byteOffset + accessor.byteOffset, accessor.byteLength / Type.BYTES_PER_ELEMENT);
+        return new Type(
+            blob.buffer,
+            blob.byteOffset + accessor.byteOffset,
+            accessor.byteLength / Type.BYTES_PER_ELEMENT
+        );
     };
 
     const data = new VatData();
@@ -318,7 +319,7 @@ export function parseVat(buffer) {
     data.frameCount = json.frameCount;
     data.width = json.texture.width;
     data.height = json.texture.height;
-    data.animations = json.animations.map(animation => ({ ...animation }));
+    data.animations = json.animations.map((animation) => ({ ...animation }));
     data.bounds.setMinMax(new Vec3(json.bounds.min), new Vec3(json.bounds.max));
     data.vat = view(json.vat, Uint16Array);
     data.indices = view(json.indices, json.indices.type === 'uint32' ? Uint32Array : Uint16Array);
@@ -368,7 +369,6 @@ export function createVatTexture(device, data) {
  * @returns {Mesh} The created mesh.
  */
 export function createVatMesh(device, data) {
-
     // decode the first frame of the texture to use as a rest pose
     const vertexCount = data.vertexCount;
     const positions = new Float32Array(vertexCount * 3);
@@ -380,7 +380,6 @@ export function createVatMesh(device, data) {
     const normal = new Vec3();
 
     for (let i = 0; i < vertexCount; i++) {
-
         // the first frame of this vertex, as a flat texel index into the wrapped layout
         const texel = i * data.frameCount * 4;
 
@@ -389,11 +388,7 @@ export function createVatMesh(device, data) {
         positions[i * 3 + 2] = min.z + (vat[texel + 2] / 65535) * size.z * 2;
 
         const packed = vat[texel + 3];
-        octDecode(
-            ((packed & 0xff) / 255) * 2 - 1,
-            ((packed >> 8) / 255) * 2 - 1,
-            normal
-        );
+        octDecode(((packed & 0xff) / 255) * 2 - 1, ((packed >> 8) / 255) * 2 - 1, normal);
         normals[i * 3] = normal.x;
         normals[i * 3 + 1] = normal.y;
         normals[i * 3 + 2] = normal.z;
@@ -439,7 +434,6 @@ export function createWhiteTexture(device) {
  * @returns {Promise<Texture|null>} The created texture.
  */
 export async function createVatAlbedoTexture(device, data) {
-
     if (!data.albedo) {
         return null;
     }

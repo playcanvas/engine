@@ -139,7 +139,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     reset() {
-
         this.sceneTexture = null;
         this.sceneTextureHalf = null;
 
@@ -156,7 +155,7 @@ class FramePassCameraFrame extends FramePass {
         }
 
         // destroy all passes we created
-        this.beforePasses.forEach(pass => pass.destroy());
+        this.beforePasses.forEach((pass) => pass.destroy());
         this.beforePasses.length = 0;
 
         this.prePass = null;
@@ -177,7 +176,12 @@ class FramePassCameraFrame extends FramePass {
         options = Object.assign({}, _defaultOptions, options);
 
         // automatically enable prepass when required internally
-        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE || options.dofEnabled || options.volumetricFogEnabled) {
+        if (
+            options.taaEnabled ||
+            options.ssaoType !== SSAOTYPE_NONE ||
+            options.dofEnabled ||
+            options.volumetricFogEnabled
+        ) {
             options.prepassEnabled = true;
         }
 
@@ -200,12 +204,14 @@ class FramePassCameraFrame extends FramePass {
         const currentOptions = this.options;
 
         // helper to compare arrays
-        const arraysNotEqual = (arr1, arr2) => arr1 !== arr2 &&
+        const arraysNotEqual = (arr1, arr2) =>
+            arr1 !== arr2 &&
             (!(Array.isArray(arr1) && Array.isArray(arr2)) ||
-            arr1.length !== arr2.length ||
-            !arr1.every((value, index) => value === arr2[index]));
+                arr1.length !== arr2.length ||
+                !arr1.every((value, index) => value === arr2[index]));
 
-        return options.ssaoType !== currentOptions.ssaoType ||
+        return (
+            options.ssaoType !== currentOptions.ssaoType ||
             options.ssaoBlurEnabled !== currentOptions.ssaoBlurEnabled ||
             options.taaEnabled !== currentOptions.taaEnabled ||
             options.samples !== currentOptions.samples ||
@@ -217,12 +223,12 @@ class FramePassCameraFrame extends FramePass {
             options.dofNearBlur !== currentOptions.dofNearBlur ||
             options.dofHighQuality !== currentOptions.dofHighQuality ||
             options.volumetricFogEnabled !== currentOptions.volumetricFogEnabled ||
-            arraysNotEqual(options.formats, currentOptions.formats);
+            arraysNotEqual(options.formats, currentOptions.formats)
+        );
     }
 
     // manually called, applies changes
     update(options) {
-
         options = this.sanitizeOptions(options);
 
         // destroy existing passes if they need to be re-created
@@ -241,7 +247,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     createRenderTarget(name, depth, stencil, samples) {
-
         const texture = new Texture(this.device, {
             name: name,
             width: 4,
@@ -263,7 +268,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     setupRenderPasses(options) {
-
         const { device } = this;
         const cameraComponent = this.cameraComponent;
         const targetRenderTarget = cameraComponent.renderTarget;
@@ -300,7 +304,7 @@ class FramePassCameraFrame extends FramePass {
         this.createPasses(options);
 
         const allPasses = this.collectPasses();
-        this.beforePasses = allPasses.filter(element => element !== undefined && element !== null);
+        this.beforePasses = allPasses.filter((element) => element !== undefined && element !== null);
 
         this.updateCameraUseFlags();
     }
@@ -343,13 +347,24 @@ class FramePassCameraFrame extends FramePass {
     }
 
     collectPasses() {
-
         // use these prepared render passes in the order they should be executed
-        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.volumetricFogPass, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass];
+        return [
+            this.prePass,
+            this.ssaoPass,
+            this.scenePass,
+            this.colorGrabPass,
+            this.scenePassTransparent,
+            this.volumetricFogPass,
+            this.taaPass,
+            this.scenePassHalf,
+            this.bloomPass,
+            this.dofPass,
+            this.composePass,
+            this.afterPass
+        ];
     }
 
     createPasses(options) {
-
         // pre-pass
         this.setupScenePrepass(options);
 
@@ -382,7 +397,6 @@ class FramePassCameraFrame extends FramePass {
 
     setupScenePrepass(options) {
         if (options.prepassEnabled) {
-
             const { app, device, cameraComponent } = this;
             const { scene, renderer } = app;
             this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, this.sceneOptions);
@@ -410,14 +424,12 @@ class FramePassCameraFrame extends FramePass {
      * @returns {number} Returns the index of last layer added.
      */
     addCameraLayers(renderPass, startIndex, firstLayerClears, lastLayerId, lastLayerIsTransparent = true) {
-
         const cameraComponent = this.cameraComponent;
         const { layerList, subLayerList } = renderPass.layerComposition;
         let clearRenderTarget = firstLayerClears;
 
         let index = startIndex;
         while (index < layerList.length) {
-
             const layer = layerList[index];
             const isTransparent = subLayerList[index];
 
@@ -439,7 +451,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     setupScenePass(options) {
-
         const { app, device } = this;
         const { scene, renderer } = app;
         const composition = scene.layers;
@@ -453,15 +464,23 @@ class FramePassCameraFrame extends FramePass {
 
         // layers this pass renders depend on the grab pass being used
         const lastLayerId = options.sceneColorMap ? options.lastGrabLayerId : options.lastSceneLayerId;
-        const lastLayerIsTransparent = options.sceneColorMap ? options.lastGrabLayerIsTransparent : options.lastSceneLayerIsTransparent;
+        const lastLayerIsTransparent = options.sceneColorMap
+            ? options.lastGrabLayerIsTransparent
+            : options.lastSceneLayerIsTransparent;
 
         // return values
         const ret = {
-            lastAddedIndex: 0,          // the last layer index added to the scene pass
-            clearRenderTarget: true     // true if the render target should be cleared
+            lastAddedIndex: 0, // the last layer index added to the scene pass
+            clearRenderTarget: true // true if the render target should be cleared
         };
 
-        ret.lastAddedIndex = this.addCameraLayers(this.scenePass, ret.lastAddedIndex, ret.clearRenderTarget, lastLayerId, lastLayerIsTransparent);
+        ret.lastAddedIndex = this.addCameraLayers(
+            this.scenePass,
+            ret.lastAddedIndex,
+            ret.clearRenderTarget,
+            lastLayerId,
+            lastLayerIsTransparent
+        );
         ret.clearRenderTarget = false;
 
         // grab pass allowing us to copy the render scene into a texture and use for refraction
@@ -474,7 +493,13 @@ class FramePassCameraFrame extends FramePass {
             this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
             this.setupScenePassSettings(this.scenePassTransparent);
             this.scenePassTransparent.init(this.rt);
-            ret.lastAddedIndex = this.addCameraLayers(this.scenePassTransparent, ret.lastAddedIndex, ret.clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
+            ret.lastAddedIndex = this.addCameraLayers(
+                this.scenePassTransparent,
+                ret.lastAddedIndex,
+                ret.clearRenderTarget,
+                options.lastSceneLayerId,
+                options.lastSceneLayerIsTransparent
+            );
 
             // if no layers are rendered by this pass, remove it
             if (!this.scenePassTransparent.rendersAnything) {
@@ -502,7 +527,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     setupSceneHalfPass(options, sourceTexture) {
-
         if (this._sceneHalfEnabled) {
             this.scenePassHalf = new RenderPassDownsample(this.device, this.sceneTexture, {
                 boxFilter: true,
@@ -519,7 +543,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     setupBloomPass(options, inputTexture) {
-
         if (this._bloomEnabled) {
             // create a bloom pass, which generates bloom texture based on the provided texture
             this.bloomPass = new FramePassBloom(this.device, inputTexture, this.hdrFormat);
@@ -527,17 +550,28 @@ class FramePassCameraFrame extends FramePass {
     }
 
     setupDofPass(options, inputTexture, inputTextureHalf) {
-        if (options.dofEnabled)  {
-            this.dofPass = new FramePassDof(this.device, this.cameraComponent, inputTexture, inputTextureHalf, options.dofHighQuality, options.dofNearBlur);
+        if (options.dofEnabled) {
+            this.dofPass = new FramePassDof(
+                this.device,
+                this.cameraComponent,
+                inputTexture,
+                inputTextureHalf,
+                options.dofHighQuality,
+                options.dofNearBlur
+            );
         }
     }
 
     setupVolumetricFogPass(options) {
         if (options.volumetricFogEnabled) {
-
             // the scene pass provides the light clusters used by the local lights of the fog
-            this.volumetricFogPass = new FramePassVolumetricFog(this.device, this.cameraComponent,
-                this.sceneTexture, this.rt, this.scenePass);
+            this.volumetricFogPass = new FramePassVolumetricFog(
+                this.device,
+                this.cameraComponent,
+                this.sceneTexture,
+                this.rt,
+                this.scenePass
+            );
 
             // when TAA is used, the fog noise pattern changes each frame and TAA resolves it
             this.volumetricFogPass.temporalDither = options.taaEnabled;
@@ -555,7 +589,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     setupComposePass(options) {
-
         // create a compose pass, which combines the results of the scene and other passes
         this.composePass = new RenderPassCompose(this.device);
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
@@ -575,7 +608,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     setupAfterPass(options, scenePassesInfo) {
-
         const { app, cameraComponent } = this;
         const { scene, renderer } = app;
         const composition = scene.layers;
@@ -590,7 +622,6 @@ class FramePassCameraFrame extends FramePass {
     }
 
     frameUpdate() {
-
         // trigger update if layers were added or removed
         if (this.layersDirty) {
             this.cameraFrame.update();

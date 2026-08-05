@@ -109,11 +109,7 @@ class ModelComponentSystem extends ComponentSystem {
         }
 
         const material = entity.model.material;
-        if (!material ||
-            material === this.defaultMaterial ||
-            !materialAsset ||
-            material === materialAsset.resource) {
-
+        if (!material || material === this.defaultMaterial || !materialAsset || material === materialAsset.resource) {
             data.materialAsset = materialAsset;
         }
 

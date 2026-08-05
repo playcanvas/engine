@@ -8,8 +8,8 @@ export const jsdomSetup = () => {
     const html = '<!DOCTYPE html><html><head></head><body></body></html>';
 
     jsdom = new JSDOM(html, {
-        resources: 'usable',         // Allow the engine to load assets
-        runScripts: 'dangerously',   // Allow the engine to run scripts
+        resources: 'usable', // Allow the engine to load assets
+        runScripts: 'dangerously', // Allow the engine to run scripts
         url: 'http://localhost:3210' // Set the URL of the document
     });
 

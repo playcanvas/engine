@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform float material_iridescenceRefractionIndex;
 
 float iridescence_iorToFresnel(float transmittedIor, float incidentIor) {

@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #include "screenDepthPS"
     
     varying vec2 uv0;

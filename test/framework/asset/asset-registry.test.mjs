@@ -11,7 +11,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AssetRegistry', function () {
-
     let app;
     let retryDelay;
 
@@ -33,18 +32,15 @@ describe('AssetRegistry', function () {
     });
 
     describe('#constructor', function () {
-
         it('instantiates correctly', function () {
             const resourceLoader = new ResourceLoader(app);
             const assetRegistry = new AssetRegistry(resourceLoader);
 
             expect(assetRegistry).to.be.ok;
         });
-
     });
 
     describe('#add', function () {
-
         it('adds an asset', function () {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
@@ -55,11 +51,9 @@ describe('AssetRegistry', function () {
             expect(assets.length).to.equal(1);
             expect(assets[0].name).to.equal(asset.name);
         });
-
     });
 
     describe('#find', function () {
-
         it('works after removing an asset', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
@@ -81,11 +75,9 @@ describe('AssetRegistry', function () {
             expect(app.assets.find(asset2.name)).to.equal(asset2);
             expect(app.assets.find(asset3.name)).to.equal(asset3);
         });
-
     });
 
     describe('#find + rename', function () {
-
         it('works after renaming an asset', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
@@ -105,11 +97,9 @@ describe('AssetRegistry', function () {
             expect(app.assets.find('Asset 1 renamed')).to.equal(null);
             expect(app.assets.find('Asset 1 renamed again')).to.equal(null);
         });
-
     });
 
     describe('#find + type', function () {
-
         it('finds assets by name filtered by type', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
@@ -124,11 +114,9 @@ describe('AssetRegistry', function () {
             expect(app.assets.find('Asset 1', 'text')).to.equal(asset1);
             expect(app.assets.find('Asset 1', 'json')).to.equal(asset2);
         });
-
     });
 
     describe('#findAll + type', function () {
-
         it('finds all assets by name filtered by type', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
@@ -156,11 +144,9 @@ describe('AssetRegistry', function () {
 
             expect(app.assets.findAll('Asset 1', 'text').length).to.equal(1);
         });
-
     });
 
     describe('#get', function () {
-
         it('retrieves an asset by id', function () {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
@@ -171,11 +157,9 @@ describe('AssetRegistry', function () {
 
             expect(asset).to.equal(assetFromRegistry);
         });
-
     });
 
     describe('#getByUrl', function () {
-
         it('retrieves an asset by url', function () {
             const asset = new Asset('Test Asset', 'text', {
                 url: 'fake/url/file.txt'
@@ -208,11 +192,9 @@ describe('AssetRegistry', function () {
             expect(app.assets.getByUrl(asset2.file.url)).to.equal(asset2);
             expect(app.assets.getByUrl(asset3.file.url)).to.equal(asset3);
         });
-
     });
 
     describe('#list', function () {
-
         it('lists all assets', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
@@ -234,11 +216,9 @@ describe('AssetRegistry', function () {
             expect(assets[1]).to.equal(asset2);
             expect(assets[2]).to.equal(asset3);
         });
-
     });
 
     describe('#loadFromUrl', function () {
-
         const assetPath = '/test/assets/';
 
         it('loads binary assets', (done) => {
@@ -331,11 +311,9 @@ describe('AssetRegistry', function () {
                 done();
             });
         });
-
     });
 
     describe('#remove', function () {
-
         it('removes by id', function () {
             const asset1 = new Asset('Asset 1', 'text', {
                 url: 'fake/one/file.txt'
@@ -366,7 +344,5 @@ describe('AssetRegistry', function () {
             expect(assets[0].id).to.equal(asset1.id);
             expect(assets[1].id).to.equal(asset3.id);
         });
-
     });
-
 });

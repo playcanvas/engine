@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #ifdef SSAO
         #define SSAO_TEXTURE
     #endif

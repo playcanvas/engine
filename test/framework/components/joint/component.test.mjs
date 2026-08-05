@@ -3,8 +3,14 @@ import { expect } from 'chai';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
 import {
-    JOINTTYPE_6DOF, JOINTTYPE_BALL, JOINTTYPE_FIXED, JOINTTYPE_HINGE, JOINTTYPE_SLIDER,
-    MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED
+    JOINTTYPE_6DOF,
+    JOINTTYPE_BALL,
+    JOINTTYPE_FIXED,
+    JOINTTYPE_HINGE,
+    JOINTTYPE_SLIDER,
+    MOTION_FREE,
+    MOTION_LIMITED,
+    MOTION_LOCKED
 } from '../../../../src/framework/components/joint/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
@@ -100,7 +106,6 @@ describe('JointComponent', function () {
     }
 
     describe('#addComponent', function () {
-
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('joint');
@@ -200,11 +205,9 @@ describe('JointComponent', function () {
 
             expect(e.joint.type).to.equal(JOINTTYPE_FIXED);
         });
-
     });
 
     describe('#type', function () {
-
         it('accepts every valid joint type', function () {
             const e = new Entity();
             e.addComponent('joint');
@@ -214,11 +217,9 @@ describe('JointComponent', function () {
                 expect(e.joint.type).to.equal(type);
             }
         });
-
     });
 
     describe('#entityA/#entityB', function () {
-
         it('accepts an entity GUID and resolves it to the entity', function () {
             const target = new Entity('target');
             app.root.addChild(target);
@@ -268,11 +269,9 @@ describe('JointComponent', function () {
             target.destroy();
             expect(e.joint.entityA).to.equal(null);
         });
-
     });
 
     describe('#breakImpulse', function () {
-
         it('stores the value before any constraint exists', function () {
             const e = new Entity();
             e.addComponent('joint');
@@ -280,11 +279,9 @@ describe('JointComponent', function () {
             e.joint.breakImpulse = 250;
             expect(e.joint.breakImpulse).to.equal(250);
         });
-
     });
 
     describe('property assignment without physics', function () {
-
         it('accepts every property after creation without throwing', function () {
             const entityA = new Entity('a');
             const entityB = new Entity('b');
@@ -304,11 +301,9 @@ describe('JointComponent', function () {
 
             expectFullData(e.joint, entityA, entityB);
         });
-
     });
 
     describe('#cloneComponent', function () {
-
         it('clones every property', function () {
             const entityA = new Entity('a');
             const entityB = new Entity('b');
@@ -348,11 +343,9 @@ describe('JointComponent', function () {
             expect(cloneJoint.entityA).to.not.equal(bodyA);
             expect(cloneJoint.entityB).to.not.equal(bodyB);
         });
-
     });
 
     describe('lifecycle', function () {
-
         it('leaves and rejoins the pending set across a disable and enable round trip', function () {
             const target = new Entity('target');
             app.root.addChild(target);
@@ -422,7 +415,5 @@ describe('JointComponent', function () {
                 e.destroy();
             }).to.not.throw();
         });
-
     });
-
 });

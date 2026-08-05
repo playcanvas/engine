@@ -1153,11 +1153,7 @@ class ButtonComponent extends Component {
 
     _applyTintImmediately(tintColor) {
         const element = this._imageEntity?.element;
-        if (
-            !tintColor ||
-            !element ||
-            element.type === ELEMENTTYPE_GROUP
-        ) {
+        if (!tintColor || !element || element.type === ELEMENTTYPE_GROUP) {
             return;
         }
 
@@ -1178,11 +1174,7 @@ class ButtonComponent extends Component {
 
     _applyTintWithTween(tintColor) {
         const element = this._imageEntity?.element;
-        if (
-            !tintColor ||
-            !element ||
-            element.type === ELEMENTTYPE_GROUP
-        ) {
+        if (!tintColor || !element || element.type === ELEMENTTYPE_GROUP) {
             return;
         }
 
@@ -1208,9 +1200,7 @@ class ButtonComponent extends Component {
         if (Math.abs(elapsedProportion - 1) > 1e-5) {
             const lerpColor = this._tweenInfo.lerpColor;
             lerpColor.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
-            this._applyTintImmediately(
-                new Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a)
-            );
+            this._applyTintImmediately(new Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a));
         } else {
             this._applyTintImmediately(this._tweenInfo.to);
             this._cancelTween();

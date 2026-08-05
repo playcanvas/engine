@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef LIT_SKYBOX_INTENSITY
     uniform skyboxIntensity : f32;
 #endif

@@ -84,12 +84,12 @@ class GSplatLayerData {
         const useSharedManager = setsEqual && hasNormalPlacements;
 
         // Desired render modes for each manager (0 = should not exist)
-        const desiredMainMode = useSharedManager ?
-            (GSPLAT_FORWARD | GSPLAT_SHADOW) :
-            (hasNormalPlacements ? GSPLAT_FORWARD : 0);
-        const desiredShadowMode = useSharedManager ?
-            0 :
-            (hasShadowCasters ? GSPLAT_SHADOW : 0);
+        const desiredMainMode = useSharedManager
+            ? GSPLAT_FORWARD | GSPLAT_SHADOW
+            : hasNormalPlacements
+              ? GSPLAT_FORWARD
+              : 0;
+        const desiredShadowMode = useSharedManager ? 0 : hasShadowCasters ? GSPLAT_SHADOW : 0;
 
         // Update or create/destroy main manager
         if (desiredMainMode) {
@@ -108,7 +108,14 @@ class GSplatLayerData {
             if (this.gsplatManagerShadow) {
                 this.gsplatManagerShadow.setRenderMode(desiredShadowMode);
             } else {
-                this.gsplatManagerShadow = this.createManager(device, director, layer, cameraNode, camera, desiredShadowMode);
+                this.gsplatManagerShadow = this.createManager(
+                    device,
+                    director,
+                    layer,
+                    cameraNode,
+                    camera,
+                    desiredShadowMode
+                );
             }
         } else if (this.gsplatManagerShadow) {
             this.gsplatManagerShadow.destroy();
@@ -137,7 +144,7 @@ class GSplatCameraData {
     layersMap = new Map();
 
     destroy() {
-        this.layersMap.forEach(layerData => layerData.destroy());
+        this.layersMap.forEach((layerData) => layerData.destroy());
         this.layersMap.clear();
     }
 
@@ -217,9 +224,8 @@ class GSplatDirector {
     }
 
     destroy() {
-
         // destroy all gsplat managers
-        this.camerasMap.forEach(cameraData => cameraData.destroy());
+        this.camerasMap.forEach((cameraData) => cameraData.destroy());
         this.camerasMap.clear();
     }
 
@@ -264,7 +270,6 @@ class GSplatDirector {
      * draw work.
      */
     updateStreaming() {
-
         // apply pending gsplat params changes (e.g. varying streams) before the world reads them
         this.scene.gsplat.frameUpdate();
 
@@ -316,16 +321,14 @@ class GSplatDirector {
      * @param {LayerComposition} comp - The layer composition.
      */
     update(comp) {
-
         // remove camera / layer entires for cameras / layers no longer in the composition
         this.camerasMap.forEach((cameraData, camera) => {
-
             // camera is no longer in the composition
             if (!comp.camerasSet.has(camera)) {
                 cameraData.destroy();
                 this.camerasMap.delete(camera);
-
-            } else { // camera still exists
+            } else {
+                // camera still exists
 
                 // remove all layerdata for removed / disabled layers of this camera
                 // Collect layers to remove (don't modify map during iteration)
@@ -363,13 +366,10 @@ class GSplatDirector {
             // for all of its layers
             const layerIds = camera.layers;
             for (let j = 0; j < layerIds.length; j++) {
-
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer?.enabled) {
-
                     // if layer's splat placements were modified, or new camera
                     if (layer.gsplatPlacementsDirty || !cameraData) {
-
                         // check if there are any placements
                         const hasNormalPlacements = layer.gsplatPlacements.length > 0;
                         const hasShadowCasters = layer.gsplatShadowCasters.length > 0;
@@ -418,8 +418,7 @@ class GSplatDirector {
 
         // update stats
         this.renderer._gsplatCount = gsplatCount;
-        this.renderer._gsplatBufferCopy = bufferCopyTotal > 0 ?
-            (bufferCopyUploaded / bufferCopyTotal * 100) : 0;
+        this.renderer._gsplatBufferCopy = bufferCopyTotal > 0 ? (bufferCopyUploaded / bufferCopyTotal) * 100 : 0;
 
         // clear dirty flags
         this.scene.gsplat.frameEnd();

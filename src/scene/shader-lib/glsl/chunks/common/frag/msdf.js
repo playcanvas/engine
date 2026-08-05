@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 uniform sampler2D texture_msdfMap;
 
 float median(float r, float g, float b) {

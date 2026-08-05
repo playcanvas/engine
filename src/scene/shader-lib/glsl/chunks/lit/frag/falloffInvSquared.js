@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 float getFalloffWindow(float lightRadius, vec3 lightDir) {
     float sqrDist = dot(lightDir, lightDir);
     float invRadius = 1.0 / lightRadius;

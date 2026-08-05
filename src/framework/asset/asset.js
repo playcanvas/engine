@@ -317,9 +317,12 @@ class Asset extends EventHandler {
                     // file for the asset
                     if (app.enableBundles) {
                         const bundles = app.bundles.listBundlesForAsset(this);
-                        if (bundles && bundles.find((b) => {
-                            return b?.file?.variants[variant];
-                        })) {
+                        if (
+                            bundles &&
+                            bundles.find((b) => {
+                                return b?.file?.variants[variant];
+                            })
+                        ) {
                             break;
                         }
                     }
@@ -328,7 +331,9 @@ class Asset extends EventHandler {
         }
 
         const oldFile = this._file;
-        const newFile = value ? new AssetFile(value.url, value.filename, value.hash, value.size, value.opt, value.contents) : null;
+        const newFile = value
+            ? new AssetFile(value.url, value.filename, value.hash, value.size, value.opt, value.contents)
+            : null;
 
         if (!!newFile !== !!oldFile || (newFile && !newFile.equals(oldFile))) {
             this._file = newFile;
@@ -641,13 +646,17 @@ class Asset extends EventHandler {
             });
         } else {
             // asset contents must be downloaded
-            http.get(loadUrl, {
-                cache: true,
-                responseType: 'arraybuffer',
-                retry: maxRetries > 0,
-                maxRetries: maxRetries,
-                progress: asset
-            }, callback);
+            http.get(
+                loadUrl,
+                {
+                    cache: true,
+                    responseType: 'arraybuffer',
+                    retry: maxRetries > 0,
+                    maxRetries: maxRetries,
+                    progress: asset
+                },
+                callback
+            );
         }
     }
 }

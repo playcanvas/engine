@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 // Reads particle state from the state texture. When float textures are renderable the texture is
 // RGBA32F and the samples are used directly; otherwise it is RGBA32U storing the exact float bits,
 // which are reinterpreted here. particleTexIN is declared as sampler2D / usampler2D to match.

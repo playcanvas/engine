@@ -110,13 +110,12 @@ class GSplatOctree {
      * @param {Object} data - The parsed JSON data containing info, filenames and tree.
      */
     constructor(assetFileUrl, data) {
-
         this.lodLevels = data.lodLevels;
         this.assetFileUrl = assetFileUrl;
 
         // expand all file paths to full URLs upfront to avoid repeated joins later
         const baseDir = path.getDirectory(assetFileUrl);
-        this.files = data.filenames.map(url => ({
+        this.files = data.filenames.map((url) => ({
             url: path.isRelativePath(url) ? path.join(baseDir, url) : url,
             lodLevel: -1
         }));
@@ -126,9 +125,9 @@ class GSplatOctree {
 
         // parse optional environment field and resolve path
         if (data.environment) {
-            this.environmentUrl = path.isRelativePath(data.environment) ?
-                path.join(baseDir, data.environment) :
-                data.environment;
+            this.environmentUrl = path.isRelativePath(data.environment)
+                ? path.join(baseDir, data.environment)
+                : data.environment;
         }
 
         // Extract leaf nodes from hierarchical tree structure
@@ -332,21 +331,19 @@ class GSplatOctree {
         if (this.cooldowns.size > 0) {
             this.cooldowns.forEach((remaining, fileIndex) => {
                 if (remaining <= 1) {
-
                     // just a safety to avoid unloading a file that was re-referenced
                     if (this.fileRefCounts[fileIndex] === 0) {
                         this.unloadResource(fileIndex);
                     }
                     _toDelete.push(fileIndex);
                 } else {
-
                     // decrement cooldown timer
                     this.cooldowns.set(fileIndex, remaining - 1);
                 }
             });
 
             // delete them from the cooldowns map
-            _toDelete.forEach(idx => this.cooldowns.delete(idx));
+            _toDelete.forEach((idx) => this.cooldowns.delete(idx));
             _toDelete.length = 0;
         }
     }

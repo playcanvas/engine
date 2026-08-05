@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 // Indirect indexed draw call parameters
 struct DrawIndexedIndirectArgs {
     indexCount: u32,        // Number of indices to draw

@@ -19,7 +19,6 @@ describe('SpriteComponent', function () {
                 return true;
             }
             return false;
-
         };
 
         atlasAsset = new Asset('red-atlas', 'textureatlas', {
@@ -135,5 +134,4 @@ describe('SpriteComponent', function () {
         expect(!spriteAsset.hasEvent('load')).to.exist;
         expect(!spriteAsset.hasEvent('remove')).to.exist;
     });
-
 });

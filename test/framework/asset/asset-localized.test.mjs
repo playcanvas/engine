@@ -6,7 +6,6 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('LocalizedAsset', function () {
-
     let app;
 
     beforeEach(function () {
@@ -289,7 +288,6 @@ describe('LocalizedAsset', function () {
         expect(la.localizedAsset).to.equal(asset2.id);
     });
 
-
     it('switches LocalizedAsset to the defaultAsset by removing a localized asset from the registry', function () {
         const asset = new Asset('Default Asset', 'texture');
         app.assets.add(asset);
@@ -331,7 +329,6 @@ describe('LocalizedAsset', function () {
     });
 
     describe('#destroy', function () {
-
         it('removes asset references and events', function () {
             const asset = new Asset('Default Asset', 'texture');
 
@@ -374,7 +371,5 @@ describe('LocalizedAsset', function () {
             expect(asset.hasEvent('change')).to.equal(false);
             expect(asset.hasEvent('remove')).to.equal(false);
         });
-
     });
-
 });

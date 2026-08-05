@@ -12,7 +12,6 @@ Enabler.prototype.initialize = function () {
     if (this.entityToEnable.script.scriptB) {
         this.entityToEnable.script.scriptB.enabled = true;
     }
-
 };
 
 Enabler.prototype.postInitialize = function () {

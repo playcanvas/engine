@@ -42,7 +42,7 @@ const cmpStaticOrder = (a, b) => a.constructor.order - b.constructor.order;
  * an object with a static `order` property.
  * @returns {Array<Component>} In place sorted array.
  */
-const sortStaticOrder = arr => arr.sort(cmpStaticOrder);
+const sortStaticOrder = (arr) => arr.sort(cmpStaticOrder);
 
 /**
  * @type {GraphNode[]}
@@ -448,7 +448,7 @@ class Entity extends GraphNode {
      * const light = entity.findComponent("light");
      */
     findComponent(type) {
-        const entity = this.findOne(entity => entity.c?.[type]);
+        const entity = this.findOne((entity) => entity.c?.[type]);
         return entity && entity.c[type];
     }
 
@@ -463,7 +463,7 @@ class Entity extends GraphNode {
      * const lights = entity.findComponents("light");
      */
     findComponents(type) {
-        return this.find(entity => entity.c?.[type]).map(entity => entity.c[type]);
+        return this.find((entity) => entity.c?.[type]).map((entity) => entity.c[type]);
     }
 
     /**
@@ -477,7 +477,7 @@ class Entity extends GraphNode {
      * const controller = entity.findScript("playerController");
      */
     findScript(nameOrType) {
-        const entity = this.findOne(node => node.c?.script?.has(nameOrType));
+        const entity = this.findOne((node) => node.c?.script?.has(nameOrType));
         return entity?.c.script.get(nameOrType);
     }
 
@@ -492,8 +492,8 @@ class Entity extends GraphNode {
      * const controllers = entity.findScripts("playerController");
      */
     findScripts(nameOrType) {
-        const entities = this.find(node => node.c?.script?.has(nameOrType));
-        return entities.map(entity => entity.c.script.get(nameOrType));
+        const entities = this.find((node) => node.c?.script?.has(nameOrType));
+        return entities.map((entity) => entity.c.script.get(nameOrType));
     }
 
     /**
@@ -783,7 +783,9 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
                     if (newEntityReferenceId) {
                         newEntity.c[componentName][propertyName] = newEntityReferenceId;
                     } else {
-                        Debug.warn('Could not find corresponding entity id when resolving duplicated entity references');
+                        Debug.warn(
+                            'Could not find corresponding entity id when resolving duplicated entity references'
+                        );
                     }
                 }
             }
@@ -827,8 +829,8 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         // Recurse into children. Note that we continue to pass in the same `oldSubtreeRoot`, in
         // order to correctly handle cases where a child has an entity reference field that points
         // to a parent or other ancestor that is still within the duplicated subtree.
-        const _old = oldEntity.children.filter(e => e instanceof Entity);
-        const _new = newEntity.children.filter(e => e instanceof Entity);
+        const _old = oldEntity.children.filter((e) => e instanceof Entity);
+        const _new = newEntity.children.filter((e) => e instanceof Entity);
 
         for (let i = 0, len = _old.length; i < len; i++) {
             resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, _old[i], _new[i], duplicatedIdsMap);

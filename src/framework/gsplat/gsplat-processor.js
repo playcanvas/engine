@@ -228,7 +228,10 @@ class GSplatProcessor {
         this._dstResource = destination.resource ?? destination.component?.resource;
 
         Debug.assert(this._srcResource, 'GSplatProcessor: Source resource not found. Provide resource or component.');
-        Debug.assert(this._dstResource, 'GSplatProcessor: Destination resource not found. Provide resource or component.');
+        Debug.assert(
+            this._dstResource,
+            'GSplatProcessor: Destination resource not found. Provide resource or component.'
+        );
         this._dstStreamDescriptors = [];
         this._dstStreamNames = new Set();
 
@@ -247,9 +250,9 @@ class GSplatProcessor {
 
         // Pre-resolve source textures
         const srcFormat = this._srcResource.format;
-        const srcStreams = this._useAllInputStreams ?
-            [...srcFormat.streams, ...srcFormat.extraStreams] :
-            source.streams.map(name => ({ name }));
+        const srcStreams = this._useAllInputStreams
+            ? [...srcFormat.streams, ...srcFormat.extraStreams]
+            : source.streams.map((name) => ({ name }));
 
         for (const stream of srcStreams) {
             const texture = this._resolveTexture(source, stream.name, this._srcResource);
@@ -373,8 +376,8 @@ class GSplatProcessor {
             // include all source streams even if they have the same names as destination streams.
             const sameResource = this._srcResource === this._dstResource;
             const inputStreamNames = allStreams
-            .filter(s => !sameResource || !this._dstStreamNames.has(s.name))
-            .map(s => s.name);
+                .filter((s) => !sameResource || !this._dstStreamNames.has(s.name))
+                .map((s) => s.name);
 
             // Include declarations for input streams, plus the read code (getCenter/getColor/etc)
             inputDeclarations = srcFormat.getInputDeclarations(inputStreamNames);
@@ -410,11 +413,8 @@ class GSplatProcessor {
         includes.set('gsplatProcessChunk', isWebGPU ? processWGSL : processGLSL);
 
         // shader unique name hash
-        const hash = hashCode([
-            isWebGPU ? processWGSL : processGLSL,
-            this._useAllInputStreams ? '1' : '0'
-        ].join('|'));
-        const outputStreams = this._dstStreamDescriptors.map(s => s.name).join(',');
+        const hash = hashCode([isWebGPU ? processWGSL : processGLSL, this._useAllInputStreams ? '1' : '0'].join('|'));
+        const outputStreams = this._dstStreamDescriptors.map((s) => s.name).join(',');
 
         // Create shader
         const shader = ShaderUtils.createShader(device, {

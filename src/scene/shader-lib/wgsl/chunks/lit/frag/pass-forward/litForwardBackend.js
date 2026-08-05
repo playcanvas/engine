@@ -1,5 +1,5 @@
 // backend shader implementing material / lighting for the lit material for forward rendering
-export default /* wgsl */`
+export default /* wgsl */ `
 fn evaluateBackend() -> FragmentOutput {
 
     var output: FragmentOutput;

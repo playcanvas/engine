@@ -1,5 +1,5 @@
 // shader declarations for the lit material for forward rendering
-export default /* glsl */`
+export default /* glsl */ `
 
 // globals
 vec3 sReflection;

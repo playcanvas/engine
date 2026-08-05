@@ -1,8 +1,6 @@
 import { BitPacking } from '../../core/math/bit-packing.js';
 import { StringIds } from '../../core/string-ids.js';
-import {
-    FUNC_LESSEQUAL, FUNC_ALWAYS
-} from './constants.js';
+import { FUNC_LESSEQUAL, FUNC_ALWAYS } from './constants.js';
 
 const stringIds = new StringIds();
 
@@ -10,8 +8,8 @@ const stringIds = new StringIds();
 const funcMask = 0b111;
 
 // shifts values to where individual parts are stored
-const funcShift = 0;       // 00 - 02 (3bits)
-const writeShift = 3;      // 03 - 03 (1bit)
+const funcShift = 0; // 00 - 02 (3bits)
+const writeShift = 3; // 03 - 03 (1bit)
 
 /**
  * DepthState is a descriptor that defines how the depth value of the fragment is used by the

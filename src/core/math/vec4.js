@@ -319,10 +319,12 @@ class Vec4 {
      * console.log("The two vectors are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
      */
     equalsApprox(rhs, epsilon = 1e-6) {
-        return (Math.abs(this.x - rhs.x) < epsilon) &&
-            (Math.abs(this.y - rhs.y) < epsilon) &&
-            (Math.abs(this.z - rhs.z) < epsilon) &&
-            (Math.abs(this.w - rhs.w) < epsilon);
+        return (
+            Math.abs(this.x - rhs.x) < epsilon &&
+            Math.abs(this.y - rhs.y) < epsilon &&
+            Math.abs(this.z - rhs.z) < epsilon &&
+            Math.abs(this.w - rhs.w) < epsilon
+        );
     }
 
     /**

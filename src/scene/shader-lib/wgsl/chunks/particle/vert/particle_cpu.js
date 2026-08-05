@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 attribute particle_vertexData: vec4f;   // XYZ = world pos, W = life
 attribute particle_vertexData2: vec4f;  // X = angle, Y = scale, Z = alpha, W = velocity.x
 attribute particle_vertexData3: vec4f;  // XYZ = particle local pos, W = velocity.y

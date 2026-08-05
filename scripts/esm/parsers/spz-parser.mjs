@@ -1,4 +1,12 @@
-import { GSplatFormat, GSplatResourceBase, Http, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32U, Vec3, WasmModule } from 'playcanvas';
+import {
+    GSplatFormat,
+    GSplatResourceBase,
+    Http,
+    PIXELFORMAT_RGBA8,
+    PIXELFORMAT_RGBA32U,
+    Vec3,
+    WasmModule
+} from 'playcanvas';
 
 /**
  * @import { AppBase, BoundingBox, GraphicsDevice } from 'playcanvas'
@@ -51,7 +59,7 @@ const SH_DIM_FOR_DEGREE = [0, 3, 8, 15, 24];
 
 // GLSL shader code for reading the quantized splat data. Texture declarations and load
 // functions are auto-generated from the GSplatFormat streams.
-const readGLSL = /* glsl */`
+const readGLSL = /* glsl */ `
 uniform float spzPositionScale;
 
 // work values
@@ -136,7 +144,7 @@ void readSHData(out vec3 sh[SH_COEFFS], out float scale) {
 `;
 
 // WGSL variant of the read code
-const readWGSL = /* wgsl */`
+const readWGSL = /* wgsl */ `
 uniform spzPositionScale: f32;
 
 // work values
@@ -287,7 +295,7 @@ class SpzGSplatData {
         for (let i = 0; i < numSplats * 3; i++) {
             const o = i * 3;
             let v = positions[o] | (positions[o + 1] << 8) | (positions[o + 2] << 16);
-            v = (v << 8) >> 8;  // sign-extend 24-bit
+            v = (v << 8) >> 8; // sign-extend 24-bit
             centers[i] = v * scale;
         }
         return centers;
@@ -307,7 +315,7 @@ class SpzGSplatData {
                 let v = positions[o] | (positions[o + 1] << 8) | (positions[o + 2] << 16);
                 v = (v << 8) >> 8;
                 const p = v * scale;
-                const mc = c === 0 ? 'x' : (c === 1 ? 'y' : 'z');
+                const mc = c === 0 ? 'x' : c === 1 ? 'y' : 'z';
                 min[mc] = Math.min(min[mc], p);
                 max[mc] = Math.max(max[mc], p);
             }
@@ -365,10 +373,14 @@ class GSplatSpzResource extends GSplatResourceBase {
             const p = i * 9;
             const s = i * 3;
             const r = i * 4;
-            packedData[i * 4 + 0] = positions[p + 0] | (positions[p + 1] << 8) | (positions[p + 2] << 16) | (scales[s + 0] << 24);
-            packedData[i * 4 + 1] = positions[p + 3] | (positions[p + 4] << 8) | (positions[p + 5] << 16) | (scales[s + 1] << 24);
-            packedData[i * 4 + 2] = positions[p + 6] | (positions[p + 7] << 8) | (positions[p + 8] << 16) | (scales[s + 2] << 24);
-            packedData[i * 4 + 3] = rotations[r + 0] | (rotations[r + 1] << 8) | (rotations[r + 2] << 16) | (rotations[r + 3] << 24);
+            packedData[i * 4 + 0] =
+                positions[p + 0] | (positions[p + 1] << 8) | (positions[p + 2] << 16) | (scales[s + 0] << 24);
+            packedData[i * 4 + 1] =
+                positions[p + 3] | (positions[p + 4] << 8) | (positions[p + 5] << 16) | (scales[s + 1] << 24);
+            packedData[i * 4 + 2] =
+                positions[p + 6] | (positions[p + 7] << 8) | (positions[p + 8] << 16) | (scales[s + 2] << 24);
+            packedData[i * 4 + 3] =
+                rotations[r + 0] | (rotations[r + 1] << 8) | (rotations[r + 2] << 16) | (rotations[r + 3] << 24);
         }
         packedTexture.unlock();
 
@@ -467,8 +479,14 @@ const parseSpz = (arrayBuffer, decoder) => {
     const numPoints = header.numPoints;
     const shDim = SH_DIM_FOR_DEGREE[header.shDegree];
     const streamNames = ['positions', 'alphas', 'colors', 'scales', 'rotations', 'sh'];
-    const streamSizes = [numPoints * 9, numPoints, numPoints * 3, numPoints * 3, numPoints * 4, numPoints * shDim * 3]
-    .filter(size => size > 0);
+    const streamSizes = [
+        numPoints * 9,
+        numPoints,
+        numPoints * 3,
+        numPoints * 3,
+        numPoints * 4,
+        numPoints * shDim * 3
+    ].filter((size) => size > 0);
 
     if (header.numStreams !== streamSizes.length) {
         throw new Error(`Invalid spz file: expected ${streamSizes.length} streams, found ${header.numStreams}`);
@@ -526,27 +544,34 @@ class SpzParser {
      */
     load(url, callback, asset) {
         if (!WasmModule.getConfig('ZstdDecoderModule')) {
-            callback('SpzParser: ZSTD decoder module is not registered. Use WasmModule.setConfig(\'ZstdDecoderModule\', { glueUrl, wasmUrl }) before loading spz files.');
+            callback(
+                "SpzParser: ZSTD decoder module is not registered. Use WasmModule.setConfig('ZstdDecoderModule', { glueUrl, wasmUrl }) before loading spz files."
+            );
             return;
         }
 
-        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, data) => {
-            if (err) {
-                callback(err);
-                return;
-            }
-
-            WasmModule.getInstance('ZstdDecoderModule', (decoder) => {
-                try {
-                    const gsplatData = parseSpz(data, decoder);
-                    const prepareCenters = this.app.scene?.gsplatCentersEnabled !== false;
-                    const resource = new GSplatSpzResource(this.app.graphicsDevice, gsplatData, { prepareCenters });
-                    callback(null, resource);
-                } catch (e) {
-                    callback(e);
+        this.handler.fetch(
+            url,
+            Http.ResponseType.ARRAY_BUFFER,
+            (err, data) => {
+                if (err) {
+                    callback(err);
+                    return;
                 }
-            });
-        }, asset);
+
+                WasmModule.getInstance('ZstdDecoderModule', (decoder) => {
+                    try {
+                        const gsplatData = parseSpz(data, decoder);
+                        const prepareCenters = this.app.scene?.gsplatCentersEnabled !== false;
+                        const resource = new GSplatSpzResource(this.app.graphicsDevice, gsplatData, { prepareCenters });
+                        callback(null, resource);
+                    } catch (e) {
+                        callback(e);
+                    }
+                });
+            },
+            asset
+        );
     }
 
     open(url, data) {

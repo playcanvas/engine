@@ -279,7 +279,7 @@ class StreamedGSplat extends Script {
     _applyResolution() {
         const device = this.app.graphicsDevice;
         const dpr = window.devicePixelRatio || 1;
-        device.maxPixelRatio = this._highRes ? Math.min(dpr, 2) : (dpr >= 2 ? dpr * 0.5 : dpr);
+        device.maxPixelRatio = this._highRes ? Math.min(dpr, 2) : dpr >= 2 ? dpr * 0.5 : dpr;
         this.app.resizeCanvas();
     }
 

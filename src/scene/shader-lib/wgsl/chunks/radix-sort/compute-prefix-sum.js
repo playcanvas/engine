@@ -3,7 +3,7 @@
 // https://www.eecs.umich.edu/courses/eecs570/hw/parprefix.pdf
 // Ported from webgpu-radix-sort (MIT License)
 
-export const prefixSumSource = /* wgsl */`
+export const prefixSumSource = /* wgsl */ `
 
 @group(0) @binding(0) var<storage, read_write> items: array<u32>;
 @group(0) @binding(1) var<storage, read_write> blockSums: array<u32>;

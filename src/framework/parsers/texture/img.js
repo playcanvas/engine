@@ -1,6 +1,4 @@
-import {
-    PIXELFORMAT_RGBA8, TEXHINT_ASSET
-} from '../../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { http } from '../../../platform/net/http.js';
 
@@ -162,8 +160,8 @@ class ImgParser extends TextureParser {
             premultiplyAlpha: 'none',
             colorSpaceConversion: 'none'
         })
-        .then(imageBitmap => callback(null, imageBitmap))
-        .catch(e => callback(e));
+            .then((imageBitmap) => callback(null, imageBitmap))
+            .catch((e) => callback(e));
     }
 }
 

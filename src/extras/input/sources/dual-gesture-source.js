@@ -226,7 +226,6 @@ class DualGestureSource extends InputSource {
         if (!left && endsWith(this._layout, 'joystick')) {
             this.fire('joystick:position:right', this._rightJoystick.up());
         }
-
     }
 
     /**

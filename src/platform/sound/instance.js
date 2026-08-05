@@ -18,7 +18,7 @@ const STATE_STOPPED = 2;
  * @returns {number} The time % duration.
  */
 function capTime(time, duration) {
-    return (time % duration) || 0;
+    return time % duration || 0;
 }
 
 /**
@@ -986,7 +986,10 @@ class SoundInstance extends EventHandler {
             // set loopStart and loopEnd so that the source starts and ends at the correct user-set times
             this.source.loopStart = capTime(this._startTime, this.source.buffer.duration);
             if (this._duration) {
-                this.source.loopEnd = Math.max(this.source.loopStart, capTime(this._startTime + this._duration, this.source.buffer.duration));
+                this.source.loopEnd = Math.max(
+                    this.source.loopStart,
+                    capTime(this._startTime + this._duration, this.source.buffer.duration)
+                );
             }
         }
 
@@ -1000,7 +1003,10 @@ class SoundInstance extends EventHandler {
      * @private
      */
     _updateCurrentTime() {
-        this._currentTime = capTime((this._manager.context.currentTime - this._startedAt) * this._pitch + this._currentOffset, this.duration);
+        this._currentTime = capTime(
+            (this._manager.context.currentTime - this._startedAt) * this._pitch + this._currentOffset,
+            this.duration
+        );
     }
 
     /**

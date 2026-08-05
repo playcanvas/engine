@@ -26,14 +26,15 @@ const _tempRect = new Vec4();
  * @category Graphics
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect) {
-
     // a valid target or a null target (framebuffer) are supported
     Debug.assert(target !== undefined);
 
     const useBlend = arguments[5];
     Debug.call(() => {
         if (useBlend !== undefined) {
-            Debug.warnOnce('drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
+            Debug.warnOnce(
+                'drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.'
+            );
         }
     });
 

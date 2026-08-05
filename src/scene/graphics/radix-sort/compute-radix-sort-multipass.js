@@ -3,9 +3,19 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Compute } from '../../../platform/graphics/compute.js';
 import { Shader } from '../../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../../platform/graphics/storage-buffer.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../../platform/graphics/bind-group-format.js';
+import {
+    BindGroupFormat,
+    BindStorageBufferFormat,
+    BindUniformBufferFormat
+} from '../../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../../platform/graphics/uniform-buffer-format.js';
-import { BUFFERUSAGE_COPY_SRC, BUFFERUSAGE_COPY_DST, SHADERLANGUAGE_WGSL, SHADERSTAGE_COMPUTE, UNIFORMTYPE_UINT } from '../../../platform/graphics/constants.js';
+import {
+    BUFFERUSAGE_COPY_SRC,
+    BUFFERUSAGE_COPY_DST,
+    SHADERLANGUAGE_WGSL,
+    SHADERSTAGE_COMPUTE,
+    UNIFORMTYPE_UINT
+} from '../../../platform/graphics/constants.js';
 import { PrefixSumKernel } from '../prefix-sum-kernel.js';
 import { radixSort4bitSource } from '../../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-4bit.js';
 import { radixSortReorderSource } from '../../shader-lib/wgsl/chunks/radix-sort/compute-radix-sort-reorder.js';
@@ -272,8 +282,16 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
                 this._reorderBindGroupFormat
             );
 
-            const histogramCompute = new Compute(this.device, histogramShader, `RadixSort4bit-Histogram${suffix}-${bitOffset}`);
-            const reorderCompute = new Compute(this.device, reorderShader, `RadixSort4bit-Reorder${suffix}-${bitOffset}`);
+            const histogramCompute = new Compute(
+                this.device,
+                histogramShader,
+                `RadixSort4bit-Histogram${suffix}-${bitOffset}`
+            );
+            const reorderCompute = new Compute(
+                this.device,
+                reorderShader,
+                `RadixSort4bit-Reorder${suffix}-${bitOffset}`
+            );
 
             this._passes.push({ histogramCompute, reorderCompute });
         }
@@ -300,14 +318,16 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
         const allocWorkgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
         const currentWorkgroupCount = Math.max(1, Math.ceil(elementCount / ELEMENTS_PER_WORKGROUP));
 
-        const buffersNeedRealloc = forceRealloc || allocWorkgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
+        const buffersNeedRealloc =
+            forceRealloc || allocWorkgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
 
         // Recreate passes when numBits, initial-values mode, or key-write mode changes
-        const passesNeedRecreate = numBits !== this._numBits ||
-            hasInitialValues !== this._hasInitialValues || skipLastPassKeyWrite !== this._skipLastPassKeyWrite;
+        const passesNeedRecreate =
+            numBits !== this._numBits ||
+            hasInitialValues !== this._hasInitialValues ||
+            skipLastPassKeyWrite !== this._skipLastPassKeyWrite;
 
         if (buffersNeedRealloc) {
-
             // Destroy old buffers
             this._destroyBuffers();
 
@@ -332,7 +352,11 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
         // Update current working size and dispatch dimensions (must be after
         // _destroyBuffers which resets _workgroupCount)
         this._workgroupCount = currentWorkgroupCount;
-        Compute.calcDispatchSize(currentWorkgroupCount, this._dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
+        Compute.calcDispatchSize(
+            currentWorkgroupCount,
+            this._dispatchSize,
+            this.device.limits.maxComputeWorkgroupsPerDimension || 65535
+        );
 
         // Resize prefix kernel to match the CURRENT scan size. The allocated
         // block_sums buffer is larger (sized for capacity), but the scan only
@@ -397,9 +421,21 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * initialValues was provided).
      */
     sort(keysBuffer, elementCount, numBits = 16, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
-        Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSortMultipass.sort: numBits must be a multiple of ${BITS_PER_PASS}`);
+        Debug.assert(
+            numBits % BITS_PER_PASS === 0,
+            `ComputeRadixSortMultipass.sort: numBits must be a multiple of ${BITS_PER_PASS}`
+        );
 
-        return this._execute(keysBuffer, elementCount, numBits, -1, null, initialValues, skipLastPassKeyWrite, destructiveKeys);
+        return this._execute(
+            keysBuffer,
+            elementCount,
+            numBits,
+            -1,
+            null,
+            initialValues,
+            skipLastPassKeyWrite,
+            destructiveKeys
+        );
     }
 
     /**
@@ -423,10 +459,31 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Storage buffer containing sorted values.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
-        Debug.assert(numBits % BITS_PER_PASS === 0, `ComputeRadixSortMultipass.sortIndirect: numBits must be a multiple of ${BITS_PER_PASS}`);
+    sortIndirect(
+        keysBuffer,
+        maxElementCount,
+        numBits,
+        sortSlotBase,
+        sortElementCountBuffer,
+        initialValues,
+        skipLastPassKeyWrite = false,
+        destructiveKeys = false
+    ) {
+        Debug.assert(
+            numBits % BITS_PER_PASS === 0,
+            `ComputeRadixSortMultipass.sortIndirect: numBits must be a multiple of ${BITS_PER_PASS}`
+        );
 
-        return this._execute(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys);
+        return this._execute(
+            keysBuffer,
+            maxElementCount,
+            numBits,
+            sortSlotBase,
+            sortElementCountBuffer,
+            initialValues,
+            skipLastPassKeyWrite,
+            destructiveKeys
+        );
     }
 
     /**
@@ -445,7 +502,16 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      * @returns {StorageBuffer} Storage buffer containing sorted values.
      * @private
      */
-    _execute(keysBuffer, elementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
+    _execute(
+        keysBuffer,
+        elementCount,
+        numBits,
+        sortSlotBase,
+        sortElementCountBuffer,
+        initialValues,
+        skipLastPassKeyWrite = false,
+        destructiveKeys = false
+    ) {
         this._elementCount = elementCount;
         const hasInitialValues = !!initialValues;
 
@@ -454,7 +520,13 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
         this._destructiveKeys = destructiveKeys;
 
         // Allocate buffers and create passes if needed
-        this._allocateBuffers(elementCount, numBits, hasInitialValues, skipLastPassKeyWrite, destructiveKeys !== prevDestructiveKeys);
+        this._allocateBuffers(
+            elementCount,
+            numBits,
+            hasInitialValues,
+            skipLastPassKeyWrite,
+            destructiveKeys !== prevDestructiveKeys
+        );
 
         // When destructiveKeys, borrow keysBuffer as _keys1 (not owned; not destroyed on realloc).
         if (destructiveKeys) {
@@ -474,7 +546,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
 
         for (let pass = 0; pass < numPasses; pass++) {
             const { histogramCompute, reorderCompute } = this._passes[pass];
-            const isLastPass = (pass === numPasses - 1);
+            const isLastPass = pass === numPasses - 1;
 
             // For indirect sort, clear block sums before each pass using clear() which
             // encodes a clearBuffer command into the command encoder. This is critical:
@@ -522,7 +594,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
             // Swap buffers for next pass (skip on last pass - not needed)
             if (!isLastPass) {
                 currentKeys = nextKeys;
-                nextKeys = (currentKeys === this._keys0) ? this._keys1 : this._keys0;
+                nextKeys = currentKeys === this._keys0 ? this._keys1 : this._keys0;
                 const tempValues = currentValues;
                 currentValues = nextValues;
                 nextValues = tempValues;

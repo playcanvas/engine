@@ -1,5 +1,5 @@
 // includes and functionality of the front end shader, generates the input to the lit shader.
-export default /* glsl */`
+export default /* glsl */ `
 
     // all passes handle opacity
     #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE

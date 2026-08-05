@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #ifdef STD_CLEARCOATNORMAL_TEXTURE
 uniform float material_clearCoatBumpiness;
 #endif

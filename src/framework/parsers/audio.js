@@ -2,16 +2,7 @@ import { path } from '../../core/path.js';
 import { Http } from '../../platform/net/http.js';
 import { Sound } from '../../platform/sound/sound.js';
 
-const supportedExtensions = [
-    '.ogg',
-    '.mp3',
-    '.wav',
-    '.mp4a',
-    '.m4a',
-    '.mp4',
-    '.aac',
-    '.opus'
-];
+const supportedExtensions = ['.ogg', '.mp3', '.wav', '.mp4a', '.m4a', '.mp4', '.aac', '.opus'];
 
 /**
  * Parser for audio resources. Fetches the audio data and decodes it into a {@link Sound} using
@@ -54,14 +45,19 @@ class AudioParser {
             return;
         }
 
-        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, response) => {
-            if (err) {
-                error(err);
-                return;
-            }
+        this.handler.fetch(
+            url,
+            Http.ResponseType.ARRAY_BUFFER,
+            (err, response) => {
+                if (err) {
+                    error(err);
+                    return;
+                }
 
-            manager.context.decodeAudioData(response, success, error);
-        }, asset);
+                manager.context.decodeAudioData(response, success, error);
+            },
+            asset
+        );
     }
 
     _isSupported(url) {

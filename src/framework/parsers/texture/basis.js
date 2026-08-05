@@ -23,26 +23,29 @@ class BasisParser extends TextureParser {
         const device = this.device;
 
         const transcode = (data) => {
-            const basisModuleFound = basisTranscode(
-                device,
-                url.load,
-                data,
-                callback,
-                { isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0 }
-            );
+            const basisModuleFound = basisTranscode(device, url.load, data, callback, {
+                isGGGR: (asset?.file?.variants?.basis?.opt & 8) !== 0
+            });
 
             if (!basisModuleFound) {
-                callback(`Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`);
+                callback(
+                    `Basis module not found. Asset [${asset.name}](${asset.getFileUrl()}) basis texture variant will not be loaded.`
+                );
             }
         };
 
-        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, result) => {
-            if (err) {
-                callback(err);
-            } else {
-                transcode(result);
-            }
-        }, asset);
+        this.handler.fetch(
+            url,
+            Http.ResponseType.ARRAY_BUFFER,
+            (err, result) => {
+                if (err) {
+                    callback(err);
+                } else {
+                    transcode(result);
+                }
+            },
+            asset
+        );
     }
 
     // our async transcode call provides the neat structure we need to create the texture instance

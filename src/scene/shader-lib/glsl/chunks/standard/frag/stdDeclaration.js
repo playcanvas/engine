@@ -1,6 +1,6 @@
 // Declaration part of the standard shader. Declares the uniforms, textures and global variables used
 // by the fragment shader of the standard shader.
-export default /* glsl */`
+export default /* glsl */ `
 
     // globals
     float dAlpha = 1.0;

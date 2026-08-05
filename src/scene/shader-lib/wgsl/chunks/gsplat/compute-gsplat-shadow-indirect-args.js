@@ -7,7 +7,7 @@
 
 import indirectCoreCS from '../common/comp/indirect-core.js';
 
-export const computeGsplatShadowIndirectArgsSource = /* wgsl */`
+export const computeGsplatShadowIndirectArgsSource = /* wgsl */ `
 
 ${indirectCoreCS}
 

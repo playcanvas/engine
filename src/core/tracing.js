@@ -49,7 +49,6 @@ class Tracing {
      * @param {boolean} enabled - New enabled state for the channel.
      */
     static set(channel, enabled = true) {
-
         // #if _DEBUG
         if (enabled) {
             Tracing._traceChannels.add(channel);

@@ -25,7 +25,6 @@ class StatsTimer {
 
         app.on('frameupdate', (ms) => {
             for (let i = 0; i < this.statNames.length; i++) {
-
                 // read specified stat from app.stats object
                 const value = resolve(this.statNames[i], this.app.stats);
                 this.values[i] = (value ?? 0) * this.multiplier;

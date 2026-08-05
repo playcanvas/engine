@@ -3,9 +3,7 @@ import { expect } from 'chai';
 import { guid } from '../../src/core/guid.js';
 
 describe('guid', function () {
-
     describe('#create', function () {
-
         it('returns a string', function () {
             expect(guid.create()).to.be.a('string');
         });
@@ -17,7 +15,5 @@ describe('guid', function () {
         it('returns different values each time', function () {
             expect(guid.create()).to.not.equal(guid.create());
         });
-
     });
-
 });

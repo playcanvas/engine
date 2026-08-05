@@ -2,8 +2,13 @@ import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
-    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
+    ADDRESS_CLAMP_TO_EDGE,
+    BLENDEQUATION_ADD,
+    BLENDMODE_ONE_MINUS_SRC_ALPHA,
+    BLENDMODE_SRC_ALPHA,
+    FILTER_LINEAR,
+    FILTER_LINEAR_MIPMAP_LINEAR,
+    PIXELFORMAT_SRGBA8,
     RENDERTARGET_ORIGIN_BOTTOM,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
@@ -175,7 +180,6 @@ class OutlineRenderer {
      * Destroy the outline renderer and its resources.
      */
     destroy() {
-
         this.outlineCameraEntity.destroy();
         this.outlineCameraEntity = null;
 
@@ -197,14 +201,14 @@ class OutlineRenderer {
         const meshInstances = [];
 
         if (entity) {
-            const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
+            const renders = recursive ? entity.findComponents('render') : entity.render ? [entity.render] : [];
             renders.forEach((render) => {
                 if (render.meshInstances) {
                     meshInstances.push(...render.meshInstances);
                 }
             });
 
-            const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
+            const models = recursive ? entity.findComponents('model') : entity.model ? [entity.model] : [];
             models.forEach((model) => {
                 if (model.meshInstances) {
                     meshInstances.push(...model.meshInstances);
@@ -232,9 +236,7 @@ class OutlineRenderer {
             if (meshInstance.material instanceof StandardMaterial) {
                 const outlineShaderPass = this.outlineShaderPass;
                 meshInstance.material.onUpdateShader = (options) => {
-
                     if (options.pass === outlineShaderPass) {
-
                         // custom shader for the outline shader pass, preserving material opacity
                         const opts = new StandardMaterialOptions();
                         opts.defines = options.defines;
@@ -293,7 +295,6 @@ class OutlineRenderer {
     }
 
     blendOutlines() {
-
         // blend in the outlines texture on top of the rendering
         const device = this.app.graphicsDevice;
         device.scope.resolve('source').setValue(this.rt.colorBuffer);
@@ -303,7 +304,6 @@ class OutlineRenderer {
     }
 
     onPostRender() {
-
         // when the outline camera has rendered the outline objects to the texture, process the texture
         // to generate the outline effect
         const device = this.app.graphicsDevice;
@@ -354,14 +354,16 @@ class OutlineRenderer {
     }
 
     updateRenderTarget(sceneCamera) {
-
         // main camera resolution
         const width = sceneCamera.renderTarget?.width ?? this.app.graphicsDevice.width;
         const height = sceneCamera.renderTarget?.height ?? this.app.graphicsDevice.height;
 
         const outlineCamera = this.outlineCameraEntity.camera;
-        if (!outlineCamera.renderTarget || outlineCamera.renderTarget.width !== width || outlineCamera.renderTarget.height !== height) {
-
+        if (
+            !outlineCamera.renderTarget ||
+            outlineCamera.renderTarget.width !== width ||
+            outlineCamera.renderTarget.height !== height
+        ) {
             this.rt.resize(width, height);
             this.tempRt.resize(width, height);
         }
@@ -376,7 +378,6 @@ class OutlineRenderer {
      * @param {boolean} blendLayerTransparent - Whether the blend layer is transparent.
      */
     frameUpdate(sceneCameraEntity, blendLayer, blendLayerTransparent) {
-
         const sceneCamera = sceneCameraEntity.camera;
         this.updateRenderTarget(sceneCamera);
 

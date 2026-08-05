@@ -1,6 +1,6 @@
 function DracoWorker(jsUrl, wasmUrl) {
     // In a browser/web worker this is `self`; in a Node worker_threads worker it's the parentPort.
-    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
+    const myself = (typeof self !== 'undefined' && self) || require('node:worker_threads').parentPort;
 
     let draco;
 
@@ -10,26 +10,40 @@ function DracoWorker(jsUrl, wasmUrl) {
 
     const wrap = (typedArray, dataType) => {
         switch (dataType) {
-            case draco.DT_INT8: return new Int8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
-            case draco.DT_INT16: return new Int16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
-            case draco.DT_INT32: return new Int32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
-            case draco.DT_UINT8: return new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
-            case draco.DT_UINT16: return new Uint16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
-            case draco.DT_UINT32: return new Uint32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
-            case draco.DT_FLOAT32: return new Float32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
+            case draco.DT_INT8:
+                return new Int8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
+            case draco.DT_INT16:
+                return new Int16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
+            case draco.DT_INT32:
+                return new Int32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
+            case draco.DT_UINT8:
+                return new Uint8Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength);
+            case draco.DT_UINT16:
+                return new Uint16Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 2);
+            case draco.DT_UINT32:
+                return new Uint32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
+            case draco.DT_FLOAT32:
+                return new Float32Array(typedArray.buffer, typedArray.byteOffset, typedArray.byteLength / 4);
         }
         return null;
     };
 
     const componentSizeInBytes = (dataType) => {
         switch (dataType) {
-            case draco.DT_INT8: return 1;
-            case draco.DT_INT16: return 2;
-            case draco.DT_INT32: return 4;
-            case draco.DT_UINT8: return 1;
-            case draco.DT_UINT16: return 2;
-            case draco.DT_UINT32: return 4;
-            case draco.DT_FLOAT32: return 4;
+            case draco.DT_INT8:
+                return 1;
+            case draco.DT_INT16:
+                return 2;
+            case draco.DT_INT32:
+                return 4;
+            case draco.DT_UINT8:
+                return 1;
+            case draco.DT_UINT16:
+                return 2;
+            case draco.DT_UINT32:
+                return 4;
+            case draco.DT_FLOAT32:
+                return 4;
         }
         return 1;
     };
@@ -38,13 +52,20 @@ function DracoWorker(jsUrl, wasmUrl) {
     // TYPE_INT8=0, TYPE_UINT8=1, TYPE_INT16=2, TYPE_UINT16=3, TYPE_INT32=4, TYPE_UINT32=5, TYPE_FLOAT32=6
     const toEngineDataType = (dataType) => {
         switch (dataType) {
-            case draco.DT_INT8: return 0;
-            case draco.DT_UINT8: return 1;
-            case draco.DT_INT16: return 2;
-            case draco.DT_UINT16: return 3;
-            case draco.DT_INT32: return 4;
-            case draco.DT_UINT32: return 5;
-            case draco.DT_FLOAT32: return 6;
+            case draco.DT_INT8:
+                return 0;
+            case draco.DT_UINT8:
+                return 1;
+            case draco.DT_INT16:
+                return 2;
+            case draco.DT_UINT16:
+                return 3;
+            case draco.DT_INT32:
+                return 4;
+            case draco.DT_UINT32:
+                return 5;
+            case draco.DT_FLOAT32:
+                return 6;
             default:
                 // Unsupported or unhandled Draco data type (e.g. DT_BOOL, DT_COMPLEX64);
                 // default to TYPE_FLOAT32 for compatibility.
@@ -57,14 +78,14 @@ function DracoWorker(jsUrl, wasmUrl) {
     };
 
     const attributeOrder = {
-        0: 0,   // position
-        1: 1,   // normal
-        5: 2,   // tangent
-        2: 3,   // color
-        7: 4,   // joints
-        8: 5,   // weights
-        4: 6,   // generic (used for blend indices and weights)
-        3: 7    // texcoord
+        0: 0, // position
+        1: 1, // normal
+        5: 2, // tangent
+        2: 3, // color
+        7: 4, // joints
+        8: 5, // weights
+        4: 6, // generic (used for blend indices and weights)
+        3: 7 // texcoord
     };
 
     const generateNormals = (vertices, indices) => {
@@ -135,7 +156,7 @@ function DracoWorker(jsUrl, wasmUrl) {
     };
 
     const decodeMesh = (inputBuffer) => {
-        const result = { };
+        const result = {};
 
         const buffer = new draco.DecoderBuffer();
         buffer.Init(inputBuffer, inputBuffer.length);
@@ -176,7 +197,10 @@ function DracoWorker(jsUrl, wasmUrl) {
 
         // order attributes
         attributes.sort((a, b) => {
-            return (attributeOrder[a.attribute_type()] ?? attributeOrder.length) - (attributeOrder[b.attribute_type()] ?? attributeOrder.length);
+            return (
+                (attributeOrder[a.attribute_type()] ?? attributeOrder.length) -
+                (attributeOrder[b.attribute_type()] ?? attributeOrder.length)
+            );
         });
 
         // calculate total vertex size and attribute offsets
@@ -188,7 +212,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         });
 
         // we will generate normals if they're missing
-        const hasNormals = attributes.some(a => a.attribute_type() === NORMAL_ATTRIBUTE);
+        const hasNormals = attributes.some((a) => a.attribute_type() === NORMAL_ATTRIBUTE);
         let normalOffset = offsets[1] ?? 0;
         if (!hasNormals) {
             // normals will be inserted after position, adjust offsets
@@ -210,7 +234,7 @@ function DracoWorker(jsUrl, wasmUrl) {
         // if normals are generated, insert normal attribute metadata after position
         if (!hasNormals) {
             result.attributes.splice(1, 0, {
-                id: -1,  // special id to indicate generated normals
+                id: -1, // special id to indicate generated normals
                 dataType: 6, // TYPE_FLOAT32
                 numComponents: 3,
                 offset: normalOffset
@@ -242,8 +266,10 @@ function DracoWorker(jsUrl, wasmUrl) {
 
             if (!hasNormals && attribute.attribute_type() === POSITION_ATTRIBUTE) {
                 // generate normals just after position
-                const normals = generateNormals(wrap(src, attribute.data_type()),
-                    shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices));
+                const normals = generateNormals(
+                    wrap(src, attribute.data_type()),
+                    shortIndices ? new Uint16Array(result.indices) : new Uint32Array(result.indices)
+                );
 
                 // pack normals
                 for (let j = 0; j < mesh.num_points(); ++j) {
@@ -266,14 +292,17 @@ function DracoWorker(jsUrl, wasmUrl) {
 
     const decode = (data) => {
         const result = decodeMesh(new Uint8Array(data.buffer));
-        myself.postMessage({
-            jobId: data.jobId,
-            error: result.error,
-            indices: result.indices,
-            vertices: result.vertices,
-            attributes: result.attributes,
-            stride: result.stride
-        }, [result.indices, result.vertices].filter(t => t != null));
+        myself.postMessage(
+            {
+                jobId: data.jobId,
+                error: result.error,
+                indices: result.indices,
+                vertices: result.vertices,
+                attributes: result.attributes,
+                stride: result.stride
+            },
+            [result.indices, result.vertices].filter((t) => t != null)
+        );
     };
 
     const workQueue = [];
@@ -286,21 +315,20 @@ function DracoWorker(jsUrl, wasmUrl) {
                 // The glue script concatenated ahead of this worker exposes the module factory
                 // differently per environment: as a global in a browser worker, and via
                 // `module.exports` (CommonJS) in a Node worker_threads worker.
-                const DracoDecoderModule = myself.DracoDecoderModule ||
-                    (typeof module !== 'undefined' && module.exports);
+                const DracoDecoderModule =
+                    myself.DracoDecoderModule || (typeof module !== 'undefined' && module.exports);
 
                 // initialize draco module
                 DracoDecoderModule({
                     instantiateWasm: (imports, successCallback) => {
                         WebAssembly.instantiate(data.module, imports)
-                        .then(result => successCallback(result))
-                        .catch(reason => console.error(`instantiate failed + ${reason}`));
+                            .then((result) => successCallback(result))
+                            .catch((reason) => console.error(`instantiate failed + ${reason}`));
                         return {};
                     }
-                })
-                .then((instance) => {
+                }).then((instance) => {
                     draco = instance;
-                    workQueue.forEach(data => decode(data));
+                    workQueue.forEach((data) => decode(data));
                 });
                 break;
             }
@@ -315,6 +343,4 @@ function DracoWorker(jsUrl, wasmUrl) {
     });
 }
 
-export {
-    DracoWorker
-};
+export { DracoWorker };

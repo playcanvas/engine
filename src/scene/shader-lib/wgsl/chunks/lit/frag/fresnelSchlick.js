@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 // pow(x, 5) implemented as multiplies to avoid the log2/exp2 pair pow compiles to
 fn pow5(x: f32) -> f32 {
     let x2: f32 = x * x;

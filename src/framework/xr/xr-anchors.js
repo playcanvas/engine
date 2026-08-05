@@ -279,16 +279,17 @@ class XrAnchors extends EventHandler {
                 return;
             }
 
-            hitResult.createAnchor()
-            .then((xrAnchor) => {
-                const anchor = this._createAnchor(xrAnchor);
-                callback?.(null, anchor);
-                this.fire('add', anchor);
-            })
-            .catch((ex) => {
-                callback?.(ex, null);
-                this.fire('error', ex);
-            });
+            hitResult
+                .createAnchor()
+                .then((xrAnchor) => {
+                    const anchor = this._createAnchor(xrAnchor);
+                    callback?.(null, anchor);
+                    this.fire('add', anchor);
+                })
+                .catch((ex) => {
+                    callback?.(ex, null);
+                    this.fire('error', ex);
+                });
         } else {
             this._creationQueue.push({
                 transform: new XRRigidTransform(position, rotation),
@@ -333,16 +334,17 @@ class XrAnchors extends EventHandler {
             return;
         }
 
-        this.manager.session.restorePersistentAnchor(uuid)
-        .then((xrAnchor) => {
-            const anchor = this._createAnchor(xrAnchor, uuid);
-            callback?.(null, anchor);
-            this.fire('add', anchor);
-        })
-        .catch((ex) => {
-            callback?.(ex, null);
-            this.fire('error', ex);
-        });
+        this.manager.session
+            .restorePersistentAnchor(uuid)
+            .then((xrAnchor) => {
+                const anchor = this._createAnchor(xrAnchor, uuid);
+                callback?.(null, anchor);
+                this.fire('add', anchor);
+            })
+            .catch((ex) => {
+                callback?.(ex, null);
+                this.fire('error', ex);
+            });
     }
 
     /**
@@ -374,14 +376,15 @@ class XrAnchors extends EventHandler {
             return;
         }
 
-        this.manager.session.deletePersistentAnchor(uuid)
-        .then(() => {
-            callback?.(null);
-        })
-        .catch((ex) => {
-            callback?.(ex);
-            this.fire('error', ex);
-        });
+        this.manager.session
+            .deletePersistentAnchor(uuid)
+            .then(() => {
+                callback?.(null);
+            })
+            .catch((ex) => {
+                callback?.(ex);
+                this.fire('error', ex);
+            });
     }
 
     /**
@@ -394,16 +397,17 @@ class XrAnchors extends EventHandler {
             if (!this.manager.session.enabledFeatures && !this._checkingAvailability) {
                 this._checkingAvailability = true;
 
-                frame.createAnchor(new XRRigidTransform(), this.manager._referenceSpace)
-                .then((xrAnchor) => {
-                    // successfully created an anchor - feature is available
-                    xrAnchor.delete();
-                    if (this.manager.active) {
-                        this._available = true;
-                        this.fire('available');
-                    }
-                })
-                .catch(() => { }); // stay unavailable
+                frame
+                    .createAnchor(new XRRigidTransform(), this.manager._referenceSpace)
+                    .then((xrAnchor) => {
+                        // successfully created an anchor - feature is available
+                        xrAnchor.delete();
+                        if (this.manager.active) {
+                            this._available = true;
+                            this.fire('available');
+                        }
+                    })
+                    .catch(() => {}); // stay unavailable
             }
             return;
         }
@@ -413,19 +417,20 @@ class XrAnchors extends EventHandler {
             for (let i = 0; i < this._creationQueue.length; i++) {
                 const request = this._creationQueue[i];
 
-                frame.createAnchor(request.transform, this.manager._referenceSpace)
-                .then((xrAnchor) => {
-                    if (request.callback) {
-                        this._callbacksAnchors.set(xrAnchor, request.callback);
-                    }
-                })
-                .catch((ex) => {
-                    if (request.callback) {
-                        request.callback(ex, null);
-                    }
+                frame
+                    .createAnchor(request.transform, this.manager._referenceSpace)
+                    .then((xrAnchor) => {
+                        if (request.callback) {
+                            this._callbacksAnchors.set(xrAnchor, request.callback);
+                        }
+                    })
+                    .catch((ex) => {
+                        if (request.callback) {
+                            request.callback(ex, null);
+                        }
 
-                    this.fire('error', ex);
-                });
+                        this.fire('error', ex);
+                    });
             }
 
             this._creationQueue.length = 0;

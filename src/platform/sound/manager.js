@@ -8,9 +8,7 @@ const CONTEXT_STATE_RUNNING = 'running';
 /**
  * List of Window events to listen when AudioContext needs to be unlocked.
  */
-const USER_INPUT_EVENTS = [
-    'click', 'touchstart', 'mousedown'
-];
+const USER_INPUT_EVENTS = ['click', 'touchstart', 'mousedown'];
 
 /**
  * The SoundManager is used to load and play audio. It also applies system-wide settings like
@@ -142,24 +140,34 @@ class SoundManager extends EventHandler {
         const context = this._context;
         if (!context) return;
 
-        context.resume().then(() => {
-            // Some platforms (mostly iOS) require an additional sound to be played.
-            // This also performs a sanity check and verifies sounds can be played.
-            const source = context.createBufferSource();
-            source.buffer = context.createBuffer(1, 1, context.sampleRate);
-            source.connect(context.destination);
-            source.start(0);
+        context
+            .resume()
+            .then(
+                () => {
+                    // Some platforms (mostly iOS) require an additional sound to be played.
+                    // This also performs a sanity check and verifies sounds can be played.
+                    const source = context.createBufferSource();
+                    source.buffer = context.createBuffer(1, 1, context.sampleRate);
+                    source.connect(context.destination);
+                    source.start(0);
 
-            // onended is only called if everything worked as expected (context is running)
-            source.onended = (event) => {
-                source.disconnect(0);
-                this.fire('resume');
-            };
-        }, (e) => {
-            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but it was rejected ${e}`);
-        }).catch((e) => {
-            Debug.error(`Attempted to resume the AudioContext on SoundManager.resume(), but threw an exception ${e}`);
-        });
+                    // onended is only called if everything worked as expected (context is running)
+                    source.onended = (event) => {
+                        source.disconnect(0);
+                        this.fire('resume');
+                    };
+                },
+                (e) => {
+                    Debug.error(
+                        `Attempted to resume the AudioContext on SoundManager.resume(), but it was rejected ${e}`
+                    );
+                }
+            )
+            .catch((e) => {
+                Debug.error(
+                    `Attempted to resume the AudioContext on SoundManager.resume(), but threw an exception ${e}`
+                );
+            });
     }
 
     // resume the sound context and fire suspend event if it succeeds
@@ -167,13 +175,23 @@ class SoundManager extends EventHandler {
         const context = this._context;
         if (!context) return;
 
-        context.suspend().then(() => {
-            this.fire('suspend');
-        }, (e) => {
-            Debug.error(`Attempted to suspend the AudioContext on SoundManager.suspend(), but it was rejected ${e}`);
-        }).catch((e) => {
-            Debug.error(`Attempted to suspend the AudioContext on SoundManager.suspend(), but threw an exception ${e}`);
-        });
+        context
+            .suspend()
+            .then(
+                () => {
+                    this.fire('suspend');
+                },
+                (e) => {
+                    Debug.error(
+                        `Attempted to suspend the AudioContext on SoundManager.suspend(), but it was rejected ${e}`
+                    );
+                }
+            )
+            .catch((e) => {
+                Debug.error(
+                    `Attempted to suspend the AudioContext on SoundManager.suspend(), but threw an exception ${e}`
+                );
+            });
     }
 
     _unlockHandler() {

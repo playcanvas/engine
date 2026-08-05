@@ -1,20 +1,38 @@
-import {
-    PIXELFORMAT_DXT5, PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR
-} from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_DXT5, PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR } from '../../platform/graphics/constants.js';
 
 import {
     BLEND_NONE,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL,
+    LIGHTTYPE_OMNI,
+    LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC,
     SHADER_PREPASS,
-    SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW,
-    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
+    SHADERDEF_DIRLM,
+    SHADERDEF_INSTANCING,
+    SHADERDEF_LM,
+    SHADERDEF_MORPH_POSITION,
+    SHADERDEF_MORPH_NORMAL,
+    SHADERDEF_NOSHADOW,
+    SHADERDEF_SCREENSPACE,
+    SHADERDEF_SKIN,
+    SHADERDEF_TANGENTS,
+    SHADERDEF_UV0,
+    SHADERDEF_UV1,
+    SHADERDEF_VCOLOR,
+    SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
     DITHER_NONE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SHADERDEF_BATCH,
     FOG_NONE,
-    REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
-    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT
+    REFLECTIONSRC_NONE,
+    REFLECTIONSRC_ENVATLAS,
+    REFLECTIONSRC_ENVATLASHQ,
+    REFLECTIONSRC_CUBEMAP,
+    REFLECTIONSRC_SPHEREMAP,
+    AMBIENTSRC_AMBIENTSH,
+    AMBIENTSRC_ENVALATLAS,
+    AMBIENTSRC_CONSTANT
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -35,7 +53,7 @@ class StandardMaterialOptionsBuilder {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateEnvOptions(options, stdMat, scene, cameraShaderParams);
         this._updateMaterialOptions(options, stdMat, scene);
-        options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
+        options.litOptions.hasTangents = objDefs && (objDefs & SHADERDEF_TANGENTS) !== 0;
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
         this._updateUVOptions(options, stdMat, objDefs, false, cameraShaderParams);
     }
@@ -132,7 +150,13 @@ class StandardMaterialOptionsBuilder {
             options[vname] = false;
             options[vcname] = '';
 
-            if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage && stdMat.opacityDither === DITHER_NONE) {
+            if (
+                isOpacity &&
+                stdMat.blendType === BLEND_NONE &&
+                stdMat.alphaTest === 0.0 &&
+                !stdMat.alphaToCoverage &&
+                stdMat.opacityDither === DITHER_NONE
+            ) {
                 return;
             }
 
@@ -148,7 +172,6 @@ class StandardMaterialOptionsBuilder {
                 if (stdMat[uname] === 0 && !hasUv0) allow = false;
                 if (stdMat[uname] === 1 && !hasUv1) allow = false;
                 if (allow) {
-
                     // create an intermediate map between the textures and their slots
                     // to ensure the unique texture mapping isn't dependent on the texture id
                     // as that will change when textures are changed, even if the sharing is the same
@@ -170,7 +193,6 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMinOptions(options, stdMat, pass) {
-
         // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
         const isPrepass = pass === SHADER_PREPASS;
         options.litOptions.opacityShadowDither = isPrepass ? stdMat.opacityDither : stdMat.opacityShadowDither;
@@ -180,22 +202,31 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMaterialOptions(options, stdMat, scene) {
-        const useSpecular = !!(stdMat.useMetalness || stdMat.specularMap || stdMat.sphereMap || stdMat.cubeMap ||
-                            notBlack(stdMat.specular) || (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
-                            stdMat.enableGGXSpecular ||
-                            (stdMat.clearCoat > 0));
+        const useSpecular = !!(
+            stdMat.useMetalness ||
+            stdMat.specularMap ||
+            stdMat.sphereMap ||
+            stdMat.cubeMap ||
+            notBlack(stdMat.specular) ||
+            (stdMat.specularityFactor > 0 && stdMat.useMetalness) ||
+            stdMat.enableGGXSpecular ||
+            stdMat.clearCoat > 0
+        );
 
-        const useSpecularColor = (!stdMat.useMetalness || stdMat.useMetalnessSpecularColor);
+        const useSpecularColor = !stdMat.useMetalness || stdMat.useMetalnessSpecularColor;
 
-        const specularityFactorTint = useSpecular && stdMat.useMetalnessSpecularColor &&
-                                      (stdMat.specularityFactorTint || stdMat.specularityFactor !== 1);
+        const specularityFactorTint =
+            useSpecular &&
+            stdMat.useMetalnessSpecularColor &&
+            (stdMat.specularityFactorTint || stdMat.specularityFactor !== 1);
 
-        const isPackedNormalMap = texture => (texture ? (texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR) : false);
+        const isPackedNormalMap = (texture) =>
+            texture ? texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR : false;
 
         const equalish = (a, b) => Math.abs(a - b) < 1e-4;
 
         options.specularityFactorTint = specularityFactorTint;
-        options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1);
+        options.metalnessTint = stdMat.useMetalness && stdMat.metalness < 1;
         options.glossTint = true;
         options.diffuseEncoding = stdMat.diffuseMap?.encoding;
         options.diffuseDetailEncoding = stdMat.diffuseDetailMap?.encoding;
@@ -204,7 +235,7 @@ class StandardMaterialOptionsBuilder {
         options.packedNormal = isPackedNormalMap(stdMat.normalMap);
         options.refractionTint = !equalish(stdMat.refraction, 1.0);
         options.refractionIndexTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
-        options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
+        options.thicknessTint = stdMat.useDynamicRefraction && stdMat.thickness !== 1.0;
         options.specularEncoding = stdMat.specularMap?.encoding;
         options.sheenEncoding = stdMat.sheenMap?.encoding;
         options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
@@ -233,13 +264,13 @@ class StandardMaterialOptionsBuilder {
         options.useSpecularColor = useSpecularColor;
 
         // LIT OPTIONS
-        options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
+        options.litOptions.separateAmbient = false; // store ambient light color in separate variable, instead of adding it to diffuse directly
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
         options.litOptions.ambientSH = !!stdMat.ambientSH;
         options.litOptions.twoSidedLighting = stdMat.twoSidedLighting;
         options.litOptions.occludeSpecular = stdMat.occludeSpecular;
-        options.litOptions.occludeSpecularFloat = (stdMat.occludeSpecularIntensity !== 1.0);
+        options.litOptions.occludeSpecularFloat = stdMat.occludeSpecularIntensity !== 1.0;
 
         options.litOptions.useMsdf = !!stdMat.msdfMap;
         options.litOptions.msdfTextAttribute = !!stdMat.msdfTextAttribute;
@@ -252,11 +283,15 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.occludeDirect = stdMat.occludeDirect;
         options.litOptions.useSpecular = useSpecular;
-        options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
+        options.litOptions.useSpecularityFactor =
+            (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
-        options.litOptions.useAnisotropy = stdMat.enableGGXSpecular && (stdMat.anisotropyIntensity > 0 || !!stdMat.anisotropyMap);
+        options.litOptions.useAnisotropy =
+            stdMat.enableGGXSpecular && (stdMat.anisotropyIntensity > 0 || !!stdMat.anisotropyMap);
         options.litOptions.fresnelModel = stdMat.fresnelModel;
-        options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || options.litOptions.reflectionSource !== REFLECTIONSRC_NONE);
+        options.litOptions.useRefraction =
+            (stdMat.refraction || !!stdMat.refractionMap) &&
+            (stdMat.useDynamicRefraction || options.litOptions.reflectionSource !== REFLECTIONSRC_NONE);
         options.litOptions.useClearCoat = !!stdMat.clearCoat;
         options.litOptions.useSheen = stdMat.useSheen;
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
@@ -358,17 +393,32 @@ class StandardMaterialOptionsBuilder {
 
         if (stdMat.useLighting) {
             const lightsFiltered = [];
-            const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? objDefs >> 16 : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
 
             if (sortedLights) {
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
+                LitMaterialOptionsBuilder.collectLights(
+                    LIGHTTYPE_DIRECTIONAL,
+                    sortedLights[LIGHTTYPE_DIRECTIONAL],
+                    lightsFiltered,
+                    mask
+                );
 
                 if (!scene.clusteredLightingEnabled) {
-                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
-                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+                    LitMaterialOptionsBuilder.collectLights(
+                        LIGHTTYPE_OMNI,
+                        sortedLights[LIGHTTYPE_OMNI],
+                        lightsFiltered,
+                        mask
+                    );
+                    LitMaterialOptionsBuilder.collectLights(
+                        LIGHTTYPE_SPOT,
+                        sortedLights[LIGHTTYPE_SPOT],
+                        lightsFiltered,
+                        mask
+                    );
                 }
             }
             options.litOptions.lights = lightsFiltered;

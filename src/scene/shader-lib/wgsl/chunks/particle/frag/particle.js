@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 varying texCoordsAlphaLife: vec4f;
 
 var colorMap: texture_2d<f32>;

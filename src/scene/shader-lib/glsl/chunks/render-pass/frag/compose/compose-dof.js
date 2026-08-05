@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
     #ifdef DOF
         uniform sampler2D cocTexture;
         uniform sampler2D blurTexture;

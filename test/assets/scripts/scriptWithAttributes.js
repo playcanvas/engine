@@ -9,19 +9,23 @@ ScriptWithAttributes.attributes.add('attribute2', {
     default: 2
 });
 
-const schema = [{
-    name: 'fieldNumber',
-    type: 'number',
-    default: 1
-}, {
-    name: 'fieldEntity',
-    type: 'entity'
-}, {
-    name: 'fieldNumberArray',
-    type: 'number',
-    array: true,
-    default: 5
-}];
+const schema = [
+    {
+        name: 'fieldNumber',
+        type: 'number',
+        default: 1
+    },
+    {
+        name: 'fieldEntity',
+        type: 'entity'
+    },
+    {
+        name: 'fieldNumberArray',
+        type: 'number',
+        array: true,
+        default: 5
+    }
+];
 
 ScriptWithAttributes.attributes.add('attribute3', {
     type: 'json',
@@ -34,8 +38,6 @@ ScriptWithAttributes.attributes.add('attribute4', {
     schema: schema
 });
 
-ScriptWithAttributes.prototype.initialize = function () {
-};
+ScriptWithAttributes.prototype.initialize = function () {};
 
-ScriptWithAttributes.prototype.postInitialize = function () {
-};
+ScriptWithAttributes.prototype.postInitialize = function () {};

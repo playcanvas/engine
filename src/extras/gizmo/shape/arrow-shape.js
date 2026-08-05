@@ -101,22 +101,15 @@ class ArrowShape extends Shape {
         this._tolerance = args.tolerance ?? this._tolerance;
 
         // intersect
-        this.triData = [
-            new TriData(new ConeGeometry()),
-            new TriData(new CylinderGeometry(), 1)
-        ];
+        this.triData = [new TriData(new ConeGeometry()), new TriData(new CylinderGeometry(), 1)];
 
         // render
         this._head = new Entity(`head:${this.axis}`);
         this.entity.addChild(this._head);
-        this._createRenderComponent(this._head, [
-            Mesh.fromGeometry(this.device, new ConeGeometry())
-        ]);
+        this._createRenderComponent(this._head, [Mesh.fromGeometry(this.device, new ConeGeometry())]);
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
-        this._createRenderComponent(this._line, [
-            Mesh.fromGeometry(this.device, new CylinderGeometry())
-        ]);
+        this._createRenderComponent(this._line, [Mesh.fromGeometry(this.device, new CylinderGeometry())]);
 
         // update
         this._update();

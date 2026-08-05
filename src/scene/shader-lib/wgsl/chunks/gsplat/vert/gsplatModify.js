@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 // Modify splat center position
 fn modifySplatCenter(center: ptr<function, vec3f>) {
     // Example: *center.y += 1.0; // offset all splats up by 1 unit

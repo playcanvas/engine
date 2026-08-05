@@ -101,7 +101,8 @@ class SoundInstance3d extends SoundInstance {
             panner.positionX.value = value.x;
             panner.positionY.value = value.y;
             panner.positionZ.value = value.z;
-        } else if (panner.setPosition) { // Firefox (and legacy browsers)
+        } else if (panner.setPosition) {
+            // Firefox (and legacy browsers)
             panner.setPosition(value.x, value.y, value.z);
         }
     }

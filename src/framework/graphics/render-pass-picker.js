@@ -185,7 +185,6 @@ class RenderPassPicker extends RenderPass {
             }
 
             if (tempMeshInstances.length > 0) {
-
                 // render the mesh instances through the standard forward layer path, using the
                 // picker's own minimal view uniform format; it sets up the camera and view uniforms,
                 // and the callback forces the picker blend state per mesh

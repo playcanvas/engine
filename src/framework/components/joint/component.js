@@ -6,7 +6,11 @@ import { GraphNode } from '../../../scene/graph-node.js';
 import { Component } from '../component.js';
 import { BODYTYPE_DYNAMIC } from '../rigid-body/constants.js';
 import {
-    JOINTTYPE_6DOF, JOINTTYPE_BALL, JOINTTYPE_FIXED, JOINTTYPE_HINGE, JOINTTYPE_SLIDER,
+    JOINTTYPE_6DOF,
+    JOINTTYPE_BALL,
+    JOINTTYPE_FIXED,
+    JOINTTYPE_HINGE,
+    JOINTTYPE_SLIDER,
     MOTION_LOCKED
 } from './constants.js';
 
@@ -1111,8 +1115,15 @@ class JointComponent extends Component {
         const system = this.system;
 
         // check whether a constraint should currently exist at all
-        if (this._joint || !this._initialized || !this.enabled || !this.entity.enabled ||
-            this._broken || !this._entityA || this._entityA === this._entityB) {
+        if (
+            this._joint ||
+            !this._initialized ||
+            !this.enabled ||
+            !this.entity.enabled ||
+            this._broken ||
+            !this._entityA ||
+            this._entityA === this._entityB
+        ) {
             system._pending.delete(this);
             this._clearBodyAvailableSubscriptions();
             return;
@@ -1171,7 +1182,10 @@ class JointComponent extends Component {
 
         Debug.call(() => {
             if (rigidbodyA.type !== BODYTYPE_DYNAMIC && (!rigidbodyB || rigidbodyB.type !== BODYTYPE_DYNAMIC)) {
-                Debug.warn('JointComponent: neither constrained body is dynamic so the joint will have no effect.', this);
+                Debug.warn(
+                    'JointComponent: neither constrained body is dynamic so the joint will have no effect.',
+                    this
+                );
             }
         });
 

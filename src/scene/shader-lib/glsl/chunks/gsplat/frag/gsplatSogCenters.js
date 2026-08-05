@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #include "gsplatPackingPS"
 
 uniform highp sampler2D means_l;

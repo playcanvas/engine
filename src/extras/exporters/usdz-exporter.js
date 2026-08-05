@@ -28,7 +28,7 @@ const header = `#usda 1.0
 )
 `;
 
-const materialListTemplate = materials => `
+const materialListTemplate = (materials) => `
 def "Materials"
 {
     ${materials.join('\n')}
@@ -57,7 +57,7 @@ def "Mesh"
 }
 `;
 
-const meshInstanceTemplate = (nodeName, meshRefPath, worldMatrix, materialRefPath) => /* usd */`
+const meshInstanceTemplate = (nodeName, meshRefPath, worldMatrix, materialRefPath) => /* usd */ `
 def Xform "${nodeName}" (
     prepend references = ${meshRefPath}
 )
@@ -153,7 +153,6 @@ class UsdzExporter extends CoreExporter {
      * @returns {Promise<ArrayBuffer>} - The USDZ file content.
      */
     build(entity, options = {}) {
-
         this.init();
 
         // root file should be first in USDZ archive so reserve place here
@@ -187,7 +186,6 @@ class UsdzExporter extends CoreExporter {
         const textureArray = Array.from(this.textureMap.keys());
         const promises = [];
         for (let i = 0; i < textureArray.length; i++) {
-
             // for now store all textures as png
             // TODO: consider jpg if the alpha channel is not used
             const isRGBA = true;
@@ -196,14 +194,12 @@ class UsdzExporter extends CoreExporter {
             // convert texture data to canvas
             const texture = textureArray[i];
             const texturePromise = this.textureToCanvas(texture, textureOptions).then((canvas) => {
-
                 // if texture format is supported
                 if (canvas) {
-
                     // async convert them to blog and then to array buffer
                     // eslint-disable-next-line no-promise-executor-return
-                    return new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
-                        blob => blob.arrayBuffer()
+                    return new Promise((resolve) => canvas.toBlob(resolve, mimeType, 1)).then((blob) =>
+                        blob.arrayBuffer()
                     );
                 }
 
@@ -211,14 +207,13 @@ class UsdzExporter extends CoreExporter {
                 console.warn(`Export of texture ${texture.name} is not currently supported.`);
 
                 // eslint-disable-next-line no-promise-executor-return
-                return new Promise(resolve => resolve(null));
+                return new Promise((resolve) => resolve(null));
             });
             promises.push(texturePromise);
         }
 
         // when all textures are converted
         const finalData = Promise.all(promises).then((values) => {
-
             // add all textures as files
             values.forEach((textureArrayBuffer, index) => {
                 const texture = textureArray[index];
@@ -239,12 +234,10 @@ class UsdzExporter extends CoreExporter {
     }
 
     alignFiles() {
-
         // 64 byte alignment
         // https://github.com/101arrowz/fflate/issues/39#issuecomment-777263109
         let offset = 0;
         for (const filename in this.files) {
-
             const file = this.files[filename];
             const headerSize = 34 + filename.length;
 
@@ -252,7 +245,6 @@ class UsdzExporter extends CoreExporter {
             const offsetMod64 = offset & 63;
 
             if (offsetMod64 !== 4) {
-
                 const padLength = 64 - offsetMod64;
                 const padding = new Uint8Array(padLength);
 
@@ -263,7 +255,6 @@ class UsdzExporter extends CoreExporter {
     }
 
     getFileIds(category, name, ref, extension = 'usda') {
-
         // filename inside the zip archive
         const fileName = `${category ? `${category}/` : ''}${name}.${extension}`;
 
@@ -278,7 +269,6 @@ class UsdzExporter extends CoreExporter {
     }
 
     addFile(category, uniqueId, refName = '', content = '') {
-
         // prepare the content with the header
         let contentU8 = null;
         if (content) {
@@ -295,7 +285,6 @@ class UsdzExporter extends CoreExporter {
     }
 
     getMaterialRef(material) {
-
         let materialRef = this.materialMap.get(material);
         if (!materialRef) {
             materialRef = this.buildMaterial(material);
@@ -303,11 +292,9 @@ class UsdzExporter extends CoreExporter {
         }
 
         return materialRef;
-
     }
 
     getMeshRef(mesh) {
-
         let meshRef = this.meshMap.get(mesh);
         if (!meshRef) {
             meshRef = this.buildMesh(mesh);
@@ -344,16 +331,13 @@ class UsdzExporter extends CoreExporter {
         return `( ${vectors.join(', ')} )`;
     }
 
-
     // format: https://graphics.pixar.com/usd/release/spec_usdpreviewsurface.html
     buildMaterial(material) {
-
         const materialName = `Material_${material.id}`;
         const materialPath = `/Materials/${materialName}`;
-        const materialPropertyPath = property => `<${materialPath}${property}>`;
+        const materialPropertyPath = (property) => `<${materialPath}${property}>`;
 
         const buildTexture = (texture, textureIds, mapType, uvChannel, tiling, offset, rotation, tintColor) => {
-
             // TODO: texture transform values are passed in but do not work correctly in many cases
 
             return `
@@ -391,11 +375,17 @@ class UsdzExporter extends CoreExporter {
         const inputs = [];
         const samplers = [];
 
-        const addTexture = (textureSlot, uniform, propType, propName, valueName, handleOpacity = false, tintTexture = false) => {
-
+        const addTexture = (
+            textureSlot,
+            uniform,
+            propType,
+            propName,
+            valueName,
+            handleOpacity = false,
+            tintTexture = false
+        ) => {
             const texture = material[textureSlot];
             if (texture) {
-
                 // add texture file
                 const textureIds = this.getTextureFileIds(texture);
                 this.textureMap.set(texture, textureIds.refName);
@@ -421,10 +411,10 @@ class UsdzExporter extends CoreExporter {
                 // texture tint
                 const tintColor = tintTexture && uniform ? uniform : Color.WHITE;
 
-                samplers.push(buildTexture(texture, textureIds, valueName, uvChannel, tiling, offset, rotation, tintColor));
-
+                samplers.push(
+                    buildTexture(texture, textureIds, valueName, uvChannel, tiling, offset, rotation, tintColor)
+                );
             } else if (uniform) {
-
                 const value = propType === 'float' ? `${uniform}` : `(${uniform.r}, ${uniform.g}, ${uniform.b})`;
                 inputs.push(materialValueTemplate(propType, propName, value));
             }
@@ -487,7 +477,6 @@ ${inputs.join('\n')}
     }
 
     buildMesh(mesh) {
-
         let positions = [];
         const indices = [];
         let normals = [];
@@ -502,7 +491,9 @@ ${inputs.join('\n')}
 
         // vertex counts for each faces (all are triangles)
         const indicesCount = indices.length || positions.length;
-        const faceVertexCounts = Array(indicesCount / 3).fill(3).join(', ');
+        const faceVertexCounts = Array(indicesCount / 3)
+            .fill(3)
+            .join(', ');
 
         // face indices if no index buffer
         if (!indices.length) {
@@ -528,7 +519,6 @@ ${inputs.join('\n')}
     }
 
     buildMeshInstance(meshInstance) {
-
         // build a mesh file, get back a reference path to it
         const meshRefPath = this.getMeshRef(meshInstance.mesh);
 

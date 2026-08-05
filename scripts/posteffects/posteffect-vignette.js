@@ -14,7 +14,7 @@ class VignetteEffect extends pc.PostEffect {
         super(graphicsDevice);
 
         // Shaders
-        const luminosityFrag = /* glsl */`
+        const luminosityFrag = /* glsl */ `
             uniform sampler2D uColorBuffer;
             uniform float uDarkness;
             uniform float uOffset;
@@ -72,9 +72,13 @@ Vignette.prototype.initialize = function () {
     this.effect.offset = this.offset;
     this.effect.darkness = this.darkness;
 
-    this.on('attr', function (name, value) {
-        this.effect[name] = value;
-    }, this);
+    this.on(
+        'attr',
+        function (name, value) {
+            this.effect[name] = value;
+        },
+        this
+    );
 
     var queue = this.entity.camera.postEffects;
     queue.addEffect(this.effect);

@@ -1,6 +1,10 @@
 import { SEMANTIC_POSITION, CULLFACE_NONE, PIXELFORMAT_RGBA16U } from '../../platform/graphics/constants.js';
 import {
-    BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD, GSPLAT_SHADOW,
+    BLEND_NONE,
+    BLEND_PREMULTIPLIED,
+    BLEND_ADDITIVE,
+    GSPLAT_FORWARD,
+    GSPLAT_SHADOW,
     SHADOWCAMERA_NAME
 } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
@@ -213,7 +217,6 @@ class GSplatQuadRenderer extends GSplatRenderer {
     }
 
     update(count, textureSize) {
-
         // limit splat render count to exclude those behind the camera
         this.meshInstance.instancingCount = Math.ceil(count / GSplatResourceBase.instanceSize);
 
@@ -284,7 +287,6 @@ class GSplatQuadRenderer extends GSplatRenderer {
     }
 
     frameUpdate(params) {
-
         // Update colorRampIntensity parameter every frame when overdraw is enabled
         if (params.colorRamp) {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
@@ -384,7 +386,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
                 keysToDelete.push(key);
             }
         });
-        keysToDelete.forEach(key => this._material.setDefine(key, undefined));
+        keysToDelete.forEach((key) => this._material.setDefine(key, undefined));
 
         // Add/update defines from the source. setDefine is conditional — it only flips
         // _definesDirty when the value actually changed, so unchanged entries stay cheap.
@@ -443,7 +445,6 @@ class GSplatQuadRenderer extends GSplatRenderer {
     }
 
     createMeshInstance() {
-
         const mesh = GSplatResourceBase.createMesh(this.device);
         const meshInstance = new MeshInstance(mesh, this._material);
         meshInstance.node = this.node;
@@ -459,7 +460,7 @@ class GSplatQuadRenderer extends GSplatRenderer {
             const renderMode = this.renderMode ?? 0;
 
             // visible for main camera in forward rendering mode
-            if (thisCamera.camera === camera && (renderMode & GSPLAT_FORWARD)) {
+            if (thisCamera.camera === camera && renderMode & GSPLAT_FORWARD) {
                 return true;
             }
 

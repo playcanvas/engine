@@ -26,7 +26,6 @@ describe('AnimClip', function () {
     });
 
     describe('#constructor', function () {
-
         it('instantiates correctly', function () {
             expect(animClip).to.be.ok;
             expect(animClip.name).to.equal('track');
@@ -36,63 +35,51 @@ describe('AnimClip', function () {
             expect(animClip.loop).to.equal(true);
             expect(animClip.eventCursor).to.equal(0);
         });
-
     });
 
     describe('#_update', function () {
-
-        it('can update the clip\'s snapshot by a given deltaTime', function () {
+        it("can update the clip's snapshot by a given deltaTime", function () {
             animClip._update(0.5);
             expect(animClip.snapshot._results[0]).to.deep.equal([0.5, 1, 1.5]);
         });
-
     });
 
     describe('#pause', function () {
-
         it('can stop the clip from updating', function () {
             animClip.pause();
             animClip._update(0.5);
             expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
-
     });
 
     describe('#stop', function () {
-
         it('pauses the clip and moves the cursor to the start', function () {
             animClip._update(0.5);
             animClip.stop();
             animClip._update(0.5);
             expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
-
     });
 
     describe('#reset', function () {
-
         it('moves the cursor to the start', function () {
             animClip._update(0.5);
             animClip.reset();
             animClip._update(0);
             expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
-
     });
 
     describe('#resume', function () {
-
         it('moves the cursor to the start', function () {
             animClip.pause();
             animClip.resume();
             animClip._update(0.5);
             expect(animClip.snapshot._results[0]).to.deep.equal([0.5, 1, 1.5]);
         });
-
     });
 
     describe('#play', function () {
-
         it('plays the clip from the beginning', function () {
             animClip._update(0.5);
             animClip.pause();
@@ -100,11 +87,9 @@ describe('AnimClip', function () {
             animClip._update(0);
             expect(animClip.snapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
-
     });
 
     describe('#time', function () {
-
         it('aligns the clips eventCursor property when setting the time', function () {
             expect(animClip.eventCursor).to.equal(0);
             animClip.time = 1.1;
@@ -150,7 +135,5 @@ describe('AnimClip', function () {
             expect(animClip.time).to.equal(0);
             expect(animClip.eventCursor).to.equal(2);
         });
-
     });
-
 });

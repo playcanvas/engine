@@ -124,7 +124,11 @@ class GSplatFrustumCuller {
         if (totalEntries > this._allocatedBoundsEntries) {
             this.boundsBuffer?.destroy();
             this._allocatedBoundsEntries = totalEntries;
-            this.boundsBuffer = new StorageBuffer(this.device, totalEntries * BOUNDS_ENTRY_FLOATS * 4, BUFFERUSAGE_COPY_DST);
+            this.boundsBuffer = new StorageBuffer(
+                this.device,
+                totalEntries * BOUNDS_ENTRY_FLOATS * 4,
+                BUFFERUSAGE_COPY_DST
+            );
             DebugHelper.setName(this.boundsBuffer, 'GsplatFrustumCuller.bounds');
 
             const ab = new ArrayBuffer(totalEntries * BOUNDS_ENTRY_FLOATS * 4);
@@ -190,11 +194,20 @@ class GSplatFrustumCuller {
         for (let i = 0; i < boundsGroups.length; i++) {
             const m = boundsGroups[i].splat.node.getWorldTransform().data;
             // row 0
-            data[offset++] = m[0]; data[offset++] = m[4]; data[offset++] = m[8]; data[offset++] = m[12];
+            data[offset++] = m[0];
+            data[offset++] = m[4];
+            data[offset++] = m[8];
+            data[offset++] = m[12];
             // row 1
-            data[offset++] = m[1]; data[offset++] = m[5]; data[offset++] = m[9]; data[offset++] = m[13];
+            data[offset++] = m[1];
+            data[offset++] = m[5];
+            data[offset++] = m[9];
+            data[offset++] = m[13];
             // row 2
-            data[offset++] = m[2]; data[offset++] = m[6]; data[offset++] = m[10]; data[offset++] = m[14];
+            data[offset++] = m[2];
+            data[offset++] = m[6];
+            data[offset++] = m[10];
+            data[offset++] = m[14];
         }
 
         this.transformsBuffer.write(0, data);

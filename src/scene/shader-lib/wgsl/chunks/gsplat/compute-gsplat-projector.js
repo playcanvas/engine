@@ -20,7 +20,7 @@
 // via clipToViewZ = (0, 0, far - near, near). For perspective + orthographic
 // the projector keeps writing real clipPos and the VS uses the
 // inverse-projection-derived clipToViewZ.
-export const computeGsplatProjectorSource = /* wgsl */`
+export const computeGsplatProjectorSource = /* wgsl */ `
 
 #include "gsplatCommonCS"
 #include "gsplatTileIntersectCS"

@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 
 #ifndef DITHER_NONE
     #include "bayerPS"

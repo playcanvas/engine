@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 // Modify splat center position
 void modifySplatCenter(inout vec3 center) {
     // Example: center.y += 1.0; // offset all splats up by 1 unit

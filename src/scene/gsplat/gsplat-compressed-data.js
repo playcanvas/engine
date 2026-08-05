@@ -39,10 +39,18 @@ class SplatCompressedIterator {
             const m = Math.sqrt(1.0 - (a * a + b * b + c * c));
 
             switch (value >>> 30) {
-                case 0: result.set(a, b, c, m); break;
-                case 1: result.set(m, b, c, a); break;
-                case 2: result.set(b, m, c, a); break;
-                case 3: result.set(b, c, m, a); break;
+                case 0:
+                    result.set(a, b, c, m);
+                    break;
+                case 1:
+                    result.set(m, b, c, a);
+                    break;
+                case 2:
+                    result.set(b, m, c, a);
+                    break;
+                case 3:
+                    result.set(b, c, m, a);
+                    break;
             }
         };
 
@@ -85,7 +93,7 @@ class SplatCompressedIterator {
                 const shData = [shData0, shData1, shData2];
                 for (let j = 0; j < 3; ++j) {
                     for (let k = 0; k < 15; ++k) {
-                        sh[j * 15 + k] = (k < shCoeffs) ? (shData[j][i * 16 + k] * (8 / 255) - 4) : 0;
+                        sh[j * 15 + k] = k < shCoeffs ? shData[j][i * 16 + k] * (8 / 255) - 4 : 0;
                     }
                 }
             }
@@ -289,10 +297,20 @@ class GSplatCompressedData {
     // decompress into GSplatData
     decompress() {
         const members = [
-            'x', 'y', 'z',
-            'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
-            'scale_0', 'scale_1', 'scale_2',
-            'rot_0', 'rot_1', 'rot_2', 'rot_3'
+            'x',
+            'y',
+            'z',
+            'f_dc_0',
+            'f_dc_1',
+            'f_dc_2',
+            'opacity',
+            'scale_0',
+            'scale_1',
+            'scale_2',
+            'rot_0',
+            'rot_1',
+            'rot_2',
+            'rot_3'
         ];
 
         const { shBands } = this;
@@ -303,7 +321,7 @@ class GSplatCompressedData {
             for (let i = 0; i < 45; ++i) {
                 shMembers.push(`f_rest_${i}`);
             }
-            const location = Math.max(...['f_dc_0', 'f_dc_1', 'f_dc_2'].map(name => members.indexOf(name)));
+            const location = Math.max(...['f_dc_0', 'f_dc_1', 'f_dc_2'].map((name) => members.indexOf(name)));
             members.splice(location + 1, 0, ...shMembers);
         }
 
@@ -341,7 +359,7 @@ class GSplatCompressedData {
             data.f_dc_1[i] = (c.y - 0.5) / SH_C0;
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
             // convert opacity to log sigmoid taking into account infinities at 0 and 1
-            data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
+            data.opacity[i] = c.w <= 0 ? -40 : c.w >= 1 ? 40 : -Math.log(1 / c.w - 1);
 
             if (sh) {
                 for (let c = 0; c < 45; ++c) {
@@ -350,18 +368,23 @@ class GSplatCompressedData {
             }
         }
 
-        return new GSplatData([{
-            name: 'vertex',
-            count: this.numSplats,
-            properties: members.map((name) => {
-                return {
-                    name: name,
-                    type: 'float',
-                    byteSize: 4,
-                    storage: data[name]
-                };
-            })
-        }], this.comments);
+        return new GSplatData(
+            [
+                {
+                    name: 'vertex',
+                    count: this.numSplats,
+                    properties: members.map((name) => {
+                        return {
+                            name: name,
+                            type: 'float',
+                            byteSize: 4,
+                            storage: data[name]
+                        };
+                    })
+                }
+            ],
+            this.comments
+        );
     }
 }
 

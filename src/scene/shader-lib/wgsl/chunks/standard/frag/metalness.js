@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 #ifdef STD_METALNESS_CONSTANT
 uniform material_metalness: f32;
 #endif

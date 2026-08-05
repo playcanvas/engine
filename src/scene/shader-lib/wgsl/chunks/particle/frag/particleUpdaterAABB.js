@@ -1,4 +1,4 @@
-export default /* wgsl */`
+export default /* wgsl */ `
 uniform spawnBounds: mat3x3f;
 uniform spawnPosInnerRatio: vec3f;
 

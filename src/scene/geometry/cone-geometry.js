@@ -57,7 +57,6 @@ class ConeGeometry extends ConeBaseGeometry {
      * });
      */
     constructor(opts = {}) {
-
         // Check the supplied options and provide defaults for unspecified ones
         const baseRadius = opts.baseRadius ?? 0.5;
         const peakRadius = opts.peakRadius ?? 0;

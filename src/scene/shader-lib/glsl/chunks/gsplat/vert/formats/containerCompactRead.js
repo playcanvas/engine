@@ -2,7 +2,7 @@
 // - dataColor: R32U (4B): RGB color (11+11+10 bits, range [0, 4])
 // - dataTransformA: RGBA32U (16B): center.xyz as f32 + scale.xyz (3x8-bit log-encoded) + alpha (8 bits)
 // - dataTransformB: R32U (4B): half-angle quaternion (11+11+10 bits)
-export default /* glsl */`
+export default /* glsl */ `
 // Required call order: getCenter() first, then getOpacity() for early culling (no extra loads),
 // then getColor() (returns RGB only). getRotation(), getScale() can follow in any order.
 uvec4 cachedTransformA;

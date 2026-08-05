@@ -4,7 +4,7 @@
 // hardware popcount, then scatters using global prefix + cumulative local rank.
 // Eliminates the local_prefix_sums buffer.
 
-export const radixSortReorderSource = /* wgsl */`
+export const radixSortReorderSource = /* wgsl */ `
 
 @group(0) @binding(0) var<storage, read> inputKeys: array<u32>;
 @group(0) @binding(1) var<storage, read_write> outputKeys: array<u32>;

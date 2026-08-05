@@ -3,9 +3,18 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Compute } from '../../../platform/graphics/compute.js';
 import { Shader } from '../../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../../platform/graphics/storage-buffer.js';
-import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../../platform/graphics/bind-group-format.js';
+import {
+    BindGroupFormat,
+    BindStorageBufferFormat,
+    BindUniformBufferFormat
+} from '../../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../../platform/graphics/uniform-buffer-format.js';
-import { BUFFERUSAGE_COPY_DST, SHADERLANGUAGE_WGSL, SHADERSTAGE_COMPUTE, UNIFORMTYPE_UINT } from '../../../platform/graphics/constants.js';
+import {
+    BUFFERUSAGE_COPY_DST,
+    SHADERLANGUAGE_WGSL,
+    SHADERSTAGE_COMPUTE,
+    UNIFORMTYPE_UINT
+} from '../../../platform/graphics/constants.js';
 import { onesweepGlobalHistSource } from '../../shader-lib/wgsl/chunks/radix-sort/onesweep-global-hist.js';
 import { onesweepScanSource } from '../../shader-lib/wgsl/chunks/radix-sort/onesweep-scan.js';
 import { onesweepBinningSource } from '../../shader-lib/wgsl/chunks/radix-sort/onesweep-binning.js';
@@ -151,7 +160,6 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
     /** @type {Compute[]} */
     _binningComputes = [];
 
-
     /**
      * @param {GraphicsDevice} device - The graphics device (must support
      * compute and subgroups).
@@ -180,7 +188,10 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         // A `minSubgroupSize` of 0 means the adapter omitted the field
         // entirely (older Chrome / Dawn on Windows); accept that — runtime
         // size on validated NVIDIA targets is still 32.
-        Debug.assert(device.minSubgroupSize <= 32, 'ComputeRadixSortOneSweep currently requires runtime subgroup size <= 32 (binning shader uses 32-bit subgroup masks)');
+        Debug.assert(
+            device.minSubgroupSize <= 32,
+            'ComputeRadixSortOneSweep currently requires runtime subgroup size <= 32 (binning shader uses 32-bit subgroup masks)'
+        );
 
         // Create uniform formats (shared between direct and indirect modes), then
         // create bind group formats and shaders for the chosen mode only.
@@ -352,7 +363,9 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
      */
     _ensureBinningComputes(numPasses) {
         while (this._binningComputes.length < numPasses) {
-            this._binningComputes.push(new Compute(this.device, this._binningShader, `OneSweepBinning-${this._binningComputes.length}`));
+            this._binningComputes.push(
+                new Compute(this.device, this._binningShader, `OneSweepBinning-${this._binningComputes.length}`)
+            );
         }
     }
 
@@ -387,7 +400,11 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
             this._allocatePingPongElementBuffers(effectiveCount);
 
             this._globalHist = new StorageBuffer(device, MAX_PASSES * RADIX * 4, BUFFERUSAGE_COPY_DST);
-            this._passHist = new StorageBuffer(device, MAX_PASSES * allocThreadBlocks * RADIX * 4, BUFFERUSAGE_COPY_DST);
+            this._passHist = new StorageBuffer(
+                device,
+                MAX_PASSES * allocThreadBlocks * RADIX * 4,
+                BUFFERUSAGE_COPY_DST
+            );
             this._index = new StorageBuffer(device, MAX_PASSES * 4, BUFFERUSAGE_COPY_DST);
             DebugHelper.setName(this._globalHist, 'ComputeRadixSortOnesweep.globalHist');
             DebugHelper.setName(this._passHist, 'ComputeRadixSortOnesweep.passHist');
@@ -520,7 +537,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
 
             if (!isLastPass) {
                 currentKeys = nextKeys;
-                nextKeys = (currentKeys === this._keys0) ? this._keys1 : this._keys0;
+                nextKeys = currentKeys === this._keys0 ? this._keys1 : this._keys0;
                 const t = currentValues;
                 currentValues = nextValues;
                 nextValues = t;
@@ -558,7 +575,16 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
      * buffer). The caller must not read `keysBuffer` after the sort returns.
      * @returns {StorageBuffer} Sorted values buffer.
      */
-    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite = false, destructiveKeys = false) {
+    sortIndirect(
+        keysBuffer,
+        maxElementCount,
+        numBits,
+        sortSlotBase,
+        sortElementCountBuffer,
+        initialValues,
+        skipLastPassKeyWrite = false,
+        destructiveKeys = false
+    ) {
         Debug.assert(numBits <= 32, `ComputeRadixSortOneSweep.sortIndirect: numBits must be <= 32, got ${numBits}`);
 
         const numPasses = numBits / 8;
@@ -642,7 +668,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
 
             if (!isLastPass) {
                 currentKeys = nextKeys;
-                nextKeys = (currentKeys === this._keys0) ? this._keys1 : this._keys0;
+                nextKeys = currentKeys === this._keys0 ? this._keys1 : this._keys0;
                 const t = currentValues;
                 currentValues = nextValues;
                 nextValues = t;

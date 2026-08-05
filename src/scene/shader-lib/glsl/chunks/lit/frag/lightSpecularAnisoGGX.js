@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 // Anisotropic GGX
 float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec3 lightDirNorm, mat3 tbn) {
     float PI = 3.141592653589793;

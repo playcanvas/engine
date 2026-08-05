@@ -39,10 +39,10 @@ class Mat4 {
     // Static function which evaluates perspective projection matrix half size at the near plane
     static _getPerspectiveHalfSize(halfSize, fov, aspect, znear, fovIsHorizontal) {
         if (fovIsHorizontal) {
-            halfSize.x = znear * Math.tan(fov * Math.PI / 360);
+            halfSize.x = znear * Math.tan((fov * Math.PI) / 360);
             halfSize.y = halfSize.x / aspect;
         } else {
-            halfSize.y = znear * Math.tan(fov * Math.PI / 360);
+            halfSize.y = znear * Math.tan((fov * Math.PI) / 360);
             halfSize.x = halfSize.y * aspect;
         }
     }
@@ -165,22 +165,24 @@ class Mat4 {
         const l = this.data,
             r = rhs.data;
 
-        return ((l[0] === r[0]) &&
-                (l[1] === r[1]) &&
-                (l[2] === r[2]) &&
-                (l[3] === r[3]) &&
-                (l[4] === r[4]) &&
-                (l[5] === r[5]) &&
-                (l[6] === r[6]) &&
-                (l[7] === r[7]) &&
-                (l[8] === r[8]) &&
-                (l[9] === r[9]) &&
-                (l[10] === r[10]) &&
-                (l[11] === r[11]) &&
-                (l[12] === r[12]) &&
-                (l[13] === r[13]) &&
-                (l[14] === r[14]) &&
-                (l[15] === r[15]));
+        return (
+            l[0] === r[0] &&
+            l[1] === r[1] &&
+            l[2] === r[2] &&
+            l[3] === r[3] &&
+            l[4] === r[4] &&
+            l[5] === r[5] &&
+            l[6] === r[6] &&
+            l[7] === r[7] &&
+            l[8] === r[8] &&
+            l[9] === r[9] &&
+            l[10] === r[10] &&
+            l[11] === r[11] &&
+            l[12] === r[12] &&
+            l[13] === r[13] &&
+            l[14] === r[14] &&
+            l[15] === r[15]
+        );
     }
 
     /**
@@ -194,22 +196,24 @@ class Mat4 {
     isIdentity() {
         const m = this.data;
 
-        return ((m[0] === 1) &&
-                (m[1] === 0) &&
-                (m[2] === 0) &&
-                (m[3] === 0) &&
-                (m[4] === 0) &&
-                (m[5] === 1) &&
-                (m[6] === 0) &&
-                (m[7] === 0) &&
-                (m[8] === 0) &&
-                (m[9] === 0) &&
-                (m[10] === 1) &&
-                (m[11] === 0) &&
-                (m[12] === 0) &&
-                (m[13] === 0) &&
-                (m[14] === 0) &&
-                (m[15] === 1));
+        return (
+            m[0] === 1 &&
+            m[1] === 0 &&
+            m[2] === 0 &&
+            m[3] === 0 &&
+            m[4] === 0 &&
+            m[5] === 1 &&
+            m[6] === 0 &&
+            m[7] === 0 &&
+            m[8] === 0 &&
+            m[9] === 0 &&
+            m[10] === 1 &&
+            m[11] === 0 &&
+            m[12] === 0 &&
+            m[13] === 0 &&
+            m[14] === 0 &&
+            m[15] === 1
+        );
     }
 
     /**
@@ -257,26 +261,26 @@ class Mat4 {
         b1 = b[1];
         b2 = b[2];
         b3 = b[3];
-        r[0]  = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
-        r[1]  = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
-        r[2]  = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
-        r[3]  = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
+        r[0] = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
+        r[1] = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
+        r[2] = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
+        r[3] = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
 
         b0 = b[4];
         b1 = b[5];
         b2 = b[6];
         b3 = b[7];
-        r[4]  = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
-        r[5]  = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
-        r[6]  = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
-        r[7]  = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
+        r[4] = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
+        r[5] = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
+        r[6] = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
+        r[7] = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
 
         b0 = b[8];
         b1 = b[9];
         b2 = b[10];
         b3 = b[11];
-        r[8]  = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
-        r[9]  = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
+        r[8] = a00 * b0 + a10 * b1 + a20 * b2 + a30 * b3;
+        r[9] = a01 * b0 + a11 * b1 + a21 * b2 + a31 * b3;
         r[10] = a02 * b0 + a12 * b1 + a22 * b2 + a32 * b3;
         r[11] = a03 * b0 + a13 * b1 + a23 * b2 + a33 * b3;
 
@@ -335,24 +339,24 @@ class Mat4 {
         b0 = b[0];
         b1 = b[1];
         b2 = b[2];
-        r[0]  = a00 * b0 + a10 * b1 + a20 * b2;
-        r[1]  = a01 * b0 + a11 * b1 + a21 * b2;
-        r[2]  = a02 * b0 + a12 * b1 + a22 * b2;
+        r[0] = a00 * b0 + a10 * b1 + a20 * b2;
+        r[1] = a01 * b0 + a11 * b1 + a21 * b2;
+        r[2] = a02 * b0 + a12 * b1 + a22 * b2;
         r[3] = 0;
 
         b0 = b[4];
         b1 = b[5];
         b2 = b[6];
-        r[4]  = a00 * b0 + a10 * b1 + a20 * b2;
-        r[5]  = a01 * b0 + a11 * b1 + a21 * b2;
-        r[6]  = a02 * b0 + a12 * b1 + a22 * b2;
+        r[4] = a00 * b0 + a10 * b1 + a20 * b2;
+        r[5] = a01 * b0 + a11 * b1 + a21 * b2;
+        r[6] = a02 * b0 + a12 * b1 + a22 * b2;
         r[7] = 0;
 
         b0 = b[8];
         b1 = b[9];
         b2 = b[10];
-        r[8]  = a00 * b0 + a10 * b1 + a20 * b2;
-        r[9]  = a01 * b0 + a11 * b1 + a21 * b2;
+        r[8] = a00 * b0 + a10 * b1 + a20 * b2;
+        r[9] = a01 * b0 + a11 * b1 + a21 * b2;
         r[10] = a02 * b0 + a12 * b1 + a22 * b2;
         r[11] = 0;
 
@@ -500,16 +504,16 @@ class Mat4 {
 
         const r = this.data;
 
-        r[0]  = x.x;
-        r[1]  = x.y;
-        r[2]  = x.z;
-        r[3]  = 0;
-        r[4]  = y.x;
-        r[5]  = y.y;
-        r[6]  = y.z;
-        r[7]  = 0;
-        r[8]  = z.x;
-        r[9]  = z.y;
+        r[0] = x.x;
+        r[1] = x.y;
+        r[2] = x.z;
+        r[3] = 0;
+        r[4] = y.x;
+        r[5] = y.y;
+        r[6] = y.z;
+        r[7] = 0;
+        r[8] = z.x;
+        r[9] = z.y;
         r[10] = z.z;
         r[11] = 0;
         r[12] = position.x;
@@ -794,7 +798,6 @@ class Mat4 {
      * const reflection = new Mat4().setReflection(Vec3.UP, 0);
      */
     setReflection(normal, distance) {
-
         const a = normal.x;
         const b = normal.y;
         const c = normal.z;
@@ -865,7 +868,7 @@ class Mat4 {
         const b10 = a21 * a33 - a23 * a31;
         const b11 = a22 * a33 - a23 * a32;
 
-        const det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+        const det = b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06;
         if (det === 0) {
             this.setIdentity();
         } else {

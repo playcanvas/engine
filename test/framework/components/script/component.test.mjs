@@ -9,8 +9,18 @@ import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ScriptComponent', function () {
-
-    const scripts = ['cloner', 'destroyer', 'disabler', 'enabler', 'loadedLater', 'postCloner', 'postInitializeReporter', 'scriptA', 'scriptB', 'scriptWithAttributes'];
+    const scripts = [
+        'cloner',
+        'destroyer',
+        'disabler',
+        'enabler',
+        'loadedLater',
+        'postCloner',
+        'postInitializeReporter',
+        'scriptA',
+        'scriptB',
+        'scriptWithAttributes'
+    ];
 
     let app;
 
@@ -20,9 +30,12 @@ describe('ScriptComponent', function () {
 
         window.initializeCalls = [];
 
-        const assets = scripts.map(script => new Asset(`${script}.js`, 'script', {
-            url: `/test/assets/scripts/${script}.js`
-        }));
+        const assets = scripts.map(
+            (script) =>
+                new Asset(`${script}.js`, 'script', {
+                    url: `/test/assets/scripts/${script}.js`
+                })
+        );
         assets.forEach((asset) => {
             asset.preload = asset.name !== 'loadedLater.js';
             app.assets.add(asset);
@@ -328,7 +341,6 @@ describe('ScriptComponent', function () {
         checkInitCall(e, 3, 'postInitialize scriptA');
         checkInitCall(e, 4, 'postInitialize scriptB');
         checkInitCall(enabler, 5, 'postInitialize enabler');
-
     });
 
     it('initialize and postInitialize are fired together for script instance that is enabled in initialize function', function () {
@@ -378,7 +390,6 @@ describe('ScriptComponent', function () {
         checkInitCall(e, ++idx, 'initialize scriptB');
         checkInitCall(e, ++idx, 'postInitialize scriptB');
         checkInitCall(enabler, ++idx, 'postInitialize enabler');
-
     });
 
     it('initialize is called for entity and all children before postInitialize', function () {
@@ -482,7 +493,7 @@ describe('ScriptComponent', function () {
         src.addComponent('script', {
             enabled: true,
             order: ['postInitializeReporter'],
-            'scripts': {
+            scripts: {
                 postInitializeReporter: {
                     enabled: true,
                     attributes: {}
@@ -537,7 +548,6 @@ describe('ScriptComponent', function () {
         expect(e.script.scriptWithAttributes.attribute2).to.equal(2);
     });
 
-
     it('script attributes are initialized with disabled entity', function () {
         const e2 = new Entity();
         app.root.addChild(e2);
@@ -562,7 +572,6 @@ describe('ScriptComponent', function () {
         expect(e.script.scriptWithAttributes.attribute1).to.equal(e2);
         expect(e.script.scriptWithAttributes.attribute2).to.equal(2);
     });
-
 
     it('script attributes are initialized for disabled script component', function () {
         const e2 = new Entity();
@@ -725,7 +734,6 @@ describe('ScriptComponent', function () {
         expect(clone.script.scriptWithAttributes.attribute2).to.equal(2);
     });
 
-
     it('script attributes are initialized when loading scene for enabled entity', function () {
         const a = app.root.findByName('EnabledEntity');
         expect(a).to.exist;
@@ -784,7 +792,6 @@ describe('ScriptComponent', function () {
         });
 
         app.loadSceneHierarchy('/test/assets/scenes/scene1.json', function () {
-
             // verify entities are loaded
             names.forEach(function (name) {
                 expect(app.root.findByName(name)).to.exist;
@@ -816,16 +823,21 @@ describe('ScriptComponent', function () {
                         attribute3: {
                             fieldNumber: 1
                         },
-                        attribute4: [{
-                            fieldNumber: 2
-                        }, {
-                            fieldNumber: 'shouldBeNull'
-                        }, {
-                            missing: true,
-                            fieldNumberArray: ['shouldBecomeNull']
-                        }, {
-                            fieldNumberArray: [1, 2, 3]
-                        }]
+                        attribute4: [
+                            {
+                                fieldNumber: 2
+                            },
+                            {
+                                fieldNumber: 'shouldBeNull'
+                            },
+                            {
+                                missing: true,
+                                fieldNumberArray: ['shouldBecomeNull']
+                            },
+                            {
+                                fieldNumberArray: [1, 2, 3]
+                            }
+                        ]
                     }
                 }
             }
@@ -864,10 +876,12 @@ describe('ScriptComponent', function () {
                             fieldNumber: 1,
                             fieldEntity: child.guid
                         },
-                        attribute4: [{
-                            fieldNumber: 2,
-                            fieldEntity: child.guid
-                        }]
+                        attribute4: [
+                            {
+                                fieldNumber: 2,
+                                fieldEntity: child.guid
+                            }
+                        ]
                     }
                 }
             }
@@ -897,12 +911,14 @@ describe('ScriptComponent', function () {
         expect(e2.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(4);
         expect(e.script.scriptWithAttributes.attribute3.fieldNumber).to.equal(1);
 
-
-        e2.script.scriptWithAttributes.attribute4 = [{
-            fieldNumber: 3
-        }, {
-            fieldNumber: 4
-        }];
+        e2.script.scriptWithAttributes.attribute4 = [
+            {
+                fieldNumber: 3
+            },
+            {
+                fieldNumber: 4
+            }
+        ];
 
         expect(e2.script.scriptWithAttributes.attribute4.length).to.equal(2);
         expect(e2.script.scriptWithAttributes.attribute4[0].fieldNumber).to.equal(3);
@@ -930,9 +946,11 @@ describe('ScriptComponent', function () {
         e.script.create('scriptWithAttributes', {
             attributes: {
                 attribute2: 3,
-                attribute4: [{
-                    fieldEntity: null
-                }]
+                attribute4: [
+                    {
+                        fieldEntity: null
+                    }
+                ]
             }
         });
 
@@ -1076,7 +1094,6 @@ describe('ScriptComponent', function () {
         checkInitCall(e, 2, 'disable scriptA');
         checkInitCall(e, 3, 'state false scriptA');
     });
-
 
     it('if entity is disabled in initialize call and enabled later, postInitialize is called only later', function () {
         const e = new Entity();
@@ -1354,7 +1371,7 @@ describe('ScriptComponent', function () {
         app.assets.load(asset);
     });
 
-    it('destroying entity during update stops updating the rest of the entity\'s scripts', function () {
+    it("destroying entity during update stops updating the rest of the entity's scripts", function () {
         const e = new Entity();
         e.addComponent('script', {
             enabled: true,
@@ -1401,7 +1418,7 @@ describe('ScriptComponent', function () {
         expect(updatesFound).to.equal(0);
     });
 
-    it('remove script component from entity during update stops updating the rest of the entity\'s scripts', function () {
+    it("remove script component from entity during update stops updating the rest of the entity's scripts", function () {
         const e = new Entity();
         e.addComponent('script', {
             enabled: true,
@@ -1493,7 +1510,6 @@ describe('ScriptComponent', function () {
         checkInitCall(e, idx++, 'update scriptB');
         checkInitCall(e, idx++, 'postUpdate destroyer');
         checkInitCall(e, idx++, 'postUpdate scriptB');
-
     });
 
     it('destroying entity fires disable and destroy events on script instances', function () {
@@ -1641,7 +1657,6 @@ describe('ScriptComponent', function () {
 
         app.root.addChild(e);
         app.root.addChild(other);
-
 
         window.initializeCalls.length = 0;
 
@@ -2360,7 +2375,6 @@ describe('ScriptComponent', function () {
         checkInitCall(d, 13, 'postUpdate scriptB');
         checkInitCall(c, 14, 'postUpdate scriptA');
         checkInitCall(c, 15, 'postUpdate scriptB');
-
     });
 
     it('update and post update are called on the same frame for child entities that become enabled during a parent\s update', function () {
@@ -2565,7 +2579,6 @@ describe('ScriptComponent', function () {
         checkInitCall(a, 2, 'update scriptA');
         checkInitCall(a, 3, 'postUpdate scriptB');
         checkInitCall(a, 4, 'postUpdate scriptA');
-
     });
 
     it('post update is called on the same frame for subsequent script instance that gets enabled during post update loop', function () {
@@ -2886,8 +2899,7 @@ describe('ScriptComponent', function () {
         NewScriptA.prototype.postUpdate = function () {
             window.initializeCalls.push(`${this.entity.guid} postUpdate new scriptA`);
         };
-        NewScriptA.prototype.swap = function () {
-        };
+        NewScriptA.prototype.swap = function () {};
 
         app.scripts.on('swap', function () {
             setTimeout(function () {
@@ -2931,13 +2943,15 @@ describe('ScriptComponent', function () {
 
     it('warns when an ESM Script class does not have a static "scriptName" property', function () {
         class TestScript extends Script {}
-        const a =  new Entity();
+        const a = new Entity();
         a.addComponent('script', { enabled: true });
         a.script.create(TestScript);
 
-        expect(Debug._loggedMessages.has(
-            'The Script class "TestScript" must have a static "scriptName" property: `TestScript.scriptName = "testScript";`. This will be an error in future versions of PlayCanvas.'
-        )).to.equal(true);
+        expect(
+            Debug._loggedMessages.has(
+                'The Script class "TestScript" must have a static "scriptName" property: `TestScript.scriptName = "testScript";`. This will be an error in future versions of PlayCanvas.'
+            )
+        ).to.equal(true);
     });
 
     it('correctly registers an ESM script with its scriptName', function () {
@@ -2994,5 +3008,4 @@ describe('ScriptComponent', function () {
         expect(Debug._loggedMessages.size).to.equal(0);
         expect(e.script.has('nullScript')).to.equal(true);
     });
-
 });

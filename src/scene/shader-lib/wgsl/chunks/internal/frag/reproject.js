@@ -9,7 +9,7 @@
 // When filtering:
 // NUM_SAMPLES - number of samples
 // NUM_SAMPLES_SQRT - sqrt of number of samples
-export default /* wgsl */`
+export default /* wgsl */ `
 
 varying vUv0: vec2f;
 
