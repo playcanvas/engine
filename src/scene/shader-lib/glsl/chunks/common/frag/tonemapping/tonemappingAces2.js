@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 // ACES approximation by Stephen Hill
 
 // sRGB => XYZ => D65_2_D60 => AP1 => RRT_SAT

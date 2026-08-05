@@ -4,7 +4,7 @@
 // and convert it to the splat's local space so user modifier code keeps working. The stored data
 // already includes the model transform and modifySplatCenter / modifySplatRotationScale, so
 // neither is re-applied by this path.
-export default /* wgsl */ `
+export default /* wgsl */`
 #ifdef GSPLAT_WORKBUFFER_GEOMETRY
 
     // world-space transform data previously written to the work buffer (see gsplatWriteVS)

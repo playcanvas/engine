@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     if (outLife >= uniform.lifetime) {
         let subtractAmount = max(uniform.lifetime, uniform.numParticles * particleRate);
         outLife = outLife - subtractAmount;

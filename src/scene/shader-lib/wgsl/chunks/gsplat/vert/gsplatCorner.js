@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform viewport_size: vec4f;             // viewport width, height, 1/width, 1/height
 uniform minPixelSize: f32;
 

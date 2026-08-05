@@ -64,6 +64,7 @@ describe('ScrollViewComponent', function () {
     });
 
     describe('#addComponent', function () {
+
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('scrollview');
@@ -147,9 +148,11 @@ describe('ScrollViewComponent', function () {
             expect(e.scrollview.horizontalScrollbarEntity).to.equal(hScrollbar);
             expect(e.scrollview.verticalScrollbarEntity).to.equal(vScrollbar);
         });
+
     });
 
     describe('#mouseWheelSensitivity', function () {
+
         it('accepts an [x, y] array and stores a Vec2', function () {
             const e = new Entity();
             e.addComponent('scrollview', { mouseWheelSensitivity: [2, 3] });
@@ -185,9 +188,11 @@ describe('ScrollViewComponent', function () {
             expect(e.scrollview.mouseWheelSensitivity.x).to.equal(2);
             expect(e.scrollview.mouseWheelSensitivity.y).to.equal(3);
         });
+
     });
 
     describe('#horizontal', function () {
+
         it('syncs the horizontal scrollbar entity enabled state when toggled', function () {
             const { e, hScrollbar } = buildScrollViewEntity();
             e.addComponent('scrollview', {
@@ -222,9 +227,11 @@ describe('ScrollViewComponent', function () {
             e.scrollview.horizontal = true;
             expect(hScrollbar.enabled).to.equal(false);
         });
+
     });
 
     describe('#vertical', function () {
+
         it('syncs the vertical scrollbar entity enabled state when toggled', function () {
             const { e, vScrollbar } = buildScrollViewEntity();
             e.addComponent('scrollview', {
@@ -241,9 +248,11 @@ describe('ScrollViewComponent', function () {
             e.scrollview.vertical = false;
             expect(vScrollbar.enabled).to.equal(false);
         });
+
     });
 
     describe('#scroll', function () {
+
         it('fires set:scroll when the value changes', function () {
             const { e, viewport, content } = buildScrollViewEntity();
             e.addComponent('scrollview', {
@@ -267,9 +276,11 @@ describe('ScrollViewComponent', function () {
             expect(captured[0].x).to.be.closeTo(0.5, 1e-5);
             expect(captured[0].y).to.be.closeTo(0.25, 1e-5);
         });
+
     });
 
     describe('#viewportEntity', function () {
+
         it('accepts an Entity reference', function () {
             const viewport = new Entity();
             viewport.addComponent('element', { type: ELEMENTTYPE_GROUP });
@@ -322,9 +333,11 @@ describe('ScrollViewComponent', function () {
             expect(viewport1.hasEvent('element:add')).to.equal(false);
             expect(viewport2.hasEvent('element:add')).to.equal(true);
         });
+
     });
 
     describe('#contentEntity', function () {
+
         it('accepts an Entity reference', function () {
             const content = new Entity();
             content.addComponent('element', { type: ELEMENTTYPE_IMAGE });
@@ -377,9 +390,11 @@ describe('ScrollViewComponent', function () {
             expect(content1.hasEvent('element:add')).to.equal(false);
             expect(content2.hasEvent('element:add')).to.equal(true);
         });
+
     });
 
     describe('#horizontalScrollbarEntity', function () {
+
         it('accepts an Entity reference', function () {
             const { hScrollbar } = buildScrollViewEntity();
 
@@ -429,9 +444,11 @@ describe('ScrollViewComponent', function () {
             expect(scrollbar1.hasEvent('scrollbar:add')).to.equal(false);
             expect(scrollbar2.hasEvent('scrollbar:add')).to.equal(true);
         });
+
     });
 
     describe('#verticalScrollbarEntity', function () {
+
         it('accepts an Entity reference', function () {
             const { vScrollbar } = buildScrollViewEntity();
 
@@ -468,9 +485,11 @@ describe('ScrollViewComponent', function () {
             expect(scrollbar1.hasEvent('scrollbar:add')).to.equal(false);
             expect(scrollbar2.hasEvent('scrollbar:add')).to.equal(true);
         });
+
     });
 
     describe('removeComponent', function () {
+
         it('tears down every listener it registered on referenced entities', function () {
             const { e, viewport, content, hScrollbar, vScrollbar } = buildScrollViewEntity();
             e.addComponent('scrollview', {
@@ -496,9 +515,11 @@ describe('ScrollViewComponent', function () {
             expect(hScrollbar.hasEvent('scrollbar:add')).to.equal(false);
             expect(vScrollbar.hasEvent('scrollbar:add')).to.equal(false);
         });
+
     });
 
     describe('#cloneComponent', function () {
+
         it('clones every scalar property', function () {
             const e = new Entity();
             e.addComponent('scrollview', {
@@ -558,9 +579,11 @@ describe('ScrollViewComponent', function () {
             expect(clone.scrollview.horizontalScrollbarEntity).to.equal(cloneHScrollbar);
             expect(clone.scrollview.verticalScrollbarEntity).to.equal(cloneVScrollbar);
         });
+
     });
 
     describe('resolveDuplicatedEntityReferenceProperties', function () {
+
         it('remaps every entity ref through duplicatedIdsMap', function () {
             const viewport = new Entity();
             const content = new Entity();
@@ -597,5 +620,7 @@ describe('ScrollViewComponent', function () {
             expect(target.scrollview.horizontalScrollbarEntity).to.equal(newHScrollbar);
             expect(target.scrollview.verticalScrollbarEntity).to.equal(newVScrollbar);
         });
+
     });
+
 });

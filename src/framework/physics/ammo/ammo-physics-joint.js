@@ -4,13 +4,8 @@ import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import {
-    JOINTTYPE_6DOF,
-    JOINTTYPE_BALL,
-    JOINTTYPE_FIXED,
-    JOINTTYPE_HINGE,
-    JOINTTYPE_SLIDER,
-    MOTION_FREE,
-    MOTION_LIMITED
+    JOINTTYPE_6DOF, JOINTTYPE_BALL, JOINTTYPE_FIXED, JOINTTYPE_HINGE, JOINTTYPE_SLIDER,
+    MOTION_FREE, MOTION_LIMITED
 } from '../../components/joint/constants.js';
 import { PhysicsJoint } from '../physics-joint.js';
 
@@ -35,8 +30,7 @@ function dofLimits(motion, limits, scale) {
     } else if (motion === MOTION_FREE) {
         _dof.lower = 1;
         _dof.upper = 0;
-    } else {
-        // MOTION_LOCKED
+    } else { // MOTION_LOCKED
         _dof.lower = 0;
         _dof.upper = 0;
     }
@@ -102,11 +96,7 @@ const hingeJoint = {
         // bullet's hinge motor clamp is an impulse per simulation step, so scale the torque by
         // the fixed timestep
         const maxImpulse = settings.maxMotorForce * joint._world._fixedTimeStep;
-        joint.nativeJoint.enableAngularMotor(
-            settings.maxMotorForce > 0,
-            settings.motorSpeed * math.DEG_TO_RAD,
-            maxImpulse
-        );
+        joint.nativeJoint.enableAngularMotor(settings.maxMotorForce > 0, settings.motorSpeed * math.DEG_TO_RAD, maxImpulse);
     }
 };
 
@@ -152,14 +142,11 @@ const sixDofJoint = {
         const constraint = joint.nativeJoint;
 
         let dof = dofLimits(settings.linearMotionX, settings.linearLimitsX, 1);
-        const lx = dof.lower,
-            ux = dof.upper;
+        const lx = dof.lower, ux = dof.upper;
         dof = dofLimits(settings.linearMotionY, settings.linearLimitsY, 1);
-        const ly = dof.lower,
-            uy = dof.upper;
+        const ly = dof.lower, uy = dof.upper;
         dof = dofLimits(settings.linearMotionZ, settings.linearLimitsZ, 1);
-        const lz = dof.lower,
-            uz = dof.upper;
+        const lz = dof.lower, uz = dof.upper;
 
         const limits = joint._world._btVec1;
         limits.setValue(lx, ly, lz);
@@ -168,14 +155,11 @@ const sixDofJoint = {
         constraint.setLinearUpperLimit(limits);
 
         dof = dofLimits(settings.angularMotionX, settings.angularLimitsX, math.DEG_TO_RAD);
-        const alx = dof.lower,
-            aux = dof.upper;
+        const alx = dof.lower, aux = dof.upper;
         dof = dofLimits(settings.angularMotionY, settings.angularLimitsY, math.DEG_TO_RAD);
-        const aly = dof.lower,
-            auy = dof.upper;
+        const aly = dof.lower, auy = dof.upper;
         dof = dofLimits(settings.angularMotionZ, settings.angularLimitsZ, math.DEG_TO_RAD);
-        const alz = dof.lower,
-            auz = dof.upper;
+        const alz = dof.lower, auz = dof.upper;
 
         limits.setValue(alx, aly, alz);
         constraint.setAngularLowerLimit(limits);
@@ -413,14 +397,10 @@ function createJoint(world, desc) {
         joint.setBreakImpulse(settings.breakImpulse);
 
         Debug.call(() => {
-            if (
-                desc.type === JOINTTYPE_6DOF &&
+            if (desc.type === JOINTTYPE_6DOF &&
                 typeof constraint.isEnabled !== 'function' &&
-                typeof constraint.getAppliedImpulse !== 'function'
-            ) {
-                Debug.warnOnce(
-                    'AmmoPhysicsJoint: this ammo build exposes no constraint state, so breakage of 6dof joints cannot be detected - the joint will still break but no break event will fire.'
-                );
+                typeof constraint.getAppliedImpulse !== 'function') {
+                Debug.warnOnce('AmmoPhysicsJoint: this ammo build exposes no constraint state, so breakage of 6dof joints cannot be detected - the joint will still break but no break event will fire.');
             }
         });
     }

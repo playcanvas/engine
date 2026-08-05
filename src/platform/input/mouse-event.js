@@ -122,7 +122,7 @@ class MouseEvent {
             }
             coords = mouse._getTargetCoords(event);
         } else {
-            event = {};
+            event = { };
         }
 
         if (coords) {

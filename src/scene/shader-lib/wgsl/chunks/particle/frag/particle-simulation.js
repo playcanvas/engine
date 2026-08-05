@@ -1,5 +1,5 @@
 // The main code of particle system fragment shader used for the simulation
-export default /* wgsl */ `
+export default /* wgsl */`
     #include "particleUpdaterInitPS"
 
     #include "particleInputPS"

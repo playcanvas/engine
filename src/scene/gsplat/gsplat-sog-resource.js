@@ -42,10 +42,7 @@ class GSplatSogResource extends GSplatResourceBase {
             // V2 always declares the sogCodebook stream below, so the texture must exist or the
             // streams system would auto-create a default (wrong-sized) RGBA32F texture at bind.
             // Callers must invoke gsplatData.prepareCodebook() before constructing the resource.
-            Debug.assert(
-                gsplatData.codebookTexture,
-                'GSplatSogResource: V2 asset is missing codebookTexture - prepareCodebook() must be called first.'
-            );
+            Debug.assert(gsplatData.codebookTexture, 'GSplatSogResource: V2 asset is missing codebookTexture - prepareCodebook() must be called first.');
             this.streams.textures.set('sogCodebook', gsplatData.codebookTexture);
         }
 

@@ -1,6 +1,6 @@
 // Read functions for large work buffer format (GSPLATDATA_LARGE, 32 bytes/splat).
 // Uses GSPLAT_COLOR_FLOAT define to switch between float and uint color reading paths.
-export default /* wgsl */ `
+export default /* wgsl */`
 // Required call order: getCenter() first, then getOpacity() (loads and caches color),
 // then getColor() (returns cached RGB). getRotation(), getScale() can follow in any order.
 var<private> cachedTransformA: vec4u;

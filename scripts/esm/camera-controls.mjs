@@ -672,8 +672,11 @@ class CameraControls extends Script {
      */
     focus(focus, resetZoom = false) {
         this._setMode('focus');
-        const zoomDist = resetZoom ? this._startZoomDist : this._camera.entity.getPosition().distance(focus);
-        const position = tmpV1.copy(this._camera.entity.forward).mulScalar(-zoomDist).add(focus);
+        const zoomDist = resetZoom ?
+            this._startZoomDist : this._camera.entity.getPosition().distance(focus);
+        const position = tmpV1.copy(this._camera.entity.forward)
+        .mulScalar(-zoomDist)
+        .add(focus);
         this._controller.attach(pose.look(position, focus));
     }
 
@@ -683,14 +686,12 @@ class CameraControls extends Script {
      */
     look(focus, resetZoom = false) {
         this._setMode('focus');
-        const position = resetZoom
-            ? tmpV1
-                  .copy(this._camera.entity.getPosition())
-                  .sub(focus)
-                  .normalize()
-                  .mulScalar(this._startZoomDist)
-                  .add(focus)
-            : this._camera.entity.getPosition();
+        const position = resetZoom ?
+            tmpV1.copy(this._camera.entity.getPosition())
+            .sub(focus)
+            .normalize()
+            .mulScalar(this._startZoomDist)
+            .add(focus) : this._camera.entity.getPosition();
         this._controller.attach(pose.look(position, focus));
     }
 
@@ -720,13 +721,7 @@ class CameraControls extends Script {
         applyDeadZone(rightStick, this.gamepadDeadZone.x, this.gamepadDeadZone.y);
 
         // update state
-        this._state.axis.add(
-            tmpV1.set(
-                key[keyCode.D] - key[keyCode.A] + (key[keyCode.RIGHT] - key[keyCode.LEFT]),
-                key[keyCode.E] - key[keyCode.Q],
-                key[keyCode.W] - key[keyCode.S] + (key[keyCode.UP] - key[keyCode.DOWN])
-            )
-        );
+        this._state.axis.add(tmpV1.set((key[keyCode.D] - key[keyCode.A]) + (key[keyCode.RIGHT] - key[keyCode.LEFT]), (key[keyCode.E] - key[keyCode.Q]), (key[keyCode.W] - key[keyCode.S]) + (key[keyCode.UP] - key[keyCode.DOWN])));
         for (let i = 0; i < this._state.mouse.length; i++) {
             this._state.mouse[i] += button[i];
         }
@@ -746,11 +741,11 @@ class CameraControls extends Script {
         const fly = +(this._mode === 'fly');
         const double = +(this._state.touches > 1);
         const desktopPan = +(this._state.shift || this._state.mouse[1]);
-        const mobileJoystick = +this._flyMobileInput.layout.endsWith('joystick');
+        const mobileJoystick = +(this._flyMobileInput.layout.endsWith('joystick'));
 
         // rate-based multipliers (keyboard, gamepad, virtual joystick)
-        const moveMult =
-            (this._state.shift ? this.moveFastSpeed : this._state.ctrl ? this.moveSlowSpeed : this.moveSpeed) * dt;
+        const moveMult = (this._state.shift ? this.moveFastSpeed : this._state.ctrl ?
+            this.moveSlowSpeed : this.moveSpeed) * dt;
         const rotateJoystickMult = this.rotateSpeed * this.rotateJoystickSens * 60 * dt;
 
         // delta-based multipliers (mouse, touch, wheel)
@@ -773,7 +768,7 @@ class CameraControls extends Script {
         // desktop rotate
         v.set(0, 0, 0);
         const mouseRotate = tmpV2.set(mouse[0], mouse[1], 0);
-        v.add(mouseRotate.mulScalar((1 - orbit * desktopPan) * rotateDeltaMult));
+        v.add(mouseRotate.mulScalar((1 - (orbit * desktopPan)) * rotateDeltaMult));
         deltas.rotate.append([v.x, v.y, v.z]);
 
         // mobile move

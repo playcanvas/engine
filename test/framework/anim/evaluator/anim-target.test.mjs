@@ -3,7 +3,9 @@ import { expect } from 'chai';
 import { AnimTarget } from '../../../../src/framework/anim/evaluator/anim-target.js';
 
 describe('AnimTarget', function () {
+
     describe('#constructor', function () {
+
         it('instantiates correctly with an object', function () {
             const func = {
                 set: 'set',
@@ -45,5 +47,7 @@ describe('AnimTarget', function () {
             expect(animTarget.targetPath).to.equal('path/to/entity/localScale');
             expect(animTarget.isTransform).to.equal(true);
         });
+
     });
+
 });

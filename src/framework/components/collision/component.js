@@ -587,7 +587,9 @@ class CollisionComponent extends Component {
 
     /** @private */
     _updateHasOffset() {
-        this._hasOffset = !this._linearOffset.equals(Vec3.ZERO) || !this._angularOffset.equals(Quat.IDENTITY);
+        this._hasOffset =
+            !this._linearOffset.equals(Vec3.ZERO) ||
+            !this._angularOffset.equals(Quat.IDENTITY);
     }
 
     /**

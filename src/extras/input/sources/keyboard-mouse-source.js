@@ -29,16 +29,16 @@ const KEY_CODES = /** @type {const} */ ({
     X: 23,
     Y: 24,
     Z: 25,
-    0: 26,
-    1: 27,
-    2: 28,
-    3: 29,
-    4: 30,
-    5: 31,
-    6: 32,
-    7: 33,
-    8: 34,
-    9: 35,
+    '0': 26,
+    '1': 27,
+    '2': 28,
+    '3': 29,
+    '4': 30,
+    '5': 31,
+    '6': 32,
+    '7': 33,
+    '8': 34,
+    '9': 35,
     UP: 36,
     DOWN: 37,
     LEFT: 38,
@@ -203,10 +203,9 @@ class KeyboardMouseSource extends InputSource {
      */
     _onPointerMove(event) {
         // Use native movementX/Y when pointer lock is active, otherwise use custom calculation
-        const [movementX, movementY] =
-            this._pointerLock && document.pointerLockElement === this._element
-                ? [event.movementX, event.movementY]
-                : this._movementState.move(event);
+        const [movementX, movementY] = this._pointerLock && document.pointerLockElement === this._element ?
+            [event.movementX, event.movementY] :
+            this._movementState.move(event);
 
         if (event.pointerType !== 'mouse') {
             return;

@@ -7,6 +7,7 @@ const tempSphere = new BoundingSphere();
 // helper class to store all lights including their original state
 class BakeLight {
     constructor(scene, light, lightingParams) {
+
         this.scene = scene;
 
         // light of type Light
@@ -25,6 +26,7 @@ class BakeLight {
 
         // bounds for non-directional light
         if (light.type !== LIGHTTYPE_DIRECTIONAL) {
+
             // world sphere
             light._node.getWorldTransform();
             light.getBoundingSphere(tempSphere);

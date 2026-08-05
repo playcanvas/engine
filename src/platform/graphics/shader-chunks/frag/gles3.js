@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #ifdef DUAL_SOURCE_BLENDING
 #extension GL_EXT_blend_func_extended : require

@@ -1,6 +1,6 @@
 // Uncompressed GSplat format - work variables, helpers, and read functions
 // Texture declarations and load functions are auto-generated from GSplatFormat streams
-export default /* glsl */ `
+export default /* glsl */`
 
 // work values
 uint tAw;

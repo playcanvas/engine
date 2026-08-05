@@ -3,21 +3,25 @@ import { expect } from 'chai';
 import { EventHandler } from '../../src/core/event-handler.js';
 
 describe('EventHandler', function () {
+
     describe('#hasEvent', function () {
+
         it('returns true if the event is registered', function () {
             const e = new EventHandler();
-            e.on('test', function () {});
+            e.on('test', function () { });
             expect(e.hasEvent('test')).to.be.true;
         });
 
         it('returns false if the event is not registered', function () {
             const e = new EventHandler();
-            e.on('test', function () {});
+            e.on('test', function () { });
             expect(e.hasEvent('hello')).to.be.false;
         });
+
     });
 
     describe('#on', function () {
+
         it('calls handler on fire', function () {
             const e = new EventHandler();
             let called = false;
@@ -46,9 +50,11 @@ describe('EventHandler', function () {
             e.fire('test', 1, 2, 3, 4, 5, 6, 7, 8, 9);
             expect(called).to.be.true;
         });
+
     });
 
     describe('#once', function () {
+
         it('unregisters itself after the first fire', function () {
             const e = new EventHandler();
             let count = 0;
@@ -61,9 +67,11 @@ describe('EventHandler', function () {
             e.fire('test');
             expect(count).to.equal(1);
         });
+
     });
 
     describe('#off', function () {
+
         it('unregisters event handler with specified callback and scope', function () {
             const e = new EventHandler();
             let called = false;
@@ -104,5 +112,7 @@ describe('EventHandler', function () {
             e.fire('test');
             expect(called).to.be.false;
         });
+
     });
+
 });

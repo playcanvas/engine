@@ -4,11 +4,14 @@
  * @ignore
  */
 class NullShader {
-    destroy(shader) {}
+    destroy(shader) {
+    }
 
-    loseContext() {}
+    loseContext() {
+    }
 
-    restoreContext(device, shader) {}
+    restoreContext(device, shader) {
+    }
 }
 
 export { NullShader };

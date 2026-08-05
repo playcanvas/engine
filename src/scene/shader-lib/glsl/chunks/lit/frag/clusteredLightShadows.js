@@ -1,5 +1,5 @@
 // Clustered Omni Sampling using atlas
-export default /* glsl */ `
+export default /* glsl */`
 
 vec3 _getShadowCoordPerspZbuffer(mat4 shadowMatrix, vec4 shadowParams, vec3 wPos) {
     vec4 projPos = shadowMatrix * vec4(wPos, 1.0);

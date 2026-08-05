@@ -4,7 +4,9 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Plane } from '../../../src/core/shape/plane.js';
 
 describe('Plane', function () {
+
     describe('#constructor', function () {
+
         it('supports zero arguments', function () {
             const p = new Plane();
             expect(p.normal.x).to.equal(Vec3.UP.x);
@@ -20,18 +22,22 @@ describe('Plane', function () {
             expect(p.normal.z).to.equal(0);
             expect(p.distance).to.equal(5);
         });
+
     });
 
     describe('#setFromPointNormal', function () {
+
         const p = new Plane();
         p.setFromPointNormal(new Vec3(1, 2, 3), Vec3.UP);
         expect(p.normal.x).to.equal(0);
         expect(p.normal.y).to.equal(1);
         expect(p.normal.z).to.equal(0);
         expect(p.distance).to.equal(-2);
+
     });
 
     describe('#intersectsLine', function () {
+
         const p = new Plane();
         p.setFromPointNormal(new Vec3(0, 5, 0), Vec3.UP);
         const intersection = new Vec3();
@@ -40,5 +46,7 @@ describe('Plane', function () {
         expect(intersection.x).to.equal(1);
         expect(intersection.y).to.equal(5);
         expect(intersection.z).to.equal(3);
+
     });
+
 });

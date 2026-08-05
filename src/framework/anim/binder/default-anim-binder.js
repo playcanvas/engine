@@ -16,7 +16,7 @@ class DefaultAnimBinder {
 
         this._mask = null;
 
-        const nodes = {};
+        const nodes = { };
         // cache node names so we can quickly resolve animation paths
         const flatten = function (node) {
             nodes[node.name] = node;
@@ -32,6 +32,7 @@ class DefaultAnimBinder {
         // #endif
 
         const findMeshInstances = function (node) {
+
             // walk up to the first parent node of entity type (skips internal nodes of Model)
             let object = node;
             while (object && !(object instanceof Entity)) {
@@ -50,10 +51,10 @@ class DefaultAnimBinder {
             return meshInstances;
         };
 
-        this.nodeCounts = {}; // map of node path -> count
-        this.activeNodes = []; // list of active nodes
+        this.nodeCounts = {};               // map of node path -> count
+        this.activeNodes = [];              // list of active nodes
         this.handlers = {
-            localPosition: function (node) {
+            'localPosition': function (node) {
                 const object = node.localPosition;
                 const func = function (value) {
                     object.set(...value);
@@ -61,7 +62,7 @@ class DefaultAnimBinder {
                 return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localPosition');
             },
 
-            localRotation: function (node) {
+            'localRotation': function (node) {
                 const object = node.localRotation;
                 const func = function (value) {
                     object.set(...value);
@@ -69,7 +70,7 @@ class DefaultAnimBinder {
                 return DefaultAnimBinder.createAnimTarget(func, 'quaternion', 4, node, 'localRotation');
             },
 
-            localScale: function (node) {
+            'localScale': function (node) {
                 const object = node.localScale;
                 const func = function (value) {
                     object.set(...value);
@@ -77,7 +78,7 @@ class DefaultAnimBinder {
                 return DefaultAnimBinder.createAnimTarget(func, 'vector', 3, node, 'localScale');
             },
 
-            weight: function (node, weightName) {
+            'weight': function (node, weightName) {
                 // Parse weight name: either a named weight ('name.something') or numeric index
                 if (weightName.indexOf('name.') === 0) {
                     weightName = weightName.replace('name.', '');
@@ -114,7 +115,7 @@ class DefaultAnimBinder {
                 }
                 return null;
             },
-            materialTexture: (node, textureName) => {
+            'materialTexture': (node, textureName) => {
                 const meshInstances = findMeshInstances(node);
                 if (meshInstances) {
                     let meshInstance;
@@ -132,14 +133,7 @@ class DefaultAnimBinder {
                                 meshInstance.material.update();
                             }
                         };
-                        return DefaultAnimBinder.createAnimTarget(
-                            func,
-                            'vector',
-                            1,
-                            node,
-                            'materialTexture',
-                            'material'
-                        );
+                        return DefaultAnimBinder.createAnimTarget(func, 'vector', 1, node, 'materialTexture', 'material');
                     }
                 }
 
@@ -187,15 +181,9 @@ class DefaultAnimBinder {
             node = this.nodes[path.entityPath[path.entityPath.length - 1] || ''];
 
             // #if _DEBUG
-            const fallbackGraphPath = AnimBinder.encode(
-                path.entityPath[path.entityPath.length - 1] || '',
-                'graph',
-                path.propertyPath
-            );
+            const fallbackGraphPath = AnimBinder.encode(path.entityPath[path.entityPath.length - 1] || '', 'graph', path.propertyPath);
             if (this.visitedFallbackGraphPaths[fallbackGraphPath] === 1) {
-                Debug.warnOnce(
-                    `Anim Binder: Multiple animation curves with the path ${fallbackGraphPath} are present in the ${this.graph.path} graph which may result in the incorrect binding of animations`
-                );
+                Debug.warnOnce(`Anim Binder: Multiple animation curves with the path ${fallbackGraphPath} are present in the ${this.graph.path} graph which may result in the incorrect binding of animations`);
             }
             if (!Number.isFinite(this.visitedFallbackGraphPaths[fallbackGraphPath])) {
                 this.visitedFallbackGraphPaths[fallbackGraphPath] = 0;
@@ -254,7 +242,7 @@ class DefaultAnimBinder {
         this.nodeCounts[node.path]--;
         if (this.nodeCounts[node.path] === 0) {
             const activeNodes = this.activeNodes;
-            const i = activeNodes.indexOf(node.node); // :(
+            const i = activeNodes.indexOf(node.node);  // :(
             const len = activeNodes.length;
             if (i < len - 1) {
                 activeNodes[i] = activeNodes[len - 1];

@@ -180,18 +180,12 @@ class RenderComponent extends Component {
         // the entity that represents the root bone if this render component has skinned meshes
 
         // render asset reference
-        this._assetReference = new AssetReference(
-            'asset',
-            this,
-            system.app.assets,
-            {
-                add: this._onRenderAssetAdded,
-                load: this._onRenderAssetLoad,
-                remove: this._onRenderAssetRemove,
-                unload: this._onRenderAssetUnload
-            },
-            this
-        );
+        this._assetReference = new AssetReference('asset', this, system.app.assets, {
+            add: this._onRenderAssetAdded,
+            load: this._onRenderAssetLoad,
+            remove: this._onRenderAssetRemove,
+            unload: this._onRenderAssetUnload
+        }, this);
 
         this._material = system.defaultMaterial;
 
@@ -302,17 +296,14 @@ class RenderComponent extends Component {
             if (value !== 'asset') {
                 let material = this._material;
                 if (!material || material === this.system.defaultMaterial) {
-                    material =
-                        this._materialReferences[0] &&
-                        this._materialReferences[0].asset &&
-                        this._materialReferences[0].asset.resource;
+                    material = this._materialReferences[0] &&
+                                this._materialReferences[0].asset &&
+                                this._materialReferences[0].asset.resource;
                 }
 
                 const primData = getShapePrimitive(this.system.app.graphicsDevice, value);
                 this._area = primData.area;
-                this.meshInstances = [
-                    new MeshInstance(primData.mesh, material || this.system.defaultMaterial, this.entity)
-                ];
+                this.meshInstances = [new MeshInstance(primData.mesh, material || this.system.defaultMaterial, this.entity)];
             }
         }
     }
@@ -340,8 +331,10 @@ class RenderComponent extends Component {
         this._meshInstances = value;
 
         if (this._meshInstances) {
+
             const mi = this._meshInstances;
             for (let i = 0; i < mi.length; i++) {
+
                 // if mesh instance was created without a node, assign it here
                 if (!mi[i].node) {
                     mi[i].node = this.entity;
@@ -407,6 +400,7 @@ class RenderComponent extends Component {
      */
     set castShadows(value) {
         if (this._castShadows !== value) {
+
             const mi = this._meshInstances;
 
             if (mi) {
@@ -455,6 +449,7 @@ class RenderComponent extends Component {
      */
     set receiveShadows(value) {
         if (this._receiveShadows !== value) {
+
             this._receiveShadows = value;
 
             const mi = this._meshInstances;
@@ -566,6 +561,7 @@ class RenderComponent extends Component {
      */
     set batchGroupId(value) {
         if (this._batchGroupId !== value) {
+
             if (this.entity.enabled && this._batchGroupId >= 0) {
                 this.system.app.batcher?.remove(BatchGroup.RENDER, this.batchGroupId, this.entity);
             }
@@ -634,20 +630,12 @@ class RenderComponent extends Component {
 
         for (let i = 0; i < value.length; i++) {
             if (!this._materialReferences[i]) {
-                this._materialReferences.push(
-                    new AssetReference(
-                        i,
-                        this,
-                        this.system.app.assets,
-                        {
-                            add: this._onMaterialAdded,
-                            load: this._onMaterialLoad,
-                            remove: this._onMaterialRemove,
-                            unload: this._onMaterialUnload
-                        },
-                        this
-                    )
-                );
+                this._materialReferences.push(new AssetReference(i, this, this.system.app.assets, {
+                    add: this._onMaterialAdded,
+                    load: this._onMaterialLoad,
+                    remove: this._onMaterialRemove,
+                    unload: this._onMaterialUnload
+                }, this));
             }
 
             if (value[i]) {
@@ -906,7 +894,7 @@ class RenderComponent extends Component {
             this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
-        const isAsset = this._type === 'asset';
+        const isAsset = (this._type === 'asset');
         if (this._meshInstances && this._meshInstances.length) {
             this.addToLayers();
         } else if (isAsset && this.asset) {
@@ -1023,11 +1011,7 @@ class RenderComponent extends Component {
 
                 // if skinned but does not have instance created yet
                 if (mesh.skin && !meshInstance.skinInstance) {
-                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(
-                        mesh.skin,
-                        this._rootBone,
-                        this.entity
-                    );
+                    meshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(mesh.skin, this._rootBone, this.entity);
                 }
             }
         }
@@ -1035,16 +1019,15 @@ class RenderComponent extends Component {
 
     _cloneMeshes(meshes) {
         if (meshes && meshes.length) {
+
             // cloned mesh instances
             const meshInstances = [];
 
             for (let i = 0; i < meshes.length; i++) {
+
                 // mesh instance
                 const mesh = meshes[i];
-                const material =
-                    this._materialReferences[i] &&
-                    this._materialReferences[i].asset &&
-                    this._materialReferences[i].asset.resource;
+                const material = this._materialReferences[i] && this._materialReferences[i].asset && this._materialReferences[i].asset.resource;
                 const meshInst = new MeshInstance(mesh, material || this.system.defaultMaterial, this.entity);
                 meshInstances.push(meshInst);
 
@@ -1062,6 +1045,7 @@ class RenderComponent extends Component {
     }
 
     _onRenderAssetUnload() {
+
         // when unloading asset, only remove asset mesh instances (type could have been already changed to 'box' or similar)
         if (this._type === 'asset') {
             this.destroyMeshInstances();

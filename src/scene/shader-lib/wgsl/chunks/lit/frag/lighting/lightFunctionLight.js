@@ -1,5 +1,5 @@
 // functions used to evaluate the light
-export default /* wgsl */ `
+export default /* wgsl */`
 #if defined(LIGHT{i})
 
 fn evaluateLight{i}(

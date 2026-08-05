@@ -3,12 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 var OrbitCamera = pc.createScript('orbitCamera');
 
-OrbitCamera.attributes.add('distanceMax', {
-    type: 'number',
-    default: 0,
-    title: 'Distance Max',
-    description: 'Setting this at 0 will give an infinite distance limit'
-});
+OrbitCamera.attributes.add('distanceMax', { type: 'number', default: 0, title: 'Distance Max', description: 'Setting this at 0 will give an infinite distance limit' });
 OrbitCamera.attributes.add('distanceMin', { type: 'number', default: 0, title: 'Distance Min' });
 OrbitCamera.attributes.add('pitchAngleMax', { type: 'number', default: 90, title: 'Pitch Angle Max (degrees)' });
 OrbitCamera.attributes.add('pitchAngleMin', { type: 'number', default: -90, title: 'Pitch Angle Min (degrees)' });
@@ -17,8 +12,7 @@ OrbitCamera.attributes.add('inertiaFactor', {
     type: 'number',
     default: 0,
     title: 'Inertia Factor',
-    description:
-        'Higher value means that the camera will continue moving after the user has stopped dragging. 0 is fully responsive.'
+    description: 'Higher value means that the camera will continue moving after the user has stopped dragging. 0 is fully responsive.'
 });
 
 OrbitCamera.attributes.add('focusEntity', {
@@ -33,6 +27,7 @@ OrbitCamera.attributes.add('frameOnStart', {
     title: 'Frame on Start',
     description: 'Frames the entity or scene at the start of the application."'
 });
+
 
 // Property to get and set the distance between the pivot point and camera
 // Clamped between this.distanceMin and this.distanceMax
@@ -58,6 +53,7 @@ Object.defineProperty(OrbitCamera.prototype, 'orthoHeight', {
     }
 });
 
+
 // Property to get and set the pitch of the camera around the pivot point (degrees)
 // Clamped between this.pitchAngleMin and this.pitchAngleMax
 // When set at 0, the camera angle is flat, looking along the horizon
@@ -70,6 +66,7 @@ Object.defineProperty(OrbitCamera.prototype, 'pitch', {
         this._targetPitch = this._clampPitchAngle(value);
     }
 });
+
 
 // Property to get and set the yaw of the camera around the pivot point (degrees)
 Object.defineProperty(OrbitCamera.prototype, 'yaw', {
@@ -95,6 +92,7 @@ Object.defineProperty(OrbitCamera.prototype, 'yaw', {
     }
 });
 
+
 // Property to get and set the world position of the pivot point that the camera orbits around
 Object.defineProperty(OrbitCamera.prototype, 'pivotPoint', {
     get: function () {
@@ -105,6 +103,7 @@ Object.defineProperty(OrbitCamera.prototype, 'pivotPoint', {
         this._pivotPoint.copy(value);
     }
 });
+
 
 // Moves the camera to look at an entity and all its children so they are all in the view
 OrbitCamera.prototype.focus = function (focusEntity) {
@@ -120,6 +119,7 @@ OrbitCamera.prototype.focus = function (focusEntity) {
 
     this._pivotPoint.copy(this._modelsAabb.center);
 };
+
 
 OrbitCamera.distanceBetween = new pc.Vec3();
 
@@ -145,12 +145,14 @@ OrbitCamera.prototype.resetAndLookAtPoint = function (resetPoint, lookAtPoint) {
     this._updatePosition();
 };
 
+
 // Set camera position to a world position and look at an entity in the scene
 // Useful if you have multiple models to swap between in a scene
 OrbitCamera.prototype.resetAndLookAtEntity = function (resetPoint, entity) {
     this._buildAabb(entity);
     this.resetAndLookAtPoint(resetPoint, this._modelsAabb.center);
 };
+
 
 // Set the camera at a specific, yaw, pitch and distance without inertia (instant cut)
 OrbitCamera.prototype.reset = function (yaw, pitch, distance) {
@@ -247,6 +249,7 @@ OrbitCamera.prototype.initialize = function () {
     });
 };
 
+
 OrbitCamera.prototype.update = function (dt) {
     // Add inertia, if any
     var t = this.inertiaFactor === 0 ? 1 : Math.min(dt / this.inertiaFactor, 1);
@@ -256,6 +259,7 @@ OrbitCamera.prototype.update = function (dt) {
 
     this._updatePosition();
 };
+
 
 OrbitCamera.prototype._updatePosition = function () {
     // Work out the camera position based on the pivot point, pitch, yaw and distance
@@ -269,11 +273,13 @@ OrbitCamera.prototype._updatePosition = function () {
     this.entity.setPosition(position);
 };
 
+
 OrbitCamera.prototype._removeInertia = function () {
     this._yaw = this._targetYaw;
     this._pitch = this._targetPitch;
     this._distance = this._targetDistance;
 };
+
 
 OrbitCamera.prototype._checkAspectRatio = function () {
     var height = this.app.graphicsDevice.height;
@@ -284,10 +290,9 @@ OrbitCamera.prototype._checkAspectRatio = function () {
     this.entity.camera.horizontalFov = height > width;
 };
 
+
 OrbitCamera.prototype._buildAabb = function (entity) {
-    var i,
-        m,
-        meshInstances = [];
+    var i, m, meshInstances = [];
 
     var renders = entity.findComponents('render');
     for (i = 0; i < renders.length; i++) {
@@ -349,6 +354,7 @@ OrbitCamera.prototype._buildAabb = function (entity) {
     }
 };
 
+
 OrbitCamera.prototype._calcYaw = function (quat) {
     var transformedForward = new pc.Vec3();
     quat.transformVector(pc.Vec3.FORWARD, transformedForward);
@@ -356,17 +362,21 @@ OrbitCamera.prototype._calcYaw = function (quat) {
     return Math.atan2(-transformedForward.x, -transformedForward.z) * pc.math.RAD_TO_DEG;
 };
 
+
 OrbitCamera.prototype._clampDistance = function (distance) {
     if (this.distanceMax > 0) {
         return pc.math.clamp(distance, this.distanceMin, this.distanceMax);
     }
     return Math.max(distance, this.distanceMin);
+
 };
+
 
 OrbitCamera.prototype._clampPitchAngle = function (pitch) {
     // Negative due as the pitch is inversed since the camera is orbiting the entity
     return pc.math.clamp(pitch, -this.pitchAngleMax, -this.pitchAngleMin);
 };
+
 
 OrbitCamera.quatWithoutYaw = new pc.Quat();
 OrbitCamera.yawOffset = new pc.Quat();
@@ -384,6 +394,7 @@ OrbitCamera.prototype._calcPitch = function (quat, yaw) {
 
     return Math.atan2(transformedForward.y, -transformedForward.z) * pc.math.RAD_TO_DEG;
 };
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                       Orbit Camera Mouse Input Script                      //
@@ -443,9 +454,11 @@ OrbitCameraInputMouse.prototype.initialize = function () {
     this.lastPoint = new pc.Vec2();
 };
 
+
 OrbitCameraInputMouse.fromWorldPoint = new pc.Vec3();
 OrbitCameraInputMouse.toWorldPoint = new pc.Vec3();
 OrbitCameraInputMouse.worldDiff = new pc.Vec3();
+
 
 OrbitCameraInputMouse.prototype.pan = function (screenPoint) {
     var fromWorldPoint = OrbitCameraInputMouse.fromWorldPoint;
@@ -465,6 +478,7 @@ OrbitCameraInputMouse.prototype.pan = function (screenPoint) {
     this.orbitCamera.pivotPoint.add(worldDiff);
 };
 
+
 OrbitCameraInputMouse.prototype.onMouseDown = function (event) {
     switch (event.button) {
         case pc.MOUSEBUTTON_LEFT:
@@ -476,6 +490,7 @@ OrbitCameraInputMouse.prototype.onMouseDown = function (event) {
             break;
     }
 };
+
 
 OrbitCameraInputMouse.prototype.onMouseUp = function (event) {
     switch (event.button) {
@@ -489,10 +504,12 @@ OrbitCameraInputMouse.prototype.onMouseUp = function (event) {
     }
 };
 
+
 OrbitCameraInputMouse.prototype.onMouseMove = function (event) {
     if (this.lookButtonDown) {
         this.orbitCamera.pitch -= event.dy * this.orbitSensitivity;
         this.orbitCamera.yaw -= event.dx * this.orbitSensitivity;
+
     } else if (this.panButtonDown) {
         this.pan(event);
     }
@@ -500,20 +517,22 @@ OrbitCameraInputMouse.prototype.onMouseMove = function (event) {
     this.lastPoint.set(event.x, event.y);
 };
 
+
 OrbitCameraInputMouse.prototype.onMouseWheel = function (event) {
     if (this.entity.camera.projection === pc.PROJECTION_PERSPECTIVE) {
-        this.orbitCamera.distance -=
-            event.wheelDelta * -2 * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
+        this.orbitCamera.distance -= event.wheelDelta * -2 * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
     } else {
         this.orbitCamera.orthoHeight -= event.wheelDelta * -2 * this.distanceSensitivity;
     }
     event.event.preventDefault();
 };
 
+
 OrbitCameraInputMouse.prototype.onMouseOut = function (event) {
     this.lookButtonDown = false;
     this.panButtonDown = false;
 };
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                       Orbit Camera Touch Input Script                      //
@@ -562,13 +581,15 @@ OrbitCameraInputTouch.prototype.initialize = function () {
     }
 };
 
+
 OrbitCameraInputTouch.prototype.getPinchDistance = function (pointA, pointB) {
     // Return the distance between the two points
     var dx = pointA.x - pointB.x;
     var dy = pointA.y - pointB.y;
 
-    return Math.sqrt(dx * dx + dy * dy);
+    return Math.sqrt((dx * dx) + (dy * dy));
 };
+
 
 OrbitCameraInputTouch.prototype.calcMidPoint = function (pointA, pointB, result) {
     result.set(pointB.x - pointA.x, pointB.y - pointA.y);
@@ -577,12 +598,14 @@ OrbitCameraInputTouch.prototype.calcMidPoint = function (pointA, pointB, result)
     result.y += pointA.y;
 };
 
+
 OrbitCameraInputTouch.prototype.onTouchStartEndCancel = function (event) {
     // We only care about the first touch for camera rotation. As the user touches the screen,
     // we stored the current touch position
     var touches = event.touches;
     if (touches.length === 1) {
         this.lastTouchPoint.set(touches[0].x, touches[0].y);
+
     } else if (touches.length === 2) {
         // If there are 2 touches on the screen, then set the pinch distance
         this.lastPinchDistance = this.getPinchDistance(touches[0], touches[1]);
@@ -590,9 +613,11 @@ OrbitCameraInputTouch.prototype.onTouchStartEndCancel = function (event) {
     }
 };
 
+
 OrbitCameraInputTouch.fromWorldPoint = new pc.Vec3();
 OrbitCameraInputTouch.toWorldPoint = new pc.Vec3();
 OrbitCameraInputTouch.worldDiff = new pc.Vec3();
+
 
 OrbitCameraInputTouch.prototype.pan = function (midPoint) {
     var fromWorldPoint = OrbitCameraInputTouch.fromWorldPoint;
@@ -612,6 +637,7 @@ OrbitCameraInputTouch.prototype.pan = function (midPoint) {
     this.orbitCamera.pivotPoint.add(worldDiff);
 };
 
+
 OrbitCameraInputTouch.pinchMidPoint = new pc.Vec2();
 
 OrbitCameraInputTouch.prototype.onTouchMove = function (event) {
@@ -627,14 +653,14 @@ OrbitCameraInputTouch.prototype.onTouchMove = function (event) {
         this.orbitCamera.yaw -= (touch.x - this.lastTouchPoint.x) * this.orbitSensitivity;
 
         this.lastTouchPoint.set(touch.x, touch.y);
+
     } else if (touches.length === 2) {
         // Calculate the difference in pinch distance since the last event
         var currentPinchDistance = this.getPinchDistance(touches[0], touches[1]);
         var diffInPinchDistance = currentPinchDistance - this.lastPinchDistance;
         this.lastPinchDistance = currentPinchDistance;
 
-        this.orbitCamera.distance -=
-            diffInPinchDistance * this.distanceSensitivity * 0.1 * (this.orbitCamera.distance * 0.1);
+        this.orbitCamera.distance -= (diffInPinchDistance * this.distanceSensitivity * 0.1) * (this.orbitCamera.distance * 0.1);
 
         // Calculate pan difference
         this.calcMidPoint(touches[0], touches[1], pinchMidPoint);

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform material_heightMapFactor: f32;
 
 fn getParallax() {

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn getReflDir(worldNormal: vec3f, viewDir: vec3f, gloss: f32, tbn: mat3x3f) {
     let roughness: f32 = sqrt(1.0 - min(gloss, 1.0));
 

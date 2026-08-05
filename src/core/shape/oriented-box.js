@@ -48,6 +48,7 @@ class OrientedBox {
      * to (0.5, 0.5, 0.5).
      */
     constructor(worldTransform = new Mat4(), halfExtents) {
+
         if (halfExtents) {
             this.halfExtents.copy(halfExtents);
         }

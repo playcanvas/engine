@@ -1,5 +1,5 @@
 // Write function for compact work buffer format (20 bytes/splat).
-export default /* glsl */ `
+export default /* glsl */`
 void writeSplat(vec3 center, vec4 rotation, vec3 scale, vec4 color) {
     // Pack RGB as 11+11+10 bits into R32U, range [0, 4]
     vec3 rgb = clamp(color.rgb, 0.0, 4.0);

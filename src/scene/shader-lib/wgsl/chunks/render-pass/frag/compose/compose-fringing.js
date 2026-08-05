@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     #ifdef FRINGING
         uniform fringingIntensity: f32;
 

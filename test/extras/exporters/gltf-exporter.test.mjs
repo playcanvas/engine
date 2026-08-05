@@ -4,6 +4,7 @@ import { GltfExporter } from '../../../src/extras/exporters/gltf-exporter.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 
 describe('GltfExporter', function () {
+
     const exportMaterial = (aoIntensity) => {
         const texture = { name: 'ao' };
         const material = new StandardMaterial();

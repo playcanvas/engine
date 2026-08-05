@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     varying vec2 uv0;
     uniform samplerCube blitTexture;
     uniform mat4 invViewProj;

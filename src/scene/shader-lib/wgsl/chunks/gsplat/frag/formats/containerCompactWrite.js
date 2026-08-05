@@ -1,5 +1,5 @@
 // Write function for compact work buffer format (20 bytes/splat).
-export default /* wgsl */ `
+export default /* wgsl */`
 fn writeSplat(center: vec3f, rotation: vec4f, scale: vec3f, color: vec4f) {
     // Pack RGB as 11+11+10 bits into R32U, range [0, 4]
     let rgb = clamp(color.rgb, vec3f(0.0), vec3f(4.0));

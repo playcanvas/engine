@@ -1,5 +1,5 @@
 // Soft directional shadows PCSS - with and without blocker search.
-export default /* wgsl */ `
+export default /* wgsl */`
 
 fn fractSinRand(uv: vec2f) -> f32 {
     let PI: f32 = 3.141592653589793;

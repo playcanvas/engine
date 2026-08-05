@@ -11,7 +11,7 @@ class LuminosityEffect extends pc.PostEffect {
     constructor(graphicsDevice) {
         super(graphicsDevice);
 
-        const fshader = /* glsl */ `
+        const fshader = /* glsl */`
             uniform sampler2D uColorBuffer;
 
             varying vec2 vUv0;

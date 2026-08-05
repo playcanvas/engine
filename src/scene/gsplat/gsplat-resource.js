@@ -1,7 +1,9 @@
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
+import {
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32U
+} from '../../platform/graphics/constants.js';
 import { GSplatResourceBase } from './gsplat-resource-base.js';
 import { GSplatFormat } from './gsplat-format.js';
 
@@ -103,9 +105,9 @@ class GSplatResource extends GSplatResourceBase {
         const SH_C0 = 0.28209479177387814;
 
         for (let i = 0; i < this.numSplats; ++i) {
-            const r = cr[i] * SH_C0 + 0.5;
-            const g = cg[i] * SH_C0 + 0.5;
-            const b = cb[i] * SH_C0 + 0.5;
+            const r = (cr[i] * SH_C0 + 0.5);
+            const g = (cg[i] * SH_C0 + 0.5);
+            const b = (cb[i] * SH_C0 + 0.5);
             const a = activated ? ca[i] : 1 / (1 + Math.exp(-ca[i]));
 
             data[i * 4 + 0] = float2Half(r);
@@ -121,6 +123,7 @@ class GSplatResource extends GSplatResourceBase {
      * @param {GSplatData} gsplatData - The source data
      */
     updateTransformData(gsplatData) {
+
         const float2Half = FloatPacking.float2Half;
 
         const transformA = this.streams.getTexture('transformA');
@@ -212,37 +215,37 @@ class GSplatResource extends GSplatResourceBase {
 
             // normalize
             for (let j = 0; j < numCoeffs; ++j) {
-                c[j * 3 + 0] = Math.max(0, Math.min(t11, Math.floor(((c[j * 3 + 0] / max) * 0.5 + 0.5) * t11 + 0.5)));
-                c[j * 3 + 1] = Math.max(0, Math.min(t10, Math.floor(((c[j * 3 + 1] / max) * 0.5 + 0.5) * t10 + 0.5)));
-                c[j * 3 + 2] = Math.max(0, Math.min(t11, Math.floor(((c[j * 3 + 2] / max) * 0.5 + 0.5) * t11 + 0.5)));
+                c[j * 3 + 0] = Math.max(0, Math.min(t11, Math.floor((c[j * 3 + 0] / max * 0.5 + 0.5) * t11 + 0.5)));
+                c[j * 3 + 1] = Math.max(0, Math.min(t10, Math.floor((c[j * 3 + 1] / max * 0.5 + 0.5) * t10 + 0.5)));
+                c[j * 3 + 2] = Math.max(0, Math.min(t11, Math.floor((c[j * 3 + 2] / max * 0.5 + 0.5) * t11 + 0.5)));
             }
 
             // pack
             float32[0] = max;
 
             sh1to3Data[i * 4 + 0] = uint32[0];
-            sh1to3Data[i * 4 + 1] = (c[0] << 21) | (c[1] << 11) | c[2];
-            sh1to3Data[i * 4 + 2] = (c[3] << 21) | (c[4] << 11) | c[5];
-            sh1to3Data[i * 4 + 3] = (c[6] << 21) | (c[7] << 11) | c[8];
+            sh1to3Data[i * 4 + 1] = c[0] << 21 | c[1] << 11 | c[2];
+            sh1to3Data[i * 4 + 2] = c[3] << 21 | c[4] << 11 | c[5];
+            sh1to3Data[i * 4 + 3] = c[6] << 21 | c[7] << 11 | c[8];
 
             if (this.shBands > 1) {
-                sh4to7Data[i * 4 + 0] = (c[9] << 21) | (c[10] << 11) | c[11];
-                sh4to7Data[i * 4 + 1] = (c[12] << 21) | (c[13] << 11) | c[14];
-                sh4to7Data[i * 4 + 2] = (c[15] << 21) | (c[16] << 11) | c[17];
-                sh4to7Data[i * 4 + 3] = (c[18] << 21) | (c[19] << 11) | c[20];
+                sh4to7Data[i * 4 + 0] = c[9] << 21 | c[10] << 11 | c[11];
+                sh4to7Data[i * 4 + 1] = c[12] << 21 | c[13] << 11 | c[14];
+                sh4to7Data[i * 4 + 2] = c[15] << 21 | c[16] << 11 | c[17];
+                sh4to7Data[i * 4 + 3] = c[18] << 21 | c[19] << 11 | c[20];
 
                 if (this.shBands > 2) {
-                    sh8to11Data[i * 4 + 0] = (c[21] << 21) | (c[22] << 11) | c[23];
-                    sh8to11Data[i * 4 + 1] = (c[24] << 21) | (c[25] << 11) | c[26];
-                    sh8to11Data[i * 4 + 2] = (c[27] << 21) | (c[28] << 11) | c[29];
-                    sh8to11Data[i * 4 + 3] = (c[30] << 21) | (c[31] << 11) | c[32];
+                    sh8to11Data[i * 4 + 0] = c[21] << 21 | c[22] << 11 | c[23];
+                    sh8to11Data[i * 4 + 1] = c[24] << 21 | c[25] << 11 | c[26];
+                    sh8to11Data[i * 4 + 2] = c[27] << 21 | c[28] << 11 | c[29];
+                    sh8to11Data[i * 4 + 3] = c[30] << 21 | c[31] << 11 | c[32];
 
-                    sh12to15Data[i * 4 + 0] = (c[33] << 21) | (c[34] << 11) | c[35];
-                    sh12to15Data[i * 4 + 1] = (c[36] << 21) | (c[37] << 11) | c[38];
-                    sh12to15Data[i * 4 + 2] = (c[39] << 21) | (c[40] << 11) | c[41];
-                    sh12to15Data[i * 4 + 3] = (c[42] << 21) | (c[43] << 11) | c[44];
+                    sh12to15Data[i * 4 + 0] = c[33] << 21 | c[34] << 11 | c[35];
+                    sh12to15Data[i * 4 + 1] = c[36] << 21 | c[37] << 11 | c[38];
+                    sh12to15Data[i * 4 + 2] = c[39] << 21 | c[40] << 11 | c[41];
+                    sh12to15Data[i * 4 + 3] = c[42] << 21 | c[43] << 11 | c[44];
                 } else {
-                    sh8to11Data[i] = (c[21] << 21) | (c[22] << 11) | c[23];
+                    sh8to11Data[i] = c[21] << 21 | c[22] << 11 | c[23];
                 }
             }
         }

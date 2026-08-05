@@ -163,7 +163,7 @@ class Quat {
      * console.log("The two quaternions are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
-        return this.x === rhs.x && this.y === rhs.y && this.z === rhs.z && this.w === rhs.w;
+        return ((this.x === rhs.x) && (this.y === rhs.y) && (this.z === rhs.z) && (this.w === rhs.w));
     }
 
     /**
@@ -179,12 +179,10 @@ class Quat {
      * console.log("The two quaternions are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
      */
     equalsApprox(rhs, epsilon = 1e-6) {
-        return (
-            Math.abs(this.x - rhs.x) < epsilon &&
-            Math.abs(this.y - rhs.y) < epsilon &&
-            Math.abs(this.z - rhs.z) < epsilon &&
-            Math.abs(this.w - rhs.w) < epsilon
-        );
+        return (Math.abs(this.x - rhs.x) < epsilon) &&
+            (Math.abs(this.y - rhs.y) < epsilon) &&
+            (Math.abs(this.z - rhs.z) < epsilon) &&
+            (Math.abs(this.w - rhs.w) < epsilon);
     }
 
     /**
@@ -316,6 +314,7 @@ class Quat {
     lengthSq() {
         return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
     }
+
 
     /**
      * Performs a linear interpolation between two quaternions. The result of the interpolation
@@ -587,7 +586,9 @@ class Quat {
         let m22 = d[10];
 
         // if negative the space is inverted so flip X axis to restore right-handedness
-        const det = m00 * (m11 * m22 - m12 * m21) - m01 * (m10 * m22 - m12 * m20) + m02 * (m10 * m21 - m11 * m20);
+        const det = m00 * (m11 * m22 - m12 * m21) -
+                    m01 * (m10 * m22 - m12 * m20) +
+                    m02 * (m10 * m21 - m11 * m20);
         if (det < 0) {
             m00 = -m00;
             m01 = -m01;
@@ -738,10 +739,10 @@ class Quat {
         // If theta = 180 degrees then result is not fully defined
         // we could rotate around any axis normal to qa or qb
         if (Math.abs(sinHalfTheta) < 0.001) {
-            this.w = lw * 0.5 + rw * 0.5;
-            this.x = lx * 0.5 + rx * 0.5;
-            this.y = ly * 0.5 + ry * 0.5;
-            this.z = lz * 0.5 + rz * 0.5;
+            this.w = (lw * 0.5 + rw * 0.5);
+            this.x = (lx * 0.5 + rx * 0.5);
+            this.y = (ly * 0.5 + ry * 0.5);
+            this.z = (lz * 0.5 + rz * 0.5);
             return this;
         }
 
@@ -749,10 +750,10 @@ class Quat {
         const ratioB = Math.sin(alpha * halfTheta) / sinHalfTheta;
 
         // Calculate Quaternion.
-        this.w = lw * ratioA + rw * ratioB;
-        this.x = lx * ratioA + rx * ratioB;
-        this.y = ly * ratioA + ry * ratioB;
-        this.z = lz * ratioA + rz * ratioB;
+        this.w = (lw * ratioA + rw * ratioB);
+        this.x = (lx * ratioA + rx * ratioB);
+        this.y = (ly * ratioA + ry * ratioB);
+        this.z = (lz * ratioA + rz * ratioB);
         return this;
     }
 
@@ -772,13 +773,8 @@ class Quat {
      * const tv = q.transformVector(v);
      */
     transformVector(vec, res = new Vec3()) {
-        const x = vec.x,
-            y = vec.y,
-            z = vec.z;
-        const qx = this.x,
-            qy = this.y,
-            qz = this.z,
-            qw = this.w;
+        const x = vec.x, y = vec.y, z = vec.z;
+        const qx = this.x, qy = this.y, qz = this.z, qw = this.w;
 
         // calculate quat * vec
         const ix = qw * x + qy * z - qz * y;

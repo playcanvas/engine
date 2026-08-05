@@ -442,9 +442,7 @@ class ScaleGizmo extends TransformGizmo {
             this._shapes.yz.entity.enabled = enabled;
             changed = true;
         }
-        flipped = this.flipPlanes
-            ? v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0))
-            : Vec3.ZERO;
+        flipped = this.flipPlanes ? v2.set(0, +(v1.dot(this.root.forward) < 0), +(v1.dot(this.root.up) < 0)) : Vec3.ZERO;
         if (!this._shapes.yz.flipped.equals(flipped)) {
             this._shapes.yz.flipped = flipped;
             changed = true;
@@ -466,9 +464,7 @@ class ScaleGizmo extends TransformGizmo {
             this._shapes.xz.entity.enabled = enabled;
             changed = true;
         }
-        flipped = this.flipPlanes
-            ? v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0))
-            : Vec3.ZERO;
+        flipped = this.flipPlanes ? v2.set(+(v1.dot(this.root.forward) > 0), 0, +(v1.dot(this.root.right) > 0)) : Vec3.ZERO;
         if (!this._shapes.xz.flipped.equals(flipped)) {
             this._shapes.xz.flipped = flipped;
             changed = true;

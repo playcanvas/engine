@@ -1,5 +1,5 @@
 // Read functions for Container GSplat format
-export default /* glsl */ `
+export default /* glsl */`
 vec3 getCenter() {
     #include "gsplatContainerUserReadVS"
     return splatCenter;

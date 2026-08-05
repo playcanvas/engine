@@ -1,5 +1,5 @@
 // Splat identification struct and helper - shared between rendering and processing contexts
-export default /* wgsl */ `
+export default /* wgsl */`
 
 // Splat identification for texture sampling
 struct Splat {

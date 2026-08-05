@@ -7,6 +7,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('ScriptRegistry', function () {
+
     let app;
 
     beforeEach(function () {
@@ -21,6 +22,7 @@ describe('ScriptRegistry', function () {
     });
 
     describe('#add', function () {
+
         it('registers an ESM Script under its static scriptName', function () {
             class EsmScript extends Script {
                 static scriptName = 'esmScript';
@@ -122,10 +124,12 @@ describe('ScriptRegistry', function () {
             expect(added).to.equal(false);
             expect(app.scripts.has('destroy')).to.equal(false);
         });
+
     });
 
     // a subclass must register under its own name, not inherit (and overwrite) its base's name
     describe('#add subclassing', function () {
+
         it('a subclass with its own scriptName does not overwrite its base (registerScript)', function () {
             class Base extends Script {
                 static scriptName = 'baseScript';
@@ -214,5 +218,7 @@ describe('ScriptRegistry', function () {
             expect(app.scripts.get('baseExplicit')).to.equal(Base);
             expect(app.scripts.get('derivedExplicit')).to.equal(Derived);
         });
+
     });
+
 });

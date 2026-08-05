@@ -271,6 +271,7 @@ class ModelComponent extends Component {
                 this.model = null;
             }
         } else {
+
             // get / create mesh of type
             const primData = getShapePrimitive(this.system.app.graphicsDevice, value);
             this._area = primData.area;
@@ -436,6 +437,7 @@ class ModelComponent extends Component {
      */
     set lightmapped(value) {
         if (value !== this._lightmapped) {
+
             this._lightmapped = value;
 
             if (this._model) {
@@ -879,7 +881,7 @@ class ModelComponent extends Component {
         }
 
         if (!this._materialEvents[index]) {
-            this._materialEvents[index] = {};
+            this._materialEvents[index] = { };
         }
 
         this._materialEvents[index][evt] = {
@@ -988,7 +990,7 @@ class ModelComponent extends Component {
             this._evtLayerRemoved = layers.on('remove', this.onLayerRemoved, this);
         }
 
-        const isAsset = this._type === 'asset';
+        const isAsset = (this._type === 'asset');
 
         let asset;
         if (this._model) {
@@ -1167,7 +1169,8 @@ class ModelComponent extends Component {
      * @param {Asset} asset - The material asset on which an asset change event has been fired.
      * @private
      */
-    _onMaterialAssetChange(asset) {}
+    _onMaterialAssetChange(asset) {
+    }
 
     /**
      * @param {Asset} asset - The model asset to bind events to.

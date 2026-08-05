@@ -4,9 +4,11 @@
  * @ignore
  */
 class NullVertexBuffer {
-    destroy(device) {}
+    destroy(device) {
+    }
 
-    unlock(vertexBuffer) {}
+    unlock(vertexBuffer) {
+    }
 }
 
 export { NullVertexBuffer };

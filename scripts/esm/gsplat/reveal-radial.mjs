@@ -1,7 +1,7 @@
 import { Vec3, Color } from 'playcanvas';
 import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
-const shaderGLSL = /* glsl */ `
+const shaderGLSL = /* glsl */`
 uniform float uTime;
 uniform vec3 uCenter;
 uniform float uSpeed;
@@ -129,7 +129,7 @@ void modifySplatColor(vec3 center, inout vec4 color) {
 }
 `;
 
-const shaderWGSL = /* wgsl */ `
+const shaderWGSL = /* wgsl */`
 uniform uTime: f32;
 uniform uCenter: vec3f;
 uniform uSpeed: f32;
@@ -406,7 +406,7 @@ class GSplatRevealRadial extends GSplatShaderEffect {
         // endRadius = speed * t + 0.5 * acceleration * t²
         if (this.acceleration === 0) {
             // No acceleration: simple linear motion
-            return liftStartTime + this.endRadius / this.speed;
+            return liftStartTime + (this.endRadius / this.speed);
         }
         // With acceleration: use quadratic formula
         // 0.5 * a * t² + v * t - d = 0
@@ -418,6 +418,7 @@ class GSplatRevealRadial extends GSplatShaderEffect {
         }
         const t = (-this.speed + Math.sqrt(discriminant)) / this.acceleration;
         return liftStartTime + t;
+
     }
 
     /**

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 
 attribute instance_line1: vec4f;
 attribute instance_line2: vec4f;

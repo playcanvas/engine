@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 var texture_cubeMap: texture_cube<f32>;
 var texture_cubeMapSampler: sampler;
 uniform material_reflectivity: f32;

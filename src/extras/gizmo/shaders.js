@@ -10,7 +10,7 @@ export const unlitShader = {
     attributes: {
         vertex_position: SEMANTIC_POSITION
     },
-    vertexGLSL: /* glsl */ `
+    vertexGLSL: /* glsl */`
         attribute vec3 vertex_position;
     
         uniform mat4 matrix_model;
@@ -21,7 +21,7 @@ export const unlitShader = {
             gl_Position.z = clamp(gl_Position.z, -abs(gl_Position.w), abs(gl_Position.w));
         }
     `,
-    fragmentGLSL: /* glsl */ `
+    fragmentGLSL: /* glsl */`
         #include "gammaPS"
     
         precision highp float;
@@ -39,7 +39,7 @@ export const unlitShader = {
             #endif
         }
     `,
-    vertexWGSL: /* wgsl */ `
+    vertexWGSL: /* wgsl */`
         attribute vertex_position: vec3f;
 
         uniform matrix_model: mat4x4f;
@@ -54,7 +54,7 @@ export const unlitShader = {
             return output;
         }
     `,
-    fragmentWGSL: /* wgsl */ `
+    fragmentWGSL: /* wgsl */`
         #include "gammaPS"
 
         uniform uColor: vec4f;

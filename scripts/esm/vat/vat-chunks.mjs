@@ -1,10 +1,6 @@
 import {
-    SEMANTIC_ATTR8,
-    SEMANTIC_ATTR11,
-    SEMANTIC_ATTR12,
-    SEMANTIC_ATTR14,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
+    SEMANTIC_ATTR8, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR14,
+    SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
 } from 'playcanvas';
 
 /**
@@ -363,6 +359,7 @@ export const vatChunks = {
  * @param {VatData} data - The VAT data the texture was created from.
  */
 export function setupVatMaterial(material, vatMap, data) {
+
     material.shaderChunksVersion = VAT_CHUNKS_VERSION;
 
     const glsl = material.getShaderChunks(SHADERLANGUAGE_GLSL);
@@ -389,7 +386,11 @@ export function setupVatMaterial(material, vatMap, data) {
     const min = data.bounds.getMin();
     const size = data.bounds.halfExtents;
     material.setParameter('vatBoundsMin', [min.x, min.y, min.z]);
-    material.setParameter('vatBoundsScale', [(size.x * 2) / 65535, (size.y * 2) / 65535, (size.z * 2) / 65535]);
+    material.setParameter('vatBoundsScale', [
+        (size.x * 2) / 65535,
+        (size.y * 2) / 65535,
+        (size.z * 2) / 65535
+    ]);
 
     // the layout of the texture, used to wrap the flat texel index into coordinates
     material.setParameter('vatFrameCount', data.frameCount);

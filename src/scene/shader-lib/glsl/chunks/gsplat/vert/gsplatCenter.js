@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 uniform mat4 matrix_model;
 uniform mat4 matrix_view;

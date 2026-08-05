@@ -5,6 +5,7 @@ import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('SceneRegistry', function () {
+
     let app;
 
     beforeEach(function () {
@@ -19,14 +20,17 @@ describe('SceneRegistry', function () {
     });
 
     describe('#constructor', function () {
+
         it('creates a new scene registry', function () {
             const registry = new SceneRegistry(app);
 
             expect(registry.list().length).to.equal(0);
         });
+
     });
 
     describe('#add', function () {
+
         it('adds a single scene to the registry', function () {
             const registry = new SceneRegistry(app);
 
@@ -50,9 +54,11 @@ describe('SceneRegistry', function () {
             expect(registry.find('New Scene 2').url).to.equal('/test2.json');
             expect(registry.find('New Scene 3').url).to.equal('/test3.json');
         });
+
     });
 
     describe('#find', function () {
+
         it('find', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene', '/test.json');
@@ -62,9 +68,11 @@ describe('SceneRegistry', function () {
             expect(result.name).to.equal('New Scene');
             expect(result.url).to.equal('/test.json');
         });
+
     });
 
     describe('#findByUrl', function () {
+
         it('url index', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
@@ -73,9 +81,11 @@ describe('SceneRegistry', function () {
             expect(result.name).to.equal('New Scene 1');
             expect(result.url).to.equal('/test1.json');
         });
+
     });
 
     describe('#list', function () {
+
         it('lists the scenes in the registry', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene 1', '/test1.json');
@@ -87,6 +97,7 @@ describe('SceneRegistry', function () {
             expect(registry.list()[1].url).to.equal('/test2.json');
             expect(registry.list()[2].url).to.equal('/test3.json');
         });
+
     });
 
     const promisedLoadSceneData = function (registry, sceneItemOrNameOrUrl) {
@@ -102,6 +113,7 @@ describe('SceneRegistry', function () {
     };
 
     describe('#loadSceneData', function () {
+
         const assetPath = '/test/assets/';
 
         it('load and cache, check data is valid, unload data, check data is removed with SceneItem', async () => {
@@ -159,6 +171,7 @@ describe('SceneRegistry', function () {
     });
 
     describe('#remove', function () {
+
         it('remove', function () {
             const registry = new SceneRegistry(app);
             registry.add('New Scene', '/test.json');
@@ -197,5 +210,7 @@ describe('SceneRegistry', function () {
             expect(registry.findByUrl('/test2.json')).to.equal(null);
             expect(registry.findByUrl('/test3.json').name).to.equal('New Scene 3');
         });
+
     });
+
 });

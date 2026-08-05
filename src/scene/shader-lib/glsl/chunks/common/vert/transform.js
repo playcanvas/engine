@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 #ifdef PIXELSNAP
 uniform vec4 uScreenSize;
 #endif

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn combineColor(albedo: vec3f, sheenSpecularity: vec3f, clearcoatSpecularity: f32) -> vec3f {
     var ret: vec3f = vec3f(0.0);
 

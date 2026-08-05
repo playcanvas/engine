@@ -41,9 +41,7 @@ function setupWaterWorldChunks(device) {
 
     // fog chunk override - matches the engine 'fogPS' chunk, with a per-pixel height gate
     const glslChunks = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
-    glslChunks.set(
-        'fogPS',
-        /* glsl */ `
+    glslChunks.set('fogPS', /* glsl */`
         float dBlendModeFogFactor = 1.0;
 
         #if (FOG != NONE)
@@ -102,12 +100,9 @@ function setupWaterWorldChunks(device) {
                 return color;
             }
         #endif
-    `
-    );
+    `);
 
-    glslChunks.set(
-        'litUserDeclarationPS',
-        /* glsl */ `
+    glslChunks.set('litUserDeclarationPS', /* glsl */`
         #if defined(WATER_CAUSTICS) && !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
             uniform float waterLevel;
             uniform sampler2D waterCausticsMap;
@@ -115,12 +110,9 @@ function setupWaterWorldChunks(device) {
             uniform vec3 waterCausticsColor;
             uniform float waterTime;
         #endif
-    `
-    );
+    `);
 
-    glslChunks.set(
-        'litUserMainEndPS',
-        /* glsl */ `
+    glslChunks.set('litUserMainEndPS', /* glsl */`
         #if defined(WATER_CAUSTICS) && !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
         {
             float depthBelow = waterLevel - vPositionW.y;
@@ -138,14 +130,11 @@ function setupWaterWorldChunks(device) {
             }
         }
         #endif
-    `
-    );
+    `);
 
     // WGSL equivalents
     const wgslChunks = ShaderChunks.get(device, SHADERLANGUAGE_WGSL);
-    wgslChunks.set(
-        'fogPS',
-        /* wgsl */ `
+    wgslChunks.set('fogPS', /* wgsl */`
         #include "fogMathPS"
 
         var<private> dBlendModeFogFactor : f32 = 1.0;
@@ -206,12 +195,9 @@ function setupWaterWorldChunks(device) {
                 #endif
             }
         #endif
-    `
-    );
+    `);
 
-    wgslChunks.set(
-        'litUserDeclarationPS',
-        /* wgsl */ `
+    wgslChunks.set('litUserDeclarationPS', /* wgsl */`
         #if defined(WATER_CAUSTICS) && !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
             uniform waterLevel : f32;
             var waterCausticsMap : texture_2d<f32>;
@@ -220,12 +206,9 @@ function setupWaterWorldChunks(device) {
             uniform waterCausticsColor : vec3f;
             uniform waterTime : f32;
         #endif
-    `
-    );
+    `);
 
-    wgslChunks.set(
-        'litUserMainEndPS',
-        /* wgsl */ `
+    wgslChunks.set('litUserMainEndPS', /* wgsl */`
         #if defined(WATER_CAUSTICS) && !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
         {
             // no branch here - textureSample requires uniform control flow in WGSL
@@ -242,8 +225,7 @@ function setupWaterWorldChunks(device) {
             output.color = vec4f(output.color.rgb * (vec3f(1.0) + uniform.waterCausticsColor * (caustic * uniform.waterCausticsParams.z * gate)), output.color.a);
         }
         #endif
-    `
-    );
+    `);
 }
 
 // Reusable objects to avoid allocations
@@ -253,7 +235,7 @@ const _flippedNormal = new Vec3();
 // Shared wave functions - Gerstner waves, 3 octaves derived from the main direction
 // ----------------------
 
-const waveFunctionsGLSL = /* glsl */ `
+const waveFunctionsGLSL = /* glsl */`
     #ifdef WATER_WAVES
         uniform vec4 uWaveParams;  // x: amplitude, y: frequency, z: speed, w: steepness
         uniform vec2 uWaveDir;
@@ -329,7 +311,7 @@ const waveFunctionsGLSL = /* glsl */ `
     #endif
 `;
 
-const waveFunctionsWGSL = /* wgsl */ `
+const waveFunctionsWGSL = /* wgsl */`
     #ifdef WATER_WAVES
         uniform uWaveParams: vec4f;  // x: amplitude, y: frequency, z: speed, w: steepness
         uniform uWaveDir: vec2f;
@@ -409,7 +391,7 @@ const waveFunctionsWGSL = /* wgsl */ `
 // GLSL Shaders
 // ----------------------
 
-const vertexGLSL = /* glsl */ `
+const vertexGLSL = /* glsl */`
     #ifdef WATER_DEPTH_EFFECTS
         #include "screenDepthPS"
     #endif
@@ -450,7 +432,7 @@ const vertexGLSL = /* glsl */ `
     }
 `;
 
-const fragmentGLSL = /* glsl */ `
+const fragmentGLSL = /* glsl */`
     #include "gammaPS"
     #ifdef WATER_DEPTH_EFFECTS
         #include "screenDepthPS"
@@ -671,7 +653,7 @@ const fragmentGLSL = /* glsl */ `
 // WGSL Shaders
 // ----------------------
 
-const vertexWGSL = /* wgsl */ `
+const vertexWGSL = /* wgsl */`
     #ifdef WATER_DEPTH_EFFECTS
         #include "screenDepthPS"
     #endif
@@ -717,7 +699,7 @@ const vertexWGSL = /* wgsl */ `
     }
 `;
 
-const fragmentWGSL = /* wgsl */ `
+const fragmentWGSL = /* wgsl */`
     #include "gammaPS"
     #ifdef WATER_DEPTH_EFFECTS
         #include "screenDepthPS"
@@ -1460,10 +1442,9 @@ class Water extends Script {
     _underwaterFogColorArray = [0, 0, 0];
 
     initialize() {
+
         if (!this.cameraEntity?.camera) {
-            console.error(
-                'Water script requires cameraEntity attribute to be set to an entity with a camera component.'
-            );
+            console.error('Water script requires cameraEntity attribute to be set to an entity with a camera component.');
             return;
         }
 
@@ -1492,7 +1473,7 @@ class Water extends Script {
         this._material.cull = CULLFACE_NONE;
 
         const meshInstances = this.entity.render.meshInstances;
-        this._originalMaterials = meshInstances.map((mi) => mi.material);
+        this._originalMaterials = meshInstances.map(mi => mi.material);
         meshInstances.forEach((mi) => {
             mi.material = this._material;
         });
@@ -1508,7 +1489,7 @@ class Water extends Script {
         this._fallbackNormalMap.unlock();
 
         // update the rendering state after all script updates, when the main camera is final
-        const evtUpdate = this.app.on('update', (dt) => this._frameUpdate(dt));
+        const evtUpdate = this.app.on('update', dt => this._frameUpdate(dt));
 
         this.on('disable', () => {
             this._enableCameras(false);
@@ -1624,6 +1605,7 @@ class Water extends Script {
     }
 
     _frameUpdate(dt) {
+
         if (!this._material || !this.cameraEntity?.camera) {
             return;
         }
@@ -1663,10 +1645,7 @@ class Water extends Script {
         // planar reflection
         if (planarReflection) {
             if (!this._reflectionEntity) {
-                ({ entity: this._reflectionEntity, renderer: this._reflectionRenderer } = this._createPlanarCamera(
-                    'WaterReflection',
-                    'reflection'
-                ));
+                ({ entity: this._reflectionEntity, renderer: this._reflectionRenderer } = this._createPlanarCamera('WaterReflection', 'reflection'));
             }
             this._reflectionEntity.enabled = true;
             this._reflectionEntity.camera.toneMapping = this.cameraEntity.camera.toneMapping;
@@ -1682,10 +1661,7 @@ class Water extends Script {
         // planar refraction
         if (this.refraction) {
             if (!this._refractionEntity) {
-                ({ entity: this._refractionEntity, renderer: this._refractionRenderer } = this._createPlanarCamera(
-                    'WaterRefraction',
-                    'refraction'
-                ));
+                ({ entity: this._refractionEntity, renderer: this._refractionRenderer } = this._createPlanarCamera('WaterRefraction', 'refraction'));
             }
             this._refractionEntity.enabled = true;
             this._refractionEntity.camera.toneMapping = this.cameraEntity.camera.toneMapping;

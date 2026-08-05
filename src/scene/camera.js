@@ -7,15 +7,8 @@ import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
 import {
-    VIEW_CENTER,
-    ASPECT_AUTO,
-    PROJECTION_PERSPECTIVE,
-    PROJECTION_ORTHOGRAPHIC,
-    LAYERID_WORLD,
-    LAYERID_DEPTH,
-    LAYERID_SKYBOX,
-    LAYERID_UI,
-    LAYERID_IMMEDIATE
+    VIEW_CENTER, ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
+    LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { FramePassColorGrab } from './graphics/frame-pass-color-grab.js';
 import { FramePassDepthGrab } from './graphics/frame-pass-depth-grab.js';
@@ -53,7 +46,12 @@ class Camera {
     static _flipYProjectionMatrix = new Mat4().setScale(1, -1, 1);
 
     /** @private */
-    static _webGpuDepthRangeMatrix = new Mat4().set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 1]);
+    static _webGpuDepthRangeMatrix = new Mat4().set([
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 0.5, 0,
+        0, 0, 0.5, 1
+    ]);
 
     /** @private */
     static _applyShaderProjectionScratch = new Mat4();
@@ -193,10 +191,10 @@ class Camera {
 
         // storage of actual matrices used by the shaders, needed by TAA
         this._shaderMatricesVersion = 0;
-        this._viewProjInverse = new Mat4(); // inverse view projection matrix from the current frame
-        this._viewProjCurrent = null; // view projection matrix from the current frame
-        this._viewProjPrevious = new Mat4(); // view projection matrix from the previous frame
-        this._jitters = [0, 0, 0, 0]; // jitter values for TAA, 0-1 - current frame, 2-3 - previous frame
+        this._viewProjInverse = new Mat4();     // inverse view projection matrix from the current frame
+        this._viewProjCurrent = null;           // view projection matrix from the current frame
+        this._viewProjPrevious = new Mat4();    // view projection matrix from the previous frame
+        this._jitters = [0, 0, 0, 0];            // jitter values for TAA, 0-1 - current frame, 2-3 - previous frame
 
         this.frustum = new Frustum();
 
@@ -222,6 +220,7 @@ class Camera {
     }
 
     destroy() {
+
         this.renderPassColorGrab?.destroy();
         this.renderPassColorGrab = null;
 
@@ -373,7 +372,7 @@ class Camera {
     }
 
     get farClip() {
-        return this.xrActive ? this._xrProperties.farClip : this._farClip;
+        return (this.xrActive) ? this._xrProperties.farClip : this._farClip;
     }
 
     set flipFaces(newValue) {
@@ -392,7 +391,7 @@ class Camera {
     }
 
     get fov() {
-        return this.xrActive ? this._xrProperties.fov : this._fov;
+        return (this.xrActive) ? this._xrProperties.fov : this._fov;
     }
 
     set frustumCulling(newValue) {
@@ -411,7 +410,7 @@ class Camera {
     }
 
     get horizontalFov() {
-        return this.xrActive ? this._xrProperties.horizontalFov : this._horizontalFov;
+        return (this.xrActive) ? this._xrProperties.horizontalFov : this._horizontalFov;
     }
 
     set layers(newValue) {
@@ -441,7 +440,7 @@ class Camera {
     }
 
     get nearClip() {
-        return this.xrActive ? this._xrProperties.nearClip : this._nearClip;
+        return (this.xrActive) ? this._xrProperties.nearClip : this._nearClip;
     }
 
     set node(newValue) {
@@ -786,6 +785,7 @@ class Camera {
      * @ignore
      */
     updateFrustum() {
+
         // XR: combined frustum from all views (avoids culling objects visible in only one eye)
         if (this.updateXrFrustum()) {
             return;
@@ -824,7 +824,10 @@ class Camera {
 
         // calculate w co-coord
         const vpm = this._viewProjMat.data;
-        const w = worldCoord.x * vpm[3] + worldCoord.y * vpm[7] + worldCoord.z * vpm[11] + 1 * vpm[15];
+        const w = worldCoord.x * vpm[3] +
+                worldCoord.y * vpm[7] +
+                worldCoord.z * vpm[11] +
+                           1 * vpm[15];
 
         // convert normalized clip space to screen space [0, 1]
         screenCoord.x = (screenCoord.x / w + 1) * 0.5;
@@ -858,6 +861,7 @@ class Camera {
         _deviceCoord.sub(Vec3.ONE);
 
         if (this._projection === PROJECTION_PERSPECTIVE) {
+
             // calculate half width and height at the near clip plane
             Mat4._getPerspectiveHalfSize(_halfSize, this.fov, this.aspectRatio, this.nearClip, this.horizontalFov);
 
@@ -878,7 +882,9 @@ class Camera {
             worldCoord.normalize();
             worldCoord.mulScalar(z);
             worldCoord.add(cameraPos);
+
         } else {
+
             this._updateViewProjMat();
             _invViewProjMat.copy(this._viewProjMat).invert();
 
@@ -928,14 +934,16 @@ class Camera {
     }
 
     getExposure() {
-        const ev100 = Math.log2((((this._aperture * this._aperture) / this._shutter) * 100.0) / this._sensitivity);
+        const ev100 = Math.log2((this._aperture * this._aperture) / this._shutter * 100.0 / this._sensitivity);
         return 1.0 / (Math.pow(2.0, ev100) * 1.2);
     }
 
     // returns estimated size of the sphere on the screen in range of [0..1]
     // 0 - infinitely small, 1 - full screen or larger
     getScreenSize(sphere) {
+
         if (this._projection === PROJECTION_PERSPECTIVE) {
+
             // camera to sphere distance
             const distance = this._node.getPosition().distance(sphere.center);
 
@@ -955,6 +963,7 @@ class Camera {
 
             // The ratio of the geometry's screen size compared to the actual size of the screen
             return Math.min(sphereViewHeight / screenViewHeight, 1);
+
         }
 
         // ortho
@@ -969,6 +978,7 @@ class Camera {
      * @returns {Vec3[]} - An array of corners, using a global storage space.
      */
     getFrustumCorners(near = this.nearClip, far = this.farClip) {
+
         const fov = this.fov * math.DEG_TO_RAD;
         const offset = this.xrActive ? Vec2.ZERO : this._projectionOffset;
         let x, y;

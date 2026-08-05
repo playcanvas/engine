@@ -14,7 +14,7 @@ class BrightnessContrastEffect extends pc.PostEffect {
         super(graphicsDevice);
 
         // Shader author: tapio / http://tapio.github.com/
-        const fshader = /* glsl */ `
+        const fshader = /* glsl */`
             uniform sampler2D uColorBuffer;
             uniform float uBrightness;
             uniform float uContrast;
@@ -80,13 +80,9 @@ BrightnessContrast.prototype.initialize = function () {
     this.effect.brightness = this.brightness;
     this.effect.contrast = this.contrast;
 
-    this.on(
-        'attr',
-        function (name, value) {
-            this.effect[name] = value;
-        },
-        this
-    );
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
 
     var queue = this.entity.camera.postEffects;
 

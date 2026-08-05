@@ -1,4 +1,6 @@
-import { DEVICETYPE_NULL } from '../constants.js';
+import {
+    DEVICETYPE_NULL
+} from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { RenderTarget } from '../render-target.js';
 
@@ -41,6 +43,7 @@ class NullGraphicsDevice extends GraphicsDevice {
     }
 
     initDeviceCaps() {
+
         this.disableParticleSystem = true;
         this.precision = 'highp';
         this.maxPrecision = 'highp';
@@ -72,11 +75,14 @@ class NullGraphicsDevice extends GraphicsDevice {
         super.frameEnd();
     }
 
-    updateBegin() {}
+    updateBegin() {
+    }
 
-    updateEnd() {}
+    updateEnd() {
+    }
 
-    readPixels(x, y, w, h, pixels) {}
+    readPixels(x, y, w, h, pixels) {
+    }
 
     createVertexBufferImpl(vertexBuffer, format) {
         return new NullVertexBuffer(vertexBuffer, format);
@@ -102,7 +108,8 @@ class NullGraphicsDevice extends GraphicsDevice {
         return new NullBindGroupFormat();
     }
 
-    setBindGroup(index, bindGroup, offsets) {}
+    setBindGroup(index, bindGroup, offsets) {
+    }
 
     createTextureImpl(texture) {
         return new NullTexture(texture);
@@ -120,42 +127,56 @@ class NullGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {}
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    }
 
-    setShader(shader, asyncCompile = false) {}
+    setShader(shader, asyncCompile = false) {
+    }
 
-    setBlendState(blendState) {}
+    setBlendState(blendState) {
+    }
 
-    setDepthState(depthState) {}
+    setDepthState(depthState) {
+    }
 
-    setStencilState(stencilFront, stencilBack) {}
+    setStencilState(stencilFront, stencilBack) {
+    }
 
-    setBlendColor(r, g, b, a) {}
+    setBlendColor(r, g, b, a) {
+    }
 
-    setCullMode(cullMode) {}
+    setCullMode(cullMode) {
+    }
 
-    setFrontFace(frontFace) {}
+    setFrontFace(frontFace) {
+    }
 
-    setAlphaToCoverage(state) {}
+    setAlphaToCoverage(state) {
+    }
 
     initializeContextCaches() {
         super.initializeContextCaches();
     }
 
-    clear(options) {}
+    clear(options) {
+    }
 
-    setViewport(x, y, w, h) {}
+    setViewport(x, y, w, h) {
+    }
 
-    setScissor(x, y, w, h) {}
+    setScissor(x, y, w, h) {
+    }
 
     copyRenderTarget(source, dest, color, depth) {
         return true;
     }
 
     // #if _DEBUG
-    pushMarker(name) {}
+    pushMarker(name) {
+    }
 
-    popMarker() {}
+    popMarker() {
+    }
     // #endif
 }
 

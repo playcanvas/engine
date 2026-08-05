@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #if defined(NEAR_BLUR)
     var nearTexture: texture_2d<f32>;
     var nearTextureSampler: sampler;

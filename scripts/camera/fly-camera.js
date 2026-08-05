@@ -13,14 +13,11 @@ FlyCamera.attributes.add('fastSpeed', {
 FlyCamera.attributes.add('mode', {
     type: 'number',
     default: 0,
-    enum: [
-        {
-            Lock: 0
-        },
-        {
-            Drag: 1
-        }
-    ]
+    enum: [{
+        'Lock': 0
+    }, {
+        'Drag': 1
+    }]
 });
 
 FlyCamera.prototype.initialize = function () {
@@ -74,6 +71,7 @@ FlyCamera.prototype.onMouseMove = function (event) {
             return;
         }
     }
+
 
     // Update the current Euler angles, clamp the pitch.
     if (!this.moved) {

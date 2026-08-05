@@ -61,15 +61,7 @@ Vehicle.prototype.initialize = function () {
 
         var wheelPos = wheelEntity.getLocalPosition();
         connectionPoint.setValue(wheelPos.x, wheelPos.y, wheelPos.z);
-        var wheelInfo = vehicle.addWheel(
-            connectionPoint,
-            wheelDirection,
-            wheelAxle,
-            suspensionRestLength,
-            radius,
-            tuning,
-            isFront
-        );
+        var wheelInfo = vehicle.addWheel(connectionPoint, wheelDirection, wheelAxle, suspensionRestLength, radius, tuning, isFront);
 
         wheelInfo.set_m_suspensionStiffness(suspensionStiffness);
         wheelInfo.set_m_wheelsDampingRelaxation(suspensionDamping);
@@ -157,6 +149,7 @@ Vehicle.prototype.update = function (dt) {
     }
 };
 
+
 var VehicleWheel = pc.createScript('vehicleWheel');
 
 VehicleWheel.attributes.add('isFront', {
@@ -240,6 +233,7 @@ VehicleWheel.prototype.initialize = function () {
     });
 };
 
+
 var VehicleControls = pc.createScript('vehicleControls');
 
 VehicleControls.attributes.add('targetVehicle', {
@@ -275,121 +269,81 @@ VehicleControls.prototype.initialize = function () {
 
     if (this.leftButton) {
         this.leftButton.enabled = pc.platform.mobile;
-        this.leftButton.button.on(
-            'pressedstart',
-            function () {
-                this.leftButtonPressed = true;
-            },
-            this
-        );
-        this.leftButton.button.on(
-            'pressedend',
-            function () {
-                this.leftButtonPressed = false;
-            },
-            this
-        );
+        this.leftButton.button.on('pressedstart', function () {
+            this.leftButtonPressed = true;
+        }, this);
+        this.leftButton.button.on('pressedend', function () {
+            this.leftButtonPressed = false;
+        }, this);
     }
     if (this.rightButton) {
         this.rightButton.enabled = pc.platform.mobile;
-        this.rightButton.button.on(
-            'pressedstart',
-            function () {
-                this.rightButtonPressed = true;
-            },
-            this
-        );
-        this.rightButton.button.on(
-            'pressedend',
-            function () {
-                this.rightButtonPressed = false;
-            },
-            this
-        );
+        this.rightButton.button.on('pressedstart', function () {
+            this.rightButtonPressed = true;
+        }, this);
+        this.rightButton.button.on('pressedend', function () {
+            this.rightButtonPressed = false;
+        }, this);
     }
     if (this.forwardButton) {
         this.forwardButton.enabled = pc.platform.mobile;
-        this.forwardButton.button.on(
-            'pressedstart',
-            function () {
-                this.upButtonPressed = true;
-            },
-            this
-        );
-        this.forwardButton.button.on(
-            'pressedend',
-            function () {
-                this.upButtonPressed = false;
-            },
-            this
-        );
+        this.forwardButton.button.on('pressedstart', function () {
+            this.upButtonPressed = true;
+        }, this);
+        this.forwardButton.button.on('pressedend', function () {
+            this.upButtonPressed = false;
+        }, this);
     }
     if (this.reverseButton) {
         this.reverseButton.enabled = pc.platform.mobile;
-        this.reverseButton.button.on(
-            'pressedstart',
-            function () {
-                this.downButtonPressed = true;
-            },
-            this
-        );
-        this.reverseButton.button.on(
-            'pressedend',
-            function () {
-                this.downButtonPressed = false;
-            },
-            this
-        );
+        this.reverseButton.button.on('pressedstart', function () {
+            this.downButtonPressed = true;
+        }, this);
+        this.reverseButton.button.on('pressedend', function () {
+            this.downButtonPressed = false;
+        }, this);
     }
 
-    this.app.keyboard.on(
-        'keydown',
-        function (e) {
-            switch (e.key) {
-                case pc.KEY_A:
-                case pc.KEY_LEFT:
-                    this.leftKeyPressed = true;
-                    break;
-                case pc.KEY_D:
-                case pc.KEY_RIGHT:
-                    this.rightKeyPressed = true;
-                    break;
-                case pc.KEY_W:
-                case pc.KEY_UP:
-                    this.upKeyPressed = true;
-                    break;
-                case pc.KEY_S:
-                case pc.KEY_DOWN:
-                    this.downKeyPressed = true;
-                    break;
-            }
-        },
-        this
-    );
-    this.app.keyboard.on(
-        'keyup',
-        function (e) {
-            switch (e.key) {
-                case pc.KEY_A:
-                case pc.KEY_LEFT:
-                    this.leftKeyPressed = false;
-                    break;
-                case pc.KEY_D:
-                case pc.KEY_RIGHT:
-                    this.rightKeyPressed = false;
-                    break;
-                case pc.KEY_W:
-                case pc.KEY_UP:
-                    this.upKeyPressed = false;
-                    break;
-                case pc.KEY_S:
-                case pc.KEY_DOWN:
-                    this.downKeyPressed = false;
-                    break;
-            }
-        },
-        this
-    );
+    this.app.keyboard.on('keydown', function (e) {
+        switch (e.key) {
+            case pc.KEY_A:
+            case pc.KEY_LEFT:
+                this.leftKeyPressed = true;
+                break;
+            case pc.KEY_D:
+            case pc.KEY_RIGHT:
+                this.rightKeyPressed = true;
+                break;
+            case pc.KEY_W:
+            case pc.KEY_UP:
+                this.upKeyPressed = true;
+                break;
+            case pc.KEY_S:
+            case pc.KEY_DOWN:
+                this.downKeyPressed = true;
+                break;
+        }
+    }, this);
+    this.app.keyboard.on('keyup', function (e) {
+        switch (e.key) {
+            case pc.KEY_A:
+            case pc.KEY_LEFT:
+                this.leftKeyPressed = false;
+                break;
+            case pc.KEY_D:
+            case pc.KEY_RIGHT:
+                this.rightKeyPressed = false;
+                break;
+            case pc.KEY_W:
+            case pc.KEY_UP:
+                this.upKeyPressed = false;
+                break;
+            case pc.KEY_S:
+            case pc.KEY_DOWN:
+                this.downKeyPressed = false;
+                break;
+        }
+    }, this);
 };
 
 VehicleControls.prototype.update = function (dt) {

@@ -159,6 +159,7 @@ class PlanarRenderer extends Script {
     _viewSpaceClipPlane = [0, 0, 0, 0];
 
     initialize() {
+
         // sceneCameraEntity needs to be set
         const sceneCamera = this.sceneCameraEntity?.camera;
         if (!sceneCamera) {
@@ -203,6 +204,7 @@ class PlanarRenderer extends Script {
     }
 
     updateRenderTarget() {
+
         // main camera resolution
         const sceneCamera = this.sceneCameraEntity.camera;
         const device = this.app.graphicsDevice;
@@ -214,11 +216,8 @@ class PlanarRenderer extends Script {
         const height = Math.min(Math.floor(sceneCameraHeight * this.scale), device.maxTextureSize);
 
         const planarCamera = this.entity.camera;
-        if (
-            !planarCamera.renderTarget ||
-            planarCamera.renderTarget.width !== width ||
-            planarCamera.renderTarget.height !== height
-        ) {
+        if (!planarCamera.renderTarget || planarCamera.renderTarget.width !== width || planarCamera.renderTarget.height !== height) {
+
             // destroy old render target
             this._destroyRenderTarget();
 
@@ -251,19 +250,14 @@ class PlanarRenderer extends Script {
      * @private
      */
     _calculateProjection(projMat) {
+
         const planarCamera = this.entity.camera;
         const rt = planarCamera.renderTarget;
         const aspect = rt ? rt.width / rt.height : 1;
 
         // rebuild the base projection from scratch each time, as the incoming matrix can already
         // contain the result of the previous modification
-        projMat.setPerspective(
-            planarCamera.fov,
-            aspect,
-            planarCamera.nearClip,
-            planarCamera.farClip,
-            planarCamera.horizontalFov
-        );
+        projMat.setPerspective(planarCamera.fov, aspect, planarCamera.nearClip, planarCamera.farClip, planarCamera.horizontalFov);
 
         if (!this.obliqueClipping) {
             return;
@@ -297,6 +291,7 @@ class PlanarRenderer extends Script {
      * @private
      */
     _updateViewSpaceClipPlane() {
+
         // clipping plane faces the kept side: in reflection mode geometry above the plane is kept,
         // in refraction mode the geometry below the plane
         _clipNormal.copy(this.planeNormal).normalize();
@@ -340,6 +335,7 @@ class PlanarRenderer extends Script {
      * @returns {Texture|null} The texture the camera renders to, or null when disabled.
      */
     frameUpdate() {
+
         const planarCamera = this.entity.camera;
         const sceneCameraEntity = this.sceneCameraEntity;
         if (!planarCamera || !sceneCameraEntity?.camera) {
@@ -349,9 +345,11 @@ class PlanarRenderer extends Script {
         this.updateRenderTarget();
 
         if (planarCamera.enabled) {
+
             const pos = sceneCameraEntity.getPosition();
 
             if (this.mode === 'reflection') {
+
                 // mirror the scene camera by the plane
                 _plane.setFromPointNormal(this.planePoint, this.planeNormal);
                 _reflectionMatrix.setReflection(_plane.normal, _plane.distance);
@@ -362,7 +360,9 @@ class PlanarRenderer extends Script {
 
                 this.entity.setPosition(_reflectedPos);
                 this.entity.lookAt(_reflectedTarget);
+
             } else {
+
                 // refraction camera matches the scene camera
                 this.entity.setPosition(pos);
                 this.entity.setRotation(sceneCameraEntity.getRotation());

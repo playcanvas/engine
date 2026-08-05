@@ -1,12 +1,8 @@
 import {
-    getGlslShaderType,
-    getWgslShaderType,
+    getGlslShaderType, getWgslShaderType,
     pixelFormatInfo,
-    PIXELFORMAT_RGBA16F,
-    PIXELFORMAT_RGBA32F,
-    SAMPLETYPE_FLOAT,
-    SAMPLETYPE_INT,
-    SAMPLETYPE_UINT,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    SAMPLETYPE_FLOAT, SAMPLETYPE_INT, SAMPLETYPE_UINT,
     SHADERSTAGE_COMPUTE
 } from '../../platform/graphics/constants.js';
 import { hashCode } from '../../core/hash.js';
@@ -50,7 +46,7 @@ import wgslContainerSimpleRead from '../shader-lib/wgsl/chunks/gsplat/vert/forma
  * @param {GSplatStreamDescriptor[]} streams - Array of stream descriptors.
  * @returns {string} Serialized string.
  */
-const serializeStreams = (streams) => streams.map((s) => `${s.name}:${s.format}:${s.storage}`).join(',');
+const serializeStreams = streams => streams.map(s => `${s.name}:${s.format}:${s.storage}`).join(',');
 
 // Pre-compiled regex patterns for template replacement
 const RE_NAME = /\{name\}/g;
@@ -195,7 +191,7 @@ class GSplatFormat {
         this.streams = [...streams];
 
         // Initialize stream names set for duplicate checking
-        this._streamNames = new Set(this.streams.map((s) => s.name));
+        this._streamNames = new Set(this.streams.map(s => s.name));
 
         // Pick the appropriate shader language based on device
         const isWebGPU = device.isWebGPU;
@@ -216,7 +212,9 @@ class GSplatFormat {
         if (this._hash === undefined) {
             const streamsStr = serializeStreams(this.streams);
             const extraStr = serializeStreams(this._extraStreams);
-            this._hash = hashCode(streamsStr + extraStr + this._read);
+            this._hash = hashCode(streamsStr +
+                extraStr +
+                this._read);
         }
         return this._hash;
     }
@@ -252,8 +250,8 @@ class GSplatFormat {
         if (this._resourceStreams === null) {
             // Base streams + extra streams that are not instance-level
             this._resourceStreams = [
-                ...this.streams.filter((s) => s.storage !== GSPLAT_STREAM_INSTANCE),
-                ...this._extraStreams.filter((s) => s.storage !== GSPLAT_STREAM_INSTANCE)
+                ...this.streams.filter(s => s.storage !== GSPLAT_STREAM_INSTANCE),
+                ...this._extraStreams.filter(s => s.storage !== GSPLAT_STREAM_INSTANCE)
             ];
         }
         return this._resourceStreams;
@@ -268,7 +266,7 @@ class GSplatFormat {
      */
     get instanceStreams() {
         if (this._instanceStreams === null) {
-            this._instanceStreams = this._extraStreams.filter((s) => s.storage === GSPLAT_STREAM_INSTANCE);
+            this._instanceStreams = this._extraStreams.filter(s => s.storage === GSPLAT_STREAM_INSTANCE);
         }
         return this._instanceStreams;
     }
@@ -325,7 +323,7 @@ class GSplatFormat {
 
         let removed = false;
         for (const name of names) {
-            const idx = this._extraStreams.findIndex((s) => s.name === name);
+            const idx = this._extraStreams.findIndex(s => s.name === name);
             if (idx !== -1) {
                 this._extraStreams.splice(idx, 1);
                 this._streamNames.delete(name);
@@ -356,7 +354,7 @@ class GSplatFormat {
         // Get streams - filter if names specified
         let streams = [...this.streams, ...this._extraStreams];
         if (streamNames) {
-            streams = streams.filter((s) => streamNames.includes(s.name));
+            streams = streams.filter(s => streamNames.includes(s.name));
         }
 
         for (const stream of streams) {
@@ -367,11 +365,11 @@ class GSplatFormat {
                 textureType = 'texture_2d<uff>';
             }
             const decl = template
-                .replace(RE_NAME, stream.name)
-                .replace(RE_SAMPLER, info.sampler ?? '')
-                .replace(RE_TEXTURE_TYPE, textureType)
-                .replace(RE_RETURN_TYPE, info.returnType)
-                .replace(RE_FUNC_NAME, funcName);
+            .replace(RE_NAME, stream.name)
+            .replace(RE_SAMPLER, info.sampler ?? '')
+            .replace(RE_TEXTURE_TYPE, textureType)
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_FUNC_NAME, funcName);
             lines.push(decl);
         }
 
@@ -402,7 +400,7 @@ class GSplatFormat {
 
         let streams = [...this.streams, ...this._extraStreams];
         if (streamNames) {
-            streams = streams.filter((s) => streamNames.includes(s.name));
+            streams = streams.filter(s => streamNames.includes(s.name));
         }
 
         for (let i = 0; i < streams.length; i++) {
@@ -414,11 +412,11 @@ class GSplatFormat {
                 textureType = 'texture_2d<uff>';
             }
             const decl = wgslComputeStreamDecl
-                .replace(RE_BINDING, String(startBinding + i))
-                .replace(RE_NAME, stream.name)
-                .replace(RE_TEXTURE_TYPE, textureType)
-                .replace(RE_RETURN_TYPE, info.returnType)
-                .replace(RE_FUNC_NAME, funcName);
+            .replace(RE_BINDING, String(startBinding + i))
+            .replace(RE_NAME, stream.name)
+            .replace(RE_TEXTURE_TYPE, textureType)
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_FUNC_NAME, funcName);
             lines.push(decl);
         }
 
@@ -436,7 +434,7 @@ class GSplatFormat {
     getComputeBindFormats(streamNames) {
         let streams = [...this.streams, ...this._extraStreams];
         if (streamNames) {
-            streams = streams.filter((s) => streamNames.includes(s.name));
+            streams = streams.filter(s => streamNames.includes(s.name));
         }
 
         return streams.map((stream) => {
@@ -494,11 +492,11 @@ class GSplatFormat {
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
             const colorSlot = i === 0 ? 'color' : `color${i}`;
             const decl = template
-                .replace(RE_FUNC_NAME, funcName)
-                .replace(RE_RETURN_TYPE, info.returnType)
-                .replace(RE_INDEX, String(i))
-                .replace(RE_COLOR_SLOT, colorSlot)
-                .replace(RE_DEFINE_GUARD, '1');
+            .replace(RE_FUNC_NAME, funcName)
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_INDEX, String(i))
+            .replace(RE_COLOR_SLOT, colorSlot)
+            .replace(RE_DEFINE_GUARD, '1');
             lines.push(decl);
         }
 
@@ -523,9 +521,9 @@ class GSplatFormat {
             const info = getShaderType(stream.format);
             const funcName = stream.name.charAt(0).toUpperCase() + stream.name.slice(1);
             const stub = template
-                .replace(RE_FUNC_NAME, funcName)
-                .replace(RE_RETURN_TYPE, info.returnType)
-                .replace(RE_DEFINE_GUARD, '0');
+            .replace(RE_FUNC_NAME, funcName)
+            .replace(RE_RETURN_TYPE, info.returnType)
+            .replace(RE_DEFINE_GUARD, '0');
             lines.push(stub);
         }
 
@@ -541,10 +539,10 @@ class GSplatFormat {
      */
     getStream(name) {
         // Check base streams first
-        let stream = this.streams.find((s) => s.name === name);
+        let stream = this.streams.find(s => s.name === name);
         if (!stream) {
             // Check extra streams
-            stream = this._extraStreams.find((s) => s.name === name);
+            stream = this._extraStreams.find(s => s.name === name);
         }
         return stream;
     }
@@ -576,19 +574,15 @@ class GSplatFormat {
      * @returns {GSplatFormat} The default format.
      */
     static createDefaultFormat(device) {
-        return new GSplatFormat(
-            device,
-            [
-                { name: 'dataColor', format: PIXELFORMAT_RGBA16F },
-                { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
-                { name: 'dataScale', format: PIXELFORMAT_RGBA16F },
-                { name: 'dataRotation', format: PIXELFORMAT_RGBA16F }
-            ],
-            {
-                readGLSL: glslContainerFloatRead,
-                readWGSL: wgslContainerFloatRead
-            }
-        );
+        return new GSplatFormat(device, [
+            { name: 'dataColor', format: PIXELFORMAT_RGBA16F },
+            { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
+            { name: 'dataScale', format: PIXELFORMAT_RGBA16F },
+            { name: 'dataRotation', format: PIXELFORMAT_RGBA16F }
+        ], {
+            readGLSL: glslContainerFloatRead,
+            readWGSL: wgslContainerFloatRead
+        });
     }
 
     /**
@@ -601,17 +595,13 @@ class GSplatFormat {
      * @returns {GSplatFormat} The simple format.
      */
     static createSimpleFormat(device) {
-        return new GSplatFormat(
-            device,
-            [
-                { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
-                { name: 'dataColor', format: PIXELFORMAT_RGBA16F }
-            ],
-            {
-                readGLSL: glslContainerSimpleRead,
-                readWGSL: wgslContainerSimpleRead
-            }
-        );
+        return new GSplatFormat(device, [
+            { name: 'dataCenter', format: PIXELFORMAT_RGBA32F },
+            { name: 'dataColor', format: PIXELFORMAT_RGBA16F }
+        ], {
+            readGLSL: glslContainerSimpleRead,
+            readWGSL: wgslContainerSimpleRead
+        });
     }
 }
 

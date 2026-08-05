@@ -13,6 +13,7 @@ import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('AnimEvaluator', function () {
+
     let app;
 
     beforeEach(function () {

@@ -1,19 +1,8 @@
 import { Debug } from '../../core/debug.js';
 import {
-    SEMANTIC_POSITION,
-    SEMANTIC_NORMAL,
-    SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1,
-    SEMANTIC_TEXCOORD2,
-    SEMANTIC_TEXCOORD3,
-    SEMANTIC_TEXCOORD4,
-    SEMANTIC_TEXCOORD5,
-    SEMANTIC_TEXCOORD6,
-    SEMANTIC_TEXCOORD7,
-    SEMANTIC_COLOR,
-    SEMANTIC_BLENDINDICES,
-    SEMANTIC_BLENDWEIGHT,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
+    SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
+    SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
     SHADERLANGUAGE_WGSL,
     SHADERLANGUAGE_GLSL,
     primitiveGlslToWgslTypeMap
@@ -102,10 +91,7 @@ class ShaderDefinitionUtils {
         Debug.assert(!options.vertexIncludes || options.vertexIncludes instanceof Map);
         Debug.assert(!options.fragmentDefines || options.fragmentDefines instanceof Map);
         Debug.assert(!options.fragmentIncludes || options.fragmentIncludes instanceof Map);
-        Debug.assert(
-            !options.useDualSourceBlending || device.supportsDualSourceBlending,
-            'Dual-source blending is not supported by this graphics device.'
-        );
+        Debug.assert(!options.useDualSourceBlending || device.supportsDualSourceBlending, 'Dual-source blending is not supported by this graphics device.');
 
         // Normalize fragmentOutputTypes to an array
         const normalizedOutputTypes = (options) => {
@@ -117,6 +103,7 @@ class ShaderDefinitionUtils {
         };
 
         const getDefines = (gpu, gl2, isVertex, options) => {
+
             const deviceIntro = device.isWebGPU ? gpu : gl2;
 
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
@@ -141,12 +128,9 @@ class ShaderDefinitionUtils {
         };
 
         const getDefinesWgsl = (isVertex, options) => {
+
             // Enable directives must come before all global declarations
-            let code = ShaderDefinitionUtils.getWGSLEnables(
-                device,
-                isVertex ? 'vertex' : 'fragment',
-                !isVertex && options.useDualSourceBlending
-            );
+            let code = ShaderDefinitionUtils.getWGSLEnables(device, isVertex ? 'vertex' : 'fragment', !isVertex && options.useDualSourceBlending);
 
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
@@ -173,6 +157,7 @@ class ShaderDefinitionUtils {
         const wgsl = options.shaderLanguage === SHADERLANGUAGE_WGSL;
 
         if (wgsl) {
+
             vertCode = `
                 ${getDefinesWgsl(true, options)}
                 ${vertexDefinesCode}
@@ -190,11 +175,16 @@ class ShaderDefinitionUtils {
                 ${sharedWGSL}
                 ${options.fragmentCode}
             `;
+
         } else {
+
             Debug.assert(options.vertexCode);
 
             // vertex code
-            vertCode = `${ShaderDefinitionUtils.versionCode(device) + getDefines(webgpuVS, gles3VS, true, options) + vertexDefinesCode + ShaderDefinitionUtils.precisionCode(device)}
+            vertCode = `${ShaderDefinitionUtils.versionCode(device) +
+                getDefines(webgpuVS, gles3VS, true, options) +
+                vertexDefinesCode +
+                ShaderDefinitionUtils.precisionCode(device)}
                 ${sharedGLSL}
                 ${ShaderDefinitionUtils.getShaderNameCode(name)}
                 ${options.vertexCode}`;
@@ -202,7 +192,11 @@ class ShaderDefinitionUtils {
             Debug.assert(options.fragmentCode);
 
             // fragment code
-            fragCode = `${(options.fragmentPreamble || '') + ShaderDefinitionUtils.versionCode(device) + getDefines(webgpuFS, gles3FS, false, options) + fragmentDefinesCode + ShaderDefinitionUtils.precisionCode(device)}
+            fragCode = `${(options.fragmentPreamble || '') +
+                ShaderDefinitionUtils.versionCode(device) +
+                getDefines(webgpuFS, gles3FS, false, options) +
+                fragmentDefinesCode +
+                ShaderDefinitionUtils.precisionCode(device)}
                 ${sharedGLSL}
                 ${ShaderDefinitionUtils.getShaderNameCode(name)}
                 ${options.fragmentCode}`;
@@ -302,6 +296,7 @@ class ShaderDefinitionUtils {
     }
 
     static precisionCode(device, forcePrecision) {
+
         if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
             forcePrecision = null;
         }
@@ -363,10 +358,7 @@ class ShaderDefinitionUtils {
 
                 // if the attribute already exists in the semantic map
                 if (attribs[attribName]) {
-                    Debug.warn(
-                        `Attribute [${attribName}] already exists when extracting the attributes from the vertex shader, ignoring.`,
-                        { vsCode }
-                    );
+                    Debug.warn(`Attribute [${attribName}] already exists when extracting the attributes from the vertex shader, ignoring.`, { vsCode });
                 } else {
                     const semantic = _attrib2Semantic[attribName];
                     if (semantic !== undefined) {

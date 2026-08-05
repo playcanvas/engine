@@ -21,6 +21,7 @@ const stateGraphData = {
 };
 
 describe('AnimStateGraphHandler', function () {
+
     afterEach(function () {
         restore();
     });

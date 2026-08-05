@@ -10,10 +10,18 @@ import { Geometry } from './geometry/geometry.js';
  */
 
 // normals are the same for every mesh
-const spriteNormals = [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1];
+const spriteNormals = [
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1,
+    0, 0, 1
+];
 
 // indices are the same for every mesh
-const spriteIndices = [0, 1, 3, 2, 3, 1];
+const spriteIndices = [
+    0, 1, 3,
+    2, 3, 1
+];
 
 /**
  * A Sprite contains references to one or more frames of a {@link TextureAtlas}. It can be used by
@@ -222,10 +230,7 @@ class Sprite extends EventHandler {
         this._meshes = new Array(count);
 
         // get function to create meshes
-        const createMeshFunc =
-            this.renderMode === SPRITE_RENDERMODE_SLICED || this._renderMode === SPRITE_RENDERMODE_TILED
-                ? this._create9SliceMesh
-                : this._createSimpleMesh;
+        const createMeshFunc = (this.renderMode === SPRITE_RENDERMODE_SLICED || this._renderMode === SPRITE_RENDERMODE_TILED ? this._create9SliceMesh : this._createSimpleMesh);
 
         // create a mesh for each frame in the sprite
         for (let i = 0; i < count; i++) {
@@ -248,18 +253,10 @@ class Sprite extends EventHandler {
 
         // positions based on pivot and size of frame
         const positions = [
-            -hp * w,
-            -vp * h,
-            0,
-            (1 - hp) * w,
-            -vp * h,
-            0,
-            (1 - hp) * w,
-            (1 - vp) * h,
-            0,
-            -hp * w,
-            (1 - vp) * h,
-            0
+            -hp * w,      -vp * h,      0,
+            (1 - hp) * w, -vp * h,      0,
+            (1 - hp) * w, (1 - vp) * h, 0,
+            -hp * w,      (1 - vp) * h, 0
         ];
 
         // uvs based on frame rect
@@ -269,7 +266,12 @@ class Sprite extends EventHandler {
         const ru = (rect.x + rect.z) / texWidth;
         const tv = 1.0 - (rect.y + rect.w) / texHeight;
 
-        const uvs = [lu, bv, ru, bv, ru, tv, lu, tv];
+        const uvs = [
+            lu, bv,
+            ru, bv,
+            ru, tv,
+            lu, tv
+        ];
 
         const geom = new Geometry();
         geom.positions = positions;
@@ -303,20 +305,21 @@ class Sprite extends EventHandler {
         // width
         let vcounter = 0;
         for (let i = 0; i <= ws; i++) {
-            const u = i === 0 || i === ws ? 0 : 1;
+            const u = (i === 0 || i === ws) ? 0 : 1;
 
             for (let j = 0; j <= ls; j++) {
-                const x = -he.x + (2.0 * he.x * (i <= 1 ? 0 : 3)) / ws;
-                const y = 0.0;
-                const z = -(-he.y + (2.0 * he.y * (j <= 1 ? 0 : 3)) / ls);
 
-                const v = j === 0 || j === ls ? 0 : 1;
+                const x = -he.x + 2.0 * he.x * (i <= 1 ? 0 : 3) / ws;
+                const y = 0.0;
+                const z = -(-he.y + 2.0 * he.y * (j <= 1 ? 0 : 3) / ls);
+
+                const v = (j === 0 || j === ls) ? 0 : 1;
 
                 positions.push(-x, y, z);
                 normals.push(0.0, 1.0, 0.0);
                 uvs.push(u, v);
 
-                if (i < ws && j < ls) {
+                if ((i < ws) && (j < ls)) {
                     indices.push(vcounter + ls + 1, vcounter + 1, vcounter);
                     indices.push(vcounter + ls + 1, vcounter + ls + 2, vcounter + 1);
                 }
@@ -376,6 +379,7 @@ class Sprite extends EventHandler {
         this._updatingProperties = false;
         if (this._meshesDirty && this._atlas && this._frameKeys) {
             this._createMeshes();
+
         }
         this._meshesDirty = false;
     }

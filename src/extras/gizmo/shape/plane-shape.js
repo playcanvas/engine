@@ -60,10 +60,14 @@ class PlaneShape extends Shape {
         this._gap = args.gap ?? this._gap;
 
         // intersect
-        this.triData = [new TriData(new PlaneGeometry())];
+        this.triData = [
+            new TriData(new PlaneGeometry())
+        ];
 
         // render
-        this._createRenderComponent(this.entity, [Mesh.fromGeometry(this.device, new PlaneGeometry())]);
+        this._createRenderComponent(this.entity, [
+            Mesh.fromGeometry(this.device, new PlaneGeometry())
+        ]);
 
         // update transform
         this._update();
@@ -138,11 +142,7 @@ class PlaneShape extends Shape {
     _update() {
         // intersect/render
         const offset = this._size / 2 + this._gap;
-        this._position.set(
-            this._flipped.x ? -offset : offset,
-            this._flipped.y ? -offset : offset,
-            this._flipped.z ? -offset : offset
-        );
+        this._position.set(this._flipped.x ? -offset : offset, this._flipped.y ? -offset : offset, this._flipped.z ? -offset : offset);
         this._position[this.axis] = 0;
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);

@@ -8,4 +8,7 @@ function setApplication(app) {
     currentApplication = app;
 }
 
-export { getApplication, setApplication };
+export {
+    getApplication,
+    setApplication
+};

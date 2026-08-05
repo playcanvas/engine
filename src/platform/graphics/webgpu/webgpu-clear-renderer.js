@@ -2,14 +2,8 @@ import { Debug } from '../../../core/debug.js';
 import { UniformBufferFormat, UniformFormat } from '../uniform-buffer-format.js';
 import { BlendState } from '../blend-state.js';
 import {
-    PRIMITIVE_TRISTRIP,
-    SHADERLANGUAGE_WGSL,
-    UNIFORMTYPE_FLOAT,
-    UNIFORMTYPE_VEC4,
-    BINDGROUP_MESH,
-    CLEARFLAG_COLOR,
-    CLEARFLAG_DEPTH,
-    CLEARFLAG_STENCIL,
+    PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
+    UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH_UB
 } from '../constants.js';
 import { Shader } from '../shader.js';
@@ -37,6 +31,7 @@ const primitive = {
  */
 class WebgpuClearRenderer {
     constructor(device) {
+
         // shader that can write out color and depth values
         const code = `
 
@@ -77,14 +72,10 @@ class WebgpuClearRenderer {
         });
 
         // uniforms
-        this.uniformBuffer = new UniformBuffer(
-            device,
-            new UniformBufferFormat(device, [
-                new UniformFormat('color', UNIFORMTYPE_VEC4),
-                new UniformFormat('depth', UNIFORMTYPE_FLOAT)
-            ]),
-            false
-        );
+        this.uniformBuffer = new UniformBuffer(device, new UniformBufferFormat(device, [
+            new UniformFormat('color', UNIFORMTYPE_VEC4),
+            new UniformFormat('depth', UNIFORMTYPE_FLOAT)
+        ]), false);
 
         this.dynamicBindGroup = new DynamicBindGroup();
 
@@ -105,6 +96,7 @@ class WebgpuClearRenderer {
 
         const flags = options.flags ?? defaultOptions.flags;
         if (flags !== 0) {
+
             DebugGraphics.pushGpuMarker(device, 'CLEAR-RENDERER');
 
             // dynamic bind group for the UB
@@ -117,7 +109,7 @@ class WebgpuClearRenderer {
 
             // setup clear color
             let blendState;
-            if (flags & CLEARFLAG_COLOR && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
+            if ((flags & CLEARFLAG_COLOR) && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
                 const color = options.color ?? defaultOptions.color;
                 this.colorData.set(color);
                 blendState = BlendState.NOBLEND;
@@ -128,7 +120,7 @@ class WebgpuClearRenderer {
 
             // setup depth clear
             let depthState;
-            if (flags & CLEARFLAG_DEPTH && renderTarget.depth) {
+            if ((flags & CLEARFLAG_DEPTH) && renderTarget.depth) {
                 const depth = options.depth ?? defaultOptions.depth;
                 uniformBuffer.set('depth', depth);
                 depthState = DepthState.WRITEDEPTH;
@@ -138,7 +130,7 @@ class WebgpuClearRenderer {
             }
 
             // setup stencil clear
-            if (flags & CLEARFLAG_STENCIL && renderTarget.stencil) {
+            if ((flags & CLEARFLAG_STENCIL) && renderTarget.stencil) {
                 Debug.warnOnce('ClearRenderer does not support stencil clear at the moment');
             }
 

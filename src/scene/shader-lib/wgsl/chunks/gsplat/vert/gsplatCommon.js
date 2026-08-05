@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #include "gsplatHelpersVS"
 #include "gsplatFormatVS"
 #include "gsplatStructsVS"

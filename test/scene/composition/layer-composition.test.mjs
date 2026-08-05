@@ -4,6 +4,7 @@ import { LayerComposition } from '../../../src/scene/composition/layer-compositi
 import { Layer } from '../../../src/scene/layer.js';
 
 describe('LayerComposition', function () {
+
     beforeEach(function () {
         this.composition = new LayerComposition();
         this.layer = new Layer({
@@ -18,12 +19,15 @@ describe('LayerComposition', function () {
     });
 
     describe('#constructor', function () {
+
         it('creates a new LayerComposition', function () {
             expect(this.composition).to.be.an.instanceof(LayerComposition);
         });
+
     });
 
     describe('#getLayerById', function () {
+
         it('should work after push()', function () {
             this.composition.push(this.layer);
             expect(this.composition.getLayerById(this.layer.id)).to.equal(this.layer);
@@ -71,9 +75,11 @@ describe('LayerComposition', function () {
             this.composition.removeTransparent(this.layer, 0);
             expect(this.composition.getLayerById(this.layer.id)).to.equal(null);
         });
+
     });
 
     describe('#getOpaqueIndex', function () {
+
         it('should return correct index after push()', function () {
             this.composition.push(this.layer);
             expect(this.composition.getOpaqueIndex(this.layer)).to.equal(0);
@@ -94,9 +100,11 @@ describe('LayerComposition', function () {
         it('should return -1 if layer not in composition', function () {
             expect(this.composition.getOpaqueIndex(this.layer)).to.equal(-1);
         });
+
     });
 
     describe('#getTransparentIndex', function () {
+
         it('should return correct index after push()', function () {
             this.composition.push(this.layer);
             expect(this.composition.getTransparentIndex(this.layer)).to.equal(1);
@@ -117,9 +125,11 @@ describe('LayerComposition', function () {
         it('should return -1 if layer not in composition', function () {
             expect(this.composition.getTransparentIndex(this.layer)).to.equal(-1);
         });
+
     });
 
     describe('#getLayerByName', function () {
+
         it('should return layer', function () {
             this.composition.push(this.layer);
             expect(this.composition.getLayerByName(this.layer.name)).to.equal(this.layer);
@@ -128,9 +138,11 @@ describe('LayerComposition', function () {
         it('should return null if layer not in composition', function () {
             expect(this.composition.getLayerByName(this.layer.name)).to.equal(null);
         });
+
     });
 
     describe('#sortTransparentLayers', function () {
+
         it('should return negative if the first layers are on top of the second layers', function () {
             const layerFront = new Layer({ id: 2 });
             const layerBack = new Layer({ id: 3 });
@@ -146,9 +158,7 @@ describe('LayerComposition', function () {
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
-            expect(this.composition.sortTransparentLayers([layerBack.id, layerFront.id], [layerMiddle.id])).to.be.below(
-                0
-            );
+            expect(this.composition.sortTransparentLayers([layerBack.id, layerFront.id], [layerMiddle.id])).to.be.below(0);
         });
 
         it('should return negative if second layers not in composition', function () {
@@ -171,9 +181,7 @@ describe('LayerComposition', function () {
             this.composition.push(layerBack);
             this.composition.push(layerMiddle);
             this.composition.push(layerFront);
-            expect(this.composition.sortTransparentLayers([layerMiddle.id], [layerBack.id, layerFront.id])).to.be.above(
-                0
-            );
+            expect(this.composition.sortTransparentLayers([layerMiddle.id], [layerBack.id, layerFront.id])).to.be.above(0);
         });
 
         it('should return positive if first layers not in composition', function () {
@@ -248,9 +256,11 @@ describe('LayerComposition', function () {
             this.composition.pushTransparent(layerMiddle);
             expect(this.composition.sortTransparentLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);
         });
+
     });
 
     describe('#sortOpaqueLayers', function () {
+
         it('should return negative if the first layers are on top of the second layers', function () {
             const layerFront = new Layer({ id: 2 });
             const layerBack = new Layer({ id: 3 });
@@ -364,5 +374,7 @@ describe('LayerComposition', function () {
             this.composition.pushOpaque(layerMiddle);
             expect(this.composition.sortOpaqueLayers([layerFront.id], [layerMiddle.id])).to.be.above(0);
         });
+
     });
+
 });

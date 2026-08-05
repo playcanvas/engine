@@ -40,12 +40,10 @@ class GSplatPlacementStateTracker {
                 // First time seeing this placement
                 this._states.set(p, { formatVersion, modifierHash, numSplats, centersVersion });
                 changed = true;
-            } else if (
-                state.formatVersion !== formatVersion ||
-                state.modifierHash !== modifierHash ||
-                state.numSplats !== numSplats ||
-                state.centersVersion !== centersVersion
-            ) {
+            } else if (state.formatVersion !== formatVersion ||
+                       state.modifierHash !== modifierHash ||
+                       state.numSplats !== numSplats ||
+                       state.centersVersion !== centersVersion) {
                 // Reuse existing object, just update values
                 state.formatVersion = formatVersion;
                 state.modifierHash = modifierHash;

@@ -19,12 +19,14 @@ class RenderPassShadowDirectional extends RenderPass {
     }
 
     execute() {
+
         const { light, camera, shadowRenderer, allCascadesRendering } = this;
         const faceCount = light.numShadowFaces;
         const shadowUpdateOverrides = light.shadowUpdateOverrides;
 
         // render all faces
         for (let face = 0; face < faceCount; face++) {
+
             if (shadowUpdateOverrides?.[face] !== SHADOWUPDATE_NONE) {
                 shadowRenderer.renderFace(light, camera, face, !allCascadesRendering);
             }

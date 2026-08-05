@@ -105,19 +105,26 @@ class WebgpuShader {
         Debug.assert(definition);
 
         if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
+
             if (definition.cshader) {
+
                 if (definition.computeEntryPoint) {
                     this.computeEntryPoint = definition.computeEntryPoint;
                 }
 
                 this.processComputeWGSL();
+
             } else {
+
                 this.vertexEntryPoint = 'vertexMain';
                 this.fragmentEntryPoint = 'fragmentMain';
 
                 if (definition.processingOptions) {
+
                     this.processWGSL();
+
                 } else {
+
                     this._vertexCode = definition.vshader ?? null;
                     this._fragmentCode = definition.fshader ?? null;
 
@@ -127,7 +134,9 @@ class WebgpuShader {
             }
 
             shader.ready = true;
+
         } else {
+
             if (definition.processingOptions) {
                 this.processGLSL();
             }
@@ -212,13 +221,7 @@ class WebgpuShader {
 
         // reflect simplified-syntax declarations into a separate bind group, leaving any
         // explicitly-bound resources (and the caller-provided format) untouched
-        const processed = WebgpuShaderProcessorWGSL.runCompute(
-            shader.device,
-            definition.cshader,
-            definition,
-            shader,
-            reflectedGroupIndex
-        );
+        const processed = WebgpuShaderProcessorWGSL.runCompute(shader.device, definition.cshader, definition, shader, reflectedGroupIndex);
 
         // keep reference to processed shader in debug mode
         Debug.call(() => {
@@ -257,15 +260,13 @@ class WebgpuShader {
     }
 
     transpile(src, shaderType, originalSrc) {
+
         // make sure shader transpilers are available
         const device = this.shader.device;
         if (!device.glslang || !device.twgsl) {
-            console.error(
-                `Cannot transpile shader [${this.shader.label}] - shader transpilers (glslang/twgsl) are not available. Make sure to provide glslangUrl and twgslUrl when creating the device.`,
-                {
-                    shader: this.shader
-                }
-            );
+            console.error(`Cannot transpile shader [${this.shader.label}] - shader transpilers (glslang/twgsl) are not available. Make sure to provide glslangUrl and twgslUrl when creating the device.`, {
+                shader: this.shader
+            });
             return null;
         }
 
@@ -275,16 +276,13 @@ class WebgpuShader {
             const wgsl = device.twgsl.convertSpirV2WGSL(spirv);
             return wgsl;
         } catch (err) {
-            console.error(
-                `Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU while rendering ${DebugGraphics.toString()}, error:\n [${err.stack}]`,
-                {
-                    processed: src,
-                    original: originalSrc,
-                    shader: this.shader,
-                    error: err,
-                    stack: err.stack
-                }
-            );
+            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU while rendering ${DebugGraphics.toString()}, error:\n [${err.stack}]`, {
+                processed: src,
+                original: originalSrc,
+                shader: this.shader,
+                error: err,
+                stack: err.stack
+            });
         }
     }
 
@@ -316,7 +314,8 @@ class WebgpuShader {
     /**
      * Dispose the shader when the context has been lost.
      */
-    loseContext() {}
+    loseContext() {
+    }
 
     /**
      * Restore shader after the context has been obtained.
@@ -324,7 +323,8 @@ class WebgpuShader {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Shader} shader - The shader to restore.
      */
-    restoreContext(device, shader) {}
+    restoreContext(device, shader) {
+    }
 }
 
 export { WebgpuShader };

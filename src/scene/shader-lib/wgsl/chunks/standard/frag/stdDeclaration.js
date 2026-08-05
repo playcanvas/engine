@@ -1,6 +1,6 @@
 // Declaration part of the standard shader. Declares the uniforms, textures and global variables used
 // by the fragment shader of the standard shader.
-export default /* wgsl */ `
+export default /* wgsl */`
 
     // globals
     var<private> dAlpha: f32 = 1.0;

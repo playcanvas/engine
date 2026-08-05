@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 
 #ifdef STD_SPECULARITYFACTOR_CONSTANT
     uniform material_specularityFactor: f32;

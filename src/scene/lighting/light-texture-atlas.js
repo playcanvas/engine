@@ -15,9 +15,9 @@ const _scissor = new Vec4();
 
 class Slot {
     constructor(rect) {
-        this.size = Math.floor(rect.w * 1024); // size normalized to 1024 atlas
+        this.size = Math.floor(rect.w * 1024);  // size normalized to 1024 atlas
         this.used = false;
-        this.lightId = -1; // id of the light using the slot
+        this.lightId = -1;  // id of the light using the slot
         this.rect = rect;
     }
 }
@@ -25,8 +25,9 @@ class Slot {
 // A class handling runtime allocation of slots in a texture. It is used to allocate slots in the shadow and cookie atlas.
 class LightTextureAtlas {
     constructor(device) {
+
         this.device = device;
-        this.version = 1; // incremented each time slot configuration changes
+        this.version = 1;   // incremented each time slot configuration changes
 
         this.shadowAtlasResolution = 2048;
         this.shadowAtlas = null;
@@ -36,13 +37,7 @@ class LightTextureAtlas {
         this.shadowEdgePixels = 3;
 
         this.cookieAtlasResolution = 4;
-        this.cookieAtlas = Texture.createDataTexture2D(
-            this.device,
-            'CookieAtlas',
-            this.cookieAtlasResolution,
-            this.cookieAtlasResolution,
-            PIXELFORMAT_SRGBA8
-        );
+        this.cookieAtlas = Texture.createDataTexture2D(this.device, 'CookieAtlas', this.cookieAtlasResolution, this.cookieAtlasResolution, PIXELFORMAT_SRGBA8);
 
         // atlas slot allocation math expects viewport rects to address identical texel rows on
         // all graphics APIs, matching the WebGL layout
@@ -71,8 +66,8 @@ class LightTextureAtlas {
         // handles gap between slots
         this.scissorVec = new Vec4();
 
-        this.allocateShadowAtlas(1); // placeholder as shader requires it
-        this.allocateCookieAtlas(1); // placeholder as shader requires it
+        this.allocateShadowAtlas(1);  // placeholder as shader requires it
+        this.allocateCookieAtlas(1);  // placeholder as shader requires it
         this.allocateUniforms();
     }
 
@@ -95,9 +90,11 @@ class LightTextureAtlas {
     }
 
     allocateShadowAtlas(resolution, shadowType = SHADOW_PCF3_32F) {
+
         const existingFormat = this.shadowAtlas?.texture.format;
         const requiredFormat = shadowTypeInfo.get(shadowType).format;
         if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution || existingFormat !== requiredFormat) {
+
             // content of atlas is lost, force re-render of static shadows
             this.version++;
 
@@ -115,8 +112,10 @@ class LightTextureAtlas {
     }
 
     allocateCookieAtlas(resolution) {
+
         // resize atlas
         if (this.cookieAtlas.width !== resolution) {
+
             this.cookieRenderTarget.resize(resolution, resolution);
 
             // content of atlas is lost, force re-render of static cookies
@@ -133,6 +132,7 @@ class LightTextureAtlas {
     }
 
     updateUniforms() {
+
         // shadow atlas texture
         const rt = this.shadowAtlas.renderTargets[0];
         const shadowBuffer = rt.depthBuffer;
@@ -148,10 +148,12 @@ class LightTextureAtlas {
     }
 
     subdivide(numLights, lightingParams) {
+
         let atlasSplit = lightingParams.atlasSplit;
 
         // if no user specified subdivision
         if (!atlasSplit) {
+
             // split to equal number of squares
             const gridSize = Math.ceil(Math.sqrt(numLights));
             atlasSplit = _tempArray2;
@@ -164,6 +166,7 @@ class LightTextureAtlas {
 
         // if the split has changed, regenerate slots
         if (!arraysEqual(atlasSplit, this.atlasSplit)) {
+
             this.version++;
             this.slots.length = 0;
 
@@ -185,12 +188,7 @@ class LightTextureAtlas {
                             for (let x = 0; x < nextLevelSplit; x++) {
                                 for (let y = 0; y < nextLevelSplit; y++) {
                                     const invSizeNext = invSize / nextLevelSplit;
-                                    const rectNext = new Vec4(
-                                        rect.x + x * invSizeNext,
-                                        rect.y + y * invSizeNext,
-                                        invSizeNext,
-                                        invSizeNext
-                                    );
+                                    const rectNext = new Vec4(rect.x + x * invSizeNext, rect.y + y * invSizeNext, invSizeNext, invSizeNext);
                                     this.slots.push(new Slot(rectNext));
                                 }
                             }
@@ -212,6 +210,7 @@ class LightTextureAtlas {
     }
 
     collectLights(localLights, lightingParams) {
+
         const cookiesEnabled = lightingParams.cookiesEnabled;
         const shadowsEnabled = lightingParams.shadowsEnabled;
 
@@ -264,12 +263,15 @@ class LightTextureAtlas {
 
     // configure light to use assigned slot
     setupSlot(light, rect) {
+
         light.atlasViewport.copy(rect);
 
         const faceCount = light.numShadowFaces;
         for (let face = 0; face < faceCount; face++) {
+
             // setup slot for shadow and cookie
             if (light.castShadows || light._cookie) {
+
                 _viewport.copy(rect);
                 _scissor.copy(rect);
 
@@ -280,6 +282,7 @@ class LightTextureAtlas {
 
                 // for cube map, allocate part of the slot
                 if (light._type === LIGHTTYPE_OMNI) {
+
                     const smallSize = _viewport.z / 3;
                     const offset = this.cubeSlotsOffsets[face];
                     _viewport.x += smallSize * offset.x;
@@ -301,6 +304,7 @@ class LightTextureAtlas {
 
     // assign a slot to the light
     assignSlot(light, slotIndex, slotReassigned) {
+
         light.atlasViewportAllocated = true;
 
         const slot = this.slots[slotIndex];
@@ -317,6 +321,7 @@ class LightTextureAtlas {
 
     // update texture atlas for a list of lights
     update(localLights, lightingParams) {
+
         // update texture resolutions
         this.shadowAtlasResolution = lightingParams.shadowAtlasResolution;
         this.cookieAtlasResolution = lightingParams.cookieAtlasResolution;
@@ -324,6 +329,7 @@ class LightTextureAtlas {
         // collect lights requiring atlas
         const lights = this.collectLights(localLights, lightingParams);
         if (lights.length > 0) {
+
             // mark all slots as unused
             const slots = this.slots;
             for (let i = 0; i < slots.length; i++) {
@@ -360,6 +366,7 @@ class LightTextureAtlas {
             // second pass - assign slots to unhandled lights
             let usedCount = 0;
             for (let i = 0; i < assignCount; i++) {
+
                 // skip already used slots
                 while (usedCount < slots.length && slots[usedCount].used) {
                     usedCount++;

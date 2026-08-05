@@ -1,5 +1,5 @@
 // main shader entry point for the lit material for other render passes
-export default /* wgsl */ `
+export default /* wgsl */`
 
 #ifdef PICK_PASS
     #include "pickPS"

@@ -1,26 +1,17 @@
 import { Debug } from '../../core/debug.js';
 import {
-    PIXELFORMAT_R32U,
-    PIXELFORMAT_RGBA16F,
-    PIXELFORMAT_RGBA16U,
-    PIXELFORMAT_RGBA32U,
-    PIXELFORMAT_RG32U
+    PIXELFORMAT_R32U, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U,
+    PIXELFORMAT_RGBA32U, PIXELFORMAT_RG32U
 } from '../../platform/graphics/constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import { GSplatVaryings } from './gsplat-varyings.js';
 import {
     GSPLATDATA_COMPACT,
-    GSPLAT_RENDERER_AUTO,
-    GSPLAT_RENDERER_RASTER_CPU_SORT,
-    GSPLAT_RENDERER_COMPUTE,
-    GSPLAT_RENDERER_RASTER_GPU_SORT,
-    GSPLAT_DEBUG_NONE,
-    GSPLAT_DEBUG_LOD,
-    GSPLAT_DEBUG_SH_UPDATE,
-    GSPLAT_DEBUG_HEATMAP,
-    GSPLAT_DEBUG_AABBS,
-    GSPLAT_DEBUG_NODE_AABBS
+    GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
+    GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT,
+    GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
+    GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -103,18 +94,14 @@ class GSplatParams {
             //   Alpha co-located with center enables single-texture opacity early-out in compute shaders.
             // - dataTransformB (R32U): half-angle quaternion (11+11+10 bits)
             //   See: https://marc-b-reynolds.github.io/quaternions/2017/05/02/QuatQuantPart1.html
-            format = new GSplatFormat(
-                this._device,
-                [
-                    { name: 'dataColor', format: PIXELFORMAT_R32U },
-                    { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
-                    { name: 'dataTransformB', format: PIXELFORMAT_R32U }
-                ],
-                {
-                    readGLSL: glslCompactRead,
-                    readWGSL: wgslCompactRead
-                }
-            );
+            format = new GSplatFormat(this._device, [
+                { name: 'dataColor', format: PIXELFORMAT_R32U },
+                { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
+                { name: 'dataTransformB', format: PIXELFORMAT_R32U }
+            ], {
+                readGLSL: glslCompactRead,
+                readWGSL: wgslCompactRead
+            });
             format.setWriteCode(glslCompactWrite, wgslCompactWrite);
         } else {
             // Large work buffer format (32 bytes/splat):
@@ -122,18 +109,14 @@ class GSplatParams {
             // - dataTransformA (RGBA32U): center.xyz (3×32-bit floats as uint) + rotation.xy (2×16-bit halfs)
             // - dataTransformB (RG32U): rotation.z + scale.xyz (4×16-bit halfs, scale.w derived via sqrt)
             const colorFormat = this._device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
-            format = new GSplatFormat(
-                this._device,
-                [
-                    { name: 'dataColor', format: colorFormat },
-                    { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
-                    { name: 'dataTransformB', format: PIXELFORMAT_RG32U }
-                ],
-                {
-                    readGLSL: glslPackedRead,
-                    readWGSL: wgslPackedRead
-                }
-            );
+            format = new GSplatFormat(this._device, [
+                { name: 'dataColor', format: colorFormat },
+                { name: 'dataTransformA', format: PIXELFORMAT_RGBA32U },
+                { name: 'dataTransformB', format: PIXELFORMAT_RG32U }
+            ], {
+                readGLSL: glslPackedRead,
+                readWGSL: wgslPackedRead
+            });
             format.setWriteCode(glslPackedWrite, wgslPackedWrite);
         }
 
@@ -176,7 +159,8 @@ class GSplatParams {
     _resolveRenderer(value) {
         // AUTO picks GPU-side sorting on WebGPU, CPU-side sorting elsewhere.
         if (value === GSPLAT_RENDERER_AUTO) {
-            return this._device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
+            return this._device.isWebGPU ?
+                GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
         }
         // GPU sort requires WebGPU; fall back to CPU sort on WebGL.
         if (value === GSPLAT_RENDERER_RASTER_GPU_SORT && !this._device.isWebGPU) {
@@ -202,9 +186,7 @@ class GSplatParams {
      */
     set renderer(value) {
         if (value === GSPLAT_RENDERER_COMPUTE) {
-            Debug.removed(
-                'GSplatParams#renderer: GSPLAT_RENDERER_COMPUTE has been removed. Falling back to GSPLAT_RENDERER_AUTO.'
-            );
+            Debug.removed('GSplatParams#renderer: GSPLAT_RENDERER_COMPUTE has been removed. Falling back to GSPLAT_RENDERER_AUTO.');
             value = GSPLAT_RENDERER_AUTO;
         }
 
@@ -332,9 +314,7 @@ class GSplatParams {
      * @ignore
      */
     set debugNodeAabbs(value) {
-        Debug.deprecated(
-            'GSplatParams#debugNodeAabbs is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_NODE_AABBS instead.'
-        );
+        Debug.deprecated('GSplatParams#debugNodeAabbs is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_NODE_AABBS instead.');
         this.debug = value ? GSPLAT_DEBUG_NODE_AABBS : GSPLAT_DEBUG_NONE;
     }
 
@@ -362,7 +342,9 @@ class GSplatParams {
         if (value && !this._enableIds) {
             this._enableIds = true;
             if (!this._format.getStream('pcId')) {
-                this._format.addExtraStreams([{ name: 'pcId', format: PIXELFORMAT_R32U }]);
+                this._format.addExtraStreams([
+                    { name: 'pcId', format: PIXELFORMAT_R32U }
+                ]);
             }
         } else if (!value && this._enableIds) {
             this._enableIds = false;
@@ -555,9 +537,7 @@ class GSplatParams {
 
     /** @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead. */
     set colorizeColorUpdate(value) {
-        Debug.deprecated(
-            'GSplatParams#colorizeColorUpdate is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_SH_UPDATE instead.'
-        );
+        Debug.deprecated('GSplatParams#colorizeColorUpdate is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_SH_UPDATE instead.');
         this.debug = value ? GSPLAT_DEBUG_SH_UPDATE : GSPLAT_DEBUG_NONE;
     }
 
@@ -591,16 +571,12 @@ class GSplatParams {
 
     /** @ignore */
     set colorUpdateDistanceLodScale(value) {
-        Debug.removed(
-            'GSplatParams#colorUpdateDistanceLodScale is removed. Per-node distance scaling is now automatic.'
-        );
+        Debug.removed('GSplatParams#colorUpdateDistanceLodScale is removed. Per-node distance scaling is now automatic.');
     }
 
     /** @ignore */
     get colorUpdateDistanceLodScale() {
-        Debug.removed(
-            'GSplatParams#colorUpdateDistanceLodScale is removed. Per-node distance scaling is now automatic.'
-        );
+        Debug.removed('GSplatParams#colorUpdateDistanceLodScale is removed. Per-node distance scaling is now automatic.');
         return 0;
     }
 
@@ -655,7 +631,7 @@ class GSplatParams {
      * @type {number}
      */
     get alphaClipForward() {
-        return this._material.getParameter('alphaClipForward')?.data ?? 1.0 / 255.0;
+        return this._material.getParameter('alphaClipForward')?.data ?? (1.0 / 255.0);
     }
 
     /**
@@ -865,7 +841,7 @@ class GSplatParams {
             this._dataFormat = value;
 
             // capture extra streams from the old format
-            const extraStreams = this._format.extraStreams.map((s) => ({
+            const extraStreams = this._format.extraStreams.map(s => ({
                 name: s.name,
                 format: s.format,
                 storage: s.storage

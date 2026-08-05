@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform material_diffuse: vec3f;
 
 #ifdef STD_DIFFUSEDETAIL_TEXTURE

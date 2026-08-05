@@ -140,14 +140,9 @@ class BoundingBox {
         const bMax = other.getMax();
         const bMin = other.getMin();
 
-        return (
-            aMin.x <= bMax.x &&
-            aMax.x >= bMin.x &&
-            aMin.y <= bMax.y &&
-            aMax.y >= bMin.y &&
-            aMin.z <= bMax.z &&
-            aMax.z >= bMin.z
-        );
+        return (aMin.x <= bMax.x) && (aMax.x >= bMin.x) &&
+               (aMin.y <= bMax.y) && (aMax.y >= bMin.y) &&
+               (aMin.z <= bMax.z) && (aMax.z >= bMin.z);
     }
 
     _intersectsRay(ray, point) {
@@ -293,14 +288,9 @@ class BoundingBox {
         const c = this.center;
         const h = this.halfExtents;
 
-        if (
-            point.x < c.x - h.x ||
-            point.x > c.x + h.x ||
-            point.y < c.y - h.y ||
-            point.y > c.y + h.y ||
-            point.z < c.z - h.z ||
-            point.z > c.z + h.z
-        ) {
+        if (point.x < c.x - h.x || point.x > c.x + h.x ||
+            point.y < c.y - h.y || point.y > c.y + h.y ||
+            point.z < c.z - h.z || point.z > c.z + h.z) {
             return false;
         }
 
@@ -328,11 +318,7 @@ class BoundingBox {
         const c = this.center;
         const h = this.halfExtents;
 
-        return result.set(
-            Math.max(c.x - h.x, Math.min(point.x, c.x + h.x)),
-            Math.max(c.y - h.y, Math.min(point.y, c.y + h.y)),
-            Math.max(c.z - h.z, Math.min(point.z, c.z + h.z))
-        );
+        return result.set(Math.max(c.x - h.x, Math.min(point.x, c.x + h.x)), Math.max(c.y - h.y, Math.min(point.y, c.y + h.y)), Math.max(c.z - h.z, Math.min(point.z, c.z + h.z)));
     }
 
     /**
@@ -385,17 +371,9 @@ class BoundingBox {
             }
         }
 
-        this.center.set(
-            d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z,
-            d[13] + my0 * ac.x + my1 * ac.y + my2 * ac.z,
-            d[14] + mz0 * ac.x + mz1 * ac.y + mz2 * ac.z
-        );
+        this.center.set(d[12] + mx0 * ac.x + mx1 * ac.y + mx2 * ac.z, d[13] + my0 * ac.x + my1 * ac.y + my2 * ac.z, d[14] + mz0 * ac.x + mz1 * ac.y + mz2 * ac.z);
 
-        this.halfExtents.set(
-            Math.abs(mx0) * ar.x + Math.abs(mx1) * ar.y + Math.abs(mx2) * ar.z,
-            Math.abs(my0) * ar.x + Math.abs(my1) * ar.y + Math.abs(my2) * ar.z,
-            Math.abs(mz0) * ar.x + Math.abs(mz1) * ar.y + Math.abs(mz2) * ar.z
-        );
+        this.halfExtents.set(Math.abs(mx0) * ar.x + Math.abs(mx1) * ar.y + Math.abs(mx2) * ar.z, Math.abs(my0) * ar.x + Math.abs(my1) * ar.y + Math.abs(my2) * ar.z, Math.abs(mz0) * ar.x + Math.abs(mz1) * ar.y + Math.abs(mz2) * ar.z);
     }
 
     /**
@@ -477,12 +455,12 @@ class BoundingBox {
             let val = 0;
 
             if (pn < bMin) {
-                val = bMin - pn;
+                val = (bMin - pn);
                 out += val * val;
             }
 
             if (pn > bMax) {
-                val = pn - bMax;
+                val = (pn - bMax);
                 out += val * val;
             }
 

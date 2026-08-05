@@ -307,11 +307,7 @@ class AnimComponentLayer {
     update(dt) {
         if (this._blendTime) {
             if (this._blendTimeElapsed < this._blendTime) {
-                this.weight = math.lerp(
-                    this._startingWeight,
-                    this._targetWeight,
-                    this._blendTimeElapsed / this._blendTime
-                );
+                this.weight = math.lerp(this._startingWeight, this._targetWeight, this._blendTimeElapsed / this._blendTime);
                 this._blendTimeElapsed += dt;
             } else {
                 this.weight = this._targetWeight;
@@ -323,6 +319,7 @@ class AnimComponentLayer {
         }
         this._controller.update(dt);
     }
+
 
     /**
      * Blend from the current weight value to the provided weight value over a given amount of time.
@@ -361,12 +358,10 @@ class AnimComponentLayer {
         }
         this._controller.assignAnimation(nodePath, animTrack, speed, loop);
         if (this._controller._transitions.length === 0) {
-            this._controller._transitions.push(
-                new AnimTransition({
-                    from: 'START',
-                    to: nodePath
-                })
-            );
+            this._controller._transitions.push(new AnimTransition({
+                from: 'START',
+                to: nodePath
+            }));
         }
         if (this._component.activate && this._component.playable) {
             this._component.playing = true;
@@ -405,14 +400,12 @@ class AnimComponentLayer {
      * between 0 and 1. Defaults to null.
      */
     transition(to, time = 0, transitionOffset = null) {
-        this._controller.updateStateFromTransition(
-            new AnimTransition({
-                from: this._controller.activeStateName,
-                to,
-                time,
-                transitionOffset
-            })
-        );
+        this._controller.updateStateFromTransition(new AnimTransition({
+            from: this._controller.activeStateName,
+            to,
+            time,
+            transitionOffset
+        }));
     }
 }
 

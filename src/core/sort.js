@@ -10,4 +10,4 @@ const cmpPriority = (a, b) => a.priority - b.priority;
  * an object with at least a priority property.
  * @returns {Array<{priority: number}>} In place sorted array.
  */
-export const sortPriority = (arr) => arr.sort(cmpPriority);
+export const sortPriority = arr => arr.sort(cmpPriority);

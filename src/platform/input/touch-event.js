@@ -139,8 +139,8 @@ class TouchEvent {
         this.element = event.target;
         this.event = event;
 
-        this.touches = Array.from(event.touches).map((touch) => new Touch(touch));
-        this.changedTouches = Array.from(event.changedTouches).map((touch) => new Touch(touch));
+        this.touches = Array.from(event.touches).map(touch => new Touch(touch));
+        this.changedTouches = Array.from(event.changedTouches).map(touch => new Touch(touch));
     }
 
     /**
@@ -152,7 +152,7 @@ class TouchEvent {
      * @returns {Touch|null} The {@link Touch} object or null.
      */
     getTouchById(id, list) {
-        return list.find((touch) => touch.id === id) || null;
+        return list.find(touch => touch.id === id) || null;
     }
 }
 

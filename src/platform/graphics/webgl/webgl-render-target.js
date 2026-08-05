@@ -153,8 +153,11 @@ class WebglRenderTarget {
         const buffers = [];
 
         if (this.suppliedColorFramebuffer !== undefined) {
+
             this._glFrameBuffer = this.suppliedColorFramebuffer;
+
         } else {
+
             Debug.call(() => {
                 if (target.width <= 0 || target.height <= 0) {
                     Debug.warnOnce(`Invalid render target size: ${target.width} x ${target.height}`, target);
@@ -178,13 +181,7 @@ class WebglRenderTarget {
                         device.setTexture(colorBuffer, 0);
                     }
                     // Attach the color buffer
-                    gl.framebufferTexture2D(
-                        gl.FRAMEBUFFER,
-                        attachmentBaseConstant + i,
-                        colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        colorBuffer.impl._glTexture,
-                        target.mipLevel
-                    );
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentBaseConstant + i, colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D, colorBuffer.impl._glTexture, target.mipLevel);
 
                     buffers.push(attachmentBaseConstant + i);
                 }
@@ -194,6 +191,7 @@ class WebglRenderTarget {
 
             const depthBuffer = target._depthBuffer;
             if (depthBuffer || target._depth) {
+
                 const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
 
                 if (depthBuffer) {
@@ -206,13 +204,8 @@ class WebglRenderTarget {
                     }
 
                     // Attach
-                    gl.framebufferTexture2D(
-                        gl.FRAMEBUFFER,
-                        attachmentPoint,
-                        depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        target._depthBuffer.impl._glTexture,
-                        target.mipLevel
-                    );
+                    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D, target._depthBuffer.impl._glTexture, target.mipLevel);
+
                 } else {
                     // --- Init a new depth/stencil buffer (optional) ---
                     // if device is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
@@ -225,12 +218,7 @@ class WebglRenderTarget {
                         const internalFormat = target._stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT32F;
                         gl.bindRenderbuffer(gl.RENDERBUFFER, this._glDepthBuffer);
                         gl.renderbufferStorage(gl.RENDERBUFFER, internalFormat, target.width, target.height);
-                        gl.framebufferRenderbuffer(
-                            gl.FRAMEBUFFER,
-                            attachmentPoint,
-                            gl.RENDERBUFFER,
-                            this._glDepthBuffer
-                        );
+                        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, attachmentPoint, gl.RENDERBUFFER, this._glDepthBuffer);
                         gl.bindRenderbuffer(gl.RENDERBUFFER, null);
                     }
                 }
@@ -241,6 +229,7 @@ class WebglRenderTarget {
 
         // ##### Create MSAA FBO #####
         if (target._samples > 1) {
+
             // Use previous FBO for resolves
             this._glResolveFrameBuffer = this._glFrameBuffer;
 
@@ -252,21 +241,18 @@ class WebglRenderTarget {
             const colorBufferCount = target._colorBuffers?.length ?? 0;
 
             if (this.suppliedColorFramebuffer !== undefined) {
+
                 const buffer = gl.createRenderbuffer();
                 this._glMsaaColorBuffers.push(buffer);
 
                 const internalFormat = device.backBufferFormat === PIXELFORMAT_RGBA8 ? gl.RGBA8 : gl.RGB8;
 
                 gl.bindRenderbuffer(gl.RENDERBUFFER, buffer);
-                gl.renderbufferStorageMultisample(
-                    gl.RENDERBUFFER,
-                    target._samples,
-                    internalFormat,
-                    target.width,
-                    target.height
-                );
+                gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
                 gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, buffer);
+
             } else {
+
                 for (let i = 0; i < colorBufferCount; ++i) {
                     const colorBuffer = target.getColorBuffer(i);
                     if (colorBuffer) {
@@ -274,13 +260,7 @@ class WebglRenderTarget {
                         this._glMsaaColorBuffers.push(buffer);
 
                         gl.bindRenderbuffer(gl.RENDERBUFFER, buffer);
-                        gl.renderbufferStorageMultisample(
-                            gl.RENDERBUFFER,
-                            target._samples,
-                            colorBuffer.impl._glInternalFormat,
-                            target.width,
-                            target.height
-                        );
+                        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer.impl._glInternalFormat, target.width, target.height);
                         gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.RENDERBUFFER, buffer);
                     }
                 }
@@ -288,6 +268,7 @@ class WebglRenderTarget {
 
             // Optionally add a MSAA depth/stencil buffer
             if (target._depth) {
+
                 Debug.assert(!this._glMsaaDepthBuffer);
                 const internalFormat = target._stencil ? gl.DEPTH24_STENCIL8 : gl.DEPTH_COMPONENT32F;
                 const attachmentPoint = target._stencil ? gl.DEPTH_STENCIL_ATTACHMENT : gl.DEPTH_ATTACHMENT;
@@ -296,6 +277,7 @@ class WebglRenderTarget {
                 let key;
                 const depthBuffer = target._depthBuffer;
                 if (depthBuffer) {
+
                     // key for matching multi-sampled depth buffer
                     key = `${depthBuffer.id}:${target.width}:${target.height}:${target._samples}:${internalFormat}:${attachmentPoint}`;
 
@@ -305,15 +287,10 @@ class WebglRenderTarget {
 
                 // if we don't have a multi-sampled depth buffer, create one
                 if (!this._glMsaaDepthBuffer) {
+
                     this._glMsaaDepthBuffer = gl.createRenderbuffer();
                     gl.bindRenderbuffer(gl.RENDERBUFFER, this._glMsaaDepthBuffer);
-                    gl.renderbufferStorageMultisample(
-                        gl.RENDERBUFFER,
-                        target._samples,
-                        internalFormat,
-                        target.width,
-                        target.height
-                    );
+                    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);
 
                     // add 'destroy' method to the renderbuffer, allowing it to be destroyed by the cache
                     this._glMsaaDepthBuffer.destroy = function () {
@@ -347,6 +324,7 @@ class WebglRenderTarget {
     }
 
     _createMsaaMrtFramebuffers(device, target, colorBufferCount) {
+
         const gl = device.gl;
         this.colorMrtFramebuffers = [];
 
@@ -359,13 +337,7 @@ class WebglRenderTarget {
             const buffer = this._glMsaaColorBuffers[i];
 
             gl.bindRenderbuffer(gl.RENDERBUFFER, buffer);
-            gl.renderbufferStorageMultisample(
-                gl.RENDERBUFFER,
-                target._samples,
-                colorBuffer.impl._glInternalFormat,
-                target.width,
-                target.height
-            );
+            gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, colorBuffer.impl._glInternalFormat, target.width, target.height);
             gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, buffer);
 
             gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
@@ -375,13 +347,7 @@ class WebglRenderTarget {
             // dst
             const dstFramebuffer = gl.createFramebuffer();
             device.setFramebuffer(dstFramebuffer);
-            gl.framebufferTexture2D(
-                gl.FRAMEBUFFER,
-                gl.COLOR_ATTACHMENT0,
-                colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                colorBuffer.impl._glTexture,
-                0
-            );
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D, colorBuffer.impl._glTexture, 0);
 
             this.colorMrtFramebuffers[i] = new FramebufferPair(srcFramebuffer, dstFramebuffer);
 
@@ -398,16 +364,11 @@ class WebglRenderTarget {
      * @private
      */
     _checkFbo(device, target, type = '') {
+
         // Build a key from attachment formats, depth/stencil config, samples, and FBO type.
         // Dimensions are excluded as they don't affect framebuffer completeness.
-        const colorFormats = target._colorBuffers?.map((b) => b?.format ?? -1).join(',') ?? '';
-        const depthInfo = target._depth
-            ? target._depthBuffer
-                ? `dt${target._depthBuffer.format}`
-                : target._stencil
-                  ? 'ds'
-                  : 'd'
-            : '';
+        const colorFormats = target._colorBuffers?.map(b => b?.format ?? -1).join(',') ?? '';
+        const depthInfo = target._depth ? (target._depthBuffer ? `dt${target._depthBuffer.format}` : (target._stencil ? 'ds' : 'd')) : '';
         const key = `${type}:${colorFormats}:${depthInfo}:${target._samples}`;
 
         // clear validated configs on context loss to re-validate after restore
@@ -443,11 +404,7 @@ class WebglRenderTarget {
             validated.add(key);
         }
 
-        Debug.assert(
-            !errorCode,
-            `Framebuffer creation failed with error code ${errorCode}, render target: ${target.name} ${type}`,
-            target
-        );
+        Debug.assert(!errorCode, `Framebuffer creation failed with error code ${errorCode}, render target: ${target.name} ${type}`, target);
     }
 
     loseContext() {
@@ -463,6 +420,7 @@ class WebglRenderTarget {
     }
 
     internalResolve(device, src, dst, target, mask) {
+
         Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
 
         // blit is affected by scissor test, so make it full size
@@ -485,6 +443,7 @@ class WebglRenderTarget {
 
         // if MRT is used, we need to resolve each buffer individually
         if (this.colorMrtFramebuffers) {
+
             // color
             if (color) {
                 for (let i = 0; i < this.colorMrtFramebuffers.length; i++) {
@@ -499,19 +458,13 @@ class WebglRenderTarget {
             // depth
             if (depth) {
                 DebugGraphics.pushGpuMarker(device, 'RESOLVE-MRT-DEPTH');
-                this.internalResolve(
-                    device,
-                    this._glFrameBuffer,
-                    this._glResolveFrameBuffer,
-                    target,
-                    gl.DEPTH_BUFFER_BIT
-                );
+                this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target, gl.DEPTH_BUFFER_BIT);
                 DebugGraphics.popGpuMarker(device);
             }
+
         } else {
             // true when this render target resolves into the active XR session's framebuffer.
-            const isXrFramebuffer =
-                !!device.defaultFramebuffer && this._glResolveFrameBuffer === device.defaultFramebuffer;
+            const isXrFramebuffer = !!device.defaultFramebuffer && this._glResolveFrameBuffer === device.defaultFramebuffer;
 
             // On visionOS / Apple Vision Pro, blitFramebuffer into the opaque XR FBO produces
             // incorrect results (content appears scaled to a small sub-region). Instead we resolve
@@ -521,25 +474,14 @@ class WebglRenderTarget {
 
             if (xrColorQuad) {
                 DebugGraphics.pushGpuMarker(device, 'RESOLVE-XR-COLOR-QUAD');
-                device.resolveMsaaColorToXrFramebufferViaQuads(
-                    this._glFrameBuffer,
-                    this._glResolveFrameBuffer,
-                    target.width,
-                    target.height
-                );
+                device.resolveMsaaColorToXrFramebufferViaQuads(this._glFrameBuffer, this._glResolveFrameBuffer, target.width, target.height);
                 DebugGraphics.popGpuMarker(device);
                 color = false; // color is resolved; fall through to handle depth if needed
             }
 
             if (color || depth) {
                 DebugGraphics.pushGpuMarker(device, 'RESOLVE');
-                this.internalResolve(
-                    device,
-                    this._glFrameBuffer,
-                    this._glResolveFrameBuffer,
-                    target,
-                    (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0)
-                );
+                this.internalResolve(device, this._glFrameBuffer, this._glResolveFrameBuffer, target, (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0));
                 DebugGraphics.popGpuMarker(device);
             }
         }

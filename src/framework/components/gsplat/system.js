@@ -174,14 +174,14 @@ class GSplatComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
+
         const gSplatComponent = entity.gsplat;
 
         // copy properties
         const data = {};
         _properties.forEach((prop) => {
             if (prop === 'material') {
-                if (!gSplatComponent.unified) {
-                    // unified gsplat does not use material
+                if (!gSplatComponent.unified) { // unified gsplat does not use material
                     const srcMaterial = gSplatComponent[prop];
                     if (srcMaterial) {
                         data[prop] = srcMaterial.clone();
@@ -233,9 +233,7 @@ class GSplatComponentSystem extends ComponentSystem {
     }
 
     getGSplatMaterial(camera, layer) {
-        Debug.deprecated(
-            'GSplatComponentSystem#getGSplatMaterial is deprecated. Use GSplatComponentSystem#getMaterial instead.'
-        );
+        Debug.deprecated('GSplatComponentSystem#getGSplatMaterial is deprecated. Use GSplatComponentSystem#getMaterial instead.');
         return this.getMaterial(camera, layer);
     }
 

@@ -1,7 +1,7 @@
 import { Vec3, Color } from 'playcanvas';
 import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
-const shaderGLSL = /* glsl */ `
+const shaderGLSL = /* glsl */`
 uniform vec3 uAabbMin;
 uniform vec3 uAabbMax;
 uniform vec3 uCropMin;
@@ -117,7 +117,7 @@ void modifySplatColor(vec3 center, inout vec4 color) {
 }
 `;
 
-const shaderWGSL = /* wgsl */ `
+const shaderWGSL = /* wgsl */`
 uniform uAabbMin: vec3f;
 uniform uAabbMax: vec3f;
 uniform uCropMin: vec3f;

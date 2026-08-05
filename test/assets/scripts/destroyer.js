@@ -37,7 +37,7 @@ Destroyer.prototype.postInitialize = function () {
 Destroyer.prototype.update = function () {
     window.initializeCalls.push(`${this.entity.guid} update destroyer`);
 
-    if (!this.methodName || this.methodName === 'update') {
+    if (!this.methodName || this.methodName === 'update')  {
         this.destroySomething();
     }
 };
@@ -49,6 +49,7 @@ Destroyer.prototype.postUpdate = function () {
         this.destroySomething();
     }
 };
+
 
 Destroyer.prototype.destroySomething = function () {
     if (this.destroyEntity) {

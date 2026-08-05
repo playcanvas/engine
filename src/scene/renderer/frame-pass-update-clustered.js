@@ -15,10 +15,7 @@ class FramePassUpdateClustered extends FramePass {
         this.frameGraph = null;
 
         // render cookies for all local visible lights
-        this.cookiesRenderPass = RenderPassCookieRenderer.create(
-            lightTextureAtlas.cookieRenderTarget,
-            lightTextureAtlas.cubeSlotsOffsets
-        );
+        this.cookiesRenderPass = RenderPassCookieRenderer.create(lightTextureAtlas.cookieRenderTarget, lightTextureAtlas.cubeSlotsOffsets);
         this.beforePasses.push(this.cookiesRenderPass);
 
         // local shadows - these are shared by all cameras (not entirely correctly)
@@ -27,6 +24,7 @@ class FramePassUpdateClustered extends FramePass {
     }
 
     update(frameGraph, shadowsEnabled, cookiesEnabled, lights, localLights) {
+
         this.frameGraph = frameGraph;
 
         this.cookiesRenderPass.enabled = cookiesEnabled;
@@ -46,6 +44,7 @@ class FramePassUpdateClustered extends FramePass {
     }
 
     execute() {
+
         // #if _PROFILER
         const startTime = now();
         // #endif

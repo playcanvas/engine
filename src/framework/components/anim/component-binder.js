@@ -11,8 +11,8 @@ import { Vec4 } from '../../../core/math/vec4.js';
 const v2 = new Vec2();
 const v3 = new Vec3();
 const v4 = new Vec4();
-const c = new Color();
-const q = new Quat();
+const c  = new Color();
+const q  = new Quat();
 
 class AnimComponentBinder extends DefaultAnimBinder {
     constructor(animComponent, graph, layerName, mask, layerIndex) {
@@ -186,6 +186,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     _createAnimTargetForProperty(propertyComponent, propertyHierarchy, targetPath) {
+
         if (this.handlers && propertyHierarchy[0].startsWith('weight.')) {
             return this.handlers.weight(propertyComponent, propertyHierarchy[0].replace('weight.', ''));
         } else if (this.handlers && propertyHierarchy[0] === 'material' && propertyHierarchy.length === 2) {
@@ -248,15 +249,10 @@ class AnimComponentBinder extends DefaultAnimBinder {
 
         // materials must have update called after changing settings
         if (propertyHierarchy.indexOf('material') !== -1) {
-            return new AnimTarget(
-                (values) => {
-                    setter(values);
-                    propertyComponent.material.update();
-                },
-                animDataType,
-                animDataComponents,
-                targetPath
-            );
+            return new AnimTarget((values) => {
+                setter(values);
+                propertyComponent.material.update();
+            }, animDataType, animDataComponents, targetPath);
         }
 
         return new AnimTarget(setter, animDataType, animDataComponents, targetPath);
@@ -274,7 +270,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
             this.graph = this.animComponent.entity;
         }
 
-        const nodes = {};
+        const nodes = { };
         // cache node names so we can quickly resolve animation paths
         const flatten = function (node) {
             nodes[node.name] = node;

@@ -13,7 +13,7 @@ import { Vec3 } from '../../core/math/vec3.js';
  */
 const calculateNormals = (positions, indices) => {
     const triangleCount = indices.length / 3;
-    const vertexCount = positions.length / 3;
+    const vertexCount   = positions.length / 3;
     const p1 = new Vec3();
     const p2 = new Vec3();
     const p3 = new Vec3();
@@ -42,13 +42,13 @@ const calculateNormals = (positions, indices) => {
         p1p3.sub2(p3, p1);
         faceNormal.cross(p1p2, p1p3).normalize();
 
-        normals[i1 * 3] += faceNormal.x;
+        normals[i1 * 3]     += faceNormal.x;
         normals[i1 * 3 + 1] += faceNormal.y;
         normals[i1 * 3 + 2] += faceNormal.z;
-        normals[i2 * 3] += faceNormal.x;
+        normals[i2 * 3]     += faceNormal.x;
         normals[i2 * 3 + 1] += faceNormal.y;
         normals[i2 * 3 + 2] += faceNormal.z;
-        normals[i3 * 3] += faceNormal.x;
+        normals[i3 * 3]     += faceNormal.x;
         normals[i3 * 3 + 1] += faceNormal.y;
         normals[i3 * 3 + 2] += faceNormal.z;
     }
@@ -84,13 +84,13 @@ const calculateTangents = (positions, normals, uvs, indices) => {
     // Lengyel's Method
     // http://web.archive.org/web/20180620024439/http://www.terathon.com/code/tangent.html
     const triangleCount = indices.length / 3;
-    const vertexCount = positions.length / 3;
-    const v1 = new Vec3();
-    const v2 = new Vec3();
-    const v3 = new Vec3();
-    const w1 = new Vec2();
-    const w2 = new Vec2();
-    const w3 = new Vec2();
+    const vertexCount   = positions.length / 3;
+    const v1   = new Vec3();
+    const v2   = new Vec3();
+    const v3   = new Vec3();
+    const w1   = new Vec2();
+    const w2   = new Vec2();
+    const w3   = new Vec2();
     const sdir = new Vec3();
     const tdir = new Vec3();
     const tan1 = new Float32Array(vertexCount * 3);
@@ -172,13 +172,13 @@ const calculateTangents = (positions, normals, uvs, indices) => {
         temp.copy(n).mulScalar(ndott);
         temp.sub2(t1, temp).normalize();
 
-        tangents[i * 4] = temp.x;
+        tangents[i * 4]     = temp.x;
         tangents[i * 4 + 1] = temp.y;
         tangents[i * 4 + 2] = temp.z;
 
         // Calculate handedness
         temp.cross(n, t1);
-        tangents[i * 4 + 3] = temp.dot(t2) < 0.0 ? -1.0 : 1.0;
+        tangents[i * 4 + 3] = (temp.dot(t2) < 0.0) ? -1.0 : 1.0;
     }
 
     return tangents;

@@ -165,7 +165,7 @@ class Tags extends EventHandler {
 
         const tags = this._list.slice(0);
         this._list = [];
-        this._index = {};
+        this._index = { };
 
         for (let i = 0; i < tags.length; i++) {
             this.fire('remove', tags[i], this._parent);

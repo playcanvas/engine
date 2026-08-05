@@ -65,8 +65,7 @@ class ModelHandler extends ResourceHandler {
                 const url = data.mapping[i].path;
                 let material;
 
-                if (id !== undefined) {
-                    // id mapping
+                if (id !== undefined) { // id mapping
                     if (!id) {
                         meshInstance.material = self.defaultMaterial;
                     } else {

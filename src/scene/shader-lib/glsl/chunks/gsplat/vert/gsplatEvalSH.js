@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     #if SH_BANDS == 1
         #define SH_COEFFS 3
     #elif SH_BANDS == 2

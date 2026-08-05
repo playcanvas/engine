@@ -19,12 +19,15 @@ const textHandlers = [
 ];
 
 describe('text resource handlers', function () {
+
     afterEach(function () {
         restore();
     });
 
     textHandlers.forEach(({ name, Handler, type }) => {
+
         describe(name, function () {
+
             it('loads the resource and returns the fetched response', function () {
                 const handler = new Handler({});
                 stub(http, 'get').callsFake((url, options, callback) => {

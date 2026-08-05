@@ -14,6 +14,7 @@ describe('AnimSnapshot', function () {
     const animSnapshot = new AnimSnapshot(animTrack);
 
     describe('#constructor', function () {
+
         it('instantiates correctly', function () {
             expect(animSnapshot).to.be.ok;
             expect(animSnapshot._name).to.equal('trackSnapshot');
@@ -22,5 +23,7 @@ describe('AnimSnapshot', function () {
             expect(animSnapshot._results[0].length).to.equal(3);
             expect(animSnapshot._results[0]).to.deep.equal([0, 0, 0]);
         });
+
     });
+
 });

@@ -44,6 +44,7 @@ describe('AnimationComponent', function () {
     };
 
     describe('preload', function () {
+
         beforeEach(function (done) {
             jsdomSetup();
             app = createApp();
@@ -91,9 +92,11 @@ describe('AnimationComponent', function () {
             // is currAnim public API?
             expect(entity.animation.currAnim).to.equal(assets.animation.name);
         });
+
     });
 
     describe('async', function () {
+
         beforeEach(function () {
             jsdomSetup();
             app = createApp();
@@ -126,6 +129,7 @@ describe('AnimationComponent', function () {
             });
 
             app.root.addChild(entity);
+
         });
 
         it('async assets, clone of animation component loads animations', function (done) {
@@ -153,9 +157,11 @@ describe('AnimationComponent', function () {
             const clone = entity.clone();
             app.root.addChild(clone);
         });
+
     });
 
     describe('asset event unbinding', function () {
+
         beforeEach(function () {
             jsdomSetup();
             app = createApp();
@@ -258,5 +264,7 @@ describe('AnimationComponent', function () {
 
             expect(app.assets.hasEvent(`add:${pending.id}`)).to.be.false;
         });
+
     });
+
 });

@@ -28,21 +28,16 @@ class JsonStandardMaterialParser {
     }
 
     load(url, callback, asset) {
-        this.handler.fetch(
-            url,
-            Http.ResponseType.JSON,
-            (err, response) => {
-                if (err) {
-                    callback(`Error loading material: ${url.original} [${err}]`);
-                } else {
-                    // loading from a url is an engine-only path - tag the data so open/patch can copy
-                    // it into the asset (in the editor, material data always comes from the asset)
-                    response._engine = true;
-                    callback(null, response);
-                }
-            },
-            asset
-        );
+        this.handler.fetch(url, Http.ResponseType.JSON, (err, response) => {
+            if (err) {
+                callback(`Error loading material: ${url.original} [${err}]`);
+            } else {
+                // loading from a url is an engine-only path - tag the data so open/patch can copy
+                // it into the asset (in the editor, material data always comes from the asset)
+                response._engine = true;
+                callback(null, response);
+            }
+        }, asset);
     }
 
     open(url, data) {
@@ -179,7 +174,10 @@ class JsonStandardMaterialParser {
         }
 
         // Properties that may exist in input data, but are now ignored
-        const DEPRECATED_PROPERTIES = ['fresnelFactor', 'shadowSampleType'];
+        const DEPRECATED_PROPERTIES = [
+            'fresnelFactor',
+            'shadowSampleType'
+        ];
 
         for (i = 0; i < DEPRECATED_PROPERTIES.length; i++) {
             const name = DEPRECATED_PROPERTIES[i];

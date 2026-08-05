@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 // Rotation source data is f16 - compute in half precision
 fn quatToMat3(r: half4) -> half3x3 {
     let r2: half4 = r + r;

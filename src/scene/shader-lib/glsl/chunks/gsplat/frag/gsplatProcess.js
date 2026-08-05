@@ -1,5 +1,5 @@
 // Fragment shader template for GSplatProcessor - processes splat data from src to dst streams
-export default /* glsl */ `
+export default /* glsl */`
 
 // Texture size and splat count uniforms
 uniform uint splatTextureSize;

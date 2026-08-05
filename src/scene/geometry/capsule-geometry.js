@@ -58,6 +58,7 @@ class CapsuleGeometry extends ConeBaseGeometry {
      * });
      */
     constructor(opts = {}) {
+
         // Check the supplied options and provide defaults for unspecified ones
         const radius = opts.radius ?? 0.3;
         const height = opts.height ?? 1;

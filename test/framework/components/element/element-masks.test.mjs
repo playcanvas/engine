@@ -84,6 +84,7 @@ describe('ElementComponent Masks', function () {
     });
 
     it('sibling masks, correct maskref', function () {
+
         // m1   m2
         // |    |
         // c1   c2
@@ -125,6 +126,7 @@ describe('ElementComponent Masks', function () {
     });
 
     it('sub-masked and sibling children', function () {
+
         //    top
         // /        \
         // m11       m12
@@ -203,6 +205,7 @@ describe('ElementComponent Masks', function () {
     });
 
     it('parallel parents - sub-masked and sibling children', function () {
+
         // m11  m12
         // |    |
         // m21  m22
@@ -266,6 +269,7 @@ describe('ElementComponent Masks', function () {
     });
 
     it('sub-masked and later children', function () {
+
         // m1
         // |  \
         // m2 c2
@@ -309,7 +313,9 @@ describe('ElementComponent Masks', function () {
         expect(c2.element.maskedBy.name).to.equal(m1.name);
     });
 
+
     it('multiple child masks and later children', function () {
+
         //    m1
         // /  |  \
         // m2 m3 c2
@@ -456,4 +462,5 @@ describe('ElementComponent Masks', function () {
         app.render();
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
     });
+
 });

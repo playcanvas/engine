@@ -371,7 +371,7 @@ const funcNameRegex = /^\s*function(?:\s|\s*\/\*.*\*\/\s*)+([^(\s\/]*)\s*/;
  * @param {string} str - The string to convert.
  * @returns {string} The converted string.
  */
-export const toLowerCamelCase = (str) => (str ? str[0].toLowerCase() + str.substring(1) : str);
+export const toLowerCamelCase = str => (str ? str[0].toLowerCase() + str.substring(1) : str);
 
 /**
  * Returns the intrinsic (display) name of a script class - either a `scriptName` declared on the
@@ -390,7 +390,7 @@ export function getScriptName(constructorFn) {
     }
     if ('name' in Function.prototype) return constructorFn.name;
     if (constructorFn === Function || constructorFn === Function.prototype.constructor) return 'Function';
-    const match = `${constructorFn}`.match(funcNameRegex);
+    const match = (`${constructorFn}`).match(funcNameRegex);
     return match ? match[1] : undefined;
 }
 

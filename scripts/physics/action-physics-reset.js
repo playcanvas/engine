@@ -3,8 +3,7 @@ var ActionPhysicsReset = pc.createScript('actionPhysicsReset');
 ActionPhysicsReset.attributes.add('event', {
     type: 'string',
     title: 'Event',
-    description:
-        'If the specified event is fired and this entity has a dynamic rigid body, it will be reset to its initial position and orientation. The event must be fired on the app.'
+    description: 'If the specified event is fired and this entity has a dynamic rigid body, it will be reset to its initial position and orientation. The event must be fired on the app.'
 });
 
 // initialize code called once per entity

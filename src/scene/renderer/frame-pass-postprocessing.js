@@ -12,6 +12,7 @@ class FramePassPostprocessing extends FramePass {
     }
 
     execute() {
+
         const renderAction = this.renderAction;
         const camera = renderAction.camera;
         Debug.assert(renderAction.triggerPostprocess && camera.onPostprocessing);

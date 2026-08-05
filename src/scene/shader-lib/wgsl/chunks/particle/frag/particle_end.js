@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     rgb = addFog(rgb);
     rgb = toneMap(rgb);
     rgb = gammaCorrectOutput(rgb);

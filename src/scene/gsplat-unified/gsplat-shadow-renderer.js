@@ -3,11 +3,7 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
-import {
-    BindGroupFormat,
-    BindStorageBufferFormat,
-    BindUniformBufferFormat
-} from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST,
@@ -230,7 +226,7 @@ class GSplatShadowRenderer {
     }
 
     destroy() {
-        this.entries.forEach((entry) => this._destroyEntry(entry));
+        this.entries.forEach(entry => this._destroyEntry(entry));
         this.entries.clear();
 
         this._compaction?.destroy();
@@ -255,11 +251,7 @@ class GSplatShadowRenderer {
     _ensureCullShader() {
         const wbFormat = this.world.workBuffer.format;
         const version = wbFormat.extraStreamsVersion;
-        if (
-            !this._cullShader ||
-            version !== this._cullFormatVersion ||
-            this._userChunksKey !== this._cullBuiltChunksKey
-        ) {
+        if (!this._cullShader || version !== this._cullFormatVersion || this._userChunksKey !== this._cullBuiltChunksKey) {
             this._cullFormatVersion = version;
             this._cullBuiltChunksKey = this._userChunksKey;
             this._buildCullShader();
@@ -412,9 +404,7 @@ class GSplatShadowRenderer {
             const light = lights[i];
             if (!light.enabled || !light.castShadows) continue;
             if (light.numCascades !== 1) {
-                Debug.warnOnce(
-                    'GSplatShadowRenderer: cascaded directional shadows are not supported for gsplats; the light will not cast a gsplat shadow.'
-                );
+                Debug.warnOnce('GSplatShadowRenderer: cascaded directional shadows are not supported for gsplats; the light will not cast a gsplat shadow.');
                 continue;
             }
             desired.add(light);
@@ -499,7 +489,7 @@ class GSplatShadowRenderer {
         if (chunksKey !== this._userChunksKey) {
             this._userChunksKey = chunksKey;
             this._userModifyWgsl = userMat.getShaderChunks?.('wgsl')?.get('gsplatModifyVS') ?? null;
-            this.entries.forEach((entry) => this._applyUserModify(entry));
+            this.entries.forEach(entry => this._applyUserModify(entry));
         }
 
         // forward user material parameters (e.g. uTime) every frame. The entry's own bindings are
@@ -567,9 +557,9 @@ class GSplatShadowRenderer {
         const orthoHeight = shadowCamera.orthoHeight;
         const shadowRes = entry.light._shadowResolution;
         const minPixelSize = gsplatParams.minPixelSize;
-        const focal = orthoHeight > 0 && shadowRes > 0 ? shadowRes / orthoHeight : 0;
+        const focal = (orthoHeight > 0 && shadowRes > 0) ? shadowRes / orthoHeight : 0;
         const t2 = minPixelSize * minPixelSize * 0.5 - 0.3;
-        const worldSizeThreshold = focal > 0 && t2 > 0 ? Math.sqrt(t2) / focal : 0;
+        const worldSizeThreshold = (focal > 0 && t2 > 0) ? Math.sqrt(t2) / focal : 0;
 
         // grow the visible-index buffer to hold all active splats (worst case: nothing culled)
         if (totalActiveSplats > entry.allocatedIndexCount) {
@@ -587,16 +577,11 @@ class GSplatShadowRenderer {
         // camera-independent buffers; only the planes are per-light, passed via a lightweight culler
         // view so the forward culler's own planes are never mutated.
         const compaction = this._compaction;
-        compaction.dispatchCompact(
-            {
-                boundsBuffer: frustumCuller.boundsBuffer,
-                transformsBuffer: frustumCuller.transformsBuffer,
-                frustumPlanes: this._frustumPlanes
-            },
-            numIntervals,
-            totalActiveSplats,
-            false
-        );
+        compaction.dispatchCompact({
+            boundsBuffer: frustumCuller.boundsBuffer,
+            transformsBuffer: frustumCuller.transformsBuffer,
+            frustumPlanes: this._frustumPlanes
+        }, numIntervals, totalActiveSplats, false);
 
         // PASS 2 (fine): flat one-thread-per-candidate cull over the candidate list — read + apply the
         // vertex modify + opacity/size/frustum tests — compacting survivors into this light's final
@@ -647,11 +632,7 @@ class GSplatShadowRenderer {
         // flat dispatch over the work-buffer capacity (a CPU-known upper bound); threads beyond the
         // candidate count early-out in the shader. Tiled across X/Y over the per-dimension limit.
         const workgroupCount = Math.ceil(totalActiveSplats / WORKGROUP_SIZE);
-        Compute.calcDispatchSize(
-            workgroupCount,
-            this._cullDispatchSize,
-            device.limits.maxComputeWorkgroupsPerDimension || 65535
-        );
+        Compute.calcDispatchSize(workgroupCount, this._cullDispatchSize, device.limits.maxComputeWorkgroupsPerDimension || 65535);
         cull.setupDispatch(this._cullDispatchSize.x, this._cullDispatchSize.y, 1);
         device.computeDispatch([cull], 'GSplatShadowCull');
 

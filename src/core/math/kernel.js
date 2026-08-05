@@ -24,7 +24,7 @@ class Kernel {
         kernel.push(0, 0);
 
         // spacing based on the first ring
-        const spacing = (2 * Math.PI) / numRings / numPoints;
+        const spacing = (2 * Math.PI / numRings) / numPoints;
 
         // Generate points for each ring
         for (let ring = 1; ring <= numRings; ring++) {

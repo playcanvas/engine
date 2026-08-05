@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 mat3 quatToMat3(vec4 R) {
     vec4 R2 = R + R;
     float X = R2.x * R.w;

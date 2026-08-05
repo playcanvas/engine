@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     #ifdef VIGNETTE
         uniform vec4 vignetterParams;
         uniform vec3 vignetteColor;

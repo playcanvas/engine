@@ -1,6 +1,5 @@
 import javascriptConfig from '@playcanvas/eslint-config/javascript';
 import { esmScriptTags } from '@playcanvas/eslint-config';
-import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 
 export default [
@@ -14,21 +13,24 @@ export default [
                 ...globals.browser,
                 ...globals.mocha,
                 ...globals.node,
-                Ammo: 'readonly',
-                earcut: 'readonly',
-                opentype: 'readonly',
-                pc: 'readonly',
-                TWEEN: 'readonly',
-                twgsl: 'readonly',
-                webkitAudioContext: 'readonly'
+                'Ammo': 'readonly',
+                'earcut': 'readonly',
+                'opentype': 'readonly',
+                'pc': 'readonly',
+                'TWEEN': 'readonly',
+                'twgsl': 'readonly',
+                'webkitAudioContext': 'readonly'
             }
         },
         rules: {
+            'function-call-argument-newline': ['error', 'never'],
+            'function-paren-newline': ['error', 'never'],
             'import/order': 'off',
             'jsdoc/check-tag-names': [
                 'error',
                 {
-                    // shared tags plus local tags this override would otherwise replace
+                    // esmScriptTags (range/step/precision included) plus the shared config's own
+                    // extra tags, which this override would otherwise drop by replacing the rule
                     definedTags: [...new Set([...esmScriptTags, 'alpha', 'beta', 'category', 'import'])]
                 }
             ]
@@ -56,7 +58,11 @@ export default [
         }
     },
     {
-        ignores: ['examples/assets/wasm/*', 'scripts/textmesh/*.min.js', 'src/polyfill/*', 'scripts/spine/*']
-    },
-    eslintConfigPrettier
+        ignores: [
+            'examples/assets/wasm/*',
+            'scripts/textmesh/*.min.js',
+            'src/polyfill/*',
+            'scripts/spine/*'
+        ]
+    }
 ];

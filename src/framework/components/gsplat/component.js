@@ -22,8 +22,7 @@ import { PickerId } from '../../../scene/picker-id.js';
 
 // Appended to warnings fired when a legacy (non-unified) API is hit in unified mode.
 // Explains the default flip and the temporary workaround.
-const UNIFIED_LEGACY_HINT =
-    'GSplatComponent#unified now defaults to true (unified rendering). To temporarily restore the deprecated legacy behavior, explicitly set unified=false when creating the component — note that non-unified mode will be removed in a future release.';
+const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unified rendering). To temporarily restore the deprecated legacy behavior, explicitly set unified=false when creating the component — note that non-unified mode will be removed in a future release.';
 
 /**
  * The GSplatComponent enables an {@link Entity} to render 3D Gaussian Splats. Splats are always
@@ -208,18 +207,12 @@ class GSplatComponent extends Component {
         super(system, entity);
 
         // gsplat asset reference
-        this._assetReference = new AssetReference(
-            'asset',
-            this,
-            system.app.assets,
-            {
-                add: this._onGSplatAssetAdded,
-                load: this._onGSplatAssetLoad,
-                remove: this._onGSplatAssetRemove,
-                unload: this._onGSplatAssetUnload
-            },
-            this
-        );
+        this._assetReference = new AssetReference('asset', this, system.app.assets, {
+            add: this._onGSplatAssetAdded,
+            load: this._onGSplatAssetLoad,
+            remove: this._onGSplatAssetRemove,
+            unload: this._onGSplatAssetUnload
+        }, this);
 
         // handle events when the entity is directly (or indirectly as a child of sub-hierarchy)
         // added or removed from the parent
@@ -263,10 +256,9 @@ class GSplatComponent extends Component {
      * @ignore
      */
     set instance(value) {
+
         if (this.unified) {
-            Debug.errorOnce(
-                `GSplatComponent#instance setter is only available in legacy non-unified mode. ${UNIFIED_LEGACY_HINT}`
-            );
+            Debug.errorOnce(`GSplatComponent#instance setter is only available in legacy non-unified mode. ${UNIFIED_LEGACY_HINT}`);
             return;
         }
 
@@ -276,6 +268,7 @@ class GSplatComponent extends Component {
         this._instance = value;
 
         if (this._instance) {
+
             // if mesh instance was created without a node, assign it here
             const mi = this._instance.meshInstance;
             if (!mi.node) {
@@ -305,9 +298,7 @@ class GSplatComponent extends Component {
 
     set material(value) {
         if (this.unified) {
-            Debug.warn(
-                `GSplatComponent#material setter is only available in legacy non-unified mode; in unified mode use app.systems.gsplat.getMaterial(camera, layer). ${UNIFIED_LEGACY_HINT}`
-            );
+            Debug.warn(`GSplatComponent#material setter is only available in legacy non-unified mode; in unified mode use app.systems.gsplat.getMaterial(camera, layer). ${UNIFIED_LEGACY_HINT}`);
             return;
         }
         if (this._instance) {
@@ -319,9 +310,7 @@ class GSplatComponent extends Component {
 
     get material() {
         if (this.unified) {
-            Debug.warnOnce(
-                `GSplatComponent#material getter returns null in unified mode; use app.systems.gsplat.getMaterial(camera, layer) instead. ${UNIFIED_LEGACY_HINT}`
-            );
+            Debug.warnOnce(`GSplatComponent#material getter returns null in unified mode; use app.systems.gsplat.getMaterial(camera, layer) instead. ${UNIFIED_LEGACY_HINT}`);
             return null;
         }
         return this._instance?.material ?? this._materialTmp ?? null;
@@ -334,6 +323,7 @@ class GSplatComponent extends Component {
      * @type {boolean}
      */
     set castShadows(value) {
+
         if (this._castShadows !== value) {
             const layers = this.layers;
             const scene = this.system.app.scene;
@@ -517,9 +507,7 @@ class GSplatComponent extends Component {
      * @ignore
      */
     set splatBudget(value) {
-        Debug.removed(
-            'GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.'
-        );
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
     }
 
     /**
@@ -528,9 +516,7 @@ class GSplatComponent extends Component {
      * @ignore
      */
     get splatBudget() {
-        Debug.removed(
-            'GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.'
-        );
+        Debug.removed('GSplatComponent.splatBudget is removed. Use app.scene.gsplat.splatBudget instead for global budget control.');
         return 0;
     }
 
@@ -543,9 +529,7 @@ class GSplatComponent extends Component {
      */
     set unified(value) {
         if (value === false) {
-            Debug.deprecated(
-                'GSplatComponent#unified is deprecated. Non-unified gsplat rendering will be removed in a future release; please migrate to unified rendering (the new default).'
-            );
+            Debug.deprecated('GSplatComponent#unified is deprecated. Non-unified gsplat rendering will be removed in a future release; please migrate to unified rendering (the new default).');
         }
         if (this._unified !== value) {
             this._unified = value;
@@ -656,6 +640,7 @@ class GSplatComponent extends Component {
      * @type {number[]}
      */
     set layers(value) {
+
         // remove the mesh instances from old layers
         this.removeFromLayers();
 
@@ -689,6 +674,7 @@ class GSplatComponent extends Component {
      * @type {Asset|number}
      */
     set asset(value) {
+
         const id = value instanceof Asset ? value.id : value;
         if (this._assetReference.id === id) return;
 
@@ -750,6 +736,7 @@ class GSplatComponent extends Component {
 
     /** @private */
     destroyInstance() {
+
         if (this._placement) {
             this.removeFromLayers();
             this._placement.destroy();
@@ -765,6 +752,7 @@ class GSplatComponent extends Component {
 
     /** @private */
     addToLayers() {
+
         if (this._placement) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
@@ -789,6 +777,7 @@ class GSplatComponent extends Component {
     }
 
     removeFromLayers() {
+
         if (this._placement) {
             const layers = this.system.app.scene.layers;
             for (let i = 0; i < this._layers.length; i++) {
@@ -1001,6 +990,7 @@ class GSplatComponent extends Component {
     }
 
     _onGSplatAssetLoad() {
+
         // remove existing instance
         this.destroyInstance();
 
@@ -1009,6 +999,7 @@ class GSplatComponent extends Component {
         if (!resource) return;
 
         if (this.unified) {
+
             this._placement = null;
 
             this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
@@ -1023,7 +1014,9 @@ class GSplatComponent extends Component {
             if (this.enabled && this.entity.enabled) {
                 this.addToLayers();
             }
+
         } else {
+
             // create new instance
             this.instance = new GSplatInstance(resource, {
                 material: this._materialTmp,

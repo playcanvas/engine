@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 #ifdef DEBUG_LIGHTING_PASS
 litArgs_albedo = vec3(0.5);
 #endif

@@ -1,8 +1,4 @@
-import {
-    ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR,
-    FILTER_LINEAR_MIPMAP_LINEAR
-} from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -32,6 +28,7 @@ class FramePassColorGrab extends FramePass {
     }
 
     shouldReallocate(targetRT, sourceTexture, sourceFormat) {
+
         // need to reallocate if format does not match
         const targetFormat = targetRT?.colorBuffer.format;
         if (targetFormat !== sourceFormat) {
@@ -45,6 +42,7 @@ class FramePassColorGrab extends FramePass {
     }
 
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format) {
+
         // allocate texture buffer
         const texture = new Texture(device, {
             name: _colorUniformName,
@@ -59,6 +57,7 @@ class FramePassColorGrab extends FramePass {
         });
 
         if (renderTarget) {
+
             // if reallocating RT size, release previous framebuffer
             renderTarget.destroyFrameBuffers();
 
@@ -69,6 +68,7 @@ class FramePassColorGrab extends FramePass {
             // update cached dimensions
             renderTarget.evaluateDimensions();
         } else {
+
             // create new render target with the texture
             renderTarget = new RenderTarget({
                 name: 'ColorGrabRT',
@@ -83,6 +83,7 @@ class FramePassColorGrab extends FramePass {
     }
 
     releaseRenderTarget(rt) {
+
         if (rt) {
             rt.destroyTextureBuffers();
             rt.destroy();
@@ -90,6 +91,7 @@ class FramePassColorGrab extends FramePass {
     }
 
     frameUpdate() {
+
         const device = this.device;
 
         // resize based on the source render target
@@ -108,6 +110,7 @@ class FramePassColorGrab extends FramePass {
     }
 
     execute() {
+
         // copy color from the current render target
         const device = this.device;
         DebugGraphics.pushGpuMarker(device, 'GRAB-COLOR');
@@ -116,11 +119,14 @@ class FramePassColorGrab extends FramePass {
         const colorBuffer = this.colorRenderTarget.colorBuffer;
 
         if (device.isWebGPU) {
+
             device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
 
             // generate mipmaps
             device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
+
         } else {
+
             device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
 
             // generate mipmaps

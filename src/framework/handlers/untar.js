@@ -64,14 +64,11 @@ class Untar extends EventHandler {
         this.prefix = assetsPrefix || '';
         this.reader = fetchPromise.body.getReader();
 
-        this.reader
-            .read()
-            .then((res) => {
-                this.pump(res.done, res.value);
-            })
-            .catch((err) => {
-                this.fire('error', err);
-            });
+        this.reader.read().then((res) => {
+            this.pump(res.done, res.value);
+        }).catch((err) => {
+            this.fire('error', err);
+        });
     }
 
     /**
@@ -96,14 +93,11 @@ class Untar extends EventHandler {
 
         while (this.readFile());
 
-        return this.reader
-            .read()
-            .then((res) => {
-                this.pump(res.done, res.value);
-            })
-            .catch((err) => {
-                this.fire('error', err);
-            });
+        return this.reader.read().then((res) => {
+            this.pump(res.done, res.value);
+        }).catch((err) => {
+            this.fire('error', err);
+        });
     }
 
     /**
@@ -113,7 +107,7 @@ class Untar extends EventHandler {
      * processing.
      */
     readFile() {
-        if (!this.headerRead && this.bytesReceived > this.bytesRead + this.headerSize) {
+        if (!this.headerRead && this.bytesReceived > (this.bytesRead + this.headerSize)) {
             this.headerRead = true;
             const view = new DataView(this.data.buffer, this.bytesRead, this.headerSize);
             this.decoder ??= new TextDecoder('windows-1252');
@@ -136,7 +130,7 @@ class Untar extends EventHandler {
 
         if (this.headerRead) {
             // buffer might be not long enough
-            if (this.bytesReceived < this.bytesRead + this.fileSize) {
+            if (this.bytesReceived < (this.bytesRead + this.fileSize)) {
                 return false;
             }
 

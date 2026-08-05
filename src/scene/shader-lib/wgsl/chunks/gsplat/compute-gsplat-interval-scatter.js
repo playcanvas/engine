@@ -11,7 +11,7 @@
 // workgroup to return immediately. Visible intervals write their splat IDs in a
 // tight parallel loop with zero divergence within the workgroup.
 
-export const computeGsplatIntervalScatterSource = /* wgsl */ `
+export const computeGsplatIntervalScatterSource = /* wgsl */`
 
 struct Interval {
     workBufferBase: u32,

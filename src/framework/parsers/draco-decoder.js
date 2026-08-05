@@ -18,14 +18,11 @@ class JobQueue {
         this.jobQueue = [];
         this.jobCallbacks = new Map();
         this.run = (worker, job) => {
-            worker.postMessage(
-                {
-                    type: 'decodeMesh',
-                    jobId: job.jobId,
-                    buffer: job.buffer
-                },
-                [job.buffer]
-            );
+            worker.postMessage({
+                type: 'decodeMesh',
+                jobId: job.jobId,
+                buffer: job.buffer
+            }, [job.buffer]);
         };
     }
 
@@ -99,7 +96,7 @@ class JobQueue {
         this.jobQueue.length = 0;
         const callbacks = this.jobCallbacks;
         this.jobCallbacks = new Map();
-        callbacks.forEach((callback) => callback(error));
+        callbacks.forEach(callback => callback(error));
     }
 
     enqueueJob(buffer, callback) {
@@ -150,12 +147,13 @@ const downloadScript = (url) => {
 const compileModule = (url) => {
     const compileManual = () => {
         return fetch(url)
-            .then((result) => result.arrayBuffer())
-            .then((buffer) => WebAssembly.compile(buffer));
+        .then(result => result.arrayBuffer())
+        .then(buffer => WebAssembly.compile(buffer));
     };
 
     const compileStreaming = () => {
-        return WebAssembly.compileStreaming(fetch(url)).catch((err) => {
+        return WebAssembly.compileStreaming(fetch(url))
+        .catch((err) => {
             Debug.warn(`compileStreaming() failed for ${url} (${err}), falling back to arraybuffer download.`);
             return compileManual();
         });
@@ -205,36 +203,37 @@ const initializeWorkers = (config) => {
 
     // worker urls must be absolute
     Promise.all([downloadScript(config.jsUrl), compileModule(config.wasmUrl)])
-        .then(([dracoSource, dracoModule]) => {
-            // build worker source
-            const code = ['/* draco */', dracoSource, '/* worker */', `(\n${DracoWorker.toString()}\n)()\n\n`].join(
-                '\n'
-            );
-            const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
+    .then(([dracoSource, dracoModule]) => {
+        // build worker source
+        const code = [
+            '/* draco */',
+            dracoSource,
+            '/* worker */',
+            `(\n${DracoWorker.toString()}\n)()\n\n`
+        ].join('\n');
+        const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
 
-            // Node uses worker_threads (no Blob/URL.createObjectURL), passing the worker source as
-            // an eval string; the browser builds a blob URL and spawns a web worker from it.
-            const isNode = platform.environment === 'node';
-            const workerUrl = isNode ? null : URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+        // Node uses worker_threads (no Blob/URL.createObjectURL), passing the worker source as
+        // an eval string; the browser builds a blob URL and spawns a web worker from it.
+        const isNode = platform.environment === 'node';
+        const workerUrl = isNode ? null : URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
 
-            // create worker instances
-            const workers = [];
-            for (let i = 0; i < numWorkers; ++i) {
-                const worker = isNode ? new Worker(code, { eval: true }) : new Worker(workerUrl);
-                worker.postMessage({
-                    type: 'init',
-                    module: dracoModule
-                });
-                workers.push(worker);
-            }
-            jobQueue.init(workers);
-        })
-        .catch((err) => {
-            Debug.warnOnce(
-                `Failed to load the Draco decoder (${config.jsUrl}, ${config.wasmUrl}): ${err}. Draco compressed meshes will not load.`
-            );
-            jobQueue.fail(err instanceof Error ? err : new Error(err));
-        });
+        // create worker instances
+        const workers = [];
+        for (let i = 0; i < numWorkers; ++i) {
+            const worker = isNode ? new Worker(code, { eval: true }) : new Worker(workerUrl);
+            worker.postMessage({
+                type: 'init',
+                module: dracoModule
+            });
+            workers.push(worker);
+        }
+        jobQueue.init(workers);
+    })
+    .catch((err) => {
+        Debug.warnOnce(`Failed to load the Draco decoder (${config.jsUrl}, ${config.wasmUrl}): ${err}. Draco compressed meshes will not load.`);
+        jobQueue.fail(err instanceof Error ? err : new Error(err));
+    });
 
     return true;
 };
@@ -272,4 +271,7 @@ const dracoDecode = (buffer, callback) => {
     return true;
 };
 
-export { dracoInitialize, dracoDecode };
+export {
+    dracoInitialize,
+    dracoDecode
+};

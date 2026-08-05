@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 // Energy-conserving (hopefully) Blinn-Phong
 float calcLightSpecular(float gloss, vec3 worldNormal, vec3 h) {
     float nh = max( dot( h, worldNormal ), 0.0 );

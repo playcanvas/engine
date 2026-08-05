@@ -31,7 +31,11 @@ describe('WideLine', function () {
     it('sets packed positions, colors and widths', function () {
         const line = new WideLine();
         const positions = new Float32Array([0, 0, 0, 1, 2, 3, 4, 5, 6]);
-        const colors = new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+        const colors = new Float32Array([
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1
+        ]);
         const widths = new Float32Array([1, 2, 3]);
 
         expect(line.set(positions, colors, widths)).to.equal(line);

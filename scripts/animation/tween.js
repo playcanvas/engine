@@ -9,126 +9,105 @@ Tween.attributes.add('tweens', {
             description: 'Play tween immediately.',
             type: 'boolean',
             default: false
-        },
-        {
+        }, {
             name: 'event',
             title: 'Trigger Event',
-            description:
-                "Play tween on the specified event name. This event must be fired on the global application object (e.g. this.app.fire('eventname');).",
+            description: 'Play tween on the specified event name. This event must be fired on the global application object (e.g. this.app.fire(\'eventname\');).',
             type: 'string'
-        },
-        {
+        }, {
             name: 'path',
             title: 'Path',
-            description:
-                "The path from the entity to the property. e.g. 'light.color', 'camera.fov' or 'script.vehicle.speed'.",
+            description: 'The path from the entity to the property. e.g. \'light.color\', \'camera.fov\' or \'script.vehicle.speed\'.',
             type: 'string'
-        },
-        {
+        }, {
             name: 'start',
             title: 'Start',
             type: 'vec4'
-        },
-        {
+        }, {
             name: 'end',
             title: 'End',
             type: 'vec4'
-        },
-        {
+        }, {
             name: 'easingFunction',
             title: 'Easing Function',
-            description:
-                'The easing functions: Linear, Quadratic, Cubic, Quartic, Quintic, Sinusoidal, Exponential, Circular, Elastic, Back and Bounce.',
+            description: 'The easing functions: Linear, Quadratic, Cubic, Quartic, Quintic, Sinusoidal, Exponential, Circular, Elastic, Back and Bounce.',
             type: 'number',
             enum: [
-                { Linear: 0 },
-                { Quadratic: 1 },
-                { Cubic: 2 },
-                { Quartic: 3 },
-                { Quintic: 4 },
-                { Sinusoidal: 5 },
-                { Exponential: 6 },
-                { Circular: 7 },
-                { Elastic: 8 },
-                { Back: 9 },
-                { Bounce: 10 }
+                { 'Linear': 0 },
+                { 'Quadratic': 1 },
+                { 'Cubic': 2 },
+                { 'Quartic': 3 },
+                { 'Quintic': 4 },
+                { 'Sinusoidal': 5 },
+                { 'Exponential': 6 },
+                { 'Circular': 7 },
+                { 'Elastic': 8 },
+                { 'Back': 9 },
+                { 'Bounce': 10 }
             ],
             default: 0
-        },
-        {
+        }, {
             name: 'easingType',
             title: 'Easing Type',
-            description:
-                'Whether to ease in, easy out or ease in and then out using the specified easing function. Note that for a Linear easing function, the easing type is ignored.',
+            description: 'Whether to ease in, easy out or ease in and then out using the specified easing function. Note that for a Linear easing function, the easing type is ignored.',
             type: 'number',
-            enum: [{ In: 0 }, { Out: 1 }, { InOut: 2 }],
+            enum: [
+                { 'In': 0 },
+                { 'Out': 1 },
+                { 'InOut': 2 }
+            ],
             default: 0
-        },
-        {
+        }, {
             name: 'delay',
             title: 'Delay',
-            description:
-                'Time to wait in milliseconds after receiving the trigger event before executing the tween. Defaults to 0.',
+            description: 'Time to wait in milliseconds after receiving the trigger event before executing the tween. Defaults to 0.',
             type: 'number',
             default: 0
-        },
-        {
+        }, {
             name: 'duration',
             title: 'Duration',
             description: 'Time to execute the tween in milliseconds. Defaults to 1000.',
             type: 'number',
             default: 1000
-        },
-        {
+        }, {
             name: 'repeat',
             title: 'Repeat',
-            description:
-                'The number of times the tween should be repeated after the initial playback. -1 will repeat forever. Defaults to 0.',
+            description: 'The number of times the tween should be repeated after the initial playback. -1 will repeat forever. Defaults to 0.',
             type: 'number',
             default: 0
-        },
-        {
+        }, {
             name: 'repeatDelay',
             title: 'Repeat Delay',
             description: 'Time to wait in milliseconds before executing each repeat of the tween. Defaults to 0.',
             type: 'number',
             default: 0
-        },
-        {
+        }, {
             name: 'yoyo',
             title: 'Yoyo',
-            description:
-                'This function only has effect if used along with repeat. When active, the behaviour of the tween will be like a yoyo, i.e. it will bounce to and from the start and end values, instead of just repeating the same sequence from the beginning. Defaults to false.',
+            description: 'This function only has effect if used along with repeat. When active, the behaviour of the tween will be like a yoyo, i.e. it will bounce to and from the start and end values, instead of just repeating the same sequence from the beginning. Defaults to false.',
             type: 'boolean',
             default: false
-        },
-        {
+        }, {
             name: 'startEvent',
             title: 'Start Event',
-            description:
-                'Executed right before the tween starts animating, after any delay time specified by the delay method. This will be executed only once per tween, i.e. it will not be run when the tween is repeated via repeat(). It is great for synchronising to other events or triggering actions you want to happen when a tween starts.',
+            description: 'Executed right before the tween starts animating, after any delay time specified by the delay method. This will be executed only once per tween, i.e. it will not be run when the tween is repeated via repeat(). It is great for synchronising to other events or triggering actions you want to happen when a tween starts.',
             type: 'string'
-        },
-        {
+        }, {
             name: 'stopEvent',
             title: 'Stop Event',
-            description:
-                'Executed when a tween is explicitly stopped via stop(), but not when it is completed normally.',
+            description: 'Executed when a tween is explicitly stopped via stop(), but not when it is completed normally.',
             type: 'string'
-        },
-        {
+        }, {
             name: 'updateEvent',
             title: 'Update Event',
             description: 'Executed each time the tween is updated, after the values have been actually updated.',
             type: 'string'
-        },
-        {
+        }, {
             name: 'completeEvent',
             title: 'Complete Event',
             description: 'Executed when a tween is finished normally (i.e. not stopped).',
             type: 'string'
-        },
-        {
+        }, {
             name: 'repeatEvent',
             title: 'Repeat Event',
             description: 'Executed whenever a tween has just finished one repetition and will begin another.',
@@ -214,19 +193,7 @@ Tween.prototype.start = function (idx) {
     var tween = this.tweens[idx];
 
     var easingTypes = ['In', 'Out', 'InOut'];
-    var easingFuncs = [
-        'Linear',
-        'Quadratic',
-        'Cubic',
-        'Quartic',
-        'Quintic',
-        'Sinusoidal',
-        'Exponential',
-        'Circular',
-        'Elastic',
-        'Back',
-        'Bounce'
-    ];
+    var easingFuncs = ['Linear', 'Quadratic', 'Cubic', 'Quartic', 'Quintic', 'Sinusoidal', 'Exponential', 'Circular', 'Elastic', 'Back', 'Bounce'];
 
     var easingFunc;
     if (tween.easingFunction === 0) {
@@ -304,42 +271,42 @@ Tween.prototype.start = function (idx) {
     updateProperty(startValue);
 
     tweenInstances[idx] = new TWEEN.Tween(startValue)
-        .to(endValue, tween.duration)
-        .easing(easingFunc)
-        .onStart((obj) => {
-            if (tween.startEvent !== '') {
-                app.fire(tween.startEvent);
-            }
-        })
-        .onStop((obj) => {
-            if (tween.stopEvent !== '') {
-                app.fire(tween.stopEvent);
-            }
-            tweenInstances[idx] = null;
-        })
-        .onUpdate((obj) => {
-            updateProperty(obj);
+    .to(endValue, tween.duration)
+    .easing(easingFunc)
+    .onStart((obj) => {
+        if (tween.startEvent !== '') {
+            app.fire(tween.startEvent);
+        }
+    })
+    .onStop((obj) => {
+        if (tween.stopEvent !== '') {
+            app.fire(tween.stopEvent);
+        }
+        tweenInstances[idx] = null;
+    })
+    .onUpdate((obj) => {
+        updateProperty(obj);
 
-            if (tween.updateEvent !== '') {
-                app.fire(tween.updateEvent);
-            }
-        })
-        .onComplete((obj) => {
-            if (tween.completeEvent !== '') {
-                app.fire(tween.completeEvent);
-            }
-            tweenInstances[idx] = null;
-        })
-        .onRepeat((obj) => {
-            if (tween.repeatEvent !== '') {
-                app.fire(tween.repeatEvent);
-            }
-        })
-        .repeat(tween.repeat === -1 ? Infinity : tween.repeat)
-        .repeatDelay(tween.repeatDelay)
-        .yoyo(tween.yoyo)
-        .delay(tween.delay)
-        .start();
+        if (tween.updateEvent !== '') {
+            app.fire(tween.updateEvent);
+        }
+    })
+    .onComplete((obj) => {
+        if (tween.completeEvent !== '') {
+            app.fire(tween.completeEvent);
+        }
+        tweenInstances[idx] = null;
+    })
+    .onRepeat((obj) => {
+        if (tween.repeatEvent !== '') {
+            app.fire(tween.repeatEvent);
+        }
+    })
+    .repeat(tween.repeat === -1 ? Infinity : tween.repeat)
+    .repeatDelay(tween.repeatDelay)
+    .yoyo(tween.yoyo)
+    .delay(tween.delay)
+    .start();
 };
 
 // We have to update the tween.js engine somewhere once a frame...

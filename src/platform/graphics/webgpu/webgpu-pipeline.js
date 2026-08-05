@@ -26,6 +26,7 @@ class WebgpuPipeline {
      * @returns {any} Returns the pipeline layout.
      */
     getPipelineLayout(bindGroupFormats) {
+
         const bindGroupLayouts = [];
         bindGroupFormats.forEach((format) => {
             bindGroupLayouts.push(format.bindGroupLayout);

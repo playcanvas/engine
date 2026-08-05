@@ -3,8 +3,7 @@ import { EventHandler } from '../../core/event-handler.js';
 import { Color } from '../../core/math/color.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR,
-    FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
     PIXELFORMAT_SRGBA8
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -151,7 +150,7 @@ class CanvasFont extends EventHandler {
      * Destroys the font. This also destroys the textures owned by the font.
      */
     destroy() {
-        this.atlases.forEach((atlas) => atlas.destroy());
+        this.atlases.forEach(atlas => atlas.destroy());
 
         // null instance variables to make it obvious this font is no longer valid
         this.chars = null;
@@ -208,12 +207,7 @@ class CanvasFont extends EventHandler {
      */
     _getAtlas(index) {
         if (index >= this.atlases.length) {
-            this.atlases[index] = new Atlas(
-                this.app.graphicsDevice,
-                this.width,
-                this.height,
-                `font-atlas-${this.fontName}-${index}`
-            );
+            this.atlases[index] = new Atlas(this.app.graphicsDevice, this.width, this.height, `font-atlas-${this.fontName}-${index}`);
         }
         return this.atlases[index];
     }
@@ -283,7 +277,7 @@ class CanvasFont extends EventHandler {
             let width = atlas.ctx.measureText(ch).width;
 
             if (width > fs) {
-                fs = (this.fontSize * this.fontSize) / width;
+                fs = this.fontSize * this.fontSize / width;
                 atlas.ctx.font = `${this.fontWeight} ${fs.toString()}px ${this.fontName}`;
                 width = this.fontSize;
             }
@@ -311,10 +305,10 @@ class CanvasFont extends EventHandler {
         }
 
         // remove any unused characters
-        this.atlases.splice(atlasIndex).forEach((atlas) => atlas.destroy());
+        this.atlases.splice(atlasIndex).forEach(atlas => atlas.destroy());
 
         // upload textures
-        this.atlases.forEach((atlas) => atlas.texture.upload());
+        this.atlases.forEach(atlas => atlas.texture.upload());
 
         // alert text-elements that the font has been re-rendered
         this.fire('render');
@@ -330,20 +324,18 @@ class CanvasFont extends EventHandler {
      */
     _createJson(chars, fontName, width, height) {
         const base = {
-            version: 3,
-            intensity: this.intensity,
-            info: {
-                face: fontName,
-                width: width,
-                height: height,
-                maps: [
-                    {
-                        width: width,
-                        height: height
-                    }
-                ]
+            'version': 3,
+            'intensity': this.intensity,
+            'info': {
+                'face': fontName,
+                'width': width,
+                'height': height,
+                'maps': [{
+                    'width': width,
+                    'height': height
+                }]
             },
-            chars: {}
+            'chars': {}
         };
 
         return base;
@@ -367,25 +359,25 @@ class CanvasFont extends EventHandler {
      */
     _addChar(json, char, charCode, x, y, w, h, xoffset, yoffset, xadvance, mapNum, mapW, mapH) {
         if (json.info.maps.length < mapNum + 1) {
-            json.info.maps.push({ width: mapW, height: mapH });
+            json.info.maps.push({ 'width': mapW, 'height': mapH });
         }
 
         const scale = this.fontSize / 32;
 
         json.chars[char] = {
-            id: charCode,
-            letter: char,
-            x: x,
-            y: y,
-            width: w,
-            height: h,
-            xadvance: xadvance / scale,
-            xoffset: xoffset / scale,
-            yoffset: (yoffset + this.padding) / scale,
-            scale: scale,
-            range: 1,
-            map: mapNum,
-            bounds: [0, 0, w / scale, h / scale]
+            'id': charCode,
+            'letter': char,
+            'x': x,
+            'y': y,
+            'width': w,
+            'height': h,
+            'xadvance': xadvance / scale,
+            'xoffset': xoffset / scale,
+            'yoffset': (yoffset + this.padding) / scale,
+            'scale': scale,
+            'range': 1,
+            'map': mapNum,
+            'bounds': [0, 0, w / scale, h / scale]
         };
     }
 
@@ -466,7 +458,7 @@ class CanvasFont extends EventHandler {
 
     // nasty, other systems are accessing textures directly
     get textures() {
-        return this.atlases.map((atlas) => atlas.texture);
+        return this.atlases.map(atlas => atlas.texture);
     }
 }
 

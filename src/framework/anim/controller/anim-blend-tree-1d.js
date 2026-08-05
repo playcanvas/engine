@@ -53,13 +53,13 @@ class AnimBlendTree1D extends AnimBlendTree {
                     const parameterDistance = Math.abs(c1.point - this._parameterValues[0]);
                     const weight = (child2Distance - parameterDistance) / child2Distance;
                     c1.weight = weight;
-                    c2.weight = 1.0 - weight;
+                    c2.weight = (1.0 - weight);
                 } else {
                     c2.weight = 0.0;
                 }
             }
             if (this._syncAnimations) {
-                weightedDurationSum += (c1.animTrack.duration / c1.absoluteSpeed) * c1.weight;
+                weightedDurationSum += c1.animTrack.duration / c1.absoluteSpeed * c1.weight;
             }
         }
         if (this._syncAnimations) {

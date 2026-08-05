@@ -1,11 +1,14 @@
 import { expect } from 'chai';
 
-import { PIXELFORMAT_RGBA8, PIXELFORMAT_R8, PIXELFORMAT_DXT1 } from '../../../src/platform/graphics/constants.js';
+import {
+    PIXELFORMAT_RGBA8, PIXELFORMAT_R8, PIXELFORMAT_DXT1
+} from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Texture#copy', function () {
+
     /** @type {NullGraphicsDevice} */
     let device;
 
@@ -21,15 +24,14 @@ describe('Texture#copy', function () {
         jsdomTeardown();
     });
 
-    const makeTexture = (opts = {}) =>
-        new Texture(device, {
-            name: 'test',
-            width: 4,
-            height: 4,
-            format: PIXELFORMAT_RGBA8,
-            mipmaps: false,
-            ...opts
-        });
+    const makeTexture = (opts = {}) => new Texture(device, {
+        name: 'test',
+        width: 4,
+        height: 4,
+        format: PIXELFORMAT_RGBA8,
+        mipmaps: false,
+        ...opts
+    });
 
     it('copies a matching texture successfully', function () {
         const src = makeTexture();

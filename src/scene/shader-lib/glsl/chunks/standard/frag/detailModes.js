@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #ifndef _DETAILMODES_INCLUDED_
 #define _DETAILMODES_INCLUDED_

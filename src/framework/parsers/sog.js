@@ -24,7 +24,7 @@ const combineProgress = (target, assets) => {
         // they are roughly the same average size as the ones that have.
         const reporting = map.size;
         if (reporting > 0 && reporting < count) {
-            total = Math.ceil((total * count) / reporting);
+            total = Math.ceil(total * count / reporting);
         }
 
         target.fire('progress', loaded, total);
@@ -123,9 +123,7 @@ class SogParser {
 
         // transform meta to latest shape
         if (meta.version !== 2) {
-            Debug.deprecated(
-                'Loading SOG v1 data which is deprecated. Please recompress your scene with latest tools.'
-            );
+            Debug.deprecated('Loading SOG v1 data which is deprecated. Please recompress your scene with latest tools.');
             meta = upgradeMeta(meta);
         }
 
@@ -140,26 +138,18 @@ class SogParser {
         subs.forEach((sub) => {
             const files = meta[sub]?.files ?? [];
             textures[sub] = files.map((filename) => {
-                const texture = new Asset(
-                    filename,
-                    'texture',
-                    {
-                        url:
-                            asset.options?.mapUrl?.(filename) ??
-                            new URL(filename, new URL(url.load, base).toString()).toString(),
-                        filename
-                    },
-                    {
-                        mipmaps: false
-                    },
-                    {
-                        crossOrigin: 'anonymous'
-                    }
-                );
+                const texture = new Asset(filename, 'texture', {
+                    url: asset.options?.mapUrl?.(filename) ?? (new URL(filename, new URL(url.load, base).toString())).toString(),
+                    filename
+                }, {
+                    mipmaps: false
+                }, {
+                    crossOrigin: 'anonymous'
+                });
 
                 const promise = new Promise((resolve, reject) => {
                     texture.on('load', () => resolve(null));
-                    texture.on('error', (err) => reject(err));
+                    texture.on('error', err => reject(err));
                 });
 
                 assets.add(texture);
@@ -169,7 +159,7 @@ class SogParser {
             });
         });
 
-        const textureAssets = subs.map((sub) => textures[sub]).flat();
+        const textureAssets = subs.map(sub => textures[sub]).flat();
 
         // Track if asset was unloaded during async loading
         let unloaded = false;
@@ -204,7 +194,7 @@ class SogParser {
 
         combineProgress(asset, textureAssets);
 
-        textureAssets.forEach((t) => assets.load(t));
+        textureAssets.forEach(t => assets.load(t));
 
         // wait for all textures to complete loading
         await Promise.allSettled(promises);
@@ -256,9 +246,9 @@ class SogParser {
         }
 
         const prepareCenters = gsplatCentersEnabledAtLoad;
-        const resource = decompress
-            ? new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters })
-            : new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
+        const resource = decompress ?
+            new GSplatResource(this.app.graphicsDevice, await data.decompress(), { prepareCenters }) :
+            new GSplatSogResource(this.app.graphicsDevice, data, { prepareCenters });
 
         // the sog resource now owns the textures in `data` (when decompressing, the decompressed
         // data was copied out instead and the textures stay with the texture assets)

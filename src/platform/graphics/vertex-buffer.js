@@ -41,6 +41,7 @@ class VertexBuffer {
      * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
     constructor(graphicsDevice, format, numVertices, options) {
+
         Debug.assert(arguments.length <= 4 && (!options || typeof options === 'object'), 'incorrect arguments');
 
         // By default, vertex buffers are static (better for performance since buffer data can be cached in VRAM)
@@ -90,6 +91,7 @@ class VertexBuffer {
      * Frees resources associated with this vertex buffer.
      */
     destroy() {
+
         // stop tracking the vertex buffer
         const device = this.device;
         device.buffers.delete(this);
@@ -168,6 +170,7 @@ class VertexBuffer {
      * returned to the control of the graphics driver.
      */
     unlock() {
+
         // Upload the new vertex data
         this.impl.unlock(this);
     }

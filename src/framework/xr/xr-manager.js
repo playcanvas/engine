@@ -6,16 +6,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import {
-    XRTYPE_INLINE,
-    XRTYPE_VR,
-    XRTYPE_AR,
-    XRDEPTHSENSINGUSAGE_CPU,
-    XRDEPTHSENSINGUSAGE_GPU,
-    XRDEPTHSENSINGFORMAT_L8A8,
-    XRDEPTHSENSINGFORMAT_R16U,
-    XRDEPTHSENSINGFORMAT_F32
-} from './constants.js';
+import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_R16U, XRDEPTHSENSINGFORMAT_F32 } from './constants.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
 import { XrImageTracking } from './xr-image-tracking.js';
@@ -350,9 +341,7 @@ class XrManager extends EventHandler {
         if (featurePolicy?.allowsFeature) {
             const allowed = featurePolicy.allowsFeature('xr-spatial-tracking');
             if (!allowed) {
-                Debug.warn(
-                    'WebXR availability detection skipped: the "xr-spatial-tracking" feature is disallowed for this document. If XR is needed, add allow="xr-spatial-tracking" to the embedding iframe or send a matching Permissions-Policy header.'
-                );
+                Debug.warn('WebXR availability detection skipped: the "xr-spatial-tracking" feature is disallowed for this document. If XR is needed, add allow="xr-spatial-tracking" to the embedding iframe or send a matching Permissions-Policy header.');
             }
             return allowed;
         }
@@ -573,11 +562,7 @@ class XrManager extends EventHandler {
                 const dataFormatPreference = [];
 
                 usagePreference.push(XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGUSAGE_CPU);
-                dataFormatPreference.push(
-                    XRDEPTHSENSINGFORMAT_F32,
-                    XRDEPTHSENSINGFORMAT_L8A8,
-                    XRDEPTHSENSINGFORMAT_R16U
-                );
+                dataFormatPreference.push(XRDEPTHSENSINGFORMAT_F32, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_R16U);
 
                 if (options.depthSensing.usagePreference) {
                     const ind = usagePreference.indexOf(options.depthSensing.usagePreference);
@@ -635,19 +620,16 @@ class XrManager extends EventHandler {
      * @private
      */
     _onStartOptionsReady(type, spaceType, options, callback) {
-        navigator.xr
-            .requestSession(type, options)
-            .then((session) => {
-                this._onSessionStart(session, spaceType, callback);
-            })
-            .catch((ex) => {
-                this._camera = null;
-                this._type = null;
-                this._spaceType = null;
+        navigator.xr.requestSession(type, options).then((session) => {
+            this._onSessionStart(session, spaceType, callback);
+        }).catch((ex) => {
+            this._camera = null;
+            this._type = null;
+            this._spaceType = null;
 
-                if (callback) callback(ex);
-                this.fire('error', ex);
-            });
+            if (callback) callback(ex);
+            this.fire('error', ex);
+        });
     }
 
     /**
@@ -732,14 +714,11 @@ class XrManager extends EventHandler {
             return;
         }
 
-        this._session
-            .initiateRoomCapture()
-            .then(() => {
-                if (callback) callback(null);
-            })
-            .catch((err) => {
-                if (callback) callback(err);
-            });
+        this._session.initiateRoomCapture().then(() => {
+            if (callback) callback(null);
+        }).catch((err) => {
+            if (callback) callback(err);
+        });
     }
 
     /**
@@ -757,14 +736,13 @@ class XrManager extends EventHandler {
             return;
         }
 
-        this._session
-            .updateTargetFrameRate(frameRate)
-            .then(() => {
-                callback?.();
-            })
-            .catch((err) => {
-                callback?.(err);
-            });
+        this._session.updateTargetFrameRate(frameRate)
+        .then(() => {
+            callback?.();
+        })
+        .catch((err) => {
+            callback?.(err);
+        });
     }
 
     /**
@@ -772,27 +750,24 @@ class XrManager extends EventHandler {
      * @private
      */
     _sessionSupportCheck(type) {
-        navigator.xr
-            .isSessionSupported(type)
-            .then((available) => {
-                // A session reported as supported by the browser can still be unusable on the current
-                // graphics backend (a WebGPU device requires `XRGPUBinding`). Reflect that requirement
-                // so availability matches what can actually be started on this device.
-                if (available && !XrManager._backendSupportsXr(this.app?.graphicsDevice?.deviceType)) {
-                    available = false;
-                }
+        navigator.xr.isSessionSupported(type).then((available) => {
+            // A session reported as supported by the browser can still be unusable on the current
+            // graphics backend (a WebGPU device requires `XRGPUBinding`). Reflect that requirement
+            // so availability matches what can actually be started on this device.
+            if (available && !XrManager._backendSupportsXr(this.app?.graphicsDevice?.deviceType)) {
+                available = false;
+            }
 
-                if (this._available[type] === available) {
-                    return;
-                }
+            if (this._available[type] === available) {
+                return;
+            }
 
-                this._available[type] = available;
-                this.fire('available', type, available);
-                this.fire(`available:${type}`, available);
-            })
-            .catch((ex) => {
-                this.fire('error', ex);
-            });
+            this._available[type] = available;
+            this.fire('available', type, available);
+            this.fire(`available:${type}`, available);
+        }).catch((ex) => {
+            this.fire('error', ex);
+        });
     }
 
     /**
@@ -893,24 +868,21 @@ class XrManager extends EventHandler {
         this._session.addEventListener('frameratechange', onFrameRateChange);
 
         // request reference space
-        session
-            .requestReferenceSpace(spaceType)
-            .then((referenceSpace) => {
-                this._referenceSpace = referenceSpace;
+        session.requestReferenceSpace(spaceType).then((referenceSpace) => {
+            this._referenceSpace = referenceSpace;
 
-                // old requestAnimationFrame will never be triggered,
-                // so queue up new tick
-                this.app.requestAnimationFrame();
+            // old requestAnimationFrame will never be triggered,
+            // so queue up new tick
+            this.app.requestAnimationFrame();
 
-                if (callback) callback(null);
-                this.fire('start');
-            })
-            .catch((ex) => {
-                failed = true;
-                session.end();
-                if (callback) callback(ex);
-                this.fire('error', ex);
-            });
+            if (callback) callback(null);
+            this.fire('start');
+        }).catch((ex) => {
+            failed = true;
+            session.end();
+            if (callback) callback(ex);
+            this.fire('error', ex);
+        });
     }
 
     /**

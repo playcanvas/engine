@@ -1,5 +1,5 @@
 // The main code of particle system vertex shader
-export default /* glsl */ `
+export default /* glsl */`
     #ifdef ANIMTEX
         uniform vec2 animTexTilesParams;
         uniform vec4 animTexParams;

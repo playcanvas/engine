@@ -43,9 +43,9 @@ describe('ElementComponent Draw Order', function () {
     it('clamp max drawOrder', function () {
         const p1 = new Entity('p1');
         p1.addComponent('element');
-        p1.element.drawOrder = 0x1ffffff;
+        p1.element.drawOrder = 0x1FFFFFF;
 
-        expect(p1.element.drawOrder).to.equal(0xffffff);
+        expect(p1.element.drawOrder).to.equal(0xFFFFFF);
     });
 
     it('reorder children', function () {
@@ -376,8 +376,8 @@ describe('ElementComponent Draw Order', function () {
         // Priority 63: 0x3F000001
         // Priority 127: 0x7F000001
         expect(elem1.element.drawOrder).to.equal(0x00000001);
-        expect(elem2.element.drawOrder).to.equal(0x3f000001);
-        expect(elem3.element.drawOrder).to.equal(0x7f000001);
+        expect(elem2.element.drawOrder).to.equal(0x3F000001);
+        expect(elem3.element.drawOrder).to.equal(0x7F000001);
 
         // Verify sorting: higher priority should have higher drawOrder
         expect(elem3.element.drawOrder).to.be.greaterThan(elem2.element.drawOrder);
@@ -388,4 +388,5 @@ describe('ElementComponent Draw Order', function () {
         expect(elem2.element.drawOrder).to.be.greaterThan(0);
         expect(elem3.element.drawOrder).to.be.greaterThan(0);
     });
+
 });

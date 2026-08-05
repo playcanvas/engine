@@ -4,8 +4,7 @@ import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import {
-    CUBEPROJ_BOX,
-    CUBEPROJ_NONE,
+    CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
@@ -21,10 +20,7 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
-import {
-    standardMaterialCubemapParameters,
-    standardMaterialTextureParameters
-} from './standard-material-parameters.js';
+import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 
@@ -642,7 +638,7 @@ class StandardMaterial extends Material {
             this[`_${name}`] = _props[name].value();
         });
 
-        this._uniformCache = {};
+        this._uniformCache = { };
         this._mapTransforms.reset();
     }
 
@@ -799,10 +795,7 @@ class StandardMaterial extends Material {
 
         if (this.enableGGXSpecular) {
             this._setParameter('material_anisotropyIntensity', this.anisotropyIntensity);
-            this._setParameter('material_anisotropyRotation', [
-                Math.cos(this.anisotropyRotation * math.DEG_TO_RAD),
-                Math.sin(this.anisotropyRotation * math.DEG_TO_RAD)
-            ]);
+            this._setParameter('material_anisotropyRotation', [Math.cos(this.anisotropyRotation * math.DEG_TO_RAD), Math.sin(this.anisotropyRotation * math.DEG_TO_RAD)]);
         }
 
         if (this.clearCoat > 0) {
@@ -815,10 +808,7 @@ class StandardMaterial extends Material {
 
         Debug.call(() => {
             if (this.emissiveMap && this._emissive.r === 0 && this._emissive.g === 0 && this._emissive.b === 0) {
-                Debug.warnOnce(
-                    `Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`,
-                    this
-                );
+                Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
             }
         });
 
@@ -841,10 +831,7 @@ class StandardMaterial extends Material {
         if (this.useDynamicRefraction) {
             this._setParameter('material_thickness', this.thickness);
             this._setParameter('material_attenuation', getUniform('attenuation'));
-            this._setParameter(
-                'material_invAttenuationDistance',
-                this.attenuationDistance === 0 ? 0 : 1.0 / this.attenuationDistance
-            );
+            this._setParameter('material_invAttenuationDistance', this.attenuationDistance === 0 ? 0 : 1.0 / this.attenuationDistance);
         }
 
         if (this.useIridescence) {
@@ -936,6 +923,7 @@ class StandardMaterial extends Material {
 
     /** @ignore */
     getShaderVariant(params) {
+
         const { device, scene, pass, objDefs, sortedLights, cameraShaderParams } = params;
 
         // update prefiltered lighting data
@@ -1001,11 +989,9 @@ const defineUniform = (name, getUniformFunc) => {
 
 const definePropInternal = (name, constructorFunc, setterFunc, getterFunc, copyFromBacking = false) => {
     Object.defineProperty(StandardMaterial.prototype, name, {
-        get:
-            getterFunc ||
-            function () {
-                return this[`_${name}`];
-            },
+        get: getterFunc || function () {
+            return this[`_${name}`];
+        },
         set: setterFunc
     });
 
@@ -1031,13 +1017,10 @@ const defineValueProp = (prop) => {
         }
     };
 
-    const getterFunc =
-        prop.getterFunc ||
-        (onGet &&
-            function () {
-                onGet.call(this);
-                return this[internalName];
-            });
+    const getterFunc = prop.getterFunc || (onGet && function () {
+        onGet.call(this);
+        return this[internalName];
+    });
 
     definePropInternal(prop.name, () => prop.defaultValue, setterFunc, getterFunc, !!onGet);
 };
@@ -1058,13 +1041,10 @@ const defineAggProp = (prop) => {
         }
     };
 
-    const getterFunc =
-        prop.getterFunc ||
-        (onGet &&
-            function () {
-                onGet.call(this);
-                return this[internalName];
-            });
+    const getterFunc = prop.getterFunc || (onGet && function () {
+        onGet.call(this);
+        return this[internalName];
+    });
 
     definePropInternal(prop.name, () => prop.defaultValue.clone(), setterFunc, getterFunc, !!onGet);
 };
@@ -1090,10 +1070,8 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
         name: `${name}Map`,
         defaultValue: null,
         dirtyShaderFunc: (oldValue, newValue) => {
-            return (
-                !!oldValue !== !!newValue ||
-                (oldValue && (oldValue.type !== newValue.type || oldValue.format !== newValue.format))
-            );
+            return !!oldValue !== !!newValue ||
+                oldValue && (oldValue.type !== newValue.type || oldValue.format !== newValue.format);
         },
         onSet: markMapTransformsDirty
     });
@@ -1156,21 +1134,20 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
         const offset = material[`_${mapOffset}`];
         const rotation = material[`_${mapRotation}`];
 
-        if (tiling.x === 1 && tiling.y === 1 && offset.x === 0 && offset.y === 0 && rotation === 0) {
+        if (tiling.x === 1 && tiling.y === 1 &&
+            offset.x === 0 && offset.y === 0 &&
+            rotation === 0) {
             return null;
         }
 
         const uniform = material._allocUniform(mapTransform, () => {
-            return [
-                {
-                    name: `texture_${mapTransform}0`,
-                    value: new Float32Array(3)
-                },
-                {
-                    name: `texture_${mapTransform}1`,
-                    value: new Float32Array(3)
-                }
-            ];
+            return [{
+                name: `texture_${mapTransform}0`,
+                value: new Float32Array(3)
+            }, {
+                name: `texture_${mapTransform}1`,
+                value: new Float32Array(3)
+            }];
         });
 
         const cr = Math.cos(rotation * math.DEG_TO_RAD);
@@ -1278,7 +1255,7 @@ function _defineMaterialProps() {
         }
     });
 
-    _defineFloat('alphaTest', 0); // NOTE: overwrites Material.alphaTest
+    _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
     _defineFloat('bumpiness', 1);
     _defineFloat('normalDetailMapBumpiness', 1);
     _defineFloat('reflectivity', 1);
@@ -1308,16 +1285,13 @@ function _defineMaterialProps() {
 
     _defineObject('cubeMapProjectionBox', (material, device, scene) => {
         const uniform = material._allocUniform('cubeMapProjectionBox', () => {
-            return [
-                {
-                    name: 'envBoxMin',
-                    value: new Float32Array(3)
-                },
-                {
-                    name: 'envBoxMax',
-                    value: new Float32Array(3)
-                }
-            ];
+            return [{
+                name: 'envBoxMin',
+                value: new Float32Array(3)
+            }, {
+                name: 'envBoxMax',
+                value: new Float32Array(3)
+            }];
         });
 
         const bboxMin = material.cubeMapProjectionBox.getMin();
@@ -1416,7 +1390,7 @@ function _defineMaterialProps() {
                 cubemaps[i] = v;
                 changed = true;
             }
-            complete = complete && !!cubemaps[i];
+            complete = complete && (!!cubemaps[i]);
         }
 
         if (changed) {

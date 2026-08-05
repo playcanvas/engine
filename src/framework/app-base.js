@@ -13,18 +13,17 @@ import { math } from '../core/math/math.js';
 import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
 
-import { CULLFACE_NONE, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../platform/graphics/constants.js';
+import {
+    CULLFACE_NONE,
+    SHADERLANGUAGE_GLSL,
+    SHADERLANGUAGE_WGSL
+} from '../platform/graphics/constants.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
 
 import {
-    LAYERID_DEPTH,
-    LAYERID_IMMEDIATE,
-    LAYERID_SKYBOX,
-    LAYERID_UI,
-    LAYERID_WORLD,
-    SORTMODE_NONE,
-    SORTMODE_MANUAL
+    LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
+    SORTMODE_NONE, SORTMODE_MANUAL
 } from '../scene/constants.js';
 import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
@@ -38,7 +37,10 @@ import { ShaderMaterial } from '../scene/materials/shader-material.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, RESOLUTION_AUTO, RESOLUTION_FIXED } from './constants.js';
+import {
+    FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
+    RESOLUTION_AUTO, RESOLUTION_FIXED
+} from './constants.js';
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { BundleRegistry } from './bundle/bundle-registry.js';
@@ -178,7 +180,7 @@ class AppBase extends EventHandler {
      *
      * @ignore
      */
-    enableBundles = typeof TextDecoder !== 'undefined';
+    enableBundles = (typeof TextDecoder !== 'undefined');
 
     /**
      * A request id returned by requestAnimationFrame, allowing us to cancel it.
@@ -245,6 +247,7 @@ class AppBase extends EventHandler {
         }
 
         if (!skipUpdate) {
+
             Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${this.frame}`);
             Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
 
@@ -253,6 +256,7 @@ class AppBase extends EventHandler {
             this.fire('framerender');
 
             if (this.autoRender || this.renderNextFrame) {
+
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
 
                 this.render();
@@ -543,21 +547,8 @@ class AppBase extends EventHandler {
      */
     init(appOptions) {
         const {
-            assetPrefix,
-            batchManager,
-            componentSystems,
-            elementInput,
-            gamepads,
-            graphicsDevice,
-            keyboard,
-            lightmapper,
-            mouse,
-            resourceHandlers,
-            scriptsOrder,
-            scriptPrefix,
-            soundManager,
-            touch,
-            xr
+            assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
+            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr
         } = appOptions;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
@@ -581,19 +572,10 @@ class AppBase extends EventHandler {
         this.scriptsOrder = scriptsOrder || [];
 
         this.defaultLayerWorld = new Layer({ name: 'World', id: LAYERID_WORLD });
-        this.defaultLayerDepth = new Layer({
-            name: 'Depth',
-            id: LAYERID_DEPTH,
-            enabled: false,
-            opaqueSortMode: SORTMODE_NONE
-        });
+        this.defaultLayerDepth = new Layer({ name: 'Depth', id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
         this.defaultLayerSkybox = new Layer({ name: 'Skybox', id: LAYERID_SKYBOX, opaqueSortMode: SORTMODE_NONE });
         this.defaultLayerUi = new Layer({ name: 'UI', id: LAYERID_UI, transparentSortMode: SORTMODE_MANUAL });
-        this.defaultLayerImmediate = new Layer({
-            name: 'Immediate',
-            id: LAYERID_IMMEDIATE,
-            opaqueSortMode: SORTMODE_NONE
-        });
+        this.defaultLayerImmediate = new Layer({ name: 'Immediate', id: LAYERID_IMMEDIATE, opaqueSortMode: SORTMODE_NONE });
 
         const defaultLayerComposition = new LayerComposition('default');
         defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
@@ -1033,6 +1015,7 @@ class AppBase extends EventHandler {
      * app.start();
      */
     start() {
+
         Debug.call(() => {
             Debug.assert(!this._alreadyStarted, 'The application can be started only one time.');
             this._alreadyStarted = true;
@@ -1226,7 +1209,7 @@ class AppBase extends EventHandler {
         this._resolutionMode = mode;
 
         // In AUTO mode the resolution is the same as the canvas size, unless specified
-        if (mode === RESOLUTION_AUTO && width === undefined) {
+        if (mode === RESOLUTION_AUTO && (width === undefined)) {
             width = this.graphicsDevice.canvas.clientWidth;
             height = this.graphicsDevice.canvas.clientHeight;
         }
@@ -1322,7 +1305,7 @@ class AppBase extends EventHandler {
      */
     updateCanvasSize() {
         // Don't update if we are in VR or XR
-        if (!this._allowResize || this.xr?.active) {
+        if ((!this._allowResize) || (this.xr?.active)) {
             return;
         }
 
@@ -1526,6 +1509,7 @@ class AppBase extends EventHandler {
      * @param {number[]} ltcMat2 - LUT table of type `array` to be set.
      */
     setAreaLightLuts(ltcMat1, ltcMat2) {
+
         if (ltcMat1 && ltcMat2) {
             AreaLightLuts.set(this.graphicsDevice, ltcMat1, ltcMat2);
         } else {
@@ -1725,14 +1709,7 @@ class AppBase extends EventHandler {
      * app.drawWireSphere(center, 1.0, Color.RED);
      * @ignore
      */
-    drawWireSphere(
-        center,
-        radius,
-        color = Color.WHITE,
-        segments = 20,
-        depthTest = true,
-        layer = this.scene.defaultDrawLayer
-    ) {
+    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
     }
 
@@ -1753,14 +1730,7 @@ class AppBase extends EventHandler {
      * app.drawWireAlignedBox(min, max, Color.RED);
      * @ignore
      */
-    drawWireAlignedBox(
-        minPoint,
-        maxPoint,
-        color = Color.WHITE,
-        depthTest = true,
-        layer = this.scene.defaultDrawLayer,
-        mat
-    ) {
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
         this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer, mat);
     }
 
@@ -1823,6 +1793,7 @@ class AppBase extends EventHandler {
      * @ignore
      */
     drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer, filterable = true) {
+
         // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
         // map to be fetched (without filtering) and rendered
         if (filterable === false && !this.graphicsDevice.isWebGPU) {
@@ -1837,9 +1808,7 @@ class AppBase extends EventHandler {
             material = new ShaderMaterial();
             material.cull = CULLFACE_NONE;
             material.setParameter('colorMap', texture);
-            material.shaderDesc = filterable
-                ? this.scene.immediate.getTextureShaderDesc(texture.encoding)
-                : this.scene.immediate.getUnfilterableTextureShaderDesc();
+            material.shaderDesc = filterable ? this.scene.immediate.getTextureShaderDesc(texture.encoding) : this.scene.immediate.getUnfilterableTextureShaderDesc();
             material.update();
         }
 

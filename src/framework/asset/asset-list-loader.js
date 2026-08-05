@@ -110,7 +110,7 @@ class AssetListLoader extends EventHandler {
     }
 
     _assetHasDependencies(asset) {
-        return asset.type === 'model' && asset.file?.url && asset.file.url && asset.file.url.match(/.json$/g);
+        return (asset.type === 'model' && asset.file?.url && asset.file.url && asset.file.url.match(/.json$/g));
     }
 
     /**

@@ -3,7 +3,9 @@ import { expect } from 'chai';
 import { createURI, URI } from '../../src/core/uri.js';
 
 describe('URI', function () {
+
     describe('#constructor', function () {
+
         it('handles all sections', function () {
             const s = 'http://a/b/c/d;p?q=r#l';
 
@@ -59,9 +61,11 @@ describe('URI', function () {
             expect(uri.query).to.equal('q=r');
             expect(uri.fragment).to.be.undefined;
         });
+
     });
 
     describe('#toString', function () {
+
         it('matches the URI passed to the constructor', function () {
             const s = 'http://a/b/c/d;p?q=r#l';
             const uri = new URI(s);
@@ -80,9 +84,11 @@ describe('URI', function () {
             uri.query = '';
             expect(uri.toString()).to.equal(s);
         });
+
     });
 
     describe('#getQuery', function () {
+
         it('correctly parses the query string', function () {
             const s = 'http://example.com/test?a=1&b=string&c=something%20spaced';
             const uri = new URI(s);
@@ -102,9 +108,11 @@ describe('URI', function () {
 
             expect(Object.keys(q).length).to.equal(0);
         });
+
     });
 
     describe('#setQuery', function () {
+
         it('adds a query string', function () {
             const uri = new URI('http://example.com/test');
             const q = {
@@ -115,10 +123,11 @@ describe('URI', function () {
             expect('key=value').to.equal(uri.query);
         });
 
+
         it('adds a query string with spaces and quotes', function () {
             const uri = new URI('http://example.com/test');
             const q = {
-                key: 'value',
+                'key': 'value',
                 'with space': '\"'
             };
 
@@ -126,9 +135,11 @@ describe('URI', function () {
             expect('key=value&with%20space=%22').to.equal(uri.query);
         });
     });
+
 });
 
 describe('createURI', function () {
+
     it('correctly constructs URIs', function () {
         let uri;
 
@@ -156,6 +167,7 @@ describe('createURI', function () {
             query: 'a=b&c=d'
         });
         expect('http://example.com/abc?a=b&c=d').to.equal(uri);
+
     });
 
     it('throws exceptions', function () {
@@ -217,4 +229,5 @@ describe('createURI', function () {
             });
         }).to.throw();
     });
+
 });

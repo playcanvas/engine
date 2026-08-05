@@ -3,7 +3,11 @@ import { expect } from 'chai';
 import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 import { Mesh } from '../../src/scene/mesh.js';
 
-const POSITIONS = [0, 0, 0, 1, 0, 0, 0, 1, 0];
+const POSITIONS = [
+    0, 0, 0,
+    1, 0, 0,
+    0, 1, 0
+];
 const INDICES = [0, 1, 2];
 
 // runs the function with console.error suppressed, and returns the number of debug asserts it fired
@@ -22,6 +26,7 @@ const withAssertCount = (fn) => {
 };
 
 describe('Mesh', function () {
+
     let device;
 
     beforeEach(function () {
@@ -33,6 +38,7 @@ describe('Mesh', function () {
     });
 
     describe('#getPositions()', function () {
+
         it('populates an array from a stream which has not been applied yet', function () {
             const mesh = new Mesh(device);
             mesh.setPositions(POSITIONS);
@@ -116,6 +122,7 @@ describe('Mesh', function () {
     });
 
     describe('#getIndices()', function () {
+
         it('populates an array from indices which have not been applied yet', function () {
             const mesh = new Mesh(device);
             mesh.setPositions(POSITIONS);

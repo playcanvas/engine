@@ -28,8 +28,8 @@ class ScriptHandler extends ResourceHandler {
     constructor(app) {
         super(app, 'script');
 
-        this._scripts = {};
-        this._cache = {};
+        this._scripts = { };
+        this._cache = { };
     }
 
     clearCache() {
@@ -55,27 +55,25 @@ class ScriptHandler extends ResourceHandler {
         const self = this;
         script.app = this._app;
 
-        const onScriptLoad =
-            (url.load,
-            (err, url, extra) => {
-                if (!err) {
-                    const obj = {};
+        const onScriptLoad = (url.load, (err, url, extra) => {
+            if (!err) {
+                const obj = { };
 
-                    for (let i = 0; i < ScriptTypes._types.length; i++) {
-                        obj[ScriptTypes._types[i].name] = ScriptTypes._types[i];
-                    }
-
-                    ScriptTypes._types.length = 0;
-
-                    callback(null, obj, extra);
-
-                    // no cache for scripts
-                    const urlWithoutEndHash = url.split('&hash=')[0];
-                    delete self._loader._cache[ResourceLoader.makeKey(urlWithoutEndHash, 'script')];
-                } else {
-                    callback(err);
+                for (let i = 0; i < ScriptTypes._types.length; i++) {
+                    obj[ScriptTypes._types[i].name] = ScriptTypes._types[i];
                 }
-            });
+
+                ScriptTypes._types.length = 0;
+
+                callback(null, obj, extra);
+
+                // no cache for scripts
+                const urlWithoutEndHash = url.split('&hash=')[0];
+                delete self._loader._cache[ResourceLoader.makeKey(urlWithoutEndHash, 'script')];
+            } else {
+                callback(err);
+            }
+        });
 
         // check if we're loading a module or a classic script
         const [basePath] = url.load.split('?');
@@ -92,7 +90,7 @@ class ScriptHandler extends ResourceHandler {
         return data;
     }
 
-    patch(asset, assets) {}
+    patch(asset, assets) { }
 
     _loadScript(url, callback) {
         const head = document.head;
@@ -102,17 +100,13 @@ class ScriptHandler extends ResourceHandler {
         // use async=false to force scripts to execute in order
         element.async = false;
 
-        element.addEventListener(
-            'error',
-            (e) => {
-                callback(`Script: ${e.target.src} failed to load`);
-            },
-            false
-        );
+        element.addEventListener('error', (e) => {
+            callback(`Script: ${e.target.src} failed to load`);
+        }, false);
 
         let done = false;
         element.onload = element.onreadystatechange = function () {
-            if (!done && (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete')) {
+            if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
                 done = true; // prevent double event firing
                 callback(null, url, element);
             }
@@ -124,56 +118,53 @@ class ScriptHandler extends ResourceHandler {
     }
 
     _loadModule(url, callback) {
+
         // if we're in the browser, we need to use the full URL
         const isBrowserWithOrigin = platform.browser && window.location.origin !== 'null';
         const baseUrl = isBrowserWithOrigin ? window.location.origin + window.location.pathname : import.meta.url;
         const importUrl = new URL(url, baseUrl);
 
         // @ts-ignore
-        import(importUrl.toString())
-            .then((module) => {
-                const filename = importUrl.pathname.split('/').pop();
-                const scriptSchema = this._app.assets.find(filename, 'script')?.data?.scripts;
+        import(importUrl.toString()).then((module) => {
 
-                for (const key in module) {
-                    const scriptClass = module[key];
-                    const extendsScriptType = scriptClass.prototype instanceof Script;
+            const filename = importUrl.pathname.split('/').pop();
+            const scriptSchema = this._app.assets.find(filename, 'script')?.data?.scripts;
 
-                    if (extendsScriptType) {
-                        // a `scriptName` declared on THIS class; an inherited one belongs to a base
-                        const ownScriptName =
-                            Object.prototype.hasOwnProperty.call(scriptClass, 'scriptName') && scriptClass.scriptName;
+            for (const key in module) {
+                const scriptClass = module[key];
+                const extendsScriptType = scriptClass.prototype instanceof Script;
 
-                        if (!ownScriptName) {
-                            Debug.warnOnce(
-                                `The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${toLowerCamelCase(scriptClass.name)}";\`. This will be an error in future versions of PlayCanvas.`
-                            );
-                        }
+                if (extendsScriptType) {
 
-                        const scriptName = getScriptRegistryName(scriptClass);
+                    // a `scriptName` declared on THIS class; an inherited one belongs to a base
+                    const ownScriptName = Object.prototype.hasOwnProperty.call(scriptClass, 'scriptName') && scriptClass.scriptName;
 
-                        // skip exports whose name cannot be resolved rather than registering under an
-                        // invalid key
-                        if (!scriptName) {
-                            Debug.error(
-                                `Script class exported as '${key}' from '${url}' has no resolvable name and was skipped. Add a static "scriptName" property.`
-                            );
-                            continue;
-                        }
-
-                        // Register the script name
-                        registerScript(scriptClass, scriptName);
-
-                        // Store any schema associated with the script
-                        if (scriptSchema) this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
+                    if (!ownScriptName) {
+                        Debug.warnOnce(`The Script class "${scriptClass.name}" must have a static "scriptName" property: \`${scriptClass.name}.scriptName = "${toLowerCamelCase(scriptClass.name)}";\`. This will be an error in future versions of PlayCanvas.`);
                     }
-                }
 
-                callback(null, url, null);
-            })
-            .catch((err) => {
-                callback(err);
-            });
+                    const scriptName = getScriptRegistryName(scriptClass);
+
+                    // skip exports whose name cannot be resolved rather than registering under an
+                    // invalid key
+                    if (!scriptName) {
+                        Debug.error(`Script class exported as '${key}' from '${url}' has no resolvable name and was skipped. Add a static "scriptName" property.`);
+                        continue;
+                    }
+
+                    // Register the script name
+                    registerScript(scriptClass, scriptName);
+
+                    // Store any schema associated with the script
+                    if (scriptSchema) this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);
+                }
+            }
+
+            callback(null, url, null);
+
+        }).catch((err) => {
+            callback(err);
+        });
     }
 }
 

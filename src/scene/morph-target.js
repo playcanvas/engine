@@ -65,6 +65,7 @@ class MorphTarget {
     }
 
     get aabb() {
+
         // lazy evaluation, which allows us to skip this completely if customAABB is used
         if (!this._aabb) {
             this._aabb = new BoundingBox();
@@ -88,6 +89,7 @@ class MorphTarget {
     }
 
     _postInit() {
+
         // release original data
         if (!this.options.preserveData) {
             this.options = null;

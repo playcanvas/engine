@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 attribute vec4 aPosition;
 
 uniform mat4 matrix_view;

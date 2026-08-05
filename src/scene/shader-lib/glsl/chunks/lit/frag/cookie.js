@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 // light cookie functionality for non-clustered lights
 vec4 getCookie2D(sampler2D tex, mat4 transform, float intensity) {
     vec4 projPos = transform * vec4(vPositionW, 1.0);

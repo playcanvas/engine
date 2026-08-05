@@ -11,6 +11,7 @@ Mouse.prototype._getTargetCoords = function (event) {
 };
 
 describe('Mouse', function () {
+
     /** @type { Mouse } */
     let mouse;
 
@@ -23,12 +24,15 @@ describe('Mouse', function () {
     });
 
     describe('#constructor', function () {
+
         it('should create a new instance', function () {
             expect(mouse).to.be.an.instanceOf(Mouse);
         });
+
     });
 
     describe('#isPressed', function () {
+
         it('should return false for all buttons by default', function () {
             for (const button of buttons) {
                 expect(mouse.isPressed(button)).to.be.false;
@@ -48,9 +52,11 @@ describe('Mouse', function () {
                 expect(mouse.isPressed(button)).to.be.false;
             }
         });
+
     });
 
     describe('#on', function () {
+
         it('should handle mousedown events', (done) => {
             mouse.on('mousedown', (event) => {
                 expect(event.button).to.equal(MOUSEBUTTON_LEFT);
@@ -74,9 +80,11 @@ describe('Mouse', function () {
             const mouseUpEvent = new MouseEvent('mouseup', { button: 0 });
             window.dispatchEvent(mouseUpEvent);
         });
+
     });
 
     describe('#wasPressed', function () {
+
         it('should return false for all buttons by default', function () {
             for (const button of buttons) {
                 expect(mouse.wasPressed(button)).to.be.false;
@@ -95,9 +103,11 @@ describe('Mouse', function () {
                 expect(mouse.wasPressed(button)).to.be.false;
             }
         });
+
     });
 
     describe('#wasReleased', function () {
+
         it('should return false for all buttons by default', function () {
             for (const button of buttons) {
                 expect(mouse.wasReleased(button)).to.be.false;
@@ -121,5 +131,7 @@ describe('Mouse', function () {
                 expect(mouse.wasReleased(button)).to.be.false;
             }
         });
+
     });
+
 });

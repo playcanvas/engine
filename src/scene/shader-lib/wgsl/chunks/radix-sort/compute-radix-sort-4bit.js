@@ -2,7 +2,7 @@
 // Each thread processes ELEMENTS_PER_THREAD keys, reducing workgroup count proportionally.
 // Computes per-workgroup digit histograms (block sums) only.
 
-export const radixSort4bitSource = /* wgsl */ `
+export const radixSort4bitSource = /* wgsl */`
 
 @group(0) @binding(0) var<storage, read> input: array<u32>;
 @group(0) @binding(1) var<storage, read_write> block_sums: array<u32>;

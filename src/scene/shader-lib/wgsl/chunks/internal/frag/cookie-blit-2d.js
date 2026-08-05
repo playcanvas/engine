@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     varying uv0: vec2f;
 
     var blitTexture: texture_2d<f32>;

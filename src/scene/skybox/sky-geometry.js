@@ -7,10 +7,8 @@ import { DomeGeometry } from '../geometry/dome-geometry.js';
 class SkyGeometry {
     static create(device, type) {
         switch (type) {
-            case SKYTYPE_BOX:
-                return SkyGeometry.box(device);
-            case SKYTYPE_DOME:
-                return SkyGeometry.dome(device);
+            case SKYTYPE_BOX: return SkyGeometry.box(device);
+            case SKYTYPE_DOME: return SkyGeometry.dome(device);
         }
         Debug.assert(type === SKYTYPE_INFINITE, `Unsupported sky geometry type ${type}`);
         return SkyGeometry.infinite(device);
@@ -25,6 +23,7 @@ class SkyGeometry {
     }
 
     static dome(device) {
+
         const geom = new DomeGeometry({
             latitudeBands: 50,
             longitudeBands: 50

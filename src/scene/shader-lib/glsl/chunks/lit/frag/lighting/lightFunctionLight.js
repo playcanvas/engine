@@ -1,5 +1,5 @@
 // functions used to evaluate the light
-export default /* glsl */ `
+export default /* glsl */`
 #if defined(LIGHT{i})
 
 void evaluateLight{i}(

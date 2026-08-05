@@ -92,14 +92,7 @@ class ContactPoint {
      * during the last sub-step. Describes how hard two objects collide. Defaults to 0.
      * @ignore
      */
-    constructor(
-        localPoint = new Vec3(),
-        localPointOther = new Vec3(),
-        point = new Vec3(),
-        pointOther = new Vec3(),
-        normal = new Vec3(),
-        impulse = 0
-    ) {
+    constructor(localPoint = new Vec3(), localPointOther = new Vec3(), point = new Vec3(), pointOther = new Vec3(), normal = new Vec3(), impulse = 0) {
         this.localPoint = localPoint;
         this.localPointOther = localPointOther;
         this.point = point;

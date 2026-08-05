@@ -9,9 +9,10 @@ import { SogParser } from '../../../src/framework/parsers/sog.js';
 import { http } from '../../../src/platform/net/http.js';
 
 describe('GSplatHandler (parser selection)', function () {
+
     // the handler only stores the app and constructs the parsers with it; a stub is enough for selection
     const handler = new GSplatHandler({});
-    const select = (url) => handler._selectParser(handler._makeContext({ load: url, original: url }));
+    const select = url => handler._selectParser(handler._makeContext({ load: url, original: url }));
 
     afterEach(function () {
         restore();

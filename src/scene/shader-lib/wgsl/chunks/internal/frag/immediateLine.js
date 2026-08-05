@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     #include "gammaPS"
     varying color: vec4f;
     @fragment

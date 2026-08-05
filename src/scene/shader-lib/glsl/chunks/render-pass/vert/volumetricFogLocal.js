@@ -2,7 +2,7 @@
 // volume, used by the volumetric fog local lights pass. Note that the generated uv0 addresses the
 // full render target, and not just the quad, so the fragment shader can sample screen space
 // textures with it.
-export default /* glsl */ `
+export default /* glsl */`
     attribute vec2 aPosition;
 
     // normalized device coordinates of the light volume bounds: xy = min, zw = max

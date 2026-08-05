@@ -4,11 +4,8 @@ import { ScriptAttributes, assignAttributesToScript } from '../../script/script-
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 import {
-    SCRIPT_INITIALIZE,
-    SCRIPT_POST_INITIALIZE,
-    SCRIPT_UPDATE,
-    SCRIPT_POST_UPDATE,
-    SCRIPT_SWAP
+    SCRIPT_INITIALIZE, SCRIPT_POST_INITIALIZE, SCRIPT_UPDATE,
+    SCRIPT_POST_UPDATE, SCRIPT_SWAP
 } from '../../script/constants.js';
 import { ScriptType } from '../../script/script-type.js';
 import { getScriptName, getScriptRegistryName, toLowerCamelCase } from '../../script/script.js';
@@ -240,6 +237,7 @@ class ScriptComponent extends Component {
 
                 // enabled
                 if (typeof value[key].enabled === 'boolean') {
+
                     // Before a script is initialized, initialize any attributes
                     script.once('preInitialize', () => {
                         this.initializeAttributes(script);
@@ -258,7 +256,7 @@ class ScriptComponent extends Component {
                             // new attribute
                             const scriptType = this.system.app.scripts.get(key);
                             if (scriptType) {
-                                scriptType.attributes.add(attr, {});
+                                scriptType.attributes.add(attr, { });
                             }
                         }
 
@@ -412,10 +410,14 @@ class ScriptComponent extends Component {
     }
 
     initializeAttributes(script) {
+
         // if script has __initializeAttributes method assume it has a runtime schema
         if (script instanceof ScriptType) {
+
             script.__initializeAttributes();
+
         } else {
+
             // otherwise we need to manually initialize attributes from the schema
             const name = script.__scriptType.__name;
             const data = this._attributeDataMap.get(name);
@@ -428,31 +430,27 @@ class ScriptComponent extends Component {
             // Fetch schema and warn if it doesn't exist
             const schema = this.system.app.scripts?.getSchema(name);
             if (!schema) {
-                Debug.warnOnce(
-                    `No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`
-                );
+                Debug.warnOnce(`No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`);
             }
 
             // Assign the attributes to the script instance based on the attribute schema
             assignAttributesToScript(this.system.app, schema.attributes, data, script);
+
         }
     }
 
     _scriptMethod(script, method, arg) {
         // #if _DEBUG
         try {
-            // #endif
+        // #endif
             script[method](arg);
-            // #if _DEBUG
+        // #if _DEBUG
         } catch (ex) {
             // disable script if it fails to call method
             script.enabled = false;
 
             if (!script.hasEvent('error')) {
-                console.warn(
-                    `unhandled exception while calling "${method}" for "${script.__scriptType.__name}" script: `,
-                    ex
-                );
+                console.warn(`unhandled exception while calling "${method}" for "${script.__scriptType.__name}" script: `, ex);
                 console.error(ex);
             }
 
@@ -699,16 +697,14 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
+
             const inferredScriptName = getScriptName(scriptType);
 
             // a `scriptName` declared on THIS class; an inherited one would belong to a base class
-            const ownScriptName =
-                Object.prototype.hasOwnProperty.call(scriptType, 'scriptName') && scriptType.scriptName;
+            const ownScriptName = Object.prototype.hasOwnProperty.call(scriptType, 'scriptName') && scriptType.scriptName;
 
             if (!(scriptType.prototype instanceof ScriptType) && !ownScriptName) {
-                Debug.warnOnce(
-                    `The Script class "${inferredScriptName}" must have a static "scriptName" property: \`${inferredScriptName}.scriptName = "${toLowerCamelCase(inferredScriptName)}";\`. This will be an error in future versions of PlayCanvas.`
-                );
+                Debug.warnOnce(`The Script class "${inferredScriptName}" must have a static "scriptName" property: \`${inferredScriptName}.scriptName = "${toLowerCamelCase(inferredScriptName)}";\`. This will be an error in future versions of PlayCanvas.`);
             }
 
             // assign an own `__name` so this class is never confused with a base class's name
@@ -720,9 +716,7 @@ class ScriptComponent extends Component {
             // bail out rather than index the script under an `undefined`/empty name (which would
             // attach it as `this.undefined` and could mask other scripts)
             if (!scriptName) {
-                Debug.error(
-                    `The script class could not be added to entity '${this.entity.name}' because its name could not be resolved. Add a static "scriptName" property to the class.`
-                );
+                Debug.error(`The script class could not be added to entity '${this.entity.name}' because its name could not be resolved. Add a static "scriptName" property to the class.`);
                 return null;
             }
         }
@@ -743,8 +737,10 @@ class ScriptComponent extends Component {
 
                 // If the script is not a ScriptType then we must store attribute data on the component
                 if (!(scriptInstance instanceof ScriptType) && args.attributes) {
+
                     // Store the Attribute data
                     this._attributeDataMap.set(scriptName, { ...args.attributes });
+
                 }
 
                 const len = this._scripts.length;
@@ -774,6 +770,7 @@ class ScriptComponent extends Component {
                 this.system.app.scripts.on(`swap:${scriptName}`, this._scriptsIndex[scriptName].onSwap);
 
                 if (!args.preloading) {
+
                     if (scriptInstance.enabled && !scriptInstance._initialized) {
                         scriptInstance._initialized = true;
 
@@ -789,6 +786,7 @@ class ScriptComponent extends Component {
                         }
                     }
                 }
+
 
                 return scriptInstance;
             }
@@ -966,8 +964,7 @@ class ScriptComponent extends Component {
             // otherwise it means that the attributes have already been initialized
             // so convert the new guid to an entity
             // and put it in the new attributes
-            const newAttributesRaw =
-                newScriptComponent[scriptName].__attributesRaw ?? newScriptComponent._attributeDataMap.get(scriptName);
+            const newAttributesRaw = newScriptComponent[scriptName].__attributesRaw ?? newScriptComponent._attributeDataMap.get(scriptName);
             const newAttributes = newScriptComponent[scriptName].__attributes;
             if (!newAttributesRaw && !newAttributes) {
                 continue;
@@ -984,8 +981,7 @@ class ScriptComponent extends Component {
                 }
 
                 // get the attribute definition from the script type
-                const attribute =
-                    scriptType.attributes?.get(attributeName) ??
+                const attribute = scriptType.attributes?.get(attributeName) ??
                     this.system.app.scripts.getSchema(scriptName)?.attributes?.[attributeName];
                 if (!attribute) {
                     continue;
@@ -993,20 +989,11 @@ class ScriptComponent extends Component {
 
                 if (attribute.type === 'entity') {
                     // entity attributes
-                    this._resolveEntityScriptAttribute(
-                        attribute,
-                        attributeName,
-                        oldAttributes[attributeName],
-                        useGuid,
-                        newAttributesRaw || newAttributes,
-                        duplicatedIdsMap
-                    );
+                    this._resolveEntityScriptAttribute(attribute, attributeName, oldAttributes[attributeName], useGuid, newAttributesRaw || newAttributes, duplicatedIdsMap);
                 } else if (attribute.type === 'json' && Array.isArray(attribute.schema)) {
                     // json attributes
                     const oldValue = oldAttributes[attributeName];
-                    const newJsonValue = newAttributesRaw
-                        ? newAttributesRaw[attributeName]
-                        : newAttributes[attributeName];
+                    const newJsonValue = (newAttributesRaw ? newAttributesRaw[attributeName] : newAttributes[attributeName]);
 
                     for (let i = 0; i < attribute.schema.length; i++) {
                         const field = attribute.schema[i];
@@ -1016,24 +1003,10 @@ class ScriptComponent extends Component {
 
                         if (attribute.array) {
                             for (let j = 0; j < oldValue.length; j++) {
-                                this._resolveEntityScriptAttribute(
-                                    field,
-                                    field.name,
-                                    oldValue[j][field.name],
-                                    useGuid,
-                                    newJsonValue[j],
-                                    duplicatedIdsMap
-                                );
+                                this._resolveEntityScriptAttribute(field, field.name, oldValue[j][field.name], useGuid, newJsonValue[j], duplicatedIdsMap);
                             }
                         } else {
-                            this._resolveEntityScriptAttribute(
-                                field,
-                                field.name,
-                                oldValue[field.name],
-                                useGuid,
-                                newJsonValue,
-                                duplicatedIdsMap
-                            );
+                            this._resolveEntityScriptAttribute(field, field.name, oldValue[field.name], useGuid, newJsonValue, duplicatedIdsMap);
                         }
                     }
                 }

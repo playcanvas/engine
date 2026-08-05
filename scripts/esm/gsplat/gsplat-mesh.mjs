@@ -1,13 +1,4 @@
-import {
-    Script,
-    Vec3,
-    Mat4,
-    BoundingBox,
-    GSplatFormat,
-    GSplatContainer,
-    FloatPacking,
-    StandardMaterial
-} from 'playcanvas';
+import { Script, Vec3, Mat4, BoundingBox, GSplatFormat, GSplatContainer, FloatPacking, StandardMaterial } from 'playcanvas';
 
 /**
  * @import { Entity } from 'playcanvas'
@@ -73,7 +64,7 @@ function rasterizeTriangle(v0, v1, v2, splatSize, marginFactor, color, outSplats
 
     // Height of triangle (perpendicular distance from apex to base)
     const height = Math.abs(apexY);
-    if (height < 0.0001) return; // Degenerate
+    if (height < 0.0001) return;  // Degenerate
 
     // Edge lengths for margin calculations
     const len02 = Math.sqrt(apexX * apexX + apexY * apexY);
@@ -86,8 +77,8 @@ function rasterizeTriangle(v0, v1, v2, splatSize, marginFactor, color, outSplats
 
     // Compute margin offsets along scanline for side edges
     // For edge at angle θ to horizontal, offset along x = margin / sin(θ)
-    const marginOffset02 = len02 > 0.0001 ? (margin * len02) / Math.abs(apexY) : margin;
-    const marginOffset12 = len12 > 0.0001 ? (margin * len12) / Math.abs(apexY) : margin;
+    const marginOffset02 = (len02 > 0.0001) ? margin * len02 / Math.abs(apexY) : margin;
+    const marginOffset12 = (len12 > 0.0001) ? margin * len12 / Math.abs(apexY) : margin;
 
     // Direction of y (handle both orientations)
     const ySign = apexY >= 0 ? 1 : -1;
@@ -97,7 +88,7 @@ function rasterizeTriangle(v0, v1, v2, splatSize, marginFactor, color, outSplats
     const startScanY = margin;
     const endScanY = height - margin;
 
-    if (startScanY >= endScanY) return; // Triangle too small
+    if (startScanY >= endScanY) return;  // Triangle too small
 
     // Calculate number of scanlines and distribute evenly
     const scanRange = endScanY - startScanY;
@@ -125,13 +116,13 @@ function rasterizeTriangle(v0, v1, v2, splatSize, marginFactor, color, outSplats
         const rightX = Math.max(intersect02, intersect12);
 
         // Apply margin offsets (perpendicular to side edges)
-        const leftMargin = intersect02 < intersect12 ? marginOffset02 : marginOffset12;
-        const rightMargin = intersect02 < intersect12 ? marginOffset12 : marginOffset02;
+        const leftMargin = (intersect02 < intersect12) ? marginOffset02 : marginOffset12;
+        const rightMargin = (intersect02 < intersect12) ? marginOffset12 : marginOffset02;
 
         const scanStartX = leftX + leftMargin;
         const scanEndX = rightX - rightMargin;
 
-        if (scanStartX >= scanEndX) continue; // Scanline too short
+        if (scanStartX >= scanEndX) continue;  // Scanline too short
 
         // Calculate number of points along scanline
         const scanLength = scanEndX - scanStartX;
@@ -171,10 +162,7 @@ function rasterizeTriangle(v0, v1, v2, splatSize, marginFactor, color, outSplats
  * @returns {{r: number, g: number, b: number, a: number}} The extracted color.
  */
 function getMaterialColor(material) {
-    let r = 1,
-        g = 1,
-        b = 1,
-        a = 1;
+    let r = 1, g = 1, b = 1, a = 1;
 
     if (material instanceof StandardMaterial) {
         // Try emissive first
@@ -424,12 +412,8 @@ class GSplatMesh extends Script {
         const centers = this._container.centers;
 
         // Track bounding box min/max
-        let minX = Infinity,
-            minY = Infinity,
-            minZ = Infinity;
-        let maxX = -Infinity,
-            maxY = -Infinity,
-            maxZ = -Infinity;
+        let minX = Infinity, minY = Infinity, minZ = Infinity;
+        let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
 
         // Write all splat data
         for (let i = 0; i < totalSplats; i++) {
@@ -468,11 +452,7 @@ class GSplatMesh extends Script {
         // Build bounding box from min/max, expanded by splat size
         const aabb = this._tempBox;
         aabb.center.set((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
-        aabb.halfExtents.set(
-            (maxX - minX) * 0.5 + splatSize,
-            (maxY - minY) * 0.5 + splatSize,
-            (maxZ - minZ) * 0.5 + splatSize
-        );
+        aabb.halfExtents.set((maxX - minX) * 0.5 + splatSize, (maxY - minY) * 0.5 + splatSize, (maxZ - minZ) * 0.5 + splatSize);
 
         // Update container
         this._container.aabb = aabb;

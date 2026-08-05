@@ -103,7 +103,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
             // any layout groups which are children of other layout groups will always have their
             // new size set before their own reflow is calculated.
             queue.sort((componentA, componentB) => {
-                return componentA.entity.graphDepth - componentB.entity.graphDepth;
+                return (componentA.entity.graphDepth - componentB.entity.graphDepth);
             });
 
             for (let i = 0; i < queue.length; ++i) {

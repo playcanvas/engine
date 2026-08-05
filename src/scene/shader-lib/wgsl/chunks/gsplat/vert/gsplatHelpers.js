@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 // Make splat spherical by setting uniform scale
 // Use size = 0.0 to hide the splat
 fn gsplatMakeSpherical(scale: ptr<function, vec3f>, size: f32) {

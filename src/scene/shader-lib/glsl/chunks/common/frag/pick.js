@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 vec4 encodePickOutput(uint id) {
     const vec4 inv = vec4(1.0 / 255.0);
     const uvec4 shifts = uvec4(16, 8, 0, 24);

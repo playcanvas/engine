@@ -1,5 +1,5 @@
 // Spherical Harmonics for SOG GSplat format - reads directly from source textures
-export default /* glsl */ `
+export default /* glsl */`
 #if SH_BANDS > 0
     #ifndef SOG_V2
         uniform float shN_mins;

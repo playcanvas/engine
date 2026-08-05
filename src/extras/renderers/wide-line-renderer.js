@@ -1,18 +1,4 @@
-import {
-    BUFFER_DYNAMIC,
-    CULLFACE_NONE,
-    PRIMITIVE_TRIANGLES,
-    SEMANTIC_ATTR8,
-    SEMANTIC_ATTR9,
-    SEMANTIC_ATTR10,
-    SEMANTIC_ATTR11,
-    SEMANTIC_ATTR12,
-    SEMANTIC_ATTR13,
-    SEMANTIC_ATTR14,
-    SEMANTIC_ATTR15,
-    SEMANTIC_POSITION,
-    TYPE_FLOAT32
-} from '../../platform/graphics/constants.js';
+import { BUFFER_DYNAMIC, CULLFACE_NONE, PRIMITIVE_TRIANGLES, SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR10, SEMANTIC_ATTR11, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15, SEMANTIC_POSITION, TYPE_FLOAT32 } from '../../platform/graphics/constants.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -426,14 +412,19 @@ const fragmentWGSL = /* wgsl */ `
 `;
 
 const createTemplateMesh = (device) => {
-    const positions = [0, -1, 0, 0, 1, 0, 1, -1, 0, 1, 1, 0];
+    const positions = [
+        0, -1, 0,
+        0, 1, 0,
+        1, -1, 0,
+        1, 1, 0
+    ];
     const indices = [0, 2, 1, 1, 2, 3];
 
     const addDisk = (kind) => {
         const center = positions.length / 3;
         positions.push(0, 0, kind);
         for (let i = 0; i <= ROUND_SEGMENTS; i++) {
-            const angle = (i / ROUND_SEGMENTS) * Math.PI * 2;
+            const angle = i / ROUND_SEGMENTS * Math.PI * 2;
             positions.push(Math.cos(angle), Math.sin(angle), kind);
         }
         for (let i = 0; i < ROUND_SEGMENTS; i++) {
@@ -625,11 +616,7 @@ class WideLineRenderer {
         this.material.depthWrite = this._depthWrite;
         this.material.update();
 
-        this.meshInstance = new MeshInstance(
-            createTemplateMesh(this.device),
-            this.material,
-            new GraphNode('WideLineRenderer')
-        );
+        this.meshInstance = new MeshInstance(createTemplateMesh(this.device), this.material, new GraphNode('WideLineRenderer'));
         this.meshInstance.cull = false;
         this.meshInstance.pick = false;
         this.meshInstance.visible = false;

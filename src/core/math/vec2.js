@@ -317,7 +317,8 @@ class Vec2 {
      * console.log("The two vectors are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
      */
     equalsApprox(rhs, epsilon = 1e-6) {
-        return Math.abs(this.x - rhs.x) < epsilon && Math.abs(this.y - rhs.y) < epsilon;
+        return (Math.abs(this.x - rhs.x) < epsilon) &&
+            (Math.abs(this.y - rhs.y) < epsilon);
     }
 
     /**
@@ -481,7 +482,7 @@ class Vec2 {
      * console.log("Vector after rotation is: " + v.toString());
      */
     rotate(degrees) {
-        const angle = Math.atan2(this.x, this.y) + degrees * math.DEG_TO_RAD;
+        const angle = Math.atan2(this.x, this.y) + (degrees * math.DEG_TO_RAD);
         const len = Math.sqrt(this.x * this.x + this.y * this.y);
         this.x = Math.sin(angle) * len;
         this.y = Math.cos(angle) * len;

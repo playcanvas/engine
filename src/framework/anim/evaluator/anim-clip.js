@@ -31,15 +31,15 @@ class AnimClip {
      * @param {EventHandler} [eventHandler] - The handler to call when an event is fired by the clip.
      */
     constructor(track, time, speed, playing, loop, eventHandler) {
-        this._name = track.name; // default to track name
+        this._name = track.name;        // default to track name
         this._track = track;
         this._snapshot = new AnimSnapshot(track);
         this._playing = playing;
-        this._time = time; // play cursor
-        this._speed = speed; // playback speed, may be negative
-        this._loop = loop; // whether to loop
-        this._blendWeight = 1.0; // blend weight 0..1
-        this._blendOrder = 0.0; // blend order relative to other clips
+        this._time = time;              // play cursor
+        this._speed = speed;            // playback speed, may be negative
+        this._loop = loop;              // whether to loop
+        this._blendWeight = 1.0;        // blend weight 0..1
+        this._blendOrder = 0.0;         // blend order relative to other clips
         this._eventHandler = eventHandler;
         this.alignCursorToCurrentTime();
     }
@@ -148,7 +148,7 @@ class AnimClip {
     }
 
     moveEventCursor() {
-        this._eventCursor += this.isReverse ? -1 : 1;
+        this._eventCursor += (this.isReverse ? -1 : 1);
         if (this._eventCursor >= this.track.events.length) {
             this._eventCursor = 0;
         } else if (this._eventCursor < 0) {
@@ -239,7 +239,7 @@ class AnimClip {
                 // playing forwards
                 if (time > duration) {
                     if (loop) {
-                        time = time % duration || 0; // if duration is 0, % is NaN
+                        time = (time % duration) || 0;  // if duration is 0, % is NaN
                     } else {
                         time = this._track.duration;
                         this.pause();
@@ -249,7 +249,7 @@ class AnimClip {
                 // playing backwards
                 if (time < 0) {
                     if (loop) {
-                        time = duration + (time % duration || 0);
+                        time = duration + ((time % duration) || 0);
                     } else {
                         time = 0;
                         this.pause();

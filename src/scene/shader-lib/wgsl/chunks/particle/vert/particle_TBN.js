@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     let rot3 = mat3x3f(
         vec3f(rotMatrix[0][0], rotMatrix[1][0], 0.0),
         vec3f(rotMatrix[0][1], rotMatrix[1][1], 0.0),

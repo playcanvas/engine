@@ -126,12 +126,12 @@ function registerScript(script, name, app) {
     // `ScriptComponent.create` and the asset loader) preserves the pre-2.19.3 registration name, so
     // projects that register ES6 classes via `registerScript(Class)` and reference them by their
     // class name keep working.
-    name = name || (Object.prototype.hasOwnProperty.call(script, '__name') && script.__name) || getScriptName(script);
+    name = name ||
+        (Object.prototype.hasOwnProperty.call(script, '__name') && script.__name) ||
+        getScriptName(script);
 
     if (!name) {
-        Debug.error(
-            `script class '${script.name || script}' has no name and cannot be registered. Add a static "scriptName" property or pass an explicit name.`
-        );
+        Debug.error(`script class '${script.name || script}' has no name and cannot be registered. Add a static "scriptName" property or pass an explicit name.`);
         return;
     }
 

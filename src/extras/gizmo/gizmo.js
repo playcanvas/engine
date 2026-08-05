@@ -359,7 +359,7 @@ class Gizmo extends EventHandler {
         if (this._layer === layer) {
             return;
         }
-        this._camera.layers = this._camera.layers.filter((id) => id !== this._layer.id);
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
         this._layer = layer;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
 
@@ -384,7 +384,7 @@ class Gizmo extends EventHandler {
         if (this._camera === camera) {
             return;
         }
-        this._camera.layers = this._camera.layers.filter((id) => id !== this._layer.id);
+        this._camera.layers = this._camera.layers.filter(id => id !== this._layer.id);
         this._camera = camera;
         this._camera.layers = this._camera.layers.concat(this._layer.id);
 
@@ -698,7 +698,8 @@ class Gizmo extends EventHandler {
      * gizmo.attach([boxA, boxB]);
      * gizmo.prerender();
      */
-    prerender() {}
+    prerender() {
+    }
 
     /**
      * Updates the gizmo position, rotation, and scale.
@@ -738,9 +739,10 @@ class Gizmo extends EventHandler {
         this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
         this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
-        this._handles.forEach((handle) => handle.off());
+        this._handles.forEach(handle => handle.off());
 
         this.root.destroy();
+
     }
 }
 

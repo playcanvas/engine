@@ -2,17 +2,9 @@ import { path } from '../../core/path.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE,
-    ADDRESS_MIRRORED_REPEAT,
-    ADDRESS_REPEAT,
-    FILTER_LINEAR,
-    FILTER_NEAREST,
-    FILTER_NEAREST_MIPMAP_NEAREST,
-    FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST,
-    FILTER_LINEAR_MIPMAP_LINEAR,
-    TEXTURETYPE_DEFAULT,
-    TEXTURETYPE_RGBM
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
+    FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { http } from '../../platform/net/http.js';
 import { TextureAtlas } from '../../scene/texture-atlas.js';
@@ -23,18 +15,18 @@ import { ResourceHandler } from './handler.js';
  */
 
 const JSON_ADDRESS_MODE = {
-    repeat: ADDRESS_REPEAT,
-    clamp: ADDRESS_CLAMP_TO_EDGE,
-    mirror: ADDRESS_MIRRORED_REPEAT
+    'repeat': ADDRESS_REPEAT,
+    'clamp': ADDRESS_CLAMP_TO_EDGE,
+    'mirror': ADDRESS_MIRRORED_REPEAT
 };
 
 const JSON_FILTER_MODE = {
-    nearest: FILTER_NEAREST,
-    linear: FILTER_LINEAR,
-    nearest_mip_nearest: FILTER_NEAREST_MIPMAP_NEAREST,
-    linear_mip_nearest: FILTER_LINEAR_MIPMAP_NEAREST,
-    nearest_mip_linear: FILTER_NEAREST_MIPMAP_LINEAR,
-    linear_mip_linear: FILTER_LINEAR_MIPMAP_LINEAR
+    'nearest': FILTER_NEAREST,
+    'linear': FILTER_LINEAR,
+    'nearest_mip_nearest': FILTER_NEAREST_MIPMAP_NEAREST,
+    'linear_mip_nearest': FILTER_LINEAR_MIPMAP_NEAREST,
+    'nearest_mip_linear': FILTER_NEAREST_MIPMAP_LINEAR,
+    'linear_mip_linear': FILTER_LINEAR_MIPMAP_LINEAR
 };
 
 const regexFrame = /^data\.frames\.(\d+)$/;
@@ -72,31 +64,27 @@ class TextureAtlasHandler extends ResourceHandler {
         // if supplied with a json file url (probably engine-only)
         // load json data then load texture of same name
         if (path.getExtension(url.original) === '.json') {
-            http.get(
-                url.load,
-                {
-                    retry: this.maxRetries > 0,
-                    maxRetries: this.maxRetries
-                },
-                (err, response) => {
-                    if (!err) {
-                        // load texture
-                        const textureUrl = url.original.replace('.json', '.png');
-                        self._loader.load(textureUrl, 'texture', (err, texture) => {
-                            if (err) {
-                                callback(err);
-                            } else {
-                                callback(null, {
-                                    data: response,
-                                    texture: texture
-                                });
-                            }
-                        });
-                    } else {
-                        callback(err);
-                    }
+            http.get(url.load, {
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
+            }, (err, response) => {
+                if (!err) {
+                    // load texture
+                    const textureUrl = url.original.replace('.json', '.png');
+                    self._loader.load(textureUrl, 'texture', (err, texture) => {
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, {
+                                data: response,
+                                texture: texture
+                            });
+                        }
+                    });
+                } else {
+                    callback(err);
                 }
-            );
+            });
         } else {
             handler.load(url, callback);
         }
@@ -130,8 +118,7 @@ class TextureAtlasHandler extends ResourceHandler {
             if (asset.resource.__data.addressu !== undefined) asset.data.addressu = asset.resource.__data.addressu;
             if (asset.resource.__data.addressv !== undefined) asset.data.addressv = asset.resource.__data.addressv;
             if (asset.resource.__data.mipmaps !== undefined) asset.data.mipmaps = asset.resource.__data.mipmaps;
-            if (asset.resource.__data.anisotropy !== undefined)
-                asset.data.anisotropy = asset.resource.__data.anisotropy;
+            if (asset.resource.__data.anisotropy !== undefined) asset.data.anisotropy = asset.resource.__data.anisotropy;
             if (asset.resource.__data.rgbm !== undefined) asset.data.rgbm = !!asset.resource.__data.rgbm;
 
             asset.data.frames = asset.resource.__data.frames;
@@ -144,17 +131,11 @@ class TextureAtlasHandler extends ResourceHandler {
         if (texture) {
             texture.name = asset.name;
 
-            if (
-                asset.data.hasOwnProperty('minfilter') &&
-                texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter]
-            ) {
+            if (asset.data.hasOwnProperty('minfilter') && texture.minFilter !== JSON_FILTER_MODE[asset.data.minfilter]) {
                 texture.minFilter = JSON_FILTER_MODE[asset.data.minfilter];
             }
 
-            if (
-                asset.data.hasOwnProperty('magfilter') &&
-                texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter]
-            ) {
+            if (asset.data.hasOwnProperty('magfilter') && texture.magFilter !== JSON_FILTER_MODE[asset.data.magfilter]) {
                 texture.magFilter = JSON_FILTER_MODE[asset.data.magfilter];
             }
 
@@ -236,6 +217,7 @@ class TextureAtlasHandler extends ResourceHandler {
                     }
 
                     asset.resource.fire('set:frame', frameKey, asset.resource.frames[frameKey]);
+
                 } else {
                     // delete frame
                     if (asset.resource.frames[frameKey]) {
@@ -243,6 +225,7 @@ class TextureAtlasHandler extends ResourceHandler {
                         asset.resource.fire('remove:frame', frameKey);
                     }
                 }
+
             }
         }
     }

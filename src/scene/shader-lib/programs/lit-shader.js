@@ -1,42 +1,18 @@
 import {
-    SEMANTIC_ATTR8,
-    SEMANTIC_ATTR9,
-    SEMANTIC_ATTR12,
-    SEMANTIC_ATTR11,
-    SEMANTIC_ATTR14,
-    SEMANTIC_ATTR15,
-    SEMANTIC_BLENDINDICES,
-    SEMANTIC_BLENDWEIGHT,
-    SEMANTIC_COLOR,
-    SEMANTIC_NORMAL,
-    SEMANTIC_POSITION,
-    SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1,
+    SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL,
     primitiveGlslToWgslTypeMap
 } from '../../../platform/graphics/constants.js';
 import {
     LIGHTSHAPE_PUNCTUAL,
-    LIGHTTYPE_DIRECTIONAL,
-    LIGHTTYPE_OMNI,
-    LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     SHADER_PICK,
-    SPRITE_RENDERMODE_SLICED,
-    SPRITE_RENDERMODE_TILED,
-    shadowTypeInfo,
-    SHADER_PREPASS,
-    lightTypeNames,
-    lightShapeNames,
-    spriteRenderModeNames,
-    fresnelNames,
-    blendNames,
-    lightFalloffNames,
-    cubemaProjectionNames,
-    specularOcclusionNames,
-    reflectionSrcNames,
-    ambientSrcNames,
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeInfo, SHADER_PREPASS,
+    lightTypeNames, lightShapeNames, spriteRenderModeNames, fresnelNames, blendNames, lightFalloffNames,
+    cubemaProjectionNames, specularOcclusionNames, reflectionSrcNames, ambientSrcNames,
     ditherNames,
     REFLECTIONSRC_NONE
 } from '../../constants.js';
@@ -127,10 +103,7 @@ class LitShader {
 
         // shader language
         const userChunks = options.shaderChunks;
-        this.shaderLanguage =
-            device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)
-                ? SHADERLANGUAGE_WGSL
-                : SHADERLANGUAGE_GLSL;
+        this.shaderLanguage = (device.isWebGPU && allowWGSL && (!userChunks || userChunks.useWGSL)) ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
 
         if (device.isWebGPU && this.shaderLanguage === SHADERLANGUAGE_GLSL) {
             if (!device.hasTranspilers) {
@@ -164,6 +137,7 @@ class LitShader {
             });
 
             userChunkMap.forEach((chunk, chunkName) => {
+
                 // extract attribute names from the used chunk. An empty chunk is valid - it is how a
                 // chunk gets blanked out - so only a missing one is a mistake
                 Debug.assert(typeof chunk === 'string', `Shader chunk [${chunkName}] is not a string.`);
@@ -181,7 +155,7 @@ class LitShader {
         this.shaderPassInfo = ShaderPass.get(this.device).getByIndex(options.pass);
         this.shadowPass = this.shaderPassInfo.isShadow;
 
-        this.lighting = options.lights.length > 0 || options.dirLightMapEnabled || options.clusteredLightingEnabled;
+        this.lighting = (options.lights.length > 0) || options.dirLightMapEnabled || options.clusteredLightingEnabled;
         this.reflections = options.reflectionSource !== REFLECTIONSRC_NONE;
         this.needsNormal =
             this.lighting ||
@@ -244,6 +218,7 @@ class LitShader {
      * @param {any} mapTransforms - Info about used texture transforms.
      */
     generateVertexShader(useUv, useUnmodifiedUv, mapTransforms) {
+
         const { options, vDefines, attributes } = this;
 
         // varyings
@@ -262,6 +237,7 @@ class LitShader {
         if (this.needsNormal) vDefines.set('NORMALS', true);
 
         if (this.options.useInstancing) {
+
             // only attach these if the default instancing chunk is used, otherwise it is expected
             // for the user to provide required attributes using material.setAttribute
             const languageChunks = ShaderChunks.get(this.device, this.shaderLanguage);
@@ -277,15 +253,15 @@ class LitShader {
             attributes.vertex_normal = SEMANTIC_NORMAL;
             varyings.set('vNormalW', 'vec3');
 
-            if (
-                options.hasTangents &&
-                (options.useHeights || options.useNormals || options.useClearCoatNormals || options.enableGGXSpecular)
-            ) {
+            if (options.hasTangents && (options.useHeights || options.useNormals || options.useClearCoatNormals || options.enableGGXSpecular)) {
+
                 vDefines.set('TANGENTS', true);
                 attributes.vertex_tangent = SEMANTIC_TANGENT;
                 varyings.set('vTangentW', 'vec3');
                 varyings.set('vBinormalW', 'vec3');
+
             } else if (options.enableGGXSpecular) {
+
                 vDefines.set('GGX_SPECULAR', true);
                 varyings.set('vObjectSpaceUpW', 'vec3');
             }
@@ -307,6 +283,7 @@ class LitShader {
         let numTransforms = 0;
         const transformDone = new Set();
         mapTransforms.forEach((mapTransform) => {
+
             const { id, uv, name } = mapTransform;
             const checkId = id + uv * 100; // make sure each UV set is transformed by each unique transform only once
 
@@ -346,6 +323,7 @@ class LitShader {
 
         // morphing - object level define, exposed to both vertex and fragment shaders
         if (options.useMorphPosition || options.useMorphNormal) {
+
             this.sharedDefineSet(true, 'MORPHING', true);
             this.sharedDefineSet(options.useMorphTextureBasedInt, 'MORPHING_INT', true);
             this.sharedDefineSet(options.useMorphPosition, 'MORPHING_POSITION', true);
@@ -356,6 +334,7 @@ class LitShader {
         }
 
         if (options.skin) {
+
             attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
 
             // skinning / batching - object level define, exposed to both vertex and fragment shaders
@@ -377,10 +356,9 @@ class LitShader {
         // generate varyings code
         varyings.forEach((type, name) => {
             this.varyingsCode += `#define VARYING_${name.toUpperCase()}\n`;
-            this.varyingsCode +=
-                this.shaderLanguage === SHADERLANGUAGE_WGSL
-                    ? `varying ${name}: ${primitiveGlslToWgslTypeMap.get(type)};\n`
-                    : `varying ${type} ${name};\n`;
+            this.varyingsCode += this.shaderLanguage === SHADERLANGUAGE_WGSL ?
+                `varying ${name}: ${primitiveGlslToWgslTypeMap.get(type)};\n` :
+                `varying ${type} ${name};\n`;
         });
 
         // varyings code exposed as an include
@@ -399,6 +377,7 @@ class LitShader {
      * @param {boolean} clusteredLightingEnabled - Whether clustered lighting is enabled.
      */
     _setupLightingDefines(hasAreaLights, clusteredLightingEnabled) {
+
         const fDefines = this.fDefines;
         const options = this.options;
 
@@ -431,7 +410,7 @@ class LitShader {
                 continue;
             }
 
-            const lightShape = hasAreaLights && light._shape ? light._shape : LIGHTSHAPE_PUNCTUAL;
+            const lightShape = (hasAreaLights && light._shape) ? light._shape : LIGHTSHAPE_PUNCTUAL;
             const shadowType = light._shadowType;
             const castShadow = light.castShadows && !options.noShadow;
             const shadowInfo = shadowTypeInfo.get(shadowType);
@@ -446,10 +425,8 @@ class LitShader {
             if (light.affectSpecularity) fDefines.set(`LIGHT${i}AFFECT_SPECULARITY`, true);
 
             if (light._cookie) {
-                if (
-                    (lightType === LIGHTTYPE_SPOT && !light._cookie._cubemap) ||
-                    (lightType === LIGHTTYPE_OMNI && light._cookie._cubemap)
-                ) {
+                if (lightType === LIGHTTYPE_SPOT && !light._cookie._cubemap ||
+                    lightType === LIGHTTYPE_OMNI && light._cookie._cubemap) {
                     fDefines.set(`LIGHT${i}COOKIE`, true);
                     fDefines.set(`{LIGHT${i}COOKIE_CHANNEL}`, light._cookieChannel);
                     if (lightType === LIGHTTYPE_SPOT) {
@@ -464,15 +441,13 @@ class LitShader {
                 if (shadowInfo.pcf) fDefines.set(`LIGHT${i}SHADOW_PCF`, true);
 
                 // shadow addressing defines, used by lightFunctionShadowPS
-                if (light._normalOffsetBias && !light._isVsm)
-                    fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_NORMAL_OFFSET`, true);
+                if (light._normalOffsetBias && !light._isVsm) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_NORMAL_OFFSET`, true);
                 if (lightType === LIGHTTYPE_DIRECTIONAL) {
                     fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_ORTHO`, true);
                     if (light.cascadeBlend > 0) fDefines.set(`LIGHT${i}_SHADOW_CASCADE_BLEND`, true);
                     if (light.numCascades > 1) fDefines.set(`LIGHT${i}_SHADOW_CASCADES`, true);
                 }
-                if (shadowInfo.pcf || shadowInfo.pcss || this.device.isWebGPU)
-                    fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_SOURCE_ZBUFFER`, true);
+                if (shadowInfo.pcf || shadowInfo.pcss || this.device.isWebGPU) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_SOURCE_ZBUFFER`, true);
                 if (lightType === LIGHTTYPE_OMNI) fDefines.set(`LIGHT${i}_SHADOW_SAMPLE_POINT`, true);
             }
 
@@ -489,15 +464,11 @@ class LitShader {
 
         // area lights are used when clustered area lights are enabled or any lights have area shape
         const clusteredAreaLights = options.clusteredLightingEnabled && options.clusteredLightingAreaLightsEnabled;
-        const hasAreaLights =
-            clusteredAreaLights ||
-            options.lights.some((light) => {
-                return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
-            });
+        const hasAreaLights = clusteredAreaLights || options.lights.some((light) => {
+            return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
+        });
         const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
-        const hasTBN =
-            this.needsNormal &&
-            (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
+        const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
 
         if (options.useSpecular) {
             this.fDefineSet(true, 'LIT_SPECULAR');
@@ -570,6 +541,7 @@ class LitShader {
     }
 
     prepareShadowPass() {
+
         // Note: LIGHT_TYPE, SHADOW_TYPE and PERSPECTIVE_DEPTH defines are generated by the
         // ShaderPassInfo of the shadow pass, and are supplied by the material options.defines
 

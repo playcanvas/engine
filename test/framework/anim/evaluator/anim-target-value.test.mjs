@@ -4,7 +4,9 @@ import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../../../../src/frame
 import { AnimTargetValue } from '../../../../src/framework/anim/evaluator/anim-target-value.js';
 
 describe('AnimTargetValue', function () {
+
     describe('#constructor', function () {
+
         it('instantiates correctly with an object', function () {
             const mockComponent = {
                 layers: [
@@ -21,9 +23,11 @@ describe('AnimTargetValue', function () {
             const animTargetValue = new AnimTargetValue(mockComponent);
             expect(animTargetValue).to.be.ok;
         });
+
     });
 
     describe('#setMask', function () {
+
         it('sets dirty to true if normalizeWeights is true', function () {
             const mockComponent = {
                 normalizeWeights: true,
@@ -44,7 +48,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.dirty).to.equal(true);
         });
 
-        it("doesn't set dirty to true if normalizeWeights is false", function () {
+        it('doesn\'t set dirty to true if normalizeWeights is false', function () {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -104,7 +108,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.mask[0]).to.equal(0);
         });
 
-        it("doesn't set the previous mask value to 0 if normalizeWeights is true and the layers blend type is additive", function () {
+        it('doesn\'t set the previous mask value to 0 if normalizeWeights is true and the layers blend type is additive', function () {
             const mockComponent = {
                 normalizeWeights: true,
                 layers: [
@@ -124,7 +128,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
-        it("doesn't set the previous mask value to 0 if normalizeWeights is false and the layers blend type is overwrite", function () {
+        it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is overwrite', function () {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -144,7 +148,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.mask[0]).to.equal(1);
         });
 
-        it("doesn't set the previous mask value to 0 if normalizeWeights is false and the layers blend type is additive", function () {
+        it('doesn\'t set the previous mask value to 0 if normalizeWeights is false and the layers blend type is additive', function () {
             const mockComponent = {
                 normalizeWeights: false,
                 layers: [
@@ -163,10 +167,12 @@ describe('AnimTargetValue', function () {
             animTargetValue.setMask(1, 1);
             expect(animTargetValue.mask[0]).to.equal(1);
         });
+
     });
 
     describe('#updateWeights', function () {
-        it("sets the instances weights to that of the component's layers weights", function () {
+
+        it('sets the instances weights to that of the component\'s layers weights', function () {
             const mockComponent = {
                 layers: [
                     {
@@ -185,7 +191,7 @@ describe('AnimTargetValue', function () {
             expect(animTargetValue.weights).to.deep.equal(new Float32Array([1, 2]));
         });
 
-        it("sets the total weight to the sum of all the component's layers weights and their masks", function () {
+        it('sets the total weight to the sum of all the component\'s layers weights and their masks', function () {
             const mockComponent = {
                 layers: [
                     {
@@ -207,9 +213,11 @@ describe('AnimTargetValue', function () {
             animTargetValue.updateWeights();
             expect(animTargetValue.totalWeight).to.equal(3);
         });
+
     });
 
     describe('#getWeight', function () {
+
         it('calls updateWeights if dirty is true', function () {
             const mockComponent = {
                 layers: [
@@ -358,9 +366,11 @@ describe('AnimTargetValue', function () {
             const weight = animTargetValue.getWeight(0);
             expect(weight).to.equal(1);
         });
+
     });
 
     describe('#updateValue', function () {
+
         it('can set a vector', function () {
             const mockComponent = {
                 layers: [
@@ -519,9 +529,13 @@ describe('AnimTargetValue', function () {
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
             expect(animTargetValue.value).to.deep.equal([
-                0.4999999999999999, 0.7071067811865475, 0, 0.4999999999999999
+                0.4999999999999999,
+                0.7071067811865475,
+                0,
+                0.4999999999999999
             ]);
         });
+
 
         it('can blend two overwrite vectors together', function () {
             const mockComponent = {
@@ -826,8 +840,13 @@ describe('AnimTargetValue', function () {
             animTargetValue.counter++;
             animTargetValue.updateValue(1, [0, 1, 0, 0]);
             expect(animTargetValue.value).to.deep.equal([
-                0.4999999999999999, 0.7071067811865475, 0, 0.4999999999999999
+                0.4999999999999999,
+                0.7071067811865475,
+                0,
+                0.4999999999999999
             ]);
         });
+
     });
+
 });

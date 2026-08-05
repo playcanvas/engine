@@ -30,11 +30,7 @@ function intersectPlanes(p1, p2, p3, out) {
     _c31.cross(p3.normal, p1.normal);
     _c12.cross(p1.normal, p2.normal);
     const invDenom = -1.0 / denom;
-    out.set(
-        (p1.distance * _c23.x + p2.distance * _c31.x + p3.distance * _c12.x) * invDenom,
-        (p1.distance * _c23.y + p2.distance * _c31.y + p3.distance * _c12.y) * invDenom,
-        (p1.distance * _c23.z + p2.distance * _c31.z + p3.distance * _c12.z) * invDenom
-    );
+    out.set((p1.distance * _c23.x + p2.distance * _c31.x + p3.distance * _c12.x) * invDenom, (p1.distance * _c23.y + p2.distance * _c31.y + p3.distance * _c12.y) * invDenom, (p1.distance * _c23.z + p2.distance * _c31.z + p3.distance * _c12.z) * invDenom);
     return isFinite(out.x) && isFinite(out.y) && isFinite(out.z);
 }
 
@@ -111,22 +107,10 @@ class Frustum {
      */
     setFromMat4(matrix) {
         const d = matrix.data;
-        const m00 = d[0],
-            m01 = d[1],
-            m02 = d[2],
-            m03 = d[3];
-        const m10 = d[4],
-            m11 = d[5],
-            m12 = d[6],
-            m13 = d[7];
-        const m20 = d[8],
-            m21 = d[9],
-            m22 = d[10],
-            m23 = d[11];
-        const m30 = d[12],
-            m31 = d[13],
-            m32 = d[14],
-            m33 = d[15];
+        const m00 = d[0], m01 = d[1], m02 = d[2], m03 = d[3];
+        const m10 = d[4], m11 = d[5], m12 = d[6], m13 = d[7];
+        const m20 = d[8], m21 = d[9], m22 = d[10], m23 = d[11];
+        const m30 = d[12], m31 = d[13], m32 = d[14], m33 = d[15];
         const planes = this.planes;
 
         planes[0].set(m03 - m00, m13 - m10, m23 - m20, m33 - m30).normalize(); // RIGHT
@@ -219,7 +203,7 @@ class Frustum {
             }
         }
 
-        return c === 6 ? 2 : 1;
+        return (c === 6) ? 2 : 1;
     }
 }
 

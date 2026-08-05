@@ -1,4 +1,9 @@
-import { SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, ShaderMaterial } from 'playcanvas';
+import {
+    SEMANTIC_NORMAL,
+    SEMANTIC_POSITION,
+    SEMANTIC_TEXCOORD0,
+    ShaderMaterial
+} from 'playcanvas';
 
 import { VAT_FRAME_SEMANTIC, VAT_TRANSFORM_SEMANTICS } from './vat-chunks.mjs';
 

@@ -1,13 +1,7 @@
 import { RenderView } from '../../scene/render-view.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import {
-    ADDRESS_CLAMP_TO_EDGE,
-    FILTER_LINEAR,
-    FILTER_NEAREST,
-    PIXELFORMAT_RGB8,
-    PIXELFORMAT_R32F
-} from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
  * @import { XrManager } from './xr-manager.js'
@@ -119,7 +113,7 @@ class XrView extends RenderView {
 
             this._textureDepth = new Texture(device, {
                 format: this._manager.views.depthPixelFormat,
-                arrayLength: viewsCount === 1 ? 0 : viewsCount,
+                arrayLength: (viewsCount === 1) ? 0 : viewsCount,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -251,11 +245,7 @@ class XrView extends RenderView {
 
         // matrices: WebXR provides both the view-to-world (transform.matrix) and world-to-view
         // (transform.inverse.matrix) matrices, so both are passed to avoid recomputing the inverse
-        this.setView(
-            this._xrView.projectionMatrix,
-            this._xrView.transform.matrix,
-            this._xrView.transform.inverse.matrix
-        );
+        this.setView(this._xrView.projectionMatrix, this._xrView.transform.matrix, this._xrView.transform.inverse.matrix);
 
         this._updateTextureColor();
         this._updateDepth(frame);
@@ -321,11 +311,7 @@ class XrView extends RenderView {
         // update texture
         if (this._depthInfo) {
             if (gpu) {
-                this._manager.xrBridge?.syncCameraDepthTexture(
-                    this._depthInfo,
-                    this._textureDepth,
-                    this._manager.views.depthPixelFormat ?? PIXELFORMAT_R32F
-                );
+                this._manager.xrBridge?.syncCameraDepthTexture(this._depthInfo, this._textureDepth, this._manager.views.depthPixelFormat ?? PIXELFORMAT_R32F);
             } else {
                 // cpu
                 this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);

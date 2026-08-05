@@ -174,36 +174,28 @@ class ResourceLoader {
                     }
                 }
 
-                handler.load(
-                    urlObj,
-                    (err, data, extra) => {
-                        // make sure key exists because loader
-                        // might have been destroyed by now
-                        if (!self._requests[key]) {
-                            return;
-                        }
+                handler.load(urlObj, (err, data, extra) => {
+                    // make sure key exists because loader
+                    // might have been destroyed by now
+                    if (!self._requests[key]) {
+                        return;
+                    }
 
-                        if (err) {
-                            self._onFailure(key, err);
-                            return;
-                        }
+                    if (err) {
+                        self._onFailure(key, err);
+                        return;
+                    }
 
-                        try {
-                            self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
-                        } catch (e) {
-                            self._onFailure(key, e);
-                        }
-                    },
-                    asset
-                );
+                    try {
+                        self._onSuccess(key, handler.open(urlObj.original, data, asset), extra);
+                    } catch (e) {
+                        self._onFailure(key, e);
+                    }
+                }, asset);
             };
 
             const normalizedUrl = url.split('?')[0];
-            if (
-                this._app.enableBundles &&
-                this._app.bundles.hasUrl(normalizedUrl) &&
-                !(options && options.bundlesIgnore)
-            ) {
+            if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl) && !(options && options.bundlesIgnore)) {
                 // if there is no loaded bundle with asset, then start loading a bundle
                 if (!this._app.bundles.urlIsLoadedOrLoading(normalizedUrl)) {
                     const bundles = this._app.bundles.listBundlesForAsset(asset);
@@ -233,7 +225,7 @@ class ResourceLoader {
             } else {
                 handleLoad(null, {
                     load: url,
-                    original: (asset && asset.file.filename) || url
+                    original: asset && asset.file.filename || url
                 });
             }
         }
@@ -295,6 +287,7 @@ class ResourceLoader {
         }
 
         return handler.open(null, data);
+
     }
 
     /**
@@ -306,7 +299,7 @@ class ResourceLoader {
      */
     patch(asset, assets) {
         const handler = this._handlers[asset.type];
-        if (!handler) {
+        if (!handler)  {
             console.warn(`No resource handler found for: ${asset.type}`);
             return;
         }

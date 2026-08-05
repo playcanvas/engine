@@ -32,6 +32,7 @@ describe('CameraComponent', function () {
     });
 
     describe('#addComponent', function () {
+
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('camera');
@@ -56,9 +57,11 @@ describe('CameraComponent', function () {
 
             expect(e.camera.projectionOffset.equals(new Vec2(0.1, 0.2))).to.equal(true);
         });
+
     });
 
     describe('#cloneComponent', function () {
+
         it('copies every property to the clone', function () {
             const fog = new FogParams();
             fog.type = FOG_LINEAR;
@@ -145,5 +148,6 @@ describe('CameraComponent', function () {
 
             expect(clone.camera.enabled).to.equal(false);
         });
+
     });
 });

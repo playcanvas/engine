@@ -4,9 +4,11 @@
  * @ignore
  */
 class NullBindGroup {
-    update(bindGroup) {}
+    update(bindGroup) {
+    }
 
-    destroy() {}
+    destroy() {
+    }
 }
 
 export { NullBindGroup };

@@ -10,7 +10,10 @@ import {
     BindStorageBufferFormat,
     BindUniformBufferFormat
 } from '../../platform/graphics/bind-group-format.js';
-import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
+import {
+    UniformBufferFormat,
+    UniformFormat
+} from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST,
     BUFFERUSAGE_COPY_SRC,
@@ -50,13 +53,7 @@ const PROJECTOR_WORKGROUP_SIZE = 256;
 // these are ignored when merged into the projector compute, so user customization can't clobber
 // the projector's own variant/format configuration.
 const PROJECTOR_INTERNAL_DEFINES = new Set([
-    '{CACHE_STRIDE}',
-    'RADIAL_SORT',
-    'PICK_MODE',
-    'GSPLAT_FISHEYE',
-    'GSPLAT_AA',
-    'GSPLAT_COLOR_FLOAT',
-    'GSPLAT_XR'
+    '{CACHE_STRIDE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA', 'GSPLAT_COLOR_FLOAT', 'GSPLAT_XR'
 ]);
 
 const _cameraDir = new Vec3();
@@ -229,11 +226,7 @@ class GSplatProjector {
         this.device = device;
 
         this.binWeightsUtil = new GSplatSortBinWeights();
-        this.binWeightsBuffer = new StorageBuffer(
-            device,
-            GSplatSortBinWeights.NUM_BINS * 2 * 4,
-            BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST
-        );
+        this.binWeightsBuffer = new StorageBuffer(device, GSplatSortBinWeights.NUM_BINS * 2 * 4, BUFFERUSAGE_COPY_SRC | BUFFERUSAGE_COPY_DST);
         DebugHelper.setName(this.binWeightsBuffer, 'GsplatProjector.binWeights');
 
         // 4 B counter, cleared every frame on the GPU via clear().
@@ -305,7 +298,7 @@ class GSplatProjector {
         // Fisheye variant appends 4 fisheye scalars (matches the GSPLAT_FISHEYE
         // ifdef'd block in compute-gsplat-projector.js).
         this._projectorUniformBufferFormatFisheye = new UniformBufferFormat(device, [
-            ...baseFields.map((f) => new UniformFormat(f.name, f.type)),
+            ...baseFields.map(f => new UniformFormat(f.name, f.type)),
             new UniformFormat('fisheye_k', UNIFORMTYPE_FLOAT),
             new UniformFormat('fisheye_inv_k', UNIFORMTYPE_FLOAT),
             new UniformFormat('fisheye_projMat00', UNIFORMTYPE_FLOAT),
@@ -315,7 +308,7 @@ class GSplatProjector {
         // Stereo variant appends the eye-1 view-projection matrix (matches the GSPLAT_XR
         // ifdef'd field in compute-gsplat-projector.js). Mutually exclusive with fisheye.
         this._projectorUniformBufferFormatStereo = new UniformBufferFormat(device, [
-            ...baseFields.map((f) => new UniformFormat(f.name, f.type)),
+            ...baseFields.map(f => new UniformFormat(f.name, f.type)),
             new UniformFormat('viewProj1', UNIFORMTYPE_MAT4)
         ]);
 
@@ -341,7 +334,9 @@ class GSplatProjector {
             new BindUniformBufferFormat('uniforms', SHADERSTAGE_COMPUTE)
         ]);
 
-        const cdefines = new Map([['{INSTANCE_SIZE}', GSplatResourceBase.instanceSize.toString()]]);
+        const cdefines = new Map([
+            ['{INSTANCE_SIZE}', GSplatResourceBase.instanceSize.toString()]
+        ]);
 
         const shader = new Shader(device, {
             name: 'GSplatProjectorWriteIndirectArgs',
@@ -473,11 +468,11 @@ class GSplatProjector {
 
         const name = `GSplatProjector${radialSort ? 'Radial' : 'Linear'}${pickMode ? 'Pick' : ''}${fisheyeMode ? 'Fisheye' : ''}${antiAlias ? 'Aa' : ''}${stereo ? 'Stereo' : ''}`;
 
-        const ubFormat = stereo
-            ? this._projectorUniformBufferFormatStereo
-            : fisheyeMode
-              ? this._projectorUniformBufferFormatFisheye
-              : this._projectorUniformBufferFormat;
+        const ubFormat = stereo ?
+            this._projectorUniformBufferFormatStereo :
+            fisheyeMode ?
+                this._projectorUniformBufferFormatFisheye :
+                this._projectorUniformBufferFormat;
 
         const shader = new Shader(device, {
             name: name,
@@ -496,24 +491,22 @@ class GSplatProjector {
         Debug.call(() => {
             const reserved = new Set();
             const bgf = this._projectorBindGroupFormat;
-            bgf?.textureFormats.forEach((f) => reserved.add(f.name));
-            bgf?.storageBufferFormats.forEach((f) => reserved.add(f.name));
-            bgf?.storageTextureFormats.forEach((f) => reserved.add(f.name));
-            bgf?.uniformBufferFormats.forEach((f) => reserved.add(f.name));
-            this._projectorUniformBufferFormatFisheye?.uniforms.forEach((u) => reserved.add(u.name));
+            bgf?.textureFormats.forEach(f => reserved.add(f.name));
+            bgf?.storageBufferFormats.forEach(f => reserved.add(f.name));
+            bgf?.storageTextureFormats.forEach(f => reserved.add(f.name));
+            bgf?.uniformBufferFormats.forEach(f => reserved.add(f.name));
+            this._projectorUniformBufferFormatFisheye?.uniforms.forEach(u => reserved.add(u.name));
 
             const impl = shader.impl;
             const checkName = (n) => {
                 if (reserved.has(n)) {
-                    Debug.errorOnce(
-                        `GSplatProjector: render-stage modify resource '${n}' collides with a projector-internal binding and is overridden by the projector. Rename it in your gsplatModifyVS chunk.`
-                    );
+                    Debug.errorOnce(`GSplatProjector: render-stage modify resource '${n}' collides with a projector-internal binding and is overridden by the projector. Rename it in your gsplatModifyVS chunk.`);
                 }
             };
-            impl.computeReflectedBindGroupFormat?.textureFormats.forEach((f) => checkName(f.name));
-            impl.computeReflectedBindGroupFormat?.storageBufferFormats.forEach((f) => checkName(f.name));
-            impl.computeReflectedBindGroupFormat?.storageTextureFormats.forEach((f) => checkName(f.name));
-            impl.computeReflectedUniformBufferFormat?.uniforms.forEach((u) => checkName(u.name));
+            impl.computeReflectedBindGroupFormat?.textureFormats.forEach(f => checkName(f.name));
+            impl.computeReflectedBindGroupFormat?.storageBufferFormats.forEach(f => checkName(f.name));
+            impl.computeReflectedBindGroupFormat?.storageTextureFormats.forEach(f => checkName(f.name));
+            impl.computeReflectedUniformBufferFormat?.uniforms.forEach(u => checkName(u.name));
         });
 
         return new Compute(device, shader, name);
@@ -533,14 +526,7 @@ class GSplatProjector {
      * @returns {Compute} The projector compute instance.
      * @private
      */
-    _getProjectorCompute(
-        workBuffer,
-        radialSort,
-        pickMode = false,
-        fisheyeMode = false,
-        antiAlias = false,
-        stereo = false
-    ) {
+    _getProjectorCompute(workBuffer, radialSort, pickMode = false, fisheyeMode = false, antiAlias = false, stereo = false) {
         const wbFormat = workBuffer.format;
         if (this._formatVersion !== wbFormat.extraStreamsVersion) {
             this._destroyProjectorComputes();
@@ -567,6 +553,7 @@ class GSplatProjector {
      * @private
      */
     _updateMaterial(material, userCacheWords = 0) {
+
         // Both keys are cached on the material and only recompute when its chunks / defines actually
         // change, so this stays cheap to call every frame. (definesKey covers all defines; the
         // projector's own defines are still filtered out when merged in _createProjectorCompute.)
@@ -649,22 +636,11 @@ class GSplatProjector {
      */
     dispatch(params) {
         const {
-            workBuffer,
-            cameraNode,
-            compactedSplatIds,
-            sortElementCountBuffer,
-            totalCapacity,
-            radialSort,
-            numBits,
-            minDist,
-            maxDist,
-            alphaClip,
-            minPixelSize,
-            minContribution,
-            foveationStrength = 0,
-            foveationCenter = 0.3,
-            viewportWidth,
-            viewportHeight,
+            workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
+            totalCapacity, radialSort, numBits, minDist, maxDist,
+            alphaClip, minPixelSize, minContribution,
+            foveationStrength = 0, foveationCenter = 0.3,
+            viewportWidth, viewportHeight,
             pickMode = false,
             fisheyeProj,
             antiAlias = false,
@@ -717,7 +693,7 @@ class GSplatProjector {
         const invRange = range > 0 ? 1.0 / range : 1.0;
 
         // Bin weights — same pattern as CPU-side sort key preparation.
-        const bucketCount = 1 << numBits;
+        const bucketCount = (1 << numBits);
         const cameraBin = GSplatSortBinWeights.computeCameraBin(radialSort, minDist, range);
         const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
         this.binWeightsBuffer.write(0, binWeights);
@@ -758,10 +734,7 @@ class GSplatProjector {
             // canonical (unflipped) projection - the cache stores canonical clip positions, and
             // the raster VS applies the per-pass target flip using the projectionFlipY uniform
             const view = cam.viewMatrix;
-            _viewProjMat.mul2(
-                Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, webgpu),
-                view
-            );
+            _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, webgpu), view);
             _viewProjData.set(_viewProjMat.data);
             _viewData.set(view.data);
             focal = viewportWidth * _shaderProjMat.data[0];
@@ -811,11 +784,7 @@ class GSplatProjector {
         // sortElementCount[0]; sizing the dispatch for the full capacity (a CPU-known
         // upper bound) avoids needing an extra indirect-args dispatch for this pass.
         const workgroupCount = Math.ceil(totalCapacity / PROJECTOR_WORKGROUP_SIZE);
-        Compute.calcDispatchSize(
-            workgroupCount,
-            _dispatchSize,
-            this.device.limits.maxComputeWorkgroupsPerDimension || 65535
-        );
+        Compute.calcDispatchSize(workgroupCount, _dispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
         compute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
         this.device.computeDispatch([compute], 'GSplatProjector');
     }

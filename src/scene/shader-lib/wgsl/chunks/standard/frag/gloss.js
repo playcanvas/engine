@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #ifdef STD_GLOSS_CONSTANT
     uniform material_gloss: f32;
 #endif

@@ -32,6 +32,7 @@ describe('Component layer composition changes', function () {
 
     LAYER_SUBSCRIBERS.forEach((type) => {
         describe(`${type} component`, function () {
+
             it('unsubscribes from the new composition when disabled', function () {
                 const e = new Entity();
                 app.root.addChild(e);
@@ -84,6 +85,7 @@ describe('Component layer composition changes', function () {
                     expect(composition.hasEvent('remove')).to.equal(false);
                 });
             });
+
         });
     });
 });

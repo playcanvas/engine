@@ -57,6 +57,7 @@ class CylinderGeometry extends ConeBaseGeometry {
      * });
      */
     constructor(opts = {}) {
+
         // Check the supplied options and provide defaults for unspecified ones
         const radius = opts.radius ?? 0.5;
         const height = opts.height ?? 1;

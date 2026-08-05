@@ -2,9 +2,7 @@ import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import {
-    PIXELFORMAT_R8,
-    SEMANTIC_POSITION,
-    SHADERLANGUAGE_GLSL,
+    PIXELFORMAT_R8, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -106,6 +104,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
         // optional blur passes
         if (blurEnabled) {
+
             const blurRT = this.createRenderTarget('SsaoTempTexture');
 
             const blurPassHorizontal = new RenderPassDepthAwareBlur(device, rt.colorBuffer, cameraComponent, true);
@@ -129,6 +128,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
     }
 
     destroy() {
+
         this.renderTarget?.destroyTextureBuffers();
         this.renderTarget?.destroy();
         this.renderTarget = null;
@@ -139,7 +139,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
             blurRt?.destroy();
         }
 
-        this.afterPasses.forEach((pass) => pass.destroy());
+        this.afterPasses.forEach(pass => pass.destroy());
         this.afterPasses.length = 0;
 
         super.destroy();
@@ -168,6 +168,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
     }
 
     execute() {
+
         const { device, sampleCount, minAngle } = this;
         const { width, height } = this.renderTarget.colorBuffer;
         const scope = device.scope;
@@ -189,7 +190,7 @@ class RenderPassSsao extends RenderPassShaderQuad {
 
         const bias = 0.001;
         const peak = 0.1 * radius;
-        const intensity = (2 * (peak * 2.0 * 3.141) * this.intensity) / sampleCount;
+        const intensity = 2 * (peak * 2.0 * 3.141) * this.intensity / sampleCount;
 
         // scale the projection based on the actual (possibly scaled) render target height, so the
         // sampling disk covers the same screen area regardless of the scale

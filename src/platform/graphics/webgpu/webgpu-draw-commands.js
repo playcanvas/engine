@@ -45,11 +45,7 @@ class WebgpuDrawCommands {
         this.storage?.destroy();
         this.gpuIndirect = new Uint32Array(5 * maxCount);
         this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
-        this.storage = new StorageBuffer(
-            this.device,
-            this.gpuIndirect.byteLength,
-            BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST
-        );
+        this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
         DebugHelper.setName(this.storage, 'WebgpuDrawCommands.indirectStorage');
     }
 

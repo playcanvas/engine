@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     fn getCenter() -> vec3f { return loadDataCenter().xyz; }
     fn getColor() -> vec4f { return loadDataColor(); }
     fn getScale() -> vec3f { return vec3f(loadDataCenter().w); }

@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #if LIT_CUBEMAP_PROJECTION == BOX
     uniform vec3 envBoxMin;

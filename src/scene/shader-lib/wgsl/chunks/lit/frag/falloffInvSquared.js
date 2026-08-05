@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn getFalloffWindow(lightRadius: f32, lightDir: vec3f) -> f32 {
     let sqrDist: f32 = dot(lightDir, lightDir);
     let invRadius: f32 = 1.0 / lightRadius;

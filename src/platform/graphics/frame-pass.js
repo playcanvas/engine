@@ -109,22 +109,30 @@ class FramePass {
         return this._enabled;
     }
 
-    onEnable() {}
+    onEnable() {
+    }
 
-    onDisable() {}
+    onDisable() {
+    }
 
-    frameUpdate() {}
+    frameUpdate() {
+    }
 
-    before() {}
+    before() {
+    }
 
-    execute() {}
+    execute() {
+    }
 
-    after() {}
+    after() {
+    }
 
-    destroy() {}
+    destroy() {
+    }
 
     render() {
         if (this.enabled) {
+
             Debug.call(() => {
                 this.log(this.device, this.device.renderPassIndex);
             });
@@ -142,10 +150,8 @@ class FramePass {
     log(device, index = 0) {
         if (Tracing.get(TRACEID_RENDER_PASS)) {
             const indexString = index.toString().padEnd(2, ' ');
-            Debug.trace(
-                TRACEID_RENDER_PASS,
-                `${indexString}: ${this.name.padEnd(20, ' ')}${this.executeEnabled ? '' : ' DISABLED '}`
-            );
+            Debug.trace(TRACEID_RENDER_PASS, `${indexString}: ${this.name.padEnd(20, ' ')}` +
+                `${this.executeEnabled ? '' : ' DISABLED '}`);
         }
     }
     // #endif

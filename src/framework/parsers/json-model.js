@@ -4,36 +4,11 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
-    INDEXFORMAT_UINT16,
-    INDEXFORMAT_UINT32,
-    PRIMITIVE_LINELOOP,
-    PRIMITIVE_LINESTRIP,
-    PRIMITIVE_LINES,
-    PRIMITIVE_POINTS,
-    PRIMITIVE_TRIANGLES,
-    PRIMITIVE_TRIFAN,
-    PRIMITIVE_TRISTRIP,
-    SEMANTIC_POSITION,
-    SEMANTIC_NORMAL,
-    SEMANTIC_TANGENT,
-    SEMANTIC_COLOR,
-    SEMANTIC_BLENDINDICES,
-    SEMANTIC_BLENDWEIGHT,
-    SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1,
-    SEMANTIC_TEXCOORD2,
-    SEMANTIC_TEXCOORD3,
-    SEMANTIC_TEXCOORD4,
-    SEMANTIC_TEXCOORD5,
-    SEMANTIC_TEXCOORD6,
-    SEMANTIC_TEXCOORD7,
-    TYPE_INT8,
-    TYPE_UINT8,
-    TYPE_INT16,
-    TYPE_UINT16,
-    TYPE_INT32,
-    TYPE_UINT32,
-    TYPE_FLOAT32
+    INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
+    PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP, PRIMITIVE_LINES, PRIMITIVE_POINTS, PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
+    SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
@@ -52,23 +27,23 @@ import { Skin } from '../../scene/skin.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 
 const JSON_PRIMITIVE_TYPE = {
-    points: PRIMITIVE_POINTS,
-    lines: PRIMITIVE_LINES,
-    lineloop: PRIMITIVE_LINELOOP,
-    linestrip: PRIMITIVE_LINESTRIP,
-    triangles: PRIMITIVE_TRIANGLES,
-    trianglestrip: PRIMITIVE_TRISTRIP,
-    trianglefan: PRIMITIVE_TRIFAN
+    'points': PRIMITIVE_POINTS,
+    'lines': PRIMITIVE_LINES,
+    'lineloop': PRIMITIVE_LINELOOP,
+    'linestrip': PRIMITIVE_LINESTRIP,
+    'triangles': PRIMITIVE_TRIANGLES,
+    'trianglestrip': PRIMITIVE_TRISTRIP,
+    'trianglefan': PRIMITIVE_TRIFAN
 };
 
 const JSON_VERTEX_ELEMENT_TYPE = {
-    int8: TYPE_INT8,
-    uint8: TYPE_UINT8,
-    int16: TYPE_INT16,
-    uint16: TYPE_UINT16,
-    int32: TYPE_INT32,
-    uint32: TYPE_UINT32,
-    float32: TYPE_FLOAT32
+    'int8': TYPE_INT8,
+    'uint8': TYPE_UINT8,
+    'int16': TYPE_INT16,
+    'uint16': TYPE_UINT16,
+    'int32': TYPE_INT32,
+    'uint32': TYPE_UINT32,
+    'float32': TYPE_FLOAT32
 };
 
 // Take PlayCanvas JSON model data and create Model
@@ -83,18 +58,13 @@ class JsonModelParser {
     }
 
     load(url, callback, asset) {
-        this.handler.fetch(
-            url,
-            Http.ResponseType.JSON,
-            (err, response) => {
-                if (err) {
-                    callback(err);
-                } else {
-                    this.parse(response, callback);
-                }
-            },
-            asset
-        );
+        this.handler.fetch(url, Http.ResponseType.JSON, (err, response) => {
+            if (err) {
+                callback(err);
+            } else {
+                this.parse(response, callback);
+            }
+        }, asset);
     }
 
     parse(data, callback) {
@@ -128,15 +98,7 @@ class JsonModelParser {
         const meshes = this._parseMeshes(data, skins.skins, morphs.morphs, vertexBuffers, indices.buffer, indices.data);
 
         // MESH INSTANCES
-        const meshInstances = this._parseMeshInstances(
-            data,
-            nodes,
-            meshes,
-            skins.skins,
-            skins.instances,
-            morphs.morphs,
-            morphs.instances
-        );
+        const meshInstances = this._parseMeshInstances(data, nodes, meshes, skins.skins, skins.instances, morphs.morphs, morphs.instances);
 
         const model = new Model();
         model.graph = nodes[0];
@@ -230,6 +192,7 @@ class JsonModelParser {
         let targets, morphTarget, morphTargetArray;
 
         if (modelData.morphs) {
+
             // convert sparse morph target vertex data to full format
             const sparseToFull = function (data, indices, totalCount) {
                 const full = new Float32Array(totalCount * 3);
@@ -254,10 +217,7 @@ class JsonModelParser {
 
                     const min = targetAabb.min;
                     const max = targetAabb.max;
-                    const aabb = new BoundingBox(
-                        new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                        new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
-                    );
+                    const aabb = new BoundingBox(new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5), new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5));
 
                     // convert sparse to full format
                     const indices = targets[j].indices;
@@ -268,12 +228,10 @@ class JsonModelParser {
                         deltaNormals = sparseToFull(deltaNormals, indices, vertexCount);
                     }
 
-                    morphTarget = new MorphTarget({
-                        deltaPositions: deltaPositions,
+                    morphTarget = new MorphTarget({ deltaPositions: deltaPositions,
                         deltaNormals: deltaNormals,
                         name: targets[j].name,
-                        aabb: aabb
-                    });
+                        aabb: aabb });
 
                     morphTargetArray.push(morphTarget);
                 }
@@ -323,7 +281,7 @@ class JsonModelParser {
                     semantic: attributeMap[attributeName],
                     components: attribute.components,
                     type: JSON_VERTEX_ELEMENT_TYPE[attribute.type],
-                    normalize: attributeMap[attributeName] === SEMANTIC_COLOR
+                    normalize: (attributeMap[attributeName] === SEMANTIC_COLOR)
                 });
             }
             const vertexFormat = new VertexFormat(this._device, formatDesc);
@@ -342,25 +300,13 @@ class JsonModelParser {
                             iterator.element[attributeMap[attributeName]].set(attribute.data[j]);
                             break;
                         case 2:
-                            iterator.element[attributeMap[attributeName]].set(
-                                attribute.data[j * 2],
-                                1.0 - attribute.data[j * 2 + 1]
-                            );
+                            iterator.element[attributeMap[attributeName]].set(attribute.data[j * 2], 1.0 - attribute.data[j * 2 + 1]);
                             break;
                         case 3:
-                            iterator.element[attributeMap[attributeName]].set(
-                                attribute.data[j * 3],
-                                attribute.data[j * 3 + 1],
-                                attribute.data[j * 3 + 2]
-                            );
+                            iterator.element[attributeMap[attributeName]].set(attribute.data[j * 3], attribute.data[j * 3 + 1], attribute.data[j * 3 + 2]);
                             break;
                         case 4:
-                            iterator.element[attributeMap[attributeName]].set(
-                                attribute.data[j * 4],
-                                attribute.data[j * 4 + 1],
-                                attribute.data[j * 4 + 2],
-                                attribute.data[j * 4 + 3]
-                            );
+                            iterator.element[attributeMap[attributeName]].set(attribute.data[j * 4], attribute.data[j * 4 + 1], attribute.data[j * 4 + 2], attribute.data[j * 4 + 3]);
                             break;
                     }
                 }
@@ -395,7 +341,7 @@ class JsonModelParser {
             maxVerts = Math.max(maxVerts, vertexBuffers[i].numVertices);
         }
         if (numIndices > 0) {
-            if (maxVerts > 0xffff) {
+            if (maxVerts > 0xFFFF) {
                 indexBuffer = new IndexBuffer(this._device, INDEXFORMAT_UINT32, numIndices);
                 indexData = new Uint32Array(indexBuffer.lock());
             } else {
@@ -422,21 +368,18 @@ class JsonModelParser {
             const meshAabb = meshData.aabb;
             const min = meshAabb.min;
             const max = meshAabb.max;
-            const aabb = new BoundingBox(
-                new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5),
-                new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5)
-            );
+            const aabb = new BoundingBox(new Vec3((max[0] + min[0]) * 0.5, (max[1] + min[1]) * 0.5, (max[2] + min[2]) * 0.5), new Vec3((max[0] - min[0]) * 0.5, (max[1] - min[1]) * 0.5, (max[2] - min[2]) * 0.5));
 
-            const indexed = meshData.indices !== undefined;
+            const indexed = (meshData.indices !== undefined);
             const mesh = new Mesh(this._device);
             mesh.vertexBuffer = vertexBuffers[meshData.vertices];
             mesh.indexBuffer[0] = indexed ? indexBuffer : null;
             mesh.primitive[0].type = JSON_PRIMITIVE_TYPE[meshData.type];
-            mesh.primitive[0].base = indexed ? meshData.base + indexBase : meshData.base;
+            mesh.primitive[0].base = indexed ? (meshData.base + indexBase) : meshData.base;
             mesh.primitive[0].count = meshData.count;
             mesh.primitive[0].indexed = indexed;
-            mesh.skin = meshData.skin !== undefined ? skins[meshData.skin] : null;
-            mesh.morph = meshData.morph !== undefined ? morphs[meshData.morph] : null;
+            mesh.skin = (meshData.skin !== undefined) ? skins[meshData.skin] : null;
+            mesh.morph = (meshData.morph !== undefined) ? morphs[meshData.morph] : null;
             mesh.aabb = aabb;
 
             if (indexed) {
@@ -472,7 +415,7 @@ class JsonModelParser {
                 const skinIndex = skins.indexOf(mesh.skin);
                 // #if _DEBUG
                 if (skinIndex === -1) {
-                    throw new Error("Mesh's skin does not appear in skin array.");
+                    throw new Error('Mesh\'s skin does not appear in skin array.');
                 }
                 // #endif
                 meshInstance.skinInstance = skinInstances[skinIndex];
@@ -482,7 +425,7 @@ class JsonModelParser {
                 const morphIndex = morphs.indexOf(mesh.morph);
                 // #if _DEBUG
                 if (morphIndex === -1) {
-                    throw new Error("Mesh's morph does not appear in morph array.");
+                    throw new Error('Mesh\'s morph does not appear in morph array.');
                 }
                 // #endif
                 meshInstance.morphInstance = morphInstances[morphIndex];

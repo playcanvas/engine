@@ -1,32 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import {
     uniformTypeToName,
-    UNIFORMTYPE_INT,
-    UNIFORMTYPE_FLOAT,
-    UNIFORMTYPE_VEC2,
-    UNIFORMTYPE_VEC3,
-    UNIFORMTYPE_VEC4,
-    UNIFORMTYPE_IVEC2,
-    UNIFORMTYPE_IVEC3,
-    UNIFORMTYPE_IVEC4,
-    UNIFORMTYPE_FLOATARRAY,
-    UNIFORMTYPE_VEC2ARRAY,
-    UNIFORMTYPE_VEC3ARRAY,
-    UNIFORMTYPE_MAT2,
-    UNIFORMTYPE_MAT3,
-    UNIFORMTYPE_UINT,
-    UNIFORMTYPE_UVEC2,
-    UNIFORMTYPE_UVEC3,
-    UNIFORMTYPE_UVEC4,
-    UNIFORMTYPE_INTARRAY,
-    UNIFORMTYPE_UINTARRAY,
-    UNIFORMTYPE_BOOLARRAY,
-    UNIFORMTYPE_IVEC2ARRAY,
-    UNIFORMTYPE_IVEC3ARRAY,
-    UNIFORMTYPE_UVEC2ARRAY,
-    UNIFORMTYPE_UVEC3ARRAY,
-    UNIFORMTYPE_BVEC2ARRAY,
-    UNIFORMTYPE_BVEC3ARRAY
+    UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
+    UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4,
+    UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY,
+    UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_UINT, UNIFORMTYPE_UVEC2, UNIFORMTYPE_UVEC3, UNIFORMTYPE_UVEC4, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_BVEC3ARRAY
 } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { DynamicBufferAllocation } from './dynamic-buffers.js';
@@ -262,6 +240,7 @@ class UniformBuffer {
         Debug.assert(format);
 
         if (persistent) {
+
             this.impl = graphicsDevice.createUniformBufferImpl(this);
 
             const storage = new ArrayBuffer(format.byteSize);
@@ -273,6 +252,7 @@ class UniformBuffer {
             // context (non-persistent buffers re-allocate from the dynamic buffers on next update)
             this.device.buffers.add(this);
         } else {
+
             this.allocation = new DynamicBufferAllocation();
         }
     }
@@ -281,6 +261,7 @@ class UniformBuffer {
      * Frees resources associated with this uniform buffer.
      */
     destroy() {
+
         if (this.persistent) {
             const device = this.device;
 
@@ -336,6 +317,7 @@ class UniformBuffer {
         const offset = uniformFormat.offset;
 
         if (value !== null && value !== undefined) {
+
             const updateFunction = _updateFunctions[uniformFormat.updateType];
             if (updateFunction) {
                 updateFunction(this, value, offset, uniformFormat.count);
@@ -343,9 +325,8 @@ class UniformBuffer {
                 this.storageFloat32.set(value, offset);
             }
         } else {
-            Debug.warnOnce(
-                `Value was not set when assigning to uniform [${uniformFormat.name}], expected type ${uniformTypeToName[uniformFormat.type]} while rendering ${DebugGraphics.toString()}`
-            );
+            Debug.warnOnce(`Value was not set when assigning to uniform [${uniformFormat.name}]` +
+                            `, expected type ${uniformTypeToName[uniformFormat.type]} while rendering ${DebugGraphics.toString()}`);
         }
     }
 
@@ -364,7 +345,9 @@ class UniformBuffer {
     }
 
     startUpdate(dynamicBindGroup) {
+
         if (!this.persistent) {
+
             // allocate memory from dynamic buffer for this frame
             const allocation = this.allocation;
             this.device.dynamicBuffers.alloc(allocation, this.format.byteSize);
@@ -379,6 +362,7 @@ class UniformBuffer {
     }
 
     endUpdate() {
+
         if (this.persistent) {
             // Upload the new data
             this.impl.unlock(this);
@@ -399,6 +383,7 @@ class UniformBuffer {
      * and no other resources.
      */
     update(dynamicBindGroup) {
+
         this.startUpdate(dynamicBindGroup);
 
         // set new values

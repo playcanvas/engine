@@ -21,6 +21,7 @@ describe('ScrollbarComponent', function () {
     });
 
     describe('#addComponent', function () {
+
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('scrollbar');
@@ -54,9 +55,11 @@ describe('ScrollbarComponent', function () {
             expect(e.scrollbar.handleSize).to.be.closeTo(0.3, 1e-6);
             expect(e.scrollbar.handleEntity).to.equal(handle);
         });
+
     });
 
     describe('#value', function () {
+
         it('clamps writes outside [0, 1]', function () {
             const e = new Entity();
             e.addComponent('scrollbar');
@@ -101,9 +104,11 @@ describe('ScrollbarComponent', function () {
             e.scrollbar.value = 0.5;
             expect(fired).to.equal(0);
         });
+
     });
 
     describe('#handleSize', function () {
+
         it('clamps writes outside [0, 1]', function () {
             const e = new Entity();
             e.addComponent('scrollbar');
@@ -123,9 +128,11 @@ describe('ScrollbarComponent', function () {
             e.scrollbar.handleSize = 0.5 + 1e-7;
             expect(e.scrollbar.handleSize).to.be.closeTo(0.5, 1e-5);
         });
+
     });
 
     describe('#orientation', function () {
+
         it('zeroes the opposite dimension on the handle element when orientation changes', function () {
             const handle = new Entity();
             handle.addComponent('element', { type: ELEMENTTYPE_IMAGE, width: 50, height: 50 });
@@ -181,9 +188,11 @@ describe('ScrollbarComponent', function () {
 
             expect(e.scrollbar._handleDragHelper._axis).to.equal('y');
         });
+
     });
 
     describe('#handleEntity', function () {
+
         it('accepts an Entity reference', function () {
             const handle = new Entity();
             handle.addComponent('element', { type: ELEMENTTYPE_IMAGE });
@@ -259,9 +268,11 @@ describe('ScrollbarComponent', function () {
             expect(handle1.hasEvent('element:add')).to.equal(false);
             expect(handle2.hasEvent('element:add')).to.equal(true);
         });
+
     });
 
     describe('#cloneComponent', function () {
+
         it('clones every scalar property', function () {
             const e = new Entity();
             e.addComponent('scrollbar', {
@@ -297,9 +308,11 @@ describe('ScrollbarComponent', function () {
             expect(cloneHandle).to.not.equal(handle);
             expect(clone.scrollbar.handleEntity).to.equal(cloneHandle);
         });
+
     });
 
     describe('resolveDuplicatedEntityReferenceProperties', function () {
+
         it('remaps the handle entity through duplicatedIdsMap', function () {
             const handle = new Entity();
             handle.addComponent('element', { type: ELEMENTTYPE_IMAGE });
@@ -320,5 +333,7 @@ describe('ScrollbarComponent', function () {
 
             expect(target.scrollbar.handleEntity).to.equal(replacement);
         });
+
     });
+
 });

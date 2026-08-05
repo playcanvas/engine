@@ -48,6 +48,7 @@ class RenderPassCoC extends RenderPassShaderQuad {
     }
 
     execute() {
+
         const { paramsValue, focusRange } = this;
         paramsValue[0] = this.focusDistance + 0.001;
         paramsValue[1] = focusRange;

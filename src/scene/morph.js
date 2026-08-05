@@ -4,13 +4,8 @@ import { Vec3 } from '../core/math/vec3.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
 import {
-    TYPE_UINT32,
-    SEMANTIC_ATTR15,
-    ADDRESS_CLAMP_TO_EDGE,
-    FILTER_NEAREST,
-    PIXELFORMAT_RGBA16F,
-    PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_RGBA16U,
+    TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16U,
     isIntegerPixelFormat
 } from '../platform/graphics/constants.js';
 import { Texture } from '../platform/graphics/texture.js';
@@ -50,28 +45,21 @@ class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
         super();
 
-        Debug.assert(
-            graphicsDevice,
-            'Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.'
-        );
+        Debug.assert(graphicsDevice, 'Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.');
         this.device = graphicsDevice;
         const device = graphicsDevice;
 
         this.preferHighPrecision = preferHighPrecision;
 
         // validation
-        Debug.assert(
-            targets.every((target) => !target.used),
-            'A specified target has already been used to create a Morph, use its clone instead.'
-        );
+        Debug.assert(targets.every(target => !target.used), 'A specified target has already been used to create a Morph, use its clone instead.');
         this._targets = targets.slice();
 
         // renderable format
         const renderableHalf = device.textureHalfFloatRenderable ? PIXELFORMAT_RGBA16F : undefined;
         const renderableFloat = device.textureFloatRenderable ? PIXELFORMAT_RGBA32F : undefined;
-        this._renderTextureFormat = this.preferHighPrecision
-            ? (renderableFloat ?? renderableHalf)
-            : (renderableHalf ?? renderableFloat);
+        this._renderTextureFormat = this.preferHighPrecision ?
+            (renderableFloat ?? renderableHalf) : (renderableHalf ?? renderableFloat);
 
         // fallback to more limited int format
         this._renderTextureFormat = this._renderTextureFormat ?? PIXELFORMAT_RGBA16U;
@@ -99,6 +87,7 @@ class Morph extends RefCountedObject {
     }
 
     get aabb() {
+
         // lazy evaluation, which allows us to skip this completely if customAABB is used
         if (!this._aabb) {
             // calculate min and max expansion size
@@ -129,6 +118,7 @@ class Morph extends RefCountedObject {
     }
 
     _init() {
+
         // texture based morphing
         this._initTextureBased();
 
@@ -139,9 +129,11 @@ class Morph extends RefCountedObject {
     }
 
     _findSparseSet(deltaArrays, ids, usedDataIndices) {
-        let freeIndex = 1; // reserve slot 0 for zero delta
+
+        let freeIndex = 1;  // reserve slot 0 for zero delta
         const dataCount = deltaArrays[0].length;
         for (let v = 0; v < dataCount; v += 3) {
+
             // find if vertex is morphed by any target
             let vertexUsed = false;
             for (let i = 0; i < deltaArrays.length; i++) {
@@ -168,15 +160,15 @@ class Morph extends RefCountedObject {
     }
 
     _initTextureBased() {
+
         // collect all source delta arrays to find sparse set of vertices
-        const deltaArrays = [],
-            deltaInfos = [];
+        const deltaArrays = [], deltaInfos = [];
         const targets = this._targets;
         for (let i = 0; i < targets.length; i++) {
             const target = targets[i];
             if (target.options.deltaPositions) {
                 deltaArrays.push(target.options.deltaPositions);
-                deltaInfos.push(true); // position
+                deltaInfos.push(true);  // position
             }
             if (target.options.deltaNormals) {
                 deltaArrays.push(target.options.deltaNormals);
@@ -185,8 +177,7 @@ class Morph extends RefCountedObject {
         }
 
         // find sparse set for all target deltas into usedDataIndices and build vertex id buffer
-        const ids = [],
-            usedDataIndices = [];
+        const ids = [], usedDataIndices = [];
         const freeIndex = this._findSparseSet(deltaArrays, ids, usedDataIndices);
 
         // texture size for freeIndex pixels - roughly square
@@ -197,9 +188,7 @@ class Morph extends RefCountedObject {
 
         // if data cannot fit into max size texture, fail this set up
         if (morphTextureHeight > maxTextureSize) {
-            Debug.warnOnce(
-                `Morph target data is too large to fit into a texture array. Required texture size: ${morphTextureWidth}x${morphTextureHeight}, max texture size: ${maxTextureSize}x${maxTextureSize}.`
-            );
+            Debug.warnOnce(`Morph target data is too large to fit into a texture array. Required texture size: ${morphTextureWidth}x${morphTextureHeight}, max texture size: ${maxTextureSize}x${maxTextureSize}.`);
             return;
         }
 
@@ -219,14 +208,12 @@ class Morph extends RefCountedObject {
         const textureDataSize = morphTextureWidth * morphTextureHeight * 4;
         for (let i = 0; i < deltaArrays.length; i++) {
             const data = deltaArrays[i];
-            const textureData =
-                this._textureFormat === PIXELFORMAT_RGBA16F
-                    ? new Uint16Array(textureDataSize)
-                    : new Float32Array(textureDataSize);
+            const textureData = this._textureFormat === PIXELFORMAT_RGBA16F ? new Uint16Array(textureDataSize) : new Float32Array(textureDataSize);
             (deltaInfos[i] ? texturesDataPositions : texturesDataNormals).push(textureData);
 
             // copy full arrays into sparse arrays and convert format (skip 0th pixel - used by non-morphed vertices)
             if (halfFloat) {
+
                 for (let v = 0; v < usedDataIndices.length; v++) {
                     const index = usedDataIndices[v] * 3;
                     const dstIndex = v * 4 + 4;
@@ -234,7 +221,9 @@ class Morph extends RefCountedObject {
                     textureData[dstIndex + 1] = float2Half(data[index + 1]);
                     textureData[dstIndex + 2] = float2Half(data[index + 2]);
                 }
+
             } else {
+
                 for (let v = 0; v < usedDataIndices.length; v++) {
                     const index = usedDataIndices[v] * 3;
                     const dstIndex = v * 4 + 4;
@@ -247,33 +236,18 @@ class Morph extends RefCountedObject {
 
         // allocate texture arrays to store data from all morph targets
         if (texturesDataPositions.length > 0) {
-            this.targetsTexturePositions = this._createTexture(
-                'MorphPositionsTexture',
-                this._textureFormat,
-                targets.length,
-                [texturesDataPositions]
-            );
+            this.targetsTexturePositions = this._createTexture('MorphPositionsTexture', this._textureFormat, targets.length, [texturesDataPositions]);
         }
 
         if (texturesDataNormals.length > 0) {
-            this.targetsTextureNormals = this._createTexture(
-                'MorphNormalsTexture',
-                this._textureFormat,
-                targets.length,
-                [texturesDataNormals]
-            );
+            this.targetsTextureNormals = this._createTexture('MorphNormalsTexture', this._textureFormat, targets.length, [texturesDataNormals]);
         }
 
         // create vertex stream with vertex_id used to map vertex to texture
         const formatDesc = [{ semantic: SEMANTIC_ATTR15, components: 1, type: TYPE_UINT32, asInt: true }];
-        this.vertexBufferIds = new VertexBuffer(
-            this.device,
-            new VertexFormat(this.device, formatDesc, ids.length),
-            ids.length,
-            {
-                data: new Uint32Array(ids)
-            }
-        );
+        this.vertexBufferIds = new VertexBuffer(this.device, new VertexFormat(this.device, formatDesc, ids.length), ids.length, {
+            data: new Uint32Array(ids)
+        });
 
         return true;
     }
@@ -297,6 +271,7 @@ class Morph extends RefCountedObject {
     // ---- deprecated block end ----
 
     _updateMorphFlags() {
+
         // find out if this morph needs to morph positions and normals
         this._morphPositions = false;
         this._morphNormals = false;

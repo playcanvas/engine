@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 vec4 encodeLinear(vec3 source) {
     return vec4(source, 1.0);
 }

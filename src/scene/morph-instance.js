@@ -56,6 +56,7 @@ class MorphInstance {
 
         // create render targets to morph targets into
         const createRT = (name, textureVar) => {
+
             // render to appropriate, RGBA formats
             this[textureVar] = morph._createTexture(name, morph._renderTextureFormat);
             return new RenderTarget({
@@ -102,11 +103,13 @@ class MorphInstance {
      * Frees video memory allocated by this object.
      */
     destroy() {
+
         // don't destroy shader as it's in the cache and can be used by other materials
         this.shader = null;
 
         const morph = this.morph;
         if (morph) {
+
             // decrease ref count
             this.morph = null;
             morph.decRefCount();
@@ -185,6 +188,7 @@ class MorphInstance {
      * @private
      */
     _createShader(maxCount) {
+
         const defines = new Map();
         defines.set('{MORPH_TEXTURE_MAX_COUNT}', maxCount);
         if (this.morph.intRenderFormat) defines.set('MORPH_INT', '');
@@ -202,6 +206,7 @@ class MorphInstance {
     }
 
     _updateTextureRenderTarget(renderTarget, activeCount, isPos) {
+
         const { morph, device } = this;
         this.setAabbUniforms(isPos);
         this.morphTextureId.setValue(isPos ? morph.targetsTexturePositions : morph.targetsTextureNormals);
@@ -218,12 +223,14 @@ class MorphInstance {
     }
 
     _updateTextureMorph(activeCount) {
+
         const device = this.device;
 
         DebugGraphics.pushGpuMarker(device, 'MorphUpdate');
 
         // update textures if active targets, or no active targets and textures need to be cleared
         if (activeCount > 0 || !this.zeroTextures) {
+
             // blend morph targets into render targets
             if (this.rtPositions) {
                 this._updateTextureRenderTarget(this.rtPositions, activeCount, true);
@@ -245,6 +252,7 @@ class MorphInstance {
         this.aabbMinId.setValue(isPos ? this._aabbMin : this._aabbNrmMin);
     }
 
+
     prepareRendering(device) {
         this.setAabbUniforms();
     }
@@ -254,6 +262,7 @@ class MorphInstance {
      * renderer.
      */
     update() {
+
         this._dirty = false;
         const targets = this.morph._targets;
 

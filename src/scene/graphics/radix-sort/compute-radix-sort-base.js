@@ -148,7 +148,7 @@ class ComputeRadixSortBase {
     get sortedIndices() {
         if (!this._values0) return null;
         const numPasses = this._numBits / this.radixBits;
-        return numPasses % 2 === 1 ? this._values1 : this._values0;
+        return (numPasses % 2 === 1) ? this._values1 : this._values0;
     }
 
     /**
@@ -163,7 +163,7 @@ class ComputeRadixSortBase {
         }
         const radix = this.radixBits;
         const numPasses = this._numBits / radix;
-        return numPasses % 2 === 0 ? this._keys1 : this._keys0;
+        return (numPasses % 2 === 0) ? this._keys1 : this._keys0;
     }
 
     /**
@@ -216,16 +216,7 @@ class ComputeRadixSortBase {
      * @returns {StorageBuffer} Sorted values buffer.
      * @abstract
      */
-    sortIndirect(
-        keysBuffer,
-        maxElementCount,
-        numBits,
-        sortSlotBase,
-        sortElementCountBuffer,
-        initialValues,
-        skipLastPassKeyWrite,
-        destructiveKeys
-    ) {
+    sortIndirect(keysBuffer, maxElementCount, numBits, sortSlotBase, sortElementCountBuffer, initialValues, skipLastPassKeyWrite, destructiveKeys) {
         Debug.error('ComputeRadixSortBase.sortIndirect must be implemented by a subclass');
         return /** @type {any} */ (null);
     }
@@ -296,7 +287,8 @@ class ComputeRadixSortBase {
     /**
      * Releases resources owned by this backend.
      */
-    destroy() {}
+    destroy() {
+    }
 }
 
 export { ComputeRadixSortBase };

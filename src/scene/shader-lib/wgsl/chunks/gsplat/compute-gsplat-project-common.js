@@ -4,7 +4,7 @@
 // compactedSplatIds and include the format/read chunks before including this
 // helper.
 
-export const computeGsplatProjectCommonSource = /* wgsl */ `
+export const computeGsplatProjectCommonSource = /* wgsl */`
 
 struct ProjectedSplatCommon {
     valid: bool,

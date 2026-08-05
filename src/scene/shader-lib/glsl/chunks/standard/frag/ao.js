@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #if defined(STD_AO_TEXTURE) || defined(STD_AO_VERTEX)
     uniform float material_aoIntensity;

@@ -1,13 +1,8 @@
 import { expect } from 'chai';
 
 import {
-    ESM_TARGETS,
-    EXPECTED_EXPORTS,
-    SOURCE_INDEX,
-    UMD_TARGETS,
-    exportNames,
-    loadEsm,
-    loadUmdGlobal
+    ESM_TARGETS, EXPECTED_EXPORTS, SOURCE_INDEX, UMD_TARGETS,
+    exportNames, loadEsm, loadUmdGlobal
 } from './helpers.mjs';
 
 describe('build / exports', function () {
@@ -23,7 +18,7 @@ describe('build / exports', function () {
         UMD_TARGETS.forEach((t) => {
             it(t.name, function () {
                 const { pc, dom } = loadUmdGlobal(t.path);
-                EXPECTED_EXPORTS.forEach((n) => expect(pc, n).to.have.property(n));
+                EXPECTED_EXPORTS.forEach(n => expect(pc, n).to.have.property(n));
                 dom.window.close();
             });
         });
@@ -31,7 +26,7 @@ describe('build / exports', function () {
         ESM_TARGETS.forEach((t) => {
             it(t.name, async function () {
                 const ns = await loadEsm(t.path);
-                EXPECTED_EXPORTS.forEach((n) => expect(ns, n).to.have.property(n));
+                EXPECTED_EXPORTS.forEach(n => expect(ns, n).to.have.property(n));
             });
         });
     });

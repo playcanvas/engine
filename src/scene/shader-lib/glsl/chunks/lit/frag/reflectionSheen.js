@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 void addReflectionSheen(vec3 worldNormal, vec3 viewDir, float gloss) {
     float NoV = dot(worldNormal, viewDir);

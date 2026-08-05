@@ -36,6 +36,7 @@ describe('LightComponent', function () {
     });
 
     describe('#addComponent', function () {
+
         it('creates a component with sensible defaults', function () {
             const e = new Entity();
             e.addComponent('light');
@@ -170,9 +171,11 @@ describe('LightComponent', function () {
             expect(e.light.cookieScale.x).to.equal(2);
             expect(e.light.cookieScale.y).to.equal(4);
         });
+
     });
 
     describe('#type', function () {
+
         it('preserves the "point" alias on read-back while mapping to LIGHTTYPE_OMNI internally', function () {
             const e = new Entity();
             e.addComponent('light', { type: 'point' });
@@ -196,7 +199,7 @@ describe('LightComponent', function () {
             expect(e.light.light.type).to.equal(LIGHTTYPE_DIRECTIONAL);
         });
 
-        it("keeps a layer's clustered-light set in sync when switching from spot to directional", function () {
+        it('keeps a layer\'s clustered-light set in sync when switching from spot to directional', function () {
             const e = new Entity();
             e.addComponent('light', { type: 'spot' });
             app.root.addChild(e);
@@ -210,18 +213,22 @@ describe('LightComponent', function () {
             // directional lights are not clustered
             expect(worldLayer.clusteredLightsSet.has(e.light.light)).to.equal(false);
         });
+
     });
 
     describe('#color', function () {
+
         it('returns the same Color reference as Light#getColor()', function () {
             const e = new Entity();
             e.addComponent('light');
 
             expect(e.light.color).to.equal(e.light.light.getColor());
         });
+
     });
 
     describe('#affectSpecularity', function () {
+
         it('round-trips the user-supplied value regardless of light type', function () {
             const e = new Entity();
             // Light#affectSpecularity ignores writes for non-directional types, but the
@@ -242,9 +249,11 @@ describe('LightComponent', function () {
             expect(e.light.affectSpecularity).to.equal(false);
             expect(e.light.light.affectSpecularity).to.equal(false);
         });
+
     });
 
     describe('#castShadows', function () {
+
         it('preserves the user-supplied value even when the mask would suppress shadows', function () {
             const e = new Entity();
             e.addComponent('light', { castShadows: true, mask: MASK_BAKE });
@@ -255,9 +264,11 @@ describe('LightComponent', function () {
             expect(e.light.castShadows).to.equal(true);
             expect(e.light.light.castShadows).to.equal(false);
         });
+
     });
 
     describe('#shadowBias', function () {
+
         it('returns the user-facing value but applies a negative-scaled value to the underlying Light', function () {
             const e = new Entity();
             e.addComponent('light', { shadowBias: 0.5 });
@@ -265,9 +276,11 @@ describe('LightComponent', function () {
             expect(e.light.shadowBias).to.equal(0.5);
             expect(e.light.light.shadowBias).to.be.closeTo(-0.005, 1e-9);
         });
+
     });
 
     describe('#cookieAngle / #cookieScale', function () {
+
         it('builds the cookieTransform matrix when either is non-default', function () {
             const e = new Entity();
             e.addComponent('light', {
@@ -296,9 +309,11 @@ describe('LightComponent', function () {
 
             expect(e.light.light.cookieTransform).to.equal(null);
         });
+
     });
 
     describe('mask flags', function () {
+
         it('toggles MASK_AFFECT_DYNAMIC when affectDynamic changes', function () {
             const e = new Entity();
             e.addComponent('light');
@@ -328,9 +343,11 @@ describe('LightComponent', function () {
             expect(e.light.light.mask & MASK_BAKE).to.equal(0);
             expect(e.light.light.mask & MASK_AFFECT_LIGHTMAPPED).to.not.equal(0);
         });
+
     });
 
     describe('#layers', function () {
+
         it('adds the light to the configured layers when the entity is enabled', function () {
             const e = new Entity();
             e.addComponent('light');
@@ -362,9 +379,11 @@ describe('LightComponent', function () {
             e.light.enabled = true;
             expect(worldLayer.hasLight(e.light.light)).to.equal(true);
         });
+
     });
 
     describe('#cloneComponent', function () {
+
         it('clones every property, deep-cloning Color/Vec2 values', function () {
             const e = new Entity();
             e.addComponent('light', {
@@ -479,5 +498,7 @@ describe('LightComponent', function () {
             expect(clone.light.type).to.equal('point');
             expect(clone.light.light.type).to.equal(LIGHTTYPE_OMNI);
         });
+
     });
+
 });

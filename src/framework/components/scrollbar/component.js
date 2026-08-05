@@ -295,7 +295,7 @@ class ScrollbarComponent extends Component {
     }
 
     _handlePositionToScrollValue(handlePosition) {
-        return (handlePosition * this._getSign()) / this._getUsableTrackLength();
+        return handlePosition * this._getSign() / this._getUsableTrackLength();
     }
 
     _scrollValueToHandlePosition(value) {
@@ -308,9 +308,7 @@ class ScrollbarComponent extends Component {
 
     _getTrackLength() {
         if (this.entity.element) {
-            return this._orientation === ORIENTATION_HORIZONTAL
-                ? this.entity.element.calculatedWidth
-                : this.entity.element.calculatedHeight;
+            return this._orientation === ORIENTATION_HORIZONTAL ? this.entity.element.calculatedWidth : this.entity.element.calculatedHeight;
         }
 
         return 0;

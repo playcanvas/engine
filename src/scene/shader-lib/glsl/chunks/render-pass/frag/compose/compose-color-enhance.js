@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     #ifdef COLOR_ENHANCE
         uniform vec4 colorEnhanceParams; // x=shadows, y=highlights, z=vibrance, w=dehaze
         uniform float colorEnhanceMidtones;

@@ -7,13 +7,7 @@ import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../scene/con
 import { GraphNode } from '../../../scene/graph-node.js';
 
 import { ElementDragHelper } from '../element/element-drag-helper.js';
-import {
-    SCROLL_MODE_BOUNCE,
-    SCROLL_MODE_CLAMP,
-    SCROLL_MODE_INFINITE,
-    SCROLLBAR_VISIBILITY_SHOW_ALWAYS,
-    SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED
-} from './constants.js';
+import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_VISIBILITY_SHOW_ALWAYS, SCROLLBAR_VISIBILITY_SHOW_WHEN_REQUIRED } from './constants.js';
 import { Component } from '../component.js';
 
 /**
@@ -805,11 +799,7 @@ class ScrollViewComponent extends Component {
     }
 
     _horizontalScrollbarEntitySubscribe() {
-        this._evtHorizontalScrollbarAdd = this._horizontalScrollbarEntity.on(
-            'scrollbar:add',
-            this._onHorizontalScrollbarGain,
-            this
-        );
+        this._evtHorizontalScrollbarAdd = this._horizontalScrollbarEntity.on('scrollbar:add', this._onHorizontalScrollbarGain, this);
 
         if (this._horizontalScrollbarEntity.scrollbar) {
             this._onHorizontalScrollbarGain();
@@ -817,11 +807,7 @@ class ScrollViewComponent extends Component {
     }
 
     _verticalScrollbarEntitySubscribe() {
-        this._evtVerticalScrollbarAdd = this._verticalScrollbarEntity.on(
-            'scrollbar:add',
-            this._onVerticalScrollbarGain,
-            this
-        );
+        this._evtVerticalScrollbarAdd = this._verticalScrollbarEntity.on('scrollbar:add', this._onVerticalScrollbarGain, this);
 
         if (this._verticalScrollbarEntity.scrollbar) {
             this._onVerticalScrollbarGain();
@@ -1280,17 +1266,11 @@ class ScrollViewComponent extends Component {
         const wheelEvent = event.event;
 
         // wheelEvent's delta variables are screen space, so they need to be normalized first
-        const normalizedDeltaX =
-            (wheelEvent.deltaX / this._contentEntity.element.calculatedWidth) * this.mouseWheelSensitivity.x;
-        const normalizedDeltaY =
-            (wheelEvent.deltaY / this._contentEntity.element.calculatedHeight) * this.mouseWheelSensitivity.y;
+        const normalizedDeltaX = (wheelEvent.deltaX / this._contentEntity.element.calculatedWidth) * this.mouseWheelSensitivity.x;
+        const normalizedDeltaY = (wheelEvent.deltaY / this._contentEntity.element.calculatedHeight) * this.mouseWheelSensitivity.y;
 
         // update scroll positions, clamping to [0, maxScrollValue] to always prevent over-shooting
-        const scrollX = math.clamp(
-            this._scroll.x + normalizedDeltaX,
-            0,
-            this._getMaxScrollValue(ORIENTATION_HORIZONTAL)
-        );
+        const scrollX = math.clamp(this._scroll.x + normalizedDeltaX, 0, this._getMaxScrollValue(ORIENTATION_HORIZONTAL));
         const scrollY = math.clamp(this._scroll.y + normalizedDeltaY, 0, this._getMaxScrollValue(ORIENTATION_VERTICAL));
 
         this.scroll = new Vec2(scrollX, scrollY);

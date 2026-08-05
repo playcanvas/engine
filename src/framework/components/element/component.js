@@ -4,12 +4,7 @@ import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import {
-    FUNC_ALWAYS,
-    FUNC_EQUAL,
-    STENCILOP_INCREMENT,
-    STENCILOP_REPLACE
-} from '../../../platform/graphics/constants.js';
+import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../platform/graphics/constants.js';
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
@@ -595,9 +590,9 @@ class ElementComponent extends Component {
             priority = this.screen.screen.priority;
         }
 
-        if (value > 0xffffff) {
-            Debug.warn(`Element.drawOrder larger than max size of: ${0xffffff}`);
-            value = 0xffffff;
+        if (value > 0xFFFFFF) {
+            Debug.warn(`Element.drawOrder larger than max size of: ${0xFFFFFF}`);
+            value = 0xFFFFFF;
         }
 
         // screen priority is stored in the top 8 bits
@@ -851,8 +846,7 @@ class ElementComponent extends Component {
     // screen-space corners (bottom left, bottom right, top right, top left), populating and
     // returning the supplied array. This is the shared logic behind screenCorners.
     _calcScreenCorners(left, bottom, right, top, corners) {
-        const parentBottomLeft =
-            this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
+        const parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
 
         // init corners
         corners[0].set(left, bottom, 0);
@@ -984,9 +978,7 @@ class ElementComponent extends Component {
             }
         } else {
             if (this._useInput === true) {
-                Debug.warn(
-                    'Elements will not get any input events because this.system.app.elementInput is not created'
-                );
+                Debug.warn('Elements will not get any input events because this.system.app.elementInput is not created');
             }
         }
 
@@ -1101,35 +1093,19 @@ class ElementComponent extends Component {
             matD.mul(matC).mul(matB).mul(matA);
 
             // bottom left
-            vecA.set(
-                localPos.x - this.pivot.x * this.calculatedWidth,
-                localPos.y - this.pivot.y * this.calculatedHeight,
-                localPos.z
-            );
+            vecA.set(localPos.x - this.pivot.x * this.calculatedWidth, localPos.y - this.pivot.y * this.calculatedHeight, localPos.z);
             matD.transformPoint(vecA, this._worldCorners[0]);
 
             // bottom right
-            vecA.set(
-                localPos.x + (1 - this.pivot.x) * this.calculatedWidth,
-                localPos.y - this.pivot.y * this.calculatedHeight,
-                localPos.z
-            );
+            vecA.set(localPos.x + (1 - this.pivot.x) * this.calculatedWidth, localPos.y - this.pivot.y * this.calculatedHeight, localPos.z);
             matD.transformPoint(vecA, this._worldCorners[1]);
 
             // top right
-            vecA.set(
-                localPos.x + (1 - this.pivot.x) * this.calculatedWidth,
-                localPos.y + (1 - this.pivot.y) * this.calculatedHeight,
-                localPos.z
-            );
+            vecA.set(localPos.x + (1 - this.pivot.x) * this.calculatedWidth, localPos.y + (1 - this.pivot.y) * this.calculatedHeight, localPos.z);
             matD.transformPoint(vecA, this._worldCorners[2]);
 
             // top left
-            vecA.set(
-                localPos.x - this.pivot.x * this.calculatedWidth,
-                localPos.y + (1 - this.pivot.y) * this.calculatedHeight,
-                localPos.z
-            );
+            vecA.set(localPos.x - this.pivot.x * this.calculatedWidth, localPos.y + (1 - this.pivot.y) * this.calculatedHeight, localPos.z);
             matD.transformPoint(vecA, this._worldCorners[3]);
         }
 
@@ -2125,11 +2101,9 @@ class ElementComponent extends Component {
         const p = this.localPosition;
         const pvt = element._pivot;
         element._margin.x = p.x - element._calculatedWidth * pvt.x;
-        element._margin.z =
-            element._localAnchor.z - element._localAnchor.x - element._calculatedWidth - element._margin.x;
+        element._margin.z = element._localAnchor.z - element._localAnchor.x - element._calculatedWidth - element._margin.x;
         element._margin.y = p.y - element._calculatedHeight * pvt.y;
-        element._margin.w =
-            element._localAnchor.w - element._localAnchor.y - element._calculatedHeight - element._margin.y;
+        element._margin.w = element._localAnchor.w - element._localAnchor.y - element._calculatedHeight - element._margin.y;
 
         if (!this._dirtyLocal) {
             this._dirtifyLocal();
@@ -2161,11 +2135,7 @@ class ElementComponent extends Component {
                     resy = resolution.y / screen.screen.scale;
                 }
 
-                element._anchorTransform.setTranslate(
-                    resx * (element.anchor.x - px),
-                    -(resy * (py - element.anchor.y)),
-                    0
-                );
+                element._anchorTransform.setTranslate(resx * (element.anchor.x - px), -(resy * (py - element.anchor.y)), 0);
                 element._anchorDirty = false;
                 element._calculateLocalAnchors();
             }
@@ -2186,11 +2156,9 @@ class ElementComponent extends Component {
             const p = this.localPosition;
             const pvt = element._pivot;
             element._margin.x = p.x - element._calculatedWidth * pvt.x;
-            element._margin.z =
-                element._localAnchor.z - element._localAnchor.x - element._calculatedWidth - element._margin.x;
+            element._margin.z = element._localAnchor.z - element._localAnchor.x - element._calculatedWidth - element._margin.x;
             element._margin.y = p.y - element._calculatedHeight * pvt.y;
-            element._margin.w =
-                element._localAnchor.w - element._localAnchor.y - element._calculatedHeight - element._margin.y;
+            element._margin.w = element._localAnchor.w - element._localAnchor.y - element._calculatedHeight - element._margin.y;
 
             this._dirtyLocal = false;
         }
@@ -2243,17 +2211,16 @@ class ElementComponent extends Component {
                     depthOffset.set(0, 0, this.localPosition.z);
 
                     const pivotOffset = vecB;
-                    pivotOffset.set(
-                        element._absLeft + element._pivot.x * element.calculatedWidth,
-                        element._absBottom + element._pivot.y * element.calculatedHeight,
-                        0
-                    );
+                    pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth, element._absBottom + element._pivot.y * element.calculatedHeight, 0);
 
                     matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
                     matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
                     matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
 
-                    element._screenTransform.mul2(element._parentWorldTransform, matC).mul(matB).mul(matA);
+                    element._screenTransform
+                    .mul2(element._parentWorldTransform, matC)
+                    .mul(matB)
+                    .mul(matA);
 
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -2385,12 +2352,10 @@ class ElementComponent extends Component {
             Debug.trace(TRACEID_ELEMENT, `masking: ${this.entity.name} with ${ref}`);
 
             // if this is image or text, set the stencil parameters
-            renderableElement?._setStencil(
-                new StencilParameters({
-                    ref: ref,
-                    func: FUNC_EQUAL
-                })
-            );
+            renderableElement?._setStencil(new StencilParameters({
+                ref: ref,
+                func: FUNC_EQUAL
+            }));
 
             this._maskedBy = mask;
         } else {
@@ -2540,12 +2505,7 @@ class ElementComponent extends Component {
             resy = res.y / scale;
         }
 
-        this._localAnchor.set(
-            this._anchor.x * resx,
-            this._anchor.y * resy,
-            this._anchor.z * resx,
-            this._anchor.w * resy
-        );
+        this._localAnchor.set(this._anchor.x * resx, this._anchor.y * resy, this._anchor.z * resx, this._anchor.w * resy);
     }
 
     // internal - apply offset x,y to local position and find point in world space
@@ -2893,13 +2853,7 @@ class ElementComponent extends Component {
             if (overflowX > 0 || overflowY > 0) {
                 const ha = this.alignment.x;
                 const va = this.alignment.y;
-                hitCorners = this._calcScreenCorners(
-                    this._absLeft - ha * overflowX,
-                    this._absBottom - va * overflowY,
-                    this._absRight + (1 - ha) * overflowX,
-                    this._absTop + (1 - va) * overflowY,
-                    tmpCorners
-                );
+                hitCorners = this._calcScreenCorners(this._absLeft - ha * overflowX, this._absBottom - va * overflowY, this._absRight + (1 - ha) * overflowX, this._absTop + (1 - va) * overflowY, tmpCorners);
             }
         }
 

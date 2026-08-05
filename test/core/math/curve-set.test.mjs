@@ -4,7 +4,9 @@ import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from '../../
 import { CurveSet } from '../../../src/core/math/curve-set.js';
 
 describe('CurveSet', function () {
+
     describe('#constructor', function () {
+
         it('supports zero arguments', function () {
             const curveSet = new CurveSet();
 
@@ -22,24 +24,27 @@ describe('CurveSet', function () {
         it('supports one array argument', function () {
             const curveSet = new CurveSet([
                 [
-                    0,
-                    0, // At 0 time, value of 0
-                    0.33,
-                    2, // At 0.33 time, value of 2
-                    0.66,
-                    2.6, // At 0.66 time, value of 2.6
-                    1,
-                    3 // At 1 time, value of 3
+                    0, 0,        // At 0 time, value of 0
+                    0.33, 2,     // At 0.33 time, value of 2
+                    0.66, 2.6,   // At 0.66 time, value of 2.6
+                    1, 3         // At 1 time, value of 3
                 ],
-                [0, 34, 0.33, 35, 0.66, 36, 1, 37]
+                [
+                    0, 34,
+                    0.33, 35,
+                    0.66, 36,
+                    1, 37
+                ]
             ]);
 
             expect(curveSet.length).to.equal(2);
             expect(curveSet.type).to.equal(CURVE_SMOOTHSTEP);
         });
+
     });
 
     describe('#type', function () {
+
         it('is CURVE_SMOOTHSTEP by default', function () {
             const curveSet = new CurveSet();
 
@@ -81,16 +86,17 @@ describe('CurveSet', function () {
         it('sets the type property of all curves in the curve set', function () {
             const curveSet = new CurveSet([
                 [
-                    0,
-                    0, // At 0 time, value of 0
-                    0.33,
-                    2, // At 0.33 time, value of 2
-                    0.66,
-                    2.6, // At 0.66 time, value of 2.6
-                    1,
-                    3 // At 1 time, value of 3
+                    0, 0,        // At 0 time, value of 0
+                    0.33, 2,     // At 0.33 time, value of 2
+                    0.66, 2.6,   // At 0.66 time, value of 2.6
+                    1, 3         // At 1 time, value of 3
                 ],
-                [0, 34, 0.33, 35, 0.66, 36, 1, 37]
+                [
+                    0, 34,
+                    0.33, 35,
+                    0.66, 36,
+                    1, 37
+                ]
             ]);
 
             expect(curveSet.type).to.equal(CURVE_SMOOTHSTEP);
@@ -121,9 +127,11 @@ describe('CurveSet', function () {
             expect(curveSet.curves[0].type).to.equal(CURVE_STEP);
             expect(curveSet.curves[1].type).to.equal(CURVE_STEP);
         });
+
     });
 
     describe('#clone()', function () {
+
         it('clones a simple curve set', function () {
             const curveSet = new CurveSet();
             const clone = curveSet.clone();
@@ -136,16 +144,17 @@ describe('CurveSet', function () {
         it('clones a complex curve set', function () {
             const curveSet = new CurveSet([
                 [
-                    0,
-                    0, // At 0 time, value of 0
-                    0.33,
-                    2, // At 0.33 time, value of 2
-                    0.66,
-                    2.6, // At 0.66 time, value of 2.6
-                    1,
-                    3 // At 1 time, value of 3
+                    0, 0,        // At 0 time, value of 0
+                    0.33, 2,     // At 0.33 time, value of 2
+                    0.66, 2.6,   // At 0.66 time, value of 2.6
+                    1, 3         // At 1 time, value of 3
                 ],
-                [0, 34, 0.33, 35, 0.66, 36, 1, 37]
+                [
+                    0, 34,
+                    0.33, 35,
+                    0.66, 36,
+                    1, 37
+                ]
             ]);
             const cloneCurveSet = curveSet.clone();
 
@@ -181,19 +190,21 @@ describe('CurveSet', function () {
     });
 
     describe('#get()', function () {
+
         it('returns the curve at the given index', function () {
             const curveSet = new CurveSet([
                 [
-                    0,
-                    0, // At 0 time, value of 0
-                    0.33,
-                    2, // At 0.33 time, value of 2
-                    0.66,
-                    2.6, // At 0.66 time, value of 2.6
-                    1,
-                    3 // At 1 time, value of 3
+                    0, 0,        // At 0 time, value of 0
+                    0.33, 2,     // At 0.33 time, value of 2
+                    0.66, 2.6,   // At 0.66 time, value of 2.6
+                    1, 3         // At 1 time, value of 3
                 ],
-                [0, 34, 0.33, 35, 0.66, 36, 1, 37]
+                [
+                    0, 34,
+                    0.33, 35,
+                    0.66, 36,
+                    1, 37
+                ]
             ]);
 
             const c0 = curveSet.get(0);
@@ -211,9 +222,11 @@ describe('CurveSet', function () {
             const c2 = curveSet.get(2);
             expect(c2).to.equal(undefined);
         });
+
     });
 
     describe('#add()', function () {
+
         it('appends a new curve and returns it', function () {
             const curveSet = new CurveSet([[0, 0, 1, 1]]);
             const curve = curveSet.add([0, 0, 1, 0.5]);
@@ -240,14 +253,13 @@ describe('CurveSet', function () {
 
             expect(curve.type).to.equal(CURVE_LINEAR);
         });
+
     });
 
     describe('#remove()', function () {
+
         it('removes and returns the curve at the given index', function () {
-            const curveSet = new CurveSet([
-                [0, 0, 1, 1],
-                [0, 0, 1, 0.5]
-            ]);
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
             const first = curveSet.get(0);
             const removed = curveSet.remove(0);
 
@@ -256,10 +268,7 @@ describe('CurveSet', function () {
         });
 
         it('removes a curve by reference', function () {
-            const curveSet = new CurveSet([
-                [0, 0, 1, 1],
-                [0, 0, 1, 0.5]
-            ]);
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
             const second = curveSet.get(1);
             const removed = curveSet.remove(second);
 
@@ -281,14 +290,13 @@ describe('CurveSet', function () {
             expect(curveSet.remove(other)).to.equal(null);
             expect(curveSet.length).to.equal(1);
         });
+
     });
 
     describe('#clearKeys()', function () {
+
         it('clears the keys of every curve but keeps the curves', function () {
-            const curveSet = new CurveSet([
-                [0, 0, 1, 1],
-                [0, 0, 1, 0.5]
-            ]);
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
             const result = curveSet.clearKeys();
 
             expect(result).to.equal(curveSet);
@@ -296,26 +304,35 @@ describe('CurveSet', function () {
             expect(curveSet.get(0).length).to.equal(0);
             expect(curveSet.get(1).length).to.equal(0);
         });
+
     });
 
     describe('#clear()', function () {
+
         it('removes all curves from the set', function () {
-            const curveSet = new CurveSet([
-                [0, 0, 1, 1],
-                [0, 0, 1, 0.5]
-            ]);
+            const curveSet = new CurveSet([[0, 0, 1, 1], [0, 0, 1, 0.5]]);
             const result = curveSet.clear();
 
             expect(result).to.equal(curveSet);
             expect(curveSet.length).to.equal(0);
         });
+
     });
 
     describe('#value()', function () {
+
         it('returns the optional array parameter', function () {
             const curveSet = new CurveSet([
-                [0, 0, 0.5, 1, 1, 0],
-                [0, 1, 0.5, 0, 1, 1]
+                [
+                    0, 0,
+                    0.5, 1,
+                    1, 0
+                ],
+                [
+                    0, 1,
+                    0.5, 0,
+                    1, 1
+                ]
             ]);
 
             const input = [];
@@ -325,8 +342,16 @@ describe('CurveSet', function () {
 
         it('fills a supplied array with interpolated values based on the specified time (linear)', function () {
             const curveSet = new CurveSet([
-                [0, 0, 0.5, 1, 1, 0],
-                [0, 1, 0.5, 0, 1, 1]
+                [
+                    0, 0,
+                    0.5, 1,
+                    1, 0
+                ],
+                [
+                    0, 1,
+                    0.5, 0,
+                    1, 1
+                ]
             ]);
             curveSet.type = CURVE_LINEAR;
 
@@ -350,8 +375,16 @@ describe('CurveSet', function () {
 
         it('fills a supplied array with interpolated values based on the specified time (smoothstep)', function () {
             const curveSet = new CurveSet([
-                [0, 0, 0.5, 1, 1, 0],
-                [0, 1, 0.5, 0, 1, 1]
+                [
+                    0, 0,
+                    0.5, 1,
+                    1, 0
+                ],
+                [
+                    0, 1,
+                    0.5, 0,
+                    1, 1
+                ]
             ]);
 
             const result = [];
@@ -371,8 +404,16 @@ describe('CurveSet', function () {
 
         it('fills a supplied array with interpolated values based on the specified time (spline)', function () {
             const curveSet = new CurveSet([
-                [0, 0, 0.5, 1, 1, 0],
-                [0, 1, 0.5, 0, 1, 1]
+                [
+                    0, 0,
+                    0.5, 1,
+                    1, 0
+                ],
+                [
+                    0, 1,
+                    0.5, 0,
+                    1, 1
+                ]
             ]);
             curveSet.type = CURVE_SPLINE;
 
@@ -396,8 +437,16 @@ describe('CurveSet', function () {
 
         it('fills a supplied array with interpolated values based on the specified time (step)', function () {
             const curveSet = new CurveSet([
-                [0, 0, 0.5, 1, 1, 0],
-                [0, 1, 0.5, 0, 1, 1]
+                [
+                    0, 0,
+                    0.5, 1,
+                    1, 0
+                ],
+                [
+                    0, 1,
+                    0.5, 0,
+                    1, 1
+                ]
             ]);
             curveSet.type = CURVE_STEP;
 
@@ -418,5 +467,7 @@ describe('CurveSet', function () {
             curveSet.value(1, result);
             expect(result).to.deep.equal([0, 1]);
         });
+
     });
+
 });

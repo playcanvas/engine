@@ -75,16 +75,16 @@ class Preprocessor {
      * @returns {string|null} Returns preprocessed source code, or null in case of error.
      */
     static run(source, includes = new Map(), options = {}) {
+
         Preprocessor.sourceName = options.sourceName;
 
         // strips comments, handles // and many cases of /*
         source = this.stripComments(source);
 
         // right trim each line
-        source = source
-            .split(/\r?\n/)
-            .map((line) => line.trimEnd())
-            .join('\n');
+        source = source.split(/\r?\n/)
+        .map(line => line.trimEnd())
+        .join('\n');
 
         // extracted defines
         const defines = new Map();
@@ -122,7 +122,9 @@ class Preprocessor {
     }
 
     static stripUnusedColorAttachments(source, options) {
+
         if (options.stripUnusedColorAttachments) {
+
             // find out how many times pcFragColorX is used (see gles3.js)
             const counts = new Map();
             const matches = source.match(FRAGCOLOR);
@@ -132,8 +134,9 @@ class Preprocessor {
             });
 
             // if there's any attachment used only one time (only as a declaration, without actual use)
-            const anySingleUse = Array.from(counts.values()).some((count) => count === 1);
+            const anySingleUse = Array.from(counts.values()).some(count => count === 1);
             if (anySingleUse) {
+
                 // remove all lines that contains pcFragColorX with single usage
                 const lines = source.split('\n');
                 const keepLines = [];
@@ -160,6 +163,7 @@ class Preprocessor {
     }
 
     static processArraySize(source, intDefines) {
+
         if (source !== null) {
             // replace lines containing "[intDefine]" with their values, so that we know the array size for WebGPU uniform buffer
             // example: weight[SAMPLES] => float weight[11] in case there was a "define SAMPLES 11" in the source code
@@ -172,12 +176,15 @@ class Preprocessor {
     }
 
     static injectDefines(source, injectDefines) {
+
         if (source !== null && injectDefines.size > 0) {
+
             // replace all instances of the injected defines with the value itself
             const lines = source.split('\n');
             injectDefines.forEach((value, key) => {
                 const regex = new RegExp(key, 'g');
                 for (let i = 0; i < lines.length; i++) {
+
                     // replace them on lines that do not contain a preprocessor directive (the define itself for example)
                     if (!lines[i].includes('#')) {
                         lines[i] = lines[i].replace(regex, value);
@@ -191,13 +198,13 @@ class Preprocessor {
     }
 
     static RemoveEmptyLines(source) {
-        if (source !== null) {
-            source = source
-                .split(/\r?\n/)
 
-                // convert lines with only white space into empty string
-                .map((line) => (line.trim() === '' ? '' : line))
-                .join('\n');
+        if (source !== null) {
+            source = source.split(/\r?\n/)
+
+            // convert lines with only white space into empty string
+            .map(line => (line.trim() === '' ? '' : line))
+            .join('\n');
 
             // remove more than 1 consecutive empty lines
             source = source.replace(/(\n\n){3,}/g, '\n\n');
@@ -221,6 +228,7 @@ class Preprocessor {
      * @returns {string|null} Returns preprocessed source code, or null if failed.
      */
     static _preprocess(source, defines = new Map(), injectDefines, includes, stripDefines) {
+
         const originalSource = source;
 
         // stack, storing info about ifdef blocks
@@ -231,16 +239,15 @@ class Preprocessor {
 
         let match;
         while ((match = KEYWORD.exec(source)) !== null && !error) {
+
             const keyword = match[1];
             switch (keyword) {
                 case 'define': {
+
                     // read the rest of the define line
                     DEFINE.lastIndex = match.index;
                     const define = DEFINE.exec(source);
-                    Debug.assert(
-                        define,
-                        `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`
-                    );
+                    Debug.assert(define, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
                     error ||= define === null;
                     const expression = define[1];
 
@@ -256,6 +263,7 @@ class Preprocessor {
                     let stripThisDefine = stripDefines;
 
                     if (keep) {
+
                         // replacement identifier (inside {}) - always remove it from code
                         const replacementDefine = identifier.startsWith('{') && identifier.endsWith('}');
                         if (replacementDefine) {
@@ -287,6 +295,7 @@ class Preprocessor {
                 }
 
                 case 'undef': {
+
                     // read the rest of the define line
                     UNDEF.lastIndex = match.index;
                     const undef = UNDEF.exec(source);
@@ -320,10 +329,7 @@ class Preprocessor {
                 case 'extension': {
                     EXTENSION.lastIndex = match.index;
                     const extension = EXTENSION.exec(source);
-                    Debug.assert(
-                        extension,
-                        `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`
-                    );
+                    Debug.assert(extension, `Invalid [${keyword}]: ${source.substring(match.index, match.index + 100)}...`);
                     error ||= extension === null;
                     if (extension) {
                         const identifier = extension[1];
@@ -346,6 +352,7 @@ class Preprocessor {
                 case 'ifdef':
                 case 'ifndef':
                 case 'if': {
+
                     // read the if line
                     IF.lastIndex = match.index;
                     const iff = IF.exec(source);
@@ -361,10 +368,10 @@ class Preprocessor {
 
                     // add info to the stack (to be handled later)
                     stack.push({
-                        anyKeep: result, // true if any branch was already accepted
-                        keep: result, // true if this branch is being taken
-                        start: match.index, // start index if IF line
-                        end: IF.lastIndex // end index of IF line
+                        anyKeep: result,        // true if any branch was already accepted
+                        keep: result,           // true if this branch is being taken
+                        start: match.index,     // start index if IF line
+                        end: IF.lastIndex       // end index of IF line
                     });
 
                     Debug.trace(TRACEID, `${keyword}: [${expression}] => ${result}`);
@@ -377,16 +384,14 @@ class Preprocessor {
                 case 'endif':
                 case 'else':
                 case 'elif': {
+
                     // match the endif
                     ENDIF.lastIndex = match.index;
                     const endif = ENDIF.exec(source);
 
                     const blockInfo = stack.pop();
                     if (!blockInfo) {
-                        console.error(
-                            `Shader preprocessing encountered "#${endif[1]}" without a preceding #if #ifdef #ifndef while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`,
-                            { source: originalSource }
-                        );
+                        console.error(`Shader preprocessing encountered "#${endif[1]}" without a preceding #if #ifdef #ifndef while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { source: originalSource });
                         error = true;
                         continue;
                     }
@@ -402,6 +407,7 @@ class Preprocessor {
                     // handle else if
                     const endifCommand = endif[1];
                     if (endifCommand === 'else' || endifCommand === 'elif') {
+
                         // if any branch was already accepted, all else branches need to fail regardless of the result
                         let result = false;
                         if (!blockInfo.anyKeep) {
@@ -433,10 +439,7 @@ class Preprocessor {
                     const include = INCLUDE.exec(source);
                     error ||= include === null;
                     if (!include) {
-                        Debug.assert(
-                            include,
-                            `Invalid [${keyword}] while preprocessing ${Preprocessor.sourceName}:\n${source.substring(match.index, match.index + 100)}...`
-                        );
+                        Debug.assert(include, `Invalid [${keyword}] while preprocessing ${Preprocessor.sourceName}:\n${source.substring(match.index, match.index + 100)}...`);
                         error = true;
                         continue;
                     }
@@ -447,9 +450,11 @@ class Preprocessor {
                     const keep = Preprocessor._keep(stack);
 
                     if (keep) {
+
                         // cut out the include line and replace it with the included string
                         let includeSource = includes?.get(identifier);
                         if (includeSource !== undefined) {
+
                             includeSource = this.stripComments(includeSource);
 
                             // handle second identifier specifying loop count
@@ -457,34 +462,27 @@ class Preprocessor {
                                 const countString = defines.get(countIdentifier);
                                 const count = parseFloat(countString);
                                 if (Number.isInteger(count)) {
+
                                     // add the include count times
                                     let result = '';
                                     for (let i = 0; i < count; i++) {
                                         result += includeSource.replace(LOOP_INDEX, String(i));
                                     }
                                     includeSource = result;
+
                                 } else {
-                                    console.error(
-                                        `Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`,
-                                        { originalSource: originalSource, source: source }
-                                    );
+                                    console.error(`Include Count identifier "${countIdentifier}" not resolved while preprocessing ${Preprocessor.sourceName} on line:\n ${source.substring(match.index, match.index + 100)}...`, { originalSource: originalSource, source: source });
                                     error = true;
                                 }
                             }
 
                             // replace the include by the included string
-                            source =
-                                source.substring(0, include.index - 1) +
-                                includeSource +
-                                source.substring(INCLUDE.lastIndex);
+                            source = source.substring(0, include.index - 1) + includeSource + source.substring(INCLUDE.lastIndex);
 
                             // process the just included test
                             KEYWORD.lastIndex = include.index - 1;
                         } else {
-                            console.error(
-                                `Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`,
-                                { originalSource: originalSource, source: source }
-                            );
+                            console.error(`Include "${identifier}" not resolved while preprocessing ${Preprocessor.sourceName}`, { originalSource: originalSource, source: source });
                             error = true;
                             continue;
                         }
@@ -497,9 +495,7 @@ class Preprocessor {
         }
 
         if (stack.length > 0) {
-            console.error(
-                `Shader preprocessing reached the end of the file without encountering the necessary #endif to close a preceding #if, #ifdef, or #ifndef block. ${Preprocessor.sourceName}`
-            );
+            console.error(`Shader preprocessing reached the end of the file without encountering the necessary #endif to close a preceding #if, #ifdef, or #ifndef block. ${Preprocessor.sourceName}`);
             error = true;
         }
 
@@ -569,26 +565,13 @@ class Preprocessor {
 
             let result = false;
             switch (operator) {
-                case '==':
-                    result = left === right;
-                    break;
-                case '!=':
-                    result = left !== right;
-                    break;
-                case '<':
-                    result = left < right;
-                    break;
-                case '<=':
-                    result = left <= right;
-                    break;
-                case '>':
-                    result = left > right;
-                    break;
-                case '>=':
-                    result = left >= right;
-                    break;
-                default:
-                    error = true;
+                case '==': result = left === right; break;
+                case '!=': result = left !== right; break;
+                case '<': result = left < right; break;
+                case '<=': result = left <= right; break;
+                case '>': result = left > right; break;
+                case '>=': result = left >= right; break;
+                default: error = true;
             }
 
             return { result, error };
@@ -678,10 +661,9 @@ class Preprocessor {
             error = error || subError;
 
             // Replace the parentheses expression with its result
-            processed =
-                processed.substring(0, deepestStart) +
-                (result ? 'true' : 'false') +
-                processed.substring(deepestEnd + 1);
+            processed = processed.substring(0, deepestStart) +
+                       (result ? 'true' : 'false') +
+                       processed.substring(deepestEnd + 1);
         }
 
         return { expression: processed, error };
@@ -720,6 +702,7 @@ class Preprocessor {
         // Step 1: Split by "||" to handle OR conditions
         const orSegments = processedExpr.split('||');
         for (const orSegment of orSegments) {
+
             // Step 2: Split each OR segment by "&&" to handle AND conditions
             const andSegments = orSegment.split('&&');
 

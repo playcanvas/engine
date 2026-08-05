@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #ifdef LIT_TANGENTS
     #define TBN_TANGENTS

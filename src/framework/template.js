@@ -41,8 +41,7 @@ class Template {
      * @returns {Entity} The root entity of the created instance.
      */
     instantiate() {
-        if (!this._templateRoot) {
-            // at first use, after scripts are loaded
+        if (!this._templateRoot) { // at first use, after scripts are loaded
             this._parseTemplate();
         }
 

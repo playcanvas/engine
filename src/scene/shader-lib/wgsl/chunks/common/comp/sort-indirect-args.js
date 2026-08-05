@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 // Writes up to 3 indirect dispatch slots for a compute-based sorter, using
 // sorter-provided metadata. Each slot occupies 3 consecutive u32 entries
 // (workgroup count x, y, z) in the dispatch buffer; this helper writes a 1D

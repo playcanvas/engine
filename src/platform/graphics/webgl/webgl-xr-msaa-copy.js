@@ -17,7 +17,7 @@ const _quadPrimitive = {
     indexed: true
 };
 
-const vsSrc = /* glsl */ `
+const vsSrc = /* glsl */`
     attribute vec2 vertex_position;
     varying vec2 pcTexCoord;
     void main() {
@@ -26,7 +26,7 @@ const vsSrc = /* glsl */ `
     }
 `;
 
-const fsSrc = /* glsl */ `
+const fsSrc = /* glsl */`
     uniform sampler2D pcSource;
     varying vec2 pcTexCoord;
     void main() {
@@ -95,15 +95,12 @@ class WebglXrMsaaCopy {
     _getShader() {
         if (!this._shader) {
             const device = this._device;
-            this._shader = new Shader(
-                device,
-                ShaderDefinitionUtils.createDefinition(device, {
-                    name: 'XrMsaaCopy',
-                    attributes: { vertex_position: SEMANTIC_POSITION },
-                    vertexCode: vsSrc,
-                    fragmentCode: fsSrc
-                })
-            );
+            this._shader = new Shader(device, ShaderDefinitionUtils.createDefinition(device, {
+                name: 'XrMsaaCopy',
+                attributes: { vertex_position: SEMANTIC_POSITION },
+                vertexCode: vsSrc,
+                fragmentCode: fsSrc
+            }));
 
             this._sourceId = device.scope.resolve('pcSource');
         }
@@ -133,13 +130,7 @@ class WebglXrMsaaCopy {
 
         // Create if not present.
         if (!this._scratchTex) {
-            this._scratchTex = Texture.createDataTexture2D(
-                device,
-                'XrMsaaScratch',
-                width,
-                height,
-                device.backBufferFormat
-            );
+            this._scratchTex = Texture.createDataTexture2D(device, 'XrMsaaScratch', width, height, device.backBufferFormat);
             this._scratchRt = new RenderTarget({
                 colorBuffer: this._scratchTex,
                 depth: false,

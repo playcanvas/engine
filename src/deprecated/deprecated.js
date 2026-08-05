@@ -4,16 +4,9 @@ import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 
 import {
-    BLENDMODE_CONSTANT,
-    BLENDMODE_ONE_MINUS_CONSTANT,
-    PIXELFORMAT_LA8,
-    PIXELFORMAT_RGB565,
-    PIXELFORMAT_RGBA5551,
-    PIXELFORMAT_RGBA4,
-    PIXELFORMAT_RGB8,
-    PIXELFORMAT_RGBA8,
-    PIXELFORMAT_SRGB8,
-    PIXELFORMAT_SRGBA8,
+    BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
+    PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_SRGB8, PIXELFORMAT_SRGBA8,
     SHADERLANGUAGE_GLSL
 } from '../platform/graphics/constants.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
@@ -45,17 +38,9 @@ import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
 import { ModelComponent } from '../framework/components/model/component.js';
 import {
-    BODYFLAG_KINEMATIC_OBJECT,
-    BODYFLAG_NORESPONSE_OBJECT,
-    BODYFLAG_STATIC_OBJECT,
-    BODYSTATE_ACTIVE_TAG,
-    BODYSTATE_DISABLE_DEACTIVATION,
-    BODYSTATE_DISABLE_SIMULATION,
-    BODYSTATE_ISLAND_SLEEPING,
-    BODYSTATE_WANTS_DEACTIVATION,
-    BODYTYPE_DYNAMIC,
-    BODYTYPE_KINEMATIC,
-    BODYTYPE_STATIC
+    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
+    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
+    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
@@ -96,56 +81,42 @@ export const CHUNKAPI_2_8 = '2.8';
 const _viewport = new Vec4();
 
 export function createSphere(device, opts) {
-    Debug.deprecated(
-        "createSphere is deprecated. Use 'Mesh.fromGeometry(device, new SphereGeometry(options));' format instead."
-    );
+    Debug.deprecated('createSphere is deprecated. Use \'Mesh.fromGeometry(device, new SphereGeometry(options));\' format instead.');
     return Mesh.fromGeometry(device, new SphereGeometry(opts));
 }
 
 export function createPlane(device, opts) {
-    Debug.deprecated(
-        "createPlane is deprecated. Use 'Mesh.fromGeometry(device, new PlaneGeometry(options));' format instead."
-    );
+    Debug.deprecated('createPlane is deprecated. Use \'Mesh.fromGeometry(device, new PlaneGeometry(options));\' format instead.');
     return Mesh.fromGeometry(device, new PlaneGeometry(opts));
 }
 
 export function createBox(device, opts) {
-    Debug.deprecated(
-        "createBox is deprecated. Use 'Mesh.fromGeometry(device, new BoxGeometry(options));' format instead."
-    );
+    Debug.deprecated('createBox is deprecated. Use \'Mesh.fromGeometry(device, new BoxGeometry(options));\' format instead.');
     return Mesh.fromGeometry(device, new BoxGeometry(opts));
 }
 
 export function createTorus(device, opts) {
-    Debug.deprecated(
-        "createTorus is deprecated. Use 'Mesh.fromGeometry(device, new TorusGeometry(options));' format instead."
-    );
+    Debug.deprecated('createTorus is deprecated. Use \'Mesh.fromGeometry(device, new TorusGeometry(options));\' format instead.');
     return Mesh.fromGeometry(device, new TorusGeometry(opts));
 }
 
 export function createCapsule(device, opts) {
-    Debug.deprecated(
-        "createCapsule is deprecated. Use 'Mesh.fromGeometry(device, new CapsuleGeometry(options));' format instead."
-    );
+    Debug.deprecated('createCapsule is deprecated. Use \'Mesh.fromGeometry(device, new CapsuleGeometry(options));\' format instead.');
     return Mesh.fromGeometry(device, new CapsuleGeometry(opts));
 }
 
 export function createCone(device, opts) {
-    Debug.deprecated(
-        "createCone is deprecated. Use 'Mesh.fromGeometry(device, new ConeGeometry(options));' format instead."
-    );
+    Debug.deprecated('createCone is deprecated. Use \'Mesh.fromGeometry(device, new ConeGeometry(options));\' format instead.');
     return Mesh.fromGeometry(device, new ConeGeometry(opts));
 }
 
 export function createCylinder(device, opts) {
-    Debug.deprecated(
-        "createCylinder is deprecated. Use 'Mesh.fromGeometry(device, new CylinderGeometry(options));' format instead."
-    );
+    Debug.deprecated('createCylinder is deprecated. Use \'Mesh.fromGeometry(device, new CylinderGeometry(options));\' format instead.');
     return Mesh.fromGeometry(device, new CylinderGeometry(opts));
 }
 
 export function createMesh(device, positions, opts = {}) {
-    Debug.deprecated("createMesh is deprecated. Use 'Mesh.fromGeometry(device, new Geometry());' format instead.");
+    Debug.deprecated('createMesh is deprecated. Use \'Mesh.fromGeometry(device, new Geometry());\' format instead.');
 
     const geom = new Geometry();
     geom.positions = positions;
@@ -162,9 +133,8 @@ export function createMesh(device, positions, opts = {}) {
 }
 
 export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
-    Debug.deprecated(
-        'drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.'
-    );
+
+    Debug.deprecated('drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.');
 
     // convert rect in normalized space to viewport in pixel space
     let viewport;
@@ -185,24 +155,17 @@ export const Node = AnimationNode;
 export const LitOptions = LitShaderOptions;
 
 // deprecated access to global shader chunks
-export const shaderChunks = new Proxy(
-    {},
-    {
-        get(target, prop) {
-            Debug.deprecated(
-                `Using shaderChunks to access global shader chunks is deprecated. Use ShaderChunks.get instead, for example: ShaderChunks.get(this.app.graphicsDevice, SHADERLANGUAGE_GLSL).get('${prop}');`
-            );
-            return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
-        },
-        set(target, prop, value) {
-            Debug.deprecated(
-                `Using shaderChunks to override global shader chunks is deprecated. Use ShaderChunks.get instead, for example: ShaderChunks.get(this.app.graphicsDevice, SHADERLANGUAGE_GLSL).set('${prop}');`
-            );
-            ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
-            return true;
-        }
+export const shaderChunks = new Proxy({}, {
+    get(target, prop) {
+        Debug.deprecated(`Using shaderChunks to access global shader chunks is deprecated. Use ShaderChunks.get instead, for example: ShaderChunks.get(this.app.graphicsDevice, SHADERLANGUAGE_GLSL).get('${prop}');`);
+        return ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).get(prop);
+    },
+    set(target, prop, value) {
+        Debug.deprecated(`Using shaderChunks to override global shader chunks is deprecated. Use ShaderChunks.get instead, for example: ShaderChunks.get(this.app.graphicsDevice, SHADERLANGUAGE_GLSL).set('${prop}');`);
+        ShaderChunks.get(getApplication().graphicsDevice, SHADERLANGUAGE_GLSL).set(prop, value);
+        return true;
     }
-);
+});
 
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('ForwardRenderer#renderComposition is deprecated. Use AppBase.renderComposition instead.');
@@ -253,16 +216,12 @@ Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
 
 Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
     get: function () {
-        Debug.deprecated(
-            'StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.'
-        );
+        Debug.deprecated('StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.');
         const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
         return this.anisotropyIntensity * sign;
     },
     set: function (value) {
-        Debug.deprecated(
-            'StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.'
-        );
+        Debug.deprecated('StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.');
         this.anisotropyIntensity = Math.abs(value);
         if (value >= 0) {
             this.anisotropyRotation = 0;
@@ -319,15 +278,11 @@ function _defineOption(name, newName) {
     if (name !== 'pass') {
         Object.defineProperty(StandardMaterialOptions.prototype, name, {
             get: function () {
-                Debug.deprecated(
-                    `Getting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`
-                );
+                Debug.deprecated(`Getting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`);
                 return this.litOptions[newName || name];
             },
             set: function (value) {
-                Debug.deprecated(
-                    `Setting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`
-                );
+                Debug.deprecated(`Setting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`);
                 this.litOptions[newName || name] = value;
             }
         });
@@ -352,9 +307,7 @@ AssetRegistry.prototype.getAssetById = function (id) {
 
 Object.defineProperty(XrInputSource.prototype, 'ray', {
     get: function () {
-        Debug.deprecated(
-            'XrInputSource#ray is deprecated. Use XrInputSource#getOrigin and XrInputSource#getDirection instead.'
-        );
+        Debug.deprecated('XrInputSource#ray is deprecated. Use XrInputSource#getOrigin and XrInputSource#getDirection instead.');
         return this._rayLocal;
     }
 });
@@ -490,16 +443,12 @@ AppBase.prototype.loadScene = function (url, callback) {
 };
 
 AppBase.prototype.loadSceneHierarchy = function (url, callback) {
-    Debug.deprecated(
-        'AppBase#loadSceneHierarchy is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneHierarchy instead.'
-    );
+    Debug.deprecated('AppBase#loadSceneHierarchy is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneHierarchy instead.');
     this.scenes.loadSceneHierarchy(url, callback);
 };
 
 AppBase.prototype.loadSceneSettings = function (url, callback) {
-    Debug.deprecated(
-        'AppBase#loadSceneSettings is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneSettings instead.'
-    );
+    Debug.deprecated('AppBase#loadSceneSettings is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneSettings instead.');
     this.scenes.loadSceneSettings(url, callback);
 };
 
@@ -525,9 +474,7 @@ RigidBodyComponent.prototype.syncBodyToEntity = function () {
 };
 
 RigidBodyComponentSystem.prototype.setGravity = function () {
-    Debug.deprecated(
-        'RigidBodyComponentSystem#setGravity is deprecated. Use RigidBodyComponentSystem#gravity instead.'
-    );
+    Debug.deprecated('RigidBodyComponentSystem#setGravity is deprecated. Use RigidBodyComponentSystem#gravity instead.');
 
     if (arguments.length === 1) {
         this.gravity.copy(arguments[0]);

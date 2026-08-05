@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 attribute vec3 vertex_outlineParameters;
 attribute vec3 vertex_shadowParameters;
 

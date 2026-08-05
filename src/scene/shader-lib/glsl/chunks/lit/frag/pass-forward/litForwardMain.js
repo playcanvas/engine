@@ -1,5 +1,5 @@
 // main shader entry point for the lit material for forward rendering
-export default /* glsl */ `
+export default /* glsl */`
 
 void main(void) {
 

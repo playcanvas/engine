@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 #ifndef VIEWMATRIX
     #define VIEWMATRIX
     uniform mat4 matrix_view;

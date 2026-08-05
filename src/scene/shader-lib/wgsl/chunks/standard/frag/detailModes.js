@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 
 #ifndef _DETAILMODES_INCLUDED_
 #define _DETAILMODES_INCLUDED_

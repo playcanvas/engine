@@ -76,6 +76,7 @@ class SceneParser {
     _setPosRotScale(entity, data, compressed) {
         if (compressed) {
             CompressUtils.setCompressedPRS(entity, data, compressed);
+
         } else {
             const p = data.position;
             const r = data.rotation;
@@ -108,9 +109,7 @@ class SceneParser {
             if (children[i]) {
                 children[i] = this._openComponentData(children[i], entities);
             } else {
-                Debug.warn(
-                    `Scene data is invalid where a child under "${entity.name}" Entity doesn't exist. Please check the scene data.`
-                );
+                Debug.warn(`Scene data is invalid where a child under "${entity.name}" Entity doesn't exist. Please check the scene data.`);
             }
         }
 

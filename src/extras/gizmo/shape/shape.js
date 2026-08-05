@@ -300,7 +300,8 @@ class Shape {
      * @returns {void}
      */
     hover(state) {
-        const color = this._disabled ? this._disabledColor : state ? this._hoverColor : this._defaultColor;
+        const color = this._disabled ?
+            this._disabledColor : state ? this._hoverColor : this._defaultColor;
         this._material.setParameter('uColor', color.toArray());
     }
 

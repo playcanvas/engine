@@ -3,8 +3,7 @@ import { ReadStream } from '../../../core/read-stream.js';
 
 import {
     TEXHINT_ASSET,
-    ADDRESS_REPEAT,
-    ADDRESS_CLAMP_TO_EDGE,
+    ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
     TEXTURETYPE_RGBE
@@ -78,7 +77,7 @@ class HdrParser extends TextureParser {
         }
 
         // read header variables
-        const variables = {};
+        const variables = { };
         while (true) {
             const line = readStream.readLine();
             if (line.length === 0) {
@@ -131,7 +130,7 @@ class HdrParser extends TextureParser {
 
         // check first scanline width to determine whether the file is RLE
         readStream.readArray(rgbe);
-        if (rgbe[0] !== 2 || rgbe[1] !== 2 || (rgbe[2] & 0x80) !== 0) {
+        if ((rgbe[0] !== 2 || rgbe[1] !== 2 || (rgbe[2] & 0x80) !== 0)) {
             // not RLE
             readStream.skip(-4);
             return this._readPixelsFlat(readStream, width, height);
@@ -191,9 +190,7 @@ class HdrParser extends TextureParser {
     }
 
     _readPixelsFlat(readStream, width, height) {
-        return readStream.remainingBytes === width * height * 4
-            ? new Uint8Array(readStream.arraybuffer, readStream.offset)
-            : null;
+        return readStream.remainingBytes === width * height * 4 ? new Uint8Array(readStream.arraybuffer, readStream.offset) : null;
     }
 }
 

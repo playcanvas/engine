@@ -4,7 +4,8 @@
  * @ignore
  */
 class NullBindGroupFormat {
-    destroy() {}
+    destroy() {
+    }
 }
 
 export { NullBindGroupFormat };

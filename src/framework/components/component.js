@@ -79,7 +79,7 @@ class Component extends EventHandler {
         schema.forEach((descriptor) => {
             // If the property descriptor is an object, it should have a `name`
             // member. If not, it should just be the plain property name.
-            const name = typeof descriptor === 'object' ? descriptor.name : descriptor;
+            const name = (typeof descriptor === 'object') ? descriptor.name : descriptor;
 
             Object.defineProperty(obj, name, {
                 get: function () {
@@ -117,13 +117,16 @@ class Component extends EventHandler {
     }
 
     /** @ignore */
-    onEnable() {}
+    onEnable() {
+    }
 
     /** @ignore */
-    onDisable() {}
+    onDisable() {
+    }
 
     /** @ignore */
-    onPostStateChange() {}
+    onPostStateChange() {
+    }
 
     /**
      * Access the component data directly. Usually you should access the data properties via the

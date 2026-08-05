@@ -7,12 +7,7 @@ import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { AssetListLoader } from '../../../../src/framework/asset/asset-list-loader.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
-import {
-    BLEND_NORMAL,
-    EMITTERSHAPE_BOX,
-    LAYERID_WORLD,
-    PARTICLEORIENTATION_SCREEN
-} from '../../../../src/scene/constants.js';
+import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_WORLD, PARTICLEORIENTATION_SCREEN } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -25,16 +20,11 @@ describe('ParticleSystemComponent', function () {
             new Asset('Box', 'model', {
                 url: '/test/assets/cube/cube.json'
             }),
-            new Asset(
-                'ColorMap',
-                'texture',
-                {
-                    url: '/test/assets/test.png'
-                },
-                {
-                    srgb: true
-                }
-            ),
+            new Asset('ColorMap', 'texture', {
+                url: '/test/assets/test.png'
+            }, {
+                srgb: true
+            }),
             new Asset('NormalMap', 'texture', {
                 url: '/test/assets/test.png'
             })
@@ -171,14 +161,7 @@ describe('ParticleSystemComponent', function () {
             emitterExtents: [1, 2, 3],
             wrapBounds: [4, 5, 6],
             alphaGraph: { type: CURVE_SPLINE, keys: [0, 0, 1, 1] },
-            colorGraph: {
-                type: CURVE_SPLINE,
-                keys: [
-                    [0, 0, 1, 1],
-                    [0, 0, 1, 1],
-                    [0, 0, 1, 1]
-                ]
-            }
+            colorGraph: { type: CURVE_SPLINE, keys: [[0, 0, 1, 1], [0, 0, 1, 1], [0, 0, 1, 1]] }
         });
 
         const c = e.particlesystem;
@@ -286,14 +269,7 @@ describe('ParticleSystemComponent', function () {
             loop: false,
             emitterExtents: [1, 2, 3],
             alphaGraph: { type: CURVE_SPLINE, keys: [0, 0, 1, 1] },
-            colorGraph: {
-                type: CURVE_SPLINE,
-                keys: [
-                    [0, 0, 1, 1],
-                    [0, 0, 1, 1],
-                    [0, 0, 1, 1]
-                ]
-            }
+            colorGraph: { type: CURVE_SPLINE, keys: [[0, 0, 1, 1], [0, 0, 1, 1], [0, 0, 1, 1]] }
         });
         app.root.addChild(e);
 
@@ -342,15 +318,15 @@ describe('ParticleSystemComponent', function () {
         // NullGraphicsDevice creates no emitter, so stub one to exercise the time logic
         c.emitter = { loop: false, simTimeTotal: 0, endTime: 5 };
 
-        expect(c.isPlaying()).to.be.true; // within the window
+        expect(c.isPlaying()).to.be.true;       // within the window
 
         c.emitter.simTimeTotal = 5;
-        expect(c.isPlaying()).to.be.true; // boundary is still playing
+        expect(c.isPlaying()).to.be.true;       // boundary is still playing
 
         c.emitter.simTimeTotal = 5.001;
-        expect(c.isPlaying()).to.be.false; // simulation has passed endTime
+        expect(c.isPlaying()).to.be.false;      // simulation has passed endTime
 
-        c.emitter = null; // drop the stub before teardown
+        c.emitter = null;                       // drop the stub before teardown
     });
 
     it('isPlaying() is true for a looping emitter regardless of elapsed time', function () {
@@ -363,7 +339,7 @@ describe('ParticleSystemComponent', function () {
 
         expect(c.isPlaying()).to.be.true;
 
-        c.emitter = null; // drop the stub before teardown
+        c.emitter = null;                       // drop the stub before teardown
     });
 
     it('isPlaying() is false while paused even within the end time', function () {
@@ -377,7 +353,7 @@ describe('ParticleSystemComponent', function () {
 
         expect(c.isPlaying()).to.be.false;
 
-        c.emitter = null; // drop the stub before teardown
+        c.emitter = null;                       // drop the stub before teardown
     });
 
     it('ColorMap Asset unbinds on destroy', function () {

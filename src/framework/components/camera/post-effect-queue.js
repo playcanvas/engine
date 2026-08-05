@@ -1,9 +1,4 @@
-import {
-    PIXELFORMAT_RGBA16F,
-    PIXELFORMAT_RGBA32F,
-    PIXELFORMAT_RGBA8,
-    PIXELFORMAT_SRGBA8
-} from '../../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
@@ -101,14 +96,14 @@ class PostEffectQueue {
      * @private
      */
     _createOffscreenTarget(useDepth, hdr) {
+
         const device = this.app.graphicsDevice;
 
         // use srgb LDR format if backbuffer is srgb
         const outputRt = this.destinationRenderTarget ?? device.backBuffer;
         const srgb = outputRt.isColorBufferSrgb(0);
 
-        const format =
-            (hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true)) ??
+        const format = (hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true)) ??
             (srgb ? PIXELFORMAT_SRGBA8 : PIXELFORMAT_RGBA8);
         const name = `${this.camera.entity.name}-posteffect-${this.effects.length}`;
 
@@ -177,6 +172,7 @@ class PostEffectQueue {
      * @param {PostEffect} effect - The post effect to remove.
      */
     removeEffect(effect) {
+
         // find index of effect
         let index = -1;
         for (let i = 0, len = this.effects.length; i < len; i++) {
@@ -187,10 +183,11 @@ class PostEffectQueue {
         }
 
         if (index >= 0) {
-            if (index > 0) {
+            if (index > 0)  {
                 // connect the previous effect with the effect after the one we're about to remove
-                this.effects[index - 1].outputTarget =
-                    index + 1 < this.effects.length ? this.effects[index + 1].inputTarget : null;
+                this.effects[index - 1].outputTarget = (index + 1) < this.effects.length ?
+                    this.effects[index + 1].inputTarget :
+                    null;
             } else {
                 if (this.effects.length > 1) {
                     // if we removed the first effect then make sure that
@@ -295,10 +292,12 @@ class PostEffectQueue {
 
             // callback when postprocessing takes place
             this.camera.onPostprocessing = () => {
+
                 if (this.enabled) {
                     let rect = null;
                     const len = this.effects.length;
                     if (len) {
+
                         for (let i = 0; i < len; i++) {
                             const fx = this.effects[i];
 
@@ -375,7 +374,8 @@ class PostEffectQueue {
 
         for (let i = 0, len = effects.length; i < len; i++) {
             const fx = effects[i];
-            if (fx.inputTarget.width !== desiredWidth || fx.inputTarget.height !== desiredHeight) {
+            if (fx.inputTarget.width !== desiredWidth ||
+                fx.inputTarget.height !== desiredHeight)  {
                 this._resizeOffscreenTarget(fx.inputTarget);
             }
         }

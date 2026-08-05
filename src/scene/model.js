@@ -103,6 +103,7 @@ class Model {
      * const clonedModel = model.clone();
      */
     clone() {
+
         // Duplicate the node hierarchy
         const srcNodes = [];
         const cloneNodes = [];

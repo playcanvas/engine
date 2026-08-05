@@ -28,8 +28,8 @@ import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
  * @property {PlyProperty[]} properties - The properties.
  */
 
-const magicBytes = new Uint8Array([112, 108, 121, 10]); // ply\n
-const endHeaderBytes = new Uint8Array([10, 101, 110, 100, 95, 104, 101, 97, 100, 101, 114, 10]); // \nend_header\n
+const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
+const endHeaderBytes = new Uint8Array([10, 101, 110, 100, 95, 104, 101, 97, 100, 101, 114, 10]);        // \nend_header\n
 
 const dataTypeMap = new Map([
     ['char', Int8Array],
@@ -130,51 +130,35 @@ class StreamBuf {
 
     // helpers for extracting data from head
     getInt8() {
-        const result = this.view.getInt8(this.head);
-        this.head++;
-        return result;
+        const result = this.view.getInt8(this.head); this.head++; return result;
     }
 
     getUint8() {
-        const result = this.view.getUint8(this.head);
-        this.head++;
-        return result;
+        const result = this.view.getUint8(this.head); this.head++; return result;
     }
 
     getInt16() {
-        const result = this.view.getInt16(this.head, true);
-        this.head += 2;
-        return result;
+        const result = this.view.getInt16(this.head, true); this.head += 2; return result;
     }
 
     getUint16() {
-        const result = this.view.getUint16(this.head, true);
-        this.head += 2;
-        return result;
+        const result = this.view.getUint16(this.head, true); this.head += 2; return result;
     }
 
     getInt32() {
-        const result = this.view.getInt32(this.head, true);
-        this.head += 4;
-        return result;
+        const result = this.view.getInt32(this.head, true); this.head += 4; return result;
     }
 
     getUint32() {
-        const result = this.view.getUint32(this.head, true);
-        this.head += 4;
-        return result;
+        const result = this.view.getUint32(this.head, true); this.head += 4; return result;
     }
 
     getFloat32() {
-        const result = this.view.getFloat32(this.head, true);
-        this.head += 4;
-        return result;
+        const result = this.view.getFloat32(this.head, true); this.head += 4; return result;
     }
 
     getFloat64() {
-        const result = this.view.getFloat64(this.head, true);
-        this.head += 8;
-        return result;
+        const result = this.view.getFloat64(this.head, true); this.head += 8; return result;
     }
 }
 
@@ -226,58 +210,40 @@ const parseHeader = (lines) => {
 // return true if the array of elements references a compressed ply file
 const isCompressedPly = (elements) => {
     const chunkProperties = [
-        'min_x',
-        'min_y',
-        'min_z',
-        'max_x',
-        'max_y',
-        'max_z',
-        'min_scale_x',
-        'min_scale_y',
-        'min_scale_z',
-        'max_scale_x',
-        'max_scale_y',
-        'max_scale_z',
-        'min_r',
-        'min_g',
-        'min_b',
-        'max_r',
-        'max_g',
-        'max_b'
+        'min_x', 'min_y', 'min_z',
+        'max_x', 'max_y', 'max_z',
+        'min_scale_x', 'min_scale_y', 'min_scale_z',
+        'max_scale_x', 'max_scale_y', 'max_scale_z',
+        'min_r', 'min_g', 'min_b',
+        'max_r', 'max_g', 'max_b'
     ];
 
-    const vertexProperties = ['packed_position', 'packed_rotation', 'packed_scale', 'packed_color'];
+    const vertexProperties = [
+        'packed_position', 'packed_rotation', 'packed_scale', 'packed_color'
+    ];
 
     const shProperties = new Array(45).fill('').map((_, i) => `f_rest_${i}`);
 
     const hasBaseElements = () => {
-        return (
-            elements[0].name === 'chunk' &&
-            elements[0].properties.every((p, i) => p.name === chunkProperties[i] && p.type === 'float') &&
-            elements[1].name === 'vertex' &&
-            elements[1].properties.every((p, i) => p.name === vertexProperties[i] && p.type === 'uint')
-        );
+        return elements[0].name === 'chunk' &&
+               elements[0].properties.every((p, i) => p.name === chunkProperties[i] && p.type === 'float') &&
+               elements[1].name === 'vertex' &&
+               elements[1].properties.every((p, i) => p.name === vertexProperties[i] && p.type === 'uint');
     };
 
     const hasSHElements = () => {
-        return (
-            elements[2].name === 'sh' &&
-            [9, 24, 45].indexOf(elements[2].properties.length) !== -1 &&
-            elements[2].properties.every((p, i) => p.name === shProperties[i] && p.type === 'uchar')
-        );
+        return elements[2].name === 'sh' &&
+               [9, 24, 45].indexOf(elements[2].properties.length) !== -1 &&
+               elements[2].properties.every((p, i) => p.name === shProperties[i] && p.type === 'uchar');
     };
 
-    return (
-        (elements.length === 2 && hasBaseElements()) || (elements.length === 3 && hasBaseElements() && hasSHElements())
-    );
+    return (elements.length === 2 && hasBaseElements()) || (elements.length === 3 && hasBaseElements() && hasSHElements());
 };
 
 const isFloatPly = (elements) => {
-    return (
-        elements.length === 1 &&
-        elements[0].name === 'vertex' &&
-        elements[0].properties.every((p) => p.type === 'float')
-    );
+    return elements.length === 1 &&
+           elements[0].name === 'vertex' &&
+           elements[0].properties.every(p => p.type === 'float');
 };
 
 // read the data of a compressed ply file
@@ -333,7 +299,7 @@ const readCompressedPly = async (streamBuf, elements, comments) => {
     // read sh data
     if (elements.length === 3) {
         // allocate memory for 48 coefficients per gaussian
-        const texStorageSize = storageSize * 16; // RGBA32U per texel
+        const texStorageSize = storageSize * 16;            // RGBA32U per texel
         const shData0 = new Uint8Array(texStorageSize);
         const shData1 = new Uint8Array(texStorageSize);
         const shData2 = new Uint8Array(texStorageSize);
@@ -385,7 +351,7 @@ const readFloatPly = async (streamBuf, elements, comments) => {
     const element = elements[0];
     const properties = element.properties;
     const numProperties = properties.length;
-    const storage = properties.map((p) => p.storage);
+    const storage  = properties.map(p => p.storage);
     const inputSize = properties.reduce((a, p) => a + p.byteSize, 0);
     let vertexIdx = 0;
     let floatData;
@@ -430,48 +396,23 @@ const readGeneralPly = async (streamBuf, elements, comments) => {
         // calculate the size of an input element record
         const inputSize = element.properties.reduce((a, p) => a + p.byteSize, 0);
         const propertyParsingFunctions = element.properties.map((p) => {
+            /* eslint-disable brace-style */
             if (p.storage) {
                 switch (p.type) {
-                    case 'char':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getInt8();
-                        };
-                    case 'uchar':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getUint8();
-                        };
-                    case 'short':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getInt16();
-                        };
-                    case 'ushort':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getUint16();
-                        };
-                    case 'int':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getInt32();
-                        };
-                    case 'uint':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getUint32();
-                        };
-                    case 'float':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getFloat32();
-                        };
-                    case 'double':
-                        return (streamBuf, c) => {
-                            p.storage[c] = streamBuf.getFloat64();
-                        };
-                    default:
-                        throw new Error(`Unsupported property data type '${p.type}' in ply header`);
+                    case 'char':   return (streamBuf, c) => { p.storage[c] = streamBuf.getInt8(); };
+                    case 'uchar':  return (streamBuf, c) => { p.storage[c] = streamBuf.getUint8(); };
+                    case 'short':  return (streamBuf, c) => { p.storage[c] = streamBuf.getInt16(); };
+                    case 'ushort': return (streamBuf, c) => { p.storage[c] = streamBuf.getUint16(); };
+                    case 'int':    return (streamBuf, c) => { p.storage[c] = streamBuf.getInt32(); };
+                    case 'uint':   return (streamBuf, c) => { p.storage[c] = streamBuf.getUint32(); };
+                    case 'float':  return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat32(); };
+                    case 'double': return (streamBuf, c) => { p.storage[c] = streamBuf.getFloat64(); };
+                    default: throw new Error(`Unsupported property data type '${p.type}' in ply header`);
                 }
             } else {
-                return (streamBuf) => {
-                    streamBuf.head += p.byteSize;
-                };
+                return (streamBuf) => { streamBuf.head += p.byteSize; };
             }
+            /* eslint-enable brace-style */
         });
         let c = 0;
 
@@ -574,7 +515,9 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
     }
 
     // decode buffer header text and split into lines and remove comments
-    const lines = new TextDecoder('ascii').decode(streamBuf.data.subarray(0, headerLength)).split('\n');
+    const lines = new TextDecoder('ascii')
+    .decode(streamBuf.data.subarray(0, headerLength))
+    .split('\n');
 
     // decode header and build element and property list
     const { elements, format, comments } = parseHeader(lines);
@@ -600,7 +543,7 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
             e.properties.forEach((p) => {
                 const storageType = dataTypeMap.get(p.type);
                 if (storageType) {
-                    const storage = !propertyFilter || propertyFilter(p.name) ? new storageType(e.count) : null;
+                    const storage = (!propertyFilter || propertyFilter(p.name)) ? new storageType(e.count) : null;
                     p.storage = storage;
                 }
             });
@@ -619,7 +562,7 @@ const readPly = async (reader, propertyFilter = null, progressFunc = null) => {
 };
 
 // by default load everything
-const defaultElementFilter = (val) => true;
+const defaultElementFilter = val => true;
 
 class PlyParser {
     /** @type {AppBase} */
@@ -656,16 +599,12 @@ class PlyParser {
                 const totalLength = parseInt(response.headers.get('content-length') ?? '0', 10);
                 let totalReceived = 0;
 
-                const data = await readPly(
-                    response.body.getReader(),
-                    asset.data.elementFilter ?? defaultElementFilter,
-                    (bytes) => {
-                        totalReceived += bytes;
-                        if (asset) {
-                            asset.fire('progress', totalReceived, totalLength);
-                        }
+                const data = await readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter, (bytes) => {
+                    totalReceived += bytes;
+                    if (asset) {
+                        asset.fire('progress', totalReceived, totalLength);
                     }
-                );
+                });
 
                 // allow application to process the data
                 asset.fire('load:data', data);
@@ -679,12 +618,9 @@ class PlyParser {
 
                 // construct the resource
                 const prepareCenters = gsplatCentersEnabledAtLoad;
-                const resource =
-                    data.isCompressed && !asset.data.decompress
-                        ? new GSplatCompressedResource(this.app.graphicsDevice, data, { prepareCenters })
-                        : new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data, {
-                              prepareCenters
-                          });
+                const resource = (data.isCompressed && !asset.data.decompress) ?
+                    new GSplatCompressedResource(this.app.graphicsDevice, data, { prepareCenters }) :
+                    new GSplatResource(this.app.graphicsDevice, data.isCompressed ? data.decompress() : data, { prepareCenters });
 
                 callback(null, resource);
             }

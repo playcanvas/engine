@@ -1,8 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import {
-    standardMaterialCubemapParameters,
-    standardMaterialTextureParameters
-} from '../../scene/materials/standard-material-parameters.js';
+import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { AssetReference } from '../asset/asset-reference.js';
 import { JsonStandardMaterialParser } from '../parsers/material/json-standard-material.js';
@@ -111,6 +108,7 @@ class MaterialHandler extends ResourceHandler {
 
     // assign a placeholder texture while waiting for one to load
     _assignPlaceholderTexture(parameterName, materialAsset) {
+
         materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName);
     }
 
@@ -140,7 +138,7 @@ class MaterialHandler extends ResourceHandler {
         // set prefiltered textures
         if (parameterName === 'cubeMap') {
             const prefiltered = textures.slice(1);
-            if (prefiltered.every((t) => t)) {
+            if (prefiltered.every(t => t)) {
                 materialAsset.resource.prefilteredCubemaps = prefiltered;
             } else if (prefiltered[0]) {
                 materialAsset.resource.envAtlas = prefiltered[0];
@@ -172,7 +170,7 @@ class MaterialHandler extends ResourceHandler {
 
         const material = materialAsset.resource;
 
-        const pathMapping = data.mappingFormat === 'path';
+        const pathMapping = (data.mappingFormat === 'path');
 
         const TEXTURES = standardMaterialTextureParameters;
 
@@ -194,18 +192,12 @@ class MaterialHandler extends ResourceHandler {
 
             if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {
                 if (!assetReference) {
-                    assetReference = new AssetReference(
-                        name,
-                        materialAsset,
-                        assets,
-                        {
-                            load: this._onTextureLoad,
-                            add: this._onTextureAdd,
-                            remove: this._onTextureRemoveOrUnload,
-                            unload: this._onTextureRemoveOrUnload
-                        },
-                        this
-                    );
+                    assetReference = new AssetReference(name, materialAsset, assets, {
+                        load: this._onTextureLoad,
+                        add: this._onTextureAdd,
+                        remove: this._onTextureRemoveOrUnload,
+                        unload: this._onTextureRemoveOrUnload
+                    }, this);
 
                     material._assetReferences[name] = assetReference;
                 }
@@ -254,18 +246,12 @@ class MaterialHandler extends ResourceHandler {
             // if we have a asset id and the prefiltered cubemap data is not set
             if (data[name] && !materialAsset.data.prefilteredCubeMap128) {
                 if (!assetReference) {
-                    assetReference = new AssetReference(
-                        name,
-                        materialAsset,
-                        assets,
-                        {
-                            load: this._onCubemapLoad,
-                            add: this._onCubemapAdd,
-                            remove: this._onCubemapRemoveOrUnload,
-                            unload: this._onCubemapRemoveOrUnload
-                        },
-                        this
-                    );
+                    assetReference = new AssetReference(name, materialAsset, assets, {
+                        load: this._onCubemapLoad,
+                        add: this._onCubemapAdd,
+                        remove: this._onCubemapRemoveOrUnload,
+                        unload: this._onCubemapRemoveOrUnload
+                    }, this);
 
                     material._assetReferences[name] = assetReference;
                 }
@@ -285,6 +271,8 @@ class MaterialHandler extends ResourceHandler {
                     assets.load(assetReference.asset);
                 }
             }
+
+
         }
 
         // call to re-initialize material after all textures assigned

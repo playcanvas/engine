@@ -3,7 +3,9 @@ import { expect } from 'chai';
 import { SetUtils } from '../../src/core/set-utils.js';
 
 describe('SetUtils', function () {
+
     describe('#equals', function () {
+
         it('returns true for equal sets with same elements', function () {
             const setA = new Set([1, 2, 3]);
             const setB = new Set([1, 2, 3]);
@@ -68,5 +70,7 @@ describe('SetUtils', function () {
             const setB = new Set([obj2, obj3]);
             expect(SetUtils.equals(setA, setB)).to.be.false;
         });
+
     });
+
 });

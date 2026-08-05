@@ -614,17 +614,7 @@ class ElementInput {
             const oldTouchInfo = this._touchedElements[touch.identifier];
 
             if (newTouchInfo && (!oldTouchInfo || newTouchInfo.element !== oldTouchInfo.element)) {
-                this._fireEvent(
-                    event.type,
-                    new ElementTouchEvent(
-                        event,
-                        newTouchInfo.element,
-                        newTouchInfo.camera,
-                        newTouchInfo.x,
-                        newTouchInfo.y,
-                        touch
-                    )
-                );
+                this._fireEvent(event.type, new ElementTouchEvent(event, newTouchInfo.element, newTouchInfo.camera, newTouchInfo.x, newTouchInfo.y, touch));
                 this._touchesForWhichTouchLeaveHasFired[touch.identifier] = false;
             }
         }
@@ -669,10 +659,12 @@ class ElementInput {
             for (let c = cameras.length - 1; c >= 0; c--) {
                 const hovered = this._getTargetElementByCoords(cameras[c], coords.x, coords.y);
                 if (hovered === element) {
+
                     if (!this._clickedEntities[element.entity.guid]) {
                         this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
                         this._clickedEntities[element.entity.guid] = Date.now();
                     }
+
                 }
             }
 
@@ -698,21 +690,8 @@ class ElementInput {
                 const coords = getTouchTargetCoords(touch);
 
                 // Fire touchleave if we've left the previously touched element
-                if (
-                    (!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) &&
-                    !this._touchesForWhichTouchLeaveHasFired[touch.identifier]
-                ) {
-                    this._fireEvent(
-                        'touchleave',
-                        new ElementTouchEvent(
-                            event,
-                            oldTouchInfo.element,
-                            oldTouchInfo.camera,
-                            coords.x,
-                            coords.y,
-                            touch
-                        )
-                    );
+                if ((!newTouchInfo || newTouchInfo.element !== oldTouchInfo.element) && !this._touchesForWhichTouchLeaveHasFired[touch.identifier]) {
+                    this._fireEvent('touchleave', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
 
                     // Flag that touchleave has been fired for this touch, so that we don't
                     // re-fire it on the next touchmove. This is required because touchmove
@@ -723,10 +702,7 @@ class ElementInput {
                     this._touchesForWhichTouchLeaveHasFired[touch.identifier] = true;
                 }
 
-                this._fireEvent(
-                    'touchmove',
-                    new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch)
-                );
+                this._fireEvent('touchmove', new ElementTouchEvent(event, oldTouchInfo.element, oldTouchInfo.camera, coords.x, coords.y, touch));
             }
         }
     }
@@ -757,16 +733,10 @@ class ElementInput {
 
         // if there was a pressed element, it takes full priority of 'move' and 'up' events
         if ((eventType === 'mousemove' || eventType === 'mouseup') && this._pressedElement) {
-            this._fireEvent(
-                eventType,
-                new ElementMouseEvent(event, this._pressedElement, camera, targetX, targetY, this._lastX, this._lastY)
-            );
+            this._fireEvent(eventType, new ElementMouseEvent(event, this._pressedElement, camera, targetX, targetY, this._lastX, this._lastY));
         } else if (element) {
             // otherwise, fire it to the currently hovered event
-            this._fireEvent(
-                eventType,
-                new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY)
-            );
+            this._fireEvent(eventType, new ElementMouseEvent(event, element, camera, targetX, targetY, this._lastX, this._lastY));
 
             if (eventType === 'mousedown') {
                 this._pressedElement = element;
@@ -776,26 +746,12 @@ class ElementInput {
         if (lastHovered !== this._hoveredElement) {
             // mouseleave event
             if (lastHovered) {
-                this._fireEvent(
-                    'mouseleave',
-                    new ElementMouseEvent(event, lastHovered, camera, targetX, targetY, this._lastX, this._lastY)
-                );
+                this._fireEvent('mouseleave', new ElementMouseEvent(event, lastHovered, camera, targetX, targetY, this._lastX, this._lastY));
             }
 
             // mouseenter event
             if (this._hoveredElement) {
-                this._fireEvent(
-                    'mouseenter',
-                    new ElementMouseEvent(
-                        event,
-                        this._hoveredElement,
-                        camera,
-                        targetX,
-                        targetY,
-                        this._lastX,
-                        this._lastY
-                    )
-                );
+                this._fireEvent('mouseenter', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
             }
         }
 
@@ -816,18 +772,7 @@ class ElementInput {
                     delete this._clickedEntities[guid];
                 }
                 if (fireClick) {
-                    this._fireEvent(
-                        'click',
-                        new ElementMouseEvent(
-                            event,
-                            this._hoveredElement,
-                            camera,
-                            targetX,
-                            targetY,
-                            this._lastX,
-                            this._lastY
-                        )
-                    );
+                    this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                 }
             }
             this._pressedElement = null;
@@ -911,10 +856,8 @@ class ElementInput {
         }
 
         if (hoveredBefore !== hoveredNow) {
-            if (hoveredBefore)
-                this._fireEvent('selectleave', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
-            if (hoveredNow)
-                this._fireEvent('selectenter', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
+            if (hoveredBefore) this._fireEvent('selectleave', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            if (hoveredNow) this._fireEvent('selectenter', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
         const pressed = this._selectedPressedElements[inputSource.id];
@@ -924,8 +867,7 @@ class ElementInput {
 
         if (eventType === 'selectstart') {
             this._selectedPressedElements[inputSource.id] = hoveredNow;
-            if (hoveredNow)
-                this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
+            if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
         if (!inputSource.elementInput && pressed) {
@@ -971,8 +913,8 @@ class ElementInput {
         const rect = this._target.getBoundingClientRect();
         const left = Math.floor(rect.left);
         const top = Math.floor(rect.top);
-        targetX = event.clientX - left;
-        targetY = event.clientY - top;
+        targetX = (event.clientX - left);
+        targetY = (event.clientY - top);
     }
 
     _sortElements(a, b) {
@@ -1010,10 +952,7 @@ class ElementInput {
         // 3d ray is copied from input ray
         rayA.origin.copy(ray.origin);
         rayA.direction.copy(ray.direction);
-        rayA.end
-            .copy(rayA.direction)
-            .mulScalar(camera.farClip * 2)
-            .add(rayA.origin);
+        rayA.end.copy(rayA.direction).mulScalar(camera.farClip * 2).add(rayA.origin);
         const ray3d = rayA;
 
         // screen-space ray is built from input ray's origin, converted to screen-space
@@ -1034,7 +973,7 @@ class ElementInput {
             const element = this._elements[i];
 
             // check if any of the layers this element renders to is being rendered by the camera
-            if (!element.layers.some((v) => camera.layersSet.has(v))) {
+            if (!element.layers.some(v => camera.layersSet.has(v))) {
                 continue;
             }
 
@@ -1086,13 +1025,15 @@ class ElementInput {
         const cameraBottom = (1 - camera.rect.y) * sh;
         const cameraTop = cameraBottom - cameraHeight;
 
-        let _x = (x * sw) / this._target.clientWidth;
-        let _y = (y * sh) / this._target.clientHeight;
+        let _x = x * sw / this._target.clientWidth;
+        let _y = y * sh / this._target.clientHeight;
 
-        if (_x >= cameraLeft && _x <= cameraRight && _y <= cameraBottom && _y >= cameraTop) {
+        if (_x >= cameraLeft && _x <= cameraRight &&
+            _y <= cameraBottom && _y >= cameraTop) {
+
             // limit window coords to camera rect coords
-            _x = (sw * (_x - cameraLeft)) / cameraWidth;
-            _y = (sh * (_y - cameraTop)) / cameraHeight;
+            _x = sw * (_x - cameraLeft) / cameraWidth;
+            _y = sh * (_y - cameraTop) / cameraHeight;
 
             // reverse _y
             _y = sh - _y;
@@ -1122,10 +1063,12 @@ class ElementInput {
         let _y = y;
 
         // check window coords are within camera rect
-        if (x >= cameraLeft && x <= cameraRight && y <= cameraBottom && _y >= cameraTop) {
+        if (x >= cameraLeft && x <= cameraRight &&
+            y <= cameraBottom && _y >= cameraTop) {
+
             // limit window coords to camera rect coords
-            _x = (sw * (_x - cameraLeft)) / cameraWidth;
-            _y = (sh * (_y - cameraTop)) / cameraHeight;
+            _x = sw * (_x - cameraLeft) / cameraWidth;
+            _y = sh * (_y - (cameraTop)) / cameraHeight;
 
             // 3D screen
             camera.screenToWorld(_x, _y, camera.nearClip, vecA);
@@ -1155,11 +1098,7 @@ class ElementInput {
             scale = ElementInput.calculateScaleToWorld(element);
         }
 
-        const corners = ElementInput.buildHitCorners(
-            element,
-            screen ? element.screenCorners : element.worldCorners,
-            scale
-        );
+        const corners = ElementInput.buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale);
 
         return intersectLineQuad(ray.origin, ray.end, corners);
     }

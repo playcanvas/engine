@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 
 // Surface albedo absorbance
 var<private> litArgs_albedo: vec3f;

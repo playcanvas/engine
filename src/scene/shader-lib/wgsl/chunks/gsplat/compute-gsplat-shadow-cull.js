@@ -20,7 +20,7 @@
 // aggregated atomic pattern (one global atomicAdd per workgroup, no subgroups). Output order is
 // unspecified — fine for shadows, which only write depth.
 
-export const computeGsplatShadowCullSource = /* wgsl */ `
+export const computeGsplatShadowCullSource = /* wgsl */`
 
 // Conservative gaussian extent (in std-devs) for the per-splat frustum radius, so a splat whose
 // tail still reaches into the light frustum is not culled at the boundary.

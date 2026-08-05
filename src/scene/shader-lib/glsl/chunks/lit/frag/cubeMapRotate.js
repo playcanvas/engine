@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 #ifdef CUBEMAP_ROTATION
 uniform mat3 cubeMapRotationMatrix;
 #endif

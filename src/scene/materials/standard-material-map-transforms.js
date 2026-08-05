@@ -10,9 +10,8 @@ const mapTransformsEqual = (a, b) => {
     const b0 = b[0].value;
     const b1 = b[1].value;
 
-    return (
-        a0[0] === b0[0] && a0[1] === b0[1] && a0[2] === b0[2] && a1[0] === b1[0] && a1[1] === b1[1] && a1[2] === b1[2]
-    );
+    return a0[0] === b0[0] && a0[1] === b0[1] && a0[2] === b0[2] &&
+           a1[0] === b1[0] && a1[1] === b1[1] && a1[2] === b1[2];
 };
 
 /**
@@ -105,16 +104,12 @@ class StandardMaterialMapTransforms {
                 this._states.set(p, state);
             }
 
-            if (
-                state[0] !== active ||
-                (active &&
-                    (state[1] !== uv ||
-                        state[2] !== tiling.x ||
-                        state[3] !== tiling.y ||
-                        state[4] !== offset.x ||
-                        state[5] !== offset.y ||
-                        state[6] !== rotation))
-            ) {
+            if (state[0] !== active ||
+                active && (state[1] !== uv ||
+                           state[2] !== tiling.x || state[3] !== tiling.y ||
+                           state[4] !== offset.x || state[5] !== offset.y ||
+                           state[6] !== rotation)) {
+
                 state[0] = active;
                 state[1] = uv;
                 state[2] = tiling.x;

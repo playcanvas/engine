@@ -1,10 +1,4 @@
-import {
-    PRIMITIVE_TRISTRIP,
-    SEMANTIC_COLOR,
-    SEMANTIC_POSITION,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
-} from '../../platform/graphics/constants.js';
+import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
 import { GraphNode } from '../graph-node.js';
@@ -85,6 +79,7 @@ class Immediate {
 
     // returns a batch for rendering lines to a layer with required depth testing state
     getBatch(layer, depthTest) {
+
         // get batches for the layer
         let batches = this.batchesMap.get(layer);
         if (!batches) {
@@ -139,9 +134,7 @@ class Immediate {
     // shader used to display texture
     getTextureShaderDesc(encoding) {
         const decodeFunc = ChunkUtils.decodeFunc(encoding);
-        return this.getShaderDesc(
-            `textureShader-${encoding}`,
-            /* glsl */ `
+        return this.getShaderDesc(`textureShader-${encoding}`, /* glsl */ `
             #include "gammaPS"
             varying vec2 uv0;
             uniform sampler2D colorMap;
@@ -149,8 +142,7 @@ class Immediate {
                 vec3 linearColor = ${decodeFunc}(texture2D(colorMap, uv0));
                 gl_FragColor = vec4(gammaCorrectOutput(linearColor), 1);
             }
-        `,
-            /* wgsl */ `
+        `, /* wgsl */`
             #include "gammaPS"
             varying uv0: vec2f;
             var colorMap: texture_2d<f32>;
@@ -162,23 +154,19 @@ class Immediate {
                 output.color = vec4f(gammaCorrectOutput(linearColor), 1.0);
                 return output;
             }
-        `
-        );
+        `);
     }
 
     // shader used to display infilterable texture sampled using texelFetch
     getUnfilterableTextureShaderDesc() {
-        return this.getShaderDesc(
-            'textureShaderUnfilterable',
-            /* glsl */ `
+        return this.getShaderDesc('textureShaderUnfilterable', /* glsl */ `
             varying vec2 uv0;
             uniform highp sampler2D colorMap;
             void main (void) {
                 ivec2 uv = ivec2(uv0 * textureSize(colorMap, 0));
                 gl_FragColor = vec4(texelFetch(colorMap, uv, 0).xyz, 1);
             }
-        `,
-            /* wgsl */ `
+        `, /* wgsl */`
 
             varying uv0: vec2f;
             var colorMap: texture_2d<uff>;
@@ -189,15 +177,12 @@ class Immediate {
                 output.color = vec4f(fetchedColor.xyz, 1.0);
                 return output;
             }
-        `
-        );
+        `);
     }
 
     // shader used to display depth texture
     getDepthTextureShaderDesc() {
-        return this.getShaderDesc(
-            'depthTextureShader',
-            /* glsl */ `
+        return this.getShaderDesc('depthTextureShader', /* glsl */ `
             #include "screenDepthPS"
             #include "gammaPS"
             varying vec2 uv0;
@@ -205,8 +190,7 @@ class Immediate {
                 float depth = getLinearScreenDepth(getImageEffectUV(uv0)) * camera_params.x;
                 gl_FragColor = vec4(gammaCorrectOutput(vec3(depth)), 1.0);
             }
-        `,
-            /* wgsl */ `
+        `, /* wgsl */`
             #include "screenDepthPS"
             #include "gammaPS"
             varying uv0: vec2f;
@@ -216,15 +200,19 @@ class Immediate {
                 output.color = vec4f(gammaCorrectOutput(vec3f(depth)), 1.0);
                 return output;
             }
-        `
-        );
+        `);
     }
 
     // creates mesh used to render a quad
     getQuadMesh() {
         if (!this.quadMesh) {
             this.quadMesh = new Mesh(this.device);
-            this.quadMesh.setPositions([-0.5, -0.5, 0, 0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0]);
+            this.quadMesh.setPositions([
+                -0.5, -0.5, 0,
+                0.5, -0.5, 0,
+                -0.5, 0.5, 0,
+                0.5, 0.5, 0
+            ]);
             this.quadMesh.update(PRIMITIVE_TRISTRIP);
         }
         return this.quadMesh;
@@ -232,6 +220,7 @@ class Immediate {
 
     // Draw mesh at this frame
     drawMesh(material, matrix, mesh, meshInstance, layer) {
+
         // create a mesh instance for the mesh if needed
         if (!meshInstance) {
             const graphNode = this.getGraphNode(matrix);
@@ -255,105 +244,20 @@ class Immediate {
                 tempPoints.push(vec.x, vec.y, vec.z);
             };
 
-            mulPoint(min.x, min.y, min.z);
-            mulPoint(min.x, max.y, min.z);
-            mulPoint(min.x, max.y, min.z);
-            mulPoint(max.x, max.y, min.z);
-            mulPoint(max.x, max.y, min.z);
-            mulPoint(max.x, min.y, min.z);
-            mulPoint(max.x, min.y, min.z);
-            mulPoint(min.x, min.y, min.z);
-            mulPoint(min.x, min.y, max.z);
-            mulPoint(min.x, max.y, max.z);
-            mulPoint(min.x, max.y, max.z);
-            mulPoint(max.x, max.y, max.z);
-            mulPoint(max.x, max.y, max.z);
-            mulPoint(max.x, min.y, max.z);
-            mulPoint(max.x, min.y, max.z);
-            mulPoint(min.x, min.y, max.z);
-            mulPoint(min.x, min.y, min.z);
-            mulPoint(min.x, min.y, max.z);
-            mulPoint(min.x, max.y, min.z);
-            mulPoint(min.x, max.y, max.z);
-            mulPoint(max.x, max.y, min.z);
-            mulPoint(max.x, max.y, max.z);
-            mulPoint(max.x, min.y, min.z);
-            mulPoint(max.x, min.y, max.z);
+            mulPoint(min.x, min.y, min.z); mulPoint(min.x, max.y, min.z);
+            mulPoint(min.x, max.y, min.z); mulPoint(max.x, max.y, min.z);
+            mulPoint(max.x, max.y, min.z); mulPoint(max.x, min.y, min.z);
+            mulPoint(max.x, min.y, min.z); mulPoint(min.x, min.y, min.z);
+            mulPoint(min.x, min.y, max.z); mulPoint(min.x, max.y, max.z);
+            mulPoint(min.x, max.y, max.z); mulPoint(max.x, max.y, max.z);
+            mulPoint(max.x, max.y, max.z); mulPoint(max.x, min.y, max.z);
+            mulPoint(max.x, min.y, max.z); mulPoint(min.x, min.y, max.z);
+            mulPoint(min.x, min.y, min.z); mulPoint(min.x, min.y, max.z);
+            mulPoint(min.x, max.y, min.z); mulPoint(min.x, max.y, max.z);
+            mulPoint(max.x, max.y, min.z); mulPoint(max.x, max.y, max.z);
+            mulPoint(max.x, min.y, min.z); mulPoint(max.x, min.y, max.z);
         } else {
-            tempPoints.push(
-                min.x,
-                min.y,
-                min.z,
-                min.x,
-                max.y,
-                min.z,
-                min.x,
-                max.y,
-                min.z,
-                max.x,
-                max.y,
-                min.z,
-                max.x,
-                max.y,
-                min.z,
-                max.x,
-                min.y,
-                min.z,
-                max.x,
-                min.y,
-                min.z,
-                min.x,
-                min.y,
-                min.z,
-                min.x,
-                min.y,
-                max.z,
-                min.x,
-                max.y,
-                max.z,
-                min.x,
-                max.y,
-                max.z,
-                max.x,
-                max.y,
-                max.z,
-                max.x,
-                max.y,
-                max.z,
-                max.x,
-                min.y,
-                max.z,
-                max.x,
-                min.y,
-                max.z,
-                min.x,
-                min.y,
-                max.z,
-                min.x,
-                min.y,
-                min.z,
-                min.x,
-                min.y,
-                max.z,
-                min.x,
-                max.y,
-                min.z,
-                min.x,
-                max.y,
-                max.z,
-                max.x,
-                max.y,
-                min.z,
-                max.x,
-                max.y,
-                max.z,
-                max.x,
-                min.y,
-                min.z,
-                max.x,
-                min.y,
-                max.z
-            );
+            tempPoints.push(min.x, min.y, min.z, min.x, max.y, min.z, min.x, max.y, min.z, max.x, max.y, min.z, max.x, max.y, min.z, max.x, min.y, min.z, max.x, min.y, min.z, min.x, min.y, min.z, min.x, min.y, max.z, min.x, max.y, max.z, min.x, max.y, max.z, max.x, max.y, max.z, max.x, max.y, max.z, max.x, min.y, max.z, max.x, min.y, max.z, min.x, min.y, max.z, min.x, min.y, min.z, min.x, min.y, max.z, min.x, max.y, min.z, min.x, max.y, max.z, max.x, max.y, min.z, max.x, max.y, max.z, max.x, min.y, min.z, max.x, min.y, max.z);
         }
 
         const batch = this.getBatch(layer, depthTest);
@@ -362,7 +266,8 @@ class Immediate {
     }
 
     drawWireSphere(center, radius, color, numSegments, depthTest, layer) {
-        const step = (2 * Math.PI) / numSegments;
+
+        const step = 2 * Math.PI / numSegments;
         let angle = 0;
 
         for (let i = 0; i < numSegments; i++) {
@@ -396,6 +301,7 @@ class Immediate {
     // This is called just before the layer is rendered to allow lines for the layer to be added from inside
     // the frame getting rendered
     onPreRenderLayer(layer, visibleList, transparent) {
+
         // update line batches for the specified sub-layer
         this.batchesMap.forEach((batches, batchLayer) => {
             if (batchLayer === layer) {
@@ -420,8 +326,9 @@ class Immediate {
 
     // called after the frame was rendered, clears data
     onPostRender() {
+
         // clean up line batches
-        this.allBatches.forEach((batch) => batch.clear());
+        this.allBatches.forEach(batch => batch.clear());
         this.allBatches.clear();
 
         // all batches need updating next frame

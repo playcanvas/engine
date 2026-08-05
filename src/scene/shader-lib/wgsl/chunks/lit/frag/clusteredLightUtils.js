@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 struct FaceCoords {
     uv: vec2f,          // Original return value
     faceIndex: f32,    // Was out parameter

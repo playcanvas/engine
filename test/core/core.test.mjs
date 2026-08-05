@@ -3,7 +3,9 @@ import { expect } from 'chai';
 import { extend } from '../../src/core/core.js';
 
 describe('core', function () {
+
     describe('#extend', function () {
+
         it('combines two objects', function () {
             const o1 = {
                 a: 'a',
@@ -80,5 +82,7 @@ describe('core', function () {
             expect(o3.c[1]).to.equal(2);
             expect(o3.A).to.equal('A');
         });
+
     });
+
 });

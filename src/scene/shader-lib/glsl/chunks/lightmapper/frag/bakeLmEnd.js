@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #ifdef LIT_LIGHTMAP_BAKING_ADD_AMBIENT
     // diffuse light stores accumulated AO, apply contrast and brightness to it

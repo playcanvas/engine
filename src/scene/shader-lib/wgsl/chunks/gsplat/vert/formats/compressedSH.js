@@ -1,5 +1,5 @@
 // Spherical Harmonics for compressed GSplat format
-export default /* wgsl */ `
+export default /* wgsl */`
 #if SH_BANDS > 0
 
 fn unpack8888s(bits: u32) -> half4 {

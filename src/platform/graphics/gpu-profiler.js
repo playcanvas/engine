@@ -131,6 +131,7 @@ class GpuProfiler {
     }
 
     report(renderVersion, timings, frameTime) {
+
         if (timings) {
             const allocations = this.pastFrameAllocations.get(renderVersion);
             if (!allocations) {

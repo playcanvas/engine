@@ -40,14 +40,14 @@ const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
 
 const _lodColorsRaw = [
-    [1, 0, 0], // red
-    [0, 1, 0], // green
-    [0, 0, 1], // blue
-    [1, 1, 0], // yellow
-    [1, 0, 1], // magenta
-    [0, 1, 1], // cyan
-    [1, 0.5, 0], // orange
-    [0.5, 0, 1] // purple
+    [1, 0, 0],  // red
+    [0, 1, 0],  // green
+    [0, 0, 1],  // blue
+    [1, 1, 0],  // yellow
+    [1, 0, 1],  // magenta
+    [0, 1, 1],  // cyan
+    [1, 0.5, 0],  // orange
+    [0.5, 0, 1]   // purple
 ];
 
 let _randomColorRaw = null;
@@ -182,10 +182,7 @@ class GSplatWorld {
         this._scene = scene;
 
         const budget = scene.gsplat.splatBudget;
-        this._allocator = new BlockAllocator(
-            budget > 0 ? Math.ceil(budget * ALLOCATOR_GROW_MULTIPLIER) : 0,
-            ALLOCATOR_GROW_MULTIPLIER
-        );
+        this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * ALLOCATOR_GROW_MULTIPLIER) : 0, ALLOCATOR_GROW_MULTIPLIER);
 
         this._workBuffer = new GSplatWorkBuffer(device, scene.gsplat.format);
         this._workBufferFormatVersion = this._workBuffer.format.extraStreamsVersion;
@@ -375,9 +372,11 @@ class GSplatWorld {
      * @param {GSplatPlacement[]} placements - The placements to reconcile with.
      */
     reconcile(placements) {
+
         tempNonOctreePlacements.clear();
         for (const p of placements) {
             if (p.resource instanceof GSplatOctreeResource) {
+
                 // make sure octree instance exists for placement
                 if (!this._octreeInstances.has(p)) {
                     // @ts-ignore - p.resource is GSplatOctreeResource so octree cannot be null
@@ -485,6 +484,7 @@ class GSplatWorld {
         let anyOctreeMoved = false;
         let cameraMovedOrRotatedForLod = false;
         if (fullUpdate) {
+
             // process any pending / prefetch resource completions and collect LOD updates
             for (const [, inst] of this._octreeInstances) {
                 const isDirty = inst.update();
@@ -501,9 +501,7 @@ class GSplatWorld {
                 if (sortedState) {
                     for (const splat of sortedState.splats) {
                         if (!splat.resource) {
-                            Debug.warn(
-                                `GSplatWorld: Resource reference is null but still referenced in world state ${sortedState.version}`
-                            );
+                            Debug.warn(`GSplatWorld: Resource reference is null but still referenced in world state ${sortedState.version}`);
                         }
                     }
                 }
@@ -546,13 +544,8 @@ class GSplatWorld {
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
-        if (
-            cameraMovedOrRotatedForLod ||
-            anyOctreeMoved ||
-            this._scene.gsplat.dirty ||
-            anyInstanceNeedsLodUpdate ||
-            hasNewInstances
-        ) {
+        if (cameraMovedOrRotatedForLod || anyOctreeMoved || this._scene.gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
+
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this._octreeInstances) {
                 inst.updateMoved();
@@ -595,6 +588,7 @@ class GSplatWorld {
      * @private
      */
     _updateWorldState(requireCenters) {
+
         // Check for state changes (format version, modifier hash, numSplats)
         let stateChanged = this._stateTracker.hasChanges(this._layerPlacements);
         for (const [, inst] of this._octreeInstances) {
@@ -616,9 +610,7 @@ class GSplatWorld {
         // add standalone splats
         for (const p of this._layerPlacements) {
             if (requireCenters && !p.resource.hasCenters) {
-                Debug.warnOnce(
-                    `Skipping gsplat resource id ${p.resource.id} on the CPU sorting path — no centers buffer. See Scene#gsplatCentersEnabled.`
-                );
+                Debug.warnOnce(`Skipping gsplat resource id ${p.resource.id} on the CPU sorting path — no centers buffer. See Scene#gsplatCentersEnabled.`);
                 continue;
             }
             p.ensureInstanceStreams(this._device);
@@ -632,9 +624,7 @@ class GSplatWorld {
                 if (p.resource) {
                     const leafResource = /** @type {GSplatResourceBase} */ (p.resource);
                     if (requireCenters && !leafResource.hasCenters) {
-                        Debug.warnOnce(
-                            `Skipping gsplat resource id ${leafResource.id} on the CPU sorting path — no centers buffer. See Scene#gsplatCentersEnabled.`
-                        );
+                        Debug.warnOnce(`Skipping gsplat resource id ${leafResource.id} on the CPU sorting path — no centers buffer. See Scene#gsplatCentersEnabled.`);
                         return;
                     }
                     p.ensureInstanceStreams(this._device);
@@ -646,13 +636,7 @@ class GSplatWorld {
             });
         }
 
-        const newState = new GSplatWorldState(
-            this._device,
-            this._lastWorldStateVersion,
-            splats,
-            this._allocator,
-            this._allocationMap
-        );
+        const newState = new GSplatWorldState(this._device, this._lastWorldStateVersion, splats, this._allocator, this._allocationMap);
 
         // increment ref count for all resources in new state
         for (const splat of newState.splats) {
@@ -674,6 +658,7 @@ class GSplatWorld {
         // handle destruction of octree instances
         if (this._octreeInstancesToDestroy.length) {
             for (const inst of this._octreeInstancesToDestroy) {
+
                 // collect pending removedCandidates (files removed by LOD changes
                 // but whose octree decRef hasn't been applied yet)
                 if (inst.removedCandidates && inst.removedCandidates.size) {
@@ -884,9 +869,7 @@ class GSplatWorld {
      * @param {number} newVersion - The new version to clean up to.
      */
     cleanupOldWorldStates(newVersion) {
-        const activeState = /** @type {GSplatWorldState} */ (
-            /** @type {unknown} */ (this._worldStates.get(newVersion))
-        );
+        const activeState = /** @type {GSplatWorldState} */ (/** @type {unknown} */ (this._worldStates.get(newVersion)));
 
         // Pass 1: propagate fullRebuild from skipped states
         if (!activeState.fullRebuild) {
@@ -959,6 +942,7 @@ class GSplatWorld {
         state.splats.forEach((splat) => {
             // Check if splat's transform changed (needs full update)
             if (splat.update()) {
+
                 _updatedSplats.push(splat);
                 uploadedBlocks += splat.intervalAllocIds.length;
 
@@ -973,7 +957,9 @@ class GSplatWorld {
 
                 // Splat moved, need to re-sort
                 movedAny = true;
+
             } else if (hasCameraMovement && splat.hasSphericalHarmonics) {
+
                 _splatsWithSH.push(splat);
 
                 if (splat.nodeInfos) {
@@ -995,7 +981,8 @@ class GSplatWorld {
                     invModelMat.copy(splat.node.getWorldTransform()).invert();
                     invModelMat.transformPoint(cameraPos, _localCamPos);
                     splat.aabb.closestPoint(_localCamPos, _closestPt);
-                    const dist = _localCamPos.distance(_closestPt) * splat.node.getWorldTransform().getScale().x;
+                    const dist = _localCamPos.distance(_closestPt) *
+                        splat.node.getWorldTransform().getScale().x;
                     const threshold = ratio * Math.max(1, dist);
                     if (splat.colorAccumulatedTranslation >= threshold) {
                         _changedColorAllocIds.add(splat.allocId);
@@ -1033,6 +1020,7 @@ class GSplatWorld {
      * @returns {boolean} True if camera moved/rotated over thresholds, otherwise false.
      */
     testCameraMovedForLod(camera) {
+
         // distance-based movement check
         const distanceThreshold = this._scene.gsplat.lodUpdateDistance;
         const currentCameraPos = camera.getPosition();
@@ -1059,8 +1047,8 @@ class GSplatWorld {
 
         // FOV change check (trigger when FOV differs by more than ~2%)
         const currentFov = camera.camera.fov;
-        const fovChanged =
-            this._lastLodCameraFov < 0 || Math.abs(currentFov - this._lastLodCameraFov) > this._lastLodCameraFov * 0.02;
+        const fovChanged = this._lastLodCameraFov < 0 ||
+            Math.abs(currentFov - this._lastLodCameraFov) > this._lastLodCameraFov * 0.02;
 
         return cameraMoved || cameraRotated || fovChanged;
     }
@@ -1176,12 +1164,7 @@ class GSplatWorld {
         // Phase 2: Evaluate optimal LODs for all octrees and calculate padding for active placements
         let totalOptimalSplats = 0;
         for (const [, inst] of this._octreeInstances) {
-            totalOptimalSplats += inst.evaluateOptimalLods(
-                camera,
-                this._scene.gsplat,
-                this._budgetScale,
-                globalMaxDistance
-            );
+            totalOptimalSplats += inst.evaluateOptimalLods(camera, this._scene.gsplat, this._budgetScale, globalMaxDistance);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1293,11 +1276,11 @@ class GSplatWorld {
             textureSize: worldState.textureSize,
             totalActiveSplats: worldState.totalActiveSplats,
             version: worldState.version,
-            ids: worldState.splats.map((splat) => splat.resource.id),
-            pixelOffsets: worldState.splats.map((splat) => splat.intervalOffsets),
+            ids: worldState.splats.map(splat => splat.resource.id),
+            pixelOffsets: worldState.splats.map(splat => splat.intervalOffsets),
 
             // TODO: consider storing this in typed array and transfer it to sorter worker
-            intervals: worldState.splats.map((splat) => splat.intervals)
+            intervals: worldState.splats.map(splat => splat.intervals)
         };
     }
 }

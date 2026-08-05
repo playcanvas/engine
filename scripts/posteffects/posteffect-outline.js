@@ -14,7 +14,7 @@ class OutlineEffect extends pc.PostEffect {
     constructor(graphicsDevice, thickness) {
         super(graphicsDevice);
 
-        const fshader = /* glsl */ `
+        const fshader = /* glsl */`
             #define THICKNESS ${thickness ? thickness.toFixed(0) : 1}
             uniform float uWidth;
             uniform float uHeight;
@@ -125,19 +125,11 @@ Outline.prototype.initialize = function () {
         queue.removeEffect(this.effect);
     });
 
-    this.on(
-        'attr:color',
-        function (value) {
-            this.effect.color = value;
-        },
-        this
-    );
+    this.on('attr:color', function (value) {
+        this.effect.color = value;
+    }, this);
 
-    this.on(
-        'attr:texture',
-        function (value) {
-            this.effect.texture = value ? value.resource : null;
-        },
-        this
-    );
+    this.on('attr:texture', function (value) {
+        this.effect.texture = value ? value.resource : null;
+    }, this);
 };

@@ -89,13 +89,7 @@ export { Ray } from './core/shape/ray.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
-export {
-    BindGroupFormat,
-    BindUniformBufferFormat,
-    BindTextureFormat,
-    BindStorageTextureFormat,
-    BindStorageBufferFormat
-} from './platform/graphics/bind-group-format.js';
+export { BindGroupFormat, BindUniformBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
@@ -390,13 +384,7 @@ export { TextureHandler } from './framework/handlers/texture.js';
 export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // FRAMEWORK / INPUT
-export {
-    ElementInput,
-    ElementInputEvent,
-    ElementMouseEvent,
-    ElementSelectEvent,
-    ElementTouchEvent
-} from './framework/input/element-input.js';
+export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent } from './framework/input/element-input.js';
 
 // FRAMEWORK / PARSERS
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';

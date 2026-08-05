@@ -1,5 +1,5 @@
 // functionality includes for lighting / shadowing code.
-export default /* wgsl */ `
+export default /* wgsl */`
 
 #ifdef LIT_CLUSTERED_LIGHTS
     // all this functionality that needs to be included for clustered lighting

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     #ifdef COLOR_ENHANCE
         uniform colorEnhanceParams: vec4f; // x=shadows, y=highlights, z=vibrance, w=dehaze
         uniform colorEnhanceMidtones: f32;

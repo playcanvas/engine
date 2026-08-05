@@ -1,4 +1,6 @@
-import { ANIM_INTERRUPTION_NONE } from './constants.js';
+import {
+    ANIM_INTERRUPTION_NONE
+} from './constants.js';
 
 /**
  * AnimTransitions represent connections in the controllers state graph between AnimStates. During
@@ -31,16 +33,7 @@ class AnimTransition {
      * interrupt this one and which of the current or previous states transitions can do so. One of
      * ANIM_INTERRUPTION_*. Defaults to ANIM_INTERRUPTION_NONE.
      */
-    constructor({
-        from,
-        to,
-        time = 0,
-        priority = 0,
-        conditions = [],
-        exitTime = null,
-        transitionOffset = null,
-        interruptionSource = ANIM_INTERRUPTION_NONE
-    }) {
+    constructor({ from, to, time = 0, priority = 0, conditions = [], exitTime = null, transitionOffset = null, interruptionSource = ANIM_INTERRUPTION_NONE }) {
         this._from = from;
         this._to = to;
         this._time = time;

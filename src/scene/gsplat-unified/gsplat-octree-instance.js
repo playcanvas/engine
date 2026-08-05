@@ -28,7 +28,13 @@ const _tempDebugAabb = new BoundingBox();
 const REF_TAN_HALF_FOV = Math.tan(22.5 * math.DEG_TO_RAD);
 
 // Color instances used by debug wireframe rendering for LOD visualization
-const _lodColors = [new Color(1, 0, 0), new Color(0, 1, 0), new Color(0, 0, 1), new Color(1, 1, 0), new Color(1, 0, 1)];
+const _lodColors = [
+    new Color(1, 0, 0),
+    new Color(0, 1, 0),
+    new Color(0, 0, 1),
+    new Color(1, 1, 0),
+    new Color(1, 0, 1)
+];
 
 /**
  * Stores LOD state for a single octree node.
@@ -453,6 +459,7 @@ class GSplatOctreeInstance {
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      */
     updateLod(cameraNode, params) {
+
         const maxLod = this.octree.lodLevels - 1;
         const { lodBaseDistance, lodMultiplier } = this.placement;
 
@@ -463,17 +470,7 @@ class GSplatOctreeInstance {
 
         // Pass 1: Evaluate optimal LOD for each node (distance-based)
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
-        this.evaluateNodeLods(
-            cameraNode,
-            maxLod,
-            lodBaseDistance,
-            lodMultiplier,
-            rangeMin,
-            rangeMax,
-            params,
-            uniformScale,
-            false
-        );
+        this.evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale, false);
 
         // Pass 2: Calculate desired LOD (underfill) and apply changes
         this.applyLodChanges(maxLod, params);
@@ -525,18 +522,7 @@ class GSplatOctreeInstance {
      * @returns {number} Total number of splats that would be used by optimal LODs when accumulateSplats is true; otherwise 0.
      * @private
      */
-    evaluateNodeLods(
-        cameraNode,
-        maxLod,
-        lodBaseDistance,
-        lodMultiplier,
-        rangeMin,
-        rangeMax,
-        params,
-        uniformScale,
-        accumulateSplats = true,
-        globalMaxDistanceForBuckets = 0
-    ) {
+    evaluateNodeLods(cameraNode, maxLod, lodBaseDistance, lodMultiplier, rangeMin, rangeMax, params, uniformScale, accumulateSplats = true, globalMaxDistanceForBuckets = 0) {
         const { lodBehindPenalty } = params;
 
         // Compute FOV compensation: use min(tanHalfV, tanHalfH) to handle ultra-wide and portrait
@@ -689,18 +675,7 @@ class GSplatOctreeInstance {
         const effectiveBase = lodBaseDistance * budgetScale;
         const effectiveMult = Math.max(1.2, lodMultiplier * Math.pow(budgetScale, -0.2));
 
-        return this.evaluateNodeLods(
-            cameraNode,
-            maxLod,
-            effectiveBase,
-            effectiveMult,
-            rangeMin,
-            rangeMax,
-            params,
-            uniformScale,
-            true,
-            globalMaxDistanceForBuckets
-        );
+        return this.evaluateNodeLods(cameraNode, maxLod, effectiveBase, effectiveMult, rangeMin, rangeMax, params, uniformScale, true, globalMaxDistanceForBuckets);
     }
 
     /**
@@ -726,6 +701,7 @@ class GSplatOctreeInstance {
 
             // if desired LOD differs from currently displayed LOD
             if (desiredLodIndex !== currentLodIndex) {
+
                 // Determine visibility based on the presence of a valid file index
                 const currentFileIndex = currentLodIndex >= 0 ? node.lods[currentLodIndex].fileIndex : -1;
                 const desiredFileIndex = desiredLodIndex >= 0 ? node.lods[desiredLodIndex].fileIndex : -1;
@@ -745,10 +721,7 @@ class GSplatOctreeInstance {
 
                         // update or clear pending transition
                         if (wasVisible && willBeVisible) {
-                            this.pendingDecrements.set(nodeIndex, {
-                                oldFileIndex: pendingEntry.oldFileIndex,
-                                newFileIndex: desiredFileIndex
-                            });
+                            this.pendingDecrements.set(nodeIndex, { oldFileIndex: pendingEntry.oldFileIndex, newFileIndex: desiredFileIndex });
                         } else {
                             // no longer targeting a visible LOD; clear pending and let normal logic handle hide/show
                             this.pendingDecrements.delete(nodeIndex);
@@ -758,6 +731,7 @@ class GSplatOctreeInstance {
                 }
 
                 if (!wasVisible && willBeVisible) {
+
                     // becoming visible (invisible -> visible)
 
                     // if we had a previous pending visible-add for a different file, cancel it
@@ -778,7 +752,9 @@ class GSplatOctreeInstance {
                         // keep displayed as invisible until resource arrives; next update will promote
                         this.pendingVisibleAdds.set(nodeIndex, desiredFileIndex);
                     }
+
                 } else if (wasVisible && !willBeVisible) {
+
                     // becoming invisible (visible -> invisible)
                     // if there was a pending target for this node, cancel it first
                     const pendingEntry2 = this.pendingDecrements.get(nodeIndex);
@@ -790,7 +766,9 @@ class GSplatOctreeInstance {
                     nodeInfo.currentLod = -1;
                     // clear any pending visible-add entry
                     this.pendingVisibleAdds.delete(nodeIndex);
+
                 } else if (wasVisible && willBeVisible) {
+
                     // switching between visible LODs (visible -> visible)
                     this.incrementFileRef(desiredFileIndex, nodeIndex, desiredLodIndex);
 
@@ -806,10 +784,7 @@ class GSplatOctreeInstance {
                         this.pendingVisibleAdds.delete(nodeIndex);
                     } else {
                         // new LOD not ready - track pending decrement for when it loads
-                        this.pendingDecrements.set(nodeIndex, {
-                            oldFileIndex: currentFileIndex,
-                            newFileIndex: desiredFileIndex
-                        });
+                        this.pendingDecrements.set(nodeIndex, { oldFileIndex: currentFileIndex, newFileIndex: desiredFileIndex });
                         // keep displayed lod as current until pending resolves
                         // ensure no pending visible-add entry remains
                         this.pendingVisibleAdds.delete(nodeIndex);
@@ -830,11 +805,13 @@ class GSplatOctreeInstance {
      * @param {number} lodIndex - The LOD index for this node.
      */
     incrementFileRef(fileIndex, nodeIndex, lodIndex) {
+
         if (fileIndex === -1) return;
 
         // check if this is the first reference
         let placement = this.filePlacements[fileIndex];
         if (!placement) {
+
             // create placement (with null resource initially)
             placement = new GSplatPlacement(null, this.placement.node, lodIndex, null, this.placement);
             this.filePlacements[fileIndex] = placement;
@@ -847,6 +824,7 @@ class GSplatOctreeInstance {
 
             // if resource is already loaded, allow it to be used
             if (!this.addFilePlacement(fileIndex)) {
+
                 // resource not loaded yet, kick off load and add to pending
                 this.octree.ensureFileResource(fileIndex);
                 this.pending.add(fileIndex);
@@ -872,6 +850,7 @@ class GSplatOctreeInstance {
      * @param {number} nodeIndex - The octree node index.
      */
     decrementFileRef(fileIndex, nodeIndex) {
+
         if (fileIndex === -1) return;
 
         const placement = this.filePlacements[fileIndex];
@@ -880,6 +859,7 @@ class GSplatOctreeInstance {
         }
 
         if (placement) {
+
             // remove interval for this node from the placement
             placement.intervals.delete(nodeIndex);
             this.dirtyModifiedPlacements = true;
@@ -966,6 +946,7 @@ class GSplatOctreeInstance {
      * @returns {boolean} True if octree instance is dirty, false otherwise.
      */
     update() {
+
         // Re-evaluate LODs when lodBaseDistance or lodMultiplier changed on the component
         if (this.placement.lodDirty) {
             this.placement.lodDirty = false;
@@ -975,6 +956,7 @@ class GSplatOctreeInstance {
         // handle pending loads
         if (this.pending.size) {
             for (const fileIndex of this.pending) {
+
                 // check if the asset has finished loading and store it if so
                 this.octree.ensureFileResource(fileIndex);
 
@@ -1028,13 +1010,7 @@ class GSplatOctreeInstance {
 
             if (envResource) {
                 // create environment placement with the loaded resource
-                this.environmentPlacement = new GSplatPlacement(
-                    envResource,
-                    this.placement.node,
-                    0,
-                    null,
-                    this.placement
-                );
+                this.environmentPlacement = new GSplatPlacement(envResource, this.placement.node, 0, null, this.placement);
                 this.environmentPlacement.aabb.copy(envResource.aabb);
                 this.activePlacements.add(this.environmentPlacement);
                 this.dirtyModifiedPlacements = true;
@@ -1074,13 +1050,7 @@ class GSplatOctreeInstance {
                     if (lodIndex >= 0) {
                         const color = _lodColors[Math.min(lodIndex, _lodColors.length - 1)];
                         _tempDebugAabb.setFromTransformedAabb(nodes[nodeIndex].bounds, modelMat);
-                        scene.immediate.drawWireAlignedBox(
-                            _tempDebugAabb.getMin(),
-                            _tempDebugAabb.getMax(),
-                            color,
-                            true,
-                            scene.defaultDrawLayer
-                        );
+                        scene.immediate.drawWireAlignedBox(_tempDebugAabb.getMin(), _tempDebugAabb.getMax(), color, true, scene.defaultDrawLayer);
                     }
                 }
             }
@@ -1102,7 +1072,9 @@ class GSplatOctreeInstance {
      * Polls prefetched file indices for completion and updates state.
      */
     pollPrefetchCompletions() {
+
         if (this.prefetchPending.size) {
+
             // poll loader and store resource in octree if ready
             for (const fileIndex of this.prefetchPending) {
                 this.octree.ensureFileResource(fileIndex);

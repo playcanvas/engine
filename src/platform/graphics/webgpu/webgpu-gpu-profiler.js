@@ -14,9 +14,7 @@ class WebgpuGpuProfiler extends GpuProfiler {
         this.maxCount = 1024;
 
         // gpu timing queries
-        this.timestampQueriesSet = device.supportsTimestampQuery
-            ? new WebgpuQuerySet(device, true, 2 * this.maxCount)
-            : null;
+        this.timestampQueriesSet = device.supportsTimestampQuery ? new WebgpuQuerySet(device, true, 2 * this.maxCount) : null;
     }
 
     destroy() {

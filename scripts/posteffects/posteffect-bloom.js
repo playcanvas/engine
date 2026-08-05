@@ -2,7 +2,7 @@
 const SAMPLE_COUNT = 15;
 
 function computeGaussian(n, theta) {
-    return (1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta));
+    return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
 }
 
 function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {
@@ -72,7 +72,7 @@ class BloomEffect extends pc.PostEffect {
 
         // Pixel shader extracts the brighter areas of an image.
         // This is the first step in applying a bloom postprocess.
-        const extractFrag = /* glsl */ `
+        const extractFrag = /* glsl */`
             varying vec2 vUv0;
 
             uniform sampler2D uBaseTexture;
@@ -91,7 +91,7 @@ class BloomEffect extends pc.PostEffect {
         // Pixel shader applies a one dimensional gaussian blur filter.
         // This is used twice by the bloom postprocess, first to
         // blur horizontally, and then again to blur vertically.
-        const gaussianBlurFrag = /* glsl */ `
+        const gaussianBlurFrag = /* glsl */`
             #define SAMPLE_COUNT ${SAMPLE_COUNT}
 
             varying vec2 vUv0;
@@ -116,7 +116,7 @@ class BloomEffect extends pc.PostEffect {
         // Pixel shader combines the bloom image with the original
         // scene, using tweakable intensity levels.
         // This is the final step in applying a bloom postprocess.
-        const combineFrag = /* glsl */ `
+        const combineFrag = /* glsl */`
             varying vec2 vUv0;
 
             uniform float uBloomEffectIntensity;
@@ -278,7 +278,7 @@ Bloom.attributes.add('blurAmount', {
     type: 'number',
     default: 4,
     min: 1,
-    title: 'Blur amount'
+    'title': 'Blur amount'
 });
 
 Bloom.prototype.initialize = function () {
@@ -292,13 +292,9 @@ Bloom.prototype.initialize = function () {
 
     queue.addEffect(this.effect);
 
-    this.on(
-        'attr',
-        function (name, value) {
-            this.effect[name] = value;
-        },
-        this
-    );
+    this.on('attr', function (name, value) {
+        this.effect[name] = value;
+    }, this);
 
     this.on('state', function (enabled) {
         if (enabled) {

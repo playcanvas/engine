@@ -1,7 +1,7 @@
 import { Vec3, Color, FloatPacking, Texture, PIXELFORMAT_RGBA16U } from 'playcanvas';
 import { GSplatShaderEffect } from './gsplat-shader-effect.mjs';
 
-const shaderGLSL = /* glsl */ `
+const shaderGLSL = /* glsl */`
 uniform highp usampler2D uLUT;
 uniform vec3 uAabbMin;
 uniform vec3 uAabbMax;
@@ -71,7 +71,7 @@ void modifySplatColor(vec3 center, inout vec4 color) {
 }
 `;
 
-const shaderWGSL = /* wgsl */ `
+const shaderWGSL = /* wgsl */`
 var uLUT: texture_2d<u32>;
 uniform uAabbMin: vec3f;
 uniform uAabbMax: vec3f;
@@ -307,7 +307,7 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
         const directionSign = this._normDir.x + this._normDir.y + this._normDir.z;
         const isNegativeDir = directionSign < 0.0;
 
-        const planePos = isNegativeDir ? (1.0 - planeProgress) * boxLength : planeProgress * boxLength;
+        const planePos = isNegativeDir ? ((1.0 - planeProgress) * boxLength) : (planeProgress * boxLength);
 
         const isTintOnlyMode = Math.abs((this.visibleStart ? 1.0 : 0.0) - (this.visibleEnd ? 1.0 : 0.0)) < 0.01;
         const invert = this.invertTint;
@@ -331,8 +331,7 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
                         const visEnd = this.visibleEnd ? 1.0 : 0.0;
                         scale = visStart + (visEnd - visStart) * tBack;
                     } else {
-                        scale =
-                            distToPlane < -edgeDistance ? (this.visibleStart ? 1.0 : 0.0) : this.visibleEnd ? 1.0 : 0.0;
+                        scale = (distToPlane < -edgeDistance) ? (this.visibleStart ? 1.0 : 0.0) : (this.visibleEnd ? 1.0 : 0.0);
                     }
                 } else {
                     if (tFront < 1.0 && distToPlane >= 0.0) {
@@ -340,7 +339,7 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
                         const visEnd = this.visibleEnd ? 1.0 : 0.0;
                         scale = visEnd + (visStart - visEnd) * tFront;
                     } else {
-                        scale = distToPlane < 0.0 ? (this.visibleEnd ? 1.0 : 0.0) : this.visibleStart ? 1.0 : 0.0;
+                        scale = (distToPlane < 0.0) ? (this.visibleEnd ? 1.0 : 0.0) : (this.visibleStart ? 1.0 : 0.0);
                     }
                 }
             }
@@ -351,7 +350,7 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
             if (isTintOnlyMode) {
                 // Tint-only mode: determine which tint to use based on position
                 // Determine if we're ahead or behind plane (accounting for direction)
-                const isAhead = isNegativeDir ? distToPlane < 0.0 : distToPlane > 0.0;
+                const isAhead = isNegativeDir ? (distToPlane < 0.0) : (distToPlane > 0.0);
                 const distAbs = Math.abs(distToPlane);
 
                 // Determine which tints to use based on invert flag
@@ -384,7 +383,9 @@ class GSplatBoxShaderEffect extends GSplatShaderEffect {
                 }
             } else {
                 // Reveal/hide mode: interpolate between tint and edgeTint
-                const edgeFactor = tBack < 1.0 && distToPlane < 0.0 ? tBack : distToPlane < -edgeDistance ? 0.0 : 1.0;
+                const edgeFactor = (tBack < 1.0 && distToPlane < 0.0) ?
+                    tBack :
+                    (distToPlane < -edgeDistance ? 0.0 : 1.0);
 
                 this._tintVec.set(this.tint.r, this.tint.g, this.tint.b);
                 this._edgeTintVec.set(this.edgeTint.r, this.edgeTint.g, this.edgeTint.b);

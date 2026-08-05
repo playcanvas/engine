@@ -117,9 +117,7 @@ class ScriptRegistry extends EventHandler {
         const scriptName = getScriptRegistryName(script);
 
         if (!scriptName) {
-            Debug.error(
-                `script class '${script?.name ?? script}' has no name and cannot be added to the script registry.`
-            );
+            Debug.error(`script class '${script?.name ?? script}' has no name and cannot be added to the script registry.`);
             return false;
         }
 
@@ -145,9 +143,7 @@ class ScriptRegistry extends EventHandler {
                     this.fire('swap', scriptName, script);
                     this.fire(`swap:${scriptName}`, script);
                 } else {
-                    console.warn(
-                        `script registry already has '${scriptName}' script, define 'swap' method for new script type to enable code hot swapping`
-                    );
+                    console.warn(`script registry already has '${scriptName}' script, define 'swap' method for new script type to enable code hot swapping`);
                 }
             });
             return false;

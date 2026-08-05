@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #define NINESLICED
 #define NINESLICETILED
 

@@ -99,15 +99,22 @@ class BoxLineShape extends Shape {
         this._tolerance = args.tolerance ?? this._tolerance;
 
         // intersect
-        this.triData = [new TriData(new BoxGeometry()), new TriData(new CylinderGeometry(), 1)];
+        this.triData = [
+            new TriData(new BoxGeometry()),
+            new TriData(new CylinderGeometry(), 1)
+        ];
 
         // render
         this._box = new Entity(`box:${this.axis}`);
         this.entity.addChild(this._box);
-        this._createRenderComponent(this._box, [Mesh.fromGeometry(this.device, new BoxGeometry())]);
+        this._createRenderComponent(this._box, [
+            Mesh.fromGeometry(this.device, new BoxGeometry())
+        ]);
         this._line = new Entity(`line:${this.axis}`);
         this.entity.addChild(this._line);
-        this._createRenderComponent(this._line, [Mesh.fromGeometry(this.device, new CylinderGeometry())]);
+        this._createRenderComponent(this._line, [
+            Mesh.fromGeometry(this.device, new CylinderGeometry())
+        ]);
 
         // update transform
         this._update();

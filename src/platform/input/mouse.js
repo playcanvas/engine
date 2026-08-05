@@ -299,7 +299,7 @@ class Mouse extends EventHandler {
      * @returns {boolean} True if the mouse button was pressed since the last update.
      */
     wasPressed(button) {
-        return this._buttons[button] && !this._lastbuttons[button];
+        return (this._buttons[button] && !this._lastbuttons[button]);
     }
 
     /**
@@ -314,7 +314,7 @@ class Mouse extends EventHandler {
      * @returns {boolean} True if the mouse button was released since the last update.
      */
     wasReleased(button) {
-        return !this._buttons[button] && this._lastbuttons[button];
+        return (!this._buttons[button] && this._lastbuttons[button]);
     }
 
     _handleUp(event) {
@@ -362,12 +362,11 @@ class Mouse extends EventHandler {
         const top = Math.floor(rect.top);
 
         // mouse is outside of canvas
-        if (
-            event.clientX < left ||
+        if (event.clientX < left ||
             event.clientX >= left + this._target.clientWidth ||
             event.clientY < top ||
-            event.clientY >= top + this._target.clientHeight
-        ) {
+            event.clientY >= top + this._target.clientHeight) {
+
             return null;
         }
 

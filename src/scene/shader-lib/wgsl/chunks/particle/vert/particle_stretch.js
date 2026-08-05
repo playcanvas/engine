@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     let moveDir: vec3f = inVel * uniform.stretch;
     var posPrev: vec3f = particlePos - moveDir;
     posPrev = posPrev + particlePosMoved;

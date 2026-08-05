@@ -4,6 +4,7 @@ import { KEY_UP } from '../../../src/platform/input/constants.js';
 import { Keyboard } from '../../../src/platform/input/keyboard.js';
 
 describe('Keyboard', function () {
+
     /** @type { Keyboard } */
     let keyboard;
 
@@ -17,12 +18,15 @@ describe('Keyboard', function () {
     });
 
     describe('#constructor', function () {
+
         it('should create a new instance', function () {
             expect(keyboard).to.be.an.instanceOf(Keyboard);
         });
+
     });
 
     describe('#isPressed', function () {
+
         it('should return false for a key that is not pressed', function () {
             expect(keyboard.isPressed(KEY_UP)).to.be.false;
         });
@@ -46,9 +50,11 @@ describe('Keyboard', function () {
 
             expect(keyboard.isPressed(KEY_UP)).to.be.false;
         });
+
     });
 
     describe('#on', function () {
+
         it('should handle keydown events', (done) => {
             keyboard.on('keydown', (event) => {
                 expect(event.key).to.equal(KEY_UP);
@@ -78,9 +84,11 @@ describe('Keyboard', function () {
             });
             window.dispatchEvent(keyUpEvent);
         });
+
     });
 
     describe('#wasPressed', function () {
+
         it('should return false for a key that was not pressed', function () {
             expect(keyboard.wasPressed(KEY_UP)).to.be.false;
         });
@@ -97,9 +105,11 @@ describe('Keyboard', function () {
 
             expect(keyboard.wasPressed(KEY_UP)).to.be.false;
         });
+
     });
 
     describe('#wasReleased', function () {
+
         it('should return false for a key that was not released', function () {
             expect(keyboard.wasReleased(KEY_UP)).to.be.false;
         });
@@ -123,5 +133,7 @@ describe('Keyboard', function () {
 
             expect(keyboard.wasReleased(KEY_UP)).to.be.false;
         });
+
     });
+
 });

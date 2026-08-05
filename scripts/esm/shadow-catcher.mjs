@@ -1,4 +1,10 @@
-import { Script, Entity, StandardMaterial, BLEND_MULTIPLICATIVE, Vec3 } from 'playcanvas';
+import {
+    Script,
+    Entity,
+    StandardMaterial,
+    BLEND_MULTIPLICATIVE,
+    Vec3
+} from 'playcanvas';
 
 /**
  * Implementations of shadow catcher functionality, which allows a shadow from directional lights to
@@ -65,6 +71,7 @@ class ShadowCatcher extends Script {
     _geometryCreated = false;
 
     initialize() {
+
         // create shadow catcher material
         const shadowCatcherMaterial = new StandardMaterial();
 
@@ -101,6 +108,7 @@ class ShadowCatcher extends Script {
         }
 
         this.geometry?.render?.meshInstances.forEach((mi) => {
+
             // if geometry was provided, set the material
             if (!this._geometryCreated) {
                 mi.material = shadowCatcherMaterial;

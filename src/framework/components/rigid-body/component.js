@@ -3,13 +3,9 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
 import {
     BODYTYPE_STATIC,
-    BODYGROUP_DYNAMIC,
-    BODYGROUP_KINEMATIC,
-    BODYGROUP_STATIC,
-    BODYMASK_ALL,
-    BODYMASK_NOT_STATIC,
-    BODYTYPE_DYNAMIC,
-    BODYTYPE_KINEMATIC
+    BODYGROUP_DYNAMIC, BODYGROUP_KINEMATIC, BODYGROUP_STATIC,
+    BODYMASK_ALL, BODYMASK_NOT_STATIC,
+    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC
 } from './constants.js';
 
 /**
@@ -929,7 +925,7 @@ class RigidBodyComponent extends Component {
      * @returns {boolean} True if static.
      */
     isStatic() {
-        return this._type === BODYTYPE_STATIC;
+        return (this._type === BODYTYPE_STATIC);
     }
 
     /**
@@ -938,7 +934,7 @@ class RigidBodyComponent extends Component {
      * @returns {boolean} True if static or kinematic.
      */
     isStaticOrKinematic() {
-        return this._type === BODYTYPE_STATIC || this._type === BODYTYPE_KINEMATIC;
+        return (this._type === BODYTYPE_STATIC || this._type === BODYTYPE_KINEMATIC);
     }
 
     /**
@@ -947,7 +943,7 @@ class RigidBodyComponent extends Component {
      * @returns {boolean} True if kinematic.
      */
     isKinematic() {
-        return this._type === BODYTYPE_KINEMATIC;
+        return (this._type === BODYTYPE_KINEMATIC);
     }
 
     /**

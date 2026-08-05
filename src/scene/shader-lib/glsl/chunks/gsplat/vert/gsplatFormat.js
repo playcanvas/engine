@@ -1,4 +1,4 @@
 // Base format declarations
-export default /* glsl */ `
+export default /* glsl */`
 uniform uint splatTextureSize;
 `;

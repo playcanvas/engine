@@ -3,15 +3,19 @@ import { expect } from 'chai';
 import { IndexedList } from '../../src/core/indexed-list.js';
 
 describe('IndexedList', function () {
+
     describe('#constructor', function () {
+
         it('creates an empty list', function () {
             const list = new IndexedList();
 
             expect(list.list().length).to.equal(0);
         });
+
     });
 
     describe('#clear', function () {
+
         it('removes all values', function () {
             const list = new IndexedList();
 
@@ -51,9 +55,11 @@ describe('IndexedList', function () {
 
             expect(all.length).to.equal(0);
         });
+
     });
 
     describe('#has', function () {
+
         it('returns true if the key exists', function () {
             const list = new IndexedList();
 
@@ -109,9 +115,11 @@ describe('IndexedList', function () {
             expect(list.has('key9')).to.equal(false);
             expect(list.has('key10')).to.equal(false);
         });
+
     });
 
     describe('#push', function () {
+
         it('adds an key-value pair to the list', function () {
             const list = new IndexedList();
 
@@ -125,9 +133,11 @@ describe('IndexedList', function () {
             expect(list.has(notkey)).to.equal(false);
             expect(list.get(key)).to.equal(value);
         });
+
     });
 
     describe('#get', function () {
+
         it('returns the value for the key', function () {
             const list = new IndexedList();
 
@@ -150,9 +160,11 @@ describe('IndexedList', function () {
 
             expect(list.get(notkey)).to.equal(null);
         });
+
     });
 
     describe('#list', function () {
+
         it('returns list in order', function () {
             const list = new IndexedList();
 
@@ -182,9 +194,11 @@ describe('IndexedList', function () {
             expect(all[3]).to.equal(value4);
             expect(all[4]).to.equal(value5);
         });
+
     });
 
     describe('#remove', function () {
+
         it('removes the key', function () {
             const list = new IndexedList();
 
@@ -197,6 +211,7 @@ describe('IndexedList', function () {
 
             expect(list.has(key)).to.equal(false);
         });
+
 
         it('does not affect surrounding keys', function () {
             const list = new IndexedList();
@@ -240,5 +255,7 @@ describe('IndexedList', function () {
             expect(all[2]).to.equal(value4);
             expect(all[3]).to.equal(value5);
         });
+
     });
+
 });

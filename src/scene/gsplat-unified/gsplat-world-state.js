@@ -98,6 +98,7 @@ class GSplatWorldState {
      */
     fullRebuild = false;
 
+
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {number} version - The version number.
@@ -128,7 +129,7 @@ class GSplatWorldState {
     }
 
     destroy() {
-        this.splats.forEach((splat) => splat.destroy());
+        this.splats.forEach(splat => splat.destroy());
         this.splats.length = 0;
         this.needsUpload.length = 0;
         this.needsUploadIds.clear();
@@ -238,10 +239,7 @@ class GSplatWorldState {
         // Derive texture size from allocator capacity (square texture)
         const cap = allocator.capacity;
         this.textureSize = cap > 0 ? Math.ceil(Math.sqrt(cap)) : 1;
-        Debug.assert(
-            this.textureSize <= device.maxTextureSize,
-            `GSplatWorldState: required texture size ${this.textureSize} exceeds device limit ${device.maxTextureSize}`
-        );
+        Debug.assert(this.textureSize <= device.maxTextureSize, `GSplatWorldState: required texture size ${this.textureSize} exceeds device limit ${device.maxTextureSize}`);
 
         const changedAllocIds = _toAllocateIds.length > 0 ? new Set(_toAllocateIds) : null;
 

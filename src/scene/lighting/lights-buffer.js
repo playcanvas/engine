@@ -1,21 +1,7 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import {
-    PIXELFORMAT_RGBA32F,
-    ADDRESS_CLAMP_TO_EDGE,
-    TEXTURETYPE_DEFAULT,
-    FILTER_NEAREST,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
-} from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURETYPE_DEFAULT, FILTER_NEAREST, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
-import {
-    LIGHTSHAPE_PUNCTUAL,
-    LIGHTTYPE_SPOT,
-    LIGHTSHAPE_RECT,
-    LIGHTSHAPE_DISK,
-    LIGHTSHAPE_SPHERE,
-    LIGHT_COLOR_DIVIDER
-} from '../constants.js';
+import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, LIGHTSHAPE_RECT, LIGHTSHAPE_DISK, LIGHTSHAPE_SPHERE, LIGHT_COLOR_DIVIDER } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LightCamera } from '../renderer/light-camera.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
@@ -27,19 +13,19 @@ const areaHalfAxisHeight = new Vec3(0, 0, 0.5);
 
 // format of the float texture data
 const TextureIndexFloat = {
-    POSITION_RANGE: 0, // positions.xyz, range
-    DIRECTION_FLAGS: 1, // spot direction.xyz, 32bit flags
-    COLOR_ANGLES_BIAS: 2, // x: color.rg, y: color.b & angle flags, z: cone angles, w: biases (all packed as 16-bit values)
+    POSITION_RANGE: 0,              // positions.xyz, range
+    DIRECTION_FLAGS: 1,             // spot direction.xyz, 32bit flags
+    COLOR_ANGLES_BIAS: 2,           // x: color.rg, y: color.b & angle flags, z: cone angles, w: biases (all packed as 16-bit values)
 
-    PROJ_MAT_0: 3, // projection matrix row 0 (spot light)
-    ATLAS_VIEWPORT: 3, // atlas viewport data (omni light)
+    PROJ_MAT_0: 3,                  // projection matrix row 0 (spot light)
+    ATLAS_VIEWPORT: 3,              // atlas viewport data (omni light)
 
-    PROJ_MAT_1: 4, // projection matrix row 1 (spot light)
-    PROJ_MAT_2: 5, // projection matrix row 2 (spot light)
-    PROJ_MAT_3: 6, // projection matrix row 3 (spot light)
+    PROJ_MAT_1: 4,                  // projection matrix row 1 (spot light)
+    PROJ_MAT_2: 5,                  // projection matrix row 2 (spot light)
+    PROJ_MAT_3: 6,                  // projection matrix row 3 (spot light)
 
-    AREA_DATA_WIDTH: 7, // area light half-width.xyz, -
-    AREA_DATA_HEIGHT: 8, // area light half-height.xyz, -
+    AREA_DATA_WIDTH: 7,             // area light half-width.xyz, -
+    AREA_DATA_HEIGHT: 8,            // area light half-height.xyz, -
 
     // leave last
     COUNT: 9
@@ -47,18 +33,18 @@ const TextureIndexFloat = {
 
 // enums supplied to the shader as inject-defines
 const enums = {
-    LIGHTSHAPE_PUNCTUAL: `${LIGHTSHAPE_PUNCTUAL}u`,
-    LIGHTSHAPE_RECT: `${LIGHTSHAPE_RECT}u`,
-    LIGHTSHAPE_DISK: `${LIGHTSHAPE_DISK}u`,
-    LIGHTSHAPE_SPHERE: `${LIGHTSHAPE_SPHERE}u`,
-    LIGHT_COLOR_DIVIDER: `${LIGHT_COLOR_DIVIDER}.0`
+    'LIGHTSHAPE_PUNCTUAL': `${LIGHTSHAPE_PUNCTUAL}u`,
+    'LIGHTSHAPE_RECT': `${LIGHTSHAPE_RECT}u`,
+    'LIGHTSHAPE_DISK': `${LIGHTSHAPE_DISK}u`,
+    'LIGHTSHAPE_SPHERE': `${LIGHTSHAPE_SPHERE}u`,
+    'LIGHT_COLOR_DIVIDER': `${LIGHT_COLOR_DIVIDER}.0`
 };
 
 // converts object with properties to a list of these as an example: "#define {CLUSTER_TEXTURE_8_BLAH} 1"
 const buildShaderDefines = (object, prefix) => {
     return Object.keys(object)
-        .map((key) => `#define {${prefix}${key}} ${object[key]}`)
-        .join('\n');
+    .map(key => `#define {${prefix}${key}} ${object[key]}`)
+    .join('\n');
 };
 
 // create a shader chunk with defines for the light buffer textures
@@ -72,6 +58,7 @@ class LightsBuffer {
     areaLightsEnabled = false;
 
     constructor(device) {
+
         this.device = device;
 
         // shader chunk with defines
@@ -90,13 +77,7 @@ class LightsBuffer {
         const pixelsPerLightFloat = TextureIndexFloat.COUNT;
         this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
         this.lightsUint = new Uint32Array(this.lightsFloat.buffer);
-        this.lightsTexture = this.createTexture(
-            this.device,
-            pixelsPerLightFloat,
-            this.maxLights,
-            PIXELFORMAT_RGBA32F,
-            'LightsTexture'
-        );
+        this.lightsTexture = this.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTexture');
         this._lightsTextureId = this.device.scope.resolve('lightsTexture');
 
         // compression ranges
@@ -107,6 +88,7 @@ class LightsBuffer {
     }
 
     destroy() {
+
         // release texture
         this.lightsTexture?.destroy();
         this.lightsTexture = null;
@@ -136,16 +118,19 @@ class LightsBuffer {
     }
 
     uploadTextures() {
+
         this.lightsTexture.lock().set(this.lightsFloat);
         this.lightsTexture.unlock();
     }
 
     updateUniforms() {
+
         // texture
         this._lightsTextureId.setValue(this.lightsTexture);
     }
 
     getSpotDirection(direction, spot) {
+
         // Spots shine down the negative Y axis
         const mat = spot._node.getWorldTransform();
         mat.getY(direction).mulScalar(-1);
@@ -154,6 +139,7 @@ class LightsBuffer {
 
     // half sizes of area light in world space, returned as an array of 6 floats
     getLightAreaSizes(light) {
+
         const mat = light._node.getWorldTransform();
 
         mat.transformVector(areaHalfAxisWidth, tempVec3);
@@ -171,6 +157,7 @@ class LightsBuffer {
 
     // fill up both float and 8bit texture data with light properties
     addLightData(light, lightIndex) {
+
         const isSpot = light._type === LIGHTTYPE_SPOT;
         const hasAtlasViewport = light.atlasViewportAllocated; // if the light does not have viewport, it does not fit to the atlas
         const isCookie = this.cookiesEnabled && !!light._cookie && hasAtlasViewport;
@@ -178,8 +165,8 @@ class LightsBuffer {
         const castShadows = this.shadowsEnabled && light.castShadows && hasAtlasViewport;
         const pos = light._node.getPosition();
 
-        let lightProjectionMatrix = null; // light projection matrix - used for shadow map and cookie of spot light
-        let atlasViewport = null; // atlas viewport info - used for shadow map and cookie of omni light
+        let lightProjectionMatrix = null;   // light projection matrix - used for shadow map and cookie of spot light
+        let atlasViewport = null;   // atlas viewport info - used for shadow map and cookie of omni light
         if (isSpot) {
             if (castShadows) {
                 const lightRenderData = light.getRenderData(null, 0);
@@ -230,10 +217,7 @@ class LightsBuffer {
         }
 
         // flags
-        dataUint[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 3] = light.getClusteredFlags(
-            castShadows,
-            isCookie
-        );
+        dataUint[dataFloatStart + 4 * TextureIndexFloat.DIRECTION_FLAGS + 3] = light.getClusteredFlags(castShadows, isCookie);
 
         // light projection matrix
         if (lightProjectionMatrix) {

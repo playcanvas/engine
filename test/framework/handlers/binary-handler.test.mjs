@@ -5,6 +5,7 @@ import { BinaryHandler } from '../../../src/framework/handlers/binary.js';
 import { http } from '../../../src/platform/net/http.js';
 
 describe('BinaryHandler', function () {
+
     afterEach(function () {
         restore();
     });

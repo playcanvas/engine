@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 vec3 refract2(vec3 viewVec, vec3 normal, float IOR) {
     float vn = dot(viewVec, normal);
     float k = 1.0 - IOR * IOR * (1.0 - vn * vn);

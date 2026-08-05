@@ -3,17 +3,10 @@ import { now } from '../../core/time.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import {
-    PRIMITIVE_TRIANGLES,
-    PRIMITIVE_TRIFAN,
-    PRIMITIVE_TRISTRIP,
-    SEMANTIC_POSITION,
-    SEMANTIC_NORMAL,
-    SEMANTIC_TANGENT,
-    SEMANTIC_BLENDINDICES,
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
-    typedArrayIndexFormats,
-    typedArrayTypes,
-    typedArrayTypesByteSize
+    typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
 } from '../../platform/graphics/constants.js';
 import { SPRITE_RENDERMODE_SIMPLE } from '../constants.js';
 import { Mesh } from '../mesh.js';
@@ -50,14 +43,12 @@ function paramsIdentical(a, b) {
 }
 
 function equalParamSets(params1, params2) {
-    for (const param in params1) {
-        // compare A -> B
+    for (const param in params1) { // compare A -> B
         if (params1.hasOwnProperty(param) && !paramsIdentical(params1[param], params2[param])) {
             return false;
         }
     }
-    for (const param in params2) {
-        // compare B -> A
+    for (const param in params2) { // compare B -> A
         if (params2.hasOwnProperty(param) && !paramsIdentical(params2[param], params1[param])) {
             return false;
         }
@@ -298,9 +289,7 @@ class BatchManager {
 
         if (hasUnsupported) {
             if (hasSupported) {
-                Debug.warnOnce(
-                    `BatchManager: Some mesh instances on entity "${nodeName}" have skin/morph and the whole entity will be excluded from batching.`
-                );
+                Debug.warnOnce(`BatchManager: Some mesh instances on entity "${nodeName}" have skin/morph and the whole entity will be excluded from batching.`);
             }
             return null;
         }
@@ -346,10 +335,8 @@ class BatchManager {
 
             if (node.element._image._renderable.unmaskMeshInstance) {
                 arr.push(node.element._image._renderable.unmaskMeshInstance);
-                if (
-                    !node.element._image._renderable.unmaskMeshInstance.stencilFront ||
-                    !node.element._image._renderable.unmaskMeshInstance.stencilBack
-                ) {
+                if (!node.element._image._renderable.unmaskMeshInstance.stencilFront ||
+                    !node.element._image._renderable.unmaskMeshInstance.stencilBack) {
                     node.element._dirtifyMask();
                     node.element._onPrerender();
                 }
@@ -389,11 +376,8 @@ class BatchManager {
 
             for (let s = 0; s < group._obj.sprite.length; s++) {
                 const node = group._obj.sprite[s];
-                if (
-                    node.sprite &&
-                    node.sprite._meshInstance &&
-                    (group.dynamic || node.sprite.sprite._renderMode === SPRITE_RENDERMODE_SIMPLE)
-                ) {
+                if (node.sprite && node.sprite._meshInstance &&
+                    (group.dynamic || node.sprite.sprite._renderMode === SPRITE_RENDERMODE_SIMPLE)) {
                     arr.push(node.sprite._meshInstance);
                     node.sprite.removeFromLayers();
                     group._sprite = true;
@@ -462,6 +446,7 @@ class BatchManager {
         }
     }
 
+
     /**
      * Takes a list of mesh instances to be batched and sorts them into lists one for each draw
      * call. The input list will be split, if:
@@ -512,18 +497,16 @@ class BatchManager {
         let meshInstancesLeftA = meshInstances;
         let meshInstancesLeftB;
 
-        const skipMesh = translucent
-            ? function (mi) {
-                  if (skipTranslucentAabb) {
-                      skipTranslucentAabb.add(mi.aabb);
-                  } else {
-                      skipTranslucentAabb = mi.aabb.clone();
-                  }
-                  meshInstancesLeftB.push(mi);
-              }
-            : function (mi) {
-                  meshInstancesLeftB.push(mi);
-              };
+        const skipMesh = translucent ? function (mi) {
+            if (skipTranslucentAabb) {
+                skipTranslucentAabb.add(mi.aabb);
+            } else {
+                skipTranslucentAabb = mi.aabb.clone();
+            }
+            meshInstancesLeftB.push(mi);
+        } : function (mi) {
+            meshInstancesLeftB.push(mi);
+        };
 
         while (meshInstancesLeftA.length > 0) {
             lists[j] = [meshInstancesLeftA[0]];
@@ -553,25 +536,21 @@ class BatchManager {
                 }
 
                 // Split by material, layer (legacy), vertex format & index compatibility, shader defines, static source, vert count, overlapping UI
-                if (
-                    material !== mi.material ||
-                    layer !== mi.layer ||
-                    vertexFormatBatchingHash !== mi.mesh.vertexBuffer.format.batchingHash ||
-                    indexed !== mi.mesh.primitive[0].indexed ||
-                    defs !== mi._shaderDefs ||
-                    vertCount + mi.mesh.vertexBuffer.getNumVertices() > maxNumVertices
-                ) {
+                if ((material !== mi.material) ||
+                    (layer !== mi.layer) ||
+                    (vertexFormatBatchingHash !== mi.mesh.vertexBuffer.format.batchingHash) ||
+                    (indexed !== mi.mesh.primitive[0].indexed) ||
+                    (defs !== mi._shaderDefs) ||
+                    (vertCount + mi.mesh.vertexBuffer.getNumVertices() > maxNumVertices)) {
                     skipMesh(mi);
                     continue;
                 }
                 // Split by AABB
                 testAabb.copy(aabb);
                 testAabb.add(mi.aabb);
-                if (
-                    testAabb.halfExtents.x > halfMaxAabbSize ||
+                if (testAabb.halfExtents.x > halfMaxAabbSize ||
                     testAabb.halfExtents.y > halfMaxAabbSize ||
-                    testAabb.halfExtents.z > halfMaxAabbSize
-                ) {
+                    testAabb.halfExtents.z > halfMaxAabbSize) {
                     skipMesh(mi);
                     continue;
                 }
@@ -600,12 +579,7 @@ class BatchManager {
                     continue;
                 }
 
-                if (
-                    translucent &&
-                    skipTranslucentAabb &&
-                    skipTranslucentAabb.intersects(mi.aabb) &&
-                    mi.drawOrder !== drawOrder
-                ) {
+                if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb) && mi.drawOrder !== drawOrder) {
                     skipMesh(mi);
                     continue;
                 }
@@ -623,6 +597,7 @@ class BatchManager {
     }
 
     collectBatchedMeshData(meshInstances, dynamic) {
+
         let streams = null;
         let batchNumVerts = 0;
         let batchNumIndices = 0;
@@ -630,6 +605,7 @@ class BatchManager {
 
         for (let i = 0; i < meshInstances.length; i++) {
             if (meshInstances[i].visible) {
+
                 // vertex counts
                 const mesh = meshInstances[i].mesh;
                 const numVerts = mesh.vertexBuffer.numVertices;
@@ -650,6 +626,7 @@ class BatchManager {
 
                 // if first mesh
                 if (!streams) {
+
                     // material
                     material = meshInstances[i].material;
 
@@ -700,6 +677,7 @@ class BatchManager {
      * @returns {Batch} The resulting batch object.
      */
     create(meshInstances, dynamic, batchGroupId) {
+
         // #if _PROFILER
         const time = now();
         // #endif
@@ -719,6 +697,7 @@ class BatchManager {
 
         // if anything to batch
         if (batchData.streams) {
+
             const streams = batchData.streams;
             let material = batchData.material;
             const batchNumVerts = batchData.batchNumVerts;
@@ -763,10 +742,7 @@ class BatchManager {
                         stream = streams[semantic];
 
                         // get vertex stream to typed view subarray
-                        const subarray = new stream.typeArrayType(
-                            stream.buffer.buffer,
-                            stream.elementByteSize * stream.count
-                        );
+                        const subarray = new stream.typeArrayType(stream.buffer.buffer, stream.elementByteSize * stream.count);
                         const totalComponents = mesh.getVertexStream(semantic, subarray) * stream.numComponents;
                         stream.count += totalComponents;
 
@@ -838,8 +814,8 @@ class BatchManager {
                     // source index buffer data mapped to its format
                     const srcFormat = mesh.indexBuffer[0].getFormat();
                     indexData = new typedArrayIndexFormats[srcFormat](mesh.indexBuffer[0].storage);
-                } else {
-                    // non-indexed
+
+                } else { // non-indexed
 
                     indexBaseVertex = 0;
 
@@ -868,14 +844,7 @@ class BatchManager {
             mesh = new Mesh(this.device);
             for (semantic in streams) {
                 stream = streams[semantic];
-                mesh.setVertexStream(
-                    semantic,
-                    stream.buffer,
-                    stream.numComponents,
-                    undefined,
-                    stream.dataType,
-                    stream.normalize
-                );
+                mesh.setVertexStream(semantic, stream.buffer, stream.numComponents, undefined, stream.dataType, stream.normalize);
             }
 
             if (indices.length > 0) {
@@ -962,9 +931,7 @@ class BatchManager {
     }
 
     clone(batch, clonedMeshInstances) {
-        Debug.removed(
-            'BatchManager#clone was removed. There is no replacement, as the method was unused and had no supported use case.'
-        );
+        Debug.removed('BatchManager#clone was removed. There is no replacement, as the method was unused and had no supported use case.');
     }
 
     /**

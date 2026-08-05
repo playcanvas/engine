@@ -131,6 +131,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const textureWidth = this.workBuffer.textureSize;
 
         if (changedAllocIds) {
+
             // Ensure shared sub-draw texture has enough capacity (grow-only)
             const requiredCapacity = changedAllocIds.size * 3;
             if (this._subDrawTexture.width * this._subDrawTexture.height < requiredCapacity) {
@@ -161,14 +162,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
 
                     for (let j = 0; j < numIntervals; j++) {
                         if (changedAllocIds.has(allocIds[j])) {
-                            writeOffset = splatInfo.appendSubDraws(
-                                texData,
-                                writeOffset,
-                                intervals[j * 2],
-                                intervals[j * 2 + 1] - intervals[j * 2],
-                                splatInfo.intervalOffsets[j],
-                                textureWidth
-                            );
+                            writeOffset = splatInfo.appendSubDraws(texData, writeOffset, intervals[j * 2], intervals[j * 2 + 1] - intervals[j * 2], splatInfo.intervalOffsets[j], textureWidth);
                         }
                     }
 
@@ -181,7 +175,9 @@ class GSplatWorkBufferRenderPass extends RenderPass {
             }
 
             this._subDrawTexture.unlock();
+
         } else {
+
             // Full rebuild: all active splats, no partial data
             for (let i = 0; i < splats.length; i++) {
                 const splatInfo = splats[i];
@@ -274,13 +270,7 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const formatDeclarations = resource.format.getInputDeclarations();
 
         // quad renderer and material are cached in the resource
-        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
-            this.colorOnly,
-            workBufferModifier,
-            formatHash,
-            formatDeclarations,
-            this.workBuffer.format
-        );
+        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(this.colorOnly, workBufferModifier, formatHash, formatDeclarations, this.workBuffer.format);
 
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);

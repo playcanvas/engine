@@ -23,6 +23,7 @@ describe('NullPhysicsWorld', function () {
     });
 
     describe('installation', function () {
+
         it('is not installed by default', function () {
             expect(app.systems.rigidbody.physicsWorld).to.equal(null);
             expect(app.systems.rigidbody.dynamicsWorld).to.equal(null);
@@ -50,9 +51,11 @@ describe('NullPhysicsWorld', function () {
                 app.update(1 / 60);
             }).to.not.throw();
         });
+
     });
 
     describe('inert operations', function () {
+
         let world;
 
         beforeEach(function () {
@@ -108,9 +111,11 @@ describe('NullPhysicsWorld', function () {
             expect(joint.isBroken()).to.equal(false);
             expect(joint.updateLimits({})).to.equal(false);
         });
+
     });
 
     describe('joint component lifecycle', function () {
+
         let bodyA, bodyB, jointEntity;
 
         beforeEach(function () {
@@ -162,5 +167,7 @@ describe('NullPhysicsWorld', function () {
             expect(component.isBroken).to.equal(false);
             expect(component._joint).to.exist;
         });
+
     });
+
 });

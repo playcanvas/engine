@@ -8,10 +8,13 @@ import { Vec3 } from '../../core/math/vec3.js';
  * @import { XrHand } from './xr-hand.js'
  */
 
-const tipJointIds =
-    platform.browser && window.XRHand
-        ? ['thumb-tip', 'index-finger-tip', 'middle-finger-tip', 'ring-finger-tip', 'pinky-finger-tip']
-        : [];
+const tipJointIds = platform.browser && window.XRHand ? [
+    'thumb-tip',
+    'index-finger-tip',
+    'middle-finger-tip',
+    'ring-finger-tip',
+    'pinky-finger-tip'
+] : [];
 
 const tipJointIdsIndex = {};
 

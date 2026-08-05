@@ -29,6 +29,7 @@ describe('Camera', function () {
     });
 
     describe('#constructor', function () {
+
         it('requires a graphics device', function () {
             // Debug.assert is stripped in production, so this throws in dev builds only via
             // the assertion; we simply verify that passing the device works.
@@ -43,6 +44,7 @@ describe('Camera', function () {
     });
 
     describe('#aspectRatio (ASPECT_AUTO)', function () {
+
         it('reflects the backbuffer size synchronously', function () {
             app.graphicsDevice.setResolution(800, 400);
 
@@ -99,6 +101,7 @@ describe('Camera', function () {
     });
 
     describe('#aspectRatio (ASPECT_MANUAL)', function () {
+
         it('preserves the manually assigned value', function () {
             app.graphicsDevice.setResolution(800, 400);
 
@@ -117,6 +120,7 @@ describe('Camera', function () {
     });
 
     describe('#projectionMatrix', function () {
+
         it('refreshes after a backbuffer resize (no setter touched)', function () {
             app.graphicsDevice.setResolution(800, 400);
 
@@ -136,6 +140,7 @@ describe('Camera', function () {
     });
 
     describe('#projectionOffset', function () {
+
         it('defaults to (0, 0) and copies the assigned value', function () {
             const camera = new Camera(app.graphicsDevice);
             expect(camera.projectionOffset.equals(new Vec2())).to.equal(true);
@@ -227,6 +232,7 @@ describe('Camera', function () {
     });
 
     describe('#clone', function () {
+
         it('preserves aspect ratio state', function () {
             app.graphicsDevice.setResolution(800, 400);
 
@@ -255,6 +261,7 @@ describe('CameraComponent', function () {
     });
 
     describe('#aspectRatio', function () {
+
         it('reflects the backbuffer size before the first frame', function () {
             app.graphicsDevice.setResolution(1600, 400);
 

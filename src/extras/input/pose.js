@@ -96,11 +96,9 @@ class Pose {
      * @returns {boolean} True if the poses are approximately equal, false otherwise.
      */
     equalsApprox(other, epsilon = 1e-6) {
-        return (
-            this.position.equalsApprox(other.position, epsilon) &&
+        return this.position.equalsApprox(other.position, epsilon) &&
             this.angles.equalsApprox(other.angles, epsilon) &&
-            Math.abs(this.distance - other.distance) < epsilon
-        );
+            Math.abs(this.distance - other.distance) < epsilon;
     }
 
     /**
@@ -199,11 +197,10 @@ class Pose {
      * @returns {Vec3} The focus point of the pose.
      */
     getFocus(out) {
-        return rotation
-            .setFromEulerAngles(this.angles)
-            .transformVector(Vec3.FORWARD, out)
-            .mulScalar(this.distance)
-            .add(this.position);
+        return rotation.setFromEulerAngles(this.angles)
+        .transformVector(Vec3.FORWARD, out)
+        .mulScalar(this.distance)
+        .add(this.position);
     }
 }
 

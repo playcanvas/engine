@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 // Surface albedo absorbance
 vec3 litArgs_albedo;

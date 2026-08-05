@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform alpha_ref: f32;
 
 fn alphaTest(a: f32) {

@@ -1,5 +1,5 @@
 // main shader entry point for the lit material for forward rendering
-export default /* wgsl */ `
+export default /* wgsl */`
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {

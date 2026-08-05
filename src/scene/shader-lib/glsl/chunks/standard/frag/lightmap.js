@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #ifdef STD_LIGHTMAP_DIR
     vec3 dLightmapDir;

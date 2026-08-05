@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #ifdef NINESLICED
     fn getUv0() -> vec2f {
         var uv = vertex_position.xz;

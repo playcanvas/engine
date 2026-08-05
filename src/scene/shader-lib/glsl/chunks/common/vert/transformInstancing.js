@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 attribute vec4 instance_line1;
 attribute vec4 instance_line2;

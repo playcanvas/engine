@@ -1,22 +1,9 @@
 import {
     TEXHINT_ASSET,
-    ADDRESS_CLAMP_TO_EDGE,
-    ADDRESS_MIRRORED_REPEAT,
-    ADDRESS_REPEAT,
-    FILTER_LINEAR,
-    FILTER_NEAREST,
-    FILTER_NEAREST_MIPMAP_NEAREST,
-    FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST,
-    FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_RGB8,
-    PIXELFORMAT_RGBA8,
-    PIXELFORMAT_RGBA32F,
-    TEXTURETYPE_DEFAULT,
-    TEXTURETYPE_RGBE,
-    TEXTURETYPE_RGBM,
-    TEXTURETYPE_SWIZZLEGGGR,
-    TEXTURETYPE_RGBP
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
+    FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, TEXTURETYPE_RGBP
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
@@ -33,26 +20,26 @@ import { ResourceHandler } from './handler.js';
  */
 
 const JSON_ADDRESS_MODE = {
-    repeat: ADDRESS_REPEAT,
-    clamp: ADDRESS_CLAMP_TO_EDGE,
-    mirror: ADDRESS_MIRRORED_REPEAT
+    'repeat': ADDRESS_REPEAT,
+    'clamp': ADDRESS_CLAMP_TO_EDGE,
+    'mirror': ADDRESS_MIRRORED_REPEAT
 };
 
 const JSON_FILTER_MODE = {
-    nearest: FILTER_NEAREST,
-    linear: FILTER_LINEAR,
-    nearest_mip_nearest: FILTER_NEAREST_MIPMAP_NEAREST,
-    linear_mip_nearest: FILTER_LINEAR_MIPMAP_NEAREST,
-    nearest_mip_linear: FILTER_NEAREST_MIPMAP_LINEAR,
-    linear_mip_linear: FILTER_LINEAR_MIPMAP_LINEAR
+    'nearest': FILTER_NEAREST,
+    'linear': FILTER_LINEAR,
+    'nearest_mip_nearest': FILTER_NEAREST_MIPMAP_NEAREST,
+    'linear_mip_nearest': FILTER_LINEAR_MIPMAP_NEAREST,
+    'nearest_mip_linear': FILTER_NEAREST_MIPMAP_LINEAR,
+    'linear_mip_linear': FILTER_LINEAR_MIPMAP_LINEAR
 };
 
 const JSON_TEXTURE_TYPE = {
-    default: TEXTURETYPE_DEFAULT,
-    rgbm: TEXTURETYPE_RGBM,
-    rgbe: TEXTURETYPE_RGBE,
-    rgbp: TEXTURETYPE_RGBP,
-    swizzleGGGR: TEXTURETYPE_SWIZZLEGGGR
+    'default': TEXTURETYPE_DEFAULT,
+    'rgbm': TEXTURETYPE_RGBM,
+    'rgbe': TEXTURETYPE_RGBE,
+    'rgbp': TEXTURETYPE_RGBP,
+    'swizzleGGGR': TEXTURETYPE_SWIZZLEGGGR
 };
 
 // In the case where a texture has more than 1 level of mip data specified, but not the full
@@ -62,24 +49,22 @@ const JSON_TEXTURE_TYPE = {
 // the texture's full mip chain was complete).
 // NOTE: this function only resamples RGBA8 and RGBAFloat32 data.
 const _completePartialMipmapChain = function (texture) {
+
     const requiredMipLevels = TextureUtils.calcMipLevelsCount(texture._width, texture._height);
 
     const isHtmlElement = function (object) {
-        return (
-            object instanceof HTMLCanvasElement ||
-            object instanceof HTMLImageElement ||
-            object instanceof HTMLVideoElement
-        );
+        return (object instanceof HTMLCanvasElement) ||
+               (object instanceof HTMLImageElement) ||
+               (object instanceof HTMLVideoElement);
     };
 
-    if (
-        !(texture._format === PIXELFORMAT_RGBA8 || texture._format === PIXELFORMAT_RGBA32F) ||
-        texture._volume ||
-        texture._compressed ||
-        texture._levels.length === 1 ||
-        texture._levels.length === requiredMipLevels ||
-        isHtmlElement(texture._cubemap ? texture._levels[0][0] : texture._levels[0])
-    ) {
+    if (!(texture._format === PIXELFORMAT_RGBA8 ||
+          texture._format === PIXELFORMAT_RGBA32F) ||
+          texture._volume ||
+          texture._compressed ||
+          texture._levels.length === 1 ||
+          texture._levels.length === requiredMipLevels ||
+          isHtmlElement(texture._cubemap ? texture._levels[0][0] : texture._levels[0])) {
         return;
     }
 
@@ -167,6 +152,7 @@ class TextureHandler extends ResourceHandler {
     }
 
     _getTextureOptions(asset) {
+
         const options = {
             // #if _PROFILER
             profilerHint: TEXHINT_ASSET

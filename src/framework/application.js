@@ -147,8 +147,9 @@ class Application extends AppBase {
     }
 
     createDevice(canvas, options) {
+
         if (!options.graphicsDeviceOptions) {
-            options.graphicsDeviceOptions = {};
+            options.graphicsDeviceOptions = { };
         }
         if (platform.browser && !!navigator.xr) {
             options.graphicsDeviceOptions.xrCompatible = true;

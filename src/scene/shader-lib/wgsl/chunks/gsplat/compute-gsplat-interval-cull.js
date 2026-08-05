@@ -12,7 +12,7 @@
 //   - prefixSum[i] gives the output offset for interval i's splats
 //   - prefixSum[numIntervals] equals the total visible splat count
 
-export const computeGsplatIntervalCullSource = /* wgsl */ `
+export const computeGsplatIntervalCullSource = /* wgsl */`
 
 struct Interval {
     workBufferBase: u32,

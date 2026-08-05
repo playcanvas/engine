@@ -1,7 +1,7 @@
 // Shader function for sampling a 2D texture with Catmull-Rom filtering, using 9 texture samples instead of 16
 // based on https://gist.github.com/TheRealMJP/c83b8c0f46b63f3a88a5986f4fa982b1
 
-export default /* wgsl */ `
+export default /* wgsl */`
 
 fn SampleTextureCatmullRom(tex: texture_2d<f32>, texSampler: sampler, uv: vec2f, texSize: vec2f) -> vec4f {
     // We're going to sample a 4x4 grid of texels surrounding the target UV coordinate. We'll do this by rounding

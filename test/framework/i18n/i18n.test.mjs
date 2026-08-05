@@ -7,6 +7,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('I18n', function () {
+
     let app;
 
     beforeEach(function () {
@@ -22,14 +23,14 @@ describe('I18n', function () {
     });
 
     const DEFAULT_LOCALE_FALLBACKS = {
-        en: 'en-US',
-        es: 'en-ES',
-        zh: 'zh-CN',
-        fr: 'fr-FR',
-        de: 'de-DE',
-        it: 'it-IT',
-        ru: 'ru-RU',
-        ja: 'ja-JP'
+        'en': 'en-US',
+        'es': 'en-ES',
+        'zh': 'zh-CN',
+        'fr': 'fr-FR',
+        'de': 'de-DE',
+        'it': 'it-IT',
+        'ru': 'ru-RU',
+        'ja': 'ja-JP'
     };
 
     // Creates data for a single translation as if it was a whole asset
@@ -40,14 +41,12 @@ describe('I18n', function () {
             header: {
                 version: 1
             },
-            data: [
-                {
-                    info: {
-                        locale: locale
-                    },
-                    messages: messages
-                }
-            ]
+            data: [{
+                info: {
+                    locale: locale
+                },
+                messages: messages
+            }]
         };
 
         return data;
@@ -62,6 +61,7 @@ describe('I18n', function () {
     };
 
     describe('#assets', function () {
+
         it('returns same ids for assets after setting array of asset ids', function () {
             app.i18n.assets = [1, 2];
             expect(app.i18n.assets).to.deep.equal([1, 2]);
@@ -79,9 +79,11 @@ describe('I18n', function () {
             app.i18n.assets = [2, 3];
             expect(app.i18n.assets).to.deep.equal([2, 3]);
         });
+
     });
 
     describe('#findAvailableLocale', function () {
+
         it('should find locale if translations have been provided for it', function () {
             addText('no-IT', 'key', 'norwegian');
             expect(app.i18n.findAvailableLocale('no-IT')).to.equal('no-IT');
@@ -101,9 +103,11 @@ describe('I18n', function () {
             addText('en-GB', 'key', 'British');
             expect(app.i18n.findAvailableLocale('en-US')).to.equal('en-GB');
         });
+
     });
 
     describe('#getPluralText', function () {
+
         it('should return key when no translations exist for that locale', function () {
             expect(app.i18n.getPluralText('key')).to.equal('key');
 
@@ -196,6 +200,7 @@ describe('I18n', function () {
             expect(app.i18n.getPluralText('key', 1, 'no-alt')).to.equal('language no');
             app.i18n.locale = 'no-alt';
             expect(app.i18n.getPluralText('key', 1)).to.equal('language no');
+
         });
 
         it('should fall back to default locale for that language if you just pass the language', function () {
@@ -281,6 +286,7 @@ describe('I18n', function () {
             });
         });
 
+
         it('should return correct plural forms for \"en, de, it, el, es, tr\"', function () {
             const locales = ['en-US', 'en-GB', 'de-DE', 'it-IT', 'el-GR', 'es-ES', 'tr-TR'];
             locales.forEach((locale) => {
@@ -337,6 +343,7 @@ describe('I18n', function () {
                 testLocale(locale);
                 app.i18n.locale = locale;
                 testLocale();
+
             });
         });
 
@@ -375,6 +382,7 @@ describe('I18n', function () {
                 testLocale(locale);
                 app.i18n.locale = locale;
                 testLocale();
+
             });
         });
 
@@ -407,9 +415,11 @@ describe('I18n', function () {
             app.i18n.locale = 'zh-SG';
             expect(app.i18n.getPluralText('key')).to.equal('cn');
         });
+
     });
 
     describe('#getText', function () {
+
         it('should return key when no translations exist for that locale', function () {
             expect(app.i18n.getText('key')).to.equal('key');
 
@@ -515,9 +525,11 @@ describe('I18n', function () {
             app.i18n.locale = 'zh-SG';
             expect(app.i18n.getText('key')).to.equal('cn');
         });
+
     });
 
     describe('#locale', function () {
+
         it('ensures locale for Indonesian always starts with "id"', function () {
             app.i18n.locale = 'id';
             expect(app.i18n.locale).to.equal('id');
@@ -538,9 +550,11 @@ describe('I18n', function () {
             app.i18n.locale = 'en-US';
             expect(app.i18n.locale).to.equal('en-US');
         });
+
     });
 
     describe('removeData', function () {
+
         it('removes all data correctly', function () {
             const data1 = addText('en-US', 'key', 'translation');
             const data2 = addText('en-US', 'key2', 'translation2');
@@ -566,6 +580,7 @@ describe('I18n', function () {
             expect(app.i18n.getText('key3', 'no-IT')).to.equal('key3');
             expect(app.i18n.getText('key3', 'no')).to.equal('key3');
         });
+
     });
 
     it.skip('assets not in asset registry get loaded after they are added to the registry', (done) => {
@@ -716,4 +731,5 @@ describe('I18n', function () {
         app.assets.add(asset);
         app.assets.load(asset);
     });
+
 });

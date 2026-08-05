@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 #ifdef LIT_GGX_SPECULAR
     uniform float material_anisotropyIntensity;

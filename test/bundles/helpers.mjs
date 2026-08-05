@@ -5,34 +5,17 @@ import vm from 'node:vm';
 import { JSDOM } from 'jsdom';
 
 // resolve a path under build/ relative to the repo root
-const build = (p) => fileURLToPath(new URL(`../../build/${p}`, import.meta.url));
+const build = p => fileURLToPath(new URL(`../../build/${p}`, import.meta.url));
 
 // url the engine assumes when reading document.baseURI / location
 const URL_ORIGIN = 'http://localhost:3210';
 
 // representative slice of the public api; parity (below) enforces the full surface
 export const EXPECTED_EXPORTS = [
-    'AppBase',
-    'app',
-    'Application',
-    'Entity',
-    'Scene',
-    'Vec2',
-    'Vec3',
-    'Vec4',
-    'Mat3',
-    'Mat4',
-    'Quat',
-    'Color',
-    'GraphicsDevice',
-    'NullGraphicsDevice',
-    'Texture',
-    'Mesh',
-    'Material',
-    'StandardMaterial',
-    'Asset',
-    'AssetRegistry',
-    'Camera'
+    'AppBase', 'app', 'Application', 'Entity', 'Scene',
+    'Vec2', 'Vec3', 'Vec4', 'Mat3', 'Mat4', 'Quat', 'Color',
+    'GraphicsDevice', 'NullGraphicsDevice', 'Texture', 'Mesh',
+    'Material', 'StandardMaterial', 'Asset', 'AssetRegistry', 'Camera'
 ];
 
 // the four single-file umd bundles, loadable as a browser global or as commonjs
@@ -61,10 +44,7 @@ export const ESM_TARGETS = [
 export const SOURCE_INDEX = fileURLToPath(new URL('../../src/index.js', import.meta.url));
 
 // the set of public export names, sorted, with the esm-only `default` filtered out
-export const exportNames = (ns) =>
-    Object.keys(ns)
-        .filter((k) => k !== 'default')
-        .sort();
+export const exportNames = ns => Object.keys(ns).filter(k => k !== 'default').sort();
 
 // run a umd bundle inside a jsdom vm context so every dom reference it makes resolves to
 // that window, regardless of the realm calling into the returned classes
@@ -87,7 +67,7 @@ export const loadUmdCjs = (path) => {
 };
 
 // native esm load
-export const loadEsm = (path) => import(pathToFileURL(path).href);
+export const loadEsm = path => import(pathToFileURL(path).href);
 
 let dom;
 

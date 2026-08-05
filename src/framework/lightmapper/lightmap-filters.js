@@ -49,6 +49,7 @@ class LightmapFilters {
     }
 
     prepare(textureWidth, textureHeight) {
+
         // inverse texture size
         this.pixelOffset[0] = 1 / textureWidth;
         this.pixelOffset[1] = 1 / textureHeight;
@@ -56,8 +57,10 @@ class LightmapFilters {
     }
 
     prepareDenoise(filterRange, filterSmoothness, bakeHDR) {
+
         const index = bakeHDR ? 0 : 1;
         if (!this.shaderDenoise[index]) {
+
             const defines = new Map();
             defines.set('{MSIZE}', 15);
             if (bakeHDR) defines.set('HDR', '');
@@ -107,8 +110,9 @@ class LightmapFilters {
     }
 
     evaluateDenoiseUniforms(filterRange, filterSmoothness) {
+
         function normpdf(x, sigma) {
-            return (0.39894 * Math.exp((-0.5 * x * x) / (sigma * sigma))) / sigma;
+            return 0.39894 * Math.exp(-0.5 * x * x / (sigma * sigma)) / sigma;
         }
 
         // kernel

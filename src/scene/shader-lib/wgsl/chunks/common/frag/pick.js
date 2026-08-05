@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn encodePickOutput(id: u32) -> vec4f {
     let inv: vec4f = vec4f(1.0 / 255.0);
     let shifts: vec4u = vec4u(16u, 8u, 0u, 24u);

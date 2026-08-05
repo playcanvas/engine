@@ -1,18 +1,13 @@
 import { hashCode } from '../../../core/hash.js';
 import { MapUtils } from '../../../core/map-utils.js';
-import {
-    SEMANTIC_ATTR15,
-    SEMANTIC_BLENDINDICES,
-    SEMANTIC_BLENDWEIGHT,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL
-} from '../../../platform/graphics/constants.js';
+import { SEMANTIC_ATTR15, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderDefinitionUtils } from '../../../platform/graphics/shader-definition-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
 import { ShaderChunks } from '../shader-chunks.js';
 
 class ShaderGeneratorShader extends ShaderGenerator {
     generateKey(options) {
+
         // Note: options.shaderChunks are not included in the key as currently shader variants are removed
         // from the material when its chunks are modified.
 
@@ -26,17 +21,18 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         let key = `${desc.uniqueName}_${definesHash}_${vsHashGLSL}_${fsHashGLSL}_${vsHashWGSL}_${fsHashWGSL}_${chunksKey}`;
 
-        if (options.skin) key += '_skin';
-        if (options.useInstancing) key += '_inst';
-        if (options.useMorphPosition) key += '_morphp';
-        if (options.useMorphNormal) key += '_morphn';
-        if (options.useMorphTextureBasedInt) key += '_morphi';
-        if (options.useDualSourceBlending) key += '_dualSource';
+        if (options.skin)                       key += '_skin';
+        if (options.useInstancing)              key += '_inst';
+        if (options.useMorphPosition)           key += '_morphp';
+        if (options.useMorphNormal)             key += '_morphn';
+        if (options.useMorphTextureBasedInt)    key += '_morphi';
+        if (options.useDualSourceBlending)       key += '_dualSource';
 
         return key;
     }
 
     createAttributesDefinition(definitionOptions, options) {
+
         // clone provided attributes if any
         const srcAttributes = options.shaderDesc.attributes;
         const attributes = srcAttributes ? { ...srcAttributes } : undefined;
@@ -74,6 +70,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
     }
 
     createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl) {
+
         const desc = options.shaderDesc;
 
         const includes = new Map(sharedIncludes);
@@ -88,6 +85,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
     }
 
     createFragmentDefinition(definitionOptions, options, sharedIncludes, wgsl) {
+
         const desc = options.shaderDesc;
 
         const includes = new Map(sharedIncludes);
@@ -100,9 +98,9 @@ class ShaderGeneratorShader extends ShaderGenerator {
     }
 
     createShaderDefinition(device, options) {
+
         const desc = options.shaderDesc;
-        const wgsl =
-            device.isWebGPU && !!desc.vertexWGSL && !!desc.fragmentWGSL && (options.shaderChunks?.useWGSL ?? true);
+        const wgsl = device.isWebGPU && !!desc.vertexWGSL && !!desc.fragmentWGSL && (options.shaderChunks?.useWGSL ?? true);
         const definitionOptions = {
             name: `ShaderMaterial-${desc.uniqueName}`,
             shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
@@ -114,10 +112,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
 
         // includes - default chunks
         const shaderLanguage = wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
-        const sharedIncludes = MapUtils.merge(
-            ShaderChunks.get(device, shaderLanguage),
-            options.shaderChunks[shaderLanguage]
-        );
+        const sharedIncludes = MapUtils.merge(ShaderChunks.get(device, shaderLanguage), options.shaderChunks[shaderLanguage]);
 
         this.createAttributesDefinition(definitionOptions, options);
         this.createVertexDefinition(definitionOptions, options, sharedIncludes, wgsl);

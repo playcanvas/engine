@@ -159,8 +159,8 @@ class SoundSlot extends EventHandler {
         this._loop = !!(options.loop !== undefined ? options.loop : false);
         this._duration = options.duration > 0 ? options.duration : null;
         this._startTime = Math.max(0, Number(options.startTime) || 0);
-        this._overlap = !!options.overlap;
-        this._autoPlay = !!options.autoPlay;
+        this._overlap = !!(options.overlap);
+        this._autoPlay = !!(options.autoPlay);
         this._firstNode = null;
         this._lastNode = null;
 
@@ -330,7 +330,7 @@ class SoundSlot extends EventHandler {
      * slot.setExternalNodes(analyzer, filter);
      */
     setExternalNodes(firstNode, lastNode) {
-        if (!firstNode) {
+        if (!(firstNode)) {
             console.error('The firstNode must have a valid AudioNode');
             return;
         }

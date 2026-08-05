@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #define NINESLICED
 
 varying vMask: vec2f;

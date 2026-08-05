@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 // bilateral filter, based on https://www.shadertoy.com/view/4dfGDH# and
 // http://people.csail.mit.edu/sparis/bf_course/course_notes.pdf
 

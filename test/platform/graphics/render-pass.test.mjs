@@ -8,6 +8,7 @@ import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 
 describe('RenderPass', function () {
+
     /** @type {NullGraphicsDevice} */
     let device;
 
@@ -17,14 +18,13 @@ describe('RenderPass', function () {
     /** @type {RenderPass} */
     let renderPass;
 
-    const createTexture = (name) =>
-        new Texture(device, {
-            name: name,
-            width: 4,
-            height: 4,
-            format: PIXELFORMAT_RGBA8,
-            mipmaps: false
-        });
+    const createTexture = name => new Texture(device, {
+        name: name,
+        width: 4,
+        height: 4,
+        format: PIXELFORMAT_RGBA8,
+        mipmaps: false
+    });
 
     beforeEach(function () {
         device = new NullGraphicsDevice({ width: 100, height: 100 });
@@ -44,6 +44,7 @@ describe('RenderPass', function () {
     });
 
     describe('#setClearColor', function () {
+
         const red = new Color(1, 0.5, 0.25, 1);
         const blue = new Color(0.25, 0.5, 1, 1);
 
@@ -104,5 +105,7 @@ describe('RenderPass', function () {
             expect(renderPass.colorArrayOps[0].clear).to.equal(false);
             expect(renderPass.colorArrayOps[1].clear).to.equal(false);
         });
+
     });
+
 });

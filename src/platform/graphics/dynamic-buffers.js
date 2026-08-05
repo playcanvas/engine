@@ -122,6 +122,7 @@ class DynamicBuffers {
      * Destroy the system of dynamic buffers.
      */
     destroy() {
+
         this.gpuBuffers.forEach((gpuBuffer) => {
             gpuBuffer.destroy(this.device);
         });
@@ -143,11 +144,13 @@ class DynamicBuffers {
      * @param {number} size - The size of the allocation.
      */
     alloc(allocation, size) {
+
         // if we have active buffer without enough space
         if (this.activeBuffer) {
             const alignedStart = math.roundUp(this.activeBuffer.size, this.bufferAlignment);
             const space = this.bufferSize - alignedStart;
             if (space < size) {
+
                 // we're done with this buffer, schedule it for submit
                 this.scheduleSubmit();
             }
@@ -155,6 +158,7 @@ class DynamicBuffers {
 
         // if we don't have an active buffer, allocate new one
         if (!this.activeBuffer) {
+
             // gpu buffer
             let gpuBuffer = this.gpuBuffers.pop();
             if (!gpuBuffer) {
@@ -177,10 +181,7 @@ class DynamicBuffers {
         // allocate from active buffer
         const activeBuffer = this.activeBuffer;
         const alignedStart = math.roundUp(activeBuffer.size, this.bufferAlignment);
-        Debug.assert(
-            alignedStart + size <= this.bufferSize,
-            `The allocation size of ${size} is larger than the buffer size of ${this.bufferSize}`
-        );
+        Debug.assert(alignedStart + size <= this.bufferSize, `The allocation size of ${size} is larger than the buffer size of ${this.bufferSize}`);
 
         allocation.gpuBuffer = activeBuffer.gpuBuffer;
         allocation.offset = alignedStart;
@@ -191,6 +192,7 @@ class DynamicBuffers {
     }
 
     scheduleSubmit() {
+
         if (this.activeBuffer) {
             this.usedBuffers.push(this.activeBuffer);
             this.activeBuffer = null;
@@ -198,6 +200,7 @@ class DynamicBuffers {
     }
 
     submit() {
+
         // schedule currently active buffer for submit
         this.scheduleSubmit();
     }

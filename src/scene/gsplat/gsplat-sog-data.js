@@ -21,6 +21,7 @@ import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCen
 const SH_C0 = 0.28209479177387814;
 
 const readImageDataAsync = (texture) => {
+
     if (texture.device.isNull) {
         return new Promise((resolve) => {
             resolve(new Uint8Array(texture.width * texture.height * 4));
@@ -42,6 +43,7 @@ const resolve = (scope, values) => {
 
 class GSplatSogIterator {
     constructor(data, p, r, s, c, sh) {
+
         const lerp = (a, b, t) => a * (1 - t) + b * t;
 
         // extract means for centers
@@ -61,21 +63,9 @@ class GSplatSogIterator {
 
         this.read = (i) => {
             if (p) {
-                const nx = lerp(
-                    means.mins[0],
-                    means.maxs[0],
-                    ((means_u_data[i * 4 + 0] << 8) + means_l_data[i * 4 + 0]) / 65535
-                );
-                const ny = lerp(
-                    means.mins[1],
-                    means.maxs[1],
-                    ((means_u_data[i * 4 + 1] << 8) + means_l_data[i * 4 + 1]) / 65535
-                );
-                const nz = lerp(
-                    means.mins[2],
-                    means.maxs[2],
-                    ((means_u_data[i * 4 + 2] << 8) + means_l_data[i * 4 + 2]) / 65535
-                );
+                const nx = lerp(means.mins[0], means.maxs[0], ((means_u_data[i * 4 + 0] << 8) + means_l_data[i * 4 + 0]) / 65535);
+                const ny = lerp(means.mins[1], means.maxs[1], ((means_u_data[i * 4 + 1] << 8) + means_l_data[i * 4 + 1]) / 65535);
+                const nz = lerp(means.mins[2], means.maxs[2], ((means_u_data[i * 4 + 2] << 8) + means_l_data[i * 4 + 2]) / 65535);
 
                 p.x = Math.sign(nx) * (Math.exp(Math.abs(nx)) - 1);
                 p.y = Math.sign(ny) * (Math.exp(Math.abs(ny)) - 1);
@@ -90,18 +80,10 @@ class GSplatSogIterator {
                 const mode = quats_data[i * 4 + 3] - 252;
 
                 switch (mode) {
-                    case 0:
-                        r.set(a, b, c, d);
-                        break;
-                    case 1:
-                        r.set(d, b, c, a);
-                        break;
-                    case 2:
-                        r.set(b, d, c, a);
-                        break;
-                    case 3:
-                        r.set(b, c, d, a);
-                        break;
+                    case 0: r.set(a, b, c, d); break;
+                    case 1: r.set(d, b, c, a); break;
+                    case 2: r.set(b, d, c, a); break;
+                    case 3: r.set(b, c, d, a); break;
                 }
             }
 
@@ -144,18 +126,13 @@ class GSplatSogIterator {
                 if (meta.version === 2) {
                     for (let j = 0; j < 3; ++j) {
                         for (let k = 0; k < coeffs; ++k) {
-                            sh[j * 15 + k] =
-                                shN.codebook[sh_centroids_data[(u + k) * 4 + j + v * data.sh_centroids.width * 4]];
+                            sh[j * 15 + k] = shN.codebook[sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)]];
                         }
                     }
                 } else {
                     for (let j = 0; j < 3; ++j) {
                         for (let k = 0; k < coeffs; ++k) {
-                            sh[j * 15 + k] = lerp(
-                                shN.mins,
-                                shN.maxs,
-                                sh_centroids_data[(u + k) * 4 + j + v * data.sh_centroids.width * 4] / 255
-                            );
+                            sh[j * 15 + k] = lerp(shN.mins, shN.maxs, sh_centroids_data[((u + k) * 4 + j) + (v * data.sh_centroids.width * 4)] / 255);
                         }
                     }
                 }
@@ -243,19 +220,11 @@ class GSplatSogData {
     calcAabb(result) {
         const { mins, maxs } = this.meta.means;
 
-        const map = (v) => Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
+        const map = v => Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
 
-        result.center.set(
-            (map(mins[0]) + map(maxs[0])) * 0.5,
-            (map(mins[1]) + map(maxs[1])) * 0.5,
-            (map(mins[2]) + map(maxs[2])) * 0.5
-        );
+        result.center.set((map(mins[0]) + map(maxs[0])) * 0.5, (map(mins[1]) + map(maxs[1])) * 0.5, (map(mins[2]) + map(maxs[2])) * 0.5);
 
-        result.halfExtents.set(
-            (map(maxs[0]) - map(mins[0])) * 0.5,
-            (map(maxs[1]) - map(mins[1])) * 0.5,
-            (map(maxs[2]) - map(mins[2])) * 0.5
-        );
+        result.halfExtents.set((map(maxs[0]) - map(mins[0])) * 0.5, (map(maxs[1]) - map(mins[1])) * 0.5, (map(maxs[2]) - map(mins[2])) * 0.5);
     }
 
     getCenters() {
@@ -270,13 +239,9 @@ class GSplatSogData {
     calcFocalPoint(result, pred) {
         const { mins, maxs } = this.meta.means;
 
-        const map = (v) => Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
+        const map = v => Math.sign(v) * (Math.exp(Math.abs(v)) - 1);
 
-        result.set(
-            (map(mins[0]) + map(maxs[0])) * 0.5,
-            (map(mins[1]) + map(maxs[1])) * 0.5,
-            (map(mins[2]) + map(maxs[2])) * 0.5
-        );
+        result.set((map(mins[0]) + map(maxs[0])) * 0.5, (map(mins[1]) + map(maxs[1])) * 0.5, (map(mins[2]) + map(maxs[2])) * 0.5);
     }
 
     get isSog() {
@@ -285,20 +250,10 @@ class GSplatSogData {
 
     async decompress() {
         const members = [
-            'x',
-            'y',
-            'z',
-            'f_dc_0',
-            'f_dc_1',
-            'f_dc_2',
-            'opacity',
-            'scale_0',
-            'scale_1',
-            'scale_2',
-            'rot_0',
-            'rot_1',
-            'rot_2',
-            'rot_3'
+            'x', 'y', 'z',
+            'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
+            'scale_0', 'scale_1', 'scale_2',
+            'rot_0', 'rot_1', 'rot_2', 'rot_3'
         ];
 
         // ensure V2 codebooks are patched before the CPU iterator indexes them; the GPU flow
@@ -361,7 +316,7 @@ class GSplatSogData {
             data.f_dc_1[i] = (c.y - 0.5) / SH_C0;
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
             // convert opacity to log sigmoid taking into account infinities at 0 and 1
-            data.opacity[i] = c.w <= 0 ? -40 : c.w >= 1 ? 40 : -Math.log(1 / c.w - 1);
+            data.opacity[i] = (c.w <= 0) ? -40 : (c.w >= 1) ? 40 : -Math.log(1 / c.w - 1);
 
             if (sh) {
                 for (let c = 0; c < 45; ++c) {
@@ -370,20 +325,18 @@ class GSplatSogData {
             }
         }
 
-        return new GSplatData([
-            {
-                name: 'vertex',
-                count: this.numSplats,
-                properties: members.map((name) => {
-                    return {
-                        name: name,
-                        type: 'float',
-                        byteSize: 4,
-                        storage: data[name]
-                    };
-                })
-            }
-        ]);
+        return new GSplatData([{
+            name: 'vertex',
+            count: this.numSplats,
+            properties: members.map((name) => {
+                return {
+                    name: name,
+                    type: 'float',
+                    byteSize: 4,
+                    storage: data[name]
+                };
+            })
+        }]);
     }
 
     async generateCenters() {
@@ -462,10 +415,7 @@ class GSplatSogData {
      * @private
      */
     _createCodebookTexture() {
-        Debug.assert(
-            !this.codebookTexture,
-            'GSplatSogData: codebookTexture already exists - _createCodebookTexture() should only be called once per data instance.'
-        );
+        Debug.assert(!this.codebookTexture, 'GSplatSogData: codebookTexture already exists - _createCodebookTexture() should only be called once per data instance.');
 
         const device = this.means_l.device;
         const { scales, sh0, shN } = this.meta;
@@ -476,7 +426,7 @@ class GSplatSogData {
         const shNCb = shN?.codebook;
 
         const data = new Float32Array(256 * 4);
-        for (let i = 0; i < 256; i++) data[i * 4] = scalesCb[i];
+        for (let i = 0; i < 256; i++) data[i * 4]     = scalesCb[i];
         for (let i = 0; i < 256; i++) data[i * 4 + 1] = sh0Cb[i];
         if (shNCb) {
             for (let i = 0; i < 256; i++) data[i * 4 + 2] = shNCb[i];

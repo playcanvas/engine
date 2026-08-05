@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform material_iridescenceRefractionIndex: f32;
 
 fn iridescence_iorToFresnelScalar(transmittedIor: f32, incidentIor: f32) -> f32 {

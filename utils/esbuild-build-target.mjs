@@ -78,17 +78,16 @@ const PRUNABLE_IMPORTS = new Set([
     'validateUserChunks'
 ]);
 
-const compactIndent = (code) => code.replace(/^ +/gm, (spaces) => spaces.replace(/ {2}/g, '\t'));
+const compactIndent = code => code.replace(/^ +/gm, spaces => spaces.replace(/ {2}/g, '\t'));
 
 const shouldCompactIndent = ({ buildType, sourcemaps }) => {
     return !sourcemaps && (buildType === 'rel' || buildType === 'prf');
 };
 
-const parseModule = (source) =>
-    parse(source, {
-        ecmaVersion: 'latest',
-        sourceType: 'module'
-    });
+const parseModule = source => parse(source, {
+    ecmaVersion: 'latest',
+    sourceType: 'module'
+});
 
 const getJSCCOptions = (type) => {
     const base = {
@@ -155,7 +154,12 @@ const getUmdFooter = () => {
 }));`;
 };
 
-const getPlugins = ({ input, buildType, moduleFormat, file }) => {
+const getPlugins = ({
+    input,
+    buildType,
+    moduleFormat,
+    file
+}) => {
     const isDebug = buildType === 'dbg';
     const isUMD = moduleFormat === 'umd';
     const jscc = getJSCCOptions(buildType === 'min' ? 'rel' : buildType);
@@ -213,11 +217,9 @@ const getBundledOptions = ({
         banner: {
             js: isUMD ? getUmdBanner(banner) : banner
         },
-        footer: isUMD
-            ? {
-                  js: getUmdFooter()
-              }
-            : undefined,
+        footer: isUMD ? {
+            js: getUmdFooter()
+        } : undefined,
         plugins: getPlugins({
             input,
             buildType,
@@ -273,8 +275,9 @@ const watchBundled = async (options, startLog, log) => {
                         startLog(input, output);
                     });
                     build.onEnd(async (result) => {
-                        const stripSections =
-                            !options.sourcemaps && options.moduleFormat === 'esm' && options.buildType !== 'dbg';
+                        const stripSections = !options.sourcemaps &&
+                            options.moduleFormat === 'esm' &&
+                            options.buildType !== 'dbg';
                         if (!result.errors.length && (stripSections || shouldCompactIndent(options))) {
                             let code = await fs.promises.readFile(output, 'utf8');
                             if (stripSections) {
@@ -314,7 +317,7 @@ const collectIdentifiers = (node, used) => {
 
         const value = node[key];
         if (Array.isArray(value)) {
-            value.forEach((item) => collectIdentifiers(item, used));
+            value.forEach(item => collectIdentifiers(item, used));
             continue;
         }
         collectIdentifiers(value, used);
@@ -324,7 +327,7 @@ const collectIdentifiers = (node, used) => {
 const pruneUnusedImports = (source) => {
     const ast = parseModule(source);
     const used = new Set();
-    ast.body.forEach((node) => collectIdentifiers(node, used));
+    ast.body.forEach(node => collectIdentifiers(node, used));
 
     const ranges = [];
     for (const node of ast.body) {
@@ -403,7 +406,12 @@ const writeFflate = async (outDir) => {
     });
 };
 
-const getUnbundledContext = ({ buildType, input = 'src/index.js', dir = 'build', sourcemaps = false }) => {
+const getUnbundledContext = ({
+    buildType,
+    input = 'src/index.js',
+    dir = 'build',
+    sourcemaps = false
+}) => {
     const isDebug = buildType === 'dbg';
     const prefix = OUT_PREFIX[buildType];
     const jscc = getJSCCOptions(buildType);
@@ -423,20 +431,16 @@ const getUnbundledContext = ({ buildType, input = 'src/index.js', dir = 'build',
 
 const transformFile = async (file, ctx) => {
     let source = await fs.promises.readFile(file, 'utf8');
-    source = applyTransforms(
-        source,
-        {
-            jsccValues: ctx.jscc.values,
-            jsccKeepLines: ctx.jscc.keepLines,
-            strip: ctx.strip,
-            processShaders: !ctx.isDebug,
-            dynamicImportLegacy: false,
-            dynamicImportSuppress: true,
-            stripComments: !ctx.isDebug,
-            importMetaUrl: null
-        },
-        file
-    );
+    source = applyTransforms(source, {
+        jsccValues: ctx.jscc.values,
+        jsccKeepLines: ctx.jscc.keepLines,
+        strip: ctx.strip,
+        processShaders: !ctx.isDebug,
+        dynamicImportLegacy: false,
+        dynamicImportSuppress: true,
+        stripComments: !ctx.isDebug,
+        importMetaUrl: null
+    }, file);
     source = pruneUnusedImports(source);
     const imports = collectImports(source, file);
     source = rewriteFflate(source, file, ctx.input);
@@ -501,10 +505,10 @@ const writeItem = async (item, sourcemaps) => {
 };
 
 const writeGraph = async (graph, sourcemaps) => {
-    const dirs = new Set([...graph.values()].map((item) => path.dirname(item.dest)));
+    const dirs = new Set([...graph.values()].map(item => path.dirname(item.dest)));
 
-    await Promise.all([...dirs].map((dir) => fs.promises.mkdir(dir, { recursive: true })));
-    await Promise.all([...graph.values()].map((item) => writeItem(item, sourcemaps)));
+    await Promise.all([...dirs].map(dir => fs.promises.mkdir(dir, { recursive: true })));
+    await Promise.all([...graph.values()].map(item => writeItem(item, sourcemaps)));
 };
 
 const cleanOutDir = async (dir, preserveTypes) => {
@@ -513,32 +517,29 @@ const cleanOutDir = async (dir, preserveTypes) => {
         return;
     }
 
-    const entries = await fs.promises.readdir(dir, { withFileTypes: true }).then(
-        (value) => value,
-        () => []
-    );
-    await Promise.all(
-        entries.map(async (entry) => {
-            const file = path.join(dir, entry.name);
-            if (entry.isDirectory()) {
-                await cleanOutDir(file, true);
-                const left = await fs.promises.readdir(file).then(
-                    (value) => value,
-                    () => []
-                );
-                if (!left.length) {
-                    await fs.promises.rm(file, { recursive: true, force: true });
-                }
-                return;
+    const entries = await fs.promises.readdir(dir, { withFileTypes: true }).then(value => value, () => []);
+    await Promise.all(entries.map(async (entry) => {
+        const file = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            await cleanOutDir(file, true);
+            const left = await fs.promises.readdir(file).then(value => value, () => []);
+            if (!left.length) {
+                await fs.promises.rm(file, { recursive: true, force: true });
             }
-            if (!file.endsWith('.d.ts')) {
-                await fs.promises.rm(file, { force: true });
-            }
-        })
-    );
+            return;
+        }
+        if (!file.endsWith('.d.ts')) {
+            await fs.promises.rm(file, { force: true });
+        }
+    }));
 };
 
-const buildUnbundled = async ({ buildType, input = 'src/index.js', dir = 'build', sourcemaps = false }) => {
+const buildUnbundled = async ({
+    buildType,
+    input = 'src/index.js',
+    dir = 'build',
+    sourcemaps = false
+}) => {
     const ctx = getUnbundledContext({
         buildType,
         input,
@@ -576,10 +577,7 @@ const watchUnbundled = async (options, startLog, log) => {
             return;
         }
 
-        const stat = await fs.promises.stat(file).then(
-            (value) => value,
-            () => null
-        );
+        const stat = await fs.promises.stat(file).then(value => value, () => null);
         if (!stat?.isFile()) {
             await fullBuild();
             return;
@@ -607,15 +605,12 @@ const watchUnbundled = async (options, startLog, log) => {
     const run = (file) => {
         startLog(input, ctx.output);
         const start = performance.now();
-        return update(file).then(
-            () => {
-                log(ctx.output, performance.now() - start, 0);
-            },
-            (err) => {
-                console.error(err.message);
-                log(ctx.output, performance.now() - start, 1);
-            }
-        );
+        return update(file).then(() => {
+            log(ctx.output, performance.now() - start, 0);
+        }, (err) => {
+            console.error(err.message);
+            log(ctx.output, performance.now() - start, 1);
+        });
     };
 
     const rebuild = (file) => {
@@ -663,26 +658,22 @@ const buildTarget = async ({
     sourcemaps = false,
     metafile = false
 }) => {
-    const tasks = [
-        buildBundled({
-            moduleFormat,
+    const tasks = [buildBundled({
+        moduleFormat,
+        buildType,
+        input,
+        dir,
+        sourcemaps,
+        metafile
+    })];
+
+    if (preserveModules) {
+        tasks.push(buildUnbundled({
             buildType,
             input,
             dir,
-            sourcemaps,
-            metafile
-        })
-    ];
-
-    if (preserveModules) {
-        tasks.push(
-            buildUnbundled({
-                buildType,
-                input,
-                dir,
-                sourcemaps
-            })
-        );
+            sourcemaps
+        }));
     }
 
     const [result] = await Promise.all(tasks);
@@ -703,34 +694,24 @@ const watchTarget = async ({
     end
 }) => {
     const watchers = [
-        await watchBundled(
-            {
-                moduleFormat,
-                buildType,
-                input,
-                dir,
-                sourcemaps,
-                metafile,
-                end
-            },
-            start,
-            log
-        )
+        await watchBundled({
+            moduleFormat,
+            buildType,
+            input,
+            dir,
+            sourcemaps,
+            metafile,
+            end
+        }, start, log)
     ];
 
     if (preserveModules) {
-        watchers.push(
-            await watchUnbundled(
-                {
-                    buildType,
-                    input,
-                    dir,
-                    sourcemaps
-                },
-                start,
-                log
-            )
-        );
+        watchers.push(await watchUnbundled({
+            buildType,
+            input,
+            dir,
+            sourcemaps
+        }, start, log));
     }
 
     return watchers;

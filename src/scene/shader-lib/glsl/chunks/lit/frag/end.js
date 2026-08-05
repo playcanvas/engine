@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     gl_FragColor.rgb = combineColor(litArgs_albedo, litArgs_sheen_specularity, litArgs_clearcoat_specularity);
 
     gl_FragColor.rgb += litArgs_emission;

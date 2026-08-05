@@ -13,6 +13,7 @@ describe('AnimTrack', function () {
     const animTrack = new AnimTrack('track', 2, inputs, outputs, curves);
 
     describe('#constructor', function () {
+
         it('instantiates correctly', function () {
             expect(animTrack).to.be.ok;
             expect(animTrack.name).to.equal('track');
@@ -21,9 +22,11 @@ describe('AnimTrack', function () {
             expect(animTrack.outputs).to.equal(outputs);
             expect(animTrack.curves).to.equal(curves);
         });
+
     });
 
     describe('#eval', function () {
+
         it('correctly updates a given snapshot', function () {
             const snapshot = new AnimSnapshot(animTrack);
             animTrack.eval(0, snapshot);
@@ -33,13 +36,16 @@ describe('AnimTrack', function () {
             animTrack.eval(1.5, snapshot);
             expect(snapshot._results[0]).to.deep.equal([1.5, 3, 4.5]);
         });
+
     });
+
 });
 
 describe('EmptyAnimTrack', function () {
     const emptyAnimTrack = AnimTrack.EMPTY;
 
     describe('#constructor', function () {
+
         it('instantiates correctly', function () {
             expect(emptyAnimTrack).to.be.ok;
             expect(emptyAnimTrack.name).to.equal('empty');
@@ -48,5 +54,7 @@ describe('EmptyAnimTrack', function () {
             expect(emptyAnimTrack.outputs.length).to.equal(0);
             expect(emptyAnimTrack.curves.length).to.equal(0);
         });
+
     });
+
 });

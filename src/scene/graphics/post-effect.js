@@ -63,7 +63,8 @@ class PostEffect {
      * @param {Vec4} [rect] - The rect of the current camera. If not specified, it will default to
      * `[0, 0, 1, 1]`.
      */
-    render(inputTarget, outputTarget, rect) {}
+    render(inputTarget, outputTarget, rect) {
+    }
 
     /**
      * Draw a screen-space rectangle in a render target, using a specified shader.

@@ -3,17 +3,8 @@ import { hashCode } from '../../core/hash.js';
 import { math } from '../../core/math/math.js';
 import { StringIds } from '../../core/string-ids.js';
 import {
-    SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1,
-    SEMANTIC_ATTR12,
-    SEMANTIC_ATTR11,
-    SEMANTIC_ATTR14,
-    SEMANTIC_ATTR15,
-    SEMANTIC_COLOR,
-    SEMANTIC_TANGENT,
-    TYPE_FLOAT32,
-    typedArrayTypesByteSize,
-    vertexTypesNames
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
 import { DeviceCache } from './device-cache.js';
 
@@ -160,21 +151,17 @@ class VertexFormat {
 
         // calculate total size of the vertex
         this.size = description.reduce((total, desc) => {
-            return total + Math.ceil((desc.components * typedArrayTypesByteSize[desc.type]) / 4) * 4;
+            return total + Math.ceil(desc.components * typedArrayTypesByteSize[desc.type] / 4) * 4;
         }, 0);
 
-        let offset = 0,
-            elementSize;
+        let offset = 0, elementSize;
         for (let i = 0, len = description.length; i < len; i++) {
             const elementDesc = description[i];
 
             elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
 
             // WebGPU has limited element size support (for example uint16x3 is not supported)
-            Debug.assert(
-                VertexFormat.isElementValid(graphicsDevice, elementDesc),
-                `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`
-            );
+            Debug.assert(VertexFormat.isElementValid(graphicsDevice, elementDesc), `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
             if (vertexCount) {
@@ -182,22 +169,15 @@ class VertexFormat {
 
                 // non-interleaved format with elementSize not multiple of 4 might be slower on some platforms - padding is recommended to align its size
                 // example: use 4 x TYPE_UINT8 instead of 3 x TYPE_UINT8
-                Debug.assert(
-                    elementSize % 4 === 0,
-                    `Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: ${elementSize}`
-                );
+                Debug.assert((elementSize % 4) === 0, `Non-interleaved vertex format with element size not multiple of 4 can have performance impact on some platforms. Element size: ${elementSize}`);
             }
 
             const asInt = elementDesc.asInt ?? false;
             const normalize = asInt ? false : (elementDesc.normalize ?? false);
             const element = {
                 name: elementDesc.semantic,
-                offset: vertexCount ? offset : elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset,
-                stride: vertexCount
-                    ? elementSize
-                    : elementDesc.hasOwnProperty('stride')
-                      ? elementDesc.stride
-                      : this.size,
+                offset: (vertexCount ? offset : (elementDesc.hasOwnProperty('offset') ? elementDesc.offset : offset)),
+                stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
                 dataType: elementDesc.type,
                 numComponents: elementDesc.components,
                 normalize: normalize,
@@ -242,6 +222,7 @@ class VertexFormat {
      * @returns {VertexFormat} The default instancing vertex format.
      */
     static getDefaultInstancingFormat(graphicsDevice) {
+
         // get it from the device cache, or create a new one if not cached yet
         return deviceCache.get(graphicsDevice, () => {
             return new VertexFormat(graphicsDevice, [
@@ -254,9 +235,7 @@ class VertexFormat {
     }
 
     static get defaultInstancingFormat() {
-        Debug.removed(
-            'VertexFormat.defaultInstancingFormat was removed. Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).'
-        );
+        Debug.removed('VertexFormat.defaultInstancingFormat was removed. Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
         return null;
     }
 
@@ -275,10 +254,7 @@ class VertexFormat {
      */
     update() {
         // Note that this is used only by vertex attribute morphing on the WebGL.
-        Debug.assert(
-            !this.device.isWebGPU,
-            'VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.'
-        );
+        Debug.assert(!this.device.isWebGPU, 'VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.');
         this._evaluateHash();
     }
 

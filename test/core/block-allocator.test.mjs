@@ -11,10 +11,10 @@ import { BlockAllocator, MemBlock } from '../../src/core/block-allocator.js';
 function mulberry32(seed) {
     return function () {
         seed |= 0;
-        seed = (seed + 0x6d2b79f5) | 0;
-        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-        t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t ^= t + Math.imul(t ^ t >>> 7, 61 | t);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
     };
 }
 
@@ -114,15 +114,14 @@ function writeBlock(buffer, block, value) {
  */
 function verifyBlock(buffer, block, value) {
     for (let i = block.offset; i < block.offset + block.size; i++) {
-        expect(buffer[i]).to.equal(
-            value,
-            `buffer[${i}] expected ${value}, got ${buffer[i]} (block offset=${block.offset} size=${block.size})`
-        );
+        expect(buffer[i]).to.equal(value, `buffer[${i}] expected ${value}, got ${buffer[i]} (block offset=${block.offset} size=${block.size})`);
     }
 }
 
 describe('BlockAllocator', function () {
+
     describe('#constructor', function () {
+
         it('creates allocator with given capacity', function () {
             const alloc = new BlockAllocator(100);
             expect(alloc.capacity).to.equal(100);
@@ -146,9 +145,11 @@ describe('BlockAllocator', function () {
             expect(alloc.capacity).to.equal(0);
             verifyInvariants(alloc);
         });
+
     });
 
     describe('#allocate()', function () {
+
         it('allocates a block with correct offset and size', function () {
             const alloc = new BlockAllocator(100);
             const block = alloc.allocate(30);
@@ -201,9 +202,11 @@ describe('BlockAllocator', function () {
             expect(alloc.fragmentation).to.equal(0);
             verifyInvariants(alloc);
         });
+
     });
 
     describe('#free()', function () {
+
         it('frees a single block', function () {
             const alloc = new BlockAllocator(100);
             const block = alloc.allocate(40);
@@ -264,9 +267,11 @@ describe('BlockAllocator', function () {
             verifyInvariants(alloc);
             expect(alloc.fragmentation).to.equal(0.5);
         });
+
     });
 
     describe('#grow()', function () {
+
         it('extends capacity', function () {
             const alloc = new BlockAllocator(50);
             alloc.grow(100);
@@ -314,9 +319,11 @@ describe('BlockAllocator', function () {
             expect(block.offset).to.equal(0);
             verifyInvariants(alloc);
         });
+
     });
 
     describe('#defrag() - full compaction', function () {
+
         it('compacts fragmented blocks to start', function () {
             const alloc = new BlockAllocator(100);
             const a = alloc.allocate(20);
@@ -372,9 +379,11 @@ describe('BlockAllocator', function () {
             expect(alloc._freeRegionCount).to.equal(1);
             expect(moved.size).to.be.at.least(1);
         });
+
     });
 
     describe('#defrag() - incremental', function () {
+
         it('moves blocks incrementally', function () {
             const alloc = new BlockAllocator(100);
             alloc.allocate(10);
@@ -397,9 +406,11 @@ describe('BlockAllocator', function () {
             verifyInvariants(alloc);
             expect(moved.size).to.equal(0);
         });
+
     });
 
     describe('#updateAllocation()', function () {
+
         it('frees and allocates in one call', function () {
             const alloc = new BlockAllocator(100);
             const a = alloc.allocate(30);
@@ -443,9 +454,11 @@ describe('BlockAllocator', function () {
             expect(alloc.usedSize).to.equal(0);
             verifyInvariants(alloc);
         });
+
     });
 
     describe('#fragmentation', function () {
+
         it('returns 0 for no free space', function () {
             const alloc = new BlockAllocator(100);
             alloc.allocate(100);
@@ -466,9 +479,11 @@ describe('BlockAllocator', function () {
             alloc.free(b);
             expect(alloc.fragmentation).to.equal(0.5);
         });
+
     });
 
     describe('pool reuse', function () {
+
         it('reuses MemBlock instances from pool', function () {
             const alloc = new BlockAllocator(100);
             const a = alloc.allocate(30);
@@ -481,9 +496,11 @@ describe('BlockAllocator', function () {
             expect(c).to.be.an.instanceof(MemBlock);
             verifyInvariants(alloc);
         });
+
     });
 
     describe('stress test with buffer validation', function () {
+
         it('maintains buffer integrity through allocations, frees, and defrags', function () {
             const random = mulberry32(12345);
             const CAPACITY = 10000;
@@ -615,10 +632,7 @@ describe('BlockAllocator', function () {
             for (let i = 1; i < blockList.length; i++) {
                 const prev = blockList[i - 1];
                 const curr = blockList[i];
-                expect(curr.offset).to.be.at.least(
-                    prev.offset + prev.size,
-                    `overlap at blocks offset=${prev.offset}+${prev.size} and offset=${curr.offset}`
-                );
+                expect(curr.offset).to.be.at.least(prev.offset + prev.size, `overlap at blocks offset=${prev.offset}+${prev.size} and offset=${curr.offset}`);
             }
         });
 
@@ -688,5 +702,7 @@ describe('BlockAllocator', function () {
 
             verifyInvariants(alloc);
         });
+
     });
+
 });

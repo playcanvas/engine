@@ -1153,7 +1153,11 @@ class ButtonComponent extends Component {
 
     _applyTintImmediately(tintColor) {
         const element = this._imageEntity?.element;
-        if (!tintColor || !element || element.type === ELEMENTTYPE_GROUP) {
+        if (
+            !tintColor ||
+            !element ||
+            element.type === ELEMENTTYPE_GROUP
+        ) {
             return;
         }
 
@@ -1174,7 +1178,11 @@ class ButtonComponent extends Component {
 
     _applyTintWithTween(tintColor) {
         const element = this._imageEntity?.element;
-        if (!tintColor || !element || element.type === ELEMENTTYPE_GROUP) {
+        if (
+            !tintColor ||
+            !element ||
+            element.type === ELEMENTTYPE_GROUP
+        ) {
             return;
         }
 

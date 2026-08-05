@@ -15,6 +15,7 @@ import { PhysicsWorld } from '../physics-world.js';
  *
  * @ignore
  */
-class NullPhysicsWorld extends PhysicsWorld {}
+class NullPhysicsWorld extends PhysicsWorld {
+}
 
 export { NullPhysicsWorld };

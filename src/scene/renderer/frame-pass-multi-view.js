@@ -120,9 +120,7 @@ class FramePassMultiView extends FramePass {
         // it actually changed - skips the cost of a redundant view re-creation in the common XR
         // case where every sub-image targets the same projection-layer texture
         if (
-            backBufferImpl &&
-            savedColorTexture &&
-            savedViewFormat &&
+            backBufferImpl && savedColorTexture && savedViewFormat &&
             backBufferImpl.assignedColorTexture !== savedColorTexture
         ) {
             backBufferImpl.assignColorTexture(savedColorTexture, savedViewFormat);

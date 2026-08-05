@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     #ifdef VIGNETTE
         uniform vignetterParams: vec4f;
         uniform vignetteColor: vec3f;

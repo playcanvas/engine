@@ -36,7 +36,7 @@ class TagsCache {
             };
             // key indexing is available
             if (this._key) {
-                this._index[tag].keys = {};
+                this._index[tag].keys = { };
             }
         }
 
@@ -84,7 +84,7 @@ class TagsCache {
     }
 
     find(args) {
-        const index = {};
+        const index = { };
         const items = [];
         let item, tag, tags, tagsRest, missingIndex;
 
@@ -126,10 +126,7 @@ class TagsCache {
 
                     for (let n = 0; n < this._index[tags[0]].list.length; n++) {
                         item = this._index[tags[0]].list[n];
-                        if (
-                            (this._key ? !index[item[this._key]] : items.indexOf(item) === -1) &&
-                            item.tags.has(tagsRest)
-                        ) {
+                        if ((this._key ? !index[item[this._key]] : (items.indexOf(item) === -1)) && item.tags.has(tagsRest)) {
                             if (this._key) {
                                 index[item[this._key]] = true;
                             }

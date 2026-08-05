@@ -69,11 +69,7 @@ class RefCountedKeyCache {
      * @param {object} object - The object to store.
      */
     set(key, object) {
-        Debug.assert(
-            !this.cache.has(key),
-            'RefCountedKeyCache: Trying to put object with key that already exists in the cache',
-            { key, object }
-        );
+        Debug.assert(!this.cache.has(key), 'RefCountedKeyCache: Trying to put object with key that already exists in the cache', { key, object });
         this.cache.set(key, new Entry(object));
     }
 

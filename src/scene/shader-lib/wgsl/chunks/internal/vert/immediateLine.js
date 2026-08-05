@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     attribute vertex_position: vec4f;
     attribute vertex_color: vec4f;
     uniform matrix_model: mat4x4f;

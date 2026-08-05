@@ -76,6 +76,7 @@ describe('ModelComponent', function () {
         expect(e.model.mapping).to.be.empty;
         expect(e.model.layers).to.contain(LAYERID_WORLD);
         expect(e.model.batchGroupId).to.equal(-1);
+
     });
 
     it('Set modelAsset and model', function () {
@@ -113,6 +114,7 @@ describe('ModelComponent', function () {
         expect(c.model.layers).to.deep.equal(e.model.layers);
     });
 
+
     it('Cloned model component with flags set has correct meshinstance flags', function () {
         const e = new Entity();
         e.addComponent('model', {
@@ -138,7 +140,9 @@ describe('ModelComponent', function () {
             expect(srcMi[i].material.id).to.exist;
             expect(srcMi[i].material.id).to.equal(dstMi[i].material.id);
         }
+
     });
+
 
     it('Cloned model component with flags set directly on mesh instance is identical', function () {
         const e = new Entity();
@@ -252,21 +256,16 @@ describe('ModelComponent', function () {
     });
 
     it('Materials applied when loading asynchronously', (done) => {
-        const boxAsset = new Asset(
-            'Box',
-            'model',
-            {
-                url: '/test/assets/cube/cube.json'
-            },
-            {
-                mapping: [
-                    {
-                        path: '208808876/Material.json'
-                    }
-                ],
-                area: 0
-            }
-        );
+        const boxAsset = new Asset('Box', 'model', {
+            url: '/test/assets/cube/cube.json'
+        }, {
+            'mapping': [
+                {
+                    'path': '208808876/Material.json'
+                }
+            ],
+            'area': 0
+        });
 
         const materialAsset = new Asset('Material', 'material', {
             url: '/test/assets/cube/208808876/Material.json'
@@ -372,23 +371,17 @@ describe('ModelComponent', function () {
 
         expect(e.model.layers[0]).to.equal(LAYERID_UI);
         expect(e.model.model).to.not.be.null;
+
     });
 
     it('Asset materials unbound on destroy', (done) => {
-        const modelAsset = new Asset(
-            'cube.json',
-            'model',
-            {
-                url: '/test/assets/cube/cube.json'
-            },
-            {
-                mapping: [
-                    {
-                        material: assets.material.id
-                    }
-                ]
-            }
-        );
+        const modelAsset = new Asset('cube.json', 'model', {
+            url: '/test/assets/cube/cube.json'
+        }, {
+            mapping: [{
+                material: assets.material.id
+            }]
+        });
         app.assets.add(modelAsset);
         app.assets.load(modelAsset);
 
@@ -410,38 +403,24 @@ describe('ModelComponent', function () {
     });
 
     it('Asset materials unbound on change model', (done) => {
-        const modelAsset = new Asset(
-            'plane.json',
-            'model',
-            {
-                url: '/test/assets/plane/plane.json'
-            },
-            {
-                mapping: [
-                    {
-                        material: assets.material.id
-                    }
-                ]
-            }
-        );
+        const modelAsset = new Asset('plane.json', 'model', {
+            url: '/test/assets/plane/plane.json'
+        }, {
+            mapping: [{
+                material: assets.material.id
+            }]
+        });
 
         const materialAsset2 = new Asset('lambert2.json', 'material', {
             url: '/test/assets/plane/31208636/lambert1.json?t=1'
         });
-        const modelAsset2 = new Asset(
-            'plane2.json',
-            'model',
-            {
-                url: '/test/assets/plane/plane.json?t=1'
-            },
-            {
-                mapping: [
-                    {
-                        material: materialAsset2.id
-                    }
-                ]
-            }
-        );
+        const modelAsset2 = new Asset('plane2.json', 'model', {
+            url: '/test/assets/plane/plane.json?t=1'
+        }, {
+            mapping: [{
+                material: materialAsset2.id
+            }]
+        });
 
         app.assets.add(modelAsset);
         app.assets.load(modelAsset);

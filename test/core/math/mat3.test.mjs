@@ -4,7 +4,7 @@ import { Mat3 } from '../../../src/core/math/mat3.js';
 import { Mat4 } from '../../../src/core/math/mat4.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 
-const identity = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+const identity =   [1, 0, 0, 0, 1, 0, 0, 0, 1];
 const increasing = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const decreasing = [9, 8, 7, 6, 5, 4, 3, 2, 1];
 const increasingTransposed = [1, 4, 7, 2, 5, 8, 3, 6, 9];
@@ -12,6 +12,7 @@ const increasingTransposed = [1, 4, 7, 2, 5, 8, 3, 6, 9];
 const increasingMat4 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 
 describe('Mat3', function () {
+
     describe('#data', function () {
         it('is a Float32Array of length 9', function () {
             const m = new Mat3();
@@ -26,6 +27,7 @@ describe('Mat3', function () {
     });
 
     describe('#equals', function () {
+
         it('returns true for the same matrix', function () {
             const m = new Mat3();
             m.data.set(increasing);
@@ -41,6 +43,7 @@ describe('Mat3', function () {
             n.data.set(decreasing);
             expect(m.equals(n)).to.be.false;
         });
+
     });
 
     describe('#clone', function () {
@@ -96,6 +99,7 @@ describe('Mat3', function () {
     });
 
     describe('#transpose', function () {
+
         it('transposes the identity matrix to the identity matrix', function () {
             const m = new Mat3();
             m.transpose();

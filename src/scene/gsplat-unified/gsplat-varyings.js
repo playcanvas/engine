@@ -1,10 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import {
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL,
-    TYPE_FLOAT32,
-    TYPE_INT32,
-    TYPE_UINT32
+    SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL,
+    TYPE_FLOAT32, TYPE_INT32, TYPE_UINT32
 } from '../../platform/graphics/constants.js';
 import { CACHE_STRIDE } from './gsplat-projector-constants.js';
 
@@ -58,19 +55,15 @@ const RE_VALUE = /\{value\}/g;
 // chunk-map keys managed by this class
 const GLSL_CHUNK_NAMES = ['gsplatUserVaryingsVS', 'gsplatUserVaryingsPS'];
 const WGSL_CHUNK_NAMES = [
-    'gsplatUserVaryingsVS',
-    'gsplatUserVaryingsFlushVS',
-    'gsplatUserVaryingsCS',
-    'gsplatUserVaryingsPS',
-    'gsplatUserCacheWriteCS',
-    'gsplatUserCacheReadVS'
+    'gsplatUserVaryingsVS', 'gsplatUserVaryingsFlushVS', 'gsplatUserVaryingsCS',
+    'gsplatUserVaryingsPS', 'gsplatUserCacheWriteCS', 'gsplatUserCacheReadVS'
 ];
 
 /**
  * @param {string} name - The stream name.
  * @returns {string} The name with the first letter upper-cased.
  */
-const pascal = (name) => name.charAt(0).toUpperCase() + name.slice(1);
+const pascal = name => name.charAt(0).toUpperCase() + name.slice(1);
 
 // per-component encode to a u32 cache word
 const encodeWord = (type, expr) => {
@@ -186,22 +179,10 @@ class GSplatVaryings {
         Debug.call(() => {
             Debug.assert(streams && streams.length > 0, 'GSplatVaryings#add: streams must be a non-empty array.');
             streams?.forEach((s) => {
-                Debug.assert(
-                    !!s && IDENTIFIER_REGEX.test(s.name ?? ''),
-                    `GSplatVaryings: varying name '${s?.name}' is not a valid identifier.`
-                );
-                Debug.assert(
-                    !!GLSL_TYPES[s.type],
-                    `GSplatVaryings: varying '${s.name}' has unsupported type. Use TYPE_FLOAT32, TYPE_INT32 or TYPE_UINT32.`
-                );
-                Debug.assert(
-                    s.components >= 1 && s.components <= 4,
-                    `GSplatVaryings: varying '${s.name}' must have 1 to 4 components.`
-                );
-                Debug.assert(
-                    !this._streams.some((v) => v.name === s.name),
-                    `GSplatVaryings: varying '${s.name}' already exists.`
-                );
+                Debug.assert(!!s && IDENTIFIER_REGEX.test(s.name ?? ''), `GSplatVaryings: varying name '${s?.name}' is not a valid identifier.`);
+                Debug.assert(!!GLSL_TYPES[s.type], `GSplatVaryings: varying '${s.name}' has unsupported type. Use TYPE_FLOAT32, TYPE_INT32 or TYPE_UINT32.`);
+                Debug.assert(s.components >= 1 && s.components <= 4, `GSplatVaryings: varying '${s.name}' must have 1 to 4 components.`);
+                Debug.assert(!this._streams.some(v => v.name === s.name), `GSplatVaryings: varying '${s.name}' already exists.`);
             });
         });
 
@@ -222,7 +203,7 @@ class GSplatVaryings {
         });
 
         const count = this._streams.length;
-        this._streams = this._streams.filter((v) => !names.includes(v.name));
+        this._streams = this._streams.filter(v => !names.includes(v.name));
         if (this._streams.length !== count) {
             this._changed();
         }
@@ -267,8 +248,10 @@ class GSplatVaryings {
             const { name, type, components } = s;
             const shaderType = types[type][components - 1];
             const funcName = pascal(name);
-            const sub = (template) =>
-                template.replace(RE_NAME, name).replace(RE_TYPE, shaderType).replace(RE_FUNC_NAME, funcName);
+            const sub = template => template
+            .replace(RE_NAME, name)
+            .replace(RE_TYPE, shaderType)
+            .replace(RE_FUNC_NAME, funcName);
 
             vs.push(sub(declVSTemplate));
             ps.push(sub(declPSTemplate));
@@ -281,18 +264,14 @@ class GSplatVaryings {
                 const words = [];
                 for (let c = 0; c < components; c++) {
                     const component = components === 1 ? `_user_${name}` : `_user_${name}.${COMPONENT_SWIZZLE[c]}`;
-                    cacheWrite.push(
-                        wgslVaryingCacheWriteCS
-                            .replace(RE_WORD, String(CACHE_STRIDE + wordOffset + c))
-                            .replace(RE_VALUE, encodeWord(type, component))
-                    );
+                    cacheWrite.push(wgslVaryingCacheWriteCS
+                    .replace(RE_WORD, String(CACHE_STRIDE + wordOffset + c))
+                    .replace(RE_VALUE, encodeWord(type, component)));
                     words.push(decodeWord(type, `projCache[base + ${CACHE_STRIDE + wordOffset + c}u]`));
                 }
-                cacheRead.push(
-                    wgslVaryingCacheReadVS
-                        .replace(RE_NAME, name)
-                        .replace(RE_VALUE, components === 1 ? words[0] : `${shaderType}(${words.join(', ')})`)
-                );
+                cacheRead.push(wgslVaryingCacheReadVS
+                .replace(RE_NAME, name)
+                .replace(RE_VALUE, components === 1 ? words[0] : `${shaderType}(${words.join(', ')})`));
             }
 
             wordOffset += components;
@@ -334,7 +313,7 @@ class GSplatVaryings {
             }
         } else {
             const names = isWebGPU ? WGSL_CHUNK_NAMES : GLSL_CHUNK_NAMES;
-            names.forEach((name) => chunks.delete(name));
+            names.forEach(name => chunks.delete(name));
         }
 
         material.update();

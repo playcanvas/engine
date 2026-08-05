@@ -78,13 +78,13 @@ class TorusGeometry extends Geometry {
 
         for (let i = 0; i <= sides; i++) {
             for (let j = 0; j <= segments; j++) {
-                const x = Math.cos((sectorAngle * j) / segments) * (rt + rc * Math.cos((2 * Math.PI * i) / sides));
-                const y = Math.sin((2 * Math.PI * i) / sides) * rc;
-                const z = Math.sin((sectorAngle * j) / segments) * (rt + rc * Math.cos((2 * Math.PI * i) / sides));
+                const x = Math.cos(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
+                const y = Math.sin(2 * Math.PI * i / sides) * rc;
+                const z = Math.sin(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
 
-                const nx = Math.cos((sectorAngle * j) / segments) * Math.cos((2 * Math.PI * i) / sides);
-                const ny = Math.sin((2 * Math.PI * i) / sides);
-                const nz = Math.sin((sectorAngle * j) / segments) * Math.cos((2 * Math.PI * i) / sides);
+                const nx = Math.cos(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
+                const ny = Math.sin(2 * Math.PI * i / sides);
+                const nz = Math.sin(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
 
                 const u = i / sides;
                 const v = 1 - j / segments;
@@ -93,11 +93,11 @@ class TorusGeometry extends Geometry {
                 normals.push(nx, ny, nz);
                 uvs.push(u, 1.0 - v);
 
-                if (i < sides && j < segments) {
-                    const first = i * (segments + 1) + j;
-                    const second = (i + 1) * (segments + 1) + j;
-                    const third = i * (segments + 1) + (j + 1);
-                    const fourth = (i + 1) * (segments + 1) + (j + 1);
+                if ((i < sides) && (j < segments)) {
+                    const first  = ((i))     * (segments + 1) + ((j));
+                    const second = ((i + 1)) * (segments + 1) + ((j));
+                    const third  = ((i))     * (segments + 1) + ((j + 1));
+                    const fourth = ((i + 1)) * (segments + 1) + ((j + 1));
 
                     indices.push(first, second, third);
                     indices.push(second, fourth, third);
@@ -108,7 +108,7 @@ class TorusGeometry extends Geometry {
         this.positions = positions;
         this.normals = normals;
         this.uvs = uvs;
-        this.uvs1 = uvs; // UV1 = UV0 for sphere
+        this.uvs1 = uvs;    // UV1 = UV0 for sphere
         this.indices = indices;
 
         if (opts.calculateTangents) {

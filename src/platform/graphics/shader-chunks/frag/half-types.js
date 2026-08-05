@@ -10,7 +10,7 @@
  *
  * @ignore
  */
-export default /* wgsl */ `
+export default /* wgsl */`
 #ifdef CAPS_SHADER_F16
     alias half = f16;
     alias half2 = vec2<f16>;

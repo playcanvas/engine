@@ -21,17 +21,16 @@ function constructPngUrl(data, width, height) {
     };
 
     var adler = function (data) {
-        var s1 = 1,
-            s2 = 0;
+        var s1 = 1, s2 = 0;
         for (var i = 0; i < data.length; i++) {
             s1 = (s1 + data.charCodeAt(i)) % 65521;
             s2 = (s2 + s1) % 65521;
         }
-        return (s2 << 16) | s1;
+        return s2 << 16 | s1;
     };
 
     var hton = function (i) {
-        return String.fromCharCode(i >>> 24, (i >>> 16) & 255, (i >>> 8) & 255, i & 255);
+        return String.fromCharCode(i >>> 24, i >>> 16 & 255, i >>> 8 & 255, i & 255);
     };
 
     var deflate = function (data) {
@@ -40,13 +39,7 @@ function constructPngUrl(data, width, height) {
         do {
             var block = data.slice(i, i + 65535);
             var len = block.length;
-            compressed += String.fromCharCode(
-                ((i += block.length) === data.length) << 0,
-                len & 255,
-                len >>> 8,
-                ~len & 255,
-                (~len >>> 8) & 255
-            );
+            compressed += String.fromCharCode(((i += block.length) === data.length) << 0, len & 255, len >>> 8, ~len & 255, (~len >>> 8) & 255);
             compressed += block;
         } while (i < data.length);
         return compressed + hton(adler(data));
@@ -66,15 +59,17 @@ function constructPngUrl(data, width, height) {
         return hton(data.length) + type + data + hton(crc32(type + data));
     };
 
-    var png = `\x89PNG\r\n\x1a\n${chunk('IHDR', `${hton(width) + hton(height)}\x08\x06\0\0\0`)}${chunk('IDAT', deflate(rows(data, width, height)))}${chunk('IEND', '')}`;
+    var png = `\x89PNG\r\n\x1a\n${
+        chunk('IHDR', `${hton(width) + hton(height)}\x08\x06\0\0\0`)
+    }${chunk('IDAT', deflate(rows(data, width, height)))
+    }${chunk('IEND', '')}`;
 
     return `data:image/png;base64,${btoa(png)}`;
 }
 
 // Construct a PNG using canvas API. This function is much faster than the manual approach,
 // but suffers from canvas premultiplied alpha bit loss.
-// eslint-disable-next-line no-unused-vars
-var constructPngUrlOld = function (data, width, height) {
+var constructPngUrlOld = function (data, width, height) {       // eslint-disable-line no-unused-vars
     var canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -131,8 +126,7 @@ function flipY(data, width, height) {
 }
 
 // download the image as png
-// eslint-disable-next-line no-unused-vars
-function downloadTexture(texture, filename, face, flipY_) {
+function downloadTexture(texture, filename, face, flipY_) {         // eslint-disable-line no-unused-vars
     var width;
     var height;
     var data;

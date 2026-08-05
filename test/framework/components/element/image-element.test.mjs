@@ -152,6 +152,7 @@ describe('ImageElement', function () {
             }
         };
 
+
         const e = new Entity();
         e.addComponent('element', {
             type: 'image',
@@ -184,6 +185,7 @@ describe('ImageElement', function () {
                 _onMaterialLoad.apply(this, arguments);
             }
         };
+
 
         const e = new Entity();
         e.addComponent('element', {
@@ -318,6 +320,7 @@ describe('ImageElement', function () {
         expect(assets.sprite.hasEvent('remove')).to.be.false;
     });
 
+
     it('Sprites assets unbound when texture set', function () {
         // expect(assets.sprite.hasEvent('change')).to.be.false;
         expect(assets.sprite.hasEvent('load')).to.be.false;
@@ -367,6 +370,7 @@ describe('ImageElement', function () {
         expect(sprite.hasEvent('set:pixelsPerUnit')).to.be.false;
         expect(sprite.hasEvent('set:atlas')).to.be.false;
     });
+
 
     it('AssetRegistry events unbound on destroy for texture asset', function () {
         const e = new Entity();
@@ -462,6 +466,7 @@ describe('ImageElement', function () {
     });
 
     it('Image element calls _updateMesh once when sprite changes', function () {
+
         const e = new Entity();
         e.addComponent('element', {
             type: 'image'
@@ -493,6 +498,7 @@ describe('ImageElement', function () {
     });
 
     it('Image element calls _updateMesh once when spriteFrame changes', function () {
+
         const e = new Entity();
         e.addComponent('element', {
             type: 'image',
@@ -583,7 +589,7 @@ describe('ImageElement', function () {
         expect(e.element._image._targetAspectRatio).to.equal(1);
     });
 
-    it("Image element calls _updateMesh when its sprite is 9-sliced and the sprite's PPU changes", function () {
+    it('Image element calls _updateMesh when its sprite is 9-sliced and the sprite\'s PPU changes', function () {
         const atlas = new TextureAtlas();
         atlas.frames = {
             0: { rect: new Vec4(), pivot: new Vec2(), border: new Vec4() },
@@ -611,7 +617,7 @@ describe('ImageElement', function () {
         expect(spy.calledOnce).to.equal(true);
     });
 
-    it("Image element calls _updateMesh once when its sprite is not 9-sliced and the sprite's PPU changes", function () {
+    it('Image element calls _updateMesh once when its sprite is not 9-sliced and the sprite\'s PPU changes', function () {
         const atlas = new TextureAtlas();
         atlas.frames = {
             0: { rect: new Vec4(), pivot: new Vec2(), border: new Vec4() },
@@ -660,6 +666,7 @@ describe('ImageElement', function () {
     });
 
     it('Image element initializes to color and opacity 1 specified in data', function () {
+
         const color = new Color(0.5, 0.6, 0.7);
         const linear = color.clone().linear();
         const e = new Entity();
@@ -742,6 +749,7 @@ describe('ImageElement', function () {
 
         const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
+
     });
 
     it('Image element with mask reverts back to the previous color, opacity and material if we clear its material', function () {
@@ -769,6 +777,7 @@ describe('ImageElement', function () {
 
         const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
+
     });
 
     it('Screenspace Image element reverts back to the previous color, opacity and material if we clear its material', function () {
@@ -802,6 +811,7 @@ describe('ImageElement', function () {
 
         const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
+
     });
 
     it('Screenspace Image element with mask reverts back to the previous color, opacity and material if we clear its material', function () {
@@ -836,6 +846,7 @@ describe('ImageElement', function () {
 
         const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
         expect(opacity).to.be.closeTo(0.4, 0.001);
+
     });
 
     it('Offscreen element is culled', function () {
@@ -866,7 +877,7 @@ describe('ImageElement', function () {
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
 
         // move just off screen
-        e.translateLocal(canvasWidth + 100 / 2 + 0.001, 0, 0);
+        e.translateLocal(canvasWidth + (100 / 2) + 0.001, 0, 0);
 
         app.update(0.1);
         app.render();
@@ -878,7 +889,9 @@ describe('ImageElement', function () {
         app.update(0.1);
         app.render();
         expect(e.element.isVisibleForCamera(camera.camera.camera)).to.be.true;
+
     });
+
 
     it('Offscreen child element is culled', function () {
         const screen = new Entity();
@@ -945,7 +958,7 @@ describe('ImageElement', function () {
         app.root.addChild(camera);
 
         // move just off screen (when rotated 45°)
-        e.translateLocal(300 + 50 * Math.sqrt(2), 0, 0);
+        e.translateLocal(300 + (50 * Math.sqrt(2)), 0, 0);
         e.rotateLocal(0, 0, 45);
 
         // update transform
@@ -1025,6 +1038,7 @@ describe('ImageElement', function () {
             spriteAsset: spriteAsset.id
         });
         app.root.addChild(e);
+
     });
 
     it('Cloning image element with texture works', function () {
@@ -1200,4 +1214,5 @@ describe('ImageElement', function () {
         expect(e.element._image.mesh.aabb.halfExtents.x).to.equal(12.5);
         expect(e.element._image.mesh.aabb.halfExtents.y).to.equal(12.5);
     });
+
 });

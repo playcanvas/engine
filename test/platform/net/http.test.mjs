@@ -25,6 +25,7 @@ describe('Http', function () {
     });
 
     describe('#get()', function () {
+
         it('returns resource', (done) => {
             http.get('/test/assets/test.json', (err, data) => {
                 expect(err).to.equal(null);
@@ -48,32 +49,24 @@ describe('Http', function () {
 
         it('retries resource and returns 404 in the end if not found', (done) => {
             spy(http, 'request');
-            http.get(
-                '/someurl.json',
-                {
-                    retry: true,
-                    maxRetries: 2
-                },
-                (err) => {
-                    expect(err).to.equal(404);
-                    expect(http.request.callCount).to.equal(3);
-                    done();
-                }
-            );
+            http.get('/someurl.json', {
+                retry: true,
+                maxRetries: 2
+            }, (err) => {
+                expect(err).to.equal(404);
+                expect(http.request.callCount).to.equal(3);
+                done();
+            });
         });
 
         it('retries resource 5 times by default', (done) => {
             spy(http, 'request');
-            http.get(
-                '/someurl.json',
-                {
-                    retry: true
-                },
-                (err) => {
-                    expect(http.request.callCount).to.equal(6);
-                    done();
-                }
-            );
+            http.get('/someurl.json', {
+                retry: true
+            }, (err) => {
+                expect(http.request.callCount).to.equal(6);
+                done();
+            });
         });
 
         it('retries resource and returns result if eventually found', function (done) {
@@ -102,23 +95,19 @@ describe('Http', function () {
                 });
             };
 
-            http.get(
-                '/someurl.json',
-                {
-                    retry: true,
-                    maxRetries: 2
-                },
-                function (err, data) {
-                    expect(err).to.equal(null);
-                    expect(http.request.callCount).to.equal(3);
-                    expect(data).to.deep.equal({ test: 'value' });
+            http.get('/someurl.json', {
+                retry: true,
+                maxRetries: 2
+            }, function (err, data) {
+                expect(err).to.equal(null);
+                expect(http.request.callCount).to.equal(3);
+                expect(data).to.deep.equal({ test: 'value' });
 
-                    // Restore original XMLHttpRequest
-                    global.XMLHttpRequest = originalXHR;
+                // Restore original XMLHttpRequest
+                global.XMLHttpRequest = originalXHR;
 
-                    done();
-                }
-            );
+                done();
+            });
         });
 
         it('status 0 returns "Network error"', function (done) {
@@ -156,6 +145,7 @@ describe('Http', function () {
                 }
             });
         });
+
     });
 
     describe('#maxConcurrentRequests', function () {
@@ -269,5 +259,7 @@ describe('Http', function () {
             expect(http._activeRequests).to.equal(0);
             expect(http._sendQueue.length).to.equal(0);
         });
+
     });
+
 });

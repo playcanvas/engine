@@ -10,6 +10,7 @@ const _tempPoint = new Vec3();
 // bake light representing an ambient light (cubemap or constant)
 class BakeLightAmbient extends BakeLight {
     constructor(lightmapper) {
+
         const scene = lightmapper.scene;
         const lightEntity = new Entity('AmbientLight');
         lightEntity.addComponent('light', {
@@ -21,7 +22,7 @@ class BakeLightAmbient extends BakeLight {
             castShadows: true,
             normalOffsetBias: 0.05,
             shadowBias: 0.2,
-            shadowDistance: 1, // this is updated during shadow map rendering
+            shadowDistance: 1,  // this is updated during shadow map rendering
             shadowResolution: 2048,
             shadowType: SHADOW_PCF3_32F,
             color: Color.WHITE,
@@ -37,6 +38,7 @@ class BakeLightAmbient extends BakeLight {
     }
 
     prepareVirtualLight(index, numVirtualLights) {
+
         // directional points down the negative Y-axis
         random.spherePointDeterministic(_tempPoint, index, numVirtualLights, 0, this.scene.ambientBakeSpherePart);
         this.light._node.lookAt(_tempPoint.mulScalar(-1));

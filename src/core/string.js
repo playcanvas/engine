@@ -2,27 +2,27 @@ const ASCII_LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
 const ASCII_UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const ASCII_LETTERS = ASCII_LOWERCASE + ASCII_UPPERCASE;
 
-const HIGH_SURROGATE_BEGIN = 0xd800;
-const HIGH_SURROGATE_END = 0xdbff;
-const LOW_SURROGATE_BEGIN = 0xdc00;
-const LOW_SURROGATE_END = 0xdfff;
-const ZERO_WIDTH_JOINER = 0x200d;
+const HIGH_SURROGATE_BEGIN = 0xD800;
+const HIGH_SURROGATE_END = 0xDBFF;
+const LOW_SURROGATE_BEGIN = 0xDC00;
+const LOW_SURROGATE_END = 0xDFFF;
+const ZERO_WIDTH_JOINER = 0x200D;
 
 // Flag emoji
-const REGIONAL_INDICATOR_BEGIN = 0x1f1e6;
-const REGIONAL_INDICATOR_END = 0x1f1ff;
+const REGIONAL_INDICATOR_BEGIN = 0x1F1E6;
+const REGIONAL_INDICATOR_END = 0x1F1FF;
 
 // Skin color modifications to emoji
-const FITZPATRICK_MODIFIER_BEGIN = 0x1f3fb;
-const FITZPATRICK_MODIFIER_END = 0x1f3ff;
+const FITZPATRICK_MODIFIER_BEGIN = 0x1F3FB;
+const FITZPATRICK_MODIFIER_END = 0x1F3FF;
 
 // Accent characters
-const DIACRITICAL_MARKS_BEGIN = 0x20d0;
-const DIACRITICAL_MARKS_END = 0x20ff;
+const DIACRITICAL_MARKS_BEGIN = 0x20D0;
+const DIACRITICAL_MARKS_END = 0x20FF;
 
 // Special emoji joins
-const VARIATION_MODIFIER_BEGIN = 0xfe00;
-const VARIATION_MODIFIER_END = 0xfe0f;
+const VARIATION_MODIFIER_BEGIN = 0xFE00;
+const VARIATION_MODIFIER_END = 0xFE0F;
 
 function getCodePointData(string, i = 0) {
     const size = string.length;
@@ -72,10 +72,9 @@ function numCharsToTakeForNextSymbol(string, index) {
 
         // check if second character is fitzpatrick (color) modifier
         // or if this is a pair of regional indicators (a flag)
-        if (
-            isCodeBetween(second, FITZPATRICK_MODIFIER_BEGIN, FITZPATRICK_MODIFIER_END) ||
+        if (isCodeBetween(second, FITZPATRICK_MODIFIER_BEGIN, FITZPATRICK_MODIFIER_END) ||
             (isCodeBetween(first, REGIONAL_INDICATOR_BEGIN, REGIONAL_INDICATOR_END) &&
-                isCodeBetween(second, REGIONAL_INDICATOR_BEGIN, REGIONAL_INDICATOR_END))
+            isCodeBetween(second, REGIONAL_INDICATOR_BEGIN, REGIONAL_INDICATOR_END))
         ) {
             return 4;
         }
@@ -198,13 +197,13 @@ const string = {
             ch = string[index + take];
             // Handle special cases
             if (isCodeBetween(ch, DIACRITICAL_MARKS_BEGIN, DIACRITICAL_MARKS_END)) {
-                ch = string[index + take++];
+                ch = string[index + (take++)];
             }
             if (isCodeBetween(ch, VARIATION_MODIFIER_BEGIN, VARIATION_MODIFIER_END)) {
-                ch = string[index + take++];
+                ch = string[index + (take++)];
             }
             if (ch && ch.charCodeAt(0) === ZERO_WIDTH_JOINER) {
-                ch = string[index + take++];
+                ch = string[index + (take++)];
                 // Not a complete char yet
                 continue;
             }
@@ -225,15 +224,13 @@ const string = {
      * @ignore
      */
     fromCodePoint(...args) {
-        return args
-            .map((codePoint) => {
-                if (codePoint > 0xffff) {
-                    codePoint -= 0x10000;
-                    return String.fromCharCode((codePoint >> 10) + 0xd800, (codePoint % 0x400) + 0xdc00);
-                }
-                return String.fromCharCode(codePoint);
-            })
-            .join('');
+        return args.map((codePoint) => {
+            if (codePoint > 0xFFFF) {
+                codePoint -= 0x10000;
+                return String.fromCharCode((codePoint >> 10) + 0xD800, (codePoint % 0x400) + 0xDC00);
+            }
+            return String.fromCharCode(codePoint);
+        }).join('');
     }
 };
 

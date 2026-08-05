@@ -7,36 +7,17 @@ import { JointComponent } from './component.js';
 
 const _properties = [
     'type',
-    'enableCollision',
-    'breakImpulse',
-    'enableLimits',
-    'limits',
-    'motorSpeed',
-    'maxMotorForce',
-    'swingLimitY',
-    'swingLimitZ',
-    'twistLimit',
-    'linearMotionX',
-    'linearMotionY',
-    'linearMotionZ',
-    'linearLimitsX',
-    'linearLimitsY',
-    'linearLimitsZ',
-    'linearStiffness',
-    'linearDamping',
-    'linearEquilibrium',
-    'angularMotionX',
-    'angularMotionY',
-    'angularMotionZ',
-    'angularLimitsX',
-    'angularLimitsY',
-    'angularLimitsZ',
-    'angularStiffness',
-    'angularDamping',
-    'angularEquilibrium',
+    'enableCollision', 'breakImpulse',
+    'enableLimits', 'limits', 'motorSpeed', 'maxMotorForce',
+    'swingLimitY', 'swingLimitZ', 'twistLimit',
+    'linearMotionX', 'linearMotionY', 'linearMotionZ',
+    'linearLimitsX', 'linearLimitsY', 'linearLimitsZ',
+    'linearStiffness', 'linearDamping', 'linearEquilibrium',
+    'angularMotionX', 'angularMotionY', 'angularMotionZ',
+    'angularLimitsX', 'angularLimitsY', 'angularLimitsZ',
+    'angularStiffness', 'angularDamping', 'angularEquilibrium',
     // entity references are assigned last so the constraint is created with full configuration
-    'entityA',
-    'entityB'
+    'entityA', 'entityB'
 ];
 
 /**

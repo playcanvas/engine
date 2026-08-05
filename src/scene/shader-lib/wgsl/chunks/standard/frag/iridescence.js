@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #ifdef STD_IRIDESCENCE_CONSTANT
     uniform material_iridescence: f32;
 #endif

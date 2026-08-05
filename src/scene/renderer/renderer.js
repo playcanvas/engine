@@ -7,20 +7,9 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import {
-    CLEARFLAG_COLOR,
-    CLEARFLAG_DEPTH,
-    CLEARFLAG_STENCIL,
-    BINDGROUP_MESH,
-    BINDGROUP_VIEW,
-    UNIFORMTYPE_MAT4,
-    UNIFORMTYPE_MAT3,
-    UNIFORMTYPE_VEC4,
-    UNIFORMTYPE_VEC3,
-    UNIFORMTYPE_IVEC3,
-    UNIFORMTYPE_VEC2,
-    UNIFORMTYPE_FLOAT,
-    UNIFORMTYPE_INT,
-    UNIFORMTYPE_UINT,
+    CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
+    BINDGROUP_MESH, BINDGROUP_VIEW,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT, UNIFORMTYPE_UINT,
     CULLFACE_NONE,
     BINDGROUP_MESH_UB,
     FRONTFACE_CCW,
@@ -31,11 +20,7 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
-    VIEW_CENTER,
-    LIGHTTYPE_DIRECTIONAL,
-    MASK_AFFECT_DYNAMIC,
-    MASK_AFFECT_LIGHTMAPPED,
-    MASK_BAKE
+    VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
@@ -94,7 +79,7 @@ const _haltonSequence = [
     new Vec2(0.875, 0.555556),
     new Vec2(0.0625, 0.888889),
     new Vec2(0.5625, 0.037037),
-    new Vec2(0.3125, 0.37037),
+    new Vec2(0.3125, 0.370370),
     new Vec2(0.8125, 0.703704),
     new Vec2(0.1875, 0.148148),
     new Vec2(0.6875, 0.481481),
@@ -223,13 +208,7 @@ class Renderer {
 
         // clustered passes
         if (this.scene.clusteredLightingEnabled) {
-            this._renderPassUpdateClustered = new FramePassUpdateClustered(
-                this.device,
-                this,
-                this.shadowRenderer,
-                this._shadowRendererLocal,
-                this.lightTextureAtlas
-            );
+            this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer, this._shadowRendererLocal, this.lightTextureAtlas);
         }
 
         // format of the view uniform buffer
@@ -321,6 +300,7 @@ class Renderer {
      * @param {RenderTarget} [renderTarget] - The render target. NULL for the default one.
      */
     setupViewport(camera, renderTarget) {
+
         const device = this.device;
         const pixelWidth = renderTarget ? renderTarget.width : device.width;
         const pixelHeight = renderTarget ? renderTarget.height : device.height;
@@ -344,6 +324,7 @@ class Renderer {
     }
 
     setCameraUniforms(camera, target) {
+
         // flipping proj matrix
         const flipY = target?.flipY;
 
@@ -354,6 +335,7 @@ class Renderer {
             // refresh the derived per-view matrices for all views
             camera.updateViewTransforms();
         } else {
+
             // Projection Matrix
             let projMat = camera.projectionMatrix;
             if (camera.calculateProjection) {
@@ -370,14 +352,15 @@ class Renderer {
             let jitterX = 0;
             let jitterY = 0;
             if (jitter > 0) {
+
                 // render target size
                 const targetWidth = target ? target.width : this.device.width;
                 const targetHeight = target ? target.height : this.device.height;
 
                 // offsets
                 const offset = _haltonSequence[this.device.renderVersion % _haltonSequence.length];
-                jitterX = (jitter * (offset.x * 2 - 1)) / targetWidth;
-                jitterY = (jitter * (offset.y * 2 - 1)) / targetHeight;
+                jitterX = jitter * (offset.x * 2 - 1) / targetWidth;
+                jitterY = jitter * (offset.y * 2 - 1) / targetHeight;
 
                 // apply jitter to projection matrix, on top of any off-center projection offset
                 projMat = _tempProjMat4.copy(projMat);
@@ -445,7 +428,7 @@ class Renderer {
         // the projection matrix when rendering with flipY. On WebGPU there is an additional inherent
         // flip because screen-space dpdy has the opposite sign to WebGL's dFdy (framebuffer space is
         // Y-down), so the backend is XORed into the sign to keep normal mapping consistent (#5735).
-        this.tbnBasis.setValue(this.device.isWebGPU !== !!flipY ? -1 : 1);
+        this.tbnBasis.setValue((this.device.isWebGPU !== !!flipY) ? -1 : 1);
 
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
@@ -454,8 +437,8 @@ class Renderer {
         // which is correct for both side-by-side single-texture and multi-pass per-eye-view
         // layouts — preferred over inferring from target.width.
         const xrView = camera.xrActive ? (camera.xrViews[0] ?? null) : null;
-        let viewportWidth = xrView ? xrView.viewport.z : target ? target.width : this.device.width;
-        let viewportHeight = xrView ? xrView.viewport.w : target ? target.height : this.device.height;
+        let viewportWidth = xrView ? xrView.viewport.z : (target ? target.width : this.device.width);
+        let viewportHeight = xrView ? xrView.viewport.w : (target ? target.height : this.device.height);
         viewportWidth *= camera.rect.z;
         viewportHeight *= camera.rect.w;
 
@@ -483,10 +466,10 @@ class Renderer {
      * value from the camera if not supplied.
      */
     clear(camera, clearColor, clearDepth, clearStencil) {
-        const flags =
-            ((clearColor ?? camera._clearColorBuffer) ? CLEARFLAG_COLOR : 0) |
-            ((clearDepth ?? camera._clearDepthBuffer) ? CLEARFLAG_DEPTH : 0) |
-            ((clearStencil ?? camera._clearStencilBuffer) ? CLEARFLAG_STENCIL : 0);
+
+        const flags = ((clearColor ?? camera._clearColorBuffer) ? CLEARFLAG_COLOR : 0) |
+                      ((clearDepth ?? camera._clearDepthBuffer) ? CLEARFLAG_DEPTH : 0) |
+                      ((clearStencil ?? camera._clearStencilBuffer) ? CLEARFLAG_STENCIL : 0);
 
         if (flags) {
             const device = this.device;
@@ -520,13 +503,12 @@ class Renderer {
     }
 
     setupCullMode(cullFaces, flipFactor, drawCall) {
-        Debug.deprecated(
-            "Renderer.setupCullMode is deprecated. Use 'Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);' format instead."
-        );
+        Debug.deprecated('Renderer.setupCullMode is deprecated. Use \'Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
         this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
     setBaseConstants(device, material) {
+
         // Cull mode
         device.setCullMode(material.cull);
 
@@ -543,6 +525,7 @@ class Renderer {
     }
 
     updateCpuSkinMatrices(drawCalls) {
+
         _skinUpdateIndex++;
 
         const drawCallsCount = drawCalls.length;
@@ -640,12 +623,15 @@ class Renderer {
     }
 
     setVertexBuffers(device, mesh) {
+
         // main vertex buffer
         device.setVertexBuffer(mesh.vertexBuffer);
     }
 
     setMorphing(device, morphInstance) {
+
         if (morphInstance) {
+
             morphInstance.prepareRendering(device);
 
             // vertex buffer with vertex ids
@@ -672,7 +658,7 @@ class Renderer {
 
     // sets Vec3 camera position uniform
     dispatchViewPos(position) {
-        const vp = this.viewPos; // note that this reuses an array
+        const vp = this.viewPos;    // note that this reuses an array
         vp[0] = position.x;
         vp[1] = position.y;
         vp[2] = position.z;
@@ -680,8 +666,10 @@ class Renderer {
     }
 
     initViewUniformFormat(isClustered) {
+
         // view uniforms always go through a uniform buffer (on all backends)
         if (!this.viewUniformFormat) {
+
             // format of the view uniform buffer
             // note: 'textureBias' is deliberately not part of this, as the tiled nine-slice mode
             // declares a global constant of that name in the shader, which would collide with it
@@ -701,19 +689,17 @@ class Renderer {
             ];
 
             if (isClustered) {
-                uniforms.push(
-                    ...[
-                        new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                        new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
-                        new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                        new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
-                        new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
-                        new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
-                        new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
-                        new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
-                        new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
-                    ]
-                );
+                uniforms.push(...[
+                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
+                    new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
+                    new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
+                ]);
             }
 
             this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
@@ -724,6 +710,7 @@ class Renderer {
      * Set up uniforms for an XR view.
      */
     setupViewUniforms(view, index) {
+
         // any view uniforms need to be part of the view uniform buffer, see initViewUniformFormat
         this.projId.setValue(view.projMat.data);
         this.projSkyboxId.setValue(view.projMat.data);
@@ -762,11 +749,13 @@ class Renderer {
      * single view.
      */
     setupViewUniformBuffers(viewUniformFormat, viewList) {
+
         Debug.assert(viewUniformFormat);
         const { device } = this;
         const ub = this.getViewUniformBuffer(viewUniformFormat);
 
         if (viewList) {
+
             // multiview: set up a dynamic bind group + offset per view, captured for per-view
             // binding in the render loop (allocations may span dynamic buffers, so capture both)
             const viewCount = viewList.length;
@@ -776,20 +765,20 @@ class Renderer {
                 this._viewBindGroups[i] = this._dynamicViewBindGroup.bindGroup;
                 this._viewBindGroupOffsets[i] = this._dynamicViewBindGroup.offsets[0];
             }
+
         } else {
+
             // single view: uniforms were set by setCameraUniforms; update the buffer and bind
             ub.update(this._dynamicViewBindGroup);
-            device.setBindGroup(
-                BINDGROUP_VIEW,
-                this._dynamicViewBindGroup.bindGroup,
-                this._dynamicViewBindGroup.offsets
-            );
+            device.setBindGroup(BINDGROUP_VIEW, this._dynamicViewBindGroup.bindGroup, this._dynamicViewBindGroup.offsets);
         }
     }
 
     setupMeshUniformBuffers(shaderInstance) {
+
         const device = this.device;
         if (device.supportsUniformBuffers) {
+
             // update mesh bind group / uniform buffer
             const meshBindGroup = shaderInstance.getBindGroup(device);
             meshBindGroup.update();
@@ -810,6 +799,7 @@ class Renderer {
     }
 
     collectLights(comp) {
+
         // build a list and of all unique lights from all layers
         this.lights.length = 0;
         this.localLights.length = 0;
@@ -849,7 +839,7 @@ class Renderer {
                         // #if _PROFILER
 
                         // if affects dynamic or baked objects in real-time
-                        if (light.mask & MASK_AFFECT_DYNAMIC || light.mask & MASK_AFFECT_LIGHTMAPPED) {
+                        if ((light.mask & MASK_AFFECT_DYNAMIC) || (light.mask & MASK_AFFECT_LIGHTMAPPED)) {
                             stats.dynamicLights++;
                         }
 
@@ -885,6 +875,7 @@ class Renderer {
 
                     // skip this for materials not using variants
                     if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
+
                         if (onlyLitShaders) {
                             // skip materials not using lighting
                             if (!mat.useLighting || (mat.emitter && !mat.emitter.lighting)) {
@@ -912,6 +903,7 @@ class Renderer {
      * @param {LayerComposition} comp - The layer composition to update.
      */
     beginFrame(comp) {
+
         const scene = this.scene;
         const updateShaders = scene.updateShaders || this.device._shadersDirty;
 
@@ -977,6 +969,7 @@ class Renderer {
      * @param {LayerComposition} comp - The layer composition to update.
      */
     updateLayerComposition(comp) {
+
         // #if _PROFILER
         const layerCompositionUpdateTime = now();
         // #endif
@@ -1004,6 +997,7 @@ class Renderer {
     }
 
     frameUpdate() {
+
         this.clustersDebugRendered = false;
 
         this.initViewUniformFormat(this.scene.clusteredLightingEnabled);

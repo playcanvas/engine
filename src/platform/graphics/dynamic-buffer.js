@@ -38,12 +38,14 @@ class DynamicBuffer {
      * to the GPU separately; WebGL overrides this to eagerly upload, as it has no buffer mapping and
      * executes draws immediately.
      */
-    upload() {}
+    upload() {
+    }
 
     getBindGroup(ub) {
         const ubSize = ub.format.byteSize;
         let bindGroup = this.bindGroupCache.get(ubSize);
         if (!bindGroup) {
+
             // bind group
             // we pass ub to it, but internally only its size is used
             bindGroup = new BindGroup(this.device, this.bindGroupFormat, ub);

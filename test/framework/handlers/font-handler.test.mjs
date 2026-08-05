@@ -6,6 +6,7 @@ import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('FontHandler', function () {
+
     let app;
 
     beforeEach(function () {
@@ -34,7 +35,7 @@ describe('FontHandler', function () {
             done();
         });
 
-        asset.on('error', (err) => done(new Error(err)));
+        asset.on('error', err => done(new Error(err)));
     });
 
     // regression test for https://github.com/playcanvas/engine/issues/8997 - MSDF atlases must
@@ -59,7 +60,7 @@ describe('FontHandler', function () {
             done();
         });
 
-        asset.on('error', (err) => done(new Error(err)));
+        asset.on('error', err => done(new Error(err)));
     });
 
     // regression test for https://github.com/playcanvas/engine/issues/7033 - unloading a font
@@ -94,6 +95,7 @@ describe('FontHandler', function () {
             done();
         });
 
-        asset.on('error', (err) => done(new Error(err)));
+        asset.on('error', err => done(new Error(err)));
     });
+
 });

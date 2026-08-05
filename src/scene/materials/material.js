@@ -1,16 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import {
-    BLENDMODE_ZERO,
-    BLENDMODE_ONE,
-    BLENDMODE_SRC_COLOR,
-    BLENDMODE_DST_COLOR,
-    BLENDMODE_ONE_MINUS_DST_COLOR,
-    BLENDMODE_SRC_ALPHA,
+    BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR,
+    BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA,
     BLENDMODE_ONE_MINUS_SRC_ALPHA,
-    BLENDEQUATION_ADD,
-    BLENDEQUATION_REVERSE_SUBTRACT,
-    BLENDEQUATION_MIN,
-    BLENDEQUATION_MAX,
+    BLENDEQUATION_ADD, BLENDEQUATION_REVERSE_SUBTRACT,
+    BLENDEQUATION_MIN, BLENDEQUATION_MAX,
     CULLFACE_BACK,
     SHADERLANGUAGE_GLSL,
     FRONTFACE_CCW
@@ -18,17 +12,9 @@ import {
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import {
-    BLEND_ADDITIVE,
-    BLEND_NORMAL,
-    BLEND_NONE,
-    BLEND_PREMULTIPLIED,
-    BLEND_MULTIPLICATIVE,
-    BLEND_ADDITIVEALPHA,
-    BLEND_MULTIPLICATIVE2X,
-    BLEND_SCREEN,
-    BLEND_MIN,
-    BLEND_MAX,
-    BLEND_SUBTRACTIVE
+    BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
+    BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
+    BLEND_MIN, BLEND_MAX, BLEND_SUBTRACTIVE
 } from '../constants.js';
 import { getDefaultMaterial } from './default-material.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
@@ -52,12 +38,7 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 const blendModes = [];
 blendModes[BLEND_SUBTRACTIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_REVERSE_SUBTRACT };
 blendModes[BLEND_NONE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ZERO, op: BLENDEQUATION_ADD };
-blendModes[BLEND_NORMAL] = {
-    src: BLENDMODE_SRC_ALPHA,
-    dst: BLENDMODE_ONE_MINUS_SRC_ALPHA,
-    op: BLENDEQUATION_ADD,
-    alphaSrc: BLENDMODE_ONE
-};
+blendModes[BLEND_NORMAL] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD, alphaSrc: BLENDMODE_ONE };
 blendModes[BLEND_PREMULTIPLIED] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE_MINUS_SRC_ALPHA, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVE] = { src: BLENDMODE_ONE, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
 blendModes[BLEND_ADDITIVEALPHA] = { src: BLENDMODE_SRC_ALPHA, dst: BLENDMODE_ONE, op: BLENDEQUATION_ADD };
@@ -327,16 +308,12 @@ class Material {
     }
 
     set chunks(value) {
-        Debug.deprecated(
-            'Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")'
-        );
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         this._oldChunks = value;
     }
 
     get chunks() {
-        Debug.deprecated(
-            'Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")'
-        );
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));
         return this._oldChunks;
     }
@@ -567,15 +544,12 @@ class Material {
      * @type {number}
      */
     set blendType(type) {
+
         const wasDualSource = this._blendState.usesDualSourceBlending;
         const blendMode = blendModes[type];
         Debug.assert(blendMode, `Unknown blend mode ${type}`);
         this._blendState.setColorBlend(blendMode.op, blendMode.src, blendMode.dst);
-        this._blendState.setAlphaBlend(
-            blendMode.alphaOp ?? blendMode.op,
-            blendMode.alphaSrc ?? blendMode.src,
-            blendMode.alphaDst ?? blendMode.dst
-        );
+        this._blendState.setAlphaBlend(blendMode.alphaOp ?? blendMode.op, blendMode.alphaSrc ?? blendMode.src, blendMode.alphaDst ?? blendMode.dst);
 
         const blend = type !== BLEND_NONE;
         if (this._blendState.blend !== blend) {
@@ -603,14 +577,8 @@ class Material {
 
         for (let i = 0; i < blendModes.length; i++) {
             const blendMode = blendModes[i];
-            if (
-                blendMode.src === colorSrcFactor &&
-                blendMode.dst === colorDstFactor &&
-                blendMode.op === colorOp &&
-                blendMode.src === alphaSrcFactor &&
-                blendMode.dst === alphaDstFactor &&
-                blendMode.op === alphaOp
-            ) {
+            if (blendMode.src === colorSrcFactor && blendMode.dst === colorDstFactor && blendMode.op === colorOp &&
+                blendMode.src === alphaSrcFactor && blendMode.dst === alphaDstFactor && blendMode.op === alphaOp) {
                 return i;
             }
         }
@@ -729,8 +697,7 @@ class Material {
 
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {
-            this.stencilBack =
-                source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
+            this.stencilBack = source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
         }
 
         // Shader parameters
@@ -824,6 +791,7 @@ class Material {
      * should reflect those changes.
      */
     update() {
+
         // handle deprecated chunks for backwards compatibility
         if (Object.keys(this._oldChunks).length > 0) {
             for (const [key, value] of Object.entries(this._oldChunks)) {
@@ -873,12 +841,10 @@ class Material {
     }
 
     _setParameterSimple(name, data) {
+
         Debug.call(() => {
             if (data === undefined) {
-                Debug.warnOnce(
-                    `Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`,
-                    this
-                );
+                Debug.warnOnce(`Material#setParameter: Attempting to set undefined data for parameter "${name}", this is likely not expected.`, this);
             }
         });
 
@@ -900,6 +866,7 @@ class Material {
      * @param {number|number[]|ArrayBufferView|Texture|StorageBuffer} data - The value for the specified parameter.
      */
     setParameter(name, data) {
+
         if (data === undefined && typeof name === 'object') {
             const uniformObject = name;
             if (uniformObject.length) {
@@ -987,9 +954,9 @@ class Material {
     get definesKey() {
         if (this._definesKey === null) {
             this._definesKey = Array.from(this.defines)
-                .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
-                .map(([k, v]) => `${k}=${v}`)
-                .join(',');
+            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+            .map(([k, v]) => `${k}=${v}`)
+            .join(',');
         }
         return this._definesKey;
     }
@@ -1021,9 +988,7 @@ class Material {
                     meshInstance.material = defaultMaterial;
                 }
             } else {
-                Debug.warn(
-                    'Material: MeshInstance.mesh is null, default material cannot be assigned to the MeshInstance'
-                );
+                Debug.warn('Material: MeshInstance.mesh is null, default material cannot be assigned to the MeshInstance');
             }
         }
 

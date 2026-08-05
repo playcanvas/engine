@@ -1,6 +1,6 @@
 // sort blind set of data
 function SortWorker() {
-    const myself = (typeof self !== 'undefined' && self) || require('node:worker_threads').parentPort;
+    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
 
     let order;
     let centers;
@@ -55,15 +55,13 @@ function SortWorker() {
 
         const epsilon = 0.001;
 
-        if (
-            !forceUpdate &&
+        if (!forceUpdate &&
             Math.abs(px - lastCameraPosition.x) < epsilon &&
             Math.abs(py - lastCameraPosition.y) < epsilon &&
             Math.abs(pz - lastCameraPosition.z) < epsilon &&
             Math.abs(dx - lastCameraDirection.x) < epsilon &&
             Math.abs(dy - lastCameraDirection.y) < epsilon &&
-            Math.abs(dz - lastCameraDirection.z) < epsilon
-        ) {
+            Math.abs(dz - lastCameraDirection.z) < epsilon) {
             return;
         }
 
@@ -80,9 +78,9 @@ function SortWorker() {
         let minDist;
         let maxDist;
         for (let i = 0; i < 8; ++i) {
-            const x = i & 1 ? boundMin.x : boundMax.x;
-            const y = i & 2 ? boundMin.y : boundMax.y;
-            const z = i & 4 ? boundMin.z : boundMax.z;
+            const x = (i & 1 ? boundMin.x : boundMax.x);
+            const y = (i & 2 ? boundMin.y : boundMax.y);
+            const z = (i & 4 ? boundMin.z : boundMax.z);
             const d = x * dx + y * dy + z * dz;
             if (i === 0) {
                 minDist = maxDist = d;
@@ -129,8 +127,8 @@ function SortWorker() {
                 const r = chunks[i * 4 + 3];
                 const d = x * dx + y * dy + z * dz - minDist;
 
-                const binMin = Math.max(0, Math.floor(((d - r) * numBins) / range));
-                const binMax = Math.min(numBins, Math.ceil(((d + r) * numBins) / range));
+                const binMin = Math.max(0, Math.floor((d - r) * numBins / range));
+                const binMax = Math.min(numBins, Math.ceil((d + r) * numBins / range));
 
                 for (let j = binMin; j < binMax; ++j) {
                     binCount[j]++;
@@ -142,7 +140,7 @@ function SortWorker() {
 
             // calculate per-bin base and divider
             for (let i = 0; i < numBins; ++i) {
-                binDivider[i] = ((binCount[i] / binTotal) * bucketCount) >>> 0;
+                binDivider[i] = (binCount[i] / binTotal * bucketCount) >>> 0;
             }
             for (let i = 0; i < numBins; ++i) {
                 binBase[i] = i === 0 ? 0 : binBase[i - 1] + binDivider[i - 1];
@@ -185,7 +183,7 @@ function SortWorker() {
             return centers[o++] * dx + centers[o++] * dy + centers[o] * dz - cameraDist;
         };
         const findZero = () => {
-            const result = binarySearch(0, numVertices - 1, (i) => -dist(i));
+            const result = binarySearch(0, numVertices - 1, i => -dist(i));
             return Math.min(numVertices, Math.abs(result));
         };
 
@@ -199,14 +197,11 @@ function SortWorker() {
         }
 
         // send results
-        myself.postMessage(
-            {
-                order: order.buffer,
-                count,
-                sortTime: performance.now() - sortStartTime
-            },
-            [order.buffer]
-        );
+        myself.postMessage({
+            order: order.buffer,
+            count,
+            sortTime: performance.now() - sortStartTime
+        }, [order.buffer]);
 
         order = null;
     };
@@ -224,7 +219,7 @@ function SortWorker() {
             if (msgData.chunks) {
                 const chunksSrc = new Float32Array(msgData.chunks);
                 // reuse chunks memory, but we only need 4 floats per chunk
-                chunks = new Float32Array(msgData.chunks, 0, (chunksSrc.length * 4) / 6);
+                chunks = new Float32Array(msgData.chunks, 0, chunksSrc.length * 4 / 6);
 
                 boundMin.x = chunksSrc[0];
                 boundMin.y = chunksSrc[1];
@@ -289,19 +284,13 @@ function SortWorker() {
                             continue;
                         }
 
-                        if (x < mx) mx = x;
-                        else if (x > Mx) Mx = x;
-                        if (y < my) my = y;
-                        else if (y > My) My = y;
-                        if (z < mz) mz = z;
-                        else if (z > Mz) Mz = z;
+                        if (x < mx) mx = x; else if (x > Mx) Mx = x;
+                        if (y < my) my = y; else if (y > My) My = y;
+                        if (z < mz) mz = z; else if (z > Mz) Mz = z;
 
-                        if (x < boundMin.x) boundMin.x = x;
-                        else if (x > boundMax.x) boundMax.x = x;
-                        if (y < boundMin.y) boundMin.y = y;
-                        else if (y > boundMax.y) boundMax.y = y;
-                        if (z < boundMin.z) boundMin.z = z;
-                        else if (z > boundMax.z) boundMax.z = z;
+                        if (x < boundMin.x) boundMin.x = x; else if (x > boundMax.x) boundMax.x = x;
+                        if (y < boundMin.y) boundMin.y = y; else if (y > boundMax.y) boundMax.y = y;
+                        if (z < boundMin.z) boundMin.z = z; else if (z > boundMax.z) boundMax.z = z;
                     }
 
                     // calculate chunk center and radius from bound min/max

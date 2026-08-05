@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform spawnBoundsSphere: f32;
 uniform spawnBoundsSphereInnerRatio: f32;
 

@@ -12,7 +12,7 @@
 // Ported from `SweepCommon.hlsl::Scan` / `GlobalHistExclusiveScanWGE16` of
 // [b0nes164/GPUSorting](https://github.com/b0nes164/GPUSorting) (MIT License).
 
-export const onesweepScanSource = /* wgsl */ `
+export const onesweepScanSource = /* wgsl */`
 
 @group(0) @binding(0) var<storage, read> b_globalHist: array<u32>;
 @group(0) @binding(1) var<storage, read_write> b_passHist: array<atomic<u32>>;

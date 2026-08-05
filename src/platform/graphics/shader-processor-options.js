@@ -31,6 +31,7 @@ class ShaderProcessorOptions {
      * @param {VertexFormat} [vertexFormat] - Format of the vertex buffer.
      */
     constructor(viewUniformFormat, vertexFormat) {
+
         // construct a sparse array
         this.uniformFormats[BINDGROUP_VIEW] = viewUniformFormat;
 
@@ -44,6 +45,7 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the uniform exists, false otherwise.
      */
     hasUniform(name) {
+
         for (let i = 0; i < this.uniformFormats.length; i++) {
             const uniformFormat = this.uniformFormats[i];
             if (uniformFormat?.get(name)) {
@@ -61,6 +63,7 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the texture uniform exists, false otherwise.
      */
     hasTexture(name) {
+
         for (let i = 0; i < this.bindGroupFormats.length; i++) {
             const groupFormat = this.bindGroupFormats[i];
             if (groupFormat?.getTexture(name)) {
@@ -72,7 +75,7 @@ class ShaderProcessorOptions {
     }
 
     getVertexElement(semantic) {
-        return this.vertexFormat?.elements.find((element) => element.name === semantic);
+        return this.vertexFormat?.elements.find(element => element.name === semantic);
     }
 
     /**

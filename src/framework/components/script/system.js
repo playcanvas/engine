@@ -56,6 +56,7 @@ class ScriptComponentSystem extends ComponentSystem {
             sortBy: '_executionOrder'
         });
 
+
         // if true then we are currently preloading scripts
         this.preloading = true;
 
@@ -102,14 +103,14 @@ class ScriptComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         const order = [];
-        const scripts = {};
+        const scripts = { };
 
         for (let i = 0; i < entity.script._scripts.length; i++) {
             const scriptInstance = entity.script._scripts[i];
             const scriptName = scriptInstance.__scriptType.__name;
             order.push(scriptName);
 
-            const attributes = entity.script._attributeDataMap?.get(scriptName) || {};
+            const attributes = entity.script._attributeDataMap?.get(scriptName) || { };
             for (const key in scriptInstance.__attributes) {
                 attributes[key] = scriptInstance.__attributes[key];
             }

@@ -1,6 +1,6 @@
 // A simple vertex shader used to render a quad, which requires 'vec2 aPosition' in the vertex
 // buffer, and generates uv coordinates uv0 for use in the fragment shader.
-export default /* glsl */ `
+export default /* glsl */`
     attribute vec2 aPosition;
     varying vec2 uv0;
     void main(void)

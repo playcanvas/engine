@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     #include  "sampleCatmullRomPS"
     #include  "screenDepthPS"
 

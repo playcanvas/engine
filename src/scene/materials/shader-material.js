@@ -1,13 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import {
-    SHADERDEF_INSTANCING,
-    SHADERDEF_MORPH_NORMAL,
-    SHADERDEF_MORPH_POSITION,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SHADERDEF_SKIN
-} from '../constants.js';
+import { SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_SKIN } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { shaderGeneratorShader } from '../shader-lib/programs/shader-generator-shader.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
@@ -85,6 +79,7 @@ class ShaderMaterial extends Material {
     set shaderDesc(value) {
         this._shaderDesc = undefined;
         if (value) {
+
             // clone the object - only supported properties
             this._shaderDesc = {
                 uniqueName: value.uniqueName,
@@ -98,9 +93,7 @@ class ShaderMaterial extends Material {
 
             // backward compatibility - convert old properties to new
             if (value.vertexCode || value.fragmentCode || value.shaderLanguage) {
-                Debug.deprecated(
-                    `ShaderMaterial [${value.uniqueName}]: vertexCode, fragmentCode and shaderLanguage properties of ShaderDesc is deprecated. Use vertexGLSL, fragmentGLSL, vertexWGSL or fragmentWGSL instead.`
-                );
+                Debug.deprecated(`ShaderMaterial [${value.uniqueName}]: vertexCode, fragmentCode and shaderLanguage properties of ShaderDesc is deprecated. Use vertexGLSL, fragmentGLSL, vertexWGSL or fragmentWGSL instead.`);
                 const language = value.shaderLanguage ?? SHADERLANGUAGE_GLSL;
                 if (language === SHADERLANGUAGE_GLSL) {
                     this._shaderDesc.vertexGLSL = value.vertexCode;
@@ -138,6 +131,7 @@ class ShaderMaterial extends Material {
 
     /** @ignore */
     getShaderVariant(params) {
+
         const { objDefs } = params;
         const shaderPassInfo = ShaderPass.get(params.device).getByIndex(params.pass);
         const options = {

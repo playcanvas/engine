@@ -12,6 +12,7 @@ class WebgpuVertexBuffer extends WebgpuBuffer {
     }
 
     unlock(vertexBuffer) {
+
         const device = vertexBuffer.device;
         super.unlock(device, vertexBuffer.storage);
     }

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 
 #if LIT_CUBEMAP_PROJECTION == BOX
     uniform envBoxMin: vec3f;

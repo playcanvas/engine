@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 // Energy-conserving (hopefully) Blinn-Phong
 fn calcLightSpecular(gloss: f32, worldNormal: vec3f, h: vec3f) -> f32 {
     let nh: f32 = max( dot( h, worldNormal ), 0.0 );

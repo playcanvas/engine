@@ -9,18 +9,10 @@ import { Color } from '../../core/math/color.js';
 import { TRACEID_BUFFERS, TRACEID_TEXTURES } from '../../core/constants.js';
 import {
     BUFFER_STATIC,
-    CULLFACE_BACK,
-    CULLFACE_NONE,
-    CLEARFLAG_COLOR,
-    CLEARFLAG_DEPTH,
+    CULLFACE_BACK, CULLFACE_NONE,
+    CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
-    PRIMITIVE_POINTS,
-    PRIMITIVE_TRIFAN,
-    SEMANTIC_POSITION,
-    TYPE_FLOAT32,
-    PIXELFORMAT_111110F,
-    PIXELFORMAT_RGBA16F,
-    PIXELFORMAT_RGBA32F,
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
     FRONTFACE_CCW
@@ -756,6 +748,7 @@ class GraphicsDevice extends EventHandler {
      * Function that executes after the device has been created.
      */
     postInit() {
+
         // create quad vertex buffer
         const vertexFormat = new VertexFormat(this, [
             { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 }
@@ -856,6 +849,7 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     loseContext() {
+
         Debug.log('GraphicsDevice: Graphics context lost.');
 
         this.contextLost = true;
@@ -889,6 +883,7 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     restoreContext() {
+
         Debug.log('GraphicsDevice: Graphics context restored.');
 
         this.contextLost = false;
@@ -918,6 +913,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeRenderState() {
+
         this.blendState = new BlendState();
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
@@ -1007,9 +1003,7 @@ class GraphicsDevice extends EventHandler {
     }
 
     setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-        Debug.deprecated(
-            'GraphicsDevice#setBlendFunctionSeparate is deprecated, use GraphicsDevice.setBlendState instead.'
-        );
+        Debug.deprecated('GraphicsDevice#setBlendFunctionSeparate is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
         _tempBlendState.copy(currentBlendState);
         _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
@@ -1021,35 +1015,17 @@ class GraphicsDevice extends EventHandler {
         Debug.deprecated('GraphicsDevice#setBlendEquation is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
         _tempBlendState.copy(currentBlendState);
-        _tempBlendState.setColorBlend(
-            blendEquation,
-            currentBlendState.colorSrcFactor,
-            currentBlendState.colorDstFactor
-        );
-        _tempBlendState.setAlphaBlend(
-            blendEquation,
-            currentBlendState.alphaSrcFactor,
-            currentBlendState.alphaDstFactor
-        );
+        _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+        _tempBlendState.setAlphaBlend(blendEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
         this.setBlendState(_tempBlendState);
     }
 
     setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
-        Debug.deprecated(
-            'GraphicsDevice#setBlendEquationSeparate is deprecated, use GraphicsDevice.setBlendState instead.'
-        );
+        Debug.deprecated('GraphicsDevice#setBlendEquationSeparate is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
         _tempBlendState.copy(currentBlendState);
-        _tempBlendState.setColorBlend(
-            blendEquation,
-            currentBlendState.colorSrcFactor,
-            currentBlendState.colorDstFactor
-        );
-        _tempBlendState.setAlphaBlend(
-            blendAlphaEquation,
-            currentBlendState.alphaSrcFactor,
-            currentBlendState.alphaDstFactor
-        );
+        _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+        _tempBlendState.setAlphaBlend(blendAlphaEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
         this.setBlendState(_tempBlendState);
     }
 
@@ -1183,14 +1159,9 @@ class GraphicsDevice extends EventHandler {
      * @param {StencilParameters} [stencilFront] - Front stencil parameters.
      * @param {StencilParameters} [stencilBack] - Back stencil parameters.
      */
-    setDrawStates(
-        blendState = BlendState.NOBLEND,
-        depthState = DepthState.NODEPTH,
-        cullMode = CULLFACE_NONE,
-        frontFace = FRONTFACE_CCW,
-        stencilFront,
-        stencilBack
-    ) {
+    setDrawStates(blendState = BlendState.NOBLEND, depthState = DepthState.NODEPTH,
+        cullMode = CULLFACE_NONE, frontFace = FRONTFACE_CCW,
+        stencilFront, stencilBack) {
         this.setBlendState(blendState);
         this.setDepthState(depthState);
         this.setCullMode(cullMode);
@@ -1222,6 +1193,7 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     setVertexBuffer(vertexBuffer) {
+
         if (vertexBuffer) {
             this.vertexBuffers.push(vertexBuffer);
         }
@@ -1312,6 +1284,7 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     initRenderTarget(target) {
+
         if (target.initialized) return;
 
         // #if _PROFILER
@@ -1383,27 +1356,23 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     _isBrowserInterface(texture) {
-        return (
-            this._isImageBrowserInterface(texture) ||
-            this._isImageCanvasInterface(texture) ||
-            this._isImageVideoInterface(texture) ||
-            this._isHTMLElementInterface(texture)
-        );
+        return this._isImageBrowserInterface(texture) ||
+                this._isImageCanvasInterface(texture) ||
+                this._isImageVideoInterface(texture) ||
+                this._isHTMLElementInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
-        return (
-            (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap) ||
-            (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement)
-        );
+        return (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap) ||
+               (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement);
     }
 
     _isImageCanvasInterface(texture) {
-        return typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement;
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement);
     }
 
     _isImageVideoInterface(texture) {
-        return typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement;
+        return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
     }
 
     /**
@@ -1416,13 +1385,10 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     _isHTMLElementInterface(texture) {
-        return (
-            typeof HTMLElement !== 'undefined' &&
-            texture instanceof HTMLElement &&
-            !(typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) &&
-            !(typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) &&
-            !(typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement)
-        );
+        return (typeof HTMLElement !== 'undefined' && texture instanceof HTMLElement &&
+                !(typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement) &&
+                !(typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) &&
+                !(typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement));
     }
 
     /**
@@ -1542,13 +1508,17 @@ class GraphicsDevice extends EventHandler {
         return this._deviceType;
     }
 
-    startRenderPass(renderPass) {}
+    startRenderPass(renderPass) {
+    }
 
-    endRenderPass(renderPass) {}
+    endRenderPass(renderPass) {
+    }
 
-    startComputePass(name) {}
+    startComputePass(name) {
+    }
 
-    endComputePass() {}
+    endComputePass() {
+    }
 
     /**
      * Function which executes at the start of the frame. This should not be called manually, as
@@ -1561,6 +1531,7 @@ class GraphicsDevice extends EventHandler {
         this.renderVersion++;
 
         Debug.call(() => {
+
             // log out all loaded textures, sorted by gpu memory size
             if (Tracing.get(TRACEID_TEXTURES)) {
                 const textures = [...this.textures];
@@ -1568,11 +1539,9 @@ class GraphicsDevice extends EventHandler {
                 Debug.log(`Textures: ${textures.length}`);
                 let textureTotal = 0;
                 textures.forEach((texture, index) => {
-                    const textureSize = texture.gpuSize;
+                    const textureSize  = texture.gpuSize;
                     textureTotal += textureSize;
-                    Debug.log(
-                        `${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`
-                    );
+                    Debug.log(`${index}. Id: ${texture.id} ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
                 });
                 Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
             }
@@ -1614,11 +1583,9 @@ class GraphicsDevice extends EventHandler {
                         totalSB += size;
                     }
                     const namePart = buffer.name ? ` ${buffer.name}` : '';
-                    Debug.log(
-                        `${index}. ${kind} Id: ${buffer.id}${namePart} VRAM: ${(size / 1024 / 1024).toFixed(2)} MB`
-                    );
+                    Debug.log(`${index}. ${kind} Id: ${buffer.id}${namePart} VRAM: ${(size / 1024 / 1024).toFixed(2)} MB`);
                 });
-                const mb = (n) => (n / 1024 / 1024).toFixed(2);
+                const mb = n => (n / 1024 / 1024).toFixed(2);
                 Debug.log(`Total VB: ${totalVB} bytes (${mb(totalVB)} MB)`);
                 Debug.log(`Total IB: ${totalIB} bytes (${mb(totalIB)} MB)`);
                 Debug.log(`Total SB: ${totalSB} bytes (${mb(totalSB)} MB)`);
@@ -1635,7 +1602,7 @@ class GraphicsDevice extends EventHandler {
      */
     frameEnd() {
         // clear all maps scheduled for end of frame clearing
-        this.mapsToClear.forEach((map) => map.clear());
+        this.mapsToClear.forEach(map => map.clear());
         this.mapsToClear.clear();
     }
 
@@ -1645,7 +1612,8 @@ class GraphicsDevice extends EventHandler {
      * @param {Array<Compute>} computes - An array of compute shaders to dispatch.
      * @param {string} [name] - The name of the dispatch, used for debugging and reporting only.
      */
-    computeDispatch(computes, name = 'Unnamed') {}
+    computeDispatch(computes, name = 'Unnamed') {
+    }
 
     /**
      * Get a renderable HDR pixel format supported by the graphics device.
@@ -1671,14 +1639,11 @@ class GraphicsDevice extends EventHandler {
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(
-        formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F],
-        filterable = true,
-        samples = 1
-    ) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
+
                 case PIXELFORMAT_111110F: {
                     if (this.textureRG11B10Renderable) {
                         return format;
@@ -1693,6 +1658,7 @@ class GraphicsDevice extends EventHandler {
                     break;
 
                 case PIXELFORMAT_RGBA32F:
+
                     // on WebGPU platform, RGBA32F is not compatible with multi-sampling
                     if (this.isWebGPU && samples > 1) {
                         continue;
@@ -1716,23 +1682,22 @@ class GraphicsDevice extends EventHandler {
      * @protected
      */
     validateAttributes(shader, vertexBuffers) {
+
         Debug.call(() => {
+
             // add all attribute locations from vertex formats to the set
             _tempSet.clear();
             for (let i = 0; i < vertexBuffers.length; i++) {
-                vertexBuffers[i]?.format.elements.forEach((element) => _tempSet.add(semanticToLocation[element.name]));
+                vertexBuffers[i]?.format.elements.forEach(element => _tempSet.add(semanticToLocation[element.name]));
             }
 
             // every location shader needs must be in the vertex buffer
             for (const [location, name] of shader.attributes) {
                 if (!_tempSet.has(location)) {
-                    Debug.errorOnce(
-                        `Vertex attribute [${name}] at location ${location} required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`,
-                        {
-                            shader,
-                            vertexBuffers
-                        }
-                    );
+                    Debug.errorOnce(`Vertex attribute [${name}] at location ${location} required by the shader is not present in the currently assigned vertex buffers, while rendering [${DebugGraphics.toString()}]`, {
+                        shader,
+                        vertexBuffers
+                    });
                 }
             }
         });

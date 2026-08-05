@@ -21,9 +21,11 @@ import { FramePass } from './frame-pass.js';
  */
 const validateClearValues = (renderPass) => {
     Debug.call(() => {
+
         const renderTarget = renderPass.renderTarget;
         const count = renderPass.colorArrayOps.length;
         for (let i = 0; i < count; i++) {
+
             const colorOps = renderPass.colorArrayOps[i];
             if (!colorOps?.clear) {
                 continue;
@@ -38,10 +40,7 @@ const validateClearValues = (renderPass) => {
             const integers = Number.isInteger(r) && Number.isInteger(g) && Number.isInteger(b) && Number.isInteger(a);
             const unsigned = formatInfo.isUint !== true || (r >= 0 && g >= 0 && b >= 0 && a >= 0);
             if (!integers || !unsigned) {
-                Debug.errorOnce(
-                    `Render pass '${renderPass.name}' clears the integer format color attachment ${i} (${formatInfo.name}) of render target '${renderTarget?.name}' to [${r}, ${g}, ${b}, ${a}], but the components must be ${formatInfo.isUint ? 'non-negative ' : ''}integers.`,
-                    renderPass
-                );
+                Debug.errorOnce(`Render pass '${renderPass.name}' clears the integer format color attachment ${i} (${formatInfo.name}) of render target '${renderTarget?.name}' to [${r}, ${g}, ${b}, ${a}], but the components must be ${formatInfo.isUint ? 'non-negative ' : ''}integers.`, renderPass);
             }
         }
     });
@@ -232,6 +231,7 @@ class RenderPass extends FramePass {
      * @param {number} [options.scaleY] - The scale factor for the render target height. Defaults to 1.
      */
     init(renderTarget = null, options) {
+
         this.options = options;
 
         // null represents the default framebuffer
@@ -248,6 +248,7 @@ class RenderPass extends FramePass {
     }
 
     allocateAttachments() {
+
         const rt = this.renderTarget;
 
         // depth
@@ -276,12 +277,13 @@ class RenderPass extends FramePass {
             const colorBuffer = this.renderTarget?._colorBuffers?.[i];
             if (this.renderTarget?.mipmaps && colorBuffer?.mipmaps) {
                 const intFormat = isIntegerPixelFormat(colorBuffer._format);
-                colorOps.genMipmaps = !intFormat; // no automatic mipmap generation for integer formats
+                colorOps.genMipmaps = !intFormat;  // no automatic mipmap generation for integer formats
             }
         }
     }
 
-    postInit() {}
+    postInit() {
+    }
 
     frameUpdate() {
         // resize the render target if needed
@@ -302,12 +304,10 @@ class RenderPass extends FramePass {
      * all color attachments are modified.
      */
     setClearColor(color, index) {
+
         // TODO: expose per color buffer clear parameters on the camera, and copy them here.
         const count = this.colorArrayOps.length;
-        Debug.assert(
-            index === undefined || (index >= 0 && index < count),
-            `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`
-        );
+        Debug.assert(index === undefined || (index >= 0 && index < count), `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);
 
         const start = index ?? 0;
         const end = index === undefined ? count : index + 1;
@@ -353,7 +353,9 @@ class RenderPass extends FramePass {
      * Render the render pass
      */
     render() {
+
         if (this.enabled) {
+
             const device = this.device;
             const realPass = this.renderTarget !== undefined;
 
@@ -364,6 +366,7 @@ class RenderPass extends FramePass {
             this.before();
 
             if (this.executeEnabled) {
+
                 if (realPass && !this._skipStart) {
                     device.startRenderPass(this);
                 }
@@ -384,48 +387,57 @@ class RenderPass extends FramePass {
     // #if _DEBUG
     log(device, index = 0) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
+
             const rt = this.renderTarget ?? (this.renderTarget === null ? device.backBuffer : null);
             const isBackBuffer = !!rt?.impl.assignedColorTexture || rt?.impl.suppliedColorFramebuffer !== undefined;
             const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
             const mipLevel = rt?.mipLevel;
-            const rtInfo = !rt
-                ? ''
-                : ` RT: ${rt ? rt.name : 'NULL'} ${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}${hasDepth ? '[Depth]' : ''}${hasStencil ? '[Stencil]' : ''} ${rt.width} x ${rt.height}${this.samples > 0 ? ` samples: ${this.samples}` : ''}${mipLevel > 0 ? ` mipLevel: ${mipLevel}` : ''}`;
+            const rtInfo = !rt ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
+                `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
+                `${hasDepth ? '[Depth]' : ''}` +
+                `${hasStencil ? '[Stencil]' : ''}` +
+                ` ${rt.width} x ${rt.height}` +
+                `${(this.samples > 0 ? ` samples: ${this.samples}` : '')}` +
+                `${mipLevel > 0 ? ` mipLevel: ${mipLevel}` : ''}`;
 
             const indexString = this._skipStart ? '++' : index.toString().padEnd(2, ' ');
-            Debug.trace(
-                TRACEID_RENDER_PASS,
-                `${indexString}: ${this.name.padEnd(20, ' ')}${this.executeEnabled ? '' : ' DISABLED '}${rtInfo.padEnd(30)}`
-            );
+            Debug.trace(TRACEID_RENDER_PASS, `${indexString}: ${this.name.padEnd(20, ' ')}` +
+                        `${this.executeEnabled ? '' : ' DISABLED '}${
+                            rtInfo.padEnd(30)}`);
 
             for (let i = 0; i < numColor; i++) {
                 const colorOps = this.colorArrayOps[i];
-                const colorFormat = pixelFormatInfo.get(
-                    isBackBuffer ? device.backBufferFormat : rt.getColorBuffer(i).format
-                )?.name;
-                Debug.trace(
-                    TRACEID_RENDER_PASS_DETAIL,
-                    `    color[${i}]: ${colorOps.clear ? 'clear' : 'load'}->${colorOps.store ? 'store' : 'discard'} ${colorOps.resolve ? 'resolve ' : ''}${colorOps.genMipmaps ? 'mipmaps ' : ''} [format: ${colorFormat}] ${colorOps.clear ? `[clear: ${colorOps.clearValue.toString(true, true)}]` : ''}`
-                );
+                const colorFormat = pixelFormatInfo.get(isBackBuffer ? device.backBufferFormat : rt.getColorBuffer(i).format)?.name;
+                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    color[${i}]: ` +
+                            `${colorOps.clear ? 'clear' : 'load'}->` +
+                            `${colorOps.store ? 'store' : 'discard'} ` +
+                            `${colorOps.resolve ? 'resolve ' : ''}` +
+                            `${colorOps.genMipmaps ? 'mipmaps ' : ''}` +
+                            ` [format: ${colorFormat}]` +
+                            ` ${colorOps.clear ? `[clear: ${colorOps.clearValue.toString(true, true)}]` : ''}`);
             }
 
             if (this.depthStencilOps) {
+
                 const depthFormat = `${rt.depthBuffer ? ` [format: ${pixelFormatInfo.get(rt.depthBuffer.format)?.name}]` : ''}`;
 
                 if (hasDepth) {
-                    Debug.trace(
-                        TRACEID_RENDER_PASS_DETAIL,
-                        `    depthOps: ${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->${this.depthStencilOps.storeDepth ? 'store' : 'discard'}${this.depthStencilOps.resolveDepth ? ' resolve' : ''}${depthFormat}${this.depthStencilOps.clearDepth ? ` [clear: ${this.depthStencilOps.clearDepthValue}]` : ''}`
-                    );
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    depthOps: ' +
+                                `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
+                                `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}` +
+                                `${this.depthStencilOps.resolveDepth ? ' resolve' : ''}` +
+                                `${depthFormat}` +
+                                `${this.depthStencilOps.clearDepth ? ` [clear: ${this.depthStencilOps.clearDepthValue}]` : ''}`);
                 }
 
                 if (hasStencil) {
-                    Debug.trace(
-                        TRACEID_RENDER_PASS_DETAIL,
-                        `    stencOps: ${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->${this.depthStencilOps.storeStencil ? 'store' : 'discard'}${depthFormat}${this.depthStencilOps.clearStencil ? ` [clear: ${this.depthStencilOps.clearStencilValue}]` : ''}`
-                    );
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, '    stencOps: ' +
+                                `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
+                                `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}` +
+                                `${depthFormat}` +
+                                `${this.depthStencilOps.clearStencil ? ` [clear: ${this.depthStencilOps.clearStencilValue}]` : ''}`);
                 }
             }
         }

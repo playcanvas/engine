@@ -33,6 +33,7 @@ describe('RigidBodyComponent', function () {
     }
 
     describe('body lifecycle', function () {
+
         it('creates a backend body once a collision shape is present', function () {
             const e = addPhysicsEntity();
 
@@ -92,9 +93,11 @@ describe('RigidBodyComponent', function () {
             expect(e.rigidbody._body).to.exist;
             expect(e.rigidbody._simulationEnabled).to.equal(true);
         });
+
     });
 
     describe('properties and operations', function () {
+
         it('routes every property setter without a native backend', function () {
             const e = addPhysicsEntity();
             const rb = e.rigidbody;
@@ -159,9 +162,11 @@ describe('RigidBodyComponent', function () {
             expect(clone.rigidbody._body).to.exist;
             expect(clone.rigidbody._body).to.not.equal(e.rigidbody._body);
         });
+
     });
 
     describe('collision shapes', function () {
+
         it('creates shapes for every primitive and compound type', function () {
             for (const type of ['box', 'sphere', 'capsule', 'cylinder', 'cone', 'compound']) {
                 const e = addPhysicsEntity('static', { type });
@@ -178,30 +183,30 @@ describe('RigidBodyComponent', function () {
             // a duck-typed render source - under an inert backend the lazy vertex/index
             // accessors of the mesh sources must never be read
             e.collision.render = {
-                meshes: [
-                    {
-                        id: 12345,
-                        primitive: [{ base: 0, count: 3 }],
-                        get vertexBuffer() {
-                            throw new Error('vertex data must not be read by an inert backend');
-                        },
-                        getPositions() {
-                            throw new Error('vertex data must not be read by an inert backend');
-                        },
-                        getIndices() {
-                            throw new Error('vertex data must not be read by an inert backend');
-                        }
+                meshes: [{
+                    id: 12345,
+                    primitive: [{ base: 0, count: 3 }],
+                    get vertexBuffer() {
+                        throw new Error('vertex data must not be read by an inert backend');
+                    },
+                    getPositions() {
+                        throw new Error('vertex data must not be read by an inert backend');
+                    },
+                    getIndices() {
+                        throw new Error('vertex data must not be read by an inert backend');
                     }
-                ]
+                }]
             };
             e.addComponent('rigidbody', { type: 'static' });
 
             expect(e.collision.shape).to.exist;
             expect(e.rigidbody._body).to.exist;
         });
+
     });
 
     describe('triggers', function () {
+
         it('creates a trigger for a collision-only entity', function () {
             const e = new Entity();
             app.root.addChild(e);
@@ -240,9 +245,11 @@ describe('RigidBodyComponent', function () {
             expect(e.trigger).to.not.exist;
             expect(e.rigidbody._body).to.exist;
         });
+
     });
 
     describe('compounds', function () {
+
         it('wires children to their compound parent', function () {
             const parent = new Entity('parent');
             app.root.addChild(parent);
@@ -284,5 +291,7 @@ describe('RigidBodyComponent', function () {
             child.removeComponent('collision');
             expect(parent.collision._compoundParent).to.equal(parent.collision);
         });
+
     });
+
 });

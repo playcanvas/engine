@@ -27,6 +27,7 @@ class ImmediateBatch {
     // add line positions and colors to the batch
     // this function expects position in Vec3 and colors in Color format
     addLines(positions, color) {
+
         // positions
         const destPos = this.positions;
         const count = positions.length;
@@ -55,6 +56,7 @@ class ImmediateBatch {
     // this function expects positions as arrays of numbers
     // and color as instance of Color or array of number specifying the same number of vertices as positions
     addLinesArrays(positions, color) {
+
         // positions
         const destPos = this.positions;
         for (let i = 0; i < positions.length; i += 3) {
@@ -77,8 +79,10 @@ class ImmediateBatch {
     }
 
     onPreRender(visibleList, transparent) {
+
         // prepare mesh if its transparency matches
         if (this.positions.length > 0 && this.material.transparent === transparent) {
+
             // update mesh vertices
             this.mesh.setPositions(this.positions);
             this.mesh.setColors(this.colors);

@@ -14,18 +14,13 @@ class GlbModelParser {
     }
 
     load(url, callback, asset) {
-        this.handler.fetch(
-            url,
-            Http.ResponseType.ARRAY_BUFFER,
-            (err, data) => {
-                if (err) {
-                    callback(err);
-                } else {
-                    this.parse(data, callback, asset);
-                }
-            },
-            asset
-        );
+        this.handler.fetch(url, Http.ResponseType.ARRAY_BUFFER, (err, data) => {
+            if (err) {
+                callback(err);
+            } else {
+                this.parse(data, callback, asset);
+            }
+        }, asset);
     }
 
     parse(data, callback, asset) {

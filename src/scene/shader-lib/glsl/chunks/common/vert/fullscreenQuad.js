@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 attribute vec2 vertex_position;
 
 varying vec2 vUv0;

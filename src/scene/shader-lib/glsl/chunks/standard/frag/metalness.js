@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 #ifdef STD_METALNESS_CONSTANT
 uniform float material_metalness;
 #endif

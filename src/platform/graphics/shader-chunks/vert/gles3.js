@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 // WEBGL_multi_draw
 #extension GL_ANGLE_multi_draw : enable

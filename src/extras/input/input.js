@@ -240,9 +240,11 @@ class InputController extends InputConsumer {
      * @param {Pose} pose - The initial pose of the controller.
      * @param {boolean} [smooth] - Whether to smooth the transition.
      */
-    attach(pose, smooth = true) {}
+    attach(pose, smooth = true) {
+    }
 
-    detach() {}
+    detach() {
+    }
 
     /**
      * @param {InputFrame} frame - The input frame.
@@ -261,4 +263,10 @@ class InputController extends InputConsumer {
     }
 }
 
-export { InputDelta, InputFrame, InputSource, InputConsumer, InputController };
+export {
+    InputDelta,
+    InputFrame,
+    InputSource,
+    InputConsumer,
+    InputController
+};

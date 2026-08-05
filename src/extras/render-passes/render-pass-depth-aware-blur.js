@@ -42,6 +42,7 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
     }
 
     execute() {
+
         this.filterSizeId.setValue(4);
         this.sourceTextureId.setValue(this.sourceTexture);
 

@@ -5,15 +5,15 @@ export const DEFAULT_LOCALE = 'en-US';
 // have en-US and en-GB then pick en-US. If a fallback does not exist either
 // then pick the first that satisfies the language.
 export const DEFAULT_LOCALE_FALLBACKS = {
-    en: 'en-US',
-    es: 'en-ES',
-    zh: 'zh-CN',
+    'en': 'en-US',
+    'es': 'en-ES',
+    'zh': 'zh-CN',
     'zh-HK': 'zh-TW',
     'zh-TW': 'zh-HK',
     'zh-MO': 'zh-HK',
-    fr: 'fr-FR',
-    de: 'de-DE',
-    it: 'it-IT',
-    ru: 'ru-RU',
-    ja: 'ja-JP'
+    'fr': 'fr-FR',
+    'de': 'de-DE',
+    'it': 'it-IT',
+    'ru': 'ru-RU',
+    'ja': 'ja-JP'
 };

@@ -1,5 +1,5 @@
 // backend shader implementation code which executes after the front end code.
-export default /* glsl */ `
+export default /* glsl */`
 
 #ifdef LIT_NEEDS_NORMAL
     #include "cubeMapRotatePS"

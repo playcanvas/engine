@@ -1,5 +1,5 @@
 // Clustered Omni Sampling using atlas
-export default /* wgsl */ `
+export default /* wgsl */`
 
 fn _getShadowCoordPerspZbuffer(shadowMatrix: mat4x4f, shadowParams: vec4f, wPos: vec3f) -> vec3f {
     var projPos = shadowMatrix * vec4f(wPos, 1.0);

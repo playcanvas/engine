@@ -59,8 +59,8 @@ class WebgpuUploadStream {
 
     destroy() {
         this._destroyed = true;
-        this.availableStagingBuffers.forEach((buffer) => buffer.destroy());
-        this.pendingStagingBuffers.forEach((buffer) => buffer.destroy());
+        this.availableStagingBuffers.forEach(buffer => buffer.destroy());
+        this.pendingStagingBuffers.forEach(buffer => buffer.destroy());
     }
 
     /**
@@ -69,6 +69,7 @@ class WebgpuUploadStream {
      * @param {number} minByteSize - Minimum size for buffers to keep. Smaller buffers are destroyed.
      */
     update(minByteSize) {
+
         const device = this.uploadStream.device;
 
         // map all pending buffers
@@ -156,38 +157,29 @@ class WebgpuUploadStream {
         // the command buffer is eventually submitted.
         if (this.pendingStagingBuffers.length > 0) {
             // @ts-ignore - submitVersion is available on WebgpuGraphicsDevice
-            Debug.assert(
-                device.submitVersion !== this._lastUploadSubmitVersion,
-                'UploadStream: each instance can only upload once per submit. A previous staging buffer copy has not been submitted yet. This causes WebGPU "buffer used in submit while mapped" errors. Ensure the caller defers uploads to one per frame.'
-            );
+            Debug.assert(device.submitVersion !== this._lastUploadSubmitVersion, 'UploadStream: each instance can only upload once per submit. A previous staging ' +
+                'buffer copy has not been submitted yet. This causes WebGPU "buffer used in submit ' +
+                'while mapped" errors. Ensure the caller defers uploads to one per frame.');
         }
 
         // Update staging buffers
         this.update(byteSize);
 
         // WebGPU copyBufferToBuffer requires offset and size to be multiples of 4 bytes
-        Debug.assert(
-            byteOffset % 4 === 0,
-            `WebGPU upload offset in bytes (${byteOffset}) must be a multiple of 4 for copyBufferToBuffer`
-        );
-        Debug.assert(
-            byteSize % 4 === 0,
-            `WebGPU upload size in bytes (${byteSize}) must be a multiple of 4 for copyBufferToBuffer`
-        );
+        Debug.assert(byteOffset % 4 === 0, `WebGPU upload offset in bytes (${byteOffset}) must be a multiple of 4 for copyBufferToBuffer`);
+        Debug.assert(byteSize % 4 === 0, `WebGPU upload size in bytes (${byteSize}) must be a multiple of 4 for copyBufferToBuffer`);
 
         // Get or create a staging buffer (guaranteed to be large enough after recycling)
-        const buffer =
-            this.availableStagingBuffers.pop() ??
-            (() => {
-                // @ts-ignore - wgpu is available on WebgpuGraphicsDevice
-                const newBuffer = this.uploadStream.device.wgpu.createBuffer({
-                    size: byteSize,
-                    usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-                    mappedAtCreation: true
-                });
-                DebugHelper.setLabel(newBuffer, `UploadStream-Staging-${id++}`);
-                return newBuffer;
-            })();
+        const buffer = this.availableStagingBuffers.pop() ?? (() => {
+            // @ts-ignore - wgpu is available on WebgpuGraphicsDevice
+            const newBuffer = this.uploadStream.device.wgpu.createBuffer({
+                size: byteSize,
+                usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
+                mappedAtCreation: true
+            });
+            DebugHelper.setLabel(newBuffer, `UploadStream-Staging-${id++}`);
+            return newBuffer;
+        })();
 
         // Write to mapped range (non-blocking)
         const mappedRange = buffer.getMappedRange();

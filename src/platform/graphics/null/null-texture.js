@@ -4,11 +4,14 @@
  * @ignore
  */
 class NullTexture {
-    destroy(device) {}
+    destroy(device) {
+    }
 
-    propertyChanged(flag) {}
+    propertyChanged(flag) {
+    }
 
-    loseContext() {}
+    loseContext() {
+    }
 
     copy(source, options) {
         return true;

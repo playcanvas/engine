@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 void addLightMap(
     vec3 lightmap, 
     vec3 dir, 

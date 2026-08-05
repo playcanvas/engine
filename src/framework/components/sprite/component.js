@@ -3,7 +3,10 @@ import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
-import { LAYERID_WORLD, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
+import {
+    LAYERID_WORLD,
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
+} from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
@@ -310,6 +313,7 @@ class SpriteComponent extends Component {
                     this.removeFromLayers();
                 }
             }
+
         } else if (this._type === SPRITETYPE_ANIMATED) {
             this.stop();
 
@@ -596,10 +600,7 @@ class SpriteComponent extends Component {
         this._width = value;
         this._outerScale.x = this._width;
 
-        if (
-            this.sprite &&
-            (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)
-        ) {
+        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)) {
             this._updateTransform();
         }
     }
@@ -625,10 +626,7 @@ class SpriteComponent extends Component {
         this._height = value;
         this._outerScale.y = this.height;
 
-        if (
-            this.sprite &&
-            (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)
-        ) {
+        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_TILED || this.sprite.renderMode === SPRITE_RENDERMODE_SLICED)) {
             this._updateTransform();
         }
     }
@@ -800,6 +798,7 @@ class SpriteComponent extends Component {
         this.stop();
         this.removeFromLayers();
 
+
         if (this._batchGroupId >= 0) {
             app.batcher?.remove(BatchGroup.SPRITE, this._batchGroupId, this.entity);
         }
@@ -937,10 +936,7 @@ class SpriteComponent extends Component {
         }
 
         // for 9-sliced
-        if (
-            this.sprite.atlas &&
-            (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)
-        ) {
+        if (this.sprite.atlas && (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)) {
             // set custom aabb function
             this._meshInstance._updateAabbFunc = this._updateAabbFunc;
 
@@ -950,20 +946,11 @@ class SpriteComponent extends Component {
                 const borderWidthScale = 2 / frameData.rect.z;
                 const borderHeightScale = 2 / frameData.rect.w;
 
-                this._innerOffset.set(
-                    frameData.border.x * borderWidthScale,
-                    frameData.border.y * borderHeightScale,
-                    frameData.border.z * borderWidthScale,
-                    frameData.border.w * borderHeightScale
-                );
+                this._innerOffset.set(frameData.border.x * borderWidthScale, frameData.border.y * borderHeightScale, frameData.border.z * borderWidthScale, frameData.border.w * borderHeightScale);
 
                 const tex = this.sprite.atlas.texture;
-                this._atlasRect.set(
-                    frameData.rect.x / tex.width,
-                    frameData.rect.y / tex.height,
-                    frameData.rect.z / tex.width,
-                    frameData.rect.w / tex.height
-                );
+                this._atlasRect.set(frameData.rect.x / tex.width, frameData.rect.y / tex.height, frameData.rect.z / tex.width, frameData.rect.w / tex.height);
+
             } else {
                 this._innerOffset.set(0, 0, 0, 0);
             }
@@ -995,10 +982,8 @@ class SpriteComponent extends Component {
         let posX = 0;
         let posY = 0;
 
-        if (
-            this.sprite &&
-            (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)
-        ) {
+        if (this.sprite && (this.sprite.renderMode === SPRITE_RENDERMODE_SLICED || this.sprite.renderMode === SPRITE_RENDERMODE_TILED)) {
+
             let w = 1;
             let h = 1;
 
@@ -1020,10 +1005,7 @@ class SpriteComponent extends Component {
             const scaleMulY = h / this.sprite.pixelsPerUnit;
 
             // scale borders if necessary instead of overlapping
-            this._outerScale.set(
-                Math.max(this._width, this._innerOffset.x * scaleMulX),
-                Math.max(this._height, this._innerOffset.y * scaleMulY)
-            );
+            this._outerScale.set(Math.max(this._width, this._innerOffset.x * scaleMulX), Math.max(this._height, this._innerOffset.y * scaleMulY));
 
             scaleX *= scaleMulX;
             scaleY *= scaleMulY;

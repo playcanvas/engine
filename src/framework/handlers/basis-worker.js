@@ -2,19 +2,19 @@
 function BasisWorker() {
     // basis compression format enums, reproduced here
     const BASIS_FORMAT = {
-        cTFETC1: 0, // etc1
-        cTFETC2: 1, // etc2
-        cTFBC1: 2, // dxt1
-        cTFBC3: 3, // dxt5
-        cTFPVRTC1_4_RGB: 8, // PVRTC1 rgb
-        cTFPVRTC1_4_RGBA: 9, // PVRTC1 rgba
-        cTFASTC_4x4: 10, // ASTC
-        cTFATC_RGB: 11, // ATC rgb
+        cTFETC1: 0,                         // etc1
+        cTFETC2: 1,                         // etc2
+        cTFBC1: 2,                          // dxt1
+        cTFBC3: 3,                          // dxt5
+        cTFPVRTC1_4_RGB: 8,                 // PVRTC1 rgb
+        cTFPVRTC1_4_RGBA: 9,                // PVRTC1 rgba
+        cTFASTC_4x4: 10,                    // ASTC
+        cTFATC_RGB: 11,                     // ATC rgb
         cTFATC_RGBA_INTERPOLATED_ALPHA: 12, // ATC rgba
         // uncompressed (fallback) formats
-        cTFRGBA32: 13, // rgba 8888
-        cTFRGB565: 14, // rgb 565
-        cTFRGBA4444: 16 // rgba 4444
+        cTFRGBA32: 13,                      // rgba 8888
+        cTFRGB565: 14,                      // rgb 565
+        cTFRGBA4444: 16                     // rgba 4444
     };
 
     // map of GPU to basis format for textures without alpha
@@ -59,30 +59,18 @@ function BasisWorker() {
     // map of basis format to engine pixel format
     const basisToEngineMapping = (basisFormat, deviceDetails) => {
         switch (basisFormat) {
-            case BASIS_FORMAT.cTFETC1:
-                return deviceDetails.formats.etc2 ? PIXEL_FORMAT.ETC2_RGB : PIXEL_FORMAT.ETC1;
-            case BASIS_FORMAT.cTFETC2:
-                return PIXEL_FORMAT.ETC2_RGBA;
-            case BASIS_FORMAT.cTFBC1:
-                return PIXEL_FORMAT.DXT1;
-            case BASIS_FORMAT.cTFBC3:
-                return PIXEL_FORMAT.DXT5;
-            case BASIS_FORMAT.cTFPVRTC1_4_RGB:
-                return PIXEL_FORMAT.PVRTC_4BPP_RGB_1;
-            case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
-                return PIXEL_FORMAT.PVRTC_4BPP_RGBA_1;
-            case BASIS_FORMAT.cTFASTC_4x4:
-                return PIXEL_FORMAT.ASTC_4x4;
-            case BASIS_FORMAT.cTFATC_RGB:
-                return PIXEL_FORMAT.ATC_RGB;
-            case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA:
-                return PIXEL_FORMAT.ATC_RGBA;
-            case BASIS_FORMAT.cTFRGBA32:
-                return PIXEL_FORMAT.R8_G8_B8_A8;
-            case BASIS_FORMAT.cTFRGB565:
-                return PIXEL_FORMAT.R5_G6_B5;
-            case BASIS_FORMAT.cTFRGBA4444:
-                return PIXEL_FORMAT.R4_G4_B4_A4;
+            case BASIS_FORMAT.cTFETC1: return deviceDetails.formats.etc2 ? PIXEL_FORMAT.ETC2_RGB : PIXEL_FORMAT.ETC1;
+            case BASIS_FORMAT.cTFETC2: return PIXEL_FORMAT.ETC2_RGBA;
+            case BASIS_FORMAT.cTFBC1: return PIXEL_FORMAT.DXT1;
+            case BASIS_FORMAT.cTFBC3: return PIXEL_FORMAT.DXT5;
+            case BASIS_FORMAT.cTFPVRTC1_4_RGB: return PIXEL_FORMAT.PVRTC_4BPP_RGB_1;
+            case BASIS_FORMAT.cTFPVRTC1_4_RGBA: return PIXEL_FORMAT.PVRTC_4BPP_RGBA_1;
+            case BASIS_FORMAT.cTFASTC_4x4: return PIXEL_FORMAT.ASTC_4x4;
+            case BASIS_FORMAT.cTFATC_RGB: return PIXEL_FORMAT.ATC_RGB;
+            case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA: return PIXEL_FORMAT.ATC_RGBA;
+            case BASIS_FORMAT.cTFRGBA32: return PIXEL_FORMAT.R8_G8_B8_A8;
+            case BASIS_FORMAT.cTFRGB565: return PIXEL_FORMAT.R5_G6_B5;
+            case BASIS_FORMAT.cTFRGBA4444: return PIXEL_FORMAT.R4_G4_B4_A4;
         }
     };
 
@@ -93,7 +81,7 @@ function BasisWorker() {
             const r = R * (2.0 / 255.0) - 1.0;
             const g = G * (2.0 / 255.0) - 1.0;
             const b = Math.sqrt(1.0 - Math.min(1.0, r * r + g * g));
-            return Math.max(0, Math.min(255, Math.floor((b + 1.0) * 0.5 * 255.0)));
+            return Math.max(0, Math.min(255, Math.floor(((b + 1.0) * 0.5) * 255.0)));
         };
 
         for (let offset = 0; offset < data.length; offset += 4) {
@@ -115,21 +103,20 @@ function BasisWorker() {
             const R = data[offset + 0];
             const G = data[offset + 1];
             const B = data[offset + 2];
-            result[offset / 4] =
-                ((R & 0xf8) << 8) | // 5
-                ((G & 0xfc) << 3) | // 6
-                (B >> 3); // 5
+            result[offset / 4] = ((R & 0xf8) << 8) |  // 5
+                                 ((G & 0xfc) << 3) |  // 6
+                                 ((B >> 3));          // 5
         }
 
         return result;
     };
 
     const isPOT = (width, height) => {
-        return (width & (width - 1)) === 0 && (height & (height - 1)) === 0;
+        return ((width & (width - 1)) === 0) && ((height & (height - 1)) === 0);
     };
 
     const performanceNow = () => {
-        return typeof performance !== 'undefined' ? performance.now() : 0;
+        return (typeof performance !== 'undefined') ? performance.now() : 0;
     };
 
     // globals, set on worker init
@@ -183,7 +170,7 @@ function BasisWorker() {
             case BASIS_FORMAT.cTFBC1:
             case BASIS_FORMAT.cTFBC3:
                 // width and height must be multiple of 4
-                return (width & 0x3) === 0 && (height & 0x3) === 0;
+                return ((width & 0x3) === 0) && ((height & 0x3) === 0);
             // pvrtc
             case BASIS_FORMAT.cTFPVRTC1_4_RGB:
             case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
@@ -251,7 +238,7 @@ function BasisWorker() {
             throw new Error(`Failed to start transcoding url=${url}`);
         }
 
-        const is16BitFormat = basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444;
+        const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
 
         // transcode a single face of a single mip level into a typed array
         const transcodeImage = (mip, face) => {
@@ -319,9 +306,7 @@ function BasisWorker() {
         if (!width || !height || !images || !levels) {
             basisFile.close();
             basisFile.delete();
-            throw new Error(
-                `Invalid image dimensions url=${url} width=${width} height=${height} images=${images} levels=${levels}`
-            );
+            throw new Error(`Invalid image dimensions url=${url} width=${width} height=${height} images=${images} levels=${levels}`);
         }
 
         // choose the target format
@@ -373,7 +358,7 @@ function BasisWorker() {
                 }
             }
 
-            const is16BitFormat = basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444;
+            const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);
 
             levelData.push(is16BitFormat ? new Uint16Array(dst.buffer) : dst);
         }
@@ -435,16 +420,17 @@ function BasisWorker() {
         // initialize the wasm module
         const instantiateWasmFunc = (imports, successCallback) => {
             WebAssembly.instantiate(config.module, imports)
-                .then((result) => {
-                    successCallback(result);
-                })
-                .catch((reason) => {
-                    console.error(`instantiate failed + ${reason}`);
-                });
+            .then((result) => {
+                successCallback(result);
+            })
+            .catch((reason) => {
+                console.error(`instantiate failed + ${reason}`);
+            });
             return {};
         };
 
-        self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null).then((instance) => {
+        self.BASIS(config.module ? { instantiateWasm: instantiateWasmFunc } : null)
+        .then((instance) => {
             instance.initializeBasis();
 
             // set globals
@@ -480,4 +466,6 @@ function BasisWorker() {
     };
 }
 
-export { BasisWorker };
+export {
+    BasisWorker
+};

@@ -3,7 +3,9 @@ import { expect } from 'chai';
 import { path } from '../../src/core/path.js';
 
 describe('path', function () {
+
     describe('#extractPath', function () {
+
         it('removes from filename from paths', function () {
             expect(path.extractPath('path/to/file')).to.equal('./path/to');
             expect(path.extractPath('./path/to/file')).to.equal('./path/to');
@@ -11,16 +13,22 @@ describe('path', function () {
             expect(path.extractPath('/path/to/file')).to.equal('/path/to');
             expect(path.extractPath('path/../path/to/file.txt')).to.equal('./path/../path/to');
         });
+
     });
 
     describe('#getBasename', function () {
+
         it('returns basename from filename', function () {
+
             expect(path.getBasename('path/to/file.txt')).to.equal('file.txt');
             expect(path.getBasename('path/to/directory')).to.equal('directory');
+
         });
+
     });
 
     describe('#getDirectory', function () {
+
         it('handles various paths', function () {
             expect(path.getDirectory('folder/file.txt')).to.equal('folder');
             expect(path.getDirectory('folder/another')).to.equal('folder');
@@ -28,9 +36,12 @@ describe('path', function () {
             expect(path.getDirectory('')).to.equal('');
             expect(path.getDirectory('/')).to.equal('');
         });
+
     });
 
+
     describe('#getExtension', function () {
+
         it('returns the extension of a file', function () {
             expect(path.getExtension('file.txt')).to.equal('.txt');
         });
@@ -46,9 +57,11 @@ describe('path', function () {
         it('returns the empty string if the file has no extension', function () {
             expect(path.getExtension('file')).to.equal('');
         });
+
     });
 
     describe('#isRelativePath', function () {
+
         it('returns true for relative paths', function () {
             expect(path.isRelativePath('path/to/file')).to.be.true;
             expect(path.isRelativePath('./path/to/file')).to.be.true;
@@ -60,9 +73,11 @@ describe('path', function () {
             expect(path.isRelativePath('/path/to/file')).to.be.false;
             expect(path.isRelativePath('/path/../path/to/file.txt')).to.be.false;
         });
+
     });
 
     describe('#join', function () {
+
         it('handles two path sections', function () {
             expect(path.join('a', 'b')).to.equal('a/b');
             expect(path.join('a', '/b')).to.equal('/b');
@@ -98,9 +113,11 @@ describe('path', function () {
                 path.join('a', undefined);
             }).to.throw();
         });
+
     });
 
     describe('#normalize', function () {
+
         it('normalizes any path', function () {
             expect(path.normalize('a/b/c')).to.equal('a/b/c');
             expect(path.normalize('/a/b/c')).to.equal('/a/b/c');
@@ -119,11 +136,15 @@ describe('path', function () {
             //            expect(path.normalize('.')).to.equal('.');
             expect(path.normalize('./../.')).to.equal('..');
         });
+
     });
 
     describe('#split', function () {
+
         it('splits a path into path and filename', function () {
             expect(path.split('path/to/file.txt')).to.deep.equal(['path/to', 'file.txt']);
         });
+
     });
+
 });

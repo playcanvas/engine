@@ -4,7 +4,7 @@
 //
 // Supported are all shadow types for directional lights, and PCF shadows for spot lights. Omni
 // lights and VSM shadows for spot lights are not supported, as those require distance based depth.
-export default /* glsl */ `
+export default /* glsl */`
 
 vec4 getShadowOutput() {
 

@@ -21,17 +21,11 @@ const REQUIRED_TYPES = [
 ];
 
 const exists = (file) => {
-    return fs.promises.stat(file).then(
-        () => true,
-        () => false
-    );
+    return fs.promises.stat(file).then(() => true, () => false);
 };
 
 const latestTypesMtime = async (dir) => {
-    const stat = await fs.promises.stat(dir).then(
-        (value) => value,
-        () => null
-    );
+    const stat = await fs.promises.stat(dir).then(value => value, () => null);
     if (!stat) {
         return 0;
     }
@@ -40,11 +34,9 @@ const latestTypesMtime = async (dir) => {
     }
 
     const entries = await fs.promises.readdir(dir, { withFileTypes: true });
-    const times = await Promise.all(
-        entries.map((entry) => {
-            return latestTypesMtime(path.join(dir, entry.name));
-        })
-    );
+    const times = await Promise.all(entries.map((entry) => {
+        return latestTypesMtime(path.join(dir, entry.name));
+    }));
 
     return Math.max(stat.mtimeMs, ...times);
 };
@@ -68,12 +60,10 @@ const runTsc = (root) => {
 };
 
 const emitTypes = async (root) => {
-    const found = await Promise.all(
-        REQUIRED_TYPES.map((file) => {
-            return exists(path.join(root, file));
-        })
-    );
-    if (found.some((value) => !value)) {
+    const found = await Promise.all(REQUIRED_TYPES.map((file) => {
+        return exists(path.join(root, file));
+    }));
+    if (found.some(value => !value)) {
         await fs.promises.rm(path.join(root, TSC_INFO), { force: true });
     }
     await runTsc(root);
@@ -83,21 +73,25 @@ const bundleTypes = async (root, dir) => {
     await fs.promises.mkdir(dir, { recursive: true });
     const opts = {
         input: path.join(root, TYPES_ENTRY),
-        output: [
-            {
-                file: path.join(dir, 'playcanvas.d.ts'),
-                footer: TYPES_FOOTER,
-                format: 'es'
-            }
-        ],
-        plugins: [dts()]
+        output: [{
+            file: path.join(dir, 'playcanvas.d.ts'),
+            footer: TYPES_FOOTER,
+            format: 'es'
+        }],
+        plugins: [
+            dts()
+        ]
     };
     const bundle = await rollup(opts);
     await bundle.write(opts.output[0]);
     await bundle.close();
 };
 
-const buildTypes = async ({ root = '.', dir = 'build', skipUnchanged = false } = {}) => {
+const buildTypes = async ({
+    root = '.',
+    dir = 'build',
+    skipUnchanged = false
+} = {}) => {
     const src = path.join(root, TYPES_DIR);
     const output = path.join(dir, 'playcanvas.d.ts');
     const before = skipUnchanged ? await latestTypesMtime(src) : 0;
@@ -105,7 +99,7 @@ const buildTypes = async ({ root = '.', dir = 'build', skipUnchanged = false } =
     await emitTypes(root);
 
     const after = skipUnchanged ? await latestTypesMtime(src) : 1;
-    const dirty = !skipUnchanged || !(await exists(output)) || after > before;
+    const dirty = !skipUnchanged || !await exists(output) || after > before;
     if (dirty) {
         fixTypes(root);
         await bundleTypes(root, dir);
@@ -116,7 +110,12 @@ const buildTypes = async ({ root = '.', dir = 'build', skipUnchanged = false } =
     };
 };
 
-const watchTypes = async ({ root = '.', dir = 'build', start, log }) => {
+const watchTypes = async ({
+    root = '.',
+    dir = 'build',
+    start,
+    log
+}) => {
     const output = path.join(dir, 'playcanvas.d.ts');
     let active = false;
     let pending = false;
@@ -132,15 +131,12 @@ const watchTypes = async ({ root = '.', dir = 'build', start, log }) => {
             root,
             dir,
             skipUnchanged
-        }).then(
-            () => {
-                log(output, performance.now() - time, 0);
-            },
-            (err) => {
-                console.error(err.message);
-                log(output, performance.now() - time, 1);
-            }
-        );
+        }).then(() => {
+            log(output, performance.now() - time, 0);
+        }, (err) => {
+            console.error(err.message);
+            log(output, performance.now() - time, 1);
+        });
     };
 
     const rebuild = () => {

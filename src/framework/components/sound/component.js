@@ -144,6 +144,7 @@ class SoundComponent extends Component {
     /** @private */
     _playingBeforeDisable = {};
 
+
     /**
      * Update the specified property on all sound instances.
      *

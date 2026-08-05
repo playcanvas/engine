@@ -1,17 +1,14 @@
 import { expect } from 'chai';
 
 import {
-    PIXELFORMAT_RGBA8,
-    PIXELFORMAT_SRGBA8,
-    PIXELFORMAT_DXT1,
-    PIXELFORMAT_DXT1_SRGB,
-    PIXELFORMAT_RGBA16F
+    PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_RGBA16F
 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Texture', function () {
+
     /** @type {NullGraphicsDevice} */
     let device;
 
@@ -28,6 +25,7 @@ describe('Texture', function () {
     });
 
     describe('#constructor: srgb option', function () {
+
         it('creates the sRGB variant of the format when srgb is true', function () {
             const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, srgb: true });
             expect(texture.format).to.equal(PIXELFORMAT_SRGBA8);

@@ -21,6 +21,7 @@ class BakeLightSimple extends BakeLight {
     }
 
     prepareVirtualLight(index, numVirtualLights) {
+
         // set to original rotation
         const light = this.light;
         light._node.setLocalRotation(this.rotation);

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 #ifndef ENV_ATLAS
     #define ENV_ATLAS
     var texture_envAtlas: texture_2d<f32>;

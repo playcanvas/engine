@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 attribute float vertex_boneIndices;
 
 uniform highp sampler2D texture_poseMap;

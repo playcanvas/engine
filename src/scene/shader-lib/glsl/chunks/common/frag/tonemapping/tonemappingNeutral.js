@@ -1,5 +1,5 @@
 // https://modelviewer.dev/examples/tone-mapping
-export default /* glsl */ `
+export default /* glsl */`
 vec3 toneMap(vec3 color) {
 
     color *= getExposure();

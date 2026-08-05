@@ -46,6 +46,7 @@ class WebgpuComputePipeline extends WebgpuPipeline {
      * @returns {object} - The compute pipeline (GPUComputePipeline).
      */
     get(shader, bindGroupFormats) {
+
         Debug.assert(bindGroupFormats.length <= 2);
 
         // unique hash for the pipeline - shader key followed by each bind group format key (0 for
@@ -89,6 +90,7 @@ class WebgpuComputePipeline extends WebgpuPipeline {
     }
 
     create(shader, pipelineLayout) {
+
         const wgpu = this.device.wgpu;
 
         /** @type {WebgpuShader} */

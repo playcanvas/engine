@@ -2,22 +2,10 @@ import { Debug } from '../../../core/debug.js';
 import { sortPriority } from '../../../core/sort.js';
 import { AnimClip } from '../evaluator/anim-clip.js';
 import {
-    ANIM_GREATER_THAN,
-    ANIM_LESS_THAN,
-    ANIM_GREATER_THAN_EQUAL_TO,
-    ANIM_LESS_THAN_EQUAL_TO,
-    ANIM_EQUAL_TO,
-    ANIM_NOT_EQUAL_TO,
-    ANIM_INTERRUPTION_NONE,
-    ANIM_INTERRUPTION_PREV,
-    ANIM_INTERRUPTION_NEXT,
-    ANIM_INTERRUPTION_PREV_NEXT,
-    ANIM_INTERRUPTION_NEXT_PREV,
+    ANIM_GREATER_THAN, ANIM_LESS_THAN, ANIM_GREATER_THAN_EQUAL_TO, ANIM_LESS_THAN_EQUAL_TO, ANIM_EQUAL_TO, ANIM_NOT_EQUAL_TO,
+    ANIM_INTERRUPTION_NONE, ANIM_INTERRUPTION_PREV, ANIM_INTERRUPTION_NEXT, ANIM_INTERRUPTION_PREV_NEXT, ANIM_INTERRUPTION_NEXT_PREV,
     ANIM_PARAMETER_TRIGGER,
-    ANIM_STATE_START,
-    ANIM_STATE_END,
-    ANIM_STATE_ANY,
-    ANIM_CONTROL_STATES
+    ANIM_STATE_START, ANIM_STATE_END, ANIM_STATE_ANY, ANIM_CONTROL_STATES
 } from './constants.js';
 import { AnimState } from './anim-state.js';
 import { AnimNode } from './anim-node.js';
@@ -136,13 +124,7 @@ class AnimController {
         this._findParameter = findParameter;
         this._consumeTrigger = consumeTrigger;
         for (let i = 0; i < states.length; i++) {
-            this._states[states[i].name] = new AnimState(
-                this,
-                states[i].name,
-                states[i].speed,
-                states[i].loop,
-                states[i].blendTree
-            );
+            this._states[states[i].name] = new AnimState(this, states[i].name, states[i].speed, states[i].loop, states[i].blendTree);
             this._stateNames.push(states[i].name);
         }
         this._transitions = transitions.map((transition) => {
@@ -263,11 +245,7 @@ class AnimController {
     }
 
     _getActiveStateProgressForTime(time) {
-        if (
-            this.activeStateName === ANIM_STATE_START ||
-            this.activeStateName === ANIM_STATE_END ||
-            this.activeStateName === ANIM_STATE_ANY
-        ) {
+        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END || this.activeStateName === ANIM_STATE_ANY) {
             return 1.0;
         }
 
@@ -414,7 +392,7 @@ class AnimController {
                     if (progress !== transition.exitTime) {
                         return null;
                     }
-                    // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
+                // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
                 } else if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
                     return null;
                 }
@@ -468,16 +446,13 @@ class AnimController {
 
             // if this new transition was activated during another transition, update the previous transition state weights based
             // on the progress through the previous transition.
-            const interpolatedTime = Math.min(
-                this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1,
-                1.0
-            );
+            const interpolatedTime = Math.min(this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1, 1.0);
             for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                 // interpolate the weights of the most recent previous state and all other previous states based on the progress through the previous transition
                 if (!this._isTransitioning) {
                     this._transitionPreviousStates[i].weight = 1.0;
                 } else if (i !== this._transitionPreviousStates.length - 1) {
-                    this._transitionPreviousStates[i].weight *= 1.0 - interpolatedTime;
+                    this._transitionPreviousStates[i].weight *= (1.0 - interpolatedTime);
                 } else {
                     this._transitionPreviousStates[i].weight = interpolatedTime;
                 }
@@ -504,9 +479,9 @@ class AnimController {
         this._currTransitionTime = 0;
         this._transitionInterruptionSource = transition.interruptionSource;
 
+
         const activeState = this.activeState;
-        const hasTransitionOffset =
-            transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
+        const hasTransitionOffset = transition.transitionOffset && transition.transitionOffset > 0.0 && transition.transitionOffset < 1.0;
 
         // set the time in the new state to 0 or to a value based on transitionOffset if one was given
         let timeInState = 0;
@@ -523,17 +498,8 @@ class AnimController {
         for (let i = 0; i < activeState.animations.length; i++) {
             clip = this._animEvaluator.findClip(activeState.animations[i].name);
             if (!clip) {
-                const speed = Number.isFinite(activeState.animations[i].speed)
-                    ? activeState.animations[i].speed
-                    : activeState.speed;
-                clip = new AnimClip(
-                    activeState.animations[i].animTrack,
-                    this._timeInState,
-                    speed,
-                    true,
-                    activeState.loop,
-                    this._eventHandler
-                );
+                const speed = Number.isFinite(activeState.animations[i].speed) ? activeState.animations[i].speed : activeState.speed;
+                clip = new AnimClip(activeState.animations[i].animTrack, this._timeInState, speed, true, activeState.loop, this._eventHandler);
                 clip.name = activeState.animations[i].name;
                 this._animEvaluator.addClip(clip);
             } else {
@@ -662,8 +628,7 @@ class AnimController {
         if (this._isTransitioning) {
             this._currTransitionTime += dt;
             if (this._currTransitionTime <= this._totalTransitionTime) {
-                const interpolatedTime =
-                    this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
+                const interpolatedTime = this._totalTransitionTime !== 0 ? this._currTransitionTime / this._totalTransitionTime : 1;
                 // while transitioning, set all previous state animations to be weighted by (1.0 - interpolationTime).
                 for (let i = 0; i < this._transitionPreviousStates.length; i++) {
                     state = this._findState(this._transitionPreviousStates[i].name);
@@ -680,8 +645,7 @@ class AnimController {
                 state = this.activeState;
                 for (let i = 0; i < state.animations.length; i++) {
                     animation = state.animations[i];
-                    this._animEvaluator.findClip(animation.name).blendWeight =
-                        interpolatedTime * animation.normalizedWeight;
+                    this._animEvaluator.findClip(animation.name).blendWeight = interpolatedTime * animation.normalizedWeight;
                 }
             } else {
                 this._isTransitioning = false;

@@ -1,2 +1,2 @@
-export default /* glsl */ `
+export default /* glsl */`
 `;

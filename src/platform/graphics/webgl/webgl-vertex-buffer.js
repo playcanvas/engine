@@ -10,6 +10,7 @@ class WebglVertexBuffer extends WebglBuffer {
     vao = null;
 
     destroy(device) {
+
         super.destroy(device);
 
         // clear up bound vertex buffers
@@ -22,6 +23,7 @@ class WebglVertexBuffer extends WebglBuffer {
     }
 
     unlock(vertexBuffer) {
+
         const device = vertexBuffer.device;
         super.unlock(device, vertexBuffer.usage, device.gl.ARRAY_BUFFER, vertexBuffer.storage);
     }

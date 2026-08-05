@@ -22,6 +22,7 @@ class DeviceCache {
      * @returns {any} The resource for the device.
      */
     get(device, onCreate) {
+
         if (!this._cache.has(device)) {
             this._cache.set(device, onCreate());
 

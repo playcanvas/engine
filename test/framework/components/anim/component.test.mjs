@@ -15,6 +15,7 @@ import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('AnimComponent', function () {
+
     let app;
 
     beforeEach(function () {
@@ -28,9 +29,10 @@ describe('AnimComponent', function () {
         jsdomTeardown();
     });
 
-    const track = (name) => new AnimTrack(name, 1, [], [], []);
+    const track = name => new AnimTrack(name, 1, [], [], []);
 
     describe('#clone', function () {
+
         // Regression test for https://github.com/playcanvas/engine/issues/6395
         it('clones a component with a layer added dynamically after the base layer', function () {
             const entity = new Entity('model', app);
@@ -88,6 +90,7 @@ describe('AnimComponent', function () {
     });
 
     describe('morph target weights', function () {
+
         const MORPH_TARGET = 'Blink';
 
         // mesh instances carrying a single named morph target, as a loaded render asset produces
@@ -96,16 +99,11 @@ describe('AnimComponent', function () {
                 positions: [0, 0, 0, 1, 0, 0, 0, 1, 0],
                 indices: [0, 1, 2]
             });
-            mesh.morph = new Morph(
-                [
-                    new MorphTarget({
-                        name: MORPH_TARGET,
-                        deltaPositions: new Float32Array([0, 0, 0, 0, 1, 0, 0, 0, 0]),
-                        defaultWeight: 0
-                    })
-                ],
-                app.graphicsDevice
-            );
+            mesh.morph = new Morph([new MorphTarget({
+                name: MORPH_TARGET,
+                deltaPositions: new Float32Array([0, 0, 0, 0, 1, 0, 0, 0, 0]),
+                defaultWeight: 0
+            })], app.graphicsDevice);
 
             const meshInstance = new MeshInstance(mesh, app.systems.render.defaultMaterial, entity);
             meshInstance.morphInstance = new MorphInstance(mesh.morph);
@@ -115,23 +113,16 @@ describe('AnimComponent', function () {
         // a track with a single morph weight curve ramping from 0 to 1 over its duration, encoded
         // the way the glb parser encodes them
         const morphTrack = (entityPath) => {
-            const curve = new AnimCurve(
-                [
-                    {
-                        entityPath,
-                        component: 'graph',
-                        propertyPath: [`weight.name.${MORPH_TARGET}`]
-                    }
-                ],
-                0,
-                0,
-                INTERPOLATION_LINEAR
-            );
+            const curve = new AnimCurve([{
+                entityPath,
+                component: 'graph',
+                propertyPath: [`weight.name.${MORPH_TARGET}`]
+            }], 0, 0, INTERPOLATION_LINEAR);
 
             return new AnimTrack('Morph', 1, [new AnimData(1, [0, 1])], [new AnimData(1, [0, 1])], [curve]);
         };
 
-        const weight = (entity) => entity.render.meshInstances[0].morphInstance.getWeight(MORPH_TARGET);
+        const weight = entity => entity.render.meshInstances[0].morphInstance.getWeight(MORPH_TARGET);
 
         // Regression test for https://github.com/playcanvas/engine/issues/5225
         it('are animated when mesh instances are created after the animation is bound', function () {

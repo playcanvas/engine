@@ -15,13 +15,13 @@
 function createURI(options) {
     let s = '';
     if ((options.authority || options.scheme) && (options.host || options.hostpath)) {
-        throw new Error("Can't have 'scheme' or 'authority' and 'host' or 'hostpath' option");
+        throw new Error('Can\'t have \'scheme\' or \'authority\' and \'host\' or \'hostpath\' option');
     }
     if (options.host && options.hostpath) {
-        throw new Error("Can't have 'host' and 'hostpath' option");
+        throw new Error('Can\'t have \'host\' and \'hostpath\' option');
     }
     if (options.path && options.hostpath) {
-        throw new Error("Can't have 'path' and 'hostpath' option");
+        throw new Error('Can\'t have \'path\' and \'hostpath\' option');
     }
 
     if (options.scheme) {

@@ -1,11 +1,8 @@
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import {
-    BODYFLAG_KINEMATIC_OBJECT,
-    BODYFLAG_NORESPONSE_OBJECT,
-    BODYSTATE_ACTIVE_TAG,
-    BODYSTATE_DISABLE_DEACTIVATION,
-    BODYSTATE_DISABLE_SIMULATION,
+    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT,
+    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION,
     BODYTYPE_KINEMATIC
 } from '../../components/rigid-body/constants.js';
 import { RaycastResult } from '../../components/rigid-body/raycast-result.js';
@@ -17,11 +14,7 @@ import { createJoint, destroyJoint, destroyFixedBody } from './ammo-physics-join
  * @import { AmmoPhysicsJoint } from './ammo-physics-joint.js'
  */
 import {
-    createShape,
-    destroyShape,
-    addCompoundChild,
-    updateCompoundChild,
-    removeCompoundChild
+    createShape, destroyShape, addCompoundChild, updateCompoundChild, removeCompoundChild
 } from './ammo-physics-shape.js';
 
 /**
@@ -122,12 +115,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
         this.overlappingPairCache = new Ammo.btDbvtBroadphase();
         this.solver = new Ammo.btSequentialImpulseConstraintSolver();
-        this.nativeWorld = new Ammo.btDiscreteDynamicsWorld(
-            this.dispatcher,
-            this.overlappingPairCache,
-            this.solver,
-            this.collisionConfiguration
-        );
+        this.nativeWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
 
         // report contacts per fixed substep from inside stepSimulation where supported,
         // otherwise defer to flushContacts()
@@ -136,9 +124,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
             const checkForCollisionsPointer = Ammo.addFunction(() => this._walkContacts(), 'vif');
             this.nativeWorld.setInternalTickCallback(checkForCollisionsPointer);
         } else {
-            Debug.warn(
-                'WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.'
-            );
+            Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
         }
 
         this._contactPair = new AmmoContactPair();
@@ -153,7 +139,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     destroy() {
-        this._triMeshCache.forEach((triMesh) => Ammo.destroy(triMesh));
+        this._triMeshCache.forEach(triMesh => Ammo.destroy(triMesh));
         this._triMeshCache.clear();
 
         destroyFixedBody(this);
@@ -244,9 +230,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         }
 
         // kinematic bodies must never deactivate, everything else enters the active state
-        nativeBody.forceActivationState(
-            body._type === BODYTYPE_KINEMATIC ? BODYSTATE_DISABLE_DEACTIVATION : BODYSTATE_ACTIVE_TAG
-        );
+        nativeBody.forceActivationState(body._type === BODYTYPE_KINEMATIC ? BODYSTATE_DISABLE_DEACTIVATION : BODYSTATE_ACTIVE_TAG);
     }
 
     removeBody(body) {
@@ -311,11 +295,9 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         // compare against the world's own value so writes through the native escape hatch are
         // still detected
         const current = this.nativeWorld.getGravity();
-        if (
-            current.x() !== this._gravityFloat32[0] ||
+        if (current.x() !== this._gravityFloat32[0] ||
             current.y() !== this._gravityFloat32[1] ||
-            current.z() !== this._gravityFloat32[2]
-        ) {
+            current.z() !== this._gravityFloat32[2]) {
             current.setValue(gravity.x, gravity.y, gravity.z);
             this.nativeWorld.setGravity(current);
         }
@@ -410,12 +392,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
                 const point = rayCallback.get_m_hitPointWorld();
                 const normal = rayCallback.get_m_hitNormalWorld();
 
-                result = new RaycastResult(
-                    body.entity,
-                    new Vec3(point.x(), point.y(), point.z()),
-                    new Vec3(normal.x(), normal.y(), normal.z()),
-                    rayCallback.get_m_closestHitFraction()
-                );
+                result = new RaycastResult(body.entity, new Vec3(point.x(), point.y(), point.z()), new Vec3(normal.x(), normal.y(), normal.z()), rayCallback.get_m_closestHitFraction());
             }
         }
 
@@ -425,10 +402,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     raycastAll(start, end, options = {}) {
-        Debug.assert(
-            Ammo.AllHitsRayResultCallback,
-            'AmmoPhysicsWorld#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.'
-        );
+        Debug.assert(Ammo.AllHitsRayResultCallback, 'AmmoPhysicsWorld#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
 
         const results = [];
 
@@ -456,21 +430,13 @@ class AmmoPhysicsWorld extends PhysicsWorld {
                 const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
 
                 if (body && body.entity) {
-                    if (
-                        (options.filterTags && !body.entity.tags.has(...options.filterTags)) ||
-                        (options.filterCallback && !options.filterCallback(body.entity))
-                    ) {
+                    if (options.filterTags && !body.entity.tags.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body.entity)) {
                         continue;
                     }
 
                     const point = points.at(i);
                     const normal = normals.at(i);
-                    const result = new RaycastResult(
-                        body.entity,
-                        new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z()),
-                        hitFractions.at(i)
-                    );
+                    const result = new RaycastResult(body.entity, new Vec3(point.x(), point.y(), point.z()), new Vec3(normal.x(), normal.y(), normal.z()), hitFractions.at(i));
 
                     results.push(result);
                 }

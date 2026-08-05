@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn saturate(x: f32) -> f32 {
     return clamp(x, 0.0, 1.0);
 }

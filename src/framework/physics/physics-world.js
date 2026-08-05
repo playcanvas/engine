@@ -184,7 +184,8 @@ class PhysicsWorld {
     /**
      * Destroys the world and all native resources it owns. The world is unusable afterwards.
      */
-    destroy() {}
+    destroy() {
+    }
 
     /**
      * Applies gravity if it differs from the current world gravity. Safe (and expected) to be
@@ -192,7 +193,8 @@ class PhysicsWorld {
      *
      * @param {Vec3} gravity - The world space gravity.
      */
-    setGravity(gravity) {}
+    setGravity(gravity) {
+    }
 
     /**
      * Advances the simulation. Contact passes are driven from inside this call on backends
@@ -202,14 +204,16 @@ class PhysicsWorld {
      * @param {number} maxSubSteps - The maximum number of fixed substeps to take.
      * @param {number} fixedTimeStep - The duration of a fixed substep in seconds.
      */
-    step(dt, maxSubSteps, fixedTimeStep) {}
+    step(dt, maxSubSteps, fixedTimeStep) {
+    }
 
     /**
      * Runs a deferred contact pass on backends that could not report contacts from inside
      * {@link PhysicsWorld#step}. Called by the system after dynamic transform sync. No-op on
      * backends that report during step.
      */
-    flushContacts() {}
+    flushContacts() {
+    }
 
     /**
      * Creates a body outside the simulation. Add it with {@link PhysicsWorld#addBody}.
@@ -228,7 +232,8 @@ class PhysicsWorld {
      *
      * @param {PhysicsBody} body - The body to destroy.
      */
-    destroyBody(body) {}
+    destroyBody(body) {
+    }
 
     /**
      * Adds a body to the simulation and applies the backend's activation policy for the body's
@@ -238,14 +243,16 @@ class PhysicsWorld {
      * @param {number} [group] - The collision group bits. Used together with mask.
      * @param {number} [mask] - The collision mask bits.
      */
-    addBody(body, group, mask) {}
+    addBody(body, group, mask) {
+    }
 
     /**
      * Removes a body from the simulation. The body becomes inert until re-added.
      *
      * @param {PhysicsBody} body - The body to remove.
      */
-    removeBody(body) {}
+    removeBody(body) {
+    }
 
     /**
      * Creates a collision shape from a typed descriptor. The returned handle is opaque - it is
@@ -263,7 +270,8 @@ class PhysicsWorld {
      *
      * @param {object} shape - The shape handle.
      */
-    destroyShape(shape) {}
+    destroyShape(shape) {
+    }
 
     /**
      * Adds a child shape to a 'compound' shape at a local pose.
@@ -273,7 +281,8 @@ class PhysicsWorld {
      * @param {Vec3} position - The child position in the compound's local space.
      * @param {Quat} rotation - The child rotation in the compound's local space.
      */
-    addCompoundChild(compound, child, position, rotation) {}
+    addCompoundChild(compound, child, position, rotation) {
+    }
 
     /**
      * Updates the local pose of a child within a 'compound' shape. Adds the child if it is not
@@ -284,7 +293,8 @@ class PhysicsWorld {
      * @param {Vec3} position - The child position in the compound's local space.
      * @param {Quat} rotation - The child rotation in the compound's local space.
      */
-    updateCompoundChild(compound, child, position, rotation) {}
+    updateCompoundChild(compound, child, position, rotation) {
+    }
 
     /**
      * Removes a child from a 'compound' shape. No-op if the child is not present.
@@ -292,7 +302,8 @@ class PhysicsWorld {
      * @param {object} compound - The compound shape handle.
      * @param {object} child - The child shape handle.
      */
-    removeCompoundChild(compound, child) {}
+    removeCompoundChild(compound, child) {
+    }
 
     /**
      * Returns the number of children in a 'compound' shape.
@@ -320,7 +331,8 @@ class PhysicsWorld {
      *
      * @param {PhysicsJoint} joint - The joint to destroy.
      */
-    destroyJoint(joint) {}
+    destroyJoint(joint) {
+    }
 
     /**
      * Raycast the world and return the first hit.

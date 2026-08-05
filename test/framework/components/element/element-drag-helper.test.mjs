@@ -242,7 +242,7 @@ describe('ElementDragHelper', function () {
         expect(dragHelper.isDragging).to.equal(false);
     });
 
-    const defaultXDelta = 4.9;
+    const defaultXDelta = 4.90;
     const defaultYDelta = -2.07;
 
     function runTransformTest(expectedXDelta, expectedYDelta) {
@@ -323,4 +323,5 @@ describe('ElementDragHelper', function () {
         app.graphicsDevice.maxPixelRatio = 2;
         runTransformTest.call(this, defaultXDelta * 2, defaultYDelta * 2);
     });
+
 });

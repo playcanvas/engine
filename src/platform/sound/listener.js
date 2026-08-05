@@ -54,8 +54,7 @@ class Listener {
                 listener.positionX.value = position.x;
                 listener.positionY.value = position.y;
                 listener.positionZ.value = position.z;
-            } else if (listener.setPosition) {
-                // Firefox (and legacy browsers)
+            } else if (listener.setPosition) { // Firefox (and legacy browsers)
                 listener.setPosition(position.x, position.y, position.z);
             }
         }
@@ -79,8 +78,7 @@ class Listener {
                 listener.upX.value = m[4];
                 listener.upY.value = m[5];
                 listener.upZ.value = m[6];
-            } else if (listener.setOrientation) {
-                // Firefox (and legacy browsers)
+            } else if (listener.setOrientation) { // Firefox (and legacy browsers)
                 listener.setOrientation(-m[8], -m[9], -m[10], m[4], m[5], m[6]);
             }
         }

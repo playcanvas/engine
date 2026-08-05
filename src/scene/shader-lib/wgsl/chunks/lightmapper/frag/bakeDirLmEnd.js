@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     let dirLm = textureSample(texture_dirLightMap, texture_dirLightMapSampler, vUv1);
 
     if (uniform.bakeDir > 0.5) {

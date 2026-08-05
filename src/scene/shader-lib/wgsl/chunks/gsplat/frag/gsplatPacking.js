@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn pack8888(v: vec4f) -> u32 {
     let t = vec4u(v * 255.0) << vec4u(24u, 16u, 8u, 0u);
     return t.x | t.y | t.z | t.w;

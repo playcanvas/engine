@@ -4,13 +4,17 @@
  * @ignore
  */
 class NullRenderTarget {
-    destroy(device) {}
+    destroy(device) {
+    }
 
-    init(device, renderTarget) {}
+    init(device, renderTarget) {
+    }
 
-    loseContext() {}
+    loseContext() {
+    }
 
-    resolve(device, target, color, depth) {}
+    resolve(device, target, color, depth) {
+    }
 }
 
 export { NullRenderTarget };

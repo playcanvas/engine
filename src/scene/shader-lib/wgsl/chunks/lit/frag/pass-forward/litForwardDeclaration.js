@@ -1,5 +1,5 @@
 // shader declarations for the lit material for forward rendering
-export default /* wgsl */ `
+export default /* wgsl */`
 
 // globals
 var<private> sReflection: vec3f;

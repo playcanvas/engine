@@ -34,6 +34,7 @@ describe('ComponentSystem', function () {
     });
 
     describe('#initializeComponentData()', function () {
+
         it('works with a flat list of property names', function () {
             const component = {};
             const data = {
@@ -176,7 +177,10 @@ describe('ComponentSystem', function () {
                 vec: [1, 2, 3, 4],
                 num: 42
             };
-            const properties = [{ name: 'vec', type: 'vec4' }, 'num'];
+            const properties = [
+                { name: 'vec', type: 'vec4' },
+                'num'
+            ];
 
             system.initializeComponentData(component, data, properties);
 
@@ -192,15 +196,19 @@ describe('ComponentSystem', function () {
             const data = {
                 foo: 42
             };
-            const properties = [{ name: 'foo', type: 'something' }];
+            const properties = [
+                { name: 'foo', type: 'something' }
+            ];
 
             expect(() => {
                 system.initializeComponentData(component, data, properties);
             }).to.throw('Could not convert unhandled type: something');
         });
+
     });
 
     describe('#getPropertiesOfType()', function () {
+
         it('returns properties of the specified type', function () {
             system.schema = [
                 { name: 'foo', type: 'typeA' },
@@ -226,18 +234,19 @@ describe('ComponentSystem', function () {
             expect(system.getPropertiesOfType('typeC')).to.deep.equal([]);
         });
 
-        it("doesn't throw an error if the system doesn't have a schema", function () {
+        it('doesn\'t throw an error if the system doesn\'t have a schema', function () {
             system.schema = null;
 
             expect(system.getPropertiesOfType('typeA')).to.deep.equal([]);
         });
+
     });
 
     describe('#addComponent() option validation', function () {
         let warnings;
         let originalWarn;
 
-        const validationWarnings = () => warnings.filter((w) => w.includes('ignoring unknown option'));
+        const validationWarnings = () => warnings.filter(w => w.includes('ignoring unknown option'));
 
         beforeEach(function () {
             // Debug.warnOnce dedupes globally by message, so clear the cache to keep tests independent
@@ -307,5 +316,7 @@ describe('ComponentSystem', function () {
 
             expect(validationWarnings()).to.have.lengthOf(1);
         });
+
     });
+
 });

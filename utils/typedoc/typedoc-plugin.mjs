@@ -1,17 +1,8 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-import {
-    ArrayType,
-    Converter,
-    DeclarationReflection,
-    IntrinsicType,
-    ReflectionFlag,
-    ReflectionKind,
-    ReferenceType,
-    TypeScript as ts,
-    UnionType
-} from 'typedoc';
+
+import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, TypeScript as ts, UnionType } from 'typedoc';
 
 /**
  * Determines whether a TypeScript declaration is annotated with an `@ignore` (or `@hidden`) JSDoc
@@ -104,20 +95,17 @@ function load(app) {
     // comment, so inspect the original TypeScript declaration here, while the symbol is still
     // available, and remember which reflections to drop.
     const ignoredReflections = new Set();
-    app.converter.on(
-        Converter.EVENT_CREATE_DECLARATION,
-        (/** @type {import('typedoc').Context} */ context, reflection) => {
-            const declarations = context.getSymbolFromReflection(reflection)?.declarations;
+    app.converter.on(Converter.EVENT_CREATE_DECLARATION, (/** @type {import('typedoc').Context} */ context, reflection) => {
+        const declarations = context.getSymbolFromReflection(reflection)?.declarations;
 
-            // Require *every* declaration to be tagged, not just one: a get/set accessor is backed by
-            // two declarations and tagging only the setter `@ignore` (as `Entity#guid` and
-            // `Texture#srgb` do) is meant to hide the setter while keeping the public getter, so the
-            // reflection as a whole must stay.
-            if (declarations?.length && declarations.every(hasIgnoreTag)) {
-                ignoredReflections.add(reflection);
-            }
+        // Require *every* declaration to be tagged, not just one: a get/set accessor is backed by
+        // two declarations and tagging only the setter `@ignore` (as `Entity#guid` and
+        // `Texture#srgb` do) is meant to hide the setter while keeping the public getter, so the
+        // reflection as a whole must stay.
+        if (declarations?.length && declarations.every(hasIgnoreTag)) {
+            ignoredReflections.add(reflection);
         }
-    );
+    });
 
     app.converter.on(Converter.EVENT_RESOLVE_END, (/** @type {import('typedoc').Context} */ context) => {
         // Sweep away any top-level Accessor reflections that `typedoc-plugin-missing-exports` has
@@ -126,7 +114,7 @@ function load(app) {
         // self-links to anchors that don't exist. The canonical documentation for each accessor
         // lives on its owning class's page; removing the project-root duplicates does not affect
         // those class-member reflections.
-        const orphans = context.project.children?.filter((child) => child.kind === ReflectionKind.Accessor) ?? [];
+        const orphans = context.project.children?.filter(child => child.kind === ReflectionKind.Accessor) ?? [];
         for (const orphan of orphans) {
             context.project.removeReflection(orphan);
         }
@@ -144,9 +132,7 @@ function load(app) {
 
     app.converter.on(Converter.EVENT_RESOLVE_BEGIN, (/** @type {import('typedoc').Context} */ context) => {
         const getReference = (type) => {
-            const reflection = context.project.children.find(
-                (child) => child.name === type && child.kind === ReflectionKind.Class
-            );
+            const reflection = context.project.children.find(child => child.name === type && child.kind === ReflectionKind.Class);
             if (!reflection) {
                 console.error(`Unable to find class ${type}`);
             }
@@ -176,7 +162,7 @@ function load(app) {
             const getType = (type) => {
                 if (type.includes('|')) {
                     const types = type.split('|');
-                    return new UnionType(types.map((type) => getType(type)));
+                    return new UnionType(types.map(type => getType(type)));
                 }
 
                 switch (type) {
@@ -198,7 +184,7 @@ function load(app) {
             const properties = getProperties(filePath);
 
             // Get just the @property definitions from the class' JSDoc block
-            const blockTags = reflection.comment.blockTags.filter((blockTag) => blockTag.tag === '@property');
+            const blockTags = reflection.comment.blockTags.filter(blockTag => blockTag.tag === '@property');
 
             // Convert all @property tags on StandardMaterial to actual child properties of StandardMaterial
             for (const blockTag of blockTags) {

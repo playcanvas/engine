@@ -208,7 +208,7 @@ class Curve {
     clone() {
         /** @type {this} */
         const result = new this.constructor();
-        result.keys = this.keys.map((key) => [...key]);
+        result.keys = this.keys.map(key => [...key]);
         result.type = this.type;
         result.tension = this.tension;
         return result;

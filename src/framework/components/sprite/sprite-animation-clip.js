@@ -395,11 +395,7 @@ class SpriteAnimationClip extends EventHandler {
 
         // unbind atlas
         if (asset.resource && !asset.resource.atlas) {
-            this._component.system.app.assets.off(
-                `load:${asset.data.textureAtlasAsset}`,
-                this._onTextureAtlasLoad,
-                this
-            );
+            this._component.system.app.assets.off(`load:${asset.data.textureAtlasAsset}`, this._onTextureAtlasLoad, this);
         }
     }
 
@@ -464,13 +460,13 @@ class SpriteAnimationClip extends EventHandler {
         const dir = this.fps < 0 ? -1 : 1;
         const time = this._time + dt * this._component.speed * dir;
         const duration = this.duration;
-        const end = time > duration || time < 0;
+        const end = (time > duration || time < 0);
 
         this._setTime(time);
 
         let frame = this.frame;
         if (this._sprite) {
-            frame = Math.floor((this._sprite.frameKeys.length * this._time) / duration);
+            frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
         } else {
             frame = 0;
         }
@@ -497,7 +493,7 @@ class SpriteAnimationClip extends EventHandler {
         const duration = this.duration;
         if (this._time < 0) {
             if (this.loop) {
-                this._time = (this._time % duration) + duration;
+                this._time = this._time % duration + duration;
             } else {
                 this._time = 0;
             }

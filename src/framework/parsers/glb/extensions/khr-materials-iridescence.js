@@ -11,6 +11,7 @@ const KHR_materials_iridescence = {
             material.iridescenceMapChannel = 'r';
             material.iridescenceMap = textures[data.iridescenceTexture.index];
             extractTextureTransform(data.iridescenceTexture, material, ['iridescence']);
+
         }
         if (data.hasOwnProperty('iridescenceIor')) {
             material.iridescenceRefractionIndex = data.iridescenceIor;

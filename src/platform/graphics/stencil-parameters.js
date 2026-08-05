@@ -223,8 +223,8 @@ class StencilParameters {
     constructor(options = {}) {
         this._func = options.func ?? FUNC_ALWAYS;
         this._ref = options.ref ?? 0;
-        this._readMask = options.readMask ?? 0xff;
-        this._writeMask = options.writeMask ?? 0xff;
+        this._readMask = options.readMask ?? 0xFF;
+        this._writeMask = options.writeMask ?? 0xFF;
 
         this._fail = options.fail ?? STENCILOP_KEEP; // keep == 0
         this._zfail = options.zfail ?? STENCILOP_KEEP;

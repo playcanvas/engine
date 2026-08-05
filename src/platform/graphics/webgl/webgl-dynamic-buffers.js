@@ -42,8 +42,8 @@ class WebglDynamicBuffers extends DynamicBuffers {
     }
 
     destroy() {
-        this.used.forEach((buffer) => buffer.destroy(this.device));
-        this.free.forEach((buffers) => buffers.forEach((buffer) => buffer.destroy(this.device)));
+        this.used.forEach(buffer => buffer.destroy(this.device));
+        this.free.forEach(buffers => buffers.forEach(buffer => buffer.destroy(this.device)));
         this.used = null;
         this.free = null;
     }
@@ -55,6 +55,7 @@ class WebglDynamicBuffers extends DynamicBuffers {
      * @param {number} size - The size of the allocation.
      */
     alloc(allocation, size) {
+
         // reuse a free buffer of matching size, or create a new one
         let buffer = this.free.get(size)?.pop();
         if (!buffer) {
@@ -95,7 +96,7 @@ class WebglDynamicBuffers extends DynamicBuffers {
     loseContext() {
         this.onFrameEnd();
         this.free.forEach((buffers) => {
-            buffers.forEach((buffer) => buffer.loseContext());
+            buffers.forEach(buffer => buffer.loseContext());
         });
     }
 }

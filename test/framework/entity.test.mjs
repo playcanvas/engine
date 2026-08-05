@@ -31,6 +31,7 @@ import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 describe('Entity', function () {
+
     let app;
 
     beforeEach(function () {
@@ -72,6 +73,7 @@ describe('Entity', function () {
     };
 
     describe('#constructor', function () {
+
         it('supports zero arguments', function () {
             const entity = new Entity();
             expect(entity).to.be.an.instanceof(Entity);
@@ -89,9 +91,11 @@ describe('Entity', function () {
             expect(entity).to.be.an.instanceof(Entity);
             expect(entity.name).to.equal('Test');
         });
+
     });
 
     describe('#addComponent', function () {
+
         for (const name in components) {
             it(`adds a ${name} component`, function () {
                 // Create an entity and verify that it does not already have the component
@@ -177,6 +181,7 @@ describe('Entity', function () {
 
             parent.destroy();
         });
+
     });
 
     const createSubtree = () => {
@@ -227,6 +232,7 @@ describe('Entity', function () {
     };
 
     describe('#clone', function () {
+
         it('clones an entity', function () {
             const entity = new Entity('Test');
             for (const name in components) {
@@ -278,7 +284,7 @@ describe('Entity', function () {
             root.destroy();
         });
 
-        it("returns a deep clone of the entity's subtree, including all components", function () {
+        it('returns a deep clone of the entity\'s subtree, including all components', function () {
             const subtree1 = createSubtree();
             const subtree2 = cloneSubtree(subtree1);
 
@@ -461,6 +467,7 @@ describe('Entity', function () {
             expect(subtree1.a_a.script.test.entityArrayAttr[0].guid).to.equal(subtree1.a.guid);
             expect(subtree1.a_a.script.test.entityArrayAttr[1].guid).to.equal(subtree1.a_a_a.guid);
 
+
             const subtree2 = cloneSubtree(subtree1);
             app.root.addChild(subtree2.a);
             expect(subtree2.a.script.test.entityAttr.guid).to.equal(subtree2.a_a.guid);
@@ -515,6 +522,7 @@ describe('Entity', function () {
     });
 
     describe('#destroy', function () {
+
         it('destroys the entity', function () {
             const entity = new Entity();
 
@@ -526,9 +534,11 @@ describe('Entity', function () {
 
             expect(destroyed).to.be.true;
         });
+
     });
 
     describe('#findByGuid', function () {
+
         it('returns same entity', function () {
             const e = new Entity();
             expect(e.findByGuid(e.guid)).to.equal(e);
@@ -576,9 +586,11 @@ describe('Entity', function () {
         it('does not return entity that does not exist', function () {
             expect(app.root.findByGuid('missing')).to.equal(null);
         });
+
     });
 
     describe('#findComponent', function () {
+
         it('finds component on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
@@ -621,9 +633,11 @@ describe('Entity', function () {
             const component = child.findComponent('anim');
             expect(component).to.be.null;
         });
+
     });
 
     describe('#findComponents', function () {
+
         it('finds components on single entity', function () {
             const e = new Entity();
             e.addComponent('anim');
@@ -678,9 +692,11 @@ describe('Entity', function () {
             expect(components).to.be.an('array');
             expect(components.length).to.equal(0);
         });
+
     });
 
     describe('#findScript', function () {
+
         it('finds script on single entity', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
@@ -741,9 +757,11 @@ describe('Entity', function () {
             const script = child.findScript('myScript');
             expect(script).to.be.undefined;
         });
+
     });
 
     describe('#findScripts', function () {
+
         it('finds scripts on single entity', function () {
             const MyScript = createScript('myScript');
             const e = new Entity();
@@ -819,9 +837,11 @@ describe('Entity', function () {
             expect(scripts).to.be.an('array');
             expect(scripts.length).to.equal(0);
         });
+
     });
 
     describe('#removeComponent', function () {
+
         it('removes a component from the entity', function () {
             const entity = new Entity();
             expect(entity.anim).to.be.undefined;
@@ -831,5 +851,7 @@ describe('Entity', function () {
             expect(entity.anim).to.be.undefined;
             entity.destroy();
         });
+
     });
+
 });

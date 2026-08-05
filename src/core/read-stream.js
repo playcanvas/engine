@@ -54,7 +54,7 @@ class ReadStream {
      * @param {number} bytes - The number of bytes to align to.
      */
     align(bytes) {
-        this.offset = (this.offset + bytes - 1) & ~(bytes - 1);
+        this.offset = (this.offset + bytes - 1) & (~(bytes - 1));
     }
 
     /**

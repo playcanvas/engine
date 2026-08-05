@@ -276,6 +276,7 @@ export class VatCharacters extends Script {
     _resolveReady;
 
     initialize() {
+
         this.ready = new Promise((resolve) => {
             this._resolveReady = resolve;
         });
@@ -283,7 +284,7 @@ export class VatCharacters extends Script {
         this.on('destroy', () => this._destroy());
 
         if (this.url) {
-            this.load(this.url).catch((error) => console.error(error));
+            this.load(this.url).catch(error => console.error(error));
         }
     }
 
@@ -295,7 +296,7 @@ export class VatCharacters extends Script {
         this._meshInstance = null;
         this._vertexBuffer?.destroy();
         this._vertexBuffer = null;
-        this._textures.forEach((texture) => texture.destroy());
+        this._textures.forEach(texture => texture.destroy());
         this._textures.length = 0;
     }
 
@@ -321,6 +322,7 @@ export class VatCharacters extends Script {
      * @returns {Promise<void>} Resolves when the characters are ready to be used.
      */
     async setData(container) {
+
         const device = this.app.graphicsDevice;
         const data = parseVat(container);
         this._data = data;
@@ -332,7 +334,7 @@ export class VatCharacters extends Script {
         const vatMap = createVatTexture(device, data);
 
         // the base color texture, or an untextured white stand-in when the data does not embed one
-        const albedo = (await createVatAlbedoTexture(device, data)) ?? createWhiteTexture(device);
+        const albedo = await createVatAlbedoTexture(device, data) ?? createWhiteTexture(device);
         this._textures.push(vatMap, albedo);
 
         // the material rendering the characters
@@ -400,6 +402,7 @@ export class VatCharacters extends Script {
      * @type {number}
      */
     set capacity(value) {
+
         const capacity = Math.max(1, Math.ceil(value / CAPACITY_GRANULARITY) * CAPACITY_GRANULARITY);
         if (capacity === this._capacity) {
             return;
@@ -441,6 +444,7 @@ export class VatCharacters extends Script {
 
     // (re)creates the instancing vertex buffer holding the per instance data
     _createVertexBuffer() {
+
         if (!this._meshInstance || this._vertexBuffer?.numVertices === this._capacity) {
             return;
         }
@@ -449,13 +453,10 @@ export class VatCharacters extends Script {
 
         const device = this.app.graphicsDevice;
         const format = new VertexFormat(device, [
-            ...VAT_TRANSFORM_SEMANTICS.map((semantic) => ({
-                // transform rows
-                semantic: semantic,
-                components: 4,
-                type: TYPE_FLOAT32
+            ...VAT_TRANSFORM_SEMANTICS.map(semantic => ({                        // transform rows
+                semantic: semantic, components: 4, type: TYPE_FLOAT32
             })),
-            { semantic: VAT_FRAME_SEMANTIC, components: 1, type: TYPE_FLOAT32 } // frame index
+            { semantic: VAT_FRAME_SEMANTIC, components: 1, type: TYPE_FLOAT32 }  // frame index
         ]);
         this._vertexBuffer = new VertexBuffer(device, format, this._capacity, { usage: BUFFER_DYNAMIC });
         this._meshInstance.setInstancing(this._vertexBuffer);
@@ -618,6 +619,7 @@ export class VatCharacters extends Script {
     // writes the world matrix of all rendered characters into the per instance data, and updates the
     // bounds covering the crowd
     _updateTransforms() {
+
         const count = this._count;
         const data = this._instanceData;
         const positions = this._position;
@@ -629,6 +631,7 @@ export class VatCharacters extends Script {
         _max.set(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
         for (let i = 0; i < count; i++) {
+
             const scale = scales[i];
             _pos.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
             _quat.set(rotations[i * 4], rotations[i * 4 + 1], rotations[i * 4 + 2], rotations[i * 4 + 3]);
@@ -639,18 +642,9 @@ export class VatCharacters extends Script {
             // fourth row the shader adds back
             const m = _mat.data;
             const offset = i * FLOATS_PER_INSTANCE;
-            data[offset] = m[0];
-            data[offset + 1] = m[4];
-            data[offset + 2] = m[8];
-            data[offset + 3] = m[12];
-            data[offset + 4] = m[1];
-            data[offset + 5] = m[5];
-            data[offset + 6] = m[9];
-            data[offset + 7] = m[13];
-            data[offset + 8] = m[2];
-            data[offset + 9] = m[6];
-            data[offset + 10] = m[10];
-            data[offset + 11] = m[14];
+            data[offset] = m[0]; data[offset + 1] = m[4]; data[offset + 2] = m[8]; data[offset + 3] = m[12];
+            data[offset + 4] = m[1]; data[offset + 5] = m[5]; data[offset + 6] = m[9]; data[offset + 7] = m[13];
+            data[offset + 8] = m[2]; data[offset + 9] = m[6]; data[offset + 10] = m[10]; data[offset + 11] = m[14];
 
             // expand the bounds by a sphere around the character, which avoids having to consider
             // its rotation
@@ -671,10 +665,12 @@ export class VatCharacters extends Script {
 
     // supplies the custom shader material with the lighting of the scene
     _updateLighting() {
+
         const material = this._meshInstance.material;
         const light = this.light?.light;
 
         if (light) {
+
             // a directional light shines along the negative y-axis of its entity
             this.light.getWorldTransform().getY(_pos).mulScalar(-1).normalize();
             _lightDirection[0] = _pos.x;
@@ -702,6 +698,7 @@ export class VatCharacters extends Script {
     }
 
     update(dt) {
+
         const data = this._data;
         if (!data || !this._meshInstance) {
             return;
@@ -722,6 +719,7 @@ export class VatCharacters extends Script {
         const animations = data.animations;
         const instanceData = this._instanceData;
         for (let i = 0; i < count; i++) {
+
             const animation = animations[this._animation[i]];
             const duration = animation.duration;
 

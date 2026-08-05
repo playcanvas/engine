@@ -3,11 +3,7 @@ import { Vec2 } from '../../core/math/vec2.js';
 import { Compute } from '../../platform/graphics/compute.js';
 import { Shader } from '../../platform/graphics/shader.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
-import {
-    BindGroupFormat,
-    BindStorageBufferFormat,
-    BindUniformBufferFormat
-} from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     BUFFERUSAGE_COPY_DST,
@@ -36,6 +32,7 @@ import { buildGSplatIntervalData, INTERVAL_STRIDE } from './gsplat-interval-data
 const WORKGROUP_SIZE = 256;
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
+
 
 /**
  * Interval-based GPU stream compaction for the GSplat GPU sort path. Replaces the
@@ -239,17 +236,17 @@ class GSplatIntervalCompaction {
             cdefines.set('GSPLAT_FISHEYE', '');
         }
 
-        const uniformBufferFormat = fisheye
-            ? new UniformBufferFormat(device, [
-                  new UniformFormat('cameraWorldPos', UNIFORMTYPE_VEC3),
-                  new UniformFormat('maxTheta', UNIFORMTYPE_FLOAT),
-                  new UniformFormat('cameraForward', UNIFORMTYPE_VEC3),
-                  new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
-              ])
-            : new UniformBufferFormat(device, [
-                  new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
-                  new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
-              ]);
+        const uniformBufferFormat = fisheye ?
+            new UniformBufferFormat(device, [
+                new UniformFormat('cameraWorldPos', UNIFORMTYPE_VEC3),
+                new UniformFormat('maxTheta', UNIFORMTYPE_FLOAT),
+                new UniformFormat('cameraForward', UNIFORMTYPE_VEC3),
+                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+            ]) :
+            new UniformBufferFormat(device, [
+                new UniformFormat('frustumPlanes', UNIFORMTYPE_VEC4, 6),
+                new UniformFormat('numIntervals', UNIFORMTYPE_UINT)
+            ]);
 
         const shader = new Shader(device, {
             name: `GSplatIntervalCull${suffix}`,
@@ -299,7 +296,9 @@ class GSplatIntervalCompaction {
             new BindStorageBufferFormat('compactedOutput', SHADERSTAGE_COMPUTE, false)
         ]);
 
-        const cdefines = new Map([['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]]);
+        const cdefines = new Map([
+            ['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]
+        ]);
 
         const shader = new Shader(device, {
             name: 'GSplatIntervalScatter',
@@ -396,11 +395,7 @@ class GSplatIntervalCompaction {
         if (numIntervals > this.allocatedIntervalCount) {
             this.intervalsBuffer?.destroy();
             this.allocatedIntervalCount = numIntervals;
-            this.intervalsBuffer = new StorageBuffer(
-                this.device,
-                numIntervals * INTERVAL_STRIDE * 4,
-                BUFFERUSAGE_COPY_DST
-            );
+            this.intervalsBuffer = new StorageBuffer(this.device, numIntervals * INTERVAL_STRIDE * 4, BUFFERUSAGE_COPY_DST);
             DebugHelper.setName(this.intervalsBuffer, 'GsplatIntervalCompaction.intervals');
         }
 
@@ -463,11 +458,7 @@ class GSplatIntervalCompaction {
         // workgroup limit (e.g. many instances across the full LOD range), so tile the dispatch
         // across X and Y. The shader reconstructs the linear interval index from (x, y) and
         // discards any over-dispatched workgroups via its numIntervals bounds check.
-        Compute.calcDispatchSize(
-            numIntervals,
-            this._scatterDispatchSize,
-            this.device.limits.maxComputeWorkgroupsPerDimension || 65535
-        );
+        Compute.calcDispatchSize(numIntervals, this._scatterDispatchSize, this.device.limits.maxComputeWorkgroupsPerDimension || 65535);
         scatterCompute.setupDispatch(this._scatterDispatchSize.x, this._scatterDispatchSize.y, 1);
         this.device.computeDispatch([scatterCompute], 'GSplatIntervalScatter');
     }

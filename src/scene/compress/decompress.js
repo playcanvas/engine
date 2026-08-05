@@ -22,8 +22,10 @@ class Decompress {
 
         if (type === '[object Object]') {
             this._handleMap();
+
         } else if (type === '[object Array]') {
             this._handleArray();
+
         } else {
             this._result = this._node;
         }

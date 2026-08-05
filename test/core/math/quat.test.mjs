@@ -5,7 +5,9 @@ import { Quat } from '../../../src/core/math/quat.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 
 describe('Quat', function () {
+
     describe('#constructor()', function () {
+
         it('supports zero arguments', function () {
             const q = new Quat();
             expect(q.x).to.equal(0);
@@ -29,9 +31,11 @@ describe('Quat', function () {
             expect(q.z).to.equal(0.3);
             expect(q.w).to.equal(0.4);
         });
+
     });
 
     describe('#clone()', function () {
+
         it('clones a quaternion', function () {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = q1.clone();
@@ -48,9 +52,11 @@ describe('Quat', function () {
             const b = a.clone();
             expect(b).to.be.an.instanceof(UserQuat);
         });
+
     });
 
     describe('#copy()', function () {
+
         it('copies a quaternion', function () {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = new Quat();
@@ -67,9 +73,11 @@ describe('Quat', function () {
             const q2 = new Quat();
             expect(q1.copy(q2)).to.equal(q1);
         });
+
     });
 
     describe('#dot()', function () {
+
         it('returns 1 for the identity quaternion', function () {
             const q = new Quat();
             expect(q.dot(q)).to.equal(1);
@@ -81,9 +89,11 @@ describe('Quat', function () {
             const dot = q1.dot(q2);
             expect(dot).to.equal(70);
         });
+
     });
 
     describe('#equals()', function () {
+
         it('checks for equality of the same quaternion', function () {
             const q = new Quat(0.1, 0.2, 0.3, 0.4);
             expect(q.equals(q)).to.be.true;
@@ -114,9 +124,11 @@ describe('Quat', function () {
             const q4 = new Quat(0.1 + epsilon + Number.EPSILON, 0.2, 0.3, 0.4);
             expect(q1.equalsApprox(q4, epsilon)).to.be.false;
         });
+
     });
 
     describe('#getAxisAngle()', function () {
+
         it('returns the x axis and 0 angle for an identity quaternion', function () {
             const q = new Quat();
             const axis = new Vec3();
@@ -137,9 +149,11 @@ describe('Quat', function () {
             expect(axis.y).to.be.closeTo(1, 0.00001);
             expect(axis.z).to.be.closeTo(0, 0.00001);
         });
+
     });
 
     describe('#getEulerAngles()', function () {
+
         it('returns zeroes for an identity quaternion', function () {
             const q = new Quat();
             const eulers = q.getEulerAngles();
@@ -238,9 +252,11 @@ describe('Quat', function () {
             expect(eulers.y).to.equal(0);
             expect(eulers.z).to.be.closeTo(-90, 0.00001);
         });
+
     });
 
     describe('#invert()', function () {
+
         it('leaves the identity quaternion unchanged', function () {
             const q = new Quat();
             q.invert();
@@ -260,9 +276,11 @@ describe('Quat', function () {
             const q = new Quat();
             expect(q.invert()).to.equal(q);
         });
+
     });
 
     describe('#length()', function () {
+
         it('returns 1 for the identity quaternion', function () {
             const q = new Quat();
             expect(q.length()).to.equal(1);
@@ -272,9 +290,11 @@ describe('Quat', function () {
             const q = new Quat(1, 2, 3, 4);
             expect(q.length()).to.equal(Math.sqrt(30));
         });
+
     });
 
     describe('#lengthSq()', function () {
+
         it('returns 1 for the identity quaternion', function () {
             const q = new Quat();
             expect(q.lengthSq()).to.equal(1);
@@ -284,9 +304,11 @@ describe('Quat', function () {
             const q = new Quat(1, 2, 3, 4);
             expect(q.lengthSq()).to.equal(30);
         });
+
     });
 
     describe('#lerp()', function () {
+
         it('linearly interpolates between two vectors with alpha of 0', function () {
             const q1 = new Quat();
             q1.setFromEulerAngles(10, 20, 30);
@@ -325,9 +347,12 @@ describe('Quat', function () {
             expect(eulers.y).to.be.closeTo(50, 0.00001);
             expect(eulers.z).to.be.closeTo(60, 0.00001);
         });
+
+
     });
 
     describe('#mul()', function () {
+
         it('sets the identity when multiplying the identity by the identity (I * I = I)', function () {
             const q1 = new Quat();
             const q2 = new Quat();
@@ -385,9 +410,11 @@ describe('Quat', function () {
             const q2 = new Quat();
             expect(q1.mul(q2)).to.equal(q1);
         });
+
     });
 
     describe('#mul2()', function () {
+
         it('sets the identity when multiplying the identity by the identity (I * I = I)', function () {
             const q1 = new Quat();
             const q2 = new Quat();
@@ -451,9 +478,11 @@ describe('Quat', function () {
             const q3 = new Quat();
             expect(q1.mul2(q2, q3)).to.equal(q1);
         });
+
     });
 
     describe('#normalize()', function () {
+
         it('leaves the identity quaternion unchanged', function () {
             const q = new Quat();
             q.normalize();
@@ -470,9 +499,11 @@ describe('Quat', function () {
             const q = new Quat();
             expect(q.normalize()).to.equal(q);
         });
+
     });
 
     describe('#set()', function () {
+
         it('sets the quaternion', function () {
             const q = new Quat();
             q.set(0.1, 0.2, 0.3, 0.4);
@@ -486,9 +517,11 @@ describe('Quat', function () {
             const q = new Quat();
             expect(q.set(0.1, 0.2, 0.3, 0.4)).to.equal(q);
         });
+
     });
 
     describe('#setFromAxisAngle()', function () {
+
         it('sets the identity quaternion when passing a zero angle', function () {
             const q = new Quat();
             q.setFromAxisAngle(Vec3.UP, 0);
@@ -517,9 +550,11 @@ describe('Quat', function () {
             const q = new Quat();
             expect(q.setFromAxisAngle(Vec3.UP, 0)).to.equal(q);
         });
+
     });
 
     describe('#setFromEulerAngles()', function () {
+
         [
             [0, 0, 0],
             [90, 0, 0],
@@ -556,9 +591,11 @@ describe('Quat', function () {
             const q = new Quat();
             expect(q.setFromEulerAngles(0, 0, 0)).to.equal(q);
         });
+
     });
 
     describe('#setFromMat4()', function () {
+
         it('set the identity quaternion from an identity matrix', function () {
             const q = new Quat();
             const m = new Mat4();
@@ -576,19 +613,17 @@ describe('Quat', function () {
             q.setFromMat4(m);
             const result =
                 (Math.abs(nq.x - q.x) < epsilon &&
-                    Math.abs(nq.y - q.y) < epsilon &&
-                    Math.abs(nq.z - q.z) < epsilon &&
-                    Math.abs(nq.w - q.w) < epsilon) ||
+                 Math.abs(nq.y - q.y) < epsilon &&
+                 Math.abs(nq.z - q.z) < epsilon &&
+                 Math.abs(nq.w - q.w) < epsilon) ||
                 (Math.abs(nq.x + q.x) < epsilon &&
-                    Math.abs(nq.y + q.y) < epsilon &&
-                    Math.abs(nq.z + q.z) < epsilon &&
-                    Math.abs(nq.w + q.w) < epsilon);
+                 Math.abs(nq.y + q.y) < epsilon &&
+                 Math.abs(nq.z + q.z) < epsilon &&
+                 Math.abs(nq.w + q.w) < epsilon);
 
             if (!result) {
                 // helpful for debugging
-                console.log(
-                    `Failed Quat [${x}, ${y}, ${z}, ${w}] -> [${nq.x}, ${nq.y}, ${nq.z}, ${nq.w}] != [${q.x}, ${q.y}, ${q.z}, ${q.w}]`
-                );
+                console.log(`Failed Quat [${x}, ${y}, ${z}, ${w}] -> [${nq.x}, ${nq.y}, ${nq.z}, ${nq.w}] != [${q.x}, ${q.y}, ${q.z}, ${q.w}]`);
             }
 
             return result;
@@ -658,15 +693,18 @@ describe('Quat', function () {
             const m = new Mat4();
             expect(q.setFromMat4(m)).to.equal(q);
         });
+
     });
 
     describe('#setFromDirections()', function () {
+
         it('set the identity quaternion from equal directions', function () {
             const v1 = new Vec3(1, 0, 0);
             const v2 = new Vec3(1, 0, 0);
 
             const q1 = new Quat().setFromDirections(v1, v2);
             expect(q1.equals(Quat.IDENTITY)).to.be.true;
+
 
             const v3 = new Vec3(0, 0, 0);
             const v4 = new Vec3(0, 0, 0);
@@ -694,6 +732,7 @@ describe('Quat', function () {
 
             const q5 = new Quat().setFromEulerAngles(0, 0, 44);
             expect(q3.equalsApprox(q5)).to.be.false;
+
         });
 
         it('returns this', function () {
@@ -702,9 +741,11 @@ describe('Quat', function () {
             const v2 = new Vec3();
             expect(q.setFromDirections(v1, v2)).to.equal(q);
         });
+
     });
 
     describe('#slerp()', function () {
+
         it('return first quaternion when alpha is 0', function () {
             const q1 = new Quat();
             q1.setFromEulerAngles(10, 20, 30);
@@ -750,16 +791,20 @@ describe('Quat', function () {
             const q = new Quat();
             expect(q.slerp(q1, q2, 0.5)).to.equal(q);
         });
+
     });
 
     describe('#toString()', function () {
+
         it('returns a string representation of the quaternion', function () {
             const q = new Quat(0.1, 0.2, 0.3, 0.4);
             expect(q.toString()).to.equal('[0.1, 0.2, 0.3, 0.4]');
         });
+
     });
 
     describe('#transformVector()', function () {
+
         it('leaves vector unchanged when transforming by the identity quaternion', function () {
             const v = new Vec3(1, 2, 3);
             const q = new Quat();
@@ -799,9 +844,11 @@ describe('Quat', function () {
             expect(v.y).to.be.closeTo(1, 0.00001);
             expect(v.z).to.be.closeTo(0, 0.00001);
         });
+
     });
 
     describe('#fromArray', function () {
+
         it('sets a quaternion from an array', function () {
             const v = new Quat();
             v.fromArray([1, 2, 3, 4]);
@@ -819,16 +866,20 @@ describe('Quat', function () {
             expect(v.z).to.equal(3);
             expect(v.w).to.equal(4);
         });
+
     });
 
     describe('#toString', function () {
+
         it('returns a string representation of a quaternion', function () {
             const v = new Quat(1, 2, 3, 4);
             expect(v.toString()).to.equal('[1, 2, 3, 4]');
         });
+
     });
 
     describe('#toArray', function () {
+
         it('returns an array representation of a quaternion', function () {
             const v = new Quat(1, 2, 3, 4);
             expect(v.toArray()).to.eql([1, 2, 3, 4]);
@@ -840,5 +891,7 @@ describe('Quat', function () {
             v.toArray(array, 2);
             expect(array).to.eql([0, 0, 1, 2, 3, 4, 0, 0]);
         });
+
     });
+
 });

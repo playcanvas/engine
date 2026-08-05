@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn readInput(uv: f32) {
     let textureSize = textureDimensions(particleTexIN, 0);
     let texel0: vec2i = vec2i(vec2f(uv, 0.25) * vec2f(textureSize));

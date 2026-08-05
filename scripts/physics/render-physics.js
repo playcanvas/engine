@@ -24,28 +24,20 @@ RenderPhysics.attributes.add('castShadows', {
 // initialize code called once per entity
 RenderPhysics.prototype.initialize = function () {
     // Handle attribute change events
-    this.on(
-        'attr:castShadows',
-        function (value, prev) {
-            this.debugRoot.children.forEach((child) => {
-                child.model.castShadows = value;
+    this.on('attr:castShadows', function (value, prev) {
+        this.debugRoot.children.forEach((child) => {
+            child.model.castShadows = value;
+        });
+    }, this);
+    this.on('attr:opacity', function (value, prev) {
+        this.debugRoot.children.forEach((child) => {
+            child.model.meshInstances.forEach((meshInstance) => {
+                var material = meshInstance.material;
+                material.opacity = value;
+                material.update();
             });
-        },
-        this
-    );
-    this.on(
-        'attr:opacity',
-        function (value, prev) {
-            this.debugRoot.children.forEach((child) => {
-                child.model.meshInstances.forEach((meshInstance) => {
-                    var material = meshInstance.material;
-                    material.opacity = value;
-                    material.update();
-                });
-            }, this);
-        },
-        this
-    );
+        }, this);
+    }, this);
 
     this.debugRoot = new pc.Entity('Physics Debug Root');
     this.app.root.addChild(this.debugRoot);
@@ -104,10 +96,7 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                             case 'cone':
                             case 'cylinder':
                             case 'capsule':
-                                if (
-                                    collision._debugShape._height !== collision.height ||
-                                    collision._debugShape._radius !== collision.radius
-                                ) {
+                                if (collision._debugShape._height !== collision.height || collision._debugShape._radius !== collision.radius) {
                                     deleteShape = true;
                                 }
                                 break;
@@ -138,55 +127,40 @@ RenderPhysics.prototype.postUpdate = function (dt) {
                     var mesh;
                     switch (collision.type) {
                         case 'box':
-                            mesh = pc.Mesh.fromGeometry(
-                                this.app.graphicsDevice,
-                                new pc.BoxGeometry({
-                                    halfExtents: collision.halfExtents
-                                })
-                            );
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.BoxGeometry({
+                                halfExtents: collision.halfExtents
+                            }));
                             debugShape._halfExtents = collision.halfExtents.clone();
                             break;
                         case 'cone':
-                            mesh = pc.Mesh.fromGeometry(
-                                this.app.graphicsDevice,
-                                new pc.ConeGeometry({
-                                    height: collision.height,
-                                    radius: collision.radius
-                                })
-                            );
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.ConeGeometry({
+                                height: collision.height,
+                                radius: collision.radius
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;
                             break;
                         case 'cylinder':
-                            mesh = pc.Mesh.fromGeometry(
-                                this.app.graphicsDevice,
-                                new pc.CylinderGeometry({
-                                    height: collision.height,
-                                    radius: collision.radius
-                                })
-                            );
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.CylinderGeometry({
+                                height: collision.height,
+                                radius: collision.radius
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;
                             break;
                         case 'sphere':
-                            mesh = pc.Mesh.fromGeometry(
-                                this.app.graphicsDevice,
-                                new pc.SphereGeometry({
-                                    radius: collision.radius
-                                })
-                            );
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.SphereGeometry({
+                                radius: collision.radius
+                            }));
                             debugShape._radius = collision.radius;
                             break;
                         case 'capsule':
-                            mesh = pc.Mesh.fromGeometry(
-                                this.app.graphicsDevice,
-                                new pc.CapsuleGeometry({
-                                    height: collision.height,
-                                    radius: collision.radius
-                                })
-                            );
+                            mesh = pc.Mesh.fromGeometry(this.app.graphicsDevice, new pc.CapsuleGeometry({
+                                height: collision.height,
+                                radius: collision.radius
+                            }));
                             debugShape._height = collision.height;
                             debugShape._radius = collision.radius;
                             debugShape._axis = collision.axis;

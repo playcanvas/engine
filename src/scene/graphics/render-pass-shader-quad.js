@@ -89,6 +89,7 @@ class RenderPassShaderQuad extends RenderPass {
      * @ignore
      */
     set shader(shader) {
+
         // destroy old
         this.quadRender?.destroy();
         this.quadRender = null;
@@ -105,15 +106,9 @@ class RenderPassShaderQuad extends RenderPass {
     }
 
     execute() {
+
         // render state
-        this.device.setDrawStates(
-            this.blendState,
-            this.depthState,
-            this.cullMode,
-            this.frontFace,
-            this.stencilFront,
-            this.stencilBack
-        );
+        this.device.setDrawStates(this.blendState, this.depthState, this.cullMode, this.frontFace, this.stencilFront, this.stencilBack);
 
         this.quadRender?.render(this.viewport, this.scissor);
     }

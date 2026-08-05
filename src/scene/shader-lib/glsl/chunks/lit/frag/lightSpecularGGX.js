@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 // Isotropic GGX (glTF 2.0 compliant)
 float calcLightSpecular(float gloss, vec3 worldNormal, vec3 viewDir, vec3 h, vec3 lightDirNorm) {
     const float PI = 3.141592653589793;

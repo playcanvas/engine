@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 fn refract2(viewVec: vec3f, normal: vec3f, IOR: f32) -> vec3f {
     let vn: f32 = dot(viewVec, normal);
     let k: f32 = 1.0 - IOR * IOR * (1.0 - vn * vn);

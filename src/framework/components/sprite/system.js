@@ -1,5 +1,8 @@
 import { Color } from '../../../core/math/color.js';
-import { CULLFACE_NONE, PIXELFORMAT_SRGBA8 } from '../../../platform/graphics/constants.js';
+import {
+    CULLFACE_NONE,
+    PIXELFORMAT_SRGBA8
+} from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
@@ -190,7 +193,7 @@ class SpriteComponentSystem extends ComponentSystem {
             }
         }
 
-        if (data.speed !== undefined) {
+        if (data.speed !== undefined)  {
             component.speed = data.speed;
         }
 

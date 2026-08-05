@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform material_invAttenuationDistance: f32;
 uniform material_attenuation: vec3f;
 

@@ -300,7 +300,7 @@ function isSettableProperty(obj, key) {
  */
 function validateComponentOptions(system, component, data) {
     Debug.call(() => {
-        const valid = (system._validProps ??= new Set(['enabled', ...system.extraDataProperties]));
+        const valid = system._validProps ??= new Set(['enabled', ...system.extraDataProperties]);
         for (const key of Object.keys(data)) {
             if (valid.has(key)) {
                 continue;
@@ -309,9 +309,7 @@ function validateComponentOptions(system, component, data) {
                 // memoize so repeatedly adding the same component type stays cheap
                 valid.add(key);
             } else {
-                Debug.warnOnce(
-                    `addComponent: ignoring unknown option '${key}' passed to the '${system.id}' component - check for a typo.`
-                );
+                Debug.warnOnce(`addComponent: ignoring unknown option '${key}' passed to the '${system.id}' component - check for a typo.`);
             }
         }
     });

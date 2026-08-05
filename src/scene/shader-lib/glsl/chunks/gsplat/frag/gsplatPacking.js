@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 uint pack8888(vec4 v) {
     uvec4 t = uvec4(v * 255.0) << uvec4(24u, 16u, 8u, 0u);
     return t.x | t.y | t.z | t.w;

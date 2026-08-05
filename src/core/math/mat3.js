@@ -149,17 +149,15 @@ class Mat3 {
         const l = this.data;
         const r = rhs.data;
 
-        return (
-            l[0] === r[0] &&
-            l[1] === r[1] &&
-            l[2] === r[2] &&
-            l[3] === r[3] &&
-            l[4] === r[4] &&
-            l[5] === r[5] &&
-            l[6] === r[6] &&
-            l[7] === r[7] &&
-            l[8] === r[8]
-        );
+        return ((l[0] === r[0]) &&
+                (l[1] === r[1]) &&
+                (l[2] === r[2]) &&
+                (l[3] === r[3]) &&
+                (l[4] === r[4]) &&
+                (l[5] === r[5]) &&
+                (l[6] === r[6]) &&
+                (l[7] === r[7]) &&
+                (l[8] === r[8]));
     }
 
     /**
@@ -172,17 +170,15 @@ class Mat3 {
      */
     isIdentity() {
         const m = this.data;
-        return (
-            m[0] === 1 &&
-            m[1] === 0 &&
-            m[2] === 0 &&
-            m[3] === 0 &&
-            m[4] === 1 &&
-            m[5] === 0 &&
-            m[6] === 0 &&
-            m[7] === 0 &&
-            m[8] === 1
-        );
+        return ((m[0] === 1) &&
+                (m[1] === 0) &&
+                (m[2] === 0) &&
+                (m[3] === 0) &&
+                (m[4] === 1) &&
+                (m[5] === 0) &&
+                (m[6] === 0) &&
+                (m[7] === 0) &&
+                (m[8] === 1));
     }
 
     /**
@@ -240,15 +236,9 @@ class Mat3 {
 
         if (s === t) {
             let tmp;
-            tmp = s[1];
-            t[1] = s[3];
-            t[3] = tmp;
-            tmp = s[2];
-            t[2] = s[6];
-            t[6] = tmp;
-            tmp = s[5];
-            t[5] = s[7];
-            t[7] = tmp;
+            tmp = s[1]; t[1] = s[3]; t[3] = tmp;
+            tmp = s[2]; t[2] = s[6]; t[6] = tmp;
+            tmp = s[5]; t[5] = s[7]; t[7] = tmp;
         } else {
             t[0] = s[0];
             t[1] = s[3];
@@ -324,17 +314,17 @@ class Mat3 {
 
         const m = this.data;
 
-        m[0] = 1 - (yy + zz);
-        m[1] = xy + wz;
-        m[2] = xz - wy;
+        m[0] = (1 - (yy + zz));
+        m[1] = (xy + wz);
+        m[2] = (xz - wy);
 
-        m[3] = xy - wz;
-        m[4] = 1 - (xx + zz);
-        m[5] = yz + wx;
+        m[3] = (xy - wz);
+        m[4] = (1 - (xx + zz));
+        m[5] = (yz + wx);
 
-        m[6] = xz + wy;
-        m[7] = yz - wx;
-        m[8] = 1 - (xx + yy);
+        m[6] = (xz + wy);
+        m[7] = (yz - wx);
+        m[8] = (1 - (xx + yy));
 
         return this;
     }
@@ -362,17 +352,17 @@ class Mat3 {
         const a9 = s[9];
         const a10 = s[10];
 
-        const b11 = a10 * a5 - a6 * a9;
+        const b11 =  a10 * a5 - a6 * a9;
         const b21 = -a10 * a1 + a2 * a9;
-        const b31 = a6 * a1 - a2 * a5;
+        const b31 =  a6  * a1 - a2 * a5;
         const b12 = -a10 * a4 + a6 * a8;
-        const b22 = a10 * a0 - a2 * a8;
-        const b32 = -a6 * a0 + a2 * a4;
-        const b13 = a9 * a4 - a5 * a8;
-        const b23 = -a9 * a0 + a1 * a8;
-        const b33 = a5 * a0 - a1 * a4;
+        const b22 =  a10 * a0 - a2 * a8;
+        const b32 = -a6  * a0 + a2 * a4;
+        const b13 =  a9  * a4 - a5 * a8;
+        const b23 = -a9  * a0 + a1 * a8;
+        const b33 =  a5  * a0 - a1 * a4;
 
-        const det = a0 * b11 + a1 * b12 + a2 * b13;
+        const det =  a0 * b11 + a1 * b12 + a2 * b13;
         if (det === 0) {
             this.setIdentity();
         } else {

@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     var animationIndex: f32;
 
     if (uniform.animTexIndexParams.y == 1.0) {

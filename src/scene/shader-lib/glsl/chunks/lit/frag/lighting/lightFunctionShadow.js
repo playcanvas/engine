@@ -1,5 +1,5 @@
 // functions used to evaluate the light shadow
-export default /* glsl */ `
+export default /* glsl */`
 
 // shadow casting functionality
 #ifdef LIGHT{i}CASTSHADOW

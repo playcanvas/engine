@@ -48,6 +48,7 @@ PlanarRenderer.attributes.add('planeNormal', {
 
 // initialize code called once per entity
 PlanarRenderer.prototype.initialize = function () {
+
     this.plane = new pc.Plane();
     this.reflectionMatrix = new pc.Mat4();
 
@@ -80,6 +81,7 @@ PlanarRenderer.prototype.initialize = function () {
 };
 
 PlanarRenderer.prototype.updateRenderTarget = function () {
+
     // main camera resolution
     var sceneCamera = this.sceneCameraEntity.camera;
     var sceneCameraWidth = sceneCamera.renderTarget?.width ?? this.app.graphicsDevice.width;
@@ -94,11 +96,8 @@ PlanarRenderer.prototype.updateRenderTarget = function () {
     height = Math.min(height, this.app.graphicsDevice.maxTextureSize);
 
     var planarCamera = this.entity.camera;
-    if (
-        !planarCamera.renderTarget ||
-        planarCamera.renderTarget.width !== width ||
-        planarCamera.renderTarget.height !== height
-    ) {
+    if (!planarCamera.renderTarget || planarCamera.renderTarget.width !== width || planarCamera.renderTarget.height !== height) {
+
         // destroy old render target
         if (planarCamera.renderTarget) {
             this.texture.destroy();
@@ -129,10 +128,12 @@ PlanarRenderer.prototype.updateRenderTarget = function () {
 };
 
 PlanarRenderer.prototype.frameUpdate = function () {
+
     this.updateRenderTarget();
 
     var planarCamera = this.entity.camera;
     if (planarCamera.enabled) {
+
         // update reflection camera orientation by mirroring the scene camera by the plane
         this.plane.setFromPointNormal(this.planePoint, this.planeNormal);
         this.reflectionMatrix.setReflection(this.plane.normal, this.plane.distance);

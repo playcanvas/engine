@@ -8,7 +8,8 @@
  * @ignore
  */
 class WebglBindGroupFormat {
-    destroy() {}
+    destroy() {
+    }
 }
 
 export { WebglBindGroupFormat };

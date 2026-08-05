@@ -36,7 +36,7 @@ class Graph {
     // called when context was lost, function releases all context related resources
     loseContext() {
         // if timer implements loseContext
-        if (this.timer && typeof this.timer.loseContext === 'function') {
+        if (this.timer && (typeof this.timer.loseContext === 'function')) {
             this.timer.loseContext();
         }
     }
@@ -65,12 +65,12 @@ class Graph {
         if (this.enabled) {
             // update total timing sample
             const range = 1.5 * this.watermark;
-            this.sample[0] = Math.floor((total / range) * 255);
+            this.sample[0] = Math.floor(total / range * 255);
             this.sample[1] = 0;
             this.sample[2] = 0;
 
             // .a store watermark
-            this.sample[3] = (this.watermark / range) * 255;
+            this.sample[3] = this.watermark / range * 255;
 
             // bounds check - skip if texture is too small
             if (this.yOffset >= this.texture.height) {
@@ -99,18 +99,7 @@ class Graph {
     }
 
     render(render2d, x, y, w, h) {
-        render2d.quad(
-            x + w,
-            y,
-            -w,
-            h,
-            this.enabled ? this.cursor : 0,
-            this.enabled ? 0.5 + this.yOffset : this.texture.height - 1,
-            -w,
-            0,
-            this.texture,
-            this.graphType
-        );
+        render2d.quad(x + w, y, -w, h, this.enabled ? this.cursor : 0, this.enabled ? 0.5 + this.yOffset : this.texture.height - 1, -w, 0, this.texture, this.graphType);
     }
 }
 

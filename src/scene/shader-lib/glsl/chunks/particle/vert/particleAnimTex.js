@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     float animationIndex;
 
     if (animTexIndexParams.y == 1.0) {

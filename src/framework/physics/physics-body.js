@@ -31,17 +31,20 @@ class PhysicsBody {
     /**
      * @param {number} friction - The friction value used when contacts occur.
      */
-    setFriction(friction) {}
+    setFriction(friction) {
+    }
 
     /**
      * @param {number} friction - The torsional friction orthogonal to the contact point.
      */
-    setRollingFriction(friction) {}
+    setRollingFriction(friction) {
+    }
 
     /**
      * @param {number} restitution - The amount of energy preserved on collision.
      */
-    setRestitution(restitution) {}
+    setRestitution(restitution) {
+    }
 
     /**
      * Sets both damping values in one call.
@@ -49,22 +52,26 @@ class PhysicsBody {
      * @param {number} linear - The rate at which the body loses linear velocity.
      * @param {number} angular - The rate at which the body loses angular velocity.
      */
-    setDamping(linear, angular) {}
+    setDamping(linear, angular) {
+    }
 
     /**
      * @param {Vec3} factor - The scaling factor for linear movement per axis.
      */
-    setLinearFactor(factor) {}
+    setLinearFactor(factor) {
+    }
 
     /**
      * @param {Vec3} factor - The scaling factor for angular movement per axis.
      */
-    setAngularFactor(factor) {}
+    setAngularFactor(factor) {
+    }
 
     /**
      * @param {Vec3} velocity - The world space linear velocity.
      */
-    setLinearVelocity(velocity) {}
+    setLinearVelocity(velocity) {
+    }
 
     /**
      * Reads the body's linear velocity into an out-parameter. Inert backends leave it
@@ -72,12 +79,14 @@ class PhysicsBody {
      *
      * @param {Vec3} velocity - The vector to write the linear velocity to.
      */
-    getLinearVelocity(velocity) {}
+    getLinearVelocity(velocity) {
+    }
 
     /**
      * @param {Vec3} velocity - The world space angular velocity.
      */
-    setAngularVelocity(velocity) {}
+    setAngularVelocity(velocity) {
+    }
 
     /**
      * Reads the body's angular velocity into an out-parameter. Inert backends leave it
@@ -85,14 +94,16 @@ class PhysicsBody {
      *
      * @param {Vec3} velocity - The vector to write the angular velocity to.
      */
-    getAngularVelocity(velocity) {}
+    getAngularVelocity(velocity) {
+    }
 
     /**
      * Sets the body mass and recomputes its inertia from the current collision shape.
      *
      * @param {number} mass - The new mass.
      */
-    setMass(mass) {}
+    setMass(mass) {
+    }
 
     /**
      * Returns true if the body is actively simulating, i.e. not sleeping.
@@ -106,7 +117,8 @@ class PhysicsBody {
     /**
      * Forcibly wakes the body.
      */
-    activate() {}
+    activate() {
+    }
 
     /**
      * Teleports the body to a new world space pose and wakes it. Backends also refresh any
@@ -116,7 +128,8 @@ class PhysicsBody {
      * @param {Vec3} position - The world space position.
      * @param {Quat} rotation - The world space rotation.
      */
-    setTransform(position, rotation) {}
+    setTransform(position, rotation) {
+    }
 
     /**
      * Reads the simulated pose to present to the scene (the interpolated transform on backends
@@ -125,7 +138,8 @@ class PhysicsBody {
      * @param {Vec3} position - The vector to write the world space position to.
      * @param {Quat} rotation - The quaternion to write the world space rotation to.
      */
-    getTransform(position, rotation) {}
+    getTransform(position, rotation) {
+    }
 
     /**
      * Drives a kinematic body towards a world space pose for the next simulation step.
@@ -133,7 +147,8 @@ class PhysicsBody {
      * @param {Vec3} position - The world space position.
      * @param {Quat} rotation - The world space rotation.
      */
-    setKinematicTarget(position, rotation) {}
+    setKinematicTarget(position, rotation) {
+    }
 
     /**
      * Applies a force at a point relative to the body's origin. The body is not woken - callers
@@ -142,12 +157,14 @@ class PhysicsBody {
      * @param {Vec3} force - The world space force.
      * @param {Vec3} relativePoint - The world space offset from the body origin.
      */
-    applyForce(force, relativePoint) {}
+    applyForce(force, relativePoint) {
+    }
 
     /**
      * @param {Vec3} torque - The world space torque.
      */
-    applyTorque(torque) {}
+    applyTorque(torque) {
+    }
 
     /**
      * Applies an impulse at a point relative to the body's origin.
@@ -155,12 +172,14 @@ class PhysicsBody {
      * @param {Vec3} impulse - The world space impulse.
      * @param {Vec3} relativePoint - The local space offset from the body origin.
      */
-    applyImpulse(impulse, relativePoint) {}
+    applyImpulse(impulse, relativePoint) {
+    }
 
     /**
      * @param {Vec3} torque - The world space torque impulse.
      */
-    applyTorqueImpulse(torque) {}
+    applyTorqueImpulse(torque) {
+    }
 }
 
 export { PhysicsBody };

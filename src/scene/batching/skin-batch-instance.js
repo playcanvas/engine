@@ -3,6 +3,7 @@ import { SkinInstance } from '../skin-instance.js';
 // Class derived from SkinInstance with changes to make it suitable for batching
 class SkinBatchInstance extends SkinInstance {
     constructor(device, nodes, rootNode) {
+
         super();
 
         const numBones = nodes.length;
@@ -15,7 +16,8 @@ class SkinBatchInstance extends SkinInstance {
         this.bones = nodes;
     }
 
-    updateMatrices(rootNode, skinUpdateIndex) {}
+    updateMatrices(rootNode, skinUpdateIndex) {
+    }
 
     updateMatrixPalette(rootNode, skinUpdateIndex) {
         const mp = this.matrixPalette;

@@ -35,80 +35,80 @@ const getWriteMask = (blendState) => {
 };
 
 const _primitiveTopology = [
-    'point-list', // PRIMITIVE_POINTS
-    'line-list', // PRIMITIVE_LINES
-    undefined, // PRIMITIVE_LINELOOP
-    'line-strip', // PRIMITIVE_LINESTRIP
-    'triangle-list', // PRIMITIVE_TRIANGLES
-    'triangle-strip', // PRIMITIVE_TRISTRIP
-    undefined // PRIMITIVE_TRIFAN
+    'point-list',       // PRIMITIVE_POINTS
+    'line-list',        // PRIMITIVE_LINES
+    undefined,          // PRIMITIVE_LINELOOP
+    'line-strip',       // PRIMITIVE_LINESTRIP
+    'triangle-list',    // PRIMITIVE_TRIANGLES
+    'triangle-strip',   // PRIMITIVE_TRISTRIP
+    undefined           // PRIMITIVE_TRIFAN
 ];
 
 const _blendOperation = [
-    'add', // BLENDEQUATION_ADD
-    'subtract', // BLENDEQUATION_SUBTRACT
+    'add',              // BLENDEQUATION_ADD
+    'subtract',         // BLENDEQUATION_SUBTRACT
     'reverse-subtract', // BLENDEQUATION_REVERSE_SUBTRACT
-    'min', // BLENDEQUATION_MIN
-    'max' // BLENDEQUATION_MAX
+    'min',              // BLENDEQUATION_MIN
+    'max'               // BLENDEQUATION_MAX
 ];
 
 const _blendFactor = [
-    'zero', // BLENDMODE_ZERO
-    'one', // BLENDMODE_ONE
-    'src', // BLENDMODE_SRC_COLOR
-    'one-minus-src', // BLENDMODE_ONE_MINUS_SRC_COLOR
-    'dst', // BLENDMODE_DST_COLOR
-    'one-minus-dst', // BLENDMODE_ONE_MINUS_DST_COLOR
-    'src-alpha', // BLENDMODE_SRC_ALPHA
-    'src-alpha-saturated', // BLENDMODE_SRC_ALPHA_SATURATE
-    'one-minus-src-alpha', // BLENDMODE_ONE_MINUS_SRC_ALPHA
-    'dst-alpha', // BLENDMODE_DST_ALPHA
-    'one-minus-dst-alpha', // BLENDMODE_ONE_MINUS_DST_ALPHA
-    'constant', // BLENDMODE_CONSTANT
-    'one-minus-constant', // BLENDMODE_ONE_MINUS_CONSTANT
-    'src1', // BLENDMODE_SRC1_COLOR
-    'one-minus-src1', // BLENDMODE_ONE_MINUS_SRC1_COLOR
-    'src1-alpha', // BLENDMODE_SRC1_ALPHA
-    'one-minus-src1-alpha' // BLENDMODE_ONE_MINUS_SRC1_ALPHA
+    'zero',                 // BLENDMODE_ZERO
+    'one',                  // BLENDMODE_ONE
+    'src',                  // BLENDMODE_SRC_COLOR
+    'one-minus-src',        // BLENDMODE_ONE_MINUS_SRC_COLOR
+    'dst',                  // BLENDMODE_DST_COLOR
+    'one-minus-dst',        // BLENDMODE_ONE_MINUS_DST_COLOR
+    'src-alpha',            // BLENDMODE_SRC_ALPHA
+    'src-alpha-saturated',  // BLENDMODE_SRC_ALPHA_SATURATE
+    'one-minus-src-alpha',  // BLENDMODE_ONE_MINUS_SRC_ALPHA
+    'dst-alpha',            // BLENDMODE_DST_ALPHA
+    'one-minus-dst-alpha',  // BLENDMODE_ONE_MINUS_DST_ALPHA
+    'constant',             // BLENDMODE_CONSTANT
+    'one-minus-constant',   // BLENDMODE_ONE_MINUS_CONSTANT
+    'src1',                 // BLENDMODE_SRC1_COLOR
+    'one-minus-src1',       // BLENDMODE_ONE_MINUS_SRC1_COLOR
+    'src1-alpha',           // BLENDMODE_SRC1_ALPHA
+    'one-minus-src1-alpha'  // BLENDMODE_ONE_MINUS_SRC1_ALPHA
 ];
 
 const _compareFunction = [
-    'never', // FUNC_NEVER
-    'less', // FUNC_LESS
-    'equal', // FUNC_EQUAL
-    'less-equal', // FUNC_LESSEQUAL
-    'greater', // FUNC_GREATER
-    'not-equal', // FUNC_NOTEQUAL
-    'greater-equal', // FUNC_GREATEREQUAL
-    'always' // FUNC_ALWAYS
+    'never',                // FUNC_NEVER
+    'less',                 // FUNC_LESS
+    'equal',                // FUNC_EQUAL
+    'less-equal',           // FUNC_LESSEQUAL
+    'greater',              // FUNC_GREATER
+    'not-equal',            // FUNC_NOTEQUAL
+    'greater-equal',        // FUNC_GREATEREQUAL
+    'always'                // FUNC_ALWAYS
 ];
 
 const _cullModes = [
-    'none', // CULLFACE_NONE
-    'back', // CULLFACE_BACK
-    'front' // CULLFACE_FRONT
+    'none',                 // CULLFACE_NONE
+    'back',                 // CULLFACE_BACK
+    'front'                 // CULLFACE_FRONT
 ];
 
 const _frontFace = [
-    'ccw', // FRONTFACE_CCW
-    'cw' // FRONTFACE_CW
+    'ccw',                  // FRONTFACE_CCW
+    'cw'                    // FRONTFACE_CW
 ];
 
 const _stencilOps = [
-    'keep', // STENCILOP_KEEP
-    'zero', // STENCILOP_ZERO
-    'replace', // STENCILOP_REPLACE
-    'increment-clamp', // STENCILOP_INCREMENT
-    'increment-wrap', // STENCILOP_INCREMENTWRAP
-    'decrement-clamp', // STENCILOP_DECREMENT
-    'decrement-wrap', // STENCILOP_DECREMENTWRAP
-    'invert' // STENCILOP_INVERT
+    'keep',                 // STENCILOP_KEEP
+    'zero',                 // STENCILOP_ZERO
+    'replace',              // STENCILOP_REPLACE
+    'increment-clamp',      // STENCILOP_INCREMENT
+    'increment-wrap',       // STENCILOP_INCREMENTWRAP
+    'decrement-clamp',      // STENCILOP_DECREMENT
+    'decrement-wrap',       // STENCILOP_DECREMENTWRAP
+    'invert'                // STENCILOP_INVERT
 ];
 
 const _indexFormat = [
-    '', // INDEXFORMAT_UINT8
-    'uint16', // INDEXFORMAT_UINT16
-    'uint32' // INDEXFORMAT_UINT32
+    '',                     // INDEXFORMAT_UINT8
+    'uint16',               // INDEXFORMAT_UINT16
+    'uint32'                // INDEXFORMAT_UINT32
 ];
 
 class CacheEntry {
@@ -167,22 +167,9 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @returns {GPURenderPipeline} Returns the render pipeline.
      * @private
      */
-    get(
-        primitive,
-        vertexFormat0,
-        vertexFormat1,
-        ibFormat,
-        shader,
-        renderTarget,
-        bindGroupFormats,
-        blendState,
-        depthState,
-        cullMode,
-        stencilEnabled,
-        stencilFront,
-        stencilBack,
-        frontFace
-    ) {
+    get(primitive, vertexFormat0, vertexFormat1, ibFormat, shader, renderTarget, bindGroupFormats, blendState,
+        depthState, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace) {
+
         Debug.assert(bindGroupFormats.length <= 3);
 
         // ibFormat is used only for stripped primitives, clear it otherwise to avoid additional render pipelines
@@ -242,21 +229,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         // pipeline
         const cacheEntry = new CacheEntry();
         cacheEntry.hashes = new Uint32Array(lookupHashes);
-        cacheEntry.pipeline = this.create(
-            primitiveTopology,
-            ibFormat,
-            shader,
-            renderTarget,
-            pipelineLayout,
-            blendState,
-            depthState,
-            vertexBufferLayout,
-            cullMode,
-            stencilEnabled,
-            stencilFront,
-            stencilBack,
-            frontFace
-        );
+        cacheEntry.pipeline = this.create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace);
 
         // add to cache
         if (cacheEntries) {
@@ -270,10 +243,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
     }
 
     getBlend(blendState) {
+
         // blend needs to be undefined when blending is disabled
         let blend;
 
         if (blendState.blend) {
+
             /** @type {GPUBlendState} */
             blend = {
                 color: {
@@ -309,10 +284,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @private
      */
     getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack, primitiveTopology) {
+
         /** @type {GPUDepthStencilState} */
         let depthStencil;
         const { depth, stencil } = renderTarget;
         if (depth || stencil) {
+
             // format of depth-stencil attachment
             depthStencil = {
                 format: renderTarget.impl.depthAttachment.format
@@ -334,6 +311,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
             // stencil
             if (stencil && stencilEnabled) {
+
                 // Note that WebGPU only supports a single mask, we use the one from front, but not from back.
                 depthStencil.stencilReadMas = stencilFront.readMask;
                 depthStencil.stencilWriteMask = stencilFront.writeMask;
@@ -357,21 +335,9 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         return depthStencil;
     }
 
-    create(
-        primitiveTopology,
-        ibFormat,
-        shader,
-        renderTarget,
-        pipelineLayout,
-        blendState,
-        depthState,
-        vertexBufferLayout,
-        cullMode,
-        stencilEnabled,
-        stencilFront,
-        stencilBack,
-        frontFace
-    ) {
+    create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout,
+        cullMode, stencilEnabled, stencilFront, stencilBack, frontFace) {
+
         const wgpu = this.device.wgpu;
 
         /** @type {WebgpuShader} */
@@ -391,14 +357,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
                 cullMode: _cullModes[cullMode]
             },
 
-            depthStencil: this.getDepthStencil(
-                depthState,
-                renderTarget,
-                stencilEnabled,
-                stencilFront,
-                stencilBack,
-                primitiveTopology
-            ),
+            depthStencil: this.getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack, primitiveTopology),
 
             multisample: {
                 count: renderTarget.samples
@@ -420,10 +379,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         const colorAttachments = renderTarget.impl.colorAttachments;
         if (blendState.usesDualSourceBlending) {
-            Debug.assert(
-                shader.definition.useDualSourceBlending,
-                'A BlendState using secondary source factors requires a dual-source blending shader.'
-            );
+            Debug.assert(shader.definition.useDualSourceBlending, 'A BlendState using secondary source factors requires a dual-source blending shader.');
             Debug.assert(colorAttachments.length === 1, 'Dual-source blending requires exactly one color attachment.');
         }
         // each color attachment uses its own blend state - without per-target overrides these all

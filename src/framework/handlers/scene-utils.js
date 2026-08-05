@@ -16,30 +16,26 @@ class SceneUtils {
             };
         }
 
-        http.get(
-            url.load,
-            {
-                retry: maxRetries > 0,
-                maxRetries: maxRetries
-            },
-            (err, response) => {
-                if (!err) {
-                    callback(err, response);
-                } else {
-                    let errMsg = `Error while loading scene JSON ${url.original}`;
-                    if (err.message) {
-                        errMsg += `: ${err.message}`;
-                        if (err.stack) {
-                            errMsg += `\n${err.stack}`;
-                        }
-                    } else {
-                        errMsg += `: ${err}`;
+        http.get(url.load, {
+            retry: maxRetries > 0,
+            maxRetries: maxRetries
+        }, (err, response) => {
+            if (!err) {
+                callback(err, response);
+            } else {
+                let errMsg = `Error while loading scene JSON ${url.original}`;
+                if (err.message) {
+                    errMsg += `: ${err.message}`;
+                    if (err.stack) {
+                        errMsg += `\n${err.stack}`;
                     }
-
-                    callback(errMsg);
+                } else {
+                    errMsg += `: ${err}`;
                 }
+
+                callback(errMsg);
             }
-        );
+        });
     }
 }
 

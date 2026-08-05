@@ -115,6 +115,7 @@ class WebglShader {
      * @param {Shader} shader - The shader to compile.
      */
     compile(device, shader) {
+
         const definition = shader.definition;
 
         // shaders generated with processing options are run through the WebGL2 shader processor,
@@ -147,6 +148,7 @@ class WebglShader {
      * @param {Shader} shader - The shader to compile.
      */
     link(device, shader) {
+
         // if the shader was already linked
         if (this.glProgram) {
             return;
@@ -201,10 +203,7 @@ class WebglShader {
             if (attrs.hasOwnProperty(attr)) {
                 const semantic = attrs[attr];
                 const loc = semanticToLocation[semantic];
-                Debug.assert(
-                    !locations.hasOwnProperty(loc),
-                    `WARNING: Two attributes are mapped to the same location in a shader: ${locations[loc]} and ${attr}`
-                );
+                Debug.assert(!locations.hasOwnProperty(loc), `WARNING: Two attributes are mapped to the same location in a shader: ${locations[loc]} and ${attr}`);
 
                 locations[loc] = attr;
                 gl.bindAttribLocation(glProgram, loc, attr);
@@ -295,6 +294,7 @@ class WebglShader {
      * @returns {boolean} True if the shader was successfully queried and false otherwise.
      */
     finalize(device, shader) {
+
         // if the device is lost, silently ignore
         const gl = device.gl;
         if (gl.isContextLost()) {
@@ -322,6 +322,7 @@ class WebglShader {
         // to finish compiling and linking
         const linkStatus = gl.getProgramParameter(glProgram, gl.LINK_STATUS);
         if (!linkStatus) {
+
             // Check for compilation errors (use the actually-compiled sources so line numbers match)
             if (!this._isCompiled(device, shader, this.glVertexShader, this._vsource, 'vertex')) {
                 return false;
@@ -336,12 +337,8 @@ class WebglShader {
             // #if _DEBUG
 
             // log translated shaders
-            definition.translatedFrag = gl
-                .getExtension('WEBGL_debug_shaders')
-                ?.getTranslatedShaderSource(this.glFragmentShader);
-            definition.translatedVert = gl
-                .getExtension('WEBGL_debug_shaders')
-                ?.getTranslatedShaderSource(this.glVertexShader);
+            definition.translatedFrag = gl.getExtension('WEBGL_debug_shaders')?.getTranslatedShaderSource(this.glFragmentShader);
+            definition.translatedVert = gl.getExtension('WEBGL_debug_shaders')?.getTranslatedShaderSource(this.glVertexShader);
 
             console.error(message, definition);
             // #else
@@ -365,10 +362,7 @@ class WebglShader {
 
             // Check attributes are correctly linked up
             if (definition.attributes[info.name] === undefined) {
-                console.error(
-                    `Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition, shader [${shader.label}]`,
-                    shader
-                );
+                console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition, shader [${shader.label}]`, shader);
                 shader.failed = true;
             } else {
                 shader.attributes.set(location, info.name);
@@ -413,11 +407,7 @@ class WebglShader {
             const shortName = blockName.startsWith('ub_') ? blockName.substring(3) : blockName;
             const bindGroupIndex = bindGroupNames.indexOf(shortName);
 
-            Debug.assert(
-                bindGroupIndex >= 0,
-                `Shader [${shader.label}] declares an unsupported uniform block [${blockName}] - user uniform buffers are not supported.`,
-                shader
-            );
+            Debug.assert(bindGroupIndex >= 0, `Shader [${shader.label}] declares an unsupported uniform block [${blockName}] - user uniform buffers are not supported.`, shader);
 
             const bindingPoint = bindGroupIndex >= 0 ? bindGroupIndex : i;
             gl.uniformBlockBinding(glProgram, i, bindingPoint);
@@ -438,10 +428,7 @@ class WebglShader {
             const duration = now() - linkStartTime;
             this.compileDuration += duration;
             _totalCompileTime += this.compileDuration;
-            Debug.trace(
-                TRACEID_SHADER_COMPILE,
-                `[id: ${shader.id}] ${shader.name}: ${this.compileDuration.toFixed(1)}ms, TOTAL: ${_totalCompileTime.toFixed(1)}ms`
-            );
+            Debug.trace(TRACEID_SHADER_COMPILE, `[id: ${shader.id}] ${shader.name}: ${this.compileDuration.toFixed(1)}ms, TOTAL: ${_totalCompileTime.toFixed(1)}ms`);
         });
 
         return true;
@@ -484,6 +471,7 @@ class WebglShader {
      * device supports the KHR_parallel_shader_compile extension, this will always return true.
      */
     isLinked(device) {
+
         const { extParallelShaderCompile } = device;
         if (extParallelShaderCompile) {
             return device.gl.getProgramParameter(this.glProgram, extParallelShaderCompile.COMPLETION_STATUS_KHR);
@@ -504,7 +492,7 @@ class WebglShader {
      * @private
      */
     _processError(src, infoLog) {
-        const error = {};
+        const error = { };
         let code = '';
 
         if (src) {
@@ -526,7 +514,7 @@ class WebglShader {
 
             // Chrome reports shader errors on lines indexed from 1
             for (let i = from; i < to; i++) {
-                const linePrefix = i + 1 === error.line ? '> ' : '  ';
+                const linePrefix = (i + 1 === error.line) ? '> ' : '  ';
                 code += `${linePrefix}${i + 1}:\t${lines[i]}\n`;
             }
 

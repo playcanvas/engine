@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 // Modify the final splat fragment color in the forward pass.
 // Parameters:
 //   gaussianUV - position of the fragment within the gaussian footprint: (0,0) at the splat

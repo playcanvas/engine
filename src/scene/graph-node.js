@@ -304,6 +304,7 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     get normalMatrix() {
+
         const normalMat = this._normalMatrix;
         if (this._dirtyNormal) {
             normalMat.invertMat4(this.getWorldTransform()).transpose();
@@ -326,7 +327,7 @@ class GraphNode extends EventHandler {
 
             // if enabling entity, make all children enabled in hierarchy only when the parent is as well
             // if disabling entity, make all children disabled in hierarchy in all cases
-            if ((enabled && this._parent?.enabled) || !enabled) {
+            if (enabled && this._parent?.enabled || !enabled) {
                 this._notifyHierarchyStateChanged(this, enabled);
             }
         }
@@ -531,6 +532,7 @@ class GraphNode extends EventHandler {
         return this;
     }
 
+
     /**
      * Destroy the graph node and all of its descendants. First, the graph node is removed from the
      * hierarchy. This is then repeated recursively for all descendants of the graph node.
@@ -700,7 +702,7 @@ class GraphNode extends EventHandler {
 
         let result = this;
         for (let i = 0, imax = parts.length; i < imax; ++i) {
-            result = result.children.find((c) => c.name === parts[i]);
+            result = result.children.find(c => c.name === parts[i]);
             if (!result) {
                 return null;
             }
@@ -940,6 +942,7 @@ class GraphNode extends EventHandler {
      * @ignore
      */
     get worldScaleSign() {
+
         if (this._worldScaleSign === 0) {
             this._worldScaleSign = this.getWorldTransform().scaleSign;
         }
@@ -1164,7 +1167,7 @@ class GraphNode extends EventHandler {
             }
         }
         this._dirtyNormal = true;
-        this._worldScaleSign = 0; // world matrix is dirty, mark this flag dirty too
+        this._worldScaleSign = 0;   // world matrix is dirty, mark this flag dirty too
         this._aabbVer++;
     }
 
@@ -1426,7 +1429,7 @@ class GraphNode extends EventHandler {
 
         // the child node should be enabled in the hierarchy only if itself is enabled and if
         // this parent is enabled
-        const enabledInHierarchy = node._enabled && this.enabled;
+        const enabledInHierarchy = (node._enabled && this.enabled);
         if (node._enabledInHierarchy !== enabledInHierarchy) {
             node._enabledInHierarchy = enabledInHierarchy;
 
@@ -1542,16 +1545,13 @@ class GraphNode extends EventHandler {
                     let tmatrix = parent.worldTransform;
                     if (parent.scaleCompensation) {
                         scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
-                        scaleCompensatePosTransform.setTRS(
-                            parent.worldTransform.getTranslation(scaleCompensatePos),
-                            scaleCompensateRot2,
-                            scaleCompensateScaleForParent
-                        );
+                        scaleCompensatePosTransform.setTRS(parent.worldTransform.getTranslation(scaleCompensatePos), scaleCompensateRot2, scaleCompensateScaleForParent);
                         tmatrix = scaleCompensatePosTransform;
                     }
                     tmatrix.transformPoint(this.localPosition, scaleCompensatePos);
 
                     this.worldTransform.setTRS(scaleCompensatePos, scaleCompensateRot, scale);
+
                 } else {
                     this.worldTransform.mulAffine2(this._parent.worldTransform, this.localTransform);
                 }
@@ -1634,11 +1634,9 @@ class GraphNode extends EventHandler {
         if (x instanceof Vec3) {
             target.copy(x);
 
-            if (y instanceof Vec3) {
-                // vec3, vec3
+            if (y instanceof Vec3) { // vec3, vec3
                 up.copy(y);
-            } else {
-                // vec3
+            } else { // vec3
                 up.copy(Vec3.UP);
             }
         } else if (z === undefined) {

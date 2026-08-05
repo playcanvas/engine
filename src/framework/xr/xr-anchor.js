@@ -199,25 +199,24 @@ class XrAnchor extends EventHandler {
 
         this._uuidRequests = [];
 
-        this._xrAnchor
-            .requestPersistentHandle()
-            .then((uuid) => {
-                this._uuid = uuid;
-                this._anchors._indexByUuid.set(this._uuid, this);
-                callback?.(null, uuid);
-                for (const uuidRequest of this._uuidRequests) {
-                    uuidRequest(null, uuid);
-                }
-                this._uuidRequests = null;
-                this.fire('persist', uuid);
-            })
-            .catch((ex) => {
-                callback?.(ex, null);
-                for (const uuidRequest of this._uuidRequests) {
-                    uuidRequest(ex, null);
-                }
-                this._uuidRequests = null;
-            });
+        this._xrAnchor.requestPersistentHandle()
+        .then((uuid) => {
+            this._uuid = uuid;
+            this._anchors._indexByUuid.set(this._uuid, this);
+            callback?.(null, uuid);
+            for (const uuidRequest of this._uuidRequests) {
+                uuidRequest(null, uuid);
+            }
+            this._uuidRequests = null;
+            this.fire('persist', uuid);
+        })
+        .catch((ex) => {
+            callback?.(ex, null);
+            for (const uuidRequest of this._uuidRequests) {
+                uuidRequest(ex, null);
+            }
+            this._uuidRequests = null;
+        });
     }
 
     /**

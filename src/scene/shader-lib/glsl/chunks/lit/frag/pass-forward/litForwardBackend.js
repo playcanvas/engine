@@ -1,5 +1,5 @@
 // backend shader implementing material / lighting for the lit material for forward rendering
-export default /* glsl */ `
+export default /* glsl */`
 void evaluateBackend() {
 
     // apply SSAO during lighting

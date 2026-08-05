@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 uniform material_sheenGloss: f32;
 
 fn getSheenGlossiness() {

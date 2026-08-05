@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 uniform vec4 viewport_size;             // viewport width, height, 1/width, 1/height
 uniform float minPixelSize;
 

@@ -5,7 +5,9 @@ import { TRACEID_VRAM_IB } from '../../core/constants.js';
  * @import { GraphicsDevice } from './graphics-device.js'
  */
 
-import { BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize } from './constants.js';
+import {
+    BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
+} from './constants.js';
 
 let id = 0;
 
@@ -83,6 +85,7 @@ class IndexBuffer {
      * Frees resources associated with this index buffer.
      */
     destroy() {
+
         // stop tracking the index buffer
         const device = this.device;
         device.buffers.delete(this);
@@ -161,6 +164,7 @@ class IndexBuffer {
      * active device.
      */
     unlock() {
+
         // Upload the new index data
         this.impl.unlock(this);
     }
@@ -192,12 +196,8 @@ class IndexBuffer {
      */
     _lockTypedArray() {
         const lock = this.lock();
-        const indices =
-            this.format === INDEXFORMAT_UINT32
-                ? new Uint32Array(lock)
-                : this.format === INDEXFORMAT_UINT16
-                  ? new Uint16Array(lock)
-                  : new Uint8Array(lock);
+        const indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
+            (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock));
         return indices;
     }
 
@@ -214,6 +214,7 @@ class IndexBuffer {
 
         // if data contains more indices than needed, copy from its subarray
         if (data.length > count) {
+
             // if data is typed array
             if (ArrayBuffer.isView(data)) {
                 data = data.subarray(0, count);

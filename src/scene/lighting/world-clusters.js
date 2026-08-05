@@ -17,7 +17,7 @@ const tempMin3 = new Vec3();
 const tempMax3 = new Vec3();
 const tempBox = new BoundingBox();
 
-const maxTextureSize = 4096; // maximum texture size allowed to work on all devices
+const maxTextureSize = 4096;    // maximum texture size allowed to work on all devices
 
 // helper class to store properties of a light used by clustering
 class ClusterLight {
@@ -50,8 +50,8 @@ class WorldClusters {
         this.boundsDelta = new Vec3();
 
         // number of cells along 3 axes
-        this._cells = new Vec3(1, 1, 1); // number of cells
-        this._cellsLimit = new Vec3(); // number of cells minus one
+        this._cells = new Vec3(1, 1, 1);       // number of cells
+        this._cellsLimit = new Vec3();  // number of cells minus one
         this.cells = this._cells;
 
         // number of lights each cell can store
@@ -82,6 +82,7 @@ class WorldClusters {
     }
 
     set maxCellLightCount(count) {
+
         if (count !== this._maxCellLightCount) {
             this._maxCellLightCount = count;
             this._cellsDirty = true;
@@ -93,6 +94,7 @@ class WorldClusters {
     }
 
     set cells(value) {
+
         // make sure we have whole numbers
         tempVec3.copy(value).floor();
 
@@ -108,6 +110,7 @@ class WorldClusters {
     }
 
     destroy() {
+
         this.lightsBuffer.destroy();
 
         this.releaseClusterTexture();
@@ -121,6 +124,7 @@ class WorldClusters {
     }
 
     registerUniforms(device) {
+
         this._numClusteredLightsId = device.scope.resolve('numClusteredLights');
 
         this._clusterMaxCellsId = device.scope.resolve('clusterMaxCells');
@@ -176,10 +180,7 @@ class WorldClusters {
             const { x: width, y: height } = TextureUtils.calcTextureSize(totalPixels, tmpSize, this.maxCellLightCount);
 
             // if the texture is allowed size
-            Debug.assert(
-                width <= maxTextureSize && height <= maxTextureSize,
-                'Clustered lights parameters cause the texture size to be over the limit, please adjust them.'
-            );
+            Debug.assert(width <= maxTextureSize && height <= maxTextureSize, 'Clustered lights parameters cause the texture size to be over the limit, please adjust them.');
 
             // maximum range of cells
             this._clusterCellsMaxData[0] = cx;
@@ -196,17 +197,12 @@ class WorldClusters {
             this.counts = new Int32Array(numCells);
 
             this.releaseClusterTexture();
-            this.clusterTexture = this.lightsBuffer.createTexture(
-                this.device,
-                width,
-                height,
-                PIXELFORMAT_R8U,
-                'ClusterTexture'
-            );
+            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8U, 'ClusterTexture');
         }
     }
 
     uploadTextures() {
+
         this.clusterTexture.lock().set(this.clusters);
         this.clusterTexture.unlock();
 
@@ -214,6 +210,7 @@ class WorldClusters {
     }
 
     updateUniforms() {
+
         // number of clustered lights (index 0 is reserved for 'no light')
         this._numClusteredLightsId.setValue(this._usedLights.length);
 
@@ -249,6 +246,7 @@ class WorldClusters {
 
     // evaluates min and max coordinates of AABB of the light in the cell space
     evalLightCellMinMax(clusteredLight, min, max) {
+
         // min point of AABB in cell space
         min.copy(clusteredLight.min);
         min.sub(this.boundsMin);
@@ -269,6 +267,7 @@ class WorldClusters {
     }
 
     collectLights(lights) {
+
         const maxLights = this.lightsBuffer.maxLights;
 
         // skip index 0 as that is used for unused light
@@ -278,16 +277,11 @@ class WorldClusters {
         lights.forEach((light) => {
             const runtimeLight = !!(light.mask & (MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED));
             const zeroAngleSpotlight = light.type === LIGHTTYPE_SPOT && light._outerConeAngle === 0;
-            if (
-                light.enabled &&
-                light.type !== LIGHTTYPE_DIRECTIONAL &&
-                light.visibleThisFrame &&
-                light.intensity > 0 &&
-                runtimeLight &&
-                !zeroAngleSpotlight
-            ) {
+            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight && !zeroAngleSpotlight) {
+
                 // within light limit
                 if (lightIndex < maxLights) {
+
                     // reuse allocated spot
                     let clusteredLight;
                     if (lightIndex < usedLights.length) {
@@ -306,9 +300,7 @@ class WorldClusters {
 
                     lightIndex++;
                 } else {
-                    Debug.warnOnce(
-                        `Clustered lighting: more than ${maxLights - 1} lights in the frame, ignoring some.`
-                    );
+                    Debug.warnOnce(`Clustered lighting: more than ${maxLights - 1} lights in the frame, ignoring some.`);
                 }
             }
         });
@@ -318,6 +310,7 @@ class WorldClusters {
 
     // evaluate the area all lights cover
     evaluateBounds() {
+
         const usedLights = this._usedLights;
 
         // bounds of the area the lights cover
@@ -326,16 +319,19 @@ class WorldClusters {
 
         // if at least one light (index 0 is null, so ignore that one)
         if (usedLights.length > 1) {
+
             // AABB of the first light
             min.copy(usedLights[1].min);
             max.copy(usedLights[1].max);
 
             for (let i = 2; i < usedLights.length; i++) {
+
                 // expand by AABB of this light
                 min.min(usedLights[i].min);
                 max.max(usedLights[i].max);
             }
         } else {
+
             // any small volume if no lights
             min.set(0, 0, 0);
             max.set(1, 1, 1);
@@ -348,6 +344,7 @@ class WorldClusters {
     }
 
     updateClusters(lightingParams) {
+
         // clear clusters
         this.counts.fill(0);
         this.clusters.fill(0);
@@ -386,11 +383,13 @@ class WorldClusters {
             for (let x = xStart; x <= xEnd; x++) {
                 for (let z = zStart; z <= zEnd; z++) {
                     for (let y = yStart; y <= yEnd; y++) {
+
                         const clusterIndex = x + divX * (z + y * divZ);
                         const count = counts[clusterIndex];
                         if (count < limit) {
                             clusters[pixelsPerCellCount * clusterIndex + count] = i;
                             counts[clusterIndex] = count + 1;
+
                         } else {
                             tooManyLights = true;
                         }
@@ -403,9 +402,8 @@ class WorldClusters {
         if (tooManyLights) {
             const reportLimit = 5;
             if (this.reportCount < reportLimit) {
-                console.warn(
-                    `Too many lights in light cluster ${this.name}, please adjust parameters.${this.reportCount === reportLimit - 1 ? ' Giving up on reporting it.' : ''}`
-                );
+                console.warn(`Too many lights in light cluster ${this.name}, please adjust parameters.${
+                    this.reportCount === reportLimit - 1 ? ' Giving up on reporting it.' : ''}`);
                 this.reportCount++;
             }
         }

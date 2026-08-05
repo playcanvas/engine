@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 
 #ifdef LIT_TANGENTS
     #define TBN_TANGENTS

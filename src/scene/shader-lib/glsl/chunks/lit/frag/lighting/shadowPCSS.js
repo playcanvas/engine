@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 
 /**
  * PCSS is a shadow sampling method that provides contact hardening soft shadows, used for omni and spot lights.

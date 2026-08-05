@@ -6,37 +6,14 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import {
-    typedArrayTypes,
-    typedArrayTypesByteSize,
-    ADDRESS_CLAMP_TO_EDGE,
-    ADDRESS_MIRRORED_REPEAT,
-    ADDRESS_REPEAT,
+    typedArrayTypes, typedArrayTypesByteSize,
+    ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     BUFFER_STATIC,
-    CULLFACE_NONE,
-    CULLFACE_BACK,
-    FILTER_NEAREST,
-    FILTER_LINEAR,
-    FILTER_NEAREST_MIPMAP_NEAREST,
-    FILTER_LINEAR_MIPMAP_NEAREST,
-    FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_LINEAR,
-    INDEXFORMAT_UINT8,
-    INDEXFORMAT_UINT16,
-    INDEXFORMAT_UINT32,
-    SEMANTIC_POSITION,
-    SEMANTIC_NORMAL,
-    SEMANTIC_TANGENT,
-    SEMANTIC_COLOR,
-    SEMANTIC_BLENDINDICES,
-    SEMANTIC_BLENDWEIGHT,
-    SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1,
-    SEMANTIC_TEXCOORD2,
-    SEMANTIC_TEXCOORD3,
-    SEMANTIC_TEXCOORD4,
-    SEMANTIC_TEXCOORD5,
-    SEMANTIC_TEXCOORD6,
-    SEMANTIC_TEXCOORD7,
+    CULLFACE_NONE, CULLFACE_BACK,
+    FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
+    INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
+    SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     TYPE_FLOAT32
 } from '../../platform/graphics/constants.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
@@ -46,13 +23,9 @@ import { VertexFormat } from '../../platform/graphics/vertex-format.js';
 import { http } from '../../platform/net/http.js';
 
 import {
-    BLEND_NONE,
-    BLEND_NORMAL,
-    PROJECTION_ORTHOGRAPHIC,
-    PROJECTION_PERSPECTIVE,
-    ASPECT_MANUAL,
-    ASPECT_AUTO,
-    SPECOCC_AO
+    BLEND_NONE, BLEND_NORMAL,
+    PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
+    ASPECT_MANUAL, ASPECT_AUTO, SPECOCC_AO
 } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Mesh } from '../../scene/mesh.js';
@@ -222,8 +195,8 @@ const cloneTexture = (texture) => {
         return result;
     };
 
-    const result = new Texture(texture.device, texture); // duplicate texture
-    result._levels = shallowCopyLevels(texture); // shallow copy the levels structure
+    const result = new Texture(texture.device, texture);   // duplicate texture
+    result._levels = shallowCopyLevels(texture);            // shallow copy the levels structure
     return result;
 };
 
@@ -281,12 +254,10 @@ const createVertexBufferInternal = (device, sourceDesc) => {
         target = vertexFormat.elements[i];
         source = sourceDesc[target.name];
         sourceOffset = source.offset - positionDesc.offset;
-        if (
-            source.buffer !== positionDesc.buffer ||
-            source.stride !== target.stride ||
-            source.size !== target.size ||
-            sourceOffset !== target.offset
-        ) {
+        if ((source.buffer !== positionDesc.buffer) ||
+            (source.stride !== target.stride) ||
+            (source.size !== target.size) ||
+            (sourceOffset !== target.offset)) {
             isCorrectlyInterleaved = false;
             break;
         }
@@ -301,11 +272,7 @@ const createVertexBufferInternal = (device, sourceDesc) => {
 
     if (isCorrectlyInterleaved) {
         // copy data
-        sourceArray = new Uint32Array(
-            positionDesc.buffer,
-            positionDesc.offset,
-            (numVertices * vertexBuffer.format.size) / 4
-        );
+        sourceArray = new Uint32Array(positionDesc.buffer, positionDesc.offset, numVertices * vertexBuffer.format.size / 4);
         targetArray.set(sourceArray);
     } else {
         let targetStride, sourceStride;
@@ -318,11 +285,7 @@ const createVertexBufferInternal = (device, sourceDesc) => {
             sourceStride = source.stride / 4;
             // ensure we don't go beyond the end of the arraybuffer when dealing with
             // interlaced vertex formats
-            sourceArray = new Uint32Array(
-                source.buffer,
-                source.offset,
-                (source.count - 1) * sourceStride + (source.size + 3) / 4
-            );
+            sourceArray = new Uint32Array(source.buffer, source.offset, (source.count - 1) * sourceStride + (source.size + 3) / 4);
 
             let src = 0;
             let dst = target.offset / 4;
@@ -343,6 +306,7 @@ const createVertexBufferInternal = (device, sourceDesc) => {
 };
 
 const createVertexBuffer = (device, attributes, indices, accessors, bufferViews, vertexBufferDict) => {
+
     // extract list of attributes to use
     const useAttributes = {};
     const attribIds = [];
@@ -370,9 +334,7 @@ const createVertexBuffer = (device, attributes, indices, accessors, bufferViews,
             const accessorData = GltfAccessor.getData(accessor, bufferViews);
             const bufferView = bufferViews[accessor.bufferView];
             const semantic = gltfToEngineSemanticMap[attrib];
-            const size =
-                GltfAccessor.getNumComponents(accessor.type) *
-                GltfAccessor.getComponentSizeInBytes(accessor.componentType);
+            const size = GltfAccessor.getNumComponents(accessor.type) * GltfAccessor.getComponentSizeInBytes(accessor.componentType);
             const stride = bufferView && bufferView.hasOwnProperty('byteStride') ? bufferView.byteStride : size;
             sourceDesc[semantic] = {
                 buffer: accessorData.buffer,
@@ -433,6 +395,7 @@ const createSkin = (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) =
     const key = boneNames.join('#');
     let skin = glbSkins.get(key);
     if (!skin) {
+
         // create the skin and add it to the cache
         skin = new Skin(device, ibp, boneNames);
         glbSkins.set(key, skin);
@@ -441,20 +404,11 @@ const createSkin = (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) =
     return skin;
 };
 
-const createMesh = (
-    device,
-    gltfMesh,
-    accessors,
-    bufferViews,
-    vertexBufferDict,
-    meshVariants,
-    meshDefaultMaterials,
-    assetOptions,
-    promises
-) => {
+const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
     const meshes = [];
 
     gltfMesh.primitives.forEach((primitive) => {
+
         if (hasGSplatExtension(primitive)) {
             // gaussian splat primitives are handled by createGSplats instead
             return;
@@ -462,22 +416,11 @@ const createMesh = (
 
         if (primitive.extensions?.KHR_draco_mesh_compression) {
             // handle draco compressed mesh
-            meshes.push(
-                createDracoMesh(device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises)
-            );
+            meshes.push(createDracoMesh(device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises));
         } else {
             // handle uncompressed mesh
-            let indices = primitive.hasOwnProperty('indices')
-                ? GltfAccessor.getData(accessors[primitive.indices], bufferViews, true)
-                : null;
-            const vertexBuffer = createVertexBuffer(
-                device,
-                primitive.attributes,
-                indices,
-                accessors,
-                bufferViews,
-                vertexBufferDict
-            );
+            let indices = primitive.hasOwnProperty('indices') ? GltfAccessor.getData(accessors[primitive.indices], bufferViews, true) : null;
+            const vertexBuffer = createVertexBuffer(device, primitive.attributes, indices, accessors, bufferViews, vertexBufferDict);
             const primitiveType = getPrimitiveType(primitive);
 
             // build the mesh
@@ -485,7 +428,7 @@ const createMesh = (
             mesh.vertexBuffer = vertexBuffer;
             mesh.primitive[0].type = primitiveType;
             mesh.primitive[0].base = 0;
-            mesh.primitive[0].indexed = indices !== null;
+            mesh.primitive[0].indexed = (indices !== null);
 
             // index buffer
             if (indices !== null) {
@@ -539,7 +482,8 @@ const createMesh = (
                     }
 
                     // name if specified
-                    if (gltfMesh.hasOwnProperty('extras') && gltfMesh.extras.hasOwnProperty('targetNames')) {
+                    if (gltfMesh.hasOwnProperty('extras') &&
+                        gltfMesh.extras.hasOwnProperty('targetNames')) {
                         options.name = gltfMesh.extras.targetNames[index];
                     } else {
                         options.name = index.toString(10);
@@ -705,26 +649,24 @@ const createMaterial = (gltfMaterial, textures) => {
 
 // create the anim structure
 const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferViews, nodes, meshes, gltfNodes) => {
+
     // create animation data block for the accessor
     const createAnimData = (gltfAccessor) => {
-        return new AnimData(
-            GltfAccessor.getNumComponents(gltfAccessor.type),
-            GltfAccessor.getDataFloat32(gltfAccessor, bufferViews)
-        );
+        return new AnimData(GltfAccessor.getNumComponents(gltfAccessor.type), GltfAccessor.getDataFloat32(gltfAccessor, bufferViews));
     };
 
     const interpMap = {
-        STEP: INTERPOLATION_STEP,
-        LINEAR: INTERPOLATION_LINEAR,
-        CUBICSPLINE: INTERPOLATION_CUBIC
+        'STEP': INTERPOLATION_STEP,
+        'LINEAR': INTERPOLATION_LINEAR,
+        'CUBICSPLINE': INTERPOLATION_CUBIC
     };
 
     // Input and output maps reference data by sampler input/output key.
-    const inputMap = {};
-    const outputMap = {};
+    const inputMap = { };
+    const outputMap = { };
     // The curve map stores temporary curve data by sampler index. Each curves input/output value will be resolved to an inputs/outputs array index after all samplers have been processed.
     // Curves and outputs that are deleted from their maps will not be included in the final AnimTrack
-    const curveMap = {};
+    const curveMap = { };
     let outputCounter = 1;
 
     let i;
@@ -744,9 +686,9 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
         }
 
         const interpolation =
-            sampler.hasOwnProperty('interpolation') && interpMap.hasOwnProperty(sampler.interpolation)
-                ? interpMap[sampler.interpolation]
-                : INTERPOLATION_LINEAR;
+            sampler.hasOwnProperty('interpolation') &&
+            interpMap.hasOwnProperty(sampler.interpolation) ?
+                interpMap[sampler.interpolation] : INTERPOLATION_LINEAR;
 
         // create curve
         const curve = {
@@ -762,9 +704,9 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
     const quatArrays = [];
 
     const transformSchema = {
-        translation: 'localPosition',
-        rotation: 'localRotation',
-        scale: 'localScale'
+        'translation': 'localPosition',
+        'rotation': 'localRotation',
+        'scale': 'localScale'
     };
 
     const constructNodePath = (node) => {
@@ -781,9 +723,7 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
     const createMorphTargetCurves = (curve, gltfNode, entityPath) => {
         const out = outputMap[curve.output];
         if (!out) {
-            Debug.warn(
-                `glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`
-            );
+            Debug.warn(`glb-parser: No output data is available for the morph target curve (${entityPath}/graph/weights). Skipping.`);
             return;
         }
 
@@ -817,13 +757,11 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
             // add the individual morph target output data to the outputMap using a negative value key (so as not to clash with sampler.output values)
             outputMap[-outputCounter] = output;
             const morphCurve = {
-                paths: [
-                    {
-                        entityPath: entityPath,
-                        component: 'graph',
-                        propertyPath: [`weight.${weightName}`]
-                    }
-                ],
+                paths: [{
+                    entityPath: entityPath,
+                    component: 'graph',
+                    propertyPath: [`weight.${weightName}`]
+                }],
                 // each morph target curve input can use the same sampler.input from the channel they were all in
                 input: curve.input,
                 // but each morph target curve should reference its individual output that was just created
@@ -882,22 +820,11 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
         if (curveData.morphCurve) {
             continue;
         }
-        curves.push(
-            new AnimCurve(
-                curveData.paths,
-                inputMap[curveData.input],
-                outputMap[curveData.output],
-                curveData.interpolation
-            )
-        );
+        curves.push(new AnimCurve(curveData.paths, inputMap[curveData.input], outputMap[curveData.output], curveData.interpolation));
 
         // if this target is a set of quaternion keys, make note of its index so we can perform
         // quaternion-specific processing on it.
-        if (
-            curveData.paths.length > 0 &&
-            curveData.paths[0].propertyPath[0] === 'localRotation' &&
-            curveData.interpolation !== INTERPOLATION_CUBIC
-        ) {
+        if (curveData.paths.length > 0 && curveData.paths[0].propertyPath[0] === 'localRotation' && curveData.interpolation !== INTERPOLATION_CUBIC) {
             quatArrays.push(curves[curves.length - 1].output);
         }
     }
@@ -918,7 +845,10 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
                 const d = data.data;
                 const len = d.length - 4;
                 for (let j = 0; j < len; j += 4) {
-                    const dp = d[j + 0] * d[j + 4] + d[j + 1] * d[j + 5] + d[j + 2] * d[j + 6] + d[j + 3] * d[j + 7];
+                    const dp = d[j + 0] * d[j + 4] +
+                             d[j + 1] * d[j + 5] +
+                             d[j + 2] * d[j + 6] +
+                             d[j + 3] * d[j + 7];
 
                     if (dp < 0) {
                         d[j + 4] *= -1;
@@ -935,17 +865,11 @@ const createAnimation = (gltfAnimation, animationIndex, gltfAccessors, bufferVie
     // calculate duration of the animation as maximum time value
     let duration = 0;
     for (i = 0; i < inputs.length; i++) {
-        data = inputs[i]._data;
+        data  = inputs[i]._data;
         duration = Math.max(duration, data.length === 0 ? 0 : data[data.length - 1]);
     }
 
-    return new AnimTrack(
-        gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : `animation_${animationIndex}`,
-        duration,
-        inputs,
-        outputs,
-        curves
-    );
+    return new AnimTrack(gltfAnimation.hasOwnProperty('name') ? gltfAnimation.name : (`animation_${animationIndex}`), duration, inputs, outputs, curves);
 };
 
 const tempMat = new Mat4();
@@ -1059,22 +983,10 @@ const createMeshes = (device, gltf, bufferViews, options) => {
     const meshDefaultMaterials = {};
     const promises = [];
 
-    const valid = !options.skipMeshes && gltf?.meshes?.length && gltf?.accessors?.length && gltf?.bufferViews?.length;
-    const meshes = valid
-        ? gltf.meshes.map((gltfMesh) => {
-              return createMesh(
-                  device,
-                  gltfMesh,
-                  gltf.accessors,
-                  bufferViews,
-                  vertexBufferDict,
-                  meshVariants,
-                  meshDefaultMaterials,
-                  options,
-                  promises
-              );
-          })
-        : [];
+    const valid = (!options.skipMeshes && gltf?.meshes?.length && gltf?.accessors?.length && gltf?.bufferViews?.length);
+    const meshes = valid ? gltf.meshes.map((gltfMesh) => {
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
+    }) : [];
 
     return {
         meshes,
@@ -1117,15 +1029,7 @@ const createAnimations = (gltf, nodes, bufferViews, options) => {
         if (preprocess) {
             preprocess(gltfAnimation);
         }
-        const animation = createAnimation(
-            gltfAnimation,
-            index,
-            gltf.accessors,
-            bufferViews,
-            nodes,
-            gltf.meshes,
-            gltf.nodes
-        );
+        const animation = createAnimation(gltfAnimation, index, gltf.accessors, bufferViews, nodes, gltf.meshes, gltf.nodes);
         if (postprocess) {
             postprocess(gltfAnimation, animation);
         }
@@ -1158,7 +1062,7 @@ const createNodes = (gltf, options, nodeInstancingMap) => {
         const gltfNode = gltf.nodes[i];
         if (gltfNode.hasOwnProperty('children')) {
             const parent = nodes[i];
-            const uniqueNames = {};
+            const uniqueNames = { };
             for (let j = 0; j < gltfNode.children.length; ++j) {
                 const child = nodes[gltfNode.children[j]];
                 if (!child.parent) {
@@ -1185,6 +1089,7 @@ const createScenes = (gltf, nodes) => {
         const nodeIndex = gltf.scenes[0].nodes[0];
         scenes.push(nodes[nodeIndex]);
     } else {
+
         // create root node per scene
         for (let i = 0; i < count; i++) {
             const scene = gltf.scenes[i];
@@ -1203,9 +1108,11 @@ const createScenes = (gltf, nodes) => {
 };
 
 const createCameras = (gltf, nodes, options) => {
+
     let cameras = null;
 
     if (gltf.hasOwnProperty('nodes') && gltf.hasOwnProperty('cameras') && gltf.cameras.length > 0) {
+
         const preprocess = options?.camera?.preprocess;
         const process = options?.camera?.process ?? createCamera;
         const postprocess = options?.camera?.postprocess;
@@ -1256,6 +1163,7 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
         preprocess(gltf);
     }
 
+
     // The very first version of FACT generated incorrectly flipped V texture
     // coordinates. Since this first version was only ever available behind an
     // editor flag there should be very few such GLB models in the wild.
@@ -1274,19 +1182,14 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
 
     // buffer data must have finished loading in order to create meshes and animations
     const bufferViewData = await Promise.all(bufferViews);
-    const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(
-        device,
-        gltf,
-        bufferViewData,
-        options
-    );
+    const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, options);
     const gsplats = options.skipMeshes ? [] : createGSplats(device, gltf, bufferViewData);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
     createInstancing(device, gltf, nodeInstancingMap, bufferViewData);
 
     // textures must have finished loading in order to create materials
     const textureAssets = await Promise.all(textures);
-    const textureInstances = textureAssets.map((t) => t.resource);
+    const textureInstances = textureAssets.map(t => t.resource);
     const materials = createMaterials(gltf, textureInstances, options);
     const skins = createSkins(device, gltf, nodes, bufferViewData);
 
@@ -1330,38 +1233,27 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
 const applySampler = (texture, gltfSampler) => {
     const getFilter = (filter, defaultValue) => {
         switch (filter) {
-            case 9728:
-                return FILTER_NEAREST;
-            case 9729:
-                return FILTER_LINEAR;
-            case 9984:
-                return FILTER_NEAREST_MIPMAP_NEAREST;
-            case 9985:
-                return FILTER_LINEAR_MIPMAP_NEAREST;
-            case 9986:
-                return FILTER_NEAREST_MIPMAP_LINEAR;
-            case 9987:
-                return FILTER_LINEAR_MIPMAP_LINEAR;
-            default:
-                return defaultValue;
+            case 9728: return FILTER_NEAREST;
+            case 9729: return FILTER_LINEAR;
+            case 9984: return FILTER_NEAREST_MIPMAP_NEAREST;
+            case 9985: return FILTER_LINEAR_MIPMAP_NEAREST;
+            case 9986: return FILTER_NEAREST_MIPMAP_LINEAR;
+            case 9987: return FILTER_LINEAR_MIPMAP_LINEAR;
+            default:   return defaultValue;
         }
     };
 
     const getWrap = (wrap, defaultValue) => {
         switch (wrap) {
-            case 33071:
-                return ADDRESS_CLAMP_TO_EDGE;
-            case 33648:
-                return ADDRESS_MIRRORED_REPEAT;
-            case 10497:
-                return ADDRESS_REPEAT;
-            default:
-                return defaultValue;
+            case 33071: return ADDRESS_CLAMP_TO_EDGE;
+            case 33648: return ADDRESS_MIRRORED_REPEAT;
+            case 10497: return ADDRESS_REPEAT;
+            default:    return defaultValue;
         }
     };
 
     if (texture) {
-        gltfSampler = gltfSampler ?? {};
+        gltfSampler = gltfSampler ?? { };
         texture.minFilter = getFilter(gltfSampler.minFilter, FILTER_LINEAR_MIPMAP_LINEAR);
         texture.magFilter = getFilter(gltfSampler.magFilter, FILTER_LINEAR);
         texture.addressU = getWrap(gltfSampler.wrapS, ADDRESS_REPEAT);
@@ -1396,6 +1288,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
 
         if (gltf.hasOwnProperty('materials')) {
             gltf.materials.forEach((gltfMaterial) => {
+
                 // base texture
                 if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
                     const pbrData = gltfMaterial.pbrMetallicRoughness;
@@ -1452,14 +1345,14 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 const data = { srgb };
 
                 const asset = new Asset(name, 'texture', file, data, options);
-                asset.on('load', (asset) => resolve(asset));
-                asset.on('error', (err) => reject(err));
+                asset.on('load', asset => resolve(asset));
+                asset.on('error', err => reject(err));
                 registry.add(asset);
                 registry.load(asset);
             };
 
             if (bufferView) {
-                bufferView.then((bufferViewData) => continuation(bufferViewData));
+                bufferView.then(bufferViewData => continuation(bufferViewData));
             } else {
                 continuation(null);
             }
@@ -1492,6 +1385,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
         }
 
         promise = promise.then((textureAsset) => {
+
             // if the image uses sRGB, pass it as an option to the texture creation
             const srgb = gammaTextures.has(i);
 
@@ -1502,23 +1396,14 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
                 if (isDataURI(gltfImage.uri)) {
                     return loadTexture(gltfImage, gltfImage.uri, null, getDataURIMimeType(gltfImage.uri), null, srgb);
                 }
-                return loadTexture(
-                    gltfImage,
-                    ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri),
-                    null,
-                    null,
-                    { crossOrigin: 'anonymous' },
-                    srgb
-                );
+                return loadTexture(gltfImage, ABSOLUTE_URL.test(gltfImage.uri) ? gltfImage.uri : path.join(urlBase, gltfImage.uri), null, null, { crossOrigin: 'anonymous' }, srgb);
             } else if (gltfImage.hasOwnProperty('bufferView') && gltfImage.hasOwnProperty('mimeType')) {
                 // bufferview
                 return loadTexture(gltfImage, null, bufferViews[gltfImage.bufferView], gltfImage.mimeType, null, srgb);
             }
 
             // fail
-            return Promise.reject(
-                new Error(`Invalid image found in gltf (neither uri or bufferView found). index=${i}`)
-            );
+            return Promise.reject(new Error(`Invalid image found in gltf (neither uri or bufferView found). index=${i}`));
         });
 
         if (postprocess) {
@@ -1534,6 +1419,7 @@ const createImages = (gltf, bufferViews, urlBase, registry, options) => {
 
 // create gltf textures. returns an array of promises that resolve to texture assets.
 const createTextures = (gltf, images, options) => {
+
     if (!gltf?.images?.length || !gltf?.textures?.length) {
         return [];
     }
@@ -1569,7 +1455,8 @@ const createTextures = (gltf, images, options) => {
 
         promise = promise.then((gltfImageIndex) => {
             // resolve image index
-            gltfImageIndex = gltfImageIndex ?? getTextureSource(gltfTexture);
+            gltfImageIndex = gltfImageIndex ??
+                getTextureSource(gltfTexture);
 
             const cloneAsset = seenImages.has(gltfImageIndex);
             seenImages.add(gltfImageIndex);
@@ -1646,17 +1533,13 @@ const loadBuffers = (gltf, binaryChunk, urlBase, options) => {
                 }
 
                 return new Promise((resolve, reject) => {
-                    http.get(
-                        ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri),
-                        { cache: true, responseType: 'arraybuffer', retry: false },
-                        (err, result) => {
-                            if (err) {
-                                reject(err);
-                            } else {
-                                resolve(new Uint8Array(result));
-                            }
+                    http.get(ABSOLUTE_URL.test(gltfBuffer.uri) ? gltfBuffer.uri : path.join(urlBase, gltfBuffer.uri), { cache: true, responseType: 'arraybuffer', retry: false }, (err, result) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(new Uint8Array(result));
                         }
-                    );
+                    });
                 });
             }
 
@@ -1704,17 +1587,14 @@ const parseGltf = (gltfChunk, callback) => {
 
 // parse glb data, returns the gltf and binary chunk
 const parseGlb = (glbData, callback) => {
-    const data =
-        glbData instanceof ArrayBuffer
-            ? new DataView(glbData)
-            : new DataView(glbData.buffer, glbData.byteOffset, glbData.byteLength);
+    const data = (glbData instanceof ArrayBuffer) ? new DataView(glbData) : new DataView(glbData.buffer, glbData.byteOffset, glbData.byteLength);
 
     // read header
     const magic = data.getUint32(0, true);
     const version = data.getUint32(4, true);
     const length = data.getUint32(8, true);
 
-    if (magic !== 0x46546c67) {
+    if (magic !== 0x46546C67) {
         callback(`Invalid magic number found in glb header. Expected 0x46546C67, found 0x${magic.toString(16)}`);
         return;
     }
@@ -1748,12 +1628,12 @@ const parseGlb = (glbData, callback) => {
         return;
     }
 
-    if (chunks[0].type !== 0x4e4f534a) {
+    if (chunks[0].type !== 0x4E4F534A) {
         callback(`Invalid chunk type found in glb file. Expected 0x4E4F534A, found 0x${chunks[0].type.toString(16)}`);
         return;
     }
 
-    if (chunks.length > 1 && chunks[1].type !== 0x004e4942) {
+    if (chunks.length > 1 && chunks[1].type !== 0x004E4942) {
         callback(`Invalid chunk type found in glb file. Expected 0x004E4942, found 0x${chunks[1].type.toString(16)}`);
         return;
     }
@@ -1784,6 +1664,7 @@ const parseChunk = (filename, data, callback) => {
 
 // create buffer views
 const createBufferViews = (gltf, buffers, options) => {
+
     const result = [];
 
     const preprocess = options?.bufferView?.preprocess;
@@ -1827,11 +1708,7 @@ const createBufferViews = (gltf, buffers, options) => {
 
             // convert buffer to typed array
             return buffers[gltfBufferView.buffer].then((buffer) => {
-                return new Uint8Array(
-                    buffer.buffer,
-                    buffer.byteOffset + (gltfBufferView.byteOffset || 0),
-                    gltfBufferView.byteLength
-                );
+                return new Uint8Array(buffer.buffer, buffer.byteOffset + (gltfBufferView.byteOffset || 0), gltfBufferView.byteLength);
             });
         });
 
@@ -1879,19 +1756,16 @@ class GlbParser {
                 const textures = createTextures(gltf, images, options);
 
                 createResources(device, gltf, bufferViews, textures, options)
-                    .then((result) => callback(null, result))
-                    .catch((err) => callback(err));
+                .then(result => callback(null, result))
+                .catch(err => callback(err));
             });
         });
     }
 
     static createDefaultMaterial() {
-        return createMaterial(
-            {
-                name: 'defaultGlbMaterial'
-            },
-            []
-        );
+        return createMaterial({
+            name: 'defaultGlbMaterial'
+        }, []);
     }
 }
 

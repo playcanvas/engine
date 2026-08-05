@@ -8,11 +8,7 @@ import { AnimComponentLayer } from './component-layer.js';
 import { AnimStateGraph } from '../../anim/state-graph/anim-state-graph.js';
 import { Entity } from '../../entity.js';
 import {
-    ANIM_PARAMETER_BOOLEAN,
-    ANIM_PARAMETER_FLOAT,
-    ANIM_PARAMETER_INTEGER,
-    ANIM_PARAMETER_TRIGGER,
-    ANIM_CONTROL_STATES
+    ANIM_PARAMETER_BOOLEAN, ANIM_PARAMETER_FLOAT, ANIM_PARAMETER_INTEGER, ANIM_PARAMETER_TRIGGER, ANIM_CONTROL_STATES
 } from '../../anim/controller/constants.js';
 import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 
@@ -144,6 +140,7 @@ class AnimComponent extends Component {
         return this._stateGraphAsset;
     }
 
+
     /**
      * Sets whether the animation component will normalize the weights of its layers by their sum total.
      *
@@ -208,6 +205,7 @@ class AnimComponent extends Component {
     get activate() {
         return this._activate;
     }
+
 
     /**
      * Sets whether to play or pause all animations in the component.
@@ -325,7 +323,7 @@ class AnimComponent extends Component {
     _onStateGraphAssetChangeEvent(asset) {
         // both animationAssets and layer masks should be maintained when switching AnimStateGraph assets
         const prevAnimationAssets = this.animationAssets;
-        const prevMasks = this.layers.map((layer) => layer.mask);
+        const prevMasks = this.layers.map(layer => layer.mask);
         // clear the previous state graph
         this.removeStateGraph();
         // load the new state graph
@@ -358,15 +356,7 @@ class AnimComponent extends Component {
         const layerIndex = this._layers.length;
         const animBinder = new AnimComponentBinder(this, graph, name, mask, layerIndex);
         const animEvaluator = new AnimEvaluator(animBinder);
-        const controller = new AnimController(
-            animEvaluator,
-            states,
-            transitions,
-            this._activate,
-            this,
-            this.findParameter,
-            this.consumeTrigger
-        );
+        const controller = new AnimController(animEvaluator, states, transitions, this._activate, this, this.findParameter, this.consumeTrigger);
         this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = layerIndex;
         return this._layers[layerIndex];
@@ -388,8 +378,8 @@ class AnimComponent extends Component {
         if (layer) return layer;
         const states = [
             {
-                name: 'START',
-                speed: 1
+                'name': 'START',
+                'speed': 1
             }
         ];
         const transitions = [];
@@ -450,7 +440,7 @@ class AnimComponent extends Component {
         for (let i = 0; i < stateGraph.layers.length; i++) {
             const layer = stateGraph.layers[i];
             this._addLayer({ ...layer });
-            if (layer.states.some((state) => state.blendTree)) {
+            if (layer.states.some(state => state.blendTree)) {
                 containsBlendTree = true;
             }
         }
@@ -497,14 +487,11 @@ class AnimComponent extends Component {
                     if (asset.resource) {
                         this.onAnimationAssetLoaded(layer.name, stateName, asset);
                     } else {
-                        asset.once(
-                            'load',
-                            function (layerName, stateName) {
-                                return function (asset) {
-                                    this.onAnimationAssetLoaded(layerName, stateName, asset);
-                                }.bind(this);
-                            }.bind(this)(layer.name, stateName)
-                        );
+                        asset.once('load', function (layerName, stateName) {
+                            return function (asset) {
+                                this.onAnimationAssetLoaded(layerName, stateName, asset);
+                            }.bind(this);
+                        }.bind(this)(layer.name, stateName));
                         this.system.app.assets.load(asset);
                     }
                 }
@@ -593,34 +580,32 @@ class AnimComponent extends Component {
 
     addAnimationState(nodeName, animTrack, speed = 1, loop = true, layerName = 'Base') {
         if (!this._stateGraph) {
-            this.loadStateGraph(
-                new AnimStateGraph({
-                    layers: [
-                        {
-                            name: layerName,
-                            states: [
-                                {
-                                    name: 'START',
-                                    speed: 1
-                                },
-                                {
-                                    name: nodeName,
-                                    speed: speed,
-                                    loop: loop,
-                                    defaultState: true
-                                }
-                            ],
-                            transitions: [
-                                {
-                                    from: 'START',
-                                    to: nodeName
-                                }
-                            ]
-                        }
-                    ],
-                    parameters: {}
-                })
-            );
+            this.loadStateGraph(new AnimStateGraph({
+                'layers': [
+                    {
+                        'name': layerName,
+                        'states': [
+                            {
+                                'name': 'START',
+                                'speed': 1
+                            },
+                            {
+                                'name': nodeName,
+                                'speed': speed,
+                                'loop': loop,
+                                'defaultState': true
+                            }
+                        ],
+                        'transitions': [
+                            {
+                                'from': 'START',
+                                'to': nodeName
+                            }
+                        ]
+                    }
+                ],
+                'parameters': {}
+            }));
         }
         const layer = this.findAnimationLayer(layerName);
         if (layer) {
@@ -652,40 +637,38 @@ class AnimComponent extends Component {
      */
     assignAnimation(nodePath, animTrack, layerName, speed = 1, loop = true) {
         if (!this._stateGraph && nodePath.indexOf('.') === -1) {
-            this.loadStateGraph(
-                new AnimStateGraph({
-                    layers: [
-                        {
-                            name: 'Base',
-                            states: [
-                                {
-                                    name: 'START',
-                                    speed: 1
-                                },
-                                {
-                                    name: nodePath,
-                                    speed: speed,
-                                    loop: loop,
-                                    defaultState: true
-                                }
-                            ],
-                            transitions: [
-                                {
-                                    from: 'START',
-                                    to: nodePath
-                                }
-                            ]
-                        }
-                    ],
-                    parameters: {}
-                })
-            );
+            this.loadStateGraph(new AnimStateGraph({
+                'layers': [
+                    {
+                        'name': 'Base',
+                        'states': [
+                            {
+                                'name': 'START',
+                                'speed': 1
+                            },
+                            {
+                                'name': nodePath,
+                                'speed': speed,
+                                'loop': loop,
+                                'defaultState': true
+                            }
+                        ],
+                        'transitions': [
+                            {
+                                'from': 'START',
+                                'to': nodePath
+                            }
+                        ]
+                    }
+                ],
+                'parameters': {}
+            }));
             this.baseLayer.assignAnimation(nodePath, animTrack);
             return;
         }
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            Debug.error("assignAnimation: Trying to assign an anim track to a layer that doesn't exist");
+            Debug.error('assignAnimation: Trying to assign an anim track to a layer that doesn\'t exist');
             return;
         }
         layer.assignAnimation(nodePath, animTrack, speed, loop);
@@ -701,9 +684,7 @@ class AnimComponent extends Component {
     removeNodeAnimations(nodeName, layerName) {
         const layer = layerName ? this.findAnimationLayer(layerName) : this.baseLayer;
         if (!layer) {
-            Debug.error(
-                'removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?'
-            );
+            Debug.error('removeStateAnimations: Trying to remove animation tracks from a state before the state graph has been loaded. Have you called loadStateGraph?');
             return;
         }
         layer.removeNodeAnimations(nodeName);
@@ -714,9 +695,7 @@ class AnimComponent extends Component {
         if (param && param.type === type) {
             return param.value;
         }
-        Debug.log(
-            `Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`
-        );
+        Debug.log(`Cannot get parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
         return undefined;
     }
 
@@ -726,9 +705,7 @@ class AnimComponent extends Component {
             param.value = value;
             return;
         }
-        Debug.log(
-            `Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`
-        );
+        Debug.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
 
     /**

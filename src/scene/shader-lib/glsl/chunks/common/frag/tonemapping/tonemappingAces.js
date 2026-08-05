@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 vec3 toneMap(vec3 color) {
     float tA = 2.51;
     float tB = 0.03;

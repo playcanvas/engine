@@ -1,5 +1,5 @@
 // Read functions for Container GSplat format
-export default /* wgsl */ `
+export default /* wgsl */`
 fn getCenter() -> vec3f {
     #include "gsplatContainerUserReadVS"
     return splatCenter;

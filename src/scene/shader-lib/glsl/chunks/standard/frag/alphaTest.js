@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
 uniform float alpha_ref;
 
 void alphaTest(float a) {

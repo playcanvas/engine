@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
     #ifdef GRADING
         uniform brightnessContrastSaturation: vec3f;
         uniform tint: vec3f;

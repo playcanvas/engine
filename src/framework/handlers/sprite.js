@@ -50,20 +50,16 @@ class SpriteHandler extends ResourceHandler {
 
         // if given a json file (probably engine-only use case)
         if (path.getExtension(url.original) === '.json') {
-            http.get(
-                url.load,
-                {
-                    retry: this.maxRetries > 0,
-                    maxRetries: this.maxRetries
-                },
-                (err, response) => {
-                    if (!err) {
-                        callback(null, response);
-                    } else {
-                        callback(err);
-                    }
+            http.get(url.load, {
+                retry: this.maxRetries > 0,
+                maxRetries: this.maxRetries
+            }, (err, response) => {
+                if (!err) {
+                    callback(null, response);
+                } else {
+                    callback(err);
                 }
-            );
+            });
         }
     }
 
@@ -141,12 +137,7 @@ class SpriteHandler extends ResourceHandler {
     _onAssetChange(asset, attribute, value, oldValue) {
         if (attribute === 'data') {
             // if the texture atlas changed, clear events for old atlas asset
-            if (
-                value &&
-                value.textureAtlasAsset &&
-                oldValue &&
-                value.textureAtlasAsset !== oldValue.textureAtlasAsset
-            ) {
+            if (value && value.textureAtlasAsset && oldValue && value.textureAtlasAsset !== oldValue.textureAtlasAsset) {
                 this._assets.off(`load:${oldValue.textureAtlasAsset}`, onTextureAtlasLoaded, asset);
                 this._assets.off(`add:${oldValue.textureAtlasAsset}`, onTextureAtlasAdded, asset);
             }

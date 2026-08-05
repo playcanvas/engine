@@ -1,4 +1,4 @@
-export default /* wgsl */ `
+export default /* wgsl */`
 
 uniform matrix_model: mat4x4f;
 uniform matrix_view: mat4x4f;

@@ -1,15 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import {
-    PIXELFORMAT_DEPTH,
-    PIXELFORMAT_DEPTH16,
-    PIXELFORMAT_DEPTHSTENCIL,
-    PIXELFORMAT_R32F,
-    RENDERTARGET_ORIGIN_BOTTOM,
-    RENDERTARGET_ORIGIN_NATIVE,
-    RENDERTARGET_ORIGIN_TOP,
-    isSrgbPixelFormat
-} from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, isSrgbPixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { TextureUtils } from './texture-utils.js';
@@ -228,18 +219,11 @@ class RenderTarget {
      * camera.renderTarget = null;
      */
     constructor(options = {}) {
-        Debug.assert(
-            !(options instanceof GraphicsDevice),
-            'RenderTarget constructor no longer accepts GraphicsDevice parameter.'
-        );
+        Debug.assert(!(options instanceof GraphicsDevice), 'RenderTarget constructor no longer accepts GraphicsDevice parameter.');
         this.id = id++;
 
         // device, from one of the buffers
-        const device =
-            options.colorBuffer?.device ??
-            options.colorBuffers?.[0].device ??
-            options.depthBuffer?.device ??
-            options.graphicsDevice;
+        const device = options.colorBuffer?.device ?? options.colorBuffers?.[0].device ?? options.depthBuffer?.device ?? options.graphicsDevice;
         Debug.assert(device, 'Failed to obtain the device, colorBuffer nor depthBuffer store it.');
         this._device = device;
 
@@ -286,10 +270,7 @@ class RenderTarget {
 
         // MRT
         if (options.colorBuffers) {
-            Debug.assert(
-                !this._colorBuffers,
-                'When constructing RenderTarget and options.colorBuffers is used, options.colorBuffer must not be used.'
-            );
+            Debug.assert(!this._colorBuffers, 'When constructing RenderTarget and options.colorBuffers is used, options.colorBuffer must not be used.');
 
             if (!this._colorBuffers) {
                 this._colorBuffers = [...options.colorBuffers];
@@ -324,9 +305,7 @@ class RenderTarget {
         // with a user-provided depthBuffer is invalid API usage (that buffer's contents must persist),
         // so warn rather than silently ignore it - unlike the unsupported-device case above.
         if ((options.transientDepth ?? false) && this._depthBuffer) {
-            Debug.warnOnce(
-                `RenderTarget '${this.name}' was created with both transientDepth and a depthBuffer. Transient depth applies to the engine-allocated depth buffer only and cannot be used with a provided depthBuffer; the transientDepth flag is ignored.`
-            );
+            Debug.warnOnce(`RenderTarget '${this.name}' was created with both transientDepth and a depthBuffer. Transient depth applies to the engine-allocated depth buffer only and cannot be used with a provided depthBuffer; the transientDepth flag is ignored.`);
         }
 
         // resolve the origin option to a per-API flipY value: 'top' stores standard image row
@@ -334,16 +313,9 @@ class RenderTarget {
         // WebGPU), 'native' (the default) stores the API-native orientation without flipping
         Debug.call(() => {
             if (options.origin !== undefined) {
-                Debug.assert(
-                    options.origin === RENDERTARGET_ORIGIN_TOP ||
-                        options.origin === RENDERTARGET_ORIGIN_BOTTOM ||
-                        options.origin === RENDERTARGET_ORIGIN_NATIVE,
-                    `RenderTarget '${this.name}': invalid origin option '${options.origin}'.`
-                );
+                Debug.assert(options.origin === RENDERTARGET_ORIGIN_TOP || options.origin === RENDERTARGET_ORIGIN_BOTTOM || options.origin === RENDERTARGET_ORIGIN_NATIVE, `RenderTarget '${this.name}': invalid origin option '${options.origin}'.`);
                 if (options.flipY !== undefined) {
-                    Debug.warnOnce(
-                        `RenderTarget '${this.name}': both 'origin' and 'flipY' options are specified, 'origin' takes precedence.`
-                    );
+                    Debug.warnOnce(`RenderTarget '${this.name}': both 'origin' and 'flipY' options are specified, 'origin' takes precedence.`);
                 }
             }
         });
@@ -360,27 +332,18 @@ class RenderTarget {
             // origin not specified - honor the deprecated flipY option, and derive the
             // equivalent origin from it
             if (options.flipY !== undefined) {
-                Debug.deprecated(
-                    'RenderTarget "flipY" option is deprecated, use the "origin" option instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.'
-                );
+                Debug.deprecated('RenderTarget "flipY" option is deprecated, use the "origin" option instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.');
             }
             this._flipY = options.flipY ?? false;
-            this._origin = this._flipY
-                ? device.isWebGPU
-                    ? RENDERTARGET_ORIGIN_BOTTOM
-                    : RENDERTARGET_ORIGIN_TOP
-                : RENDERTARGET_ORIGIN_NATIVE;
+            this._origin = this._flipY ? (device.isWebGPU ? RENDERTARGET_ORIGIN_BOTTOM : RENDERTARGET_ORIGIN_TOP) : RENDERTARGET_ORIGIN_NATIVE;
         }
 
         this._mipLevel = options.mipLevel ?? 0;
         if (this._mipLevel > 0 && this._depth) {
-            Debug.error(
-                `Rendering to a mipLevel is not supported when render target uses a depth buffer. Ignoring mipLevel ${this._mipLevel} for render target ${this.name}`,
-                {
-                    renderTarget: this,
-                    options
-                }
-            );
+            Debug.error(`Rendering to a mipLevel is not supported when render target uses a depth buffer. Ignoring mipLevel ${this._mipLevel} for render target ${this.name}`, {
+                renderTarget: this,
+                options
+            });
             this._mipLevel = 0;
         }
 
@@ -395,16 +358,20 @@ class RenderTarget {
         // device specific implementation
         this.impl = device.createRenderTargetImpl(this);
 
-        Debug.trace(
-            TRACEID_RENDER_TARGET_ALLOC,
-            `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [samples: ${this.samples}]${this._colorBuffers?.length ? `[MRT: ${this._colorBuffers.length}]` : ''}${this.colorBuffer ? '[Color]' : ''}${this.depth ? '[Depth]' : ''}${this.stencil ? '[Stencil]' : ''}[Face:${this.face}]`
-        );
+        Debug.trace(TRACEID_RENDER_TARGET_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} ` +
+            `[samples: ${this.samples}]` +
+            `${this._colorBuffers?.length ? `[MRT: ${this._colorBuffers.length}]` : ''}` +
+            `${this.colorBuffer ? '[Color]' : ''}` +
+            `${this.depth ? '[Depth]' : ''}` +
+            `${this.stencil ? '[Stencil]' : ''}` +
+            `[Face:${this.face}]`);
     }
 
     /**
      * Frees resources associated with this render target.
      */
     destroy() {
+
         Debug.trace(TRACEID_RENDER_TARGET_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
 
         const device = this._device;
@@ -425,6 +392,7 @@ class RenderTarget {
      * @ignore
      */
     destroyFrameBuffers() {
+
         const device = this._device;
         if (device) {
             this.impl.destroy(device);
@@ -437,6 +405,7 @@ class RenderTarget {
      * @ignore
      */
     destroyTextureBuffers() {
+
         this._depthBuffer?.destroy();
         this._depthBuffer = null;
 
@@ -455,6 +424,7 @@ class RenderTarget {
      * @param {number} height - The height of the render target in pixels.
      */
     resize(width, height) {
+
         if (this.mipLevel > 0) {
             Debug.warn('Only a render target rendering to mipLevel 0 can be resized, ignoring.', this);
             return;
@@ -468,6 +438,7 @@ class RenderTarget {
 
         // only rebuild framebuffers if dimensions changed
         if (this._width !== width || this._height !== height) {
+
             // release existing
             this.destroyFrameBuffers();
 
@@ -490,26 +461,10 @@ class RenderTarget {
                 const { width, height, cubemap, volume } = this._colorBuffers[0];
                 for (let i = 1; i < this._colorBuffers.length; i++) {
                     const colorBuffer = this._colorBuffers[i];
-                    Debug.assert(
-                        colorBuffer.width === width,
-                        'All render target color buffers must have the same width',
-                        this
-                    );
-                    Debug.assert(
-                        colorBuffer.height === height,
-                        'All render target color buffers must have the same height',
-                        this
-                    );
-                    Debug.assert(
-                        colorBuffer.cubemap === cubemap,
-                        'All render target color buffers must have the same cubemap setting',
-                        this
-                    );
-                    Debug.assert(
-                        colorBuffer.volume === volume,
-                        'All render target color buffers must have the same volume setting',
-                        this
-                    );
+                    Debug.assert(colorBuffer.width === width, 'All render target color buffers must have the same width', this);
+                    Debug.assert(colorBuffer.height === height, 'All render target color buffers must have the same height', this);
+                    Debug.assert(colorBuffer.cubemap === cubemap, 'All render target color buffers must have the same cubemap setting', this);
+                    Debug.assert(colorBuffer.volume === volume, 'All render target color buffers must have the same volume setting', this);
                 }
             }
         });
@@ -579,13 +534,11 @@ class RenderTarget {
      * depth buffer.
      */
     resolve(color = true, depth = !!this._depthBuffer) {
+
         // TODO: consider adding support for MRT to this function.
 
         if (this._device && this._samples > 1) {
-            DebugGraphics.pushGpuMarker(
-                this._device,
-                `RESOLVE-RT:${this.name}:${color ? '[color]' : ''}:${depth ? '[depth]' : ''}`
-            );
+            DebugGraphics.pushGpuMarker(this._device, `RESOLVE-RT:${this.name}:${color ? '[color]' : ''}:${depth ? '[depth]' : ''}`);
             this.impl.resolve(this._device, this, color, depth);
             DebugGraphics.popGpuMarker(this._device);
         }
@@ -601,6 +554,7 @@ class RenderTarget {
      * @returns {boolean} True if the copy was successful, false otherwise.
      */
     copy(source, color, depth) {
+
         // TODO: consider adding support for MRT to this function.
 
         if (!this._device) {
@@ -620,15 +574,9 @@ class RenderTarget {
     }
 
     set flipY(value) {
-        Debug.deprecated(
-            'RenderTarget#flipY is deprecated, use the "origin" option of the RenderTarget constructor instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.'
-        );
+        Debug.deprecated('RenderTarget#flipY is deprecated, use the "origin" option of the RenderTarget constructor instead. Typical migration: flipY: !device.isWebGPU -> origin: RENDERTARGET_ORIGIN_TOP, flipY: device.isWebGPU -> origin: RENDERTARGET_ORIGIN_BOTTOM.');
         this._flipY = value;
-        this._origin = value
-            ? this._device.isWebGPU
-                ? RENDERTARGET_ORIGIN_BOTTOM
-                : RENDERTARGET_ORIGIN_TOP
-            : RENDERTARGET_ORIGIN_NATIVE;
+        this._origin = value ? (this._device.isWebGPU ? RENDERTARGET_ORIGIN_BOTTOM : RENDERTARGET_ORIGIN_TOP) : RENDERTARGET_ORIGIN_NATIVE;
     }
 
     /**

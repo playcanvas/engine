@@ -1,14 +1,8 @@
 import { expect } from 'chai';
 
 import {
-    ESM_TARGETS,
-    UMD_TARGETS,
-    createAppFrom,
-    loadEsm,
-    loadUmdCjs,
-    loadUmdGlobal,
-    setupDom,
-    teardownDom
+    ESM_TARGETS, UMD_TARGETS,
+    createAppFrom, loadEsm, loadUmdCjs, loadUmdGlobal, setupDom, teardownDom
 } from './helpers.mjs';
 
 // guards the #8836 regression: `pc.app` must stay a live binding on the umd namespace, so that
@@ -66,9 +60,7 @@ describe('build / overridable exports (#8839)', function () {
         UMD_TARGETS.forEach((t) => {
             it(t.name, function () {
                 const { pc, dom } = loadUmdGlobal(t.path);
-                expect(Object.getOwnPropertyDescriptor(pc, 'createScript').set, 'export has a setter').to.be.a(
-                    'function'
-                );
+                expect(Object.getOwnPropertyDescriptor(pc, 'createScript').set, 'export has a setter').to.be.a('function');
                 const stub = function stub() {};
                 pc.createScript = stub;
                 expect(pc.createScript, 'override takes effect').to.equal(stub);
@@ -85,9 +77,7 @@ describe('build / overridable exports (#8839)', function () {
         UMD_TARGETS.forEach((t) => {
             it(t.name, function () {
                 const pc = loadUmdCjs(t.path);
-                expect(Object.getOwnPropertyDescriptor(pc, 'createScript').set, 'export has a setter').to.be.a(
-                    'function'
-                );
+                expect(Object.getOwnPropertyDescriptor(pc, 'createScript').set, 'export has a setter').to.be.a('function');
                 const stub = function stub() {};
                 pc.createScript = stub;
                 expect(pc.createScript, 'override takes effect').to.equal(stub);

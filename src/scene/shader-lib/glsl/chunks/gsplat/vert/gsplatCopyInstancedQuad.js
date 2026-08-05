@@ -1,7 +1,7 @@
 // vertex shader for instanced LOD quad rendering to work buffer.
 // Each instance covers one row-aligned segment of an interval.
 // The fragment shader computes originalIndex from flat varyings.
-export default /* glsl */ `
+export default /* glsl */`
 
 attribute vec2 vertex_position;
 

@@ -1,37 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
-import {
-    PAD_FACE_1,
-    PAD_FACE_2,
-    PAD_FACE_3,
-    PAD_FACE_4,
-    PAD_L_SHOULDER_1,
-    PAD_R_SHOULDER_1,
-    PAD_L_SHOULDER_2,
-    PAD_R_SHOULDER_2,
-    PAD_SELECT,
-    PAD_START,
-    PAD_L_STICK_BUTTON,
-    PAD_R_STICK_BUTTON,
-    PAD_UP,
-    PAD_DOWN,
-    PAD_LEFT,
-    PAD_RIGHT,
-    PAD_VENDOR,
-    XRPAD_TRIGGER,
-    XRPAD_SQUEEZE,
-    XRPAD_TOUCHPAD_BUTTON,
-    XRPAD_STICK_BUTTON,
-    XRPAD_A,
-    XRPAD_B,
-    PAD_L_STICK_X,
-    PAD_L_STICK_Y,
-    PAD_R_STICK_X,
-    PAD_R_STICK_Y,
-    XRPAD_TOUCHPAD_X,
-    XRPAD_TOUCHPAD_Y,
-    XRPAD_STICK_X,
-    XRPAD_STICK_Y
-} from './constants.js';
+import { PAD_FACE_1, PAD_FACE_2, PAD_FACE_3, PAD_FACE_4, PAD_L_SHOULDER_1, PAD_R_SHOULDER_1, PAD_L_SHOULDER_2, PAD_R_SHOULDER_2, PAD_SELECT, PAD_START, PAD_L_STICK_BUTTON, PAD_R_STICK_BUTTON, PAD_UP, PAD_DOWN, PAD_LEFT, PAD_RIGHT, PAD_VENDOR, XRPAD_TRIGGER, XRPAD_SQUEEZE, XRPAD_TOUCHPAD_BUTTON, XRPAD_STICK_BUTTON, XRPAD_A, XRPAD_B, PAD_L_STICK_X, PAD_L_STICK_Y, PAD_R_STICK_X, PAD_R_STICK_Y, XRPAD_TOUCHPAD_X, XRPAD_TOUCHPAD_Y, XRPAD_STICK_X, XRPAD_STICK_Y } from './constants.js';
 import { math } from '../../core/math/math.js';
 import { platform } from '../../core/platform.js';
 
@@ -475,7 +443,7 @@ class GamePad {
     constructor(gamepad, map) {
         this.id = gamepad.id;
         this.index = gamepad.index;
-        this._buttons = gamepad.buttons.map((b) => new GamePadButton(b));
+        this._buttons = gamepad.buttons.map(b => new GamePadButton(b));
         this._axes = [...gamepad.axes];
         this._previousAxes = [...gamepad.axes];
         this.mapping = map.mapping;
@@ -537,11 +505,7 @@ class GamePad {
         if (synthesizedButtonsMap) {
             Object.entries(synthesizedButtonsMap).forEach((button) => {
                 const { axis, max, min } = button[1];
-                buttons[buttonsIndexes[button[0]]] = () =>
-                    new GamePadButton(
-                        Math.abs(math.clamp(this._axes[axis] ?? 0, min, max)),
-                        Math.abs(math.clamp(this._previousAxes[axis] ?? 0, min, max))
-                    );
+                buttons[buttonsIndexes[button[0]]] = () => new GamePadButton(Math.abs(math.clamp(this._axes[axis] ?? 0, min, max)), Math.abs(math.clamp(this._previousAxes[axis] ?? 0, min, max)));
             });
         }
 
@@ -654,7 +618,7 @@ class GamePad {
      * @type {number[]}
      */
     get axes() {
-        return this._compiledMapping.axes.map((a) => a());
+        return this._compiledMapping.axes.map(a => a());
     }
 
     /**
@@ -663,7 +627,7 @@ class GamePad {
      * @type {GamePadButton[]}
      */
     get buttons() {
-        return this._compiledMapping.buttons.map((b) => b());
+        return this._compiledMapping.buttons.map(b => b());
     }
 
     /**
@@ -678,38 +642,34 @@ class GamePad {
      * @returns {Promise<boolean>} Return a Promise resulting in true if the pulse was successfully completed.
      */
     async pulse(intensity, duration, options) {
-        const actuators = this.pad.vibrationActuator
-            ? [this.pad.vibrationActuator]
-            : this.pad.hapticActuators || dummyArray;
+        const actuators = this.pad.vibrationActuator ? [this.pad.vibrationActuator] : this.pad.hapticActuators || dummyArray;
 
         if (actuators.length) {
             const startDelay = options?.startDelay ?? 0;
             const strongMagnitude = options?.strongMagnitude ?? intensity;
             const weakMagnitude = options?.weakMagnitude ?? intensity;
 
-            const results = await Promise.all(
-                actuators.map(async (actuator) => {
-                    if (!actuator) {
-                        return true;
-                    }
+            const results = await Promise.all(actuators.map(async (actuator) => {
+                if (!actuator) {
+                    return true;
+                }
 
-                    if (actuator.playEffect) {
-                        return actuator.playEffect(actuator.type, {
-                            duration,
-                            startDelay,
-                            strongMagnitude,
-                            weakMagnitude
-                        });
-                    } else if (actuator.pulse) {
-                        await sleep(startDelay);
-                        return actuator.pulse(intensity, duration);
-                    }
+                if (actuator.playEffect) {
+                    return actuator.playEffect(actuator.type, {
+                        duration,
+                        startDelay,
+                        strongMagnitude,
+                        weakMagnitude
+                    });
+                } else if (actuator.pulse) {
+                    await sleep(startDelay);
+                    return actuator.pulse(intensity, duration);
+                }
 
-                    return false;
-                })
-            );
+                return false;
+            }));
 
-            return results.some((r) => r === true || r === 'complete');
+            return results.some(r => r === true || r === 'complete');
         }
 
         return false;
@@ -909,10 +869,10 @@ class GamePads extends EventHandler {
         const pad = new GamePad(event.gamepad, this.getMap(event.gamepad));
         const current = this.current;
 
-        let padIndex = current.findIndex((gp) => gp.index === pad.index);
+        let padIndex = current.findIndex(gp => gp.index === pad.index);
         while (padIndex !== -1) {
             current.splice(padIndex, 1);
-            padIndex = current.findIndex((gp) => gp.index === pad.index);
+            padIndex = current.findIndex(gp => gp.index === pad.index);
         }
 
         current.push(pad);
@@ -927,7 +887,7 @@ class GamePads extends EventHandler {
      */
     _ongamepaddisconnected(event) {
         const current = this.current;
-        const padIndex = current.findIndex((gp) => gp.index === event.gamepad.index);
+        const padIndex = current.findIndex(gp => gp.index === event.gamepad.index);
 
         if (padIndex !== -1) {
             this.fire('gamepaddisconnected', current[padIndex]);
@@ -1073,7 +1033,7 @@ class GamePads extends EventHandler {
      * @returns {Promise<boolean[]>} Return a Promise resulting in an array of booleans defining if the pulse was successfully completed for every gamepads.
      */
     pulseAll(intensity, duration, options) {
-        return Promise.all(this.current.map((pad) => pad.pulse(intensity, duration, options)));
+        return Promise.all(this.current.map(pad => pad.pulse(intensity, duration, options)));
     }
 
     /**
@@ -1083,7 +1043,7 @@ class GamePads extends EventHandler {
      * @returns {GamePad|null} The {@link GamePad} with the matching identifier or null if no gamepad is found or the gamepad is not connected.
      */
     findById(id) {
-        return this.current.find((gp) => gp && gp.id === id) || null;
+        return this.current.find(gp => gp && gp.id === id) || null;
     }
 
     /**
@@ -1093,7 +1053,7 @@ class GamePads extends EventHandler {
      * @returns {GamePad|null} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
      */
     findByIndex(index) {
-        return this.current.find((gp) => gp && gp.index === index) || null;
+        return this.current.find(gp => gp && gp.index === index) || null;
     }
 }
 

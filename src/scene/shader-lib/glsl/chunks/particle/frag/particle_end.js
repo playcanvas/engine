@@ -1,4 +1,4 @@
-export default /* glsl */ `
+export default /* glsl */`
     rgb = addFog(rgb);
     rgb = toneMap(rgb);
     rgb = gammaCorrectOutput(rgb);

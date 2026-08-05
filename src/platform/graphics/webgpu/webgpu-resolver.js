@@ -91,6 +91,7 @@ class WebgpuResolver {
      * @private
      */
     createPipeline(format) {
+
         /** @type {WebgpuShader} */
         const webgpuShader = this.shader.impl;
 
@@ -103,11 +104,9 @@ class WebgpuResolver {
             fragment: {
                 module: webgpuShader.getFragmentShaderModule(),
                 entryPoint: webgpuShader.fragmentEntryPoint,
-                targets: [
-                    {
-                        format: format
-                    }
-                ]
+                targets: [{
+                    format: format
+                }]
             },
             primitive: {
                 topology: 'triangle-strip'
@@ -124,6 +123,7 @@ class WebgpuResolver {
      * @private
      */
     resolveDepth(commandEncoder, sourceTexture, destinationTexture) {
+
         Debug.assert(sourceTexture.sampleCount > 1);
         Debug.assert(destinationTexture.sampleCount === 1);
         Debug.assert(sourceTexture.depthOrArrayLayers === destinationTexture.depthOrArrayLayers);
@@ -138,6 +138,7 @@ class WebgpuResolver {
 
         const numFaces = sourceTexture.depthOrArrayLayers;
         for (let face = 0; face < numFaces; face++) {
+
             // copy depth only (not stencil)
             const srcView = sourceTexture.createView({
                 dimension: '2d',
@@ -155,25 +156,21 @@ class WebgpuResolver {
             });
 
             const passEncoder = commandEncoder.beginRenderPass({
-                colorAttachments: [
-                    {
-                        view: dstView,
-                        loadOp: 'clear',
-                        storeOp: 'store'
-                    }
-                ]
+                colorAttachments: [{
+                    view: dstView,
+                    loadOp: 'clear',
+                    storeOp: 'store'
+                }]
             });
             DebugHelper.setLabel(passEncoder, 'DepthResolve-PassEncoder');
 
             // no need for a sampler when using textureLoad
             const bindGroup = wgpu.createBindGroup({
                 layout: pipeline.getBindGroupLayout(0),
-                entries: [
-                    {
-                        binding: 0,
-                        resource: srcView
-                    }
-                ]
+                entries: [{
+                    binding: 0,
+                    resource: srcView
+                }]
             });
 
             passEncoder.setPipeline(pipeline);
