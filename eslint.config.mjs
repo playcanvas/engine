@@ -1,14 +1,9 @@
-import playcanvasConfig from '@playcanvas/eslint-config';
+import javascriptConfig from '@playcanvas/eslint-config/javascript';
+import { esmScriptTags } from '@playcanvas/eslint-config';
 import globals from 'globals';
 
-// Extract or preserve existing JSDoc tags
-const jsdocRule = playcanvasConfig.find(
-    config => config.rules && config.rules['jsdoc/check-tag-names']
-);
-const existingTags = jsdocRule?.rules['jsdoc/check-tag-names'][1]?.definedTags || [];
-
 export default [
-    ...playcanvasConfig,
+    ...javascriptConfig,
     {
         files: ['**/*.js', '**/*.mjs'],
         languageOptions: {
@@ -32,8 +27,9 @@ export default [
             'jsdoc/check-tag-names': [
                 'error',
                 {
-                    // custom mjs script tags to not error on, add them to those from parent config
-                    definedTags: [...new Set([...existingTags, 'range', 'step', 'precision'])]
+                    // esmScriptTags (range/step/precision included) plus the shared config's own
+                    // extra tags, which this override would otherwise drop by replacing the rule
+                    definedTags: [...new Set([...esmScriptTags, 'alpha', 'beta', 'category', 'import'])]
                 }
             ]
         }

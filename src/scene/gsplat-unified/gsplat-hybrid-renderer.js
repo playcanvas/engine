@@ -158,7 +158,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @param {Layer} layer - The layer to add mesh instances to.
      * @param {GSplatWorkBuffer} workBuffer - The work buffer (kept for parent compatibility;
      * the hybrid renderer does not bind work-buffer textures itself).
-     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch] -
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch]
      * Manager-owned shared scratch; forwarded to the interval compaction (shared with the shadow cull).
      */
     constructor(device, node, cameraNode, layer, workBuffer, scratch = null) {

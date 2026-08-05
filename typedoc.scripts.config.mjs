@@ -1,4 +1,3 @@
-/* eslint-disable-next-line import/no-unresolved */
 import { OptionDefaults } from 'typedoc';
 
 /**

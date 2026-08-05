@@ -628,7 +628,7 @@ class GSplatProjector {
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
      * @param {boolean} [params.pickMode] - Whether to write picking IDs into the cache.
-     * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj] -
+     * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj]
      * Fisheye projection state. When `fisheyeProj.enabled` is true the projector picks the
      * GSPLAT_FISHEYE variant and writes NDC-style clip data; otherwise the linear path runs.
      * @param {boolean} [params.antiAlias] - Whether to bake anti-aliasing opacity

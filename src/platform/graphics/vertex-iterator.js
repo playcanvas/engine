@@ -363,7 +363,7 @@ class VertexIterator {
      * only part of the data gets copied out (typed arrays ignore read/write out of range).
      *
      * @param {string} semantic - The semantic of the vertex element to read.
-     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} data -
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} data
      * The array to receive the data.
      * @returns {number} The number of vertices read.
      * @ignore

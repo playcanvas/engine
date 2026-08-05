@@ -237,7 +237,7 @@ class BindGroupFormat {
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
-     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats -
+     * @param {(BindTextureFormat|BindStorageTextureFormat|BindUniformBufferFormat|BindStorageBufferFormat)[]} formats
      * An array of bind formats. Note that each entry in the array uses up one slot. The exception
      * is a texture format that has a sampler, which uses up two slots. The slots are allocated
      * sequentially, starting from 0.
