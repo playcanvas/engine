@@ -1,4 +1,4 @@
-import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { PRIMITIVE_TRIANGLES, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
 import { GraphNode } from '../graph-node.js';
@@ -216,7 +216,9 @@ class Immediate {
                 -0.5, 0.5, 0,
                 0.5, 0.5, 0
             ]);
-            this.quadMesh.update(PRIMITIVE_TRISTRIP);
+            // indexed triangles rather than a triangle strip, see the comment in ImageElement#_createMesh
+            this.quadMesh.setIndices([0, 1, 3, 0, 3, 2]);
+            this.quadMesh.update(PRIMITIVE_TRIANGLES);
         }
         return this.quadMesh;
     }
