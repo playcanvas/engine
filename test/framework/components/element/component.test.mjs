@@ -205,6 +205,26 @@ describe('ElementComponent', function () {
             expect(indices).to.deep.equal([0, 1, 3, 0, 3, 2]);
         });
 
+        it('shares one index buffer across image elements and keeps it alive on destroy', function () {
+            const a = new Entity();
+            a.addComponent('element', { type: 'image' });
+            app.root.addChild(a);
+
+            const b = new Entity();
+            b.addComponent('element', { type: 'image' });
+            app.root.addChild(b);
+
+            const indexBuffer = a.element._image._defaultMesh.indexBuffer[0];
+            expect(indexBuffer).to.exist;
+            expect(b.element._image._defaultMesh.indexBuffer[0]).to.equal(indexBuffer);
+
+            // destroying one element must not destroy the buffer the others are still using
+            a.destroy();
+
+            expect(app.graphicsDevice.buffers.has(indexBuffer)).to.be.true;
+            expect(b.element._image._defaultMesh.indexBuffer[0]).to.equal(indexBuffer);
+        });
+
     });
 
     describe('#type', function () {
