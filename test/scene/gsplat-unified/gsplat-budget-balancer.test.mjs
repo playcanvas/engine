@@ -116,6 +116,12 @@ describe('GSplatBudgetBalancer', function () {
         expect(makeOctree([0], true).lodErrors).to.equal(false);
     });
 
+    it('reports no usable errors when a declared error is negative', function () {
+        // errors are magnitudes relative to the finest LOD; a negative one would let
+        // the coarse level dominate every finer level on the frontier
+        expect(makeOctree([0, -3], true).lodErrors).to.equal(false);
+    });
+
     it('ignores errors on LOD levels that hold no splats', function () {
         expect(makeOctree([0, null], true, 0).lodErrors).to.equal(true);
     });

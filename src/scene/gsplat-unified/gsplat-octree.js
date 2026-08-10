@@ -39,8 +39,8 @@ class GSplatOctree {
 
     /**
      * True when the manifest declares per-node approximation errors and every node
-     * supplies a finite one for each of its non-empty LOD levels, which allows
-     * error-driven budget allocation. Established here, once, so the budget
+     * supplies a finite, non-negative one for each of its non-empty LOD levels,
+     * which allows error-driven budget allocation. Established here, once, so the budget
      * balancer does not walk each node's levels every frame - and so its choice of
      * allocator is a property of the asset rather than of what is currently
      * visible. Note this covers all LOD levels, not just a currently configured
@@ -183,9 +183,13 @@ class GSplatOctree {
                     });
                 }
 
-                // an unusable error on a level that can be rendered rules out
-                // error-driven allocation for the whole octree
-                if (lodErrors && lods[i].count > 0 && !Number.isFinite(error)) {
+                // An unusable error on a level that can be rendered rules out
+                // error-driven allocation for the whole octree. Errors are
+                // magnitudes relative to the finest LOD, so a negative one is as
+                // meaningless as a non-finite one - and more dangerous, since it
+                // would let a coarse level dominate every finer one on the frontier
+                // and pin the node there at any budget.
+                if (lodErrors && lods[i].count > 0 && !(Number.isFinite(error) && error >= 0)) {
                     lodErrors = false;
                 }
             }
@@ -195,7 +199,7 @@ class GSplatOctree {
 
         this.lodErrors = lodErrors;
         if (data.lodErrors === true && !lodErrors) {
-            Debug.warn(`GSplatOctree: ${assetFileUrl} declares lodErrors but does not supply a finite error for every non-empty LOD level, falling back to distance-based LOD allocation.`);
+            Debug.warn(`GSplatOctree: ${assetFileUrl} declares lodErrors but does not supply a finite, non-negative error for every non-empty LOD level, falling back to distance-based LOD allocation.`);
         }
 
         // precompute node bounds for CPU hot paths
