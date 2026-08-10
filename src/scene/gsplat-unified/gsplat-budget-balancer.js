@@ -139,21 +139,45 @@ class GSplatBudgetBalancer {
                 const lods = nodes[nodeIndex].lods;
                 nodeInfo.lods = lods;
 
-                let frontierCount = 0;
+                // Collect the levels this node can render, ordered by ascending cost
+                // and then ascending error. Insertion sort: the list is at most
+                // lodLevels long and usually already in order.
+                const scratch = this._frontierScratch;
+                let candidateCount = 0;
                 for (let lod = inst.rangeMin; lod <= inst.rangeMax; lod++) {
                     if (lods[lod].count <= 0) continue;
-                    let dominated = false;
-                    for (let other = inst.rangeMin; other <= inst.rangeMax; other++) {
-                        if (other === lod || lods[other].count <= 0) continue;
-                        const noMoreCost = lods[other].count <= lods[lod].count;
-                        const noMoreError = lods[other].error <= lods[lod].error;
-                        const strictlyBetter = lods[other].count < lods[lod].count || lods[other].error < lods[lod].error;
-                        if (noMoreCost && noMoreError && strictlyBetter) {
-                            dominated = true;
+                    let j = candidateCount++;
+                    while (j > 0) {
+                        const prev = scratch[j - 1];
+                        if (lods[prev].count < lods[lod].count ||
+                            (lods[prev].count === lods[lod].count && lods[prev].error <= lods[lod].error)) {
                             break;
                         }
+                        scratch[j] = prev;
+                        j--;
                     }
-                    if (!dominated) this._frontierScratch[frontierCount++] = lod;
+                    scratch[j] = lod;
+                }
+
+                // Pareto frontier in a single sweep of that order: a level is worth
+                // keeping only when it strictly improves on the cheapest error seen
+                // so far. Compacts in place, since the write index never runs ahead
+                // of the read index.
+                //
+                // Requiring a *strict* improvement also collapses levels with
+                // identical cost and error, so consecutive frontier entries always
+                // differ in both. That keeps every transition's cost above zero: a
+                // zero-cost transition would carry a 0/0 priority and, because
+                // upgrades apply in chain order, would stall the node there for the
+                // rest of the pass.
+                let frontierCount = 0;
+                let bestError = Infinity;
+                for (let i = 0; i < candidateCount; i++) {
+                    const lod = scratch[i];
+                    if (lods[lod].error < bestError) {
+                        bestError = lods[lod].error;
+                        scratch[frontierCount++] = lod;
+                    }
                 }
 
                 if (frontierCount === 0) {
@@ -161,25 +185,15 @@ class GSplatBudgetBalancer {
                     continue;
                 }
 
-                for (let i = 1; i < frontierCount; i++) {
-                    const lod = this._frontierScratch[i];
-                    let j = i;
-                    while (j > 0 && lods[this._frontierScratch[j - 1]].count > lods[lod].count) {
-                        this._frontierScratch[j] = this._frontierScratch[j - 1];
-                        j--;
-                    }
-                    this._frontierScratch[j] = lod;
-                }
-
                 const errorNodeIndex = this._errorNodes.length;
                 this._errorNodes.push(nodeInfo);
-                nodeInfo.optimalLod = this._frontierScratch[0];
+                nodeInfo.optimalLod = scratch[0];
                 currentSplats += lods[nodeInfo.optimalLod].count;
 
                 let previousPriority = Infinity;
                 for (let i = 1; i < frontierCount; i++) {
-                    const coarseLod = this._frontierScratch[i - 1];
-                    const fineLod = this._frontierScratch[i];
+                    const coarseLod = scratch[i - 1];
+                    const fineLod = scratch[i];
                     const cost = lods[fineLod].count - lods[coarseLod].count;
                     const benefit = lods[coarseLod].error - lods[fineLod].error;
                     const priority = Math.min(previousPriority, nodeInfo.lodCoverage * benefit / cost);

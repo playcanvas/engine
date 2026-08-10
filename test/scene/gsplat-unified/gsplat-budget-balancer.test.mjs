@@ -80,6 +80,24 @@ describe('GSplatBudgetBalancer', function () {
         expect(inst.nodeInfos[0].optimalLod).to.equal(0);
     });
 
+    it('does not let a duplicated LOD cost a node its priority', function () {
+        // Node 0's LODs 1 and 2 are indistinguishable in both cost and error. Keeping
+        // both would put a zero-cost 0/0-priority transition in its chain, and since
+        // priorities are accumulated with Math.min, that NaN demotes every later
+        // transition on the node to the lowest bucket. Node 0's upgrade is worth 5x
+        // node 1's, so with only one upgrade's worth of spare budget it should win.
+        const { inst, instances } = makeInstances([
+            { lods: [{ count: 10, error: 0 }, { count: 5, error: 5 }, { count: 5, error: 5 }] },
+            { lods: [{ count: 10, error: 9 }, { count: 5, error: 10 }, { count: 0, error: 10 }] }
+        ]);
+
+        // seeds are 5 + 5 splats, so a budget of 15 affords exactly one cost-5 upgrade
+        new GSplatBudgetBalancer().balance(instances, 15);
+
+        expect(inst.nodeInfos[0].optimalLod).to.equal(0);
+        expect(inst.nodeInfos[1].optimalLod).to.equal(1);
+    });
+
     it('loads per-LOD errors from streamed SOG metadata', function () {
         const octree = makeOctree([0, 12.5], true);
 
