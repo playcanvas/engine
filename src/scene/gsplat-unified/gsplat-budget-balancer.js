@@ -76,24 +76,27 @@ class GSplatBudgetBalancer {
      * @param {number} budget - Target splat budget for octrees.
      */
     balance(octreeInstances, budget) {
+        // Usable error metadata is a property of each asset, settled when its octree
+        // was built, so this is one lookup per instance instead of a walk over every
+        // node's LOD levels each frame.
         let completeErrors = true;
-        let activeNodes = 0;
         for (const [, inst] of octreeInstances) {
-            const nodes = inst.octree.nodes;
-            for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
-                const nodeInfo = inst.nodeInfos[nodeIndex];
-                if (nodeInfo.optimalLod < 0) continue;
-                activeNodes++;
-                const lods = nodes[nodeIndex].lods;
-                for (let lod = inst.rangeMin; lod <= inst.rangeMax; lod++) {
-                    if (lods[lod].count > 0 && !Number.isFinite(lods[lod].error)) {
-                        completeErrors = false;
-                        break;
-                    }
-                }
-                if (!completeErrors) break;
+            if (!inst.octree.lodErrors) {
+                completeErrors = false;
+                break;
             }
-            if (!completeErrors) break;
+        }
+
+        // only the error allocator needs the visible-node count, to size its
+        // transition arrays
+        let activeNodes = 0;
+        if (completeErrors) {
+            for (const [, inst] of octreeInstances) {
+                const nodeInfos = inst.nodeInfos;
+                for (let nodeIndex = 0; nodeIndex < inst.octree.nodes.length; nodeIndex++) {
+                    if (nodeInfos[nodeIndex].optimalLod >= 0) activeNodes++;
+                }
+            }
         }
 
         if (completeErrors && activeNodes > 0) {
