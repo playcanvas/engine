@@ -438,7 +438,7 @@ class GSplatWorld {
      * @param {boolean} allowLodUpdate - Back-pressure gate (false when the CPU sorter is busy).
      * @param {boolean} requireCenters - Whether resources without a centers buffer must be skipped
      * (CPU sort path).
-     * @param {{ newVersion: boolean, overdrawDirty: boolean, sortNeeded: boolean }} result -
+     * @param {{ newVersion: boolean, overdrawDirty: boolean, sortNeeded: boolean }} result
      * Caller-owned result object the manager reacts to.
      * @returns {{ newVersion: boolean, overdrawDirty: boolean, sortNeeded: boolean }} The populated result.
      */
@@ -765,7 +765,7 @@ class GSplatWorld {
      * @param {number} version - The render-ready version to bake.
      * @param {GraphNode} camera - The primary camera (for color bake).
      * @param {boolean} updateBounds - Whether to upload frustum-culling bounds (false for CPU sort).
-     * @param {{ rebuilt: boolean, count: number, textureSize: number, sortNeeded: boolean }} result -
+     * @param {{ rebuilt: boolean, count: number, textureSize: number, sortNeeded: boolean }} result
      * Caller-owned result. When `rebuilt` is true the manager must call `renderer.update(count,
      * textureSize)`, `renderer.setOrderData()` and `intervalCompaction.invalidateUpload()`. When
      * `sortNeeded` is true (a splat moved during the incremental update) the manager must re-sort.

@@ -63,7 +63,11 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
 
     #endif
 
-    let W = transpose(mat3x3f(center.modelView[0].xyz, center.modelView[1].xyz, center.modelView[2].xyz));
+    // Firefox on Windows (D3D12) returns a transposed matrix when a struct member is indexed
+    // through a pointer, so load the whole matrix into a local first. Remove the local once the
+    // fix has shipped: https://bugzilla.mozilla.org/show_bug.cgi?id=2059727
+    let modelView = center.modelView;
+    let W = transpose(mat3x3f(modelView[0].xyz, modelView[1].xyz, modelView[2].xyz));
     let T = W * J;
     let cov = transpose(T) * Vrk * T;
 

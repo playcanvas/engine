@@ -36,7 +36,7 @@ let id = 0;
  * Helper function copying the specified number of values from src, which can be an array or a typed
  * array, into a typed array destination. A typed array source uses the faster TypedArray#set path.
  *
- * @param {Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} dst -
+ * @param {Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} dst
  * The typed array to copy the values to.
  * @param {NumericArray} src - The values to copy.
  * @param {number} numValues - The number of values to copy.
