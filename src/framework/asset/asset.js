@@ -704,7 +704,9 @@ class Asset extends EventHandler {
                 responseType: 'arraybuffer',
                 retry: maxRetries > 0,
                 maxRetries: maxRetries,
-                progress: asset
+                progress: asset,
+                // Magnopus patched - add withCredentials option
+                withCredentials: asset?.options?.crossOrigin === 'use-credentials'
             }, callback);
         }
     }
