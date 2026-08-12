@@ -265,6 +265,19 @@ class GraphicsDevice extends EventHandler {
     supportsSubgroups = false;
 
     /**
+     * True if the device supports subgroup size control (WebGPU only). This depends on
+     * {@link supportsSubgroups} and, when available, allows a compute shader to pin its execution
+     * to a specific subgroup size (a power of two within the {@link minSubgroupSize} to
+     * {@link maxSubgroupSize} range) via the WGSL `@subgroup_size` attribute. The
+     * `subgroup-size-control` device feature is automatically requested when this is supported, and
+     * the shader define `CAPS_SUBGROUP_SIZE_CONTROL` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroupSizeControl = false;
+
+    /**
      * True if the device supports the WGSL subgroup_uniformity extension, which allows
      * subgroup functionality to be considered uniform in more cases during shader compilation.
      * This is automatically enabled via the `enable subgroups;` directive when
@@ -351,22 +364,20 @@ class GraphicsDevice extends EventHandler {
     supportsUnrestrictedPointerParameters = false;
 
     /**
-     * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either
-     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
-     * implementation did not expose the value.
+     * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either the device
+     * does not expose subgroup sizes, or the WebGPU implementation did not report the value.
      *
      * @type {number}
-     * @ignore
+     * @readonly
      */
     maxSubgroupSize = 0;
 
     /**
-     * Minimum subgroup (warp/wavefront) size reported for the device. Zero means either
-     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
-     * implementation did not expose the value.
+     * Minimum subgroup (warp/wavefront) size reported for the device. Zero means either the device
+     * does not expose subgroup sizes, or the WebGPU implementation did not report the value.
      *
      * @type {number}
-     * @ignore
+     * @readonly
      */
     minSubgroupSize = 0;
 
@@ -778,6 +789,7 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
         if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
         if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
+        if (this.supportsSubgroupSizeControl) capsDefines.set('CAPS_SUBGROUP_SIZE_CONTROL', '');
         if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
         if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
         if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');

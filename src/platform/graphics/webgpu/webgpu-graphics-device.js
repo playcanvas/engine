@@ -472,8 +472,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
-        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
-        this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
+        this.supportsSubgroupSizeControl = requireFeature('subgroup-size-control');
+        this.maxSubgroupSize = this.gpuAdapter?.info?.subgroupMaxSize ?? 0;
+        this.minSubgroupSize = this.gpuAdapter?.info?.subgroupMinSize ?? 0;
         const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
             Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
         Debug.log(
@@ -489,7 +490,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const adapterLimits = this.gpuAdapter?.limits;
             if (adapterLimits) {
                 for (const limitName in adapterLimits) {
-                    // skip these as they fail on Windows Chrome and are not part of spec currently
+                    // subgroup sizes are exposed via GPUAdapterInfo (read above), not as requestable
+                    // limits - some implementations (e.g. Windows Chrome) still surface them here and
+                    // reject them in requiredLimits, so skip them
                     if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
                         continue;
                     }
