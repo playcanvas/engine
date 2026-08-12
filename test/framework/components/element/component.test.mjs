@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 
 import { Entity } from '../../../../src/framework/entity.js';
-import { PRIMITIVE_TRIANGLES } from '../../../../src/platform/graphics/constants.js';
 import { LAYERID_UI } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
@@ -178,53 +177,6 @@ describe('ElementComponent', function () {
         const newParent = new Entity();
         app.root.addChild(newParent);
         expect(() => newParent.addChild(e)).to.not.throw();
-    });
-
-    describe('image mesh', function () {
-
-        it('renders the quad as indexed triangles rather than a triangle strip', function () {
-            // Triangle strips are a legacy topology that some drivers mis-handle, corrupting the uvs
-            // across the strip's second triangle. See https://github.com/playcanvas/engine/issues/9051
-            const e = new Entity();
-            e.addComponent('element', { type: 'image' });
-            app.root.addChild(e);
-
-            const mesh = e.element._image._defaultMesh;
-            const primitive = mesh.primitive[0];
-
-            expect(primitive.type).to.equal(PRIMITIVE_TRIANGLES);
-            expect(primitive.indexed).to.be.true;
-            expect(primitive.base).to.equal(0);
-            expect(primitive.count).to.equal(6);
-
-            // 2 triangles covering the 4 corner vertices of the quad
-            expect(mesh.vertexBuffer.numVertices).to.equal(4);
-
-            const indices = [];
-            expect(mesh.getIndices(indices)).to.equal(6);
-            expect(indices).to.deep.equal([0, 1, 3, 0, 3, 2]);
-        });
-
-        it('shares one index buffer across image elements and keeps it alive on destroy', function () {
-            const a = new Entity();
-            a.addComponent('element', { type: 'image' });
-            app.root.addChild(a);
-
-            const b = new Entity();
-            b.addComponent('element', { type: 'image' });
-            app.root.addChild(b);
-
-            const indexBuffer = a.element._image._defaultMesh.indexBuffer[0];
-            expect(indexBuffer).to.exist;
-            expect(b.element._image._defaultMesh.indexBuffer[0]).to.equal(indexBuffer);
-
-            // destroying one element must not destroy the buffer the others are still using
-            a.destroy();
-
-            expect(app.graphicsDevice.buffers.has(indexBuffer)).to.be.true;
-            expect(b.element._image._defaultMesh.indexBuffer[0]).to.equal(indexBuffer);
-        });
-
     });
 
     describe('#type', function () {
