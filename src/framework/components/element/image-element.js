@@ -6,12 +6,15 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 import {
+    BUFFER_STATIC,
     FUNC_EQUAL,
-    PRIMITIVE_TRISTRIP,
+    INDEXFORMAT_UINT16,
+    PRIMITIVE_TRIANGLES,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0,
     STENCILOP_DECREMENT,
     TYPE_FLOAT32
 } from '../../../platform/graphics/constants.js';
+import { IndexBuffer } from '../../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
 import { DeviceCache } from '../../../platform/graphics/device-cache.js';
@@ -37,6 +40,11 @@ import { Asset } from '../../asset/asset.js';
 
 const _tempColor = new Color();
 const _vertexFormatDeviceCache = new DeviceCache();
+const _indexBufferDeviceCache = new DeviceCache();
+
+// Triangulation of the 4 vertex quad the image element is built from. This matches the triangulation
+// the batcher applies to these meshes, so batched and non-batched images rasterize identically.
+const _quadIndices = new Uint16Array([0, 1, 3, 0, 3, 2]);
 
 class ImageRenderable {
     constructor(entity, mesh, material) {
@@ -352,6 +360,11 @@ class ImageElement {
         this.materialAsset = null;
 
         this._renderable.setMesh(this._defaultMesh);
+
+        // the index buffer is shared by every image element, so detach it before the renderable
+        // destroys the mesh - Mesh#destroy would otherwise destroy it out from under the others
+        this._defaultMesh.indexBuffer[0] = null;
+
         this._renderable.destroy();
         this._defaultMesh = null;
 
@@ -433,7 +446,7 @@ class ImageElement {
         const r = this._rect;
         const device = this._system.app.graphicsDevice;
 
-        // content of the vertex buffer for 4 vertices, rendered as a tristrip
+        // content of the vertex buffer for the 4 corners of the quad
         const vertexData = new Float32Array([
             w, 0, 0,                        // position
             0, 0, 1,                        // normal
@@ -465,12 +478,28 @@ class ImageElement {
             data: vertexData.buffer
         });
 
+        // The quad is drawn as indexed triangles rather than a triangle strip. Strips are a legacy
+        // topology that little else on the web still uses, and some drivers get the winding flip of
+        // the strip's second triangle wrong, corrupting the interpolated uvs across half the quad.
+        // See https://github.com/playcanvas/engine/issues/9051
+        //
+        // Every image element quad uses the same indices, so a single index buffer is shared by all
+        // of them. Giving each element its own costs measurable per-draw time (the device rebinds
+        // ELEMENT_ARRAY_BUFFER for every draw, as the VAO captures the last bind) on top of a driver
+        // side buffer object per element. ImageElement#destroy detaches it so the mesh can't destroy
+        // a buffer the other elements are still using.
+        const indexBuffer = _indexBufferDeviceCache.get(device, () => {
+            return new IndexBuffer(device, INDEXFORMAT_UINT16, _quadIndices.length,
+                BUFFER_STATIC, new Uint16Array(_quadIndices));
+        });
+
         const mesh = new Mesh(device);
         mesh.vertexBuffer = vertexBuffer;
-        mesh.primitive[0].type = PRIMITIVE_TRISTRIP;
+        mesh.indexBuffer[0] = indexBuffer;
+        mesh.primitive[0].type = PRIMITIVE_TRIANGLES;
         mesh.primitive[0].base = 0;
-        mesh.primitive[0].count = 4;
-        mesh.primitive[0].indexed = false;
+        mesh.primitive[0].count = _quadIndices.length;
+        mesh.primitive[0].indexed = true;
         mesh.aabb.setMinMax(Vec3.ZERO, new Vec3(w, h, 0));
 
         this._updateMesh(mesh);
