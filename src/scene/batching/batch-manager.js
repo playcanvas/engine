@@ -615,7 +615,7 @@ class BatchManager {
                 if (mesh.primitive[0].indexed) {
                     batchNumIndices += mesh.primitive[0].count;
                 } else {
-                    // special case of a non-indexed 4 vertex fan / strip primitive
+                    // special case of fan / strip non-indexed primitive used by UI
                     const primitiveType = mesh.primitive[0].type;
                     if (primitiveType === PRIMITIVE_TRIFAN || primitiveType === PRIMITIVE_TRISTRIP) {
                         if (mesh.primitive[0].count === 4) {
