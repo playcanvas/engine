@@ -569,6 +569,15 @@ class GraphicsDevice extends EventHandler {
     textureFloatFilterable = false;
 
     /**
+     * True if blending can be used when rendering to 32-bit floating-point render targets. Note that
+     * 16-bit floating-point render targets are always blendable when they are renderable.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    textureFloatBlendable = false;
+
+    /**
      * A vertex buffer representing a quad.
      *
      * @type {VertexBuffer}
