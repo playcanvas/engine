@@ -912,7 +912,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extTextureFloatLinear = this.getExtension('OES_texture_float_linear');
         this.textureFloatFilterable = !!this.extTextureFloatLinear;
 
+        // blending into 32-bit float render targets requires this extension
         this.extFloatBlend = this.getExtension('EXT_float_blend');
+        this.textureFloatBlendable = !!this.extFloatBlend;
         this.extBlendFuncExtended = this.getExtension('WEBGL_blend_func_extended');
         this.supportsDualSourceBlending = !!this.extBlendFuncExtended;
         this.extDrawBuffersIndexed = this.getExtension('OES_draw_buffers_indexed');
