@@ -338,6 +338,8 @@ const isBlack = (color) => {
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenVertexColor Use mesh vertex colors for sheen. If sheen map or
  * sheen tint are set, they'll be multiplied by vertex colors.
+ * @property {string} sheenVertexColorChannel Vertex color channels to use for sheen. Can be "r",
+ * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
  * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
@@ -389,7 +391,7 @@ const isBlack = (color) => {
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
- * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
+ * @property {string} opacityShadowDither Used to specify whether shadow opacity is dithered, which
  * allows shadow transparency without alpha blending. Can be:
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
