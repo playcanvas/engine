@@ -81,10 +81,10 @@ class RenderPassSsao extends RenderPassShaderQuad {
         const defines = new Map();
 
         // add defines needed for correct use of screenDepthPS chunk
-        ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
+        const depthKey = ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
 
         this.shader = ShaderUtils.createShader(device, {
-            uniqueName: 'SsaoShader',
+            uniqueName: `SsaoShader${depthKey}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'quadVS',
             fragmentChunk: 'ssaoPS',
