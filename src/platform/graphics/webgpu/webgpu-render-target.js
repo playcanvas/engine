@@ -1,7 +1,9 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST } from '../constants.js';
 import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 import { validateClearValues } from '../render-pass.js';
+import { Texture } from '../texture.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
@@ -17,7 +19,9 @@ const stringIds = new StringIds();
  *
  * @param {boolean} transientColor - Whether the attachment is transient (memoryless).
  * @param {boolean} bindMultisampled - Whether the MS color buffer should be bindable as a texture.
- * @returns {number} Combined GPUTextureUsage flags.
+ * Ignored when `transientColor` is true.
+ * @returns {number} Combined GPUTextureUsage flags. If `transientColor` is true,
+ * `TRANSIENT_ATTACHMENT` is set and `bindMultisampled` is ignored.
  * @ignore
  */
 const getMultisampledColorUsage = (transientColor, bindMultisampled) => {
@@ -50,6 +54,14 @@ class ColorAttachment {
     multisampledBuffer;
 
     /**
+     * PlayCanvas Texture wrapping `multisampledBuffer` when `bindMultisampled` is set. Owned by
+     * this attachment; do not destroy from user code.
+     *
+     * @type {Texture|null}
+     */
+    bindTexture = null;
+
+    /**
      * True if the multi-sampled buffer is a transient ("memoryless") attachment, and so must be
      * cleared on load and discarded on store.
      *
@@ -58,6 +70,8 @@ class ColorAttachment {
     transient = false;
 
     destroy(device) {
+        this.bindTexture?.destroy();
+        this.bindTexture = null;
         device.deferDestroy(this.multisampledBuffer);
         this.multisampledBuffer = null;
     }
@@ -510,6 +524,10 @@ class WebgpuRenderTarget {
             //   transient texture's usage);
             // - this multi-sampled buffer is the render `view`; the single-sampled, non-transient
             //   buffer is the `resolveTarget` - a transient texture must never be the `resolveTarget`.
+            //
+            // Non-transient + bindMultisampled: add TEXTURE_BINDING so the same MS buffer can be a
+            // render view and a shader-visible texture; it remains the render view, resolve stays
+            // on the single-sampled target.
             const transientColor = renderTarget.transientColor;
 
             /** @type {GPUTextureDescriptor} */
@@ -526,6 +544,22 @@ class WebgpuRenderTarget {
             DebugHelper.setLabel(multisampledColorBuffer, `${renderTarget.name}.multisampledColor`);
             this.setColorAttachment(index, multisampledColorBuffer, multisampledTextureDesc.format);
             this.colorAttachments[index].transient = transientColor;
+
+            if (renderTarget.bindMultisampled && colorBuffer) {
+                this.colorAttachments[index].bindTexture = new Texture(device, {
+                    name: `${renderTarget.name}.multisampledColor${index}`,
+                    width,
+                    height,
+                    format: colorBuffer.format,
+                    mipmaps: false,
+                    minFilter: FILTER_NEAREST,
+                    magFilter: FILTER_NEAREST,
+                    addressU: ADDRESS_CLAMP_TO_EDGE,
+                    addressV: ADDRESS_CLAMP_TO_EDGE,
+                    samples,
+                    _importedGpuTexture: multisampledColorBuffer
+                });
+            }
 
             colorAttachment.view = multisampledColorBuffer.createView();
             DebugHelper.setLabel(colorAttachment.view, `${renderTarget.name}.multisampledColorView`);
@@ -573,6 +607,11 @@ class WebgpuRenderTarget {
                 colorAttachment.loadOp = 'clear';
                 colorAttachment.storeOp = 'discard';
             }
+
+            if (renderTarget.bindMultisampled && colorAttachment.storeOp === 'discard') {
+                Debug.warnOnce(`Render target '${renderTarget.name}' has bindMultisampled set, but the color attachment storeOp resolved to 'discard'. The MSAA samples would not be available to textureLoad; forcing storeOp 'store'.`);
+                colorAttachment.storeOp = 'store';
+            }
         }
 
         const depthAttachment = this.renderPassDescriptor.depthStencilAttachment;
@@ -611,6 +650,14 @@ class WebgpuRenderTarget {
     }
 
     resolve(device, target, color, depth) {
+    }
+
+    /**
+     * @param {number} index - Color attachment index.
+     * @returns {Texture|null} The bindable MSAA color texture, or null.
+     */
+    getMultisampledColorBuffer(index) {
+        return this.colorAttachments[index]?.bindTexture ?? null;
     }
 }
 

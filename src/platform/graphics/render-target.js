@@ -203,12 +203,16 @@ class RenderTarget {
      * transient attachment support, and ignored (with a warning) when an explicit `depthBuffer` is
      * provided. Incompatible with a scene depth grab pass (`sceneDepthMap`), a depth prepass, or any
      * depth resolve, as the depth cannot be sampled or copied out. Defaults to false.
-     * @param {boolean} [options.bindMultisampled] - If set to true, the multi-sampled (MSAA) color
-     * attachment is created with texture-binding usage so it can be sampled in a shader via
-     * `textureLoad` (WGSL `texture_multisampled_2d`). WebGPU only, and only effective when
-     * samples > 1. Mutually exclusive with `transientColor` - a transient (memoryless) attachment
-     * cannot carry texture-binding usage. If both are set, `bindMultisampled` is ignored and a
-     * warning is issued. Defaults to false.
+     * @param {boolean} [options.bindMultisampled] - If set to true, the engine-allocated
+     * multi-sampled color attachment (not `colorBuffer`, which is the single-sampled resolve
+     * target) is created with texture-binding usage so a shader can `textureLoad` it as
+     * `texture_multisampled_2d`. Bind the texture returned by
+     * {@link RenderTarget#getMultisampledColorBuffer}, not {@link colorBuffer}. Applies to every
+     * MSAA color attachment (including MRT), not depth.
+     * WebGPU only; ignored unless samples > 1. Ignored (with a debug warning) when transient color
+     * actually takes effect — a memoryless attachment cannot carry texture-binding usage. If
+     * `transientColor` is requested but not supported, this option still applies. Custom
+     * per-sample resolves typically also set `autoResolve: false`. Defaults to false.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
      * const colorBuffer = new Texture(graphicsDevice, {
@@ -654,13 +658,34 @@ class RenderTarget {
     }
 
     /**
-     * True if the multi-sampled color attachment was created with texture-binding usage so it can
-     * be sampled in a shader (WebGPU only). See the `bindMultisampled` constructor option.
+     * True if the MSAA color attachment will be created with texture-binding usage. Resolved
+     * value of the `bindMultisampled` constructor option (false if ignored). See the
+     * `bindMultisampled` constructor option.
      *
      * @type {boolean}
      */
     get bindMultisampled() {
         return this._bindMultisampled;
+    }
+
+    /**
+     * The engine-allocated multi-sampled color texture for the given attachment, when
+     * `bindMultisampled` is true. Bind this (not {@link colorBuffer}) as a
+     * `texture_multisampled_2d`. Returns `null` if `bindMultisampled` is not in effect. The
+     * texture is owned by the render target; do not destroy it. After {@link resize}, fetch it
+     * again.
+     *
+     * @param {number} [index] - Color attachment index. Defaults to 0.
+     * @returns {Texture|null} The multisampled color texture, or null.
+     */
+    getMultisampledColorBuffer(index = 0) {
+        if (!this._bindMultisampled) {
+            return null;
+        }
+        if (!this.initialized) {
+            this.init();
+        }
+        return this.impl.getMultisampledColorBuffer?.(index) ?? null;
     }
 
     /**

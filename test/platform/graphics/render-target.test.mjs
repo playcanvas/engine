@@ -214,5 +214,43 @@ describe('RenderTarget', function () {
             expect(rt.bindMultisampled).to.be.true;
             destroyRenderTarget(rt);
         });
+
+        it('warns when both bindMultisampled and supported transientColor are set', function () {
+            device.isWebGPU = true;
+            device.supportsTransientAttachments = true;
+            const warn = console.warn;
+            const messages = [];
+            console.warn = (...args) => {
+                messages.push(args.join(' '));
+            };
+            let rt;
+            try {
+                rt = createRenderTarget({ name: 'bind-and-transient', samples: 4, bindMultisampled: true, transientColor: true });
+                expect(messages.some(m => m.includes('bind-and-transient') && m.includes('bindMultisampled'))).to.be.true;
+            } finally {
+                console.warn = warn;
+                if (rt) {
+                    destroyRenderTarget(rt);
+                }
+            }
+        });
+
+        it('returns a bindable MSAA color texture when bindMultisampled is set', function () {
+            device.isWebGPU = true;
+            const rt = createRenderTarget({ samples: 4, bindMultisampled: true });
+            const msColor = rt.getMultisampledColorBuffer();
+            expect(msColor).to.not.equal(null);
+            expect(msColor.samples).to.equal(rt.samples);
+            expect(msColor.width).to.equal(rt.width);
+            expect(msColor.height).to.equal(rt.height);
+            expect(msColor).to.not.equal(rt.colorBuffer);
+            destroyRenderTarget(rt);
+        });
+
+        it('returns null from getMultisampledColorBuffer when bindMultisampled is off', function () {
+            const rt = createRenderTarget({ samples: 4 });
+            expect(rt.getMultisampledColorBuffer()).to.equal(null);
+            destroyRenderTarget(rt);
+        });
     });
 });

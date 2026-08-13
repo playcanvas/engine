@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 
-import { BindTextureFormat } from '../../../src/platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindTextureFormat } from '../../../src/platform/graphics/bind-group-format.js';
 import {
     SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D
 } from '../../../src/platform/graphics/constants.js';
+import { ScopeSpace } from '../../../src/platform/graphics/scope-space.js';
 
 describe('BindTextureFormat', function () {
 
@@ -38,6 +39,42 @@ describe('BindTextureFormat', function () {
             expect(format.multisampled).to.equal(true);
             expect(format.hasSampler).to.equal(false);
             expect(format.samplerName).to.equal(null);
+        });
+
+        it('coerces SAMPLETYPE_FLOAT to UNFILTERABLE_FLOAT when multisampled', function () {
+            const format = new BindTextureFormat(
+                'msColor',
+                SHADERSTAGE_FRAGMENT,
+                TEXTUREDIMENSION_2D,
+                SAMPLETYPE_FLOAT,
+                true,
+                'msColor_sampler',
+                true
+            );
+            expect(format.sampleType).to.equal(SAMPLETYPE_UNFILTERABLE_FLOAT);
+            expect(format.hasSampler).to.equal(false);
+            expect(format.samplerName).to.equal(null);
+        });
+    });
+
+    describe('BindGroupFormat slots', function () {
+
+        it('assigns one slot to a multisampled texture and two to a sampled texture', function () {
+            let implKey = 0;
+            const device = {
+                scope: new ScopeSpace('test'),
+                createBindGroupFormatImpl() {
+                    return { key: implKey++, destroy() {} };
+                }
+            };
+            const ms = new BindTextureFormat('msColor', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, true, null, true);
+            const sampled = new BindTextureFormat('color', SHADERSTAGE_FRAGMENT);
+            const format = new BindGroupFormat(device, [ms, sampled]);
+
+            expect(ms.hasSampler).to.equal(false);
+            expect(ms.slot).to.equal(0);
+            expect(sampled.slot).to.equal(1);
+            format.destroy();
         });
     });
 });

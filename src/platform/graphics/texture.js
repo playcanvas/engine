@@ -255,6 +255,9 @@ class Texture {
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
+     * @param {number} [options.samples] - Sample count of the GPU texture. 1 for a regular texture,
+     * > 1 for a multisampled texture (typically created by {@link RenderTarget} when
+     * `bindMultisampled` is set). Defaults to 1.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new Texture(graphicsDevice, {
@@ -303,6 +306,8 @@ class Texture {
         this._arrayLength = Math.floor(options.arrayLength ?? 0);
 
         this._storage = options.storage ?? false;
+        this._samples = options.samples ?? 1;
+        this._importedGpuTexture = options._importedGpuTexture ?? null;
         this._cubemap = options.cubemap ?? false;
         this._flipY = options.flipY ?? false;
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;
@@ -345,7 +350,7 @@ class Texture {
             this._clearLevels();
         }
 
-        this.recreateImpl(upload);
+        this.recreateImpl(upload && !this._importedGpuTexture);
 
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
@@ -440,10 +445,15 @@ class Texture {
 
         // create new
         this.impl = device.createTextureImpl(this);
-        this.dirtyAll();
+        if (this._importedGpuTexture) {
+            this._needsUpload = false;
+            this._needsMipmapsUpload = false;
+        } else {
+            this.dirtyAll();
 
-        if (upload) {
-            this.upload();
+            if (upload) {
+                this.upload();
+            }
         }
     }
 
@@ -464,6 +474,11 @@ class Texture {
      * @ignore
      */
     resize(width, height, depth = 1) {
+
+        if (this._importedGpuTexture) {
+            Debug.warn('Texture#resize: cannot resize an imported texture', this);
+            return;
+        }
 
         if (this.width !== width || this.height !== height || this.depth !== depth) {
 
@@ -834,6 +849,16 @@ class Texture {
      */
     get width() {
         return this._width;
+    }
+
+    /**
+     * Sample count of the GPU texture. 1 for a regular texture; greater than 1 for a
+     * multisampled texture returned by {@link RenderTarget#getMultisampledColorBuffer}.
+     *
+     * @type {number}
+     */
+    get samples() {
+        return this._samples;
     }
 
     /**

@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { getMultisampledColorUsage } from '../../../../src/platform/graphics/webgpu/webgpu-render-target.js';
+import { WebgpuRenderTarget, getMultisampledColorUsage } from '../../../../src/platform/graphics/webgpu/webgpu-render-target.js';
 
 // getMultisampledColorUsage reads the WebGPU GPUTextureUsage global. The headless test runner
 // has no GPUDevice; stub the enum with the spec values.
@@ -36,6 +36,62 @@ describe('getMultisampledColorUsage', function () {
     it('does not add TEXTURE_BINDING when transient (mutually exclusive)', function () {
         expect(getMultisampledColorUsage(true, true)).to.equal(
             GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT
+        );
+    });
+});
+
+describe('WebgpuRenderTarget#initColor', function () {
+
+    it('creates the MSAA color texture with TEXTURE_BINDING when bindMultisampled is set', function () {
+        const created = [];
+        const wgpu = {
+            createTexture(desc) {
+                created.push(desc);
+                return {
+                    createView() {
+                        return {};
+                    }
+                };
+            }
+        };
+        const colorBuffer = {
+            cubemap: false,
+            format: 7,
+            impl: {
+                format: 'rgba16float',
+                createView() {
+                    return { resolve: true };
+                }
+            }
+        };
+        const renderTarget = {
+            samples: 4,
+            width: 4,
+            height: 4,
+            mipLevel: 0,
+            face: 0,
+            name: 'msaa-rt',
+            transientColor: false,
+            bindMultisampled: true,
+            getColorBuffer: () => colorBuffer
+        };
+        const device = {
+            wgpu,
+            createTextureImpl() {
+                return {
+                    destroy() {},
+                    propertyChanged() {},
+                    loseContext() {}
+                };
+            }
+        };
+        const impl = new WebgpuRenderTarget(renderTarget);
+        impl.initColor(device, wgpu, renderTarget, 0);
+
+        expect(created).to.have.lengthOf(1);
+        expect(created[0].sampleCount).to.equal(4);
+        expect(created[0].usage).to.equal(
+            GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
         );
     });
 });

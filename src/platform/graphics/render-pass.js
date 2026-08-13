@@ -271,6 +271,9 @@ class RenderPass extends FramePass {
             if (this.samples === 1) {
                 colorOps.store = true;
                 colorOps.resolve = false;
+            } else if (rt?.bindMultisampled) {
+                // keep the MSAA samples so a later pass can textureLoad them
+                colorOps.store = true;
             }
 
             // if render target needs mipmaps

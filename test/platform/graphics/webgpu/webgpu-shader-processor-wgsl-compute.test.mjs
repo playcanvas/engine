@@ -303,6 +303,7 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
         expect(tf.samplerName).to.equal(null);
         expect(tf.sampleType).to.equal(SAMPLETYPE_UNFILTERABLE_FLOAT);
         expect(tf.slot).to.equal(0);
+        expect(result.cshader).to.contain('@group(1) @binding(0) var msColor: texture_multisampled_2d<f32>;');
         expect(result.cshader).to.not.match(/msColor_sampler/);
     });
 
@@ -321,6 +322,7 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
         expect(tf.samplerName).to.equal(null);
         expect(tf.sampleType).to.equal(SAMPLETYPE_DEPTH);
         expect(tf.slot).to.equal(0);
+        expect(result.cshader).to.contain('@group(1) @binding(0) var msDepth: texture_depth_multisampled_2d;');
     });
 
     it('maps integer component types on a multisampled color texture', function () {
@@ -337,9 +339,13 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
         expect(formats[0].name).to.equal('msUint');
         expect(formats[0].sampleType).to.equal(SAMPLETYPE_UINT);
         expect(formats[0].multisampled).to.equal(true);
+        expect(formats[0].hasSampler).to.equal(false);
         expect(formats[1].name).to.equal('msInt');
         expect(formats[1].sampleType).to.equal(SAMPLETYPE_INT);
         expect(formats[1].multisampled).to.equal(true);
+        expect(formats[1].hasSampler).to.equal(false);
+        expect(result.cshader).to.contain('@group(1) @binding(0) var msUint: texture_multisampled_2d<u32>;');
+        expect(result.cshader).to.contain('@group(1) @binding(1) var msInt: texture_multisampled_2d<i32>;');
     });
 
 });
