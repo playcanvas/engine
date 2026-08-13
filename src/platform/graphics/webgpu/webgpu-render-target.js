@@ -651,6 +651,9 @@ class WebgpuRenderTarget {
         this.colorAttachments.forEach((colorAttachment) => {
             colorAttachment.bindTexture?.destroy();
             colorAttachment.bindTexture = null;
+            // The underlying GPU texture is invalid after context loss; clear the reference so
+            // the next init() does not accidentally reuse a stale multisampled buffer.
+            colorAttachment.multisampledBuffer = null;
         });
     }
 
