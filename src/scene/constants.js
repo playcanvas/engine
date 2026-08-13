@@ -1333,3 +1333,13 @@ export const RADIX_SORT_PORTABLE = 1;
  * @category Graphics
  */
 export const RADIX_SORT_ONESWEEP = 2;
+
+/**
+ * The name of the scene depth texture - a scene texture storing the linear depth of the scene,
+ * rendered by the scene pass alongside the scene color. See
+ * {@link CameraShaderParams#sceneTextures}.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const SCENETEXTURE_DEPTH = 'depth';

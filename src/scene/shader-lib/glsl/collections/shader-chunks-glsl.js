@@ -38,6 +38,7 @@ import envProcPS from '../chunks/common/frag/envProc.js';
 import falloffInvSquaredPS from '../chunks/lit/frag/falloffInvSquared.js';
 import falloffLinearPS from '../chunks/lit/frag/falloffLinear.js';
 import floatAsUintPS from '../chunks/common/frag/float-as-uint.js';
+import sceneTexturesPS from '../chunks/common/frag/scene-textures.js';
 import fogPS from '../chunks/common/frag/fog.js';
 import fresnelSchlickPS from '../chunks/lit/frag/fresnelSchlick.js';
 import fullscreenQuadVS from '../chunks/common/vert/fullscreenQuad.js';
@@ -202,6 +203,7 @@ const shaderChunksGLSL = {
     falloffInvSquaredPS,
     falloffLinearPS,
     floatAsUintPS,
+    sceneTexturesPS,
     fogPS,
     fresnelSchlickPS,
     frontendCodePS: '',  // empty chunk, supplied by the shader generator

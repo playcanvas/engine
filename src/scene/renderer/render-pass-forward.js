@@ -61,11 +61,22 @@ class RenderPassForward extends RenderPass {
     gammaCorrection;
 
     /**
-     * The tone mapping setting for the render pass. In not set, setting from the camera is used.
+     * The tone mapping setting for the render pass. If not set, setting from the camera is used.
      *
      * @type {number|undefined}
      */
     toneMapping;
+
+    /**
+     * The names of the scene textures this pass renders alongside the scene color, in the order of
+     * the color attachments they are rendered to. If not set, setting from the camera is used. Only
+     * the passes rendering to a render target the scene textures are attached to set this, so that
+     * the camera's other passes, for example the one rendering the UI to the output render target,
+     * do not write them.
+     *
+     * @type {string[]|undefined}
+     */
+    sceneTextures;
 
     /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
@@ -179,7 +190,11 @@ class RenderPassForward extends RenderPass {
             const camera = cameraComponent.camera;
             const fullSizeClearRect = camera.fullSizeClearRect;
 
-            this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined);
+            // when this pass renders the scene textures, the camera's clear color describes the scene
+            // color attachment alone - the clear values of the scene texture attachments belong to
+            // whoever owns them, and are left alone here
+            const colorIndex = this.sceneTextures?.length ? 0 : undefined;
+            this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined, colorIndex);
             this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }
@@ -270,9 +285,11 @@ class RenderPassForward extends RenderPass {
 
         if (cameraComponent) {
 
-            // override gamma correction and tone mapping settings
+            // override gamma correction, tone mapping and scene texture settings
             const originalGammaCorrection = cameraComponent.gammaCorrection;
             const originalToneMapping = cameraComponent.toneMapping;
+            const originalSceneTextures = cameraComponent.shaderParams.sceneTextures;
+            if (this.sceneTextures !== undefined) cameraComponent.shaderParams.sceneTextures = this.sceneTextures;
             if (this.gammaCorrection !== undefined) cameraComponent.gammaCorrection = this.gammaCorrection;
             if (this.toneMapping !== undefined) cameraComponent.toneMapping = this.toneMapping;
 
@@ -292,6 +309,12 @@ class RenderPassForward extends RenderPass {
                 options.clearColor = step.clearColor;
                 options.clearDepth = step.clearDepth;
                 options.clearStencil = step.clearStencil;
+
+                // unlike the clear of the render pass itself, this clear is not attachment aware - it
+                // clears all the color attachments of the render target, and so would also clear the
+                // scene textures, which this pass does not own the content of
+                Debug.assert(!(options.clearColor && this.sceneTextures?.length),
+                    'Clearing the color inside a render pass which renders the scene textures is not supported, as the clear would also clear those. This happens when the camera does not clear the whole render target, or when it is not the first one rendering to it.', this);
             }
 
             const renderTarget = step.renderTarget ?? device.backBuffer;
@@ -308,9 +331,10 @@ class RenderPassForward extends RenderPass {
             // layer post render event
             scene.fire(EVENT_POSTRENDER_LAYER, cameraComponent, layer, transparent);
 
-            // restore gamma correction and tone mapping settings
+            // restore gamma correction, tone mapping and scene texture settings
             if (this.gammaCorrection !== undefined) cameraComponent.gammaCorrection = originalGammaCorrection;
             if (this.toneMapping !== undefined) cameraComponent.toneMapping = originalToneMapping;
+            if (this.sceneTextures !== undefined) cameraComponent.shaderParams.sceneTextures = originalSceneTextures;
         }
 
         DebugGraphics.popGpuMarker(this.device);
