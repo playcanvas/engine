@@ -546,6 +546,7 @@ class WebgpuRenderTarget {
             this.colorAttachments[index].transient = transientColor;
 
             if (renderTarget.bindMultisampled && colorBuffer) {
+                this.colorAttachments[index].bindTexture?.destroy();
                 this.colorAttachments[index].bindTexture = new Texture(device, {
                     name: `${renderTarget.name}.multisampledColor${index}`,
                     width,
@@ -647,6 +648,10 @@ class WebgpuRenderTarget {
 
     loseContext() {
         this.initialized = false;
+        this.colorAttachments.forEach((colorAttachment) => {
+            colorAttachment.bindTexture?.destroy();
+            colorAttachment.bindTexture = null;
+        });
     }
 
     resolve(device, target, color, depth) {

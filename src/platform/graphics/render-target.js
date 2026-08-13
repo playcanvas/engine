@@ -678,7 +678,9 @@ class RenderTarget {
             return null;
         }
         if (!this.initialized) {
-            this.init();
+            // Register with the device so loseContext/restore still tracks this target.
+            // Direct init() would set initialized and skip GraphicsDevice.initRenderTarget().
+            this._device.initRenderTarget(this);
         }
         return this.impl.getMultisampledColorBuffer?.(index) ?? null;
     }
