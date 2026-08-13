@@ -99,6 +99,11 @@ class BindStorageBufferFormat extends BindBaseFormat {
  */
 class BindTextureFormat extends BindBaseFormat {
     /**
+     * @type {string|null}
+     */
+    samplerName;
+
+    /**
      * Create a new instance.
      *
      * @param {string} name - The name of the storage buffer.
@@ -130,10 +135,15 @@ class BindTextureFormat extends BindBaseFormat {
      *
      * @param {boolean} [hasSampler] - True if the sampler for the texture is needed. Note that if the
      * sampler is used, it will take up an additional slot, directly following the texture slot.
-     * Defaults to true.
-     * @param {string|null} [samplerName] - Optional name of the sampler. Defaults to null.
+     * Defaults to true. Forced to false when `multisampled` is true.
+     * @param {string|null} [samplerName] - Optional name of the sampler. Defaults to null. Forced to
+     * null when `multisampled` is true.
+     * @param {boolean} [multisampled] - True if this is a multisampled texture binding
+     * (`texture_multisampled_2d` / `texture_depth_multisampled_2d`). When set, `hasSampler` is
+     * forced to false and `samplerName` to null, since WGSL only allows `textureLoad` (not
+     * `textureSample`) on these types. Defaults to false.
      */
-    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null) {
+    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null, multisampled = false) {
         super(name, visibility);
 
         // TEXTUREDIMENSION_***
@@ -142,11 +152,20 @@ class BindTextureFormat extends BindBaseFormat {
         // SAMPLETYPE_***
         this.sampleType = sampleType;
 
-        // whether to use a sampler with this texture
-        this.hasSampler = hasSampler;
+        // whether this is a multisampled (MSAA) texture binding
+        this.multisampled = multisampled;
 
-        // optional name of the sampler (its automatically generated if not provided)
-        this.samplerName = samplerName ?? `${name}_sampler`;
+        // WGSL only allows textureLoad on texture_multisampled_2d / texture_depth_multisampled_2d
+        if (multisampled) {
+            this.hasSampler = false;
+            this.samplerName = null;
+        } else {
+            // whether to use a sampler with this texture
+            this.hasSampler = hasSampler;
+
+            // optional name of the sampler (its automatically generated if not provided)
+            this.samplerName = samplerName ?? `${name}_sampler`;
+        }
     }
 }
 

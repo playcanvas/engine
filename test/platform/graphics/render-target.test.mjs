@@ -168,4 +168,51 @@ describe('RenderTarget', function () {
             destroyRenderTarget(rt);
         });
     });
+
+    describe('#constructor: bindMultisampled option', function () {
+
+        it('defaults to false', function () {
+            const rt = createRenderTarget({ samples: 4 });
+            expect(rt.bindMultisampled).to.be.false;
+            destroyRenderTarget(rt);
+        });
+
+        it('is ignored on a non-WebGPU device', function () {
+            const rt = createRenderTarget({ samples: 4, bindMultisampled: true });
+            expect(rt.bindMultisampled).to.be.false;
+            destroyRenderTarget(rt);
+        });
+
+        it('is ignored when samples is 1', function () {
+            device.isWebGPU = true;
+            const rt = createRenderTarget({ samples: 1, bindMultisampled: true });
+            expect(rt.bindMultisampled).to.be.false;
+            destroyRenderTarget(rt);
+        });
+
+        it('is enabled on WebGPU when samples > 1', function () {
+            device.isWebGPU = true;
+            const rt = createRenderTarget({ samples: 4, bindMultisampled: true });
+            expect(rt.bindMultisampled).to.be.true;
+            destroyRenderTarget(rt);
+        });
+
+        it('is ignored when transientColor is also set (and supported)', function () {
+            device.isWebGPU = true;
+            device.supportsTransientAttachments = true;
+            const rt = createRenderTarget({ samples: 4, bindMultisampled: true, transientColor: true });
+            expect(rt.transientColor).to.be.true;
+            expect(rt.bindMultisampled).to.be.false;
+            destroyRenderTarget(rt);
+        });
+
+        it('is enabled when transientColor is requested but not supported', function () {
+            device.isWebGPU = true;
+            device.supportsTransientAttachments = false;
+            const rt = createRenderTarget({ samples: 4, bindMultisampled: true, transientColor: true });
+            expect(rt.transientColor).to.be.false;
+            expect(rt.bindMultisampled).to.be.true;
+            destroyRenderTarget(rt);
+        });
+    });
 });

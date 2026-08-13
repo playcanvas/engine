@@ -13,6 +13,25 @@ import { WebgpuDebug } from './webgpu-debug.js';
 const stringIds = new StringIds();
 
 /**
+ * Compute GPUTextureUsage flags for a multi-sampled color attachment.
+ *
+ * @param {boolean} transientColor - Whether the attachment is transient (memoryless).
+ * @param {boolean} bindMultisampled - Whether the MS color buffer should be bindable as a texture.
+ * @returns {number} Combined GPUTextureUsage flags.
+ * @ignore
+ */
+const getMultisampledColorUsage = (transientColor, bindMultisampled) => {
+    let usage = GPUTextureUsage.RENDER_ATTACHMENT;
+    if (transientColor) {
+        // memoryless: cannot also carry TEXTURE_BINDING
+        usage |= GPUTextureUsage.TRANSIENT_ATTACHMENT;
+    } else if (bindMultisampled) {
+        usage |= GPUTextureUsage.TEXTURE_BINDING;
+    }
+    return usage;
+};
+
+/**
  * Private class storing info about color buffer.
  *
  * @private
@@ -499,9 +518,7 @@ class WebgpuRenderTarget {
                 dimension: '2d',
                 sampleCount: samples,
                 format: format,
-                usage: transientColor ?
-                    GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TRANSIENT_ATTACHMENT :
-                    GPUTextureUsage.RENDER_ATTACHMENT
+                usage: getMultisampledColorUsage(transientColor, renderTarget.bindMultisampled)
             };
 
             // allocate multi-sampled color buffer
@@ -597,4 +614,4 @@ class WebgpuRenderTarget {
     }
 }
 
-export { WebgpuRenderTarget };
+export { WebgpuRenderTarget, getMultisampledColorUsage };

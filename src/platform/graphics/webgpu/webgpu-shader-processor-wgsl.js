@@ -101,11 +101,12 @@ const textureBaseInfo = {
     'texture_3d': { viewDimension: TEXTUREDIMENSION_3D, baseSampleType: SAMPLETYPE_FLOAT },
     'texture_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_FLOAT },
     'texture_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
-    'texture_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT, multisampled: true },
     'texture_depth_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_DEPTH, multisampled: true },
     'texture_external': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_UNFILTERABLE_FLOAT }
 };
 
@@ -116,7 +117,8 @@ const getTextureInfo = (baseType, componentType) => {
     Debug.assert(baseInfo);
 
     let finalSampleType = baseInfo.baseSampleType;
-    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT && baseType !== 'texture_multisampled_2d') {
+    const multisampled = !!baseInfo.multisampled;
+    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT) {
         switch (componentType) {
             case 'u32': finalSampleType = SAMPLETYPE_UINT; break;
             case 'i32': finalSampleType = SAMPLETYPE_INT; break;
@@ -125,11 +127,16 @@ const getTextureInfo = (baseType, componentType) => {
             // custom 'uff' type for unfilterable float, allowing us to create correct bind, which is automatically generated based on the shader
             case 'uff': finalSampleType = SAMPLETYPE_UNFILTERABLE_FLOAT; break;
         }
+        // WebGPU rejects sampleType "float" on a multisampled binding
+        if (multisampled && finalSampleType === SAMPLETYPE_FLOAT) {
+            finalSampleType = SAMPLETYPE_UNFILTERABLE_FLOAT;
+        }
     }
 
     return {
         viewDimension: baseInfo.viewDimension,
-        sampleType: finalSampleType
+        sampleType: finalSampleType,
+        multisampled
     };
 };
 
@@ -287,6 +294,7 @@ class ResourceLine {
         this.isStorageTexture = false;
         this.isStorageBuffer = false;
         this.isExternalTexture = false;
+        this.multisampled = false;
         this.type = '';
         this.matchedElements = [];
 
@@ -304,6 +312,7 @@ class ResourceLine {
             Debug.assert(info);
             this.textureDimension = info.viewDimension;
             this.sampleType = info.sampleType;
+            this.multisampled = info.multisampled;
         }
 
         // storage texture (e.g., texture_storage_2d<rgba8unorm, write>)
@@ -361,6 +370,7 @@ class ResourceLine {
         if (this.textureFormat !== other.textureFormat) return false;
         if (this.textureDimension !== other.textureDimension) return false;
         if (this.sampleType !== other.sampleType) return false;
+        if (this.multisampled !== other.multisampled) return false;
         if (this.textureType !== other.textureType) return false;
         if (this.format !== other.format) return false;
         if (this.access !== other.access) return false;
@@ -743,7 +753,7 @@ class WebgpuShaderProcessorWGSL {
                 const dimension = resource.textureDimension;
 
                 // TODO: we could optimize visibility to only stages that use any of the data
-                formats.push(new BindTextureFormat(resource.name, visibility, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null));
+                formats.push(new BindTextureFormat(resource.name, visibility, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null, resource.multisampled));
 
                 // following sampler was already handled
                 if (hasSampler) i++;

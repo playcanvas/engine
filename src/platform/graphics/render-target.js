@@ -78,6 +78,12 @@ class RenderTarget {
      */
     _transientDepth;
 
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _bindMultisampled;
+
     /** @type {boolean} */
     autoResolve;
 
@@ -197,6 +203,12 @@ class RenderTarget {
      * transient attachment support, and ignored (with a warning) when an explicit `depthBuffer` is
      * provided. Incompatible with a scene depth grab pass (`sceneDepthMap`), a depth prepass, or any
      * depth resolve, as the depth cannot be sampled or copied out. Defaults to false.
+     * @param {boolean} [options.bindMultisampled] - If set to true, the multi-sampled (MSAA) color
+     * attachment is created with texture-binding usage so it can be sampled in a shader via
+     * `textureLoad` (WGSL `texture_multisampled_2d`). WebGPU only, and only effective when
+     * samples > 1. Mutually exclusive with `transientColor` - a transient (memoryless) attachment
+     * cannot carry texture-binding usage. If both are set, `bindMultisampled` is ignored and a
+     * warning is issued. Defaults to false.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
      * const colorBuffer = new Texture(graphicsDevice, {
@@ -306,6 +318,16 @@ class RenderTarget {
         // so warn rather than silently ignore it - unlike the unsupported-device case above.
         if ((options.transientDepth ?? false) && this._depthBuffer) {
             Debug.warnOnce(`RenderTarget '${this.name}' was created with both transientDepth and a depthBuffer. Transient depth applies to the engine-allocated depth buffer only and cannot be used with a provided depthBuffer; the transientDepth flag is ignored.`);
+        }
+
+        // bindMultisampled: allow the MSAA color buffer to be sampled (WebGPU only). A
+        // transient/memoryless attachment can never carry TEXTURE_BINDING.
+        const bindRequested = options.bindMultisampled ?? false;
+        if (bindRequested && this._transientColor) {
+            Debug.warnOnce(`RenderTarget '${this.name}' was created with both bindMultisampled and transientColor. A transient (memoryless) attachment cannot be bound as a texture; bindMultisampled is ignored.`);
+            this._bindMultisampled = false;
+        } else {
+            this._bindMultisampled = bindRequested && this._device.isWebGPU && this._samples > 1;
         }
 
         // resolve the origin option to a per-API flipY value: 'top' stores standard image row
@@ -629,6 +651,16 @@ class RenderTarget {
      */
     get transientDepth() {
         return this._transientDepth;
+    }
+
+    /**
+     * True if the multi-sampled color attachment was created with texture-binding usage so it can
+     * be sampled in a shader (WebGPU only). See the `bindMultisampled` constructor option.
+     *
+     * @type {boolean}
+     */
+    get bindMultisampled() {
+        return this._bindMultisampled;
     }
 
     /**
