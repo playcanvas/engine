@@ -320,8 +320,11 @@ class Texture {
         this._arrayLength = Math.floor(options.arrayLength ?? 0);
 
         this._storage = options.storage ?? false;
-        this._samples = options.samples ?? 1;
+        // `_samples` is internal (used by the MSAA render-target wrapper). The public
+        // `options.samples` is ignored so `new Texture({ samples: 4 })` cannot report a
+        // sample count the allocated GPU texture does not have.
         this._importedGpuTexture = options._importedGpuTexture ?? null;
+        this._samples = options._samples ?? 1;
         this._cubemap = options.cubemap ?? false;
         this._flipY = options.flipY ?? false;
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;

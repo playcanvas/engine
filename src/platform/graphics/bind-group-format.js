@@ -175,8 +175,9 @@ class BindTextureFormat extends BindBaseFormat {
         this.multisampled = multisampled;
 
         // no sampler: WGSL only allows textureLoad, and a WebGPU multisampled texture binding
-        // cannot be paired with a sampler. Reflection already strips a following sampler
-        // (`hasSampler && !resource.multisampled`); the assert below is for hand-authored formats.
+        // cannot be paired with a sampler. Coerce rather than assert: hasSampler defaults to
+        // true, so `new BindTextureFormat(name, vis, dim, type, undefined, undefined, true)`
+        // must work without a debug assertion.
         this.hasSampler = multisampled ? false : hasSampler;
         this.samplerName = multisampled ? null : (samplerName ?? `${name}_sampler`);
         this.sampleType = (multisampled && sampleType === SAMPLETYPE_FLOAT) ?
@@ -184,7 +185,6 @@ class BindTextureFormat extends BindBaseFormat {
 
         if (multisampled) {
             Debug.assert(textureDimension === TEXTUREDIMENSION_2D, `Multisampled texture binding '${name}' requires TEXTUREDIMENSION_2D.`);
-            Debug.assert(!hasSampler, `Multisampled texture binding '${name}' cannot have a sampler.`);
         }
     }
 }

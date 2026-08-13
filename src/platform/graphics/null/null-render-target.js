@@ -30,7 +30,7 @@ class NullRenderTarget {
                     height: renderTarget.height,
                     format: colorBuffer.format,
                     mipmaps: false,
-                    samples: renderTarget.samples
+                    _samples: renderTarget.samples
                 });
             }
         }

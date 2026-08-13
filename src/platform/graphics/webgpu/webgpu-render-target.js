@@ -556,7 +556,7 @@ class WebgpuRenderTarget {
                     magFilter: FILTER_NEAREST,
                     addressU: ADDRESS_CLAMP_TO_EDGE,
                     addressV: ADDRESS_CLAMP_TO_EDGE,
-                    samples,
+                    _samples: samples,
                     _importedGpuTexture: multisampledColorBuffer
                 });
             }
