@@ -12,7 +12,9 @@ import {
     CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32,
+    PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
     FRONTFACE_CCW
@@ -1645,22 +1647,35 @@ class GraphicsDevice extends EventHandler {
      * formats on the majority of devices apart from some very old iOS and Android devices (99%).
      * - When the `filterable` parameter is set to true, the function returns a format on a
      * considerably lower number of devices (70%).
+     * - Support is determined by the precision of a format and not by its number of channels, and so
+     * all the half float formats are supported wherever any of them is, and similarly for the 32bit
+     * float formats.
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
      * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_R16F}
+     * - {@link PIXELFORMAT_R32F}
+     * - {@link PIXELFORMAT_RG16F}
+     * - {@link PIXELFORMAT_RG32F}
      * - {@link PIXELFORMAT_RGBA16F}
      * - {@link PIXELFORMAT_RGBA32F}
      *
-     * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
-     * true.
+     * Any other format in the array is skipped, allowing a non-HDR format to be included in the
+     * list and handled by the caller's own fallback.
+     *
+     * @param {boolean} [filterable] - If true, the format also needs to be filterable, allowing it
+     * to be sampled with linear filtering. Defaults to true.
      * @param {number} [samples] - The number of samples to check for. Some formats are not
      * compatible with multi-sampling, for example {@link PIXELFORMAT_RGBA32F} on WebGPU platform.
      * Defaults to 1.
+     * @param {boolean} [blendable] - If true, the format also needs to be blendable, allowing it to
+     * be used as a blended render target attachment. This is an independent capability to
+     * filtering, and only the 32bit float formats can fail to support it. Defaults to false.
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
@@ -1672,20 +1687,31 @@ class GraphicsDevice extends EventHandler {
                     break;
                 }
 
+                case PIXELFORMAT_R16F:
+                case PIXELFORMAT_RG16F:
                 case PIXELFORMAT_RGBA16F:
+
+                    // half float formats are filterable and blendable wherever they are
+                    // renderable, so those requirements need no additional test
                     if (this.textureHalfFloatRenderable) {
                         return format;
                     }
                     break;
 
+                case PIXELFORMAT_R32F:
+                case PIXELFORMAT_RG32F:
                 case PIXELFORMAT_RGBA32F:
 
-                    // on WebGPU platform, RGBA32F is not compatible with multi-sampling
+                    // on WebGPU platform, 32bit float formats are not compatible with multi-sampling
                     if (this.isWebGPU && samples > 1) {
                         continue;
                     }
 
-                    if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
+                    // unlike the smaller float formats, filtering and blending of the 32bit float
+                    // formats are both optional capabilities, tested for independently
+                    if (this.textureFloatRenderable &&
+                        (!filterable || this.textureFloatFilterable) &&
+                        (!blendable || this.textureFloatBlendable)) {
                         return format;
                     }
                     break;
