@@ -141,6 +141,23 @@ class Texture {
     /** @protected */
     _storage = false;
 
+    /**
+     * Sample count of the GPU texture.
+     *
+     * @type {number}
+     * @private
+     */
+    _samples = 1;
+
+    /**
+     * Existing GPU texture to wrap instead of allocating one. Used internally by
+     * {@link RenderTarget} when `bindMultisampled` is set.
+     *
+     * @type {object|null}
+     * @ignore
+     */
+    _importedGpuTexture = null;
+
     /** @protected */
     _numLevels = 0;
 
@@ -255,9 +272,8 @@ class Texture {
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
-     * @param {number} [options.samples] - Sample count of the GPU texture. 1 for a regular texture,
-     * > 1 for a multisampled texture (typically created by {@link RenderTarget} when
-     * `bindMultisampled` is set). Defaults to 1.
+     * @param {number} [options.samples] - Sample count of the GPU texture. 1 for a regular
+     * texture, greater than 1 for a multi-sampled texture. Defaults to 1.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new Texture(graphicsDevice, {
@@ -852,8 +868,8 @@ class Texture {
     }
 
     /**
-     * Sample count of the GPU texture. 1 for a regular texture; greater than 1 for a
-     * multisampled texture returned by {@link RenderTarget#getMultisampledColorBuffer}.
+     * Sample count of the GPU texture. 1 for a regular texture, greater than 1 for a
+     * multi-sampled texture (see {@link RenderTarget#getMultisampledColorBuffer}).
      *
      * @type {number}
      */

@@ -54,10 +54,10 @@ class ColorAttachment {
     multisampledBuffer;
 
     /**
-     * PlayCanvas Texture wrapping `multisampledBuffer` when `bindMultisampled` is set. Owned by
-     * this attachment; do not destroy from user code.
+     * Texture wrapping `multisampledBuffer` when `bindMultisampled` is set.
      *
      * @type {Texture|null}
+     * @ignore
      */
     bindTexture = null;
 
