@@ -26,6 +26,15 @@ class CameraShaderParams {
     _sceneDepthMapLinear = false;
 
     /**
+     * True when each depth in the linear scene depth map is stored as a float bit-packed into an
+     * RGBA8 texel, the encoding the producer of the map falls back to when float textures cannot be
+     * rendered to. Only meaningful when {@link CameraShaderParams#sceneDepthMapLinear} is set.
+     *
+     * @private
+     */
+    _sceneDepthMapPacked = false;
+
+    /**
      * The hash of the rendering parameters, or undefined if the hash has not been computed yet.
      *
      * @type {number|undefined}
@@ -52,7 +61,7 @@ class CameraShaderParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -66,7 +75,13 @@ class CameraShaderParams {
             this._definesDirty = false;
             defines.clear();
 
-            if (this._sceneDepthMapLinear) defines.set('SCENE_DEPTHMAP_LINEAR', '');
+            if (this._sceneDepthMapLinear) {
+                defines.set('SCENE_DEPTHMAP_LINEAR', '');
+
+                // nested, so that the packed define never appears without the linear one, which is
+                // what the decode in the screenDepth chunk relies on
+                if (this._sceneDepthMapPacked) defines.set('SCENE_DEPTHMAP_PACKED', '');
+            }
             if (this.shaderOutputGamma === GAMMA_SRGB) defines.set('SCENE_COLORMAP_GAMMA', '');
             defines.set('FOG', this._fog.toUpperCase());
             defines.set('TONEMAP', tonemapNames[this._toneMapping]);
@@ -145,6 +160,17 @@ class CameraShaderParams {
 
     get sceneDepthMapLinear() {
         return this._sceneDepthMapLinear;
+    }
+
+    set sceneDepthMapPacked(value) {
+        if (this._sceneDepthMapPacked !== value) {
+            this._sceneDepthMapPacked = value;
+            this.markDirty();
+        }
+    }
+
+    get sceneDepthMapPacked() {
+        return this._sceneDepthMapPacked;
     }
 
     /**
