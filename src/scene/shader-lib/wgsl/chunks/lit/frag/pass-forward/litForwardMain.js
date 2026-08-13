@@ -1,6 +1,8 @@
 // main shader entry point for the lit material for forward rendering
 export default /* wgsl */`
 
+#include "sceneTexturesPS"
+
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
@@ -46,6 +48,12 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     #include "debugProcessFrontendPS"
 
     var output: FragmentOutput = evaluateBackend();
+
+    // guarded by the same define the write function tests internally, as vLinearDepth is only
+    // generated when the depth is written
+    #ifdef SCENE_TEXTURE_DEPTH
+        writeSceneTextureDepth(&output, vLinearDepth, 1.0);
+    #endif
 
     #include "litUserMainEndPS"
 

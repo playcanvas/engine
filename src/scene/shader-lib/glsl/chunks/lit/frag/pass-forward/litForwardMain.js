@@ -1,6 +1,8 @@
 // main shader entry point for the lit material for forward rendering
 export default /* glsl */`
 
+#include "sceneTexturesPS"
+
 void main(void) {
 
     #include "litUserMainStartPS"
@@ -45,6 +47,12 @@ void main(void) {
     #include "debugProcessFrontendPS"
 
     evaluateBackend();
+
+    // guarded by the same define the write function tests internally, as vLinearDepth is only
+    // generated when the depth is written
+    #ifdef SCENE_TEXTURE_DEPTH
+        writeSceneTextureDepth(vLinearDepth, 1.0);
+    #endif
 
     #include "litUserMainEndPS"
 }

@@ -38,6 +38,7 @@ import envProcPS from '../chunks/common/frag/envProc.js';
 import falloffInvSquaredPS from '../chunks/lit/frag/falloffInvSquared.js';
 import falloffLinearPS from '../chunks/lit/frag/falloffLinear.js';
 import floatAsUintPS from '../chunks/common/frag/float-as-uint.js';
+import sceneTexturesPS from '../chunks/common/frag/scene-textures.js';
 import fogPS from '../chunks/common/frag/fog.js';
 import fogMathPS from '../chunks/common/shared/fogMath.js';
 import fresnelSchlickPS from '../chunks/lit/frag/fresnelSchlick.js';
@@ -203,6 +204,7 @@ const shaderChunksWGSL = {
     falloffInvSquaredPS,
     falloffLinearPS,
     floatAsUintPS,
+    sceneTexturesPS,
     fogPS,
     fogMathPS,
     fresnelSchlickPS,

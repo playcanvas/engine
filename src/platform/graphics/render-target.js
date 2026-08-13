@@ -659,6 +659,15 @@ class RenderTarget {
     }
 
     /**
+     * The number of color buffers (attachments) set up on the render target.
+     *
+     * @type {number}
+     */
+    get colorBufferCount() {
+        return this._colorBuffers?.length ?? 0;
+    }
+
+    /**
      * Accessor for multiple render target color buffers.
      *
      * @param {number} index - Index of the color buffer to get.

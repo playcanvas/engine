@@ -18,6 +18,7 @@ import { RenderPassForward } from './render-pass-forward.js';
 import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
+import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -610,6 +611,11 @@ class ForwardRenderer extends Renderer {
         const flipFactor = flipFaces ? -1 : 1;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
+        // when this pass renders the scene textures, the additional attachments of the materials whose
+        // shader does not generate them need masking off
+        const sceneTextures = camera.shaderParams.sceneTextures.length > 0;
+        const attachmentCount = sceneTextures ? (device.renderTarget?.colorBufferCount ?? 1) : 1;
+
         // multiview xr rendering
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
 
@@ -654,7 +660,9 @@ class ForwardRenderer extends Renderer {
 
                 this.alphaTestId.setValue(material.alphaTest);
 
-                device.setBlendState(material.blendState);
+                const blendState = (attachmentCount > 1 && !material.sceneTexturesWrite) ?
+                    getSingleAttachmentBlendState(material.blendState, attachmentCount) : material.blendState;
+                device.setBlendState(blendState);
                 device.setDepthState(material.depthState);
                 device.setAlphaToCoverage(material.alphaToCoverage);
             }

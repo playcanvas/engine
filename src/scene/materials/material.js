@@ -150,6 +150,14 @@ class Material {
     /** @ignore */
     _blendState = new BlendState();
 
+    /**
+     * Explicit setting of sceneTexturesWrite, or undefined to derive it from transparency.
+     *
+     * @type {boolean|undefined}
+     * @private
+     */
+    _sceneTexturesWrite;
+
     /** @ignore */
     _depthState = new DepthState();
 
@@ -484,6 +492,47 @@ class Material {
         return this._blendState.blend;
     }
 
+    /**
+     * Declares whether this material's shader generates the scene textures - the additional render
+     * target attachments the scene pass renders alongside the scene color, holding per pixel data
+     * such as the linear depth. It applies to all of them at once, as a shader either supports the
+     * scene textures or it does not. The attachments of a material that does not generate them are
+     * masked off, as a shader leaving an attachment unwritten makes the draw invalid.
+     *
+     * The default depends on where the shader comes from, so this rarely needs setting:
+     *
+     * - {@link StandardMaterial} and {@link LitMaterial} generate them from the engine's own shader,
+     * so they default to true when opaque and false when transparent - blending the values of
+     * ordinary transparent geometry into them is not meaningful.
+     * - {@link ShaderMaterial} defaults to false, as its shader is supplied by the user. Set this to
+     * true if that shader outputs them using the `sceneTexturesPS` chunk.
+     * - Gaussian splat materials set it to true, the deliberate exception to the transparency rule -
+     * their premultiplied blending accumulates a transmittance weighted average.
+     * - Particle materials set it to false, as they use their own shader.
+     *
+     * Unlike {@link Material#depthWrite} and the color write properties this is not purely a mask:
+     * setting it to true for a shader that does not generate the scene textures makes its draws
+     * invalid, rather than simply skipping the write.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    set sceneTexturesWrite(value) {
+        this._sceneTexturesWrite = value;
+    }
+
+    /**
+     * Gets whether this material's shader generates the scene textures. Returns the explicitly set
+     * value when there is one, and otherwise derives it from transparency - opaque materials generate
+     * them, transparent ones do not. See the setter for the default of each material type.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get sceneTexturesWrite() {
+        return this._sceneTexturesWrite ?? !this.transparent;
+    }
+
     _updateTransparency() {
         for (const meshInstance of this.meshInstances) {
             meshInstance.transparent = this.transparent;
@@ -691,6 +740,7 @@ class Material {
 
         this._blendState.copy(source._blendState);
         this._depthState.copy(source._depthState);
+        this._sceneTexturesWrite = source._sceneTexturesWrite;
 
         this.cull = source.cull;
         this.frontFace = source.frontFace;
