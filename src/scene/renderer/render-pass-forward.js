@@ -61,7 +61,7 @@ class RenderPassForward extends RenderPass {
     gammaCorrection;
 
     /**
-     * The tone mapping setting for the render pass. In not set, setting from the camera is used.
+     * The tone mapping setting for the render pass. If not set, setting from the camera is used.
      *
      * @type {number|undefined}
      */
@@ -69,7 +69,7 @@ class RenderPassForward extends RenderPass {
 
     /**
      * The names of the scene textures this pass renders alongside the scene color, in the order of
-     * the color attachments they are rendered to. In not set, setting from the camera is used. Only
+     * the color attachments they are rendered to. If not set, setting from the camera is used. Only
      * the passes rendering to a render target the scene textures are attached to set this, so that
      * the camera's other passes, for example the one rendering the UI to the output render target,
      * do not write them.
@@ -309,6 +309,12 @@ class RenderPassForward extends RenderPass {
                 options.clearColor = step.clearColor;
                 options.clearDepth = step.clearDepth;
                 options.clearStencil = step.clearStencil;
+
+                // unlike the clear of the render pass itself, this clear is not attachment aware - it
+                // clears all the color attachments of the render target, and so would also clear the
+                // scene textures, which this pass does not own the content of
+                Debug.assert(!(options.clearColor && this.sceneTextures?.length),
+                    'Clearing the color inside a render pass which renders the scene textures is not supported, as the clear would also clear those. This happens when the camera does not clear the whole render target, or when it is not the first one rendering to it.', this);
             }
 
             const renderTarget = step.renderTarget ?? device.backBuffer;

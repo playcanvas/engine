@@ -57,15 +57,23 @@ describe('CameraShaderParams', function () {
             expect(params.hash).to.not.equal(depth);
         });
 
-        it('keeps the hash stable when reassigned the same names in a new array', function () {
+        it('does not invalidate anything when reassigned the same names in a new array', function () {
             const params = new CameraShaderParams();
             params.sceneTextures = ['depth'];
-            const hash = params.hash;
 
-            // the render passes assign this as they execute, so an equal value must not invalidate
-            // the shader variants of every material
+            // the render passes assign this around every layer step they render, so an equal value
+            // must not dirty the hash which the shader variants of every material are keyed on. Note
+            // that the hash itself cannot show this, as recomputing it yields the same number
+            let dirtied = 0;
+            params.markDirty = () => {
+                dirtied++;
+            };
+
             params.sceneTextures = ['depth'];
-            expect(params.hash).to.equal(hash);
+            expect(dirtied).to.equal(0);
+
+            params.sceneTextures = ['depth', 'velocity'];
+            expect(dirtied).to.equal(1);
         });
 
         it('reflects the names in the order they are supplied', function () {

@@ -616,6 +616,13 @@ class ForwardRenderer extends Renderer {
         const sceneTextures = camera.shaderParams.sceneTextures.length > 0;
         const attachmentCount = sceneTextures ? (device.renderTarget?.colorBufferCount ?? 1) : 1;
 
+        // the masking requires independent blending - without it the blend state of the attachment 0
+        // applies to all attachments, and so the materials which do not generate the scene textures
+        // would write undefined values to them. Whoever sets up the scene textures has to test for
+        // this capability.
+        Debug.assert(attachmentCount <= 1 || device.supportsIndependentBlending,
+            'Rendering the scene textures requires GraphicsDevice#supportsIndependentBlending, as the attachments of the materials which do not generate them cannot be masked off without it.');
+
         // multiview xr rendering
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
 
