@@ -32,7 +32,7 @@ describe('BindTextureFormat', function () {
                 SHADERSTAGE_FRAGMENT,
                 TEXTUREDIMENSION_2D,
                 SAMPLETYPE_UNFILTERABLE_FLOAT,
-                true,
+                false,
                 'msColor_sampler',
                 true
             );
@@ -47,8 +47,8 @@ describe('BindTextureFormat', function () {
                 SHADERSTAGE_FRAGMENT,
                 TEXTUREDIMENSION_2D,
                 SAMPLETYPE_FLOAT,
-                true,
-                'msColor_sampler',
+                false,
+                null,
                 true
             );
             expect(format.sampleType).to.equal(SAMPLETYPE_UNFILTERABLE_FLOAT);
@@ -67,7 +67,7 @@ describe('BindTextureFormat', function () {
                     return { key: implKey++, destroy() {} };
                 }
             };
-            const ms = new BindTextureFormat('msColor', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, true, null, true);
+            const ms = new BindTextureFormat('msColor', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, false, null, true);
             const sampled = new BindTextureFormat('color', SHADERSTAGE_FRAGMENT);
             const format = new BindGroupFormat(device, [ms, sampled]);
 

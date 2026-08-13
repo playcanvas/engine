@@ -272,8 +272,6 @@ class Texture {
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
-     * @param {number} [options.samples] - Sample count of the GPU texture. 1 for a regular
-     * texture, greater than 1 for a multi-sampled texture. Defaults to 1.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new Texture(graphicsDevice, {
@@ -868,10 +866,11 @@ class Texture {
     }
 
     /**
-     * Sample count of the GPU texture. 1 for a regular texture, greater than 1 for a
-     * multi-sampled texture (see {@link RenderTarget#getMultisampledColorBuffer}).
+     * Sample count of the GPU texture. Used internally by the multi-sampled color wrapper
+     * returned from {@link RenderTarget#getMultisampledColorBuffer}.
      *
      * @type {number}
+     * @ignore
      */
     get samples() {
         return this._samples;
