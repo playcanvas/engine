@@ -12,9 +12,9 @@ class NullRenderTarget {
     _msColorBuffers = [];
 
     destroy(device) {
+        this.initialized = false;
         this._msColorBuffers.forEach(texture => texture.destroy());
         this._msColorBuffers = [];
-        this.initialized = false;
     }
 
     init(device, renderTarget) {
@@ -46,6 +46,9 @@ class NullRenderTarget {
     }
 
     loseContext() {
+        this.initialized = false;
+        this._msColorBuffers.forEach(texture => texture.destroy());
+        this._msColorBuffers = [];
     }
 
     resolve(device, target, color, depth) {
