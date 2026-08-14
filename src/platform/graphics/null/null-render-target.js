@@ -14,6 +14,7 @@ class NullRenderTarget {
     destroy(device) {
         this._msColorBuffers.forEach(texture => texture.destroy());
         this._msColorBuffers = [];
+        this.initialized = false;
     }
 
     init(device, renderTarget) {
