@@ -73,7 +73,7 @@ varying gaussianColor: half4;
     varying id: f32;
 #endif
 
-#ifdef PREPASS_PASS
+#if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
     varying vLinearDepth: f32;
 #endif
 
@@ -212,7 +212,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         output.id = f32(cacheIdx);
     #endif
 
-    #ifdef PREPASS_PASS
+    #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
         output.vLinearDepth = viewDepth;
     #endif
 

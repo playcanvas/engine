@@ -13,7 +13,7 @@ varying gaussianColor: half4;
 
 const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
 
-#ifdef PREPASS_PASS
+#if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
     varying vLinearDepth: f32;
 #endif
 
@@ -137,7 +137,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         output.id = f32(splat.index);
     #endif
 
-    #ifdef PREPASS_PASS
+    #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
         output.vLinearDepth = -center.view.z;
     #endif
 
