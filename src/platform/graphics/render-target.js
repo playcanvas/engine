@@ -677,6 +677,8 @@ class RenderTarget {
         if (!this._bindMultisampled) {
             return null;
         }
+        Debug.assert(index >= 0 && index < this.colorBufferCount,
+            `getMultisampledColorBuffer: index ${index} is out of range for render target '${this.name}' with ${this.colorBufferCount} color attachment(s).`);
         if (!this.initialized) {
             // Register with the device so loseContext/restore still tracks this target.
             // Direct init() would set initialized and skip GraphicsDevice.initRenderTarget().
