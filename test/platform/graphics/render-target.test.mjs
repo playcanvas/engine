@@ -252,5 +252,21 @@ describe('RenderTarget', function () {
             expect(rt.getMultisampledColorBuffer()).to.equal(null);
             destroyRenderTarget(rt);
         });
+
+        it('returns a fresh bindable MSAA color texture after resize', function () {
+            device.isWebGPU = true;
+            const rt = createRenderTarget({ samples: 4, bindMultisampled: true });
+            const msColor1 = rt.getMultisampledColorBuffer();
+            expect(msColor1).to.not.equal(null);
+
+            rt.resize(8, 8);
+            const msColor2 = rt.getMultisampledColorBuffer();
+            expect(msColor2).to.not.equal(null);
+            expect(msColor2).to.not.equal(msColor1);
+            expect(msColor2.width).to.equal(8);
+            expect(msColor2.height).to.equal(8);
+            expect(msColor2.samples).to.equal(4);
+            destroyRenderTarget(rt);
+        });
     });
 });
