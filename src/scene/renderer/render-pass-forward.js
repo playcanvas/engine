@@ -6,7 +6,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { LayerRenderStep } from './layer-render-step.js';
-import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD } from '../constants.js';
+import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD, sceneTextureUniformNames } from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -77,6 +77,17 @@ class RenderPassForward extends RenderPass {
      * @type {string[]|undefined}
      */
     sceneTextures;
+
+    /**
+     * True if this pass publishes the scene textures it rendered when it finishes, making them
+     * available to the passes which consume them. Only the last pass rendering to the render target
+     * they are attached to sets this - publishing earlier would expose an attachment of a render target
+     * the remaining passes still render into, and the materials they render could then sample it, which
+     * is not allowed.
+     *
+     * @type {boolean}
+     */
+    publishSceneTextures = false;
 
     /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
@@ -252,6 +263,25 @@ class RenderPassForward extends RenderPass {
     }
 
     after() {
+
+        // Publish the scene textures this pass rendered, making them available to the passes which
+        // consume them. This happens before the events below, so that a handler reading them sees the
+        // ones from this frame. Note that the depth prepass publishes its own depth to the same
+        // uniform, from its own after - the two are producers of the same thing, and this pass runs
+        // later, so the scene texture depth, which additionally covers the blended geometry, is what
+        // the consumers sample.
+        const sceneTextures = this.sceneTextures;
+        if (this.publishSceneTextures && sceneTextures?.length) {
+            const { renderTarget } = this;
+            Debug.assert(renderTarget.colorBufferCount > sceneTextures.length,
+                'The render target of a pass rendering the scene textures needs an attachment for each of them, in addition to the one holding the scene color.');
+
+            for (let i = 0; i < sceneTextures.length; i++) {
+                const uniformName = sceneTextureUniformNames[sceneTextures[i]];
+                Debug.assert(uniformName, `Scene texture '${sceneTextures[i]}' has no uniform to be published under, see sceneTextureUniformNames.`);
+                this.device.scope.resolve(uniformName).setValue(renderTarget.getColorBuffer(i + 1));
+            }
+        }
 
         // onPostRender events
         for (let i = 0; i < this.layerRenderSteps.length; i++) {

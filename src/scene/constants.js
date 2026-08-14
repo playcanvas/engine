@@ -1343,3 +1343,15 @@ export const RADIX_SORT_ONESWEEP = 2;
  * @ignore
  */
 export const SCENETEXTURE_DEPTH = 'depth';
+
+/**
+ * The uniform each scene texture is published under by the render pass which rendered it. Note that
+ * the depth uses the same uniform as the depth prepass, as those are two producers of the same thing,
+ * and the consumers sample whichever of them ran later in the frame.
+ *
+ * @type {Object<string, string>}
+ * @ignore
+ */
+export const sceneTextureUniformNames = {
+    [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
+};
