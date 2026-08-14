@@ -9,6 +9,7 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LightComponent } from '../../framework/components/light/component.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
@@ -598,6 +599,26 @@ class CameraFrame {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Returns whether a device is able to let the gaussian splats contribute to the scene depth, which
+     * the volumetric fog and the depth of field need in order to be bounded by the splats instead of
+     * drawing through them. Their contribution additionally has to be turned on using
+     * {@link GSplatParams#sceneDepthWrite}; this reports whether doing so can take effect, so that an
+     * application rendering gaussian splats can disable those effects on the devices which cannot
+     * respect them.
+     *
+     * This tests the device alone, and so can be called before any camera frame is created. Whether a
+     * particular one then renders the depth this way also depends on its own settings - multi-sampling
+     * and a camera not clearing the whole of its render target both rule it out - and a debug build
+     * warns, naming the reason, when the splats end up not contributing.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {boolean} True if the splats can contribute to the scene depth.
+     */
+    static isSplatSceneDepthSupported(device) {
+        return FramePassCameraFrame.isSceneTextureDepthSupported(device);
     }
 
     /**
