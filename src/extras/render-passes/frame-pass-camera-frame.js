@@ -1,4 +1,4 @@
-import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE, SCENETEXTURE_DEPTH, sceneTextureUniformNames } from '../../scene/constants.js';
+import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE, SCENETEXTURE_DEPTH } from '../../scene/constants.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
@@ -81,6 +81,14 @@ const _defaultOptions = new CameraFrameOptions();
 
 // the formats the scene depth can be rendered to, in the order of preference
 const _sceneDepthFormats = [PIXELFORMAT_R32F, PIXELFORMAT_R16F];
+
+// the largest value a half float can store, and so the furthest the scene depth can reach when it falls
+// back to that format
+const _maxHalfFloat = 65504;
+
+// how far inside the far clip the scene depth is cleared to, as a fraction of it. Large enough to survive
+// being stored as a half float, which steps by around a thousandth of the value it holds.
+const _sceneDepthClearEpsilon = 1e-3;
 
 /**
  * Render pass implementation of a common camera frame rendering with integrated post-processing
@@ -354,6 +362,13 @@ class FramePassCameraFrame extends FramePass {
         // - it would also clear the scene textures
         if (!this.cameraComponent.camera.fullSizeClearRect) {
             return 'this camera does not clear the whole render target, and the clear it uses instead would also clear the scene depth';
+        }
+
+        // the depth is stored in linear view space units, so the far clip has to fit in the format. Half
+        // float stops being able to represent it at all beyond 65504, and steps by tens of units well
+        // before that, so the effects consuming it need the far clip considerably lower still.
+        if (this.sceneDepthFormat === PIXELFORMAT_R16F && this.cameraComponent.camera.farClip > _maxHalfFloat) {
+            return `the far clip of this camera is too far for a half float scene depth - keep it below ${_maxHalfFloat}, and well below that for the depth to stay precise enough`;
         }
 
         // The depth prepass, which this camera needs as well, publishes its depth to the same uniform
@@ -788,6 +803,12 @@ class FramePassCameraFrame extends FramePass {
         // being rendered into is not allowed.
         (this.scenePassTransparent ?? this.scenePass).publishSceneTextures = true;
 
+        // Without a prepass nothing has published the scene depth by the time the scene renders, so the
+        // first pass clears the uniform it is published to. This has to happen as the pass renders rather
+        // than when the frame is set up, as every camera's frameUpdate runs before any of them renders,
+        // and so another camera could publish its own depth in between.
+        this.scenePass.clearSceneTextures = options.sceneTextureDepth && !options.prepassEnabled;
+
         return ret;
     }
 
@@ -904,24 +925,13 @@ class FramePassCameraFrame extends FramePass {
             // texture with the scene render target, which the scene pass resizes
             this.rtSceneColor.resize(this.rt.width, this.rt.height);
 
-            // pixels no geometry covers read as the far clip. Only the first pass rendering to the
+            // pixels no geometry covers read as the far clip, nudged just inside it so that a consumer
+            // testing for the far plane is not caught by rounding. Only the first pass rendering to the
             // scene render target clears it - the one rendering the transparent layers after the grab
             // pass blends into what the first one accumulated.
             const clearValue = this._sceneDepthClearValue;
-            clearValue.r = this.cameraComponent.camera.farClip - Number.MIN_VALUE;
+            clearValue.r = this.cameraComponent.camera.farClip * (1 - _sceneDepthClearEpsilon);
             this.scenePass.setClearColor(clearValue, this.sceneDepthSlot);
-
-            // Without a prepass nothing produces the scene depth before the scene pass, and what the
-            // last scene pass published in the previous frame is an attachment of the render target the
-            // scene passes render into. Clear those uniforms, so that a material sampling the scene
-            // depth without the user having asked for it reports that the depth is not available -
-            // which is the case - instead of silently reading a texture that is currently attached.
-            if (!this.options.prepassEnabled) {
-                const { scope } = this.device;
-                this._sceneTextureNames.forEach((name) => {
-                    scope.resolve(sceneTextureUniformNames[name]).setValue(null);
-                });
-            }
         }
 
         // scene texture is either output of taa pass or the scene render target

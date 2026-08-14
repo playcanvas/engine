@@ -90,6 +90,16 @@ class RenderPassForward extends RenderPass {
     publishSceneTextures = false;
 
     /**
+     * True if this pass clears the uniforms the scene textures are published to before it renders. Only
+     * the first pass rendering to the render target they are attached to sets this, and only when no
+     * depth prepass has published to those uniforms already - it is what stops a material from sampling
+     * a scene texture which nothing has produced yet.
+     *
+     * @type {boolean}
+     */
+    clearSceneTextures = false;
+
+    /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
      * pre-pass.
      */
@@ -233,6 +243,18 @@ class RenderPassForward extends RenderPass {
 
     before() {
         const { layerRenderSteps } = this;
+
+        // Clear the uniforms the scene textures are published to, so that a material sampling them
+        // reports that they are not available - which is the case, as nothing has produced them for this
+        // frame yet - instead of silently reading a texture this pass renders into, or one that another
+        // camera published earlier in the frame. Only the first pass rendering to the render target they
+        // are attached to does this, and only when no depth prepass published to those uniforms before it.
+        if (this.clearSceneTextures) {
+            const { scope } = this.device;
+            this.sceneTextures.forEach((name) => {
+                scope.resolve(sceneTextureUniformNames[name]).setValue(null);
+            });
+        }
 
         // onPreRender events
         for (let i = 0; i < layerRenderSteps.length; i++) {
