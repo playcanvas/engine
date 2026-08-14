@@ -15,6 +15,13 @@ export default /* glsl */`
     #include "floatAsUintPS"
 #endif
 
+// the prepass declares this varying above, and the two passes are never generated as one
+#if defined(SCENE_TEXTURE_DEPTH) && !defined(PREPASS_PASS)
+    varying float vLinearDepth;
+#endif
+
+#include "sceneTexturesPS"
+
 #if !defined(SHADOW_PASS) && !defined(PICK_PASS) && !defined(PREPASS_PASS)
     uniform float alphaClipForward;
 #endif
@@ -94,6 +101,19 @@ void main(void) {
         vec4 fragColor = vec4(gaussianColor.xyz, alpha);
         modifySplatColor(gaussianUV, fragColor);
         gl_FragColor = vec4(fragColor.xyz * fragColor.a, fragColor.a);
+
+        // The same premultiplied blending which composites the color accumulates a transmittance
+        // weighted depth, so the splats gain a depth without being rendered a second time. Dithered
+        // splats render as opaque, and the fragments which survive the dither have full coverage.
+        // Guarded by the define the write function tests internally, as vLinearDepth is only generated
+        // when the depth is written.
+        #ifdef SCENE_TEXTURE_DEPTH
+            #ifdef DITHER_NONE
+                writeSceneTextureDepth(vLinearDepth, fragColor.a);
+            #else
+                writeSceneTextureDepth(vLinearDepth, 1.0);
+            #endif
+        #endif
     #endif
 }
 `;
