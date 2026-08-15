@@ -1230,6 +1230,8 @@ class JointComponent extends Component {
                 rigidbodyB.on('beforeremove', this._onBodyLost, this)
             );
         }
+
+        this._activateBodies();
     }
 
     /** @private */
@@ -1248,6 +1250,8 @@ class JointComponent extends Component {
 
             this.system.app.systems.rigidbody.physicsWorld.destroyJoint(joint);
             this._joint = null;
+
+            this._activateBodies();
         }
     }
 
@@ -1318,7 +1322,9 @@ class JointComponent extends Component {
 
     /**
      * Wakes the constrained bodies so that a change to the constraint takes immediate effect on
-     * a sleeping simulation island.
+     * a sleeping simulation island. Creating and destroying the constraint wake the bodies too,
+     * so a joint added between two settled bodies is enforced right away and one removed from
+     * them releases them right away, rather than leaving them holding the constrained pose.
      *
      * @private
      */
