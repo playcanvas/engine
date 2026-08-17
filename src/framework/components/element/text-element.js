@@ -238,6 +238,11 @@ class TextElement {
             this._model = null;
         }
 
+        // the node was added as a child of the entity, so detach it - otherwise it lingers in
+        // entity.children for the lifetime of the entity
+        this._node.remove();
+        this._node = null;
+
         this._fontAsset.destroy();
         this.font = null;
 
