@@ -45,7 +45,7 @@ const assets = {
     ),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     height: new Asset('height', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
-    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' })
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {

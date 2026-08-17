@@ -28,9 +28,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvasGrey: new Asset('playcanvasGrey', 'texture', {
-        url: './assets/textures/playcanvas-grey.png'
-    })
+    playcanvasGrey: new Asset(
+        'playcanvasGrey',
+        'texture',
+        {
+            url: './assets/textures/playcanvas-grey.png'
+        },
+        { srgb: true }
+    )
 };
 
 const gfxOptions = {
