@@ -294,11 +294,16 @@ const createUpdate = async (file, engine, logStart = null) => {
 
         // the example source is gone, which is what a rename or a delete looks like from here. There
         // is no update to send - the example list is read once at startup, so a new name needs a
-        // restart to appear - and reading its config would throw.
+        // restart to appear - and reading its config would throw. Anything other than a missing file
+        // is a real problem, so it is left to the watcher's catch to report.
         const source = getExamplePath(item, 'example.mjs');
-        const exists = await fs.promises.stat(source).then(() => true, () => false);
-        if (!exists) {
-            return null;
+        try {
+            await fs.promises.stat(source);
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                return null;
+            }
+            throw err;
         }
 
         const example = `/${item.categoryKebab}/${item.exampleNameKebab}`;
