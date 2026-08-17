@@ -44,8 +44,7 @@ describe('CollisionComponent', function () {
             expect(e.collision.checkVertexDuplicates).to.equal(true);
             expect(e.collision.shape).to.equal(null);
             expect(e.collision.render).to.equal(null);
-            // non-mesh initialization creates a placeholder model
-            expect(e.collision.model).to.be.an.instanceof(Model);
+            expect(e.collision.model).to.equal(null);
         });
 
         it('round-trips every property passed via the data argument', function () {
@@ -244,6 +243,20 @@ describe('CollisionComponent', function () {
             e.collision.type = 'sphere';
 
             expect(e.collision.type).to.equal('sphere');
+        });
+
+        it('does not build a mesh shape when a non-mesh type is switched to mesh', function () {
+            app.systems.rigidbody.setPhysicsWorld(new NullPhysicsWorld());
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('collision');
+
+            // no asset, render asset or model was supplied, so there is nothing to build from
+            e.collision.type = 'mesh';
+
+            expect(e.collision.model).to.equal(null);
+            expect(e.collision.shape).to.equal(null);
         });
 
         it('is a no-op when the type is unchanged', function () {
