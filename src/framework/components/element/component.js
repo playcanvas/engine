@@ -1407,6 +1407,32 @@ class ElementComponent extends Component {
     }
 
     /**
+     * Sets whether wrapped lines are stretched to be flush with both edges of the element, by
+     * widening the gaps between their words. The last line of the text and any line ended by an
+     * explicit line break are not stretched, and follow {@link alignment} instead - as does a line
+     * with no gaps to widen. Only works for {@link ELEMENTTYPE_TEXT} elements, and only has an
+     * effect when {@link wrapLines} is set to true and the element has a fixed width.
+     *
+     * @type {boolean}
+     */
+    set justify(arg) {
+        this._setValue('justify', arg);
+    }
+
+    /**
+     * Gets whether wrapped lines are stretched to be flush with both edges of the element.
+     *
+     * @type {boolean}
+     */
+    get justify() {
+        if (this._text) {
+            return this._text.justify;
+        }
+
+        return null;
+    }
+
+    /**
      * Gets the lines of rendered text, split by line breaks and word wrapping. Only works for
      * {@link ELEMENTTYPE_TEXT} elements, and is populated when the text is laid out, so it reads as
      * `undefined` until the first update.
