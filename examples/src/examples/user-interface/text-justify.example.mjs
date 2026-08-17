@@ -87,8 +87,8 @@ app.root.addChild(screen);
 const TEXT_WIDTH = 620;
 const TEXT_HEIGHT = 290;
 
-// A panel behind the text, exactly the size of the text element, so that it is easy to see
-// where the edges the text is aligned to actually are
+// A panel behind the text, exactly the size of the text element, so that it is easy to see which
+// edges the text is being aligned to
 const panel = new Entity('panel');
 panel.setLocalPosition(0, 40, 0);
 panel.addComponent('element', {

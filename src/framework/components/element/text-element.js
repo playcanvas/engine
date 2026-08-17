@@ -636,7 +636,7 @@ class TextElement {
                 meshInfo.colors.length = l * 4 * 4;
                 meshInfo.outlines.length = l * 4 * 3;
                 meshInfo.shadows.length = l * 4 * 3;
-                meshInfo.gapIndices.length = l;
+                meshInfo.gapIndices.length = this._justify ? l : 0;
 
                 // destroy old mesh
                 if (meshInfo.meshInstance) {
@@ -862,6 +862,8 @@ class TextElement {
         if (autoFit) {
             this._fontSize = this._maxFontSize;
         }
+
+        const justify = this._justify;
 
         const MAGIC = 32;
         const l = this._symbols.length;
@@ -1131,23 +1133,28 @@ class TextElement {
                     }
                 }
 
+                quad = meshInfo.quad;
+                meshInfo.lines[lines - 1] = quad;
+
                 // Count the whitespace gaps preceding this glyph on its line and record the count
                 // per quad. Justification shifts each glyph by the width of the gaps before it, and
                 // the quads of one line can be spread over several meshes when the font has more
                 // than one texture page, so the count cannot be recovered later from the line alone.
-                if (isWhitespace) {
-                    prevWasWhitespace = true;
-                } else {
-                    if (prevWasWhitespace && seenNonWhitespaceThisLine) {
-                        numGapsThisLine++;
+                // Only tracked when justifying, which leaves every line with a gap count of zero
+                // otherwise - changing justify rebuilds the text, so this cannot go stale.
+                if (justify) {
+                    if (isWhitespace) {
+                        prevWasWhitespace = true;
+                    } else {
+                        if (prevWasWhitespace && seenNonWhitespaceThisLine) {
+                            numGapsThisLine++;
+                        }
+                        prevWasWhitespace = false;
+                        seenNonWhitespaceThisLine = true;
                     }
-                    prevWasWhitespace = false;
-                    seenNonWhitespaceThisLine = true;
-                }
 
-                quad = meshInfo.quad;
-                meshInfo.lines[lines - 1] = quad;
-                meshInfo.gapIndices[quad] = numGapsThisLine;
+                    meshInfo.gapIndices[quad] = numGapsThisLine;
+                }
 
                 let left = _x - x;
                 let right = left + quadsize;
@@ -1363,7 +1370,7 @@ class TextElement {
                 // horizontal alignment and spreads the space it has left over evenly between its
                 // words instead. Lines that must not be justified carry a gap count of 0 and so
                 // keep using the alignment.
-                const numGaps = this._justify ? this._lineGaps[lineIndex] : 0;
+                const numGaps = justify ? this._lineGaps[lineIndex] : 0;
                 const justified = numGaps > 0 && slack > 0;
                 const gapWidth = justified ? slack / numGaps : 0;
 

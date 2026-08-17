@@ -189,7 +189,7 @@ describe('TextElement', function () {
             });
             return {
                 mapping: mapping,
-                isrtl: true
+                rtl: true
             };
         });
     }
@@ -351,6 +351,12 @@ describe('TextElement', function () {
         element.text = 'aa bb cc dd ee ff gg hh ii jj kk ll';
 
         const ranges = lineQuadRanges();
+        const before = quadLefts();
+
+        element.justify = true;
+        const after = quadLefts();
+
+        // gap counts are only tracked while justifying, so they have to be read afterwards
         const lineGaps = element._text._lineGaps.slice();
 
         // pick a stretched line with more than one gap in it
@@ -360,10 +366,6 @@ describe('TextElement', function () {
         const range = ranges[lineIndex];
         const slack = element.calculatedWidth - element._text._lineWidths[lineIndex];
         expect(slack).to.be.above(0);
-
-        const before = quadLefts();
-        element.justify = true;
-        const after = quadLefts();
 
         // how far the first glyph of each word on the line moved
         const shifts = [];
@@ -399,6 +401,11 @@ describe('TextElement', function () {
         element.rtlReorder = true;
 
         element.text = 'abcde fghij klmno pqrst uvwxyz';
+
+        // guard against the reorder handler silently failing to turn rtl on, which would leave
+        // this exercising the ltr path and let the rtl behaviour regress unnoticed
+        expect(element._text._rtl).to.equal(true);
+
         assertJustifiedLinesAreFlushWithBothEdges();
     });
 
