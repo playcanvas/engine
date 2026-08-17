@@ -453,9 +453,12 @@ class CameraFrame {
     };
 
     /**
-     * Debug rendering. Set to null to disable.
+     * Debug rendering, which displays an intermediate value of the frame in place of the composed
+     * result. This never changes what the frame renders - a mode whose value this frame does not
+     * generate simply displays nothing: 'depth' renders black when no effect has produced the scene
+     * depth, and the modes of a disabled effect are ignored. Set to null to disable.
      *
-     * @type {null|'scene'|'ssao'|'bloom'|'vignette'|'dofcoc'|'dofblur'}
+     * @type {null|'scene'|'ssao'|'bloom'|'vignette'|'dofcoc'|'dofblur'|'depth'}
      */
     debug = null;
 
