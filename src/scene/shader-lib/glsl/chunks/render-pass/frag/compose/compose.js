@@ -17,6 +17,14 @@ export default /* glsl */`
     #include "composeCasPS"
     #include "composeColorLutPS"
 
+    // The depth debug mode displays a depth some other pass in this frame has already produced - the
+    // debug modes never turn any rendering on, so the mode is switched to depthmissing when nothing
+    // did, see RenderPassCompose. That is also why this is included here rather than unconditionally:
+    // declaring the depth sampler in a frame with no depth to bind to it is an error.
+    #if DEBUG_COMPOSE == depth
+        #include "screenDepthPS"
+    #endif
+
     #include "composeDeclarationsPS"
 
     void main() {
@@ -94,6 +102,13 @@ export default /* glsl */`
                 result = vec3(dSsao);
             #elif defined(VIGNETTE) && DEBUG_COMPOSE == vignette
                 result = vec3(dVignette);
+            #elif DEBUG_COMPOSE == depth
+                // a linear ramp over the camera clip range
+                float dDepth = getLinearScreenDepth(uv);
+                result = vec3(clamp((dDepth - camera_params.z) / (camera_params.y - camera_params.z), 0.0, 1.0));
+            #elif DEBUG_COMPOSE == depthmissing
+                // the depth was asked for while nothing in this frame produces it
+                result = vec3(0.0);
             #endif
         #endif
 
