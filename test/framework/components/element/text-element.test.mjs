@@ -118,7 +118,7 @@ describe('TextElement', function () {
             });
             return {
                 mapping: mapping,
-                isrtl: true
+                rtl: true
             };
         });
     }
@@ -365,6 +365,19 @@ describe('TextElement', function () {
             'a',
             'bcdef ghijkl'
         ]);
+    });
+
+    it('rtl - reorder handler turns on rtl layout', function () {
+        registerRtlHandler();
+
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = 'abcde fghij';
+
+        // without this the rtl tests below all run through the ltr path, and the rtl specific
+        // layout code they are meant to cover is never reached
+        expect(element._text._rtl).to.equal(true);
     });
 
     it('rtl - breaks onto multiple lines if individual lines are too long', function () {
