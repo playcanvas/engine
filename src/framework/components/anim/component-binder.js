@@ -80,6 +80,9 @@ class AnimComponentBinder extends DefaultAnimBinder {
         switch (path.component) {
             case 'entity':
                 entity = this._getEntityFromHierarchy(path.entityPath);
+                if (!entity) {
+                    return null;
+                }
                 targetPath = AnimBinder.encode(
                     entity.path,
                     'entity',
@@ -98,6 +101,9 @@ class AnimComponentBinder extends DefaultAnimBinder {
                 break;
             default:
                 entity = this._getEntityFromHierarchy(path.entityPath);
+                if (!entity) {
+                    return null;
+                }
                 propertyComponent = entity.findComponent(path.component);
                 if (!propertyComponent) {
                     return null;
@@ -126,7 +132,7 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     _getEntityFromHierarchy(entityHierarchy) {
-        if (!this.animComponent.entity.name === entityHierarchy[0]) {
+        if (this.animComponent.entity.name !== entityHierarchy[0]) {
             return null;
         }
 
