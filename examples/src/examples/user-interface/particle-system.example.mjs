@@ -35,7 +35,7 @@ window.focus();
 
 const assets = {
     font: new Asset('font', 'font', { url: './assets/fonts/courier.json' }),
-    spark: new Asset('spark', 'texture', { url: './assets/textures/spark.png' })
+    spark: new Asset('spark', 'texture', { url: './assets/textures/spark.png' }, { srgb: true })
 };
 
 const gfxOptions = {
