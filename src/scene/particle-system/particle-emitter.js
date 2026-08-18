@@ -519,7 +519,9 @@ class ParticleEmitter {
             accumR[1] += this.qRadialSpeed2[index] * stepWeight;
             maxR = Math.max(maxR, Math.max(Math.abs(accumR[0]), Math.abs(accumR[1])));
 
-            maxScale = Math.max(maxScale, this.qScale[index]);
+            // both scale curves, as the rendered size is interpolated between them, and by
+            // magnitude, as a negative scale mirrors the particle without shrinking it
+            maxScale = Math.max(maxScale, Math.abs(this.qScale[index]), Math.abs(this.qScale2[index]));
         }
 
         if (this.emitterShape === EMITTERSHAPE_BOX) {

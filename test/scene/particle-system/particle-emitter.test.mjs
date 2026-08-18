@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 
+import { Curve } from '../../../src/core/math/curve.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { EMITTERSHAPE_SPHERE } from '../../../src/scene/constants.js';
@@ -105,6 +106,34 @@ describe('ParticleEmitter', function () {
             }
 
             expect(calls).to.equal(0);
+        });
+
+        it('grows when the scale curve changes', function () {
+            const emitter = createEmitter();
+            const before = emitter.localBounds.halfExtents.x;
+
+            emitter.node.particlesystem.scaleGraph = new Curve([0, 100, 1, 100]);
+
+            expect(emitter.localBounds.halfExtents.x).to.be.above(before + 40);
+        });
+
+        it('grows when only the secondary scale curve changes', function () {
+            const emitter = createEmitter();
+            const before = emitter.localBounds.halfExtents.x;
+
+            // the rendered size is interpolated between both scale curves
+            emitter.node.particlesystem.scaleGraph2 = new Curve([0, 100, 1, 100]);
+
+            expect(emitter.localBounds.halfExtents.x).to.be.above(before + 40);
+        });
+
+        it('covers the magnitude of a negative scale curve', function () {
+            const emitter = createEmitter();
+
+            // a negative scale mirrors the particle without shrinking it
+            emitter.node.particlesystem.scaleGraph = new Curve([0, -100, 1, -100]);
+
+            expect(emitter.localBounds.halfExtents.x).to.be.above(40);
         });
     });
 });
