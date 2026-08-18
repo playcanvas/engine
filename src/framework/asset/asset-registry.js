@@ -353,8 +353,12 @@ class AssetRegistry extends EventHandler {
             asset.tags.off('remove', this._onTagRemove, this);
 
             // clear the back-reference, so that an asset which outlives the application does not
-            // keep the registry - and through it all other assets - alive
-            asset.registry = null;
+            // keep the registry - and through it all other assets - alive. An asset added to
+            // another registry since points at that one instead, which cannot retain this
+            // registry, so it is left alone.
+            if (asset.registry === this) {
+                asset.registry = null;
+            }
         }
 
         this._assets.clear();

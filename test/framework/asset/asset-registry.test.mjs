@@ -405,6 +405,27 @@ describe('AssetRegistry', function () {
             expect(registry.find('Renamed Asset')).to.be.null;
         });
 
+        it('leaves a registry reference which belongs to another registry', function () {
+            const asset = new Asset('Asset', 'text', {
+                url: 'fake/one/file.txt'
+            });
+
+            const registry = new AssetRegistry(new ResourceLoader(app));
+            registry.add(asset);
+
+            // the asset now belongs to the other registry, which is still live
+            const other = new AssetRegistry(new ResourceLoader(app));
+            other.add(asset);
+
+            registry.destroy();
+
+            expect(asset.registry).to.equal(other);
+            expect(other.get(asset.id)).to.equal(asset);
+
+            other.destroy();
+            expect(asset.registry).to.be.null;
+        });
+
     });
 
 });
