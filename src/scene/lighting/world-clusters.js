@@ -1,7 +1,7 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R8U } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_R16U, PIXELFORMAT_R8U } from '../../platform/graphics/constants.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
@@ -93,6 +93,22 @@ class WorldClusters {
         return this._maxCellLightCount;
     }
 
+    // maximum number of visible lights - the lights buffer additionally stores the reserved
+    // 'no light' slot, so it is allocated with one more slot than this
+    set maxLights(count) {
+
+        if (count !== this.maxLights) {
+            this.lightsBuffer.maxLights = count + 1;
+
+            // the pixel format of the cluster texture depends on the number of lights
+            this._cellsDirty = true;
+        }
+    }
+
+    get maxLights() {
+        return this.lightsBuffer.maxLights - 1;
+    }
+
     set cells(value) {
 
         // make sure we have whole numbers
@@ -156,6 +172,7 @@ class WorldClusters {
         if (lightingParams) {
             this.cells = lightingParams.cells;
             this.maxCellLightCount = lightingParams.maxLightsPerCell;
+            this.maxLights = lightingParams.maxLights;
 
             this.lightsBuffer.cookiesEnabled = lightingParams.cookiesEnabled;
             this.lightsBuffer.shadowsEnabled = lightingParams.shadowsEnabled;
@@ -193,12 +210,17 @@ class WorldClusters {
             this._clusterCellsDotData[1] = cx * cz * this.maxCellLightCount;
             this._clusterCellsDotData[2] = cx * this.maxCellLightCount;
 
+            // lights use indices 1 .. maxLights, so 8 bits are enough for up to 255 lights,
+            // otherwise 16 bits are needed
+            const use16BitIndex = this.maxLights > 255;
+
             // cluster data and number of lights per cell
-            this.clusters = new Uint8ClampedArray(totalPixels);
+            this.clusters = use16BitIndex ? new Uint16Array(totalPixels) : new Uint8ClampedArray(totalPixels);
             this.counts = new Int32Array(numCells);
 
             this.releaseClusterTexture();
-            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8U, 'ClusterTexture');
+            this.clusterTexture = this.lightsBuffer.createTexture(this.device, width, height,
+                use16BitIndex ? PIXELFORMAT_R16U : PIXELFORMAT_R8U, 'ClusterTexture');
         }
     }
 
