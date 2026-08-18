@@ -54,15 +54,9 @@ const createHatchMaterial = (device, textures) => {
                 // Functions added: getNormalMatrix, getLocalNormal
                 #include "normalCoreVS"
 
-                // engine supplied uniforms
-                uniform vec3 view_position;
-
-                // out custom uniforms
-                uniform vec3 uLightDir;
-                uniform float uMetalness;
-
-                // variables we pass to the fragment shader
-                varying float brightness;
+                // variables we pass to the fragment shader, where the lighting is evaluated
+                varying vec3 worldPos;
+                varying vec3 worldNormal;
 
             #endif
 
@@ -71,25 +65,18 @@ const createHatchMaterial = (device, textures) => {
                 // use functionality from transformCore to get a world position, which includes skinning and morphing as needed
                 mat4 modelMatrix = getModelMatrix();
                 vec3 localPos = getLocalPosition(vertex_position.xyz);
-                vec4 worldPos = modelMatrix * vec4(localPos, 1.0);
+                vec4 worldPosition = modelMatrix * vec4(localPos, 1.0);
 
                 #ifndef SHADOW_PASS
 
                     // use functionality from normalCore to get the world normal, which includes skinning and morphing as needed
                     mat3 normalMatrix = getNormalMatrix(modelMatrix);
                     vec3 localNormal = getLocalNormal(vertex_normal);
-                    vec3 worldNormal = normalize(normalMatrix * localNormal);
 
-                    // simple wrap-around diffuse lighting using normal and light direction
-                    float diffuse = dot(worldNormal, uLightDir) * 0.5 + 0.5;
-
-                    // a simple specular lighting
-                    vec3 viewDir = normalize(view_position - worldPos.xyz);
-                    vec3 reflectDir = reflect(-uLightDir, worldNormal);
-                    float specular = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
-
-                    // combine the lighting
-                    brightness = diffuse * (1.0 - uMetalness) + specular * uMetalness;
+                    // the lighting is evaluated per-pixel, so simply pass the world space position
+                    // and normal along to the fragment shader
+                    worldPos = worldPosition.xyz;
+                    worldNormal = normalMatrix * localNormal;
 
                 #endif
 
@@ -97,7 +84,7 @@ const createHatchMaterial = (device, textures) => {
                 uv0 = aUv0;
 
                 // Transform the geometry
-                gl_Position = matrix_viewProjection * worldPos;
+                gl_Position = matrix_viewProjection * worldPosition;
             }
         `,
         vertexWGSL: /* wgsl */ `
@@ -122,15 +109,9 @@ const createHatchMaterial = (device, textures) => {
                 // Functions added: getNormalMatrix, getLocalNormal
                 #include "normalCoreVS"
 
-                // engine supplied uniforms
-                uniform view_position: vec3f;
-
-                // out custom uniforms
-                uniform uLightDir: vec3f;
-                uniform uMetalness: f32;
-
-                // variables we pass to the fragment shader
-                varying brightness: f32;
+                // variables we pass to the fragment shader, where the lighting is evaluated
+                varying worldPos: vec3f;
+                varying worldNormal: vec3f;
 
             #endif
 
@@ -142,25 +123,18 @@ const createHatchMaterial = (device, textures) => {
                 // use functionality from transformCore to get a world position, which includes skinning and morphing as needed
                 let modelMatrix: mat4x4f = getModelMatrix();
                 let localPos: vec3f = getLocalPosition(vertex_position.xyz);
-                let worldPos: vec4f = modelMatrix * vec4f(localPos, 1.0);
+                let worldPosition: vec4f = modelMatrix * vec4f(localPos, 1.0);
 
                 #ifndef SHADOW_PASS
 
                     // use functionality from normalCore to get the world normal, which includes skinning and morphing as needed
                     let normalMatrix: mat3x3f = getNormalMatrix(modelMatrix);
                     let localNormal: vec3f = getLocalNormal(vertex_normal);
-                    let worldNormal: vec3f = normalize(normalMatrix * localNormal);
 
-                    // simple wrap-around diffuse lighting using normal and light direction
-                    let diffuse: f32 = dot(worldNormal, uniform.uLightDir) * 0.5 + 0.5;
-
-                    // a simple specular lighting
-                    let viewDir: vec3f = normalize(uniform.view_position - worldPos.xyz);
-                    let reflectDir: vec3f = reflect(-uniform.uLightDir, worldNormal);
-                    let specular: f32 = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
-
-                    // combine the lighting
-                    output.brightness = diffuse * (1.0 - uniform.uMetalness) + specular * uniform.uMetalness;
+                    // the lighting is evaluated per-pixel, so simply pass the world space position
+                    // and normal along to the fragment shader
+                    output.worldPos = worldPosition.xyz;
+                    output.worldNormal = normalMatrix * localNormal;
 
                 #endif
 
@@ -168,7 +142,7 @@ const createHatchMaterial = (device, textures) => {
                 output.uv0 = aUv0;
 
                 // Transform the geometry
-                output.position = uniform.matrix_viewProjection * worldPos;
+                output.position = uniform.matrix_viewProjection * worldPosition;
 
                 return output;
             }
@@ -191,7 +165,20 @@ const createHatchMaterial = (device, textures) => {
             varying vec2 uv0;
 
             #ifndef SHADOW_PASS
-                varying float brightness;
+
+                // this gives us the geometric normal of the triangle: getFlatNormal
+                #include "flatNormalPS"
+
+                varying vec3 worldPos;
+                varying vec3 worldNormal;
+
+                // engine supplied uniforms
+                uniform vec3 view_position;
+
+                // our custom uniforms
+                uniform vec3 uLightDir;
+                uniform float uMetalness;
+
             #endif
 
             uniform sampler2DArray uDiffuseMap;
@@ -220,6 +207,26 @@ const createHatchMaterial = (device, textures) => {
                     gl_FragColor = getShadowOutput();
 
                 #else
+
+                // the FLAT_SHADING define is added by the engine when Material#flatShading is
+                // enabled, and we use it to shade using the geometric normal of the triangle instead
+                // of the normal interpolated from the vertex normals
+                #ifdef FLAT_SHADING
+                    vec3 normal = getFlatNormal(worldPos);
+                #else
+                    vec3 normal = normalize(worldNormal);
+                #endif
+
+                // simple wrap-around diffuse lighting using normal and light direction
+                float diffuse = dot(normal, uLightDir) * 0.5 + 0.5;
+
+                // a simple specular lighting
+                vec3 viewDir = normalize(view_position - worldPos);
+                vec3 reflectDir = reflect(-uLightDir, normal);
+                float specular = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
+
+                // combine the lighting
+                float brightness = diffuse * (1.0 - uMetalness) + specular * uMetalness;
 
                 #ifdef TOON
 
@@ -265,7 +272,20 @@ const createHatchMaterial = (device, textures) => {
             varying uv0: vec2f;
 
             #ifndef SHADOW_PASS
-                varying brightness: f32;
+
+                // this gives us the geometric normal of the triangle: getFlatNormal
+                #include "flatNormalPS"
+
+                varying worldPos: vec3f;
+                varying worldNormal: vec3f;
+
+                // engine supplied uniforms
+                uniform view_position: vec3f;
+
+                // our custom uniforms
+                uniform uLightDir: vec3f;
+                uniform uMetalness: f32;
+
             #endif
 
             var uDiffuseMap: texture_2d_array<f32>;
@@ -302,15 +322,35 @@ const createHatchMaterial = (device, textures) => {
 
                 var colorLinear: half3;
 
+                // the FLAT_SHADING define is added by the engine when Material#flatShading is
+                // enabled, and we use it to shade using the geometric normal of the triangle instead
+                // of the normal interpolated from the vertex normals
+                #ifdef FLAT_SHADING
+                    let normal: vec3f = getFlatNormal(worldPos);
+                #else
+                    let normal: vec3f = normalize(worldNormal);
+                #endif
+
+                // simple wrap-around diffuse lighting using normal and light direction
+                let diffuse: f32 = dot(normal, uniform.uLightDir) * 0.5 + 0.5;
+
+                // a simple specular lighting
+                let viewDir: vec3f = normalize(uniform.view_position - worldPos);
+                let reflectDir: vec3f = reflect(-uniform.uLightDir, normal);
+                let specular: f32 = pow(max(dot(viewDir, reflectDir), 0.0), 9.0);
+
+                // combine the lighting
+                let brightness: f32 = diffuse * (1.0 - uniform.uMetalness) + specular * uniform.uMetalness;
+
                 #ifdef TOON
 
                     // just a simple toon shader - no texture sampling
-                    let level: half = half(i32(input.brightness * uniform.uNumTextures)) / half(uniform.uNumTextures);
+                    let level: half = half(i32(brightness * uniform.uNumTextures)) / half(uniform.uNumTextures);
                     colorLinear = level * half3(uniform.uColor);
 
                 #else
                     // brightness dictates the hatch texture level
-                    let level: half = (half(1.0) - half(input.brightness)) * half(uniform.uNumTextures);
+                    let level: half = (half(1.0) - half(brightness)) * half(uniform.uNumTextures);
 
                     // sample the two nearest levels and interpolate between them
                     let hatchUnder: half3 = half3(textureSample(uDiffuseMap, uDiffuseMapSampler, input.uv0 * uniform.uDensity, i32(floor(level))).xyz);
