@@ -1836,6 +1836,10 @@ class ParticleSystemComponent extends Component {
         if (this.emitter) {
             this.emitter[name] = arg;
             this.emitter.rebuildGraphs();
+
+            // velocity and scale graphs are inputs to the local bounds, and unlike the spawn
+            // volume they cannot be cheaply compared each frame, so refresh the bounds here
+            this.emitter.calculateLocalBounds();
             this.emitter.resetMaterial();
         }
     }
