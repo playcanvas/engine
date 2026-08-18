@@ -21,7 +21,11 @@ void main(void) {
     #endif
 
     #ifdef LIT_NEEDS_NORMAL
-        dVertexNormalW = normalize(vNormalW);
+        #ifdef FLAT_SHADING
+            dVertexNormalW = getFlatNormal(vPositionW);
+        #else
+            dVertexNormalW = normalize(vNormalW);
+        #endif
 
         #ifdef LIT_TANGENTS
             #if defined(LIT_HEIGHTS) || defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS) || defined(LIT_GGX_SPECULAR)

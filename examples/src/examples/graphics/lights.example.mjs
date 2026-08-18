@@ -177,6 +177,12 @@ data.set('lights', {
     }
 });
 
+// Setup material data. Note this is set up before the observer handler below is registered, so that
+// it does not fire for the initial value.
+data.set('material', {
+    flatShading: false
+});
+
 /** @type {{[key: string]: Entity }} */
 const lights = {};
 
@@ -303,6 +309,20 @@ app.on('update', (dt) => {
 
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
+
+    if (pathArray[0] === 'material' && pathArray[1] === 'flatShading') {
+        // Shade each triangle using its geometric normal instead of the normal interpolated from the
+        // vertex normals, giving the statue and the ground a faceted look. Note how this also affects
+        // the normal offset shadow bias, and so the shadows remain correct.
+        app.root.findComponents('render').forEach((render) => {
+            render.meshInstances.forEach((meshInstance) => {
+                meshInstance.material.flatShading = value;
+                meshInstance.material.update();
+            });
+        });
+        return;
+    }
+
     if (pathArray[2] === 'enabled') {
         lights[pathArray[1]].enabled = value;
     } else {

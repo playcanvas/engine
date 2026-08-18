@@ -223,6 +223,52 @@ class Material {
     }
 
     /**
+     * Enables or disables flat shading. When enabled, the surface is shaded using the geometric
+     * normal of the triangle the fragment belongs to, instead of the normal interpolated from the
+     * vertex normals, giving the mesh a faceted look. This works on skinned and morphed geometry as
+     * well, and does not require the mesh to supply vertex normals.
+     *
+     * The geometric normal is oriented to match the winding of the triangle, as configured by
+     * {@link Material#frontFace}, and so it agrees with correctly authored vertex normals. Flat
+     * shading therefore only changes the faceting - {@link Material#cull},
+     * {@link Material#frontFace} and {@link StandardMaterial#twoSidedLighting} all behave the same
+     * as they do for smooth shading.
+     *
+     * {@link StandardMaterial} and {@link LitMaterial} implement this automatically. For a
+     * {@link ShaderMaterial}, this adds a `FLAT_SHADING` define to the shader, which the supplied
+     * shader code needs to handle. The `flatNormalPS` chunk provides the `getFlatNormal` function
+     * used by the engine internally, and can be used for this:
+     *
+     * ```javascript
+     * #include "flatNormalPS"
+     * ...
+     * #ifdef FLAT_SHADING
+     *     vec3 normal = getFlatNormal(worldPos);
+     * #else
+     *     vec3 normal = normalize(interpolatedNormal);
+     * #endif
+     * ```
+     *
+     * As with other material properties, call {@link Material#update} after changing this.
+     *
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set flatShading(value) {
+        this.setDefine('FLAT_SHADING', value);
+    }
+
+    /**
+     * Gets whether flat shading is enabled.
+     *
+     * @type {boolean}
+     */
+    get flatShading() {
+        return this.defines.has('FLAT_SHADING');
+    }
+
+    /**
      * Returns true if the material has custom shader chunks.
      *
      * @type {boolean}

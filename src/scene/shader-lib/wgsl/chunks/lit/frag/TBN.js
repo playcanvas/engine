@@ -9,7 +9,10 @@ export default /* wgsl */`
 #endif
 
 #if defined(TBN_DERIVATIVES)
-    uniform tbnBasis: f32;
+    #ifndef TBNBASIS
+        #define TBNBASIS
+        uniform tbnBasis: f32;
+    #endif
 #endif
 
 fn getTBN(tangent: vec3f, binormal: vec3f, normal: vec3f) {
