@@ -12,7 +12,10 @@ export default /* wgsl */`
 // This is exact rather than an approximation - both screen space derivatives of the world position
 // lie in the plane of the triangle, and so their cross product is the normal of that plane. It works
 // on skinned and morphed geometry at no additional cost, as it operates on the final world space
-// positions, and it does not need the mesh to supply vertex normals at all.
+// positions.
+//
+// Note that the lit shader still declares the vertex normal attribute for flat shaded variants, as
+// other parts of the vertex shader depend on it, and so a mesh without normals is not supported yet.
 //
 // The returned normal is oriented to match the winding of the triangle, and so it agrees with
 // correctly authored vertex normals on both front and back faces. This keeps flat shading orthogonal

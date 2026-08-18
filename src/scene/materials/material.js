@@ -226,7 +226,7 @@ class Material {
      * Enables or disables flat shading. When enabled, the surface is shaded using the geometric
      * normal of the triangle the fragment belongs to, instead of the normal interpolated from the
      * vertex normals, giving the mesh a faceted look. This works on skinned and morphed geometry as
-     * well, and does not require the mesh to supply vertex normals.
+     * well.
      *
      * The geometric normal is oriented to match the winding of the triangle, as configured by
      * {@link Material#frontFace}, and so it agrees with correctly authored vertex normals. Flat
