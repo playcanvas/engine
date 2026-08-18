@@ -37,6 +37,7 @@ import envAtlasPS from '../chunks/common/frag/envAtlas.js';
 import envProcPS from '../chunks/common/frag/envProc.js';
 import falloffInvSquaredPS from '../chunks/lit/frag/falloffInvSquared.js';
 import falloffLinearPS from '../chunks/lit/frag/falloffLinear.js';
+import flatNormalPS from '../chunks/common/frag/flat-normal.js';
 import floatAsUintPS from '../chunks/common/frag/float-as-uint.js';
 import sceneTexturesPS from '../chunks/common/frag/scene-textures.js';
 import fogPS from '../chunks/common/frag/fog.js';
@@ -202,6 +203,7 @@ const shaderChunksGLSL = {
     envProcPS,
     falloffInvSquaredPS,
     falloffLinearPS,
+    flatNormalPS,
     floatAsUintPS,
     sceneTexturesPS,
     fogPS,

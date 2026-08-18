@@ -9,7 +9,10 @@ export default /* glsl */`
 #endif
 
 #if defined(TBN_DERIVATIVES)
-    uniform float tbnBasis;
+    #ifndef TBNBASIS
+        #define TBNBASIS
+        uniform float tbnBasis;
+    #endif
 #endif
 
 void getTBN(vec3 tangent, vec3 binormal, vec3 normal) {

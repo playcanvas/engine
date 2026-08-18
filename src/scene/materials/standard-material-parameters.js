@@ -144,6 +144,7 @@ const standardMaterialParameterTypes = {
     envAtlas: 'texture',
 
     twoSidedLighting: 'boolean',
+    flatShading: 'boolean',
     shadowCatcher: 'boolean'
 
     // nineSlicedMode

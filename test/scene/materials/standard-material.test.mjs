@@ -145,6 +145,7 @@ describe('StandardMaterial', function () {
         expect(material.emissiveVertexColorChannel).to.equal('rgb');
 
         expect(material.enableGGXSpecular).to.equal(false);
+        expect(material.flatShading).to.equal(false);
         expect(material.fresnelModel).to.equal(FRESNEL_SCHLICK);
 
         expect(material.gloss).to.equal(0.25);

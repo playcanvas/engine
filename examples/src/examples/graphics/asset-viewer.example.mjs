@@ -298,3 +298,16 @@ data.on('previous', () => {
 data.on('next', () => {
     jumpToAsset(1);
 });
+
+// Toggle flat shading on all materials in the scene. This shades each triangle using its geometric
+// normal instead of the normal interpolated from the vertex normals, giving a faceted look.
+data.on('flatShading:set', (value) => {
+    app.root.findComponents('render').forEach((render) => {
+        render.meshInstances.forEach((meshInstance) => {
+            meshInstance.material.flatShading = value;
+            meshInstance.material.update();
+        });
+    });
+});
+
+data.set('flatShading', false);
