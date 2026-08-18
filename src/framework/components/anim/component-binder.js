@@ -2,6 +2,7 @@ import { AnimTarget } from '../../anim/evaluator/anim-target.js';
 import { DefaultAnimBinder } from '../../anim/binder/default-anim-binder.js';
 import { AnimBinder } from '../../anim/binder/anim-binder.js';
 
+import { Debug } from '../../../core/debug.js';
 import { Color } from '../../../core/math/color.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -132,15 +133,19 @@ class AnimComponentBinder extends DefaultAnimBinder {
     }
 
     _getEntityFromHierarchy(entityHierarchy) {
-        if (this.animComponent.entity.name !== entityHierarchy[0]) {
-            return null;
-        }
-
         const currEntity = this.animComponent.entity;
 
+        // a single element path can only refer to the anim component's own entity, so bind it
+        // regardless of the authored root name - clips remain usable after the entity is renamed
         if (entityHierarchy.length === 1) {
             return currEntity;
         }
+
+        if (currEntity.name !== entityHierarchy[0]) {
+            Debug.warnOnce(`Anim Binder: entity path '${entityHierarchy.join('/')}' is not rooted at the anim component's entity '${currEntity.name}'; the curve will not be bound.`);
+            return null;
+        }
+
         return currEntity._parent.findByPath(entityHierarchy);
     }
 

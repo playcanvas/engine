@@ -299,16 +299,16 @@ describe('AnimComponent', function () {
             expect(lamp.light.intensity).to.be.closeTo(0.5, 1e-5);
         });
 
-        it('leaves curves unbound when the path root does not match the anim component entity', function () {
+        it('binds single element paths to the anim component entity regardless of the root name', function () {
             const root = new Entity('root', app);
             app.root.addChild(root);
 
             root.addComponent('anim', { activate: true });
             root.anim.assignAnimation('Scale', scaleTrack(['other']));
 
-            expect(() => app.systems.anim.onAnimationUpdate(0.5)).to.not.throw();
+            app.systems.anim.onAnimationUpdate(0.5);
 
-            expect(root.getLocalScale().x).to.equal(1);
+            expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
         });
 
         it('leaves curves unbound instead of resolving into sibling hierarchies', function () {
