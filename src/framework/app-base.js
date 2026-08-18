@@ -1975,6 +1975,12 @@ class AppBase extends EventHandler {
             setApplication(null);
         }
 
+        // clear the module scoped reference, which would otherwise keep the destroyed application
+        // alive. Skipped if another application has already taken over.
+        if (app === this) {
+            app = null;
+        }
+
         AppBase.cancelTick(this);
     }
 

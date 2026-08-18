@@ -1,9 +1,11 @@
 import { expect } from 'chai';
 
+import { app as currentApp } from '../../src/framework/app-base.js';
 import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
 import { ComponentSystemRegistry } from '../../src/framework/components/registry.js';
 import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.js';
 import { Entity } from '../../src/framework/entity.js';
+import { getApplication } from '../../src/framework/globals.js';
 import { ResourceLoader } from '../../src/framework/handlers/loader.js';
 import { I18n } from '../../src/framework/i18n/i18n.js';
 import { Lightmapper } from '../../src/framework/lightmapper/lightmapper.js';
@@ -83,6 +85,23 @@ describe('Application', function () {
             expect(app.systems).to.be.null;
             expect(app.touch).to.be.null;
             // expect(app.xr).to.be.null;
+
+            app = null;
+        });
+
+        it('clears the references to the application', function () {
+            const loader = app.loader;
+
+            expect(currentApp).to.equal(app);
+            expect(getApplication()).to.equal(app);
+
+            app.destroy();
+
+            // the destroyed application must not be reachable from module scope or from objects
+            // which may outlive it
+            expect(currentApp).to.be.null;
+            expect(getApplication()).to.be.null;
+            expect(loader._app).to.be.null;
 
             app = null;
         });
