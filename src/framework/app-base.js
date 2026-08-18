@@ -1953,7 +1953,8 @@ class AppBase extends EventHandler {
             assets[i].unload();
             assets[i].off();
         }
-        this.assets.off();
+        this.assets.destroy();
+        this.assets = null;
 
         // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
         this.scene.destroy();
