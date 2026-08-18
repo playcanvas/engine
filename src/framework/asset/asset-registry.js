@@ -340,6 +340,35 @@ class AssetRegistry extends EventHandler {
     }
 
     /**
+     * Destroys the registry, releasing all assets held by it. Called by {@link AppBase#destroy}.
+     * Note that this does not destroy the resources of the assets - {@link Asset#unload} needs to
+     * be called for each asset before the registry is destroyed.
+     *
+     * @ignore
+     */
+    destroy() {
+        for (const asset of this._assets) {
+            asset.off('name', this._onNameChange, this);
+            asset.tags.off('add', this._onTagAdd, this);
+            asset.tags.off('remove', this._onTagRemove, this);
+
+            // clear the back-reference, so that an asset which outlives the application does not
+            // keep the registry - and through it all other assets - alive
+            asset.registry = null;
+        }
+
+        this._assets.clear();
+        this._idToAsset.clear();
+        this._urlToAsset.clear();
+        this._nameToAsset.clear();
+
+        this._tags = null;
+        this.bundles = null;
+
+        this.off();
+    }
+
+    /**
      * Retrieve an asset from the registry by its id field.
      *
      * @param {number} id - The id of the asset to get.
