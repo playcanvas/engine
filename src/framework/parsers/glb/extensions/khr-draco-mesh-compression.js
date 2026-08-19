@@ -8,11 +8,11 @@ import { VertexBuffer } from '../../../../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../../platform/graphics/vertex-format.js';
 import { Mesh } from '../../../../scene/mesh.js';
 import { dracoDecode } from '../../draco-decoder.js';
-import { GltfAccessor, getPrimitiveType, gltfToEngineSemanticMap } from '../gltf-accessor.js';
+import { GltfAccessor, getPrimitiveType, isTriangleMode, gltfToEngineSemanticMap } from '../gltf-accessor.js';
 import { registerMeshVariants } from './khr-materials-variants.js';
 
 // https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_draco_mesh_compression
-const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises) => {
+const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, flatShadedMeshes, promises) => {
     // create the mesh
     const result = new Mesh(device);
     result.aabb = GltfAccessor.getBoundingBox(accessors[primitive.attributes.POSITION]);
@@ -108,6 +108,13 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
     registerMeshVariants(primitive, result.id, meshVariants);
 
     meshDefaultMaterials[result.id] = primitive.material;
+
+    // the spec requires flat shading when the mesh does not supply normals - the draco worker still
+    // generates smooth normals for the vertex buffer, so that the user can turn the flat shading off
+    // and get the previous behavior back
+    if (!primitive.attributes.hasOwnProperty('NORMAL') && isTriangleMode(getPrimitiveType(primitive))) {
+        flatShadedMeshes.add(result.id);
+    }
 
     return result;
 };
