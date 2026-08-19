@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { Entity } from '../../../../src/framework/entity.js';
 import { BatchGroup } from '../../../../src/scene/batching/batch-group.js';
-import { LAYERID_WORLD } from '../../../../src/scene/constants.js';
+import { LAYERID_WORLD, SHADOW_CASCADE_0, SHADOW_CASCADE_1, SHADOW_CASCADE_ALL } from '../../../../src/scene/constants.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -66,6 +66,65 @@ describe('RenderComponent', function () {
             e.removeComponent('render');
 
             expect(worldLayer.meshInstances.length).to.equal(0);
+        });
+
+    });
+
+    describe('#shadowCascadeMask', function () {
+
+        it('defaults to all cascades and is assigned to the mesh instances', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('render', { type: 'box' });
+
+            expect(e.render.shadowCascadeMask).to.equal(SHADOW_CASCADE_ALL);
+            expect(e.render.meshInstances[0].shadowCascadeMask).to.equal(SHADOW_CASCADE_ALL);
+        });
+
+        it('can be initialized from the component data', function () {
+            const mask = SHADOW_CASCADE_0 | SHADOW_CASCADE_1;
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('render', { type: 'box', shadowCascadeMask: mask });
+
+            expect(e.render.shadowCascadeMask).to.equal(mask);
+            expect(e.render.meshInstances[0].shadowCascadeMask).to.equal(mask);
+        });
+
+        it('is applied to the existing mesh instances when set', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('render', { type: 'box' });
+
+            e.render.shadowCascadeMask = SHADOW_CASCADE_0;
+
+            expect(e.render.meshInstances[0].shadowCascadeMask).to.equal(SHADOW_CASCADE_0);
+        });
+
+        it('is applied to mesh instances created after it was set', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('render', { type: 'box' });
+
+            e.render.shadowCascadeMask = SHADOW_CASCADE_0;
+
+            // this recreates the mesh instances
+            e.render.type = 'sphere';
+
+            expect(e.render.meshInstances[0].shadowCascadeMask).to.equal(SHADOW_CASCADE_0);
+        });
+
+        it('is preserved when the entity is cloned', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('render', { type: 'box', shadowCascadeMask: SHADOW_CASCADE_1 });
+
+            const clone = e.clone();
+            app.root.addChild(clone);
+
+            expect(clone.render.shadowCascadeMask).to.equal(SHADOW_CASCADE_1);
+            expect(clone.render.meshInstances[0].shadowCascadeMask).to.equal(SHADOW_CASCADE_1);
         });
 
     });
