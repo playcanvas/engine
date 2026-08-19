@@ -42,6 +42,14 @@ const getPrimitiveType = (primitive) => {
     }
 };
 
+// returns true for the primitive types made up of triangles, which are the only ones a face normal
+// can be evaluated for
+const isTriangleMode = (primitiveType) => {
+    return primitiveType === PRIMITIVE_TRIANGLES ||
+        primitiveType === PRIMITIVE_TRISTRIP ||
+        primitiveType === PRIMITIVE_TRIFAN;
+};
+
 // returns a function for dequantizing the data type
 const getDequantizeFunc = (srcType) => {
     // see https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_mesh_quantization#encoding-quantized-data
@@ -251,4 +259,4 @@ class GltfAccessor {
     }
 }
 
-export { GltfAccessor, getPrimitiveType, gltfToEngineSemanticMap };
+export { GltfAccessor, getPrimitiveType, isTriangleMode, gltfToEngineSemanticMap };

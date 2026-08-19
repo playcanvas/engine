@@ -1,6 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Color } from '../../core/math/color.js';
+import { math } from '../../core/math/math.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
@@ -36,6 +37,12 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
  */
 
 const tempSet = new Set();
+
+// per-face scratch state for the omni cull - the visible caster list and the shadow camera of each
+// of the six cube map faces of the light currently being culled
+const _faceLists = [];
+const _faceCameras = [];
+
 const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
@@ -71,6 +78,14 @@ class ShadowRenderer {
      * @private
      */
     shadowPassCache = [];
+
+    /**
+     * Reusable list of shadow caster arrays, see {@link ShadowRenderer#_collectCasterLists}.
+     *
+     * @type {MeshInstance[][]}
+     * @private
+     */
+    _casterLists = [];
 
     /**
      * @param {Renderer} renderer - The renderer.
@@ -169,10 +184,40 @@ class ShadowRenderer {
 
         visible.length = 0;
 
+        const casterLists = this._collectCasterLists(comp, light, casters);
+        for (let i = 0; i < casterLists.length; i++) {
+            this._cullShadowCastersInternal(casterLists[i], visible, camera);
+        }
+
+        // this sorts the shadow casters by the shader id
+        visible.sort(this.sortCompareShader);
+
+        // event after culling - the camera is null as this is internal (shadow) culling rather
+        // than culling for a user camera
+        this.renderer.scene?.fire(EVENT_POSTCULL, null);
+    }
+
+    /**
+     * Collects the lists of shadow casters used by the light: either the supplied array of casters,
+     * or the shadow casters of each layer the light is part of.
+     *
+     * @param {LayerComposition} comp - The layer composition used as a source of shadow casters,
+     * if those are not provided directly.
+     * @param {Light} light - The light.
+     * @param {MeshInstance[]} [casters] - Optional array of mesh instances to use as casters.
+     * @returns {MeshInstance[][]} The lists of shadow casters. This is reused between calls, and so
+     * is only valid until the next call.
+     * @private
+     */
+    _collectCasterLists(comp, light, casters) {
+
+        const lists = this._casterLists;
+        lists.length = 0;
+
         // if the casters are supplied, use them
         if (casters) {
 
-            this._cullShadowCastersInternal(casters, visible, camera);
+            lists.push(casters);
 
         } else {    // otherwise, get them from the layer composition
 
@@ -187,7 +232,7 @@ class ShadowRenderer {
                     if (!tempSet.has(layer)) {
                         tempSet.add(layer);
 
-                        this._cullShadowCastersInternal(layer.shadowCasters, visible, camera);
+                        lists.push(layer.shadowCasters);
                     }
                 }
             }
@@ -195,8 +240,194 @@ class ShadowRenderer {
             tempSet.clear();
         }
 
+        return lists;
+    }
+
+    /**
+     * Culls the shadow casters used by an omni light against all six of its cube map faces in a
+     * single pass over the casters, storing the visible mesh instances in the per-face light render
+     * data. This replaces one full pass over the casters per face.
+     *
+     * The six shadow cameras of an omni light are axis aligned in world space - see
+     * {@link LightCamera.pointLightRotations}, and note that {@link ShadowRendererLocal#cull} only
+     * sets the position of an omni light's shadow cameras, never their rotation. Light space is
+     * therefore world space translated by the light position, and each face's frustum is bounded by
+     * a near and a far plane perpendicular to the face axis, plus four side planes through the
+     * light position with the slope of the face's field of view. Testing a caster's bounding sphere
+     * against those planes in light space is a handful of comparisons per face, and uses the same
+     * planes {@link Frustum#containsSphere} would, so the result is the same set of casters (up to
+     * the slab rejection below, which is tighter than a plane test near the frustum corners).
+     *
+     * @param {LayerComposition} comp - The layer composition used as a source of shadow casters,
+     * if those are not provided directly.
+     * @param {Light} light - The omni light.
+     * @param {MeshInstance[]} [casters] - Optional array of mesh instances to use as casters.
+     */
+    cullShadowCastersOmni(comp, light, casters) {
+
+        Debug.assert(light._type === LIGHTTYPE_OMNI);
+
+        // event before culling - the camera is null as this is internal (shadow) culling rather
+        // than culling for a user camera
+        this.renderer.scene?.fire(EVENT_PRECULL, null);
+
+        // per-face visible caster lists and shadow cameras
+        for (let face = 0; face < 6; face++) {
+            const lightRenderData = light.getRenderData(null, face);
+            const visible = lightRenderData.visibleCasters;
+            visible.length = 0;
+            _faceLists[face] = visible;
+            _faceCameras[face] = lightRenderData.shadowCamera;
+        }
+
+        // light space is world space translated by the light position
+        const lightPos = light._node.getPosition();
+        const lightX = lightPos.x;
+        const lightY = lightPos.y;
+        const lightZ = lightPos.z;
+
+        // face frustum planes, shared by all six faces: the near and far planes are perpendicular to
+        // the face axis, and the four side planes have the slope of the face's field of view - which
+        // is slightly wider than 90 degrees when rendering to the shadow atlas
+        const shadowCam = _faceCameras[0];
+        const near = shadowCam.nearClip;
+        const far = shadowCam.farClip;
+        const slope = Math.tan(shadowCam.fov * 0.5 * math.DEG_TO_RAD);
+
+        // side plane normals are (slope, -+1) and so need scaling to be normalized
+        const sideScale = Math.sqrt(1 + slope * slope);
+
+        // The union of the six face frusta is bounded by the axis aligned cube of this half side.
+        // Note that this is larger than the light's range: each face's far plane is perpendicular to
+        // the face axis, so the corners of the frusta stick out past the range sphere, and rejecting
+        // against a sphere here would wrongly drop casters in those corners.
+        const bounds = far * slope;
+
+        Debug.call(() => {
+            // the face order the light space classification below relies on
+            const axes = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+            for (let face = 0; face < 6; face++) {
+                const forward = _faceCameras[face]._node.forward;
+                const axis = axes[face];
+                Debug.assert(Math.abs(forward.x - axis[0]) < 1e-4 &&
+                    Math.abs(forward.y - axis[1]) < 1e-4 &&
+                    Math.abs(forward.z - axis[2]) < 1e-4,
+                `Omni shadow face ${face} is not aligned to the expected world axis ${axis}, the culling in cullShadowCastersOmni does not apply.`);
+            }
+        });
+
+        const casterLists = this._collectCasterLists(comp, light, casters);
+        for (let listIndex = 0; listIndex < casterLists.length; listIndex++) {
+
+            const meshInstances = casterLists[listIndex];
+            const numInstances = meshInstances.length;
+            for (let i = 0; i < numInstances; i++) {
+
+                const meshInstance = meshInstances[i];
+                if (!meshInstance.castShadow) {
+                    continue;
+                }
+
+                // mesh instances with culling disabled are visible in all faces, and those with a
+                // custom visibility function need to evaluate it for each face's shadow camera
+                if (!meshInstance.cull || meshInstance.isVisibleFunc) {
+                    for (let face = 0; face < 6; face++) {
+                        if (!meshInstance.cull || meshInstance._isVisible(_faceCameras[face])) {
+                            meshInstance.visibleThisFrame = true;
+                            _faceLists[face].push(meshInstance);
+                        }
+                    }
+                    continue;
+                }
+
+                if (!meshInstance.visible) {
+                    continue;
+                }
+
+                // caster's bounding sphere in light space
+                const center = meshInstance.aabb.center;    // this line evaluates aabb
+                const radius = meshInstance._aabb.halfExtents.length();
+                const x = center.x - lightX;
+                const y = center.y - lightY;
+                const z = center.z - lightZ;
+
+                // reject casters outside the bounds of all six faces
+                const slab = bounds + radius;
+                if (x > slab || x < -slab || y > slab || y < -slab || z > slab || z < -slab) {
+                    continue;
+                }
+
+                // a sphere is outside a plane when its signed distance is <= -radius, so for each
+                // face: axial > near - radius, axial < far + radius, and (slope * axial -+ lateral)
+                // > -radius * sideScale for the two lateral axes
+                const nearLimit = near - radius;
+                const farLimit = far + radius;
+                const sideLimit = -radius * sideScale;
+                const slopeX = slope * x;
+                const slopeY = slope * y;
+                const slopeZ = slope * z;
+                let visible = false;
+
+                // +X
+                if (x > nearLimit && x < farLimit &&
+                    slopeX - y > sideLimit && slopeX + y > sideLimit &&
+                    slopeX - z > sideLimit && slopeX + z > sideLimit) {
+                    _faceLists[0].push(meshInstance);
+                    visible = true;
+                }
+
+                // -X
+                if (-x > nearLimit && -x < farLimit &&
+                    -slopeX - y > sideLimit && -slopeX + y > sideLimit &&
+                    -slopeX - z > sideLimit && -slopeX + z > sideLimit) {
+                    _faceLists[1].push(meshInstance);
+                    visible = true;
+                }
+
+                // +Y
+                if (y > nearLimit && y < farLimit &&
+                    slopeY - x > sideLimit && slopeY + x > sideLimit &&
+                    slopeY - z > sideLimit && slopeY + z > sideLimit) {
+                    _faceLists[2].push(meshInstance);
+                    visible = true;
+                }
+
+                // -Y
+                if (-y > nearLimit && -y < farLimit &&
+                    -slopeY - x > sideLimit && -slopeY + x > sideLimit &&
+                    -slopeY - z > sideLimit && -slopeY + z > sideLimit) {
+                    _faceLists[3].push(meshInstance);
+                    visible = true;
+                }
+
+                // +Z
+                if (z > nearLimit && z < farLimit &&
+                    slopeZ - x > sideLimit && slopeZ + x > sideLimit &&
+                    slopeZ - y > sideLimit && slopeZ + y > sideLimit) {
+                    _faceLists[4].push(meshInstance);
+                    visible = true;
+                }
+
+                // -Z
+                if (-z > nearLimit && -z < farLimit &&
+                    -slopeZ - x > sideLimit && -slopeZ + x > sideLimit &&
+                    -slopeZ - y > sideLimit && -slopeZ + y > sideLimit) {
+                    _faceLists[5].push(meshInstance);
+                    visible = true;
+                }
+
+                if (visible) {
+                    meshInstance.visibleThisFrame = true;
+                }
+            }
+        }
+
         // this sorts the shadow casters by the shader id
-        visible.sort(this.sortCompareShader);
+        for (let face = 0; face < 6; face++) {
+            _faceLists[face].sort(this.sortCompareShader);
+            _faceLists[face] = null;
+            _faceCameras[face] = null;
+        }
 
         // event after culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
