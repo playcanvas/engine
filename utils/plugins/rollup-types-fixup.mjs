@@ -7,10 +7,15 @@ const REGULAR_OUT = '\x1b[22m';
 
 const TYPES_PATH = './build/playcanvas/src';
 
+// StandardMaterial defines its accessors dynamically, so TypeScript emits none of them. They are
+// declared by hand from this list, and their doc comments are taken from the matching
+// `@property {type} name` tag in the class JSDoc - so the type here must match the type documented
+// there, or the build fails. An optional third element supplies the doc comment for properties that
+// have no `@property` tag (deprecated aliases, which are defined in src/deprecated/deprecated.js).
 const STANDARD_MAT_PROPS = [
-    ['alphaFade', 'boolean'],
+    ['alphaFade', 'number'],
     ['ambient', 'Color'],
-    ['anisotropy', 'number'],
+    ['anisotropy', 'number', 'Defines amount of anisotropy. @deprecated Use {@link StandardMaterial#anisotropyIntensity} and {@link StandardMaterial#anisotropyRotation} instead.'],
     ['anisotropyIntensity', 'number'],
     ['anisotropyRotation', 'number'],
     ['anisotropyMap', 'Texture|null'],
@@ -137,7 +142,7 @@ const STANDARD_MAT_PROPS = [
     ['normalMapRotation', 'number'],
     ['normalMapTiling', 'Vec2'],
     ['normalMapUv', 'number'],
-    ['occludeDirect', 'number'],
+    ['occludeDirect', 'boolean'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
     ['opacity', 'number'],
@@ -194,31 +199,66 @@ const STANDARD_MAT_PROPS = [
     ['useSkybox', 'boolean']
 ];
 
+/**
+ * Parses the `@property` tags of the StandardMaterial class JSDoc block.
+ *
+ * @param {string} contents - The contents of the generated standard-material.d.ts.
+ * @returns {Map<string, {type: string, description: string}>} The documented properties, keyed by
+ * property name.
+ */
+const parseProperties = (contents) => {
+    const properties = new Map();
+
+    // Only consider the class JSDoc block, and split it on tag boundaries so that multi-line
+    // descriptions stay attached to the tag they belong to
+    const block = contents.slice(0, contents.indexOf('export class StandardMaterial'));
+    for (const tag of block.split('\n * @')) {
+        const match = /^property \{(.+?)\} (\w+)\s([\s\S]*)$/.exec(tag);
+        if (match) {
+            const [, type, name, description] = match;
+            properties.set(name, {
+                type,
+                description: description
+                .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
+                .replace(/\s+/g, ' ') // collapse whitespace
+                .trim()
+            });
+        }
+    }
+
+    return properties;
+};
+
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
-        guard: 'set alphaFade(arg: boolean);',
+        guard: 'set alphaFade(arg:',
         transformer: (contents) => {
+            const properties = parseProperties(contents);
+            const errors = [];
 
-            // Find the jsdoc block description using eg "@property {Type} {name}"
+            const accessors = STANDARD_MAT_PROPS.map(([name, type, doc]) => {
+                let description = doc;
+                if (description === undefined) {
+                    const property = properties.get(name);
+                    if (!property) {
+                        errors.push(`${name}: declared as '${type}' but has no @property tag`);
+                    } else if (property.type !== type) {
+                        errors.push(`${name}: declared as '${type}' but documented as '${property.type}'`);
+                    }
+                    description = property?.description ?? '';
+                }
+
+                const jsdoc = description ? `/** ${description} */` : '';
+                return `\t${jsdoc}\n\tset ${name}(arg: ${type});\n\tget ${name}(): ${type};\n\n`;
+            }).join('');
+
+            if (errors.length) {
+                throw new Error(`StandardMaterial types disagree with its JSDoc - fix the @property tag in src/scene/materials/standard-material.js or the type in STANDARD_MAT_PROPS:\n  ${errors.join('\n  ')}`);
+            }
+
             return contents.replace('reset(): void;', `reset(): void;
-                ${STANDARD_MAT_PROPS.map((prop) => {
-        const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
-        const typeDescriptionIndex = contents.match(typeDefinition);
-        const typeDescription = typeDescriptionIndex ?
-            contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
-            '';
-
-        // Strip newlines, asterisks, and tabs from the type description
-        const cleanTypeDescription = typeDescription
-        .trim()
-        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
-        .replace(/\s+/g, ' '); // collapse whitespace
-
-        const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
-        return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
-    }).join('')}`
-            );
+                ${accessors}`);
         },
         footer: `
 import { Color } from '../../core/math/color.js';
