@@ -807,7 +807,13 @@ class ScriptComponent extends Component {
 
             this._scriptsIndex[scriptName] = {
                 awaiting: true,
-                ind: this._scripts.length
+                ind: this._scripts.length,
+                // remember what the script was asked to be created with, the deferred creation in
+                // ScriptRegistry#add has nothing else to go on for a script that was not declared
+                // through component data
+                enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
+                attributes: args.attributes,
+                properties: args.properties
             };
 
             Debug.warn(`script '${scriptName}' is not found, awaiting it to be added to registry`);
