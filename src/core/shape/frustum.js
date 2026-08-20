@@ -3,6 +3,7 @@ import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /**
+ * @import { BoundingBox } from './bounding-box.js'
  * @import { BoundingSphere } from './bounding-sphere.js'
  * @import { Mat4 } from '../math/mat4.js'
  */
@@ -286,6 +287,42 @@ class Frustum {
         }
 
         return (c === 6) ? 2 : 1;
+    }
+
+    /**
+     * Tests whether an axis aligned bounding box intersects the frustum.
+     *
+     * The test is conservative in the same way the plane based sphere test is: a box lying just
+     * outside a frustum corner can be reported as intersecting. It is however always at least as
+     * tight as testing the box's bounding sphere, since the extent of a box along a plane normal
+     * never exceeds the radius of its bounding sphere.
+     *
+     * Unlike {@link Frustum#containsSphere}, a box completely inside the frustum is not
+     * distinguished from one merely intersecting it. Detecting that costs a comparison per plane
+     * and no caller needs it.
+     *
+     * @param {BoundingBox} aabb - The bounding box to test.
+     * @returns {boolean} True if the bounding box intersects or is inside the frustum, false if it
+     * is completely outside.
+     */
+    containsAabb(aabb) {
+        const data = this.planeData;
+        const { center, halfExtents } = aabb;
+        const { x, y, z } = center;
+        const ex = halfExtents.x, ey = halfExtents.y, ez = halfExtents.z;
+
+        for (let offset = 0; offset < 24; offset += 4) {
+            const nx = data[offset], ny = data[offset + 1], nz = data[offset + 2];
+
+            // the box's extent along the plane normal - the box is outside the plane when its
+            // signed distance is no greater than minus that extent
+            const extent = Math.abs(nx) * ex + Math.abs(ny) * ey + Math.abs(nz) * ez;
+            if (nx * x + ny * y + nz * z + data[offset + 3] <= -extent) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

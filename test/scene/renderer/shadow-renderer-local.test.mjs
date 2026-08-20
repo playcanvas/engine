@@ -48,14 +48,18 @@ describe('ShadowRendererLocal', function () {
 
     /**
      * @param {Vec3} position - The caster position.
-     * @param {number} scale - The uniform caster scale.
+     * @param {number|Vec3} scale - The caster scale, uniform or per axis.
      * @returns {MeshInstance} The caster's mesh instance.
      */
     const createCaster = (position, scale) => {
         const entity = new Entity();
         entity.addComponent('render', { type: 'box' });
         entity.setPosition(position);
-        entity.setLocalScale(scale, scale, scale);
+        if (scale instanceof Vec3) {
+            entity.setLocalScale(scale);
+        } else {
+            entity.setLocalScale(scale, scale, scale);
+        }
         app.root.addChild(entity);
         return entity.render.meshInstances[0];
     };
@@ -99,15 +103,12 @@ describe('ShadowRendererLocal', function () {
      * @returns {Set<MeshInstance>[]} The visible casters per face.
      */
     const referenceFaces = (light, casters) => {
-        const sphere = new BoundingSphere();
         const faces = [];
         for (let face = 0; face < light.numShadowFaces; face++) {
             const camera = light.getRenderData(null, face).shadowCamera;
             const visible = new Set();
             for (const caster of casters) {
-                sphere.center.copy(caster.aabb.center);
-                sphere.radius = caster._aabb.halfExtents.length();
-                if (camera.frustum.containsSphere(sphere) > 0) {
+                if (camera.frustum.containsAabb(caster.aabb)) {
                     visible.add(caster);
                 }
             }
@@ -117,8 +118,8 @@ describe('ShadowRendererLocal', function () {
     };
 
     /**
-     * A caster is provably outside every face frustum when its bounding sphere does not reach the
-     * axis aligned cube the union of the six frusta is bounded by. Used to confirm the casters the
+     * A caster is provably outside every face frustum when its bounding box does not reach the axis
+     * aligned cube the union of the six frusta is bounded by. Used to confirm the casters the
      * single pass classification drops - but a per-plane frustum test keeps - genuinely cannot
      * render into any face.
      *
@@ -130,14 +131,14 @@ describe('ShadowRendererLocal', function () {
         const shadowCam = light.getRenderData(null, 0).shadowCamera;
         const half = shadowCam.farClip * Math.tan(shadowCam.fov * 0.5 * Math.PI / 180);
         const center = caster.aabb.center;
-        const radius = caster._aabb.halfExtents.length();
+        const halfExtents = caster._aabb.halfExtents;
         const lightPos = light._node.getPosition();
-        let distance = 0;
         for (const axis of ['x', 'y', 'z']) {
-            const excess = Math.max(0, Math.abs(center[axis] - lightPos[axis]) - half);
-            distance += excess * excess;
+            if (Math.abs(center[axis] - lightPos[axis]) - halfExtents[axis] > half) {
+                return true;
+            }
         }
-        return distance > radius * radius;
+        return false;
     };
 
     describe('#cull - omni', function () {
@@ -191,6 +192,27 @@ describe('ShadowRendererLocal', function () {
             for (let face = 1; face < 6; face++) {
                 expect(faces[face].size, `face ${face}`).to.equal(0);
             }
+        });
+
+        it('excludes an elongated caster from the faces only its bounding sphere reaches', function () {
+            const light = createLight(new Vec3(0, 0, 0));
+
+            // a long thin beam beside the light. Its bounding sphere has a radius of ~60, so a
+            // sphere based test reaches faces the box itself is nowhere near.
+            const caster = createCaster(new Vec3(70, 0, 0), new Vec3(120, 1, 1));
+
+            const faces = cullFaces(light, [caster]);
+            expect(faceIndices(faces, [caster])).to.eql([[0], [], [], [], [], []]);
+
+            // the same caster's bounding sphere is not rejected by those other faces
+            const sphere = new BoundingSphere(caster.aabb.center.clone(), caster._aabb.halfExtents.length());
+            let sphereFaces = 0;
+            for (let face = 0; face < 6; face++) {
+                if (light.getRenderData(null, face).shadowCamera.frustum.containsSphere(sphere) > 0) {
+                    sphereFaces++;
+                }
+            }
+            expect(sphereFaces).to.be.greaterThan(1);
         });
 
         it('places a caster straddling two faces in both of them', function () {

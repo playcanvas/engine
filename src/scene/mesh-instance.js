@@ -1,6 +1,5 @@
 import { Debug, DebugHelper } from '../core/debug.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
-import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 import { BindGroup } from '../platform/graphics/bind-group.js';
 import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
@@ -44,7 +43,6 @@ import { PickerId } from './picker-id.js';
 
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
-const _tempSphere = new BoundingSphere();
 
 /** @type {Set<Mesh>} */
 const _meshSet = new Set();
@@ -1121,10 +1119,8 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
-            _tempSphere.radius = this._aabb.halfExtents.length();
-
-            return camera.frustum.containsSphere(_tempSphere) > 0;
+            // note that reading aabb evaluates it
+            return camera.frustum.containsAabb(this.aabb);
         }
 
         return false;
