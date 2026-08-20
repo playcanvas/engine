@@ -26,34 +26,33 @@ fn calcReflection(reflDir: vec3f, gloss: f32) -> vec3f {
     let dir: vec3f = cubeMapProject(reflDir) * vec3f(-1.0, 1.0, 1.0);
     let uv: vec2f = toSphericalUv(dir);
 
-    // calculate roughness level
-    let level: f32 = saturate(1.0 - gloss) * 5.0;
-    let ilevel: f32 = floor(level);
+    // roughness mip level based on material gloss
+    var level: f32 = saturate(1.0 - gloss) * 5.0;
 
-    // accessing the shiny (top level) reflection - perform manual mipmap lookup
+    // screen-space minification level - drives specular anti-aliasing
     let level2: f32 = shinyMipLevel(uv * atlasSize);
-    let ilevel2: f32 = floor(level2);
+
+    // the reflection must be at least as blurry as screen-space minification requires,
+    // otherwise high-curvature / minified surfaces alias badly
+    level = max(level, level2);
+
+    let ilevel: f32 = floor(level);
 
     var uv0: vec2f;
     var uv1: vec2f;
-    var weight: f32;
     if (ilevel == 0.0) {
-        uv0 = mapShinyUv(uv, ilevel2);
-        uv1 = mapShinyUv(uv, ilevel2 + 1.0);
-        weight = level2 - ilevel2;
+        // sharp reflection: blend the shiny (top mip) level into roughness level 1
+        uv0 = mapShinyUv(uv, 0.0);
+        uv1 = mapRoughnessUv(uv, 1.0);
     } else {
-        // accessing rough reflection - just sample the same part twice
+        // blurry reflection: blend two pre-convolved roughness levels
         uv0 = mapRoughnessUv(uv, ilevel);
-        uv1 = uv0;
-        weight = 0.0;
+        uv1 = mapRoughnessUv(uv, ilevel + 1.0);
     }
 
     let linearA: vec3f = {reflectionDecode}(textureSample(texture_envAtlas, texture_envAtlasSampler, uv0));
     let linearB: vec3f = {reflectionDecode}(textureSample(texture_envAtlas, texture_envAtlasSampler, uv1));
-    let linear0: vec3f = mix(linearA, linearB, weight);
-    let linear1: vec3f = {reflectionDecode}(textureSample(texture_envAtlas, texture_envAtlasSampler, mapRoughnessUv(uv, ilevel + 1.0)));
-
-    return processEnvironment(mix(linear0, linear1, level - ilevel));
+    return processEnvironment(mix(linearA, linearB, level - ilevel));
 }
 
 fn addReflection(reflDir: vec3f, gloss: f32) {

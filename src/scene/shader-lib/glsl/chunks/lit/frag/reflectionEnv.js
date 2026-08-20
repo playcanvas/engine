@@ -25,32 +25,32 @@ vec3 calcReflection(vec3 reflDir, float gloss) {
     vec3 dir = cubeMapProject(reflDir) * vec3(-1.0, 1.0, 1.0);
     vec2 uv = toSphericalUv(dir);
 
-    // calculate roughness level
+    // roughness mip level based on material gloss
     float level = saturate(1.0 - gloss) * 5.0;
+
+    // screen-space minification level - drives specular anti-aliasing
+    float level2 = shinyMipLevel(uv * atlasSize);
+
+    // the reflection must be at least as blurry as screen-space minification requires,
+    // otherwise high-curvature / minified surfaces alias badly
+    level = max(level, level2);
+
     float ilevel = floor(level);
 
-    // accessing the shiny (top level) reflection - perform manual mipmap lookup
-    float level2 = shinyMipLevel(uv * atlasSize);
-    float ilevel2 = floor(level2);
-
     vec2 uv0, uv1;
-    float weight;
     if (ilevel == 0.0) {
-        uv0 = mapShinyUv(uv, ilevel2);
-        uv1 = mapShinyUv(uv, ilevel2 + 1.0);
-        weight = level2 - ilevel2;
+        // sharp reflection: blend the shiny (top mip) level into roughness level 1
+        uv0 = mapShinyUv(uv, 0.0);
+        uv1 = mapRoughnessUv(uv, 1.0);
     } else {
-        // accessing rough reflection - just sample the same part twice
-        uv0 = uv1 = mapRoughnessUv(uv, ilevel);
-        weight = 0.0;
+        // blurry reflection: blend two pre-convolved roughness levels
+        uv0 = mapRoughnessUv(uv, ilevel);
+        uv1 = mapRoughnessUv(uv, ilevel + 1.0);
     }
 
     vec3 linearA = {reflectionDecode}(texture2D(texture_envAtlas, uv0));
     vec3 linearB = {reflectionDecode}(texture2D(texture_envAtlas, uv1));
-    vec3 linear0 = mix(linearA, linearB, weight);
-    vec3 linear1 = {reflectionDecode}(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel + 1.0)));
-
-    return processEnvironment(mix(linear0, linear1, level - ilevel));
+    return processEnvironment(mix(linearA, linearB, level - ilevel));
 }
 
 void addReflection(vec3 reflDir, float gloss) {   
