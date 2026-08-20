@@ -185,7 +185,9 @@ class Culler {
             const light = localLights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    renderer._shadowRendererLocal.cull(light, comp);
+                    // the composition's cameras are the ones that can sample this shadow map, which
+                    // lets an omni light skip the cube map faces none of them reach
+                    renderer._shadowRendererLocal.cull(light, comp, null, comp.cameras);
                 }
             }
         }

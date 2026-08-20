@@ -262,8 +262,10 @@ class ShadowRenderer {
      * if those are not provided directly.
      * @param {Light} light - The omni light.
      * @param {MeshInstance[]} [casters] - Optional array of mesh instances to use as casters.
+     * @param {number} [faceMask] - A bit per face; faces whose bit is clear get an empty caster
+     * list, as no camera can sample them. Defaults to all six faces.
      */
-    cullShadowCastersOmni(comp, light, casters) {
+    cullShadowCastersOmni(comp, light, casters, faceMask = 0x3f) {
 
         Debug.assert(light._type === LIGHTTYPE_OMNI);
 
@@ -313,6 +315,14 @@ class ShadowRenderer {
             }
         });
 
+        // hoisted out of the caster loop below - a face no camera can sample is skipped entirely
+        const face0 = (faceMask & 1) !== 0;
+        const face1 = (faceMask & 2) !== 0;
+        const face2 = (faceMask & 4) !== 0;
+        const face3 = (faceMask & 8) !== 0;
+        const face4 = (faceMask & 16) !== 0;
+        const face5 = (faceMask & 32) !== 0;
+
         const casterLists = this._collectCasterLists(comp, light, casters);
         for (let listIndex = 0; listIndex < casterLists.length; listIndex++) {
 
@@ -329,6 +339,9 @@ class ShadowRenderer {
                 // custom visibility function need to evaluate it for each face's shadow camera
                 if (!meshInstance.cull || meshInstance.isVisibleFunc) {
                     for (let face = 0; face < 6; face++) {
+                        if ((faceMask & (1 << face)) === 0) {
+                            continue;
+                        }
                         if (!meshInstance.cull || meshInstance._isVisible(_faceCameras[face])) {
                             meshInstance.visibleThisFrame = true;
                             _faceLists[face].push(meshInstance);
@@ -377,7 +390,7 @@ class ShadowRenderer {
                 let visible = false;
 
                 // +X
-                if (x + ex > near && x - ex < far &&
+                if (face0 && x + ex > near && x - ex < far &&
                     slopeX - y > limXY && slopeX + y > limXY &&
                     slopeX - z > limXZ && slopeX + z > limXZ) {
                     _faceLists[0].push(meshInstance);
@@ -385,7 +398,7 @@ class ShadowRenderer {
                 }
 
                 // -X
-                if (-x + ex > near && -x - ex < far &&
+                if (face1 && -x + ex > near && -x - ex < far &&
                     -slopeX - y > limXY && -slopeX + y > limXY &&
                     -slopeX - z > limXZ && -slopeX + z > limXZ) {
                     _faceLists[1].push(meshInstance);
@@ -393,7 +406,7 @@ class ShadowRenderer {
                 }
 
                 // +Y
-                if (y + ey > near && y - ey < far &&
+                if (face2 && y + ey > near && y - ey < far &&
                     slopeY - x > limYX && slopeY + x > limYX &&
                     slopeY - z > limYZ && slopeY + z > limYZ) {
                     _faceLists[2].push(meshInstance);
@@ -401,7 +414,7 @@ class ShadowRenderer {
                 }
 
                 // -Y
-                if (-y + ey > near && -y - ey < far &&
+                if (face3 && -y + ey > near && -y - ey < far &&
                     -slopeY - x > limYX && -slopeY + x > limYX &&
                     -slopeY - z > limYZ && -slopeY + z > limYZ) {
                     _faceLists[3].push(meshInstance);
@@ -409,7 +422,7 @@ class ShadowRenderer {
                 }
 
                 // +Z
-                if (z + ez > near && z - ez < far &&
+                if (face4 && z + ez > near && z - ez < far &&
                     slopeZ - x > limZX && slopeZ + x > limZX &&
                     slopeZ - y > limZY && slopeZ + y > limZY) {
                     _faceLists[4].push(meshInstance);
@@ -417,7 +430,7 @@ class ShadowRenderer {
                 }
 
                 // -Z
-                if (-z + ez > near && -z - ez < far &&
+                if (face5 && -z + ez > near && -z - ez < far &&
                     -slopeZ - x > limZX && -slopeZ + x > limZX &&
                     -slopeZ - y > limZY && -slopeZ + y > limZY) {
                     _faceLists[5].push(meshInstance);

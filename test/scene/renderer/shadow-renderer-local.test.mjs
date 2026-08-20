@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BoundingSphere } from '../../../src/core/shape/bounding-sphere.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME } from '../../../src/scene/constants.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -44,6 +45,38 @@ describe('ShadowRendererLocal', function () {
         entity.setPosition(position);
         app.root.addChild(entity);
         return entity.light.light;
+    };
+
+    /**
+     * @param {Vec3} position - The camera position.
+     * @param {Vec3} target - The point the camera looks at.
+     * @returns {object} The camera component.
+     */
+    const createCamera = (position, target) => {
+        const entity = new Entity();
+        entity.addComponent('camera', { fov: 60, nearClip: 1, farClip: 1000 });
+        app.root.addChild(entity);
+        entity.setPosition(position);
+        entity.lookAt(target);
+        entity.camera.camera.updateFrustum();
+        return entity.camera;
+    };
+
+    /**
+     * Culls with a camera list, so an omni light can skip the faces none of them reach.
+     *
+     * @param {Light} light - The light.
+     * @param {MeshInstance[]} casters - The casters.
+     * @param {object[]} cameras - The camera components.
+     * @returns {number[]} The number of casters in each face.
+     */
+    const cullWithCameras = (light, casters, cameras) => {
+        app.renderer._shadowRendererLocal.cull(light, app.scene.layers, casters, cameras);
+        const counts = [];
+        for (let face = 0; face < light.numShadowFaces; face++) {
+            counts.push(light.getRenderData(null, face).visibleCasters.length);
+        }
+        return counts;
     };
 
     /**
@@ -329,6 +362,83 @@ describe('ShadowRendererLocal', function () {
             // cases the two tests disagree on
             expect(visible).to.be.greaterThan(100);
             expect(dropped).to.be.greaterThan(0);
+        });
+    });
+
+    describe('#cull - omni face culling', function () {
+
+        it('needs all six faces when the light is inside the camera frustum', function () {
+            const light = createLight(new Vec3(0, 0, 0));
+            const caster = createCaster(new Vec3(0, 0, 0), 4);
+            const camera = createCamera(new Vec3(0, 0, 300), new Vec3(0, 0, 0));
+
+            // every face frustum has the light's position as its apex, so a light the camera
+            // contains can have no face rejected
+            expect(cullWithCameras(light, [caster], [camera])).to.eql([1, 1, 1, 1, 1, 1]);
+        });
+
+        it('skips faces a camera looking away cannot reach', function () {
+            const light = createLight(new Vec3(0, 0, 0));
+            const caster = createCaster(new Vec3(0, 0, 0), 4);
+
+            // the camera sits to one side of the light, looking away from it along +x, so the
+            // faces on the far side of the light are out of reach
+            const camera = createCamera(new Vec3(60, 0, 0), new Vec3(400, 0, 0));
+
+            const counts = cullWithCameras(light, [caster], [camera]);
+            const facesWithCasters = counts.filter(c => c > 0).length;
+            expect(facesWithCasters, 'some faces should be skipped').to.be.lessThan(6);
+            expect(facesWithCasters, 'and some should remain').to.be.greaterThan(0);
+        });
+
+        it('unions the faces needed across several cameras', function () {
+            const light = createLight(new Vec3(0, 0, 0));
+            const caster = createCaster(new Vec3(0, 0, 0), 4);
+            const a = createCamera(new Vec3(60, 0, 0), new Vec3(400, 0, 0));
+            const b = createCamera(new Vec3(-60, 0, 0), new Vec3(-400, 0, 0));
+
+            const one = cullWithCameras(light, [caster], [a]).map(c => c > 0);
+            const two = cullWithCameras(light, [caster], [b]).map(c => c > 0);
+            const both = cullWithCameras(light, [caster], [a, b]).map(c => c > 0);
+
+            for (let face = 0; face < 6; face++) {
+                expect(both[face], `face ${face}`).to.equal(one[face] || two[face]);
+            }
+        });
+
+        it('ignores a disabled camera', function () {
+            const light = createLight(new Vec3(0, 0, 0));
+            const caster = createCaster(new Vec3(0, 0, 0), 4);
+            const away = createCamera(new Vec3(60, 0, 0), new Vec3(400, 0, 0));
+            const containing = createCamera(new Vec3(0, 0, 300), new Vec3(0, 0, 0));
+            containing.enabled = false;
+
+            // with the containing camera disabled the mask comes from the other one alone
+            const withDisabled = cullWithCameras(light, [caster], [away, containing]);
+            const awayOnly = cullWithCameras(light, [caster], [away]);
+            expect(withDisabled).to.eql(awayOnly);
+        });
+
+        it('keeps all six faces for a shadow that does not re-render every frame', function () {
+            const light = createLight(new Vec3(0, 0, 0));
+            const caster = createCaster(new Vec3(0, 0, 0), 4);
+            const camera = createCamera(new Vec3(60, 0, 0), new Vec3(400, 0, 0));
+
+            // a one shot update is retired after this render, so a face skipped now could never be
+            // filled in later - such a light must render every face
+            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+            expect(cullWithCameras(light, [caster], [camera])).to.eql([1, 1, 1, 1, 1, 1]);
+
+            light.shadowUpdateMode = SHADOWUPDATE_REALTIME;
+            expect(cullWithCameras(light, [caster], [camera]).filter(c => c > 0).length).to.be.lessThan(6);
+        });
+
+        it('keeps all six faces when no cameras are supplied', function () {
+            const light = createLight(new Vec3(0, 0, 0));
+            const caster = createCaster(new Vec3(0, 0, 0), 4);
+
+            // the lightmapper bakes with its own cameras and calls cull without a camera list
+            expect(cullFaces(light, [caster]).map(f => f.size)).to.eql([1, 1, 1, 1, 1, 1]);
         });
     });
 

@@ -1,46 +1,60 @@
-import { Plane } from './plane.js';
 import { Debug } from '../debug.js';
-import { Vec3 } from '../math/vec3.js';
 
 /**
  * @import { BoundingBox } from './bounding-box.js'
  * @import { BoundingSphere } from './bounding-sphere.js'
  * @import { Mat4 } from '../math/mat4.js'
+ * @import { Plane } from './plane.js'
+ * @import { Vec3 } from '../math/vec3.js'
  */
 
-// temporaries for three-plane intersection
-const _c23 = new Vec3();
-const _c31 = new Vec3();
-const _c12 = new Vec3();
-const _corner = new Vec3();
-
-// scratch planes, used to read the planes of another frustum in add()
-const _scratchPlanes = [new Plane(), new Plane(), new Plane(), new Plane(), new Plane(), new Plane()];
+// corners of the frustum being added in add()
+const _corners = new Float64Array(24);
 
 /**
- * Intersects three planes and writes the intersection point to out.
+ * Intersects the three planes at the given offsets into packed plane data, writing the intersection
+ * point to out.
  *
- * @param {Plane} p1 - The first plane.
- * @param {Plane} p2 - The second plane.
- * @param {Plane} p3 - The third plane.
- * @param {Vec3} out - The intersection point.
+ * @param {Float64Array|Float32Array} planes - Packed planes, four floats each.
+ * @param {number} a - Offset of the first plane.
+ * @param {number} b - Offset of the second plane.
+ * @param {number} c - Offset of the third plane.
+ * @param {Float64Array} out - Receives the intersection point.
+ * @param {number} outOffset - Offset to write the point at.
  * @returns {boolean} False when the planes do not intersect in a single finite point.
  */
-function intersectPlanes(p1, p2, p3, out) {
-    _c23.cross(p2.normal, p3.normal);
-    const denom = p1.normal.dot(_c23);
+function intersectPlanes(planes, a, b, c, out, outOffset) {
+
+    // cross products of the plane normals
+    const bcx = planes[b + 1] * planes[c + 2] - planes[b + 2] * planes[c + 1];
+    const bcy = planes[b + 2] * planes[c] - planes[b] * planes[c + 2];
+    const bcz = planes[b] * planes[c + 1] - planes[b + 1] * planes[c];
+
+    const denom = planes[a] * bcx + planes[a + 1] * bcy + planes[a + 2] * bcz;
     if (Math.abs(denom) < 1e-6) {
         return false;
     }
-    _c31.cross(p3.normal, p1.normal);
-    _c12.cross(p1.normal, p2.normal);
-    const invDenom = -1.0 / denom;
-    out.set(
-        (p1.distance * _c23.x + p2.distance * _c31.x + p3.distance * _c12.x) * invDenom,
-        (p1.distance * _c23.y + p2.distance * _c31.y + p3.distance * _c12.y) * invDenom,
-        (p1.distance * _c23.z + p2.distance * _c31.z + p3.distance * _c12.z) * invDenom
-    );
-    return isFinite(out.x) && isFinite(out.y) && isFinite(out.z);
+
+    const cax = planes[c + 1] * planes[a + 2] - planes[c + 2] * planes[a + 1];
+    const cay = planes[c + 2] * planes[a] - planes[c] * planes[a + 2];
+    const caz = planes[c] * planes[a + 1] - planes[c + 1] * planes[a];
+    const abx = planes[a + 1] * planes[b + 2] - planes[a + 2] * planes[b + 1];
+    const aby = planes[a + 2] * planes[b] - planes[a] * planes[b + 2];
+    const abz = planes[a] * planes[b + 1] - planes[a + 1] * planes[b];
+
+    const invDenom = -1 / denom;
+    const da = planes[a + 3], db = planes[b + 3], dc = planes[c + 3];
+    const x = (da * bcx + db * cax + dc * abx) * invDenom;
+    const y = (da * bcy + db * cay + dc * aby) * invDenom;
+    const z = (da * bcz + db * caz + dc * abz) * invDenom;
+    if (!isFinite(x) || !isFinite(y) || !isFinite(z)) {
+        return false;
+    }
+
+    out[outOffset] = x;
+    out[outOffset + 1] = y;
+    out[outOffset + 2] = z;
+    return true;
 }
 
 /**
@@ -216,6 +230,32 @@ class Frustum {
     }
 
     /**
+     * Writes the frustum's corner points, as x, y, z triples, by intersecting its plane triplets.
+     *
+     * @param {Float64Array} out - Receives up to eight corners, as 24 floats.
+     * @returns {number} The number of corners written. Fewer than eight means some plane triplets
+     * do not meet in a single finite point, which happens for a degenerate frustum.
+     * @ignore
+     */
+    getCorners(out) {
+        const data = this.planeData;
+        let count = 0;
+
+        // (FAR|NEAR) x (RIGHT|LEFT) x (BOTTOM|TOP) triplets - see the plane order in setFromMat4
+        for (let zi = 4; zi <= 5; zi++) {
+            for (let xi = 0; xi <= 1; xi++) {
+                for (let yi = 2; yi <= 3; yi++) {
+                    if (intersectPlanes(data, zi * 4, xi * 4, yi * 4, out, count * 3)) {
+                        count++;
+                    }
+                }
+            }
+        }
+
+        return count;
+    }
+
+    /**
      * Expands this frustum to also contain another frustum. The other frustum's 8 corner points
      * are computed, and each of this frustum's planes is pushed outwards just far enough to
      * contain them all. The result is a conservative convex volume that contains both frustums.
@@ -232,31 +272,22 @@ class Frustum {
      */
     add(other) {
         const data = this.planeData;
+        const count = other.getCorners(_corners);
 
-        // the other frustum's planes as objects, for the three-plane intersection below. This runs
-        // a couple of times per frame at most - only stereo XR uses it - so the unpacking is free.
-        for (let p = 0; p < 6; p++) {
-            other.getPlane(p, _scratchPlanes[p]);
-        }
+        for (let c = 0; c < count * 3; c += 3) {
+            const x = _corners[c];
+            const y = _corners[c + 1];
+            const z = _corners[c + 2];
 
-        // The 8 corners of the other frustum: intersections of (FAR|NEAR) x (RIGHT|LEFT) x
-        // (BOTTOM|TOP) plane triplets - see the plane order in setFromMat4.
-        for (let zi = 4; zi <= 5; zi++) {
-            for (let xi = 0; xi <= 1; xi++) {
-                for (let yi = 2; yi <= 3; yi++) {
-                    if (intersectPlanes(_scratchPlanes[zi], _scratchPlanes[xi], _scratchPlanes[yi], _corner)) {
-                        // push out any plane the corner is behind, so it ends up on the plane
-                        for (let offset = 0; offset < 24; offset += 4) {
-                            const d = data[offset] * _corner.x + data[offset + 1] * _corner.y +
-                                data[offset + 2] * _corner.z + data[offset + 3];
-                            if (d < 0) {
-                                data[offset + 3] -= d;
-                            }
-                        }
-                    }
+            // push out any plane the corner is behind, so it ends up on the plane
+            for (let offset = 0; offset < 24; offset += 4) {
+                const d = data[offset] * x + data[offset + 1] * y + data[offset + 2] * z + data[offset + 3];
+                if (d < 0) {
+                    data[offset + 3] -= d;
                 }
             }
         }
+
         return this;
     }
 
