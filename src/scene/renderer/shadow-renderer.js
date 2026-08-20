@@ -255,7 +255,7 @@ class ShadowRenderer {
      * a near and a far plane perpendicular to the face axis, plus four side planes through the
      * light position with the slope of the face's field of view. Testing a caster's bounding sphere
      * against those planes in light space is a handful of comparisons per face, and uses the same
-     * planes {@link Frustum#containsSphere} would, so the result is the same set of casters (up to
+     * planes {@link Frustum#containsAabb} would, so the result is the same set of casters (up to
      * the slab rejection below, which is tighter than a plane test near the frustum corners).
      *
      * @param {LayerComposition} comp - The layer composition used as a source of shadow casters,
@@ -293,9 +293,6 @@ class ShadowRenderer {
         const near = shadowCam.nearClip;
         const far = shadowCam.farClip;
         const slope = Math.tan(shadowCam.fov * 0.5 * math.DEG_TO_RAD);
-
-        // side plane normals are (slope, -+1) and so need scaling to be normalized
-        const sideScale = Math.sqrt(1 + slope * slope);
 
         // The union of the six face frusta is bounded by the axis aligned cube of this half side.
         // Note that this is larger than the light's range: each face's far plane is perpendicular to
@@ -344,74 +341,85 @@ class ShadowRenderer {
                     continue;
                 }
 
-                // caster's bounding sphere in light space
+                // caster's bounding box in light space
                 const center = meshInstance.aabb.center;    // this line evaluates aabb
-                const radius = meshInstance._aabb.halfExtents.length();
+                const halfExtents = meshInstance._aabb.halfExtents;
+                const ex = halfExtents.x;
+                const ey = halfExtents.y;
+                const ez = halfExtents.z;
                 const x = center.x - lightX;
                 const y = center.y - lightY;
                 const z = center.z - lightZ;
 
                 // reject casters outside the bounds of all six faces
-                const slab = bounds + radius;
-                if (x > slab || x < -slab || y > slab || y < -slab || z > slab || z < -slab) {
+                if (x > bounds + ex || x < -bounds - ex ||
+                    y > bounds + ey || y < -bounds - ey ||
+                    z > bounds + ez || z < -bounds - ez) {
                     continue;
                 }
 
-                // a sphere is outside a plane when its signed distance is <= -radius, so for each
-                // face: axial > near - radius, axial < far + radius, and (slope * axial -+ lateral)
-                // > -radius * sideScale for the two lateral axes
-                const nearLimit = near - radius;
-                const farLimit = far + radius;
-                const sideLimit = -radius * sideScale;
+                // A box is outside a plane when its signed distance is no greater than minus its
+                // extent along the plane normal. For a face with axial extent ea and lateral extents
+                // eu and ev that gives: axial + ea > near, axial - ea < far, and
+                // (slope * axial -+ lateral) > -(slope * ea + e_lateral). The 1 / sqrt(1 + slope^2)
+                // that normalizes the side plane normals cancels on both sides, so it is dropped.
                 const slopeX = slope * x;
                 const slopeY = slope * y;
                 const slopeZ = slope * z;
+
+                // side plane limits, shared by the two faces of each axis
+                const limXY = -(slope * ex + ey);
+                const limXZ = -(slope * ex + ez);
+                const limYX = -(slope * ey + ex);
+                const limYZ = -(slope * ey + ez);
+                const limZX = -(slope * ez + ex);
+                const limZY = -(slope * ez + ey);
                 let visible = false;
 
                 // +X
-                if (x > nearLimit && x < farLimit &&
-                    slopeX - y > sideLimit && slopeX + y > sideLimit &&
-                    slopeX - z > sideLimit && slopeX + z > sideLimit) {
+                if (x + ex > near && x - ex < far &&
+                    slopeX - y > limXY && slopeX + y > limXY &&
+                    slopeX - z > limXZ && slopeX + z > limXZ) {
                     _faceLists[0].push(meshInstance);
                     visible = true;
                 }
 
                 // -X
-                if (-x > nearLimit && -x < farLimit &&
-                    -slopeX - y > sideLimit && -slopeX + y > sideLimit &&
-                    -slopeX - z > sideLimit && -slopeX + z > sideLimit) {
+                if (-x + ex > near && -x - ex < far &&
+                    -slopeX - y > limXY && -slopeX + y > limXY &&
+                    -slopeX - z > limXZ && -slopeX + z > limXZ) {
                     _faceLists[1].push(meshInstance);
                     visible = true;
                 }
 
                 // +Y
-                if (y > nearLimit && y < farLimit &&
-                    slopeY - x > sideLimit && slopeY + x > sideLimit &&
-                    slopeY - z > sideLimit && slopeY + z > sideLimit) {
+                if (y + ey > near && y - ey < far &&
+                    slopeY - x > limYX && slopeY + x > limYX &&
+                    slopeY - z > limYZ && slopeY + z > limYZ) {
                     _faceLists[2].push(meshInstance);
                     visible = true;
                 }
 
                 // -Y
-                if (-y > nearLimit && -y < farLimit &&
-                    -slopeY - x > sideLimit && -slopeY + x > sideLimit &&
-                    -slopeY - z > sideLimit && -slopeY + z > sideLimit) {
+                if (-y + ey > near && -y - ey < far &&
+                    -slopeY - x > limYX && -slopeY + x > limYX &&
+                    -slopeY - z > limYZ && -slopeY + z > limYZ) {
                     _faceLists[3].push(meshInstance);
                     visible = true;
                 }
 
                 // +Z
-                if (z > nearLimit && z < farLimit &&
-                    slopeZ - x > sideLimit && slopeZ + x > sideLimit &&
-                    slopeZ - y > sideLimit && slopeZ + y > sideLimit) {
+                if (z + ez > near && z - ez < far &&
+                    slopeZ - x > limZX && slopeZ + x > limZX &&
+                    slopeZ - y > limZY && slopeZ + y > limZY) {
                     _faceLists[4].push(meshInstance);
                     visible = true;
                 }
 
                 // -Z
-                if (-z > nearLimit && -z < farLimit &&
-                    -slopeZ - x > sideLimit && -slopeZ + x > sideLimit &&
-                    -slopeZ - y > sideLimit && -slopeZ + y > sideLimit) {
+                if (-z + ez > near && -z - ez < far &&
+                    -slopeZ - x > limZX && -slopeZ + x > limZX &&
+                    -slopeZ - y > limZY && -slopeZ + y > limZY) {
                     _faceLists[5].push(meshInstance);
                     visible = true;
                 }

@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Mat4 } from '../../../src/core/math/mat4.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
+import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { BoundingSphere } from '../../../src/core/shape/bounding-sphere.js';
 import { Frustum } from '../../../src/core/shape/frustum.js';
 import { Plane } from '../../../src/core/shape/plane.js';
@@ -177,6 +178,80 @@ describe('Frustum', function () {
 
             // straddling the left plane, which passes through the origin at 45 degrees
             expect(frustum.containsSphere(new BoundingSphere(new Vec3(-50, 0, -50), 5))).to.equal(1);
+        });
+    });
+
+    describe('#containsAabb', function () {
+
+        it('accepts a box in the middle and rejects boxes outside', function () {
+            const frustum = createFrustum();
+            expect(frustum.containsAabb(new BoundingBox(new Vec3(0, 0, -50), new Vec3(1, 1, 1)))).to.equal(true);
+            expect(frustum.containsAabb(new BoundingBox(new Vec3(0, 0, 10), new Vec3(1, 1, 1)))).to.equal(false);
+            expect(frustum.containsAabb(new BoundingBox(new Vec3(0, 0, -200), new Vec3(1, 1, 1)))).to.equal(false);
+            expect(frustum.containsAabb(new BoundingBox(new Vec3(200, 0, -50), new Vec3(1, 1, 1)))).to.equal(false);
+        });
+
+        it('accepts a box straddling a side plane', function () {
+            const frustum = createFrustum();
+
+            // the frustum reaches x = -50 at z = -50, so this box is half in and half out
+            expect(frustum.containsAabb(new BoundingBox(new Vec3(-50, 0, -50), new Vec3(5, 5, 5)))).to.equal(true);
+        });
+
+        it('accepts a box enclosing the whole frustum', function () {
+            const frustum = createFrustum();
+            expect(frustum.containsAabb(new BoundingBox(new Vec3(0, 0, 0), new Vec3(500, 500, 500)))).to.equal(true);
+        });
+
+        it('agrees with containsPoint for a box of zero size', function () {
+            const frustum = createFrustum();
+            for (const p of [new Vec3(0, 0, -50), new Vec3(0, 0, 10), new Vec3(90, 0, -50), new Vec3(-10, 5, -30)]) {
+                const box = new BoundingBox(p.clone(), new Vec3(0, 0, 0));
+                expect(frustum.containsAabb(box), `${p.x},${p.y},${p.z}`).to.equal(frustum.containsPoint(p));
+            }
+        });
+
+        it('is tighter than testing the box bounding sphere', function () {
+            const frustum = createFrustum();
+
+            // a long thin box well outside the frustum, whose bounding sphere is not - the sphere
+            // radius is the box diagonal, while the box only reaches one unit along the axis the
+            // side plane cares about
+            const box = new BoundingBox(new Vec3(-120, 0, -50), new Vec3(60, 1, 1));
+            const sphere = new BoundingSphere(box.center.clone(), box.halfExtents.length());
+
+            expect(frustum.containsSphere(sphere)).to.be.greaterThan(0);
+            expect(frustum.containsAabb(box)).to.equal(false);
+        });
+
+        it('never reports a box visible that the bounding sphere test rejects', function () {
+            const frustum = createFrustum();
+            const box = new BoundingBox();
+            const sphere = new BoundingSphere();
+
+            let seed = 8675309;
+            const random = () => {
+                seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+                return seed / 0x7fffffff;
+            };
+
+            let tighter = 0;
+            for (let i = 0; i < 20000; i++) {
+                box.center.set((random() * 2 - 1) * 150, (random() * 2 - 1) * 150, (random() * 2 - 1) * 150);
+                box.halfExtents.set(0.5 + random() * 20, 0.5 + random() * 4, 0.5 + random() * 4);
+                sphere.center.copy(box.center);
+                sphere.radius = box.halfExtents.length();
+
+                const byBox = frustum.containsAabb(box);
+                const bySphere = frustum.containsSphere(sphere) > 0;
+                expect(byBox && !bySphere, `box ${i} visible by the box test but not by the sphere test`).to.equal(false);
+                if (bySphere && !byBox) {
+                    tighter++;
+                }
+            }
+
+            // and it does reject boxes the sphere test admits
+            expect(tighter).to.be.greaterThan(0);
         });
     });
 
