@@ -519,6 +519,27 @@ class ScriptComponent extends Component {
     }
 
     /**
+     * Returns the index in {@link ScriptComponent#scripts} at which a script that has been
+     * awaiting its script type should be created: directly after the script it was declared
+     * after, skipping any scripts that do not exist yet. Unlike an index captured when the script
+     * was first declared this holds whichever order the script types end up being registered in,
+     * and it follows the preceding script if that has since been moved.
+     *
+     * @param {string} scriptName - The name of the awaiting script.
+     * @returns {number} The index to create the script instance at.
+     * @private
+     */
+    _awaitingInsertIndex(scriptName) {
+        let previous = null;
+        for (const name of this._declarationOrder) {
+            if (name === scriptName) break;
+            previous = this._scriptsIndex[name]?.instance ?? previous;
+        }
+
+        return previous ? this._scripts.indexOf(previous) + 1 : 0;
+    }
+
+    /**
      * Inserts script instance into the scripts array at the specified index. Also inserts the
      * script into the update list if it has an update method and the post update list if it has a
      * postUpdate method.
