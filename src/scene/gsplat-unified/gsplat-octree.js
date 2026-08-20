@@ -38,6 +38,19 @@ class GSplatOctree {
     lodLevels;
 
     /**
+     * True when the manifest declares per-node approximation errors and every node
+     * supplies a finite, non-negative one for each of its non-empty LOD levels,
+     * which allows error-driven budget allocation. Established here, once, so the budget
+     * balancer does not walk each node's levels every frame - and so its choice of
+     * allocator is a property of the asset rather than of what is currently
+     * visible. Note this covers all LOD levels, not just a currently configured
+     * sub-range.
+     *
+     * @type {boolean}
+     */
+    lodErrors = false;
+
+    /**
      * The file URL of the container asset, used as the base for resolving relative URLs.
      *
      * @type {string}
@@ -135,6 +148,10 @@ class GSplatOctree {
         const leafNodes = [];
         this._extractLeafNodes(data.tree, leafNodes);
 
+        // The manifest declares whether it carries error tables; confirm the values
+        // are actually usable while the nodes are being built.
+        let lodErrors = data.lodErrors === true;
+
         // Create nodes from the extracted leaf nodes
         this.nodes = leafNodes.map((nodeData) => {
             /** @type {GSplatOctreeNodeLod[]} */
@@ -143,12 +160,14 @@ class GSplatOctree {
             // Ensure we have exactly lodLevels entries
             for (let i = 0; i < this.lodLevels; i++) {
                 const lodData = nodeData.lods[i.toString()];
+                const error = nodeData.errors?.[i];
                 if (lodData) {
                     lods.push({
                         file: this.files[lodData.file].url || '',
                         fileIndex: lodData.file,
                         offset: lodData.offset || 0,
-                        count: lodData.count || 0
+                        count: lodData.count || 0,
+                        error
                     });
 
                     // record LOD level for the file index
@@ -159,13 +178,29 @@ class GSplatOctree {
                         file: '',
                         fileIndex: -1,
                         offset: 0,
-                        count: 0
+                        count: 0,
+                        error
                     });
+                }
+
+                // An unusable error on a level that can be rendered rules out
+                // error-driven allocation for the whole octree. Errors are
+                // magnitudes relative to the finest LOD, so a negative one is as
+                // meaningless as a non-finite one - and more dangerous, since it
+                // would let a coarse level dominate every finer one on the frontier
+                // and pin the node there at any budget.
+                if (lodErrors && lods[i].count > 0 && !(Number.isFinite(error) && error >= 0)) {
+                    lodErrors = false;
                 }
             }
 
             return new GSplatOctreeNode(lods, nodeData.bound);
         });
+
+        this.lodErrors = lodErrors;
+        if (data.lodErrors === true && !lodErrors) {
+            Debug.warn(`GSplatOctree: ${assetFileUrl} declares lodErrors but does not supply a finite, non-negative error for every non-empty LOD level, falling back to distance-based LOD allocation.`);
+        }
 
         // precompute node bounds for CPU hot paths
         const nodeCount = this.nodes.length;
@@ -238,7 +273,8 @@ class GSplatOctree {
             // This is a leaf node with LOD data
             leafNodes.push({
                 lods: node.lods,
-                bound: node.bound
+                bound: node.bound,
+                errors: node.errors
             });
         } else if (node.children) {
             // This is a branch node, recurse into children

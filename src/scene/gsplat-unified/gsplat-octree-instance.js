@@ -59,6 +59,11 @@ class NodeInfo {
     worldDistance = 0;
 
     /**
+     * Approximate projected screen coverage of the node, including FOV and behind-camera penalty.
+     */
+    lodCoverage = 0;
+
+    /**
      * Accumulated camera translation for SH color update threshold tracking.
      */
     colorAccumulatedTranslation = 0;
@@ -627,6 +632,9 @@ class GSplatOctreeInstance {
 
             nodeInfo.optimalLod = optimalLodIndex;
             nodeInfo.worldDistance = fovAdjustedDistance * uniformScale;
+            const radius = nodes[nodeIndex].boundingSphere.w;
+            const projectedRadius = radius / Math.max(radius + fovAdjustedDistance, 1e-12);
+            nodeInfo.lodCoverage = projectedRadius * projectedRadius;
 
             // Budget balancer bucket (sqrt mapping; must match GSplatBudgetBalancer). Fused here when enforcing budget.
             if (bucketScale > 0 && optimalLodIndex >= 0) {
