@@ -47,8 +47,6 @@ function intersectPlanes(p1, p2, p3, out) {
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
  * directly, but instead query {@link CameraComponent#frustum}.
  *
- * @example
- * const frustum = new Frustum();
  * @category Math
  */
 class Frustum {
@@ -65,6 +63,15 @@ class Frustum {
      * @ignore
      */
     planeData = new Float32Array(24);
+
+    /**
+     * Create a new Frustum instance.
+     *
+     * @example
+     * const frustum = new Frustum();
+     */
+    // eslint-disable-next-line no-useless-constructor
+    constructor() { }
 
     /**
      * @type {Plane[]}
