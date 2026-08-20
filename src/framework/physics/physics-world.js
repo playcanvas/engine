@@ -31,7 +31,8 @@ import { PhysicsJoint } from './physics-joint.js';
 /**
  * @typedef {object} PhysicsMeshSource
  * @property {number} id - A stable cache key for the source geometry (mesh id). Backends may
- * cache built triangle data per id for the lifetime of the world.
+ * cache triangle data built without a bake scale per id for the lifetime of the world. An id
+ * can be shared by sources carrying different bake scales, so scaled data is not cacheable.
  * @property {Float32Array|number[]} positions - Vertex positions, possibly interleaved.
  * @property {number} stride - The number of floats between consecutive positions (3 when
  * tightly packed).

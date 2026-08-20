@@ -759,6 +759,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         // Check to see whether we need to update gravity on the physics world
         this._world.setGravity(this.gravity);
 
+        // rebuild mesh collision shapes whose entity world scale changed since they were built
+        this.app.systems.collision?._updateMeshScales();
+
         const triggers = this._triggers;
         for (i = 0, len = triggers.length; i < len; i++) {
             triggers[i].updateTransform();
