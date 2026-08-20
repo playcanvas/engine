@@ -1354,6 +1354,122 @@ describe('ScriptComponent', function () {
         app.assets.load(asset);
     });
 
+    it('cloning an entity preserves scripts that are awaiting their script type', function () {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'loadedLater', 'scriptB'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                loadedLater: { enabled: false, attributes: { disableEntity: true } },
+                scriptB: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const indexData = clone.script._scriptsIndex.loadedLater;
+        expect(indexData).to.exist;
+        expect(indexData.awaiting).to.equal(true);
+        expect(indexData.ind).to.equal(e.script._scriptsIndex.loadedLater.ind);
+
+        // the data the script will be created from once its type is registered is preserved too
+        expect(clone.script._scriptsData.loadedLater.enabled).to.equal(false);
+        expect(clone.script._scriptsData.loadedLater.attributes.disableEntity).to.equal(true);
+    });
+
+    it('cloning an entity keeps the relative order of consecutive awaiting scripts', function () {
+        const e = new Entity();
+        const order = ['scriptA', 'awaitingOne', 'awaitingTwo', 'scriptB', 'awaitingThree'];
+        const scripts = {};
+        order.forEach((name) => {
+            scripts[name] = { enabled: true, attributes: {} };
+        });
+        e.addComponent('script', { enabled: true, order: order, scripts: scripts });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        // initializeComponentData creates the scripts in `order`, so this is the order the
+        // clone was rebuilt with
+        expect(clone.script._declarationOrder).to.deep.equal(order);
+    });
+
+    it('cloning an entity keeps the declared order of awaiting scripts with integer-like names', function () {
+        const e = new Entity();
+        const order = ['scriptA', '10', '2', 'scriptB'];
+        const scripts = {};
+        order.forEach((name) => {
+            scripts[name] = { enabled: true, attributes: {} };
+        });
+        e.addComponent('script', { enabled: true, order: order, scripts: scripts });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        // integer-like keys are enumerated first, so the key order of `_scriptsIndex` is not the
+        // declared order here
+        expect(clone.script._declarationOrder).to.deep.equal(order);
+    });
+
+    it('cloning an entity places an awaiting script after the script it was declared after', function () {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB', 'awaitingMoved'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} },
+                awaitingMoved: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        // the awaiting script was declared after scriptB, which now runs first
+        e.script.move('scriptB', 0);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        expect(clone.script._declarationOrder).to.deep.equal(['scriptB', 'awaitingMoved', 'scriptA']);
+    });
+
+    it('scripts awaiting their script type are created on a clone when the type is registered', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'loadedLater', 'scriptB'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                loadedLater: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        expect(clone.script.loadedLater).to.not.exist;
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater).to.exist;
+                expect(clone.script.loadedLater).to.exist;
+                const names = clone.script.scripts.map(s => s.__scriptType.__name);
+                expect(names).to.deep.equal(['scriptA', 'loadedLater', 'scriptB']);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
     it('destroying entity during update stops updating the rest of the entity\'s scripts', function () {
         const e = new Entity();
         e.addComponent('script', {

@@ -121,10 +121,31 @@ class ScriptComponentSystem extends ComponentSystem {
             };
         }
 
-        for (const key in entity.script._scriptsIndex) {
-            if (key.awaiting) {
-                order.splice(key.ind, 0, key);
+        // scripts still awaiting their script type to be added to the registry have no instance
+        // to read from, so restore them from the data they were declared with. Their entry in
+        // `scripts` is required, otherwise initializeComponentData throws when it looks up the
+        // name coming from `order`.
+        let previousName = null;
+        for (const scriptName of entity.script._declarationOrder) {
+            const indexData = entity.script._scriptsIndex[scriptName];
+
+            // scripts that have an instance are already in `order`
+            if (!indexData?.awaiting) {
+                if (indexData?.instance) previousName = scriptName;
+                continue;
             }
+
+            // place the script directly after the one it was declared after, which is where the
+            // deferred creation in ScriptRegistry#add will put it on the source entity
+            const ind = previousName === null ? 0 : order.indexOf(previousName) + 1;
+            order.splice(ind, 0, scriptName);
+            previousName = scriptName;
+
+            const scriptData = entity.script._scriptsData?.[scriptName];
+            scripts[scriptName] = {
+                enabled: scriptData?.enabled ?? true,
+                attributes: { ...scriptData?.attributes }
+            };
         }
 
         const data = {

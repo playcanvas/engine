@@ -198,6 +198,10 @@ class ScriptComponent extends Component {
         this._postUpdateList = new SortedLoopArray({ sortBy: '__executionOrder' });
 
         this._scriptsIndex = {};
+        // the names of all scripts declared on this component, created or still awaiting their
+        // script type, in the order they were declared. Unlike the key order of `_scriptsIndex`
+        // this is reliable for any script name, and unlike `_scripts` it is not affected by move()
+        this._declarationOrder = [];
         this._destroyedScripts = [];
         this._destroyed = false;
         this._scriptsData = null;
@@ -751,6 +755,10 @@ class ScriptComponent extends Component {
 
                 this._insertScriptInstance(scriptInstance, ind, len);
 
+                if (!this._scriptsIndex[scriptName]) {
+                    this._declarationOrder.push(scriptName);
+                }
+
                 this._scriptsIndex[scriptName] = {
                     instance: scriptInstance,
                     onSwap: function () {
@@ -793,6 +801,10 @@ class ScriptComponent extends Component {
 
             Debug.warn(`script '${scriptName}' is already added to entity '${this.entity.name}'`);
         } else {
+            if (!this._scriptsIndex[scriptName]) {
+                this._declarationOrder.push(scriptName);
+            }
+
             this._scriptsIndex[scriptName] = {
                 awaiting: true,
                 ind: this._scripts.length
@@ -826,6 +838,11 @@ class ScriptComponent extends Component {
         const scriptData = this._scriptsIndex[scriptName];
         delete this._scriptsIndex[scriptName];
         if (!scriptData) return false;
+
+        const declarationIndex = this._declarationOrder.indexOf(scriptName);
+        if (declarationIndex !== -1) {
+            this._declarationOrder.splice(declarationIndex, 1);
+        }
 
         this._attributeDataMap.delete(scriptName);
 
