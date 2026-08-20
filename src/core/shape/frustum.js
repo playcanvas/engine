@@ -1,4 +1,5 @@
 import { Plane } from './plane.js';
+import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /**
@@ -64,6 +65,16 @@ class Frustum {
      * @ignore
      */
     planeData = new Float32Array(24);
+
+    /**
+     * @type {Plane[]}
+     * @deprecated Use {@link Frustum#getPlane} and {@link Frustum#setPlane} instead.
+     * @ignore
+     */
+    get planes() {
+        Debug.removed('Frustum#planes is removed. Use Frustum#getPlane and Frustum#setPlane instead.');
+        return [];
+    }
 
     /**
      * Returns a clone of the specified frustum.
