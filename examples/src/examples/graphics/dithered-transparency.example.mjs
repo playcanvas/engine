@@ -59,7 +59,7 @@ const assets = {
     ),
     table: new Asset('table', 'container', { url: './assets/models/glass-table.glb' }),
     script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    diffuse: new Asset('color', 'texture', { url: './assets/textures/playcanvas.png' })
+    diffuse: new Asset('color', 'texture', { url: './assets/textures/playcanvas.png' }, { srgb: true })
 };
 
 const gfxOptions = {
