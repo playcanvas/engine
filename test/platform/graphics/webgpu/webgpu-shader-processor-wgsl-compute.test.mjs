@@ -273,4 +273,19 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
         expect(result.cshader).to.contain('ub_compute.scale');
     });
 
+    it('does not fabricate a sampler when a texture is the last declared resource', function () {
+        const src = `
+            var srcTex: texture_2d<f32>;
+            @compute @workgroup_size(1) fn main() { }
+        `;
+        const { result, shader } = run(src);
+        expect(shader.failed).to.equal(false);
+
+        const tf = result.computeBindGroupFormat.textureFormats[0];
+        expect(tf.hasSampler).to.equal(false);
+        expect(tf.slot).to.equal(0);
+        expect(result.cshader).to.contain('@group(1) @binding(0) var srcTex: texture_2d<f32>;');
+        expect(result.cshader).to.not.match(/srcTex_sampler/);
+    });
+
 });

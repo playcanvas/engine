@@ -733,9 +733,10 @@ class WebgpuShaderProcessorWGSL {
 
             if (resource.isTexture) {
 
-                // followed by optional sampler uniform
+                // followed by optional sampler uniform. Use `?? false` so a missing next resource
+                // (undefined) does not trip BindTextureFormat's hasSampler = true default.
                 const sampler = resources[i + 1];
-                const hasSampler = sampler?.isSampler;
+                const hasSampler = sampler?.isSampler ?? false;
 
                 // TODO: handle external, and storage types
                 const sampleType = resource.sampleType;
