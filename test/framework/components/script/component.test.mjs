@@ -3341,6 +3341,23 @@ describe('ScriptComponent', function () {
         expect(a.script._scriptsIndex.undefined).to.equal(undefined);
     });
 
+    it('does not throw when an ESM script has attribute data but no schema', function () {
+        class NoSchemaScript extends Script {
+            static scriptName = 'noSchemaScript';
+        }
+
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+        app.root.addChild(e);
+
+        expect(() => e.script.create(NoSchemaScript, { attributes: { speed: 42 } })).to.not.throw();
+        expect(e.script.noSchemaScript).to.exist;
+        expect(e.script.noSchemaScript.speed).to.not.exist;
+        expect(Debug._loggedMessages.has(
+            'No schema exists for the script \'noSchemaScript\'. A schema must exist for data to be instantiated on the script.'
+        )).to.equal(true);
+    });
+
     it('does not warn when a ScriptType is used', function () {
         Debug._loggedMessages.clear();
         createScript('nullScript');
