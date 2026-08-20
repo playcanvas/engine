@@ -263,6 +263,12 @@ class Morph extends RefCountedObject {
 
     // ---- deprecated block start ----
 
+    /**
+     * @deprecated Use Morph#targets instead.
+     * @param {number} index - The index of the morph target.
+     * @returns {MorphTarget} The morph target at the given index.
+     * @ignore
+     */
     getTarget(index) {
         Debug.deprecated('Morph#getTarget is deprecated. Use Morph#targets instead.');
         return this.targets[index];

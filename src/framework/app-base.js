@@ -114,6 +114,11 @@ let app = null;
  * {@link ResourceHandler}s yourself. This facilitates
  * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
  * your application.
+ *
+ * `new AppBase(canvas)` only constructs the instance and its root entity. You must then call
+ * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
+ * `componentSystems` and `resourceHandlers` before adding components or calling
+ * {@link AppBase#start}. {@link Application} assembles those options for you.
  */
 class AppBase extends EventHandler {
     /**
@@ -1174,7 +1179,10 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Controls how the canvas fills the window and resizes when the window changes.
+     * Controls how the canvas fills the window. The canvas is sized when this is called and on
+     * every {@link AppBase#resizeCanvas}; the engine installs no window `resize` listener of its
+     * own, so call `resizeCanvas` from your own handler to keep the window-relative modes tracking
+     * the window.
      *
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *

@@ -398,31 +398,57 @@ class GraphNode extends EventHandler {
 
     // ---- deprecated block start ----
 
+    /**
+     * @deprecated Use GraphNode#children instead.
+     * @ignore
+     */
     getChildren() {
         Debug.deprecated('GraphNode#getChildren is deprecated. Use GraphNode#children instead.');
         return this.children;
     }
 
+    /**
+     * @deprecated Use GraphNode#name instead.
+     * @ignore
+     */
     getName() {
         Debug.deprecated('GraphNode#getName is deprecated. Use GraphNode#name instead.');
         return this.name;
     }
 
+    /**
+     * @deprecated Use GraphNode#path instead.
+     * @ignore
+     */
     getPath() {
         Debug.deprecated('GraphNode#getPath is deprecated. Use GraphNode#path instead.');
         return this.path;
     }
 
+    /**
+     * @deprecated Use GraphNode#root instead.
+     * @ignore
+     */
     getRoot() {
         Debug.deprecated('GraphNode#getRoot is deprecated. Use GraphNode#root instead.');
         return this.root;
     }
 
+    /**
+     * @deprecated Use GraphNode#parent instead.
+     * @returns {GraphNode|null} The parent node, or null if this node has no parent.
+     * @ignore
+     */
     getParent() {
         Debug.deprecated('GraphNode#getParent is deprecated. Use GraphNode#parent instead.');
         return this.parent;
     }
 
+    /**
+     * @deprecated Use GraphNode#name instead.
+     * @param {string} name - The name to set.
+     * @ignore
+     */
     setName(name) {
         Debug.deprecated('GraphNode#setName is deprecated. Use GraphNode#name instead.');
         this.name = name;
@@ -1337,6 +1363,10 @@ class GraphNode extends EventHandler {
      * Add a new child to the child list and update the parent value of the child node.
      * If the node already had a parent, it is removed from its child list.
      *
+     * The child keeps its existing local transform, which is now interpreted relative to the new
+     * parent, so a node placed in world space before being added will appear to move. Set the
+     * transform after adding, or re-apply the world placement with {@link GraphNode#setPosition}.
+     *
      * @param {GraphNode} node - The new child to add.
      * @example
      * const e = new Entity(app);
@@ -1473,6 +1503,10 @@ class GraphNode extends EventHandler {
     /**
      * Remove the node from the child list and update the parent value of the child.
      *
+     * This detaches the node without disabling it: the removed subtree still reports
+     * `enabled === true`, and its lights, cameras, scripts and sounds keep running. Set
+     * `enabled = false` to deactivate a node, or destroy the entity to remove it outright.
+     *
      * @param {GraphNode} child - The node to remove.
      * @example
      * const child = this.entity.children[0];
@@ -1590,6 +1624,11 @@ class GraphNode extends EventHandler {
 
     /**
      * Reorients the graph node so that the negative z-axis points towards the target.
+     *
+     * The up vector must not be parallel to the direction from the node to the target. When it is —
+     * looking straight up or down with the default up vector, or at the node's own position — the
+     * basis is degenerate and the node's rotation is reset to identity, discarding whatever
+     * rotation it already had, with nothing reported. Pass a different up vector in those cases.
      *
      * @overload
      * @param {number} x - X-component of the world space coordinate to look at.

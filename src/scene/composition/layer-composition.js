@@ -403,6 +403,11 @@ class LayerComposition extends EventHandler {
     /**
      * Adds a layer (both opaque and semi-transparent parts) to the end of the {@link layerList}.
      *
+     * The default composition ends with the UI layer, so a layer pushed here renders after the UI
+     * and after the last layer a camera's post-processing applies to. To place a layer inside the
+     * post-processed range instead, use {@link LayerComposition#insert} with an index from
+     * {@link LayerComposition#getOpaqueIndex}.
+     *
      * @param {Layer} layer - A {@link Layer} to add.
      */
     push(layer) {
