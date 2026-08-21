@@ -498,6 +498,14 @@ class Http {
         xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : this.withCredentials;
         xhr.responseType = xhr._jsonResponse ? Http.ResponseType.TEXT : responseType;
 
+        if (xhr._jsonResponse) {
+            // JSON is defined as UTF-8, and the JSON response type decodes it that way whatever
+            // charset the server declared. Reading it as text would instead honour that charset, so
+            // a server wrongly declaring, say, iso-8859-1 on a UTF-8 body would silently produce
+            // mojibake. Force UTF-8 to keep decoding identical to the JSON response type.
+            xhr.overrideMimeType('text/plain; charset=utf-8');
+        }
+
         // Set the http headers
         for (const header in options.headers) {
             if (options.headers.hasOwnProperty(header)) {
@@ -634,6 +642,7 @@ class Http {
 
         let response;
         let contentType;
+        let delivered = false;
         const header = xhr.getResponseHeader('Content-Type');
         if (header) {
             // Split up header into content type and parameter
@@ -659,16 +668,22 @@ class Http {
                 // It's raw data
                 response = xhr.responseText;
             }
+
+            delivered = true;
+            options.callback(null, response);
         } catch (err) {
+            if (delivered) {
+                // The callback itself threw, so the response was already delivered. Report the
+                // original error rather than letting it be silently replaced by a load failure -
+                // but still fail the request below, because a consumer which threw part way through
+                // its own chain would otherwise be left with a load that never completes.
+                console.error(err);
+            }
+
             // a body that cannot be parsed (for example truncated JSON) is a failed load, not a
             // successful one
             options.callback(err);
-            return;
         }
-
-        // deliberately outside the try above: an exception thrown by the callback belongs to the
-        // caller, and must not be swallowed and re-reported here as a load error
-        options.callback(null, response);
     }
 
     _onError(method, url, options, xhr) {

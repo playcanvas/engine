@@ -40,6 +40,8 @@ class FakeXhr {
 
     setRequestHeader() {}
 
+    overrideMimeType() {}
+
     send() {}
 
     getResponseHeader(name) {
@@ -425,25 +427,28 @@ describe('Http', function () {
             expect(xhr.responseType).to.equal('text');
         });
 
-        it('does not swallow an exception thrown while handling a success', function () {
+        it('reports an exception thrown while handling a success, and still fails the request', function () {
+            const logged = spy(console, 'error');
             const calls = [];
             http.get('/data.json', (err, data) => {
                 calls.push({ err, data });
                 if (calls.length === 1) {
-                    // application code failing to handle a *successful* response
+                    // application or parser code failing to handle a *successful* response
                     throw new TypeError('thrown by the application');
                 }
             });
 
-            // the caller's exception belongs to the caller: it propagates with its own stack
-            // intact rather than being caught and re-reported as a load error
-            expect(() => FakeXhr.instances[0].succeedWith('{"a":1}'))
-            .to.throw(TypeError, 'thrown by the application');
+            FakeXhr.instances[0].succeedWith('{"a":1}');
 
-            // and it must not come back as a second, spurious failure callback
-            expect(calls.length).to.equal(1);
+            // the original error is surfaced rather than silently replaced by a load failure
+            expect(logged.calledWith(calls[1].err)).to.equal(true);
+
+            // and the request still completes as a failure, so a consumer which threw part way
+            // through its own chain is not left with a load that never finishes
+            expect(calls.length).to.equal(2);
             expect(calls[0].err).to.equal(null);
             expect(calls[0].data).to.deep.equal({ a: 1 });
+            expect(calls[1].err).to.be.an.instanceof(TypeError);
         });
     });
 
