@@ -276,15 +276,23 @@ describe('Http', function () {
             expect(calls[0].data).to.equal(undefined);
         });
 
-        it('reports a body of literal null as an error (a known limitation)', function () {
+        it('parses a body of literal null as a successful load', function () {
             const calls = capture('/data.json');
             created[0].respond(200, JSON_HEADERS, 'null');
 
-            // `null` is a valid JSON document, but the browser represents it and a parse failure
-            // identically, and the raw text is not readable once the response type is JSON. This
-            // documents the accepted trade-off rather than a desired behaviour
+            // `null` is a valid JSON document and must stay distinguishable from a parse failure
             expect(calls.length).to.equal(1);
-            expect(calls[0].err).to.be.an.instanceof(SyntaxError);
+            expect(calls[0].err).to.equal(null);
+            expect(calls[0].data).to.equal(null);
+        });
+
+        it('parses a body of literal null served with a binary content type', function () {
+            const calls = capture('/data.json');
+            created[0].respond(200, { 'Content-Type': 'application/octet-stream' }, 'null');
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.equal(null);
+            expect(calls[0].data).to.equal(null);
         });
 
         it('reports an empty body on a .json url as an error', function () {

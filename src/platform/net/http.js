@@ -469,10 +469,19 @@ class Http {
             url = uri.toString();
         }
 
+        const responseType = options.responseType || this._guessResponseType(url);
+
+        // Asking XHR to parse JSON itself loses the ability to report a failure: it represents a
+        // parse error and the valid document `null` identically, as a null response, and the raw
+        // text cannot be read back once the response type is JSON. Request the text instead and
+        // parse it in _onSuccess, so a malformed body is reported as a SyntaxError while `null`
+        // stays a successful load. Tracked on the xhr rather than on options, which callers may
+        // reuse across requests.
         const xhr = new XMLHttpRequest();
+        xhr._jsonResponse = responseType === Http.ResponseType.JSON;
         xhr.open(method, url, options.async);
         xhr.withCredentials = options.withCredentials !== undefined ? options.withCredentials : this.withCredentials;
-        xhr.responseType = options.responseType || this._guessResponseType(url);
+        xhr.responseType = xhr._jsonResponse ? Http.ResponseType.TEXT : responseType;
 
         // Set the http headers
         for (const header in options.headers) {
@@ -547,8 +556,7 @@ class Http {
 
     _isBinaryResponseType(responseType) {
         return responseType === Http.ResponseType.ARRAY_BUFFER ||
-               responseType === Http.ResponseType.BLOB ||
-               responseType === Http.ResponseType.JSON;
+               responseType === Http.ResponseType.BLOB;
     }
 
     /**
@@ -619,7 +627,11 @@ class Http {
         }
         try {
             // Check the content type to see if we want to parse it
-            if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
+            if (xhr._jsonResponse) {
+                // JSON was asked for, or guessed from the url, so parse it whatever content type
+                // the server reported - some hosts serve .json as application/octet-stream
+                response = JSON.parse(xhr.responseText);
+            } else if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
                 // It's a binary response
                 response = xhr.response;
             } else if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith('.json')) {
@@ -631,15 +643,6 @@ class Http {
             } else {
                 // It's raw data
                 response = xhr.responseText;
-            }
-
-            // A JSON response type is parsed by the browser, which reports a parse failure as a
-            // null response rather than as an error - so without this an unparseable body would be
-            // delivered as a successful load with a null resource. The one false positive is a body
-            // of literal `null`, which is valid JSON but indistinguishable here: the raw text is
-            // not readable once the response type is JSON.
-            if (xhr.responseType === Http.ResponseType.JSON && response === null) {
-                throw new SyntaxError('Failed to parse JSON response');
             }
         } catch (err) {
             // a body that cannot be parsed (for example truncated JSON) is a failed load, not a
