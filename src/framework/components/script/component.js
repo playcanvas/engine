@@ -431,10 +431,12 @@ class ScriptComponent extends Component {
                 return;
             }
 
-            // Fetch schema and warn if it doesn't exist
+            // Fetch schema and warn if it doesn't exist. Without one there is nothing to assign
+            // the data against, so there is no point in carrying on
             const schema = this.system.app.scripts?.getSchema(name);
             if (!schema) {
                 Debug.warnOnce(`No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`);
+                return;
             }
 
             // Assign the attributes to the script instance based on the attribute schema
