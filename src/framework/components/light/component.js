@@ -74,6 +74,24 @@ const _properties = [
  * - `spot`: A local light that emits light similarly to an omni light but is bounded by a cone
  * centered on the owner entity's negative y-axis. Emulates flashlights, spotlights, etc.
  *
+ * Directional and spot lights are therefore aimed with the owner entity's rotation, and shine along
+ * its negative y-axis - so an unrotated light shines straight down. Note that
+ * {@link GraphNode#lookAt} orients an entity's negative z-axis, which aims a camera but not a
+ * light:
+ *
+ * ```javascript
+ * // an unrotated light shines straight down
+ * light.setEulerAngles(0, 0, 0);
+ *
+ * // tilted 45 degrees, it shines down and towards negative z
+ * light.setEulerAngles(45, 0, 0);
+ *
+ * // to aim it at a target, lookAt orients the negative z-axis and the extra rotation brings the
+ * // negative y-axis onto it
+ * light.lookAt(target.getPosition());
+ * light.rotateLocal(90, 0, 0);
+ * ```
+ *
  * You should never need to use the LightComponent constructor directly. To add a LightComponent
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
@@ -257,7 +275,7 @@ class LightComponent extends Component {
      * - `"spot"`: A local light that emits light similarly to an omni light but is bounded by a
      * cone centered on the owner entity's negative y-axis.
      *
-     * Defaults to `"directional"`.
+     * Defaults to `"directional"`. See {@link LightComponent} for how a light is aimed.
      *
      * @type {string}
      */
