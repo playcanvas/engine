@@ -141,10 +141,10 @@ class ScriptComponentSystem extends ComponentSystem {
             order.splice(ind, 0, scriptName);
             previousName = scriptName;
 
-            const scriptData = entity.script._scriptsData?.[scriptName];
+            // the same declaration the deferred creation will read on the source entity
             scripts[scriptName] = {
-                enabled: scriptData?.enabled ?? true,
-                attributes: { ...scriptData?.attributes }
+                enabled: indexData.enabled,
+                attributes: { ...indexData.attributes }
             };
         }
 

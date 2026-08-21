@@ -1470,6 +1470,153 @@ describe('ScriptComponent', function () {
         app.assets.load(asset);
     });
 
+    it('a disabled script added to the registry later stays disabled and is not initialized', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: false,
+                    attributes: {}
+                }
+            }
+        });
+
+        app.root.addChild(e);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater).to.exist;
+                expect(e.script.loadedLater.enabled).to.equal(false);
+                expect(window.initializeCalls.length).to.equal(0);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('a script created before its type is registered keeps the options it was created with', function (done) {
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+
+        // declared through create() rather than component data, so there is no `_scriptsData`
+        e.script.create('loadedLater', {
+            enabled: false,
+            attributes: { disableEntity: true },
+            properties: { customValue: 42 }
+        });
+        app.root.addChild(e);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater).to.exist;
+                expect(e.script.loadedLater.enabled).to.equal(false);
+                expect(e.script.loadedLater.disableEntity).to.equal(true);
+                expect(e.script.loadedLater.customValue).to.equal(42);
+                expect(window.initializeCalls.length).to.equal(0);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('a clone keeps the options an awaiting script was created with', function (done) {
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+        e.script.create('loadedLater', { enabled: false, attributes: { disableEntity: true } });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(clone.script.loadedLater).to.exist;
+                expect(clone.script.loadedLater.enabled).to.equal(false);
+                expect(clone.script.loadedLater.disableEntity).to.equal(true);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('recreating a destroyed awaiting script uses the newly supplied options', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: { disableEntity: true }
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        // destroy() leaves the component data entry behind, so the replacement declaration must
+        // not be read out of it
+        expect(e.script.destroy('loadedLater')).to.equal(true);
+        e.script.create('loadedLater', { enabled: false, attributes: { disableEntity: false } });
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater.enabled).to.equal(false);
+                expect(e.script.loadedLater.disableEntity).to.equal(false);
+                expect(clone.script.loadedLater.enabled).to.equal(false);
+                expect(clone.script.loadedLater.disableEntity).to.equal(false);
+                expect(window.initializeCalls.length).to.equal(0);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('attributes of a script added to the registry later are not shared between components', function (done) {
+        // declares attribute data for the script
+        const e1 = new Entity();
+        e1.addComponent('script', {
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: { disableScriptInstance: true }
+                }
+            }
+        });
+        app.root.addChild(e1);
+
+        // requests the same script without any attribute data
+        const e2 = new Entity();
+        e2.addComponent('script', { enabled: true });
+        e2.script.create('loadedLater');
+        app.root.addChild(e2);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e1.script.loadedLater.disableScriptInstance).to.equal(true);
+                expect(e2.script.loadedLater.disableScriptInstance).to.equal(false);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
     it('destroying entity during update stops updating the rest of the entity\'s scripts', function () {
         const e = new Entity();
         e.addComponent('script', {
