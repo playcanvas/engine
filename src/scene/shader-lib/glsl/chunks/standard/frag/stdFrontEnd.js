@@ -1,6 +1,11 @@
 // includes and functionality of the front end shader, generates the input to the lit shader.
 export default /* glsl */`
 
+    // parallax - included before opacity, as it generates the uv offset applied to all other maps
+    #if defined(FORWARD_PASS) && defined(STD_HEIGHT_MAP)
+        #include "parallaxPS"
+    #endif
+
     // all passes handle opacity
     #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
         #include "opacityPS"
@@ -16,11 +21,6 @@ export default /* glsl */`
     #endif
 
     #ifdef FORWARD_PASS // ----------------
-
-        // parallax
-        #ifdef STD_HEIGHT_MAP
-            #include "parallaxPS"
-        #endif
 
         // diffuse
         #include  "diffusePS"
@@ -108,6 +108,11 @@ export default /* glsl */`
 
     void evaluateFrontend() {
 
+        // parallax - must run first, as it generates the uv offset used to sample all other maps
+        #if defined(FORWARD_PASS) && defined(STD_HEIGHT_MAP)
+            getParallax();
+        #endif
+
         // all passes handle opacity
         #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
             getOpacity();
@@ -124,11 +129,6 @@ export default /* glsl */`
         #endif
 
         #ifdef FORWARD_PASS // ----------------
-
-            // parallax
-            #ifdef STD_HEIGHT_MAP
-                getParallax();
-            #endif
 
             // diffuse
             getAlbedo();

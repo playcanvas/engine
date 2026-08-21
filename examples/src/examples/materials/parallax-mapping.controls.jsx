@@ -1,4 +1,4 @@
-import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -13,6 +13,17 @@ export function Controls({ observer }) {
     return (
         <>
             <Panel headerText='Settings'>
+                <LabelGroup text='Shape'>
+                    <SelectInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.shape' }}
+                        type='string'
+                        options={[
+                            { v: 'box', t: 'Box' },
+                            { v: 'sphere', t: 'Sphere' }
+                        ]}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Height'>
                     <SliderInput
                         binding={new BindingTwoWay()}
