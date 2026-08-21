@@ -3269,6 +3269,31 @@ describe('ScriptComponent', function () {
         expect(e.script.has(null)).to.equal(false);
     });
 
+    it('cloning an entity does not share the attribute data of an ESM script with the clone', function () {
+        class CloneAttributes extends Script {
+            static scriptName = 'cloneAttributes';
+        }
+
+        app.scripts.addSchema('cloneAttributes', { attributes: { speed: { type: 'number' } } });
+
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+        e.script.create(CloneAttributes, { attributes: { speed: 42 } });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const sourceData = e.script._attributeDataMap.get('cloneAttributes');
+        const cloneData = clone.script._scriptsData.cloneAttributes.attributes;
+
+        expect(cloneData).to.deep.equal({ speed: 42 });
+        expect(cloneData).to.not.equal(sourceData);
+
+        cloneData.speed = 7;
+        expect(sourceData.speed).to.equal(42);
+    });
+
     it('warns when an ESM Script class does not have a static "scriptName" property', function () {
         class TestScript extends Script {}
         const a =  new Entity();
