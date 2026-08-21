@@ -3,7 +3,7 @@ export default /* wgsl */`
 #ifdef LIT_TANGENTS
     #define TBN_TANGENTS
 #else
-    #if defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS)
+    #if defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS) || defined(LIT_HEIGHTS)
         #define TBN_DERIVATIVES
     #endif
 #endif

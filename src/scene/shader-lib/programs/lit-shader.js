@@ -468,7 +468,9 @@ class LitShader {
             return light._shape && light._shape !== LIGHTSHAPE_PUNCTUAL;
         });
         const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
-        const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
+        // parallax mapping transforms the view direction to tangent space, so it needs the TBN matrix
+        // as well
+        const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || options.useHeights || options.enableGGXSpecular);
 
         if (options.useSpecular) {
             this.fDefineSet(true, 'LIT_SPECULAR');
