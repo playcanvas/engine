@@ -183,7 +183,7 @@ class ScriptRegistry extends EventHandler {
                     // per component and specific to the declaration that is still standing
                     const scriptInstance = component.create(scriptName, {
                         preloading: true,
-                        ind: indexData.ind,
+                        ind: component._awaitingInsertIndex(scriptName),
                         enabled: indexData.enabled,
                         attributes: indexData.attributes,
                         properties: indexData.properties

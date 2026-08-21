@@ -1617,6 +1617,83 @@ describe('ScriptComponent', function () {
         app.assets.load(asset);
     });
 
+    it('scripts added to the registry later are created in their declared order', function (done) {
+        const e = new Entity();
+        const order = ['scriptA', 'awaitingOne', 'awaitingTwo', 'scriptB', 'awaitingThree'];
+        const scripts = {};
+        order.forEach((name) => {
+            scripts[name] = { enabled: true, attributes: {} };
+        });
+        e.addComponent('script', { enabled: true, order: order, scripts: scripts });
+        app.root.addChild(e);
+
+        expect(e.script.scripts.map(s => s.__scriptType.__name)).to.deep.equal(['scriptA', 'scriptB']);
+
+        // register the missing script types out of their declared order
+        createScript('awaitingThree', app);
+        createScript('awaitingOne', app);
+        createScript('awaitingTwo', app);
+
+        setTimeout(function () {
+            expect(e.script.scripts.map(s => s.__scriptType.__name)).to.deep.equal(order);
+            done();
+        }, 100);
+    });
+
+    it('a script added to the registry later follows a preceding script that has been moved', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB', 'awaitingAfterMove'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} },
+                awaitingAfterMove: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        // the awaiting script is declared after scriptB, which now runs first
+        e.script.move('scriptB', 0);
+
+        createScript('awaitingAfterMove', app);
+
+        setTimeout(function () {
+            const names = e.script.scripts.map(s => s.__scriptType.__name);
+            expect(names).to.deep.equal(['scriptB', 'awaitingAfterMove', 'scriptA']);
+            done();
+        }, 100);
+    });
+
+    it('a clone ends up with the same script order as its source when an awaiting type is registered', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB', 'awaitingParity'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} },
+                awaitingParity: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        // clone a component whose scripts have been reordered and that has a script pending
+        e.script.move('scriptB', 0);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        createScript('awaitingParity', app);
+
+        setTimeout(function () {
+            const names = ent => ent.script.scripts.map(s => s.__scriptType.__name);
+            expect(names(e)).to.deep.equal(['scriptB', 'awaitingParity', 'scriptA']);
+            expect(names(clone)).to.deep.equal(names(e));
+            done();
+        }, 100);
+    });
+
     it('destroying entity during update stops updating the rest of the entity\'s scripts', function () {
         const e = new Entity();
         e.addComponent('script', {
