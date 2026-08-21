@@ -941,6 +941,7 @@ class GraphicsDevice extends EventHandler {
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
         this.frontFace = FRONTFACE_CCW;
+        this.alphaToCoverage = false;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;

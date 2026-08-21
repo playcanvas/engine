@@ -138,12 +138,18 @@ class Material {
     alphaTest = 0;
 
     /**
-     * Enables or disables alpha to coverage (WebGL2 only). When enabled, and if hardware
-     * anti-aliasing is on, limited order-independent transparency can be achieved. Quality depends
-     * on the number of MSAA samples of the current render target. It can nicely soften edges of
-     * otherwise sharp alpha cutouts, but isn't recommended for large area semi-transparent
-     * surfaces. Note, that you don't need to enable blending to make alpha to coverage work. It
-     * will work without it, just like alphaTest.
+     * Enables or disables alpha to coverage. When enabled, and if hardware anti-aliasing is on,
+     * limited order-independent transparency can be achieved. Quality depends on the number of
+     * MSAA samples of the current render target. It can nicely soften edges of otherwise sharp
+     * alpha cutouts, but isn't recommended for large area semi-transparent surfaces. Note, that
+     * you don't need to enable blending to make alpha to coverage work. It will work without it,
+     * just like alphaTest.
+     *
+     * This requires a multi-sampled render target, and is silently ignored when rendering to a
+     * single-sampled one. On WebGPU it additionally requires the first color attachment of the
+     * render target to use a blendable format with an alpha channel, and is silently ignored
+     * otherwise - note that {@link PIXELFORMAT_111110F}, the default HDR format used by
+     * {@link CameraFrame}, has no alpha channel.
      */
     alphaToCoverage = false;
 

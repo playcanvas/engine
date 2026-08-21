@@ -942,7 +942,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // render pipeline
                 pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace);
+                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
                 Debug.assert(pipeline);
 
                 if (this.pipeline !== pipeline) {
@@ -1069,6 +1069,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setAlphaToCoverage(state) {
+        this.alphaToCoverage = state;
     }
 
     initializeContextCaches() {

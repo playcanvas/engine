@@ -24,6 +24,19 @@ let _pipelineId = 0;
 // reused destination for BlendState#getAttachment, to avoid allocations
 const _attachmentBlendState = new BlendState();
 
+// GPUTextureFormats which are blendable and have an alpha channel, which the WebGPU spec requires
+// of the first color attachment when alpha-to-coverage is enabled. Note that 'rgba32float' also
+// qualifies, but only when the float32-blendable feature is available, and so it is handled
+// separately.
+const _alphaToCoverageFormats = new Set([
+    'rgba8unorm',
+    'rgba8unorm-srgb',
+    'bgra8unorm',
+    'bgra8unorm-srgb',
+    'rgb10a2unorm',
+    'rgba16float'
+]);
+
 // Assembles the WebGPU color write mask of the supplied blend state.
 const getWriteMask = (blendState) => {
     let writeMask = 0;
@@ -129,7 +142,7 @@ class CacheEntry {
 }
 
 class WebgpuRenderPipeline extends WebgpuPipeline {
-    lookupHashes = new Uint32Array(15);
+    lookupHashes = new Uint32Array(16);
 
     constructor(device) {
         super(device);
@@ -164,11 +177,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
      * @param {StencilParameters} stencilFront - The stencil state for front faces.
      * @param {StencilParameters} stencilBack - The stencil state for back faces.
      * @param {number} frontFace - The front face.
+     * @param {boolean} alphaToCoverage - Whether alpha to coverage is requested.
      * @returns {GPURenderPipeline} Returns the render pipeline.
      * @private
      */
     get(primitive, vertexFormat0, vertexFormat1, ibFormat, shader, renderTarget, bindGroupFormats, blendState,
-        depthState, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace) {
+        depthState, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace, alphaToCoverage) {
 
         Debug.assert(bindGroupFormats.length <= 3);
 
@@ -183,6 +197,10 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         Debug.assert(bindGroupFormats[0], `BindGroup with index 0 [${bindGroupNames[0]}] is not set.`);
         Debug.assert(bindGroupFormats[1], `BindGroup with index 1 [${bindGroupNames[1]}] is not set.`);
         Debug.assert(bindGroupFormats[2], `BindGroup with index 2 [${bindGroupNames[2]}] is not set.`);
+
+        // alpha to coverage is dropped when the render target cannot support it, so the effective
+        // state is what needs to take part in the hash
+        const alphaToCoverageEnabled = this.getAlphaToCoverage(alphaToCoverage, renderTarget);
 
         // render pipeline unique hash
         const lookupHashes = this.lookupHashes;
@@ -201,6 +219,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         lookupHashes[12] = stencilEnabled ? stencilBack.key : 0;
         lookupHashes[13] = ibFormat ?? 0;
         lookupHashes[14] = frontFace;
+        lookupHashes[15] = alphaToCoverageEnabled ? 1 : 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline
@@ -230,7 +249,8 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         const cacheEntry = new CacheEntry();
         cacheEntry.hashes = new Uint32Array(lookupHashes);
         cacheEntry.pipeline = this.create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState,
-            depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace);
+            depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace,
+            alphaToCoverageEnabled);
 
         // add to cache
         if (cacheEntries) {
@@ -272,6 +292,41 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         }
 
         return blend;
+    }
+
+    /**
+     * Alpha to coverage is part of the immutable pipeline state on WebGPU, and the spec only allows
+     * it when the render target is multi-sampled and its first color attachment uses a blendable
+     * format with an alpha channel. A material is not tied to a single render target - the same one
+     * can be rendered into a multi-sampled forward pass, a single-sampled pass, or a depth-only
+     * shadow pass with no color attachment at all - so the flag is dropped where it cannot be used
+     * instead of failing the pipeline creation. This matches WebGL, where enabling
+     * SAMPLE_ALPHA_TO_COVERAGE on a single-sampled framebuffer is a no-op rather than an error.
+     *
+     * @param {boolean} alphaToCoverage - The requested alpha to coverage state.
+     * @param {RenderTarget} renderTarget - The render target.
+     * @returns {boolean} Returns true if alpha to coverage can be enabled for the render target.
+     * @private
+     */
+    getAlphaToCoverage(alphaToCoverage, renderTarget) {
+
+        // requires a multi-sampled target - this also covers depth-only passes, which have no
+        // color attachments and are never multi-sampled
+        if (!alphaToCoverage || renderTarget.samples <= 1) {
+            return false;
+        }
+
+        const format = renderTarget.impl.colorAttachments[0]?.format;
+        const supported = _alphaToCoverageFormats.has(format) ||
+            (format === 'rgba32float' && this.device.textureFloatBlendable);
+
+        // this case is worth reporting - alpha to coverage was asked for on a multi-sampled target,
+        // and the only reason it cannot be honoured is the format of the first color attachment
+        if (!supported) {
+            Debug.warnOnce('Alpha to coverage is ignored, as it requires the first color attachment to use a blendable format with an alpha channel. Format:', format);
+        }
+
+        return supported;
     }
 
     /**
@@ -337,7 +392,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
     }
 
     create(primitiveTopology, ibFormat, shader, renderTarget, pipelineLayout, blendState, depthState, vertexBufferLayout,
-        cullMode, stencilEnabled, stencilFront, stencilBack, frontFace) {
+        cullMode, stencilEnabled, stencilFront, stencilBack, frontFace, alphaToCoverageEnabled) {
 
         const wgpu = this.device.wgpu;
 
@@ -361,7 +416,8 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             depthStencil: this.getDepthStencil(depthState, renderTarget, stencilEnabled, stencilFront, stencilBack, primitiveTopology),
 
             multisample: {
-                count: renderTarget.samples
+                count: renderTarget.samples,
+                alphaToCoverageEnabled: alphaToCoverageEnabled
             },
 
             // uniform / texture binding layout
