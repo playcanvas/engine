@@ -304,6 +304,32 @@ describe('AssetRegistry', function () {
             });
         });
 
+        it('reports a malformed json asset as a failed load, not a null resource', (done) => {
+            // a truncated body is a broken asset: it must not be delivered as a successful load
+            // whose resource is silently null
+            const calls = [];
+            let asserting = false;
+
+            app.assets.loadFromUrl(`${assetPath}test-malformed.json`, 'json', (err, asset) => {
+                calls.push({ err, asset });
+
+                // assert on a later tick, so that a second (incorrect) delivery is counted rather
+                // than mistaken for the first
+                if (asserting) {
+                    return;
+                }
+                asserting = true;
+
+                setTimeout(() => {
+                    expect(calls.length).to.equal(1);
+                    expect(calls[0].err).to.be.a('string');
+                    expect(calls[0].err).to.contain('test-malformed.json');
+                    expect(calls[0].asset.resource).to.not.exist;
+                    done();
+                });
+            });
+        });
+
         it('loads shader assets', (done) => {
             app.assets.loadFromUrl(`${assetPath}test.glsl`, 'shader', (err, asset) => {
                 expect(err).to.be.null;

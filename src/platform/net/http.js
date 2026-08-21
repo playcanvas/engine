@@ -551,6 +551,25 @@ class Http {
                responseType === Http.ResponseType.JSON;
     }
 
+    /**
+     * Claim the single completion callback for a request. A failed request reaches the engine's
+     * handlers twice: the XHR spec's request error steps set readyState to 4 and fire
+     * `readystatechange` before firing `error`, so both `onreadystatechange` and `onerror` run for
+     * one failure. Only the first arrival may call back.
+     *
+     * @param {XMLHttpRequest} xhr - The request object (gains a private `_completed` flag).
+     * @returns {boolean} True if the caller now owns the completion, false if the request has
+     * already completed and this arrival should be ignored.
+     * @private
+     */
+    _claimCompletion(xhr) {
+        if (xhr._completed) {
+            return false;
+        }
+        xhr._completed = true;
+        return true;
+    }
+
     _onReadyStateChange(method, url, options, xhr) {
         if (xhr.readyState === 4) {
             switch (xhr.status) {
@@ -586,6 +605,10 @@ class Http {
     _onSuccess(method, url, options, xhr) {
         this._releaseSlot(xhr);
 
+        if (!this._claimCompletion(xhr)) {
+            return;
+        }
+
         let response;
         let contentType;
         const header = xhr.getResponseHeader('Content-Type');
@@ -610,17 +633,31 @@ class Http {
                 response = xhr.responseText;
             }
 
-            options.callback(null, response);
+            // A JSON response type is parsed by the browser, which reports a parse failure as a
+            // null response rather than as an error - so without this an unparseable body would be
+            // delivered as a successful load with a null resource. The one false positive is a body
+            // of literal `null`, which is valid JSON but indistinguishable here: the raw text is
+            // not readable once the response type is JSON.
+            if (xhr.responseType === Http.ResponseType.JSON && response === null) {
+                throw new SyntaxError('Failed to parse JSON response');
+            }
         } catch (err) {
+            // a body that cannot be parsed (for example truncated JSON) is a failed load, not a
+            // successful one
             options.callback(err);
+            return;
         }
+
+        // deliberately outside the try above: an exception thrown by the callback belongs to the
+        // caller, and must not be swallowed and re-reported here as a load error
+        options.callback(null, response);
     }
 
     _onError(method, url, options, xhr) {
         // the request is no longer in flight; free its slot (a retry below re-acquires one)
         this._releaseSlot(xhr);
 
-        if (options.retrying) {
+        if (!this._claimCompletion(xhr) || options.retrying) {
             return;
         }
 

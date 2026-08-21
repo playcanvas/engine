@@ -5,6 +5,81 @@ import { restore, spy } from 'sinon';
 import { http, Http } from '../../../src/platform/net/http.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
+/**
+ * A minimal XMLHttpRequest stand-in that lets a test drive the exact completion sequence a browser
+ * uses. Sinon's fake XHR is not usable for that: it only dispatches events to addEventListener()
+ * listeners, so it never invokes the `onerror` property the engine assigns, and it swallows
+ * exceptions thrown out of `onreadystatechange`.
+ */
+class FakeXhr {
+    static instances = [];
+
+    readyState = 0;
+
+    status = 0;
+
+    responseType = '';
+
+    responseText = '';
+
+    response = null;
+
+    responseURL = '';
+
+    onreadystatechange = null;
+
+    onerror = null;
+
+    _contentType = null;
+
+    constructor() {
+        FakeXhr.instances.push(this);
+    }
+
+    open() {}
+
+    setRequestHeader() {}
+
+    send() {}
+
+    getResponseHeader(name) {
+        return name === 'Content-Type' ? this._contentType ?? null : null;
+    }
+
+    /**
+     * Replay the browser's network-error sequence. Per the XHR spec the request error steps set
+     * readyState to 4 (leaving status 0), fire `readystatechange` and *then* fire `error`, so both
+     * of the engine's handlers run for a single failure.
+     */
+    failWithNetworkError() {
+        this.readyState = 4;
+        this.status = 0;
+        this.onreadystatechange?.();
+        this.onerror?.();
+    }
+
+    succeedWith(body, contentType = 'application/json') {
+        this.readyState = 4;
+        this.status = 200;
+        this.responseText = body;
+        this._contentType = contentType;
+
+        if (this.responseType === 'json') {
+            // a browser parses the body itself for this response type, and reports a parse failure
+            // as a null response rather than by throwing
+            try {
+                this.response = JSON.parse(body);
+            } catch (e) {
+                this.response = null;
+            }
+        } else {
+            this.response = body;
+        }
+
+        this.onreadystatechange?.();
+    }
+}
+
 describe('Http', function () {
     let retryDelay;
 
@@ -146,6 +221,206 @@ describe('Http', function () {
             });
         });
 
+    });
+
+    describe('JSON responses', function () {
+        let originalXHR;
+        let created;
+
+        const JSON_HEADERS = { 'Content-Type': 'application/json' };
+
+        // a truncated body: valid JSON up to the point it stops
+        const MALFORMED = '{ "a": 1, ';
+
+        beforeEach(function () {
+            created = [];
+            originalXHR = global.XMLHttpRequest;
+            const fakeXhr = nise.fakeXhr.useFakeXMLHttpRequest();
+            global.XMLHttpRequest = fakeXhr;
+            // collect every created XHR so each test can drive the response itself
+            fakeXhr.onCreate = (xhr) => {
+                created.push(xhr);
+            };
+        });
+
+        afterEach(function () {
+            global.XMLHttpRequest = originalXHR;
+        });
+
+        // issue a request and record every callback invocation, so tests can assert on the
+        // delivered (err, data) as well as on how many times it was delivered
+        const capture = (url, options) => {
+            const calls = [];
+            http.get(url, options ?? {}, (err, data) => {
+                calls.push({ err, data });
+            });
+            return calls;
+        };
+
+        it('parses a valid body on a .json url', function () {
+            const calls = capture('/data.json');
+            created[0].respond(200, JSON_HEADERS, '{"a":1,"b":true}');
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.equal(null);
+            expect(calls[0].data).to.deep.equal({ a: 1, b: true });
+        });
+
+        it('reports a malformed body on a .json url as an error', function () {
+            const calls = capture('/data.json');
+            created[0].respond(200, JSON_HEADERS, MALFORMED);
+
+            // must not be delivered as a successful load with a null resource
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.be.an.instanceof(SyntaxError);
+            expect(calls[0].data).to.equal(undefined);
+        });
+
+        it('reports a body of literal null as an error (a known limitation)', function () {
+            const calls = capture('/data.json');
+            created[0].respond(200, JSON_HEADERS, 'null');
+
+            // `null` is a valid JSON document, but the browser represents it and a parse failure
+            // identically, and the raw text is not readable once the response type is JSON. This
+            // documents the accepted trade-off rather than a desired behaviour
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.be.an.instanceof(SyntaxError);
+        });
+
+        it('reports an empty body on a .json url as an error', function () {
+            const calls = capture('/data.json');
+            created[0].respond(200, JSON_HEADERS, '');
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.be.an.instanceof(SyntaxError);
+            expect(calls[0].data).to.equal(undefined);
+        });
+
+        it('reports a malformed body on a .json url with a query string as an error', function () {
+            const calls = capture('/data.json?v=2');
+            created[0].respond(200, JSON_HEADERS, MALFORMED);
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.be.an.instanceof(SyntaxError);
+        });
+
+        it('reports a malformed body as an error for an explicit json responseType', function () {
+            const calls = capture('/api/config', { responseType: Http.ResponseType.JSON });
+            created[0].respond(200, JSON_HEADERS, MALFORMED);
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.be.an.instanceof(SyntaxError);
+            expect(calls[0].data).to.equal(undefined);
+        });
+
+        it('reports a malformed body as an error regardless of the url extension', function () {
+            // the same body served with the same content type must fail the same way whether or
+            // not the url happens to end in .json
+            const withExt = capture('/data.json');
+            const withoutExt = capture('/api/config');
+            created[0].respond(200, JSON_HEADERS, MALFORMED);
+            created[1].respond(200, JSON_HEADERS, MALFORMED);
+
+            expect(withExt[0].err).to.be.an.instanceof(SyntaxError);
+            expect(withoutExt[0].err).to.be.an.instanceof(SyntaxError);
+        });
+
+        it('parses a .json url served with a binary content type', function () {
+            // some hosts serve .json as application/octet-stream (issue #5264): the requested JSON
+            // response type must win over the content type sniff
+            const calls = capture('/data.json');
+            created[0].respond(200, { 'Content-Type': 'application/octet-stream' }, '{"a":1}');
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.equal(null);
+            expect(calls[0].data).to.deep.equal({ a: 1 });
+        });
+
+        it('reports a malformed body served with a binary content type as an error', function () {
+            const calls = capture('/data.json');
+            created[0].respond(200, { 'Content-Type': 'application/octet-stream' }, MALFORMED);
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.be.an.instanceof(SyntaxError);
+            expect(calls[0].data).to.equal(undefined);
+        });
+
+        it('parses an explicit json responseType served as text/plain', function () {
+            const calls = capture('/api/config', { responseType: Http.ResponseType.JSON });
+            created[0].respond(200, { 'Content-Type': 'text/plain' }, '{"a":1}');
+
+            expect(calls[0].err).to.equal(null);
+            expect(calls[0].data).to.deep.equal({ a: 1 });
+        });
+
+        it('does not parse a .json url requested as an arraybuffer', function () {
+            const calls = capture('/data.json', { responseType: Http.ResponseType.ARRAY_BUFFER });
+            created[0].respond(200, JSON_HEADERS, MALFORMED);
+
+            // an explicitly binary response type wins over the .json extension, and the raw bytes
+            // are handed back unparsed
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.equal(null);
+            expect(calls[0].data.byteLength).to.equal(MALFORMED.length);
+        });
+    });
+
+    describe('error delivery', function () {
+        let originalXHR;
+
+        beforeEach(function () {
+            FakeXhr.instances = [];
+            originalXHR = global.XMLHttpRequest;
+            global.XMLHttpRequest = FakeXhr;
+        });
+
+        afterEach(function () {
+            global.XMLHttpRequest = originalXHR;
+        });
+
+        it('delivers a network error exactly once', function () {
+            const calls = [];
+            http.get('/data.json', (err, data) => {
+                calls.push({ err, data });
+            });
+
+            FakeXhr.instances[0].failWithNetworkError();
+
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.equal('Network error');
+            expect(calls[0].data).to.equal(null);
+        });
+
+        it('retries a network error once per failure, not once per handler', function () {
+            spy(http, 'request');
+
+            http.get('/data.json', { retry: true, maxRetries: 1 }, () => {});
+            FakeXhr.instances[0].failWithNetworkError();
+
+            // one failure schedules one retry, even though both handlers saw it
+            expect(http.request.callCount).to.equal(1);
+        });
+
+        it('does not swallow an exception thrown while handling a success', function () {
+            const calls = [];
+            http.get('/data.json', (err, data) => {
+                calls.push({ err, data });
+                if (calls.length === 1) {
+                    // application code failing to handle a *successful* response
+                    throw new TypeError('thrown by the application');
+                }
+            });
+
+            // the caller's exception belongs to the caller: it propagates with its own stack
+            // intact rather than being caught and re-reported as a load error
+            expect(() => FakeXhr.instances[0].succeedWith('{"a":1}'))
+            .to.throw(TypeError, 'thrown by the application');
+
+            // and it must not come back as a second, spurious failure callback
+            expect(calls.length).to.equal(1);
+            expect(calls[0].err).to.equal(null);
+            expect(calls[0].data).to.deep.equal({ a: 1 });
+        });
     });
 
     describe('#maxConcurrentRequests', function () {
