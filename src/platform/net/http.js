@@ -156,7 +156,10 @@ class Http {
      * @param {boolean} [options.async] - Make the request asynchronously. Defaults to true.
      * @param {boolean} [options.cache] - If false, then add a timestamp to the request to prevent caching.
      * @param {boolean} [options.withCredentials] - Send cookies with this request. Defaults to false.
-     * @param {string} [options.responseType] - Override the response type.
+     * @param {string} [options.responseType] - Override the response type. A `json` response
+     * type is fetched as text and parsed here, so that a malformed body is reported to the
+     * callback as an error instead of as a null response. The returned request therefore
+     * reports a `text` response type, and its `response` holds the unparsed text.
      * @param {Document|object} [options.postdata] - Data to send in the body of the request.
      * Some content types are handled automatically. If postdata is an XML Document, it is handled. If
      * the Content-Type header is set to 'application/json' then the postdata is JSON stringified.
@@ -220,7 +223,10 @@ class Http {
      * @param {boolean} [options.async] - Make the request asynchronously. Defaults to true.
      * @param {boolean} [options.cache] - If false, then add a timestamp to the request to prevent caching.
      * @param {boolean} [options.withCredentials] - Send cookies with this request. Defaults to false.
-     * @param {string} [options.responseType] - Override the response type.
+     * @param {string} [options.responseType] - Override the response type. A `json` response
+     * type is fetched as text and parsed here, so that a malformed body is reported to the
+     * callback as an error instead of as a null response. The returned request therefore
+     * reports a `text` response type, and its `response` holds the unparsed text.
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with an exponential backoff.
      * @param {number} [options.maxRetries] - If options.retry is true this specifies the maximum
      * number of retries. Defaults to 5.
@@ -263,7 +269,10 @@ class Http {
      * @param {boolean} [options.async] - Make the request asynchronously. Defaults to true.
      * @param {boolean} [options.cache] - If false, then add a timestamp to the request to prevent caching.
      * @param {boolean} [options.withCredentials] - Send cookies with this request. Defaults to false.
-     * @param {string} [options.responseType] - Override the response type.
+     * @param {string} [options.responseType] - Override the response type. A `json` response
+     * type is fetched as text and parsed here, so that a malformed body is reported to the
+     * callback as an error instead of as a null response. The returned request therefore
+     * reports a `text` response type, and its `response` holds the unparsed text.
      * @param {boolean} [options.retry] - If true then if the request fails it will be retried with
      * an exponential backoff.
      * @param {number} [options.maxRetries] - If options.retry is true this specifies the maximum
@@ -303,7 +312,10 @@ class Http {
      * @param {boolean} [options.async] - Make the request asynchronously. Defaults to true.
      * @param {boolean} [options.cache] - If false, then add a timestamp to the request to prevent caching.
      * @param {boolean} [options.withCredentials] - Send cookies with this request. Defaults to false.
-     * @param {string} [options.responseType] - Override the response type.
+     * @param {string} [options.responseType] - Override the response type. A `json` response
+     * type is fetched as text and parsed here, so that a malformed body is reported to the
+     * callback as an error instead of as a null response. The returned request therefore
+     * reports a `text` response type, and its `response` holds the unparsed text.
      * @param {Document|object} [options.postdata] - Data to send in the body of the request.
      * Some content types are handled automatically. If postdata is an XML Document, it is handled.
      * If the Content-Type header is set to 'application/json' then the postdata is JSON
@@ -351,7 +363,10 @@ class Http {
      * number of retries. Defaults to 5.
      * @param {number} [options.maxRetryDelay] - If options.retry is true this specifies the
      * maximum amount of time to wait between retries in milliseconds. Defaults to 5000.
-     * @param {string} [options.responseType] - Override the response type.
+     * @param {string} [options.responseType] - Override the response type. A `json` response
+     * type is fetched as text and parsed here, so that a malformed body is reported to the
+     * callback as an error instead of as a null response. The returned request therefore
+     * reports a `text` response type, and its `response` holds the unparsed text.
      * @param {Document|object} [options.postdata] - Data to send in the body of the request.
      * Some content types are handled automatically. If postdata is an XML Document, it is handled.
      * If the Content-Type header is set to 'application/json' then the postdata is JSON

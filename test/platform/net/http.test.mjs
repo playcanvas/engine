@@ -399,14 +399,30 @@ describe('Http', function () {
             expect(calls[0].data).to.equal(null);
         });
 
-        it('retries a network error once per failure, not once per handler', function () {
+        it('schedules exactly one retry for a single network failure', function (done) {
             spy(http, 'request');
 
             http.get('/data.json', { retry: true, maxRetries: 1 }, () => {});
             FakeXhr.instances[0].failWithNetworkError();
 
-            // one failure schedules one retry, even though both handlers saw it
-            expect(http.request.callCount).to.equal(1);
+            // the retry runs on a timer, so it has to be waited for: suppressing the duplicate
+            // handler call must not also suppress the retry, nor let it run twice
+            setTimeout(() => {
+                expect(http.request.callCount).to.equal(2);
+                expect(FakeXhr.instances.length).to.equal(2);
+
+                // drain the retry so it does not leave a slot held on the shared http instance
+                FakeXhr.instances[1].failWithNetworkError();
+                done();
+            }, 50);
+        });
+
+        it('reports a text response type on the returned request for a JSON request', function () {
+            // a declared behaviour change: a JSON response type is fetched as text and parsed by
+            // the engine, so the returned request - which is public API - reports `text`
+            const xhr = http.get('/data.json', () => {});
+
+            expect(xhr.responseType).to.equal('text');
         });
 
         it('does not swallow an exception thrown while handling a success', function () {
