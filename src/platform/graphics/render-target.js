@@ -78,6 +78,12 @@ class RenderTarget {
      */
     _transientDepth;
 
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _bindMultisampled;
+
     /** @type {boolean} */
     autoResolve;
 
@@ -197,6 +203,12 @@ class RenderTarget {
      * transient attachment support, and ignored (with a warning) when an explicit `depthBuffer` is
      * provided. Incompatible with a scene depth grab pass (`sceneDepthMap`), a depth prepass, or any
      * depth resolve, as the depth cannot be sampled or copied out. Defaults to false.
+     * @param {boolean} [options.bindMultisampled] - If set to true, the multi-sampled (MSAA) color
+     * attachment is created so it can be sampled in a shader via `textureLoad`. Bind the texture
+     * returned by {@link RenderTarget#getMultisampledColorBuffer}, not
+     * {@link RenderTarget#colorBuffer} (the single-sampled resolve target). WebGPU only, and only
+     * effective when samples > 1. Incompatible with `transientColor` - if both apply, this option
+     * is ignored with a warning. Defaults to false.
      * @example
      * // Create a 512x512x24-bit render target with a depth buffer
      * const colorBuffer = new Texture(graphicsDevice, {
@@ -306,6 +318,16 @@ class RenderTarget {
         // so warn rather than silently ignore it - unlike the unsupported-device case above.
         if ((options.transientDepth ?? false) && this._depthBuffer) {
             Debug.warnOnce(`RenderTarget '${this.name}' was created with both transientDepth and a depthBuffer. Transient depth applies to the engine-allocated depth buffer only and cannot be used with a provided depthBuffer; the transientDepth flag is ignored.`);
+        }
+
+        // bindMultisampled: allow the MSAA color buffer to be sampled (WebGPU only). A
+        // transient/memoryless attachment can never carry TEXTURE_BINDING.
+        const bindRequested = options.bindMultisampled ?? false;
+        if (bindRequested && this._transientColor) {
+            Debug.warnOnce(`RenderTarget '${this.name}' was created with both bindMultisampled and transientColor. A transient (memoryless) attachment cannot be bound as a texture; bindMultisampled is ignored.`);
+            this._bindMultisampled = false;
+        } else {
+            this._bindMultisampled = bindRequested && this._device.isWebGPU && this._samples > 1;
         }
 
         // resolve the origin option to a per-API flipY value: 'top' stores standard image row
@@ -629,6 +651,40 @@ class RenderTarget {
      */
     get transientDepth() {
         return this._transientDepth;
+    }
+
+    /**
+     * True if the multi-sampled color attachment can be sampled in a shader (WebGPU only). See
+     * the `bindMultisampled` constructor option.
+     *
+     * @type {boolean}
+     */
+    get bindMultisampled() {
+        return this._bindMultisampled;
+    }
+
+    /**
+     * The engine-allocated multi-sampled color texture for the given attachment, when
+     * `bindMultisampled` is true. Bind this, not {@link RenderTarget#colorBuffer}, as a
+     * `texture_multisampled_2d`. Returns `null` if `bindMultisampled` is not in effect. Owned
+     * by the render target; do not destroy it. After {@link RenderTarget#resize}, fetch it
+     * again.
+     *
+     * @param {number} [index] - Color attachment index. Defaults to 0.
+     * @returns {Texture|null} The multi-sampled color texture, or null.
+     */
+    getMultisampledColorBuffer(index = 0) {
+        if (!this._bindMultisampled) {
+            return null;
+        }
+        Debug.assert(index >= 0 && index < this.colorBufferCount,
+            `getMultisampledColorBuffer: index ${index} is out of range for render target '${this.name}' with ${this.colorBufferCount} color attachment(s).`);
+        if (!this.initialized) {
+            // Register with the device so loseContext/restore still tracks this target.
+            // Direct init() would set initialized and skip GraphicsDevice.initRenderTarget().
+            this._device.initRenderTarget(this);
+        }
+        return this.impl.getMultisampledColorBuffer?.(index) ?? null;
     }
 
     /**

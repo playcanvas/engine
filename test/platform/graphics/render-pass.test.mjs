@@ -108,4 +108,43 @@ describe('RenderPass', function () {
 
     });
 
+    describe('#allocateAttachments: bindMultisampled', function () {
+
+        it('stores MSAA color when bindMultisampled is set', function () {
+            device.isWebGPU = true;
+            const msTarget = new RenderTarget({
+                colorBuffer: createTexture('msColor'),
+                depth: false,
+                samples: 4,
+                bindMultisampled: true
+            });
+            const msPass = new RenderPass(device);
+            msPass.init(msTarget);
+
+            expect(msTarget.bindMultisampled).to.equal(true);
+            expect(msPass.samples).to.be.greaterThan(1);
+            expect(msPass.colorArrayOps[0].store).to.equal(true);
+            expect(msPass.colorArrayOps[0].resolve).to.equal(true);
+
+            msTarget.destroyTextureBuffers();
+            msTarget.destroy();
+        });
+
+        it('discards MSAA color when bindMultisampled is off', function () {
+            const msTarget = new RenderTarget({
+                colorBuffer: createTexture('msColor'),
+                depth: false,
+                samples: 4
+            });
+            const msPass = new RenderPass(device);
+            msPass.init(msTarget);
+
+            expect(msPass.samples).to.be.greaterThan(1);
+            expect(msPass.colorArrayOps[0].store).to.equal(false);
+
+            msTarget.destroyTextureBuffers();
+            msTarget.destroy();
+        });
+    });
+
 });

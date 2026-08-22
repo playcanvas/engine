@@ -2,7 +2,7 @@ import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 import {
     TEXTUREDIMENSION_2D,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
+    SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, PIXELFORMAT_RGBA8, SHADERSTAGE_COMPUTE, SHADERSTAGE_VERTEX
 } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 
@@ -99,11 +99,33 @@ class BindStorageBufferFormat extends BindBaseFormat {
  */
 class BindTextureFormat extends BindBaseFormat {
     /**
+     * Sampler uniform name. `null` when `multisampled` is true; otherwise the provided name or
+     * `${name}_sampler`.
+     *
+     * @type {string|null}
+     */
+    samplerName = null;
+
+    /**
+     * Whether a sampler binding follows this texture. Always false when `multisampled` is true.
+     *
+     * @type {boolean}
+     */
+    hasSampler;
+
+    /**
+     * Whether this is a multisampled (`texture_multisampled_*`) binding.
+     *
+     * @type {boolean}
+     */
+    multisampled;
+
+    /**
      * Create a new instance.
      *
-     * @param {string} name - The name of the storage buffer.
-     * @param {number} visibility - A bit-flag that specifies the shader stages in which the storage
-     * buffer is visible. Can be:
+     * @param {string} name - The name of the texture.
+     * @param {number} visibility - A bit-flag that specifies the shader stages in which the texture
+     * is visible. Can be:
      *
      * - {@link SHADERSTAGE_VERTEX}
      * - {@link SHADERSTAGE_FRAGMENT}
@@ -119,6 +141,8 @@ class BindTextureFormat extends BindBaseFormat {
      * - {@link TEXTUREDIMENSION_CUBE_ARRAY}
      * - {@link TEXTUREDIMENSION_3D}
      *
+     * When `multisampled` is true, must be {@link TEXTUREDIMENSION_2D}.
+     *
      * @param {number} [sampleType] - The type of the texture samples. Defaults to
      * {@link SAMPLETYPE_FLOAT}. Can be:
      *
@@ -128,25 +152,40 @@ class BindTextureFormat extends BindBaseFormat {
      * - {@link SAMPLETYPE_INT}
      * - {@link SAMPLETYPE_UINT}
      *
+     * When `multisampled` is true, {@link SAMPLETYPE_FLOAT} is coerced to
+     * {@link SAMPLETYPE_UNFILTERABLE_FLOAT} (WebGPU rejects `sampleType: "float"` on a
+     * multisampled binding).
+     *
      * @param {boolean} [hasSampler] - True if the sampler for the texture is needed. Note that if the
      * sampler is used, it will take up an additional slot, directly following the texture slot.
-     * Defaults to true.
-     * @param {string|null} [samplerName] - Optional name of the sampler. Defaults to null.
+     * Defaults to true. Forced to false when `multisampled` is true.
+     * @param {string|null} [samplerName] - Sampler uniform name. If omitted, generated as
+     * `${name}_sampler`. Ignored and stored as `null` when `multisampled` is true.
+     * @param {boolean} [multisampled] - True if this is a multisampled texture binding
+     * (`texture_multisampled_2d` / `texture_depth_multisampled_2d`). When set, `hasSampler` is
+     * forced to false and `samplerName` to null (WGSL only allows `textureLoad`, and a WebGPU
+     * multisampled texture binding cannot be paired with a sampler). Defaults to false.
      */
-    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null) {
+    constructor(name, visibility, textureDimension = TEXTUREDIMENSION_2D, sampleType = SAMPLETYPE_FLOAT, hasSampler = true, samplerName = null, multisampled = false) {
         super(name, visibility);
 
         // TEXTUREDIMENSION_***
         this.textureDimension = textureDimension;
 
-        // SAMPLETYPE_***
-        this.sampleType = sampleType;
+        this.multisampled = multisampled;
 
-        // whether to use a sampler with this texture
-        this.hasSampler = hasSampler;
+        // no sampler: WGSL only allows textureLoad, and a WebGPU multisampled texture binding
+        // cannot be paired with a sampler. Coerce rather than assert: hasSampler defaults to
+        // true, so `new BindTextureFormat(name, vis, dim, type, undefined, undefined, true)`
+        // must work without a debug assertion.
+        this.hasSampler = multisampled ? false : hasSampler;
+        this.samplerName = multisampled ? null : (samplerName ?? `${name}_sampler`);
+        this.sampleType = (multisampled && sampleType === SAMPLETYPE_FLOAT) ?
+            SAMPLETYPE_UNFILTERABLE_FLOAT : sampleType;
 
-        // optional name of the sampler (its automatically generated if not provided)
-        this.samplerName = samplerName ?? `${name}_sampler`;
+        if (multisampled) {
+            Debug.assert(textureDimension === TEXTUREDIMENSION_2D, `Multisampled texture binding '${name}' requires TEXTUREDIMENSION_2D.`);
+        }
     }
 }
 

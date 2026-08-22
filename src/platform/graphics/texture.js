@@ -141,6 +141,23 @@ class Texture {
     /** @protected */
     _storage = false;
 
+    /**
+     * Sample count of the GPU texture.
+     *
+     * @type {number}
+     * @private
+     */
+    _samples = 1;
+
+    /**
+     * Existing GPU texture to wrap instead of allocating one. Used internally by
+     * {@link RenderTarget} when `bindMultisampled` is set.
+     *
+     * @type {object|null}
+     * @ignore
+     */
+    _importedGpuTexture = null;
+
     /** @protected */
     _numLevels = 0;
 
@@ -303,6 +320,11 @@ class Texture {
         this._arrayLength = Math.floor(options.arrayLength ?? 0);
 
         this._storage = options.storage ?? false;
+        // `_samples` is internal (used by the MSAA render-target wrapper). The public
+        // `options.samples` is ignored so `new Texture({ samples: 4 })` cannot report a
+        // sample count the allocated GPU texture does not have.
+        this._importedGpuTexture = options._importedGpuTexture ?? null;
+        this._samples = options._samples ?? 1;
         this._cubemap = options.cubemap ?? false;
         this._flipY = options.flipY ?? false;
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;
@@ -345,7 +367,7 @@ class Texture {
             this._clearLevels();
         }
 
-        this.recreateImpl(upload);
+        this.recreateImpl(upload && !this._importedGpuTexture);
 
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
@@ -440,10 +462,15 @@ class Texture {
 
         // create new
         this.impl = device.createTextureImpl(this);
-        this.dirtyAll();
+        if (this._importedGpuTexture) {
+            this._needsUpload = false;
+            this._needsMipmapsUpload = false;
+        } else {
+            this.dirtyAll();
 
-        if (upload) {
-            this.upload();
+            if (upload) {
+                this.upload();
+            }
         }
     }
 
@@ -464,6 +491,11 @@ class Texture {
      * @ignore
      */
     resize(width, height, depth = 1) {
+
+        if (this._importedGpuTexture) {
+            Debug.warn('Texture#resize: cannot resize an imported texture', this);
+            return;
+        }
 
         if (this.width !== width || this.height !== height || this.depth !== depth) {
 
@@ -834,6 +866,17 @@ class Texture {
      */
     get width() {
         return this._width;
+    }
+
+    /**
+     * Sample count of the GPU texture. Used internally by the multi-sampled color wrapper
+     * returned from {@link RenderTarget#getMultisampledColorBuffer}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get samples() {
+        return this._samples;
     }
 
     /**

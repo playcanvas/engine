@@ -101,22 +101,25 @@ const textureBaseInfo = {
     'texture_3d': { viewDimension: TEXTUREDIMENSION_3D, baseSampleType: SAMPLETYPE_FLOAT },
     'texture_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_FLOAT },
     'texture_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_FLOAT },
-    'texture_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT },
+    'texture_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_FLOAT, multisampled: true },
     'texture_depth_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_2d_array': { viewDimension: TEXTUREDIMENSION_2D_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_cube': { viewDimension: TEXTUREDIMENSION_CUBE, baseSampleType: SAMPLETYPE_DEPTH },
     'texture_depth_cube_array': { viewDimension: TEXTUREDIMENSION_CUBE_ARRAY, baseSampleType: SAMPLETYPE_DEPTH },
+    'texture_depth_multisampled_2d': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_DEPTH, multisampled: true },
     'texture_external': { viewDimension: TEXTUREDIMENSION_2D, baseSampleType: SAMPLETYPE_UNFILTERABLE_FLOAT }
 };
 
-// get the view dimension and sample type for a given texture type
+// get the view dimension, sample type and multisampled flag for a given texture type
 // example: texture_2d_array<u32> -> 2d_array & uint
+//          texture_multisampled_2d<f32> -> 2d & unfilterable-float & MS
 const getTextureInfo = (baseType, componentType) => {
     const baseInfo = textureBaseInfo[baseType];
     Debug.assert(baseInfo);
 
     let finalSampleType = baseInfo.baseSampleType;
-    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT && baseType !== 'texture_multisampled_2d') {
+    const multisampled = !!baseInfo.multisampled;
+    if (baseInfo.baseSampleType === SAMPLETYPE_FLOAT) {
         switch (componentType) {
             case 'u32': finalSampleType = SAMPLETYPE_UINT; break;
             case 'i32': finalSampleType = SAMPLETYPE_INT; break;
@@ -125,17 +128,39 @@ const getTextureInfo = (baseType, componentType) => {
             // custom 'uff' type for unfilterable float, allowing us to create correct bind, which is automatically generated based on the shader
             case 'uff': finalSampleType = SAMPLETYPE_UNFILTERABLE_FLOAT; break;
         }
+        // WebGPU rejects sampleType "float" on a multisampled binding
+        if (multisampled && finalSampleType === SAMPLETYPE_FLOAT) {
+            finalSampleType = SAMPLETYPE_UNFILTERABLE_FLOAT;
+        }
     }
 
     return {
         viewDimension: baseInfo.viewDimension,
-        sampleType: finalSampleType
+        sampleType: finalSampleType,
+        multisampled
     };
 };
 
-// reverse to getTextureInfo, convert view dimension and sample type to texture declaration
+// reverse of getTextureInfo: view dimension + sample type + multisampled -> WGSL texture type
 // example: 2d_array & float -> texture_2d_array<f32>
-const getTextureDeclarationType = (viewDimension, sampleType) => {
+//          2d & unfilterable-float & MS -> texture_multisampled_2d<f32>
+const getTextureDeclarationType = (viewDimension, sampleType, multisampled = false) => {
+
+    if (multisampled) {
+        Debug.assert(viewDimension === TEXTUREDIMENSION_2D, `Multisampled textures must be 2d, got '${viewDimension}'`);
+        if (sampleType === SAMPLETYPE_DEPTH) {
+            return 'texture_depth_multisampled_2d';
+        }
+        let msFormat;
+        switch (sampleType) {
+            case SAMPLETYPE_FLOAT:
+            case SAMPLETYPE_UNFILTERABLE_FLOAT: msFormat = 'f32'; break;
+            case SAMPLETYPE_UINT: msFormat = 'u32'; break;
+            case SAMPLETYPE_INT: msFormat = 'i32'; break;
+            default: Debug.assert(false);
+        }
+        return `texture_multisampled_2d<${msFormat}>`;
+    }
 
     // types without template specifiers
     if (sampleType === SAMPLETYPE_DEPTH) {
@@ -257,6 +282,8 @@ class UniformLine {
 //     var diffuseTexture : texture_2d<f32>;
 //     var diffuseTextures : texture_2d_array<f32>;
 //     var shadowMap : texture_depth_2d;
+//     var msColor : texture_multisampled_2d<f32>;
+//     var msDepth : texture_depth_multisampled_2d;
 //     var diffuseSampler : sampler;
 //     var<storage, read> particles: array<Particle>;
 //     var<storage, read_write> storageBuffer : Buffer;
@@ -287,6 +314,7 @@ class ResourceLine {
         this.isStorageTexture = false;
         this.isStorageBuffer = false;
         this.isExternalTexture = false;
+        this.multisampled = false;
         this.type = '';
         this.matchedElements = [];
 
@@ -304,6 +332,7 @@ class ResourceLine {
             Debug.assert(info);
             this.textureDimension = info.viewDimension;
             this.sampleType = info.sampleType;
+            this.multisampled = info.multisampled;
         }
 
         // storage texture (e.g., texture_storage_2d<rgba8unorm, write>)
@@ -361,6 +390,7 @@ class ResourceLine {
         if (this.textureFormat !== other.textureFormat) return false;
         if (this.textureDimension !== other.textureDimension) return false;
         if (this.sampleType !== other.sampleType) return false;
+        if (this.multisampled !== other.multisampled) return false;
         if (this.textureType !== other.textureType) return false;
         if (this.format !== other.format) return false;
         if (this.access !== other.access) return false;
@@ -736,14 +766,16 @@ class WebgpuShaderProcessorWGSL {
                 // followed by optional sampler uniform. Use `?? false` so a missing next resource
                 // (undefined) does not trip BindTextureFormat's hasSampler = true default.
                 const sampler = resources[i + 1];
-                const hasSampler = sampler?.isSampler ?? false;
+                Debug.assert(!resource.multisampled || !sampler?.isSampler,
+                    `Sampler uniform cannot follow a multisampled texture '${resource.name}' on line [${resource.originalLine}]`);
+                const hasSampler = (sampler?.isSampler ?? false) && !resource.multisampled;
 
                 // TODO: handle external, and storage types
                 const sampleType = resource.sampleType;
                 const dimension = resource.textureDimension;
 
                 // TODO: we could optimize visibility to only stages that use any of the data
-                formats.push(new BindTextureFormat(resource.name, visibility, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null));
+                formats.push(new BindTextureFormat(resource.name, visibility, dimension, sampleType, hasSampler, hasSampler ? sampler.name : null, resource.multisampled));
 
                 // following sampler was already handled
                 if (hasSampler) i++;
@@ -855,6 +887,7 @@ class WebgpuShaderProcessorWGSL {
      * ```
      *    @group(0) @binding(0) var diffuseTexture: texture_2d<f32>;
      *    @group(0) @binding(1) var diffuseTexture_sampler: sampler;  // optional
+     *    @group(0) @binding(2) var msColor: texture_multisampled_2d<f32>;
      * ```
      * @param {BindGroupFormat} format - The format of the bind group.
      * @param {number} bindGroup - The bind group index.
@@ -865,7 +898,7 @@ class WebgpuShaderProcessorWGSL {
 
         format.textureFormats.forEach((format) => {
 
-            const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType);
+            const textureTypeName = getTextureDeclarationType(format.textureDimension, format.sampleType, format.multisampled);
             code += `@group(${bindGroup}) @binding(${format.slot}) var ${format.name}: ${textureTypeName};\n`;
 
             if (format.hasSampler) {

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import {
     SHADERSTAGE_COMPUTE,
-    SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT
+    SAMPLETYPE_DEPTH, SAMPLETYPE_FLOAT, SAMPLETYPE_INT, SAMPLETYPE_UINT, SAMPLETYPE_UNFILTERABLE_FLOAT
 } from '../../../../src/platform/graphics/constants.js';
 import { ScopeSpace } from '../../../../src/platform/graphics/scope-space.js';
 import { WebgpuShaderProcessorWGSL } from '../../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
@@ -286,6 +286,66 @@ describe('WebgpuShaderProcessorWGSL - compute reflection', function () {
         expect(tf.slot).to.equal(0);
         expect(result.cshader).to.contain('@group(1) @binding(0) var srcTex: texture_2d<f32>;');
         expect(result.cshader).to.not.match(/srcTex_sampler/);
+    });
+
+    it('reflects a multisampled color texture without a sampler', function () {
+        const src = `
+            var msColor: texture_multisampled_2d<f32>;
+            @compute @workgroup_size(1) fn main() { }
+        `;
+        const { result, shader } = run(src);
+        expect(shader.failed).to.equal(false);
+
+        const tf = result.computeBindGroupFormat.textureFormats[0];
+        expect(tf.name).to.equal('msColor');
+        expect(tf.multisampled).to.equal(true);
+        expect(tf.hasSampler).to.equal(false);
+        expect(tf.samplerName).to.equal(null);
+        expect(tf.sampleType).to.equal(SAMPLETYPE_UNFILTERABLE_FLOAT);
+        expect(tf.slot).to.equal(0);
+        expect(result.cshader).to.contain('@group(1) @binding(0) var msColor: texture_multisampled_2d<f32>;');
+        expect(result.cshader).to.not.match(/msColor_sampler/);
+    });
+
+    it('reflects a multisampled depth texture', function () {
+        const src = `
+            var msDepth: texture_depth_multisampled_2d;
+            @compute @workgroup_size(1) fn main() { }
+        `;
+        const { result, shader } = run(src);
+        expect(shader.failed).to.equal(false);
+
+        const tf = result.computeBindGroupFormat.textureFormats[0];
+        expect(tf.name).to.equal('msDepth');
+        expect(tf.multisampled).to.equal(true);
+        expect(tf.hasSampler).to.equal(false);
+        expect(tf.samplerName).to.equal(null);
+        expect(tf.sampleType).to.equal(SAMPLETYPE_DEPTH);
+        expect(tf.slot).to.equal(0);
+        expect(result.cshader).to.contain('@group(1) @binding(0) var msDepth: texture_depth_multisampled_2d;');
+    });
+
+    it('maps integer component types on a multisampled color texture', function () {
+        const src = `
+            var msUint: texture_multisampled_2d<u32>;
+            var msInt: texture_multisampled_2d<i32>;
+            @compute @workgroup_size(1) fn main() { }
+        `;
+        const { result, shader } = run(src);
+        expect(shader.failed).to.equal(false);
+
+        const formats = result.computeBindGroupFormat.textureFormats;
+        expect(formats).to.have.lengthOf(2);
+        expect(formats[0].name).to.equal('msUint');
+        expect(formats[0].sampleType).to.equal(SAMPLETYPE_UINT);
+        expect(formats[0].multisampled).to.equal(true);
+        expect(formats[0].hasSampler).to.equal(false);
+        expect(formats[1].name).to.equal('msInt');
+        expect(formats[1].sampleType).to.equal(SAMPLETYPE_INT);
+        expect(formats[1].multisampled).to.equal(true);
+        expect(formats[1].hasSampler).to.equal(false);
+        expect(result.cshader).to.contain('@group(1) @binding(0) var msUint: texture_multisampled_2d<u32>;');
+        expect(result.cshader).to.contain('@group(1) @binding(1) var msInt: texture_multisampled_2d<i32>;');
     });
 
 });
