@@ -338,7 +338,7 @@ class Texture {
                     `Multisampled texture '${this.name}' cannot be created with initial data, it can only be rendered into.`, this);
                 Debug.assert(options.numLevels === undefined,
                     `Multisampled texture '${this.name}' cannot use the numLevels option, it always has a single mip level.`, this);
-                Debug.assert(isMultisampleCapablePixelFormat(this._format, graphicsDevice),
+                Debug.assert(isMultisampleCapablePixelFormat(this._format),
                     `Multisampled texture '${this.name}' uses format ${pixelFormatInfo.get(this._format)?.name}, which does not support multisampling.`, this);
             } else {
                 Debug.warnOnce(`Texture '${this.name}' was created with samples > 1, which is only supported on WebGPU; the samples option is ignored.`);

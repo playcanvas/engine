@@ -1095,7 +1095,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4, msaa: true }],
     [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2, msaa: true }],
     [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4, msaa: true }],
-    [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
+    [PIXELFORMAT_111110F,       { name: '111110F', size: 4, msaa: true }],
     [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
     [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true, msaa: true }],
     [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true, msaa: true }],
@@ -1171,26 +1171,17 @@ export const isIntegerPixelFormat = (format) => {
  * resolve is a separate, narrower capability: integer formats and {@link PIXELFORMAT_R32F} are
  * multisample-capable but cannot be resolved, and depth formats have no hardware resolve at all.
  *
+ * {@link PIXELFORMAT_111110F} is reported as capable even though it is gated on the
+ * 'rg11b10ufloat-renderable' device feature - the feature is near-universally available, and on a
+ * device without it the WebGPU validation reports the failure. Snorm formats (RG8S, RGBA8S) would
+ * become capable via 'texture-formats-tier1', which the engine does not currently request.
+ *
  * @param {number} format - The pixel format.
- * @param {import('./graphics-device.js').GraphicsDevice|null} [device] - The graphics device,
- * used to also allow formats whose multisample capability is gated on an optional device feature.
- * When not provided, only the core capability table is consulted.
  * @returns {boolean} True if the format supports multisampling.
  * @ignore
  */
-export const isMultisampleCapablePixelFormat = (format, device = null) => {
-    if (pixelFormatInfo.get(format)?.msaa === true) {
-        return true;
-    }
-
-    // rg11b10ufloat is multisample-capable when the device has the 'rg11b10ufloat-renderable'
-    // feature. Snorm formats (RG8S, RGBA8S) would similarly become capable via
-    // 'texture-formats-tier1', which the engine does not currently request.
-    if (format === PIXELFORMAT_111110F) {
-        return !!device?.textureRG11B10Renderable;
-    }
-
-    return false;
+export const isMultisampleCapablePixelFormat = (format) => {
+    return pixelFormatInfo.get(format)?.msaa === true;
 };
 
 // Cached shader type objects

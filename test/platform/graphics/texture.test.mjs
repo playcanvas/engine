@@ -116,18 +116,15 @@ describe('Texture', function () {
             expect(device._vram.tex).to.equal(before);
         });
 
-        it('allows 111110F only when the device supports rg11b10ufloat-renderable', function () {
+        it('reports multisample capability per format, including feature-gated 111110F', function () {
             expect(isMultisampleCapablePixelFormat(PIXELFORMAT_RGBA8)).to.be.true;
+            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F)).to.be.true;
             expect(isMultisampleCapablePixelFormat(PIXELFORMAT_RGBA32F)).to.be.false;
-            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F)).to.be.false;
-            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F, { textureRG11B10Renderable: false })).to.be.false;
-            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F, { textureRG11B10Renderable: true })).to.be.true;
         });
 
-        it('does not assert on a multisampled 111110F texture when the device feature is present', function () {
+        it('asserts on a multisampled texture with an incapable format', function () {
             device.isWebGPU = true;
             device.maxSamples = 4;
-            device.textureRG11B10Renderable = true;
             const error = console.error;
             const errors = [];
             console.error = (...args) => {
@@ -138,8 +135,7 @@ describe('Texture', function () {
                 expect(errors).to.have.lengthOf(0);
                 texture.destroy();
 
-                device.textureRG11B10Renderable = false;
-                const texture2 = new Texture(device, { format: PIXELFORMAT_111110F, width: 8, height: 8, samples: 4 });
+                const texture2 = new Texture(device, { format: PIXELFORMAT_RGBA32F, width: 8, height: 8, samples: 4 });
                 expect(errors.some(m => m.includes('does not support multisampling'))).to.be.true;
                 texture2.destroy();
             } finally {
