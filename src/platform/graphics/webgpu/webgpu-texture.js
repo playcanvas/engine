@@ -82,14 +82,6 @@ class WebgpuTexture {
     format;
 
     /**
-     * True if `gpuTexture` is owned by a render target and must not be destroyed here.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _imported = false;
-
-    /**
      * A cache of texture views keyed by TextureView.key, used for storage texture bindings.
      *
      * @type {Map<number, GPUTextureView>}
@@ -114,25 +106,6 @@ class WebgpuTexture {
         const numLevels = texture.numLevels;
 
         Debug.assert(texture.width > 0 && texture.height > 0, `Invalid texture dimensions ${texture.width}x${texture.height} for texture ${texture.name}`, texture);
-
-        if (texture._importedGpuTexture) {
-            this._imported = true;
-            this.gpuTexture = texture._importedGpuTexture;
-            this.desc = {
-                size: {
-                    width: texture.width,
-                    height: texture.height,
-                    depthOrArrayLayers: 1
-                },
-                format: this.format,
-                mipLevelCount: 1,
-                sampleCount: texture.samples,
-                dimension: '2d',
-                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
-            };
-            this.view = this.createView();
-            return;
-        }
 
         // All compressed formats currently supported by the engine (BC, ETC2, ASTC 4x4) use 4x4
         // pixel blocks. If ASTC formats with other block sizes (e.g. 5x4, 6x6, 8x8) are added,
@@ -194,9 +167,7 @@ class WebgpuTexture {
 
     destroy(device) {
         // defer GPU texture destruction until after command buffer submission
-        if (!this._imported) {
-            device.deferDestroy(this.gpuTexture);
-        }
+        device.deferDestroy(this.gpuTexture);
         this.gpuTexture = null;
         this.view = null;
         this.viewCache.clear();
