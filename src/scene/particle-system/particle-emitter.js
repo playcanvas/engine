@@ -24,6 +24,7 @@ import {
     SEMANTIC_POSITION,
     isIntegerPixelFormat
 } from '../../platform/graphics/constants.js';
+import { BufferUtils } from '../../platform/graphics/buffer-utils.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -896,7 +897,7 @@ class ParticleEmitter {
             const data = new Float32Array(this.vertexBuffer.lock());
             let meshData, posOffset, posStride, uvOffset, uvStride;
             if (this.useMesh) {
-                meshData = new Float32Array(this.mesh.vertexBuffer.lock());
+                meshData = BufferUtils.createStorageView(this.mesh.vertexBuffer, Float32Array);
 
                 // Copy positions and UVs using each element's own offset and stride (in floats),
                 // which handles both interleaved and non-interleaved source meshes. Procedurally
