@@ -21,11 +21,14 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     LightComponentSystem,
+    Mesh,
+    MeshInstance,
     PARALLAX_OCCLUSION,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     ScriptComponentSystem,
     ScriptHandler,
+    SphereGeometry,
     StandardMaterial,
     TEXTURETYPE_RGBP,
     TONEMAP_ACES,
@@ -169,12 +172,22 @@ walls.forEach((wall) => {
     app.root.addChild(entity);
 });
 
-// a sphere in the middle of it, so the effect can be seen on a curved surface as well as flat walls
+// A sphere, so the effect can be seen on a curved surface as well as on the flat walls. It is built
+// from the geometry directly rather than as a primitive, as the sixteen bands a primitive sphere uses
+// leave the silhouette and the shading faceted, and the facet edges shimmer as the parallax offset
+// steps across them.
+const sphereMesh = Mesh.fromGeometry(
+    app.graphicsDevice,
+    new SphereGeometry({
+        radius: 0.5,
+        latitudeBands: 128,
+        longitudeBands: 128
+    })
+);
+
 const sphere = new Entity('sphere');
-sphere.addComponent('render', {
-    type: 'sphere',
-    material: sphereMaterial
-});
+sphere.addComponent('render', { type: 'asset' });
+sphere.render.meshInstances = [new MeshInstance(sphereMesh, sphereMaterial, sphere)];
 sphere.setLocalScale(sphereSize, sphereSize, sphereSize);
 sphere.setLocalPosition(spherePosition);
 app.root.addChild(sphere);
