@@ -1167,17 +1167,30 @@ export const isIntegerPixelFormat = (format) => {
 
 /**
  * Returns true if the specified pixel format can be used to create a multisampled texture on
- * WebGPU (per the WebGPU texture format capabilities table, core features). Note that support for
- * hardware resolve is a separate, narrower capability: integer formats and
- * {@link PIXELFORMAT_R32F} are multisample-capable but cannot be resolved, and depth formats have
- * no hardware resolve at all.
+ * WebGPU (per the WebGPU texture format capabilities table). Note that support for hardware
+ * resolve is a separate, narrower capability: integer formats and {@link PIXELFORMAT_R32F} are
+ * multisample-capable but cannot be resolved, and depth formats have no hardware resolve at all.
  *
  * @param {number} format - The pixel format.
+ * @param {import('./graphics-device.js').GraphicsDevice|null} [device] - The graphics device,
+ * used to also allow formats whose multisample capability is gated on an optional device feature.
+ * When not provided, only the core capability table is consulted.
  * @returns {boolean} True if the format supports multisampling.
  * @ignore
  */
-export const isMultisampleCapablePixelFormat = (format) => {
-    return pixelFormatInfo.get(format)?.msaa === true;
+export const isMultisampleCapablePixelFormat = (format, device = null) => {
+    if (pixelFormatInfo.get(format)?.msaa === true) {
+        return true;
+    }
+
+    // rg11b10ufloat is multisample-capable when the device has the 'rg11b10ufloat-renderable'
+    // feature. Snorm formats (RG8S, RGBA8S) would similarly become capable via
+    // 'texture-formats-tier1', which the engine does not currently request.
+    if (format === PIXELFORMAT_111110F) {
+        return !!device?.textureRG11B10Renderable;
+    }
+
+    return false;
 };
 
 // Cached shader type objects

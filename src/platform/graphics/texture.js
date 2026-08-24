@@ -338,7 +338,7 @@ class Texture {
                     `Multisampled texture '${this.name}' cannot be created with initial data, it can only be rendered into.`, this);
                 Debug.assert(options.numLevels === undefined,
                     `Multisampled texture '${this.name}' cannot use the numLevels option, it always has a single mip level.`, this);
-                Debug.assert(isMultisampleCapablePixelFormat(this._format),
+                Debug.assert(isMultisampleCapablePixelFormat(this._format, graphicsDevice),
                     `Multisampled texture '${this.name}' uses format ${pixelFormatInfo.get(this._format)?.name}, which does not support multisampling.`, this);
             } else {
                 Debug.warnOnce(`Texture '${this.name}' was created with samples > 1, which is only supported on WebGPU; the samples option is ignored.`);
@@ -384,6 +384,13 @@ class Texture {
         }
 
         this.recreateImpl(upload);
+
+        // a multisampled texture is never uploaded (the usual point where VRAM tracking is
+        // updated), so account for its VRAM at creation; destroy() subtracts it
+        if (this._samples > 1) {
+            this._gpuSize = this.gpuSize;
+            this.adjustVramSizeTracking(graphicsDevice._vram, this._gpuSize);
+        }
 
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
@@ -520,6 +527,12 @@ class Texture {
             // re-create the implementation
             this.impl = device.createTextureImpl(this);
             this.dirtyAll();
+
+            // a multisampled texture is never uploaded, so re-account for its VRAM here
+            if (this._samples > 1) {
+                this._gpuSize = this.gpuSize;
+                this.adjustVramSizeTracking(device._vram, this._gpuSize);
+            }
         }
     }
 
@@ -947,7 +960,7 @@ class Texture {
 
     get gpuSize() {
         const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap) * this._samples;
     }
 
     /**

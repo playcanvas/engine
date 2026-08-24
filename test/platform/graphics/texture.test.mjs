@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 
 import {
-    PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB, PIXELFORMAT_RGBA16F
+    PIXELFORMAT_111110F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, isMultisampleCapablePixelFormat
 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -92,6 +93,58 @@ describe('Texture', function () {
             expect(texture.mipmaps).to.be.false;
             expect(texture.numLevels).to.equal(1);
             texture.destroy();
+        });
+
+        it('accounts for the sample count in gpuSize and VRAM tracking', function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            const before = device._vram.tex;
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 8, height: 8, samples: 4 });
+
+            // 8x8 * 4 bytes * 4 samples
+            expect(texture.gpuSize).to.equal(1024);
+
+            // tracked at creation (a multisampled texture is never uploaded)
+            expect(device._vram.tex - before).to.equal(1024);
+
+            // re-accounted across a resize
+            texture.resize(4, 4);
+            expect(device._vram.tex - before).to.equal(256);
+
+            // released on destroy
+            texture.destroy();
+            expect(device._vram.tex).to.equal(before);
+        });
+
+        it('allows 111110F only when the device supports rg11b10ufloat-renderable', function () {
+            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_RGBA8)).to.be.true;
+            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_RGBA32F)).to.be.false;
+            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F)).to.be.false;
+            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F, { textureRG11B10Renderable: false })).to.be.false;
+            expect(isMultisampleCapablePixelFormat(PIXELFORMAT_111110F, { textureRG11B10Renderable: true })).to.be.true;
+        });
+
+        it('does not assert on a multisampled 111110F texture when the device feature is present', function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            device.textureRG11B10Renderable = true;
+            const error = console.error;
+            const errors = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+            try {
+                const texture = new Texture(device, { format: PIXELFORMAT_111110F, width: 8, height: 8, samples: 4 });
+                expect(errors).to.have.lengthOf(0);
+                texture.destroy();
+
+                device.textureRG11B10Renderable = false;
+                const texture2 = new Texture(device, { format: PIXELFORMAT_111110F, width: 8, height: 8, samples: 4 });
+                expect(errors.some(m => m.includes('does not support multisampling'))).to.be.true;
+                texture2.destroy();
+            } finally {
+                console.error = error;
+            }
         });
     });
 
