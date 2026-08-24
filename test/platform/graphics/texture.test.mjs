@@ -52,4 +52,106 @@ describe('Texture', function () {
             texture.destroy();
         });
     });
+
+    describe('#constructor: samples option', function () {
+
+        it('defaults to 1', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA16F });
+            expect(texture.samples).to.equal(1);
+            texture.destroy();
+        });
+
+        it('is ignored with a warning on a non-WebGPU device', function () {
+            const warn = console.warn;
+            const messages = [];
+            console.warn = (...args) => {
+                messages.push(args.join(' '));
+            };
+            try {
+                const texture = new Texture(device, { name: 'msTex', format: PIXELFORMAT_RGBA16F, samples: 4 });
+                expect(texture.samples).to.equal(1);
+                expect(messages.some(m => m.includes('samples'))).to.be.true;
+                texture.destroy();
+            } finally {
+                console.warn = warn;
+            }
+        });
+
+        it('is normalized to the device sample count on WebGPU', function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA16F, samples: 2 });
+            expect(texture.samples).to.equal(4);
+            texture.destroy();
+        });
+
+        it('forces mipmaps off on a multisampled texture', function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA16F, samples: 4, mipmaps: true, width: 16, height: 16 });
+            expect(texture.mipmaps).to.be.false;
+            expect(texture.numLevels).to.equal(1);
+            texture.destroy();
+        });
+    });
+
+    describe('#copy: multisampled textures', function () {
+
+        let errors;
+        let originalError;
+
+        beforeEach(function () {
+            originalError = console.error;
+            errors = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+        });
+
+        afterEach(function () {
+            console.error = originalError;
+        });
+
+        const createMs = (options = {}) => {
+            return new Texture(device, { format: PIXELFORMAT_RGBA16F, width: 8, height: 8, samples: 4, ...options });
+        };
+
+        it('allows a full-texture copy between multisampled textures', function () {
+            const src = createMs({ name: 'src' });
+            const dst = createMs({ name: 'dst' });
+            expect(dst.copy(src)).to.be.true;
+            expect(errors).to.have.lengthOf(0);
+            src.destroy();
+            dst.destroy();
+        });
+
+        it('rejects a copy between different sample counts', function () {
+            const src = createMs({ name: 'src' });
+            const dst = new Texture(device, { name: 'dst', format: PIXELFORMAT_RGBA16F, width: 8, height: 8, mipmaps: false });
+            expect(dst.copy(src)).to.be.false;
+            expect(errors.some(m => m.includes('sample counts'))).to.be.true;
+            src.destroy();
+            dst.destroy();
+        });
+
+        it('rejects a partial copy of multisampled textures', function () {
+            const src = createMs({ name: 'src' });
+            const dst = createMs({ name: 'dst' });
+            expect(dst.copy(src, { width: 4, height: 4 })).to.be.false;
+            expect(errors.some(m => m.includes('entire texture'))).to.be.true;
+            src.destroy();
+            dst.destroy();
+        });
+
+        it('rejects an offset copy of multisampled textures', function () {
+            const src = createMs({ name: 'src', width: 4, height: 4 });
+            const dst = createMs({ name: 'dst' });
+            expect(dst.copy(src, { destX: 4, destY: 4 })).to.be.false;
+            expect(errors.some(m => m.includes('entire texture'))).to.be.true;
+            src.destroy();
+            dst.destroy();
+        });
+    });
 });
