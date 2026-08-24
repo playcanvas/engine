@@ -1104,6 +1104,28 @@ export const DITHER_BLUENOISE = 'bluenoise';
  */
 export const DITHER_IGNNOISE = 'ignnoise';
 
+/**
+ * Parallax mapping computes the uv offset from a single tap of the height map. This is the cheapest
+ * option, and suits shallow surface detail.
+ *
+ * @category Graphics
+ */
+export const PARALLAX_OFFSET = 'offset';
+
+/**
+ * Parallax occlusion mapping marches the view ray through the height field to find where it meets
+ * the displaced surface. This costs more than {@link PARALLAX_OFFSET}, but represents deeper
+ * displacement without smearing the texture.
+ *
+ * @category Graphics
+ */
+export const PARALLAX_OCCLUSION = 'occlusion';
+
+export const parallaxNames = {
+    [PARALLAX_OFFSET]: 'OFFSET',
+    [PARALLAX_OCCLUSION]: 'OCCLUSION'
+};
+
 export const ditherNames = {
     [DITHER_NONE]: 'NONE',
     [DITHER_BAYER2]: 'BAYER2',

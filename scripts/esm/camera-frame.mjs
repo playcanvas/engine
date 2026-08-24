@@ -39,7 +39,8 @@ const DebugType = {
     BLOOM: 'bloom',
     VIGNETTE: 'vignette',
     DOFCOC: 'dofcoc',
-    DOFBLUR: 'dofblur'
+    DOFBLUR: 'dofblur',
+    DEPTH: 'depth'
 };
 
 /**

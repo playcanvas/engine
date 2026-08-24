@@ -87,6 +87,8 @@ const standardMaterialParameterTypes = {
 
     ..._textureParameter('height', true, false),
     heightMapFactor: 'number',
+    parallaxMode: 'string',
+    parallaxSamples: 'number',
 
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
@@ -144,6 +146,7 @@ const standardMaterialParameterTypes = {
     envAtlas: 'texture',
 
     twoSidedLighting: 'boolean',
+    flatShading: 'boolean',
     shadowCatcher: 'boolean'
 
     // nineSlicedMode

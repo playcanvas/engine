@@ -138,12 +138,18 @@ class Material {
     alphaTest = 0;
 
     /**
-     * Enables or disables alpha to coverage (WebGL2 only). When enabled, and if hardware
-     * anti-aliasing is on, limited order-independent transparency can be achieved. Quality depends
-     * on the number of MSAA samples of the current render target. It can nicely soften edges of
-     * otherwise sharp alpha cutouts, but isn't recommended for large area semi-transparent
-     * surfaces. Note, that you don't need to enable blending to make alpha to coverage work. It
-     * will work without it, just like alphaTest.
+     * Enables or disables alpha to coverage. When enabled, and if hardware anti-aliasing is on,
+     * limited order-independent transparency can be achieved. Quality depends on the number of
+     * MSAA samples of the current render target. It can nicely soften edges of otherwise sharp
+     * alpha cutouts, but isn't recommended for large area semi-transparent surfaces. Note, that
+     * you don't need to enable blending to make alpha to coverage work. It will work without it,
+     * just like alphaTest.
+     *
+     * This requires a multi-sampled render target, and is silently ignored when rendering to a
+     * single-sampled one. On WebGPU it additionally requires the first color attachment of the
+     * render target to use a blendable format with an alpha channel, and is silently ignored
+     * otherwise - note that {@link PIXELFORMAT_111110F}, the default HDR format used by
+     * {@link CameraFrame}, has no alpha channel.
      */
     alphaToCoverage = false;
 
@@ -220,6 +226,52 @@ class Material {
         if (new.target === Material) {
             Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
         }
+    }
+
+    /**
+     * Enables or disables flat shading. When enabled, the surface is shaded using the geometric
+     * normal of the triangle the fragment belongs to, instead of the normal interpolated from the
+     * vertex normals, giving the mesh a faceted look. This works on skinned and morphed geometry as
+     * well.
+     *
+     * The geometric normal is oriented to match the winding of the triangle, as configured by
+     * {@link Material#frontFace}, and so it agrees with correctly authored vertex normals. Flat
+     * shading therefore only changes the faceting - {@link Material#cull},
+     * {@link Material#frontFace} and {@link StandardMaterial#twoSidedLighting} all behave the same
+     * as they do for smooth shading.
+     *
+     * {@link StandardMaterial} and {@link LitMaterial} implement this automatically. For a
+     * {@link ShaderMaterial}, this adds a `FLAT_SHADING` define to the shader, which the supplied
+     * shader code needs to handle. The `flatNormalPS` chunk provides the `getFlatNormal` function
+     * used by the engine internally, and can be used for this:
+     *
+     * ```javascript
+     * #include "flatNormalPS"
+     * ...
+     * #ifdef FLAT_SHADING
+     *     vec3 normal = getFlatNormal(worldPos);
+     * #else
+     *     vec3 normal = normalize(interpolatedNormal);
+     * #endif
+     * ```
+     *
+     * As with other material properties, call {@link Material#update} after changing this.
+     *
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set flatShading(value) {
+        this.setDefine('FLAT_SHADING', value);
+    }
+
+    /**
+     * Gets whether flat shading is enabled.
+     *
+     * @type {boolean}
+     */
+    get flatShading() {
+        return this.defines.has('FLAT_SHADING');
     }
 
     /**

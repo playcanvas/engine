@@ -253,4 +253,88 @@ describe('AnimComponent', function () {
             expect(rebinds).to.equal(0);
         });
     });
+
+    describe('property track binding', function () {
+
+        // a track with a single curve ramping the given property from its first to its second
+        // keyframe over the track duration, the way anim clip JSON encodes property curves
+        const propertyTrack = (entityPath, component, propertyPath, components, keyframes) => {
+            const curve = new AnimCurve([{
+                entityPath,
+                component,
+                propertyPath
+            }], 0, 0, INTERPOLATION_LINEAR);
+
+            return new AnimTrack('Property', 1, [new AnimData(1, [0, 1])], [new AnimData(components, keyframes)], [curve]);
+        };
+
+        const scaleTrack = entityPath => propertyTrack(entityPath, 'entity', ['localScale'], 3, [1, 1, 1, 3, 3, 3]);
+
+        it('resolves entity paths rooted at the anim component entity', function () {
+            const root = new Entity('root', app);
+            const child = new Entity('child', app);
+            root.addChild(child);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack(['root', 'child']));
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(child.getLocalScale().x).to.be.closeTo(2, 1e-5);
+        });
+
+        it('resolves component properties on descendants', function () {
+            const root = new Entity('root', app);
+            const lamp = new Entity('lamp', app);
+            root.addChild(lamp);
+            app.root.addChild(root);
+
+            lamp.addComponent('light', { type: 'spot', intensity: 0 });
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Intensity', propertyTrack(['root', 'lamp'], 'light', ['intensity'], 1, [0, 1]));
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(lamp.light.intensity).to.be.closeTo(0.5, 1e-5);
+        });
+
+        it('binds single element paths to the anim component entity regardless of the root name', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack(['other']));
+
+            app.systems.anim.onAnimationUpdate(0.5);
+
+            expect(root.getLocalScale().x).to.be.closeTo(2, 1e-5);
+        });
+
+        it('leaves curves unbound instead of resolving into sibling hierarchies', function () {
+            const root = new Entity('root', app);
+            const sibling = new Entity('other', app);
+            const target = new Entity('target', app);
+            sibling.addChild(target);
+            app.root.addChild(root);
+            app.root.addChild(sibling);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack(['other', 'target']));
+
+            expect(() => app.systems.anim.onAnimationUpdate(0.5)).to.not.throw();
+
+            expect(target.getLocalScale().x).to.equal(1);
+        });
+
+        it('leaves curves unbound when the path names a missing descendant', function () {
+            const root = new Entity('root', app);
+            app.root.addChild(root);
+
+            root.addComponent('anim', { activate: true });
+            root.anim.assignAnimation('Scale', scaleTrack(['root', 'missing']));
+
+            expect(() => app.systems.anim.onAnimationUpdate(0.5)).to.not.throw();
+        });
+    });
 });

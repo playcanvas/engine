@@ -291,6 +291,21 @@ const createUpdate = async (file, engine, logStart = null) => {
     const stamp = Date.now().toString(36);
     const item = exampleFromFile(abs);
     if (item) {
+
+        // the example source is gone, which is what a rename or a delete looks like from here. There
+        // is no update to send - the example list is read once at startup, so a new name needs a
+        // restart to appear - and reading its config would throw. Anything other than a missing file
+        // is a real problem, so it is left to the watcher's catch to report.
+        const source = getExamplePath(item, 'example.mjs');
+        try {
+            await fs.promises.stat(source);
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                return null;
+            }
+            throw err;
+        }
+
         const example = `/${item.categoryKebab}/${item.exampleNameKebab}`;
         logStart?.('example', example);
         return {
@@ -597,7 +612,11 @@ export const examplesDevServer = ({ hmr = true } = {}) => {
                             data
                         });
                     });
-                }, (err) => {
+
+                // as a trailing catch, not a rejection handler on the first link of the chain - that
+                // one leaves everything after it unhandled, and an unhandled rejection in a watcher
+                // callback takes the whole dev server down
+                }).catch((err) => {
                     server.config.logger.error(err.message);
                 });
             };

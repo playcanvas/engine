@@ -878,7 +878,7 @@ class FramePassCameraFrame extends FramePass {
     setupComposePass(options) {
 
         // create a compose pass, which combines the results of the scene and other passes
-        this.composePass = new RenderPassCompose(this.device);
+        this.composePass = new RenderPassCompose(this.device, this.cameraComponent);
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.hdrScene = this.hdrFormat !== PIXELFORMAT_RGBA8;
         this.composePass.taaEnabled = options.taaEnabled;
@@ -918,6 +918,19 @@ class FramePassCameraFrame extends FramePass {
         }
 
         super.frameUpdate();
+
+        // Whether the depth debug mode has a depth to display. Either producer publishes to the same
+        // uniform, and both have run by the time the composition does. The mode does not request the
+        // depth - a debug view never changes what is rendered - so with neither producer it shows black.
+        const { options, composePass } = this;
+        const sceneDepthAvailable = options.sceneTextureDepth || options.prepassEnabled;
+        composePass.sceneDepthAvailable = sceneDepthAvailable;
+
+        Debug.call(() => {
+            if (composePass.debug === 'depth' && !sceneDepthAvailable) {
+                Debug.warnOnce('CameraFrame.debug is set to \'depth\', but nothing this camera renders produces the scene depth, so the debug view is black. Enable an effect which consumes the depth (the depth of field, the volumetric fog, TAA, or SSAO in combine mode), or request it with CameraFrame.rendering.sceneDepthMap.');
+            }
+        });
 
         if (this.sceneDepthTexture) {
 

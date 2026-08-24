@@ -170,22 +170,23 @@ class ScriptRegistry extends EventHandler {
             }
 
             const components = this.app.systems.script._components;
-            let attributes;
             const scriptInstances = [];
             const scriptInstancesInitialized = [];
 
             for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
                 const component = components.items[components.loopIndex];
                 // check if awaiting for script
-                if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
-                    if (component._scriptsData && component._scriptsData[scriptName]) {
-                        attributes = component._scriptsData[scriptName].attributes;
-                    }
+                const indexData = component._scriptsIndex[scriptName];
+                if (indexData && indexData.awaiting) {
 
+                    // the awaiting entry holds what this component asked for, which is both
+                    // per component and specific to the declaration that is still standing
                     const scriptInstance = component.create(scriptName, {
                         preloading: true,
-                        ind: component._scriptsIndex[scriptName].ind,
-                        attributes: attributes
+                        ind: component._awaitingInsertIndex(scriptName),
+                        enabled: indexData.enabled,
+                        attributes: indexData.attributes,
+                        properties: indexData.properties
                     });
 
                     if (scriptInstance) {

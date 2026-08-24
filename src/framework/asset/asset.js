@@ -598,7 +598,7 @@ class Asset extends EventHandler {
         }
 
         this.fire('unload', this);
-        this.registry.fire(`unload:${this.id}`, this);
+        this.registry?.fire(`unload:${this.id}`, this);
 
         const old = this._resources;
 
@@ -613,7 +613,7 @@ class Asset extends EventHandler {
 
         // remove resource from loader cache
         if (this.file) {
-            this.registry._loader.clearCache(this.getFileUrl(), this.type);
+            this.registry?._loader.clearCache(this.getFileUrl(), this.type);
         }
 
         // destroy resources
