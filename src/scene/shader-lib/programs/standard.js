@@ -1,8 +1,10 @@
 import { Debug } from '../../../core/debug.js';
 import {
     BLEND_NONE, DITHER_NONE, ditherNames, FRESNEL_SCHLICK,
+    PARALLAX_OFFSET,
     SHADER_FORWARD,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED,
+    parallaxNames
 } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
@@ -312,6 +314,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.lightVertexColor, 'STD_LIGHT_VERTEX_COLOR', '');
         fDefineSet(options.dirLightMap && options.litOptions.useSpecular, 'STD_LIGHTMAP_DIR', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
+        fDefineSet(true, 'STD_PARALLAX', parallaxNames[options.parallaxMode ?? PARALLAX_OFFSET]);
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
         fDefineSet(options.useSpecularColor && (options.litOptions.useSpecular || options.litOptions.useRefraction), 'STD_SPECULAR_CONSTANT', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
