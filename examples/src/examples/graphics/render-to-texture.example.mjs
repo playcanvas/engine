@@ -55,7 +55,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }),
+    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true }),
     script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 

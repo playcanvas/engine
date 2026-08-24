@@ -35,7 +35,7 @@ const assets = {
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     other: new Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
 };
 

@@ -97,7 +97,7 @@ const message = (msg) => {
 
 // Assets
 const assets = {
-    buttonTexture: new Asset('buttonTexture', 'texture', { url: './assets/textures/blue-button.png' }),
+    buttonTexture: new Asset('buttonTexture', 'texture', { url: './assets/textures/blue-button.png' }, { srgb: true }),
     click: new Asset('click', 'audio', { url: './assets/sounds/click.mp3' }),
     cube: new Asset('cube', 'container', { url: './assets/models/playcanvas-cube.glb' }),
     envAtlas: new Asset(
