@@ -1,13 +1,13 @@
 // @config
 //
-// Parallax mapping: a `heightMap` offsets the uv of the material's other maps by the surface height
-// and the view direction, so a flat surface reads as though it had depth.
+// Parallax mapping uses a height map to offset the uv of the material's other maps, so a flat
+// surface reads as though it had depth. The Mode control switches between the two the engine
+// offers - a single tap of the map, and marching the view ray through it, which holds up at much
+// deeper relief - and the height map switched off entirely for comparison.
 //
-// The four shapes form a 2x2 grid: top left diffuse map only · top right normal map · bottom left
-// height map · bottom right normal map and height map.
-//
-// The offset is zero head on, so orbit to a grazing angle. The Height slider drives
-// `heightMapFactor`.
+// The same brick material covers the inside of the room and the sphere, lit by a spot light and an
+// omni light. Samples caps the number of height map taps taken along the ray, and Height scales the
+// depth of the height field.
 //
 // `LMB` Orbit · Hold `Shift` / `MMB` Pan · `Wheel` Zoom
 
@@ -21,6 +21,7 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     LightComponentSystem,
+    PARALLAX_OCCLUSION,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     ScriptComponentSystem,
@@ -29,6 +30,7 @@ import {
     TEXTURETYPE_RGBP,
     TONEMAP_ACES,
     TextureHandler,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
@@ -39,6 +41,7 @@ import { data, deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
+const path = './assets/textures/bricks076a';
 const assets = {
     helipad: new Asset(
         'helipad-env-atlas',
@@ -46,9 +49,11 @@ const assets = {
         { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    height: new Asset('height', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
-    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' })
+    color: new Asset('color', 'texture', { url: `${path}/color.webp` }, { srgb: true }),
+    normal: new Asset('normal', 'texture', { url: `${path}/normal.webp` }),
+    height: new Asset('height', 'texture', { url: `${path}/height.webp` }),
+    roughness: new Asset('roughness', 'texture', { url: `${path}/roughness.webp` }),
+    ao: new Asset('ao', 'texture', { url: `${path}/ao.webp` })
 };
 
 const gfxOptions = {
@@ -88,166 +93,194 @@ await new Promise((resolve) => {
 
 app.start();
 
+// the room is closed, so the environment is only there to fill the shadows with some ambient light
+const envIntensity = 0.1;
 app.scene.envAtlas = assets.helipad.resource;
+app.scene.skyboxIntensity = envIntensity;
 app.scene.exposure = 1;
 
-// keep the ambient contribution low, so the directional light shapes the surface relief
-app.scene.skyboxIntensity = 0.15;
+/**
+ * Create a brick material from the full set of maps.
+ *
+ * @param {Vec2} tiling - The tiling to apply to every map.
+ * @returns {StandardMaterial} The new material.
+ */
+function createBrickMaterial(tiling) {
+    const material = new StandardMaterial();
+    material.diffuseMap = assets.color.resource;
+    material.normalMap = assets.normal.resource;
+    material.heightMap = assets.height.resource;
+    material.aoMap = assets.ao.resource;
 
-// Create an entity with a camera component, driven by the camera controls script. Drag to orbit the
-// shapes - looking straight at a surface produces no parallax offset at all, the effect only appears
-// as the viewing direction tilts away from the surface normal.
+    // the map is roughness rather than gloss, so it is used inverted
+    material.glossMap = assets.roughness.resource;
+    material.glossInvert = true;
+
+    material.useMetalness = true;
+    material.metalness = 0;
+
+    // the parallax offset is applied to the uv of all other maps, so they all need the same tiling
+    const maps = [
+        material.diffuseMapTiling,
+        material.normalMapTiling,
+        material.heightMapTiling,
+        material.aoMapTiling,
+        material.glossMapTiling
+    ];
+    maps.forEach((map) => map.copy(tiling));
+
+    material.update();
+    return material;
+}
+
+const roomSize = 10;
+const sphereSize = 2.2;
+
+// the sphere rests on the floor, and is what the camera orbits
+const spherePosition = new Vec3(0, (sphereSize - roomSize) * 0.5, 0);
+
+const roomMaterial = createBrickMaterial(new Vec2(3, 3));
+const sphereMaterial = createBrickMaterial(new Vec2(3, 2));
+const materials = [roomMaterial, sphereMaterial];
+
+// The room is six inward facing planes rather than a box seen from the inside. A tangent frame
+// derived from screen space derivatives is mirrored on a back face, and as two sided lighting only
+// flips the normal of the frame and not its tangents, the marched relief on those faces comes out
+// inside out. Keeping every face front facing avoids that, and needs no back face culling either.
+const half = roomSize * 0.5;
+const walls = [
+    { name: 'floor', position: new Vec3(0, -half, 0), rotation: new Vec3(0, 0, 0) },
+    { name: 'ceiling', position: new Vec3(0, half, 0), rotation: new Vec3(180, 0, 0) },
+    { name: 'wall back', position: new Vec3(0, 0, -half), rotation: new Vec3(90, 0, 0) },
+    { name: 'wall front', position: new Vec3(0, 0, half), rotation: new Vec3(-90, 0, 0) },
+    { name: 'wall left', position: new Vec3(-half, 0, 0), rotation: new Vec3(0, 0, -90) },
+    { name: 'wall right', position: new Vec3(half, 0, 0), rotation: new Vec3(0, 0, 90) }
+];
+
+walls.forEach((wall) => {
+    const entity = new Entity(wall.name);
+    entity.addComponent('render', {
+        type: 'plane',
+        material: roomMaterial
+    });
+    entity.setLocalPosition(wall.position);
+    entity.setLocalEulerAngles(wall.rotation);
+    entity.setLocalScale(roomSize, 1, roomSize);
+    app.root.addChild(entity);
+});
+
+// a sphere in the middle of it, so the effect can be seen on a curved surface as well as flat walls
+const sphere = new Entity('sphere');
+sphere.addComponent('render', {
+    type: 'sphere',
+    material: sphereMaterial
+});
+sphere.setLocalScale(sphereSize, sphereSize, sphereSize);
+sphere.setLocalPosition(spherePosition);
+app.root.addChild(sphere);
+
+// A spot light above the sphere, casting shadows. A light shines along the negative y axis of its
+// entity, so lookAt - which orients the negative z axis - is followed by a quarter turn to bring
+// that axis onto the target.
+const spot = new Entity('spot light');
+spot.addComponent('light', {
+    type: 'spot',
+    color: new Color(1, 0.95, 0.85),
+    intensity: 3,
+    range: 18,
+    innerConeAngle: 12,
+    outerConeAngle: 32,
+    castShadows: true,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05,
+    shadowResolution: 1024
+});
+spot.setLocalPosition(2.8, 4, 2.8);
+spot.lookAt(spherePosition);
+spot.rotateLocal(90, 0, 0);
+app.root.addChild(spot);
+
+// an omni light in the opposite corner, filling the shadows with a cooler colour, and casting its
+// own set of them
+const omni = new Entity('omni light');
+omni.addComponent('light', {
+    type: 'omni',
+    color: new Color(0.55, 0.7, 1),
+    intensity: 2,
+    range: 18,
+    castShadows: true,
+    shadowBias: 0.2,
+    normalOffsetBias: 0.05,
+    shadowResolution: 1024
+});
+omni.setLocalPosition(-3.2, -2, -3.4);
+app.root.addChild(omni);
+
+// The camera orbits the sphere from inside the room. The zoom range keeps it clear of the sphere and
+// of the walls, and the pitch range stops it dropping below the sphere and through the floor.
 const camera = new Entity('camera');
 camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES,
-    fov: 45,
-    clearColor: new Color(0.05, 0.06, 0.08)
+    fov: 60,
+    clearColor: new Color(0, 0, 0)
 });
-
-// Start off to the side and above, so the shapes are already seen at an angle on the first frame and
-// their sides and tops are visible. Not too far round, or the near column would hide the far one -
-// orbiting further is what makes the parallax offset grow.
-camera.setLocalPosition(8.4, 6.5, 18.1);
+camera.setLocalPosition(spherePosition.x + 2.6, spherePosition.y + 1.5, spherePosition.z + 3);
 camera.addComponent('script');
 app.root.addChild(camera);
 
 camera.script.create(CameraControls, {
     properties: {
-        focusPoint: Vec3.ZERO,
-        enableFly: false
+        focusPoint: spherePosition,
+        enableFly: false,
+        zoomRange: new Vec2(sphereSize * 0.8, roomSize * 0.45),
+        pitchRange: new Vec2(-75, 0)
     }
 });
 
-// A directional light raking across the front of the shapes at a shallow angle, which is what makes
-// the surface relief read as depth, while still lighting the sides and tops the camera can see.
-// A directional light shines along its entity's -Y axis, so these angles tilt that axis towards
-// the camera side of the cubes.
-const light = new Entity('light');
-light.addComponent('light', {
-    type: 'directional',
-    color: new Color(1, 0.95, 0.85),
-    intensity: 4
-});
-light.setLocalEulerAngles(45, 45, 0);
-app.root.addChild(light);
-
-const tiling = 1.5;
-
-/**
- * Create a material sharing the same base textures, optionally with a normal map and a height map.
- *
- * @param {boolean} useNormalMap - True to assign the normal map.
- * @param {boolean} useHeightMap - True to assign the height map, enabling parallax mapping.
- * @returns {StandardMaterial} The new material.
- */
-function createMaterial(useNormalMap, useHeightMap) {
-    const material = new StandardMaterial();
-    material.diffuseMap = assets.diffuse.resource;
-    material.diffuseMapTiling.set(tiling, tiling);
-
-    if (useNormalMap) {
-        material.normalMap = assets.normal.resource;
-        material.normalMapTiling.set(tiling, tiling);
-    }
-
-    if (useHeightMap) {
-        material.heightMap = assets.height.resource;
-
-        // the parallax offset is applied to the uv of all other maps, so the height map needs to
-        // use the same tiling as those maps
-        material.heightMapTiling.set(tiling, tiling);
-    }
-
-    material.gloss = 0.4;
-    material.metalness = 0;
-    material.useMetalness = true;
-    material.update();
-    return material;
-}
-
-// Four primitives, showing the base textures, the effect of the normal map on its own, parallax
-// mapping without a normal map, and the two combined.
-//
-// They are laid out as a 2x2 grid, so all four are seen at the same viewing angle and can be
-// compared directly:
-//
-//     diffuse only  |  normal map
-//     -------------------------------------
-//     parallax      |  normal map + parallax
-//
-// The shape is selectable, as the tangent frame the parallax offset is built from is oriented
-// differently on each of them - the flat faces of a box, and the poles and equator of a sphere.
-const primitives = [
-    { name: 'diffuse only', normalMap: false, heightMap: false },
-    { name: 'normal map', normalMap: true, heightMap: false },
-    { name: 'parallax, no normal map', normalMap: false, heightMap: true },
-    { name: 'normal map + parallax', normalMap: true, heightMap: true }
-];
-
-const primitiveSize = 4;
-
-// the shapes are as deep as they are wide, so they need a gap wider than a small one to stop the
-// near column and row hiding the far ones when the camera orbits round
-const primitiveGap = 1.5;
-const step = primitiveSize + primitiveGap;
-
-/**
- * Scale a primitive so its largest dimension fills its grid cell, and push it back so the closest
- * point of the shape lands on the z = 0 plane, taking the extents from the mesh so any shape lines
- * up. Re-applied whenever the shape changes.
- *
- * @param {Entity} entity - The entity to place.
- * @param {number} i - The index of the entity in the grid.
- */
-function fit(entity, i) {
-    const halfExtents = entity.render.meshInstances[0].mesh.aabb.halfExtents;
-    const scale = primitiveSize / (2 * Math.max(halfExtents.x, halfExtents.y, halfExtents.z));
-    entity.setLocalScale(scale, scale, scale);
-    entity.setLocalPosition(((i % 2) - 0.5) * step, (0.5 - Math.floor(i / 2)) * step, -halfExtents.z * scale);
-}
-
-primitives.forEach((primitive, i) => {
-    primitive.material = createMaterial(primitive.normalMap, primitive.heightMap);
-
-    const entity = new Entity(primitive.name);
-    entity.addComponent('render', {
-        type: 'box',
-        material: primitive.material
-    });
-
-    fit(entity, i);
-    app.root.addChild(entity);
-
-    primitive.entity = entity;
-});
+// Selecting this mode unassigns the height map rather than setting a mode on the material, which
+// takes the parallax code out of the generated shader altogether
+const MODE_NONE = 'none';
 
 // Initial values
 data.set('data', {
-    shape: 'box',
-    height: 1
+    mode: PARALLAX_OCCLUSION,
+    samples: 16,
+
+    // A height of 1 asks for a relief a tenth of a uv tile deep, which on these walls is a good
+    // third of a world unit - real enough to march correctly, but far deeper than brickwork, and it
+    // reads as spikes when the floor is viewed from low down. This is the depth the material suits.
+    height: 0.4,
+
+    spot: true,
+    omni: true,
+    env: envIntensity
 });
 
-// keep the materials which use parallax mapping in sync with the control panel
-const heightMaterials = primitives.filter((p) => p.heightMap).map((p) => p.material);
-
-let shape = 'box';
+let mode, samples, height;
 
 app.on('update', () => {
-    const height = data.get('data.height');
-    heightMaterials.forEach((material) => {
-        if (height !== material.heightMapFactor) {
+    const newMode = data.get('data.mode');
+    const newSamples = data.get('data.samples');
+    const newHeight = data.get('data.height');
+
+    if (newMode !== mode || newSamples !== samples || newHeight !== height) {
+        mode = newMode;
+        samples = newSamples;
+        height = newHeight;
+
+        materials.forEach((material) => {
+            material.heightMap = mode === MODE_NONE ? null : assets.height.resource;
+            if (mode !== MODE_NONE) {
+                material.parallaxMode = mode;
+            }
+            material.parallaxSamples = samples;
             material.heightMapFactor = height;
             material.update();
-        }
-    });
-
-    // assigning the render component type rebuilds the mesh instance, keeping the material
-    const selected = data.get('data.shape');
-    if (selected !== shape) {
-        shape = selected;
-        primitives.forEach((primitive, i) => {
-            primitive.entity.render.type = shape;
-            fit(primitive.entity, i);
         });
     }
+
+    // both setters ignore a value they already hold, so these need no change tracking
+    spot.enabled = data.get('data.spot');
+    omni.enabled = data.get('data.omni');
+    app.scene.skyboxIntensity = data.get('data.env');
 });

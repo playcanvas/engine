@@ -8,6 +8,8 @@ import {
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
+    PARALLAX_OCCLUSION,
+    PARALLAX_OFFSET,
     SHADER_PICK,
     SHADER_PREPASS,
     SPECOCC_AO,
@@ -452,6 +454,22 @@ const isBlack = (color) => {
  * @property {number} heightMapFactor Height map multiplier (default is 1). Affects the strength of
  * the parallax effect. A value of 1 displaces the texture by up to 5% of a UV tile, so useful values
  * are typically in the 0 to 2 range.
+ * @property {string} parallaxMode Selects how the height map is used to offset the UV of the other
+ * maps of the material. Can be:
+ *
+ * - {@link PARALLAX_OFFSET}: A single tap of the height map, which pivots the surface around the
+ * mid-grey level of the map.
+ * - {@link PARALLAX_OCCLUSION}: The view ray is marched through the height field. The map is
+ * treated as depth below the original geometry, so white is at the level of the geometry and black
+ * is {@link heightMapFactor} deep. This represents deeper displacement without smearing, at the
+ * cost of multiple taps per pixel. Note that the silhouette of the mesh is not affected, and the
+ * depth buffer still sees the flat surface.
+ *
+ * Defaults to {@link PARALLAX_OFFSET}.
+ * @property {number} parallaxSamples The maximum number of height map taps taken along the view ray
+ * when {@link parallaxMode} is {@link PARALLAX_OCCLUSION} (default is 16). Fewer taps are taken as
+ * the view direction approaches the surface normal, where the ray barely moves. Has no effect in
+ * {@link PARALLAX_OFFSET} mode.
  * @property {Texture|null} envAtlas The prefiltered environment lighting atlas (default is null).
  * This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
  * @property {Texture|null} cubeMap The cubic environment map of the material (default is null).
@@ -884,6 +902,10 @@ class StandardMaterial extends Material {
 
         if (this.heightMap) {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
+
+            if (this.parallaxMode === PARALLAX_OCCLUSION) {
+                this._setParameter('material_parallaxSamples', this.parallaxSamples);
+            }
         }
 
         // set overridden environment textures
@@ -1244,6 +1266,7 @@ function _defineMaterialProps() {
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.1;
     });
+    _defineFloat('parallaxSamples', 16);
     _defineFloat('opacity', 1);
     _defineFloat('alphaFade', 1);
 
@@ -1338,6 +1361,7 @@ function _defineMaterialProps() {
     _defineFlag('glossInvert', false);
     _defineFlag('sheenGlossInvert', false);
     _defineFlag('clearCoatGlossInvert', false);
+    _defineFlag('parallaxMode', PARALLAX_OFFSET);
     _defineFlag('opacityDither', DITHER_NONE);
     _defineFlag('opacityShadowDither', DITHER_NONE);
     _defineFlag('shadowCatcher', false);

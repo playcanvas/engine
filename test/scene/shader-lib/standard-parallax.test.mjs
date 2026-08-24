@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
+    PARALLAX_OCCLUSION, PARALLAX_OFFSET,
     SHADER_FORWARD, SHADER_PREPASS, SHADER_SHADOW,
     SHADERDEF_TANGENTS, SHADERDEF_UV0
 } from '../../../src/scene/constants.js';
@@ -58,7 +59,8 @@ describe('StandardMaterial parallax mapping', function () {
 
         const material = new StandardMaterial();
         material.diffuseMap = texture();
-        material.heightMap = texture();
+        if (!options.noHeightMap) material.heightMap = texture();
+        if (options.parallaxMode) material.parallaxMode = options.parallaxMode;
         if (options.normalMap) material.normalMap = texture();
         if (options.alphaTest) {
             material.opacityMap = texture();
@@ -140,5 +142,58 @@ describe('StandardMaterial parallax mapping', function () {
             const source = fragmentSource(createMaterial(options), SHADER_FORWARD, SHADERDEF_UV0);
             expect(functionBody(source, 'getTBN')).to.not.include('dUvOffset');
         }
+    });
+
+    it('marches the view ray through the height field in occlusion mode', function () {
+        const offset = functionBody(fragmentSource(createMaterial({ parallaxMode: PARALLAX_OFFSET }), SHADER_FORWARD), 'getParallax');
+        const occlusion = functionBody(fragmentSource(createMaterial({ parallaxMode: PARALLAX_OCCLUSION }), SHADER_FORWARD), 'getParallax');
+
+        // the offset mode is a single tap, the occlusion mode marches
+        expect(offset).to.not.include('for (');
+        expect(occlusion).to.include('for (');
+        expect(occlusion).to.include('dUvOffset = ');
+    });
+
+    it('refines the hit by resampling inside the bracketing step', function () {
+        // interpolating between the ends of the step instead assumes the height field runs straight
+        // between them, which at a shallow view angle snaps the hit to the step grid and terraces
+        const occlusion = functionBody(fragmentSource(createMaterial({ parallaxMode: PARALLAX_OCCLUSION }), SHADER_FORWARD), 'getParallax');
+
+        // the linear search and the refinement are two separate loops, both sampling the map
+        expect((occlusion.match(/for \(/g) ?? []).length).to.equal(2);
+        expect((occlusion.match(/texture2DLod\(/g) ?? []).length).to.be.at.least(3);
+    });
+
+    it('samples the height map with an explicit mip level while marching', function () {
+        // the march is non-uniform control flow, where implicit derivatives are undefined - a
+        // texture2DBias tap inside it would trip WGSL's derivative_uniformity diagnostic
+        const occlusion = functionBody(fragmentSource(createMaterial({ parallaxMode: PARALLAX_OCCLUSION }), SHADER_FORWARD), 'getParallax');
+
+        expect(occlusion).to.include('texture2DLod(');
+        expect(occlusion).to.not.include('texture2DBias(');
+    });
+
+    it('generates a separate shader for each parallax mode', function () {
+        // parallaxMode is assigned onto the shared options object rather than declared on it, so
+        // this guards against it being left out of the shader cache key
+        const offset = fragmentSource(createMaterial({ parallaxMode: PARALLAX_OFFSET }), SHADER_FORWARD);
+        const occlusion = fragmentSource(createMaterial({ parallaxMode: PARALLAX_OCCLUSION }), SHADER_FORWARD);
+
+        expect(offset).to.not.equal(occlusion);
+    });
+
+    it('declares the sample count uniform only when marching', function () {
+        const offset = fragmentSource(createMaterial({ parallaxMode: PARALLAX_OFFSET }), SHADER_FORWARD);
+        const occlusion = fragmentSource(createMaterial({ parallaxMode: PARALLAX_OCCLUSION }), SHADER_FORWARD);
+
+        expect(offset).to.not.include('material_parallaxSamples');
+        expect(occlusion).to.include('material_parallaxSamples');
+    });
+
+    it('ignores the parallax mode when no height map is assigned', function () {
+        const source = fragmentSource(createMaterial({ noHeightMap: true, parallaxMode: PARALLAX_OCCLUSION }), SHADER_FORWARD);
+
+        expect(source).to.not.include('dUvOffset');
+        expect(source).to.not.include('material_parallaxSamples');
     });
 });
