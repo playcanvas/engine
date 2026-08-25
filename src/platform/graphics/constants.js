@@ -1070,19 +1070,19 @@ export const pixelFormatInfo = new Map([
 
     // float formats
     [PIXELFORMAT_A8,            { name: 'A8', size: 1, ldr: true }],
-    [PIXELFORMAT_R8,            { name: 'R8', size: 1, ldr: true, msaa: true }],
+    [PIXELFORMAT_R8,            { name: 'R8', size: 1, ldr: true, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_L8,            { name: 'L8', size: 1, ldr: true }],
     [PIXELFORMAT_LA8,           { name: 'LA8', size: 2, ldr: true }],
-    [PIXELFORMAT_RG8,           { name: 'RG8', size: 2, ldr: true, msaa: true }],
+    [PIXELFORMAT_RG8,           { name: 'RG8', size: 2, ldr: true, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2, ldr: true }],
     [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2, ldr: true }],
     [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2, ldr: true }],
-    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4, ldr: true, msaa: true }],
-    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4, ldr: true, srgbFormat: PIXELFORMAT_SRGBA8, msaa: true }],
-    [PIXELFORMAT_R16F,          { name: 'R16F', size: 2, msaa: true }],
-    [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4, msaa: true }],
+    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4, ldr: true, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4, ldr: true, srgbFormat: PIXELFORMAT_SRGBA8, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_R16F,          { name: 'R16F', size: 2, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
-    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8, msaa: true }],
+    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
     [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
     [PIXELFORMAT_R32F,          { name: 'R32F', size: 4, msaa: true }],
@@ -1090,16 +1090,16 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_RGB9E5,        { name: 'RGB9E5', size: 4 }],
     [PIXELFORMAT_RG8S,          { name: 'RG8S', size: 2 }],
     [PIXELFORMAT_RGBA8S,        { name: 'RGBA8S', size: 4 }],
-    [PIXELFORMAT_RGB10A2,       { name: 'RGB10A2', size: 4, msaa: true }],
+    [PIXELFORMAT_RGB10A2,       { name: 'RGB10A2', size: 4, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_RGB10A2U,      { name: 'RGB10A2U', size: 4, isUint: true, msaa: true }],
     [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4, msaa: true }],
     [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2, msaa: true }],
     [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4, msaa: true }],
-    [PIXELFORMAT_111110F,       { name: '111110F', size: 4, msaa: true }],
+    [PIXELFORMAT_111110F,       { name: '111110F', size: 4, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
-    [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true, msaa: true }],
-    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true, msaa: true }],
-    [PIXELFORMAT_SBGRA8,        { name: 'SBGRA8', size: 4, ldr: true, srgb: true, msaa: true }],
+    [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_SBGRA8,        { name: 'SBGRA8', size: 4, ldr: true, srgb: true, msaa: true, msaaResolve: true }],
 
     // compressed formats
     [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_DXT1_SRGB }],
@@ -1182,6 +1182,21 @@ export const isIntegerPixelFormat = (format) => {
  */
 export const isMultisampleCapablePixelFormat = (format) => {
     return pixelFormatInfo.get(format)?.msaa === true;
+};
+
+/**
+ * Returns true if a multisampled texture of the specified pixel format can be hardware-resolved
+ * on WebGPU (per the WebGPU texture format capabilities table). This is a narrower capability
+ * than {@link isMultisampleCapablePixelFormat}: integer formats and {@link PIXELFORMAT_R32F} can
+ * be multisampled but not resolved (read their samples in a shader instead), and depth formats
+ * have no hardware resolve at all.
+ *
+ * @param {number} format - The pixel format.
+ * @returns {boolean} True if the format supports hardware resolve.
+ * @ignore
+ */
+export const isMultisampleResolveCapablePixelFormat = (format) => {
+    return pixelFormatInfo.get(format)?.msaaResolve === true;
 };
 
 // Cached shader type objects

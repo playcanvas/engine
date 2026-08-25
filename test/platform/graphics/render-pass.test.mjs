@@ -108,4 +108,59 @@ describe('RenderPass', function () {
 
     });
 
+    describe('#allocateAttachments: explicit multisampled attachments', function () {
+
+        const createMsTexture = (name, format = PIXELFORMAT_RGBA8) => {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            return new Texture(device, { name, width: 4, height: 4, format, samples: 4 });
+        };
+
+        it('stores the samples when there is no resolve buffer', function () {
+            const rt = new RenderTarget({ colorBuffer: createMsTexture('ms'), depth: false });
+            const pass = new RenderPass(device);
+            pass.init(rt);
+
+            expect(pass.samples).to.equal(4);
+            expect(pass.colorArrayOps[0].store).to.equal(true);
+            expect(pass.colorArrayOps[0].resolve).to.equal(false);
+
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('resolves and discards the samples when a resolve buffer is assigned', function () {
+            const resolve = new Texture(device, { name: 'resolve', width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false });
+            const rt = new RenderTarget({ colorBuffer: createMsTexture('ms2'), resolveBuffer: resolve, depth: false });
+            const pass = new RenderPass(device);
+            pass.init(rt);
+
+            expect(pass.colorArrayOps[0].store).to.equal(false);
+            expect(pass.colorArrayOps[0].resolve).to.equal(true);
+
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('applies the defaults per attachment', function () {
+            const resolve = new Texture(device, { name: 'resolve0', width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false });
+            const rt = new RenderTarget({
+                colorBuffers: [createMsTexture('msA'), createMsTexture('msB')],
+                resolveBuffers: [resolve, null],
+                depth: false
+            });
+            const pass = new RenderPass(device);
+            pass.init(rt);
+
+            expect(pass.colorArrayOps[0].store).to.equal(false);
+            expect(pass.colorArrayOps[0].resolve).to.equal(true);
+            expect(pass.colorArrayOps[1].store).to.equal(true);
+            expect(pass.colorArrayOps[1].resolve).to.equal(false);
+
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+    });
+
 });
