@@ -267,15 +267,24 @@ class RenderPass extends FramePass {
             const colorOps = new ColorAttachmentOps();
             this.colorArrayOps[i] = colorOps;
 
+            const colorBuffer = rt?._colorBuffers?.[i];
+
             // if rendering to single-sampled buffer, this buffer needs to be stored
             if (this.samples === 1) {
                 colorOps.store = true;
                 colorOps.resolve = false;
+            } else if (colorBuffer?.samples > 1) {
+                // explicit multisampled attachment: with a resolve buffer, the hardware resolve is
+                // the pass output and the samples are discarded (matching the implicit multisampled
+                // path); without one, the samples are the output and must be stored to be read in a
+                // shader using textureLoad
+                const resolve = !!rt.getResolveBuffer(i);
+                colorOps.resolve = resolve;
+                colorOps.store = !resolve;
             }
 
             // if render target needs mipmaps
-            const colorBuffer = this.renderTarget?._colorBuffers?.[i];
-            if (this.renderTarget?.mipmaps && colorBuffer?.mipmaps) {
+            if (rt?.mipmaps && colorBuffer?.mipmaps) {
                 const intFormat = isIntegerPixelFormat(colorBuffer._format);
                 colorOps.genMipmaps = !intFormat;  // no automatic mipmap generation for integer formats
             }

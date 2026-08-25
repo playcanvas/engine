@@ -38,9 +38,19 @@ class ColorAttachment {
      */
     transient = false;
 
+    /**
+     * View of the resolve buffer of an explicit multisampled attachment, used to attach / detach
+     * the resolve target based on the per-pass resolve flag. The underlying texture is user-owned.
+     *
+     * @type {GPUTextureView|undefined}
+     * @private
+     */
+    resolveView;
+
     destroy(device) {
         device.deferDestroy(this.multisampledBuffer);
         this.multisampledBuffer = null;
+        this.resolveView = undefined;
     }
 }
 
@@ -473,6 +483,30 @@ class WebgpuRenderTarget {
         // multi-sampled color buffer
         if (samples > 1) {
 
+            // explicit multisampled attachment - the color buffer is itself a multisampled
+            // texture, rendered into directly; the optional per-attachment resolve buffer becomes
+            // the resolve target. The user texture is not owned by this render target.
+            if (!this.isBackbuffer && colorBuffer?.samples > 1) {
+
+                this.setColorAttachment(index, undefined, colorBuffer.impl.format);
+
+                colorAttachment.view = colorView;
+                DebugHelper.setLabel(colorAttachment.view, `${renderTarget.name}.msColorView`);
+
+                const resolveBuffer = renderTarget.getResolveBuffer(index);
+                if (resolveBuffer) {
+                    const resolveView = resolveBuffer.impl.createView({ mipLevelCount: 1, baseMipLevel: 0 });
+                    DebugHelper.setLabel(resolveView, `${renderTarget.name}.resolveView`);
+
+                    // stored on the attachment info so setupForRenderPass can honor the per-pass
+                    // resolve flag by attaching / detaching it
+                    this.colorAttachments[index].resolveView = resolveView;
+                    colorAttachment.resolveTarget = resolveView;
+                }
+
+                return colorAttachment;
+            }
+
             // Main framebuffer: MSAA texture format must match the attachment view format used for
             // resolve; WebgpuGraphicsDevice#frameStart sets that on this impl via setColorAttachment
             // before the first init.
@@ -545,6 +579,19 @@ class WebgpuRenderTarget {
             colorAttachment.clearValue = srgb ? colorOps.clearValueLinear : colorOps.clearValue;
             colorAttachment.loadOp = colorOps.clear ? 'clear' : 'load';
             colorAttachment.storeOp = colorOps.store ? 'store' : 'discard';
+
+            // explicit multisampled attachment with a resolve buffer - honor the per-pass resolve
+            // flag by attaching / detaching the resolve target
+            if (this.colorAttachments[i]?.resolveView) {
+                colorAttachment.resolveTarget = colorOps.resolve ? this.colorAttachments[i].resolveView : undefined;
+            }
+
+            // a multisampled attachment that is neither stored nor resolved produces no observable
+            // output - rendering into the void. This cannot happen with default ops, only when
+            // they are overridden.
+            if (!this.isBackbuffer && renderTarget.samples > 1 && colorAttachment.storeOp === 'discard' && !colorAttachment.resolveTarget) {
+                Debug.warnOnce(`Render target '${renderTarget.name}': multisampled color attachment ${i} is neither stored nor resolved, the rendered output is discarded.`);
+            }
 
             // a transient (memoryless) attachment must be cleared on load and discarded on store.
             // The frame-graph store-on-no-clear optimization can flip these post-authoring (e.g. a

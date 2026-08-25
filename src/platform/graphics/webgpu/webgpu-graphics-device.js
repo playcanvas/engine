@@ -1587,6 +1587,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         if (color) {
 
+            // WebGPU only allows copies between textures with equal sample counts. A copy between
+            // a multisampled and a single-sampled color buffer is not a copy - use a resolve.
+            const srcSamples = (source ? source.colorBuffer?.samples : 1) ?? 1;
+            const dstSamples = (dest ? dest.colorBuffer?.samples : 1) ?? 1;
+            if (srcSamples !== dstSamples) {
+                Debug.errorOnce(`copyRenderTarget: cannot copy between color buffers with different sample counts (source '${source?.name}' has ${srcSamples}, destination '${dest?.name}' has ${dstSamples}). Use a resolve instead of a copy.`);
+                DebugGraphics.popGpuMarker(this);
+                return false;
+            }
+
             // read from supplied render target, or from the framebuffer
             /** @type {GPUTexelCopyTextureInfo} */
             const copySrc = {
