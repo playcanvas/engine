@@ -47,6 +47,12 @@ const MARKER = '@@@';
 // matches vertex of fragment entry function, extracts the input name. Ends at the start of the function body '{'.
 const ENTRY_FUNCTION = /(@vertex|@fragment)\s*fn\s+\w+\s*\(\s*(\w+)\s*:[\s\S]*?\{/;
 
+// matches an `output.fragDepth =` style assignment, ignoring whitespace before the = sign
+const FRAG_DEPTH_ASSIGN = /\.fragDepth\s*=/;
+
+// matches an `output.sampleMask =` style assignment (and not a `==` comparison)
+const SAMPLE_MASK_ASSIGN = /\.sampleMask\s*=(?!=)/;
+
 // Tables describing optional WGSL built-in inputs that the engine emits on demand. Each entry
 // maps a public private global (pcXxx) and a struct field (`<input>.xxx`) to the underlying
 // `@builtin(...)` declaration. Detection is data-driven so adding a new built-in is a one-row
@@ -59,6 +65,7 @@ const FRAGMENT_BUILTINS = [
     { wgslName: 'position', wgslType: 'vec4f', wgslBuiltin: 'position', pcName: 'pcPosition', isFallback: true },
     { wgslName: 'frontFacing', wgslType: 'bool', wgslBuiltin: 'front_facing', pcName: 'pcFrontFacing' },
     { wgslName: 'sampleIndex', wgslType: 'u32', wgslBuiltin: 'sample_index', pcName: 'pcSampleIndex' },
+    { wgslName: 'sampleMask', wgslType: 'u32', wgslBuiltin: 'sample_mask', pcName: 'pcSampleMask' },
     { wgslName: 'primitiveIndex', wgslType: 'u32', wgslBuiltin: 'primitive_index', pcName: 'pcPrimitiveIndex', requiresFeature: 'supportsPrimitiveIndex' }
 ];
 
@@ -1020,10 +1027,18 @@ class WebgpuShaderProcessorWGSL {
             }
         }
 
-        // find if the src contains `.fragDepth =`, ignoring whitespace before = sign
-        const needsFragDepth = src.search(/\.fragDepth\s*=/) !== -1;
+        // find if the src writes to `output.fragDepth`
+        const needsFragDepth = src.search(FRAG_DEPTH_ASSIGN) !== -1;
         if (needsFragDepth) {
-            structCode += '    @builtin(frag_depth) fragDepth : f32\n';
+            structCode += '    @builtin(frag_depth) fragDepth : f32,\n';
+        }
+
+        // find if the src writes to `output.sampleMask`. The written mask is AND-ed with the
+        // coverage mask by the GPU, allowing the shader to discard individual samples of a
+        // multisampled render target.
+        const needsSampleMask = src.search(SAMPLE_MASK_ASSIGN) !== -1;
+        if (needsSampleMask) {
+            structCode += '    @builtin(sample_mask) sampleMask : u32,\n';
         }
 
         return `${structCode}};\n`;
