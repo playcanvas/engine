@@ -279,6 +279,16 @@ describe('RenderTarget', function () {
             rt.destroy();
         });
 
+        it('asserts on mixed sample counts when the first attachment is single-sampled', function () {
+            const rt = new RenderTarget({ name: 'ms-mixed-reversed', colorBuffers: [create1x(), createMs()], depth: false });
+            expect(errors.some(m => m.includes('same sample count'))).to.be.true;
+
+            // the multisampled attachment still selects the explicit mode and its sample count
+            expect(rt.samples).to.equal(4);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
         it('asserts on a depth format color buffer', function () {
             const ms = createMs({ format: PIXELFORMAT_DEPTH });
             const rt = new RenderTarget({ name: 'ms-depth-color', colorBuffer: ms, depth: false });

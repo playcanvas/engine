@@ -325,15 +325,18 @@ class RenderTarget {
 
         // samples. When the provided color buffers are multisampled textures (explicit
         // multisampled attachments, WebGPU only), the render target renders directly into them
-        // and the sample count is inferred from the textures.
+        // and the sample count is inferred from the textures. Any multisampled attachment selects
+        // the explicit mode, so that mixed sample counts are caught by the validation below
+        // regardless of the attachment order.
         const { maxSamples } = this._device;
-        const firstColorBuffer = options.colorBuffer ?? options.colorBuffers?.[0];
-        const explicitMsaa = (firstColorBuffer?.samples ?? 1) > 1;
+        const suppliedColorBuffers = options.colorBuffers ?? (options.colorBuffer ? [options.colorBuffer] : undefined);
+        const msColorBuffer = suppliedColorBuffers?.find(colorBuffer => colorBuffer?.samples > 1);
+        const explicitMsaa = !!msColorBuffer;
         if (explicitMsaa) {
-            this._samples = firstColorBuffer.samples;
+            this._samples = msColorBuffer.samples;
             Debug.call(() => {
                 if (options.samples !== undefined && options.samples !== this._samples) {
-                    Debug.warnOnce(`RenderTarget '${options.name ?? firstColorBuffer.name}': the samples option (${options.samples}) does not match the multisampled color buffer (${this._samples} samples); using the color buffer's sample count.`);
+                    Debug.warnOnce(`RenderTarget '${options.name ?? msColorBuffer.name}': the samples option (${options.samples}) does not match the multisampled color buffer (${this._samples} samples); using the color buffer's sample count.`);
                 }
             });
         } else {
