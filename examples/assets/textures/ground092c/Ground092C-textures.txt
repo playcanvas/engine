@@ -1,0 +1,17 @@
+Texture Information:
+* title:	Ground 092 C
+* source:	https://ambientcg.com/view?id=Ground092C
+* full set:	https://ambientcg.com/get?file=Ground092C_1K-PNG.zip
+
+Texture License:
+* All ambientCG assets are released under a CC0 1.0 Universal creative commons license,
+  which makes them free to use without attribution, even commercially.
+
+Notes:
+* Converted from the 1K PNG set to webp, which came out at 0.7MB against 3.3MB for the
+  equivalent JPG maps. Quality 95 for the normal and height maps, as compression artifacts
+  in those show up as shading and marching errors, and quality 90 for the rest.
+* The set also ships a DirectX convention normal map, which is not included here - the
+  engine expects the OpenGL convention one (green pointing up), which is NormalGL.
+* Higher resolutions, and the source .blend / .usdc / .mtlx files, are available from the
+  page above if more of the set is ever needed.
