@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, isSrgbPixelFormat, isMultisampleResolveCapablePixelFormat } from './constants.js';
+import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, isSrgbPixelFormat, isMultisampleResolveCapablePixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { TextureUtils } from './texture-utils.js';
@@ -165,6 +165,12 @@ class RenderTarget {
     autoResolve;
 
     /**
+     * @type {string}
+     * @private
+     */
+    _depthResolveMode = DEPTHRESOLVE_MIN;
+
+    /**
      * @type {number}
      * @private
      */
@@ -215,6 +221,19 @@ class RenderTarget {
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA
      * resolve after rendering to this RT (see {@link resolve}). Defaults to true.
+     * @param {string} [options.depthResolveMode] - How the samples of the multisampled depth
+     * buffer are resolved into a single depth value, whenever the depth of this render target is
+     * resolved by a shader-based resolve (WebGPU only) - the depth grab pass (`sceneDepthMap`), a
+     * depth {@link copy}, or the automatic resolve into a provided `depthBuffer`. Can be:
+     *
+     * - {@link DEPTHRESOLVE_MIN}: the minimum sample value - with a standard depth buffer this
+     * selects the nearest surface, a conservative and stable choice for depth-consuming effects.
+     * - {@link DEPTHRESOLVE_MAX}: the maximum sample value - the farthest surface.
+     * - {@link DEPTHRESOLVE_SAMPLE0}: the value of the sample at index 0.
+     *
+     * Defaults to {@link DEPTHRESOLVE_MIN}. Ignored on WebGL2, where the sample selection of the
+     * depth resolve is defined by the implementation. Can also be changed at any time using the
+     * {@link depthResolveMode} property.
      * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a
      * rendering surface. This can be a multisampled texture (a texture created with `samples` > 1,
      * WebGPU only), in which case the render target renders directly into its samples, the sample
@@ -416,6 +435,8 @@ class RenderTarget {
         if (!this.name) {
             this.name = 'Untitled';
         }
+
+        this.depthResolveMode = options.depthResolveMode ?? DEPTHRESOLVE_MIN;
 
         // validate explicit multisampled attachments and their resolve buffers
         Debug.call(() => {
@@ -777,6 +798,29 @@ class RenderTarget {
      */
     get samples() {
         return this._samples;
+    }
+
+    /**
+     * Sets how the samples of the multisampled depth buffer are resolved into a single depth
+     * value (WebGPU only). Can be changed at any time - the mode is used at the time the depth is
+     * resolved. See the `depthResolveMode` constructor option.
+     *
+     * @type {string}
+     */
+    set depthResolveMode(value) {
+        Debug.assert(value === DEPTHRESOLVE_MIN || value === DEPTHRESOLVE_MAX || value === DEPTHRESOLVE_SAMPLE0,
+            `RenderTarget '${this.name}': invalid depthResolveMode '${value}'.`, this);
+        this._depthResolveMode = value;
+    }
+
+    /**
+     * Gets how the samples of the multisampled depth buffer are resolved into a single depth
+     * value.
+     *
+     * @type {string}
+     */
+    get depthResolveMode() {
+        return this._depthResolveMode;
     }
 
     /**

@@ -389,6 +389,33 @@ export const RENDERTARGET_ORIGIN_BOTTOM = 'bottom';
 export const RENDERTARGET_ORIGIN_NATIVE = 'native';
 
 /**
+ * The depth value of the multisampled depth buffer is resolved by taking its sample at index 0.
+ * See {@link RenderTarget#depthResolveMode}.
+ *
+ * @category Graphics
+ */
+export const DEPTHRESOLVE_SAMPLE0 = 'sample0';
+
+/**
+ * The depth value of the multisampled depth buffer is resolved by taking the minimum value of all
+ * samples - with a standard depth buffer this selects the nearest surface, which is a conservative
+ * and stable choice for depth-consuming effects. This is the default. See
+ * {@link RenderTarget#depthResolveMode}.
+ *
+ * @category Graphics
+ */
+export const DEPTHRESOLVE_MIN = 'min';
+
+/**
+ * The depth value of the multisampled depth buffer is resolved by taking the maximum value of all
+ * samples - with a standard depth buffer this selects the farthest surface. See
+ * {@link RenderTarget#depthResolveMode}.
+ *
+ * @category Graphics
+ */
+export const DEPTHRESOLVE_MAX = 'max';
+
+/**
  * No triangles are culled.
  *
  * @category Graphics
