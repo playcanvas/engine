@@ -11,6 +11,7 @@ import { DynamicBindGroup } from '../bind-group.js';
 import { UniformBuffer } from '../uniform-buffer.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { DepthState } from '../depth-state.js';
+import webgpuClear from '../shader-chunks/frag/webgpu-clear.js';
 
 const primitive = {
     type: PRIMITIVE_TRISTRIP,
@@ -33,42 +34,11 @@ class WebgpuClearRenderer {
     constructor(device) {
 
         // shader that can write out color and depth values
-        const code = `
-
-            struct ub_mesh {
-                color : vec4f,
-                depth: f32
-            }
-
-            @group(2) @binding(0) var<uniform> ubMesh : ub_mesh;
-
-            var<private> pos : array<vec2f, 4> = array<vec2f, 4>(
-                vec2(-1.0, 1.0), vec2(1.0, 1.0),
-                vec2(-1.0, -1.0), vec2(1.0, -1.0)
-            );
-
-            struct VertexOutput {
-                @builtin(position) position : vec4f
-            }
-
-            @vertex
-            fn vertexMain(@builtin(vertex_index) vertexIndex : u32) -> VertexOutput {
-                var output : VertexOutput;
-                output.position = vec4(pos[vertexIndex], ubMesh.depth, 1.0);
-                return output;
-            }
-
-            @fragment
-            fn fragmentMain() -> @location(0) vec4f {
-                return ubMesh.color;
-            }
-        `;
-
         this.shader = new Shader(device, {
             name: 'WebGPUClearRendererShader',
             shaderLanguage: SHADERLANGUAGE_WGSL,
-            vshader: code,
-            fshader: code
+            vshader: webgpuClear,
+            fshader: webgpuClear
         });
 
         // uniforms
