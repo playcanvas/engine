@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
+import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -323,6 +323,30 @@ describe('RenderTarget', function () {
             expect(resolve.height).to.equal(8);
             rt.destroyTextureBuffers();
             rt.destroy();
+        });
+    });
+
+    describe('#depthResolveMode', function () {
+
+        it('defaults to DEPTHRESOLVE_MIN', function () {
+            const rt = createRenderTarget({ samples: 4 });
+            expect(rt.depthResolveMode).to.equal(DEPTHRESOLVE_MIN);
+            destroyRenderTarget(rt);
+        });
+
+        it('is set by the constructor option', function () {
+            const rt = createRenderTarget({ samples: 4, depthResolveMode: DEPTHRESOLVE_SAMPLE0 });
+            expect(rt.depthResolveMode).to.equal(DEPTHRESOLVE_SAMPLE0);
+            destroyRenderTarget(rt);
+        });
+
+        it('is mutable at any time', function () {
+            const rt = createRenderTarget({ samples: 4 });
+            rt.depthResolveMode = DEPTHRESOLVE_MAX;
+            expect(rt.depthResolveMode).to.equal(DEPTHRESOLVE_MAX);
+            rt.depthResolveMode = DEPTHRESOLVE_MIN;
+            expect(rt.depthResolveMode).to.equal(DEPTHRESOLVE_MIN);
+            destroyRenderTarget(rt);
         });
     });
 });

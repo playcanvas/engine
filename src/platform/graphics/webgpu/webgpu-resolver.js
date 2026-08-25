@@ -1,7 +1,8 @@
 import { Shader } from '../shader.js';
-import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, SHADERLANGUAGE_WGSL } from '../constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { DebugGraphics } from '../debug-graphics.js';
+import webgpuDepthResolve from '../shader-chunks/frag/webgpu-depth-resolve.js';
 
 /**
  * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
@@ -18,82 +19,80 @@ class WebgpuResolver {
     device;
 
     /**
-     * Cache of render pipelines for each texture format, to avoid their per frame creation.
+     * Cache of render pipelines for each texture format and depth resolve mode, to avoid their
+     * per frame creation.
      *
-     * @type {Map<GPUTextureFormat, GPURenderPipeline>}
+     * @type {Map<string, GPURenderPipeline>}
      * @private
      */
     pipelineCache = new Map();
 
+    /**
+     * Cache of shaders for each depth resolve mode (DEPTHRESOLVE_***).
+     *
+     * @type {Map<string, Shader>}
+     * @private
+     */
+    shaderCache = new Map();
+
     constructor(device) {
         this.device = device;
-
-        // Shader that renders a fullscreen textured quad and copies the depth value from sample index 0
-        // TODO: could handle all sample indices and use min/max as needed
-        const code = `
- 
-            var<private> pos : array<vec2f, 4> = array<vec2f, 4>(
-                vec2(-1.0, 1.0), vec2(1.0, 1.0), vec2(-1.0, -1.0), vec2(1.0, -1.0)
-            );
-
-            struct VertexOutput {
-                @builtin(position) position : vec4f,
-            };
-
-            @vertex
-            fn vertexMain(@builtin(vertex_index) vertexIndex : u32) -> VertexOutput {
-              var output : VertexOutput;
-              output.position = vec4f(pos[vertexIndex], 0, 1);
-              return output;
-            }
-
-            @group(0) @binding(0) var img : texture_depth_multisampled_2d;
-
-            @fragment
-            fn fragmentMain(@builtin(position) fragColor: vec4f) -> @location(0) vec4f {
-                // load th depth value from sample index 0
-                var depth = textureLoad(img, vec2i(fragColor.xy), 0u);
-                return vec4f(depth, 0.0, 0.0, 0.0);
-            }
-        `;
-
-        this.shader = new Shader(device, {
-            name: 'WebGPUResolverDepthShader',
-            shaderLanguage: SHADERLANGUAGE_WGSL,
-            vshader: code,
-            fshader: code
-        });
     }
 
     destroy() {
-        this.shader.destroy();
-        this.shader = null;
+        this.shaderCache.forEach(shader => shader.destroy());
+        this.shaderCache = null;
         this.pipelineCache = null;
     }
 
     /**
-     * @param {GPUTextureFormat} format - Texture format.
-     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @param {string} mode - The depth resolve mode (DEPTHRESOLVE_***).
+     * @returns {Shader} Shader for the given resolve mode.
      * @private
      */
-    getPipeline(format) {
-        let pipeline = this.pipelineCache.get(format);
+    getShader(mode) {
+        Debug.assert(mode === DEPTHRESOLVE_SAMPLE0 || mode === DEPTHRESOLVE_MIN || mode === DEPTHRESOLVE_MAX, `Invalid depth resolve mode '${mode}'`);
+        let shader = this.shaderCache.get(mode);
+        if (!shader) {
+            // the resolve mode is selected by a define, handled by the shader preprocessor
+            const code = `#define DEPTH_RESOLVE_${mode.toUpperCase()}\n${webgpuDepthResolve}`;
+            shader = new Shader(this.device, {
+                name: `WebGPUResolverDepthShader-${mode}`,
+                shaderLanguage: SHADERLANGUAGE_WGSL,
+                vshader: code,
+                fshader: code
+            });
+            this.shaderCache.set(mode, shader);
+        }
+        return shader;
+    }
+
+    /**
+     * @param {GPUTextureFormat} format - Texture format.
+     * @param {string} mode - The depth resolve mode (DEPTHRESOLVE_***).
+     * @returns {GPURenderPipeline} Pipeline for the given format and resolve mode.
+     * @private
+     */
+    getPipeline(format, mode) {
+        const key = `${format}-${mode}`;
+        let pipeline = this.pipelineCache.get(key);
         if (!pipeline) {
-            pipeline = this.createPipeline(format);
-            this.pipelineCache.set(format, pipeline);
+            pipeline = this.createPipeline(format, mode);
+            this.pipelineCache.set(key, pipeline);
         }
         return pipeline;
     }
 
     /**
      * @param {GPUTextureFormat} format - Texture format.
-     * @returns {GPURenderPipeline} Pipeline for the given format.
+     * @param {string} mode - The depth resolve mode (DEPTHRESOLVE_***).
+     * @returns {GPURenderPipeline} Pipeline for the given format and resolve mode.
      * @private
      */
-    createPipeline(format) {
+    createPipeline(format, mode) {
 
         /** @type {WebgpuShader} */
-        const webgpuShader = this.shader.impl;
+        const webgpuShader = this.getShader(mode).impl;
 
         const pipeline = this.device.wgpu.createRenderPipeline({
             layout: 'auto',
@@ -112,7 +111,7 @@ class WebgpuResolver {
                 topology: 'triangle-strip'
             }
         });
-        DebugHelper.setLabel(pipeline, `RenderPipeline-DepthResolver-${format}`);
+        DebugHelper.setLabel(pipeline, `RenderPipeline-DepthResolver-${format}-${mode}`);
         return pipeline;
     }
 
@@ -120,9 +119,11 @@ class WebgpuResolver {
      * @param {GPUCommandEncoder} commandEncoder - Command encoder to use for the resolve.
      * @param {GPUTexture} sourceTexture - Source multi-sampled depth texture to resolve.
      * @param {GPUTexture} destinationTexture - Destination depth texture to resolve to.
+     * @param {string} [mode] - The depth resolve mode (DEPTHRESOLVE_***). Defaults to
+     * {@link DEPTHRESOLVE_MIN}.
      * @private
      */
-    resolveDepth(commandEncoder, sourceTexture, destinationTexture) {
+    resolveDepth(commandEncoder, sourceTexture, destinationTexture, mode = DEPTHRESOLVE_MIN) {
 
         Debug.assert(sourceTexture.sampleCount > 1);
         Debug.assert(destinationTexture.sampleCount === 1);
@@ -131,8 +132,8 @@ class WebgpuResolver {
         const device = this.device;
         const wgpu = device.wgpu;
 
-        // pipeline depends on the format
-        const pipeline = this.getPipeline(destinationTexture.format);
+        // pipeline depends on the format and the resolve mode
+        const pipeline = this.getPipeline(destinationTexture.format, mode);
 
         DebugGraphics.pushGpuMarker(device, 'DEPTH_RESOLVE-RENDERER');
 

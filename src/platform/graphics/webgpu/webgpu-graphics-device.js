@@ -1203,7 +1203,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     if (depthAttachment?.transient) {
                         Debug.errorOnce(`Depth resolve is not possible on render target '${target.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth resolve.`);
                     } else if (depthAttachment && destTexture) {
-                        this.resolver.resolveDepth(this.commandEncoder, depthAttachment.multisampledDepthBuffer, destTexture);
+                        this.resolver.resolveDepth(this.commandEncoder, depthAttachment.multisampledDepthBuffer, destTexture, target.depthResolveMode);
                     }
                 }
             }
@@ -1629,14 +1629,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 return false;
             }
 
-            const sourceTexture = sourceRT.impl.depthAttachment.depthTexture;
+            // internally allocated depth uses depthTexture (multisampled when samples > 1); a
+            // user-provided depth buffer with samples > 1 stores its multisampled depth separately
+            const sourceAttachment = sourceRT.impl.depthAttachment;
+            const sourceTexture = sourceAttachment.depthTexture ?? sourceAttachment.multisampledDepthBuffer;
             const sourceMipLevel = sourceRT.mipLevel;
 
             if (sourceRT.samples > 1) {
 
-                // resolve the depth to a color buffer of destination render target
+                // resolve the depth to a color buffer of destination render target, using the
+                // resolve mode of the source render target
                 const destTexture = dest.colorBuffer.impl.gpuTexture;
-                this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture);
+                this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture, sourceRT.depthResolveMode);
 
             } else {
 
