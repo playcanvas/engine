@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 
+import { JsonStandardMaterialParser } from '../../../src/framework/parsers/material/json-standard-material.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
@@ -7,6 +8,7 @@ import {
     SHADER_FORWARD, SHADER_PREPASS, SHADER_SHADOW,
     SHADERDEF_TANGENTS, SHADERDEF_UV0
 } from '../../../src/scene/constants.js';
+import { StandardMaterialValidator } from '../../../src/scene/materials/standard-material-validator.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -168,6 +170,21 @@ describe('StandardMaterial parallax mapping', function () {
         const material = createMaterial({ parallaxMode: PARALLAX_OCCLUSION, parallaxShadowSamples: 12 });
         expect(material.clone().parallaxShadowSamples).to.equal(12);
         expect(new StandardMaterial().parallaxShadowSamples).to.equal(0);
+    });
+
+    it('accepts the self shadow tap count from a material asset', function () {
+        // a public property has to be in the parameter registry as well: without it the validator
+        // marks the whole material invalid and warns, and the parser only assigns the value through
+        // its untyped fallback, so it never gets number validation
+        const validator = new StandardMaterialValidator();
+        const data = { parallaxMode: 'occlusion', parallaxShadowSamples: 8 };
+        validator.validate(data);
+        expect(validator.valid).to.equal(true);
+        expect(data.parallaxShadowSamples).to.equal(8);
+
+        const material = new StandardMaterial();
+        new JsonStandardMaterialParser().initialize(material, data);
+        expect(material.parallaxShadowSamples).to.equal(8);
     });
 
     it('evaluates the parallax offset before it is used by any other map', function () {

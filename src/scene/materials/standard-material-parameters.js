@@ -89,6 +89,7 @@ const standardMaterialParameterTypes = {
     heightMapFactor: 'number',
     parallaxMode: 'string',
     parallaxSamples: 'number',
+    parallaxShadowSamples: 'number',
 
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
