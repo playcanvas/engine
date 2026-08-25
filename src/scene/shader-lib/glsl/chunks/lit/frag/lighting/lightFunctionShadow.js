@@ -31,7 +31,7 @@ export default /* glsl */`
                     #ifdef LIGHT{i}_SHADOW_SAMPLE_ORTHO
                         float distScale = 1.0;
                     #else
-                        float distScale = abs(dot(vPositionW - lightPos, lightDirNorm));
+                        float distScale = abs(dot(worldPosition - lightPos, lightDirNorm));
                     #endif
                     surfacePosition = surfacePosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
                 #endif
