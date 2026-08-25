@@ -315,6 +315,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.dirLightMap && options.litOptions.useSpecular, 'STD_LIGHTMAP_DIR', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
         fDefineSet(true, 'STD_PARALLAX', parallaxNames[options.parallaxMode ?? PARALLAX_OFFSET]);
+        fDefineSet(options.parallaxSelfShadow, 'STD_PARALLAX_SELF_SHADOW', '');
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
         fDefineSet(options.useSpecularColor && (options.litOptions.useSpecular || options.litOptions.useRefraction), 'STD_SPECULAR_CONSTANT', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');

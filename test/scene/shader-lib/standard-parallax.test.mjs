@@ -61,6 +61,7 @@ describe('StandardMaterial parallax mapping', function () {
         material.diffuseMap = texture();
         if (!options.noHeightMap) material.heightMap = texture();
         if (options.parallaxMode) material.parallaxMode = options.parallaxMode;
+        if (options.parallaxShadowSamples !== undefined) material.parallaxShadowSamples = options.parallaxShadowSamples;
         if (options.normalMap) material.normalMap = texture();
         if (options.alphaTest) {
             material.opacityMap = texture();
@@ -90,6 +91,84 @@ describe('StandardMaterial parallax mapping', function () {
         expect(shader.definition.fshader).to.be.a('string');
         return shader.definition.fshader;
     };
+
+    it('marches the height field towards the light only when a tap budget is given', function () {
+        // the tap count doubles as the switch, so zero has to take the march out of the shader
+        // entirely rather than leaving a loop which runs no iterations
+        const off = fragmentSource(createMaterial({ parallaxMode: PARALLAX_OCCLUSION }), SHADER_FORWARD);
+        expect(off).to.not.include('getParallaxSelfShadow');
+        expect(off).to.not.include('material_parallaxShadowSamples');
+
+        const on = fragmentSource(
+            createMaterial({ parallaxMode: PARALLAX_OCCLUSION, parallaxShadowSamples: 8 }),
+            SHADER_FORWARD
+        );
+        expect(on).to.include('getParallaxSelfShadow');
+        expect(on).to.include('material_parallaxShadowSamples');
+    });
+
+    it('does not march towards the light in offset mode, which has no hit point to march from', function () {
+        const source = fragmentSource(
+            createMaterial({ parallaxMode: PARALLAX_OFFSET, parallaxShadowSamples: 8 }),
+            SHADER_FORWARD
+        );
+        expect(source).to.not.include('getParallaxSelfShadow');
+    });
+
+    it('carries the hit depth and mip level to the self shadow march', function () {
+        // the march runs per light, after the front end has finished, so what it needs from the view
+        // march has to be handed over in globals rather than recomputed
+        const source = fragmentSource(
+            createMaterial({ parallaxMode: PARALLAX_OCCLUSION, parallaxShadowSamples: 8 }),
+            SHADER_FORWARD
+        );
+        expect(source).to.include('dParallaxHitDepth');
+        expect(source).to.include('dParallaxLod');
+        expect(functionBody(source, 'getParallax')).to.include('dParallaxHitDepth = ');
+    });
+
+    it('takes every self shadow tap at an explicit mip level', function () {
+        // the march is non-uniform control flow, where an implicit derivative is undefined in GLSL
+        // and rejected outright by WGSL - which silently removed every parallax surface once
+        const source = fragmentSource(
+            createMaterial({ parallaxMode: PARALLAX_OCCLUSION, parallaxShadowSamples: 8 }),
+            SHADER_FORWARD
+        );
+        const start = source.indexOf('float getParallaxSelfShadow(');
+        expect(start).to.be.above(-1);
+        const body = source.substring(start, source.indexOf('\n    }', start));
+        expect(body).to.include('texture2DLod(');
+        expect(body).to.not.include('texture2DBias(');
+        expect(body).to.not.match(/dFdx|dFdy/);
+    });
+
+    it('rebuilds the shader only when the self shadow tap count crosses zero', function () {
+        // the count doubles as the switch, so zero is the only value which changes the generated
+        // shader - the generic number property rule invalidates on 1 as well, which would rebuild
+        // for nothing every time the count is dragged past it
+        const material = createMaterial({ parallaxMode: PARALLAX_OCCLUSION, parallaxShadowSamples: 8 });
+        expect(material._dirtyShader).to.equal(false);
+
+        material.parallaxShadowSamples = 16;
+        expect(material._dirtyShader).to.equal(false);
+
+        material.parallaxShadowSamples = 1;
+        expect(material._dirtyShader).to.equal(false);
+
+        material.parallaxShadowSamples = 0;
+        expect(material._dirtyShader).to.equal(true);
+
+        material.update();
+        material.parallaxShadowSamples = 4;
+        expect(material._dirtyShader).to.equal(true);
+    });
+
+    it('carries the self shadow tap count through a clone', function () {
+        // the property is declared by hand, so this is what keeps it inside the reset and copy loops
+        const material = createMaterial({ parallaxMode: PARALLAX_OCCLUSION, parallaxShadowSamples: 12 });
+        expect(material.clone().parallaxShadowSamples).to.equal(12);
+        expect(new StandardMaterial().parallaxShadowSamples).to.equal(0);
+    });
 
     it('evaluates the parallax offset before it is used by any other map', function () {
         const source = fragmentSource(createMaterial({ normalMap: true, alphaTest: true }), SHADER_FORWARD);

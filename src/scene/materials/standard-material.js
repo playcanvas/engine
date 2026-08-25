@@ -470,6 +470,11 @@ const isBlack = (color) => {
  * when {@link parallaxMode} is {@link PARALLAX_OCCLUSION} (default is 16). Fewer taps are taken as
  * the view direction approaches the surface normal, where the ray barely moves. Has no effect in
  * {@link PARALLAX_OFFSET} mode.
+ * @property {number} parallaxShadowSamples The maximum number of height map taps taken towards each
+ * directional light to shadow the relief against itself, or 0 to disable it (default is 0). The
+ * shadow is soft: the march accumulates how far the height field stands above the light ray and
+ * weights it by distance, so more taps buy a smoother penumbra rather than an earlier exit. Applies
+ * only to directional lights, and only when {@link parallaxMode} is {@link PARALLAX_OCCLUSION}.
  * @property {Texture|null} envAtlas The prefiltered environment lighting atlas (default is null).
  * This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
  * @property {Texture|null} cubeMap The cubic environment map of the material (default is null).
@@ -905,6 +910,10 @@ class StandardMaterial extends Material {
 
             if (this.parallaxMode === PARALLAX_OCCLUSION) {
                 this._setParameter('material_parallaxSamples', this.parallaxSamples);
+
+                if (this.parallaxShadowSamples > 0) {
+                    this._setParameter('material_parallaxShadowSamples', this.parallaxShadowSamples);
+                }
             }
         }
 
@@ -1267,6 +1276,20 @@ function _defineMaterialProps() {
         return material.heightMapFactor * 0.1;
     });
     _defineFloat('parallaxSamples', 16);
+
+    // The self shadow tap count is declared by hand rather than through _defineFloat, because the
+    // generic number property invalidates the shader whenever a value crosses 0 or 1, and only
+    // crossing zero matters here - that is what takes the march out of the shader. Left to the
+    // generic rule, dragging the count from 1 to 2 would rebuild for nothing. Its uniform is set
+    // from updateUniforms rather than through defineUniform, since it only applies in occlusion mode.
+    definePropInternal('parallaxShadowSamples', () => 0, function (value) {
+        if (this._parallaxShadowSamples !== value) {
+            if ((this._parallaxShadowSamples === 0) !== (value === 0)) {
+                this._dirtyShader = true;
+            }
+            this._parallaxShadowSamples = value;
+        }
+    });
     _defineFloat('opacity', 1);
     _defineFloat('alphaFade', 1);
 

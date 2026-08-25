@@ -46,6 +46,14 @@ export default /* glsl */`
         // parallax
         #ifdef STD_HEIGHT_MAP
             vec2 dUvOffset;
+            #ifdef STD_PARALLAX_SELF_SHADOW
+                // The depth the view ray hit the height field at, and the mip level the march read.
+                // Both are carried to the per light self shadow march, which starts where the
+                // shading does. The depth already has the distance fade applied, so it reaches zero
+                // with the fade and the shadow goes with it.
+                float dParallaxHitDepth;
+                float dParallaxLod;
+            #endif
             #ifdef STD_HEIGHT_TEXTURE_ALLOCATE
                 uniform sampler2D texture_heightMap;
             #endif
