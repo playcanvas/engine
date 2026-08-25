@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_RENDER_TARGET_ALLOC } from '../../core/constants.js';
-import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, isSrgbPixelFormat } from './constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, isSrgbPixelFormat, isMultisampleResolveCapablePixelFormat } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { GraphicsDevice } from './graphics-device.js';
 import { TextureUtils } from './texture-utils.js';
@@ -12,7 +12,82 @@ import { TextureUtils } from './texture-utils.js';
 let id = 0;
 
 /**
- * A render target is a rectangular rendering surface.
+ * A render target is a rectangular rendering surface that can be rendered into, instead of the
+ * screen. It wraps one or more color buffer {@link Texture}s and an optional depth (and stencil)
+ * buffer. Once a camera or a render pass has rendered into it, the color texture holds the result
+ * and can be used anywhere a normal texture can - applied to a material to display it in the
+ * scene, or fed into further processing. This underpins effects such as in-world screens, mirrors
+ * and portals, reflections, picking and custom multi-pass pipelines.
+ *
+ * ## Usage
+ * Create a texture to render into, wrap it in a render target and assign it to a camera. The
+ * texture must use a renderable, uncompressed format:
+ *
+ * ```javascript
+ * const texture = new Texture(device, {
+ *     width: 512,
+ *     height: 512,
+ *     format: PIXELFORMAT_SRGBA8,
+ *     mipmaps: false,
+ *     minFilter: FILTER_LINEAR,
+ *     magFilter: FILTER_LINEAR
+ * });
+ *
+ * const renderTarget = new RenderTarget({
+ *     colorBuffer: texture,
+ *     depth: true,
+ *     origin: RENDERTARGET_ORIGIN_TOP
+ * });
+ *
+ * // the camera renders into the texture instead of the screen
+ * cameraEntity.camera.renderTarget = renderTarget;
+ *
+ * // and the texture can be used as any other, for example by a material
+ * material.emissiveMap = texture;
+ * ```
+ *
+ * When the result is sampled as a regular texture like this, specify the `origin` option as
+ * {@link RENDERTARGET_ORIGIN_TOP}, which stores the image in the same orientation on all graphics
+ * APIs. Multiple color buffers can be attached using the `colorBuffers` option, to render into
+ * all of them simultaneously from a single pass (MRT).
+ *
+ * A live example: {@link https://playcanvas.github.io/#/graphics/render-to-texture}
+ *
+ * ## Multisampling (MSAA)
+ * Set the `samples` option to a value greater than 1 to render with hardware anti-aliasing. The
+ * render target internally allocates a multisampled buffer to render into, and automatically
+ * resolves it into the single-sampled `colorBuffer` at the end of a render pass - the color
+ * texture is used the same way as in the single-sampled case.
+ *
+ * ```javascript
+ * const renderTarget = new RenderTarget({ colorBuffer: texture, depth: true, samples: 4 });
+ * ```
+ *
+ * ## Explicit multisampled color buffers and custom resolves (WebGPU)
+ * A multisampled texture (a {@link Texture} created with `samples` greater than 1, WebGPU only)
+ * can be used as the color buffer directly. The render target then renders into its samples, and
+ * the sample count is inferred from the texture. Provide a `resolveBuffer` to get the standard
+ * hardware resolve, or omit it to keep the individual samples: these are then read in a shader
+ * using `textureLoad` on a `texture_multisampled_2d`, typically by a follow-up pass implementing
+ * a custom resolve - an operation the hardware resolve cannot express, such as a tonemapped or
+ * min/max resolve. This is also the only way to use multisampling with formats the hardware
+ * cannot resolve, such as integer formats.
+ *
+ * ```javascript
+ * // a multisampled texture, rendered into directly
+ * const msColor = new Texture(device, {
+ *     width: 512,
+ *     height: 512,
+ *     format: PIXELFORMAT_RGBA16F,
+ *     samples: 4
+ * });
+ *
+ * // renders into the samples of msColor, which are stored (no resolve buffer),
+ * // to be read by a custom resolve pass using textureLoad
+ * const renderTarget = new RenderTarget({ colorBuffer: msColor, depth: true });
+ * ```
+ *
+ * A live example: {@link https://playcanvas.github.io/#/graphics-advanced/custom-msaa-resolve}
  *
  * @category Graphics
  */
@@ -47,6 +122,14 @@ class RenderTarget {
      * @private
      */
     _depthBuffer;
+
+    /**
+     * Per-attachment resolve targets for explicit multisampled color attachments.
+     *
+     * @type {(Texture|null)[]|null}
+     * @private
+     */
+    _resolveBuffers = null;
 
     /**
      * @type {boolean}
@@ -133,9 +216,22 @@ class RenderTarget {
      * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA
      * resolve after rendering to this RT (see {@link resolve}). Defaults to true.
      * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a
-     * rendering surface.
+     * rendering surface. This can be a multisampled texture (a texture created with `samples` > 1,
+     * WebGPU only), in which case the render target renders directly into its samples, the sample
+     * count is inferred from the texture, and an optional `resolveBuffer` receives the hardware
+     * resolve.
      * @param {Texture[]} [options.colorBuffers] - The textures that this render target will treat
-     * as a rendering surfaces. If this option is set, the colorBuffer option is ignored.
+     * as a rendering surfaces. If this option is set, the colorBuffer option is ignored. All
+     * textures must have the same sample count.
+     * @param {Texture|null} [options.resolveBuffer] - A single-sampled texture that the
+     * multisampled color buffer is hardware-resolved into at the end of a render pass. Only valid
+     * when `colorBuffer` is a multisampled texture, and must match its format and dimensions. When
+     * not provided, the multisampled samples are stored instead, to be read in a shader using
+     * `textureLoad` (a custom resolve). Note that integer formats and {@link PIXELFORMAT_R32F}
+     * cannot be hardware-resolved.
+     * @param {(Texture|null)[]} [options.resolveBuffers] - Per-attachment resolve textures
+     * matching `colorBuffers` by index; use null for attachments that should not be
+     * hardware-resolved. If this option is set, the resolveBuffer option must not be used.
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
      * @param {Texture} [options.depthBuffer] - The texture that this render target will treat as a
@@ -227,12 +323,28 @@ class RenderTarget {
         Debug.assert(device, 'Failed to obtain the device, colorBuffer nor depthBuffer store it.');
         this._device = device;
 
-        // samples
+        // samples. When the provided color buffers are multisampled textures (explicit
+        // multisampled attachments, WebGPU only), the render target renders directly into them
+        // and the sample count is inferred from the textures. Any multisampled attachment selects
+        // the explicit mode, so that mixed sample counts are caught by the validation below
+        // regardless of the attachment order.
         const { maxSamples } = this._device;
-        this._samples = Math.min(options.samples ?? 1, maxSamples);
-        if (device.isWebGPU) {
-            // WebGPU only supports values of 1 or 4 for samples
-            this._samples = this._samples > 1 ? maxSamples : 1;
+        const suppliedColorBuffers = options.colorBuffers ?? (options.colorBuffer ? [options.colorBuffer] : undefined);
+        const msColorBuffer = suppliedColorBuffers?.find(colorBuffer => colorBuffer?.samples > 1);
+        const explicitMsaa = !!msColorBuffer;
+        if (explicitMsaa) {
+            this._samples = msColorBuffer.samples;
+            Debug.call(() => {
+                if (options.samples !== undefined && options.samples !== this._samples) {
+                    Debug.warnOnce(`RenderTarget '${options.name ?? msColorBuffer.name}': the samples option (${options.samples}) does not match the multisampled color buffer (${this._samples} samples); using the color buffer's sample count.`);
+                }
+            });
+        } else {
+            this._samples = Math.min(options.samples ?? 1, maxSamples);
+            if (device.isWebGPU) {
+                // WebGPU only supports values of 1 or 4 for samples
+                this._samples = this._samples > 1 ? maxSamples : 1;
+            }
         }
 
         // Use the single colorBuffer in the colorBuffers array. This allows us to always just use the array internally.
@@ -280,6 +392,17 @@ class RenderTarget {
             }
         }
 
+        // resolve buffers - per-attachment resolve targets for explicit multisampled attachments
+        const resolveOption = options.resolveBuffers ?? (options.resolveBuffer !== undefined ? [options.resolveBuffer] : undefined);
+        Debug.assert(!(options.resolveBuffers && options.resolveBuffer), 'When constructing RenderTarget and options.resolveBuffers is used, options.resolveBuffer must not be used.');
+        if (resolveOption) {
+            if (explicitMsaa) {
+                this._resolveBuffers = [...resolveOption];
+            } else {
+                Debug.error(`RenderTarget '${options.name ?? this._colorBuffer?.name}': resolveBuffer(s) are only supported when the color buffers are multisampled textures. With a single-sampled colorBuffer and samples > 1, the colorBuffer itself is the resolve target. The resolve buffers are ignored.`);
+            }
+        }
+
         this.autoResolve = options.autoResolve ?? true;
 
         // use specified name, otherwise get one from color or depth buffer
@@ -294,11 +417,44 @@ class RenderTarget {
             this.name = 'Untitled';
         }
 
+        // validate explicit multisampled attachments and their resolve buffers
+        Debug.call(() => {
+            if (explicitMsaa) {
+                this._colorBuffers?.forEach((colorBuffer, index) => {
+                    Debug.assert(colorBuffer.samples === this._samples,
+                        `RenderTarget '${this.name}': all color buffers must have the same sample count, but color buffer ${index} has ${colorBuffer.samples} samples while ${this._samples} are expected.`, this);
+                    const format = colorBuffer.format;
+                    Debug.assert(format !== PIXELFORMAT_DEPTH && format !== PIXELFORMAT_DEPTH16 && format !== PIXELFORMAT_DEPTHSTENCIL,
+                        `RenderTarget '${this.name}': a depth format texture cannot be used as a color buffer, use the depthBuffer option.`, this);
+                });
+                this._resolveBuffers?.forEach((resolveBuffer, index) => {
+                    if (!resolveBuffer) return;
+                    const colorBuffer = this._colorBuffers?.[index];
+                    Debug.assert(colorBuffer,
+                        `RenderTarget '${this.name}': resolveBuffer at index ${index} has no matching color buffer.`, this);
+                    if (!colorBuffer) return;
+                    Debug.assert(resolveBuffer.samples === 1,
+                        `RenderTarget '${this.name}': resolveBuffer at index ${index} must be single-sampled, but has ${resolveBuffer.samples} samples.`, this);
+                    Debug.assert(resolveBuffer.format === colorBuffer.format,
+                        `RenderTarget '${this.name}': resolveBuffer at index ${index} format does not match its color buffer format.`, this);
+                    Debug.assert(resolveBuffer.width === colorBuffer.width && resolveBuffer.height === colorBuffer.height,
+                        `RenderTarget '${this.name}': resolveBuffer at index ${index} dimensions (${resolveBuffer.width}x${resolveBuffer.height}) do not match its color buffer (${colorBuffer.width}x${colorBuffer.height}).`, this);
+                    Debug.assert(isMultisampleResolveCapablePixelFormat(colorBuffer.format),
+                        `RenderTarget '${this.name}': color buffer format at index ${index} cannot be hardware-resolved; omit the resolveBuffer and resolve in a shader using textureLoad.`, this);
+                });
+            }
+        });
+
         // transient (memoryless) attachments (WebGPU only). Gated on device support, so they are
         // silently ignored when the device does not support transient attachments. Transient color
         // additionally requires MSAA (single-sampled color is always stored), also silently ignored.
+        // An explicit multisampled attachment cannot be transient (the user texture is bindable,
+        // which is incompatible with a memoryless allocation).
         const transientSupported = !!this._device.supportsTransientAttachments;
-        this._transientColor = (options.transientColor ?? false) && transientSupported && this._samples > 1;
+        this._transientColor = (options.transientColor ?? false) && transientSupported && this._samples > 1 && !explicitMsaa;
+        if ((options.transientColor ?? false) && explicitMsaa) {
+            Debug.warnOnce(`RenderTarget '${this.name}' was created with transientColor and multisampled color buffers. A user-provided multisampled texture cannot be transient (memoryless); the transientColor flag is ignored.`);
+        }
         this._transientDepth = (options.transientDepth ?? false) && transientSupported && !this._depthBuffer;
 
         // transient depth applies to the engine-allocated depth buffer only. Requesting it together
@@ -339,6 +495,10 @@ class RenderTarget {
         }
 
         this._mipLevel = options.mipLevel ?? 0;
+        if (this._mipLevel > 0 && explicitMsaa) {
+            Debug.error(`Rendering to a mipLevel is not supported for multisampled color buffers (they have a single mip level). Ignoring mipLevel ${this._mipLevel} for render target ${this.name}`);
+            this._mipLevel = 0;
+        }
         if (this._mipLevel > 0 && this._depth) {
             Debug.error(`Rendering to a mipLevel is not supported when render target uses a depth buffer. Ignoring mipLevel ${this._mipLevel} for render target ${this.name}`, {
                 renderTarget: this,
@@ -414,6 +574,11 @@ class RenderTarget {
         });
         this._colorBuffers = null;
         this._colorBuffer = null;
+
+        this._resolveBuffers?.forEach((resolveBuffer) => {
+            resolveBuffer?.destroy();
+        });
+        this._resolveBuffers = null;
     }
 
     /**
@@ -434,6 +599,9 @@ class RenderTarget {
         this._depthBuffer?.resize(width, height);
         this._colorBuffers?.forEach((colorBuffer) => {
             colorBuffer.resize(width, height);
+        });
+        this._resolveBuffers?.forEach((resolveBuffer) => {
+            resolveBuffer?.resize(width, height);
         });
 
         // only rebuild framebuffers if dimensions changed
@@ -659,6 +827,15 @@ class RenderTarget {
     }
 
     /**
+     * The number of color buffers (attachments) set up on the render target.
+     *
+     * @type {number}
+     */
+    get colorBufferCount() {
+        return this._colorBuffers?.length ?? 0;
+    }
+
+    /**
      * Accessor for multiple render target color buffers.
      *
      * @param {number} index - Index of the color buffer to get.
@@ -666,6 +843,29 @@ class RenderTarget {
      */
     getColorBuffer(index) {
         return this._colorBuffers?.[index];
+    }
+
+    /**
+     * The resolve texture of the first color attachment, when the render target uses explicit
+     * multisampled color buffers and a resolve buffer was provided. See the `resolveBuffer`
+     * constructor option. Null otherwise.
+     *
+     * @type {Texture|null}
+     */
+    get resolveBuffer() {
+        return this._resolveBuffers?.[0] ?? null;
+    }
+
+    /**
+     * Accessor for the per-attachment resolve textures. See the `resolveBuffers` constructor
+     * option.
+     *
+     * @param {number} [index] - Index of the color attachment. Defaults to 0.
+     * @returns {Texture|null} - The resolve texture at the specified index, or null when the
+     * attachment has none.
+     */
+    getResolveBuffer(index = 0) {
+        return this._resolveBuffers?.[index] ?? null;
     }
 
     /**

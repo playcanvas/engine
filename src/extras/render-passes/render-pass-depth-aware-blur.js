@@ -24,10 +24,10 @@ class RenderPassDepthAwareBlur extends RenderPassShaderQuad {
         if (horizontal) defines.set('HORIZONTAL', '');
 
         // add defines needed for correct use of screenDepthPS chunk
-        ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
+        const depthKey = ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
 
         this.shader = ShaderUtils.createShader(device, {
-            uniqueName: `DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader`,
+            uniqueName: `DepthAware${horizontal ? 'Horizontal' : 'Vertical'}BlurShader${depthKey}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'quadVS',
             fragmentChunk: 'depthAwareBlurPS',

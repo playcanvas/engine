@@ -121,6 +121,21 @@ export function Controls({ observer }) {
                         value={observer.get('settings.numLights')}
                     />
                 </LabelGroup>
+                <LabelGroup text='16bit Index'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.use16BitIndex' }}
+                        value={observer.get('settings.use16BitIndex')}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Max Lights'>
+                    <Label
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.maxLightsInfo' }}
+                        value={observer.get('settings.maxLightsInfo')}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Debug'>
                 <LabelGroup text='Cells'>

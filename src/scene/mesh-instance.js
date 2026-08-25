@@ -1,6 +1,5 @@
 import { Debug, DebugHelper } from '../core/debug.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
-import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 import { BindGroup } from '../platform/graphics/bind-group.js';
 import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
@@ -44,7 +43,6 @@ import { PickerId } from './picker-id.js';
 
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
-const _tempSphere = new BoundingSphere();
 
 /** @type {Set<Mesh>} */
 const _meshSet = new Set();
@@ -234,6 +232,14 @@ class ShaderInstance {
  * cmd.add(1, 60, 1, 36);
  * cmd.update(2);
  * ```
+ *
+ * ### Precedence
+ *
+ * When draw commands (indirect or multi-draw, see {@link setIndirect} and {@link setMultiDraw})
+ * are bound, they are the source of truth for rendering: the number of draws and the per-draw
+ * instance counts come from the draw commands, and {@link instancingCount} is ignored. In this
+ * case setting {@link instancingCount} to 0 does not skip rendering. {@link instancingCount} only
+ * takes effect for plain hardware instancing, when no draw commands are bound.
  *
  * @category Graphics
  */
@@ -1113,10 +1119,8 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
-            _tempSphere.radius = this._aabb.halfExtents.length();
-
-            return camera.frustum.containsSphere(_tempSphere) > 0;
+            // note that reading aabb evaluates it
+            return camera.frustum.containsAabb(this.aabb);
         }
 
         return false;

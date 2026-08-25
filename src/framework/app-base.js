@@ -1417,6 +1417,9 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.lightingShadowAtlasResolution] - Resolution of the atlas texture storing all non-directional shadow textures. Defaults to 2048.
      * @param {number} [settings.render.lightingCookieAtlasResolution] - Resolution of the atlas texture storing all non-directional cookie textures. Defaults to 2048.
      * @param {number} [settings.render.lightingMaxLightsPerCell] - Maximum number of lights a cell can store. Defaults to 255.
+     * @param {number} [settings.render.lightingMaxLights] - Maximum number of lights the clustered lighting can use in a single
+     * frame. Keep this as low as the scene allows, as a larger value has a per-frame cost. The value is limited by the maximum
+     * texture size supported by the device. Defaults to 255.
      * @param {number} [settings.render.lightingShadowType] - The type of shadow filtering used by all shadows. Can be:
      *
      * - {@link SHADOW_PCF1_32F}
@@ -1950,7 +1953,8 @@ class AppBase extends EventHandler {
             assets[i].unload();
             assets[i].off();
         }
-        this.assets.off();
+        this.assets.destroy();
+        this.assets = null;
 
         // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
         this.scene.destroy();
@@ -1970,6 +1974,12 @@ class AppBase extends EventHandler {
 
         if (getApplication() === this) {
             setApplication(null);
+        }
+
+        // clear the module scoped reference, which would otherwise keep the destroyed application
+        // alive. Skipped if another application has already taken over.
+        if (app === this) {
+            app = null;
         }
 
         AppBase.cancelTick(this);

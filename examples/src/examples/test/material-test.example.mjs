@@ -40,7 +40,7 @@ const assets = {
     diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
     other: new Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-height.jpg' }),
     gloss: new Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    colors: new Asset('other', 'texture', { url: './assets/textures/colors.webp' }),
+    colors: new Asset('other', 'texture', { url: './assets/textures/colors.webp' }, { srgb: true }),
     hatch: new Asset('other', 'texture', { url: './assets/textures/hatch-0.jpg' })
 };
 

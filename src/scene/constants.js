@@ -1104,6 +1104,28 @@ export const DITHER_BLUENOISE = 'bluenoise';
  */
 export const DITHER_IGNNOISE = 'ignnoise';
 
+/**
+ * Parallax mapping computes the uv offset from a single tap of the height map. This is the cheapest
+ * option, and suits shallow surface detail.
+ *
+ * @category Graphics
+ */
+export const PARALLAX_OFFSET = 'offset';
+
+/**
+ * Parallax occlusion mapping marches the view ray through the height field to find where it meets
+ * the displaced surface. This costs more than {@link PARALLAX_OFFSET}, but represents deeper
+ * displacement without smearing the texture.
+ *
+ * @category Graphics
+ */
+export const PARALLAX_OCCLUSION = 'occlusion';
+
+export const parallaxNames = {
+    [PARALLAX_OFFSET]: 'OFFSET',
+    [PARALLAX_OCCLUSION]: 'OCCLUSION'
+};
+
 export const ditherNames = {
     [DITHER_NONE]: 'NONE',
     [DITHER_BAYER2]: 'BAYER2',
@@ -1333,3 +1355,25 @@ export const RADIX_SORT_PORTABLE = 1;
  * @category Graphics
  */
 export const RADIX_SORT_ONESWEEP = 2;
+
+/**
+ * The name of the scene depth texture - a scene texture storing the linear depth of the scene,
+ * rendered by the scene pass alongside the scene color. See
+ * {@link CameraShaderParams#sceneTextures}.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const SCENETEXTURE_DEPTH = 'depth';
+
+/**
+ * The uniform each scene texture is published under by the render pass which rendered it. Note that
+ * the depth uses the same uniform as the depth prepass, as those are two producers of the same thing,
+ * and the consumers sample whichever of them ran later in the frame.
+ *
+ * @type {Object<string, string>}
+ * @ignore
+ */
+export const sceneTextureUniformNames = {
+    [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
+};

@@ -93,6 +93,15 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
             </Panel>
+            <Panel headerText='MATERIAL'>
+                <LabelGroup text='flat shading'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'material.flatShading' }}
+                    />
+                </LabelGroup>
+            </Panel>
         </>
     );
 }

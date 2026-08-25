@@ -12,7 +12,9 @@ import {
     CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32,
+    PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
     semanticToLocation,
     FRONTFACE_CCW
@@ -265,6 +267,19 @@ class GraphicsDevice extends EventHandler {
     supportsSubgroups = false;
 
     /**
+     * True if the device supports subgroup size control (WebGPU only). This depends on
+     * {@link supportsSubgroups} and, when available, allows a compute shader to pin its execution
+     * to a specific subgroup size (a power of two within the {@link minSubgroupSize} to
+     * {@link maxSubgroupSize} range) via the WGSL `@subgroup_size` attribute. The
+     * `subgroup-size-control` device feature is automatically requested when this is supported, and
+     * the shader define `CAPS_SUBGROUP_SIZE_CONTROL` is set for conditional compilation.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsSubgroupSizeControl = false;
+
+    /**
      * True if the device supports the WGSL subgroup_uniformity extension, which allows
      * subgroup functionality to be considered uniform in more cases during shader compilation.
      * This is automatically enabled via the `enable subgroups;` directive when
@@ -351,22 +366,20 @@ class GraphicsDevice extends EventHandler {
     supportsUnrestrictedPointerParameters = false;
 
     /**
-     * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either
-     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
-     * implementation did not expose the value.
+     * Maximum subgroup (warp/wavefront) size reported for the device. Zero means either the device
+     * does not expose subgroup sizes, or the WebGPU implementation did not report the value.
      *
      * @type {number}
-     * @ignore
+     * @readonly
      */
     maxSubgroupSize = 0;
 
     /**
-     * Minimum subgroup (warp/wavefront) size reported for the device. Zero means either
-     * subgroups are not supported ({@link supportsSubgroups} is false), or the WebGPU
-     * implementation did not expose the value.
+     * Minimum subgroup (warp/wavefront) size reported for the device. Zero means either the device
+     * does not expose subgroup sizes, or the WebGPU implementation did not report the value.
      *
      * @type {number}
-     * @ignore
+     * @readonly
      */
     minSubgroupSize = 0;
 
@@ -556,6 +569,15 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     textureFloatFilterable = false;
+
+    /**
+     * True if blending can be used when rendering to 32-bit floating-point render targets. Note that
+     * 16-bit floating-point render targets are always blendable when they are renderable.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    textureFloatBlendable = false;
 
     /**
      * A vertex buffer representing a quad.
@@ -778,6 +800,7 @@ class GraphicsDevice extends EventHandler {
         if (this.supportsPrimitiveIndex) capsDefines.set('CAPS_PRIMITIVE_INDEX', '');
         if (this.supportsShaderF16) capsDefines.set('CAPS_SHADER_F16', '');
         if (this.supportsSubgroups) capsDefines.set('CAPS_SUBGROUPS', '');
+        if (this.supportsSubgroupSizeControl) capsDefines.set('CAPS_SUBGROUP_SIZE_CONTROL', '');
         if (this.supportsSubgroupId) capsDefines.set('CAPS_SUBGROUP_ID', '');
         if (this.supportsLinearIndexing) capsDefines.set('CAPS_LINEAR_INDEXING', '');
         if (this.supportsUnrestrictedPointerParameters) capsDefines.set('CAPS_UNRESTRICTED_POINTER_PARAMETERS', '');
@@ -918,6 +941,7 @@ class GraphicsDevice extends EventHandler {
         this.depthState = new DepthState();
         this.cullMode = CULLFACE_BACK;
         this.frontFace = FRONTFACE_CCW;
+        this.alphaToCoverage = false;
 
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
@@ -1624,22 +1648,35 @@ class GraphicsDevice extends EventHandler {
      * formats on the majority of devices apart from some very old iOS and Android devices (99%).
      * - When the `filterable` parameter is set to true, the function returns a format on a
      * considerably lower number of devices (70%).
+     * - Support is determined by the precision of a format and not by its number of channels, and so
+     * all the half float formats are supported wherever any of them is, and similarly for the 32bit
+     * float formats.
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
      *
      * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_R16F}
+     * - {@link PIXELFORMAT_R32F}
+     * - {@link PIXELFORMAT_RG16F}
+     * - {@link PIXELFORMAT_RG32F}
      * - {@link PIXELFORMAT_RGBA16F}
      * - {@link PIXELFORMAT_RGBA32F}
      *
-     * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
-     * true.
+     * Any other format in the array is skipped, allowing a non-HDR format to be included in the
+     * list and handled by the caller's own fallback.
+     *
+     * @param {boolean} [filterable] - If true, the format also needs to be filterable, allowing it
+     * to be sampled with linear filtering. Defaults to true.
      * @param {number} [samples] - The number of samples to check for. Some formats are not
      * compatible with multi-sampling, for example {@link PIXELFORMAT_RGBA32F} on WebGPU platform.
      * Defaults to 1.
+     * @param {boolean} [blendable] - If true, the format also needs to be blendable, allowing it to
+     * be used as a blended render target attachment. This is an independent capability to
+     * filtering, and only the 32bit float formats can fail to support it. Defaults to false.
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
      */
-    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1) {
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true, samples = 1, blendable = false) {
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
             switch (format) {
@@ -1651,20 +1688,31 @@ class GraphicsDevice extends EventHandler {
                     break;
                 }
 
+                case PIXELFORMAT_R16F:
+                case PIXELFORMAT_RG16F:
                 case PIXELFORMAT_RGBA16F:
+
+                    // half float formats are filterable and blendable wherever they are
+                    // renderable, so those requirements need no additional test
                     if (this.textureHalfFloatRenderable) {
                         return format;
                     }
                     break;
 
+                case PIXELFORMAT_R32F:
+                case PIXELFORMAT_RG32F:
                 case PIXELFORMAT_RGBA32F:
 
-                    // on WebGPU platform, RGBA32F is not compatible with multi-sampling
+                    // on WebGPU platform, 32bit float formats are not compatible with multi-sampling
                     if (this.isWebGPU && samples > 1) {
                         continue;
                     }
 
-                    if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
+                    // unlike the smaller float formats, filtering and blending of the 32bit float
+                    // formats are both optional capabilities, tested for independently
+                    if (this.textureFloatRenderable &&
+                        (!filterable || this.textureFloatFilterable) &&
+                        (!blendable || this.textureFloatBlendable)) {
                         return format;
                     }
                     break;

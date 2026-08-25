@@ -11,10 +11,12 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
     DITHER_NONE,
+    PARALLAX_OFFSET,
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
-    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT
+    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
+    SCENETEXTURE_DEPTH
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -32,7 +34,7 @@ class StandardMaterialOptionsBuilder {
     }
 
     updateRef(options, scene, cameraShaderParams, stdMat, objDefs, pass, sortedLights) {
-        this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
+        this._updateSharedOptions(options, scene, stdMat, objDefs, pass, cameraShaderParams);
         this._updateEnvOptions(options, stdMat, scene, cameraShaderParams);
         this._updateMaterialOptions(options, stdMat, scene);
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
@@ -40,8 +42,14 @@ class StandardMaterialOptionsBuilder {
         this._updateUVOptions(options, stdMat, objDefs, false, cameraShaderParams);
     }
 
-    _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
+    _updateSharedOptions(options, scene, stdMat, objDefs, pass, cameraShaderParams) {
         options.forceUv1 = stdMat.forceUv1;
+
+        // linear depth is rendered by the prepass, and by the forward pass when the camera renders
+        // the scene depth into a scene texture. Note that the minimal variant of the options, used
+        // by the prepass among others, is built without the camera shader params
+        options.litOptions.linearDepth = pass === SHADER_PREPASS ||
+            !!cameraShaderParams?.sceneTextures.includes(SCENETEXTURE_DEPTH);
 
         // USER ATTRIBUTES
         if (stdMat.userAttributes) {
@@ -103,6 +111,9 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.lightMapEnabled = options.lightMap;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
         options.litOptions.useHeights = options.heightMap;
+
+        // the parallax mode only matters when a height map is assigned
+        options.parallaxMode = options.heightMap ? stdMat.parallaxMode : PARALLAX_OFFSET;
         options.litOptions.useNormals = options.normalMap;
         options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
         options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.litOptions.ssao;
@@ -174,7 +185,6 @@ class StandardMaterialOptionsBuilder {
         // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
         const isPrepass = pass === SHADER_PREPASS;
         options.litOptions.opacityShadowDither = isPrepass ? stdMat.opacityDither : stdMat.opacityShadowDither;
-        options.litOptions.linearDepth = isPrepass;
 
         options.litOptions.lights = [];
     }

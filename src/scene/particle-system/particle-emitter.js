@@ -24,6 +24,7 @@ import {
     SEMANTIC_POSITION,
     isIntegerPixelFormat
 } from '../../platform/graphics/constants.js';
+import { BufferUtils } from '../../platform/graphics/buffer-utils.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -354,12 +355,10 @@ class ParticleEmitter {
         this.worldBoundsTrail = [new BoundingBox(), new BoundingBox()];
         this.worldBounds = new BoundingBox();
 
-        this.worldBoundsSize = new Vec3();
-
-        this.prevWorldBoundsSize = new Vec3();
-        this.prevWorldBoundsCenter = new Vec3();
-        this.prevEmitterExtents = this.emitterExtents;
-        this.prevEmitterRadius = this.emitterRadius;
+        // spawn volume the local bounds were last calculated for, used to detect changes to it.
+        // Note this must be a copy, as emitterExtents can be modified in place by the user.
+        this.prevEmitterExtents = new Vec3();
+        this.prevEmitterRadius = 0;
         this.timeToSwitchBounds = 0;
 
         // simulation shaders - do not destroy those, as they're cached and shared between emitters
@@ -417,21 +416,13 @@ class ParticleEmitter {
     calculateWorldBounds() {
         if (!this.node) return;
 
-        this.prevWorldBoundsSize.copy(this.worldBoundsSize);
-        this.prevWorldBoundsCenter.copy(this.worldBounds.center);
-
-        if (!this.useCpu) {
-            let recalculateLocalBounds = false;
-            if (this.emitterShape === EMITTERSHAPE_BOX) {
-                recalculateLocalBounds = !this.emitterExtents.equals(this.prevEmitterExtents);
-            } else {
-                recalculateLocalBounds = !(this.emitterRadius === this.prevEmitterRadius);
-            }
-            if (recalculateLocalBounds) {
-                this.calculateLocalBounds();
-            }
+        // the spawn volume can be changed at any time, and the local bounds are derived from it
+        const recalculateLocalBounds = this.emitterShape === EMITTERSHAPE_BOX ?
+            !this.emitterExtents.equals(this.prevEmitterExtents) :
+            this.emitterRadius !== this.prevEmitterRadius;
+        if (recalculateLocalBounds) {
+            this.calculateLocalBounds();
         }
-
 
         const nodeWT = this.node.getWorldTransform();
         if (this.localSpace) {
@@ -451,8 +442,6 @@ class ParticleEmitter {
         }
 
         this.worldBounds.copy(this.worldBoundsTrail[0]);
-
-        this.worldBoundsSize.copy(this.worldBounds.halfExtents).mulScalar(2);
 
         if (this.localSpace) {
             this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, nodeWT);
@@ -474,16 +463,17 @@ class ParticleEmitter {
         this.worldBoundsTrail[1].copy(this.worldBoundsNoTrail);
 
         this.worldBounds.copy(this.worldBoundsTrail[0]);
-        this.worldBoundsSize.copy(this.worldBounds.halfExtents).mulScalar(2);
-
-        this.prevWorldBoundsSize.copy(this.worldBoundsSize);
-        this.prevWorldBoundsCenter.copy(this.worldBounds.center);
 
         this.simTimeTotal = 0;
         this.timeToSwitchBounds = 0;
     }
 
     calculateLocalBounds() {
+
+        // store the spawn volume the bounds are calculated for, to detect later changes to it
+        this.prevEmitterExtents.copy(this.emitterExtents);
+        this.prevEmitterRadius = this.emitterRadius;
+
         let minx = Number.MAX_VALUE;
         let miny = Number.MAX_VALUE;
         let minz = Number.MAX_VALUE;
@@ -530,7 +520,9 @@ class ParticleEmitter {
             accumR[1] += this.qRadialSpeed2[index] * stepWeight;
             maxR = Math.max(maxR, Math.max(Math.abs(accumR[0]), Math.abs(accumR[1])));
 
-            maxScale = Math.max(maxScale, this.qScale[index]);
+            // both scale curves, as the rendered size is interpolated between them, and by
+            // magnitude, as a negative scale mirrors the particle without shrinking it
+            maxScale = Math.max(maxScale, Math.abs(this.qScale[index]), Math.abs(this.qScale2[index]));
         }
 
         if (this.emitterShape === EMITTERSHAPE_BOX) {
@@ -582,10 +574,6 @@ class ParticleEmitter {
 
             this.worldBoundsTrail[0].copy(this.worldBounds);
             this.worldBoundsTrail[1].copy(this.worldBounds);
-
-            this.worldBoundsSize.copy(this.worldBounds.halfExtents).mulScalar(2);
-            this.prevWorldBoundsSize.copy(this.worldBoundsSize);
-            this.prevWorldBoundsCenter.copy(this.worldBounds.center);
         }
 
         // Dynamic simulation data
@@ -909,7 +897,7 @@ class ParticleEmitter {
             const data = new Float32Array(this.vertexBuffer.lock());
             let meshData, posOffset, posStride, uvOffset, uvStride;
             if (this.useMesh) {
-                meshData = new Float32Array(this.mesh.vertexBuffer.lock());
+                meshData = BufferUtils.createStorageView(this.mesh.vertexBuffer, Float32Array);
 
                 // Copy positions and UVs using each element's own offset and stride (in floats),
                 // which handles both interleaved and non-interleaved source meshes. Procedurally

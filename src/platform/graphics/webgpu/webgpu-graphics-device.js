@@ -472,8 +472,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
-        this.maxSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMaxSize ?? 0) : 0;
-        this.minSubgroupSize = this.supportsSubgroups ? (this.gpuAdapter?.info?.subgroupMinSize ?? 0) : 0;
+        this.supportsSubgroupSizeControl = requireFeature('subgroup-size-control');
+        this.maxSubgroupSize = this.gpuAdapter?.info?.subgroupMaxSize ?? 0;
+        this.minSubgroupSize = this.gpuAdapter?.info?.subgroupMinSize ?? 0;
         const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
             Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
         Debug.log(
@@ -489,7 +490,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const adapterLimits = this.gpuAdapter?.limits;
             if (adapterLimits) {
                 for (const limitName in adapterLimits) {
-                    // skip these as they fail on Windows Chrome and are not part of spec currently
+                    // subgroup sizes are exposed via GPUAdapterInfo (read above), not as requestable
+                    // limits - some implementations (e.g. Windows Chrome) still surface them here and
+                    // reject them in requiredLimits, so skip them
                     if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
                         continue;
                     }
@@ -939,7 +942,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // render pipeline
                 pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
                     this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace);
+                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
                 Debug.assert(pipeline);
 
                 if (this.pipeline !== pipeline) {
@@ -1066,6 +1069,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setAlphaToCoverage(state) {
+        this.alphaToCoverage = state;
     }
 
     initializeContextCaches() {
@@ -1582,6 +1586,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
         if (color) {
+
+            // WebGPU only allows copies between textures with equal sample counts. A copy between
+            // a multisampled and a single-sampled color buffer is not a copy - use a resolve.
+            const srcSamples = (source ? source.colorBuffer?.samples : 1) ?? 1;
+            const dstSamples = (dest ? dest.colorBuffer?.samples : 1) ?? 1;
+            if (srcSamples !== dstSamples) {
+                Debug.errorOnce(`copyRenderTarget: cannot copy between color buffers with different sample counts (source '${source?.name}' has ${srcSamples}, destination '${dest?.name}' has ${dstSamples}). Use a resolve instead of a copy.`);
+                DebugGraphics.popGpuMarker(this);
+                return false;
+            }
 
             // read from supplied render target, or from the framebuffer
             /** @type {GPUTexelCopyTextureInfo} */

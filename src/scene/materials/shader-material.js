@@ -68,6 +68,10 @@ class ShaderMaterial extends Material {
     constructor(shaderDesc) {
         super();
 
+        // the shader is supplied by the user, so by default it is not expected to generate the scene
+        // textures - a material whose shader does needs to opt in
+        this.sceneTexturesWrite = false;
+
         this.shaderDesc = shaderDesc;
     }
 

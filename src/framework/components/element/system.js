@@ -232,6 +232,7 @@ class ElementComponentSystem extends ComponentSystem {
             if (data.lineHeight !== undefined) component.lineHeight = data.lineHeight;
             if (data.maxLines !== undefined) component.maxLines = data.maxLines;
             if (data.wrapLines !== undefined) component.wrapLines = data.wrapLines;
+            if (data.justify !== undefined) component.justify = data.justify;
             if (data.minFontSize !== undefined) component.minFontSize = data.minFontSize;
             if (data.maxFontSize !== undefined) component.maxFontSize = data.maxFontSize;
             if (data.autoFitWidth) component.autoFitWidth = data.autoFitWidth;
@@ -302,6 +303,7 @@ class ElementComponentSystem extends ComponentSystem {
             spacing: source.spacing,
             lineHeight: source.lineHeight,
             wrapLines: source.wrapLines,
+            justify: source.justify,
             layers: source.layers,
             fontSize: source.fontSize,
             minFontSize: source.minFontSize,

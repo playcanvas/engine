@@ -750,6 +750,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
     }
 
     frameUpdate(params) {
+
+        // Whether the splats contribute to the scene depth. This only selects the blend state, as the
+        // write itself is enabled by a define coming from the camera, so it needs no shader rebuild and
+        // can follow the scene setting from frame to frame.
+        this._material.sceneTexturesWrite = params.sceneDepthWrite;
+
         this._material.setParameter('alphaClip', params.alphaClip);
         this._material.setParameter('alphaClipForward', params.alphaClipForward);
         this._pickMaterial?.setParameter('alphaClip', params.alphaClip);

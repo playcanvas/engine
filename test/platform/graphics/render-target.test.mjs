@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -166,6 +166,163 @@ describe('RenderTarget', function () {
             rt.flipY = false;
             expect(rt.origin).to.equal(RENDERTARGET_ORIGIN_NATIVE);
             destroyRenderTarget(rt);
+        });
+    });
+
+    describe('#constructor: multisampled color attachments', function () {
+
+        let errors, warnings;
+        let originalError, originalWarn;
+
+        beforeEach(function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            originalError = console.error;
+            originalWarn = console.warn;
+            errors = [];
+            warnings = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+            console.warn = (...args) => {
+                warnings.push(args.join(' '));
+            };
+        });
+
+        afterEach(function () {
+            console.error = originalError;
+            console.warn = originalWarn;
+        });
+
+        const createMs = (options = {}) => {
+            return new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, samples: 4, ...options });
+        };
+
+        const create1x = (options = {}) => {
+            return new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false, ...options });
+        };
+
+        it('infers the sample count from the color buffer', function () {
+            const rt = new RenderTarget({ name: 'ms-infer', colorBuffer: createMs(), depth: false });
+            expect(rt.samples).to.equal(4);
+            expect(errors).to.have.lengthOf(0);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('warns when the samples option disagrees with the color buffer', function () {
+            const rt = new RenderTarget({ name: 'ms-mismatch', colorBuffer: createMs(), samples: 2, depth: false });
+            expect(rt.samples).to.equal(4);
+            expect(warnings.some(m => m.includes('samples option'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('stores the resolve buffer and exposes it through getters', function () {
+            const resolve = create1x({ name: 'resolveTex' });
+            const rt = new RenderTarget({ name: 'ms-resolve', colorBuffer: createMs(), resolveBuffer: resolve, depth: false });
+            expect(rt.resolveBuffer).to.equal(resolve);
+            expect(rt.getResolveBuffer(0)).to.equal(resolve);
+            expect(rt.getResolveBuffer(1)).to.equal(null);
+            expect(errors).to.have.lengthOf(0);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('errors when a resolveBuffer is used with a single-sampled colorBuffer', function () {
+            const colorBuffer = create1x();
+            const resolve = create1x();
+            const rt = new RenderTarget({ name: 'ms-implicit-clash', colorBuffer, samples: 4, resolveBuffer: resolve, depth: false });
+            expect(errors.some(m => m.includes('only supported when the color buffers are multisampled'))).to.be.true;
+            expect(rt.resolveBuffer).to.equal(null);
+            rt.destroyTextureBuffers();
+            resolve.destroy();
+            rt.destroy();
+        });
+
+        it('asserts on a multisampled resolveBuffer', function () {
+            const rt = new RenderTarget({ name: 'ms-ms-resolve', colorBuffer: createMs(), resolveBuffer: createMs(), depth: false });
+            expect(errors.some(m => m.includes('must be single-sampled'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts on a resolveBuffer format mismatch', function () {
+            const resolve = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA16F, mipmaps: false });
+            const rt = new RenderTarget({ name: 'ms-format-mismatch', colorBuffer: createMs(), resolveBuffer: resolve, depth: false });
+            expect(errors.some(m => m.includes('format does not match'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts on a resolveBuffer size mismatch', function () {
+            const resolve = create1x({ width: 8, height: 8 });
+            const rt = new RenderTarget({ name: 'ms-size-mismatch', colorBuffer: createMs(), resolveBuffer: resolve, depth: false });
+            expect(errors.some(m => m.includes('dimensions'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts on a resolveBuffer for a format that cannot be hardware-resolved', function () {
+            const ms = createMs({ format: PIXELFORMAT_RGBA16U });
+            const resolve = create1x({ format: PIXELFORMAT_RGBA16U });
+            const rt = new RenderTarget({ name: 'ms-int-resolve', colorBuffer: ms, resolveBuffer: resolve, depth: false });
+            expect(errors.some(m => m.includes('cannot be hardware-resolved'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts on mixed sample counts across MRT attachments', function () {
+            const rt = new RenderTarget({ name: 'ms-mixed', colorBuffers: [createMs(), create1x()], depth: false });
+            expect(errors.some(m => m.includes('same sample count'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts on mixed sample counts when the first attachment is single-sampled', function () {
+            const rt = new RenderTarget({ name: 'ms-mixed-reversed', colorBuffers: [create1x(), createMs()], depth: false });
+            expect(errors.some(m => m.includes('same sample count'))).to.be.true;
+
+            // the multisampled attachment still selects the explicit mode and its sample count
+            expect(rt.samples).to.equal(4);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts on a depth format color buffer', function () {
+            const ms = createMs({ format: PIXELFORMAT_DEPTH });
+            const rt = new RenderTarget({ name: 'ms-depth-color', colorBuffer: ms, depth: false });
+            expect(errors.some(m => m.includes('depth format texture cannot be used as a color buffer'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('ignores transientColor with a warning', function () {
+            device.supportsTransientAttachments = true;
+            const rt = new RenderTarget({ name: 'ms-transient', colorBuffer: createMs(), transientColor: true, depth: false });
+            expect(rt.transientColor).to.be.false;
+            expect(warnings.some(m => m.includes('transient'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('ignores a mipLevel with an error', function () {
+            const rt = new RenderTarget({ name: 'ms-miplevel', colorBuffer: createMs(), mipLevel: 1, depth: false });
+            expect(rt.mipLevel).to.equal(0);
+            expect(errors.some(m => m.includes('mipLevel'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('resizes the resolve buffers along with the color buffers', function () {
+            const resolve = create1x();
+            const rt = new RenderTarget({ name: 'ms-resize', colorBuffer: createMs(), resolveBuffer: resolve, depth: false });
+            rt.resize(8, 8);
+            expect(rt.colorBuffer.width).to.equal(8);
+            expect(resolve.width).to.equal(8);
+            expect(resolve.height).to.equal(8);
+            rt.destroyTextureBuffers();
+            rt.destroy();
         });
     });
 });

@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { LAYERID_WORLD, RENDERSTYLE_SOLID } from '../../../scene/constants.js';
+import { LAYERID_WORLD, RENDERSTYLE_SOLID, SHADOW_CASCADE_ALL } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { MorphInstance } from '../../../scene/morph-instance.js';
@@ -67,6 +67,9 @@ class RenderComponent extends Component {
 
     /** @private */
     _castShadows = true;
+
+    /** @private */
+    _shadowCascadeMask = SHADOW_CASCADE_ALL;
 
     /** @private */
     _receiveShadows = true;
@@ -346,6 +349,7 @@ class RenderComponent extends Component {
                 }
 
                 mi[i].castShadow = this._castShadows;
+                mi[i].shadowCascadeMask = this._shadowCascadeMask;
                 mi[i].receiveShadow = this._receiveShadows;
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
@@ -445,6 +449,44 @@ class RenderComponent extends Component {
      */
     get castShadows() {
         return this._castShadows;
+    }
+
+    /**
+     * Sets a bitmask that controls which shadow cascades the attached meshes contribute to when
+     * rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source. Combine the
+     * {@link SHADOW_CASCADE_0} .. {@link SHADOW_CASCADE_3} flags to select individual cascades.
+     * This is only effective when {@link castShadows} is enabled. Defaults to
+     * {@link SHADOW_CASCADE_ALL}, which contributes to all available cascades.
+     *
+     * Note that this filters the meshes per cascade at render time, it does not remove them from
+     * the shadow casters of the {@link Layer} - use {@link castShadows} to disable shadow casting
+     * completely.
+     *
+     * @type {number}
+     * @example
+     * // only cast shadows into the two cascades closest to the camera
+     * entity.render.shadowCascadeMask = pc.SHADOW_CASCADE_0 | pc.SHADOW_CASCADE_1;
+     */
+    set shadowCascadeMask(value) {
+        if (this._shadowCascadeMask !== value) {
+            this._shadowCascadeMask = value;
+
+            const mi = this._meshInstances;
+            if (mi) {
+                for (let i = 0; i < mi.length; i++) {
+                    mi[i].shadowCascadeMask = value;
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets the bitmask that controls which shadow cascades the attached meshes contribute to.
+     *
+     * @type {number}
+     */
+    get shadowCascadeMask() {
+        return this._shadowCascadeMask;
     }
 
     /**

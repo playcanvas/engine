@@ -2,9 +2,8 @@ import { Debug } from '../../../core/debug.js';
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
+import { BufferUtils } from '../../../platform/graphics/buffer-utils.js';
 import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
-import { GraphNode } from '../../../scene/graph-node.js';
-import { Model } from '../../../scene/model.js';
 import { ComponentSystem } from '../system.js';
 import { CollisionComponent } from './component.js';
 import { Trigger } from './trigger.js';
@@ -12,6 +11,7 @@ import { Trigger } from './trigger.js';
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Entity } from '../../entity.js'
+ * @import { GraphNode } from '../../../scene/graph-node.js'
  */
 
 const mat4 = new Mat4();
@@ -84,8 +84,6 @@ const collisionImpls = {
     },
 
     mesh: {
-        // the model comes from assets - no placeholder is created
-        beforeInitialize() {},
         createPhysicalShape: createMeshShape,
         recreatePhysicalShapes: recreateMeshShapes,
         updateTransform: updateMeshTransform
@@ -111,10 +109,6 @@ function getImpl(type) {
 // Called before the call to system.super.initializeComponentData is made
 function beforeInitialize(system, component) {
     component._shape = null;
-
-    const model = new Model();
-    model.graph = new GraphNode();
-    component._model = model;
 }
 
 // Called after the call to system.super.initializeComponentData is made
@@ -264,7 +258,7 @@ function createMeshSource(system, mesh, node, bakeScale, convexHull, checkDuplic
             for (let i = 0; i < format.elements.length; i++) {
                 const element = format.elements[i];
                 if (element.name === SEMANTIC_POSITION) {
-                    positions = new Float32Array(vb.lock(), element.offset);
+                    positions = BufferUtils.createStorageView(vb, Float32Array, element.offset);
                     stride = element.stride / 4;
                     break;
                 }

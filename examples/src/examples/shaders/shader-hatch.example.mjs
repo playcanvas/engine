@@ -278,6 +278,14 @@ data.on('*:set', (path, value) => {
             mat.update();
         });
     }
+    if (propertyName === 'flatShading') {
+        materials.forEach((mat) => {
+            // this adds a FLAT_SHADING define to the shader, which the hatch shader uses to shade
+            // using the geometric normal of the triangle instead of the interpolated vertex normal
+            mat.flatShading = value;
+            mat.update();
+        });
+    }
 });
 
 // Initial values
@@ -286,5 +294,6 @@ data.set('data', {
     metalness: 0.5,
     tonemapping: 0,
     fog: false,
-    toon: false
+    toon: false,
+    flatShading: false
 });

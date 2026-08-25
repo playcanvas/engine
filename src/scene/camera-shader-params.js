@@ -1,3 +1,5 @@
+import { array } from '../core/array-utils.js';
+import { Debug } from '../core/debug.js';
 import { hashCode } from '../core/hash.js';
 import { FOG_NONE, GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from './constants.js';
 
@@ -26,6 +28,36 @@ class CameraShaderParams {
     _sceneDepthMapLinear = false;
 
     /**
+     * True when each depth in the linear scene depth map is stored as a float bit-packed into an
+     * RGBA8 texel, the encoding the producer of the map falls back to when float textures cannot be
+     * rendered to. Only meaningful when {@link CameraShaderParams#sceneDepthMapLinear} is set.
+     *
+     * @private
+     */
+    _sceneDepthMapPacked = false;
+
+    /**
+     * The names of the scene textures the scene pass renders alongside the scene color, in the order
+     * of the color attachments they are rendered to - the name at index i goes to the attachment at
+     * index i + 1, as attachment 0 is the scene color itself. Empty when the scene pass renders the
+     * scene color alone.
+     *
+     * The render pass is what owns this, as only the passes rendering to a render target the scene
+     * textures are attached to may write them - a camera's pass rendering the UI to the output render
+     * target must not. It is mirrored here because shader generation is given no more than the camera
+     * shader params, so this is how a material learns that its shader has to write the additional
+     * attachments, and how those attachments take part in the shader variant key.
+     *
+     * That makes the value transient: {@link RenderPassForward} assigns it and restores the previous
+     * value around each layer step it renders, in the same way it overrides the gamma correction and
+     * the tone mapping. Outside of those draws the camera reads as rendering no scene textures.
+     *
+     * @type {string[]}
+     * @private
+     */
+    _sceneTextures = [];
+
+    /**
      * The hash of the rendering parameters, or undefined if the hash has not been computed yet.
      *
      * @type {number|undefined}
@@ -52,7 +84,7 @@ class CameraShaderParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}_${this._sceneTextures.join('-')}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -66,7 +98,22 @@ class CameraShaderParams {
             this._definesDirty = false;
             defines.clear();
 
-            if (this._sceneDepthMapLinear) defines.set('SCENE_DEPTHMAP_LINEAR', '');
+            if (this._sceneDepthMapLinear) {
+                defines.set('SCENE_DEPTHMAP_LINEAR', '');
+
+                // nested, so that the packed define never appears without the linear one, which is
+                // what the decode in the screenDepth chunk relies on
+                if (this._sceneDepthMapPacked) defines.set('SCENE_DEPTHMAP_PACKED', '');
+            }
+
+            // each scene texture supplies a pair of defines - one enabling its write, and one giving
+            // the color attachment it is written to, which the preprocessor substitutes into the name
+            // of the output the sceneTexturesPS chunk writes
+            this._sceneTextures.forEach((name, index) => {
+                const upperName = name.toUpperCase();
+                defines.set(`SCENE_TEXTURE_${upperName}`, '');
+                defines.set(`{SCENE_TEXTURE_${upperName}_SLOT}`, String(index + 1));
+            });
             if (this.shaderOutputGamma === GAMMA_SRGB) defines.set('SCENE_COLORMAP_GAMMA', '');
             defines.set('FOG', this._fog.toUpperCase());
             defines.set('TONEMAP', tonemapNames[this._toneMapping]);
@@ -145,6 +192,54 @@ class CameraShaderParams {
 
     get sceneDepthMapLinear() {
         return this._sceneDepthMapLinear;
+    }
+
+    set sceneDepthMapPacked(value) {
+        if (this._sceneDepthMapPacked !== value) {
+            this._sceneDepthMapPacked = value;
+            this.markDirty();
+        }
+    }
+
+    get sceneDepthMapPacked() {
+        return this._sceneDepthMapPacked;
+    }
+
+    /**
+     * Sets the names of the scene textures the scene pass renders alongside the scene color, for
+     * example `['depth']`. Their order is the order of the color attachments they are rendered to,
+     * so the name at index i is written to the attachment at index i + 1. Assign an empty array when
+     * the scene pass renders the scene color alone. This is assigned by the render pass rendering
+     * them, for the duration of its draws only - see the note on the backing field.
+     *
+     * Each name generates a pair of shader defines, following the same naming as the shader passes:
+     * `'depth'` supplies `SCENE_TEXTURE_DEPTH`, which enables the write, and
+     * `{SCENE_TEXTURE_DEPTH_SLOT}`, which the sceneTexturesPS chunk substitutes into the name of the
+     * output it writes. A name can only contain letters, numbers and underscores, and start with a
+     * letter.
+     *
+     * @type {string[]}
+     */
+    set sceneTextures(value) {
+
+        const names = value ?? [];
+
+        Debug.call(() => {
+            names.forEach((name) => {
+                Debug.assert(/^[a-z]\w*$/i.test(name), `Scene texture name can only contain letters, numbers and underscores and start with a letter: ${name}`);
+            });
+        });
+
+        // compared by value, as this is assigned by each render pass as it executes, and taking a
+        // new array of the same names must not invalidate the shader variants of every material
+        if (!array.equals(this._sceneTextures, names)) {
+            this._sceneTextures = names.slice();
+            this.markDirty();
+        }
+    }
+
+    get sceneTextures() {
+        return this._sceneTextures;
     }
 
     /**

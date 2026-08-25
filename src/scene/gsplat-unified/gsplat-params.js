@@ -830,6 +830,21 @@ class GSplatParams {
     cooldownTicks = 100;
 
     /**
+     * Whether the gaussian splats contribute to the scene depth, which the volumetric fog and the depth
+     * of field need in order to be bounded by the splats instead of drawing through them.
+     *
+     * This costs an extra full screen render target, and so defaults to false. Enable it for a scene
+     * where the splats need to take part in those effects. Requires the camera to render using
+     * {@link CameraFrame} - see {@link CameraFrame.isSplatSceneDepthSupported}.
+     *
+     * On some devices enabling this stores the scene depth at a lower precision, which the other
+     * effects using it share.
+     *
+     * @type {boolean}
+     */
+    sceneDepthWrite = false;
+
+    /**
      * Work buffer data format. Controls the precision and bandwidth of the intermediate work buffer
      * used during GSplat rendering. Can be set to {@link GSPLATDATA_COMPACT} (20 bytes/splat)
      * or {@link GSPLATDATA_LARGE} (32 bytes/splat). Defaults to {@link GSPLATDATA_COMPACT}.
