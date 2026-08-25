@@ -75,6 +75,11 @@ fn getParallax() {
 
         dUvOffset = vec2f(0.0);
 
+        #ifdef STD_PARALLAX_SELF_SHADOW
+            dParallaxHitDepth = 0.0;
+            dParallaxLod = lod;
+        #endif
+
         if (fade > 0.0) {
 
             // The step count follows the detail actually being crossed rather than the view angle,
@@ -135,7 +140,12 @@ fn getParallax() {
                 }
             }
 
-            dUvOffset = uvSpan * clamp(hitDepth, 0.0, 1.0) * fade;
+            let visibleDepth: f32 = clamp(hitDepth, 0.0, 1.0) * fade;
+            dUvOffset = uvSpan * visibleDepth;
+
+            #ifdef STD_PARALLAX_SELF_SHADOW
+                dParallaxHitDepth = visibleDepth;
+            #endif
         }
 
     #else
@@ -154,4 +164,82 @@ fn getParallax() {
 
     #endif
 }
+
+#ifdef STD_PARALLAX_SELF_SHADOW
+
+    uniform material_parallaxShadowSamples: f32;
+
+    // How much of the relief depth a blocker has to stand above the light ray to shadow fully. The
+    // march measures that in the same 0 to 1 depth units the view march uses, where even a strong
+    // blocker is a small number, so it is scaled up here. Measured on rippled ground, the mean
+    // darkening rises 4.2 / 7.4 / 10.1 / 12.1 for 4 / 8 / 16 / 32, and nothing clips to black at any
+    // of them because the ambient fills the shadow - so this is an authority knob rather than a
+    // clipping risk, and the returns flatten after 16.
+    const parallaxShadowHardness: f32 = 16.0;
+
+    // The light ray is limited like the view ray, but the trade is not the same: limiting the view
+    // ray flattens the relief, while limiting the light ray truncates long shadows - which is the
+    // low light angle where they matter most. So this is looser than parallaxMaxSlope.
+    const parallaxShadowMaxSlope: f32 = 20.0;
+
+    // Soft self shadowing of the height field. Marches from the point the view ray hit towards the
+    // light and accumulates the deepest weighted penetration of the field above the ray, rather than
+    // stopping at the first blocker: the weight falls away with distance from the hit, which is what
+    // gives a penumbra that hardens towards contact. The cost is fixed for a given budget.
+    fn getParallaxSelfShadow(lightDirNormW: vec3f) -> f32 {
+
+        // nothing to shadow where the relief has faded to flat
+        if (dParallaxHitDepth <= 0.0) {
+            return 1.0;
+        }
+
+        // The light direction in tangent space, pointing from the surface towards the light. Its v
+        // component is negated to match the uv convention of the view march.
+        let lightDirT: vec3f = normalize(-lightDirNormW * dTBN);
+        let lightDirUv: vec2f = vec2f(lightDirT.x, -lightDirT.y);
+
+        // the light is below the surface, so the relief cannot shadow anything the light reaches
+        if (lightDirT.z <= 0.0) {
+            return 1.0;
+        }
+
+        let parallaxScale: f32 = uniform.material_heightMapFactor;
+
+        // uv travelled per unit of depth climbed towards the light, limited as the view march is
+        let climb: vec2f = parallaxScale * lightDirUv / lightDirT.z;
+        let climbLength: f32 = length(climb);
+        let maxClimbLength: f32 = parallaxScale * parallaxShadowMaxSlope;
+        let uvPerDepth: vec2f = select(climb, climb * (maxClimbLength / climbLength), climbLength > maxClimbLength);
+
+        // the step count follows the detail the march actually crosses, capped by the budget
+        let heightMapSize: vec2f = vec2f(textureDimensions({STD_HEIGHT_TEXTURE_NAME}, 0));
+        let marchTexels: f32 = length(uvPerDepth * dParallaxHitDepth * heightMapSize) / exp2(dParallaxLod);
+        let steps: f32 = clamp(marchTexels / parallaxTexelsPerStep, 1.0, uniform.material_parallaxShadowSamples);
+
+        let hitUv: vec2f = {STD_HEIGHT_TEXTURE_UV} + dUvOffset;
+        var blocked: f32 = 0.0;
+
+        // Every tap takes an explicit mip level: this is non uniform control flow, where an implicit
+        // derivative is undefined in GLSL and rejected outright in WGSL.
+        for (var i: f32 = 0.0; i < steps; i += 1.0) {
+
+            // climb from the hit depth up to the surface, so the far end of the march leaves the field
+            let t: f32 = (i + 1.0) / steps;
+            let climbed: f32 = dParallaxHitDepth * t;
+            let rayDepth: f32 = dParallaxHitDepth - climbed;
+            let fieldDepth: f32 = 1.0 - textureSampleLevel({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, hitUv + uvPerDepth * climbed, dParallaxLod).{STD_HEIGHT_TEXTURE_CHANNEL};
+
+            // The field standing above the ray is a blocker, weighted down as it recedes from the
+            // hit. Both factors are clamped at zero, which is not defensive: the step count is not a
+            // whole number, so the last iteration overshoots t = 1, where the ray is above the
+            // surface and the penetration is negative - and a negative penetration times a negative
+            // weight is a positive, which shows up as rings of false shadow on the crests of the
+            // relief, where the step count is smallest.
+            blocked = max(blocked, max(0.0, rayDepth - fieldDepth) * max(0.0, 1.0 - t));
+        }
+
+        return clamp(1.0 - blocked * parallaxShadowHardness, 0.0, 1.0);
+    }
+
+#endif
 `;

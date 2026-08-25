@@ -284,8 +284,15 @@ light.addComponent('light', {
     penumbraSize: 0.02
 });
 
-// a light shines along the negative y axis of its entity, so these angles rake it across the ground
-light.setLocalEulerAngles(62, 25, 0);
+// A light shines along the negative y axis of its entity, so this pitch rakes it across the ground.
+// The rotation around y is driven by the control panel, so the relief can be lit from any side - the
+// self shadowing only appears where the light rakes across the grain of the height map, so which way
+// it comes from matters as much as how low it is.
+const lightPitch = 62;
+
+// degrees per second the animation turns the light, slow enough to watch the shadows travel
+const lightSpin = 6;
+light.setLocalEulerAngles(lightPitch, 25, 0);
 app.root.addChild(light);
 
 const camera = new Entity('camera');
@@ -319,25 +326,35 @@ const MODE_NONE = 'none';
 data.set('data', {
     mode: PARALLAX_OCCLUSION,
     samples: 16,
+    selfShadowSamples: 8,
     height: 0.35,
     shadowType: SHADOW_PCF3_32F,
     numCascades: 4,
-    penumbraFalloff: 1,
-    shadowSamples: 16,
-    shadowBlockerSamples: 16
+    lightRotation: 25,
+    animate: true
 });
 
-let mode, samples, height, shadowType, numCascades;
-let penumbraFalloff, shadowSamples, shadowBlockerSamples;
+let mode, samples, selfShadowSamples, height, shadowType, numCascades;
+let lightRotation, animate;
 
-app.on('update', () => {
+// the live angle, which the animation advances and the slider follows
+let lightAngle = 25;
+
+app.on('update', (dt) => {
     const newMode = data.get('data.mode');
     const newSamples = data.get('data.samples');
+    const newSelfShadowSamples = data.get('data.selfShadowSamples');
     const newHeight = data.get('data.height');
 
-    if (newMode !== mode || newSamples !== samples || newHeight !== height) {
+    if (
+        newMode !== mode ||
+        newSamples !== samples ||
+        newSelfShadowSamples !== selfShadowSamples ||
+        newHeight !== height
+    ) {
         mode = newMode;
         samples = newSamples;
+        selfShadowSamples = newSelfShadowSamples;
         height = newHeight;
 
         material.heightMap = mode === MODE_NONE ? null : assets.height.resource;
@@ -345,6 +362,9 @@ app.on('update', () => {
             material.parallaxMode = mode;
         }
         material.parallaxSamples = samples;
+
+        // zero takes the self shadow march out of the shader, so this both budgets and switches it
+        material.parallaxShadowSamples = selfShadowSamples;
         material.heightMapFactor = height;
         material.update();
     }
@@ -360,22 +380,34 @@ app.on('update', () => {
         light.light.numCascades = numCascades;
     }
 
-    // the soft shadow settings, which only apply to the pcss filtering mode
-    const newPenumbraFalloff = data.get('data.penumbraFalloff');
-    const newShadowSamples = data.get('data.shadowSamples');
-    const newShadowBlockerSamples = data.get('data.shadowBlockerSamples');
+    const newAnimate = data.get('data.animate');
+    const newRotation = data.get('data.lightRotation');
 
-    if (
-        newPenumbraFalloff !== penumbraFalloff ||
-        newShadowSamples !== shadowSamples ||
-        newShadowBlockerSamples !== shadowBlockerSamples
-    ) {
-        penumbraFalloff = newPenumbraFalloff;
-        shadowSamples = newShadowSamples;
-        shadowBlockerSamples = newShadowBlockerSamples;
+    if (newAnimate !== animate) {
+        animate = newAnimate;
 
-        light.light.penumbraFalloff = penumbraFalloff;
-        light.light.shadowSamples = shadowSamples;
-        light.light.shadowBlockerSamples = shadowBlockerSamples;
+        // carry on from wherever the slider was left
+        lightAngle = newRotation;
     }
+
+    if (animate) {
+        lightAngle = (lightAngle + dt * lightSpin) % 360;
+
+        // a change the animation did not make is the slider being dragged, so follow it
+        if (Math.abs(newRotation - lightRotation) > 1) {
+            lightAngle = newRotation;
+        }
+
+        // write the angle back a degree at a time, so the slider tracks without churning every frame
+        const rounded = Math.round(lightAngle);
+        if (rounded !== lightRotation) {
+            lightRotation = rounded;
+            data.set('data.lightRotation', rounded);
+        }
+    } else if (newRotation !== lightRotation) {
+        lightRotation = newRotation;
+        lightAngle = newRotation;
+    }
+
+    light.setLocalEulerAngles(lightPitch, lightAngle, 0);
 });

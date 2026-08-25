@@ -11,6 +11,7 @@ import {
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
     DITHER_NONE,
+    PARALLAX_OCCLUSION,
     PARALLAX_OFFSET,
     SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
     FOG_NONE,
@@ -114,6 +115,10 @@ class StandardMaterialOptionsBuilder {
 
         // the parallax mode only matters when a height map is assigned
         options.parallaxMode = options.heightMap ? stdMat.parallaxMode : PARALLAX_OFFSET;
+
+        // self shadowing marches the height field, so it needs the marched mode - the tap count
+        // doubles as the switch, as alphaTest does above
+        options.parallaxSelfShadow = options.parallaxMode === PARALLAX_OCCLUSION && stdMat.parallaxShadowSamples > 0;
         options.litOptions.useNormals = options.normalMap;
         options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
         options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.litOptions.ssao;

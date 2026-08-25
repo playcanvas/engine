@@ -1,4 +1,11 @@
-import { BindingTwoWay, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    Panel,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
 
 import {
     PARALLAX_OCCLUSION,
@@ -45,6 +52,15 @@ export function Controls({ observer }) {
                         precision={0}
                     />
                 </LabelGroup>
+                <LabelGroup text='Self Shadow'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.selfShadowSamples' }}
+                        min={0}
+                        max={32}
+                        precision={0}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Height'>
                     <SliderInput
                         binding={new BindingTwoWay()}
@@ -55,8 +71,24 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
             </Panel>
-            <Panel headerText='Shadow Cascades'>
-                <LabelGroup text='Filtering'>
+            <Panel headerText='Light'>
+                <LabelGroup text='Rotation'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.lightRotation' }}
+                        min={0}
+                        max={360}
+                        precision={0}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Animate'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.animate' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Shadow Type'>
                     <SelectInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'data.shadowType' }}
@@ -70,41 +102,12 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='Count'>
+                <LabelGroup text='Num Cascades'>
                     <SliderInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'data.numCascades' }}
                         min={1}
                         max={4}
-                        precision={0}
-                    />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Soft Shadows'>
-                <LabelGroup text='Falloff'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'data.penumbraFalloff' }}
-                        min={1}
-                        max={10}
-                        precision={1}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Samples'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'data.shadowSamples' }}
-                        min={1}
-                        max={128}
-                        precision={0}
-                    />
-                </LabelGroup>
-                <LabelGroup text='Blocker Samples'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'data.shadowBlockerSamples' }}
-                        min={0}
-                        max={128}
                         precision={0}
                     />
                 </LabelGroup>
