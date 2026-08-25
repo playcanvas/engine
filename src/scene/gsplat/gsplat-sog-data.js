@@ -3,7 +3,6 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import {
@@ -14,7 +13,7 @@ import {
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
-import { RenderPassQuad } from '../../scene/graphics/render-pass-quad.js';
+import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCenters.js';
 import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
@@ -399,14 +398,12 @@ class GSplatSogData {
         });
 
         const quad = new QuadRender(shader);
-        const renderPass = new RenderPassQuad(device, quad);
+        const renderPass = new RenderPassShaderQuad(device);
+        renderPass.quadRender = quad;
         renderPass.name = 'SogGenerateCenters';
         renderPass.init(renderTarget);
         renderPass.colorOps.clear = false;
         renderPass.depthStencilOps.clearDepth = false;
-        // RenderPassQuad preserves the device blend state; blending must be off
-        // for the integer render target
-        device.setBlendState(BlendState.NOBLEND);
         renderPass.render();
         quad.destroy();
 
