@@ -3,6 +3,7 @@ import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { GSplatData } from './gsplat-data.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import {
@@ -403,6 +404,9 @@ class GSplatSogData {
         renderPass.init(renderTarget);
         renderPass.colorOps.clear = false;
         renderPass.depthStencilOps.clearDepth = false;
+        // RenderPassQuad preserves the device blend state; blending must be off
+        // for the integer render target
+        device.setBlendState(BlendState.NOBLEND);
         renderPass.render();
         quad.destroy();
 
