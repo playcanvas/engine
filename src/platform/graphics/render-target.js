@@ -132,6 +132,14 @@ class RenderTarget {
     _resolveBuffers = null;
 
     /**
+     * Single-sampled resolve target for an explicit multisampled depth buffer.
+     *
+     * @type {Texture|null}
+     * @private
+     */
+    _depthResolveBuffer = null;
+
+    /**
      * @type {boolean}
      * @private
      */
@@ -254,9 +262,17 @@ class RenderTarget {
      * @param {boolean} [options.depth] - If set to true, depth buffer will be created. Defaults to
      * true. Ignored if depthBuffer is defined.
      * @param {Texture} [options.depthBuffer] - The texture that this render target will treat as a
-     * depth/stencil surface (WebGL2 only). If set, the 'depth' and 'stencil' properties are
-     * ignored. Texture must have {@link PIXELFORMAT_DEPTH} or {@link PIXELFORMAT_DEPTHSTENCIL}
-     * format.
+     * depth/stencil surface. If set, the 'depth' and 'stencil' properties are ignored. The texture
+     * must use {@link PIXELFORMAT_DEPTH}, {@link PIXELFORMAT_DEPTH16} or
+     * {@link PIXELFORMAT_DEPTHSTENCIL} format. On WebGPU this can be a multisampled texture (a
+     * texture created with `samples` > 1), in which case the render target renders directly into
+     * its depth samples, which can later be read in a shader using `textureLoad` on a
+     * `texture_depth_multisampled_2d`, or resolved into an optional `depthResolveBuffer`.
+     * @param {Texture} [options.depthResolveBuffer] - A single-sampled {@link PIXELFORMAT_R32F}
+     * texture that the multisampled depth buffer is resolved into at the end of a render pass,
+     * using a shader-based resolve controlled by {@link RenderTarget#depthResolveMode} (WebGPU
+     * only - no hardware depth resolve exists). Only valid when `depthBuffer` is a multisampled
+     * texture, and must match its dimensions.
      * @param {number} [options.mipLevel] - If set to a number greater than 0, the render target
      * will render to the specified mip level of the color buffer. Defaults to 0.
      * @param {number} [options.face] - If the colorBuffer parameter is a cubemap, use this option
@@ -350,12 +366,14 @@ class RenderTarget {
         const { maxSamples } = this._device;
         const suppliedColorBuffers = options.colorBuffers ?? (options.colorBuffer ? [options.colorBuffer] : undefined);
         const msColorBuffer = suppliedColorBuffers?.find(colorBuffer => colorBuffer?.samples > 1);
-        const explicitMsaa = !!msColorBuffer;
+        const msDepthBuffer = (options.depthBuffer?.samples ?? 1) > 1 ? options.depthBuffer : undefined;
+        const msBuffer = msColorBuffer ?? msDepthBuffer;
+        const explicitMsaa = !!msBuffer;
         if (explicitMsaa) {
-            this._samples = msColorBuffer.samples;
+            this._samples = msBuffer.samples;
             Debug.call(() => {
                 if (options.samples !== undefined && options.samples !== this._samples) {
-                    Debug.warnOnce(`RenderTarget '${options.name ?? msColorBuffer.name}': the samples option (${options.samples}) does not match the multisampled color buffer (${this._samples} samples); using the color buffer's sample count.`);
+                    Debug.warnOnce(`RenderTarget '${options.name ?? msBuffer.name}': the samples option (${options.samples}) does not match the multisampled buffer (${this._samples} samples); using the buffer's sample count.`);
                 }
             });
         } else {
@@ -422,6 +440,16 @@ class RenderTarget {
             }
         }
 
+        // depth resolve buffer - a single-sampled destination the multisampled depth buffer is
+        // shader-resolved into at the end of a render pass
+        if (options.depthResolveBuffer) {
+            if (msDepthBuffer) {
+                this._depthResolveBuffer = options.depthResolveBuffer;
+            } else {
+                Debug.error(`RenderTarget '${options.name ?? this._depthBuffer?.name}': depthResolveBuffer is only supported when the depthBuffer is a multisampled texture. The depth resolve buffer is ignored.`);
+            }
+        }
+
         this.autoResolve = options.autoResolve ?? true;
 
         // use specified name, otherwise get one from color or depth buffer
@@ -463,6 +491,29 @@ class RenderTarget {
                     Debug.assert(isMultisampleResolveCapablePixelFormat(colorBuffer.format),
                         `RenderTarget '${this.name}': color buffer format at index ${index} cannot be hardware-resolved; omit the resolveBuffer and resolve in a shader using textureLoad.`, this);
                 });
+
+                // depth buffer of an explicit multisampled render target
+                const depthBuffer = this._depthBuffer;
+                if (depthBuffer) {
+                    Debug.assert(depthBuffer.samples === this._samples,
+                        `RenderTarget '${this.name}': the depth buffer must have the same sample count as the color buffers, but has ${depthBuffer.samples} samples while ${this._samples} are expected.`, this);
+                    if (depthBuffer.samples > 1) {
+                        const format = depthBuffer.format;
+                        Debug.assert(format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16 || format === PIXELFORMAT_DEPTHSTENCIL,
+                            `RenderTarget '${this.name}': a multisampled depthBuffer must use a depth format.`, this);
+                    }
+                }
+
+                // depth resolve buffer
+                const depthResolveBuffer = this._depthResolveBuffer;
+                if (depthResolveBuffer && depthBuffer) {
+                    Debug.assert(depthResolveBuffer.samples === 1,
+                        `RenderTarget '${this.name}': depthResolveBuffer must be single-sampled, but has ${depthResolveBuffer.samples} samples.`, this);
+                    Debug.assert(depthResolveBuffer.format === PIXELFORMAT_R32F,
+                        `RenderTarget '${this.name}': depthResolveBuffer must use the PIXELFORMAT_R32F format.`, this);
+                    Debug.assert(depthResolveBuffer.width === depthBuffer.width && depthResolveBuffer.height === depthBuffer.height,
+                        `RenderTarget '${this.name}': depthResolveBuffer dimensions (${depthResolveBuffer.width}x${depthResolveBuffer.height}) do not match the depth buffer (${depthBuffer.width}x${depthBuffer.height}).`, this);
+                }
             }
         });
 
@@ -600,6 +651,9 @@ class RenderTarget {
             resolveBuffer?.destroy();
         });
         this._resolveBuffers = null;
+
+        this._depthResolveBuffer?.destroy();
+        this._depthResolveBuffer = null;
     }
 
     /**
@@ -624,6 +678,7 @@ class RenderTarget {
         this._resolveBuffers?.forEach((resolveBuffer) => {
             resolveBuffer?.resize(width, height);
         });
+        this._depthResolveBuffer?.resize(width, height);
 
         // only rebuild framebuffers if dimensions changed
         if (this._width !== width || this._height !== height) {
@@ -920,6 +975,16 @@ class RenderTarget {
      */
     get depthBuffer() {
         return this._depthBuffer;
+    }
+
+    /**
+     * The single-sampled texture the multisampled depth buffer is resolved into at the end of a
+     * render pass. See the `depthResolveBuffer` constructor option. Null when not provided.
+     *
+     * @type {Texture|null}
+     */
+    get depthResolveBuffer() {
+        return this._depthResolveBuffer;
     }
 
     /**

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
-import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderPass } from '../../../src/platform/graphics/render-pass.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
@@ -156,6 +156,41 @@ describe('RenderPass', function () {
             expect(pass.colorArrayOps[0].resolve).to.equal(true);
             expect(pass.colorArrayOps[1].store).to.equal(true);
             expect(pass.colorArrayOps[1].resolve).to.equal(false);
+
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+    });
+
+    describe('#allocateAttachments: multisampled depth', function () {
+
+        const createMsDepth = () => {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            return new Texture(device, { name: 'msDepth', width: 4, height: 4, format: PIXELFORMAT_DEPTH, samples: 4 });
+        };
+
+        it('stores depth and does not resolve without a depth resolve buffer', function () {
+            const rt = new RenderTarget({ depthBuffer: createMsDepth() });
+            const pass = new RenderPass(device);
+            pass.init(rt);
+
+            expect(pass.depthStencilOps.storeDepth).to.equal(true);
+            expect(pass.depthStencilOps.resolveDepth).to.equal(false);
+
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('resolves depth by default when a depth resolve buffer is assigned', function () {
+            const resolve = new Texture(device, { name: 'depthResolve', width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false });
+            const rt = new RenderTarget({ depthBuffer: createMsDepth(), depthResolveBuffer: resolve });
+            const pass = new RenderPass(device);
+            pass.init(rt);
+
+            expect(pass.depthStencilOps.storeDepth).to.equal(true);
+            expect(pass.depthStencilOps.resolveDepth).to.equal(true);
 
             rt.destroyTextureBuffers();
             rt.destroy();
