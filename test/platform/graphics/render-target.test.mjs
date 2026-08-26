@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
+import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
@@ -321,6 +321,109 @@ describe('RenderTarget', function () {
             expect(rt.colorBuffer.width).to.equal(8);
             expect(resolve.width).to.equal(8);
             expect(resolve.height).to.equal(8);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+    });
+
+    describe('#constructor: multisampled depth attachments', function () {
+
+        let errors;
+        let originalError;
+
+        beforeEach(function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            originalError = console.error;
+            errors = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+        });
+
+        afterEach(function () {
+            console.error = originalError;
+        });
+
+        const createMsDepth = (options = {}) => {
+            return new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_DEPTH, samples: 4, ...options });
+        };
+
+        const createMsColor = (options = {}) => {
+            return new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, samples: 4, ...options });
+        };
+
+        const createR32F = (options = {}) => {
+            return new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_R32F, mipmaps: false, ...options });
+        };
+
+        it('infers the sample count from a depth-only multisampled render target', function () {
+            const rt = new RenderTarget({ name: 'msd-only', depthBuffer: createMsDepth() });
+            expect(rt.samples).to.equal(4);
+            expect(rt.depth).to.be.true;
+            expect(errors).to.have.lengthOf(0);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('accepts matching multisampled color and depth buffers', function () {
+            const rt = new RenderTarget({ name: 'msd-both', colorBuffer: createMsColor(), depthBuffer: createMsDepth() });
+            expect(rt.samples).to.equal(4);
+            expect(errors).to.have.lengthOf(0);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts when the depth buffer sample count does not match the color buffers', function () {
+            const oneSampleDepth = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_DEPTH, mipmaps: false });
+            const rt = new RenderTarget({ name: 'msd-mixed', colorBuffer: createMsColor(), depthBuffer: oneSampleDepth });
+            expect(errors.some(m => m.includes('same sample count'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('stores the depth resolve buffer and exposes it through the getter', function () {
+            const resolve = createR32F();
+            const rt = new RenderTarget({ name: 'msd-resolve', depthBuffer: createMsDepth(), depthResolveBuffer: resolve });
+            expect(rt.depthResolveBuffer).to.equal(resolve);
+            expect(errors).to.have.lengthOf(0);
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('errors when depthResolveBuffer is used without a multisampled depthBuffer', function () {
+            const depthBuffer = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_DEPTH, mipmaps: false });
+            const resolve = createR32F();
+            const rt = new RenderTarget({ name: 'msd-no-ms', depthBuffer, depthResolveBuffer: resolve });
+            expect(errors.some(m => m.includes('only supported when the depthBuffer is a multisampled'))).to.be.true;
+            expect(rt.depthResolveBuffer).to.equal(null);
+            rt.destroyTextureBuffers();
+            resolve.destroy();
+            rt.destroy();
+        });
+
+        it('asserts on a depthResolveBuffer with the wrong format', function () {
+            const resolve = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false });
+            const rt = new RenderTarget({ name: 'msd-format', depthBuffer: createMsDepth(), depthResolveBuffer: resolve });
+            expect(errors.some(m => m.includes('PIXELFORMAT_R32F'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('asserts on a depthResolveBuffer with mismatched dimensions', function () {
+            const resolve = createR32F({ width: 8, height: 8 });
+            const rt = new RenderTarget({ name: 'msd-dims', depthBuffer: createMsDepth(), depthResolveBuffer: resolve });
+            expect(errors.some(m => m.includes('dimensions'))).to.be.true;
+            rt.destroyTextureBuffers();
+            rt.destroy();
+        });
+
+        it('resizes the depth resolve buffer along with the other buffers', function () {
+            const resolve = createR32F();
+            const rt = new RenderTarget({ name: 'msd-resize', depthBuffer: createMsDepth(), depthResolveBuffer: resolve });
+            rt.resize(8, 8);
+            expect(rt.depthBuffer.width).to.equal(8);
+            expect(resolve.width).to.equal(8);
             rt.destroyTextureBuffers();
             rt.destroy();
         });

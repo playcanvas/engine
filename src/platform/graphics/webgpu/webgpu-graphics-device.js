@@ -1193,17 +1193,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (target) {
 
             // resolve depth buffer (stencil resolve is not yet implemented)
-            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth) {
-                if (renderPass.samples > 1 && target.autoResolve) {
+            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth && renderPass.samples > 1) {
+
+                // legacy mode: the internally allocated multisampled depth is resolved into the
+                // user-provided single-sampled depthBuffer (R32F), additionally gated on
+                // autoResolve. Explicit mode: the user-provided multisampled depthBuffer is
+                // resolved into depthResolveBuffer, driven purely by the per-pass resolveDepth
+                // flag - matching how explicit color resolve buffers are controlled.
+                const explicitMsaa = target.depthBuffer.samples > 1;
+                if (explicitMsaa || target.autoResolve) {
                     const depthAttachment = target.impl.depthAttachment;
-                    const destTexture = target.depthBuffer.impl.gpuTexture;
+                    const sourceTexture = explicitMsaa ? depthAttachment?.depthTexture : depthAttachment?.multisampledDepthBuffer;
+                    const destTexture = explicitMsaa ? target.depthResolveBuffer?.impl.gpuTexture : target.depthBuffer.impl.gpuTexture;
 
                     // a transient (memoryless) depth buffer cannot be sampled, so it cannot be the
                     // source of a shader-based depth resolve (it has no TEXTURE_BINDING usage)
                     if (depthAttachment?.transient) {
                         Debug.errorOnce(`Depth resolve is not possible on render target '${target.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth resolve.`);
-                    } else if (depthAttachment && destTexture) {
-                        this.resolver.resolveDepth(this.commandEncoder, depthAttachment.multisampledDepthBuffer, destTexture, target.depthResolveMode);
+                    } else if (sourceTexture && destTexture) {
+                        this.resolver.resolveDepth(this.commandEncoder, sourceTexture, destTexture, target.depthResolveMode);
                     }
                 }
             }
@@ -1637,10 +1645,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             if (sourceRT.samples > 1) {
 
-                // resolve the depth to a color buffer of destination render target, using the
-                // resolve mode of the source render target
-                const destTexture = dest.colorBuffer.impl.gpuTexture;
-                this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture, sourceRT.depthResolveMode);
+                // multisampled destination depth buffer - a plain copy between the multisampled
+                // depth textures (a depth snapshot). WebGPU requires equal sample counts and
+                // matching formats.
+                const destMsDepth = dest?.depthBuffer?.samples > 1 ? dest.depthBuffer : null;
+                if (destMsDepth) {
+                    if (destMsDepth.samples !== sourceRT.samples) {
+                        Debug.errorOnce(`copyRenderTarget: cannot copy depth between render targets with different sample counts (source '${sourceRT.name}' has ${sourceRT.samples}, destination '${dest.name}' has ${destMsDepth.samples}).`);
+                        DebugGraphics.popGpuMarker(this);
+                        return false;
+                    }
+                    Debug.assert(copySize.width === destMsDepth.width && copySize.height === destMsDepth.height,
+                        'copyRenderTarget: copies of multisampled depth must cover the entire texture.');
+                    commandEncoder.copyTextureToTexture(
+                        { texture: sourceTexture },
+                        { texture: destMsDepth.impl.gpuTexture },
+                        copySize
+                    );
+                } else {
+
+                    // resolve the depth to a color buffer of destination render target, using the
+                    // resolve mode of the source render target
+                    const destTexture = dest.colorBuffer.impl.gpuTexture;
+                    this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture, sourceRT.depthResolveMode);
+                }
 
             } else {
 

@@ -258,6 +258,13 @@ class RenderPass extends FramePass {
         // assume the user wants to use its content, and so store it by default
         if (rt?.depthBuffer) {
             this.depthStencilOps.storeDepth = true;
+
+            // a depth resolve buffer is the output of the shader-based depth resolve, which runs
+            // after the pass - resolve by default (the multisampled depth is stored either way, as
+            // the resolve reads it after the pass has finished)
+            if (rt.depthResolveBuffer) {
+                this.depthStencilOps.resolveDepth = true;
+            }
         }
 
         // color
