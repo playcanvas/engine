@@ -228,7 +228,11 @@ class RenderTarget {
      *
      * @param {object} [options] - Object for passing optional arguments.
      * @param {boolean} [options.autoResolve] - If samples > 1, enables or disables automatic MSAA
-     * resolve after rendering to this RT (see {@link resolve}). Defaults to true.
+     * resolve after rendering to this RT (see {@link resolve}). Applies to the implicit
+     * multisampled path only - resolves of explicit multisampled attachments (a multisampled
+     * `colorBuffer` with a `resolveBuffer`, or a multisampled `depthBuffer` with a
+     * `depthResolveBuffer`) are controlled by the per-pass resolve flags instead. Defaults to
+     * true.
      * @param {string} [options.depthResolveMode] - How the samples of the multisampled depth
      * buffer are resolved into a single depth value, whenever the depth of this render target is
      * resolved by a shader-based resolve (WebGPU only) - the depth grab pass (`sceneDepthMap`), a
@@ -790,7 +794,18 @@ class RenderTarget {
 
     /**
      * Copies color and/or depth contents of source render target to this one. Formats, sizes and
-     * anti-aliasing samples must match. Depth buffer can only be copied on WebGL 2.0.
+     * anti-aliasing samples must match.
+     *
+     * A depth copy is supported in these cases:
+     *
+     * - On WebGL 2.0, between render targets with matching sample counts.
+     * - On WebGPU, between single-sampled render targets.
+     * - On WebGPU, from a multisampled source into a multisampled `depthBuffer` of this render
+     * target with an equal sample count and matching format - a full depth snapshot, including
+     * the individual samples.
+     * - On WebGPU, from a multisampled source into a single-sampled {@link PIXELFORMAT_R32F}
+     * color buffer of this render target - a shader-based resolve controlled by the source's
+     * {@link RenderTarget#depthResolveMode}.
      *
      * @param {RenderTarget} source - Source render target to copy from.
      * @param {boolean} [color] - If true, will copy the color buffer. Defaults to false.

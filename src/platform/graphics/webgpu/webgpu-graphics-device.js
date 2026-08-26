@@ -1193,14 +1193,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (target) {
 
             // resolve depth buffer (stencil resolve is not yet implemented)
-            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth) {
-                if (renderPass.samples > 1 && target.autoResolve) {
-                    const depthAttachment = target.impl.depthAttachment;
+            if (target.depthBuffer && renderPass.depthStencilOps.resolveDepth && renderPass.samples > 1) {
 
-                    // legacy mode: the internally allocated multisampled depth is resolved into
-                    // the user-provided single-sampled depthBuffer (R32F). Explicit mode: the
-                    // user-provided multisampled depthBuffer is resolved into depthResolveBuffer.
-                    const explicitMsaa = target.depthBuffer.samples > 1;
+                // legacy mode: the internally allocated multisampled depth is resolved into the
+                // user-provided single-sampled depthBuffer (R32F), additionally gated on
+                // autoResolve. Explicit mode: the user-provided multisampled depthBuffer is
+                // resolved into depthResolveBuffer, driven purely by the per-pass resolveDepth
+                // flag - matching how explicit color resolve buffers are controlled.
+                const explicitMsaa = target.depthBuffer.samples > 1;
+                if (explicitMsaa || target.autoResolve) {
+                    const depthAttachment = target.impl.depthAttachment;
                     const sourceTexture = explicitMsaa ? depthAttachment?.depthTexture : depthAttachment?.multisampledDepthBuffer;
                     const destTexture = explicitMsaa ? target.depthResolveBuffer?.impl.gpuTexture : target.depthBuffer.impl.gpuTexture;
 
