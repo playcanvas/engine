@@ -374,6 +374,18 @@ class WebgpuRenderTarget {
                 renderingView = depthTexture.createView();
                 DebugHelper.setLabel(renderingView, `${renderTarget.name}.autoDepthView`);
 
+            } else if (depthBuffer.samples > 1) {
+
+                // explicit multisampled depth attachment - the depth buffer is itself a
+                // multisampled depth-format texture, rendered into directly. The user texture is
+                // not owned by this render target.
+                this.depthAttachment = new DepthAttachment(depthBuffer.impl.format);
+                this.depthAttachment.depthTexture = depthBuffer.impl.gpuTexture;
+                this.depthAttachment.depthTextureInternal = false;
+
+                renderingView = depthBuffer.impl.gpuTexture.createView();
+                DebugHelper.setLabel(renderingView, `${renderTarget.name}.msDepthView`);
+
             } else {  // use provided depth buffer
 
                 this.depthAttachment = new DepthAttachment(depthBuffer.impl.format);
