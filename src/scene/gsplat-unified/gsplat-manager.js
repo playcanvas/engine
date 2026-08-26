@@ -754,8 +754,7 @@ class GSplatManager {
         // Renderer per-frame update (material syncing, deferred setup). Must run after
         // fireFrameReadyEvent(): listeners may change material state (e.g. antiAlias), and
         // syncing here applies it this same frame before frameEnd() clears the dirty flag.
-        const fogParams = this.scene.gsplat.useFog ? (this.cameraNode.camera.fogParams ?? this.scene.fog) : null;
-        this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure, fogParams);
+        this.renderer.frameUpdate(this.scene.gsplat);
 
         // return the number of active splats for stats
         const sortedState = this.world.getState(this.world.currentVersion);

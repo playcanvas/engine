@@ -535,6 +535,14 @@ class GSplatParams {
      */
     useFog = true;
 
+    /**
+     * Whether to apply the camera's tonemapping and the scene exposure to Gaussian splats. When
+     * false, splats render with their stored colors, unaffected by {@link Scene#exposure} and the
+     * camera's {@link CameraComponent#toneMapping}. Fog, when enabled, still applies. Defaults to
+     * true.
+     */
+    useTonemap = true;
+
     /** @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead. */
     set colorizeColorUpdate(value) {
         Debug.deprecated('GSplatParams#colorizeColorUpdate is deprecated. Use GSplatParams#debug = GSPLAT_DEBUG_SH_UPDATE instead.');
@@ -975,6 +983,7 @@ class GSplatParams {
 
         this.antiAlias = render.gsplatAntiAlias ?? this.antiAlias;
         this.useFog = render.gsplatUseFog ?? this.useFog;
+        this.useTonemap = render.gsplatUseTonemap ?? this.useTonemap;
         this.colorUpdateAngle = render.gsplatColorUpdateAngle ?? this.colorUpdateAngle;
         this.cooldownTicks = render.gsplatCooldownTicks ?? this.cooldownTicks;
         this.dataFormat = render.gsplatDataFormat ?? this.dataFormat;
