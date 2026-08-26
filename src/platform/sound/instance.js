@@ -398,9 +398,19 @@ class SoundInstance extends EventHandler {
      * @type {boolean}
      */
     set loop(value) {
-        this._loop = !!value;
+        const loop = !!value;
+        const wasLooping = this._loop;
+        this._loop = loop;
+
         if (this.source) {
-            this.source.loop = this._loop;
+            this.source.loop = loop;
+
+            // the duration is not passed to the source for looping instances, so if looping is
+            // disabled while the instance is playing, the end of the current iteration of the loop
+            // region has to be scheduled manually
+            if (wasLooping && !loop && this._duration && this._state === STATE_PLAYING) {
+                this._stopAtEndOfLoopRegion();
+            }
         }
     }
 
@@ -678,12 +688,8 @@ class SoundInstance extends EventHandler {
         // reset start offset now that we started the sound
         this._startOffset = null;
 
-        // start source with specified offset and duration
-        if (this._duration) {
-            this.source.start(0, offset, this._duration);
-        } else {
-            this.source.start(0, offset);
-        }
+        // start source with specified offset
+        this._startSource(offset);
 
         // reset times
         this._startedAt = this._manager.context.currentTime;
@@ -704,6 +710,50 @@ class SoundInstance extends EventHandler {
         if (!this._suspendInstanceEvents) {
             this._onPlay();
         }
+    }
+
+    /**
+     * Starts the source at the specified offset into the buffer.
+     *
+     * The duration is only passed to the source for non-looping instances. For a looping instance,
+     * the region to play is defined by loopStart/loopEnd - passing a duration as well would stop
+     * playback at the end of the first iteration instead of looping.
+     *
+     * @param {number} offset - The offset into the buffer, in seconds, to start playing from.
+     * @private
+     */
+    _startSource(offset) {
+        if (this._duration && !this._loop) {
+            this.source.start(0, offset, this._duration);
+        } else {
+            this.source.start(0, offset);
+        }
+    }
+
+    /**
+     * Schedules the source to stop at the end of the current iteration of the loop region. Needed
+     * when looping is disabled mid-playback, because a looping source is started without a
+     * duration and would otherwise keep playing to the end of the buffer.
+     *
+     * @private
+     */
+    _stopAtEndOfLoopRegion() {
+        const source = this.source;
+        const loopStart = source.loopStart;
+        const loopEnd = source.loopEnd;
+        const region = loopEnd - loopStart;
+        if (region <= 0) {
+            return;
+        }
+
+        // work out how far into the loop region playback currently is
+        const context = this._manager.context;
+        let position = this._currentOffset + (context.currentTime - this._startedAt) * this._pitch;
+        if (position > loopEnd) {
+            position = loopStart + ((position - loopStart) % region);
+        }
+
+        source.stop(context.currentTime + Math.max(0, loopEnd - position) / this._pitch);
     }
 
     /**
@@ -782,11 +832,7 @@ class SoundInstance extends EventHandler {
         }
 
         // start source
-        if (this._duration) {
-            this.source.start(0, offset, this._duration);
-        } else {
-            this.source.start(0, offset);
-        }
+        this._startSource(offset);
 
         this._startedAt = this._manager.context.currentTime;
         this._currentOffset = offset;
@@ -986,7 +1032,9 @@ class SoundInstance extends EventHandler {
             // set loopStart and loopEnd so that the source starts and ends at the correct user-set times
             this.source.loopStart = capTime(this._startTime, this.source.buffer.duration);
             if (this._duration) {
-                this.source.loopEnd = Math.max(this.source.loopStart, capTime(this._startTime + this._duration, this.source.buffer.duration));
+                // clamp instead of wrapping - a wrapped loopEnd can collapse onto loopStart, which
+                // the Web Audio API interprets as 'loop the whole buffer'
+                this.source.loopEnd = Math.min(this.source.loopStart + this._duration, this.source.buffer.duration);
             }
         }
 
