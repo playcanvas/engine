@@ -80,6 +80,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
         this._internalDefines.add('GSPLAT_SEPARATE_OPACITY');
         this._internalDefines.add('GSPLAT_FISHEYE');
+        this._internalDefines.add('GSPLAT_NO_FOG');
+        this._internalDefines.add('GSPLAT_NO_TONEMAP');
+        this._internalDefines.add('GSPLAT_OVERDRAW');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -315,9 +318,12 @@ class GSplatQuadRenderer extends GSplatRenderer {
         }
 
         const noFog = !params.useFog;
-        if (noFog !== this._lastNoFog) {
+        const noTonemap = !params.useTonemap;
+        if (noFog !== this._lastNoFog || noTonemap !== this._lastNoTonemap) {
             this._lastNoFog = noFog;
+            this._lastNoTonemap = noTonemap;
             this._material.setDefine('GSPLAT_NO_FOG', noFog);
+            this._material.setDefine('GSPLAT_NO_TONEMAP', noTonemap);
             this._material.update();
         }
 

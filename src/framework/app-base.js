@@ -1448,6 +1448,8 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
      * @param {boolean} [settings.render.gsplatAntiAlias] - Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
      * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.
+     * @param {boolean} [settings.render.gsplatUseTonemap] - Whether to apply the camera's tonemapping and the
+     * scene exposure to Gaussian splats. Defaults to true.
      * @param {number} [settings.render.gsplatColorUpdateAngle] - Viewing angle threshold in degrees for triggering gsplat spherical harmonics color updates. Defaults to 10.
      * @param {number} [settings.render.gsplatCooldownTicks] - Number of update ticks before unloading unused streamed gsplat resources. Defaults to 100.
      * @param {string} [settings.render.gsplatDataFormat] - Work buffer data format for gsplat rendering. One of the GSPLATDATA_* constants. Defaults to {@link GSPLATDATA_COMPACT}.
