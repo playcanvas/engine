@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { SogBundleParser } from '../../../src/framework/parsers/sog-bundle.js';
 import { SogParser } from '../../../src/framework/parsers/sog.js';
 import { http } from '../../../src/platform/net/http.js';
 import { createApp } from '../../app.mjs';
@@ -86,5 +87,57 @@ describe('SogParser', function () {
             ]);
             done();
         }, sog);
+    });
+
+    // Nothing cancels an in-flight request, so a load callback can run after app.destroy(). That
+    // drops the asset registry before it marks the graphics device destroyed, leaving a window where
+    // app.assets is null while the device still looks alive - which used to throw out of
+    // _shouldAbort rather than aborting the load.
+    describe('#_shouldAbort', function () {
+
+        const parsers = () => [new SogParser(app), new SogBundleParser(app)];
+
+        it('does not abort while the asset is registered and the device is alive', function () {
+            const asset = new Asset('sog', 'gsplat', { url: META_URL });
+            app.assets.add(asset);
+
+            for (const parser of parsers()) {
+                expect(parser._shouldAbort(asset, false)).to.equal(false);
+                expect(parser._shouldAbort(asset, true)).to.equal(true, 'unloaded wins');
+            }
+        });
+
+        it('aborts rather than throwing once the app has dropped its asset registry', function () {
+            const asset = new Asset('sog', 'gsplat', { url: META_URL });
+            const device = app.graphicsDevice;
+
+            for (const parser of parsers()) {
+                // app.destroy() nulls assets before it destroys the device, so this state is real
+                parser.app = { assets: null, graphicsDevice: device };
+                expect(() => parser._shouldAbort(asset, false)).to.not.throw();
+                expect(parser._shouldAbort(asset, false)).to.equal(true);
+            }
+        });
+
+        it('aborts when the graphics device is gone or destroyed', function () {
+            const asset = new Asset('sog', 'gsplat', { url: META_URL });
+            app.assets.add(asset);
+
+            for (const parser of parsers()) {
+                parser.app = { assets: app.assets, graphicsDevice: { _destroyed: true } };
+                expect(parser._shouldAbort(asset, false)).to.equal(true);
+
+                parser.app = { assets: app.assets, graphicsDevice: null };
+                expect(parser._shouldAbort(asset, false)).to.equal(true);
+            }
+        });
+
+        it('aborts when the asset is no longer registered', function () {
+            const asset = new Asset('sog', 'gsplat', { url: META_URL });
+
+            for (const parser of parsers()) {
+                expect(parser._shouldAbort(asset, false)).to.equal(true);
+            }
+        });
     });
 });
