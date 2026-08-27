@@ -572,12 +572,16 @@ class ForwardRenderer extends Renderer {
             // Skip hardware-instanced rendering with 0 instances. When draw commands (indirect /
             // multi-draw) are bound, they are the source of truth for the number of draws and
             // per-draw instance counts, so instancingData.count must not gate the draw.
-            const instancingData = drawCall.instancingData;
             const drawCommands = drawCall.getDrawCommands(camera);
-
-            if (instancingData && instancingData.count <= 0 &&
-                (!drawCommands || !drawCommands.hasDraws)) {
-                continue;
+            if (!drawCommands) {
+                const instancingData = drawCall.instancingData;
+                if (instancingData && instancingData.count <= 0) {
+                    continue;
+                }
+            } else {
+                if (!drawCommands.hasDraws) {
+                    continue;
+                }
             }
 
             drawCall.ensureMaterial(device);

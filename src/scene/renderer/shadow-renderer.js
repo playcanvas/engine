@@ -551,9 +551,14 @@ class ShadowRenderer {
             // Skip hardware-instanced rendering with 0 instances. When draw commands (indirect /
             // multi-draw) are bound, they are the source of truth for the number of draws and
             // per-draw instance counts, so instancingData.count must not gate the draw.
-            if (instancingData && instancingData.count <= 0 &&
-                (!drawCommands || !drawCommands.hasDraws)) {
-                continue;
+            if (!drawCommands) {
+                if (instancingData && instancingData.count <= 0) {
+                    continue;
+                }
+            } else {
+                if (!drawCommands.hasDraws) {
+                    continue;
+                }
             }
 
             meshInstance.ensureMaterial(device);
