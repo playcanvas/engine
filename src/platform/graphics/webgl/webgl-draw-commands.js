@@ -16,6 +16,9 @@ class WebglDrawCommands {
     /** @type {Int32Array|null} */
     glInstanceCounts = null;
 
+    /** @type {boolean} */
+    hasDraws = false;
+
     /**
      * @param {number} indexSizeBytes - Size of index in bytes (1, 2 or 4). 0 for non-indexed.
      */
@@ -51,24 +54,29 @@ class WebglDrawCommands {
     }
 
     /**
-     * Calculate total primitives for stats (profiler builds only).
+     * Sets {@link hasDraws} and calculate total primitives for stats (profiler builds only).
      * @param {number} count - Number of active draws.
      * @returns {number} Total primitive count.
      */
     update(count) {
-        // calculate total primitives for stats
         let totalPrimitives = 0;
+        let hasDraws = false;
 
-        // #if _PROFILER
         if (this.glCounts && this.glInstanceCounts && count > 0) {
             for (let d = 0; d < count; d++) {
                 const indexOrVertexCount = this.glCounts[d];
                 const instanceCount = this.glInstanceCounts[d];
+                if (indexOrVertexCount > 0 && instanceCount > 0) {
+                    hasDraws = true;
+                }
+
+                // #if _PROFILER
                 totalPrimitives += indexOrVertexCount * instanceCount;
+                // #endif
             }
         }
-        // #endif
 
+        this.hasDraws = hasDraws;
         return totalPrimitives;
     }
 }

@@ -236,10 +236,10 @@ class ShaderInstance {
  * ### Precedence
  *
  * When draw commands (indirect or multi-draw, see {@link setIndirect} and {@link setMultiDraw})
- * are bound, they are the source of truth for rendering: the number of draws and the per-draw
- * instance counts come from the draw commands, and {@link instancingCount} is ignored. In this
- * case setting {@link instancingCount} to 0 does not skip rendering. {@link instancingCount} only
- * takes effect for plain hardware instancing, when no draw commands are bound.
+ * are bound, they are the source of truth: draw count and per-draw instance counts come from
+ * the commands, and {@link instancingCount} is ignored. Rendering is skipped when
+ * {@link DrawCommands#hasDraws} is false. {@link instancingCount} only gates plain hardware
+ * instancing when no draw commands are bound.
  *
  * @category Graphics
  */

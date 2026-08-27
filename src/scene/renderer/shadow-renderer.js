@@ -549,8 +549,12 @@ class ShadowRenderer {
             // Skip hardware-instanced rendering with 0 instances. When draw commands (indirect /
             // multi-draw) are bound, they are the source of truth for the number of draws and
             // per-draw instance counts, so instancingData.count must not gate the draw.
+            const drawCommands = meshInstance.getDrawCommands(camera);
+            if (drawCommands && !drawCommands.hasDraws) {
+                continue;
+            }
             const instancingData = meshInstance.instancingData;
-            if (instancingData && instancingData.count <= 0 && !meshInstance.getDrawCommands(camera)) {
+            if (instancingData && instancingData.count <= 0) {
                 continue;
             }
 
@@ -599,8 +603,7 @@ class ShadowRenderer {
 
             // draw
             const style = meshInstance.renderStyle;
-            const indirectData = meshInstance.getDrawCommands(camera);
-            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
+            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, drawCommands);
 
             renderer._shadowDrawCalls++;
             if (instancingData) {

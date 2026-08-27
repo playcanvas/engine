@@ -66,11 +66,21 @@ class DrawCommands {
     }
 
     /**
-     * Slot index of the first indirect draw call. Ignored for multi-draw commands.
+     * First indirect slot, or `-1` for multi-draw.
      *
      * @ignore
      */
-    slotIndex = 0;
+    slotIndex = -1;
+
+    /**
+     * True if this container is bound to GPU-driven indirect slots.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get isIndirect() {
+        return this.slotIndex >= 0;
+    }
 
     /**
      * Total number of primitives across all sub-draws (pre-calculated).
@@ -78,6 +88,14 @@ class DrawCommands {
      * @ignore
      */
     primitiveCount = 0;
+
+    /**
+     * True if any sub-draw has index/vertex count > 0 and instance count > 0.
+     * For indirect draws (`isIndirect`), true when {@link count} > 0.
+     *
+     * @type {boolean}
+     */
+    hasDraws = false;
 
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
@@ -104,6 +122,7 @@ class DrawCommands {
      */
     allocate(maxCount) {
         this._maxCount = maxCount;
+        this.slotIndex = -1;
         this.impl.allocate?.(maxCount);
     }
 
@@ -123,13 +142,22 @@ class DrawCommands {
     }
 
     /**
-     * Finalize and set draw count after all commands have been added.
+     * Sets the draw count and {@link hasDraws}.
      *
      * @param {number} count - Number of draws to execute.
      */
     update(count) {
         this._count = count;
         this.primitiveCount = this.impl.update?.(count) ?? 0;
+
+        // For indirect draws, the CPU cannot inspect the instance counts,
+        // so we treat the draw count as the hasDraws flag.
+        if (this.isIndirect) {
+            this.hasDraws = count > 0;
+            return;
+        }
+
+        this.hasDraws = this.impl.hasDraws ?? (count > 0);
     }
 }
 

@@ -956,15 +956,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
 
             // draw
-            if (drawCommands) { // indirect draw path
+            if (drawCommands) { // indirect / multi-draw path
 
+                const baseSlot = drawCommands.isIndirect ? drawCommands.slotIndex : 0;
                 const storage = drawCommands.impl?.storage ?? this.indirectDrawBuffer;
                 const indirectBuffer = storage.impl.buffer;
                 const drawsCount = drawCommands.count;
 
                 // TODO: when multiDrawIndirect is supported, we can use it here instead of a loop
                 for (let d = 0; d < drawsCount; d++) {
-                    const indirectOffset = (drawCommands.slotIndex + d) * _indirectEntryByteSize;
+                    const indirectOffset = (baseSlot + d) * _indirectEntryByteSize;
                     if (indexBuffer) {
                         passEncoder.drawIndexedIndirect(indirectBuffer, indirectOffset);
                     } else {
