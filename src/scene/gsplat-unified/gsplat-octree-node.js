@@ -10,7 +10,8 @@ import { Vec4 } from '../../core/math/vec4.js';
  * @property {number} count - The count of items
  * @property {number} error - Approximation error relative to the finest LOD present in this node.
  * Zero at that finest level and non-decreasing as levels get coarser. Read from the manifest when
- * it supplies one, otherwise derived from splat counts - see {@link GSplatOctree#lodErrorSource}.
+ * it supplies one, otherwise derived from splat counts - see `GSplatOctree#lodErrorSource`.
+ * @ignore
  */
 
 const tmpMin = new Vec3();
