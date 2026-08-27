@@ -790,7 +790,7 @@ async function runBenchmark(config, colIndex, budgetIndices) {
         url: './assets/splats/playcanvas-logo/meta.json'
     });
     const churchAsset = new Asset('church', 'gsplat', {
-        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json'
     });
 
     setStatus(`${config.label}  Loading assets...`);

@@ -8,6 +8,9 @@ import { Vec4 } from '../../core/math/vec4.js';
  * @property {number} fileIndex - The file index in the octree files array
  * @property {number} offset - The offset in the file
  * @property {number} count - The count of items
+ * @property {number} error - Approximation error relative to the finest LOD present in this node.
+ * Zero at that finest level and non-decreasing as levels get coarser. Read from the manifest when
+ * it supplies one, otherwise derived from splat counts - see {@link GSplatOctree#lodErrorSource}.
  */
 
 const tmpMin = new Vec3();

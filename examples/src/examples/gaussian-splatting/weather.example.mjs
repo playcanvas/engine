@@ -83,7 +83,7 @@ app.on('destroy', () => {
 
 const assets = {
     scene: new Asset('gsplat', 'gsplat', {
-        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json'
     })
 };
 
@@ -131,9 +131,6 @@ gsplatEntity.addComponent('gsplat', {
 });
 gsplatEntity.setLocalEulerAngles(270, 0, 0);
 app.root.addChild(gsplatEntity);
-
-gsplatEntity.gsplat.lodBaseDistance = 5;
-gsplatEntity.gsplat.lodMultiplier = 4;
 
 // Procedural weather
 const weatherEntity = new Entity('Weather');

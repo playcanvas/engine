@@ -1,144 +1,280 @@
 /**
  * @import { GSplatOctreeInstance } from './gsplat-octree-instance.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
+ * @import { GSplatLodTable } from './gsplat-lod-table.js'
  */
 
-import { NUM_BUCKETS } from './constants.js';
+import { NUM_VALUE_BUCKETS } from './constants.js';
+
+// Monotonic float -> integer key. The bit pattern of a positive float is order preserving, and
+// linear in log2 of the value, so bucketing on it is a log-spaced bucketing without a Math.log.
+const _f32 = new Float32Array(1);
+const _u32 = new Uint32Array(_f32.buffer);
+const keyOf = (value) => {
+    _f32[0] = value;
+    return _u32[0];
+};
+
+// Fixed bucket scale rather than one derived from the values seen this update. A derived range
+// shifts every update, which moves a node between buckets when nothing about that node changed -
+// and that is a flicker source in its own right.
+//
+// The window has to cover every `coverage * error-per-splat` a scene can produce. Coverage is
+// structurally bounded to [1e-12, 1] by NodeInfo#lodCoverage, so scene extent does not enter into
+// it. The ratio does: with derived errors it is `ln(a/b) / (a - b)` over adjacent frontier counts,
+// which peaks at ln 2 for counts 1 -> 2 and falls as ~ln2/count for large nodes. So the low end
+// tracks splats *per node* rather than scene size - 1e-24 leaves room for a node of ~1e12 splats.
+// The high end allows for authored errors far larger than any measured (~3), since the colour term
+// in splat-transform's metric is unnormalised and has no upper bound.
+//
+// Anything outside the window still resolves, it just shares the first or last bucket and loses
+// ordering against its neighbours there.
+const KEY_LO = keyOf(1e-24);
+const KEY_HI = keyOf(1e3);
+const KEY_SCALE = (NUM_VALUE_BUCKETS - 1) / (KEY_HI - KEY_LO);
 
 /**
- * Balances splat budget across multiple octree instances by adjusting LOD levels.
- * Uses sqrt-based bucket distribution to give more precision to nearby geometry.
- * Bucket 0 = nearest to camera (highest priority), bucket N-1 = farthest (lowest priority).
+ * Distributes a splat budget across octree instances by choosing a LOD level per node.
+ *
+ * Every node starts at the cheapest level it can render, which is the coarsest the scene can be and
+ * therefore always within budget. Each single-level upgrade available anywhere in the scene is then
+ * ranked by `coverage * error removed / splats added` - value for money, weighted by how much
+ * screen the node covers - and they are bought best first until one does not fit.
+ *
+ * Stopping at the first upgrade that does not fit, rather than skipping it and continuing, is
+ * deliberate. Continuing would make a node's outcome depend on whether some unrelated cheaper
+ * upgrade happened to be considered first, so small camera movements would flip levels on and off.
+ * The cost is leaving some budget unspent.
+ *
+ * Only a node's next unbought upgrade is ever in the queue; buying it enqueues its successor. Since
+ * a successor's value is never higher than its predecessor's, it lands in the current bucket or a
+ * lower one, so a single sweep from the top bucket down suffices. It also means at most one entry
+ * per node is live, which is what lets the buckets be intrusive lists over preallocated typed
+ * arrays with no per-entry storage at all.
  *
  * @ignore
  */
 class GSplatBudgetBalancer {
-    /**
-     * Buckets storing NodeInfo references.
-     * @type {Array<Array>|null}
-     * @private
-     */
-    _buckets = null;
+    /** @type {Int32Array} */
+    _bucketHead = new Int32Array(NUM_VALUE_BUCKETS);
+
+    /** @type {Int32Array} */
+    _bucketTail = new Int32Array(NUM_VALUE_BUCKETS);
 
     /**
-     * Initialize bucket infrastructure on first use.
+     * Next node in the same bucket, indexed by global node index. -1 terminates the list.
+     *
+     * @type {Int32Array}
      * @private
      */
-    _initBuckets() {
-        if (!this._buckets) {
-            // Pre-allocate bucket arrays (will hold NodeInfo references)
-            this._buckets = new Array(NUM_BUCKETS);
-            for (let i = 0; i < NUM_BUCKETS; i++) {
-                this._buckets[i] = [];
-            }
-        }
+    _next = new Int32Array(0);
+
+    /**
+     * Index of a node's next unbought upgrade, indexed by global node index.
+     *
+     * @type {Int32Array}
+     * @private
+     */
+    _pending = new Int32Array(0);
+
+    /**
+     * Node coverage, indexed by global node index. Copied out of NodeInfo during the seed pass so
+     * the drain, which visits nodes in value order rather than index order, reads a flat array.
+     *
+     * @type {Float32Array}
+     * @private
+     */
+    _coverage = new Float32Array(0);
+
+    /**
+     * Which instance owns each global node index.
+     *
+     * @type {Uint16Array}
+     * @private
+     */
+    _instanceOf = new Uint16Array(0);
+
+    /**
+     * Global node index of each instance's first node.
+     *
+     * @type {number[]}
+     * @private
+     */
+    _instanceBase = [];
+
+    /** @type {GSplatOctreeInstance[]} */
+    _instances = [];
+
+    /** @type {GSplatLodTable[]} */
+    _tables = [];
+
+    /**
+     * @param {number} capacity - Required global node capacity.
+     * @private
+     */
+    _ensureCapacity(capacity) {
+        if (this._next.length >= capacity) return;
+        const size = Math.max(capacity, this._next.length * 2, 1024);
+        this._next = new Int32Array(size);
+        this._pending = new Int32Array(size);
+        this._coverage = new Float32Array(size);
+        this._instanceOf = new Uint16Array(size);
     }
 
     /**
-     * Balances splat budget across all octree instances by adjusting LOD levels.
-     * Uses sqrt-based bucket distribution to give more precision to nearby geometry.
-     * Makes multiple passes, adjusting by one LOD level per pass, until budget is reached
-     * or all nodes hit their respective limits (per-instance rangeMin or rangeMax).
+     * Maps an upgrade value to a bucket. Monotonic, so a node's successor upgrade never lands in a
+     * bucket above the one it was bought from.
+     *
+     * @param {number} value - Coverage-weighted error reduction per splat.
+     * @returns {number} Bucket index.
+     * @private
+     */
+    _bucketOf(value) {
+        const bucket = ((keyOf(value) - KEY_LO) * KEY_SCALE) | 0;
+        return bucket < 0 ? 0 : (bucket >= NUM_VALUE_BUCKETS ? NUM_VALUE_BUCKETS - 1 : bucket);
+    }
+
+    /**
+     * @param {number} bucket - Bucket to append to.
+     * @param {number} node - Global node index.
+     * @private
+     */
+    _push(bucket, node) {
+        this._next[node] = -1;
+        if (this._bucketHead[bucket] < 0) {
+            this._bucketHead[bucket] = node;
+        } else {
+            this._next[this._bucketTail[bucket]] = node;
+        }
+        this._bucketTail[bucket] = node;
+    }
+
+    /**
+     * Assigns a LOD level to every node of every instance, keeping the total splat count within
+     * budget. Reads NodeInfo#lodCoverage, writes NodeInfo#optimalLod.
      *
      * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - Map of
      * GSplatOctreeInstance objects.
      * @param {number} budget - Target splat budget for octrees.
      */
     balance(octreeInstances, budget) {
-        // Initialize buckets on first use
-        this._initBuckets();
+        const instances = this._instances;
+        const tables = this._tables;
+        const bases = this._instanceBase;
+        instances.length = 0;
+        tables.length = 0;
+        bases.length = 0;
 
-        // Clear buckets
-        for (let i = 0; i < NUM_BUCKETS; i++) {
-            this._buckets[i].length = 0;
-        }
-
-        // Collect all nodes into buckets (indices precomputed in evaluateNodeLods when enforcing budget).
-        let totalOptimalSplats = 0;
+        let nodeTotal = 0;
+        let totalStartCount = 0;
+        let totalFinestCount = 0;
         for (const [, inst] of octreeInstances) {
-            const nodes = inst.octree.nodes;
-            const nodeInfos = inst.nodeInfos;
-
-            for (let nodeIndex = 0, len = nodes.length; nodeIndex < len; nodeIndex++) {
-                const nodeInfo = nodeInfos[nodeIndex];
-                const optimalLod = nodeInfo.optimalLod;
-                if (optimalLod < 0) continue;
-
-                // Cache lods array on nodeInfo for fast access in budget adjustment loops
-                const lods = nodes[nodeIndex].lods;
-                nodeInfo.lods = lods;
-
-                this._buckets[nodeInfo.budgetBucket].push(nodeInfo);
-
-                totalOptimalSplats += lods[optimalLod].count;
-            }
+            const table = inst.octree.getLodTable(inst.rangeMin, inst.rangeMax);
+            bases.push(nodeTotal);
+            instances.push(inst);
+            tables.push(table);
+            nodeTotal += inst.octree.nodes.length;
+            totalStartCount += table.totalStartCount;
+            totalFinestCount += table.totalFinestCount;
         }
+        if (instances.length === 0) return;
 
-        // Skip if already at budget
-        let currentSplats = totalOptimalSplats;
-        if (currentSplats === budget) {
+        // Everything fits, or nothing does - either way there is nothing to trade off.
+        if (totalFinestCount <= budget) {
+            this._assignChainEnd(true);
+            return;
+        }
+        if (totalStartCount >= budget) {
+            this._assignChainEnd(false);
             return;
         }
 
-        // Determine direction
-        const isOverBudget = currentSplats > budget;
+        this._ensureCapacity(nodeTotal);
+        this._bucketHead.fill(-1);
 
-        // Multiple passes: adjust by one LOD level per pass until budget is reached
-        let done = false;
-        while (!done && (isOverBudget ? currentSplats > budget : currentSplats < budget)) {
-            let modified = false;
+        const next = this._next;
+        const pending = this._pending;
+        const coverage = this._coverage;
+        const instanceOf = this._instanceOf;
 
-            if (isOverBudget) {
-                // Degrade: process from FARTHEST (bucket NUM_BUCKETS-1) to NEAREST (bucket 0)
-                // This preserves quality for nearby geometry
-                for (let b = NUM_BUCKETS - 1; b >= 0 && !done; b--) {
-                    const bucket = this._buckets[b];
-                    for (let i = 0, len = bucket.length; i < len; i++) {
-                        const nodeInfo = bucket[i];
-                        if (nodeInfo.optimalLod < nodeInfo.inst.rangeMax) {
-                            const lods = nodeInfo.lods;
-                            const optimalLod = nodeInfo.optimalLod;
-                            currentSplats -= lods[optimalLod].count - lods[optimalLod + 1].count;
-                            nodeInfo.optimalLod = optimalLod + 1;
-                            modified = true;
-                            if (currentSplats <= budget) {
-                                done = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-            } else {
-                // Upgrade: process from NEAREST (bucket 0) to FARTHEST (bucket NUM_BUCKETS-1)
-                // This improves quality for nearby geometry first
-                for (let b = 0; b < NUM_BUCKETS && !done; b++) {
-                    const bucket = this._buckets[b];
-                    for (let i = 0, len = bucket.length; i < len; i++) {
-                        const nodeInfo = bucket[i];
-                        if (nodeInfo.optimalLod > nodeInfo.inst.rangeMin) {
-                            const lods = nodeInfo.lods;
-                            const optimalLod = nodeInfo.optimalLod;
-                            const splatsAdded = lods[optimalLod - 1].count - lods[optimalLod].count;
-                            if (currentSplats + splatsAdded <= budget) {
-                                nodeInfo.optimalLod = optimalLod - 1;
-                                currentSplats += splatsAdded;
-                                modified = true;
-                                if (currentSplats >= budget) {
-                                    done = true;
-                                    break;
-                                }
-                            } else {
-                                done = true;
-                                break;
-                            }
-                        }
-                    }
-                }
+        // Seed pass: floor every node and queue its first upgrade.
+        for (let i = 0; i < instances.length; i++) {
+            const inst = instances[i];
+            const table = tables[i];
+            const nodeInfos = inst.nodeInfos;
+            const base = bases[i];
+            const { startLod, firstUpgrade, upgradeRatio } = table;
+
+            for (let n = 0, len = nodeInfos.length; n < len; n++) {
+                const nodeInfo = nodeInfos[n];
+                const lod = startLod[n];
+                nodeInfo.optimalLod = lod;
+                if (lod < 0) continue;
+
+                const first = firstUpgrade[n];
+                if (first >= firstUpgrade[n + 1]) continue;
+
+                const g = base + n;
+                const cov = nodeInfo.lodCoverage;
+                coverage[g] = cov;
+                instanceOf[g] = i;
+                pending[g] = first;
+                this._push(this._bucketOf(cov * upgradeRatio[first]), g);
             }
+        }
 
-            // If no nodes were modified, we can't adjust further (all at limits)
-            if (!modified) {
-                break;
+        // Drain: best deals first, stopping at the first upgrade that does not fit.
+        //
+        // Each bucket is consumed as a queue: pop the head, then push the node's successor, which
+        // may land back in this same bucket and must be appended behind whatever is still queued.
+        // Popping first is what makes that safe - reading the popped node's link afterwards would
+        // miss a same-bucket re-push whenever it was the tail.
+        let spent = totalStartCount;
+        for (let bucket = NUM_VALUE_BUCKETS - 1; bucket >= 0; bucket--) {
+            let g = this._bucketHead[bucket];
+            while (g >= 0) {
+                this._bucketHead[bucket] = next[g];
+
+                const i = instanceOf[g];
+                const table = tables[i];
+                const k = pending[g];
+                const cost = table.upgradeCost[k];
+                if (spent + cost > budget) return;
+
+                spent += cost;
+                const n = g - bases[i];
+                instances[i].nodeInfos[n].optimalLod = table.upgradeToLod[k];
+
+                const k2 = k + 1;
+                if (k2 < table.firstUpgrade[n + 1]) {
+                    pending[g] = k2;
+                    this._push(this._bucketOf(coverage[g] * table.upgradeRatio[k2]), g);
+                }
+                g = this._bucketHead[bucket];
+            }
+        }
+    }
+
+    /**
+     * Puts every node at one end of its LOD chain, for the cases where the budget makes the ranking
+     * irrelevant - either the whole scene fits at its finest, or not even the cheapest scene does.
+     *
+     * @param {boolean} finest - True for the finest level in range, false for the cheapest.
+     * @private
+     */
+    _assignChainEnd(finest) {
+        for (let i = 0; i < this._instances.length; i++) {
+            const table = this._tables[i];
+            const nodeInfos = this._instances[i].nodeInfos;
+            const { startLod, firstUpgrade, upgradeToLod } = table;
+            for (let n = 0, len = nodeInfos.length; n < len; n++) {
+                const lod = startLod[n];
+                if (lod < 0 || !finest) {
+                    nodeInfos[n].optimalLod = lod;
+                    continue;
+                }
+                const end = firstUpgrade[n + 1];
+                nodeInfos[n].optimalLod = end > firstUpgrade[n] ? upgradeToLod[end - 1] : lod;
             }
         }
     }

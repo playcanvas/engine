@@ -1,10 +1,12 @@
 import { GSplatOctreeNode } from './gsplat-octree-node.js';
+import { GSplatLodTable } from './gsplat-lod-table.js';
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { TRACEID_OCTREE_RESOURCES } from '../../core/constants.js';
 // Temporary array reused to avoid allocations during cooldown ticking
 const _toDelete = [];
+
 
 /**
  * @import { GSplatResource } from '../gsplat/gsplat-resource.js'
@@ -36,6 +38,35 @@ class GSplatOctree {
      * @type {number}
      */
     lodLevels;
+
+    /**
+     * Where the per-level approximation errors in {@link GSplatOctreeNode#lods} came from.
+     * `'file'` when the manifest declared `lodErrors` and every renderable level supplied a usable
+     * value, `'derived'` when they were computed from splat counts instead. Errors always exist
+     * either way - this is for diagnostics only, there is no separate code path.
+     *
+     * @type {'file'|'derived'}
+     */
+    lodErrorSource = 'derived';
+
+    /**
+     * Precomputed LOD selection table for the LOD range currently in use, shared by every instance
+     * of this octree. Only one is kept: changing the range is rare, and retaining tables for ranges
+     * no longer in use costs memory for nothing.
+     *
+     * @type {GSplatLodTable|null}
+     * @private
+     */
+    _lodTable = null;
+
+    /**
+     * How many times {@link GSplatOctree#getLodTable} has had to rebuild. Debug-only, to catch
+     * instances of one octree asking for different ranges - which would rebuild on every request.
+     *
+     * @type {number}
+     * @private
+     */
+    _lodTableRebuilds = 0;
 
     /**
      * The file URL of the container asset, used as the base for resolving relative URLs.
@@ -135,6 +166,11 @@ class GSplatOctree {
         const leafNodes = [];
         this._extractLeafNodes(data.tree, leafNodes);
 
+        // The manifest declares whether it carries error tables; the values themselves are
+        // confirmed while the nodes are built, so one bad entry anywhere falls the whole asset
+        // back to derived errors rather than mixing the two.
+        let fileErrors = data.lodErrors === true;
+
         // Create nodes from the extracted leaf nodes
         this.nodes = leafNodes.map((nodeData) => {
             /** @type {GSplatOctreeNodeLod[]} */
@@ -143,12 +179,14 @@ class GSplatOctree {
             // Ensure we have exactly lodLevels entries
             for (let i = 0; i < this.lodLevels; i++) {
                 const lodData = nodeData.lods[i.toString()];
+                const error = nodeData.errors?.[i];
                 if (lodData) {
                     lods.push({
                         file: this.files[lodData.file].url || '',
                         fileIndex: lodData.file,
                         offset: lodData.offset || 0,
-                        count: lodData.count || 0
+                        count: lodData.count || 0,
+                        error: 0
                     });
 
                     // record LOD level for the file index
@@ -159,13 +197,34 @@ class GSplatOctree {
                         file: '',
                         fileIndex: -1,
                         offset: 0,
-                        count: 0
+                        count: 0,
+                        error: 0
                     });
+                }
+
+                // A level that can be rendered must supply an error that is finite and
+                // non-negative. Errors are magnitudes relative to the finest level, so a negative
+                // one is meaningless - and more dangerous than a non-finite one, since it would
+                // pass a finiteness check and then dominate every finer level on the frontier.
+                if (fileErrors) {
+                    if (lods[i].count > 0 && !(Number.isFinite(error) && error >= 0)) {
+                        fileErrors = false;
+                    } else {
+                        lods[i].error = error ?? 0;
+                    }
                 }
             }
 
             return new GSplatOctreeNode(lods, nodeData.bound);
         });
+
+        this.lodErrorSource = fileErrors ? 'file' : 'derived';
+        if (data.lodErrors === true && !fileErrors) {
+            Debug.warn(`GSplatOctree: ${assetFileUrl} declares lodErrors but does not supply a finite, non-negative error for every renderable LOD level, deriving errors from splat counts instead.`);
+        }
+        if (!fileErrors) {
+            this._deriveLodErrors();
+        }
 
         // precompute node bounds for CPU hot paths
         const nodeCount = this.nodes.length;
@@ -195,6 +254,7 @@ class GSplatOctree {
         this.destroyed = true;
 
         // Clear internal state
+        this._lodTable = null;
         this.fileResources.clear();
         this.cooldowns.clear();
 
@@ -227,6 +287,94 @@ class GSplatOctree {
     }
 
     /**
+     * Derives per-level approximation errors from splat counts, used when the manifest supplies
+     * none. The measure is the log of the level's decimation factor against the node's finest
+     * renderable level.
+     *
+     * The allocator only ever consumes the *difference* between adjacent levels, and decimation is
+     * geometric - each level holds roughly half the splats of the one below it. A log therefore
+     * gives equal error steps for equal count ratios, which matches how the levels were actually
+     * produced, and it beat a cube-root spacing proxy on every capture measured - by 2 percentage
+     * points on a finely partitioned one and by over 20 on a coarse one.
+     *
+     * Deliberately scale-free. Reweighting a node by its physical size, as `ln(ref/c) * V^p` over
+     * AABB volume `V`, was swept for `p` in 1/12 .. 1/3 against real splat-transform errors on
+     * three captures: it never helped, and cost up to +120% on the finely partitioned one. Two
+     * reasons it should not help - {@link NodeInfo#lodCoverage} already accounts for apparent size,
+     * so a size term double-counts it, and splat-transform's own error is a mass-weighted *mean*,
+     * itself scale-free, so a scale-free proxy matches it in kind.
+     *
+     * How close it gets depends mostly on how finely the asset is partitioned, since a count-only
+     * proxy has less to work with when a node covers more varied content. Against authored errors:
+     * ~2-6% on captures with thousands of nodes, ~13-17% on one with only ~500.
+     *
+     * The result is clamped monotone non-decreasing, because nothing upstream guarantees that a
+     * coarser level holds fewer splats and a coarser level must never advertise less error than
+     * the finer one it stands in for.
+     *
+     * @private
+     */
+    _deriveLodErrors() {
+        const levels = this.lodLevels;
+        const nodes = this.nodes;
+        for (let n = 0; n < nodes.length; n++) {
+            const lods = nodes[n].lods;
+
+            // finest renderable level is the reference, and carries no error
+            let refCount = 0;
+            for (let i = 0; i < levels; i++) {
+                if (lods[i].count > 0) {
+                    refCount = lods[i].count;
+                    break;
+                }
+            }
+            if (refCount === 0) continue;
+
+            let previous = 0;
+            for (let i = 0; i < levels; i++) {
+                const count = lods[i].count;
+                const error = count > 0 ? Math.log(refCount / count) : 0;
+                previous = Math.max(previous, error);
+                lods[i].error = previous;
+            }
+        }
+    }
+
+    /**
+     * Returns the LOD selection table for a LOD range, building it on first use and whenever the
+     * range changes. The previous table is dropped rather than kept: the range comes from placement
+     * properties and changes rarely, so caching one per range seen would hold memory for ranges no
+     * longer in use.
+     *
+     * The table has to be per range rather than derived from a single full-range one, because a
+     * sub-range's Pareto frontier is not the full frontier filtered down to it - when `rangeMax`
+     * lands inside a run of levels with equal error, a level that the full range discards becomes
+     * the sub-range's cheapest entry.
+     *
+     * @param {number} rangeMin - Finest allowed LOD index.
+     * @param {number} rangeMax - Coarsest allowed LOD index.
+     * @returns {GSplatLodTable} The selection table.
+     */
+    getLodTable(rangeMin, rangeMax) {
+        let table = this._lodTable;
+        if (!table || table.rangeMin !== rangeMin || table.rangeMax !== rangeMax) {
+            table = new GSplatLodTable(this, rangeMin, rangeMax);
+            this._lodTable = table;
+
+            Debug.call(() => {
+                // One slot assumes every instance of this octree uses the same range, which is the
+                // case when the range comes from a shared preset. Instances asking for different
+                // ranges would rebuild on every request instead, so say so rather than quietly
+                // spending the build cost each update.
+                if (++this._lodTableRebuilds === 64) {
+                    Debug.warnOnce(`GSplatOctree: ${this.assetFileUrl} has rebuilt its LOD selection table ${this._lodTableRebuilds} times. Instances of one octree using different LOD ranges rebuild it on every request - give them a shared range if that is not intended.`);
+                }
+            });
+        }
+        return table;
+    }
+
+    /**
      * Recursively extracts leaf nodes (nodes with 'lods' property) from the hierarchical tree.
      *
      * @param {Object} node - The current tree node to process.
@@ -238,7 +386,8 @@ class GSplatOctree {
             // This is a leaf node with LOD data
             leafNodes.push({
                 lods: node.lods,
-                bound: node.bound
+                bound: node.bound,
+                errors: node.errors
             });
         } else if (node.children) {
             // This is a branch node, recurse into children

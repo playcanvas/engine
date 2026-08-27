@@ -153,7 +153,7 @@ app.on('destroy', () => {
 // Original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
 const config = {
     name: 'Roman-Parish',
-    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
+    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json',
     lodUpdateDistance: 0.5,
     lodUnderfillLimit: 5,
     cameraPosition: [10.3, 2, -10],
@@ -180,27 +180,19 @@ const ENV_PRESETS = {
 };
 
 // LOD preset definitions
-/** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
+/** @type {Record<string, { range: number[] }>} */
 const LOD_PRESETS = {
     'desktop-max': {
-        range: [0, 5],
-        lodBaseDistance: 7,
-        lodMultiplier: 3
+        range: [0, 5]
     },
     desktop: {
-        range: [1, 5],
-        lodBaseDistance: 5,
-        lodMultiplier: 4
+        range: [1, 5]
     },
     'mobile-max': {
-        range: [2, 5],
-        lodBaseDistance: 5,
-        lodMultiplier: 2
+        range: [2, 5]
     },
     mobile: {
-        range: [3, 5],
-        lodBaseDistance: 2,
-        lodMultiplier: 2
+        range: [3, 5]
     }
 };
 
@@ -209,7 +201,7 @@ const assets = {
 
     // Draco compressed mesh matching the splat scene, with positions and normals
     mesh: new Asset('mesh', 'container', {
-        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/roman-parish-mesh.glb'
+        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/roman-parish-mesh.glb'
     }),
 
     envatlas: new Asset(
@@ -701,11 +693,7 @@ const applyPreset = () => {
     if (gsplatGs) {
         gsplatGs.lodRangeMin = presetData.range[0];
         gsplatGs.lodRangeMax = presetData.range[1];
-        gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
-        gsplatGs.lodMultiplier = presetData.lodMultiplier;
     }
-    data.set('lodBaseDistance', presetData.lodBaseDistance);
-    data.set('lodMultiplier', presetData.lodMultiplier);
 };
 
 const loadGSplat = async (/** @type {string|null} */ url) => {
@@ -749,10 +737,6 @@ const loadGSplat = async (/** @type {string|null} */ url) => {
     app.root.addChild(gsplatEntity);
     gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
 
-    const presetData = LOD_PRESETS[data.get('lodPreset')] || LOD_PRESETS.desktop;
-    gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
-    gsplatGs.lodMultiplier = presetData.lodMultiplier;
-
     // Start with lowest LOD for fast initial display, then stream up
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
     if (lodLevels) {
@@ -780,13 +764,6 @@ const loadGSplat = async (/** @type {string|null} */ url) => {
 await loadGSplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);
-
-data.on('lodBaseDistance:set', () => {
-    if (gsplatGs) gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
-});
-data.on('lodMultiplier:set', () => {
-    if (gsplatGs) gsplatGs.lodMultiplier = data.get('lodMultiplier');
-});
 
 const applySplatBudget = () => {
     const millions = data.get('splatBudget');
