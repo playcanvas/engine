@@ -23,7 +23,7 @@ class NullDrawCommands {
      * @returns {number} Total primitive count.
      */
     update(count) {
-        this.hasDraws = count > 0;
+        this.hasDraws = false;
         return 0;
     }
 }
