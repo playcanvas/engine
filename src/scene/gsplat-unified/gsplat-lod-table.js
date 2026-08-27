@@ -1,5 +1,3 @@
-import { Debug } from '../../core/debug.js';
-
 /**
  * @import { GSplatOctree } from './gsplat-octree.js'
  */
@@ -11,20 +9,21 @@ import { Debug } from '../../core/debug.js';
  * Each node is reduced to a chain of single-level *upgrades*, ordered cheapest level first. The
  * chain is the Pareto frontier over (splat count, error): a level is kept only when it strictly
  * improves on the cheapest error seen so far, which discards levels that cost more and look worse
- * than something else the node already offers. Requiring a *strict* improvement also collapses
- * levels identical in both, so consecutive entries always differ in both and every upgrade's cost
- * stays above zero.
+ * than something else the node already offers - a small fraction in practice, and redundant by
+ * definition. Requiring a *strict* improvement also collapses levels identical in both, so
+ * consecutive entries always differ in both and every upgrade's cost stays above zero.
+ *
+ * Every level that survives is a level the node can render, and the allocator moves one level at a
+ * time. Nothing else is dropped: levels that are poor value for their splats are still real
+ * improvements, and the chain doubles as the set of states streaming and underfill may pass
+ * through, so removing them would deny a loaded level to underfill and turn prefetch's one-level
+ * climb into a multi-level jump.
  *
  * Per update the allocator needs one number per node - its projected screen coverage - and the
- * value of an upgrade is `coverage * error removed / splats added`. The second factor is fixed, and
- * coverage is a single non-negative scalar multiplying every upgrade of that node equally, so the
- * running minimum that keeps a node's returns non-increasing can be taken here rather than each
- * update:
- *
- *   min over j<=k of (coverage * r_j)  ===  coverage * min over j<=k of r_j
- *
- * That is what {@link GSplatLodTable#upgradeRatio} stores, leaving one multiply per upgrade at
- * selection time.
+ * value of an upgrade is `coverage * error removed / splats added`. The second factor is fixed and
+ * coverage is a single non-negative scalar multiplying every upgrade of that node equally, so
+ * {@link GSplatLodTable#upgradeRatio} holds the fixed part and selection costs one multiply per
+ * upgrade.
  *
  * @ignore
  */
@@ -92,9 +91,13 @@ class GSplatLodTable {
     upgradeCost;
 
     /**
-     * Per upgrade, error removed per additional splat, clamped to the running minimum along the
-     * node's chain so returns never increase as a node gets finer. Multiplying by the node's
-     * coverage yields the upgrade's value.
+     * Per upgrade, error removed per additional splat over the best run this upgrade opens up -
+     * `max` over the levels reachable from where it starts, rather than its own slope. Multiplying
+     * by the node's coverage yields the upgrade's value.
+     *
+     * Note this is not monotone along a chain: once a poorly-valued step has been taken, what
+     * remains can be worth more than what was just bought. The allocator tolerates that, see
+     * GSplatBudgetBalancer.
      *
      * @type {Float32Array}
      */
@@ -187,35 +190,6 @@ class GSplatLodTable {
                 continue;
             }
 
-            // Reduce the frontier to its upper concave hull over (count, -error). The frontier only
-            // guarantees that error falls as cost rises - the slopes between consecutive levels can
-            // still *rise* towards the finer end, and a level sitting below the chord between its
-            // neighbours is never worth stopping at. Dropping it pools the levels either side into
-            // one compound upgrade priced at the chord, which is the value actually on offer.
-            //
-            // Without this the allocator would have to clamp each marginal ratio to the running
-            // minimum to keep its greedy order valid, and that understates the compound step: for
-            // levels (20,10) -> (90,8) -> (100,0) both ratios clamp to 2/70, hiding the 10-error
-            // reduction available for 80 splats at 0.125. Real authored error curves are not
-            // concave - this binds on 9-27% of upgrades across measured captures - so the clamp
-            // could leave a node stranded at its coarsest level while cheaper, less valuable
-            // upgrades elsewhere won the budget. Compacts in place, as above.
-            let hullCount = 0;
-            for (let i = 0; i < frontierCount; i++) {
-                const lod = scratch[i];
-                while (hullCount >= 2) {
-                    const a = scratch[hullCount - 2];
-                    const b = scratch[hullCount - 1];
-                    // sign of (b - a) x (lod - a) with y = -error; >= 0 means b is not above the
-                    // chord a -> lod, so it cannot be an optimal stopping point
-                    const cross = (lods[b].count - lods[a].count) * (lods[a].error - lods[lod].error) -
-                                  (lods[a].error - lods[b].error) * (lods[lod].count - lods[a].count);
-                    if (cross >= 0) hullCount--; else break;
-                }
-                scratch[hullCount++] = lod;
-            }
-            frontierCount = hullCount;
-
             const startLod = scratch[0];
             this.startLod[n] = startLod;
             this.startCount[n] = lods[startLod].count;
@@ -225,20 +199,28 @@ class GSplatLodTable {
             for (let i = 1; i < frontierCount; i++) {
                 const coarseLod = scratch[i - 1];
                 const fineLod = scratch[i];
-                const cost = lods[fineLod].count - lods[coarseLod].count;
-                const benefit = lods[coarseLod].error - lods[fineLod].error;
+
+                // Value this step by the best deal reachable by carrying on from where it starts,
+                // not by its own slope. A step can be poor on its own while the run it opens is
+                // excellent - for levels (20,10) -> (90,8) -> (100,0) the first step removes 2
+                // error for 70 splats, but reaching 100 removes 10 for 80. Priced locally the node
+                // looks worthless and loses the budget to genuinely inferior upgrades elsewhere;
+                // priced by its reach it competes on what it is actually worth, then climbs one
+                // level at a time. O(levels) per step over a handful of levels.
+                let ratio = 0;
+                for (let j = i; j < frontierCount; j++) {
+                    const reach = scratch[j];
+                    const r = (lods[coarseLod].error - lods[reach].error) /
+                              (lods[reach].count - lods[coarseLod].count);
+                    if (r > ratio) ratio = r;
+                }
+
                 upgradeToLod[upgradeCount] = fineLod;
-                upgradeCost[upgradeCount] = cost;
-                upgradeRatio[upgradeCount] = benefit / cost;
+                upgradeCost[upgradeCount] = lods[fineLod].count - lods[coarseLod].count;
+                upgradeRatio[upgradeCount] = ratio;
                 upgradeCount++;
             }
 
-            // The hull makes this hold by construction, and both the allocator's single sweep and
-            // its lazy re-insertion depend on it.
-            const emitted = upgradeCount;
-            Debug.call(() => {
-                this._assertNonIncreasing(n, upgradeRatio, emitted);
-            });
         }
 
         this.firstUpgrade[nodeCount] = upgradeCount;
@@ -250,21 +232,6 @@ class GSplatLodTable {
         this.upgradeToLod = upgradeToLod.subarray(0, upgradeCount).slice();
         this.upgradeCost = upgradeCost.subarray(0, upgradeCount).slice();
         this.upgradeRatio = upgradeRatio.subarray(0, upgradeCount).slice();
-    }
-
-    /**
-     * Asserts that a node's emitted marginal ratios never rise towards the finer end.
-     *
-     * @param {number} nodeIndex - The node whose chain was just emitted.
-     * @param {Float32Array} ratios - The ratio array being filled.
-     * @param {number} end - One past the node's last emitted upgrade.
-     * @private
-     */
-    _assertNonIncreasing(nodeIndex, ratios, end) {
-        for (let k = this.firstUpgrade[nodeIndex] + 1; k < end; k++) {
-            Debug.assert(ratios[k] <= ratios[k - 1],
-                `GSplatLodTable: node ${nodeIndex} has rising marginal returns (${ratios[k - 1]} -> ${ratios[k]}); the concave hull should have pooled these levels.`);
-        }
     }
 
     /**

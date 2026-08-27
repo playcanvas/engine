@@ -173,31 +173,35 @@ describe('GSplatLodTable', function () {
         }
     });
 
-    it('pools levels below the chord into one compound upgrade', function () {
-        // The frontier keeps all three, but 90 sits below the chord from 20 to 100, so stopping
-        // there is never optimal. Pooling prices the real offer - 10 error for 80 splats - where
-        // treating them as two steps would advertise only 2/70 for the first.
+    it('prices a step by the best run it opens, keeping every level', function () {
+        // 20 -> 90 is a poor step on its own - 2 error for 70 splats - but it opens the way to 100,
+        // which removes 10 for 80 (0.125). Pricing it locally would make the node look worthless.
+        // The middle level still has to survive: it is a real improvement, and both streaming and
+        // underfill step through it.
         const octree = makeOctree([100, 90, 20], [0, 8, 10], true);
         const table = new GSplatLodTable(octree, 0, 2);
 
-        expect(chainOf(table)).to.deep.equal([2, 0]);
+        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
         const upgrades = upgradesOf(table);
-        expect(upgrades.length).to.equal(1);
-        expect(upgrades[0].cost).to.equal(80);
+        expect(upgrades.length).to.equal(2);
+
+        expect(upgrades[0].cost).to.equal(70);
         expect(upgrades[0].ratio).to.be.closeTo(0.125, 1e-6);
+
+        expect(upgrades[1].cost).to.equal(10);
+        expect(upgrades[1].ratio).to.be.closeTo(0.8, 1e-6);
     });
 
-    it('keeps every level whose returns already fall towards the finest', function () {
-        // 50 is above the chord from 20 to 100, so it is a genuine stopping point and survives
+    it('prices a step by its own slope when nothing further beats it', function () {
+        // returns already fall towards the finest here, so each step is its own best deal
         const octree = makeOctree([100, 50, 20], [0, 1, 5], true);
         const table = new GSplatLodTable(octree, 0, 2);
 
         expect(chainOf(table)).to.deep.equal([2, 1, 0]);
         const ratios = upgradesOf(table).map(u => u.ratio);
         expect(ratios.length).to.equal(2);
-        for (let i = 1; i < ratios.length; i++) {
-            expect(ratios[i]).to.be.at.most(ratios[i - 1]);
-        }
+        expect(ratios[0]).to.be.closeTo(4 / 30, 1e-6);
+        expect(ratios[1]).to.be.closeTo(1 / 50, 1e-6);
     });
 
     it('skips levels with no splats', function () {

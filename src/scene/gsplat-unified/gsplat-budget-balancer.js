@@ -46,11 +46,13 @@ const KEY_SCALE = (NUM_VALUE_BUCKETS - 1) / (KEY_HI - KEY_LO);
  * upgrade happened to be considered first, so small camera movements would flip levels on and off.
  * The cost is leaving some budget unspent.
  *
- * Only a node's next unbought upgrade is ever in the queue; buying it enqueues its successor. Since
- * a successor's value is never higher than its predecessor's, it lands in the current bucket or a
- * lower one, so a single sweep from the top bucket down suffices. It also means at most one entry
- * per node is live, which is what lets the buckets be intrusive lists over preallocated typed
- * arrays with no per-entry storage at all.
+ * Only a node's next unbought upgrade is ever in the queue; buying it enqueues its successor. That
+ * keeps at most one entry per node live, which is what lets the buckets be intrusive lists over
+ * preallocated typed arrays with no per-entry storage at all.
+ *
+ * A successor can be worth more than what was just bought, since values are the best deal reachable
+ * from a level rather than that level's own slope. Requeueing is therefore capped at the bucket
+ * being drained, so a run always completes within the sweep that started it - see the drain.
  *
  * @ignore
  */
@@ -122,8 +124,8 @@ class GSplatBudgetBalancer {
     }
 
     /**
-     * Maps an upgrade value to a bucket. Monotonic, so a node's successor upgrade never lands in a
-     * bucket above the one it was bought from.
+     * Maps an upgrade value to a bucket. Monotonic in the value, so ordering between different
+     * upgrades is preserved; the drain caps where a successor may be requeued.
      *
      * @param {number} value - Coverage-weighted error reduction per splat.
      * @returns {number} Bucket index.
@@ -250,7 +252,15 @@ class GSplatBudgetBalancer {
                 const k2 = k + 1;
                 if (k2 < table.firstUpgrade[n + 1]) {
                     pending[g] = k2;
-                    this._push(this._bucketOf(coverage[g] * table.upgradeRatio[k2]), g);
+                    // Never above the bucket being drained. A successor can be worth more than what
+                    // was just bought - values are the best deal reachable from a level, so a poorly
+                    // valued step opens a better run - and this sweep has already passed the higher
+                    // buckets. Since every update re-floors from the cheapest level, a node pushed
+                    // above the sweep would be dropped on every update, not merely delayed, and
+                    // could never finish the run it started. Requeueing it here instead completes
+                    // the run in this sweep, at the priority of the step that opened it.
+                    const target = this._bucketOf(coverage[g] * table.upgradeRatio[k2]);
+                    this._push(target > bucket ? bucket : target, g);
                 }
                 g = this._bucketHead[bucket];
             }
