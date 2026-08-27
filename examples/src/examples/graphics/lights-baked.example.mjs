@@ -1,7 +1,6 @@
 import {
     AppBase,
     AppOptions,
-    Asset,
     AssetListLoader,
     BAKE_COLOR,
     CameraComponentSystem,
@@ -18,17 +17,18 @@ import {
     ScriptHandler,
     StandardMaterial,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
-};
+const assets = {};
 
 const gfxOptions = {
     deviceTypes: [deviceType]
@@ -246,19 +246,18 @@ camera.addComponent('camera', {
     farClip: 100,
     nearClip: 0.05
 });
-camera.setLocalPosition(1, 3, -1);
+camera.setLocalPosition(9.37, 9.278, -9.37);
+app.root.addChild(camera);
 
-// Add orbit camera script with mouse and touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 15
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 2.25, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 15)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 // lightmap baking properties
 const bakeType = BAKE_COLOR;

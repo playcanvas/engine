@@ -29,11 +29,13 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     Vec4,
     WasmModule,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -52,7 +54,6 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -156,20 +157,17 @@ cameraTop.addComponent('camera', {
 });
 cameraTop.translate(-100, 75, 100);
 cameraTop.lookAt(0, 7, 0);
+cameraTop.addComponent('script');
 app.root.addChild(cameraTop);
 
-// Add orbit camera script with a mouse and a touch support
-cameraTop.addComponent('script');
-cameraTop.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: app.root,
-        distanceMax: 300,
-        frameOnStart: false
+// Add camera controls
+cameraTop.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 7, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 300)
     }
 });
-cameraTop.script.create('orbitCameraInputMouse');
-cameraTop.script.create('orbitCameraInputTouch');
 
 // Create a directional light which casts shadows
 const dirLight = new Entity();

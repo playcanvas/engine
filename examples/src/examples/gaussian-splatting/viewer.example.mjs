@@ -37,8 +37,10 @@ import {
     TextureHandler,
     TouchDevice,
     WasmModule,
+    Vec2,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { SpzParser } from 'playcanvas/scripts/esm/parsers/spz-parser.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -131,7 +133,6 @@ app.on('destroy', () => {
 
 // Load orbit camera script and HDRI
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     hdri: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false })
 };
 
@@ -474,14 +475,11 @@ canvas.addEventListener('drop', async (e) => {
 
     // Add orbit camera script
     camera.addComponent('script');
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: entity,
-            distanceMax: size * 5,
-            frameOnStart: true
+    camera.script.create(CameraControls, {
+        properties: {
+            focusPoint: center.clone(),
+            zoomRange: new Vec2(0.01, size * 5),
+            enableFly: false
         }
     });
-    camera.script.create('orbitCameraInputMouse');
-    camera.script.create('orbitCameraInputTouch');
 });

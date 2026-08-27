@@ -27,10 +27,12 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     Vec4,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -77,7 +79,6 @@ app.on('destroy', () => {
 
 const assets = {
     logo: new Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -161,19 +162,16 @@ cameraTop.addComponent('camera', {
 cameraTop.translate(-2, 6, 9);
 app.root.addChild(cameraTop);
 
-// Add orbit camera script with a mouse and a touch support to top camera
+// Add camera controls to top camera
 cameraTop.addComponent('script');
 if (cameraTop.script) {
-    cameraTop.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            focusEntity: logoEntity2,
-            distanceMax: 60,
-            frameOnStart: false
+    cameraTop.script.create(CameraControls, {
+        properties: {
+            focusPoint: new Vec3(0, -0.5, 0),
+            enableFly: false,
+            zoomRange: new Vec2(0.01, 60)
         }
     });
-    cameraTop.script.create('orbitCameraInputMouse');
-    cameraTop.script.create('orbitCameraInputTouch');
 }
 
 // Update function called once per frame

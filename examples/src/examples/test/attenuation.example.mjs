@@ -23,8 +23,10 @@ import {
     TONEMAP_LINEAR,
     TextureHandler,
     TouchDevice,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -32,7 +34,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -95,17 +96,15 @@ camera.addComponent('camera', {
     toneMapping: TONEMAP_LINEAR
 });
 camera.camera.requestSceneColorMap(true);
+camera.setLocalPosition(24, 0, 1);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 1),
+        enableFly: false
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
-camera.script.orbitCamera.yaw = 90;
-camera.script.orbitCamera.distance = 24;
 
 // Test with camera frame which uses linear rendering
 const cameraFrame = false;
