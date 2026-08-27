@@ -10,6 +10,10 @@ const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
 const STATE_STOPPED = 2;
 
+// A scheduled stop cannot be cancelled through the Web Audio API, only replaced by a later one, so
+// an unwanted stop is pushed this many seconds into the future instead.
+const STOP_NEVER_DELAY = 1e6;
+
 /**
  * Return time % duration but always return a number instead of NaN when duration is 0.
  *
@@ -216,6 +220,35 @@ class SoundInstance extends EventHandler {
         this._currentOffset = 0;
 
         /**
+         * The offset into the buffer, in seconds, that the source was playing at when the position
+         * tracking used by the loop region was last brought up to date.
+         *
+         * @private
+         */
+        this._sourceOffset = 0;
+
+        /**
+         * The context time that _sourceOffset was recorded at.
+         *
+         * @private
+         */
+        this._sourceOffsetAt = 0;
+
+        /**
+         * Whether the source has been looping since _sourceOffset was recorded.
+         *
+         * @private
+         */
+        this._sourceLooping = false;
+
+        /**
+         * Whether a stop at the end of the loop region is currently scheduled on the source.
+         *
+         * @private
+         */
+        this._regionStopPending = false;
+
+        /**
          * The input node is the one that is connected to the source.
          *
          * @type {AudioNode|null}
@@ -398,9 +431,18 @@ class SoundInstance extends EventHandler {
      * @type {boolean}
      */
     set loop(value) {
-        this._loop = !!value;
+        const loop = !!value;
+        const wasLooping = this._loop;
+        this._loop = loop;
+
         if (this.source) {
-            this.source.loop = this._loop;
+            this.source.loop = loop;
+
+            // the duration is not passed to the source for looping instances, so the end of the
+            // loop region has to be scheduled (and unscheduled) manually as looping is toggled
+            if (wasLooping !== loop && this._duration && this._state === STATE_PLAYING) {
+                this._updateRegionStop();
+            }
         }
     }
 
@@ -425,11 +467,21 @@ class SoundInstance extends EventHandler {
         if (this._manager.context) {
             this._currentOffset = this.currentTime;
             this._startedAt = this._manager.context.currentTime;
+
+            // bring the tracked source position up to date while _pitch is still the old rate
+            if (this.source) {
+                this._syncSourcePosition();
+            }
         }
 
         this._pitch = Math.max(Number(pitch) || 0, 0.01);
         if (this.source) {
             this.source.playbackRate.value = this._pitch;
+
+            // a pending stop was scheduled in context time using the old rate
+            if (this._regionStopPending) {
+                this._updateRegionStop();
+            }
         }
     }
 
@@ -678,12 +730,8 @@ class SoundInstance extends EventHandler {
         // reset start offset now that we started the sound
         this._startOffset = null;
 
-        // start source with specified offset and duration
-        if (this._duration) {
-            this.source.start(0, offset, this._duration);
-        } else {
-            this.source.start(0, offset);
-        }
+        // start source with specified offset
+        this._startSource(offset);
 
         // reset times
         this._startedAt = this._manager.context.currentTime;
@@ -704,6 +752,86 @@ class SoundInstance extends EventHandler {
         if (!this._suspendInstanceEvents) {
             this._onPlay();
         }
+    }
+
+    /**
+     * Starts the source at the specified offset into the buffer.
+     *
+     * The duration is only passed to the source for non-looping instances. For a looping instance,
+     * the region to play is defined by loopStart/loopEnd - passing a duration as well would stop
+     * playback at the end of the first iteration instead of looping.
+     *
+     * @param {number} offset - The offset into the buffer, in seconds, to start playing from.
+     * @private
+     */
+    _startSource(offset) {
+        if (this._duration && !this._loop) {
+            this.source.start(0, offset, this._duration);
+        } else {
+            this.source.start(0, offset);
+        }
+
+        this._sourceOffset = offset;
+        this._sourceOffsetAt = this._manager.context.currentTime;
+        this._sourceLooping = this._loop;
+        this._regionStopPending = false;
+    }
+
+    /**
+     * Brings the tracked source position up to date and returns the offset into the buffer, in
+     * seconds, that the source is currently playing at. Tracked separately from _currentTime
+     * because that is capped to the duration of the instance rather than the buffer.
+     *
+     * @returns {number} The offset into the buffer, in seconds.
+     * @private
+     */
+    _syncSourcePosition() {
+        const source = this.source;
+        const context = this._manager.context;
+
+        let position = this._sourceOffset + (context.currentTime - this._sourceOffsetAt) * this._pitch;
+
+        // a source that has been looping has wrapped around the loop region
+        const region = source.loopEnd - source.loopStart;
+        if (this._sourceLooping && region > 0 && position > source.loopEnd) {
+            position = source.loopStart + ((position - source.loopStart) % region);
+        }
+
+        this._sourceOffset = position;
+        this._sourceOffsetAt = context.currentTime;
+        this._sourceLooping = source.loop;
+
+        return position;
+    }
+
+    /**
+     * Schedules, reschedules or unschedules the stop that ends the loop region. A looping source is
+     * started without a duration, so when looping is disabled the end of the current iteration has
+     * to be scheduled manually - and that deadline is in context time, so it has to be revisited
+     * whenever looping or the pitch changes.
+     *
+     * @private
+     */
+    _updateRegionStop() {
+        const source = this.source;
+        const context = this._manager.context;
+        const position = this._syncSourcePosition();
+
+        if (this._loop) {
+            if (this._regionStopPending) {
+                source.stop(context.currentTime + STOP_NEVER_DELAY);
+                this._regionStopPending = false;
+            }
+            return;
+        }
+
+        const region = source.loopEnd - source.loopStart;
+        if (region <= 0) {
+            return;
+        }
+
+        source.stop(context.currentTime + Math.max(0, source.loopEnd - position) / this._pitch);
+        this._regionStopPending = true;
     }
 
     /**
@@ -782,11 +910,7 @@ class SoundInstance extends EventHandler {
         }
 
         // start source
-        if (this._duration) {
-            this.source.start(0, offset, this._duration);
-        } else {
-            this.source.start(0, offset);
-        }
+        this._startSource(offset);
 
         this._startedAt = this._manager.context.currentTime;
         this._currentOffset = offset;
@@ -986,7 +1110,9 @@ class SoundInstance extends EventHandler {
             // set loopStart and loopEnd so that the source starts and ends at the correct user-set times
             this.source.loopStart = capTime(this._startTime, this.source.buffer.duration);
             if (this._duration) {
-                this.source.loopEnd = Math.max(this.source.loopStart, capTime(this._startTime + this._duration, this.source.buffer.duration));
+                // clamp instead of wrapping - a wrapped loopEnd can collapse onto loopStart, which
+                // the Web Audio API interprets as 'loop the whole buffer'
+                this.source.loopEnd = Math.min(this.source.loopStart + this._duration, this.source.buffer.duration);
             }
         }
 
