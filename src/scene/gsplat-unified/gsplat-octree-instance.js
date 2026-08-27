@@ -165,13 +165,13 @@ class GSplatOctreeInstance {
     rangeMax = 0;
 
     /**
-     * Selection table for the current LOD range, refreshed by
-     * {@link GSplatOctreeInstance#resolveLodRange}.
+     * Selection table for this instance's current LOD range, refreshed by
+     * {@link GSplatOctreeInstance#resolveLodRange}. Read by the budget balancer rather than having
+     * it resolve the range a second time.
      *
      * @type {import('./gsplat-lod-table.js').GSplatLodTable|null}
-     * @private
      */
-    _lodTable = null;
+    lodTable = null;
 
     /**
      * Previous node position at which LOD was last updated. This is used to determine if LOD needs
@@ -391,7 +391,7 @@ class GSplatOctreeInstance {
      */
     selectDesiredLodIndex(nodeIndex, optimalLodIndex, lodUnderfillLimit) {
         if (lodUnderfillLimit > 0 && optimalLodIndex >= 0) {
-            const table = this._lodTable;
+            const table = this.lodTable;
             const node = this.octree.nodes[nodeIndex];
 
             // prefer the finest already-loaded level within the allowed window
@@ -442,7 +442,7 @@ class GSplatOctreeInstance {
         }
 
         // Step one chain entry finer toward optimal
-        const targetLod = this._lodTable.finerOnChain(nodeIndex, desiredLodIndex);
+        const targetLod = this.lodTable.finerOnChain(nodeIndex, desiredLodIndex);
         if (targetLod < 0) return;
         const fi = node.lods[targetLod].fileIndex;
         if (fi !== -1) {
@@ -465,7 +465,7 @@ class GSplatOctreeInstance {
         const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
         this.rangeMin = rangeMin;
         this.rangeMax = rangeMax;
-        this._lodTable = this.octree.getLodTable(rangeMin, rangeMax);
+        this.lodTable = this.octree.getLodTable(rangeMin, rangeMax);
     }
 
     /**

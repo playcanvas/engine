@@ -19,7 +19,10 @@ const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.le
         octree,
         nodeInfos: nodes.map((_, i) => ({ optimalLod: -1, lodCoverage: coverage?.[i] ?? 1 })),
         rangeMin,
-        rangeMax
+        rangeMax,
+        // resolveLodRange() supplies this in the engine; the balancer reads it rather than
+        // resolving the range itself
+        lodTable: octree.getLodTable(rangeMin, rangeMax)
     };
 };
 
@@ -179,6 +182,24 @@ describe('GSplatBudgetBalancer', function () {
         new GSplatBudgetBalancer().balance(instances, 30);
 
         expect(lodsOf(inst)).to.deep.equal([1, 1]);
+    });
+
+    it('buys a compound upgrade that beats a cheaper rival outright', function () {
+        // Node 0's middle level sits below the chord, so its levels pool into one 80-splat step
+        // worth 10 error (0.125/splat). Node 1 offers 4 error for 40 splats (0.1/splat). Treating
+        // node 0 as two steps would price both at 2/70, letting node 1 win and then leaving too
+        // little budget for node 0's 70-splat first step - residual 10 instead of 4.
+        const { inst, instances } = single([
+            { lods: [{ count: 100, error: 0 }, { count: 90, error: 8 }, { count: 20, error: 10 }] },
+            { lods: [{ count: 60, error: 0 }, { count: 60, error: 0 }, { count: 20, error: 4 }] }
+        ]);
+
+        // floors are 20 + 20, so 120 affords exactly node 0's compound step
+        new GSplatBudgetBalancer().balance(instances, 120);
+
+        expect(inst.nodeInfos[0].optimalLod).to.equal(0);
+        expect(inst.nodeInfos[1].optimalLod).to.equal(2);
+        expect(splatsOf(inst)).to.equal(120);
     });
 
     it('never exceeds the budget', function () {

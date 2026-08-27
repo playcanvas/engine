@@ -169,7 +169,9 @@ class GSplatBudgetBalancer {
         let totalStartCount = 0;
         let totalFinestCount = 0;
         for (const [, inst] of octreeInstances) {
-            const table = inst.octree.getLodTable(inst.rangeMin, inst.rangeMax);
+            // resolveLodRange() already built this for the instance's range; resolving it again
+            // here would rebuild whenever two instances of one octree differ in range
+            const table = inst.lodTable;
             bases.push(nodeTotal);
             instances.push(inst);
             tables.push(table);

@@ -85,19 +85,30 @@ describe('GSplatOctree LOD errors', function () {
         }
     });
 
-    it('reuses a table for the same range and rebuilds for a different one', function () {
+    it('keeps a table per range so differing instances do not rebuild each other', function () {
+        // lodRangeMin/Max are per placement, so two instances of one octree can differ. Holding
+        // only the last range would make each request rebuild the other's table.
         const octree = makeOctree([10, 5, 2], [0, 1, 2], true);
         const a = octree.getLodTable(0, 2);
-        expect(octree.getLodTable(0, 2)).to.equal(a);
-
         const b = octree.getLodTable(1, 2);
+
         expect(b).to.not.equal(a);
+        expect(a.rangeMin).to.equal(0);
         expect(b.rangeMin).to.equal(1);
 
-        // only the current range is kept, so going back rebuilds rather than returning the old one
-        const c = octree.getLodTable(0, 2);
-        expect(c).to.not.equal(a);
-        expect(c.rangeMin).to.equal(0);
+        // alternating between them returns the same objects, no rebuild
+        expect(octree.getLodTable(0, 2)).to.equal(a);
+        expect(octree.getLodTable(1, 2)).to.equal(b);
+        expect(octree.getLodTable(0, 2)).to.equal(a);
+    });
+
+    it('evicts the oldest table rather than growing without bound', function () {
+        const octree = makeOctree([100, 50, 20, 10, 5], [0, 1, 2, 3, 4], true);
+        const first = octree.getLodTable(0, 4);
+        // fill past the cap with distinct ranges; the first one should be gone by then
+        for (const [lo, hi] of [[1, 4], [2, 4], [3, 4], [0, 3]]) octree.getLodTable(lo, hi);
+
+        expect(octree.getLodTable(0, 4)).to.not.equal(first);
     });
 });
 
@@ -135,14 +146,28 @@ describe('GSplatLodTable', function () {
         }
     });
 
-    it('keeps upgrade ratios non-increasing along a chain', function () {
-        // raw ratios here rise towards the finest level; the running minimum has to flatten them,
-        // otherwise a later upgrade could outrank an earlier one on the same node
+    it('pools levels below the chord into one compound upgrade', function () {
+        // The frontier keeps all three, but 90 sits below the chord from 20 to 100, so stopping
+        // there is never optimal. Pooling prices the real offer - 10 error for 80 splats - where
+        // treating them as two steps would advertise only 2/70 for the first.
         const octree = makeOctree([100, 90, 20], [0, 8, 10], true);
         const table = new GSplatLodTable(octree, 0, 2);
 
+        expect(chainOf(table)).to.deep.equal([2, 0]);
+        const upgrades = upgradesOf(table);
+        expect(upgrades.length).to.equal(1);
+        expect(upgrades[0].cost).to.equal(80);
+        expect(upgrades[0].ratio).to.be.closeTo(0.125, 1e-6);
+    });
+
+    it('keeps every level whose returns already fall towards the finest', function () {
+        // 50 is above the chord from 20 to 100, so it is a genuine stopping point and survives
+        const octree = makeOctree([100, 50, 20], [0, 1, 5], true);
+        const table = new GSplatLodTable(octree, 0, 2);
+
+        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
         const ratios = upgradesOf(table).map(u => u.ratio);
-        expect(ratios.length).to.be.above(1);
+        expect(ratios.length).to.equal(2);
         for (let i = 1; i < ratios.length; i++) {
             expect(ratios[i]).to.be.at.most(ratios[i - 1]);
         }

@@ -7,6 +7,10 @@ import { TRACEID_OCTREE_RESOURCES } from '../../core/constants.js';
 // Temporary array reused to avoid allocations during cooldown ticking
 const _toDelete = [];
 
+// How many LOD selection tables one octree keeps. Sized for the number of distinct LOD ranges that
+// can be live at once - a few quality presets - not for every range ever requested.
+const MAX_LOD_TABLES = 4;
+
 
 /**
  * @import { GSplatResource } from '../gsplat/gsplat-resource.js'
@@ -50,18 +54,22 @@ class GSplatOctree {
     lodErrorSource = 'derived';
 
     /**
-     * Precomputed LOD selection table for the LOD range currently in use, shared by every instance
-     * of this octree. Only one is kept: changing the range is rare, and retaining tables for ranges
-     * no longer in use costs memory for nothing.
+     * Precomputed LOD selection tables, keyed by the LOD range they were built for, and shared by
+     * every instance of this octree using that range.
      *
-     * @type {GSplatLodTable|null}
+     * More than one is kept because `lodRangeMin`/`lodRangeMax` are per placement, so instances of
+     * one octree may legitimately differ - holding only the last would rebuild on every request
+     * once two ranges are live. The map is bounded, and the oldest entry is evicted rather than
+     * retained indefinitely, so a range that falls out of use does not hold its table forever.
+     *
+     * @type {Map<number, GSplatLodTable>}
      * @private
      */
-    _lodTable = null;
+    _lodTables = new Map();
 
     /**
-     * How many times {@link GSplatOctree#getLodTable} has had to rebuild. Debug-only, to catch
-     * instances of one octree asking for different ranges - which would rebuild on every request.
+     * How many times {@link GSplatOctree#getLodTable} has had to rebuild. Debug-only, to catch more
+     * concurrently-live LOD ranges than the map holds, which would rebuild on every request.
      *
      * @type {number}
      * @private
@@ -254,7 +262,7 @@ class GSplatOctree {
         this.destroyed = true;
 
         // Clear internal state
-        this._lodTable = null;
+        this._lodTables.clear();
         this.fileResources.clear();
         this.cooldowns.clear();
 
@@ -341,10 +349,9 @@ class GSplatOctree {
     }
 
     /**
-     * Returns the LOD selection table for a LOD range, building it on first use and whenever the
-     * range changes. The previous table is dropped rather than kept: the range comes from placement
-     * properties and changes rarely, so caching one per range seen would hold memory for ranges no
-     * longer in use.
+     * Returns the LOD selection table for a LOD range, building it on first use. Tables for ranges
+     * still in use are kept, so instances of this octree that differ in range do not rebuild each
+     * other's table on every request.
      *
      * The table has to be per range rather than derived from a single full-range one, because a
      * sub-range's Pareto frontier is not the full frontier filtered down to it - when `rangeMax`
@@ -356,18 +363,23 @@ class GSplatOctree {
      * @returns {GSplatLodTable} The selection table.
      */
     getLodTable(rangeMin, rangeMax) {
-        let table = this._lodTable;
-        if (!table || table.rangeMin !== rangeMin || table.rangeMax !== rangeMax) {
+        const key = rangeMin * 256 + rangeMax;
+        let table = this._lodTables.get(key);
+        if (!table) {
+            // Evict the oldest rather than growing without bound - Map iterates in insertion order.
+            // The cap only needs to cover the ranges live at one time, which is a handful of quality
+            // presets in practice.
+            if (this._lodTables.size >= MAX_LOD_TABLES) {
+                this._lodTables.delete(this._lodTables.keys().next().value);
+            }
             table = new GSplatLodTable(this, rangeMin, rangeMax);
-            this._lodTable = table;
+            this._lodTables.set(key, table);
 
             Debug.call(() => {
-                // One slot assumes every instance of this octree uses the same range, which is the
-                // case when the range comes from a shared preset. Instances asking for different
-                // ranges would rebuild on every request instead, so say so rather than quietly
-                // spending the build cost each update.
+                // Rebuilding a handful of times as ranges settle is expected; rebuilding constantly
+                // means more ranges are live than the map holds, and every request pays a build.
                 if (++this._lodTableRebuilds === 64) {
-                    Debug.warnOnce(`GSplatOctree: ${this.assetFileUrl} has rebuilt its LOD selection table ${this._lodTableRebuilds} times. Instances of one octree using different LOD ranges rebuild it on every request - give them a shared range if that is not intended.`);
+                    Debug.warnOnce(`GSplatOctree: ${this.assetFileUrl} has rebuilt its LOD selection table ${this._lodTableRebuilds} times, so more than ${MAX_LOD_TABLES} LOD ranges are in use at once and each request is rebuilding. Share ranges between instances, or raise MAX_LOD_TABLES.`);
                 }
             });
         }
