@@ -148,7 +148,7 @@ class DrawCommands {
      */
     update(count) {
         this._count = count;
-        this.primitiveCount = this.impl.update?.(count) ?? 0;
+        this.primitiveCount = this.impl.update(count);
 
         // For indirect draws, the CPU cannot inspect the instance counts,
         // so we treat the draw count as the hasDraws flag.
@@ -157,7 +157,7 @@ class DrawCommands {
             return;
         }
 
-        this.hasDraws = this.impl.hasDraws ?? (count > 0);
+        this.hasDraws = this.impl.hasDraws;
     }
 }
 
