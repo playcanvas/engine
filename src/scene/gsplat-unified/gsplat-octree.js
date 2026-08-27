@@ -7,10 +7,6 @@ import { TRACEID_OCTREE_RESOURCES } from '../../core/constants.js';
 // Temporary array reused to avoid allocations during cooldown ticking
 const _toDelete = [];
 
-// How many LOD selection tables one octree keeps. Sized for the number of distinct LOD ranges that
-// can be live at once - a few quality presets - not for every range ever requested.
-const MAX_LOD_TABLES = 4;
-
 
 /**
  * @import { GSplatResource } from '../gsplat/gsplat-resource.js'
@@ -54,27 +50,19 @@ class GSplatOctree {
     lodErrorSource = 'derived';
 
     /**
-     * Precomputed LOD selection tables, keyed by the LOD range they were built for, and shared by
+     * Precomputed LOD selection tables, keyed by the LOD range they were built for and shared by
      * every instance of this octree using that range.
      *
-     * More than one is kept because `lodRangeMin`/`lodRangeMax` are per placement, so instances of
-     * one octree may legitimately differ - holding only the last would rebuild on every request
-     * once two ranges are live. The map is bounded, and the oldest entry is evicted rather than
-     * retained indefinitely, so a range that falls out of use does not hold its table forever.
+     * `lodRangeMin`/`lodRangeMax` are per placement, so instances of one octree may legitimately
+     * differ and each live range needs its own table - holding only the most recent would rebuild
+     * on every request. Entries are reference counted by the instances holding them and dropped at
+     * zero, so nothing is retained for a range that has fallen out of use, and nothing still in use
+     * can be evicted.
      *
      * @type {Map<number, GSplatLodTable>}
      * @private
      */
     _lodTables = new Map();
-
-    /**
-     * How many times {@link GSplatOctree#getLodTable} has had to rebuild. Debug-only, to catch more
-     * concurrently-live LOD ranges than the map holds, which would rebuild on every request.
-     *
-     * @type {number}
-     * @private
-     */
-    _lodTableRebuilds = 0;
 
     /**
      * The file URL of the container asset, used as the base for resolving relative URLs.
@@ -349,9 +337,8 @@ class GSplatOctree {
     }
 
     /**
-     * Returns the LOD selection table for a LOD range, building it on first use. Tables for ranges
-     * still in use are kept, so instances of this octree that differ in range do not rebuild each
-     * other's table on every request.
+     * Takes a reference to the LOD selection table for a LOD range, building it on first use. The
+     * caller must pass it back to {@link GSplatOctree#releaseLodTable} when it stops using it.
      *
      * The table has to be per range rather than derived from a single full-range one, because a
      * sub-range's Pareto frontier is not the full frontier filtered down to it - when `rangeMax`
@@ -360,30 +347,32 @@ class GSplatOctree {
      *
      * @param {number} rangeMin - Finest allowed LOD index.
      * @param {number} rangeMax - Coarsest allowed LOD index.
-     * @returns {GSplatLodTable} The selection table.
+     * @returns {GSplatLodTable} The selection table, with its reference count incremented.
      */
-    getLodTable(rangeMin, rangeMax) {
+    acquireLodTable(rangeMin, rangeMax) {
         const key = rangeMin * 256 + rangeMax;
         let table = this._lodTables.get(key);
         if (!table) {
-            // Evict the oldest rather than growing without bound - Map iterates in insertion order.
-            // The cap only needs to cover the ranges live at one time, which is a handful of quality
-            // presets in practice.
-            if (this._lodTables.size >= MAX_LOD_TABLES) {
-                this._lodTables.delete(this._lodTables.keys().next().value);
-            }
             table = new GSplatLodTable(this, rangeMin, rangeMax);
             this._lodTables.set(key, table);
-
-            Debug.call(() => {
-                // Rebuilding a handful of times as ranges settle is expected; rebuilding constantly
-                // means more ranges are live than the map holds, and every request pays a build.
-                if (++this._lodTableRebuilds === 64) {
-                    Debug.warnOnce(`GSplatOctree: ${this.assetFileUrl} has rebuilt its LOD selection table ${this._lodTableRebuilds} times, so more than ${MAX_LOD_TABLES} LOD ranges are in use at once and each request is rebuilding. Share ranges between instances, or raise MAX_LOD_TABLES.`);
-                }
-            });
         }
+        table.refCount++;
         return table;
+    }
+
+    /**
+     * Releases a reference taken by {@link GSplatOctree#acquireLodTable}, dropping the table once
+     * no instance holds it.
+     *
+     * @param {GSplatLodTable|null} table - The table to release. Null is ignored, so callers can
+     * release unconditionally.
+     */
+    releaseLodTable(table) {
+        if (!table) return;
+        Debug.assert(table.refCount > 0, `GSplatOctree: releasing a LOD table for range [${table.rangeMin}, ${table.rangeMax}] that holds no references.`);
+        if (--table.refCount <= 0) {
+            this._lodTables.delete(table.rangeMin * 256 + table.rangeMax);
+        }
     }
 
     /**

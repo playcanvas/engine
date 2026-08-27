@@ -9,10 +9,12 @@ const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.le
     const tables = new Map();
     const octree = {
         nodes: nodes.map(node => ({ lods: node.lods })),
-        getLodTable(min, max) {
+        acquireLodTable(min, max) {
             const key = min * 256 + max;
             if (!tables.has(key)) tables.set(key, new GSplatLodTable(this, min, max));
-            return tables.get(key);
+            const table = tables.get(key);
+            table.refCount++;
+            return table;
         }
     };
     return {
@@ -22,7 +24,7 @@ const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.le
         rangeMax,
         // resolveLodRange() supplies this in the engine; the balancer reads it rather than
         // resolving the range itself
-        lodTable: octree.getLodTable(rangeMin, rangeMax)
+        lodTable: octree.acquireLodTable(rangeMin, rangeMax)
     };
 };
 
@@ -45,7 +47,7 @@ const splatsOf = (inst) => {
 // Exact greedy over the same chains, used as an oracle: a max-heap keyed on the true
 // coverage-weighted ratio rather than a bucketed approximation of it. Same early exit.
 const exactGreedy = (inst, budget) => {
-    const table = inst.octree.getLodTable(inst.rangeMin, inst.rangeMax);
+    const table = inst.lodTable;
     const chosen = [];
     const heap = [];
     let spent = 0;
@@ -273,7 +275,7 @@ describe('GSplatBudgetBalancer', function () {
         // difference stays negligible.
         const { nodes, coverage } = makeScene(2000, 5, 11);
         const { inst, instances } = single(nodes, coverage);
-        const table = inst.octree.getLodTable(inst.rangeMin, inst.rangeMax);
+        const table = inst.lodTable;
         const balancer = new GSplatBudgetBalancer();
 
         for (const fraction of [0.2, 0.5]) {
@@ -291,7 +293,7 @@ describe('GSplatBudgetBalancer', function () {
         // lands, the two would diverge in how much they manage to spend.
         const { nodes, coverage } = makeScene(2000, 5, 29);
         const { inst, instances } = single(nodes, coverage);
-        const table = inst.octree.getLodTable(inst.rangeMin, inst.rangeMax);
+        const table = inst.lodTable;
         const balancer = new GSplatBudgetBalancer();
 
         for (const fraction of [0.2, 0.5, 0.8]) {

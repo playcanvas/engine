@@ -44,6 +44,16 @@ class GSplatLodTable {
     rangeMax;
 
     /**
+     * How many octree instances currently hold this table. Managed by the owning
+     * {@link GSplatOctree}, which drops the table when this reaches zero - so a table is retained
+     * exactly while some instance is using its range, rather than on a fixed cap that could evict
+     * one still in use.
+     *
+     * @type {number}
+     */
+    refCount = 0;
+
+    /**
      * Per node, the cheapest renderable level in range - where the allocator starts before it
      * spends anything. -1 when the node has no renderable level in range at all.
      *

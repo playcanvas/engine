@@ -273,6 +273,13 @@ class GSplatOctreeInstance {
      * (e.g. during world state updates where decrements must be deferred).
      */
     destroy(skipRefCounting = false) {
+        // The LOD table is this instance's own cache reference, not one of the octree's file
+        // reference counts, so it is released regardless of skipRefCounting.
+        if (this.octree && !this.octree.destroyed) {
+            this.octree.releaseLodTable(this.lodTable);
+        }
+        this.lodTable = null;
+
         if (!skipRefCounting && this.octree && !this.octree.destroyed) {
             // Decrement ref counts for all files currently in use (loaded files)
             const filesToDecRef = this.getFileDecrements();
@@ -465,7 +472,14 @@ class GSplatOctreeInstance {
         const rangeMax = Math.max(rangeMin, Math.min(lodRangeMax ?? maxLod, maxLod));
         this.rangeMin = rangeMin;
         this.rangeMax = rangeMax;
-        this.lodTable = this.octree.getLodTable(rangeMin, rangeMax);
+
+        // Hold a reference only while this instance is on that range, so a table is built once per
+        // live range and dropped when the last instance moves off it.
+        const table = this.lodTable;
+        if (!table || table.rangeMin !== rangeMin || table.rangeMax !== rangeMax) {
+            this.lodTable = this.octree.acquireLodTable(rangeMin, rangeMax);
+            this.octree.releaseLodTable(table);
+        }
     }
 
     /**
