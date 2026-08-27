@@ -274,6 +274,11 @@ const camera = new Entity('camera');
 camera.addComponent('camera', {
     clearColor: new Color(1, 1, 1),
     fov: 75,
+    // Generous, because this example loads arbitrary captures via the `url` hash parameter and some
+    // span kilometres. The far plane cuts on view-space depth, so at the default 1000 a distant node
+    // vanishes when looked at head-on and returns when it moves off to the side - which reads as
+    // patches popping around the horizon rather than as a clipped horizon.
+    farClip: 100000,
     toneMapping: TONEMAP_LINEAR
 });
 
