@@ -442,10 +442,10 @@ const isBlack = (color) => {
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {Texture|null} heightMap The height map of the material (default is null). Used for a
  * view-dependent parallax effect. The texture must represent the height of the surface where
- * darker pixels are lower and lighter pixels are higher, with mid-grey being the level of the
- * original geometry. It is recommended to use it together with a normal map. Note that the parallax
- * offset is applied to all other maps of the material, so the height map should use the same tiling
- * and offset as those maps.
+ * darker pixels are lower and lighter pixels are higher, with {@link heightMapBase} selecting the
+ * value that sits at the level of the original geometry. It is recommended to use it together with
+ * a normal map. Note that the parallax offset is applied to all other maps of the material, so the
+ * height map should use the same tiling and offset as those maps.
  * @property {number} heightMapUv Height map UV channel.
  * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b"
  * or "a".
@@ -456,16 +456,21 @@ const isBlack = (color) => {
  * @property {number} heightMapFactor Height map multiplier (default is 1). Affects the strength of
  * the parallax effect. A value of 1 displaces the texture by up to 5% of a UV tile, so useful values
  * are typically in the 0 to 2 range.
+ * @property {number} heightMapBase The height map value that sits at the level of the original
+ * geometry, in the 0 to 1 range (default is 0.5). Relief above the base appears to stand out of
+ * the surface and relief below it appears to sink in. Set it to 1 to treat the map as pure depth
+ * carved below the geometry, or to 0 to treat it as pure elevation above it. Both parallax modes
+ * honor it.
  * @property {string} parallaxMode Selects how the height map is used to offset the UV of the other
  * maps of the material. Can be:
  *
  * - {@link PARALLAX_OFFSET}: A single tap of the height map, which pivots the surface around the
- * mid-grey level of the map.
- * - {@link PARALLAX_OCCLUSION}: The view ray is marched through the height field. The map is
- * treated as depth below the original geometry, so white is at the level of the geometry and black
- * is {@link heightMapFactor} deep. This represents deeper displacement without smearing, at the
- * cost of multiple taps per pixel. Note that the silhouette of the mesh is not affected, and the
- * depth buffer still sees the flat surface.
+ * {@link heightMapBase} level of the map.
+ * - {@link PARALLAX_OCCLUSION}: The view ray is marched through the height field, which spans
+ * {@link heightMapFactor} of depth with the geometry sitting at the {@link heightMapBase} level.
+ * This represents deeper displacement without smearing, at the cost of multiple taps per pixel.
+ * Note that the silhouette of the mesh is not affected, and the depth buffer still sees the flat
+ * surface.
  *
  * Defaults to {@link PARALLAX_OFFSET}.
  * @property {number} parallaxSamples The maximum number of height map taps taken along the view ray
@@ -909,6 +914,7 @@ class StandardMaterial extends Material {
 
         if (this.heightMap) {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
+            this._setParameter('material_heightMapBase', this.heightMapBase);
 
             if (this.parallaxMode === PARALLAX_OCCLUSION) {
                 this._setParameter('material_parallaxSamples', this.parallaxSamples);
@@ -1277,6 +1283,16 @@ function _defineMaterialProps() {
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.1;
     });
+
+    // The base only feeds a uniform, so unlike the generic number property it never invalidates
+    // the shader - the generic rule would rebuild for nothing when a slider lands on 0 or 1. Its
+    // uniform is set from updateUniforms, since it is only needed while a height map is assigned.
+    defineProp({
+        name: 'heightMapBase',
+        defaultValue: 0.5,
+        dirtyShaderFunc: () => false
+    });
+
     _defineFloat('parallaxSamples', 16);
 
     // The self shadow tap count is declared by hand rather than through _defineFloat, because the

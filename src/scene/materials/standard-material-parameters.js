@@ -87,6 +87,7 @@ const standardMaterialParameterTypes = {
 
     ..._textureParameter('height', true, false),
     heightMapFactor: 'number',
+    heightMapBase: 'number',
     parallaxMode: 'string',
     parallaxSamples: 'number',
     parallaxShadowSamples: 'number',
