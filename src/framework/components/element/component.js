@@ -1264,8 +1264,8 @@ class ElementComponent extends Component {
 
     /**
      * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} elements or the color of the text for
-     * {@link ELEMENTTYPE_TEXT} elements. Only the RGB channels are used; the alpha channel is ignored,
-     * so use {@link opacity} to control transparency.
+     * {@link ELEMENTTYPE_TEXT} elements, specified in sRGB color space. Only the RGB channels are
+     * used; the alpha channel is ignored, so use {@link opacity} to control transparency.
      *
      * @type {Color}
      */
@@ -1885,7 +1885,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} elements.
+     * Sets the text outline effect color and opacity, with the color specified in sRGB color space.
+     * Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Color}
      */
@@ -1930,7 +1931,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} elements.
+     * Sets the text shadow effect color and opacity, with the color specified in sRGB color space.
+     * Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Color}
      */

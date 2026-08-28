@@ -1591,7 +1591,8 @@ class AppBase extends EventHandler {
      *
      * @param {Vec3} start - The start world space coordinate of the line.
      * @param {Vec3} end - The end world space coordinate of the line.
-     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {Color} [color] - The color of the line, specified in sRGB color space. It defaults
+     * to white if not specified.
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
