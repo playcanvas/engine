@@ -85,6 +85,23 @@ describe('GSplatOctreeInstance#evaluateNodeCoverage', function () {
         expect(zoomedOut).to.be.above(zoomedFurtherOut * 50);
     });
 
+    it('scales orthographic coverage with the placement transform', function () {
+        // Node radii are octree-local, orthoHeight is world-space: a scaled placement doubles the
+        // projected radius, so coverage must quadruple - the same octree at different scales must
+        // not rank identically under the shared budget.
+        const octree = makeOctree([[0, 0, -100]]);
+        const camera = makeCamera(PROJECTION_ORTHOGRAPHIC, 1000);
+
+        const instance = makeInstance(octree);
+        instance.evaluateNodeCoverage(camera, { lodBehindPenalty: 1 });
+        const atUnitScale = instance.nodeInfos[0].lodCoverage;
+
+        instance.placement.node.setLocalScale(2, 2, 2);
+        instance.evaluateNodeCoverage(camera, { lodBehindPenalty: 1 });
+
+        expect(instance.nodeInfos[0].lodCoverage).to.be.closeTo(atUnitScale * 4, atUnitScale * 1e-5);
+    });
+
     it('still penalises nodes behind an orthographic camera', function () {
         // Behind-camera content is invisible under any projection, so it must not win budget just
         // because orthographic coverage carries no distance term.

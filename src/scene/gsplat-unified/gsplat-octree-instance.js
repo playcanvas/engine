@@ -516,7 +516,10 @@ class GSplatOctreeInstance {
             const tanHalfHFov = tanHalfVFov * camera.aspectRatio;
             fovScale = Math.min(tanHalfVFov, tanHalfHFov) / REF_TAN_HALF_FOV;
         }
-        const invOrthoHeight = ortho ? 1 / Math.max(camera.orthoHeight, 1e-12) : 0;
+        // Node radii are octree-local while orthoHeight is a world-space window, so the placement's
+        // uniform scale is folded in here. The perspective path needs no such conversion - its
+        // radius and distance are both local, so the scale cancels in the ratio.
+        const invOrthoHeight = ortho ? uniformScale / Math.max(camera.orthoHeight, 1e-12) : 0;
 
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
