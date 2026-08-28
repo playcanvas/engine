@@ -953,7 +953,7 @@ const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
 };
 
 // creates a camera component on the supplied node, and returns it
-const createCamera = (gltfCamera, node) => {
+const createCamera = (gltfCamera, node, app) => {
     const isOrthographic = gltfCamera.type === 'orthographic';
     const gltfProperties = isOrthographic ? gltfCamera.orthographic : gltfCamera.perspective;
 
@@ -985,7 +985,7 @@ const createCamera = (gltfCamera, node) => {
         }
     }
 
-    const cameraEntity = new Entity(gltfCamera.name);
+    const cameraEntity = new Entity(gltfCamera.name, app);
     cameraEntity.addComponent('camera', componentData);
     return cameraEntity;
 };
@@ -1185,14 +1185,14 @@ const createScenes = (gltf, nodes) => {
     return scenes;
 };
 
-const createCameras = (gltf, nodes, options) => {
+const createCameras = (gltf, nodes, options, app) => {
 
     let cameras = null;
 
     if (gltf.hasOwnProperty('nodes') && gltf.hasOwnProperty('cameras') && gltf.cameras.length > 0) {
 
         const preprocess = options?.camera?.preprocess;
-        const process = options?.camera?.process ?? createCamera;
+        const process = options?.camera?.process;
         const postprocess = options?.camera?.postprocess;
 
         gltf.nodes.forEach((gltfNode, nodeIndex) => {
@@ -1202,7 +1202,9 @@ const createCameras = (gltf, nodes, options) => {
                     if (preprocess) {
                         preprocess(gltfCamera);
                     }
-                    const camera = process(gltfCamera, nodes[nodeIndex]);
+                    const camera = process ?
+                        process(gltfCamera, nodes[nodeIndex]) :
+                        createCamera(gltfCamera, nodes[nodeIndex], app);
                     if (postprocess) {
                         postprocess(gltfCamera, camera);
                     }
@@ -1233,7 +1235,7 @@ const linkSkins = (gltf, renders, skins) => {
 };
 
 // create engine resources from the downloaded GLB data
-const createResources = async (device, gltf, bufferViews, textures, options) => {
+const createResources = async (device, gltf, bufferViews, textures, options, app) => {
     const preprocess = options?.global?.preprocess;
     const postprocess = options?.global?.postprocess;
 
@@ -1254,8 +1256,8 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     const nodeInstancingMap = new Map();
     const nodes = createNodes(gltf, options, nodeInstancingMap);
     const scenes = createScenes(gltf, nodes);
-    const lights = createLights(gltf, nodes, options);
-    const cameras = createCameras(gltf, nodes, options);
+    const lights = createLights(gltf, nodes, options, app);
+    const cameras = createCameras(gltf, nodes, options, app);
     const variants = createVariants(gltf);
 
     // buffer data must have finished loading in order to create meshes and animations
@@ -1844,7 +1846,7 @@ class GlbParser {
                 const images = createImages(gltf, bufferViews, urlBase, registry, options);
                 const textures = createTextures(gltf, images, options);
 
-                createResources(device, gltf, bufferViews, textures, options)
+                createResources(device, gltf, bufferViews, textures, options, registry.loader._app)
                 .then(result => callback(null, result))
                 .catch(err => callback(err));
             });
