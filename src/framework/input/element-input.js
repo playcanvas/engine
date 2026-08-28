@@ -427,7 +427,7 @@ class ElementInput {
         this._target = domElement;
         this._attached = true;
 
-        const opts = platform.passiveEvents ? { passive: true } : false;
+        const opts = { passive: true };
         if (this._useMouse) {
             window.addEventListener('mouseup', this._upHandler, opts);
             window.addEventListener('mousedown', this._downHandler, opts);
@@ -465,7 +465,7 @@ class ElementInput {
         if (!this._attached) return;
         this._attached = false;
 
-        const opts = platform.passiveEvents ? { passive: true } : false;
+        const opts = { passive: true };
         if (this._useMouse) {
             window.removeEventListener('mouseup', this._upHandler, opts);
             window.removeEventListener('mousedown', this._downHandler, opts);
