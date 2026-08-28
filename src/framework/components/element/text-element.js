@@ -2084,7 +2084,7 @@ class TextElement {
         }
 
         if (this._element) {
-            this._element.fire('set:outline', this._color);
+            this._element.fire('set:outline', this._outlineColor);
         }
     }
 
