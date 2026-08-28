@@ -90,6 +90,14 @@ const _properties = [
  * // negative y-axis onto it
  * light.lookAt(target.getPosition());
  * light.rotateLocal(90, 0, 0);
+ *
+ * // to aim it along a world space direction, rotate the negative y-axis onto that direction.
+ * // Unlike lookAt, this is well defined even when the direction is straight up or down
+ * const dir = new Vec3(-0.5, -1, -0.3).normalize();
+ * light.setRotation(new Quat().setFromDirections(Vec3.DOWN, dir));
+ *
+ * // the direction a light currently shines in is the negative of its world space up vector
+ * const currentDir = light.up.clone().mulScalar(-1);
  * ```
  *
  * You should never need to use the LightComponent constructor directly. To add a LightComponent
