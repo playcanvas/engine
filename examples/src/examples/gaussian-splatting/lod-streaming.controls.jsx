@@ -219,24 +219,6 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='LOD Base Dist'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodBaseDistance' }}
-                        min={1}
-                        max={50}
-                        precision={1}
-                    />
-                </LabelGroup>
-                <LabelGroup text='LOD Multiplier'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodMultiplier' }}
-                        min={1.2}
-                        max={5}
-                        precision={1}
-                    />
-                </LabelGroup>
                 <LabelGroup text='Splat Budget'>
                     <SliderInput
                         binding={new BindingTwoWay()}

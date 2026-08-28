@@ -12,6 +12,7 @@ import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
 import { GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE } from '../constants.js';
+import { SPLAT_BUDGET_DEFAULT } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -23,8 +24,6 @@ import { GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE } from '../constants.js';
  */
 
 // Module-scope scratch (stateless)
-const cameraPosition = new Vec3();
-const _tempVec3 = new Vec3();
 const invModelMat = new Mat4();
 const _localCamPos = new Vec3();
 const _closestPt = new Vec3();
@@ -134,9 +133,6 @@ class GSplatWorld {
 
     /** @type {GSplatBudgetBalancer} */
     _budgetBalancer = new GSplatBudgetBalancer();
-
-    /** @type {number} */
-    _budgetScale = 1.0;
 
     /** @type {BlockAllocator} */
     _allocator;
@@ -556,18 +552,16 @@ class GSplatWorld {
             this._lastLodCameraFwd.copy(camera.forward);
             this._lastLodCameraFov = camera.camera.fov;
 
-            const budget = this._scene.gsplat.splatBudget;
-
-            if (budget > 0) {
-                // Global budget enforcement
-                this._enforceBudget(budget, camera);
-            } else {
-                // Budget disabled - use LOD distances only, no budget adjustments
-                this._budgetScale = 1.0;
-                for (const [, inst] of this._octreeInstances) {
-                    inst.updateLod(camera, this._scene.gsplat);
-                }
+            // LOD selection is always budget driven. A budget generous enough for the whole scene
+            // resolves to every node at its finest level, so there is no separate unbudgeted path -
+            // which also means a non-positive budget is not a way to disable LOD selection, it would
+            // simply pin every node to its coarsest level. Substitute the default and say so.
+            let budget = this._scene.gsplat.splatBudget;
+            if (budget <= 0) {
+                Debug.warnOnce(`GSplatParams#splatBudget is ${budget}, which is not a way to disable LOD selection - LOD levels are always chosen to fit the budget, so a non-positive one would render everything at its coarsest level. Using the default of ${SPLAT_BUDGET_DEFAULT} instead; set a budget that suits the scene.`);
+                budget = SPLAT_BUDGET_DEFAULT;
             }
+            this._enforceBudget(budget, camera);
         }
 
         // create new world state if needed
@@ -1113,33 +1107,7 @@ class GSplatWorld {
     }
 
     /**
-     * Computes max world-space distance across all octree instances. Used for sqrt-based bucket
-     * distribution in budget balancing.
-     *
-     * @param {GraphNode} camera - The primary camera.
-     * @returns {number} Maximum world-space distance, minimum 1 to avoid division by zero.
-     * @private
-     */
-    computeGlobalMaxDistance(camera) {
-        let maxDist = 0;
-        cameraPosition.copy(camera.getPosition());
-
-        for (const [, inst] of this._octreeInstances) {
-            const worldTransform = inst.placement.node.getWorldTransform();
-            const aabb = inst.placement.aabb;
-
-            // Transform center to world space and add bounding sphere radius
-            worldTransform.transformPoint(aabb.center, _tempVec3);
-            const scale = worldTransform.getScale().x;
-            const dist = _tempVec3.distance(cameraPosition) + aabb.halfExtents.length() * scale;
-            if (dist > maxDist) maxDist = dist;
-        }
-
-        return Math.max(maxDist, 1);
-    }
-
-    /**
-     * Enforces global splat budget across all octree instances using a phased approach.
+     * Enforces the global splat budget across all octree instances.
      *
      * @param {number} budget - Target splat budget from GSplatParams.splatBudget.
      * @param {GraphNode} camera - The primary camera.
@@ -1164,13 +1132,11 @@ class GSplatWorld {
         // Remaining budget for octrees after accounting for fixed splats.
         const octreeBudget = Math.max(1, budget - fixedSplats);
 
-        // Compute global max distance for distance bucket calculation
-        const globalMaxDistance = this.computeGlobalMaxDistance(camera);
-
-        // Phase 2: Evaluate optimal LODs for all octrees and calculate padding for active placements
-        let totalOptimalSplats = 0;
+        // Phase 1: resolve each instance's LOD range and evaluate per-node coverage, and collect
+        // padding for active placements
         for (const [, inst] of this._octreeInstances) {
-            totalOptimalSplats += inst.evaluateOptimalLods(camera, this._scene.gsplat, this._budgetScale, globalMaxDistance);
+            inst.resolveLodRange();
+            inst.evaluateNodeCoverage(camera, this._scene.gsplat);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1181,26 +1147,12 @@ class GSplatWorld {
         // Adjust budget for estimated padding overhead
         const adjustedBudget = Math.max(1, octreeBudget - paddingEstimate);
 
-        // Adapt _budgetScale to bring LOD estimates closer to budget by uniformly shifting LOD
-        // boundaries.
-        if (totalOptimalSplats > 0) {
-            const ratio = totalOptimalSplats / adjustedBudget;
-            const budgetScaleDeadZone = 0.4;
-            const budgetScaleBlendRate = 0.3;
-            if (ratio > 1 + budgetScaleDeadZone || ratio < 1 - budgetScaleDeadZone) {
-                const invCorrection = 1 / Math.sqrt(ratio);
-                this._budgetScale *= 1 + (invCorrection - 1) * budgetScaleBlendRate;
-                this._budgetScale = Math.max(0.01, Math.min(this._budgetScale, 100.0));
-            }
-        }
-
-        // Budget balancing across all octrees
+        // Phase 2: choose a LOD level per node within that budget
         this._budgetBalancer.balance(this._octreeInstances, adjustedBudget);
 
-        // Apply LOD changes
+        // Phase 3: apply LOD changes
         for (const [, inst] of this._octreeInstances) {
-            const maxLod = inst.octree.lodLevels - 1;
-            inst.applyLodChanges(maxLod, this._scene.gsplat);
+            inst.applyLodChanges(this._scene.gsplat);
         }
     }
 

@@ -83,7 +83,7 @@ app.on('destroy', () => {
 
 const assets = {
     skatepark: new Asset('gsplat', 'gsplat', {
-        url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_skatepark_03/lod-meta.json'
     }),
     envAtlas: new Asset(
         'env-atlas',
@@ -146,8 +146,6 @@ skatepark.addComponent('gsplat', {
     asset: assets.skatepark
 });
 skatepark.setLocalEulerAngles(-90, 0, 0);
-skatepark.gsplat.lodBaseDistance = 15;
-skatepark.gsplat.lodMultiplier = 4;
 app.root.addChild(skatepark);
 
 // the reusable wind script

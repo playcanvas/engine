@@ -22,6 +22,7 @@ import wgslCompactRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/conta
 import wgslCompactWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerCompactWrite.js';
 import wgslPackedRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerPackedRead.js';
 import wgslPackedWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerPackedWrite.js';
+import { SPLAT_BUDGET_DEFAULT } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -467,12 +468,16 @@ class GSplatParams {
     }
 
     /** @private */
-    _splatBudget = 0;
+    _splatBudget = SPLAT_BUDGET_DEFAULT;
 
     /**
-     * Target number of splats across all GSplats in the scene. When set > 0,
-     * the system adjusts LOD levels globally to stay within this budget.
-     * Set to 0 to disable budget enforcement and use LOD distances only (default).
+     * Target number of splats across all GSplats in the scene. LOD levels are chosen globally to
+     * stay within this budget, spending it where it removes the most approximation error per splat.
+     * A budget larger than the scene resolves to every node at its finest level. Defaults to
+     * 1000000.
+     *
+     * There is no way to disable budgeted LOD selection: a non-positive value would pin every node
+     * to its coarsest level rather than lift the cap, so it warns and the default is used instead.
      *
      * @type {number}
      */

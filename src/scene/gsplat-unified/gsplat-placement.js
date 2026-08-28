@@ -62,49 +62,6 @@ class GSplatPlacement {
     lodIndex = 0;
 
     /**
-     * Base distance for the first LOD transition (LOD 0 to LOD 1).
-     *
-     * @private
-     */
-    _lodBaseDistance = 5;
-
-    /**
-     * Geometric multiplier between successive LOD distance thresholds.
-     * Distance for LOD level i is: lodBaseDistance * lodMultiplier^i.
-     *
-     * @private
-     */
-    _lodMultiplier = 3;
-
-    /**
-     * @type {number}
-     */
-    set lodBaseDistance(value) {
-        if (this._lodBaseDistance !== value) {
-            this._lodBaseDistance = value;
-            this.lodDirty = true;
-        }
-    }
-
-    get lodBaseDistance() {
-        return this._lodBaseDistance;
-    }
-
-    /**
-     * @type {number}
-     */
-    set lodMultiplier(value) {
-        if (this._lodMultiplier !== value) {
-            this._lodMultiplier = value;
-            this.lodDirty = true;
-        }
-    }
-
-    get lodMultiplier() {
-        return this._lodMultiplier;
-    }
-
-    /**
      * Minimum allowed LOD index (inclusive). Clamped to the asset's valid range at use.
      *
      * @private
@@ -312,16 +269,6 @@ class GSplatPlacement {
         const aabb = this._aabb ?? this.resource?.aabb;
         Debug.assert(aabb, 'GSplatPlacement.aabb is null - resource.aabb must be set');
         return /** @type {BoundingBox} */ (aabb);
-    }
-
-    /**
-     * Computes the LOD distance threshold for a given level using the geometric progression.
-     *
-     * @param {number} level - The LOD level index.
-     * @returns {number} The distance threshold for the given LOD level.
-     */
-    getLodDistance(level) {
-        return this.lodBaseDistance * Math.pow(this.lodMultiplier, level);
     }
 
     /**
