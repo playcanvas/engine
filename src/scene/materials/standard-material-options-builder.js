@@ -233,12 +233,6 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
         options.iorTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
 
-        // hack, see Scene.forcePassThroughSpecular description
-        if (scene.forcePassThroughSpecular) {
-            options.specularEncoding = 'linear';
-            options.sheenEncoding = 'linear';
-        }
-
         options.iridescenceTint = stdMat.iridescence !== 1.0;
 
         options.glossInvert = stdMat.glossInvert;
