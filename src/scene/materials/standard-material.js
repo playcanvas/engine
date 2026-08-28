@@ -63,10 +63,11 @@ const isBlack = (color) => {
  * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
  * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
- * @property {Color} ambient The ambient color of the material. This color value is 3-component
- * (RGB), where each component is between 0 and 1.
- * @property {Color} diffuse The diffuse color of the material. This color value is 3-component
- * (RGB), where each component is between 0 and 1. Defines basic surface color (aka albedo).
+ * @property {Color} ambient The ambient color of the material, specified in sRGB color space. This
+ * color value is 3-component (RGB), where each component is between 0 and 1.
+ * @property {Color} diffuse The diffuse color of the material, specified in sRGB color space. This
+ * color value is 3-component (RGB), where each component is between 0 and 1. Defines basic surface
+ * color (aka albedo).
  * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
  * null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
@@ -104,9 +105,9 @@ const isBlack = (color) => {
  * component-wise.
  *
  * Defaults to {@link DETAILMODE_MUL}.
- * @property {Color} specular The specular color of the material. This color value is 3-component
- * (RGB), where each component is between 0 and 1. Defines surface reflection/specular color.
- * Affects specular intensity and tint.
+ * @property {Color} specular The specular color of the material, specified in sRGB color space.
+ * This color value is 3-component (RGB), where each component is between 0 and 1. Defines surface
+ * reflection/specular color. Affects specular intensity and tint.
  * @property {Texture|null} specularMap The specular map of the material (default is null).
  * @property {number} specularMapUv Specular map UV channel.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
@@ -302,12 +303,12 @@ const isBlack = (color) => {
  * "g", "b" or "a".
  * @property {boolean} thicknessVertexColor Use mesh vertex colors for thickness. If
  * thickness map is set, it will be multiplied by vertex colors.
- * @property {Color} attenuation The attenuation color for refractive materials, only used when
- * useDynamicRefraction is enabled.
+ * @property {Color} attenuation The attenuation color for refractive materials, specified in sRGB
+ * color space. Only used when useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
  * within the medium. Only used when useDynamicRefraction is enabled.
- * @property {Color} emissive The emissive color of the material. This color value is 3-component
- * (RGB), where each component is between 0 and 1.
+ * @property {Color} emissive The emissive color of the material, specified in sRGB color space.
+ * This color value is 3-component (RGB), where each component is between 0 and 1.
  * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
  * HDR. When the emissive map is applied, the emissive color is multiplied by the texel color in the
  * map. Since the emissive color is black by default, the emissive map won't be visible unless the
@@ -326,8 +327,9 @@ const isBlack = (color) => {
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} useSheen Toggle sheen specular effect on/off.
- * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure.
- * This color value is 3-component (RGB), where each component is between 0 and 1.
+ * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure, specified
+ * in sRGB color space. This color value is 3-component (RGB), where each component is between 0
+ * and 1.
  * @property {Texture|null} sheenMap The sheen microstructure color map of the material (default is
  * null).
  * @property {number} sheenMapUv Sheen map UV channel.
