@@ -20,6 +20,7 @@ class ApplicationStats {
      * Create a new ApplicationStats instance.
      *
      * @param {AppBase} app - The application.
+     * @ignore
      */
     constructor(app) {
         this._app = app;
