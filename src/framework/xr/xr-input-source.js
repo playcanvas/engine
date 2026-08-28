@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
@@ -697,6 +698,42 @@ class XrInputSource extends EventHandler {
     onHitTestSourceRemove(hitTestSource) {
         const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
+    }
+
+    /**
+     * Gets the local space ray of the input source.
+     *
+     * @type {Ray}
+     * @ignore
+     * @deprecated Use {@link XrInputSource#getOrigin} and {@link XrInputSource#getDirection} instead.
+     */
+    get ray() {
+        Debug.deprecated('XrInputSource#ray is deprecated. Use XrInputSource#getOrigin and XrInputSource#getDirection instead.');
+        return this._rayLocal;
+    }
+
+    /**
+     * Gets the local space position of the input source.
+     *
+     * @type {Vec3|null}
+     * @ignore
+     * @deprecated Use {@link XrInputSource#getLocalPosition} instead.
+     */
+    get position() {
+        Debug.deprecated('XrInputSource#position is deprecated. Use XrInputSource#getLocalPosition instead.');
+        return this._localPosition;
+    }
+
+    /**
+     * Gets the local space rotation of the input source.
+     *
+     * @type {Quat|null}
+     * @ignore
+     * @deprecated Use {@link XrInputSource#getLocalRotation} instead.
+     */
+    get rotation() {
+        Debug.deprecated('XrInputSource#rotation is deprecated. Use XrInputSource#getLocalRotation instead.');
+        return this._localRotation;
     }
 }
 

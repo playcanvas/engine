@@ -2021,6 +2021,147 @@ class AppBase extends EventHandler {
             this.stats.frame.gsplatSort += sortTime;
         });
     }
+
+    /**
+     * Reports whether the document is in fullscreen mode.
+     *
+     * @returns {boolean} True if the document is in fullscreen.
+     * @ignore
+     * @deprecated Use the Fullscreen API directly.
+     */
+    isFullscreen() {
+        Debug.deprecated('AppBase#isFullscreen is deprecated. Use the Fullscreen API directly.');
+
+        return !!document.fullscreenElement;
+    }
+
+    /**
+     * Requests fullscreen mode on the given element.
+     *
+     * @param {Element} [element] - The element to make fullscreen. Defaults to the graphics
+     * device canvas.
+     * @param {Function} [success] - Called once fullscreen has been entered.
+     * @param {Function} [error] - Called if entering fullscreen fails.
+     * @ignore
+     * @deprecated Use the Fullscreen API directly.
+     */
+    enableFullscreen(element, success, error) {
+        Debug.deprecated('AppBase#enableFullscreen is deprecated. Use the Fullscreen API directly.');
+
+        element = element || this.graphicsDevice.canvas;
+
+        // success callback
+        const s = function () {
+            success();
+            document.removeEventListener('fullscreenchange', s);
+        };
+
+        // error callback
+        const e = function () {
+            error();
+            document.removeEventListener('fullscreenerror', e);
+        };
+
+        if (success) {
+            document.addEventListener('fullscreenchange', s, false);
+        }
+
+        if (error) {
+            document.addEventListener('fullscreenerror', e, false);
+        }
+
+        if (element.requestFullscreen) {
+            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        } else {
+            error();
+        }
+    }
+
+    /**
+     * Exits fullscreen mode.
+     *
+     * @param {Function} [success] - Called once fullscreen has been exited.
+     * @ignore
+     * @deprecated Use the Fullscreen API directly.
+     */
+    disableFullscreen(success) {
+        Debug.deprecated('AppBase#disableFullscreen is deprecated. Use the Fullscreen API directly.');
+
+        // success callback
+        const s = function () {
+            success();
+            document.removeEventListener('fullscreenchange', s);
+        };
+
+        if (success) {
+            document.addEventListener('fullscreenchange', s, false);
+        }
+
+        document.exitFullscreen();
+    }
+
+    /**
+     * Gets the URL of a scene by name.
+     *
+     * @param {string} name - The name of the scene.
+     * @returns {string|null} The URL of the scene, or null if not found.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#find} instead.
+     */
+    getSceneUrl(name) {
+        Debug.deprecated('AppBase#getSceneUrl is deprecated. Use AppBase#scenes and SceneRegistry#find instead.');
+        const entry = this.scenes.find(name);
+        if (entry) {
+            return entry.url;
+        }
+        return null;
+    }
+
+    /**
+     * Loads a scene.
+     *
+     * @param {string} url - The URL of the scene file.
+     * @param {Function} callback - Called when the scene has loaded.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#loadScene} instead.
+     */
+    loadScene(url, callback) {
+        Debug.deprecated('AppBase#loadScene is deprecated. Use AppBase#scenes and SceneRegistry#loadScene instead.');
+        this.scenes.loadScene(url, callback);
+    }
+
+    /**
+     * Loads a scene hierarchy.
+     *
+     * @param {string} url - The URL of the scene file.
+     * @param {Function} callback - Called when the scene hierarchy has loaded.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#loadSceneHierarchy} instead.
+     */
+    loadSceneHierarchy(url, callback) {
+        Debug.deprecated('AppBase#loadSceneHierarchy is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneHierarchy instead.');
+        this.scenes.loadSceneHierarchy(url, callback);
+    }
+
+    /**
+     * Loads scene settings.
+     *
+     * @param {string} url - The URL of the scene file.
+     * @param {Function} callback - Called when the scene settings have loaded.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#loadSceneSettings} instead.
+     */
+    loadSceneSettings(url, callback) {
+        Debug.deprecated('AppBase#loadSceneSettings is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneSettings instead.');
+        this.scenes.loadSceneSettings(url, callback);
+    }
 }
 
 export { app, AppBase };
+
+// ForwardRenderer#renderComposition is deprecated and patched here, rather than declared on the
+// class, because it needs getApplication and scene code must not import from framework.
+ForwardRenderer.prototype.renderComposition = function (comp) {
+    Debug.deprecated('ForwardRenderer#renderComposition is deprecated. Use AppBase.renderComposition instead.');
+    getApplication().renderComposition(comp);
+};

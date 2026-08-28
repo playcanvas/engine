@@ -800,6 +800,22 @@ class RigidBodyComponentSystem extends ComponentSystem {
             this._world = null;
         }
     }
+
+    /**
+     * Sets the world space gravity. Accepts either a Vec3 or three numbers.
+     *
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponentSystem#gravity} instead.
+     */
+    setGravity() {
+        Debug.deprecated('RigidBodyComponentSystem#setGravity is deprecated. Use RigidBodyComponentSystem#gravity instead.');
+
+        if (arguments.length === 1) {
+            this.gravity.copy(arguments[0]);
+        } else {
+            this.gravity.set(arguments[0], arguments[1], arguments[2]);
+        }
+    }
 }
 
 export { RigidBodyComponentSystem };

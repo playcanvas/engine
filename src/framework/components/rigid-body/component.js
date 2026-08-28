@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
@@ -1119,6 +1120,41 @@ class RigidBodyComponent extends Component {
     /** @ignore */
     onDisable() {
         this.disableSimulation();
+    }
+
+    /**
+     * Sets the rigid body type.
+     *
+     * @type {string}
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponent#type} instead.
+     */
+    set bodyType(type) {
+        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
+        this.type = type;
+    }
+
+    /**
+     * Gets the rigid body type.
+     *
+     * @type {string}
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponent#type} instead.
+     */
+    get bodyType() {
+        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
+        return this.type;
+    }
+
+    /**
+     * Writes the entity transform into the rigid body.
+     *
+     * @ignore
+     * @deprecated Not public API.
+     */
+    syncBodyToEntity() {
+        Debug.deprecated('RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
+        this._updateDynamic();
     }
 }
 

@@ -1195,6 +1195,17 @@ class ElementInput {
 
         return _accumulatedScale;
     }
+
+    /**
+     * Gets the mouse wheel value.
+     *
+     * @type {number}
+     * @ignore
+     * @deprecated Use {@link ElementMouseEvent#wheelDelta} instead.
+     */
+    get wheel() {
+        return this.wheelDelta * -2;
+    }
 }
 
 export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent, ElementTouchEvent };
