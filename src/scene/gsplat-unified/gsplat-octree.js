@@ -59,7 +59,7 @@ class GSplatOctree {
      * zero, so nothing is retained for a range that has fallen out of use, and nothing still in use
      * can be evicted.
      *
-     * @type {Map<number, GSplatLodTable>}
+     * @type {Map<string, GSplatLodTable>}
      * @private
      */
     _lodTables = new Map();
@@ -350,7 +350,10 @@ class GSplatOctree {
      * @returns {GSplatLodTable} The selection table, with its reference count incremented.
      */
     acquireLodTable(rangeMin, rangeMax) {
-        const key = rangeMin * 256 + rangeMax;
+        // A string key rather than packed arithmetic: nothing bounds lodLevels or the configured
+        // range, and a packed key would alias pairs once rangeMax passes the pack base, silently
+        // handing an instance a table for the wrong range.
+        const key = `${rangeMin},${rangeMax}`;
         let table = this._lodTables.get(key);
         if (!table) {
             table = new GSplatLodTable(this, rangeMin, rangeMax);
@@ -371,7 +374,7 @@ class GSplatOctree {
         if (!table) return;
         Debug.assert(table.refCount > 0, `GSplatOctree: releasing a LOD table for range [${table.rangeMin}, ${table.rangeMax}] that holds no references.`);
         if (--table.refCount <= 0) {
-            this._lodTables.delete(table.rangeMin * 256 + table.rangeMax);
+            this._lodTables.delete(`${table.rangeMin},${table.rangeMax}`);
         }
     }
 

@@ -186,6 +186,40 @@ describe('GSplatBudgetBalancer', function () {
         expect(lodsOf(inst)).to.deep.equal([1, 1]);
     });
 
+    it('pins the boundary behaviour when a ranked run only partly fits', function () {
+        // Deliberate trade-off, not a target. Node 0's rank comes from the run to lod0 - 10 error
+        // for 80 splats - but at this budget only its 70-splat first step fits, removing 2 error
+        // where node 1's 40-splat step would have removed 4. An affordability-aware drain that
+        // resolves this boundary (and the one below) optimally was built and measured: ~0.2%
+        // better in aggregate across four captures, for a per-pop walk and a relaxed early exit -
+        // traded away for a simpler drain and the hard early exit that keeps selection stable as
+        // the camera moves.
+        const { inst, instances } = single([
+            { lods: [{ count: 100, error: 0 }, { count: 90, error: 8 }, { count: 20, error: 10 }] },
+            { lods: [{ count: 60, error: 0 }, { count: 60, error: 0 }, { count: 20, error: 4 }] }
+        ]);
+
+        new GSplatBudgetBalancer().balance(instances, 110);
+
+        expect(lodsOf(inst)).to.deep.equal([1, 2]);
+        expect(splatsOf(inst)).to.equal(110);
+    });
+
+    it('pins the hard stop when the top-ranked step does not fit at all', function () {
+        // Same nodes at budget 100: node 0 ranks first but its 70-splat first step exceeds the 60
+        // spare, so the sweep stops - node 1's affordable step is deliberately left unbought rather
+        // than letting cheaper upgrades reshuffle the outcome as the camera moves.
+        const { inst, instances } = single([
+            { lods: [{ count: 100, error: 0 }, { count: 90, error: 8 }, { count: 20, error: 10 }] },
+            { lods: [{ count: 60, error: 0 }, { count: 60, error: 0 }, { count: 20, error: 4 }] }
+        ]);
+
+        new GSplatBudgetBalancer().balance(instances, 100);
+
+        expect(lodsOf(inst)).to.deep.equal([2, 2]);
+        expect(splatsOf(inst)).to.equal(40);
+    });
+
     it('buys a compound upgrade that beats a cheaper rival outright', function () {
         // Node 0's middle level sits below the chord, so its levels pool into one 80-splat step
         // worth 10 error (0.125/splat). Node 1 offers 4 error for 40 splats (0.1/splat). Treating

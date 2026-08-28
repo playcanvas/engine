@@ -133,6 +133,24 @@ describe('GSplatOctree LOD errors', function () {
         });
     });
 
+    it('keeps ranges distinct beyond any packing base', function () {
+        // nothing bounds lodLevels or the configured range, and a packed numeric key would alias
+        // pairs like [0, 300] and [1, 44] - handing an instance a table for the wrong range
+        const octree = makeOctree(Array.from({ length: 301 }, (_, i) => 301 - i), undefined, undefined);
+        const a = octree.acquireLodTable(0, 300);
+        const b = octree.acquireLodTable(1, 44);
+
+        expect(b).to.not.equal(a);
+        expect(a.rangeMin).to.equal(0);
+        expect(a.rangeMax).to.equal(300);
+        expect(b.rangeMin).to.equal(1);
+        expect(b.rangeMax).to.equal(44);
+
+        // and releasing one leaves the other untouched
+        octree.releaseLodTable(b);
+        expect(octree.acquireLodTable(0, 300)).to.equal(a);
+    });
+
     it('tolerates releasing null', function () {
         const octree = makeOctree([10, 5], [0, 1], true);
         expect(() => octree.releaseLodTable(null)).to.not.throw();

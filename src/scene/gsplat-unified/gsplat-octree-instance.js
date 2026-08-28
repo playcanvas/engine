@@ -7,7 +7,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 import { GsplatAllocId } from './gsplat-alloc-id.js';
-import { GSPLAT_DEBUG_NODE_AABBS } from '../constants.js';
+import { GSPLAT_DEBUG_NODE_AABBS, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -487,9 +487,11 @@ class GSplatOctreeInstance {
      * Pass 1 of the LOD update process; results are stored in the nodeInfos array and consumed by
      * the budget allocator, which is what actually picks a LOD level.
      *
-     * Coverage is the square of the node's projected radius, with FOV compensation so it is
-     * comparable across cameras, and with the behind-camera penalty folded into the distance. It is
-     * the only route by which camera position influences LOD.
+     * Coverage is the square of the node's projected radius. Under a perspective camera that
+     * attenuates with distance, with FOV compensation so it is comparable across cameras; under an
+     * orthographic camera a node's footprint does not depend on depth, so coverage is the radius
+     * against the ortho window, mirroring Camera#getScreenSize. The behind-camera penalty applies
+     * in both. Coverage is the only route by which camera position influences LOD.
      *
      * @param {GraphNode} cameraNode - The camera node.
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
@@ -500,14 +502,21 @@ class GSplatOctreeInstance {
         // Uniform scale of the octree transform, for world-space distance conversion.
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
 
-        // Compute FOV compensation: use min(tanHalfV, tanHalfH) to handle ultra-wide and portrait
         const camera = cameraNode.camera;
-        let tanHalfVFov = Math.tan(camera.fov * 0.5 * math.DEG_TO_RAD);
-        if (camera.horizontalFov) {
-            tanHalfVFov /= camera.aspectRatio;
+        const ortho = camera.projection === PROJECTION_ORTHOGRAPHIC;
+
+        // FOV compensation, perspective only: use min(tanHalfV, tanHalfH) to handle ultra-wide and
+        // portrait. An orthographic footprint depends on neither FOV nor distance.
+        let fovScale = 1;
+        if (!ortho) {
+            let tanHalfVFov = Math.tan(camera.fov * 0.5 * math.DEG_TO_RAD);
+            if (camera.horizontalFov) {
+                tanHalfVFov /= camera.aspectRatio;
+            }
+            const tanHalfHFov = tanHalfVFov * camera.aspectRatio;
+            fovScale = Math.min(tanHalfVFov, tanHalfHFov) / REF_TAN_HALF_FOV;
         }
-        const tanHalfHFov = tanHalfVFov * camera.aspectRatio;
-        const fovScale = Math.min(tanHalfVFov, tanHalfHFov) / REF_TAN_HALF_FOV;
+        const invOrthoHeight = ortho ? 1 / Math.max(camera.orthoHeight, 1e-12) : 0;
 
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
@@ -560,9 +569,9 @@ class GSplatOctreeInstance {
             const dz = qz - pz;
             const actualDistance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-            // Apply angular-based multiplier for nodes behind the camera when enabled
-            let penalizedDistance = actualDistance;
-
+            // Angular multiplier for nodes behind the camera when enabled - kept as a factor so the
+            // orthographic path, whose coverage does not go through distance, can still apply it.
+            let penaltyFactor = 1;
             if (lodBehindPenalty > 1 && actualDistance > 0.01) {
                 // forward · (dx,dy,dz) / |d| — same as Vec3.dot(dir, forward) / distance without temporaries
                 const dotOverDistance = (fwx * dx + fwy * dy + fwz * dz) / actualDistance;
@@ -570,20 +579,30 @@ class GSplatOctreeInstance {
                 // Only apply penalty when behind the camera (dot < 0)
                 if (dotOverDistance < 0) {
                     const t = -dotOverDistance; // 0 .. 1 for front -> directly behind
-                    const factor = 1 + t * (lodBehindPenalty - 1);
-                    penalizedDistance = actualDistance * factor;
+                    penaltyFactor = 1 + t * (lodBehindPenalty - 1);
                 }
             }
 
-            const fovAdjustedDistance = penalizedDistance * fovScale;
+            const fovAdjustedDistance = actualDistance * penaltyFactor * fovScale;
             nodeInfo.worldDistance = fovAdjustedDistance * uniformScale;
 
             // Squared projected radius. Floored just above zero so a degenerate node still has a
             // well-defined, lowest-possible priority rather than a value the allocator has to
             // special-case.
             const radius = nodes[nodeIndex].boundingSphere.w;
-            const projectedRadius = radius / Math.max(radius + fovAdjustedDistance, 1e-12);
-            nodeInfo.lodCoverage = Math.max(projectedRadius * projectedRadius, 1e-12);
+            let coverage;
+            if (ortho) {
+                // No distance attenuation: the footprint is the radius against the ortho window,
+                // clamped to a full-window 1 as the perspective ratio is bounded by 1. The behind
+                // penalty divides squared, matching how a penalized distance scales the far-field
+                // perspective coverage.
+                const projectedRadius = Math.min(radius * invOrthoHeight, 1);
+                coverage = (projectedRadius * projectedRadius) / (penaltyFactor * penaltyFactor);
+            } else {
+                const projectedRadius = radius / Math.max(radius + fovAdjustedDistance, 1e-12);
+                coverage = projectedRadius * projectedRadius;
+            }
+            nodeInfo.lodCoverage = Math.max(coverage, 1e-12);
         }
     }
 
