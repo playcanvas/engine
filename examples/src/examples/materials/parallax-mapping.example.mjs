@@ -264,22 +264,28 @@ data.set('data', {
     // reads as spikes when the floor is viewed from low down. This is the depth the material suits.
     height: 0.4,
 
+    // the height map value that sits at the level of the geometry - the engine default pivots the
+    // relief around mid-grey, and 1 treats the map as pure depth carved below the surface
+    base: 0.5,
+
     spot: true,
     omni: true,
     env: envIntensity
 });
 
-let mode, samples, height;
+let mode, samples, height, base;
 
 app.on('update', () => {
     const newMode = data.get('data.mode');
     const newSamples = data.get('data.samples');
     const newHeight = data.get('data.height');
+    const newBase = data.get('data.base');
 
-    if (newMode !== mode || newSamples !== samples || newHeight !== height) {
+    if (newMode !== mode || newSamples !== samples || newHeight !== height || newBase !== base) {
         mode = newMode;
         samples = newSamples;
         height = newHeight;
+        base = newBase;
 
         materials.forEach((material) => {
             material.heightMap = mode === MODE_NONE ? null : assets.height.resource;
@@ -288,6 +294,7 @@ app.on('update', () => {
             }
             material.parallaxSamples = samples;
             material.heightMapFactor = height;
+            material.heightMapBase = base;
             material.update();
         });
     }

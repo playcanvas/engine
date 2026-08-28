@@ -1,5 +1,6 @@
 export default /* wgsl */`
 uniform material_heightMapFactor: f32;
+uniform material_heightMapBase: f32;
 
 #if STD_PARALLAX == OCCLUSION
     uniform material_parallaxSamples: f32;
@@ -36,11 +37,10 @@ fn getParallax() {
 
     #if STD_PARALLAX == OCCLUSION
 
-        // Parallax occlusion mapping. The height map is treated as depth below the original
-        // geometry - white sits at the level of the geometry and black is parallaxScale deep - and
-        // the view ray is marched through that volume until it passes below the height field. Note
-        // this reads the map differently to the OFFSET mode above, which pivots the surface around
-        // the mid-grey level instead.
+        // Parallax occlusion mapping. The height map spans a volume parallaxScale deep, with the
+        // original geometry sitting where the map reads material_heightMapBase - relief above the
+        // base stands out of the surface and relief below it sinks in - and the view ray is marched
+        // through that volume until it passes below the height field.
 
         // The uv the ray travels while descending through the whole depth range: the depth scale
         // times the tangent of the view angle, pointing away from the camera as the ray descends.
@@ -53,6 +53,12 @@ fn getParallax() {
         let marchLength: f32 = length(march);
         let maxMarchLength: f32 = parallaxScale * parallaxMaxSlope;
         let uvSpan: vec2f = select(march, march * (maxMarchLength / marchLength), marchLength > maxMarchLength);
+
+        // The depth of the geometry plane within the volume, zero when the base is white. The
+        // rasterized fragment sits on that plane, so the view ray entered the top of the volume
+        // behind it - the march starts there, extrapolated back along the ray.
+        let geomDepth: f32 = 1.0 - uniform.material_heightMapBase;
+        let entryUv: vec2f = {STD_HEIGHT_TEXTURE_UV} - uvSpan * geomDepth;
 
         // The mip level the march reads. Every tap uses an explicit level because the loop below is
         // non-uniform control flow, where the implicit derivatives an automatic level needs are
@@ -95,7 +101,7 @@ fn getParallax() {
             // intersection to the surface itself whenever the first step already lands below the
             // height field, removing the offset entirely wherever a single step is taken.
             var rayDepth: f32 = 0.0;
-            var surfaceDepth: f32 = 1.0 - textureSampleLevel({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, {STD_HEIGHT_TEXTURE_UV}, lod).{STD_HEIGHT_TEXTURE_CHANNEL};
+            var surfaceDepth: f32 = 1.0 - textureSampleLevel({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, entryUv, lod).{STD_HEIGHT_TEXTURE_CHANNEL};
             var prevRayDepth: f32 = rayDepth;
             var prevSurfaceDepth: f32 = surfaceDepth;
 
@@ -109,7 +115,7 @@ fn getParallax() {
                 prevSurfaceDepth = surfaceDepth;
 
                 rayDepth += stepSize;
-                surfaceDepth = 1.0 - textureSampleLevel({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, {STD_HEIGHT_TEXTURE_UV} + uvSpan * rayDepth, lod).{STD_HEIGHT_TEXTURE_CHANNEL};
+                surfaceDepth = 1.0 - textureSampleLevel({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, entryUv + uvSpan * rayDepth, lod).{STD_HEIGHT_TEXTURE_CHANNEL};
             }
 
             // The ray crossed the surface somewhere inside the last step, so refine within it. Each
@@ -133,18 +139,23 @@ fn getParallax() {
                 // couple of texels was measured as a large regression, so it always runs.
                 for (var i: i32 = 0; i < parallaxRefineSteps; i++) {
                     interval *= 0.5;
-                    let refineDepth: f32 = 1.0 - textureSampleLevel({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, {STD_HEIGHT_TEXTURE_UV} + uvSpan * hitDepth, lod).{STD_HEIGHT_TEXTURE_CHANNEL};
+                    let refineDepth: f32 = 1.0 - textureSampleLevel({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, entryUv + uvSpan * hitDepth, lod).{STD_HEIGHT_TEXTURE_CHANNEL};
 
                     // below the height field, step back towards the surface, otherwise go deeper
                     hitDepth += select(interval, -interval, hitDepth >= refineDepth);
                 }
             }
 
-            let visibleDepth: f32 = clamp(hitDepth, 0.0, 1.0) * fade;
-            dUvOffset = uvSpan * visibleDepth;
+            // The offset runs from the geometry plane to the hit, so relief above the base moves
+            // the lookup back towards the camera, and the fade pulls the hit onto the plane so the
+            // relief flattens out with distance rather than sliding to the top of the volume.
+            let hitBelowTop: f32 = clamp(hitDepth, 0.0, 1.0);
+            dUvOffset = uvSpan * ((hitBelowTop - geomDepth) * fade);
 
             #ifdef STD_PARALLAX_SELF_SHADOW
-                dParallaxHitDepth = visibleDepth;
+                // The climb still fades towards zero length, so the shadow leaves together with
+                // the relief instead of stepping off where the fade ends.
+                dParallaxHitDepth = hitBelowTop * fade;
             #endif
         }
 
@@ -152,9 +163,9 @@ fn getParallax() {
 
         var height: f32 = textureSampleBias({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, {STD_HEIGHT_TEXTURE_UV}, uniform.textureBias).{STD_HEIGHT_TEXTURE_CHANNEL};
 
-        // remap the height to be relative to the mid-level of the height map, so the surface pivots
-        // around the original geometry instead of floating in front of it
-        height = height * parallaxScale - parallaxScale * 0.5;
+        // remap the height to be relative to the base level of the height map, so the surface
+        // pivots around the original geometry instead of floating in front of it
+        height = (height - uniform.material_heightMapBase) * parallaxScale;
 
         // Parallax mapping with offset limiting (Welsh 2004). The geometrically correct offset is
         // height * viewDirUv / viewDirT.z, but the 1/z term explodes at grazing angles and smears

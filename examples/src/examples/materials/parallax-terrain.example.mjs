@@ -328,13 +328,17 @@ data.set('data', {
     samples: 16,
     selfShadowSamples: 8,
     height: 0.35,
+
+    // the height map value that sits at the level of the geometry - the engine default pivots the
+    // relief around mid-grey, and 1 treats the map as pure depth carved below the surface
+    base: 0.5,
     shadowType: SHADOW_PCF3_32F,
     numCascades: 4,
     lightRotation: 25,
     animate: true
 });
 
-let mode, samples, selfShadowSamples, height, shadowType, numCascades;
+let mode, samples, selfShadowSamples, height, base, shadowType, numCascades;
 let lightRotation, animate;
 
 // the live angle, which the animation advances and the slider follows
@@ -345,17 +349,20 @@ app.on('update', (dt) => {
     const newSamples = data.get('data.samples');
     const newSelfShadowSamples = data.get('data.selfShadowSamples');
     const newHeight = data.get('data.height');
+    const newBase = data.get('data.base');
 
     if (
         newMode !== mode ||
         newSamples !== samples ||
         newSelfShadowSamples !== selfShadowSamples ||
-        newHeight !== height
+        newHeight !== height ||
+        newBase !== base
     ) {
         mode = newMode;
         samples = newSamples;
         selfShadowSamples = newSelfShadowSamples;
         height = newHeight;
+        base = newBase;
 
         material.heightMap = mode === MODE_NONE ? null : assets.height.resource;
         if (mode !== MODE_NONE) {
@@ -366,6 +373,7 @@ app.on('update', (dt) => {
         // zero takes the self shadow march out of the shader, so this both budgets and switches it
         material.parallaxShadowSamples = selfShadowSamples;
         material.heightMapFactor = height;
+        material.heightMapBase = base;
         material.update();
     }
 

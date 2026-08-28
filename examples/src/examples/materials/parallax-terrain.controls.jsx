@@ -70,6 +70,15 @@ export function Controls({ observer }) {
                         precision={2}
                     />
                 </LabelGroup>
+                <LabelGroup text='Base'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.base' }}
+                        min={0.0}
+                        max={1}
+                        precision={2}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Light'>
                 <LabelGroup text='Rotation'>
