@@ -64,6 +64,22 @@ describe('Application', function () {
 
     });
 
+    describe('#stats', function () {
+
+        it('returns stats for the owning application when multiple applications exist', function () {
+            const app2 = createApp();
+
+            try {
+                expect(app.stats.scene).to.equal(app.scene._stats);
+                expect(app.stats.lightmapper).to.equal(app.lightmapper.stats);
+                expect(app.stats.batcher).to.equal(app.batcher._stats);
+            } finally {
+                app2.destroy();
+            }
+        });
+
+    });
+
     describe('#destroy', function () {
 
         it('destroys the application', function () {
