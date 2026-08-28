@@ -588,7 +588,8 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Gets the duration of the sound that the slot will play starting from startTime.
+     * Gets the duration of the sound that the slot will play starting from {@link startTime}. The
+     * returned value is clamped to the time available after the normalized start time.
      *
      * @type {number}
      */
@@ -601,7 +602,8 @@ class SoundSlot extends EventHandler {
 
         // != intentional
         if (this._duration != null) {
-            return this._duration % (assetDuration || 1);
+            const startTime = (this._startTime % assetDuration) || 0;
+            return Math.min(this._duration, assetDuration - startTime);
         }
         return assetDuration;
     }
