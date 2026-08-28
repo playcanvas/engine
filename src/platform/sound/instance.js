@@ -375,7 +375,8 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Gets the duration of the sound that the instance will play starting from startTime.
+     * Gets the duration of the sound that the instance will play starting from startTime. The
+     * returned value is clamped to the duration of the sound resource.
      *
      * @type {number}
      */
@@ -384,7 +385,7 @@ class SoundInstance extends EventHandler {
             return 0;
         }
         if (this._duration) {
-            return capTime(this._duration, this._sound.duration);
+            return Math.min(this._duration, this._sound.duration);
         }
         return this._sound.duration;
     }

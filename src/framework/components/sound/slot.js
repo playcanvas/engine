@@ -588,7 +588,8 @@ class SoundSlot extends EventHandler {
     }
 
     /**
-     * Gets the duration of the sound that the slot will play starting from startTime.
+     * Gets the duration of the sound that the slot will play starting from startTime. The returned
+     * value is clamped to the duration of the audio asset.
      *
      * @type {number}
      */
@@ -601,7 +602,7 @@ class SoundSlot extends EventHandler {
 
         // != intentional
         if (this._duration != null) {
-            return this._duration % (assetDuration || 1);
+            return Math.min(this._duration, assetDuration);
         }
         return assetDuration;
     }
