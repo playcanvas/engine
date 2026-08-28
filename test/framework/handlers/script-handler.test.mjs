@@ -22,6 +22,7 @@ describe('ScriptHandler', function () {
     it('registers module scripts with the handler application', async function () {
         const otherApp = createApp();
         const scriptUrl = new URL('../../../src/framework/script/script.js', import.meta.url);
+        // The trailing token makes the data URL end in '.mjs', selecting the ESM loader path.
         const source = `
             import { Script } from '${scriptUrl}';
             export class ModuleScript extends Script {
