@@ -114,6 +114,9 @@ let app = null;
  * {@link ResourceHandler}s yourself. This facilitates
  * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
  * your application.
+ *
+ * It is the preferred entry point for new code - {@link Application} is a convenience subclass
+ * that registers everything for you, and is expected to be deprecated in a future release.
  */
 class AppBase extends EventHandler {
     /**
