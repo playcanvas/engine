@@ -560,7 +560,7 @@ class AppBase extends EventHandler {
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(graphicsDevice);
+        this.stats = new ApplicationStats(this);
 
         this._soundManager = soundManager;
         this.scene = new Scene(graphicsDevice);
