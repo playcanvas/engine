@@ -216,7 +216,11 @@ class SoundInstance extends EventHandler {
          */
         this._currentTime = 0;
 
-        /** @private */
+        /**
+         * The playback position relative to startTime when _startedAt was recorded.
+         *
+         * @private
+         */
         this._currentOffset = 0;
 
         /**
@@ -302,13 +306,17 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Sets the current time of the sound that is playing. If the value provided is bigger than the
-     * duration of the instance it will wrap from the beginning.
+     * Sets the current time of the sound that is playing, relative to {@link startTime}. If the
+     * value provided is bigger than the duration of the instance it will wrap from the beginning.
      *
      * @type {number}
      */
     set currentTime(value) {
+        value = Number(value) || 0;
         if (value < 0) return;
+
+        const duration = this.duration;
+        const currentTime = duration ? capTime(value, duration) : value;
 
         if (this._state === STATE_PLAYING) {
             const suspend = this._suspendInstanceEvents;
@@ -318,19 +326,19 @@ class SoundInstance extends EventHandler {
             this.stop();
 
             // set _startOffset and play
-            this._startOffset = value;
+            this._startOffset = currentTime;
             this.play();
             this._suspendInstanceEvents = suspend;
         } else {
             // set _startOffset which will be used when the instance will start playing
-            this._startOffset = value;
+            this._startOffset = currentTime;
             // set _currentTime
-            this._currentTime = value;
+            this._currentTime = currentTime;
         }
     }
 
     /**
-     * Gets the current time of the sound that is playing.
+     * Gets the current time of the sound that is playing, relative to {@link startTime}.
      *
      * @type {number}
      */
@@ -375,8 +383,8 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Gets the duration of the sound that the instance will play starting from startTime. The
-     * returned value is clamped to the duration of the sound resource.
+     * Gets the duration of the sound that the instance will play starting from {@link startTime}.
+     * The returned value is clamped to the time available after the normalized start time.
      *
      * @type {number}
      */
@@ -385,7 +393,9 @@ class SoundInstance extends EventHandler {
             return 0;
         }
         if (this._duration) {
-            return Math.min(this._duration, this._sound.duration);
+            const soundDuration = this._sound.duration;
+            const startTime = capTime(this._startTime, soundDuration);
+            return Math.min(this._duration, soundDuration - startTime);
         }
         return this._sound.duration;
     }
@@ -725,19 +735,19 @@ class SoundInstance extends EventHandler {
             this._createSource();
         }
 
-        // calculate start offset
-        let offset = capTime(this._startOffset, this.duration);
-        offset = capTime(this._startTime + offset, this._sound.duration);
+        // calculate the current offset relative to startTime and its matching buffer offset
+        const currentOffset = capTime(this._startOffset, this.duration);
+        const offset = capTime(this._startTime + currentOffset, this._sound.duration);
         // reset start offset now that we started the sound
         this._startOffset = null;
 
         // start source with specified offset
-        this._startSource(offset);
+        this._startSource(offset, currentOffset);
 
         // reset times
         this._startedAt = this._manager.context.currentTime;
         this._currentTime = 0;
-        this._currentOffset = offset;
+        this._currentOffset = currentOffset;
 
         // Initialize volume and loop - note moved to be after start() because of Chrome bug
         this.volume = this._volume;
@@ -763,11 +773,12 @@ class SoundInstance extends EventHandler {
      * playback at the end of the first iteration instead of looping.
      *
      * @param {number} offset - The offset into the buffer, in seconds, to start playing from.
+     * @param {number} currentOffset - The offset relative to startTime, in seconds.
      * @private
      */
-    _startSource(offset) {
+    _startSource(offset, currentOffset) {
         if (this._duration && !this._loop) {
-            this.source.start(0, offset, this._duration);
+            this.source.start(0, offset, this.duration - currentOffset);
         } else {
             this.source.start(0, offset);
         }
@@ -885,8 +896,8 @@ class SoundInstance extends EventHandler {
             return false;
         }
 
-        // start at point where sound was paused
-        let offset = this.currentTime;
+        // start at the point relative to startTime where the sound was paused
+        let currentOffset = this.currentTime;
 
         // set state back to playing
         this._state = STATE_PLAYING;
@@ -903,18 +914,19 @@ class SoundInstance extends EventHandler {
         // if the user set the 'currentTime' property while the sound
         // was paused then use that as the offset instead
         if (this._startOffset !== null) {
-            offset = capTime(this._startOffset, this.duration);
-            offset = capTime(this._startTime + offset, this._sound.duration);
+            currentOffset = capTime(this._startOffset, this.duration);
 
             // reset offset
             this._startOffset = null;
         }
 
+        const offset = capTime(this._startTime + currentOffset, this._sound.duration);
+
         // start source
-        this._startSource(offset);
+        this._startSource(offset, currentOffset);
 
         this._startedAt = this._manager.context.currentTime;
-        this._currentOffset = offset;
+        this._currentOffset = currentOffset;
 
         // Initialize parameters
         this.volume = this._volume;
