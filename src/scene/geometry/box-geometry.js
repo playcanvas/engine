@@ -1,5 +1,4 @@
 import { Vec3 } from '../../core/math/vec3.js';
-import { calculateTangents } from './geometry-utils.js';
 import { Geometry } from './geometry.js';
 
 const primitiveUv1Padding = 8.0 / 64;
@@ -175,7 +174,7 @@ class BoxGeometry extends Geometry {
         this.indices = indices;
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(positions, normals, uvs, indices);
+            this.calculateTangents();
         }
     }
 }
