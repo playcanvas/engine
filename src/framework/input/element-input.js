@@ -427,16 +427,17 @@ class ElementInput {
         this._target = domElement;
         this._attached = true;
 
-        const opts = platform.passiveEvents ? { passive: true } : false;
+        /** @type {AddEventListenerOptions} */
+        const options = { passive: true };
         if (this._useMouse) {
-            window.addEventListener('mouseup', this._upHandler, opts);
-            window.addEventListener('mousedown', this._downHandler, opts);
-            window.addEventListener('mousemove', this._moveHandler, opts);
-            window.addEventListener('wheel', this._wheelHandler, opts);
+            window.addEventListener('mouseup', this._upHandler, options);
+            window.addEventListener('mousedown', this._downHandler, options);
+            window.addEventListener('mousemove', this._moveHandler, options);
+            window.addEventListener('wheel', this._wheelHandler, options);
         }
 
         if (this._useTouch && platform.touch) {
-            this._target.addEventListener('touchstart', this._touchstartHandler, opts);
+            this._target.addEventListener('touchstart', this._touchstartHandler, options);
             // Passive is not used for the touchend event because some components need to be
             // able to call preventDefault(). See notes in button/component.js for more details.
             this._target.addEventListener('touchend', this._touchendHandler, false);
@@ -465,16 +466,17 @@ class ElementInput {
         if (!this._attached) return;
         this._attached = false;
 
-        const opts = platform.passiveEvents ? { passive: true } : false;
+        /** @type {AddEventListenerOptions} */
+        const options = { passive: true };
         if (this._useMouse) {
-            window.removeEventListener('mouseup', this._upHandler, opts);
-            window.removeEventListener('mousedown', this._downHandler, opts);
-            window.removeEventListener('mousemove', this._moveHandler, opts);
-            window.removeEventListener('wheel', this._wheelHandler, opts);
+            window.removeEventListener('mouseup', this._upHandler, options);
+            window.removeEventListener('mousedown', this._downHandler, options);
+            window.removeEventListener('mousemove', this._moveHandler, options);
+            window.removeEventListener('wheel', this._wheelHandler, options);
         }
 
         if (this._useTouch) {
-            this._target.removeEventListener('touchstart', this._touchstartHandler, opts);
+            this._target.removeEventListener('touchstart', this._touchstartHandler, options);
             this._target.removeEventListener('touchend', this._touchendHandler, false);
             this._target.removeEventListener('touchmove', this._touchmoveHandler, false);
             this._target.removeEventListener('touchcancel', this._touchcancelHandler, false);
