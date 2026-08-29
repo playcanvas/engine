@@ -821,7 +821,7 @@ class TextElement {
     }
 
     _updateMaterialShadow() {
-        if (this._symbolOutlineParams) {
+        if (this._symbolShadowParams) {
             // when per-vertex shadow is present, disable material shadow uniforms
             this._shadowColorUniform[0] = 0;
             this._shadowColorUniform[1] = 0;
