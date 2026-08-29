@@ -147,15 +147,6 @@ const platform = {
     workers: workers,
 
     /**
-     * True if the platform supports passive event listeners. Always true, as every browser able
-     * to run the engine supports them. Kept for backwards compatibility.
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    passiveEvents: true,
-
-    /**
      * Get the browser name.
      *
      * @type {'chrome' | 'safari' | 'firefox' | 'other' | null}
