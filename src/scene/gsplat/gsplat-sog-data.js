@@ -13,7 +13,7 @@ import {
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
-import { RenderPassQuad } from '../../scene/graphics/render-pass-quad.js';
+import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import glslSogCentersPS from '../shader-lib/glsl/chunks/gsplat/frag/gsplatSogCenters.js';
 import wgslSogCentersPS from '../shader-lib/wgsl/chunks/gsplat/frag/gsplatSogCenters.js';
@@ -398,7 +398,8 @@ class GSplatSogData {
         });
 
         const quad = new QuadRender(shader);
-        const renderPass = new RenderPassQuad(device, quad);
+        const renderPass = new RenderPassShaderQuad(device);
+        renderPass.quadRender = quad;
         renderPass.name = 'SogGenerateCenters';
         renderPass.init(renderTarget);
         renderPass.colorOps.clear = false;

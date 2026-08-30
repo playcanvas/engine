@@ -23,20 +23,20 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
  *
  * ```javascript
  * // Create a child handle entity that the user can drag
- * const handle = new pc.Entity();
+ * const handle = new Entity();
  * handle.addComponent('element', {
- *     type: pc.ELEMENTTYPE_IMAGE,
+ *     type: ELEMENTTYPE_IMAGE,
  *     useInput: true
  * });
  *
  * // Create the scrollbar entity and wire in the handle
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addChild(handle);
  * entity.addComponent('element', {
- *     type: pc.ELEMENTTYPE_IMAGE
+ *     type: ELEMENTTYPE_IMAGE
  * });
  * entity.addComponent('scrollbar', {
- *     orientation: pc.ORIENTATION_VERTICAL,
+ *     orientation: ORIENTATION_VERTICAL,
  *     value: 0,
  *     handleSize: 0.5,
  *     handleEntity: handle

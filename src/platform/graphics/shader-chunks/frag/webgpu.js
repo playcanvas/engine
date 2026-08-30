@@ -28,6 +28,10 @@ export default /* glsl */`
 #define outType_7 vec4
 #endif
 
+#ifdef DUAL_SOURCE_BLENDING
+layout(location = 0, index = 0) out highp outType_0 pcFragColor0;
+layout(location = 0, index = 1) out highp outType_0 pcFragColorSecondary;
+#else
 layout(location = 0) out highp outType_0 pcFragColor0;
 layout(location = 1) out highp outType_1 pcFragColor1;
 layout(location = 2) out highp outType_2 pcFragColor2;
@@ -36,6 +40,7 @@ layout(location = 4) out highp outType_4 pcFragColor4;
 layout(location = 5) out highp outType_5 pcFragColor5;
 layout(location = 6) out highp outType_6 pcFragColor6;
 layout(location = 7) out highp outType_7 pcFragColor7;
+#endif
 
 #define gl_FragColor pcFragColor0
 

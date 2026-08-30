@@ -44,8 +44,8 @@ const assets = {
         { url: './assets/cubemaps/morning-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
-    diffuseDetail: new Asset('diffuse', 'texture', { url: './assets/textures/playcanvas.png' }),
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
+    diffuseDetail: new Asset('diffuse', 'texture', { url: './assets/textures/playcanvas.png' }, { srgb: true }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     normalDetail: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
     ao: new Asset('ao', 'texture', { url: './assets/textures/seaside-rocks01-ao.jpg' }),

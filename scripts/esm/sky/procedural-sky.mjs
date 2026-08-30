@@ -478,6 +478,7 @@ const sunRotQuat = new Quat();
  *
  * An optional directional light is kept in sync with the sun, so direct lighting and shadows match
  * the visible sky and its image-based lighting.
+ * @category Rendering
  */
 class ProceduralSky extends Script {
     static scriptName = 'proceduralSky';
@@ -500,6 +501,21 @@ class ProceduralSky extends Script {
      * @type {number}
      */
     elevation = 25;
+
+    /**
+     * Rotation of the whole sky around the Y axis, in degrees. It is added to the sun azimuth, so the
+     * sky, the sun and the moon all turn together, along with the sun light and the shadows it casts.
+     * Use it to orient the sky relative to the scene without disturbing the azimuth and elevation - a
+     * day / night cycle driving those keeps its mapping of time to sun position.
+     *
+     * Note the procedural star field is anchored to the world axes rather than turning with the sky,
+     * which is not observable as the stars are noise to begin with.
+     *
+     * @attribute
+     * @range [0, 360]
+     * @type {number}
+     */
+    rotation = 0;
 
     /**
      * Atmosphere haziness. Higher values give a milkier sky and a larger sun glow.
@@ -789,9 +805,27 @@ class ProceduralSky extends Script {
      */
     _computeSunDir(out) {
         const el = this.elevation * Math.PI / 180;
-        const az = this.azimuth * Math.PI / 180;
+        const az = (this.azimuth + this.rotation) * Math.PI / 180;
         const cosEl = Math.cos(el);
         return out.set(cosEl * Math.sin(az), Math.sin(el), cosEl * Math.cos(az)).normalize();
+    }
+
+    /**
+     * Computes the world-space direction towards the moon, turned by the sky rotation so that it keeps
+     * its place relative to the sun's path.
+     *
+     * @param {Vec3} out - The vector to receive the result.
+     * @returns {Vec3} The world-space moon direction.
+     * @private
+     */
+    _computeMoonDir(out) {
+        const a = this.rotation * Math.PI / 180;
+        const sin = Math.sin(a);
+        const cos = Math.cos(a);
+        const { x, y, z } = this.moonDirection;
+
+        // rotate around Y in the same direction an increasing azimuth turns, see _computeSunDir
+        return out.set(x * cos + z * sin, y, z * cos - x * sin).normalize();
     }
 
     /**
@@ -885,7 +919,7 @@ class ProceduralSky extends Script {
         const nightFactor = Math.max(0, Math.min(1, -this.elevation / 6));
 
         // light source direction: towards the sun by day, towards the moon by night
-        tmpMoon.copy(this.moonDirection).normalize();
+        this._computeMoonDir(tmpMoon);
         const src = tmpSrc.lerp(this._sunDir, tmpMoon, nightFactor).normalize();
 
         // A directional light emits along its entity's -Y (down) axis (see forward-renderer:
@@ -945,7 +979,7 @@ class ProceduralSky extends Script {
         scope.resolve('procSkyMoonColor').setValue([this.moonColor.r, this.moonColor.g, this.moonColor.b]);
         scope.resolve('procSkyMoonSize').setValue(this.moonSize * Math.PI / 180);
         scope.resolve('procSkyMoonGlow').setValue(this.moonGlow);
-        tmpMoon.copy(this.moonDirection).normalize();
+        this._computeMoonDir(tmpMoon);
         scope.resolve('procSkyMoonDir').setValue([-tmpMoon.x, tmpMoon.y, tmpMoon.z]);
 
         this._updateSunLight();

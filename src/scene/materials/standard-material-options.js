@@ -14,16 +14,14 @@ class StandardMaterialOptions {
      */
     defines = new Map();
 
+    /** @ignore */
+    useDualSourceBlending = false;
+
     /**
      * If UV1 (second set of texture coordinates) is required in the shader. Will be declared as
      * "vUv1" and passed to the fragment shader.
      */
     forceUv1 = false;
-
-    /**
-     * Defines if {@link StandardMaterial#specular} constant should affect specular color.
-     */
-    specularTint = false;
 
     /**
      * Defines if {@link StandardMaterial#metalness} constant should affect metalness value.

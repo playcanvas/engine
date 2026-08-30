@@ -5,6 +5,7 @@ import { Color } from '../../../core/math/color.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     CULLFACE_NONE,
+    isIntegerPixelFormat, pixelFormatInfo,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     FUNC_ALWAYS,
@@ -44,6 +45,7 @@ import { WebglUploadStream } from './webgl-upload-stream.js';
 import { WebglXrBridge } from './webgl-xr-bridge.js';
 import { WebglXrMsaaCopy } from './webgl-xr-msaa-copy.js';
 import { BlendState } from '../blend-state.js';
+import { validateClearValues } from '../render-pass.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
@@ -56,6 +58,27 @@ import { getBuiltInTexture } from '../built-in-textures.js';
  * @import { Shader } from '../shader.js'
  * @import { VertexBuffer } from '../vertex-buffer.js'
  */
+
+// reused destination for BlendState#getAttachment, to avoid allocations
+const _attachmentBlendState = new BlendState();
+
+// maximum number of color attachments a BlendState can describe
+const maxBlendAttachments = 8;
+
+// reused storage for the clear color of an individual attachment, to avoid allocations. The typed
+// array matching the format class of the attachment is used.
+const _attachmentClearValue = new Float32Array(4);
+const _attachmentClearValueInt = new Int32Array(4);
+const _attachmentClearValueUint = new Uint32Array(4);
+
+// reused options for the render pass clears, to avoid allocations. The fields not covered by the
+// flags are ignored by the clear call.
+const _clearOptions = {
+    flags: 0,
+    color: [0, 0, 0, 1],
+    depth: 1,
+    stencil: 0
+};
 
 /**
  * Returns the number of channels for 8-bit normalized formats that require RGBA readback.
@@ -289,7 +312,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.DST_ALPHA,
             gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_COLOR,
-            gl.ONE_MINUS_CONSTANT_COLOR
+            gl.ONE_MINUS_CONSTANT_COLOR,
+            this.extBlendFuncExtended?.SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.SRC1_ALPHA_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_ALPHA_WEBGL
         ];
 
         this.glBlendFunctionAlpha = [
@@ -305,7 +332,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.DST_ALPHA,
             gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_ALPHA,
-            gl.ONE_MINUS_CONSTANT_ALPHA
+            gl.ONE_MINUS_CONSTANT_ALPHA,
+            this.extBlendFuncExtended?.SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_COLOR_WEBGL,
+            this.extBlendFuncExtended?.SRC1_ALPHA_WEBGL,
+            this.extBlendFuncExtended?.ONE_MINUS_SRC1_ALPHA_WEBGL
         ];
 
         this.glComparison = [
@@ -881,7 +912,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extTextureFloatLinear = this.getExtension('OES_texture_float_linear');
         this.textureFloatFilterable = !!this.extTextureFloatLinear;
 
+        // blending into 32-bit float render targets requires this extension
         this.extFloatBlend = this.getExtension('EXT_float_blend');
+        this.textureFloatBlendable = !!this.extFloatBlend;
+        this.extBlendFuncExtended = this.getExtension('WEBGL_blend_func_extended');
+        this.supportsDualSourceBlending = !!this.extBlendFuncExtended;
+        this.extDrawBuffersIndexed = this.getExtension('OES_draw_buffers_indexed');
+        this.supportsIndependentBlending = !!this.extDrawBuffersIndexed;
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
@@ -1070,7 +1107,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.boundVao = null;
         this.activeFramebuffer = null;
         this.feedback = null;
-        this.transformFeedbackBuffer = null;
+
+        /** @type {VertexBuffer[]|null} */
+        this.transformFeedbackBuffers = null;
 
         this.textureUnit = 0;
         this.initTextureUnits(this.maxCombinedTextures);
@@ -1370,32 +1409,84 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.setViewport(0, 0, width, height);
         this.setScissor(0, 0, width, height);
 
-        // clear the render target
-        const colorOps = renderPass.colorOps;
+        // set up the clear of the depth and stencil, which are shared by all color attachments
         const depthStencilOps = renderPass.depthStencilOps;
-        if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
+        let clearFlags = 0;
 
-            let clearFlags = 0;
-            const clearOptions = {};
+        if (depthStencilOps.clearDepth) {
+            clearFlags |= CLEARFLAG_DEPTH;
+            _clearOptions.depth = depthStencilOps.clearDepthValue;
+        }
 
-            if (colorOps?.clear) {
-                clearFlags |= CLEARFLAG_COLOR;
-                clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
+        if (depthStencilOps.clearStencil) {
+            clearFlags |= CLEARFLAG_STENCIL;
+            _clearOptions.stencil = depthStencilOps.clearStencilValue;
+        }
+
+        // A single color attachment of a float / normalized format is cleared by the same clear
+        // call. Integer formats cannot be cleared by gl.clear (the results are undefined), and use
+        // the per-attachment path below instead.
+        const colorBufferCount = rt._colorBuffers?.length ?? 0;
+        const colorOps = renderPass.colorOps;
+        const useClearBuffers = colorBufferCount > 1 ||
+            (colorBufferCount === 1 && isIntegerPixelFormat(rt._colorBuffers[0].format));
+        if (!useClearBuffers && colorOps?.clear) {
+            clearFlags |= CLEARFLAG_COLOR;
+            const { clearValue } = colorOps;
+            const color = _clearOptions.color;
+            color[0] = clearValue.r;
+            color[1] = clearValue.g;
+            color[2] = clearValue.b;
+            color[3] = clearValue.a;
+        }
+
+        if (clearFlags !== 0) {
+            _clearOptions.flags = clearFlags;
+            this.clear(_clearOptions);
+        }
+
+        // The remaining color attachments are cleared individually using clearBuffer functions,
+        // as the non-indexed gl.clear applies a single clear color to all draw buffers, and does
+        // not support integer formats. This applies their own clear colors, uses the clearBuffer
+        // function matching the format class of each attachment, and preserves the content of the
+        // attachments which do not clear. Note that the clearBuffer functions are affected by the
+        // color write masks, including the per-attachment ones, and so these are reset first.
+        if (useClearBuffers) {
+            const gl = this.gl;
+            const { colorArrayOps } = renderPass;
+
+            // integer formats require the clear value components to be integers representable in
+            // the format, as they would otherwise be silently truncated by the typed array
+            Debug.call(() => validateClearValues(renderPass));
+
+            let writeMasksReset = false;
+            for (let i = 0; i < colorBufferCount; i++) {
+                const colorOps = colorArrayOps[i];
+                if (colorOps?.clear) {
+
+                    if (!writeMasksReset) {
+                        this.setBlendState(BlendState.NOBLEND);
+                        writeMasksReset = true;
+                    }
+
+                    const { clearValue } = colorOps;
+                    const formatInfo = pixelFormatInfo.get(rt._colorBuffers[i].format);
+                    const clearValueArray = formatInfo?.isUint ? _attachmentClearValueUint :
+                        (formatInfo?.isInt ? _attachmentClearValueInt : _attachmentClearValue);
+                    clearValueArray[0] = clearValue.r;
+                    clearValueArray[1] = clearValue.g;
+                    clearValueArray[2] = clearValue.b;
+                    clearValueArray[3] = clearValue.a;
+
+                    if (formatInfo?.isUint) {
+                        gl.clearBufferuiv(gl.COLOR, i, clearValueArray);
+                    } else if (formatInfo?.isInt) {
+                        gl.clearBufferiv(gl.COLOR, i, clearValueArray);
+                    } else {
+                        gl.clearBufferfv(gl.COLOR, i, clearValueArray);
+                    }
+                }
             }
-
-            if (depthStencilOps.clearDepth) {
-                clearFlags |= CLEARFLAG_DEPTH;
-                clearOptions.depth = depthStencilOps.clearDepthValue;
-            }
-
-            if (depthStencilOps.clearStencil) {
-                clearFlags |= CLEARFLAG_STENCIL;
-                clearOptions.stencil = depthStencilOps.clearStencilValue;
-            }
-
-            // clear it
-            clearOptions.flags = clearFlags;
-            this.clear(clearOptions);
         }
 
         Debug.call(() => {
@@ -1768,6 +1859,50 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    /**
+     * Generates the key of the vertex array object cache for the supplied vertex buffers. Each part
+     * identifies both the buffer and its format, and is delimited, so distinct buffer lists cannot
+     * generate the same key.
+     *
+     * @param {VertexBuffer[]} vertexBuffers - The vertex buffers of the draw.
+     * @returns {string} The cache key.
+     * @private
+     */
+    _vertexArrayKey(vertexBuffers) {
+        let key = '';
+        for (let i = 0; i < vertexBuffers.length; i++) {
+            key += vertexBuffers[i].vaoKeyPart;
+        }
+        return key;
+    }
+
+    /**
+     * Removes the cached vertex array object for the supplied vertex buffers, if one exists.
+     *
+     * This is needed by code which exchanges the GPU buffers behind VertexBuffer objects while
+     * leaving the objects themselves in place - see {@link TransformFeedback#process}. A vertex
+     * array object captures the GPU buffers it was built from, and this cache is keyed on the
+     * VertexBuffer objects, so such an exchange is invisible to it and a stale vertex array object
+     * would keep reading the buffers from before the exchange.
+     *
+     * Only has an effect when more than one vertex buffer is supplied - a single vertex buffer stores
+     * its vertex array object on itself, and so it travels with the buffer.
+     *
+     * @param {VertexBuffer[]} vertexBuffers - The vertex buffers whose cached vertex array object
+     * should be removed.
+     * @ignore
+     */
+    removeVertexArrayFromCache(vertexBuffers) {
+        if (vertexBuffers.length > 1) {
+            const key = this._vertexArrayKey(vertexBuffers);
+            const vao = this._vaoMap.get(key);
+            if (vao) {
+                this._vaoMap.delete(key);
+                this.gl.deleteVertexArray(vao);
+            }
+        }
+    }
+
     // function creates VertexArrayObject from list of vertex buffers
     createVertexArray(vertexBuffers) {
 
@@ -1777,12 +1912,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const useCache = vertexBuffers.length > 1;
         if (useCache) {
 
-            // generate unique key for the vertex buffers
-            key = '';
-            for (let i = 0; i < vertexBuffers.length; i++) {
-                const vertexBuffer = vertexBuffers[i];
-                key += vertexBuffer.id + vertexBuffer.format.renderingHash;
-            }
+            key = this._vertexArrayKey(vertexBuffers);
 
             // try to get VAO from cache
             vao = this._vaoMap.get(key);
@@ -1836,7 +1966,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // unbind any array buffer
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
-            // add it to cache
+            // add it to cache. Note that entries are not removed when one of the vertex buffers is
+            // destroyed - the cache only retains the vertex array object itself, not the buffers, and
+            // the number of buffers taking part in multi-buffer draws is small, so pruning per
+            // destroyed buffer is not considered worth the cost. The cache is released in full when
+            // the device is destroyed or the context is lost.
             if (useCache) {
                 this._vaoMap.set(key, vao);
             }
@@ -1931,7 +2065,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 // vertex buffers
                 if (first) {
-                    Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers[0]?.format, this.vertexBuffers[1]?.format));
+                    Debug.call(() => {
+                        if (this.blendState.usesDualSourceBlending) {
+                            const isBackbuffer = !this.renderTarget || this.renderTarget === this.backBuffer;
+                            const colorAttachmentCount = isBackbuffer ? 1 : (this.renderTarget._colorBuffers?.length ?? 0);
+                            Debug.assert(shader.definition.useDualSourceBlending,
+                                'A BlendState using secondary source factors requires a dual-source blending shader.');
+                            Debug.assert(colorAttachmentCount === 1,
+                                'Dual-source blending requires exactly one color attachment.');
+                        }
+                    });
+
+                    Debug.call(() => this.validateAttributes(this.shader, this.vertexBuffers));
 
                     this.setBuffers(indexBuffer);
                 }
@@ -2023,9 +2168,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (this.transformFeedbackBuffer) {
-                    // Enable TF, start writing to out buffer
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.transformFeedbackBuffer.impl.bufferId);
+                const transformFeedbackBuffers = this.transformFeedbackBuffers;
+                if (transformFeedbackBuffers) {
+                    // Enable TF, start writing to out buffers
+                    for (let i = 0; i < transformFeedbackBuffers.length; i++) {
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, transformFeedbackBuffers[i].impl.bufferId);
+                    }
                     gl.beginTransformFeedback(gl.POINTS);
                 }
 
@@ -2079,10 +2227,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (this.transformFeedbackBuffer) {
+                if (transformFeedbackBuffers) {
                     // disable TF
                     gl.endTransformFeedback();
-                    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+                    for (let i = 0; i < transformFeedbackBuffers.length; i++) {
+                        gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, i, null);
+                    }
                 }
 
                 this._drawCallsPerFrame++;
@@ -2130,14 +2280,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * // Clear just the color buffer to red
      * device.clear({
      *     color: [1, 0, 0, 1],
-     *     flags: pc.CLEARFLAG_COLOR
+     *     flags: CLEARFLAG_COLOR
      * });
      *
      * // Clear color buffer to yellow and depth to 1.0
      * device.clear({
      *     color: [1, 1, 0, 1],
      *     depth: 1,
-     *     flags: pc.CLEARFLAG_COLOR | pc.CLEARFLAG_DEPTH
+     *     flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
      * });
      */
     clear(options) {
@@ -2393,25 +2543,43 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Sets the output vertex buffer. It will be written to by a shader with transform feedback
-     * varyings.
+     * Sets the output vertex buffers. They will be written to by a shader with transform feedback
+     * varyings. A shader created with {@link TRANSFORM_FEEDBACK_INTERLEAVED} captures all varyings
+     * into a single buffer, and so expects one buffer. A shader created with
+     * {@link TRANSFORM_FEEDBACK_SEPARATE} captures each varying into its own buffer, and so expects
+     * one buffer per varying, in declaration order.
      *
-     * @param {VertexBuffer} tf - The output vertex buffer.
+     * @param {VertexBuffer[]|null} buffers - The output vertex buffers, or null to disable transform
+     * feedback.
      * @ignore
      */
-    setTransformFeedbackBuffer(tf) {
-        if (this.transformFeedbackBuffer !== tf) {
-            this.transformFeedbackBuffer = tf;
+    setTransformFeedbackBuffers(buffers) {
 
-            const gl = this.gl;
-            if (tf) {
-                if (!this.feedback) {
-                    this.feedback = gl.createTransformFeedback();
-                }
+        Debug.call(() => {
+            buffers?.forEach((buffer, index) => {
+                Debug.assert(buffer, `Transform feedback buffer at index ${index} is null - a buffer is required for every varying the shader captures.`);
+
+                // A vertex buffer only allocates its GPU storage when it is first given data, so a
+                // buffer created without any is still empty here. Transform feedback would fail on
+                // beginTransformFeedback with an error naming neither the buffer nor the cause, so
+                // catch it while the buffer is still identifiable.
+                Debug.assert(buffer?.impl.initialized, `Transform feedback buffer ${buffer?.id} at index ${index} has no GPU storage allocated, so it cannot be written to. A vertex buffer allocates its storage when first given data, so pass initial data when creating a buffer which only transform feedback writes to.`, buffer);
+            });
+        });
+
+        const gl = this.gl;
+        const active = buffers?.length ? buffers : null;
+        const wasActive = this.transformFeedbackBuffers !== null;
+
+        this.transformFeedbackBuffers = active;
+
+        if (active) {
+            if (!wasActive) {
+                this.feedback ??= gl.createTransformFeedback();
                 gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.feedback);
-            } else {
-                gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
             }
+        } else if (wasActive) {
+            gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
         }
     }
 
@@ -2517,40 +2685,123 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    /**
+     * Applies a blend state to all draw buffers.
+     *
+     * @param {BlendState} blendState - The blend state to apply. Only the state of its attachment 0
+     * is used, as the non-indexed entry points apply to all draw buffers.
+     * @param {BlendState} [prevState] - The currently applied state, used to skip the calls which
+     * would not change anything. When not specified, all state is set.
+     * @private
+     */
+    applyBlendState(blendState, prevState) {
+        const gl = this.gl;
+
+        // state values to set
+        const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
+
+        // enable blend
+        if (!prevState || prevState.blend !== blend) {
+            if (blend) {
+                gl.enable(gl.BLEND);
+            } else {
+                gl.disable(gl.BLEND);
+            }
+        }
+
+        // blend ops
+        if (!prevState || prevState.colorOp !== colorOp || prevState.alphaOp !== alphaOp) {
+            const glBlendEquation = this.glBlendEquation;
+            gl.blendEquationSeparate(glBlendEquation[colorOp], glBlendEquation[alphaOp]);
+        }
+
+        // blend factors
+        if (!prevState || prevState.colorSrcFactor !== colorSrcFactor || prevState.colorDstFactor !== colorDstFactor ||
+            prevState.alphaSrcFactor !== alphaSrcFactor || prevState.alphaDstFactor !== alphaDstFactor) {
+
+            gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+                this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+        }
+
+        // color write
+        if (!prevState || prevState.allWrite !== blendState.allWrite) {
+            gl.colorMask(blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+        }
+    }
+
+    /**
+     * Applies a blend state to a single draw buffer, using the indexed entry points of the
+     * OES_draw_buffers_indexed extension. The state is always set in full, as the caller has just
+     * overwritten the state of all draw buffers.
+     *
+     * @param {number} index - The index of the draw buffer.
+     * @param {BlendState} blendState - The blend state to apply.
+     * @private
+     */
+    applyBlendStateIndexed(index, blendState) {
+        const gl = this.gl;
+        const ext = this.extDrawBuffersIndexed;
+
+        // state values to set
+        const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
+
+        if (blend) {
+            ext.enableiOES(gl.BLEND, index);
+        } else {
+            ext.disableiOES(gl.BLEND, index);
+        }
+
+        const glBlendEquation = this.glBlendEquation;
+        ext.blendEquationSeparateiOES(index, glBlendEquation[colorOp], glBlendEquation[alphaOp]);
+
+        ext.blendFuncSeparateiOES(index, this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+            this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+
+        ext.colorMaskiOES(index, blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+    }
+
     setBlendState(blendState) {
+        Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
+            'Dual-source blending is not supported by this graphics device.');
+
         const currentBlendState = this.blendState;
         if (!currentBlendState.equals(blendState)) {
-            const gl = this.gl;
 
-            // state values to set
-            const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
+            // when either the new or the currently applied state uses independent blending, the
+            // state of the individual draw buffers needs to be set explicitly
+            if ((blendState.hasAttachmentOverrides || currentBlendState.hasAttachmentOverrides) &&
+                this.supportsIndependentBlending) {
 
-            // enable blend
-            if (currentBlendState.blend !== blend) {
-                if (blend) {
-                    gl.enable(gl.BLEND);
-                } else {
-                    gl.disable(gl.BLEND);
+                // Apply attachment 0 to all draw buffers using the non-indexed entry points, which
+                // by definition affect every one of them. This is a single set of calls which
+                // covers attachment 0, every attachment inheriting it, and any stale independent
+                // state a previous draw has left behind. Setting each attachment individually
+                // instead would need a set of indexed calls per attachment, as a change of
+                // attachment 0 also changes all the attachments which inherit it.
+                blendState.getAttachment(0, _attachmentBlendState);
+                this.applyBlendState(_attachmentBlendState);
+                const attachment0Key = _attachmentBlendState.key;
+
+                // and then re-apply just the attachments which differ from attachment 0
+                if (blendState.hasAttachmentOverrides) {
+                    const count = Math.min(maxBlendAttachments, this.maxColorAttachments);
+                    for (let i = 1; i < count; i++) {
+                        blendState.getAttachment(i, _attachmentBlendState);
+                        if (_attachmentBlendState.key !== attachment0Key) {
+                            this.applyBlendStateIndexed(i, _attachmentBlendState);
+                        }
+                    }
                 }
-            }
 
-            // blend ops
-            if (currentBlendState.colorOp !== colorOp || currentBlendState.alphaOp !== alphaOp) {
-                const glBlendEquation = this.glBlendEquation;
-                gl.blendEquationSeparate(glBlendEquation[colorOp], glBlendEquation[alphaOp]);
-            }
+            } else {
 
-            // blend factors
-            if (currentBlendState.colorSrcFactor !== colorSrcFactor || currentBlendState.colorDstFactor !== colorDstFactor ||
-                currentBlendState.alphaSrcFactor !== alphaSrcFactor || currentBlendState.alphaDstFactor !== alphaDstFactor) {
+                Debug.call(() => {
+                    if (blendState.hasAttachmentOverrides) {
+                        Debug.warnOnce('BlendState uses independent blending, but the device does not support it (the OES_draw_buffers_indexed extension is not available). The blend state of the attachment 0 is used for all attachments.');
+                    }
+                });
 
-                gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
-                    this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
-            }
-
-            // color write
-            if (currentBlendState.allWrite !== blendState.allWrite) {
-                this.gl.colorMask(blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+                this.applyBlendState(blendState, currentBlendState);
             }
 
             // update internal state

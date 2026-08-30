@@ -11,12 +11,13 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
     isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY,
     TEXPROPERTY_ALL,
-    requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear
+    requiresManualGamma, pixelFormatInfo, isSrgbPixelFormat, pixelFormatLinearToGamma, pixelFormatGammaToLinear,
+    isMultisampleCapablePixelFormat
 } from './constants.js';
 import { TextureUtils } from './texture-utils.js';
 import { TextureView } from './texture-view.js';
@@ -141,6 +142,14 @@ class Texture {
     /** @protected */
     _storage = false;
 
+    /**
+     * The number of MSAA samples of the texture, 1 if not multisampled.
+     *
+     * @type {number}
+     * @protected
+     */
+    _samples = 1;
+
     /** @protected */
     _numLevels = 0;
 
@@ -255,12 +264,19 @@ class Texture {
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
+     * @param {number} [options.samples] - The number of MSAA samples. A value greater than 1
+     * creates a multisampled texture (WebGPU only, ignored with a warning on other devices, and
+     * rounded up to the device's supported sample count). A multisampled texture can only be
+     * rendered into, and its individual samples read in a shader using `textureLoad` - it cannot
+     * be sampled with a sampler, uploaded to or read back. It must be a 2D non-array
+     * texture with a format that supports multisampling, cannot be a storage texture, and has no
+     * mipmaps (the mipmaps option is ignored). Defaults to 1.
      * @example
      * // Create a 8x8x24-bit texture
-     * const texture = new pc.Texture(graphicsDevice, {
+     * const texture = new Texture(graphicsDevice, {
      *     width: 8,
      *     height: 8,
-     *     format: pc.PIXELFORMAT_RGB8
+     *     format: PIXELFORMAT_RGB8
      * });
      *
      * // Fill the texture with a gradient
@@ -307,7 +323,29 @@ class Texture {
         this._flipY = options.flipY ?? false;
         this._premultiplyAlpha = options.premultiplyAlpha ?? false;
 
-        this._mipmaps = options.mipmaps ?? true;
+        // multisampled (MSAA) texture, WebGPU only - can only be rendered into, and read in
+        // shaders using textureLoad
+        const requestedSamples = options.samples ?? 1;
+        if (requestedSamples > 1) {
+            if (graphicsDevice.isWebGPU) {
+                // WebGPU only supports sample counts of 1 or 4
+                this._samples = graphicsDevice.maxSamples;
+                Debug.assert(!this._volume && !this._cubemap && this._arrayLength === 0,
+                    `Multisampled texture '${this.name}' must be a 2D non-array texture.`, this);
+                Debug.assert(!this._storage,
+                    `Multisampled texture '${this.name}' cannot be a storage texture.`, this);
+                Debug.assert(!options.levels,
+                    `Multisampled texture '${this.name}' cannot be created with initial data, it can only be rendered into.`, this);
+                Debug.assert(options.numLevels === undefined,
+                    `Multisampled texture '${this.name}' cannot use the numLevels option, it always has a single mip level.`, this);
+                Debug.assert(isMultisampleCapablePixelFormat(this._format),
+                    `Multisampled texture '${this.name}' uses format ${pixelFormatInfo.get(this._format)?.name}, which does not support multisampling.`, this);
+            } else {
+                Debug.warnOnce(`Texture '${this.name}' was created with samples > 1, which is only supported on WebGPU; the samples option is ignored.`);
+            }
+        }
+
+        this._mipmaps = (options.mipmaps ?? true) && this._samples === 1;
         this._numLevelsRequested = options.numLevels;
         if (options.numLevels !== undefined) {
             this._numLevels = options.numLevels;
@@ -346,6 +384,13 @@ class Texture {
         }
 
         this.recreateImpl(upload);
+
+        // a multisampled texture is never uploaded (the usual point where VRAM tracking is
+        // updated), so account for its VRAM at creation; destroy() subtracts it
+        if (this._samples > 1) {
+            this._gpuSize = this.gpuSize;
+            this.adjustVramSizeTracking(graphicsDevice._vram, this._gpuSize);
+        }
 
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} [${pixelFormatInfo.get(this.format)?.name}]` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
@@ -482,6 +527,12 @@ class Texture {
             // re-create the implementation
             this.impl = device.createTextureImpl(this);
             this.dirtyAll();
+
+            // a multisampled texture is never uploaded, so re-account for its VRAM here
+            if (this._samples > 1) {
+                this._gpuSize = this.gpuSize;
+                this.adjustVramSizeTracking(device._vram, this._gpuSize);
+            }
         }
     }
 
@@ -669,7 +720,7 @@ class Texture {
      */
     set addressW(addressW) {
         if (!this._volume) {
-            Debug.warn('pc.Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
+            Debug.warn('Texture#addressW: Can\'t set W addressing mode for a non-3D texture.');
             return;
         }
         if (addressW !== this._addressW) {
@@ -828,6 +879,17 @@ class Texture {
     }
 
     /**
+     * The number of MSAA samples of the texture, 1 if the texture is not multisampled. Specified
+     * via the `samples` constructor option (WebGPU only). A multisampled texture can only be
+     * rendered into, and its individual samples read in a shader using `textureLoad`.
+     *
+     * @type {number}
+     */
+    get samples() {
+        return this._samples;
+    }
+
+    /**
      * The width of the texture in pixels.
      *
      * @type {number}
@@ -898,7 +960,7 @@ class Texture {
 
     get gpuSize() {
         const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap) * this._samples;
     }
 
     /**
@@ -951,6 +1013,31 @@ class Texture {
      */
     get type() {
         return this._type;
+    }
+
+    set rgbm(value) {
+        Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
+        this.type = value ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+    }
+
+    get rgbm() {
+        Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
+        return this.type === TEXTURETYPE_RGBM;
+    }
+
+    set swizzleGGGR(value) {
+        Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
+        this.type = value ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
+    }
+
+    get swizzleGGGR() {
+        Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
+        return this.type === TEXTURETYPE_SWIZZLEGGGR;
+    }
+
+    get _glTexture() {
+        Debug.deprecated('Texture#_glTexture is no longer available. Use Texture.impl._glTexture instead.');
+        return this.impl._glTexture;
     }
 
     /**
@@ -1099,6 +1186,8 @@ class Texture {
         options.face ??= 0;
         options.mode ??= TEXTURELOCK_WRITE;
 
+        Debug.assert(this._samples === 1, 'Cannot lock a multisampled texture.', this);
+
         Debug.assert(
             this._lockedMode === TEXTURELOCK_NONE,
             'The texture is already locked. Call `texture.unlock()` before attempting to lock again.',
@@ -1142,6 +1231,7 @@ class Texture {
      * than 0, represents the image source for the Nth mipmap reduction level.
      */
     setSource(source, mipLevel = 0) {
+        Debug.assert(this._samples === 1, 'Cannot set the source of a multisampled texture.', this);
         if (this.device._isHTMLElementInterface(source)) {
             if (!this.device.supportsHtmlTextures) {
                 Debug.error('Texture#setSource: HTML element textures are not supported on this device. Check device.supportsHtmlTextures before calling setSource with an HTML element.');
@@ -1267,7 +1357,7 @@ class Texture {
      */
     unlock() {
         if (this._lockedMode === TEXTURELOCK_NONE) {
-            Debug.warn('pc.Texture#unlock: Attempting to unlock a texture that is not locked.', this);
+            Debug.warn('Texture#unlock: Attempting to unlock a texture that is not locked.', this);
         }
 
         // Upload the new pixel data if locked in write mode (default)
@@ -1332,6 +1422,7 @@ class Texture {
      * with the pixel data of the texture.
      */
     read(x, y, width, height, options = {}) {
+        Debug.assert(this._samples === 1, 'Cannot read back a multisampled texture.', this);
         return this.impl.read?.(x, y, width, height, options);
     }
 
@@ -1377,6 +1468,10 @@ class Texture {
             Debug.error('Texture#copy: copying 3D (volume) textures is not supported.');
             return false;
         }
+        if (source._samples !== this._samples) {
+            Debug.error(`Texture#copy: source and destination sample counts must match (source '${source.name}' has ${source._samples}, destination '${this.name}' has ${this._samples}). A multisampled texture cannot be copied to or from a single-sampled texture - use a resolve instead.`);
+            return false;
+        }
 
         const sourceMipLevel = options.sourceMipLevel ?? 0;
         const destMipLevel = options.destMipLevel ?? 0;
@@ -1414,6 +1509,14 @@ class Texture {
             Debug.error(`Texture#copy: copy region is out of bounds (source ${sw}x${sh}, destination ${dw}x${dh}).`);
             return false;
         }
+
+        // WebGPU requires copies involving multisampled textures to cover the entire texture
+        if (this._samples > 1) {
+            if (sx !== 0 || sy !== 0 || dx !== 0 || dy !== 0 || w !== sw || h !== sh || sw !== dw || sh !== dh) {
+                Debug.error(`Texture#copy: copies of multisampled textures must cover the entire texture (source '${source.name}' ${sw}x${sh}, destination '${this.name}' ${dw}x${dh}, no offsets or partial regions).`);
+                return false;
+            }
+        }
         // #endif
         return true;
     }
@@ -1421,7 +1524,10 @@ class Texture {
     /**
      * Copies a region of a source texture into this texture. Both textures must have the same
      * pixel format. The copied region sizes must match (no scaling), and must lie within the
-     * chosen mip levels of both textures.
+     * chosen mip levels of both textures. Multisampled textures can be copied to other
+     * multisampled textures with the same sample count (WebGPU only), but only as a full-texture
+     * copy - no offsets or partial regions, and no copies between different sample counts (use a
+     * resolve instead).
      *
      * @param {Texture} source - The source texture to copy from.
      * @param {object} [options] - Optional arguments.

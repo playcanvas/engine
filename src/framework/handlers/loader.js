@@ -61,7 +61,7 @@ class ResourceLoader {
      * supporting at least `load()` and `open()`.
      * @example
      * const loader = new ResourceLoader();
-     * loader.addHandler("json", new pc.JsonHandler());
+     * loader.addHandler("json", new JsonHandler());
      */
     addHandler(type, handler) {
         this._handlers[type] = handler;
@@ -425,6 +425,7 @@ class ResourceLoader {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
+        this._app = null;
     }
 }
 

@@ -13,7 +13,7 @@ varying mediump vec4 gaussianColor;
 
 mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
-#ifdef PREPASS_PASS
+#if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
     varying float vLinearDepth;
 #endif
 
@@ -120,7 +120,7 @@ void main(void) {
         id = float(splat.index);
     #endif
 
-    #ifdef PREPASS_PASS
+    #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
         vLinearDepth = -center.view.z;
     #endif
 

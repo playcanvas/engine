@@ -107,6 +107,11 @@ class Preprocessor {
         // strip comments again after the includes have been resolved
         source = this.stripComments(source);
 
+        // inject defines before the passes that inspect the source, so that they see the substituted
+        // values and not the {NAME} placeholders - stripUnusedColorAttachments for example looks for
+        // pcFragColorX with a literal index
+        source = this.injectDefines(source, injectDefines);
+
         source = this.stripUnusedColorAttachments(source, options);
 
         // remove empty lines
@@ -114,9 +119,6 @@ class Preprocessor {
 
         // process array sizes
         source = this.processArraySize(source, intDefines);
-
-        // inject defines
-        source = this.injectDefines(source, injectDefines);
 
         return source;
     }

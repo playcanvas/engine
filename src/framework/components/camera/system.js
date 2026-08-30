@@ -1,5 +1,6 @@
 import { sortPriority } from '../../../core/sort.js';
 import { Color } from '../../../core/math/color.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
@@ -32,6 +33,7 @@ const _properties = [
     'nearClip',
     'orthoHeight',
     'projection',
+    'projectionOffset',
     'priority',
     'rect',
     'scissorRect',
@@ -90,6 +92,13 @@ class CameraComponentSystem extends ComponentSystem {
                     case 'clearColor':
                         if (Array.isArray(value)) {
                             component[property] = new Color(value[0], value[1], value[2], value[3]);
+                        } else {
+                            component[property] = value;
+                        }
+                        break;
+                    case 'projectionOffset':
+                        if (Array.isArray(value)) {
+                            component[property] = new Vec2(value[0], value[1]);
                         } else {
                             component[property] = value;
                         }

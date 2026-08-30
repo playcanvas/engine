@@ -20,6 +20,13 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.dynamic' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Metalness'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.metalness' }}
+                    />
+                </LabelGroup>
             </Panel>
         </>
     );

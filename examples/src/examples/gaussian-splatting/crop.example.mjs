@@ -27,7 +27,7 @@ import {
     TouchDevice,
     createGraphicsDevice
 } from 'playcanvas';
-import { GsplatCropShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-crop.mjs';
+import { GSplatCropShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-crop.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -114,7 +114,7 @@ app.root.addChild(hotel);
 hotel.addComponent('script');
 
 // Create the crop effect script
-const cropScript = hotel.script?.create(GsplatCropShaderEffect);
+const cropScript = hotel.script?.create(GSplatCropShaderEffect);
 
 // Set initial edge scale factor
 if (cropScript) {

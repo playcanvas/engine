@@ -18,9 +18,9 @@ class MorphTarget {
      * Create a new MorphTarget instance.
      *
      * @param {object} options - Object for passing optional arguments.
-     * @param {ArrayBuffer} options.deltaPositions - An array of 3-dimensional vertex position
+     * @param {ArrayLike<number>} options.deltaPositions - An array of 3-dimensional vertex position
      * offsets.
-     * @param {ArrayBuffer} [options.deltaNormals] - An array of 3-dimensional vertex normal
+     * @param {ArrayLike<number>} [options.deltaNormals] - An array of 3-dimensional vertex normal
      * offsets.
      * @param {string} [options.name] - Name.
      * @param {BoundingBox} [options.aabb] - Bounding box. Will be automatically generated, if

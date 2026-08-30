@@ -42,7 +42,9 @@ class MeshInfo {
         this.outlines = [];
         // float array for shadows
         this.shadows = [];
-        // pc.MeshInstance created from this MeshInfo
+        // number of word gaps preceding each quad on its line, used to justify text
+        this.gapIndices = [];
+        // MeshInstance created from this MeshInfo
         this.meshInstance = null;
     }
 }
@@ -159,6 +161,7 @@ class TextElement {
         this._lineHeight = 32;
         this._scaledLineHeight = 32;
         this._wrapLines = false;
+        this._justify = false;
 
         this._drawOrder = 0;
 
@@ -237,6 +240,11 @@ class TextElement {
             this._model.destroy();
             this._model = null;
         }
+
+        // the node was added as a child of the entity, so detach it - otherwise it lingers in
+        // entity.children for the lifetime of the entity
+        this._node.remove();
+        this._node = null;
 
         this._fontAsset.destroy();
         this.font = null;
@@ -633,6 +641,7 @@ class TextElement {
                 meshInfo.colors.length = l * 4 * 4;
                 meshInfo.outlines.length = l * 4 * 3;
                 meshInfo.shadows.length = l * 4 * 3;
+                meshInfo.gapIndices.length = this._justify ? l : 0;
 
                 // destroy old mesh
                 if (meshInfo.meshInstance) {
@@ -812,7 +821,7 @@ class TextElement {
     }
 
     _updateMaterialShadow() {
-        if (this._symbolOutlineParams) {
+        if (this._symbolShadowParams) {
             // when per-vertex shadow is present, disable material shadow uniforms
             this._shadowColorUniform[0] = 0;
             this._shadowColorUniform[1] = 0;
@@ -859,6 +868,8 @@ class TextElement {
             this._fontSize = this._maxFontSize;
         }
 
+        const justify = this._justify;
+
         const MAGIC = 32;
         const l = this._symbols.length;
 
@@ -874,6 +885,14 @@ class TextElement {
         let numCharsThisLine = 0;
         let numBreaksThisLine = 0;
 
+        // number of whitespace gaps between words seen so far on the current line, and the same
+        // count taken at the start of the current word - when a line wraps, the word being moved
+        // to the next line takes its gap with it, so the line we emit uses the latter
+        let numGapsThisLine = 0;
+        let numGapsAtWordStart = 0;
+        let prevWasWhitespace = false;
+        let seenNonWhitespaceThisLine = false;
+
         const splitHorizontalAnchors = Math.abs(this._element.anchor.x - this._element.anchor.z) >= 0.0001;
 
         let maxLineWidth = this._element.calculatedWidth;
@@ -886,8 +905,12 @@ class TextElement {
 
         let char, data, quad, nextchar;
 
-        function breakLine(symbols, lineBreakIndex, lineBreakX) {
+        // lineGaps is the number of gaps the line can be stretched at when justifying. It is 0 for
+        // lines that must not be justified - those ended by an explicit line break and the last
+        // line of the text - which makes them fall back to plain alignment.
+        function breakLine(symbols, lineBreakIndex, lineBreakX, lineGaps) {
             self._lineWidths.push(Math.abs(lineBreakX));
+            self._lineGaps.push(lineGaps);
             // in rtl mode lineStartIndex will usually be larger than lineBreakIndex and we will
             // need to adjust the start / end indices when calling symbols.slice()
             const sliceStart = lineStartIndex > lineBreakIndex ? lineBreakIndex + 1 : lineStartIndex;
@@ -918,6 +941,10 @@ class TextElement {
             numWordsThisLine = 0;
             numCharsThisLine = 0;
             numBreaksThisLine = 0;
+            numGapsThisLine = 0;
+            numGapsAtWordStart = 0;
+            prevWasWhitespace = false;
+            seenNonWhitespaceThisLine = false;
             wordStartX = 0;
             lineStartIndex = lineBreakIndex;
         }
@@ -938,6 +965,7 @@ class TextElement {
             this.height = 0;
             this._lineWidths = [];
             this._lineContents = [];
+            this._lineGaps = [];
 
             _x = 0;
             _y = 0;
@@ -951,6 +979,10 @@ class TextElement {
             numWordsThisLine = 0;
             numCharsThisLine = 0;
             numBreaksThisLine = 0;
+            numGapsThisLine = 0;
+            numGapsAtWordStart = 0;
+            prevWasWhitespace = false;
+            seenNonWhitespaceThisLine = false;
 
             const scale = this._fontSize / MAGIC;
 
@@ -991,7 +1023,8 @@ class TextElement {
                     numBreaksThisLine++;
                     // If we are not line wrapping then we should be ignoring maxlines
                     if (!this._wrapLines || this._maxLines < 0 || lines < this._maxLines) {
-                        breakLine(this._symbols, i, _xMinusTrailingWhitespace);
+                        // a line ended by an explicit line break is never justified
+                        breakLine(this._symbols, i, _xMinusTrailingWhitespace, 0);
                         wordStartIndex = i + 1;
                         lineStartIndex = i + 1;
                     }
@@ -1075,7 +1108,8 @@ class TextElement {
                         // broken onto multiple lines.
                         if (numWordsThisLine === 0) {
                             wordStartIndex = i;
-                            breakLine(this._symbols, i, _xMinusTrailingWhitespace);
+                            // a single word broken mid-word has no gaps to stretch
+                            breakLine(this._symbols, i, _xMinusTrailingWhitespace, 0);
                         } else {
                             // Move back to the beginning of the current word.
                             const backtrack = Math.max(i - wordStartIndex, 0);
@@ -1098,7 +1132,7 @@ class TextElement {
 
                             i -= backtrack + 1;
 
-                            breakLine(this._symbols, wordStartIndex, wordStartX);
+                            breakLine(this._symbols, wordStartIndex, wordStartX, numGapsAtWordStart);
                             continue;
                         }
                     }
@@ -1106,6 +1140,26 @@ class TextElement {
 
                 quad = meshInfo.quad;
                 meshInfo.lines[lines - 1] = quad;
+
+                // Count the whitespace gaps preceding this glyph on its line and record the count
+                // per quad. Justification shifts each glyph by the width of the gaps before it, and
+                // the quads of one line can be spread over several meshes when the font has more
+                // than one texture page, so the count cannot be recovered later from the line alone.
+                // Only tracked when justifying, which leaves every line with a gap count of zero
+                // otherwise - changing justify rebuilds the text, so this cannot go stale.
+                if (justify) {
+                    if (isWhitespace) {
+                        prevWasWhitespace = true;
+                    } else {
+                        if (prevWasWhitespace && seenNonWhitespaceThisLine) {
+                            numGapsThisLine++;
+                        }
+                        prevWasWhitespace = false;
+                        seenNonWhitespaceThisLine = true;
+                    }
+
+                    meshInfo.gapIndices[quad] = numGapsThisLine;
+                }
 
                 let left = _x - x;
                 let right = left + quadsize;
@@ -1179,6 +1233,7 @@ class TextElement {
                     numWordsThisLine++;
                     wordStartX = _xMinusTrailingWhitespace;
                     wordStartIndex = i + 1;
+                    numGapsAtWordStart = numGapsThisLine;
                 }
 
                 numCharsThisLine++;
@@ -1289,7 +1344,8 @@ class TextElement {
             // there will almost always be some leftover text on the final line which has
             // not yet been pushed to _lineContents.
             if (lineStartIndex < l) {
-                breakLine(this._symbols, l, _x);
+                // the last line of the text is never justified
+                breakLine(this._symbols, l, _x, 0);
             }
         }
 
@@ -1311,15 +1367,30 @@ class TextElement {
             let prevQuad = 0;
             for (const line in this._meshInfo[i].lines) {
                 const index = this._meshInfo[i].lines[line];
-                const lw = this._lineWidths[parseInt(line, 10)];
-                const hoffset = -hp * this._element.calculatedWidth + ha * (this._element.calculatedWidth - lw) * (this._rtl ? -1 : 1);
+                const lineIndex = parseInt(line, 10);
+                const lw = this._lineWidths[lineIndex];
+                const slack = this._element.calculatedWidth - lw;
+
+                // A justified line is flush with both edges of the element, so it ignores the
+                // horizontal alignment and spreads the space it has left over evenly between its
+                // words instead. Lines that must not be justified carry a gap count of 0 and so
+                // keep using the alignment.
+                const numGaps = justify ? this._lineGaps[lineIndex] : 0;
+                const justified = numGaps > 0 && slack > 0;
+                const gapWidth = justified ? slack / numGaps : 0;
+
+                const hoffset = -hp * this._element.calculatedWidth + (justified ? 0 : ha * slack * (this._rtl ? -1 : 1));
                 const voffset = (1 - vp) * this._element.calculatedHeight - fontMaxY - (1 - va) * (this._element.calculatedHeight - this.height);
 
                 for (let quad = prevQuad; quad <= index; quad++) {
-                    this._meshInfo[i].positions[quad * 4 * 3] += hoffset;
-                    this._meshInfo[i].positions[quad * 4 * 3 + 3] += hoffset;
-                    this._meshInfo[i].positions[quad * 4 * 3 + 6] += hoffset;
-                    this._meshInfo[i].positions[quad * 4 * 3 + 9] += hoffset;
+                    const qoffset = justified ?
+                        hoffset + gapWidth * this._meshInfo[i].gapIndices[quad] :
+                        hoffset;
+
+                    this._meshInfo[i].positions[quad * 4 * 3] += qoffset;
+                    this._meshInfo[i].positions[quad * 4 * 3 + 3] += qoffset;
+                    this._meshInfo[i].positions[quad * 4 * 3 + 6] += qoffset;
+                    this._meshInfo[i].positions[quad * 4 * 3 + 9] += qoffset;
 
                     this._meshInfo[i].positions[quad * 4 * 3 + 1] += voffset;
                     this._meshInfo[i].positions[quad * 4 * 3 + 4] += voffset;
@@ -1332,7 +1403,10 @@ class TextElement {
                     for (let quad = prevQuad; quad <= index; quad++) {
                         const idx = quad * 4 * 3;
 
-                        // flip the entire line horizontally
+                        // flip the entire line horizontally. This mirrors around the line offset,
+                        // so it must use hoffset and not the per-quad offset - the justification
+                        // gaps are already baked into the positions and the mirror has to reverse
+                        // their direction along with everything else on the line.
                         for (let vert = 0; vert < 4; ++vert) {
                             this._meshInfo[i].positions[idx + vert * 3] =
                                 this._element.calculatedWidth - this._meshInfo[i].positions[idx + vert * 3] + hoffset * 2;
@@ -1710,6 +1784,18 @@ class TextElement {
         return this._wrapLines;
     }
 
+    set justify(value) {
+        const _prev = this._justify;
+        this._justify = value;
+        if (_prev !== value && this._font) {
+            this._updateText();
+        }
+    }
+
+    get justify() {
+        return this._justify;
+    }
+
     get lines() {
         return this._lineContents;
     }
@@ -1998,7 +2084,7 @@ class TextElement {
         }
 
         if (this._element) {
-            this._element.fire('set:outline', this._color);
+            this._element.fire('set:outline', this._outlineColor);
         }
     }
 

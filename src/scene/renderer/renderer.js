@@ -363,15 +363,15 @@ class Renderer {
                 jitterX = jitter * (offset.x * 2 - 1) / targetWidth;
                 jitterY = jitter * (offset.y * 2 - 1) / targetHeight;
 
-                // apply offset to projection matrix
+                // apply jitter to projection matrix, on top of any off-center projection offset
                 projMat = _tempProjMat4.copy(projMat);
-                projMat.data[8] = jitterX;
-                projMat.data[9] = jitterY;
+                projMat.data[8] += jitterX;
+                projMat.data[9] += jitterY;
 
-                // apply offset to skybox projection matrix
+                // apply jitter to skybox projection matrix
                 projMatSkybox = _tempProjMat5.copy(projMatSkybox);
-                projMatSkybox.data[8] = jitterX;
-                projMatSkybox.data[9] = jitterY;
+                projMatSkybox.data[8] += jitterX;
+                projMatSkybox.data[9] += jitterY;
 
                 // blue noise vec4 - only use when jitter is enabled
                 if (this.blueNoiseJitterVersion !== this.device.renderVersion) {
@@ -415,15 +415,21 @@ class Renderer {
             // store matrices needed by TAA
             camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion);
 
-            this.flipYId.setValue(flipY ? -1 : 1);
-
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
 
             camera.frustum.setFromMat4(viewProjMat);
         }
 
-        this.tbnBasis.setValue(flipY ? -1 : 1);
+        // set for all passes including XR, to keep the uniform fresh per render pass - it is
+        // consumed by shaders of any pass (e.g. screen-space UI, gsplat rasterization)
+        this.flipYId.setValue(flipY ? -1 : 1);
+
+        // Sign for the derivative-based TBN (see TBN.js). It compensates for the Y flip applied to
+        // the projection matrix when rendering with flipY. On WebGPU there is an additional inherent
+        // flip because screen-space dpdy has the opposite sign to WebGL's dFdy (framebuffer space is
+        // Y-down), so the backend is XORed into the sign to keep normal mapping consistent (#5735).
+        this.tbnBasis.setValue((this.device.isWebGPU !== !!flipY) ? -1 : 1);
 
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
@@ -498,7 +504,7 @@ class Renderer {
     }
 
     setupCullMode(cullFaces, flipFactor, drawCall) {
-        Debug.deprecated('pc.Renderer.setupCullMode is deprecated. Use \'pc.Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
+        Debug.deprecated('Renderer.setupCullMode is deprecated. Use \'Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
         this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
@@ -666,6 +672,8 @@ class Renderer {
         if (!this.viewUniformFormat) {
 
             // format of the view uniform buffer
+            // note: 'textureBias' is deliberately not part of this, as the tiled nine-slice mode
+            // declares a global constant of that name in the shader, which would collide with it
             const uniforms = [
                 new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
@@ -678,7 +686,6 @@ class Renderer {
                 new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
                 new UniformFormat('view_index', UNIFORMTYPE_UINT)
             ];
 

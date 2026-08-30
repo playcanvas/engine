@@ -70,6 +70,33 @@ import { XrManager } from './xr/xr-manager.js';
  * {@link ComponentSystem}s and {@link ResourceHandler}s implemented in the PlayCanvas Engine. This
  * makes app setup simple but results in the full engine being included when bundling your
  * application.
+ *
+ * New code should prefer {@link AppBase}, as this class is expected to be deprecated in a future
+ * release. Two limitations motivate that:
+ *
+ * - Its constructor is synchronous, so it cannot create a WebGPU device. Creating one requires
+ * awaiting {@link createGraphicsDevice}.
+ * - It references every component system and resource handler, so none of them can be
+ * [tree-shaken](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) out of your
+ * bundle. {@link AppBase} leaves that choice to you.
+ *
+ * The equivalent {@link AppBase} setup registers only what the app actually uses:
+ *
+ * ```javascript
+ * const device = await createGraphicsDevice(canvas, { deviceTypes: [DEVICETYPE_WEBGPU] });
+ *
+ * const options = new AppOptions();
+ * options.graphicsDevice = device;
+ * options.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+ * options.resourceHandlers = [TextureHandler, ContainerHandler];
+ *
+ * const app = new AppBase(canvas);
+ * app.init(options);
+ * ```
+ *
+ * The component systems this class registers are listed on the constructor below. That list
+ * doubles as a migration checklist, as it maps each component name to the system you would need
+ * to register yourself.
  */
 class Application extends AppBase {
     /**
@@ -84,6 +111,8 @@ class Application extends AppBase {
      * - camera ({@link CameraComponentSystem})
      * - collision ({@link CollisionComponentSystem})
      * - element ({@link ElementComponentSystem})
+     * - gsplat ({@link GSplatComponentSystem})
+     * - joint ({@link JointComponentSystem})
      * - layoutchild ({@link LayoutChildComponentSystem})
      * - layoutgroup ({@link LayoutGroupComponentSystem})
      * - light ({@link LightComponentSystem})
@@ -97,6 +126,7 @@ class Application extends AppBase {
      * - scrollview ({@link ScrollViewComponentSystem})
      * - sound ({@link SoundComponentSystem})
      * - sprite ({@link SpriteComponentSystem})
+     * - zone ({@link ZoneComponentSystem})
      *
      * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
@@ -114,7 +144,7 @@ class Application extends AppBase {
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually
-     * const app = new pc.Application(canvas, options);
+     * const app = new Application(canvas, options);
      *
      * // Start the application's main loop
      * app.start();

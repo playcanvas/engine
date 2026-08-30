@@ -13,6 +13,7 @@ import {
     PIXELFORMAT_RGB8,
     PROJECTION_ORTHOGRAPHIC,
     ParticleSystemComponentSystem,
+    RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RenderTarget,
@@ -107,7 +108,8 @@ const texture = new Texture(app.graphicsDevice, {
 });
 const renderTarget = new RenderTarget({
     colorBuffer: texture,
-    depth: false
+    depth: false,
+    origin: RENDERTARGET_ORIGIN_TOP
 });
 
 // Create a layer for rendering to texture, and add it to the beginning of layers to render into it first

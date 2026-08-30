@@ -40,7 +40,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatWeather } from 'playcanvas/scripts/esm/gsplat/gsplat-weather.mjs';
+import { GSplatWeather } from 'playcanvas/scripts/esm/gsplat/gsplat-weather.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -83,7 +83,7 @@ app.on('destroy', () => {
 
 const assets = {
     scene: new Asset('gsplat', 'gsplat', {
-        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json'
     })
 };
 
@@ -132,14 +132,11 @@ gsplatEntity.addComponent('gsplat', {
 gsplatEntity.setLocalEulerAngles(270, 0, 0);
 app.root.addChild(gsplatEntity);
 
-gsplatEntity.gsplat.lodBaseDistance = 5;
-gsplatEntity.gsplat.lodMultiplier = 4;
-
 // Procedural weather
 const weatherEntity = new Entity('Weather');
 weatherEntity.addComponent('script');
-const weather = /** @type {GsplatWeather} */ (
-    weatherEntity.script.create(GsplatWeather, {
+const weather = /** @type {GSplatWeather} */ (
+    weatherEntity.script.create(GSplatWeather, {
         properties: {
             followEntity: camera,
             speed: 1.0,

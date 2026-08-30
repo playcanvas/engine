@@ -1,6 +1,7 @@
 import { math, Quat, Script, Vec3 } from 'playcanvas';
 
 /** @import { Entity, XrInputSource } from 'playcanvas' */
+/** @import { XrNavigation } from './xr-navigation.mjs' */
 
 // Minimum 3D hand separation (meters) below which the scale solve is held, avoiding division
 // blow-up when the two grip poses (near-)coincide
@@ -99,7 +100,7 @@ const wrapPi = (angle) => {
  *
  * @example
  * // Parent the scene content under a world root and grab-manipulate it
- * const worldRoot = new pc.Entity('WorldRoot');
+ * const worldRoot = new Entity('WorldRoot');
  * app.root.addChild(worldRoot);
  * worldRoot.addChild(galleryEntity);
  *
@@ -111,6 +112,7 @@ const wrapPi = (angle) => {
  *         maxScale: 4
  *     }
  * });
+ * @category XR
  */
 class XrManipulation extends Script {
     static scriptName = 'xrManipulation';

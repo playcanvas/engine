@@ -152,6 +152,30 @@ describe('math', function () {
 
     });
 
+    describe('#lerpUnclamped', function () {
+
+        it('returns a when alpha is 0', function () {
+            expect(math.lerpUnclamped(0, 1, 0)).to.equal(0);
+        });
+
+        it('returns b when alpha is 1', function () {
+            expect(math.lerpUnclamped(0, 1, 1)).to.equal(1);
+        });
+
+        it('interpolates when alpha is between 0 and 1', function () {
+            expect(math.lerpUnclamped(0, 1, 0.5)).to.equal(0.5);
+        });
+
+        it('extrapolates below a when alpha is less than 0', function () {
+            expect(math.lerpUnclamped(0, 10, -0.5)).to.equal(-5);
+        });
+
+        it('extrapolates beyond b when alpha is greater than 1', function () {
+            expect(math.lerpUnclamped(0, 10, 1.5)).to.equal(15);
+        });
+
+    });
+
     describe('#lerpAngle', function () {
 
         it('returns 0 when a is 0 and b is 360 and alpha is 0', function () {

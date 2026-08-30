@@ -33,7 +33,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     const useBlend = arguments[5];
     Debug.call(() => {
         if (useBlend !== undefined) {
-            Debug.warnOnce('pc.drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
+            Debug.warnOnce('drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
         }
     });
 

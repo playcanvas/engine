@@ -3,13 +3,16 @@ export default /* wgsl */`
 #ifdef LIT_TANGENTS
     #define TBN_TANGENTS
 #else
-    #if defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS)
+    #if defined(LIT_USE_NORMALS) || defined(LIT_USE_CLEARCOAT_NORMALS) || defined(LIT_HEIGHTS)
         #define TBN_DERIVATIVES
     #endif
 #endif
 
 #if defined(TBN_DERIVATIVES)
-    uniform tbnBasis: f32;
+    #ifndef TBNBASIS
+        #define TBNBASIS
+        uniform tbnBasis: f32;
+    #endif
 #endif
 
 fn getTBN(tangent: vec3f, binormal: vec3f, normal: vec3f) {

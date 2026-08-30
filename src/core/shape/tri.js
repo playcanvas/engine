@@ -50,10 +50,10 @@ class Tri {
      * @param {Vec3} [v1] - The second 3-dimensional vector.
      * @param {Vec3} [v2] - The third 3-dimensional vector.
      * @example
-     * const v0 = new pc.Vec3(1, 0, 0);
-     * const v1 = new pc.Vec3(0, 1, 0);
-     * const v2 = new pc.Vec3(2, 2, 1);
-     * const t = new pc.Tri(v0, v1, v2);
+     * const v0 = new Vec3(1, 0, 0);
+     * const v1 = new Vec3(0, 1, 0);
+     * const v2 = new Vec3(2, 2, 1);
+     * const t = new Tri(v0, v1, v2);
      */
     constructor(v0 = Vec3.ZERO, v1 = Vec3.ZERO, v2 = Vec3.ZERO) {
         this.set(v0, v1, v2);
@@ -67,10 +67,10 @@ class Tri {
      * @param {Vec3} v2 - The value set on the third 3-dimensional vector of the triangle.
      * @returns {Tri} Self for chaining.
      * @example
-     * const t = new pc.Tri(pc.Vec3.UP, pc.Vec3.RIGHT, pc.Vec3.BACK);
-     * const v0 = new pc.Vec3(1, 0, 0);
-     * const v1 = new pc.Vec3(0, 1, 0);
-     * const v2 = new pc.Vec3(2, 2, 1);
+     * const t = new Tri(Vec3.UP, Vec3.RIGHT, Vec3.BACK);
+     * const v0 = new Vec3(1, 0, 0);
+     * const v1 = new Vec3(0, 1, 0);
+     * const v2 = new Vec3(2, 2, 1);
      * t.set(v0, v1, v2);
      *
      * // Outputs [[1, 0, 0], [0, 1, 0], [2, 2, 1]]
@@ -130,7 +130,7 @@ class Tri {
      *
      * @returns {string} The triangle in string form.
      * @example
-     * const t = new pc.Tri(pc.Vec3.UP, pc.Vec3.RIGHT, pc.Vec3.BACK);
+     * const t = new Tri(Vec3.UP, Vec3.RIGHT, Vec3.BACK);
      * // Outputs [[0, 1, 0], [1, 0, 0], [0, 0, 1]]
      * console.log(t.toString());
      */

@@ -112,6 +112,38 @@ export const BLENDMODE_CONSTANT = 11;
 export const BLENDMODE_ONE_MINUS_CONSTANT = 12;
 
 /**
+ * Multiply all fragment components by the components of the secondary source fragment. This can
+ * only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_SRC1_COLOR = 13;
+
+/**
+ * Multiply all fragment components by one minus the components of the secondary source fragment.
+ * This can only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_ONE_MINUS_SRC1_COLOR = 14;
+
+/**
+ * Multiply all fragment components by the alpha value of the secondary source fragment. This can
+ * only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_SRC1_ALPHA = 15;
+
+/**
+ * Multiply all fragment components by one minus the alpha value of the secondary source fragment.
+ * This can only be used when {@link GraphicsDevice#supportsDualSourceBlending} is true.
+ *
+ * @category Graphics
+ */
+export const BLENDMODE_ONE_MINUS_SRC1_ALPHA = 16;
+
+/**
  * Add the results of the source and destination fragment multiplies.
  *
  * @category Graphics
@@ -252,6 +284,20 @@ export const BUFFER_STREAM = 2;
 export const BUFFER_GPUDYNAMIC = 3;
 
 /**
+ * Captures all varyings into one interleaved transform feedback buffer.
+ *
+ * @category Graphics
+ */
+export const TRANSFORM_FEEDBACK_INTERLEAVED = 0;
+
+/**
+ * Captures each varying into its own transform feedback buffer.
+ *
+ * @category Graphics
+ */
+export const TRANSFORM_FEEDBACK_SEPARATE = 1;
+
+/**
  * Clear the color buffer.
  *
  * @category Graphics
@@ -313,6 +359,61 @@ export const CUBEFACE_POSZ = 4;
  * @category Graphics
  */
 export const CUBEFACE_NEGZ = 5;
+
+/**
+ * The render target stores the image with row 0 being the top row of the rendered image, on all
+ * graphics APIs - the same layout image textures use. See the `origin` option of the
+ * {@link RenderTarget} constructor for guidance on which origin to use.
+ *
+ * @category Graphics
+ */
+export const RENDERTARGET_ORIGIN_TOP = 'top';
+
+/**
+ * The render target stores the image with row 0 being the bottom row of the rendered image, on
+ * all graphics APIs - replicating WebGL2's native layout. See the `origin` option of the
+ * {@link RenderTarget} constructor for guidance on which origin to use.
+ *
+ * @category Graphics
+ */
+export const RENDERTARGET_ORIGIN_BOTTOM = 'bottom';
+
+/**
+ * The render target stores the image in the native orientation of the graphics API - bottom-up
+ * on WebGL2, top-down on WebGPU - so the stored row order differs between the APIs. This is the
+ * default. See the `origin` option of the {@link RenderTarget} constructor for guidance on which
+ * origin to use.
+ *
+ * @category Graphics
+ */
+export const RENDERTARGET_ORIGIN_NATIVE = 'native';
+
+/**
+ * The depth value of the multisampled depth buffer is resolved by taking its sample at index 0.
+ * See {@link RenderTarget#depthResolveMode}.
+ *
+ * @category Graphics
+ */
+export const DEPTHRESOLVE_SAMPLE0 = 'sample0';
+
+/**
+ * The depth value of the multisampled depth buffer is resolved by taking the minimum value of all
+ * samples - with a standard depth buffer this selects the nearest surface, which is a conservative
+ * and stable choice for depth-consuming effects. This is the default. See
+ * {@link RenderTarget#depthResolveMode}.
+ *
+ * @category Graphics
+ */
+export const DEPTHRESOLVE_MIN = 'min';
+
+/**
+ * The depth value of the multisampled depth buffer is resolved by taking the maximum value of all
+ * samples - with a standard depth buffer this selects the farthest surface. See
+ * {@link RenderTarget#depthResolveMode}.
+ *
+ * @category Graphics
+ */
+export const DEPTHRESOLVE_MAX = 'max';
 
 /**
  * No triangles are culled.
@@ -996,36 +1097,36 @@ export const pixelFormatInfo = new Map([
 
     // float formats
     [PIXELFORMAT_A8,            { name: 'A8', size: 1, ldr: true }],
-    [PIXELFORMAT_R8,            { name: 'R8', size: 1, ldr: true }],
+    [PIXELFORMAT_R8,            { name: 'R8', size: 1, ldr: true, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_L8,            { name: 'L8', size: 1, ldr: true }],
     [PIXELFORMAT_LA8,           { name: 'LA8', size: 2, ldr: true }],
-    [PIXELFORMAT_RG8,           { name: 'RG8', size: 2, ldr: true }],
+    [PIXELFORMAT_RG8,           { name: 'RG8', size: 2, ldr: true, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2, ldr: true }],
     [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2, ldr: true }],
     [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2, ldr: true }],
-    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4, ldr: true }],
-    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4, ldr: true, srgbFormat: PIXELFORMAT_SRGBA8 }],
-    [PIXELFORMAT_R16F,          { name: 'R16F', size: 2 }],
-    [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4 }],
+    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4, ldr: true, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4, ldr: true, srgbFormat: PIXELFORMAT_SRGBA8, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_R16F,          { name: 'R16F', size: 2, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_RG16F,         { name: 'RG16F', size: 4, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
-    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8 }],
+    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
     [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
-    [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
+    [PIXELFORMAT_R32F,          { name: 'R32F', size: 4, msaa: true }],
     [PIXELFORMAT_RG32F,         { name: 'RG32F', size: 8 }],
     [PIXELFORMAT_RGB9E5,        { name: 'RGB9E5', size: 4 }],
     [PIXELFORMAT_RG8S,          { name: 'RG8S', size: 2 }],
     [PIXELFORMAT_RGBA8S,        { name: 'RGBA8S', size: 4 }],
-    [PIXELFORMAT_RGB10A2,       { name: 'RGB10A2', size: 4 }],
-    [PIXELFORMAT_RGB10A2U,      { name: 'RGB10A2U', size: 4, isUint: true }],
-    [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
-    [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2 }],
-    [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
-    [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
+    [PIXELFORMAT_RGB10A2,       { name: 'RGB10A2', size: 4, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_RGB10A2U,      { name: 'RGB10A2U', size: 4, isUint: true, msaa: true }],
+    [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4, msaa: true }],
+    [PIXELFORMAT_DEPTH16,       { name: 'DEPTH16', size: 2, msaa: true }],
+    [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4, msaa: true }],
+    [PIXELFORMAT_111110F,       { name: '111110F', size: 4, msaa: true, msaaResolve: true }],
     [PIXELFORMAT_SRGB8,         { name: 'SRGB8', size: 4, ldr: true, srgb: true }],
-    [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true }],
-    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true }],
-    [PIXELFORMAT_SBGRA8,        { name: 'SBGRA8', size: 4, ldr: true, srgb: true }],
+    [PIXELFORMAT_SRGBA8,        { name: 'SRGBA8', size: 4, ldr: true, srgb: true, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4, ldr: true, msaa: true, msaaResolve: true }],
+    [PIXELFORMAT_SBGRA8,        { name: 'SBGRA8', size: 4, ldr: true, srgb: true, msaa: true, msaaResolve: true }],
 
     // compressed formats
     [PIXELFORMAT_DXT1,              { name: 'DXT1', blockSize: 8, ldr: true, srgbFormat: PIXELFORMAT_DXT1_SRGB }],
@@ -1055,25 +1156,25 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_BC7_SRGBA,          { name: 'BC7_SRGBA', blockSize: 16, ldr: true, srgb: true }],
 
     // signed integer formats
-    [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
-    [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
+    [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true, msaa: true }],
+    [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true, msaa: true }],
     [PIXELFORMAT_R32I,     { name: 'R32I', size: 4, isInt: true }],
-    [PIXELFORMAT_RG8I,     { name: 'RG8I', size: 2, isInt: true }],
-    [PIXELFORMAT_RG16I,    { name: 'RG16I', size: 4, isInt: true }],
+    [PIXELFORMAT_RG8I,     { name: 'RG8I', size: 2, isInt: true, msaa: true }],
+    [PIXELFORMAT_RG16I,    { name: 'RG16I', size: 4, isInt: true, msaa: true }],
     [PIXELFORMAT_RG32I,    { name: 'RG32I', size: 8, isInt: true }],
-    [PIXELFORMAT_RGBA8I,   { name: 'RGBA8I', size: 4, isInt: true }],
-    [PIXELFORMAT_RGBA16I,  { name: 'RGBA16I', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA8I,   { name: 'RGBA8I', size: 4, isInt: true, msaa: true }],
+    [PIXELFORMAT_RGBA16I,  { name: 'RGBA16I', size: 8, isInt: true, msaa: true }],
     [PIXELFORMAT_RGBA32I,  { name: 'RGBA32I', size: 16, isInt: true }],
 
     // unsigned integer formats
-    [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isUint: true }],
-    [PIXELFORMAT_R16U,     { name: 'R16U', size: 2, isUint: true }],
+    [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isUint: true, msaa: true }],
+    [PIXELFORMAT_R16U,     { name: 'R16U', size: 2, isUint: true, msaa: true }],
     [PIXELFORMAT_R32U,     { name: 'R32U', size: 4, isUint: true }],
-    [PIXELFORMAT_RG8U,     { name: 'RG8U', size: 2, isUint: true }],
-    [PIXELFORMAT_RG16U,    { name: 'RG16U', size: 4, isUint: true }],
+    [PIXELFORMAT_RG8U,     { name: 'RG8U', size: 2, isUint: true, msaa: true }],
+    [PIXELFORMAT_RG16U,    { name: 'RG16U', size: 4, isUint: true, msaa: true }],
     [PIXELFORMAT_RG32U,    { name: 'RG32U', size: 8, isUint: true }],
-    [PIXELFORMAT_RGBA8U,   { name: 'RGBA8U', size: 4, isUint: true }],
-    [PIXELFORMAT_RGBA16U,  { name: 'RGBA16U', size: 8, isUint: true }],
+    [PIXELFORMAT_RGBA8U,   { name: 'RGBA8U', size: 4, isUint: true, msaa: true }],
+    [PIXELFORMAT_RGBA16U,  { name: 'RGBA16U', size: 8, isUint: true, msaa: true }],
     [PIXELFORMAT_RGBA32U,  { name: 'RGBA32U', size: 16, isUint: true }]
 ]);
 
@@ -1089,6 +1190,40 @@ export const isSrgbPixelFormat = (format) => {
 export const isIntegerPixelFormat = (format) => {
     const info = pixelFormatInfo.get(format);
     return info?.isInt === true || info?.isUint === true;
+};
+
+/**
+ * Returns true if the specified pixel format can be used to create a multisampled texture on
+ * WebGPU (per the WebGPU texture format capabilities table). Note that support for hardware
+ * resolve is a separate, narrower capability: integer formats and {@link PIXELFORMAT_R32F} are
+ * multisample-capable but cannot be resolved, and depth formats have no hardware resolve at all.
+ *
+ * {@link PIXELFORMAT_111110F} is reported as capable even though it is gated on the
+ * 'rg11b10ufloat-renderable' device feature - the feature is near-universally available, and on a
+ * device without it the WebGPU validation reports the failure. Snorm formats (RG8S, RGBA8S) would
+ * become capable via 'texture-formats-tier1', which the engine does not currently request.
+ *
+ * @param {number} format - The pixel format.
+ * @returns {boolean} True if the format supports multisampling.
+ * @ignore
+ */
+export const isMultisampleCapablePixelFormat = (format) => {
+    return pixelFormatInfo.get(format)?.msaa === true;
+};
+
+/**
+ * Returns true if a multisampled texture of the specified pixel format can be hardware-resolved
+ * on WebGPU (per the WebGPU texture format capabilities table). This is a narrower capability
+ * than {@link isMultisampleCapablePixelFormat}: integer formats and {@link PIXELFORMAT_R32F} can
+ * be multisampled but not resolved (read their samples in a shader instead), and depth formats
+ * have no hardware resolve at all.
+ *
+ * @param {number} format - The pixel format.
+ * @returns {boolean} True if the format supports hardware resolve.
+ * @ignore
+ */
+export const isMultisampleResolveCapablePixelFormat = (format) => {
+    return pixelFormatInfo.get(format)?.msaaResolve === true;
 };
 
 // Cached shader type objects

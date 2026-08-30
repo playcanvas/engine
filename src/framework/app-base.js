@@ -114,6 +114,9 @@ let app = null;
  * {@link ResourceHandler}s yourself. This facilitates
  * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
  * your application.
+ *
+ * It is the preferred entry point for new code - {@link Application} is a convenience subclass
+ * that registers everything for you, and is expected to be deprecated in a future release.
  */
 class AppBase extends EventHandler {
     /**
@@ -356,7 +359,7 @@ class AppBase extends EventHandler {
      *
      * @example
      * // Render the scene only while space key is pressed
-     * if (this.app.keyboard.isPressed(pc.KEY_SPACE)) {
+     * if (this.app.keyboard.isPressed(KEY_SPACE)) {
      *     this.app.renderNextFrame = true;
      * }
      */
@@ -385,7 +388,7 @@ class AppBase extends EventHandler {
      * @type {Scene}
      * @example
      * // Set the fog type property of the application's scene
-     * this.app.scene.fog.type = pc.FOG_LINEAR;
+     * this.app.scene.fog.type = FOG_LINEAR;
      */
     scene;
 
@@ -502,7 +505,7 @@ class AppBase extends EventHandler {
      * @type {XrManager|null}
      * @example
      * // check if VR is available
-     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     * if (app.xr.isAvailable(XRTYPE_VR)) {
      *     // VR is available
      * }
      */
@@ -513,7 +516,7 @@ class AppBase extends EventHandler {
      *
      * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @example
-     * const app = new pc.AppBase(canvas);
+     * const app = new AppBase(canvas);
      *
      * const options = new AppOptions();
      * app.init(options);
@@ -560,7 +563,7 @@ class AppBase extends EventHandler {
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(graphicsDevice);
+        this.stats = new ApplicationStats(this);
 
         this._soundManager = soundManager;
         this.scene = new Scene(graphicsDevice);
@@ -654,7 +657,7 @@ class AppBase extends EventHandler {
      * this id. Otherwise current application will be returned.
      * @returns {AppBase|undefined} The running application, if any.
      * @example
-     * const app = pc.AppBase.getApplication();
+     * const app = AppBase.getApplication();
      */
     static getApplication(id) {
         return id ? AppBase._applications[id] : getApplication();
@@ -1417,6 +1420,9 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.lightingShadowAtlasResolution] - Resolution of the atlas texture storing all non-directional shadow textures. Defaults to 2048.
      * @param {number} [settings.render.lightingCookieAtlasResolution] - Resolution of the atlas texture storing all non-directional cookie textures. Defaults to 2048.
      * @param {number} [settings.render.lightingMaxLightsPerCell] - Maximum number of lights a cell can store. Defaults to 255.
+     * @param {number} [settings.render.lightingMaxLights] - Maximum number of lights the clustered lighting can use in a single
+     * frame. Keep this as low as the scene allows, as a larger value has a per-frame cost. The value is limited by the maximum
+     * texture size supported by the device. Defaults to 255.
      * @param {number} [settings.render.lightingShadowType] - The type of shadow filtering used by all shadows. Can be:
      *
      * - {@link SHADOW_PCF1_32F}
@@ -1436,7 +1442,7 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 0.
      * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.
      * @param {number} [settings.render.gsplatLodUnderfillLimit] - Maximum number of gsplat LOD levels allowed below the optimal level when optimal data is not resident. Defaults to 0.
-     * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. 0 disables budget enforcement. Defaults to 0.
+     * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. LOD levels are chosen globally to stay within it; a non-positive value is not a way to disable this and the default is used instead. Defaults to 1000000.
      * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
      * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
@@ -1445,6 +1451,8 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
      * @param {boolean} [settings.render.gsplatAntiAlias] - Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
      * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.
+     * @param {boolean} [settings.render.gsplatUseTonemap] - Whether to apply the camera's tonemapping and the
+     * scene exposure to Gaussian splats. Defaults to true.
      * @param {number} [settings.render.gsplatColorUpdateAngle] - Viewing angle threshold in degrees for triggering gsplat spherical harmonics color updates. Defaults to 10.
      * @param {number} [settings.render.gsplatCooldownTicks] - Number of update ticks before unloading unused streamed gsplat resources. Defaults to 100.
      * @param {string} [settings.render.gsplatDataFormat] - Work buffer data format for gsplat rendering. One of the GSPLATDATA_* constants. Defaults to {@link GSPLATDATA_COMPACT}.
@@ -1479,7 +1487,8 @@ class AppBase extends EventHandler {
     applySceneSettings(settings) {
         let asset;
 
-        if (this.systems.rigidbody && typeof Ammo !== 'undefined') {
+        // gravity is engine state - the physics backend applies it when present
+        if (this.systems.rigidbody) {
             const [x, y, z] = settings.physics.gravity;
             this.systems.rigidbody.gravity.set(x, y, z);
         }
@@ -1585,26 +1594,27 @@ class AppBase extends EventHandler {
      *
      * @param {Vec3} start - The start world space coordinate of the line.
      * @param {Vec3} end - The end world space coordinate of the line.
-     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {Color} [color] - The color of the line, specified in sRGB color space. It defaults
+     * to white if not specified.
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
      * app.drawLine(start, end);
      * @example
      * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * app.drawLine(start, end, pc.Color.RED, false);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * app.drawLine(start, end, Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
-     * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(LAYERID_WORLD);
+     * app.drawLine(start, end, Color.WHITE, true, worldLayer);
      */
     drawLine(start, end, color, depthTest, layer) {
         this.scene.drawLine(start, end, color, depthTest, layer);
@@ -1627,26 +1637,26 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
-     * const start = new pc.Vec3(0, 0, 0);
-     * const end = new pc.Vec3(1, 0, 0);
-     * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
+     * const start = new Vec3(0, 0, 0);
+     * const end = new Vec3(1, 0, 0);
+     * app.drawLines([start, end], [Color.RED, Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
      * const points = [
      *     // Line 1
-     *     new pc.Vec3(0, 0, 0),
-     *     new pc.Vec3(1, 0, 0),
+     *     new Vec3(0, 0, 0),
+     *     new Vec3(1, 0, 0),
      *     // Line 2
-     *     new pc.Vec3(1, 1, 0),
-     *     new pc.Vec3(1, 1, 1)
+     *     new Vec3(1, 1, 0),
+     *     new Vec3(1, 1, 1)
      * ];
      * const colors = [
      *     // Line 1
-     *     pc.Color.RED,
-     *     pc.Color.YELLOW,
+     *     Color.RED,
+     *     Color.YELLOW,
      *     // Line 2
-     *     pc.Color.CYAN,
-     *     pc.Color.BLUE
+     *     Color.CYAN,
+     *     Color.BLUE
      * ];
      * app.drawLines(points, colors);
      */
@@ -1704,8 +1714,8 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
-     * const center = new pc.Vec3(0, 0, 0);
-     * app.drawWireSphere(center, 1.0, pc.Color.RED);
+     * const center = new Vec3(0, 0, 0);
+     * app.drawWireSphere(center, 1.0, Color.RED);
      * @ignore
      */
     drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
@@ -1724,9 +1734,9 @@ class AppBase extends EventHandler {
      * @param {Mat4} [mat] - Matrix to transform the box before rendering.
      * @example
      * // Render a red wire aligned box
-     * const min = new pc.Vec3(-1, -1, -1);
-     * const max = new pc.Vec3(1, 1, 1);
-     * app.drawWireAlignedBox(min, max, pc.Color.RED);
+     * const min = new Vec3(-1, -1, -1);
+     * const max = new Vec3(1, 1, 1);
+     * app.drawWireAlignedBox(min, max, Color.RED);
      * @ignore
      */
     drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
@@ -1949,7 +1959,8 @@ class AppBase extends EventHandler {
             assets[i].unload();
             assets[i].off();
         }
-        this.assets.off();
+        this.assets.destroy();
+        this.assets = null;
 
         // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
         this.scene.destroy();
@@ -1969,6 +1980,12 @@ class AppBase extends EventHandler {
 
         if (getApplication() === this) {
             setApplication(null);
+        }
+
+        // clear the module scoped reference, which would otherwise keep the destroyed application
+        // alive. Skipped if another application has already taken over.
+        if (app === this) {
+            app = null;
         }
 
         AppBase.cancelTick(this);

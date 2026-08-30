@@ -22,7 +22,7 @@ import { AnimTrack } from '../../anim/evaluator/anim-track.js';
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('anim', {
  *     activate: true,
  *     speed: 1
@@ -378,7 +378,7 @@ class AnimComponent extends Component {
      * @param {object[]} [mask] - A list of paths to bones in the model which should be animated in
      * this layer. If omitted the full model is used. Defaults to null.
      * @param {string} [blendType] - Defines how properties animated by this layer blend with
-     * animations of those properties in previous layers. Defaults to pc.ANIM_LAYER_OVERWRITE.
+     * animations of those properties in previous layers. Defaults to ANIM_LAYER_OVERWRITE.
      * @returns {AnimComponentLayer} The created anim component layer.
      */
     addLayer(name, weight, mask, blendType) {
@@ -558,6 +558,21 @@ class AnimComponent extends Component {
         for (let i = 0; i < this._layers.length; i++) {
             this._layers[i].rebind();
         }
+    }
+
+    /**
+     * Tests whether the given entity is part of the hierarchy this component animates. The binders
+     * resolve their targets within the root bone when one is assigned, and within this component's
+     * entity otherwise, so anything they bind - including the mesh instances backing morph target
+     * weights and animated material textures - belongs to an entity at or below that root.
+     *
+     * @param {Entity} entity - The entity to test.
+     * @returns {boolean} True if the entity is part of the animated hierarchy.
+     * @ignore
+     */
+    animatesEntity(entity) {
+        const graph = this._rootBone || this.entity;
+        return graph === entity || graph.isAncestorOf(entity);
     }
 
     /**

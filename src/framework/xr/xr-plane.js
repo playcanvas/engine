@@ -176,12 +176,12 @@ class XrPlane extends EventHandler {
      * @type {DOMPointReadOnly[]}
      * @example
      * // prepare reusable objects
-     * const transform = new pc.Mat4();
-     * const vecA = new pc.Vec3();
-     * const vecB = new pc.Vec3();
+     * const transform = new Mat4();
+     * const vecA = new Vec3();
+     * const vecB = new Vec3();
      *
      * // update Mat4 to plane position and rotation
-     * transform.setTRS(plane.getPosition(), plane.getRotation(), pc.Vec3.ONE);
+     * transform.setTRS(plane.getPosition(), plane.getRotation(), Vec3.ONE);
      *
      * // draw lines between points
      * for (let i = 0; i < plane.points.length; i++) {
@@ -193,7 +193,7 @@ class XrPlane extends EventHandler {
      *     transform.transformPoint(vecB, vecB);
      *
      *     // render line
-     *     app.drawLine(vecA, vecB, pc.Color.WHITE);
+     *     app.drawLine(vecA, vecB, Color.WHITE);
      * }
      */
     get points() {

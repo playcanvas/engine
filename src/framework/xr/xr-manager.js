@@ -67,7 +67,7 @@ class XrManager extends EventHandler {
      *     console.log(`XR type ${type} is now ${available ? 'available' : 'unavailable'}`);
      * });
      * @example
-     * app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
+     * app.xr.on(`available:${XRTYPE_VR}`, (available) => {
      *     console.log(`XR type VR is now ${available ? 'available' : 'unavailable'}`);
      * });
      */
@@ -367,7 +367,7 @@ class XrManager extends EventHandler {
      * @returns {Promise<boolean>} Promise that resolves to true if a session of the given type is
      * reported supported on the given backend, false otherwise.
      * @example
-     * const supported = await pc.XrManager.isDeviceSupported(pc.DEVICETYPE_WEBGPU, pc.XRTYPE_VR);
+     * const supported = await XrManager.isDeviceSupported(DEVICETYPE_WEBGPU, XRTYPE_VR);
      * if (supported) {
      *     // a WebGPU device can be created and used to offer VR
      * }
@@ -473,11 +473,11 @@ class XrManager extends EventHandler {
      * be chosen by the underlying depth sensing system.
      * @example
      * button.on('click', () => {
-     *     app.xr.start(camera, pc.XRTYPE_VR, pc.XRSPACE_LOCALFLOOR);
+     *     app.xr.start(camera, XRTYPE_VR, XRSPACE_LOCALFLOOR);
      * });
      * @example
      * button.on('click', () => {
-     *     app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+     *     app.xr.start(camera, XRTYPE_AR, XRSPACE_LOCALFLOOR, {
      *         anchors: true,
      *         imageTracking: true,
      *         depthSensing: { }
@@ -640,7 +640,7 @@ class XrManager extends EventHandler {
      * ended. The callback has one argument Error - it is null if successfully ended XR session.
      * @example
      * app.keyboard.on('keydown', (evt) => {
-     *     if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+     *     if (evt.key === KEY_ESCAPE && app.xr.active) {
      *         app.xr.end();
      *     }
      * });
@@ -671,7 +671,7 @@ class XrManager extends EventHandler {
      * that is intended to be blended with real-world environment.
      *
      * @example
-     * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
+     * if (app.xr.isAvailable(XRTYPE_VR)) {
      *     // VR is available
      * }
      * @returns {boolean} True if the specified session type is available.

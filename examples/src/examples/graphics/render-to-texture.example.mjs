@@ -18,6 +18,7 @@ import {
     PROJECTION_ORTHOGRAPHIC,
     PROJECTION_PERSPECTIVE,
     ParticleSystemComponentSystem,
+    RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
     RenderTarget,
@@ -54,7 +55,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }),
+    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true }),
     script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
 };
 
@@ -194,7 +195,7 @@ const renderTarget = new RenderTarget({
     name: 'RT',
     colorBuffer: texture,
     depth: true,
-    flipY: !app.graphicsDevice.isWebGPU,
+    origin: RENDERTARGET_ORIGIN_TOP,
     samples: 2,
 
     // Allocate this render target's MSAA color and depth attachments as transient

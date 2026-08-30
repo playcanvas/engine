@@ -12,7 +12,6 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @import { GSplatWorldState } from './gsplat-world-state.js'
  * @import { GSplatVaryings } from './gsplat-varyings.js'
  * @import { MeshInstance } from '../mesh-instance.js'
- * @import { FogParams } from '../fog-params.js'
  */
 
 /**
@@ -224,10 +223,8 @@ class GSplatRenderer {
      * Per-frame update for the renderer (material syncing, parameter updates).
      *
      * @param {object} params - The gsplat parameters.
-     * @param {number} [exposure] - Scene exposure value.
-     * @param {FogParams} [fogParams] - Fog parameters.
      */
-    frameUpdate(params, exposure, fogParams) {
+    frameUpdate(params) {
     }
 
     /**

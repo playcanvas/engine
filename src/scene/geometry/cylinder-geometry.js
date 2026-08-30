@@ -1,5 +1,4 @@
 import { ConeBaseGeometry } from './cone-base-geometry.js';
-import { calculateTangents } from './geometry-utils.js';
 
 /**
  * A procedural cylinder-shaped geometry.
@@ -14,13 +13,13 @@ import { calculateTangents } from './geometry-utils.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.CylinderGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new CylinderGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -49,7 +48,7 @@ class CylinderGeometry extends ConeBaseGeometry {
      * cylinder. Defaults to 20.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.CylinderGeometry({
+     * const geometry = new CylinderGeometry({
      *     radius: 1,
      *     height: 2,
      *     heightSegments: 2,
@@ -68,7 +67,7 @@ class CylinderGeometry extends ConeBaseGeometry {
         super(radius, radius, height, heightSegments, capSegments, false);
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(this.positions, this.normals, this.uvs, this.indices);
+            this.calculateTangents();
         }
     }
 }

@@ -1,7 +1,7 @@
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { PIXELFORMAT_SRGBA8 } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_SRGBA8, RENDERTARGET_ORIGIN_BOTTOM } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -39,10 +39,12 @@ class LightTextureAtlas {
         this.cookieAtlasResolution = 4;
         this.cookieAtlas = Texture.createDataTexture2D(this.device, 'CookieAtlas', this.cookieAtlasResolution, this.cookieAtlasResolution, PIXELFORMAT_SRGBA8);
 
+        // atlas slot allocation math expects viewport rects to address identical texel rows on
+        // all graphics APIs, matching the WebGL layout
         this.cookieRenderTarget = new RenderTarget({
             colorBuffer: this.cookieAtlas,
             depth: false,
-            flipY: true
+            origin: RENDERTARGET_ORIGIN_BOTTOM
         });
 
         // available slots (of type Slot)

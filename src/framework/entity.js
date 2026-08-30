@@ -14,6 +14,7 @@ import { getApplication } from './globals.js';
  * @import { Component } from './components/component.js'
  * @import { ElementComponent } from './components/element/component.js'
  * @import { GSplatComponent } from './components/gsplat/component.js'
+ * @import { JointComponent } from './components/joint/component.js'
  * @import { LayoutChildComponent } from './components/layout-child/component.js'
  * @import { LayoutGroupComponent } from './components/layout-group/component.js'
  * @import { LightComponent } from './components/light/component.js'
@@ -89,16 +90,16 @@ const releaseTempArray = (a) => {
  *
  * @example
  * // Create an entity, give it a camera component, position it, and add it to the scene
- * const camera = new pc.Entity('camera');
+ * const camera = new Entity('camera');
  * camera.addComponent('camera', {
- *     clearColor: new pc.Color(0.1, 0.1, 0.1)
+ *     clearColor: new Color(0.1, 0.1, 0.1)
  * });
  * camera.setPosition(0, 0, 10);
  * app.root.addChild(camera);
  * @example
  * // Entities form a hierarchy: a child inherits its parent's transform
- * const parent = new pc.Entity('parent');
- * const child = new pc.Entity('child');
+ * const parent = new Entity('parent');
+ * const child = new Entity('child');
  * parent.addChild(child);
  * parent.setLocalPosition(5, 0, 0); // moves both parent and child
  */
@@ -177,6 +178,15 @@ class Entity extends GraphNode {
      * @readonly
      */
     gsplat;
+
+    /**
+     * Gets the {@link JointComponent} attached to this entity.
+     *
+     * @type {JointComponent|undefined}
+     * @readonly
+     * @alpha
+     */
+    joint;
 
     /**
      * Gets the {@link LayoutChildComponent} attached to this entity.
@@ -324,7 +334,7 @@ class Entity extends GraphNode {
      * @param {AppBase} [app] - The application the entity belongs to, default is the current
      * application.
      * @example
-     * const entity = new pc.Entity();
+     * const entity = new Entity();
      *
      * // Add a Component to the Entity
      * entity.addComponent('camera', {
@@ -390,7 +400,7 @@ class Entity extends GraphNode {
      * @returns {Component|null} The new Component that was attached to the entity or null if there
      * was an error.
      * @example
-     * const entity = new pc.Entity();
+     * const entity = new Entity();
      *
      * // Add a light component with default properties
      * entity.addComponent("light");
@@ -398,7 +408,7 @@ class Entity extends GraphNode {
      * // Add a camera component with some specified properties
      * entity.addComponent("camera", {
      *     fov: 45,
-     *     clearColor: new pc.Color(1, 0, 0)
+     *     clearColor: new Color(1, 0, 0)
      * });
      */
     addComponent(type, data) {
@@ -419,7 +429,7 @@ class Entity extends GraphNode {
      *
      * @param {string} type - The name of the Component type.
      * @example
-     * const entity = new pc.Entity();
+     * const entity = new Entity();
      * entity.addComponent("light"); // add new light component
      *
      * entity.removeComponent("light"); // remove light component

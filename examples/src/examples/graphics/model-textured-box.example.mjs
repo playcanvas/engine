@@ -21,7 +21,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    clouds: new Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' })
+    clouds: new Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {

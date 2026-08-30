@@ -16,6 +16,11 @@ export default /* wgsl */`
     #include "baseNineSlicedTiledPS"
 #endif
 
+// flat shading
+#ifdef FLAT_SHADING
+    #include "flatNormalPS"
+#endif
+
 // TBN
 #ifdef LIT_TBN
     #include "TBNPS"

@@ -40,7 +40,7 @@ class KeyboardEvent {
      * @param {globalThis.KeyboardEvent} event - The original browser event that was fired.
      * @example
      * const onKeyDown = function (e) {
-     *     if (e.key === pc.KEY_SPACE) {
+     *     if (e.key === KEY_SPACE) {
      *         // space key pressed
      *     }
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.

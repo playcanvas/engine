@@ -9,6 +9,7 @@ import halfTypes from './shader-chunks/frag/half-types.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { TRANSFORM_FEEDBACK_INTERLEAVED, TRANSFORM_FEEDBACK_SEPARATE } from './constants.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { UniformBufferFormat } from './uniform-buffer-format.js'
  */
@@ -67,6 +68,11 @@ class Shader {
      * @param {string[]} [definition.feedbackVaryings] - A list of shader output variable
      * names that will be captured when using transform feedback. This setting is only effective
      * if the useTransformFeedback property is enabled.
+     * @param {number} [definition.feedbackVaryingsMode] - Specifies how transform feedback varyings
+     * are written into GPU buffers. Use {@link TRANSFORM_FEEDBACK_INTERLEAVED} to pack all captured
+     * varyings into a single buffer, or {@link TRANSFORM_FEEDBACK_SEPARATE} to store each varying
+     * in its own buffer. This setting is only effective when useTransformFeedback property is enabled.
+     * Defaults to {@link TRANSFORM_FEEDBACK_INTERLEAVED}.
      * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
      * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
@@ -75,6 +81,10 @@ class Shader {
      * WebGPU platform.
      * @param {string} [definition.computeEntryPoint] - The entry point function name for the compute
      * shader. Defaults to 'main'.
+     * @param {BindGroupFormat} [definition.computeBindGroupFormat] - The bind group format for
+     * caller-provided compute resources in group 0. Only used on WebGPU.
+     * @param {Object<string, UniformBufferFormat>} [definition.computeUniformBufferFormats] - The
+     * uniform buffer formats keyed by bind group entry name. Requires computeBindGroupFormat.
      * @param {Map<string, string>} [definition.vincludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.
@@ -91,6 +101,8 @@ class Shader {
      * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
+     * @param {boolean} [definition.useDualSourceBlending] - Whether the fragment shader outputs a
+     * secondary color for dual-source blending. Defaults to false.
      * @param {string} [definition.shaderLanguage] - Specifies the shader language of vertex and
      * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example
@@ -116,13 +128,13 @@ class Shader {
      *
      * const shaderDefinition = {
      *     attributes: {
-     *         aPosition: pc.SEMANTIC_POSITION
+     *         aPosition: SEMANTIC_POSITION
      *     },
      *     vshader,
      *     fshader
      * };
      *
-     * const shader = new pc.Shader(graphicsDevice, shaderDefinition);
+     * const shader = new Shader(graphicsDevice, shaderDefinition);
      */
     constructor(graphicsDevice, definition) {
         this.id = id++;

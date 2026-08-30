@@ -19,13 +19,13 @@ jobs:
           private-key: ${{ secrets.APP_KEY }}
 
       - name: Check out code
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Node.js 24.x
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.x
           cache: "npm"
@@ -37,9 +37,12 @@ jobs:
         shell: bash
 
       - name: Tag alpha
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           base=$(npm pkg get version | sed 's/"//g' | sed 's/-.*//')
-          version="$base-alpha.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          pr=$(gh pr view "$GITHUB_REF_NAME" --json number --jq .number 2>/dev/null || true)
+          version="$base-alpha.${pr:-$GITHUB_RUN_NUMBER}.${GITHUB_RUN_NUMBER}"
           npm version "$version" --no-git-tag-version
           git commit -m "Alpha $version" -- package.json package-lock.json
           git tag "v$version"

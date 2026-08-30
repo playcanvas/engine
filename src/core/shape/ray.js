@@ -33,7 +33,7 @@ class Ray {
      * @example
      * // Create a new ray starting at the position of this entity and pointing down
      * // the entity's negative Z axis
-     * const ray = new pc.Ray(this.entity.getPosition(), this.entity.forward);
+     * const ray = new Ray(this.entity.getPosition(), this.entity.forward);
      */
     constructor(origin, direction) {
         if (origin) {

@@ -76,6 +76,13 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.toon' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='Flat shading'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.flatShading' }}
+                    />
+                </LabelGroup>
             </Panel>
         </>
     );

@@ -48,8 +48,8 @@ class Color {
      * @param {number} [b] - The b value. Defaults to 0.
      * @param {number} [a] - The a value. Defaults to 1.
      * @example
-     * const c1 = new pc.Color(); // defaults to 0, 0, 0, 1
-     * const c2 = new pc.Color(0.1, 0.2, 0.3, 0.4);
+     * const c1 = new Color(); // defaults to 0, 0, 0, 1
+     * const c2 = new Color(0.1, 0.2, 0.3, 0.4);
      */
     /**
      * Creates a new Color instance.
@@ -57,7 +57,7 @@ class Color {
      * @overload
      * @param {number[]} arr - The array to set the color values from.
      * @example
-     * const c = new pc.Color([0.1, 0.2, 0.3, 0.4]);
+     * const c = new Color([0.1, 0.2, 0.3, 0.4]);
      */
     /**
      * @param {number|number[]} [r] - The r value. Defaults to 0. If r is an array of length 3 or
@@ -86,7 +86,7 @@ class Color {
      *
      * @returns {this} A duplicate color object.
      * @example
-     * const c = new pc.Color(1, 0, 0, 1);
+     * const c = new Color(1, 0, 0, 1);
      * const cClone = c.clone();
      * // cClone is [1, 0, 0, 1]
      */
@@ -102,8 +102,8 @@ class Color {
      * @param {Color} rhs - A color to copy to the specified color.
      * @returns {Color} Self for chaining.
      * @example
-     * const src = new pc.Color(1, 0, 0, 1);
-     * const dst = new pc.Color();
+     * const src = new Color(1, 0, 0, 1);
+     * const dst = new Color();
      *
      * dst.copy(src);
      *
@@ -124,8 +124,8 @@ class Color {
      * @param {Color} rhs - The color to compare to the specified color.
      * @returns {boolean} True if the colors are equal and false otherwise.
      * @example
-     * const a = new pc.Color(1, 0, 0, 1);
-     * const b = new pc.Color(1, 1, 0, 1);
+     * const a = new Color(1, 0, 0, 1);
+     * const b = new Color(1, 1, 0, 1);
      * console.log("The two colors are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
@@ -141,7 +141,7 @@ class Color {
      * @param {number} [a] - The value for the alpha (0-1), defaults to 1.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new pc.Color();
+     * const c = new Color();
      * c.set(1, 0, 0, 1);
      * // c is now red [1, 0, 0, 1]
      */
@@ -164,9 +164,9 @@ class Color {
      * range, the linear interpolant will occur on a ray extrapolated from this line.
      * @returns {Color} Self for chaining.
      * @example
-     * const a = new pc.Color(0, 0, 0);
-     * const b = new pc.Color(1, 1, 0.5);
-     * const r = new pc.Color();
+     * const a = new Color(0, 0, 0);
+     * const b = new Color(1, 1, 0.5);
+     * const r = new Color();
      *
      * r.lerp(a, b, 0);   // r is equal to a
      * r.lerp(a, b, 0.5); // r is 0.5, 0.5, 0.25
@@ -188,7 +188,7 @@ class Color {
      * is done in place.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new pc.Color(0.5, 0.5, 0.5, 1);
+     * const c = new Color(0.5, 0.5, 0.5, 1);
      * c.linear();
      * // c is now approximately [0.218, 0.218, 0.218, 1]
      */
@@ -207,7 +207,7 @@ class Color {
      * done in place.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new pc.Color(0.218, 0.218, 0.218, 1);
+     * const c = new Color(0.218, 0.218, 0.218, 1);
      * c.gamma();
      * // c is now approximately [0.5, 0.5, 0.5, 1]
      */
@@ -225,7 +225,7 @@ class Color {
      * @param {number} scalar - The number to multiply by.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new pc.Color(0.2, 0.4, 0.6, 1);
+     * const c = new Color(0.2, 0.4, 0.6, 1);
      * c.mulScalar(2);
      * // c is now [0.4, 0.8, 1.2, 1]
      */
@@ -244,7 +244,7 @@ class Color {
      * HTML/CSS.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new pc.Color();
+     * const c = new Color();
      * c.fromString('#ff0000');
      * // c is now [1, 0, 0, 1]
      */
@@ -271,7 +271,7 @@ class Color {
      * array. Default is 0.
      * @returns {Color} Self for chaining.
      * @example
-     * const c = new pc.Color();
+     * const c = new Color();
      * c.fromArray([1, 0, 1, 1]);
      * // c is set to [1, 0, 1, 1]
      */
@@ -293,7 +293,7 @@ class Color {
      * @param {boolean} [asArray] - If true, the output will be an array of numbers. Defaults to false.
      * @returns {string} The color in string form.
      * @example
-     * const c = new pc.Color(1, 1, 1);
+     * const c = new Color(1, 1, 1);
      * // Outputs #ffffff
      * console.log(c.toString());
      */
@@ -344,7 +344,7 @@ class Color {
      * @param {boolean} [alpha] - If true, the output array will include the alpha value.
      * @returns {number[]|ArrayBufferView} The color as an array.
      * @example
-     * const c = new pc.Color(1, 1, 1);
+     * const c = new Color(1, 1, 1);
      * // Outputs [1, 1, 1, 1]
      * console.log(c.toArray());
      */

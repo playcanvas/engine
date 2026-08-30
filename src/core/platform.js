@@ -1,21 +1,3 @@
-// detect whether passive events are supported by the browser
-const detectPassiveEvents = () => {
-    let result = false;
-
-    try {
-        const opts = Object.defineProperty({}, 'passive', {
-            get: function () {
-                result = true;
-                return false;
-            }
-        });
-        window.addEventListener('testpassive', null, opts);
-        window.removeEventListener('testpassive', null, opts);
-    } catch (e) {}
-
-    return result;
-};
-
 const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
 const environment = typeof window !== 'undefined' ? 'browser' :
     typeof global !== 'undefined' ? 'node' : 'worker';
@@ -47,14 +29,13 @@ const visionos = /Macintosh/i.test(ua) &&
 const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
 const gamepads = (environment === 'browser') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
 const workers = (typeof Worker !== 'undefined');
-const passiveEvents = detectPassiveEvents();
 
 /**
  * Global namespace that stores flags regarding platform environment and features support.
  *
  * @namespace
  * @example
- * if (pc.platform.touch) {
+ * if (platform.touch) {
  *     // touch is supported
  * }
  */
@@ -164,15 +145,6 @@ const platform = {
      * @type {boolean}
      */
     workers: workers,
-
-    /**
-     * True if the platform supports an options object as the third parameter to
-     * `EventTarget.addEventListener()` and the passive property is supported.
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    passiveEvents: passiveEvents,
 
     /**
      * Get the browser name.

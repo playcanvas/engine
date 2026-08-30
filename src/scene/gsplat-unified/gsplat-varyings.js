@@ -171,7 +171,7 @@ class GSplatVaryings {
      * // and read per fragment in gsplatModifyPS using getFlag()
      * app.scene.gsplat.varyings.add([{
      *     name: 'flag',
-     *     type: pc.TYPE_UINT32,
+     *     type: TYPE_UINT32,
      *     components: 1
      * }]);
      */

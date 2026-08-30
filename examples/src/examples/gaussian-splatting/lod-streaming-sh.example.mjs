@@ -38,7 +38,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
+import { GSplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -92,7 +92,7 @@ app.on('destroy', () => {
 // Skatepark configuration
 const config = {
     name: 'Skatepark',
-    url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json',
+    url: 'https://code.playcanvas.com/examples_data/example_skatepark_03/lod-meta.json',
     lodUpdateDistance: 1,
     lodUnderfillLimit: 10,
     cameraPosition: [32, 2, 2],
@@ -105,23 +105,19 @@ const config = {
 };
 
 // LOD preset definitions with customizable distances
-/** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
+/** @type {Record<string, { range: number[] }>} */
 const LOD_PRESETS = {
     'desktop-max': {
-        range: [0, 5],
-        lodBaseDistance: 15
+        range: [0, 5]
     },
     desktop: {
-        range: [0, 2],
-        lodBaseDistance: 15
+        range: [0, 2]
     },
     'mobile-max': {
-        range: [1, 2],
-        lodBaseDistance: 15
+        range: [1, 2]
     },
     mobile: {
-        range: [2, 5],
-        lodBaseDistance: 15
+        range: [2, 5]
     }
 };
 
@@ -190,22 +186,10 @@ const applyPreset = () => {
     const presetData = LOD_PRESETS[preset] || LOD_PRESETS.desktop;
     gs.lodRangeMin = presetData.range[0];
     gs.lodRangeMax = presetData.range[1];
-    gs.lodBaseDistance = presetData.lodBaseDistance;
-    data.set('lodBaseDistance', presetData.lodBaseDistance);
 };
 
 applyPreset();
 data.on('lodPreset:set', applyPreset);
-
-data.set('lodMultiplier', 4);
-gs.lodMultiplier = 4;
-
-data.on('lodBaseDistance:set', () => {
-    gs.lodBaseDistance = data.get('lodBaseDistance');
-});
-data.on('lodMultiplier:set', () => {
-    gs.lodMultiplier = data.get('lodMultiplier');
-});
 
 const applySplatBudget = () => {
     const millions = data.get('splatBudget');
@@ -232,9 +216,9 @@ camera.setLocalPosition(camX, camY, camZ);
 
 app.root.addChild(camera);
 
-// Add the GsplatRevealGridEruption script to the gsplat entity
+// Add the GSplatRevealGridEruption script to the gsplat entity
 entity.addComponent('script');
-const revealScript = entity.script?.create(GsplatRevealGridEruption);
+const revealScript = entity.script?.create(GSplatRevealGridEruption);
 if (revealScript) {
     revealScript.center.set(focusX, focusY, focusZ);
     revealScript.blockCount = 6;

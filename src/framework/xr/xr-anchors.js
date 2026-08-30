@@ -25,7 +25,7 @@ import { XrAnchor } from './xr-anchor.js';
  * session with lots of movement.
  *
  * ```javascript
- * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+ * app.xr.start(camera, XRTYPE_AR, XRSPACE_LOCALFLOOR, {
  *     anchors: true
  * });
  * ```

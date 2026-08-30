@@ -208,8 +208,8 @@ export class Script extends EventHandler {
      * Create a new Script instance.
      *
      * @param {object} args - The input arguments object.
-     * @param {AppBase} args.app - The {@link AppBase} that is running the script.
-     * @param {Entity} args.entity - The {@link Entity} that the script is attached to.
+     * @param {AppBase} args.app - The AppBase that is running the script.
+     * @param {Entity} args.entity - The Entity that the script is attached to.
      */
     constructor(args) {
         super();
@@ -271,8 +271,8 @@ export class Script extends EventHandler {
     /**
      * @typedef {object} ScriptInitializationArgs
      * @property {boolean} [enabled] - True if the script instance is in running state.
-     * @property {AppBase} app - The {@link AppBase} that is running the script.
-     * @property {Entity} entity - The {@link Entity} that the script is attached to.
+     * @property {AppBase} app - The AppBase that is running the script.
+     * @property {Entity} entity - The Entity that the script is attached to.
      */
 
     /**

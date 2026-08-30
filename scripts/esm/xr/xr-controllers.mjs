@@ -26,6 +26,7 @@ import { Script } from 'playcanvas';
  *         basePath: 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles'
  *     }
  * });
+ * @category XR
  */
 class XrControllers extends Script {
     static scriptName = 'xrControllers';

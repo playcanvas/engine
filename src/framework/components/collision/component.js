@@ -25,14 +25,14 @@ const _quat = new Quat();
  * CollisionComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('collision'); // This defaults to 1x1x1 box-shaped trigger volume
  * ```
  *
  * To create a 0.5 radius dynamic rigid body sphere:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('collision', {
  *     type: 'sphere'
  * });
@@ -180,6 +180,14 @@ class CollisionComponent extends Component {
 
     /** @private */
     _hasOffset = false;
+
+    /**
+     * The entity world scale a mesh shape was last built with - a change triggers a rebuild.
+     *
+     * @type {Vec3|null}
+     * @private
+     */
+    _builtWorldScale = null;
 
     /**
      * Create a new CollisionComponent.
@@ -499,7 +507,7 @@ class CollisionComponent extends Component {
         this._convexHull = arg;
 
         if (this._initialized && this._type === 'mesh') {
-            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+            this.system.doRecreatePhysicalShape(this);
         }
     }
 
@@ -532,7 +540,7 @@ class CollisionComponent extends Component {
             // recreate physical shapes skipping loading the model
             // from the 'asset' as the model passed in might
             // have been created procedurally
-            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+            this.system.doRecreatePhysicalShape(this);
         }
     }
 
@@ -551,7 +559,7 @@ class CollisionComponent extends Component {
         if (this._initialized && this._type === 'mesh') {
             // recreate physical shapes skipping loading the render asset
             // as the render passed in might have been created procedurally
-            this.system.implementations.mesh.doRecreatePhysicalShape(this);
+            this.system.doRecreatePhysicalShape(this);
         }
     }
 
@@ -607,35 +615,12 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @param {object} shape - The Ammo collision shape to find.
-     * @returns {number|null} The shape's index in the child array of the compound shape.
-     * @ignore
-     */
-    getCompoundChildShapeIndex(shape) {
-        const compound = this._shape;
-        const shapes = compound.getNumChildShapes();
-
-        for (let i = 0; i < shapes; i++) {
-            const childShape = compound.getChildShape(i);
-            if (Ammo.getPointer(childShape) === Ammo.getPointer(shape)) {
-                return i;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * @param {GraphNode} parent - The parent node.
      * @private
      */
     _onInsert(parent) {
-        // TODO
-        // if is child of compound shape
-        // and there is no change of compoundParent, then update child transform
-        // once updateChildTransform is exposed in ammo.js
-
-        if (typeof Ammo === 'undefined') {
+        const world = this.system.physicsWorld;
+        if (!world) {
             return;
         }
 
@@ -645,7 +630,7 @@ class CollisionComponent extends Component {
             let ancestor = this.entity.parent;
             while (ancestor) {
                 if (ancestor.collision && ancestor.collision.type === 'compound') {
-                    if (ancestor.collision.shape.getNumChildShapes() === 0) {
+                    if (world.getCompoundChildCount(ancestor.collision.shape) === 0) {
                         this.system.recreatePhysicalShapes(ancestor.collision);
                     } else {
                         this.system.recreatePhysicalShapes(this);
@@ -655,6 +640,22 @@ class CollisionComponent extends Component {
                 ancestor = ancestor.parent;
             }
         }
+    }
+
+    /**
+     * An {@link Entity#forEach} callback that refreshes the compound child transform of each
+     * descendant wired to the same compound root. Invoked with `this` set to the compound
+     * root's entity.
+     *
+     * @param {Entity} entity - The visited descendant entity.
+     * @private
+     */
+    _updateEachDescendantTransform(entity) {
+        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent) {
+            return;
+        }
+
+        this.collision.system.updateCompoundChildTransform(entity, false);
     }
 
     /** @private */
@@ -676,7 +677,7 @@ class CollisionComponent extends Component {
             }
 
             if (dirty) {
-                entity.forEach(this.system.implementations.compound._updateEachDescendantTransform, entity);
+                entity.forEach(this._updateEachDescendantTransform, entity);
 
                 const bodyComponent = this._compoundParent.entity.rigidbody;
                 if (bodyComponent) {
@@ -736,12 +737,12 @@ class CollisionComponent extends Component {
                 this.entity.rigidbody.enableSimulation();
             }
         } else if (this._compoundParent && this !== this._compoundParent) {
-            if (this._compoundParent.shape.getNumChildShapes() === 0) {
+            if (this.system.physicsWorld.getCompoundChildCount(this._compoundParent.shape) === 0) {
                 this.system.recreatePhysicalShapes(this._compoundParent);
             } else {
-                const transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
-                this._compoundParent.shape.addChildShape(transform, this._shape);
-                Ammo.destroy(transform);
+                // the shape is known to be absent from the compound (it was removed on
+                // disable), so a forced child update adds it back at the current pose
+                this.system.updateCompoundChildTransform(this.entity, true);
 
                 if (this._compoundParent.entity.rigidbody) {
                     this._compoundParent.entity.rigidbody.activate();

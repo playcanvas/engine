@@ -261,6 +261,15 @@ class Morph extends RefCountedObject {
         return this._targets;
     }
 
+    // ---- deprecated block start ----
+
+    getTarget(index) {
+        Debug.deprecated('Morph#getTarget is deprecated. Use Morph#targets instead.');
+        return this.targets[index];
+    }
+
+    // ---- deprecated block end ----
+
     _updateMorphFlags() {
 
         // find out if this morph needs to morph positions and normals

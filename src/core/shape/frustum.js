@@ -1,7 +1,9 @@
 import { Plane } from './plane.js';
+import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
 /**
+ * @import { BoundingBox } from './bounding-box.js'
  * @import { BoundingSphere } from './bounding-sphere.js'
  * @import { Mat4 } from '../math/mat4.js'
  */
@@ -11,6 +13,9 @@ const _c23 = new Vec3();
 const _c31 = new Vec3();
 const _c12 = new Vec3();
 const _corner = new Vec3();
+
+// scratch planes, used to read the planes of another frustum in add()
+const _scratchPlanes = [new Plane(), new Plane(), new Plane(), new Plane(), new Plane(), new Plane()];
 
 /**
  * Intersects three planes and writes the intersection point to out.
@@ -47,22 +52,36 @@ function intersectPlanes(p1, p2, p3, out) {
  */
 class Frustum {
     /**
-     * The six planes that make up the frustum.
+     * The six planes of the frustum, packed as four floats each - the normal's x, y and z followed
+     * by the plane's distance from the origin - in the order right, left, bottom, top, far, near.
+     * The normals point inwards, so a point is outside a plane when
+     * `normal.dot(point) + distance` is negative.
      *
-     * @type {Plane[]}
+     * This is the frustum's storage, exposed for internal use where the packed form avoids
+     * per-plane object access. Use {@link Frustum#getPlane} and {@link Frustum#setPlane} instead.
+     *
+     * @type {Float32Array}
+     * @ignore
      */
-    planes = [];
+    planeData = new Float32Array(24);
 
     /**
      * Create a new Frustum instance.
      *
      * @example
-     * const frustum = new pc.Frustum();
+     * const frustum = new Frustum();
      */
-    constructor() {
-        for (let i = 0; i < 6; i++) {
-            this.planes[i] = new Plane();
-        }
+    // eslint-disable-next-line no-useless-constructor
+    constructor() { }
+
+    /**
+     * @type {Plane[]}
+     * @deprecated Use {@link Frustum#getPlane} and {@link Frustum#setPlane} instead.
+     * @ignore
+     */
+    get planes() {
+        Debug.removed('Frustum#planes is removed. Use Frustum#getPlane and Frustum#setPlane instead.');
+        return [];
     }
 
     /**
@@ -70,7 +89,7 @@ class Frustum {
      *
      * @returns {Frustum} A duplicate frustum.
      * @example
-     * const frustum = new pc.Frustum();
+     * const frustum = new Frustum();
      * const clone = frustum.clone();
      */
     clone() {
@@ -86,14 +105,66 @@ class Frustum {
      * @returns {Frustum} Self for chaining.
      * @example
      * const src = entity.camera.frustum;
-     * const dst = new pc.Frustum();
+     * const dst = new Frustum();
      * dst.copy(src);
      */
     copy(src) {
-        for (let i = 0; i < 6; i++) {
-            this.planes[i].copy(src.planes[i]);
-        }
+        this.planeData.set(src.planeData);
         return this;
+    }
+
+    /**
+     * Returns one of the frustum's six planes. The planes are ordered right, left, bottom, top,
+     * far, near, and their normals point inwards.
+     *
+     * @param {number} index - The index of the plane, from 0 to 5.
+     * @param {Plane} result - The plane to write to.
+     * @returns {Plane} The supplied plane, containing the frustum plane.
+     * @example
+     * const plane = new Plane();
+     * entity.camera.frustum.getPlane(0, plane);
+     */
+    getPlane(index, result) {
+        const data = this.planeData;
+        const offset = index * 4;
+        result.normal.set(data[offset], data[offset + 1], data[offset + 2]);
+        result.distance = data[offset + 3];
+        return result;
+    }
+
+    /**
+     * Sets one of the frustum's six planes. The plane is normalized as it is stored, as the
+     * frustum's tests require unit length normals. The planes are ordered right, left, bottom, top,
+     * far, near, and their normals must point inwards.
+     *
+     * @param {number} index - The index of the plane, from 0 to 5.
+     * @param {Plane} plane - The plane to store.
+     * @returns {Frustum} Self for chaining.
+     */
+    setPlane(index, plane) {
+        const { normal, distance } = plane;
+        this._setPlane(index, normal.x, normal.y, normal.z, distance);
+        return this;
+    }
+
+    /**
+     * Stores a normalized plane at the given index.
+     *
+     * @param {number} index - The index of the plane, from 0 to 5.
+     * @param {number} nx - The x component of the plane normal.
+     * @param {number} ny - The y component of the plane normal.
+     * @param {number} nz - The z component of the plane normal.
+     * @param {number} distance - The plane's distance from the origin.
+     * @private
+     */
+    _setPlane(index, nx, ny, nz, distance) {
+        const invLength = 1 / Math.sqrt(nx * nx + ny * ny + nz * nz);
+        const data = this.planeData;
+        const offset = index * 4;
+        data[offset] = nx * invLength;
+        data[offset + 1] = ny * invLength;
+        data[offset + 2] = nz * invLength;
+        data[offset + 3] = distance * invLength;
     }
 
     /**
@@ -102,11 +173,11 @@ class Frustum {
      * @param {Mat4} matrix - The matrix describing the shape of the frustum.
      * @example
      * // Create a perspective projection matrix
-     * const projection = new pc.Mat4();
+     * const projection = new Mat4();
      * projection.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
-     * const frustum = new pc.Frustum();
+     * const frustum = new Frustum();
      * frustum.setFromMat4(projection);
      */
     setFromMat4(matrix) {
@@ -115,14 +186,13 @@ class Frustum {
         const m10 = d[4], m11 = d[5], m12 = d[6], m13 = d[7];
         const m20 = d[8], m21 = d[9], m22 = d[10], m23 = d[11];
         const m30 = d[12], m31 = d[13], m32 = d[14], m33 = d[15];
-        const planes = this.planes;
 
-        planes[0].set(m03 - m00, m13 - m10, m23 - m20, m33 - m30).normalize(); // RIGHT
-        planes[1].set(m03 + m00, m13 + m10, m23 + m20, m33 + m30).normalize(); // LEFT
-        planes[2].set(m03 + m01, m13 + m11, m23 + m21, m33 + m31).normalize(); // BOTTOM
-        planes[3].set(m03 - m01, m13 - m11, m23 - m21, m33 - m31).normalize(); // TOP
-        planes[4].set(m03 - m02, m13 - m12, m23 - m22, m33 - m32).normalize(); // FAR
-        planes[5].set(m03 + m02, m13 + m12, m23 + m22, m33 + m32).normalize(); // NEAR
+        this._setPlane(0, m03 - m00, m13 - m10, m23 - m20, m33 - m30);  // RIGHT
+        this._setPlane(1, m03 + m00, m13 + m10, m23 + m20, m33 + m30);  // LEFT
+        this._setPlane(2, m03 + m01, m13 + m11, m23 + m21, m33 + m31);  // BOTTOM
+        this._setPlane(3, m03 - m01, m13 - m11, m23 - m21, m33 - m31);  // TOP
+        this._setPlane(4, m03 - m02, m13 - m12, m23 - m22, m33 - m32);  // FAR
+        this._setPlane(5, m03 + m02, m13 + m12, m23 + m22, m33 + m32);  // NEAR
     }
 
     /**
@@ -133,12 +203,15 @@ class Frustum {
      * @returns {boolean} True if the point is inside the frustum, false otherwise.
      */
     containsPoint(point) {
-        for (let p = 0; p < 6; p++) {
-            const { normal, distance } = this.planes[p];
-            if (normal.dot(point) + distance <= 0) {
+        const data = this.planeData;
+        const { x, y, z } = point;
+
+        for (let offset = 0; offset < 24; offset += 4) {
+            if (data[offset] * x + data[offset + 1] * y + data[offset + 2] * z + data[offset + 3] <= 0) {
                 return false;
             }
         }
+
         return true;
     }
 
@@ -158,21 +231,26 @@ class Frustum {
      * @returns {Frustum} Self for chaining.
      */
     add(other) {
-        const planes = this.planes;
-        const op = other.planes;
+        const data = this.planeData;
+
+        // the other frustum's planes as objects, for the three-plane intersection below. This runs
+        // a couple of times per frame at most - only stereo XR uses it - so the unpacking is free.
+        for (let p = 0; p < 6; p++) {
+            other.getPlane(p, _scratchPlanes[p]);
+        }
 
         // The 8 corners of the other frustum: intersections of (FAR|NEAR) x (RIGHT|LEFT) x
         // (BOTTOM|TOP) plane triplets - see the plane order in setFromMat4.
         for (let zi = 4; zi <= 5; zi++) {
             for (let xi = 0; xi <= 1; xi++) {
                 for (let yi = 2; yi <= 3; yi++) {
-                    if (intersectPlanes(op[zi], op[xi], op[yi], _corner)) {
+                    if (intersectPlanes(_scratchPlanes[zi], _scratchPlanes[xi], _scratchPlanes[yi], _corner)) {
                         // push out any plane the corner is behind, so it ends up on the plane
-                        for (let p = 0; p < 6; p++) {
-                            const plane = planes[p];
-                            const d = plane.normal.dot(_corner) + plane.distance;
+                        for (let offset = 0; offset < 24; offset += 4) {
+                            const d = data[offset] * _corner.x + data[offset + 1] * _corner.y +
+                                data[offset + 2] * _corner.z + data[offset + 3];
                             if (d < 0) {
-                                plane.distance -= d;
+                                data[offset + 3] -= d;
                             }
                         }
                     }
@@ -193,12 +271,13 @@ class Frustum {
      * frustum and 2 if it is contained by the frustum.
      */
     containsSphere(sphere) {
+        const data = this.planeData;
         const { center, radius } = sphere;
+        const { x, y, z } = center;
 
         let c = 0;
-        for (let p = 0; p < 6; p++) {
-            const { normal, distance } = this.planes[p];
-            const d = normal.dot(center) + distance;
+        for (let offset = 0; offset < 24; offset += 4) {
+            const d = data[offset] * x + data[offset + 1] * y + data[offset + 2] * z + data[offset + 3];
             if (d <= -radius) {
                 return 0;
             }
@@ -208,6 +287,42 @@ class Frustum {
         }
 
         return (c === 6) ? 2 : 1;
+    }
+
+    /**
+     * Tests whether an axis aligned bounding box intersects the frustum.
+     *
+     * The test is conservative in the same way the plane based sphere test is: a box lying just
+     * outside a frustum corner can be reported as intersecting. It is however always at least as
+     * tight as testing the box's bounding sphere, since the extent of a box along a plane normal
+     * never exceeds the radius of its bounding sphere.
+     *
+     * Unlike {@link Frustum#containsSphere}, a box completely inside the frustum is not
+     * distinguished from one merely intersecting it. Detecting that costs a comparison per plane
+     * and no caller needs it.
+     *
+     * @param {BoundingBox} aabb - The bounding box to test.
+     * @returns {boolean} True if the bounding box intersects or is inside the frustum, false if it
+     * is completely outside.
+     */
+    containsAabb(aabb) {
+        const data = this.planeData;
+        const { center, halfExtents } = aabb;
+        const { x, y, z } = center;
+        const ex = halfExtents.x, ey = halfExtents.y, ez = halfExtents.z;
+
+        for (let offset = 0; offset < 24; offset += 4) {
+            const nx = data[offset], ny = data[offset + 1], nz = data[offset + 2];
+
+            // the box's extent along the plane normal - the box is outside the plane when its
+            // signed distance is no greater than minus that extent
+            const extent = Math.abs(nx) * ex + Math.abs(ny) * ey + Math.abs(nz) * ez;
+            if (nx * x + ny * y + nz * z + data[offset + 3] <= -extent) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 

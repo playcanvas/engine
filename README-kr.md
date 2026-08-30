@@ -11,10 +11,10 @@
 
 PlayCanvas는 WebGL2와 WebGPU 기반의 오픈소스 게임 엔진입니다. 모든 브라우저, 모든 디바이스에서 실행되는 인터랙티브 3D 앱, 게임 및 시각화를 만들 수 있습니다.
 
-[English](https://github.com/playcanvas/engine/blob/dev/README.md)
-[中文](https://github.com/playcanvas/engine/blob/dev/README-zh.md)
-[日本語](https://github.com/playcanvas/engine/blob/dev/README-ja.md)
-[한글](https://github.com/playcanvas/engine/blob/dev/README-kr.md)
+[English](https://github.com/playcanvas/engine/blob/main/README.md)
+[中文](https://github.com/playcanvas/engine/blob/main/README-zh.md)
+[日本語](https://github.com/playcanvas/engine/blob/main/README-ja.md)
+[한글](https://github.com/playcanvas/engine/blob/main/README-kr.md)
 
 ## 설치
 

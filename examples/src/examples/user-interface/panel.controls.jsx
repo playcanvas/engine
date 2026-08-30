@@ -20,6 +20,13 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.sliced' }}
                     />
                 </LabelGroup>
+                <LabelGroup text='9-Tiled'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.tiled' }}
+                    />
+                </LabelGroup>
             </Panel>
         </>
     );

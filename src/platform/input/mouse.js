@@ -1,4 +1,3 @@
-import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
@@ -156,8 +155,7 @@ class Mouse extends EventHandler {
         this._attached = true;
 
         /** @type {AddEventListenerOptions} */
-        const passiveOptions = { passive: false };
-        const options = platform.passiveEvents ? passiveOptions : false;
+        const options = { passive: false };
         window.addEventListener('mouseup', this._upHandler, options);
         window.addEventListener('mousedown', this._downHandler, options);
         window.addEventListener('mousemove', this._moveHandler, options);
@@ -173,8 +171,7 @@ class Mouse extends EventHandler {
         this._target = null;
 
         /** @type {AddEventListenerOptions} */
-        const passiveOptions = { passive: false };
-        const options = platform.passiveEvents ? passiveOptions : false;
+        const options = { passive: false };
         window.removeEventListener('mouseup', this._upHandler, options);
         window.removeEventListener('mousedown', this._downHandler, options);
         window.removeEventListener('mousemove', this._moveHandler, options);

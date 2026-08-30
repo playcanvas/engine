@@ -43,7 +43,7 @@ import {
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
-import { GsplatFlipbook } from 'playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs';
+import { GSplatFlipbook } from 'playcanvas/scripts/esm/gsplat/gsplat-flipbook.mjs';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -156,7 +156,7 @@ player.addComponent('gsplat', {
     castShadows: true
 });
 player.addComponent('script');
-const flipbook = player.script.create(GsplatFlipbook);
+const flipbook = player.script.create(GSplatFlipbook);
 if (flipbook) {
     flipbook.fps = 15;
     flipbook.folder = 'https://code.playcanvas.com/examples_data/example_basketball_02';

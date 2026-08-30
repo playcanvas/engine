@@ -45,7 +45,7 @@ class XrInputSource extends EventHandler {
      *
      * @event
      * @example
-     * const ray = new pc.Ray();
+     * const ray = new Ray();
      * inputSource.on('select', (evt) => {
      *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
      *     if (obj.intersectsRay(ray)) {

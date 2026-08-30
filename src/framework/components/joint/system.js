@@ -44,14 +44,6 @@ class JointComponentSystem extends ComponentSystem {
     _breakable = new Set();
 
     /**
-     * Shared static Ammo body that world-pinned joints attach to - see {@link getFixedBody}.
-     *
-     * @type {object|null}
-     * @private
-     */
-    _fixedBody = null;
-
-    /**
      * Create a new JointComponentSystem instance.
      *
      * @param {AppBase} app - The application.
@@ -71,33 +63,6 @@ class JointComponentSystem extends ComponentSystem {
         // created before the physics step that follows
         this.app.systems.on('update', this.onUpdate, this);
         this.app.systems.on('postUpdate', this.onPostUpdate, this);
-    }
-
-    /**
-     * Returns a shared static body, lazily created and never added to the dynamics world, that
-     * world-pinned joints (entityB of null) attach to. Its transform is identity, so the frame a
-     * joint computes against it is simply the joint's world frame. This mirrors Bullet's own
-     * getFixedBody pattern and avoids the single-body constraint constructors, some of which do
-     * not transform their frame to world space (notably btConeTwistConstraint).
-     *
-     * @returns {object} The shared static Ammo body.
-     * @ignore
-     */
-    getFixedBody() {
-        if (!this._fixedBody) {
-            const transform = new Ammo.btTransform();
-            transform.setIdentity();
-            const motionState = new Ammo.btDefaultMotionState(transform);
-            const shape = new Ammo.btSphereShape(0.001);
-            const inertia = new Ammo.btVector3(0, 0, 0);
-            const info = new Ammo.btRigidBodyConstructionInfo(0, motionState, shape, inertia);
-            this._fixedBody = new Ammo.btRigidBody(info);
-            Ammo.destroy(info);
-            Ammo.destroy(inertia);
-            Ammo.destroy(transform);
-        }
-
-        return this._fixedBody;
     }
 
     initializeComponentData(component, data, properties) {
@@ -154,13 +119,6 @@ class JointComponentSystem extends ComponentSystem {
 
         this.app.systems.off('update', this.onUpdate, this);
         this.app.systems.off('postUpdate', this.onPostUpdate, this);
-
-        if (this._fixedBody) {
-            Ammo.destroy(this._fixedBody.getMotionState());
-            Ammo.destroy(this._fixedBody.getCollisionShape());
-            Ammo.destroy(this._fixedBody);
-            this._fixedBody = null;
-        }
     }
 }
 

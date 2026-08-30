@@ -1063,11 +1063,32 @@ export const SKYTYPE_DOME = 'dome';
 export const DITHER_NONE = 'none';
 
 /**
+ * Opacity is dithered using a Bayer 2 matrix.
+ *
+ * @category Graphics
+ */
+export const DITHER_BAYER2 = 'bayer2';
+
+/**
+ * Opacity is dithered using a Bayer 4 matrix.
+ *
+ * @category Graphics
+ */
+export const DITHER_BAYER4 = 'bayer4';
+
+/**
  * Opacity is dithered using a Bayer 8 matrix.
  *
  * @category Graphics
  */
 export const DITHER_BAYER8 = 'bayer8';
+
+/**
+ * Opacity is dithered using a Bayer 16 matrix.
+ *
+ * @category Graphics
+ */
+export const DITHER_BAYER16 = 'bayer16';
 
 /**
  * Opacity is dithered using a blue noise.
@@ -1083,9 +1104,34 @@ export const DITHER_BLUENOISE = 'bluenoise';
  */
 export const DITHER_IGNNOISE = 'ignnoise';
 
+/**
+ * Parallax mapping computes the uv offset from a single tap of the height map. This is the cheapest
+ * option, and suits shallow surface detail.
+ *
+ * @category Graphics
+ */
+export const PARALLAX_OFFSET = 'offset';
+
+/**
+ * Parallax occlusion mapping marches the view ray through the height field to find where it meets
+ * the displaced surface. This costs more than {@link PARALLAX_OFFSET}, but represents deeper
+ * displacement without smearing the texture.
+ *
+ * @category Graphics
+ */
+export const PARALLAX_OCCLUSION = 'occlusion';
+
+export const parallaxNames = {
+    [PARALLAX_OFFSET]: 'OFFSET',
+    [PARALLAX_OCCLUSION]: 'OCCLUSION'
+};
+
 export const ditherNames = {
     [DITHER_NONE]: 'NONE',
+    [DITHER_BAYER2]: 'BAYER2',
+    [DITHER_BAYER4]: 'BAYER4',
     [DITHER_BAYER8]: 'BAYER8',
+    [DITHER_BAYER16]: 'BAYER16',
     [DITHER_BLUENOISE]: 'BLUENOISE',
     [DITHER_IGNNOISE]: 'IGNNOISE'
 };
@@ -1309,3 +1355,25 @@ export const RADIX_SORT_PORTABLE = 1;
  * @category Graphics
  */
 export const RADIX_SORT_ONESWEEP = 2;
+
+/**
+ * The name of the scene depth texture - a scene texture storing the linear depth of the scene,
+ * rendered by the scene pass alongside the scene color. See
+ * {@link CameraShaderParams#sceneTextures}.
+ *
+ * @type {string}
+ * @ignore
+ */
+export const SCENETEXTURE_DEPTH = 'depth';
+
+/**
+ * The uniform each scene texture is published under by the render pass which rendered it. Note that
+ * the depth uses the same uniform as the depth prepass, as those are two producers of the same thing,
+ * and the consumers sample whichever of them ran later in the frame.
+ *
+ * @type {Object<string, string>}
+ * @ignore
+ */
+export const sceneTextureUniformNames = {
+    [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
+};

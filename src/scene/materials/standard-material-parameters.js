@@ -36,7 +36,6 @@ const standardMaterialParameterTypes = {
     vertexColorGamma: 'boolean',
 
     specular: 'rgb',
-    specularTint: 'boolean',
     ..._textureParameter('specular'),
     occludeSpecular: 'enum:occludeSpecular',
     specularityFactor: 'number',
@@ -88,6 +87,10 @@ const standardMaterialParameterTypes = {
 
     ..._textureParameter('height', true, false),
     heightMapFactor: 'number',
+    heightMapBase: 'number',
+    parallaxMode: 'string',
+    parallaxSamples: 'number',
+    parallaxShadowSamples: 'number',
 
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
@@ -145,6 +148,7 @@ const standardMaterialParameterTypes = {
     envAtlas: 'texture',
 
     twoSidedLighting: 'boolean',
+    flatShading: 'boolean',
     shadowCatcher: 'boolean'
 
     // nineSlicedMode
@@ -194,6 +198,7 @@ const standardMaterialRemovedParameters = {
     ambientTint: 'boolean',
     emissiveTint: 'boolean',
     diffuseTint: 'boolean',
+    specularTint: 'boolean',
     sheenTint: 'boolean',
     conserveEnergy: 'boolean',
     useGamma: 'boolean',

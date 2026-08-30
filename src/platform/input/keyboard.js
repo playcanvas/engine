@@ -70,7 +70,7 @@ class Keyboard extends EventHandler {
      * @event
      * @example
      * const onKeyDown = (e) => {
-     *     if (e.key === pc.KEY_SPACE) {
+     *     if (e.key === KEY_SPACE) {
      *         // space key pressed
      *     }
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
@@ -86,7 +86,7 @@ class Keyboard extends EventHandler {
      * @event
      * @example
      * const onKeyUp = (e) => {
-     *     if (e.key === pc.KEY_SPACE) {
+     *     if (e.key === KEY_SPACE) {
      *         // space key released
      *     }
      *     e.event.preventDefault(); // Use original browser event to prevent browser action.
@@ -165,7 +165,7 @@ class Keyboard extends EventHandler {
      * event.
      * @example
      * // attach keyboard listeners to the window
-     * const keyboard = new pc.Keyboard(window);
+     * const keyboard = new Keyboard(window);
      */
     constructor(element, options = {}) {
         super();

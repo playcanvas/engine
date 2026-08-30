@@ -127,7 +127,7 @@ class ParticleCPUUpdater {
             rndFactor3Vec.y = particleTex[id * particleTexChannels + 1 + emitter.numParticlesPot * 2 * particleTexChannels];
             rndFactor3Vec.z = particleTex[id * particleTexChannels + 2 + emitter.numParticlesPot * 2 * particleTexChannels];
 
-            const particleRate = emitter.rate + (emitter.rate2 - emitter.rate) * rndFactor;// pc.math.lerp(emitter.rate, emitter.rate2, rndFactor);
+            const particleRate = emitter.rate + (emitter.rate2 - emitter.rate) * rndFactor;// math.lerp(emitter.rate, emitter.rate2, rndFactor);
 
             const particleLifetime = emitter.lifetime;
 

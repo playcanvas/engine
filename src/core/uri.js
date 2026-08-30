@@ -148,7 +148,7 @@ class URI {
      * @returns {object} The URI's query parameters converted to an Object.
      * @example
      * const s = "http://example.com?a=1&b=2&c=3";
-     * const uri = new pc.URI(s);
+     * const uri = new URI(s);
      * const q = uri.getQuery();
      * console.log(q.a); // logs "1"
      * console.log(q.b); // logs "2"
@@ -174,7 +174,7 @@ class URI {
      * @param {object} params - Key-Value pairs to encode into the query string.
      * @example
      * const s = "http://example.com";
-     * const uri = new pc.URI(s);
+     * const uri = new URI(s);
      * uri.setQuery({
      *     "a": 1,
      *     "b": 2

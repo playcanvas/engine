@@ -9,9 +9,9 @@ import { Component } from '../component.js';
  * LayoutChildComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('element', {
- *     type: pc.ELEMENTTYPE_IMAGE
+ *     type: ELEMENTTYPE_IMAGE
  * });
  * entity.addComponent('layoutchild', {
  *     minWidth: 50,

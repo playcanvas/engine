@@ -63,7 +63,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatWeather } from 'playcanvas/scripts/esm/gsplat/gsplat-weather.mjs';
+import { GSplatWeather } from 'playcanvas/scripts/esm/gsplat/gsplat-weather.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -112,8 +112,8 @@ app.on('destroy', () => {
 });
 
 // Outside scene (Roman Parish) and inside-portal scene (Skatepark) configuration
-const OUTSIDE_URL = 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json';
-const INSIDE_URL = 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json';
+const OUTSIDE_URL = 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json';
+const INSIDE_URL = 'https://code.playcanvas.com/examples_data/example_skatepark_03/lod-meta.json';
 
 const assets = {
     outside: new Asset('outside', 'gsplat', { url: OUTSIDE_URL }),
@@ -318,8 +318,6 @@ const sceneConfigs = [
         name: 'Parish',
         asset: assets.outside,
         layer: outsideLayer,
-        lodBaseDistance: 7,
-        lodMultiplier: 3,
         intrinsicEuler: new Vec3(-90, 0, 0),
         portalLocalPos: new Vec3(2, 2.4, 5),
         portalLocalYaw: 130,
@@ -329,8 +327,6 @@ const sceneConfigs = [
         name: 'Skatepark',
         asset: assets.inside,
         layer: insideLayer,
-        lodBaseDistance: 15,
-        lodMultiplier: 4,
         intrinsicEuler: new Vec3(-90, 0, 0),
         portalLocalPos: new Vec3(14, 1, 13.5),
         portalLocalYaw: 50,
@@ -381,8 +377,6 @@ sceneConfigs.forEach((config) => {
     entity.addComponent('gsplat', {
         asset: config.asset,
         layers: [config.layer.id],
-        lodBaseDistance: config.lodBaseDistance,
-        lodMultiplier: config.lodMultiplier,
         // Start with the lowest LOD until the first frame settles, then unlock the full range
         lodRangeMin: 4,
         lodRangeMax: 5
@@ -422,8 +416,8 @@ sceneConfigs.forEach((config) => {
 const SNOW_EXTENT = 20;
 const weatherEntity = new Entity('Weather');
 weatherEntity.addComponent('script');
-const weather = /** @type {GsplatWeather} */ (
-    weatherEntity.script.create(GsplatWeather, {
+const weather = /** @type {GSplatWeather} */ (
+    weatherEntity.script.create(GSplatWeather, {
         properties: {
             followEntity: camera,
             speed: 2.0,

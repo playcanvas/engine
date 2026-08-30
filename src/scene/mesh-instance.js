@@ -1,6 +1,5 @@
 import { Debug, DebugHelper } from '../core/debug.js';
 import { BoundingBox } from '../core/shape/bounding-box.js';
-import { BoundingSphere } from '../core/shape/bounding-sphere.js';
 import { BindGroup } from '../platform/graphics/bind-group.js';
 import { UniformBuffer } from '../platform/graphics/uniform-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
@@ -44,7 +43,6 @@ import { PickerId } from './picker-id.js';
 
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
-const _tempSphere = new BoundingSphere();
 
 /** @type {Set<Mesh>} */
 const _meshSet = new Set();
@@ -235,6 +233,14 @@ class ShaderInstance {
  * cmd.update(2);
  * ```
  *
+ * ### Precedence
+ *
+ * When draw commands (indirect or multi-draw, see {@link setIndirect} and {@link setMultiDraw})
+ * are bound, they are the source of truth for rendering: the number of draws and the per-draw
+ * instance counts come from the draw commands, and {@link instancingCount} is ignored. In this
+ * case setting {@link instancingCount} to 0 does not skip rendering. {@link instancingCount} only
+ * takes effect for plain hardware instancing, when no draw commands are bound.
+ *
  * @category Graphics
  */
 class MeshInstance {
@@ -298,10 +304,10 @@ class MeshInstance {
      * @example
      * // clear the forward (color) pass bit, leaving all other pass bits set: the mesh is no longer
      * // drawn in the color image, but still takes part in the other passes (such as the prepass)
-     * meshInstance.shaderPassMask &= ~(1 << pc.SHADER_FORWARD);
+     * meshInstance.shaderPassMask &= ~(1 << SHADER_FORWARD);
      * @example
      * // set the forward (color) pass bit, leaving all other pass bits unchanged
-     * meshInstance.shaderPassMask |= (1 << pc.SHADER_FORWARD);
+     * meshInstance.shaderPassMask |= (1 << SHADER_FORWARD);
      * @example
      * // exclude the mesh from a custom shader pass set up on the camera (see
      * // CameraComponent#setShaderPass), leaving all other pass bits set
@@ -309,7 +315,7 @@ class MeshInstance {
      * meshInstance.shaderPassMask &= ~(1 << customPass);
      * @example
      * // test whether the forward (color) pass bit is set
-     * const forwardBitSet = (meshInstance.shaderPassMask & (1 << pc.SHADER_FORWARD)) !== 0;
+     * const forwardBitSet = (meshInstance.shaderPassMask & (1 << SHADER_FORWARD)) !== 0;
      * @example
      * // set every pass bit (the default value)
      * meshInstance.shaderPassMask = 0xFFFFFFFF;
@@ -376,7 +382,7 @@ class MeshInstance {
     meshMetaData = null;
 
     /**
-     * @type {Record<string, {scopeId: ScopeId|null, data: any, passFlags: number}>}
+     * @type {Record<string, {scopeId: ScopeId|null, data: any}>}
      * @ignore
      */
     parameters = {};
@@ -495,7 +501,7 @@ class MeshInstance {
     _shaderCache = new Map();
 
     /**
-     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = pc.MASK_AFFECT_DYNAMIC
+     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = MASK_AFFECT_DYNAMIC
      *
      * @private
      */
@@ -517,12 +523,12 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, new pc.BoxGeometry());
-     * const material = new pc.StandardMaterial();
+     * const mesh = Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry());
+     * const material = new StandardMaterial();
      *
-     * const meshInstance = new pc.MeshInstance(mesh, material);
+     * const meshInstance = new MeshInstance(mesh, material);
      *
-     * const entity = new pc.Entity();
+     * const entity = new Entity();
      * entity.addComponent('render', {
      *     meshInstances: [meshInstance]
      * });
@@ -1113,10 +1119,8 @@ class MeshInstance {
                 return this.isVisibleFunc(camera);
             }
 
-            _tempSphere.center = this.aabb.center;  // this line evaluates aabb
-            _tempSphere.radius = this._aabb.halfExtents.length();
-
-            return camera.frustum.containsSphere(_tempSphere) > 0;
+            // note that reading aabb evaluates it
+            return camera.frustum.containsAabb(this.aabb);
         }
 
         return false;
@@ -1327,20 +1331,22 @@ class MeshInstance {
      *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
-     * @param {number} [passFlags] - Mask describing which passes the material should be included
-     * in. Defaults to 0xFFFFFFFF (all passes).
      */
-    setParameter(name, data, passFlags = 0xFFFFFFFF) {
+    setParameter(name, data) {
+
+        Debug.call(() => {
+            if (arguments[2] !== undefined) {
+                Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
+            }
+        });
 
         const param = this.parameters[name];
         if (param) {
             param.data = data;
-            param.passFlags = passFlags;
         } else {
             this.parameters[name] = {
                 scopeId: null,
-                data: data,
-                passFlags: passFlags
+                data: data
             };
         }
     }
@@ -1390,19 +1396,16 @@ class MeshInstance {
      * by forward-renderer.
      *
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {number} passFlag - The pass flag for the current render pass.
      * @ignore
      */
-    setParameters(device, passFlag) {
+    setParameters(device) {
         const parameters = this.parameters;
         for (const paramName in parameters) {
             const parameter = parameters[paramName];
-            if (parameter.passFlags & passFlag) {
-                if (!parameter.scopeId) {
-                    parameter.scopeId = device.scope.resolve(paramName);
-                }
-                parameter.scopeId.setValue(parameter.data);
+            if (!parameter.scopeId) {
+                parameter.scopeId = device.scope.resolve(paramName);
             }
+            parameter.scopeId.setValue(parameter.data);
         }
     }
 

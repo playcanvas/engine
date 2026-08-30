@@ -1,5 +1,4 @@
 import { ConeBaseGeometry } from './cone-base-geometry.js';
-import { calculateTangents } from './geometry-utils.js';
 
 /**
  * A procedural capsule-shaped geometry.
@@ -14,13 +13,13 @@ import { calculateTangents } from './geometry-utils.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.CapsuleGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new CapsuleGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -50,7 +49,7 @@ class CapsuleGeometry extends ConeBaseGeometry {
      * Defaults to 20.
      * @param {boolean} [opts.calculateTangents] - Generate tangent information. Defaults to false.
      * @example
-     * const geometry = new pc.CapsuleGeometry({
+     * const geometry = new CapsuleGeometry({
      *     radius: 1,
      *     height: 2,
      *     heightSegments: 2,
@@ -69,7 +68,7 @@ class CapsuleGeometry extends ConeBaseGeometry {
         super(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(this.positions, this.normals, this.uvs, this.indices);
+            this.calculateTangents();
         }
     }
 }

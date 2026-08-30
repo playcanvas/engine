@@ -138,17 +138,31 @@ class Material {
     alphaTest = 0;
 
     /**
-     * Enables or disables alpha to coverage (WebGL2 only). When enabled, and if hardware
-     * anti-aliasing is on, limited order-independent transparency can be achieved. Quality depends
-     * on the number of MSAA samples of the current render target. It can nicely soften edges of
-     * otherwise sharp alpha cutouts, but isn't recommended for large area semi-transparent
-     * surfaces. Note, that you don't need to enable blending to make alpha to coverage work. It
-     * will work without it, just like alphaTest.
+     * Enables or disables alpha to coverage. When enabled, and if hardware anti-aliasing is on,
+     * limited order-independent transparency can be achieved. Quality depends on the number of
+     * MSAA samples of the current render target. It can nicely soften edges of otherwise sharp
+     * alpha cutouts, but isn't recommended for large area semi-transparent surfaces. Note, that
+     * you don't need to enable blending to make alpha to coverage work. It will work without it,
+     * just like alphaTest.
+     *
+     * This requires a multi-sampled render target, and is silently ignored when rendering to a
+     * single-sampled one. On WebGPU it additionally requires the first color attachment of the
+     * render target to use a blendable format with an alpha channel, and is silently ignored
+     * otherwise - note that {@link PIXELFORMAT_111110F}, the default HDR format used by
+     * {@link CameraFrame}, has no alpha channel.
      */
     alphaToCoverage = false;
 
     /** @ignore */
     _blendState = new BlendState();
+
+    /**
+     * Explicit setting of sceneTexturesWrite, or undefined to derive it from transparency.
+     *
+     * @type {boolean|undefined}
+     * @private
+     */
+    _sceneTexturesWrite;
 
     /** @ignore */
     _depthState = new DepthState();
@@ -215,6 +229,52 @@ class Material {
     }
 
     /**
+     * Enables or disables flat shading. When enabled, the surface is shaded using the geometric
+     * normal of the triangle the fragment belongs to, instead of the normal interpolated from the
+     * vertex normals, giving the mesh a faceted look. This works on skinned and morphed geometry as
+     * well.
+     *
+     * The geometric normal is oriented to match the winding of the triangle, as configured by
+     * {@link Material#frontFace}, and so it agrees with correctly authored vertex normals. Flat
+     * shading therefore only changes the faceting - {@link Material#cull},
+     * {@link Material#frontFace} and {@link StandardMaterial#twoSidedLighting} all behave the same
+     * as they do for smooth shading.
+     *
+     * {@link StandardMaterial} and {@link LitMaterial} implement this automatically. For a
+     * {@link ShaderMaterial}, this adds a `FLAT_SHADING` define to the shader, which the supplied
+     * shader code needs to handle. The `flatNormalPS` chunk provides the `getFlatNormal` function
+     * used by the engine internally, and can be used for this:
+     *
+     * ```javascript
+     * #include "flatNormalPS"
+     * ...
+     * #ifdef FLAT_SHADING
+     *     vec3 normal = getFlatNormal(worldPos);
+     * #else
+     *     vec3 normal = normalize(interpolatedNormal);
+     * #endif
+     * ```
+     *
+     * As with other material properties, call {@link Material#update} after changing this.
+     *
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set flatShading(value) {
+        this.setDefine('FLAT_SHADING', value);
+    }
+
+    /**
+     * Gets whether flat shading is enabled.
+     *
+     * @type {boolean}
+     */
+    get flatShading() {
+        return this.defines.has('FLAT_SHADING');
+    }
+
+    /**
      * Returns true if the material has custom shader chunks.
      *
      * @type {boolean}
@@ -258,13 +318,13 @@ class Material {
      * WGSL to simply return a red color:
      *
      * ```javascript
-     * material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set('emissivePS', `
+     * material.getShaderChunks(SHADERLANGUAGE_GLSL).set('emissivePS', `
      *     void getEmission() {
      *         dEmission = vec3(1.0, 0.0, 1.0);
      *     }
      * `);
      *
-     * material.getShaderChunks(pc.SHADERLANGUAGE_WGSL).set('emissivePS', `
+     * material.getShaderChunks(SHADERLANGUAGE_WGSL).set('emissivePS', `
      *     fn getEmission() {
      *         dEmission = vec3f(1.0, 0.0, 1.0);
      *     }
@@ -308,12 +368,12 @@ class Material {
     }
 
     set chunks(value) {
-        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         this._oldChunks = value;
     }
 
     get chunks() {
-        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(pc.SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
+        Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));
         return this._oldChunks;
     }
@@ -362,7 +422,38 @@ class Material {
 
     _scene = null;
 
-    dirty = true;
+    /**
+     * Incremented by {@link Material#update} so internal consumers can detect material changes
+     * without consuming shared dirty state.
+     *
+     * @type {number}
+     * @private
+     */
+    _updateVersion = 0;
+
+    /**
+     * The update version most recently processed by {@link Material#prepareForRender}.
+     *
+     * @type {number}
+     * @private
+     */
+    _preparedVersion = -1;
+
+    /**
+     * The version incremented each time {@link Material#update} is called.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get updateVersion() {
+        return this._updateVersion;
+    }
+
+    /** @ignore */
+    get dirty() {
+        Debug.removed('Material#dirty has been removed. Call Material#update() after modifying material properties.');
+        return undefined;
+    }
 
     /**
      * Sets whether the red channel is written to the color buffer. If true, the red component of
@@ -453,6 +544,47 @@ class Material {
         return this._blendState.blend;
     }
 
+    /**
+     * Declares whether this material's shader generates the scene textures - the additional render
+     * target attachments the scene pass renders alongside the scene color, holding per pixel data
+     * such as the linear depth. It applies to all of them at once, as a shader either supports the
+     * scene textures or it does not. The attachments of a material that does not generate them are
+     * masked off, as a shader leaving an attachment unwritten makes the draw invalid.
+     *
+     * The default depends on where the shader comes from, so this rarely needs setting:
+     *
+     * - {@link StandardMaterial} and {@link LitMaterial} generate them from the engine's own shader,
+     * so they default to true when opaque and false when transparent - blending the values of
+     * ordinary transparent geometry into them is not meaningful.
+     * - {@link ShaderMaterial} defaults to false, as its shader is supplied by the user. Set this to
+     * true if that shader outputs them using the `sceneTexturesPS` chunk.
+     * - Gaussian splat materials set it to true, the deliberate exception to the transparency rule -
+     * their premultiplied blending accumulates a transmittance weighted average.
+     * - Particle materials set it to false, as they use their own shader.
+     *
+     * Unlike {@link Material#depthWrite} and the color write properties this is not purely a mask:
+     * setting it to true for a shader that does not generate the scene textures makes its draws
+     * invalid, rather than simply skipping the write.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    set sceneTexturesWrite(value) {
+        this._sceneTexturesWrite = value;
+    }
+
+    /**
+     * Gets whether this material's shader generates the scene textures. Returns the explicitly set
+     * value when there is one, and otherwise derives it from transparency - opaque materials generate
+     * them, transparent ones do not. See the setter for the default of each material type.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get sceneTexturesWrite() {
+        return this._sceneTexturesWrite ?? !this.transparent;
+    }
+
     _updateTransparency() {
         for (const meshInstance of this.meshInstances) {
             meshInstance.transparent = this.transparent;
@@ -467,8 +599,13 @@ class Material {
      * @type {BlendState}
      */
     set blendState(value) {
+        const wasDualSource = this._blendState.usesDualSourceBlending;
         this._blendState.copy(value);
         this._updateTransparency();
+
+        if (wasDualSource !== this._blendState.usesDualSourceBlending) {
+            this.clearVariants();
+        }
     }
 
     /**
@@ -509,6 +646,7 @@ class Material {
      */
     set blendType(type) {
 
+        const wasDualSource = this._blendState.usesDualSourceBlending;
         const blendMode = blendModes[type];
         Debug.assert(blendMode, `Unknown blend mode ${type}`);
         this._blendState.setColorBlend(blendMode.op, blendMode.src, blendMode.dst);
@@ -520,6 +658,10 @@ class Material {
             this._updateTransparency();
         }
         this._updateMeshInstanceKeys();
+
+        if (wasDualSource !== this._blendState.usesDualSourceBlending) {
+            this.clearVariants();
+        }
     }
 
     /**
@@ -650,6 +792,7 @@ class Material {
 
         this._blendState.copy(source._blendState);
         this._depthState.copy(source._depthState);
+        this._sceneTexturesWrite = source._sceneTexturesWrite;
 
         this.cull = source.cull;
         this.frontFace = source.frontFace;
@@ -695,10 +838,31 @@ class Material {
         }
     }
 
-    updateUniforms(device, scene) {
+    /** @private */
+    _clearVariantsIfDirty() {
         if (this._dirtyShader) {
             this.clearVariants();
             this._dirtyShader = false;
+        }
+    }
+
+    updateUniforms(device, scene) {
+        // Compatibility fallback for materials rendered without calling update().
+        this._clearVariantsIfDirty();
+    }
+
+    /**
+     * Prepares the material for rendering when it has been updated since the previous preparation.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Scene} scene - The scene.
+     * @ignore
+     */
+    prepareForRender(device, scene) {
+        const version = this._updateVersion;
+        if (this._preparedVersion !== version) {
+            this.updateUniforms(device, scene);
+            this._preparedVersion = version;
         }
     }
 
@@ -742,11 +906,11 @@ class Material {
         if (this._definesDirty || this._shaderChunks?.isDirty()) {
             this._definesDirty = false;
             this._shaderChunks?.resetDirty();
-
-            this.clearVariants();
+            this._dirtyShader = true;
         }
 
-        this.dirty = true;
+        this._clearVariantsIfDirty();
+        this._updateVersion++;
     }
 
     // Parameter management
@@ -926,7 +1090,7 @@ class Material {
                     meshInstance.material = defaultMaterial;
                 }
             } else {
-                Debug.warn('pc.Material: MeshInstance.mesh is null, default material cannot be assigned to the MeshInstance');
+                Debug.warn('Material: MeshInstance.mesh is null, default material cannot be assigned to the MeshInstance');
             }
         }
 

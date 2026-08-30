@@ -59,7 +59,8 @@ const _properties = [
     'penumbraSize',
     'penumbraFalloff',
     'shadowSamples',
-    'shadowBlockerSamples'
+    'shadowBlockerSamples',
+    'volumetricScattering'
 ];
 
 /**
@@ -73,14 +74,40 @@ const _properties = [
  * - `spot`: A local light that emits light similarly to an omni light but is bounded by a cone
  * centered on the owner entity's negative y-axis. Emulates flashlights, spotlights, etc.
  *
+ * Directional and spot lights are therefore aimed with the owner entity's rotation, and shine along
+ * its negative y-axis - so an unrotated light shines straight down. Note that
+ * {@link GraphNode#lookAt} orients an entity's negative z-axis, which aims a camera but not a
+ * light:
+ *
+ * ```javascript
+ * // an unrotated light shines straight down
+ * light.setEulerAngles(0, 0, 0);
+ *
+ * // tilted 45 degrees, it shines down and towards negative z
+ * light.setEulerAngles(45, 0, 0);
+ *
+ * // to aim it at a target, lookAt orients the negative z-axis and the extra rotation brings the
+ * // negative y-axis onto it
+ * light.lookAt(target.getPosition());
+ * light.rotateLocal(90, 0, 0);
+ *
+ * // to aim it along a world space direction, rotate the negative y-axis onto that direction.
+ * // Unlike lookAt, this is well defined even when the direction is straight up or down
+ * const dir = new Vec3(-0.5, -1, -0.3).normalize();
+ * light.setRotation(new Quat().setFromDirections(Vec3.DOWN, dir));
+ *
+ * // the direction a light currently shines in is the negative of its world space up vector
+ * const currentDir = light.up.clone().mulScalar(-1);
+ * ```
+ *
  * You should never need to use the LightComponent constructor directly. To add a LightComponent
  * to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('light', {
  *     type: 'omni',
- *     color: new pc.Color(1, 0, 0),
+ *     color: new Color(1, 0, 0),
  *     intensity: 2
  * });
  * ```
@@ -256,7 +283,7 @@ class LightComponent extends Component {
      * - `"spot"`: A local light that emits light similarly to an omni light but is bounded by a
      * cone centered on the owner entity's negative y-axis.
      *
-     * Defaults to `"directional"`.
+     * Defaults to `"directional"`. See {@link LightComponent} for how a light is aimed.
      *
      * @type {string}
      */
@@ -440,6 +467,27 @@ class LightComponent extends Component {
      */
     get shadowIntensity() {
         return this._light.shadowIntensity;
+    }
+
+    /**
+     * Sets a multiplier of the light's contribution to the volumetric fog, allowing individual
+     * lights to scatter more or less light than the others, or none at all when set to 0. Only
+     * used by omni and spot lights, when {@link CameraFrame} renders volumetric fog with local
+     * lights enabled. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set volumetricScattering(value) {
+        this._light.volumetricScattering = value;
+    }
+
+    /**
+     * Gets the multiplier of the light's contribution to the volumetric fog.
+     *
+     * @type {number}
+     */
+    get volumetricScattering() {
+        return this._light.volumetricScattering;
     }
 
     /**
@@ -1312,10 +1360,12 @@ class LightComponent extends Component {
         if (this.enabled && this.entity.enabled) {
             this.addLightToLayers();
         }
-        oldComp.off('add', this.onLayerAdded, this);
-        oldComp.off('remove', this.onLayerRemoved, this);
-        newComp.on('add', this.onLayerAdded, this);
-        newComp.on('remove', this.onLayerRemoved, this);
+
+        // store the new handles, so that onDisable can unsubscribe from the current composition
+        this._evtLayerAdded?.off();
+        this._evtLayerAdded = newComp.on('add', this.onLayerAdded, this);
+        this._evtLayerRemoved?.off();
+        this._evtLayerRemoved = newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {

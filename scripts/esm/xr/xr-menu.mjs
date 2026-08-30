@@ -80,9 +80,10 @@ const FINGER_JOINTS = [
  *         menuItems: [ ... ],
  *         alwaysVisible: true,
  *         followDistance: 0.6,
- *         followOffset: new pc.Vec2(0.25, -0.15)
+ *         followOffset: new Vec2(0.25, -0.15)
  *     }
  * });
+ * @category XR
  */
 class XrMenu extends Script {
     static scriptName = 'xrMenu';
@@ -431,8 +432,11 @@ class XrMenu extends Script {
         // Create menu container and UI
         this._createMenu();
 
-        // Hide menu initially
-        this._setMenuVisible(false);
+        // Hide the menu until an XR session shows it. This can't go through
+        // _setMenuVisible(false) — _menuVisible is already false, so it early-outs and leaves the
+        // container enabled at the element opacities _createButton assigned, which renders the
+        // menu at the world origin outside XR.
+        this._hideImmediate();
 
         // Listen for XR input sources
         this.app.xr.input.on('add', this._onInputSourceAdd, this);
@@ -473,10 +477,33 @@ class XrMenu extends Script {
     }
 
     _onXrEnd() {
+        // _setMenuVisible fires 'xr:menu:active' for listeners when the menu was open, but only
+        // requests the fade-out — which update() can no longer advance now that the session has
+        // ended. _hideImmediate finishes the job, otherwise the menu stays frozen in the world at
+        // its last headset-relative pose.
         this._setMenuVisible(false);
+        this._hideImmediate();
         this._inputSources.clear();
         this._activeInputSource = null;
         this._followInitialized = false;
+    }
+
+    /**
+     * Hides the menu at once, bypassing the opacity fade. Required whenever no XR session is
+     * running: the fade in {@link XrMenu#update} only advances while `xr.active` is true, so a hide
+     * requested outside a session (before the first one starts, or as one ends) would never
+     * complete and the menu would keep rendering in the world.
+     *
+     * @private
+     */
+    _hideImmediate() {
+        this._menuVisible = false;
+        this._currentOpacity = 0;
+        this._targetOpacity = 0;
+        this._updateMenuOpacity(0);
+        this._setHovered(null);
+        this._pressedButton = null;
+        if (this._menuContainer) this._menuContainer.enabled = false;
     }
 
     /**

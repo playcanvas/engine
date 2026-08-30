@@ -1,5 +1,5 @@
-import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE } from '../../scene/constants.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE, SCENETEXTURE_DEPTH } from '../../scene/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { FramePassColorGrab } from '../../scene/graphics/frame-pass-color-grab.js';
@@ -10,6 +10,7 @@ import { FramePassBloom } from './frame-pass-bloom.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { FramePassDof } from './frame-pass-dof.js';
+import { FramePassVolumetricFog } from './frame-pass-volumetric-fog.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
 import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
@@ -19,6 +20,7 @@ import { Color } from '../../core/math/color.js';
 
 /**
  * @import { CameraFrame } from './camera-frame.js'
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
 /**
@@ -59,15 +61,34 @@ class CameraFrameOptions {
 
     prepassEnabled = false;
 
+    // Whether the scene depth is rendered by the scene pass into an additional attachment of the
+    // scene render target, instead of, or in addition to, by the depth prepass. This is not a user
+    // setting - sanitizeOptions derives it from what needs the depth and what the device supports.
+    sceneTextureDepth = false;
+
     // DOF
     dofEnabled = false;
 
     dofNearBlur = false;
 
     dofHighQuality = true;
+
+    // Volumetric fog
+    volumetricFogEnabled = false;
 }
 
 const _defaultOptions = new CameraFrameOptions();
+
+// the formats the scene depth can be rendered to, in the order of preference
+const _sceneDepthFormats = [PIXELFORMAT_R32F, PIXELFORMAT_R16F];
+
+// the largest value a half float can store, and so the furthest the scene depth can reach when it falls
+// back to that format
+const _maxHalfFloat = 65504;
+
+// how far inside the far clip the scene depth is cleared to, as a fraction of it. Large enough to survive
+// being stored as a half float, which steps by around a thousandth of the value it holds.
+const _sceneDepthClearEpsilon = 1e-3;
 
 /**
  * Render pass implementation of a common camera frame rendering with integrated post-processing
@@ -95,6 +116,8 @@ class FramePassCameraFrame extends FramePass {
 
     dofPass;
 
+    volumetricFogPass;
+
     _renderTargetScale = 1;
 
     /**
@@ -117,6 +140,53 @@ class FramePassCameraFrame extends FramePass {
      */
     rt = null;
 
+    /**
+     * The names of the scene textures the scene pass renders alongside the scene color, in the order
+     * of the color attachments they are rendered to. The scene passes are given this array itself, so
+     * that assigning it to the camera as they render does not allocate.
+     *
+     * @type {string[]}
+     * @private
+     */
+    _sceneTextureNames = [];
+
+    /**
+     * The scene depth rendered by the scene pass as a scene texture, or null when the depth is not
+     * rendered this way. Owned by the scene render target it is attached to.
+     *
+     * @type {Texture|null}
+     * @private
+     */
+    sceneDepthTexture = null;
+
+    /**
+     * The color attachment index the scene depth is rendered to, or 0 when it is not rendered.
+     *
+     * @type {number}
+     * @private
+     */
+    sceneDepthSlot = 0;
+
+    /**
+     * A render target holding the scene color alone, aliasing the color attachment of the scene
+     * render target. The passes blending into the scene after it has been rendered use this instead of
+     * the scene render target, as they sample the scene textures, and a texture attached to the render
+     * target being rendered into cannot be sampled. Null when there are no scene textures.
+     *
+     * @type {RenderTarget|null}
+     * @private
+     */
+    rtSceneColor = null;
+
+    /**
+     * The clear value of the scene depth texture, set up each frame as it depends on the camera's far
+     * clip. The alpha is 1, so that what the gaussian splats blend into it stays a weighted average.
+     *
+     * @type {Color}
+     * @private
+     */
+    _sceneDepthClearValue = new Color(0, 0, 0, 1);
+
     constructor(app, cameraFrame, cameraComponent, options = {}) {
         Debug.assert(app);
         super(app.graphicsDevice);
@@ -136,6 +206,25 @@ class FramePassCameraFrame extends FramePass {
 
         this.sceneTexture = null;
         this.sceneTextureHalf = null;
+
+        if (this.sceneDepthTexture) {
+
+            // the texture itself is owned by the scene render target, destroyed below
+            this.sceneDepthTexture = null;
+            this.sceneDepthSlot = 0;
+            this._sceneTextureNames.length = 0;
+
+            const { shaderParams } = this.cameraComponent;
+            shaderParams.sceneDepthMapLinear = false;
+            shaderParams.sceneDepthMapPacked = false;
+        }
+
+        if (this.rtSceneColor) {
+
+            // only aliases the scene color texture, which the scene render target owns
+            this.rtSceneColor.destroy();
+            this.rtSceneColor = null;
+        }
 
         if (this.rt) {
             this.rt.destroyTextureBuffers();
@@ -164,17 +253,190 @@ class FramePassCameraFrame extends FramePass {
         this.afterPass = null;
         this.scenePassHalf = null;
         this.dofPass = null;
+        this.volumetricFogPass = null;
     }
 
     sanitizeOptions(options) {
         options = Object.assign({}, _defaultOptions, options);
 
-        // automatically enable prepass when required internally
-        if (options.taaEnabled || options.ssaoType !== SSAOTYPE_NONE || options.dofEnabled) {
-            options.prepassEnabled = true;
-        }
+        // depth consumed by the passes running after the scene pass. SSAO belongs here when the compose
+        // pass is what applies it, as it is then free to run after the scene - see collectPasses.
+        const postProcessDepth = options.taaEnabled || options.dofEnabled ||
+            options.volumetricFogEnabled || options.ssaoType === SSAOTYPE_COMBINE;
+
+        const inSceneDepth = this.needsInSceneDepth(options);
+        const splatDepth = this.app.scene.gsplat.sceneDepthWrite;
+        const deviceSupported = FramePassCameraFrame.isSceneTextureDepthSupported(this.device);
+        const unsupportedReason = this.sceneTexturesUnsupportedReason(options);
+
+        // The scene textures only exist once the scene pass has finished, so they can serve the
+        // post-processing passes alone. When nothing needs the depth earlier they replace the prepass
+        // outright, which is both cheaper - no additional geometry pass - and better, as the gaussian
+        // splats contribute to them.
+        //
+        // Two configurations make them worth their bandwidth only if the splats do contribute, which is
+        // what the scene setting asks for: when the prepass is rendered anyway, and when the depth would
+        // be stored at half float precision - the prepass stores it more precisely, either as R32F or
+        // losslessly packed, and the effects consuming it are sensitive to that.
+        const requiresSplatDepth = inSceneDepth || this.sceneDepthFormat !== PIXELFORMAT_R32F;
+
+        options.sceneTextureDepth = postProcessDepth && deviceSupported && !unsupportedReason &&
+            (!requiresSplatDepth || splatDepth);
+
+        options.prepassEnabled = inSceneDepth || (postProcessDepth && !options.sceneTextureDepth);
+
+        Debug.call(() => {
+
+            // the splats contribute only when the scene depth is rendered by the scene pass and they are
+            // set to write it. Note that the first alone is not enough - the scene textures can be
+            // rendered while the splats stay out of them.
+            const splatsContribute = options.sceneTextureDepth && splatDepth;
+            if (postProcessDepth && !splatsContribute && this.rendersGSplats()) {
+                const reason = !deviceSupported ?
+                    'this device cannot render the scene depth the splats contribute to - see CameraFrame.isSplatSceneDepthSupported' :
+                    unsupportedReason ??
+                    'Scene#gsplat.sceneDepthWrite is not set - setting it includes them, at the cost of an additional render target attachment';
+                Debug.warnOnce(`CameraFrame: the gaussian splats this camera renders do not contribute to the scene depth, and so the effects using it (the volumetric fog and the depth of field) are not bound by them: ${reason}.`);
+            }
+        });
 
         return options;
+    }
+
+    /**
+     * Whether the gaussian splat director has any splats for this camera. Reports this in a debug build
+     * only, and returns false otherwise, as the only use of it is to advise on the scene setting - the
+     * shape of the pipeline is a function of the settings alone, and never of the contents of the scene,
+     * so that it does not change as the splats are loaded or culled.
+     *
+     * @returns {boolean} True if the camera renders gaussian splats.
+     * @private
+     */
+    rendersGSplats() {
+        let renders = false;
+        Debug.call(() => {
+            const director = this.app.renderer.gsplatDirector;
+            const cameraData = director?.camerasMap.get(this.cameraComponent.camera);
+            renders = (cameraData?.layersMap.size ?? 0) > 0;
+        });
+        return renders;
+    }
+
+    /**
+     * Whether the depth is consumed no later than the scene pass - by the materials when the user asks
+     * for the scene depth map, and by SSAO applied during shading, whose texture the lit shaders sample
+     * and which therefore has to be generated before the scene renders. Only the prepass supplies that,
+     * as the scene textures do not exist until the scene pass has finished.
+     *
+     * @param {CameraFrameOptions} options - The options.
+     * @returns {boolean} True if the depth is needed no later than the scene pass.
+     * @private
+     */
+    needsInSceneDepth(options) {
+        return options.prepassEnabled || options.ssaoType === SSAOTYPE_LIGHTING;
+    }
+
+    /**
+     * Why this camera cannot render the scene textures, on top of what
+     * {@link FramePassCameraFrame.isSceneTextureDepthSupported} already rules out, or null when it can.
+     * Note that this is not reported on its own - the scene textures are not something the user asks
+     * for, so a camera which cannot use them simply renders the depth with the prepass instead. The
+     * reason is only used to explain why the gaussian splats do not contribute to the scene depth,
+     * which is visible in the result.
+     *
+     * @param {CameraFrameOptions} options - The options.
+     * @returns {string|null} The reason, or null when this camera can render the scene textures.
+     * @private
+     */
+    sceneTexturesUnsupportedReason(options) {
+
+        // the depth is blended into by the gaussian splats, and resolving it from a multi-sampled
+        // attachment would average the depths across a silhouette, giving a depth which unprojects to
+        // empty space
+        if (options.samples > 1) {
+            return 'multi-sampling is enabled on the CameraFrame, which the scene depth cannot be rendered with';
+        }
+
+        // a camera which does not clear the whole render target, or which is not the first one
+        // rendering to it, clears from inside the render pass, and that clear is not attachment aware
+        // - it would also clear the scene textures
+        if (!this.cameraComponent.camera.fullSizeClearRect) {
+            return 'this camera does not clear the whole render target, and the clear it uses instead would also clear the scene depth';
+        }
+
+        // the depth is stored in linear view space units, so the far clip has to fit in the format. Half
+        // float stops being able to represent it at all beyond 65504, and steps by tens of units well
+        // before that, so the effects consuming it need the far clip considerably lower still.
+        if (this.sceneDepthFormat === PIXELFORMAT_R16F && this.cameraComponent.camera.farClip > _maxHalfFloat) {
+            return `the far clip of this camera is too far for a half float scene depth - keep it below ${_maxHalfFloat}, and well below that for the depth to stay precise enough`;
+        }
+
+        // The depth prepass, which this camera needs as well, publishes its depth to the same uniform
+        // as the scene textures do, and so the two have to store it the same way - the shaders sampling
+        // it are generated once, from a single declaration of the encoding. Where a float texture cannot
+        // be rendered to, the prepass falls back to packing the depth into RGBA8, which the scene
+        // textures cannot do, as packed values cannot be blended into.
+        //
+        // This restriction could be lifted by giving the passes which consume the depth after the scene
+        // pass a uniform of their own, separate from the one the prepass publishes to. Each would then
+        // declare its own encoding and the two producers could coexist - and as the scene texture depth
+        // is always linear and unpacked, a single define would describe it. That would also remove the
+        // need to publish the scene textures from the last scene pass only, and to clear the uniform
+        // when no prepass runs, as the materials would no longer be able to sample them at all. Note
+        // that the choice of which uniform to sample would have to be made per consuming pass rather
+        // than per camera, as SSAO applied during shading runs before the scene pass and so has to keep
+        // reading the depth of the prepass.
+        if (this.needsInSceneDepth(options) && !this.device.textureFloatRenderable) {
+            return 'the depth prepass this camera also needs stores the depth packed into RGBA8 on this device, which the scene depth cannot be stored as';
+        }
+
+        return null;
+    }
+
+    /**
+     * The format of the scene depth texture, or undefined when the device supports no floating point
+     * format which can be both rendered and blended into.
+     *
+     * @type {number|undefined}
+     * @private
+     */
+    get sceneDepthFormat() {
+        return FramePassCameraFrame.getSceneDepthFormat(this.device);
+    }
+
+    /**
+     * The format the scene depth is rendered to on the given device, or undefined when it supports no
+     * suitable one. Static, so that the support for it can be tested before a camera frame exists.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {number|undefined} The format, or undefined when there is none.
+     * @ignore
+     */
+    static getSceneDepthFormat(device) {
+
+        // full precision is preferred, as the depth is stored in linear view space units and half float
+        // steps by a whole unit at a far clip of a thousand. Blending is required, as that is how the
+        // gaussian splats accumulate their weighted average, and filtering is not - the depth is point
+        // sampled.
+        return device.getRenderableHdrFormat(_sceneDepthFormats, false, 1, true);
+    }
+
+    /**
+     * Whether the given device can render the scene textures at all. A particular camera can still be
+     * set up in a way which prevents it - see
+     * {@link FramePassCameraFrame#sceneTexturesUnsupportedReason}.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {boolean} True if the device can render the scene textures.
+     * @ignore
+     */
+    static isSceneTextureDepthSupported(device) {
+
+        // the materials which do not write the scene textures need the writes to their attachments
+        // masked off individually, which is not expressible without independent blending - their draws
+        // would be invalid
+        return device.supportsIndependentBlending &&
+            FramePassCameraFrame.getSceneDepthFormat(device) !== undefined;
     }
 
     set renderTargetScale(value) {
@@ -205,10 +467,12 @@ class FramePassCameraFrame extends FramePass {
             options.stencil !== currentOptions.stencil ||
             options.bloomEnabled !== currentOptions.bloomEnabled ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
+            options.sceneTextureDepth !== currentOptions.sceneTextureDepth ||
             options.sceneColorMap !== currentOptions.sceneColorMap ||
             options.dofEnabled !== currentOptions.dofEnabled ||
             options.dofNearBlur !== currentOptions.dofNearBlur ||
             options.dofHighQuality !== currentOptions.dofHighQuality ||
+            options.volumetricFogEnabled !== currentOptions.volumetricFogEnabled ||
             arraysNotEqual(options.formats, currentOptions.formats);
     }
 
@@ -232,7 +496,7 @@ class FramePassCameraFrame extends FramePass {
         }
     }
 
-    createRenderTarget(name, depth, stencil, samples, flipY) {
+    createRenderTarget(name, depth, stencil, samples, sceneTextures) {
 
         const texture = new Texture(this.device, {
             name: name,
@@ -247,11 +511,10 @@ class FramePassCameraFrame extends FramePass {
         });
 
         return new RenderTarget({
-            colorBuffer: texture,
+            colorBuffers: sceneTextures?.length ? [texture, ...sceneTextures] : [texture],
             depth: depth,
             stencil: stencil,
-            samples: samples,
-            flipY: flipY
+            samples: samples
         });
     }
 
@@ -272,14 +535,48 @@ class FramePassCameraFrame extends FramePass {
         // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
         cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
 
-        // create a render target to render the scene into
-        const flipY = !!targetRenderTarget?.flipY; // flipY is inherited from the target renderTarget
-        this.rt = this.createRenderTarget('SceneColor', true, options.stencil, options.samples, flipY);
+        // The scene textures are rendered by the scene pass into the color attachments after the scene
+        // color, each enabled one taking the next. This is the only place their layout is decided -
+        // the names are handed to the scene passes, which give them to the shaders, and the slot each
+        // one lands on follows from the order.
+        const sceneTextures = [];
+        const names = this._sceneTextureNames;
+        names.length = 0;
+        if (options.sceneTextureDepth) {
+            this.sceneDepthTexture = Texture.createDataTexture2D(device, 'SceneTextureDepth', 4, 4, this.sceneDepthFormat);
+            sceneTextures.push(this.sceneDepthTexture);
+            names.push(SCENETEXTURE_DEPTH);
+            this.sceneDepthSlot = sceneTextures.length;
+        }
+
+        // create a render target to render the scene into. This uses the API-native orientation
+        // regardless of the orientation of the target render target - the compose pass flips its
+        // sampling when needed to store the requested orientation in the target render target.
+        this.rt = this.createRenderTarget('SceneColor', true, options.stencil, options.samples, sceneTextures);
         this.sceneTexture = this.rt.colorBuffer;
+
+        if (this.sceneDepthTexture) {
+
+            // declare how the depth is stored, for the shaders which sample it. Note that the prepass
+            // declares the same when both are rendered, as the scene textures are only used on a
+            // device which can render the depth to a float texture.
+            const { shaderParams } = cameraComponent;
+            shaderParams.sceneDepthMapLinear = true;
+            shaderParams.sceneDepthMapPacked = false;
+
+            // the passes blending into the scene color after the scene pass sample the scene depth, so
+            // they cannot render to the render target it is attached to
+            this.rtSceneColor = new RenderTarget({
+                name: 'SceneColorOnly',
+                colorBuffers: [this.sceneTexture],
+                depth: false,
+                samples: 1
+            });
+        }
 
         // when half size scene color buffer is used
         if (this._sceneHalfEnabled) {
-            this.rtHalf = this.createRenderTarget('SceneColorHalf', false, false, 1, flipY);
+            this.rtHalf = this.createRenderTarget('SceneColorHalf', false, false, 1);
             this.sceneTextureHalf = this.rtHalf.colorBuffer;
         }
 
@@ -336,8 +633,20 @@ class FramePassCameraFrame extends FramePass {
 
     collectPasses() {
 
+        // SSAO applied during shading has to be generated before the scene pass, as the lit shaders
+        // sample its texture as they render. Applied by the compose pass instead, it is free to run
+        // after the scene, where the depth it needs can come from the scene textures - which include
+        // the gaussian splats and require no prepass.
+        const ssaoBeforeScene = this.options.ssaoType === SSAOTYPE_LIGHTING;
+
         // use these prepared render passes in the order they should be executed
-        return [this.prePass, this.ssaoPass, this.scenePass, this.colorGrabPass, this.scenePassTransparent, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass];
+        return [
+            this.prePass,
+            ssaoBeforeScene ? this.ssaoPass : null,
+            this.scenePass, this.colorGrabPass, this.scenePassTransparent,
+            ssaoBeforeScene ? null : this.ssaoPass,
+            this.volumetricFogPass, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass
+        ];
     }
 
     createPasses(options) {
@@ -350,6 +659,9 @@ class FramePassCameraFrame extends FramePass {
 
         // scene including color grab pass
         const scenePassesInfo = this.setupScenePass(options);
+
+        // volumetric fog, blended into the scene render target before TAA
+        this.setupVolumetricFogPass(options);
 
         // TAA
         const sceneTextureWithTaa = this.setupTaaPass(options);
@@ -382,6 +694,11 @@ class FramePassCameraFrame extends FramePass {
         // forward passes render in HDR
         pass.gammaCorrection = GAMMA_NONE;
         pass.toneMapping = TONEMAP_NONE;
+
+        // only the passes rendering to the scene render target write the scene textures, so that the
+        // camera's other passes, for example the one rendering the UI to the output render target, do
+        // not output them
+        pass.sceneTextures = this._sceneTextureNames;
     }
 
     /**
@@ -479,6 +796,19 @@ class FramePassCameraFrame extends FramePass {
             }
         }
 
+        // The scene textures become available once the last pass rendering to the scene render target
+        // has finished, and only that pass publishes them. Publishing them from an earlier one would
+        // expose an attachment of the render target the remaining passes still render into, which the
+        // materials they render could then sample - reading a texture attached to the render target
+        // being rendered into is not allowed.
+        (this.scenePassTransparent ?? this.scenePass).publishSceneTextures = true;
+
+        // Without a prepass nothing has published the scene depth by the time the scene renders, so the
+        // first pass clears the uniform it is published to. This has to happen as the pass renders rather
+        // than when the frame is set up, as every camera's frameUpdate runs before any of them renders,
+        // and so another camera could publish its own depth in between.
+        this.scenePass.clearSceneTextures = options.sceneTextureDepth && !options.prepassEnabled;
+
         return ret;
     }
 
@@ -521,6 +851,20 @@ class FramePassCameraFrame extends FramePass {
         }
     }
 
+    setupVolumetricFogPass(options) {
+        if (options.volumetricFogEnabled) {
+
+            // the scene pass provides the light clusters used by the local lights of the fog. The fog
+            // samples the scene depth, and so blends into the alias of the scene color rather than the
+            // scene render target, which the depth is attached to.
+            this.volumetricFogPass = new FramePassVolumetricFog(this.device, this.cameraComponent,
+                this.sceneTexture, this.rtSceneColor ?? this.rt, this.scenePass);
+
+            // when TAA is used, the fog noise pattern changes each frame and TAA resolves it
+            this.volumetricFogPass.temporalDither = options.taaEnabled;
+        }
+    }
+
     setupTaaPass(options) {
         let textureWithTaa = this.sceneTexture;
         if (options.taaEnabled) {
@@ -534,7 +878,7 @@ class FramePassCameraFrame extends FramePass {
     setupComposePass(options) {
 
         // create a compose pass, which combines the results of the scene and other passes
-        this.composePass = new RenderPassCompose(this.device);
+        this.composePass = new RenderPassCompose(this.device, this.cameraComponent);
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.hdrScene = this.hdrFormat !== PIXELFORMAT_RGBA8;
         this.composePass.taaEnabled = options.taaEnabled;
@@ -574,6 +918,34 @@ class FramePassCameraFrame extends FramePass {
         }
 
         super.frameUpdate();
+
+        // Whether the depth debug mode has a depth to display. Either producer publishes to the same
+        // uniform, and both have run by the time the composition does. The mode does not request the
+        // depth - a debug view never changes what is rendered - so with neither producer it shows black.
+        const { options, composePass } = this;
+        const sceneDepthAvailable = options.sceneTextureDepth || options.prepassEnabled;
+        composePass.sceneDepthAvailable = sceneDepthAvailable;
+
+        Debug.call(() => {
+            if (composePass.debug === 'depth' && !sceneDepthAvailable) {
+                Debug.warnOnce('CameraFrame.debug is set to \'depth\', but nothing this camera renders produces the scene depth, so the debug view is black. Enable an effect which consumes the depth (the depth of field, the volumetric fog, TAA, or SSAO in combine mode), or request it with CameraFrame.rendering.sceneDepthMap.');
+            }
+        });
+
+        if (this.sceneDepthTexture) {
+
+            // the alias of the scene color is not resized by a pass of its own, as it shares its
+            // texture with the scene render target, which the scene pass resizes
+            this.rtSceneColor.resize(this.rt.width, this.rt.height);
+
+            // pixels no geometry covers read as the far clip, nudged just inside it so that a consumer
+            // testing for the far plane is not caught by rounding. Only the first pass rendering to the
+            // scene render target clears it - the one rendering the transparent layers after the grab
+            // pass blends into what the first one accumulated.
+            const clearValue = this._sceneDepthClearValue;
+            clearValue.r = this.cameraComponent.camera.farClip * (1 - _sceneDepthClearEpsilon);
+            this.scenePass.setClearColor(clearValue, this.sceneDepthSlot);
+        }
 
         // scene texture is either output of taa pass or the scene render target
         const sceneTexture = this.taaPass?.update() ?? this.rt.colorBuffer;

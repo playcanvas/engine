@@ -34,19 +34,28 @@ jobs:
     env:
       ENGINE_BUILD_REVISION: ci-build-size
     steps:
-      - name: Check out base
-        uses: actions/checkout@v7.0.0
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          path: base
-
       - name: Check out PR
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7.0.1
         with:
           path: pr
+          fetch-depth: 2 # need the merge commit's parents, see below
+
+      - name: Resolve base commit
+        id: base
+        # First parent of the pull_request merge ref is the base commit this PR was actually merged
+        # with. Do not use pull_request.base.sha - that is frozen when the PR is opened and is not
+        # advanced on synchronize, so once the base branch moves, everything merged into it since
+        # shows up as this PR's own size change.
+        run: echo "sha=$(git -C pr rev-parse HEAD^1)" >> "$GITHUB_OUTPUT"
+
+      - name: Check out base
+        uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ steps.base.outputs.sha }}
+          path: base
 
       - name: Setup Node.js 24.x
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24.x
 

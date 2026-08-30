@@ -22,10 +22,13 @@ uniform float font_pxrange;      // number of texels of SDF spread (inside <-> o
 
 vec4 applyMsdf(vec4 color) {
 
-    // Convert to linear space before processing
+    // The incoming color is in gamma space, premultiplied by alpha. Un-premultiply before the
+    // gamma decode (the decode is only valid on straight color), then re-premultiply so the
+    // compositing below stays premultiplied.
     // TODO: ideally this would receive the color in linear space, but that would require larger changes
     // on the engine side, with the way premultiplied alpha is handled as well.
-    color.rgb = gammaCorrectInput(color.rgb);
+    float srcAlpha = max(color.a, 0.0001);
+    color.rgb = gammaCorrectInput(color.rgb / srcAlpha) * srcAlpha;
 
     // sample the field
     vec3 tsample = texture2D(texture_msdfMap, vUv0).rgb;
@@ -41,10 +44,12 @@ vec4 applyMsdf(vec4 color) {
 
     // Width of the distance-field transition in screen pixels, from the uv magnification (both
     // axes) and the atlas spread. Stable under motion and minification, unlike fwidth(sigDist)
-    // whose noise on undersampled glyphs makes small text shimmer. Floored at 1px so minified
-    // text keeps a soft ~1px edge rather than a razor one.
+    // whose noise on undersampled glyphs makes small text shimmer. Floored at 2.5 so the
+    // minified coverage ramp spans at most 0.4 of the field's range ([edge - 0.2, edge + 0.2]):
+    // a lower floor lets the ramp (and its outline/shadow-shifted copies) reach the field's far
+    // tail, which washes translucent outline across the whole glyph quad and hazes distant text.
     vec2 unitRange = vec2(font_pxrange) / vec2(textureSize(texture_msdfMap, 0));
-    float screenPxRange = max(0.5 * dot(unitRange, 1.0 / max(fwidth(vUv0), vec2(1e-6))), 1.0);
+    float screenPxRange = max(0.5 * dot(unitRange, 1.0 / max(fwidth(vUv0), vec2(1e-6))), 2.5);
 
     float inside = clamp(screenPxRange * (sigDist - edge) + 0.5, 0.0, 1.0);
     float outline = clamp(screenPxRange * (sigDist + outline_thickness - edge) + 0.5, 0.0, 1.0);
@@ -56,8 +61,10 @@ vec4 applyMsdf(vec4 color) {
     vec4 scolor = (shadow > outline) ? shadow * vec4(shadow_color.a * shadow_color.rgb, shadow_color.a) : tcolor;
     tcolor = mix(scolor, tcolor, outline);
 
-    // Convert back to gamma space before returning
-    tcolor.rgb = gammaCorrectOutput(tcolor.rgb);
+    // Convert back to gamma space: encode the straight (un-premultiplied) color and re-premultiply.
+    // Encoding the premultiplied product would overshoot at partial coverage (gamma(c * a) > gamma(c) * a),
+    // drawing a bright halo around glyphs under premultiplied-alpha blending (#9122).
+    tcolor.rgb = gammaCorrectOutput(tcolor.rgb / max(tcolor.a, 0.0001)) * tcolor.a;
     
     return tcolor;
 }

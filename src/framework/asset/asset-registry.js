@@ -252,7 +252,7 @@ class AssetRegistry extends EventHandler {
      *
      * @param {Asset} asset - The asset to add.
      * @example
-     * const asset = new pc.Asset("My Asset", "texture", {
+     * const asset = new Asset("My Asset", "texture", {
      *     url: "../path/to/image.jpg"
      * });
      * app.assets.add(asset);
@@ -337,6 +337,39 @@ class AssetRegistry extends EventHandler {
         }
 
         return true;
+    }
+
+    /**
+     * Destroys the registry, releasing all assets held by it. Called by {@link AppBase#destroy}.
+     * Note that this does not destroy the resources of the assets - {@link Asset#unload} needs to
+     * be called for each asset before the registry is destroyed.
+     *
+     * @ignore
+     */
+    destroy() {
+        for (const asset of this._assets) {
+            asset.off('name', this._onNameChange, this);
+            asset.tags.off('add', this._onTagAdd, this);
+            asset.tags.off('remove', this._onTagRemove, this);
+
+            // clear the back-reference, so that an asset which outlives the application does not
+            // keep the registry - and through it all other assets - alive. An asset added to
+            // another registry since points at that one instead, which cannot retain this
+            // registry, so it is left alone.
+            if (asset.registry === this) {
+                asset.registry = null;
+            }
+        }
+
+        this._assets.clear();
+        this._idToAsset.clear();
+        this._urlToAsset.clear();
+        this._nameToAsset.clear();
+
+        this._tags = null;
+        this.bundles = null;
+
+        this.off();
     }
 
     /**

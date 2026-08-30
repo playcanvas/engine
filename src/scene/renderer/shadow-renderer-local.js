@@ -90,9 +90,17 @@ class ShadowRendererLocal {
                 }
             }
 
-            // cull shadow casters
             shadowCam.updateFrustum();
-            this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
+
+            // cull shadow casters - a spot light has a single face and is culled against its
+            // frustum, an omni light is culled against all six faces in a single pass below
+            if (type === LIGHTTYPE_SPOT) {
+                this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
+            }
+        }
+
+        if (type === LIGHTTYPE_OMNI) {
+            this.shadowRenderer.cullShadowCastersOmni(comp, light, casters);
         }
     }
 

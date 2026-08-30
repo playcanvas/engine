@@ -34,7 +34,7 @@ const _dynamicBindGroup = new DynamicBindGroup();
  * Example:
  *
  * ```javascript
- * const shader = pc.ShaderUtils.createShader(app.graphicsDevice, {
+ * const shader = ShaderUtils.createShader(app.graphicsDevice, {
  *     uniqueName: 'MyShader',
  *     attributes: { aPosition: SEMANTIC_POSITION },
  *     vertexGLSL: '// vertex shader code',

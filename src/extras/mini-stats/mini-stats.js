@@ -85,7 +85,7 @@ class MiniStats {
      * @param {MiniStatsOptions} [options] - Options for the MiniStats instance.
      * @example
      * // create a new MiniStats instance using default options
-     * const miniStats = new pc.MiniStats(app);
+     * const miniStats = new MiniStats(app);
      */
     constructor(app, options = MiniStats.getDefaultOptions()) {
         const device = app.graphicsDevice;
@@ -244,10 +244,10 @@ class MiniStats {
      * @returns {object} The default options for MiniStats.
      * @example
      * // default options without extra stats
-     * const options = pc.MiniStats.getDefaultOptions();
+     * const options = MiniStats.getDefaultOptions();
      * @example
      * // include gsplat stats
-     * const options = pc.MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']);
+     * const options = MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']);
      */
     static getDefaultOptions(extraStats = []) {
         const options = {

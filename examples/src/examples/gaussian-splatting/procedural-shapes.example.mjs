@@ -28,10 +28,10 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatImage } from 'playcanvas/scripts/esm/gsplat/gsplat-image.mjs';
-import { GsplatLines } from 'playcanvas/scripts/esm/gsplat/gsplat-lines.mjs';
-import { GsplatText } from 'playcanvas/scripts/esm/gsplat/gsplat-text.mjs';
-import { GsplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
+import { GSplatImage } from 'playcanvas/scripts/esm/gsplat/gsplat-image.mjs';
+import { GSplatLines } from 'playcanvas/scripts/esm/gsplat/gsplat-lines.mjs';
+import { GSplatText } from 'playcanvas/scripts/esm/gsplat/gsplat-text.mjs';
+import { GSplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -115,7 +115,7 @@ app.root.addChild(bicycle);
 
 // Add a reveal effect to the scene using box shader effect
 bicycle.addComponent('script');
-const revealScript = bicycle.script.create(GsplatBoxShaderEffect);
+const revealScript = bicycle.script.create(GSplatBoxShaderEffect);
 revealScript.aabbMin.set(-2, -0.5, -2);
 revealScript.aabbMax.set(2, 1.5, 2);
 revealScript.direction.set(1, 1, 0);
@@ -127,19 +127,19 @@ revealScript.baseTint.set(1, 1, 1);
 revealScript.edgeTint.set(5, 2, 0); // orange/gold edge
 revealScript.tint.set(1, 1, 1);
 
-// Create ground entity with GsplatImage script
+// Create ground entity with GSplatImage script
 const ground = new Entity('Ground');
 ground.addComponent('script');
-const groundImage = ground.script.create(GsplatImage);
+const groundImage = ground.script.create(GSplatImage);
 groundImage.imageAsset = assets.groundTexture;
 ground.setLocalPosition(0, -0.05, 0);
 ground.setLocalScale(3, 3, 3);
 app.root.addChild(ground);
 
-// Create gear wall entity with GsplatImage script (behind the bike)
+// Create gear wall entity with GSplatImage script (behind the bike)
 const gearWall = new Entity('GearWall');
 gearWall.addComponent('script');
-const gearImage = gearWall.script.create(GsplatImage);
+const gearImage = gearWall.script.create(GSplatImage);
 gearImage.imageAsset = assets.gearTexture;
 gearWall.setLocalPosition(1, 0.5, 0);
 gearWall.setLocalEulerAngles(-90, -90, 0);
@@ -237,7 +237,7 @@ const textEntities = [];
 const createTextLabel = (text, x, y, z, rotX, rotY, rotZ) => {
     const textEntity = new Entity(`Text-${text}`);
     textEntity.addComponent('script');
-    const textScript = textEntity.script.create(GsplatText);
+    const textScript = textEntity.script.create(GSplatText);
     textScript.text = text;
     textScript.fontSize = 48;
     textScript.fillStyle = '#00e5ff'; // Cyan to match arrows
@@ -256,7 +256,7 @@ const createTextLabel = (text, x, y, z, rotX, rotY, rotZ) => {
 const createLinesEntity = () => {
     linesEntity = new Entity('Lines');
     linesEntity.addComponent('script');
-    const lines = linesEntity.script.create(GsplatLines);
+    const lines = linesEntity.script.create(GSplatLines);
     app.root.addChild(linesEntity);
 
     // Add all primitives

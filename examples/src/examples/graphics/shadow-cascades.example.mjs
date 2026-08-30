@@ -175,6 +175,7 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create a directional light casting cascaded shadows
+const { everyFrame, ...lightSettings } = data.get('settings.light');
 const dirLight = new Entity('Cascaded Light');
 dirLight.addComponent('light', {
     ...{
@@ -188,13 +189,13 @@ dirLight.addComponent('light', {
         castShadows: true,
         shadowDistance: 1000
     },
-    ...data.get('settings.light')
+    ...lightSettings
 });
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(45, 350, 20);
 
 // Update mode of cascades
-let updateEveryFrame = true;
+let updateEveryFrame = everyFrame;
 
 // Handle HUD changes - update properties on the light
 data.on('*:set', (/** @type {string} */ path, value) => {

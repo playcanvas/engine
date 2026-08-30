@@ -66,9 +66,9 @@ class ComponentSystem extends EventHandler {
      * @param {object} [data] - The source data with which to create the component.
      * @returns {Component} Returns a Component of type defined by the component system.
      * @example
-     * const entity = new pc.Entity(app);
+     * const entity = new Entity(app);
      * app.systems.model.addComponent(entity, { type: 'box' });
-     * // entity.model is now set to a pc.ModelComponent
+     * // entity.model is now set to a ModelComponent
      * @ignore
      */
     addComponent(entity, data = {}) {

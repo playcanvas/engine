@@ -1,6 +1,11 @@
 // includes and functionality of the front end shader, generates the input to the lit shader.
 export default /* wgsl */`
 
+    // parallax - included before opacity, as it generates the uv offset applied to all other maps
+    #if defined(FORWARD_PASS) && defined(STD_HEIGHT_MAP)
+        #include "parallaxPS"
+    #endif
+
     // all passes handle opacity
     #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
         #include "opacityPS"
@@ -17,11 +22,6 @@ export default /* wgsl */`
 
     #ifdef FORWARD_PASS // ----------------
 
-        // parallax
-        #ifdef STD_HEIGHT_MAP
-            #include "parallaxPS"
-        #endif
-
         // diffuse
         #include  "diffusePS"
 
@@ -34,6 +34,11 @@ export default /* wgsl */`
         #ifdef LIT_REFRACTION
             #include "transmissionPS"
             #include "thicknessPS"
+
+            // ior, unless it is included by the metalness path below
+            #ifndef LIT_METALNESS
+                #include "iorPS"
+            #endif
         #endif
 
         // iridescence
@@ -42,8 +47,8 @@ export default /* wgsl */`
             #include "iridescenceThicknessPS"
         #endif
 
-        // specularity & glossiness
-        #ifdef LIT_SPECULAR_OR_REFLECTION
+        // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+        #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
 
             // sheen
             #ifdef LIT_SHEEN
@@ -103,6 +108,11 @@ export default /* wgsl */`
 
     fn evaluateFrontend() {
 
+        // parallax - must run first, as it generates the uv offset used to sample all other maps
+        #if defined(FORWARD_PASS) && defined(STD_HEIGHT_MAP)
+            getParallax();
+        #endif
+
         // all passes handle opacity
         #if LIT_BLEND_TYPE != NONE || defined(LIT_ALPHA_TEST) || defined(LIT_ALPHA_TO_COVERAGE) || STD_OPACITY_DITHER != NONE
             getOpacity();
@@ -119,11 +129,6 @@ export default /* wgsl */`
         #endif
 
         #ifdef FORWARD_PASS // ----------------
-
-            // parallax
-            #ifdef STD_HEIGHT_MAP
-                getParallax();
-            #endif
 
             // diffuse
             getAlbedo();
@@ -143,6 +148,12 @@ export default /* wgsl */`
                 getThickness();
                 litArgs_thickness = dThickness;
 
+                // ior, unless it is handled by the metalness path below
+                #ifndef LIT_METALNESS
+                    getIor();
+                    litArgs_ior = dIor;
+                #endif
+
                 #ifdef LIT_DISPERSION
                     litArgs_dispersion = uniform.material_dispersion;
                 #endif
@@ -156,8 +167,8 @@ export default /* wgsl */`
                 litArgs_iridescence_thickness = dIridescenceThickness;
             #endif
 
-            // specularity & glossiness
-            #ifdef LIT_SPECULAR_OR_REFLECTION
+            // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+            #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
 
                 // sheen
                 #ifdef LIT_SHEEN

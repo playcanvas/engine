@@ -19,4 +19,4 @@ zstd
 ZSTD (Zstandard) decompressor, used by the SPZ gaussian splat parser. The wasm binary is the
 single-file zstd decoder (zstddeclib) from https://github.com/facebook/zstd (BSD-3-Clause),
 compiled to WebAssembly by https://github.com/donmccurdy/zstddec (MIT). The glue script
-(zstd.wasm.js) is a hand-written wrapper conforming to the pc.WasmModule contract.
+(zstd.wasm.js) is a hand-written wrapper conforming to the WasmModule contract.

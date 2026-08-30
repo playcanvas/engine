@@ -2,22 +2,25 @@ import { now } from '../../../core/time.js';
 import { ObjectPool } from '../../../core/object-pool.js';
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
+import { AmmoPhysicsWorld } from '../../physics/ammo/ammo-physics-world.js';
 import { ComponentSystem } from '../system.js';
-import { BODYFLAG_NORESPONSE_OBJECT } from './constants.js';
+import {
+    BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC,
+    BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
+} from './constants.js';
 import { RigidBodyComponent } from './component.js';
 import { ContactPoint } from './contact-point.js';
 import { ContactResult } from './contact-result.js';
-import { RaycastResult } from './raycast-result.js';
 import { SingleContactResult } from './single-contact-result.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { CollisionComponent } from '../collision/component.js'
  * @import { Entity } from '../../entity.js'
+ * @import { PhysicsContactPair, PhysicsWorld } from '../../physics/physics-world.js'
+ * @import { RaycastResult } from './raycast-result.js'
  * @import { Trigger } from '../collision/trigger.js'
  */
-
-let ammoRayStart, ammoRayEnd;
 
 const _properties = [
     'mass',
@@ -74,15 +77,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @example
      * // Set the gravity in the physics world to simulate a planet with low gravity
-     * app.systems.rigidbody.gravity = new pc.Vec3(0, -3.7, 0);
+     * app.systems.rigidbody.gravity = new Vec3(0, -3.7, 0);
      */
     gravity = new Vec3(0, -9.81, 0);
 
     /**
-     * @type {Float32Array}
+     * @type {PhysicsWorld|null}
      * @private
      */
-    _gravityFloat32 = new Float32Array(3);
+    _world = null;
 
     /**
      * @type {RigidBodyComponent[]}
@@ -138,35 +141,71 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @ignore
      */
     onLibraryLoaded() {
-        // Create the Ammo physics world
-        if (typeof Ammo !== 'undefined') {
-            this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
-            this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
-            this.overlappingPairCache = new Ammo.btDbvtBroadphase();
-            this.solver = new Ammo.btSequentialImpulseConstraintSolver();
-            this.dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(this.dispatcher, this.overlappingPairCache, this.solver, this.collisionConfiguration);
-
-            if (this.dynamicsWorld.setInternalTickCallback) {
-                const checkForCollisionsPointer = Ammo.addFunction(this._checkForCollisions.bind(this), 'vif');
-                this.dynamicsWorld.setInternalTickCallback(checkForCollisionsPointer);
-            } else {
-                Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
-            }
-
-            // Lazily create temp vars
-            ammoRayStart = new Ammo.btVector3();
-            ammoRayEnd = new Ammo.btVector3();
-            RigidBodyComponent.onLibraryLoaded();
-
-            this.contactPointPool = new ObjectPool(ContactPoint, 1);
-            this.contactResultPool = new ObjectPool(ContactResult, 1);
-            this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
-
-            this.app.systems.on('update', this.onUpdate, this);
-        } else {
+        if (!this._world && typeof Ammo !== 'undefined') {
+            this.setPhysicsWorld(new AmmoPhysicsWorld({ contactListener: this }));
+        } else if (!this._world) {
             // Unbind the update function if we haven't loaded Ammo by now
             this.app.systems.off('update', this.onUpdate, this);
         }
+    }
+
+    /**
+     * Installs a physics backend. Used internally for Ammo auto-detection and by tests to
+     * inject a NullPhysicsWorld. A backend can be installed at most once.
+     *
+     * @param {PhysicsWorld} world - The physics backend.
+     * @ignore
+     */
+    setPhysicsWorld(world) {
+        Debug.assert(!this._world, 'RigidBodyComponentSystem#setPhysicsWorld: a physics world is already installed.');
+        this._world = world;
+
+        this.contactPointPool = new ObjectPool(ContactPoint, 1);
+        this.contactResultPool = new ObjectPool(ContactResult, 1);
+        this.singleContactResultPool = new ObjectPool(SingleContactResult, 1);
+
+        this.app.systems.on('update', this.onUpdate, this);
+    }
+
+    /**
+     * The installed physics backend, or null when no physics library has loaded.
+     *
+     * @type {PhysicsWorld|null}
+     * @ignore
+     */
+    get physicsWorld() {
+        return this._world;
+    }
+
+    /**
+     * The native physics world - btDiscreteDynamicsWorld when the Ammo backend is active,
+     * null otherwise.
+     *
+     * @type {*}
+     * @ignore
+     */
+    get dynamicsWorld() {
+        return this._world?.nativeWorld ?? null;
+    }
+
+    /** @ignore */
+    get collisionConfiguration() {
+        return this._world?.collisionConfiguration ?? null;
+    }
+
+    /** @ignore */
+    get dispatcher() {
+        return this._world?.dispatcher ?? null;
+    }
+
+    /** @ignore */
+    get overlappingPairCache() {
+        return this._world?.overlappingPairCache ?? null;
+    }
+
+    /** @ignore */
+    get solver() {
+        return this._world?.solver ?? null;
     }
 
     initializeComponentData(component, data) {
@@ -203,46 +242,135 @@ class RigidBodyComponentSystem extends ComponentSystem {
             component.enabled = false;
         }
 
-        if (component.body) {
-            this.destroyBody(component.body);
+        if (component._body) {
+            this._world.destroyBody(component._body);
             component.body = null;
         }
     }
 
     addBody(body, group, mask) {
-        if (group !== undefined && mask !== undefined) {
-            this.dynamicsWorld.addRigidBody(body, group, mask);
-        } else {
-            this.dynamicsWorld.addRigidBody(body);
-        }
+        this._world.addBody(body, group, mask);
     }
 
     removeBody(body) {
-        this.dynamicsWorld.removeRigidBody(body);
+        this._world.removeBody(body);
     }
 
-    createBody(mass, shape, transform) {
-        const localInertia = new Ammo.btVector3(0, 0, 0);
-        if (mass !== 0) {
-            shape.calculateLocalInertia(mass, localInertia);
+    /**
+     * Adds a component's body to the simulation and registers the component with the update
+     * lists for its body type. Fires 'simulationenabled' on the component. No-op unless the
+     * component has a body, an enabled collision component and is not already simulating.
+     *
+     * @param {RigidBodyComponent} component - The component to add to the simulation.
+     * @ignore
+     */
+    enableSimulation(component) {
+        const entity = component.entity;
+        if (entity.collision && entity.collision.enabled && !component._simulationEnabled) {
+            const body = component._body;
+            if (body) {
+                // addBody also applies the backend's per-type activation policy
+                this.addBody(body, component._group, component._mask);
+
+                switch (component._type) {
+                    case BODYTYPE_DYNAMIC:
+                        this._dynamic.push(component);
+                        component.syncEntityToBody();
+                        break;
+                    case BODYTYPE_KINEMATIC:
+                        this._kinematic.push(component);
+                        break;
+                    case BODYTYPE_STATIC:
+                        component.syncEntityToBody();
+                        break;
+                }
+
+                if (entity.collision.type === 'compound') {
+                    this._compounds.push(entity.collision);
+                }
+
+                body.activate();
+
+                component._simulationEnabled = true;
+
+                // internal event consumed by the joint system to (re)create constraints
+                // against bodies that are present in the dynamics world
+                component.fire('simulationenabled');
+            }
         }
-
-        const motionState = new Ammo.btDefaultMotionState(transform);
-        const bodyInfo = new Ammo.btRigidBodyConstructionInfo(mass, motionState, shape, localInertia);
-        const body = new Ammo.btRigidBody(bodyInfo);
-        Ammo.destroy(bodyInfo);
-        Ammo.destroy(localInertia);
-
-        return body;
     }
 
-    destroyBody(body) {
-        // The motion state needs to be destroyed explicitly (if present)
-        const motionState = body.getMotionState();
-        if (motionState) {
-            Ammo.destroy(motionState);
+    /**
+     * Removes a component's body from the simulation and unregisters the component from the
+     * update lists. Fires 'simulationdisabled' on the component. No-op unless the component
+     * has a body and is currently simulating.
+     *
+     * @param {RigidBodyComponent} component - The component to remove from the simulation.
+     * @ignore
+     */
+    disableSimulation(component) {
+        const body = component._body;
+        if (body && component._simulationEnabled) {
+            let idx = this._compounds.indexOf(component.entity.collision);
+            if (idx > -1) {
+                this._compounds.splice(idx, 1);
+            }
+
+            idx = this._dynamic.indexOf(component);
+            if (idx > -1) {
+                this._dynamic.splice(idx, 1);
+            }
+
+            idx = this._kinematic.indexOf(component);
+            if (idx > -1) {
+                this._kinematic.splice(idx, 1);
+            }
+
+            // removeBody also drops the body out of the active state so isActive() does not
+            // return true even though it is no longer in the dynamics world
+            this.removeBody(body);
+
+            component._simulationEnabled = false;
+
+            // internal event consumed by the joint system to destroy constraints that reference
+            // this body. The body has just been removed from the dynamics world above and is now
+            // inert, but is still a valid object - tearing the constraints down here keeps them
+            // from referencing the body once it is later destroyed or rebuilt.
+            component.fire('simulationdisabled');
         }
-        Ammo.destroy(body);
+    }
+
+    /**
+     * Adds a trigger's body to the simulation and registers the trigger for per-frame
+     * transform updates. No-op if the trigger is already registered.
+     *
+     * @param {Trigger} trigger - The trigger to add to the simulation.
+     * @ignore
+     */
+    addTrigger(trigger) {
+        if (this._triggers.indexOf(trigger) < 0) {
+            // addBody also puts the body into the active state so that it is simulated
+            // properly again
+            this.addBody(trigger.body, BODYGROUP_TRIGGER, BODYMASK_NOT_STATIC ^ BODYGROUP_TRIGGER);
+            this._triggers.push(trigger);
+        }
+    }
+
+    /**
+     * Removes a trigger's body from the simulation and unregisters the trigger. No-op if the
+     * trigger is not registered.
+     *
+     * @param {Trigger} trigger - The trigger to remove from the simulation.
+     * @ignore
+     */
+    removeTrigger(trigger) {
+        const idx = this._triggers.indexOf(trigger);
+        if (idx > -1) {
+            // removeBody also drops the body out of the active state so that it properly
+            // deactivates after being removed from the physics world
+            this.removeBody(trigger.body);
+            this._triggers.splice(idx, 1);
+        }
     }
 
     /**
@@ -269,41 +397,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
             return this.raycastAll(start, end, options)[0] || null;
         }
 
-        let result = null;
-
-        ammoRayStart.setValue(start.x, start.y, start.z);
-        ammoRayEnd.setValue(end.x, end.y, end.z);
-        const rayCallback = new Ammo.ClosestRayResultCallback(ammoRayStart, ammoRayEnd);
-
-        if (typeof options.filterCollisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
-        }
-
-        if (typeof options.filterCollisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
-        }
-
-        this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
-        if (rayCallback.hasHit()) {
-            const collisionObj = rayCallback.get_m_collisionObject();
-            const body = Ammo.castObject(collisionObj, Ammo.btRigidBody);
-
-            if (body) {
-                const point = rayCallback.get_m_hitPointWorld();
-                const normal = rayCallback.get_m_hitNormalWorld();
-
-                result = new RaycastResult(
-                    body.entity,
-                    new Vec3(point.x(), point.y(), point.z()),
-                    new Vec3(normal.x(), normal.y(), normal.z()),
-                    rayCallback.get_m_closestHitFraction()
-                );
-            }
-        }
-
-        Ammo.destroy(rayCallback);
-
-        return result;
+        return this._world.raycastFirst(start, end, options);
     }
 
     /**
@@ -353,57 +447,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * });
      */
     raycastAll(start, end, options = {}) {
-        Debug.assert(Ammo.AllHitsRayResultCallback, 'pc.RigidBodyComponentSystem#raycastAll: Your version of ammo.js does not expose Ammo.AllHitsRayResultCallback. Update it to latest.');
+        const results = this._world.raycastAll(start, end, options);
 
-        const results = [];
-
-        ammoRayStart.setValue(start.x, start.y, start.z);
-        ammoRayEnd.setValue(end.x, end.y, end.z);
-        const rayCallback = new Ammo.AllHitsRayResultCallback(ammoRayStart, ammoRayEnd);
-
-        if (typeof options.filterCollisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+        if (options.sort) {
+            results.sort((a, b) => a.hitFraction - b.hitFraction);
         }
-
-        if (typeof options.filterCollisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
-        }
-
-        this.dynamicsWorld.rayTest(ammoRayStart, ammoRayEnd, rayCallback);
-        if (rayCallback.hasHit()) {
-            const collisionObjs = rayCallback.get_m_collisionObjects();
-            const points = rayCallback.get_m_hitPointWorld();
-            const normals = rayCallback.get_m_hitNormalWorld();
-            const hitFractions = rayCallback.get_m_hitFractions();
-
-            const numHits = collisionObjs.size();
-            for (let i = 0; i < numHits; i++) {
-                const body = Ammo.castObject(collisionObjs.at(i), Ammo.btRigidBody);
-
-                if (body && body.entity) {
-                    if (options.filterTags && !body.entity.tags.has(...options.filterTags) || options.filterCallback && !options.filterCallback(body.entity)) {
-                        continue;
-                    }
-
-                    const point = points.at(i);
-                    const normal = normals.at(i);
-                    const result = new RaycastResult(
-                        body.entity,
-                        new Vec3(point.x(), point.y(), point.z()),
-                        new Vec3(normal.x(), normal.y(), normal.z()),
-                        hitFractions.at(i)
-                    );
-
-                    results.push(result);
-                }
-            }
-
-            if (options.sort) {
-                results.sort((a, b) => a.hitFraction - b.hitFraction);
-            }
-        }
-
-        Ammo.destroy(rayCallback);
 
         return results;
     }
@@ -434,37 +482,22 @@ class RigidBodyComponentSystem extends ComponentSystem {
         return isNewCollision;
     }
 
-    _createContactPointFromAmmo(contactPoint) {
-        const localPointA = contactPoint.get_m_localPointA();
-        const localPointB = contactPoint.get_m_localPointB();
-        const positionWorldOnA = contactPoint.getPositionWorldOnA();
-        const positionWorldOnB = contactPoint.getPositionWorldOnB();
-        const normalWorldOnB = contactPoint.get_m_normalWorldOnB();
-
+    /**
+     * Allocates a pooled contact point that is the given one seen from the other body's
+     * perspective.
+     *
+     * @param {ContactPoint} forward - The contact point from body A's perspective.
+     * @returns {ContactPoint} The reversed contact point.
+     * @private
+     */
+    _createReverseContactPoint(forward) {
         const contact = this.contactPointPool.allocate();
-        contact.localPoint.set(localPointA.x(), localPointA.y(), localPointA.z());
-        contact.localPointOther.set(localPointB.x(), localPointB.y(), localPointB.z());
-        contact.point.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
-        contact.pointOther.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
-        contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
-        contact.impulse = contactPoint.getAppliedImpulse();
-        return contact;
-    }
-
-    _createReverseContactPointFromAmmo(contactPoint) {
-        const localPointA = contactPoint.get_m_localPointA();
-        const localPointB = contactPoint.get_m_localPointB();
-        const positionWorldOnA = contactPoint.getPositionWorldOnA();
-        const positionWorldOnB = contactPoint.getPositionWorldOnB();
-        const normalWorldOnB = contactPoint.get_m_normalWorldOnB();
-
-        const contact = this.contactPointPool.allocate();
-        contact.localPointOther.set(localPointA.x(), localPointA.y(), localPointA.z());
-        contact.localPoint.set(localPointB.x(), localPointB.y(), localPointB.z());
-        contact.pointOther.set(positionWorldOnA.x(), positionWorldOnA.y(), positionWorldOnA.z());
-        contact.point.set(positionWorldOnB.x(), positionWorldOnB.y(), positionWorldOnB.z());
-        contact.normal.set(normalWorldOnB.x(), normalWorldOnB.y(), normalWorldOnB.z());
-        contact.impulse = contactPoint.getAppliedImpulse();
+        contact.localPoint.copy(forward.localPointOther);
+        contact.localPointOther.copy(forward.localPoint);
+        contact.point.copy(forward.pointOther);
+        contact.pointOther.copy(forward.point);
+        contact.normal.copy(forward.normal);
+        contact.impulse = forward.impulse;
         return contact;
     }
 
@@ -573,157 +606,142 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Checks for collisions and fires collision events.
+     * Called by the physics backend when a contact pass begins.
      *
-     * @param {number} world - The pointer to the dynamics world that invoked this callback.
-     * @param {number} timeStep - The amount of simulation time processed in the last simulation tick.
-     * @private
+     * @ignore
      */
-    _checkForCollisions(world, timeStep) {
-        const dynamicsWorld = Ammo.wrapPointer(world, Ammo.btDynamicsWorld);
-
-        // Check for collisions and fire callbacks
-        const dispatcher = dynamicsWorld.getDispatcher();
-        const numManifolds = dispatcher.getNumManifolds();
-
+    onContactsBegin() {
         this.frameCollisions = {};
+    }
 
-        // loop through the all contacts and fire events
-        for (let i = 0; i < numManifolds; i++) {
-            const manifold = dispatcher.getManifoldByIndexInternal(i);
+    /**
+     * Called by the physics backend for each contacting pair. Fires the trigger and collision
+     * events.
+     *
+     * @param {PhysicsContactPair} pair - The contacting pair. Only valid during the call.
+     * @ignore
+     */
+    onContactPair(pair) {
+        const e0 = pair.entityA;
+        const e1 = pair.entityB;
 
-            const body0 = manifold.getBody0();
-            const body1 = manifold.getBody1();
+        const forwardContacts = [];
+        const reverseContacts = [];
+        let newCollision;
 
-            const wb0 = Ammo.castObject(body0, Ammo.btRigidBody);
-            const wb1 = Ammo.castObject(body1, Ammo.btRigidBody);
+        // don't fire contact events for triggers
+        if (pair.triggerA || pair.triggerB) {
+            const e0Events = e0.collision && (e0.collision.hasEvent('triggerenter') || e0.collision.hasEvent('triggerleave'));
+            const e1Events = e1.collision && (e1.collision.hasEvent('triggerenter') || e1.collision.hasEvent('triggerleave'));
+            const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent('triggerenter') || e0.rigidbody.hasEvent('triggerleave'));
+            const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent('triggerenter') || e1.rigidbody.hasEvent('triggerleave'));
 
-            const e0 = wb0.entity;
-            const e1 = wb1.entity;
-
-            // check if entity is null - TODO: investigate when this happens
-            if (!e0 || !e1) {
-                continue;
+            // fire triggerenter events for triggers
+            if (e0Events) {
+                newCollision = this._storeCollision(e0, e1);
+                if (newCollision && !pair.triggerB) {
+                    e0.collision.fire('triggerenter', e1);
+                }
             }
 
-            const flags0 = wb0.getCollisionFlags();
-            const flags1 = wb1.getCollisionFlags();
+            if (e1Events) {
+                newCollision = this._storeCollision(e1, e0);
+                if (newCollision && !pair.triggerA) {
+                    e1.collision.fire('triggerenter', e0);
+                }
+            }
 
-            const numContacts = manifold.getNumContacts();
-            const forwardContacts = [];
-            const reverseContacts = [];
-            let newCollision;
+            // fire triggerenter events for rigidbodies
+            if (e0BodyEvents) {
+                if (!newCollision) {
+                    newCollision = this._storeCollision(e1, e0);
+                }
 
-            if (numContacts > 0) {
-                // don't fire contact events for triggers
-                if ((flags0 & BODYFLAG_NORESPONSE_OBJECT) ||
-                    (flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
+                if (newCollision) {
+                    e0.rigidbody.fire('triggerenter', e1);
+                }
+            }
 
-                    const e0Events = e0.collision && (e0.collision.hasEvent('triggerenter') || e0.collision.hasEvent('triggerleave'));
-                    const e1Events = e1.collision && (e1.collision.hasEvent('triggerenter') || e1.collision.hasEvent('triggerleave'));
-                    const e0BodyEvents = e0.rigidbody && (e0.rigidbody.hasEvent('triggerenter') || e0.rigidbody.hasEvent('triggerleave'));
-                    const e1BodyEvents = e1.rigidbody && (e1.rigidbody.hasEvent('triggerenter') || e1.rigidbody.hasEvent('triggerleave'));
+            if (e1BodyEvents) {
+                if (!newCollision) {
+                    newCollision = this._storeCollision(e0, e1);
+                }
 
-                    // fire triggerenter events for triggers
-                    if (e0Events) {
-                        newCollision = this._storeCollision(e0, e1);
-                        if (newCollision && !(flags1 & BODYFLAG_NORESPONSE_OBJECT)) {
-                            e0.collision.fire('triggerenter', e1);
-                        }
+                if (newCollision) {
+                    e1.rigidbody.fire('triggerenter', e0);
+                }
+            }
+        } else {
+            const e0Events = this._hasContactEvent(e0);
+            const e1Events = this._hasContactEvent(e1);
+            const globalEvents = this.hasEvent('contact');
+
+            if (globalEvents || e0Events || e1Events) {
+                const contactCount = pair.contactCount;
+                for (let j = 0; j < contactCount; j++) {
+                    const contactPoint = this.contactPointPool.allocate();
+                    pair.readContact(j, contactPoint);
+
+                    if (e0Events || e1Events) {
+                        forwardContacts.push(contactPoint);
+                        reverseContacts.push(this._createReverseContactPoint(contactPoint));
                     }
 
-                    if (e1Events) {
-                        newCollision = this._storeCollision(e1, e0);
-                        if (newCollision && !(flags0 & BODYFLAG_NORESPONSE_OBJECT)) {
-                            e1.collision.fire('triggerenter', e0);
-                        }
+                    if (globalEvents) {
+                        // fire global contact event for every contact
+                        const result = this._createSingleContactResult(e0, e1, contactPoint);
+                        this.fire('contact', result);
                     }
+                }
 
-                    // fire triggerenter events for rigidbodies
-                    if (e0BodyEvents) {
-                        if (!newCollision) {
-                            newCollision = this._storeCollision(e1, e0);
-                        }
+                if (e0Events) {
+                    const forwardResult = this._createContactResult(e1, forwardContacts);
+                    newCollision = this._storeCollision(e0, e1);
 
+                    if (e0.collision) {
+                        e0.collision.fire('contact', forwardResult);
                         if (newCollision) {
-                            e0.rigidbody.fire('triggerenter', e1);
+                            e0.collision.fire('collisionstart', forwardResult);
                         }
                     }
 
-                    if (e1BodyEvents) {
-                        if (!newCollision) {
-                            newCollision = this._storeCollision(e0, e1);
-                        }
-
+                    if (e0.rigidbody) {
+                        e0.rigidbody.fire('contact', forwardResult);
                         if (newCollision) {
-                            e1.rigidbody.fire('triggerenter', e0);
+                            e0.rigidbody.fire('collisionstart', forwardResult);
                         }
                     }
-                } else {
-                    const e0Events = this._hasContactEvent(e0);
-                    const e1Events = this._hasContactEvent(e1);
-                    const globalEvents = this.hasEvent('contact');
+                }
 
-                    if (globalEvents || e0Events || e1Events) {
-                        for (let j = 0; j < numContacts; j++) {
-                            const btContactPoint = manifold.getContactPoint(j);
-                            const contactPoint = this._createContactPointFromAmmo(btContactPoint);
+                if (e1Events) {
+                    const reverseResult = this._createContactResult(e0, reverseContacts);
+                    newCollision = this._storeCollision(e1, e0);
 
-                            if (e0Events || e1Events) {
-                                forwardContacts.push(contactPoint);
-                                const reverseContactPoint = this._createReverseContactPointFromAmmo(btContactPoint);
-                                reverseContacts.push(reverseContactPoint);
-                            }
-
-                            if (globalEvents) {
-                                // fire global contact event for every contact
-                                const result = this._createSingleContactResult(e0, e1, contactPoint);
-                                this.fire('contact', result);
-                            }
+                    if (e1.collision) {
+                        e1.collision.fire('contact', reverseResult);
+                        if (newCollision) {
+                            e1.collision.fire('collisionstart', reverseResult);
                         }
+                    }
 
-                        if (e0Events) {
-                            const forwardResult = this._createContactResult(e1, forwardContacts);
-                            newCollision = this._storeCollision(e0, e1);
-
-                            if (e0.collision) {
-                                e0.collision.fire('contact', forwardResult);
-                                if (newCollision) {
-                                    e0.collision.fire('collisionstart', forwardResult);
-                                }
-                            }
-
-                            if (e0.rigidbody) {
-                                e0.rigidbody.fire('contact', forwardResult);
-                                if (newCollision) {
-                                    e0.rigidbody.fire('collisionstart', forwardResult);
-                                }
-                            }
-                        }
-
-                        if (e1Events) {
-                            const reverseResult = this._createContactResult(e0, reverseContacts);
-                            newCollision = this._storeCollision(e1, e0);
-
-                            if (e1.collision) {
-                                e1.collision.fire('contact', reverseResult);
-                                if (newCollision) {
-                                    e1.collision.fire('collisionstart', reverseResult);
-                                }
-                            }
-
-                            if (e1.rigidbody) {
-                                e1.rigidbody.fire('contact', reverseResult);
-                                if (newCollision) {
-                                    e1.rigidbody.fire('collisionstart', reverseResult);
-                                }
-                            }
+                    if (e1.rigidbody) {
+                        e1.rigidbody.fire('contact', reverseResult);
+                        if (newCollision) {
+                            e1.rigidbody.fire('collisionstart', reverseResult);
                         }
                     }
                 }
             }
         }
+    }
 
+    /**
+     * Called by the physics backend when a contact pass ends. Fires collisionend/triggerleave
+     * events for lost contacts and frees the pooled results.
+     *
+     * @ignore
+     */
+    onContactsEnd() {
         // check for collisions that no longer exist and fire events
         this._cleanOldCollisions();
 
@@ -738,20 +756,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this._stats.physicsStart = now();
 
-        // downcast gravity to float32 so we can accurately compare with existing
-        // gravity set in ammo.
-        this._gravityFloat32[0] = this.gravity.x;
-        this._gravityFloat32[1] = this.gravity.y;
-        this._gravityFloat32[2] = this.gravity.z;
-
-        // Check to see whether we need to update gravity on the dynamics world
-        const gravity = this.dynamicsWorld.getGravity();
-        if (gravity.x() !== this._gravityFloat32[0] ||
-            gravity.y() !== this._gravityFloat32[1] ||
-            gravity.z() !== this._gravityFloat32[2]) {
-            gravity.setValue(this.gravity.x, this.gravity.y, this.gravity.z);
-            this.dynamicsWorld.setGravity(gravity);
-        }
+        // Check to see whether we need to update gravity on the physics world
+        this._world.setGravity(this.gravity);
 
         const triggers = this._triggers;
         for (i = 0, len = triggers.length; i < len; i++) {
@@ -770,7 +776,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // Step the physics simulation
-        this.dynamicsWorld.stepSimulation(dt, this.maxSubSteps, this.fixedTimeStep);
+        this._world.step(dt, this.maxSubSteps, this.fixedTimeStep);
 
         // Update the transforms of all entities referencing a dynamic body
         const dynamic = this._dynamic;
@@ -778,9 +784,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
             dynamic[i]._updateDynamic();
         }
 
-        if (!this.dynamicsWorld.setInternalTickCallback) {
-            this._checkForCollisions(Ammo.getPointer(this.dynamicsWorld), dt);
-        }
+        // no-op on backends that report contacts from inside step()
+        this._world.flushContacts();
 
         this._stats.physicsTime = now() - this._stats.physicsStart;
     }
@@ -790,22 +795,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this.app.systems.off('update', this.onUpdate, this);
 
-        if (typeof Ammo !== 'undefined') {
-            Ammo.destroy(this.dynamicsWorld);
-            Ammo.destroy(this.solver);
-            Ammo.destroy(this.overlappingPairCache);
-            Ammo.destroy(this.dispatcher);
-            Ammo.destroy(this.collisionConfiguration);
-            Ammo.destroy(ammoRayStart);
-            Ammo.destroy(ammoRayEnd);
-            this.dynamicsWorld = null;
-            this.solver = null;
-            this.overlappingPairCache = null;
-            this.dispatcher = null;
-            this.collisionConfiguration = null;
-            ammoRayStart = null;
-            ammoRayEnd = null;
-            RigidBodyComponent.onAppDestroy();
+        if (this._world) {
+            this._world.destroy();
+            this._world = null;
         }
     }
 }

@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { LAYERID_WORLD, RENDERSTYLE_SOLID } from '../../../scene/constants.js';
+import { LAYERID_WORLD, RENDERSTYLE_SOLID, SHADOW_CASCADE_ALL } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
 import { MorphInstance } from '../../../scene/morph-instance.js';
@@ -34,7 +34,7 @@ import { Component } from '../component.js';
  * to an Entity, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     type: 'box'
  * });
@@ -67,6 +67,9 @@ class RenderComponent extends Component {
 
     /** @private */
     _castShadows = true;
+
+    /** @private */
+    _shadowCascadeMask = SHADOW_CASCADE_ALL;
 
     /** @private */
     _receiveShadows = true;
@@ -329,7 +332,9 @@ class RenderComponent extends Component {
      */
     set meshInstances(value) {
         Debug.assert(Array.isArray(value), 'MeshInstances set to a Render component must be an array.');
-        this.destroyMeshInstances();
+
+        // don't notify yet, the change is announced once the new mesh instances are in place
+        this._destroyMeshInstances();
 
         this._meshInstances = value;
 
@@ -344,6 +349,7 @@ class RenderComponent extends Component {
                 }
 
                 mi[i].castShadow = this._castShadows;
+                mi[i].shadowCascadeMask = this._shadowCascadeMask;
                 mi[i].receiveShadow = this._receiveShadows;
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
@@ -354,6 +360,8 @@ class RenderComponent extends Component {
                 this.addToLayers();
             }
         }
+
+        this._onMeshInstancesChanged();
     }
 
     /**
@@ -441,6 +449,44 @@ class RenderComponent extends Component {
      */
     get castShadows() {
         return this._castShadows;
+    }
+
+    /**
+     * Sets a bitmask that controls which shadow cascades the attached meshes contribute to when
+     * rendered with a {@link LIGHTTYPE_DIRECTIONAL} light source. Combine the
+     * {@link SHADOW_CASCADE_0} .. {@link SHADOW_CASCADE_3} flags to select individual cascades.
+     * This is only effective when {@link castShadows} is enabled. Defaults to
+     * {@link SHADOW_CASCADE_ALL}, which contributes to all available cascades.
+     *
+     * Note that this filters the meshes per cascade at render time, it does not remove them from
+     * the shadow casters of the {@link Layer} - use {@link castShadows} to disable shadow casting
+     * completely.
+     *
+     * @type {number}
+     * @example
+     * // only cast shadows into the two cascades closest to the camera
+     * entity.render.shadowCascadeMask = pc.SHADOW_CASCADE_0 | pc.SHADOW_CASCADE_1;
+     */
+    set shadowCascadeMask(value) {
+        if (this._shadowCascadeMask !== value) {
+            this._shadowCascadeMask = value;
+
+            const mi = this._meshInstances;
+            if (mi) {
+                for (let i = 0; i < mi.length; i++) {
+                    mi[i].shadowCascadeMask = value;
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets the bitmask that controls which shadow cascades the attached meshes contribute to.
+     *
+     * @type {number}
+     */
+    get shadowCascadeMask() {
+        return this._shadowCascadeMask;
     }
 
     /**
@@ -762,6 +808,17 @@ class RenderComponent extends Component {
 
     /** @private */
     destroyMeshInstances() {
+        this._destroyMeshInstances();
+        this._onMeshInstancesChanged();
+    }
+
+    /**
+     * Destroys the mesh instances without firing a change notification. Used by the meshInstances
+     * setter, which notifies once the replacement mesh instances are in place.
+     *
+     * @private
+     */
+    _destroyMeshInstances() {
         const meshInstances = this._meshInstances;
         if (meshInstances) {
             this.removeFromLayers();
@@ -773,6 +830,25 @@ class RenderComponent extends Component {
                 meshInstances[i].destroy();
             }
             this._meshInstances.length = 0;
+        }
+    }
+
+    /**
+     * Fires a notification that the set of mesh instances has changed, so that systems which
+     * reference them can re-resolve. An anim component binds morph target weights and animated
+     * material textures to specific mesh instances, and unlike a model component - which owns its
+     * mesh instances on a private graph node hierarchy under its own entity - a render hierarchy is
+     * a public entity hierarchy, so the anim component driving these mesh instances can live on any
+     * ancestor entity. The notification is therefore broadcast rather than delivered directly. See
+     * #5225.
+     *
+     * @private
+     */
+    _onMeshInstancesChanged() {
+        if (!this.entity._destroying) {
+            // the systems registry is torn down before assets are unloaded when the app is
+            // destroyed, and by then there is nothing left to notify
+            this.system.app.systems?.fire('meshInstancesChange', this);
         }
     }
 
@@ -812,6 +888,11 @@ class RenderComponent extends Component {
     }
 
     onBeforeRemove() {
+        // removing a component does not disable it first, so undo what onEnable set up
+        if (this.enabled && this.entity.enabled) {
+            this.onDisable();
+        }
+
         this.destroyMeshInstances();
 
         this.asset = null;
@@ -824,15 +905,19 @@ class RenderComponent extends Component {
         }
 
         this.entity.off('remove', this.onRemoveChild, this);
+        this.entity.off('removehierarchy', this.onRemoveChild, this);
         this.entity.off('insert', this.onInsertChild, this);
+        this.entity.off('inserthierarchy', this.onInsertChild, this);
     }
 
     onLayersChanged(oldComp, newComp) {
         this.addToLayers();
-        oldComp.off('add', this.onLayerAdded, this);
-        oldComp.off('remove', this.onLayerRemoved, this);
-        newComp.on('add', this.onLayerAdded, this);
-        newComp.on('remove', this.onLayerRemoved, this);
+
+        // store the new handles, so that onDisable can unsubscribe from the current composition
+        this._evtLayerAdded?.off();
+        this._evtLayerAdded = newComp.on('add', this.onLayerAdded, this);
+        this._evtLayerRemoved?.off();
+        this._evtLayerRemoved = newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {

@@ -19,6 +19,9 @@ class LightingParams {
     _maxLightsPerCell = 255;
 
     /** @private */
+    _maxLights = 255;
+
+    /** @private */
     _shadowsEnabled = true;
 
     /** @private */
@@ -69,6 +72,7 @@ class LightingParams {
         this.shadowAtlasResolution = render.lightingShadowAtlasResolution ?? this.shadowAtlasResolution;
         this.cookieAtlasResolution = render.lightingCookieAtlasResolution ?? this.cookieAtlasResolution;
         this.maxLightsPerCell = render.lightingMaxLightsPerCell ?? this.maxLightsPerCell;
+        this.maxLights = render.lightingMaxLights ?? this.maxLights;
         this.shadowType = render.lightingShadowType ?? this.shadowType;
         if (render.lightingCells) {
             this.cells = new Vec3(render.lightingCells);
@@ -111,6 +115,28 @@ class LightingParams {
      */
     get maxLightsPerCell() {
         return this._maxLightsPerCell;
+    }
+
+    /**
+     * Sets the maximum number of lights the clustered lighting can use in a single frame. Lights
+     * over this limit are ignored, and a warning is reported.
+     *
+     * Values up to 255 store the light index in the light grid using 8 bits, larger values use 16
+     * bits and so double the size of the texture the grid is stored in. Defaults to 255.
+     *
+     * @type {number}
+     */
+    set maxLights(value) {
+        this._maxLights = math.clamp(value, 1, Math.min(65535, this._maxTextureSize - 1));
+    }
+
+    /**
+     * Gets the maximum number of lights the clustered lighting can use in a single frame.
+     *
+     * @type {number}
+     */
+    get maxLights() {
+        return this._maxLights;
     }
 
     /**

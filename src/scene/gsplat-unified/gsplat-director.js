@@ -298,8 +298,8 @@ class GSplatDirector {
         // any gsplat component exists) there are no managers in camerasMap to consume it, so leave
         // it set — otherwise a param change made before the first frame (e.g. overdraw mode) would
         // be dropped and the first manager created on the render path would miss the dirty-driven
-        // setup. The material dirty flag is cleared separately by frameEnd() in update(), after the
-        // renderers re-sync the material — so we must NOT clear it here.
+        // setup. Material changes are tracked independently by each renderer using the material's
+        // update version, so they do not need to be cleared here.
         if (streamed) {
             this.scene.gsplat.dirty = false;
         }

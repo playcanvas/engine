@@ -26,9 +26,9 @@ import {
     TouchDevice,
     createGraphicsDevice
 } from 'playcanvas';
-import { GsplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
-import { GsplatRevealRain } from 'playcanvas/scripts/esm/gsplat/reveal-rain.mjs';
+import { GSplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
+import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { GSplatRevealRain } from 'playcanvas/scripts/esm/gsplat/reveal-rain.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -112,7 +112,7 @@ hotel.addComponent('script');
 
 // Helper function to create radial script with configured attributes
 const createRadialScript = () => {
-    const script = hotel.script?.create(GsplatRevealRadial);
+    const script = hotel.script?.create(GSplatRevealRadial);
     if (script) {
         script.center.set(0, 0, 0);
         script.speed = 5;
@@ -128,7 +128,7 @@ const createRadialScript = () => {
 
 // Helper function to create rain script with configured attributes
 const createRainScript = () => {
-    const script = hotel.script?.create(GsplatRevealRain);
+    const script = hotel.script?.create(GSplatRevealRain);
     if (script) {
         script.center.set(0, 0, 0);
         script.distance = 30;
@@ -148,7 +148,7 @@ const createRainScript = () => {
 
 // Helper function to create grid eruption script with configured attributes
 const createGridScript = () => {
-    const script = hotel.script?.create(GsplatRevealGridEruption);
+    const script = hotel.script?.create(GSplatRevealGridEruption);
     if (script) {
         script.center.set(0, 0, 0);
         script.blockCount = 10;
@@ -171,9 +171,9 @@ const createGridScript = () => {
  */
 const createEffect = (effectName) => {
     // Destroy any existing reveal scripts
-    hotel.script?.destroy(GsplatRevealRadial.scriptName);
-    hotel.script?.destroy(GsplatRevealRain.scriptName);
-    hotel.script?.destroy(GsplatRevealGridEruption.scriptName);
+    hotel.script?.destroy(GSplatRevealRadial.scriptName);
+    hotel.script?.destroy(GSplatRevealRain.scriptName);
+    hotel.script?.destroy(GSplatRevealGridEruption.scriptName);
 
     // Create the selected effect (fresh instance, starts from beginning)
     if (effectName === 'radial') {

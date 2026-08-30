@@ -104,7 +104,7 @@ class SceneRegistry {
      */
     add(name, url) {
         if (this._index.hasOwnProperty(name)) {
-            Debug.warn(`pc.SceneRegistry: trying to add more than one scene called: ${name}`);
+            Debug.warn(`SceneRegistry: trying to add more than one scene called: ${name}`);
             return false;
         }
 
@@ -460,8 +460,9 @@ class SceneRegistry {
 
                     app.root.addChild(scene.root);
 
-                    // Initialize pack settings
-                    if (app.systems.rigidbody && typeof Ammo !== 'undefined') {
+                    // Initialize pack settings - gravity is engine state, applied by the
+                    // physics backend when present
+                    if (app.systems.rigidbody) {
                         app.systems.rigidbody.gravity.set(scene._gravity.x, scene._gravity.y, scene._gravity.z);
                     }
 

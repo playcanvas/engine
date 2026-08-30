@@ -169,7 +169,7 @@ class Http {
      * where data is the response (format depends on response type: text, Object, ArrayBuffer, XML) and
      * err is the error code.
      * @example
-     * pc.http.get("http://example.com/", {
+     * http.get("http://example.com/", {
      *     "retry": true,
      *     "maxRetries": 5
      * }, (err, response) => {
@@ -230,7 +230,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.post("http://example.com/", {
+     * http.post("http://example.com/", {
      *     "name": "Alex"
      * }, {
      *     "retry": true,
@@ -274,7 +274,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.put("http://example.com/", {
+     * http.put("http://example.com/", {
      *     "name": "Alex"
      * }, {
      *     "retry": true,
@@ -318,7 +318,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.del("http://example.com/", {
+     * http.del("http://example.com/", {
      *     "retry": true,
      *     "maxRetries": 5
      * }, (err, response) => {
@@ -360,7 +360,7 @@ class Http {
      * Passed (err, data) where data is the response (format depends on response type: text,
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
-     * pc.http.request("get", "http://example.com/", {
+     * http.request("get", "http://example.com/", {
      *     "retry": true,
      *     "maxRetries": 5
      * }, (err, response) => {

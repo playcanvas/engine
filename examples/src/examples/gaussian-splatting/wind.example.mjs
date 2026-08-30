@@ -1,6 +1,6 @@
 // @config
 //
-// Wind swaying of trees in a streamed gaussian splat scene, using the reusable GsplatTrees script.
+// Wind swaying of trees in a streamed gaussian splat scene, using the reusable GSplatTrees script.
 // Trees are marked by spheres; toggle Edit mode to position them and drive the wind from the controls.
 //
 // @credit
@@ -38,7 +38,7 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatTrees } from 'playcanvas/scripts/esm/gsplat/gsplat-trees.mjs';
+import { GSplatTrees } from 'playcanvas/scripts/esm/gsplat/gsplat-trees.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -83,7 +83,7 @@ app.on('destroy', () => {
 
 const assets = {
     skatepark: new Asset('gsplat', 'gsplat', {
-        url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_skatepark_03/lod-meta.json'
     }),
     envAtlas: new Asset(
         'env-atlas',
@@ -146,13 +146,11 @@ skatepark.addComponent('gsplat', {
     asset: assets.skatepark
 });
 skatepark.setLocalEulerAngles(-90, 0, 0);
-skatepark.gsplat.lodBaseDistance = 15;
-skatepark.gsplat.lodMultiplier = 4;
 app.root.addChild(skatepark);
 
 // the reusable wind script
 skatepark.addComponent('script');
-const treesScript = /** @type {GsplatTrees} */ (skatepark.script.create(GsplatTrees));
+const treesScript = /** @type {GSplatTrees} */ (skatepark.script.create(GSplatTrees));
 
 // Each tree is a helper entity whose world position is the sphere center and whose uniform scale
 // is the sphere radius; the gizmos move/scale these. Use Edit mode to reposition them, add or

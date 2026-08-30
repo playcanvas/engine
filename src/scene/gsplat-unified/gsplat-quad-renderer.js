@@ -34,14 +34,14 @@ class GSplatQuadRenderer extends GSplatRenderer {
     /** @type {Set<string>} */
     _internalDefines = new Set();
 
-    /** @type {boolean} */
-    forceCopyMaterial = true;
-
     /** @private */
     _lastFisheyeEnabled = false;
 
     /** @private */
     _lastSourceChunksKey = '';
+
+    /** @private */
+    _sourceMaterialVersion = -1;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -80,6 +80,9 @@ class GSplatQuadRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_INDIRECT_DRAW');
         this._internalDefines.add('GSPLAT_SEPARATE_OPACITY');
         this._internalDefines.add('GSPLAT_FISHEYE');
+        this._internalDefines.add('GSPLAT_NO_FOG');
+        this._internalDefines.add('GSPLAT_NO_TONEMAP');
+        this._internalDefines.add('GSPLAT_OVERDRAW');
 
         this.meshInstance = this.createMeshInstance();
     }
@@ -285,6 +288,11 @@ class GSplatQuadRenderer extends GSplatRenderer {
 
     frameUpdate(params) {
 
+        // Whether the splats contribute to the scene depth. This only selects the blend state, as the
+        // write itself is enabled by a define coming from the camera, so it needs no shader rebuild and
+        // can follow the scene setting from frame to frame.
+        this._material.sceneTexturesWrite = params.sceneDepthWrite;
+
         // Update colorRampIntensity parameter every frame when overdraw is enabled
         if (params.colorRamp) {
             this._material.setParameter('colorRampIntensity', params.colorRampIntensity);
@@ -310,19 +318,23 @@ class GSplatQuadRenderer extends GSplatRenderer {
         }
 
         const noFog = !params.useFog;
-        if (noFog !== this._lastNoFog) {
+        const noTonemap = !params.useTonemap;
+        if (noFog !== this._lastNoFog || noTonemap !== this._lastNoTonemap) {
             this._lastNoFog = noFog;
+            this._lastNoTonemap = noTonemap;
             this._material.setDefine('GSPLAT_NO_FOG', noFog);
+            this._material.setDefine('GSPLAT_NO_TONEMAP', noTonemap);
             this._material.update();
         }
 
         // Check if work buffer format has changed (extra streams added)
         this._syncWithWorkBufferFormat();
 
-        // Copy material settings from params.material if dirty or on first update
-        if (this.forceCopyMaterial || params.material.dirty) {
+        // Copy material settings when the source material has been updated
+        const sourceMaterialVersion = params.material.updateVersion;
+        if (this._sourceMaterialVersion !== sourceMaterialVersion) {
             this.copyMaterialSettings(params.material);
-            this.forceCopyMaterial = false;
+            this._sourceMaterialVersion = sourceMaterialVersion;
         }
     }
 

@@ -918,7 +918,7 @@ class GamePads extends EventHandler {
      * @returns {GamePad[]} An array of gamepads and mappings for the model of gamepad that is
      * attached.
      * @example
-     * const gamepads = new pc.GamePads();
+     * const gamepads = new GamePads();
      * const pads = gamepads.poll();
      */
     poll(pads = []) {

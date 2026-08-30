@@ -172,9 +172,6 @@ class WebglTexture {
             case PIXELFORMAT_SBGRA8:
                 Debug.error('BGRA8 and SBGRA8 texture formats are not supported by WebGL.');
                 break;
-            case PIXELFORMAT_RG32F:
-                Debug.error('RG32F texture format is not supported by WebGL.');
-                break;
             case PIXELFORMAT_RGB9E5:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.RGB9_E5;
@@ -334,6 +331,11 @@ class WebglTexture {
             case PIXELFORMAT_R32F:
                 this._glFormat = gl.RED;
                 this._glInternalFormat = gl.R32F;
+                this._glPixelType = gl.FLOAT;
+                break;
+            case PIXELFORMAT_RG32F:
+                this._glFormat = gl.RG;
+                this._glInternalFormat = gl.RG32F;
                 this._glPixelType = gl.FLOAT;
                 break;
             case PIXELFORMAT_DEPTH:

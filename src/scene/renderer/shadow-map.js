@@ -5,6 +5,7 @@ import {
     FUNC_LESS,
     PIXELFORMAT_R32F, PIXELFORMAT_R16F,
     pixelFormatInfo,
+    RENDERTARGET_ORIGIN_BOTTOM,
     TEXHINT_SHADOWMAP
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -110,6 +111,8 @@ class ShadowMap {
             name: `ShadowMap2D_${formatName}`
         });
 
+        // the shadow map sampling math (matrix scale-bias derived uvs, atlas viewport rects) is
+        // written against the WebGL layout, so replicate it on all graphics APIs
         let target = null;
         if (shadowInfo?.pcf) {
 
@@ -119,19 +122,16 @@ class ShadowMap {
 
             // depthbuffer only
             target = new RenderTarget({
-                depthBuffer: texture
+                depthBuffer: texture,
+                origin: RENDERTARGET_ORIGIN_BOTTOM
             });
         } else {
             // encoded rgba depth
             target = new RenderTarget({
                 colorBuffer: texture,
-                depth: true
+                depth: true,
+                origin: RENDERTARGET_ORIGIN_BOTTOM
             });
-        }
-
-        // TODO: this is temporary, and will be handled on generic level for all render targets for WebGPU
-        if (device.isWebGPU) {
-            target.flipY = true;
         }
 
         return new ShadowMap(texture, [target]);

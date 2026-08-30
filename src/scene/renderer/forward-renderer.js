@@ -18,6 +18,7 @@ import { RenderPassForward } from './render-pass-forward.js';
 import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
+import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -568,9 +569,11 @@ class ForwardRenderer extends Renderer {
             }
             // #endif
 
-            // skip instanced rendering with 0 instances
+            // Skip hardware-instanced rendering with 0 instances. When draw commands (indirect /
+            // multi-draw) are bound, they are the source of truth for the number of draws and
+            // per-draw instance counts, so instancingData.count must not gate the draw.
             const instancingData = drawCall.instancingData;
-            if (instancingData && instancingData.count <= 0) {
+            if (instancingData && instancingData.count <= 0 && !drawCall.getDrawCommands(camera)) {
                 continue;
             }
 
@@ -587,13 +590,7 @@ class ForwardRenderer extends Renderer {
             if (material !== prevMaterial) {
                 this._materialSwitches++;
                 material._scene = scene;
-
-                if (material.dirty) {
-                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}, Material: ${material.name}`);
-                    material.updateUniforms(device, scene);
-                    material.dirty = false;
-                    DebugGraphics.popGpuMarker(device);
-                }
+                material.prepareForRender(device, scene);
             }
 
             const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, sortedLights);
@@ -611,9 +608,20 @@ class ForwardRenderer extends Renderer {
     renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
         const device = this.device;
         const scene = this.scene;
-        const passFlag = 1 << pass;
         const flipFactor = flipFaces ? -1 : 1;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
+
+        // when this pass renders the scene textures, the additional attachments of the materials whose
+        // shader does not generate them need masking off
+        const sceneTextures = camera.shaderParams.sceneTextures.length > 0;
+        const attachmentCount = sceneTextures ? (device.renderTarget?.colorBufferCount ?? 1) : 1;
+
+        // the masking requires independent blending - without it the blend state of the attachment 0
+        // applies to all attachments, and so the materials which do not generate the scene textures
+        // would write undefined values to them. Whoever sets up the scene textures has to test for
+        // this capability.
+        Debug.assert(attachmentCount <= 1 || device.supportsIndependentBlending,
+            'Rendering the scene textures requires GraphicsDevice#supportsIndependentBlending, as the attachments of the materials which do not generate them cannot be masked off without it.');
 
         // multiview xr rendering
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
@@ -659,7 +667,9 @@ class ForwardRenderer extends Renderer {
 
                 this.alphaTestId.setValue(material.alphaTest);
 
-                device.setBlendState(material.blendState);
+                const blendState = (attachmentCount > 1 && !material.sceneTexturesWrite) ?
+                    getSingleAttachmentBlendState(material.blendState, attachmentCount) : material.blendState;
+                device.setBlendState(blendState);
                 device.setDepthState(material.depthState);
                 device.setAlphaToCoverage(material.alphaToCoverage);
             }
@@ -673,7 +683,7 @@ class ForwardRenderer extends Renderer {
             device.setStencilState(stencilFront, stencilBack);
 
             // Uniforms II: meshInstance overrides
-            drawCall.setParameters(device, passFlag);
+            drawCall.setParameters(device);
 
             // mesh ID - used by the picker
             device.scope.resolve('meshInstanceId').setValue(drawCall.id);

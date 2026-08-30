@@ -52,11 +52,10 @@ import {
     TouchDevice,
     Vec3,
     createGraphicsDevice,
-    math,
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -131,7 +130,6 @@ const config = {
     lodUnderfillLimit: 5,
     // Distance-based LOD ramp base distance (LOD = 1 + log(d / base) / log(mult)); the multiplier
     // is derived from the splat budget — see the budget section below
-    lodBaseDistance: 20,
     // Fly speeds
     moveSpeed: 13,
     moveFastSpeed: 100,
@@ -225,7 +223,7 @@ const camStart = new Vec3(config.cameraPosition[0], config.cameraPosition[1], co
 const revealReach = camStart.distance(center) + radius; // furthest splat from the camera start
 const revealHost = /** @type {Entity} */ (root.children[0]);
 revealHost.addComponent('script');
-const reveal = /** @type {any} */ (/** @type {any} */ (revealHost.script).create(GsplatRevealRadial));
+const reveal = /** @type {any} */ (/** @type {any} */ (revealHost.script).create(GSplatRevealRadial));
 reveal.center.copy(camStart);
 reveal.endRadius = revealReach * 1.1; // reaches the whole scene from the camera start
 reveal.speed = (revealReach * 1.1) / 3; // sweep across in ~3s
@@ -306,21 +304,12 @@ Object.assign(cc, {
     focusPoint: focusPoint
 });
 
-// --- Splat budget (millions; 0 = no cap), driving both the cap and the LOD multiplier.
-// Base distance is fixed (config.lodBaseDistance); the multiplier interpolates 1.5 (at 2M) to
-// 2.5 (at the Extreme budget), clamped — coarser falloff as the budget grows. Default to the
-// Medium quality preset (desktop 8M / mobile 2M), so a quality button is lit at launch. ---
-const extremeBudget = platform.mobile ? 8 : 25;
+// --- Splat budget (millions). LOD levels are chosen to fit it, spending splats where they remove
+// the most approximation error. Default to the Medium quality preset (desktop 8M / mobile 4M), so
+// a quality button is lit at launch. ---
 data.set('splatBudget', platform.mobile ? 4 : 8);
 const applySplatBudget = () => {
-    const budget = data.get('splatBudget');
-    app.scene.gsplat.splatBudget = Math.round(budget * 1000000);
-    const t = math.clamp((budget - 2) / (extremeBudget - 2), 0, 1);
-    const mult = 1.5 + t * (2.5 - 1.5);
-    for (let i = 0; i < gsInstances.length; i++) {
-        gsInstances[i].lodBaseDistance = config.lodBaseDistance;
-        gsInstances[i].lodMultiplier = mult;
-    }
+    app.scene.gsplat.splatBudget = Math.round(data.get('splatBudget') * 1000000);
 };
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);

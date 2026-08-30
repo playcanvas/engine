@@ -14,15 +14,16 @@ import { Script, Vec3, BoundingBox, GSplatFormat, GSplatContainer, PIXELFORMAT_R
  * giving correct depth ordering with both CPU and GPU sorting.
  *
  * @example
- * const weatherEntity = new pc.Entity('Weather');
+ * const weatherEntity = new Entity('Weather');
  * weatherEntity.addComponent('script');
- * const weather = weatherEntity.script.create(GsplatWeather);
+ * const weather = weatherEntity.script.create(GSplatWeather);
  * weather.followEntity = cameraEntity;
  * weather.speed = 1.2;
  * weather.drift = 0.15;
  * app.root.addChild(weatherEntity);
+ * @category Gaussian Splatting
  */
-class GsplatWeather extends Script {
+class GSplatWeather extends Script {
     static scriptName = 'gsplatWeather';
 
     // --- Grid configuration (read at initialize; call rebuild() after changing) ---
@@ -450,4 +451,4 @@ class GsplatWeather extends Script {
     }
 }
 
-export { GsplatWeather };
+export { GSplatWeather };

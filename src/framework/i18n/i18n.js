@@ -148,7 +148,7 @@ class I18n extends EventHandler {
      * @example
      * // With a defined dictionary of locales
      * const availableLocales = { en: 'en-US', fr: 'fr-FR' };
-     * const locale = pc.I18n.getText('en-US', availableLocales);
+     * const locale = I18n.getText('en-US', availableLocales);
      * // returns 'en'
      * @ignore
      */

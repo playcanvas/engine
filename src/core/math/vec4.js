@@ -1,3 +1,5 @@
+import { Debug } from '../debug.js';
+
 /**
  * A 4-dimensional vector. Vec4 is commonly used to represent homogeneous coordinates or shader
  * uniforms requiring four components.
@@ -42,8 +44,8 @@ class Vec4 {
      * @param {number} [z] - The z value. Defaults to 0.
      * @param {number} [w] - The w value. Defaults to 0.
      * @example
-     * const v1 = new pc.Vec4(); // defaults to 0, 0, 0, 0
-     * const v2 = new pc.Vec4(1, 2, 3, 4);
+     * const v1 = new Vec4(); // defaults to 0, 0, 0, 0
+     * const v2 = new Vec4(1, 2, 3, 4);
      */
     /**
      * Creates a new Vec4 instance.
@@ -51,7 +53,7 @@ class Vec4 {
      * @overload
      * @param {number[]} arr - The array to set the vector values from.
      * @example
-     * const v = new pc.Vec4([1, 2, 3, 4]);
+     * const v = new Vec4([1, 2, 3, 4]);
      */
     /**
      * @param {number|number[]} [x] - The x value. Defaults to 0. If x is an array of length 4, the
@@ -80,8 +82,8 @@ class Vec4 {
      * @param {Vec4} rhs - The vector to add to the specified vector.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(10, 10, 10, 10);
-     * const b = new pc.Vec4(20, 20, 20, 20);
+     * const a = new Vec4(10, 10, 10, 10);
+     * const b = new Vec4(20, 20, 20, 20);
      *
      * a.add(b);
      *
@@ -104,9 +106,9 @@ class Vec4 {
      * @param {Vec4} rhs - The second vector operand for the addition.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(10, 10, 10, 10);
-     * const b = new pc.Vec4(20, 20, 20, 20);
-     * const r = new pc.Vec4();
+     * const a = new Vec4(10, 10, 10, 10);
+     * const b = new Vec4(20, 20, 20, 20);
+     * const r = new Vec4();
      *
      * r.add2(a, b);
      * // Outputs [30, 30, 30, 30]
@@ -128,7 +130,7 @@ class Vec4 {
      * @param {number} scalar - The number to add.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const vec = new pc.Vec4(3, 4, 5, 6);
+     * const vec = new Vec4(3, 4, 5, 6);
      *
      * vec.addScalar(2);
      *
@@ -151,9 +153,9 @@ class Vec4 {
      * @param {number} scalar - The number to multiply the added vector with.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const vec = new pc.Vec4(1, 2, 3, 4);
+     * const vec = new Vec4(1, 2, 3, 4);
      *
-     * vec.addScaled(pc.Vec4.ONE, 2);
+     * vec.addScaled(Vec4.ONE, 2);
      *
      * // Outputs [3, 4, 5, 6]
      * console.log("The result of the addition is: " + vec.toString());
@@ -172,7 +174,7 @@ class Vec4 {
      *
      * @returns {this} A 4-dimensional vector containing the result of the cloning.
      * @example
-     * const v = new pc.Vec4(10, 20, 30, 40);
+     * const v = new Vec4(10, 20, 30, 40);
      * const vclone = v.clone();
      * console.log("The result of the cloning is: " + vclone.toString());
      */
@@ -188,8 +190,8 @@ class Vec4 {
      * @param {Vec4} rhs - A vector to copy to the specified vector.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const src = new pc.Vec4(10, 20, 30, 40);
-     * const dst = new pc.Vec4();
+     * const src = new Vec4(10, 20, 30, 40);
+     * const dst = new Vec4();
      *
      * dst.copy(src);
      *
@@ -210,8 +212,8 @@ class Vec4 {
      * @param {Vec4} rhs - The vector to divide the specified vector by.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(4, 9, 16, 25);
-     * const b = new pc.Vec4(2, 3, 4, 5);
+     * const a = new Vec4(4, 9, 16, 25);
+     * const b = new Vec4(2, 3, 4, 5);
      *
      * a.div(b);
      *
@@ -234,9 +236,9 @@ class Vec4 {
      * @param {Vec4} rhs - The divisor vector (the vector dividing the dividend).
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(4, 9, 16, 25);
-     * const b = new pc.Vec4(2, 3, 4, 5);
-     * const r = new pc.Vec4();
+     * const a = new Vec4(4, 9, 16, 25);
+     * const b = new Vec4(2, 3, 4, 5);
+     * const r = new Vec4();
      *
      * r.div2(a, b);
      *
@@ -258,7 +260,7 @@ class Vec4 {
      * @param {number} scalar - The number to divide by.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const vec = new pc.Vec4(3, 6, 9, 12);
+     * const vec = new Vec4(3, 6, 9, 12);
      *
      * vec.divScalar(3);
      *
@@ -281,8 +283,8 @@ class Vec4 {
      * @param {Vec4} rhs - The second 4-dimensional vector operand of the dot product.
      * @returns {number} The result of the dot product operation.
      * @example
-     * const v1 = new pc.Vec4(5, 10, 20, 40);
-     * const v2 = new pc.Vec4(10, 20, 40, 80);
+     * const v1 = new Vec4(5, 10, 20, 40);
+     * const v2 = new Vec4(10, 20, 40, 80);
      * const v1dotv2 = v1.dot(v2);
      * console.log("The result of the dot product is: " + v1dotv2);
      */
@@ -296,8 +298,8 @@ class Vec4 {
      * @param {Vec4} rhs - The vector to compare to the specified vector.
      * @returns {boolean} True if the vectors are equal and false otherwise.
      * @example
-     * const a = new pc.Vec4(1, 2, 3, 4);
-     * const b = new pc.Vec4(5, 6, 7, 8);
+     * const a = new Vec4(1, 2, 3, 4);
+     * const b = new Vec4(5, 6, 7, 8);
      * console.log("The two vectors are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
@@ -312,8 +314,8 @@ class Vec4 {
      * vectors. Defaults to 1e-6.
      * @returns {boolean} True if the vectors are equal and false otherwise.
      * @example
-     * const a = new pc.Vec4();
-     * const b = new pc.Vec4();
+     * const a = new Vec4();
+     * const b = new Vec4();
      * console.log("The two vectors are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
      */
     equalsApprox(rhs, epsilon = 1e-6) {
@@ -328,7 +330,7 @@ class Vec4 {
      *
      * @returns {number} The magnitude of the specified 4-dimensional vector.
      * @example
-     * const vec = new pc.Vec4(3, 4, 0, 0);
+     * const vec = new Vec4(3, 4, 0, 0);
      * const len = vec.length();
      * // Outputs 5
      * console.log("The length of the vector is: " + len);
@@ -342,7 +344,7 @@ class Vec4 {
      *
      * @returns {number} The magnitude squared of the specified 4-dimensional vector.
      * @example
-     * const vec = new pc.Vec4(3, 4, 0, 0);
+     * const vec = new Vec4(3, 4, 0, 0);
      * const len = vec.lengthSq();
      * // Outputs 25
      * console.log("The length squared of the vector is: " + len);
@@ -361,9 +363,9 @@ class Vec4 {
      * range, the linear interpolant will occur on a ray extrapolated from this line.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(0, 0, 0, 0);
-     * const b = new pc.Vec4(10, 10, 10, 10);
-     * const r = new pc.Vec4();
+     * const a = new Vec4(0, 0, 0, 0);
+     * const b = new Vec4(10, 10, 10, 10);
+     * const r = new Vec4();
      *
      * r.lerp(a, b, 0);   // r is equal to a
      * r.lerp(a, b, 0.5); // r is 5, 5, 5, 5
@@ -384,8 +386,8 @@ class Vec4 {
      * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(2, 3, 4, 5);
-     * const b = new pc.Vec4(4, 5, 6, 7);
+     * const a = new Vec4(2, 3, 4, 5);
+     * const b = new Vec4(4, 5, 6, 7);
      *
      * a.mul(b);
      *
@@ -408,9 +410,9 @@ class Vec4 {
      * @param {Vec4} rhs - The 4-dimensional vector used as the second multiplicand of the operation.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(2, 3, 4, 5);
-     * const b = new pc.Vec4(4, 5, 6, 7);
-     * const r = new pc.Vec4();
+     * const a = new Vec4(2, 3, 4, 5);
+     * const b = new Vec4(4, 5, 6, 7);
+     * const r = new Vec4();
      *
      * r.mul2(a, b);
      *
@@ -432,7 +434,7 @@ class Vec4 {
      * @param {number} scalar - The number to multiply by.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const vec = new pc.Vec4(3, 6, 9, 12);
+     * const vec = new Vec4(3, 6, 9, 12);
      *
      * vec.mulScalar(3);
      *
@@ -448,6 +450,11 @@ class Vec4 {
         return this;
     }
 
+    scale(scalar) {
+        Debug.deprecated('Vec4#scale is deprecated. Use Vec4#mulScalar instead.');
+        return this.mulScalar(scalar);
+    }
+
     /**
      * Returns this 4-dimensional vector converted to a unit vector in place. If the vector has a
      * length of zero, the vector's elements will be set to zero.
@@ -455,7 +462,7 @@ class Vec4 {
      * @param {Vec4} [src] - The vector to normalize. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const v = new pc.Vec4(25, 0, 0, 0);
+     * const v = new Vec4(25, 0, 0, 0);
      *
      * v.normalize();
      *
@@ -481,7 +488,7 @@ class Vec4 {
      * @param {Vec4} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const v = new pc.Vec4(1.2, 3.9, 5.5, 7.8);
+     * const v = new Vec4(1.2, 3.9, 5.5, 7.8);
      * v.floor();
      * // v is now [1, 3, 5, 7]
      */
@@ -499,7 +506,7 @@ class Vec4 {
      * @param {Vec4} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const v = new pc.Vec4(1.2, 3.1, 5.9, 7.4);
+     * const v = new Vec4(1.2, 3.1, 5.9, 7.4);
      * v.ceil();
      * // v is now [2, 4, 6, 8]
      */
@@ -517,7 +524,7 @@ class Vec4 {
      * @param {Vec4} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const v = new pc.Vec4(1.4, 3.6, 5.5, 7.2);
+     * const v = new Vec4(1.4, 3.6, 5.5, 7.2);
      * v.round();
      * // v is now [1, 4, 6, 7]
      */
@@ -535,8 +542,8 @@ class Vec4 {
      * @param {Vec4} rhs - The 4-dimensional vector used as the source of elements to compare to.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(5, 1, 7, 3);
-     * const b = new pc.Vec4(2, 8, 3, 9);
+     * const a = new Vec4(5, 1, 7, 3);
+     * const b = new Vec4(2, 8, 3, 9);
      * a.min(b);
      * // a is now [2, 1, 3, 3]
      */
@@ -554,8 +561,8 @@ class Vec4 {
      * @param {Vec4} rhs - The 4-dimensional vector used as the source of elements to compare to.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(5, 1, 7, 3);
-     * const b = new pc.Vec4(2, 8, 3, 9);
+     * const a = new Vec4(5, 1, 7, 3);
+     * const b = new Vec4(2, 8, 3, 9);
      * a.max(b);
      * // a is now [5, 8, 7, 9]
      */
@@ -576,7 +583,7 @@ class Vec4 {
      * @param {number} w - The value to set on the fourth component of the vector.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const v = new pc.Vec4();
+     * const v = new Vec4();
      * v.set(5, 10, 20, 40);
      *
      * // Outputs 5, 10, 20, 40
@@ -597,8 +604,8 @@ class Vec4 {
      * @param {Vec4} rhs - The vector to subtract from the specified vector.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(10, 10, 10, 10);
-     * const b = new pc.Vec4(20, 20, 20, 20);
+     * const a = new Vec4(10, 10, 10, 10);
+     * const b = new Vec4(20, 20, 20, 20);
      *
      * a.sub(b);
      *
@@ -621,9 +628,9 @@ class Vec4 {
      * @param {Vec4} rhs - The second vector operand for the subtraction.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const a = new pc.Vec4(10, 10, 10, 10);
-     * const b = new pc.Vec4(20, 20, 20, 20);
-     * const r = new pc.Vec4();
+     * const a = new Vec4(10, 10, 10, 10);
+     * const b = new Vec4(20, 20, 20, 20);
+     * const r = new Vec4();
      *
      * r.sub2(a, b);
      *
@@ -645,7 +652,7 @@ class Vec4 {
      * @param {number} scalar - The number to subtract.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const vec = new pc.Vec4(3, 4, 5, 6);
+     * const vec = new Vec4(3, 4, 5, 6);
      *
      * vec.subScalar(2);
      *
@@ -669,7 +676,7 @@ class Vec4 {
      * array. Default is 0.
      * @returns {Vec4} Self for chaining.
      * @example
-     * const v = new pc.Vec4();
+     * const v = new Vec4();
      * v.fromArray([20, 10, 5, 0]);
      * // v is set to [20, 10, 5, 0]
      */
@@ -687,7 +694,7 @@ class Vec4 {
      *
      * @returns {string} The vector in string form.
      * @example
-     * const v = new pc.Vec4(20, 10, 5, 0);
+     * const v = new Vec4(20, 10, 5, 0);
      * // Outputs [20, 10, 5, 0]
      * console.log(v.toString());
      */
@@ -720,7 +727,7 @@ class Vec4 {
      * array. Default is 0.
      * @returns {number[]|ArrayBufferView} The vector as an array.
      * @example
-     * const v = new pc.Vec4(20, 10, 5, 1);
+     * const v = new Vec4(20, 10, 5, 1);
      * // Outputs [20, 10, 5, 1]
      * console.log(v.toArray());
      */

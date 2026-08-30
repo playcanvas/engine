@@ -122,7 +122,6 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
     }
 
     // Generate normals based on modified positions and indices
-    // @ts-ignore engine-tsd
     const modifiedNormals = new Float32Array(calculateNormals(modifiedPositions, indices));
 
     // Generate delta positions and normals - as morph targets store delta between base position / normal and modified position / normal
@@ -132,7 +131,6 @@ const createMorphTarget = (positions, normals, indices, nx, ny, nz) => {
     }
 
     // Create a morph target
-    // @ts-ignore engine-tsd
     return new MorphTarget({
         deltaPositions: modifiedPositions,
         deltaNormals: modifiedNormals

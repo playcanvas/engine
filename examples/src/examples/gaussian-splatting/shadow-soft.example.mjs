@@ -192,6 +192,7 @@ app.root.addChild(camera);
 camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(-3, 2, 4), new Vec3(0, 0, 0));
 
 // Single directional light casting soft shadows
+const { soft: softShadows, ...lightSettings } = data.get('settings.light');
 const dirLight = new Entity('MainLight');
 dirLight.addComponent('light', {
     ...{
@@ -201,11 +202,11 @@ dirLight.addComponent('light', {
         shadowBias: 0.2,
         normalOffsetBias: 0.05,
         castShadows: true,
-        shadowType: data.get('settings.light.soft') ? SHADOW_PCSS_32F : SHADOW_PCF3_32F,
+        shadowType: softShadows ? SHADOW_PCSS_32F : SHADOW_PCF3_32F,
         shadowDistance: 10,
         shadowResolution: 2048
     },
-    ...data.get('settings.light')
+    ...lightSettings
 });
 app.root.addChild(dirLight);
 dirLight.setLocalEulerAngles(55, 30, 0);

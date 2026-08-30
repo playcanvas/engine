@@ -15,6 +15,7 @@ const _properties = [
     'asset',
     'materialAssets',
     'castShadows',
+    'shadowCascadeMask',
     'receiveShadows',
     'castShadowsLightmap',
     'lightmapped',

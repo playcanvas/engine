@@ -1,8 +1,10 @@
 import { Debug } from '../../../core/debug.js';
 import {
     BLEND_NONE, DITHER_NONE, ditherNames, FRESNEL_SCHLICK,
+    PARALLAX_OFFSET,
     SHADER_FORWARD,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED,
+    parallaxNames
 } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
 import { LitShader } from './lit-shader.js';
@@ -58,10 +60,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @param {string} transformPropName - Name of the transform id in the options block. Usually "basenameTransform".
      * @param {string} uVPropName - Name of the UV channel in the options block. Usually "basenameUv".
      * @param {object} options - The options passed into createShaderDefinition.
+     * @param {boolean} [allowParallaxOffset] - True to apply the parallax uv offset to the
+     * expression when a height map is used. Set to false for uv expressions evaluated before
+     * the parallax offset is known, for example the uv used to build the TBN matrix.
      * @returns {string} The code used to replace '*_TEXTURE_UV' in the shader code.
      * @private
      */
-    _getUvSourceExpression(transformPropName, uVPropName, options) {
+    _getUvSourceExpression(transformPropName, uVPropName, options, allowParallaxOffset = true) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
         const isMainPass = options.litOptions.pass === SHADER_FORWARD;
@@ -79,8 +84,9 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 expression = `vUV${uvChannel}_${transformId}`;
             }
 
-            // if heightmap is enabled all maps except the heightmap are offset
-            if (options.heightMap && transformPropName !== 'heightMapTransform') {
+            // if heightmap is enabled all maps except the heightmap are offset. Note that dUvOffset
+            // is only declared and evaluated by the forward pass, so other passes must not use it.
+            if (isMainPass && allowParallaxOffset && options.heightMap && transformPropName !== 'heightMapTransform') {
                 expression += ' + dUvOffset';
             }
         }
@@ -308,7 +314,10 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         fDefineSet(options.lightVertexColor, 'STD_LIGHT_VERTEX_COLOR', '');
         fDefineSet(options.dirLightMap && options.litOptions.useSpecular, 'STD_LIGHTMAP_DIR', '');
         fDefineSet(options.heightMap, 'STD_HEIGHT_MAP', '');
+        fDefineSet(true, 'STD_PARALLAX', parallaxNames[options.parallaxMode ?? PARALLAX_OFFSET]);
+        fDefineSet(options.parallaxSelfShadow, 'STD_PARALLAX_SELF_SHADOW', '');
         fDefineSet(options.useSpecularColor, 'STD_SPECULAR_COLOR', '');
+        fDefineSet(options.useSpecularColor && (options.litOptions.useSpecular || options.litOptions.useRefraction), 'STD_SPECULAR_CONSTANT', '');
         fDefineSet(options.aoMap || options.aoVertexColor || options.useAO, 'STD_AO', '');
         fDefineSet(true, 'STD_OPACITY_DITHER', ditherNames[shaderPassInfo.isForward ? options.litOptions.opacityDither : options.litOptions.opacityShadowDither]);
     }
@@ -351,11 +360,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
             // normal
             if (litShader.needsNormal) {
-                if (options.normalMap || options.clearCoatNormalMap) {
+                if (options.normalMap || options.clearCoatNormalMap || options.heightMap) {
                     if (!options.litOptions.hasTangents) {
+                        // the uv used to derive the TBN matrix. It must not include the parallax
+                        // offset, as the TBN is evaluated before the parallax offset is known.
                         // TODO: generalize to support each normalmap input (normalMap, normalDetailMap, clearCoatNormalMap) independently
-                        const baseName = options.normalMap ? 'normalMap' : 'clearCoatNormalMap';
-                        lightingUv = this._getUvSourceExpression(`${baseName}Transform`, `${baseName}Uv`, options);
+                        const baseName = options.normalMap ? 'normalMap' : (options.clearCoatNormalMap ? 'clearCoatNormalMap' : 'heightMap');
+                        lightingUv = this._getUvSourceExpression(`${baseName}Transform`, `${baseName}Uv`, options, false);
                     }
                 }
 
@@ -373,6 +384,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             if (options.litOptions.useRefraction) {
                 this._addMapDefines(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping);
                 this._addMapDefines(fDefines, 'thickness', 'thicknessPS', options, litShader.chunks, textureMapping);
+
+                // refraction needs ior, which is otherwise handled by the metalness path
+                if (!options.litOptions.useMetalness) {
+                    this._addMapDefines(fDefines, 'ior', 'iorPS', options, litShader.chunks, textureMapping);
+                }
             }
 
             // iridescence
@@ -381,8 +397,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMapDefines(fDefines, 'iridescenceThickness', 'iridescenceThicknessPS', options, litShader.chunks, textureMapping);
             }
 
-            // specularity & glossiness
-            if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections) {
+            // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+            if ((litShader.lighting && options.litOptions.useSpecular) || litShader.reflections || options.litOptions.useRefraction) {
                 if (options.litOptions.useSheen) {
                     this._addMapDefines(fDefines, 'sheen', 'sheenPS', options, litShader.chunks, textureMapping, options.sheenEncoding);
                     this._addMapDefines(fDefines, 'sheenGloss', 'sheenGlossPS', options, litShader.chunks, textureMapping);
@@ -461,7 +477,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             vertexIncludes: includes,
             fragmentIncludes: includes,
             fragmentDefines: fDefines,
-            vertexDefines: vDefines
+            vertexDefines: vDefines,
+            useDualSourceBlending: options.useDualSourceBlending
         });
 
         if (litShader.shaderPassInfo.isForward) {

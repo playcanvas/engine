@@ -1,4 +1,4 @@
-import playcanvasConfig from '@playcanvas/eslint-config';
+import javascriptConfig from '@playcanvas/eslint-config/javascript';
 import eslintConfigPrettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 
@@ -513,7 +513,7 @@ const examplesPlugin = {
 };
 
 export default [
-    ...playcanvasConfig,
+    ...javascriptConfig,
     {
         files: ['**/*.js', '**/*.mjs', '**/*.jsx'],
         languageOptions: {
@@ -529,7 +529,8 @@ export default [
         },
         rules: {
             'import/order': importOrder,
-            'import/no-unresolved': 'off'
+            'import/no-unresolved': 'off',
+            'import/extensions': 'off' // examples import via the 'examples/context' alias, not real paths
         }
     },
     {

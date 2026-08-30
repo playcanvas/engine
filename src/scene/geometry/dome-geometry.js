@@ -13,13 +13,13 @@ import { SphereGeometry } from './sphere-geometry.js';
  *
  * ```javascript
  * // Create a mesh instance
- * const geometry = new pc.DomeGeometry();
- * const mesh = pc.Mesh.fromGeometry(app.graphicsDevice, geometry);
- * const material = new pc.StandardMaterial();
- * const meshInstance = new pc.MeshInstance(mesh, material);
+ * const geometry = new DomeGeometry();
+ * const mesh = Mesh.fromGeometry(app.graphicsDevice, geometry);
+ * const material = new StandardMaterial();
+ * const meshInstance = new MeshInstance(mesh, material);
  *
  * // Create an entity
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     meshInstances: [meshInstance]
  * });
@@ -43,7 +43,7 @@ class DomeGeometry extends SphereGeometry {
      * @param {number} [opts.longitudeBands] - The number of divisions along the longitudinal axis of
      * the sphere. Defaults to 16.
      * @example
-     * const geometry = new pc.DomeGeometry({
+     * const geometry = new DomeGeometry({
      *     latitudeBands: 32,
      *     longitudeBands: 32
      * });

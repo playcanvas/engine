@@ -95,6 +95,8 @@ data.set('settings', {
     shadowIntensity: 1,
     cookieIntensity: 0.5,
     numLights: 0,
+    use16BitIndex: false,
+    maxLightsInfo: 0,
     debug: false,
     debugAtlas: false,
     splitOptions: 0,
@@ -115,9 +117,15 @@ const lighting = app.scene.lighting;
 // 1) subdivide space with lights into this many cells
 lighting.cells = new Vec3(12, 4, 12);
 
-// 2) and allow this many lights per cell
-const maxLights = 24;
-lighting.maxLightsPerCell = maxLights;
+// 2) and allow this many lights per cell. All lights in this example overlap the middle of the
+// scene, so this is also used as the limit on the number of lights that can be added
+const maxLightsPerCell = 24;
+lighting.maxLightsPerCell = maxLightsPerCell;
+
+// 3) the light grid stores the light index using 8 bits, allowing up to 255 lights. The '16bit
+// Index' option switches it to 16 bits, raising the limit to as many lights as the device allows
+const maxLights16Bit = device.maxTextureSize;
+data.set('settings.maxLightsInfo', lighting.maxLights);
 
 // Enable clustered shadows (it's enabled by default as well)
 lighting.shadowsEnabled = observer.get('settings.shadowsEnabled');
@@ -289,6 +297,12 @@ camera.script.create('orbitCameraInputTouch');
 // Handle HUD changes - update properties on the scene
 data.on('*:set', (/** @type {string} */ path, value) => {
     const pathArray = path.split('.');
+
+    // values only reported on the HUD
+    if (pathArray[1] === 'numLights' || pathArray[1] === 'maxLightsInfo') {
+        return;
+    }
+
     if (pathArray[1] === 'static') {
         lightsStatic = value;
         updateLightCount();
@@ -298,6 +312,12 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     } else if (pathArray[1] === 'debug') {
         // debug rendering of lighting clusters on world layer
         lighting.debugLayer = value ? app.scene.layers.getLayerByName('World').id : undefined;
+    } else if (pathArray[1] === 'use16BitIndex') {
+        // switch the light grid between an 8bit and a 16bit light index
+        lighting.maxLights = value ? maxLights16Bit : 255;
+
+        // the requested value is limited by the device, so report the value actually used
+        data.set('settings.maxLightsInfo', lighting.maxLights);
     } else if (pathArray[1] === 'debugAtlas') {
         // Show debug atlas
         debugAtlas = value;
@@ -327,7 +347,7 @@ function updateLightCount() {
 
 // Add light button handler
 data.on('add', () => {
-    if (spotLightList.length < maxLights) {
+    if (spotLightList.length < maxLightsPerCell) {
         createLight(spotLightList.length);
         updateLightCount();
     }

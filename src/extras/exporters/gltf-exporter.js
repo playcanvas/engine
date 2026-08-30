@@ -665,6 +665,9 @@ class GltfExporter extends CoreExporter {
 
                 this.attachTexture(resources, mat, material, 'normalTexture', 'normalMap', json);
                 this.attachTexture(resources, mat, material, 'occlusionTexture', 'aoMap', json);
+                if (material.occlusionTexture && mat.aoIntensity !== 1) {
+                    material.occlusionTexture.strength = mat.aoIntensity;
+                }
                 this.attachTexture(resources, mat, material, 'emissiveTexture', 'emissiveMap', json);
 
                 return material;

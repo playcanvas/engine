@@ -28,9 +28,9 @@ const _tempScrollValue = new Vec2();
  * ScrollViewComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('element', {
- *     type: pc.ELEMENTTYPE_GROUP,
+ *     type: ELEMENTTYPE_GROUP,
  *     useInput: true
  * });
  * entity.addComponent('scrollview', {
@@ -44,7 +44,7 @@ const _tempScrollValue = new Vec2();
  * {@link Entity#scrollview} property:
  *
  * ```javascript
- * entity.scrollview.scroll = new pc.Vec2(0, 1); // Scroll to the top
+ * entity.scrollview.scroll = new Vec2(0, 1); // Scroll to the top
  *
  * console.log(entity.scrollview.scroll);        // Get the scroll position and print it
  * ```

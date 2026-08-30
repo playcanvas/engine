@@ -40,7 +40,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * SpriteComponent to an {@link Entity}, use {@link Entity#addComponent}:
  *
  * ```javascript
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('sprite', {
  *     spriteAsset: spriteAsset
  * });
@@ -50,7 +50,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * {@link Entity#sprite} property:
  *
  * ```javascript
- * entity.sprite.color = pc.Color.RED; // Tint the sprite red
+ * entity.sprite.color = Color.RED; // Tint the sprite red
  *
  * console.log(entity.sprite.color);   // Get the sprite tint and print it
  * ```
@@ -393,7 +393,7 @@ class SpriteComponent extends Component {
         return this._currentClip.sprite;
     }
 
-    // (private) {pc.Material} material The material used to render a sprite.
+    // (private) {Material} material The material used to render a sprite.
     set material(value) {
         this._material = value;
         if (this._meshInstance) {
@@ -805,6 +805,12 @@ class SpriteComponent extends Component {
     }
 
     onBeforeRemove() {
+        // removing a component does not disable it first, so undo what onEnable set up. This runs
+        // before the clips are torn down below, as onDisable stops the current clip.
+        if (this.enabled && this.entity.enabled) {
+            this.onDisable();
+        }
+
         this._currentClip = null;
 
         if (this._defaultClip) {
@@ -1059,10 +1065,11 @@ class SpriteComponent extends Component {
     }
 
     _onLayersChanged(oldComp, newComp) {
-        oldComp.off('add', this._onLayerAdded, this);
-        oldComp.off('remove', this._onLayerRemoved, this);
-        newComp.on('add', this._onLayerAdded, this);
-        newComp.on('remove', this._onLayerRemoved, this);
+        // store the new handles, so that onDisable can unsubscribe from the current composition
+        this._evtLayerAdded?.off();
+        this._evtLayerAdded = newComp.on('add', this._onLayerAdded, this);
+        this._evtLayerRemoved?.off();
+        this._evtLayerRemoved = newComp.on('remove', this._onLayerRemoved, this);
 
         if (this.enabled && this.entity.enabled) {
             this.addToLayers();

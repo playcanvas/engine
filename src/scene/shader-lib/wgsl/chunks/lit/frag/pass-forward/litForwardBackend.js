@@ -20,7 +20,7 @@ fn evaluateBackend() -> FragmentOutput {
         #endif
     #endif
 
-    #ifdef LIT_SPECULAR_OR_REFLECTION
+    #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
         #ifdef LIT_METALNESS
             var f0: f32 = 1.0 / litArgs_ior;
             f0 = (f0 - 1.0) / (f0 + 1.0);
@@ -172,23 +172,25 @@ fn evaluateBackend() -> FragmentOutput {
 
         #endif
 
-        #ifdef LIT_REFRACTION
-            addRefraction(
-                litArgs_worldNormal, 
-                dViewDirW, 
-                litArgs_thickness, 
-                litArgs_gloss, 
-                litArgs_specularity, 
-                litArgs_albedo, 
-                litArgs_transmission,
-                litArgs_ior,
-                litArgs_dispersion
-                #if defined(LIT_IRIDESCENCE)
-                    , iridescenceFresnel, 
-                    litArgs_iridescence_intensity
-                #endif
-            );
-        #endif
+    #endif
+
+    // refraction is not gated on lighting / reflections, so that it also works without them
+    #ifdef LIT_REFRACTION
+        addRefraction(
+            litArgs_worldNormal,
+            dViewDirW,
+            litArgs_thickness,
+            litArgs_gloss,
+            litArgs_specularity,
+            litArgs_albedo,
+            litArgs_transmission,
+            litArgs_ior,
+            litArgs_dispersion
+            #if defined(LIT_IRIDESCENCE)
+                , iridescenceFresnel,
+                litArgs_iridescence_intensity
+            #endif
+        );
     #endif
 
     // apply ambient occlusion
@@ -243,6 +245,8 @@ fn evaluateBackend() -> FragmentOutput {
         // output when the shadow catcher is enabled - accumulated shadows
         output.color = vec4f(vec3f(dShadowCatcher), output.color.a);
     #endif
+
+    #include "outlineOutputPS"
 
     return output;
 }

@@ -369,4 +369,63 @@ describe('AssetRegistry', function () {
 
     });
 
+    describe('#destroy', function () {
+
+        it('empties the registry and clears asset references to it', function () {
+            const asset = new Asset('Asset', 'text', {
+                url: 'fake/one/file.txt'
+            });
+            asset.tags.add('tag');
+
+            const registry = new AssetRegistry(new ResourceLoader(app));
+            registry.add(asset);
+            registry.destroy();
+
+            expect(registry.list().length).to.equal(0);
+            expect(registry.get(asset.id)).to.be.undefined;
+            expect(registry.getByUrl('fake/one/file.txt')).to.be.undefined;
+            expect(asset.registry).to.be.null;
+        });
+
+        it('unsubscribes from asset name and tag changes', function () {
+            const asset = new Asset('Asset', 'text', {
+                url: 'fake/one/file.txt'
+            });
+
+            const registry = new AssetRegistry(new ResourceLoader(app));
+            registry.add(asset);
+            registry.destroy();
+
+            // a still subscribed tag handler throws on the released tags cache, and a still
+            // subscribed name handler repopulates the name index
+            asset.tags.add('tag');
+            asset.tags.remove('tag');
+            asset.name = 'Renamed Asset';
+
+            expect(registry.find('Renamed Asset')).to.be.null;
+        });
+
+        it('leaves a registry reference which belongs to another registry', function () {
+            const asset = new Asset('Asset', 'text', {
+                url: 'fake/one/file.txt'
+            });
+
+            const registry = new AssetRegistry(new ResourceLoader(app));
+            registry.add(asset);
+
+            // the asset now belongs to the other registry, which is still live
+            const other = new AssetRegistry(new ResourceLoader(app));
+            other.add(asset);
+
+            registry.destroy();
+
+            expect(asset.registry).to.equal(other);
+            expect(other.get(asset.id)).to.equal(asset);
+
+            other.destroy();
+            expect(asset.registry).to.be.null;
+        });
+
+    });
+
 });

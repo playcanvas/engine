@@ -68,6 +68,10 @@ class ImageRenderable {
         this._element.removeModelFromLayers(this.model);
         this.model.destroy();
         this.model = null;
+
+        // the node was added as a child of the entity, so detach it - otherwise it lingers in
+        // entity.children for the lifetime of the entity
+        this.node.remove();
         this.node = null;
         this.mesh = null;
         this.meshInstance?.destroy();

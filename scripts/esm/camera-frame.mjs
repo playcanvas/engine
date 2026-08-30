@@ -1,9 +1,9 @@
-// Camera Frame v 1.1
+// Camera Frame v 1.2
 
 import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
 
 /**
- * @import { Asset } from 'playcanvas';
+ * @import { Asset, Entity } from 'playcanvas';
  */
 
 /** @enum {number} */
@@ -39,10 +39,14 @@ const DebugType = {
     BLOOM: 'bloom',
     VIGNETTE: 'vignette',
     DOFCOC: 'dofcoc',
-    DOFBLUR: 'dofblur'
+    DOFBLUR: 'dofblur',
+    DEPTH: 'depth'
 };
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Rendering {
     /**
      * @attribute
@@ -104,7 +108,10 @@ class Rendering {
     debug = DebugType.NONE;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Ssao {
     /**
      * @attribute
@@ -116,6 +123,14 @@ class Ssao {
      * @visibleif {type !== 'none'}
      */
     blurEnabled = true;
+
+    /**
+     * Whether the sampling is randomized. Useful instead of the blur when TAA is enabled, which
+     * resolves the noise over time and keeps more of the detail.
+     *
+     * @visibleif {type !== 'none'}
+     */
+    randomize = false;
 
     /**
      * @range [0, 1]
@@ -166,7 +181,10 @@ class Ssao {
     scale = 1;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Bloom {
     enabled = false;
 
@@ -188,7 +206,10 @@ class Bloom {
     blurLevel = 16;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Grading {
     enabled = false;
 
@@ -223,7 +244,10 @@ class Grading {
     tint = new Color(1, 1, 1, 1);
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class ColorLUT {
     /**
      * @attribute
@@ -270,7 +294,10 @@ class ColorLUT {
     blend = 0;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Vignette {
     enabled = false;
 
@@ -313,7 +340,10 @@ class Vignette {
     color = new Color(0, 0, 0, 1);
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Fringing {
     enabled = false;
 
@@ -326,7 +356,10 @@ class Fringing {
     intensity = 50;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class ColorEnhance {
     enabled = false;
 
@@ -371,7 +404,10 @@ class ColorEnhance {
     dehaze = 0;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Taa {
     enabled = false;
 
@@ -384,7 +420,10 @@ class Taa {
     jitter = 1;
 }
 
-/** @interface */
+/**
+ * @interface
+ * @category Post-Processing
+ */
 class Dof {
     enabled = false;
 
@@ -436,6 +475,176 @@ class Dof {
     blurRingPoints = 5;
 }
 
+/**
+ * @interface
+ * @category Post-Processing
+ */
+class VolumetricFog {
+    enabled = false;
+
+    /**
+     * The entity with the directional light providing the scattered light. Leave it unset to light
+     * the fog by the local lights and the ambient term alone.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     * @type {Entity}
+     */
+    light = null;
+
+    /**
+     * Whether the omni lights scatter light in the fog. Requires clustered lighting, which is
+     * enabled by default. An omni light fills its whole range, so it typically covers much more of
+     * the screen than a spot light and costs more.
+     *
+     * @visibleif {enabled}
+     */
+    localOmniLights = false;
+
+    /**
+     * Whether the spot lights scatter light in the fog, forming visible beams. Requires clustered
+     * lighting, which is enabled by default.
+     *
+     * @visibleif {enabled}
+     */
+    localSpotLights = false;
+
+    /**
+     * The intensity of the light scattering of the omni and the spot lights. A narrow beam crosses
+     * only a short part of each view ray, and so typically needs a much larger value than the
+     * directional light's intensity below.
+     *
+     * @visibleif {enabled && (localOmniLights || localSpotLights)}
+     * @range [0, 100]
+     * @precision 2
+     * @step 0.1
+     */
+    localIntensity = 1;
+
+    /**
+     * The number of raymarching steps taken inside the volume of each omni and spot light.
+     *
+     * @visibleif {enabled && (localOmniLights || localSpotLights)}
+     * @range [2, 64]
+     * @precision 0
+     * @step 1
+     */
+    localSteps = 12;
+
+    /**
+     * @attribute
+     * @visibleif {enabled}
+     */
+    tint = new Color(1, 1, 1, 1);
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 0.2]
+     * @precision 4
+     * @step 0.001
+     */
+    density = 0.01;
+
+    /**
+     * @visibleif {enabled}
+     * @precision 2
+     * @step 1
+     */
+    heightBase = 0;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 1]
+     * @precision 3
+     * @step 0.001
+     */
+    heightFalloff = 0.05;
+
+    /**
+     * How quickly the fog absorbs the light passing through it, without affecting how much light it
+     * scatters. A value of 1 is physically consistent, where distant fog and light shafts fade out
+     * exponentially with the density. Lower it to keep them visible further away while the fog
+     * itself stays as bright.
+     *
+     * @visibleif {enabled}
+     * @range [0, 2]
+     * @precision 2
+     * @step 0.05
+     */
+    extinction = 1;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 0.95]
+     * @precision 3
+     * @step 0.001
+     */
+    anisotropy = 0.6;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 10]
+     * @precision 3
+     * @step 0.01
+     */
+    intensity = 1;
+
+    /**
+     * @attribute
+     * @visibleif {enabled}
+     */
+    ambientColor = new Color(1, 1, 1, 1);
+
+    /**
+     * @visibleif {enabled}
+     * @range [0, 1]
+     * @precision 4
+     * @step 0.001
+     */
+    ambientIntensity = 0.02;
+
+    /**
+     * @visibleif {enabled}
+     * @precision 2
+     * @step 1
+     */
+    maxDistance = 300;
+
+    /**
+     * @visibleif {enabled}
+     * @range [4, 128]
+     * @precision 0
+     * @step 1
+     */
+    steps = 24;
+
+    /**
+     * @visibleif {enabled}
+     * @range [0.25, 1]
+     * @precision 2
+     * @step 0.05
+     */
+    scale = 0.5;
+}
+
+/**
+ * Enables the engine's {@link EngineCameraFrame | CameraFrame} render pipeline on a camera
+ * entity, exposing its settings as grouped script attributes: rendering (render format, tone
+ * mapping, sharpness, TAA), SSAO, bloom, color grading, color LUT, vignette, fringing, depth
+ * of field and volumetric fog.
+ *
+ * Attach the script to an entity with a camera component and adjust the attribute groups to
+ * configure the post-processing stack.
+ *
+ * @example
+ * cameraEntity.addComponent('script');
+ * cameraEntity.script.create(CameraFrame, {
+ *     properties: {
+ *         bloom: { intensity: 0.02 }
+ *     }
+ * });
+ * @category Post-Processing
+ */
 class CameraFrame extends Script {
     static scriptName = 'cameraFrame';
 
@@ -499,6 +708,12 @@ class CameraFrame extends Script {
      */
     dof = new Dof();
 
+    /**
+     * @attribute
+     * @type {VolumetricFog}
+     */
+    volumetricFog = new VolumetricFog();
+
     engineCameraFrame;
 
     initialize() {
@@ -525,7 +740,7 @@ class CameraFrame extends Script {
     postUpdate(dt) {
 
         const cf = this.engineCameraFrame;
-        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT } = this;
+        const { rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao, dof, colorLUT, volumetricFog } = this;
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
@@ -544,6 +759,8 @@ class CameraFrame extends Script {
         const dstSsao = cf.ssao;
         dstSsao.type = ssao.type;
         if (ssao.type !== SsaoType.NONE) {
+            dstSsao.blurEnabled = ssao.blurEnabled;
+            dstSsao.randomize = ssao.randomize;
             dstSsao.intensity = ssao.intensity;
             dstSsao.radius = ssao.radius;
             dstSsao.samples = ssao.samples;
@@ -630,6 +847,29 @@ class CameraFrame extends Script {
             dstDof.blurRingPoints = dof.blurRingPoints;
         }
 
+        // volumetricFog
+        const dstVolumetricFog = cf.volumetricFog;
+        dstVolumetricFog.enabled = volumetricFog.enabled;
+        if (volumetricFog.enabled) {
+            dstVolumetricFog.light = volumetricFog.light?.light ?? null;
+            dstVolumetricFog.localOmniLights = volumetricFog.localOmniLights;
+            dstVolumetricFog.localSpotLights = volumetricFog.localSpotLights;
+            dstVolumetricFog.localIntensity = volumetricFog.localIntensity;
+            dstVolumetricFog.localSteps = volumetricFog.localSteps;
+            dstVolumetricFog.tint.copy(volumetricFog.tint);
+            dstVolumetricFog.density = volumetricFog.density;
+            dstVolumetricFog.heightBase = volumetricFog.heightBase;
+            dstVolumetricFog.heightFalloff = volumetricFog.heightFalloff;
+            dstVolumetricFog.extinction = volumetricFog.extinction;
+            dstVolumetricFog.anisotropy = volumetricFog.anisotropy;
+            dstVolumetricFog.intensity = volumetricFog.intensity;
+            dstVolumetricFog.ambientColor.copy(volumetricFog.ambientColor);
+            dstVolumetricFog.ambientIntensity = volumetricFog.ambientIntensity;
+            dstVolumetricFog.maxDistance = volumetricFog.maxDistance;
+            dstVolumetricFog.steps = volumetricFog.steps;
+            dstVolumetricFog.scale = volumetricFog.scale;
+        }
+
         // debugging
         cf.debug = rendering.debug;
 
@@ -637,4 +877,4 @@ class CameraFrame extends Script {
     }
 }
 
-export { CameraFrame };
+export { CameraFrame, Rendering, Ssao, Bloom, Grading, ColorLUT, Vignette, Fringing, ColorEnhance, Taa, Dof, VolumetricFog };

@@ -94,12 +94,12 @@ class ScriptRegistry extends EventHandler {
      * @returns {boolean} True if the script was added for the first time. False if a script with
      * the same name already exists, or if the script has no resolvable name.
      * @example
-     * var PlayerController = pc.createScript('playerController');
-     * // playerController Script Type will be added to pc.ScriptRegistry automatically
+     * var PlayerController = createScript('playerController');
+     * // playerController Script Type will be added to ScriptRegistry automatically
      * console.log(app.scripts.has('playerController')); // outputs true
      * @example
      * // engine-only: register an ESM Script class manually
-     * class Rotator extends pc.Script {
+     * class Rotator extends Script {
      *     static scriptName = 'rotator';
      * }
      * app.scripts.add(Rotator);
@@ -170,22 +170,23 @@ class ScriptRegistry extends EventHandler {
             }
 
             const components = this.app.systems.script._components;
-            let attributes;
             const scriptInstances = [];
             const scriptInstancesInitialized = [];
 
             for (components.loopIndex = 0; components.loopIndex < components.length; components.loopIndex++) {
                 const component = components.items[components.loopIndex];
                 // check if awaiting for script
-                if (component._scriptsIndex[scriptName] && component._scriptsIndex[scriptName].awaiting) {
-                    if (component._scriptsData && component._scriptsData[scriptName]) {
-                        attributes = component._scriptsData[scriptName].attributes;
-                    }
+                const indexData = component._scriptsIndex[scriptName];
+                if (indexData && indexData.awaiting) {
 
+                    // the awaiting entry holds what this component asked for, which is both
+                    // per component and specific to the declaration that is still standing
                     const scriptInstance = component.create(scriptName, {
                         preloading: true,
-                        ind: component._scriptsIndex[scriptName].ind,
-                        attributes: attributes
+                        ind: component._awaitingInsertIndex(scriptName),
+                        enabled: indexData.enabled,
+                        attributes: indexData.attributes,
+                        properties: indexData.properties
                     });
 
                     if (scriptInstance) {
@@ -283,7 +284,7 @@ class ScriptRegistry extends EventHandler {
      * @returns {boolean} True if {@link ScriptType} is in registry.
      * @example
      * if (app.scripts.has('playerController')) {
-     *     // playerController is in pc.ScriptRegistry
+     *     // playerController is in ScriptRegistry
      * }
      */
     has(nameOrType) {

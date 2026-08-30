@@ -1,7 +1,7 @@
 import { PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP } from '../platform/graphics/constants.js';
-import { getApplication } from './globals.js';
 
 /**
+ * @import { AppBase } from './app-base.js'
  * @import { ForwardRenderer } from '../scene/renderer/forward-renderer.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  */
@@ -11,11 +11,21 @@ import { getApplication } from './globals.js';
  */
 class ApplicationStats {
     /**
+     * @type {AppBase}
+     * @private
+     */
+    _app;
+
+    /**
      * Create a new ApplicationStats instance.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {AppBase} app - The application.
+     * @ignore
      */
-    constructor(device) {
+    constructor(app) {
+        this._app = app;
+
+        const device = app.graphicsDevice;
         this.frame = {
             fps: 0,
             ms: 0,
@@ -109,15 +119,15 @@ class ApplicationStats {
     }
 
     get scene() {
-        return getApplication().scene._stats;
+        return this._app.scene._stats;
     }
 
     get lightmapper() {
-        return getApplication().lightmapper?.stats;
+        return this._app.lightmapper?.stats;
     }
 
     get batcher() {
-        const batcher = getApplication()._batcher;
+        const batcher = this._app._batcher;
         return batcher ? batcher._stats : null;
     }
 

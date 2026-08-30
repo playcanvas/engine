@@ -38,6 +38,10 @@ fn delinearizeDepth(linearDepth: f32) -> f32 {
 }
 
 // Retrieves rendered linear camera depth by UV
+//
+// Note that there is no SCENE_DEPTHMAP_PACKED decode here, unlike in the GLSL chunk. WebGPU can
+// always render to float textures, so no producer of the scene depth map falls back to packing the
+// depth into RGBA8 on this backend. RenderPassPrepass asserts this.
 fn getLinearScreenDepth(uv: vec2f) -> f32 {
     let textureSize = textureDimensions(uSceneDepthMap, 0);
     let texel: vec2i = vec2i(uv * vec2f(textureSize));

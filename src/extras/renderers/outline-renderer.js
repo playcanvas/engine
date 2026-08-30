@@ -4,6 +4,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
+    RENDERTARGET_ORIGIN_BOTTOM,
     SEMANTIC_POSITION
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -132,7 +133,7 @@ class OutlineRenderer {
         });
 
         // custom shader pass for the outline camera
-        this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('OutlineShaderPass');
+        this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('pcOutline');
 
         // function called after the camera has rendered the outline objects to the texture
         this.postRender = (cameraComponent) => {
@@ -168,26 +169,12 @@ class OutlineRenderer {
         });
 
         this.quadRenderer = new QuadRender(this.shaderBlend);
-
-        this.whiteTex = new Texture(device, {
-            name: 'OutlineWhiteTexture',
-            width: 1,
-            height: 1,
-            format: PIXELFORMAT_SRGBA8,
-            mipmaps: false
-        });
-        const pixels = this.whiteTex.lock();
-        pixels.set(new Uint8Array([255, 255, 255, 255]));
-        this.whiteTex.unlock();
     }
 
     /**
      * Destroy the outline renderer and its resources.
      */
     destroy() {
-
-        this.whiteTex.destroy();
-        this.whiteTex = null;
 
         this.outlineCameraEntity.destroy();
         this.outlineCameraEntity = null;
@@ -248,7 +235,7 @@ class OutlineRenderer {
 
                     if (options.pass === outlineShaderPass) {
 
-                        // custom shader for the outline shader pass, renders single color meshes using emissive color
+                        // custom shader for the outline shader pass, preserving material opacity
                         const opts = new StandardMaterialOptions();
                         opts.defines = options.defines;
                         opts.opacityMap = options.opacityMap;
@@ -272,11 +259,10 @@ class OutlineRenderer {
                     return options;
                 };
 
-                // set emissive color override for the outline shader pass only
+                // set the color consumed only by the pcOutline shader variant
                 _tempColor.linear(color);
                 const colArray = new Float32Array([_tempColor.r, _tempColor.g, _tempColor.b]);
-                meshInstance.setParameter('material_emissive', colArray, 1 << this.outlineShaderPass);
-                meshInstance.setParameter('texture_emissiveMap', this.whiteTex, 1 << this.outlineShaderPass);
+                meshInstance.setParameter('pcOutlineColor', colArray);
             }
         });
 
@@ -297,7 +283,7 @@ class OutlineRenderer {
         meshInstances.forEach((meshInstance) => {
             if (meshInstance.material instanceof StandardMaterial) {
                 meshInstance.material.onUpdateShader = null;
-                meshInstance.deleteParameter('material_emissive');
+                meshInstance.deleteParameter('pcOutlineColor');
             }
         });
     }
@@ -358,11 +344,12 @@ class OutlineRenderer {
             magFilter: FILTER_LINEAR
         });
 
-        // render target
+        // render target - the outline texture is composited using a raw-uv fullscreen quad
+        // written against the WebGL layout, so replicate it on all graphics APIs
         return new RenderTarget({
             colorBuffer: texture,
             depth: depth,
-            flipY: this.app.graphicsDevice.isWebGPU
+            origin: RENDERTARGET_ORIGIN_BOTTOM
         });
     }
 

@@ -102,6 +102,16 @@ export function Controls({ observer }) {
                         step={0.0001}
                     />
                 </LabelGroup>
+                <LabelGroup text='Vertical Correction'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'verticalCorrection' }}
+                        min={0}
+                        max={1}
+                        precision={2}
+                        step={0.01}
+                    />
+                </LabelGroup>
                 <LabelGroup text='High Res'>
                     <BooleanInput
                         type='toggle'
@@ -207,24 +217,6 @@ export function Controls({ observer }) {
                             { v: 'mobile-max', t: 'Mobile Max (2-5)' },
                             { v: 'mobile', t: 'Mobile (3-5)' }
                         ]}
-                    />
-                </LabelGroup>
-                <LabelGroup text='LOD Base Dist'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodBaseDistance' }}
-                        min={1}
-                        max={50}
-                        precision={1}
-                    />
-                </LabelGroup>
-                <LabelGroup text='LOD Multiplier'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodMultiplier' }}
-                        min={1.2}
-                        max={5}
-                        precision={1}
                     />
                 </LabelGroup>
                 <LabelGroup text='Splat Budget'>

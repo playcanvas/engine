@@ -169,18 +169,15 @@ class BasisQueue {
                 (callback[i])(err);
             }
         } else {
-            // (re)create typed array from the returned array buffers
-            if (data.format === PIXELFORMAT_RGB565 || data.format === PIXELFORMAT_RGBA4) {
-                // handle 16 bit formats
-                data.levels = data.levels.map((v) => {
-                    return new Uint16Array(v);
-                });
-            } else {
-                // all other
-                data.levels = data.levels.map((v) => {
-                    return new Uint8Array(v);
-                });
-            }
+            // (re)create typed array from the returned array buffers. cubemap levels are
+            // arrays of six face buffers, all other levels are a single image buffer.
+            const TypedArray = (data.format === PIXELFORMAT_RGB565 || data.format === PIXELFORMAT_RGBA4) ?
+                Uint16Array : Uint8Array;
+            data.levels = data.levels.map((level) => {
+                return Array.isArray(level) ?
+                    level.map(face => new TypedArray(face)) :
+                    new TypedArray(level);
+            });
 
             for (let i = 0; i < callback.length; ++i) {
                 (callback[i])(null, data);
@@ -330,6 +327,8 @@ let deviceDetails = null;
  * circumstances the texture will be unswizzled during transcoding.
  * @param {boolean} [options.isKTX2] - Indicates the image is KTX2 format. Otherwise
  * basis format is assumed.
+ * @param {boolean} [options.isCubemap] - Indicates the image contains six cubemap faces. Only
+ * supported for KTX2 files.
  * @returns {boolean} True if the basis worker was initialized and false otherwise.
  * @ignore
  */
@@ -345,7 +344,8 @@ function basisTranscode(device, url, data, callback, options) {
     queue.enqueueJob(url, data, callback, {
         deviceDetails: deviceDetails,
         isGGGR: !!options?.isGGGR,
-        isKTX2: !!options?.isKTX2
+        isKTX2: !!options?.isKTX2,
+        isCubemap: !!options?.isCubemap
     });
 
     return initializing;

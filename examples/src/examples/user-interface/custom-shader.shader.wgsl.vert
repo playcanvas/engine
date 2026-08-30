@@ -3,9 +3,9 @@
  * Simple Screen-Space Vertex Shader with one UV coordinate.
  * This shader is useful for simple UI shaders.
  * 
- * Usage: the following attributes must be configured when creating a new pc.Shader:
- *   vertex_position: pc.SEMANTIC_POSITION
- *   vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+ * Usage: the following attributes must be configured when creating a new Shader:
+ *   vertex_position: SEMANTIC_POSITION
+ *   vertex_texCoord0: SEMANTIC_TEXCOORD0
  */
 
 // Default PlayCanvas uniforms
@@ -32,4 +32,3 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     
     return output;
 }
-

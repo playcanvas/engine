@@ -35,13 +35,13 @@ const AXES = /** @type {('x' | 'y' | 'z')[]} */ (['x', 'y', 'z']);
  *
  * ```javascript
  * // Create a layer for rendering all gizmos
- * const gizmoLayer = pc.Gizmo.createLayer(app);
+ * const gizmoLayer = Gizmo.createLayer(app);
  *
  * // Create a translate gizmo
- * const gizmo = new pc.TranslateGizmo(cameraComponent, gizmoLayer);
+ * const gizmo = new TranslateGizmo(cameraComponent, gizmoLayer);
  *
  * // Create an entity to attach the gizmo to
- * const entity = new pc.Entity();
+ * const entity = new Entity();
  * entity.addComponent('render', {
  *     type: 'box'
  * });
@@ -151,7 +151,7 @@ class TranslateGizmo extends TransformGizmo {
      * @param {CameraComponent} camera - The camera component.
      * @param {Layer} layer - The layer responsible for rendering the gizmo.
      * @example
-     * const gizmo = new pc.TranslateGizmo(camera, layer);
+     * const gizmo = new TranslateGizmo(camera, layer);
      */
     constructor(camera, layer) {
         super(camera, layer, 'gizmo:translate');

@@ -85,6 +85,8 @@ class ShaderUtils {
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
+     * @param {boolean} [options.useDualSourceBlending] - Whether the fragment shader outputs a
+     * secondary color for dual-source blending. Defaults to false.
      * @returns {Shader} The newly created shader.
      */
     static createShader(device, options) {
@@ -122,7 +124,8 @@ class ShaderUtils {
                 vertexDefines: options.vertexDefines,
                 fragmentIncludes: fragmentIncludes,
                 fragmentDefines: options.fragmentDefines,
-                fragmentOutputTypes: options.fragmentOutputTypes
+                fragmentOutputTypes: options.fragmentOutputTypes,
+                useDualSourceBlending: options.useDualSourceBlending
             }));
             programLibrary.setCachedShader(options.uniqueName, shader);
         }
@@ -188,29 +191,54 @@ class ShaderUtils {
     }
 
     /**
+     * Returns a key identifying the defines {@link ShaderUtils.addScreenDepthChunkDefines} adds for
+     * the given camera shader parameters. As the shader cache is keyed on the unique name of a
+     * shader alone, the name of every shader using those defines has to include this key, or two
+     * differently decoding variants would share a single compiled shader.
+     *
+     * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
+     * @returns {string} The key, empty when the defines add nothing.
+     * @ignore
+     */
+    static getScreenDepthChunkKey(cameraShaderParams) {
+        const { sceneDepthMapLinear, sceneDepthMapPacked } = cameraShaderParams;
+        return sceneDepthMapLinear ? (sceneDepthMapPacked ? '-linearPacked' : '-linear') : '';
+    }
+
+    /**
      * Add defines required for correct screenDepthPS chunk functionality for the given camera
-     * shader parameters. Note that the float vs packed-RGBA8 decode is selected inside the chunk
-     * using the global CAPS_TEXTURE_FLOAT_RENDERABLE define, which matches the format the depth
-     * prepass allocates the linear depth texture in.
+     * shader parameters. These describe how the scene depth map currently assigned to the camera is
+     * encoded, and are declared by whichever render pass produced it, as different producers store
+     * the depth in different formats.
      *
      * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
      * @param {Map<string, string>} defines - The map of defines to add to.
+     * @returns {string} The key of the added defines, to be included in the unique name of the
+     * shader using them. See {@link ShaderUtils.getScreenDepthChunkKey}.
      * @ignore
      */
     static addScreenDepthChunkDefines(cameraShaderParams, defines) {
         if (cameraShaderParams.sceneDepthMapLinear) {
             defines.set('SCENE_DEPTHMAP_LINEAR', '');
+
+            // nested, so that the packed define never appears without the linear one, which is what
+            // the decode in the screenDepth chunk relies on
+            if (cameraShaderParams.sceneDepthMapPacked) {
+                defines.set('SCENE_DEPTHMAP_PACKED', '');
+            }
         }
+
+        return ShaderUtils.getScreenDepthChunkKey(cameraShaderParams);
     }
 }
 
 function createShader(device, vsName, fsName, useTransformFeedback = false, shaderDefinitionOptions = {}) {
-    Debug.removed('pc.createShader has been removed deprecated. Use ShaderUtils.createShader instead.');
+    Debug.removed('createShader has been removed deprecated. Use ShaderUtils.createShader instead.');
 }
 
 function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false, shaderDefinitionOptions = {}) {
 
-    Debug.deprecated('pc.createShaderFromCode has been deprecated. Use ShaderUtils.createShader instead.');
+    Debug.deprecated('createShaderFromCode has been deprecated. Use ShaderUtils.createShader instead.');
 
     // the function signature has changed, fail if called incorrectly
     Debug.assert(typeof attributes !== 'boolean');

@@ -136,13 +136,13 @@ class Impl {
  *
  * @example
  * // Load the Ammo.js physics engine
- * pc.WasmModule.setConfig('Ammo', {
+ * WasmModule.setConfig('Ammo', {
  *     glueUrl: `ammo.wasm.js`,
  *     wasmUrl: `ammo.wasm.wasm`,
  *     fallbackUrl: `ammo.js`
  * });
  * await new Promise((resolve) => {
- *     pc.WasmModule.getInstance('Ammo', () => resolve());
+ *     WasmModule.getInstance('Ammo', () => resolve());
  * });
  */
 class WasmModule {

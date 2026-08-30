@@ -1354,6 +1354,346 @@ describe('ScriptComponent', function () {
         app.assets.load(asset);
     });
 
+    it('cloning an entity preserves scripts that are awaiting their script type', function () {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'loadedLater', 'scriptB'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                loadedLater: { enabled: false, attributes: { disableEntity: true } },
+                scriptB: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const indexData = clone.script._scriptsIndex.loadedLater;
+        expect(indexData).to.exist;
+        expect(indexData.awaiting).to.equal(true);
+        expect(indexData.ind).to.equal(e.script._scriptsIndex.loadedLater.ind);
+
+        // the data the script will be created from once its type is registered is preserved too
+        expect(clone.script._scriptsData.loadedLater.enabled).to.equal(false);
+        expect(clone.script._scriptsData.loadedLater.attributes.disableEntity).to.equal(true);
+    });
+
+    it('cloning an entity keeps the relative order of consecutive awaiting scripts', function () {
+        const e = new Entity();
+        const order = ['scriptA', 'awaitingOne', 'awaitingTwo', 'scriptB', 'awaitingThree'];
+        const scripts = {};
+        order.forEach((name) => {
+            scripts[name] = { enabled: true, attributes: {} };
+        });
+        e.addComponent('script', { enabled: true, order: order, scripts: scripts });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        // initializeComponentData creates the scripts in `order`, so this is the order the
+        // clone was rebuilt with
+        expect(clone.script._declarationOrder).to.deep.equal(order);
+    });
+
+    it('cloning an entity keeps the declared order of awaiting scripts with integer-like names', function () {
+        const e = new Entity();
+        const order = ['scriptA', '10', '2', 'scriptB'];
+        const scripts = {};
+        order.forEach((name) => {
+            scripts[name] = { enabled: true, attributes: {} };
+        });
+        e.addComponent('script', { enabled: true, order: order, scripts: scripts });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        // integer-like keys are enumerated first, so the key order of `_scriptsIndex` is not the
+        // declared order here
+        expect(clone.script._declarationOrder).to.deep.equal(order);
+    });
+
+    it('cloning an entity places an awaiting script after the script it was declared after', function () {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB', 'awaitingMoved'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} },
+                awaitingMoved: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        // the awaiting script was declared after scriptB, which now runs first
+        e.script.move('scriptB', 0);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        expect(clone.script._declarationOrder).to.deep.equal(['scriptB', 'awaitingMoved', 'scriptA']);
+    });
+
+    it('scripts awaiting their script type are created on a clone when the type is registered', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'loadedLater', 'scriptB'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                loadedLater: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        expect(clone.script.loadedLater).to.not.exist;
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater).to.exist;
+                expect(clone.script.loadedLater).to.exist;
+                const names = clone.script.scripts.map(s => s.__scriptType.__name);
+                expect(names).to.deep.equal(['scriptA', 'loadedLater', 'scriptB']);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('a disabled script added to the registry later stays disabled and is not initialized', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: false,
+                    attributes: {}
+                }
+            }
+        });
+
+        app.root.addChild(e);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater).to.exist;
+                expect(e.script.loadedLater.enabled).to.equal(false);
+                expect(window.initializeCalls.length).to.equal(0);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('a script created before its type is registered keeps the options it was created with', function (done) {
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+
+        // declared through create() rather than component data, so there is no `_scriptsData`
+        e.script.create('loadedLater', {
+            enabled: false,
+            attributes: { disableEntity: true },
+            properties: { customValue: 42 }
+        });
+        app.root.addChild(e);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater).to.exist;
+                expect(e.script.loadedLater.enabled).to.equal(false);
+                expect(e.script.loadedLater.disableEntity).to.equal(true);
+                expect(e.script.loadedLater.customValue).to.equal(42);
+                expect(window.initializeCalls.length).to.equal(0);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('a clone keeps the options an awaiting script was created with', function (done) {
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+        e.script.create('loadedLater', { enabled: false, attributes: { disableEntity: true } });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(clone.script.loadedLater).to.exist;
+                expect(clone.script.loadedLater.enabled).to.equal(false);
+                expect(clone.script.loadedLater.disableEntity).to.equal(true);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('recreating a destroyed awaiting script uses the newly supplied options', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: { disableEntity: true }
+                }
+            }
+        });
+        app.root.addChild(e);
+
+        // destroy() leaves the component data entry behind, so the replacement declaration must
+        // not be read out of it
+        expect(e.script.destroy('loadedLater')).to.equal(true);
+        e.script.create('loadedLater', { enabled: false, attributes: { disableEntity: false } });
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e.script.loadedLater.enabled).to.equal(false);
+                expect(e.script.loadedLater.disableEntity).to.equal(false);
+                expect(clone.script.loadedLater.enabled).to.equal(false);
+                expect(clone.script.loadedLater.disableEntity).to.equal(false);
+                expect(window.initializeCalls.length).to.equal(0);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('attributes of a script added to the registry later are not shared between components', function (done) {
+        // declares attribute data for the script
+        const e1 = new Entity();
+        e1.addComponent('script', {
+            enabled: true,
+            order: ['loadedLater'],
+            scripts: {
+                loadedLater: {
+                    enabled: true,
+                    attributes: { disableScriptInstance: true }
+                }
+            }
+        });
+        app.root.addChild(e1);
+
+        // requests the same script without any attribute data
+        const e2 = new Entity();
+        e2.addComponent('script', { enabled: true });
+        e2.script.create('loadedLater');
+        app.root.addChild(e2);
+
+        const asset = app.assets.find('loadedLater.js', 'script');
+        app.scripts.on('add:loadedLater', function () {
+            setTimeout(function () {
+                expect(e1.script.loadedLater.disableScriptInstance).to.equal(true);
+                expect(e2.script.loadedLater.disableScriptInstance).to.equal(false);
+                done();
+            }, 100);
+        });
+
+        app.assets.load(asset);
+    });
+
+    it('scripts added to the registry later are created in their declared order', function (done) {
+        const e = new Entity();
+        const order = ['scriptA', 'awaitingOne', 'awaitingTwo', 'scriptB', 'awaitingThree'];
+        const scripts = {};
+        order.forEach((name) => {
+            scripts[name] = { enabled: true, attributes: {} };
+        });
+        e.addComponent('script', { enabled: true, order: order, scripts: scripts });
+        app.root.addChild(e);
+
+        expect(e.script.scripts.map(s => s.__scriptType.__name)).to.deep.equal(['scriptA', 'scriptB']);
+
+        // register the missing script types out of their declared order
+        createScript('awaitingThree', app);
+        createScript('awaitingOne', app);
+        createScript('awaitingTwo', app);
+
+        setTimeout(function () {
+            expect(e.script.scripts.map(s => s.__scriptType.__name)).to.deep.equal(order);
+            done();
+        }, 100);
+    });
+
+    it('a script added to the registry later follows a preceding script that has been moved', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB', 'awaitingAfterMove'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} },
+                awaitingAfterMove: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        // the awaiting script is declared after scriptB, which now runs first
+        e.script.move('scriptB', 0);
+
+        createScript('awaitingAfterMove', app);
+
+        setTimeout(function () {
+            const names = e.script.scripts.map(s => s.__scriptType.__name);
+            expect(names).to.deep.equal(['scriptB', 'awaitingAfterMove', 'scriptA']);
+            done();
+        }, 100);
+    });
+
+    it('a clone ends up with the same script order as its source when an awaiting type is registered', function (done) {
+        const e = new Entity();
+        e.addComponent('script', {
+            enabled: true,
+            order: ['scriptA', 'scriptB', 'awaitingParity'],
+            scripts: {
+                scriptA: { enabled: true, attributes: {} },
+                scriptB: { enabled: true, attributes: {} },
+                awaitingParity: { enabled: true, attributes: {} }
+            }
+        });
+        app.root.addChild(e);
+
+        // clone a component whose scripts have been reordered and that has a script pending
+        e.script.move('scriptB', 0);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        createScript('awaitingParity', app);
+
+        setTimeout(function () {
+            const names = ent => ent.script.scripts.map(s => s.__scriptType.__name);
+            expect(names(e)).to.deep.equal(['scriptB', 'awaitingParity', 'scriptA']);
+            expect(names(clone)).to.deep.equal(names(e));
+            done();
+        }, 100);
+    });
+
     it('destroying entity during update stops updating the rest of the entity\'s scripts', function () {
         const e = new Entity();
         e.addComponent('script', {
@@ -2905,7 +3245,7 @@ describe('ScriptComponent', function () {
         });
     });
 
-    it('pc.ScriptComponent#has', function () {
+    it('ScriptComponent#has', function () {
         const e = new Entity();
         e.addComponent('script', {
             enabled: true,
@@ -2927,6 +3267,31 @@ describe('ScriptComponent', function () {
         expect(e.script.has('')).to.equal(false);
         expect(e.script.has(undefined)).to.equal(false);
         expect(e.script.has(null)).to.equal(false);
+    });
+
+    it('cloning an entity does not share the attribute data of an ESM script with the clone', function () {
+        class CloneAttributes extends Script {
+            static scriptName = 'cloneAttributes';
+        }
+
+        app.scripts.addSchema('cloneAttributes', { attributes: { speed: { type: 'number' } } });
+
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+        e.script.create(CloneAttributes, { attributes: { speed: 42 } });
+        app.root.addChild(e);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const sourceData = e.script._attributeDataMap.get('cloneAttributes');
+        const cloneData = clone.script._scriptsData.cloneAttributes.attributes;
+
+        expect(cloneData).to.deep.equal({ speed: 42 });
+        expect(cloneData).to.not.equal(sourceData);
+
+        cloneData.speed = 7;
+        expect(sourceData.speed).to.equal(42);
     });
 
     it('warns when an ESM Script class does not have a static "scriptName" property', function () {
@@ -2974,6 +3339,23 @@ describe('ScriptComponent', function () {
         expect(instance).to.equal(null);
         expect(a.script.undefined).to.equal(undefined);
         expect(a.script._scriptsIndex.undefined).to.equal(undefined);
+    });
+
+    it('does not throw when an ESM script has attribute data but no schema', function () {
+        class NoSchemaScript extends Script {
+            static scriptName = 'noSchemaScript';
+        }
+
+        const e = new Entity();
+        e.addComponent('script', { enabled: true });
+        app.root.addChild(e);
+
+        expect(() => e.script.create(NoSchemaScript, { attributes: { speed: 42 } })).to.not.throw();
+        expect(e.script.noSchemaScript).to.exist;
+        expect(e.script.noSchemaScript.speed).to.not.exist;
+        expect(Debug._loggedMessages.has(
+            'No schema exists for the script \'noSchemaScript\'. A schema must exist for data to be instantiated on the script.'
+        )).to.equal(true);
     });
 
     it('does not warn when a ScriptType is used', function () {

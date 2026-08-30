@@ -1,12 +1,13 @@
 import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_IB } from '../../core/constants.js';
+import { BufferUtils } from './buffer-utils.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
  */
 
 import {
-    BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
+    BUFFER_STATIC, typedArrayIndexFormats, typedArrayIndexFormatsByteSize
 } from './constants.js';
 
 let id = 0;
@@ -48,10 +49,10 @@ class IndexBuffer {
      * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
      * // static, hinting that the buffer will never be modified.
      * const indices = new Uint16Array([0, 1, 2]);
-     * const indexBuffer = new pc.IndexBuffer(graphicsDevice,
-     *                                        pc.INDEXFORMAT_UINT16,
+     * const indexBuffer = new IndexBuffer(graphicsDevice,
+     *                                        INDEXFORMAT_UINT16,
      *                                        3,
-     *                                        pc.BUFFER_STATIC,
+     *                                        BUFFER_STATIC,
      *                                        indices);
      */
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData, options) {
@@ -189,19 +190,6 @@ class IndexBuffer {
     }
 
     /**
-     * Get the appropriate typed array from an index buffer.
-     *
-     * @returns {Uint8Array|Uint16Array|Uint32Array} The typed array containing the index data.
-     * @private
-     */
-    _lockTypedArray() {
-        const lock = this.lock();
-        const indices = this.format === INDEXFORMAT_UINT32 ? new Uint32Array(lock) :
-            (this.format === INDEXFORMAT_UINT16 ? new Uint16Array(lock) : new Uint8Array(lock));
-        return indices;
-    }
-
-    /**
      * Copies the specified number of elements from data into index buffer. Optimized for
      * performance from both typed array as well as array.
      *
@@ -210,7 +198,7 @@ class IndexBuffer {
      * @ignore
      */
     writeData(data, count) {
-        const indices = this._lockTypedArray();
+        const indices = BufferUtils.createStorageView(this, typedArrayIndexFormats[this.format]);
 
         // if data contains more indices than needed, copy from its subarray
         if (data.length > count) {
@@ -242,12 +230,13 @@ class IndexBuffer {
      */
     readData(data) {
         // note: there is no need to unlock this buffer, as we are only reading from it
-        const indices = this._lockTypedArray();
+        const indices = BufferUtils.createStorageView(this, typedArrayIndexFormats[this.format]);
         const count = this.numIndices;
 
         if (ArrayBuffer.isView(data)) {
-            // destination data is typed array
-            data.set(indices);
+            // destination data is typed array, copy as much of the data as it can hold
+            Debug.assert(data.length >= count, 'Destination array is too small to receive all index data.');
+            data.set(data.length >= count ? indices : indices.subarray(0, data.length));
         } else {
             // data is array, copy right amount manually
             data.length = 0;

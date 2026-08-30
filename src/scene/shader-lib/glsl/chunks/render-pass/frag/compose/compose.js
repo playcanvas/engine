@@ -5,6 +5,7 @@ export default /* glsl */`
     varying vec2 uv0;
     uniform sampler2D sceneTexture;
     uniform vec2 sceneTextureInvRes;
+    uniform float composeTargetFlipY;
 
     #include "composeBloomPS"
     #include "composeDofPS"
@@ -16,13 +17,23 @@ export default /* glsl */`
     #include "composeCasPS"
     #include "composeColorLutPS"
 
+    // The depth debug mode displays a depth some other pass in this frame has already produced - the
+    // debug modes never turn any rendering on, so the mode is switched to depthmissing when nothing
+    // did, see RenderPassCompose. That is also why this is included here rather than unconditionally:
+    // declaring the depth sampler in a frame with no depth to bind to it is an error.
+    #if DEBUG_COMPOSE == depth
+        #include "screenDepthPS"
+    #endif
+
     #include "composeDeclarationsPS"
 
     void main() {
 
         #include "composeMainStartPS"
 
-        vec2 uv = uv0;
+        // flip the sampling vertically when the target render target stores a flipped image, so
+        // that the natively-oriented output of the scene pass chain lands in the requested row order
+        vec2 uv = vec2(uv0.x, mix(uv0.y, 1.0 - uv0.y, composeTargetFlipY));
 
         vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
         vec3 result = scene.rgb;
@@ -34,12 +45,12 @@ export default /* glsl */`
 
         // Apply DOF
         #ifdef DOF
-            result = applyDof(result, uv0);
+            result = applyDof(result, uv);
         #endif
 
         // Apply SSAO
         #ifdef SSAO_TEXTURE
-            result = applySsao(result, uv0);
+            result = applySsao(result, uv);
         #endif
 
         // Apply Fringing
@@ -49,7 +60,7 @@ export default /* glsl */`
 
         // Apply Bloom
         #ifdef BLOOM
-            result = applyBloom(result, uv0);
+            result = applyBloom(result, uv);
         #endif
 
         // Apply Color Enhancement (shadows, highlights, vibrance)
@@ -91,6 +102,13 @@ export default /* glsl */`
                 result = vec3(dSsao);
             #elif defined(VIGNETTE) && DEBUG_COMPOSE == vignette
                 result = vec3(dVignette);
+            #elif DEBUG_COMPOSE == depth
+                // a linear ramp over the camera clip range
+                float dDepth = getLinearScreenDepth(uv);
+                result = vec3(clamp((dDepth - camera_params.z) / (camera_params.y - camera_params.z), 0.0, 1.0));
+            #elif DEBUG_COMPOSE == depthmissing
+                // the depth was asked for while nothing in this frame produces it
+                result = vec3(0.0);
             #endif
         #endif
 

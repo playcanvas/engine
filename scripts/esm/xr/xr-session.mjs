@@ -35,6 +35,7 @@ import { Color, Quat, Script, Vec3, LAYERID_SKYBOX } from 'playcanvas';
  *
  * // Or start AR
  * app.fire('ar:start');
+ * @category XR
  */
 class XrSession extends Script {
     static scriptName = 'xrSession';

@@ -943,7 +943,7 @@ const fragmentWGSL = /* wgsl */`
  * the water's own layers, the UI and the depth layer.
  *
  * @example
- * const water = new pc.Entity('Water');
+ * const water = new Entity('Water');
  * water.addComponent('render', { type: 'plane', layers: [waterLayer.id], castShadows: false });
  * water.setLocalScale(100, 1, 100);
  * water.addComponent('script');
@@ -955,6 +955,7 @@ const fragmentWGSL = /* wgsl */`
  *     }
  * });
  * app.root.addChild(water);
+ * @category Rendering
  */
 class Water extends Script {
     static scriptName = 'water';

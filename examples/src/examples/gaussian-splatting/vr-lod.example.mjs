@@ -66,7 +66,7 @@ import {
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
-import { GsplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
+import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 import { XrMenu } from 'playcanvas/scripts/esm/xr/xr-menu.mjs';
 import { XrNavigation } from 'playcanvas/scripts/esm/xr/xr-navigation.mjs';
 import { XrSession } from 'playcanvas/scripts/esm/xr/xr-session.mjs';
@@ -133,7 +133,7 @@ app.on('destroy', () => {
 
 const config = {
     name: 'Roman-Parish',
-    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
+    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json',
     lodUpdateDistance: 0.5,
     lodUnderfillLimit: 5,
     cameraPosition: [10.3, 2, -10],
@@ -144,27 +144,19 @@ const config = {
     focusPoint: [12, 3, 0]
 };
 
-/** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
+/** @type {Record<string, { range: number[] }>} */
 const LOD_PRESETS = {
     'desktop-max': {
-        range: [0, 5],
-        lodBaseDistance: 7,
-        lodMultiplier: 3
+        range: [0, 5]
     },
     desktop: {
-        range: [1, 5],
-        lodBaseDistance: 5,
-        lodMultiplier: 4
+        range: [1, 5]
     },
     'mobile-max': {
-        range: [2, 5],
-        lodBaseDistance: 5,
-        lodMultiplier: 2
+        range: [2, 5]
     },
     mobile: {
-        range: [3, 5],
-        lodBaseDistance: 2,
-        lodMultiplier: 2
+        range: [3, 5]
     }
 };
 
@@ -469,12 +461,10 @@ const applyPreset = () => {
     if (gsplatGs) {
         gsplatGs.lodRangeMin = presetData.range[0];
         gsplatGs.lodRangeMax = presetData.range[1];
-        gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
-        gsplatGs.lodMultiplier = presetData.lodMultiplier;
     }
 };
 
-const loadGsplat = (scene) => {
+const loadGSplat = (scene) => {
     if (gsplatEntity) {
         gsplatEntity.destroy();
         gsplatEntity = null;
@@ -493,10 +483,6 @@ const loadGsplat = (scene) => {
     gsplatEntity.setLocalScale(1, 1, 1);
     app.root.addChild(gsplatEntity);
     gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
-
-    const presetData = LOD_PRESETS[lodPresetKey] || LOD_PRESETS.desktop;
-    gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
-    gsplatGs.lodMultiplier = presetData.lodMultiplier;
 
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
     if (lodLevels) {
@@ -519,7 +505,7 @@ const loadGsplat = (scene) => {
     gsplatSystem.on('frame:ready', onFrameReady);
 
     gsplatEntity.addComponent('script');
-    const revealScript = gsplatEntity.script?.create(GsplatRevealRadial);
+    const revealScript = gsplatEntity.script?.create(GSplatRevealRadial);
     if (revealScript) {
         revealScript.center.set(scene.focus[0], scene.focus[1], scene.focus[2]);
         revealScript.speed = 10;
@@ -539,7 +525,7 @@ const caveAsset = new Asset('gsplat-cave', 'gsplat', {
 app.assets.add(caveAsset);
 
 const skateparkAsset = new Asset('gsplat-skatepark', 'gsplat', {
-    url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
+    url: 'https://code.playcanvas.com/examples_data/example_skatepark_03/lod-meta.json'
 });
 app.assets.add(skateparkAsset);
 
@@ -595,11 +581,11 @@ const setScene = (index) => {
     }
 
     if (scene.asset.loaded) {
-        loadGsplat(scene);
+        loadGSplat(scene);
     } else {
         // Load on demand; guard against a newer selection completing first
         scene.asset.once('load', () => {
-            if (SCENES[sceneIndex] === scene) loadGsplat(scene);
+            if (SCENES[sceneIndex] === scene) loadGSplat(scene);
         });
         app.assets.load(scene.asset);
     }
