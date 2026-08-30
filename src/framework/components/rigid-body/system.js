@@ -38,14 +38,16 @@ const _properties = [
 
 /**
  * The RigidBodyComponentSystem manages the physics simulation for all rigid body components
- * in the application. It creates and maintains the underlying Ammo.js physics world, handles
+ * in the application. It creates and maintains the underlying physics world, handles
  * physics object creation and destruction, performs physics raycasting, detects and reports
  * collisions, and updates the transforms of entities with rigid bodies after each physics step.
  *
  * The system controls global physics settings like gravity and provides methods for raycasting
  * and collision detection.
  *
- * This system is only functional if your application has loaded the Ammo.js {@link WasmModule}.
+ * This system is only functional once a physics backend is installed: either by supplying
+ * {@link AppOptions#physicsWorld} when creating the application, or automatically when the
+ * application has loaded the Ammo.js {@link WasmModule}.
  *
  * @category Physics
  */
@@ -136,22 +138,21 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Called once Ammo has been loaded. Responsible for creating the physics world.
+     * Called once application libraries have loaded. Creates the Ammo backend when the Ammo
+     * global is present and no backend was injected via {@link AppOptions#physicsWorld}.
      *
      * @ignore
      */
     onLibraryLoaded() {
         if (!this._world && typeof Ammo !== 'undefined') {
-            this.setPhysicsWorld(new AmmoPhysicsWorld({ contactListener: this }));
-        } else if (!this._world) {
-            // Unbind the update function if we haven't loaded Ammo by now
-            this.app.systems.off('update', this.onUpdate, this);
+            this.setPhysicsWorld(new AmmoPhysicsWorld());
         }
     }
 
     /**
-     * Installs a physics backend. Used internally for Ammo auto-detection and by tests to
-     * inject a NullPhysicsWorld. A backend can be installed at most once.
+     * Installs a physics backend and registers this system as its contact listener. Called by
+     * {@link AppBase#init} when {@link AppOptions#physicsWorld} is supplied, and internally by
+     * Ammo auto-detection. A backend can be installed at most once.
      *
      * @param {PhysicsWorld} world - The physics backend.
      * @ignore
@@ -159,6 +160,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     setPhysicsWorld(world) {
         Debug.assert(!this._world, 'RigidBodyComponentSystem#setPhysicsWorld: a physics world is already installed.');
         this._world = world;
+        world.contactListener = this;
 
         this.contactPointPool = new ObjectPool(ContactPoint, 1);
         this.contactResultPool = new ObjectPool(ContactResult, 1);
@@ -168,10 +170,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * The installed physics backend, or null when no physics library has loaded.
+     * Gets the installed physics backend, or null when no backend is installed. Supply a
+     * backend via {@link AppOptions#physicsWorld}, or load the Ammo.js library to have one
+     * installed automatically.
      *
      * @type {PhysicsWorld|null}
-     * @ignore
+     * @alpha
      */
     get physicsWorld() {
         return this._world;

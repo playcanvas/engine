@@ -69,11 +69,28 @@ class AmmoContactPair {
 }
 
 /**
- * The Ammo.js (Bullet) physics backend. Expects the `Ammo` global to be available when
- * constructed - the RigidBodyComponentSystem only creates it after the Ammo WasmModule has
- * loaded.
+ * The Ammo.js (Bullet) physics backend. The `Ammo` global must be available when the world is
+ * constructed - load the library first, then supply the backend to the application:
  *
- * @ignore
+ * ```javascript
+ * WasmModule.setConfig('Ammo', {
+ *     glueUrl: 'ammo.wasm.js',
+ *     wasmUrl: 'ammo.wasm.wasm',
+ *     fallbackUrl: 'ammo.js'
+ * });
+ * await new Promise((resolve) => {
+ *     WasmModule.getInstance('Ammo', () => resolve());
+ * });
+ *
+ * const options = new AppOptions();
+ * options.physicsWorld = new AmmoPhysicsWorld();
+ * ```
+ *
+ * When {@link AppOptions#physicsWorld} is omitted, the engine creates this backend
+ * automatically once application libraries have loaded, if the Ammo global is present.
+ *
+ * @category Physics
+ * @alpha
  */
 class AmmoPhysicsWorld extends PhysicsWorld {
     /** @private */
@@ -104,12 +121,73 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     _fixedTimeStep = 1 / 60;
 
     /**
-     * Create a new AmmoPhysicsWorld instance.
+     * The native btDefaultCollisionConfiguration.
      *
-     * @param {object} [options] - The world options. See {@link PhysicsWorld}.
+     * @ignore
      */
-    constructor(options = {}) {
-        super(options);
+    collisionConfiguration = null;
+
+    /**
+     * The native btCollisionDispatcher.
+     *
+     * @ignore
+     */
+    dispatcher = null;
+
+    /**
+     * The native btDbvtBroadphase.
+     *
+     * @ignore
+     */
+    overlappingPairCache = null;
+
+    /**
+     * The native btSequentialImpulseConstraintSolver.
+     *
+     * @ignore
+     */
+    solver = null;
+
+    /**
+     * Whether contacts are reported per fixed substep from inside stepSimulation.
+     *
+     * @private
+     */
+    _useTickCallback = false;
+
+    /**
+     * The reused contact pair driven through the contact listener.
+     *
+     * @private
+     */
+    _contactPair = null;
+
+    /** @private */
+    _btVec1 = null;
+
+    /** @private */
+    _btVec2 = null;
+
+    /** @private */
+    _btQuat = null;
+
+    /** @private */
+    _btTransform = null;
+
+    /** @private */
+    _btRayStart = null;
+
+    /** @private */
+    _btRayEnd = null;
+
+    /**
+     * Create a new AmmoPhysicsWorld instance. The Ammo library must be loaded before the
+     * backend is constructed.
+     */
+    constructor() {
+        super();
+
+        Debug.assert(typeof Ammo !== 'undefined', 'AmmoPhysicsWorld: the Ammo.js library must be loaded before the Ammo backend is constructed.');
 
         this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
         this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
@@ -172,6 +250,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     /**
      * @param {PhysicsBodyDesc} desc - The body descriptor.
      * @returns {AmmoPhysicsBody} The new body.
+     * @ignore
      */
     createBody(desc) {
         const { type, mass, shape, position, rotation, entity } = desc;
@@ -245,6 +324,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     /**
      * @param {PhysicsShapeDesc} desc - The shape descriptor.
      * @returns {object} The opaque shape handle (the native btCollisionShape).
+     * @ignore
      */
     createShape(desc) {
         return createShape(this, desc);
@@ -273,6 +353,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     /**
      * @param {PhysicsJointDesc} desc - The joint descriptor.
      * @returns {AmmoPhysicsJoint} The new joint.
+     * @ignore
      */
     createJoint(desc) {
         return createJoint(this, desc);
@@ -284,6 +365,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
 
     /**
      * @param {Vec3} gravity - The world space gravity.
+     * @ignore
      */
     setGravity(gravity) {
         // downcast gravity to float32 so we can accurately compare with existing gravity set

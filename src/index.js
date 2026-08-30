@@ -289,6 +289,9 @@ export { RaycastResult } from './framework/components/rigid-body/raycast-result.
 export { RigidBodyComponent } from './framework/components/rigid-body/component.js';
 export { RigidBodyComponentSystem } from './framework/components/rigid-body/system.js';
 export { SingleContactResult } from './framework/components/rigid-body/single-contact-result.js';
+export { AmmoPhysicsWorld } from './framework/physics/ammo/ammo-physics-world.js';
+export { NullPhysicsWorld } from './framework/physics/null/null-physics-world.js';
+export { PhysicsWorld } from './framework/physics/physics-world.js';
 export { SceneRegistry } from './framework/scene-registry.js';
 export { SceneRegistryItem } from './framework/scene-registry-item.js';
 export * from './framework/components/screen/constants.js';
