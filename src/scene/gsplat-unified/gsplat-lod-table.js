@@ -1,6 +1,14 @@
+import { GSPLAT_LODMODE_DISTANCE, GSPLAT_LODMODE_ERROR } from '../constants.js';
+
 /**
  * @import { GSplatOctree } from './gsplat-octree.js'
  */
+
+// Band spacing for GSPLAT_LODMODE_DISTANCE. A step to absolute level i is priced at
+// M^(2 * (i - 1)) error per splat, so node content cancels out of the ranking and a node of a
+// given size steps down one level per xM^(1/lodFalloff) of distance, with the band edges set by
+// the budget. 3 matches the multiplier the old distance-band system defaulted to.
+const DISTANCE_BAND_MULTIPLIER = 3;
 
 /**
  * Everything the budget allocator can know about an octree before it sees a camera, precomputed
@@ -25,6 +33,12 @@
  * {@link GSplatLodTable#upgradeRatio} holds the fixed part and selection costs one multiply per
  * upgrade.
  *
+ * In {@link GSPLAT_LODMODE_DISTANCE} the node's error metadata is deliberately ignored and a
+ * synthetic table is used instead, shaped so that error-per-splat is a per-level constant across
+ * all nodes. Content then cancels out of the ranking entirely and selection degenerates to
+ * distance bands: every node steps coarser at fixed distance ratios, which is the guarantee that
+ * mode exists to provide.
+ *
  * @ignore
  */
 class GSplatLodTable {
@@ -41,6 +55,14 @@ class GSplatLodTable {
      * @type {number}
      */
     rangeMax;
+
+    /**
+     * The LOD selection mode this table was built for - GSPLAT_LODMODE_ERROR or
+     * GSPLAT_LODMODE_DISTANCE. Part of the octree's cache identity alongside the range.
+     *
+     * @type {string}
+     */
+    lodMode;
 
     /**
      * How many octree instances currently hold this table. Managed by the owning
@@ -123,10 +145,12 @@ class GSplatLodTable {
      * @param {GSplatOctree} octree - The octree to build the table for.
      * @param {number} rangeMin - Finest allowed LOD index.
      * @param {number} rangeMax - Coarsest allowed LOD index.
+     * @param {string} [lodMode] - GSPLAT_LODMODE_ERROR (default) or GSPLAT_LODMODE_DISTANCE.
      */
-    constructor(octree, rangeMin, rangeMax) {
+    constructor(octree, rangeMin, rangeMax, lodMode = GSPLAT_LODMODE_ERROR) {
         this.rangeMin = rangeMin;
         this.rangeMax = rangeMax;
+        this.lodMode = lodMode;
 
         const nodes = octree.nodes;
         const nodeCount = nodes.length;
@@ -145,6 +169,16 @@ class GSplatLodTable {
         // Reused per node: the candidate levels, then the frontier compacted in place over them.
         const scratch = new Int16Array(spanLength);
 
+        // The error each level is judged by, indexed by absolute LOD. In error mode this mirrors
+        // the node's own table; in distance mode it is synthesized per node so that every step's
+        // error-per-splat is the per-level band weight, making the ranking content-free.
+        const distanceMode = lodMode === GSPLAT_LODMODE_DISTANCE;
+        const err = new Float64Array(rangeMax + 1);
+        const bandWeight = new Float64Array(rangeMax + 1);
+        for (let lod = 1; lod <= rangeMax; lod++) {
+            bandWeight[lod] = Math.pow(DISTANCE_BAND_MULTIPLIER, 2 * (lod - 1));
+        }
+
         let upgradeCount = 0;
         let totalStartCount = 0;
         let totalFinestCount = 0;
@@ -152,6 +186,23 @@ class GSplatLodTable {
         for (let n = 0; n < nodeCount; n++) {
             const lods = nodes[n].lods;
             this.firstUpgrade[n] = upgradeCount;
+
+            if (distanceMode) {
+                let finerCount = -1;
+                let e = 0;
+                for (let lod = rangeMin; lod <= rangeMax; lod++) {
+                    if (lods[lod].count <= 0) continue;
+                    if (finerCount >= 0) {
+                        e += Math.max(finerCount - lods[lod].count, 1) * bandWeight[lod];
+                    }
+                    err[lod] = e;
+                    finerCount = lods[lod].count;
+                }
+            } else {
+                for (let lod = rangeMin; lod <= rangeMax; lod++) {
+                    err[lod] = lods[lod].error;
+                }
+            }
 
             // Collect renderable levels in range, ordered by ascending cost and then ascending
             // error. Insertion sort: the list is at most spanLength long and, since coarser levels
@@ -163,7 +214,7 @@ class GSplatLodTable {
                 while (j > 0) {
                     const prev = scratch[j - 1];
                     if (lods[prev].count < lods[lod].count ||
-                        (lods[prev].count === lods[lod].count && lods[prev].error <= lods[lod].error)) {
+                        (lods[prev].count === lods[lod].count && err[prev] <= err[lod])) {
                         break;
                     }
                     scratch[j] = prev;
@@ -178,8 +229,8 @@ class GSplatLodTable {
             let bestError = Infinity;
             for (let i = 0; i < candidateCount; i++) {
                 const lod = scratch[i];
-                if (lods[lod].error < bestError) {
-                    bestError = lods[lod].error;
+                if (err[lod] < bestError) {
+                    bestError = err[lod];
                     scratch[frontierCount++] = lod;
                 }
             }
@@ -210,7 +261,7 @@ class GSplatLodTable {
                 let ratio = 0;
                 for (let j = i; j < frontierCount; j++) {
                     const reach = scratch[j];
-                    const r = (lods[coarseLod].error - lods[reach].error) /
+                    const r = (err[coarseLod] - err[reach]) /
                               (lods[reach].count - lods[coarseLod].count);
                     if (r > ratio) ratio = r;
                 }

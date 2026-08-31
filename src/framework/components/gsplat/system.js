@@ -26,6 +26,7 @@ Debug.call(() => {
 // order matters here
 const _properties = [
     'unified',
+    'lodFalloff',
     'lodRangeMin',
     'lodRangeMax',
     'castShadows',

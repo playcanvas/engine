@@ -7,7 +7,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 import { GsplatAllocId } from './gsplat-alloc-id.js';
-import { GSPLAT_DEBUG_NODE_AABBS, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
+import { GSPLAT_DEBUG_NODE_AABBS, GSPLAT_LODMODE_DISTANCE, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -464,8 +464,10 @@ class GSplatOctreeInstance {
      * Resolves the configured LOD range against the octree and caches the selection table for it.
      * Called before {@link GSplatOctreeInstance#evaluateNodeCoverage} so both that and the budget
      * allocator see the same range.
+     *
+     * @param {string} lodMode - The scene's LOD selection mode, part of the table's identity.
      */
-    resolveLodRange() {
+    resolveLodRange(lodMode) {
         const maxLod = this.octree.lodLevels - 1;
         const { lodRangeMin, lodRangeMax } = this.placement;
         const rangeMin = Math.max(0, Math.min(lodRangeMin ?? 0, maxLod));
@@ -473,11 +475,11 @@ class GSplatOctreeInstance {
         this.rangeMin = rangeMin;
         this.rangeMax = rangeMax;
 
-        // Hold a reference only while this instance is on that range, so a table is built once per
-        // live range and dropped when the last instance moves off it.
+        // Hold a reference only while this instance is on that range and mode, so a table is built
+        // once per live combination and dropped when the last instance moves off it.
         const table = this.lodTable;
-        if (!table || table.rangeMin !== rangeMin || table.rangeMax !== rangeMax) {
-            this.lodTable = this.octree.acquireLodTable(rangeMin, rangeMax);
+        if (!table || table.rangeMin !== rangeMin || table.rangeMax !== rangeMax || table.lodMode !== lodMode) {
+            this.lodTable = this.octree.acquireLodTable(rangeMin, rangeMax, lodMode);
             this.octree.releaseLodTable(table);
         }
     }
@@ -493,11 +495,20 @@ class GSplatOctreeInstance {
      * against the ortho window, mirroring Camera#getScreenSize. The behind-camera penalty applies
      * in both. Coverage is the only route by which camera position influences LOD.
      *
+     * In distance LOD mode the node's size is factored out instead: coverage is the inverse square
+     * of the world distance under both projections, so equal-distance nodes always rank equally and
+     * the selection forms clean concentric bands, matching what that mode promises. This is also
+     * what gives an orthographic camera a distance ordering at all - its footprint carries no depth
+     * term to rank by.
+     *
      * @param {GraphNode} cameraNode - The camera node.
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      */
     evaluateNodeCoverage(cameraNode, params) {
         const { lodBehindPenalty } = params;
+
+        // resolveLodRange has run just before this, so the table always reflects the current mode
+        const distanceMode = this.lodTable.lodMode === GSPLAT_LODMODE_DISTANCE;
 
         // Uniform scale of the octree transform, for world-space distance conversion.
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
@@ -594,7 +605,17 @@ class GSplatOctreeInstance {
             // special-case.
             const radius = nodes[nodeIndex].boundingSphere.w;
             let coverage;
-            if (ortho) {
+            if (distanceMode) {
+                // Inverse-square world distance, both projections: node size is deliberately not a
+                // factor, so equal-distance nodes rank equally whatever leaf sizes the octree cut
+                // produced and the selection forms clean concentric bands. The scale converts the
+                // octree-local distance to world units so differently scaled placements stay
+                // comparable under the shared budget; the behind penalty and FOV compensation
+                // arrive through fovAdjustedDistance. The floor is a constant, not the node radius,
+                // as a per-node guard would put size back into the ranking near the camera.
+                const worldDist = Math.max(fovAdjustedDistance * uniformScale, 1e-6);
+                coverage = 1 / (worldDist * worldDist);
+            } else if (ortho) {
                 // No distance attenuation: the footprint is the radius against the ortho window,
                 // clamped to a full-window 1 as the perspective ratio is bounded by 1. The behind
                 // penalty divides squared, matching how a penalized distance scales the far-field

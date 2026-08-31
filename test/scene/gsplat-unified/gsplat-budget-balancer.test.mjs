@@ -4,8 +4,8 @@ import { GSplatBudgetBalancer } from '../../../src/scene/gsplat-unified/gsplat-b
 import { GSplatLodTable } from '../../../src/scene/gsplat-unified/gsplat-lod-table.js';
 
 // Minimal stand-ins for the pieces the balancer touches: an octree exposing nodes and a table
-// cache, and an instance exposing nodeInfos plus its resolved LOD range.
-const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.length - 1) => {
+// cache, and an instance exposing nodeInfos, its resolved LOD range and its placement's falloff.
+const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.length - 1, lodFalloff = 1) => {
     const tables = new Map();
     const octree = {
         nodes: nodes.map(node => ({ lods: node.lods })),
@@ -19,6 +19,7 @@ const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.le
     };
     return {
         octree,
+        placement: { lodFalloff },
         nodeInfos: nodes.map((_, i) => ({ optimalLod: -1, lodCoverage: coverage?.[i] ?? 1 })),
         rangeMin,
         rangeMax,
@@ -26,6 +27,11 @@ const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.le
         // resolving the range itself
         lodTable: octree.acquireLodTable(rangeMin, rangeMax)
     };
+};
+
+const singleWithFalloff = (nodes, coverage, lodFalloff) => {
+    const inst = makeInstance(nodes, coverage, 0, nodes[0].lods.length - 1, lodFalloff);
+    return { inst, instances: new Map([[{}, inst]]) };
 };
 
 const single = (nodes, coverage, rangeMin, rangeMax) => {
@@ -337,6 +343,51 @@ describe('GSplatBudgetBalancer', function () {
             const exact = exactGreedy(inst, budget).spent;
             expect(splatsOf(inst)).to.be.at.least(exact * 0.99);
         }
+    });
+
+    it('tilts the budget towards the camera as lodFalloff rises', function () {
+        // Two nodes compete for one 5-splat upgrade. The far node removes 16x the error, so at the
+        // neutral falloff it wins despite its lower coverage; at falloff 2 the coverage difference
+        // is amplified enough that the near node takes it. The pivot cancels in the comparison, so
+        // the flip point is exact: falloff * log2(covNear/covFar) vs log2(ratioFar/ratioNear).
+        const nodes = [
+            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] },
+            { lods: [{ count: 10, error: 0 }, { count: 5, error: 16 }] }
+        ];
+
+        const neutral = singleWithFalloff(nodes, [0.1, 0.01], 1);
+        new GSplatBudgetBalancer().balance(neutral.instances, 15);
+        expect(lodsOf(neutral.inst)).to.deep.equal([1, 0]);
+
+        const steep = singleWithFalloff(nodes, [0.1, 0.01], 2);
+        new GSplatBudgetBalancer().balance(steep.instances, 15);
+        expect(lodsOf(steep.inst)).to.deep.equal([0, 1]);
+    });
+
+    it('ignores the view entirely at lodFalloff 0', function () {
+        // With the exponent at 0 every node's coverage term is equal, so the far node's better
+        // error-per-splat must win regardless of how much closer the other sits.
+        const { inst, instances } = singleWithFalloff([
+            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] },
+            { lods: [{ count: 10, error: 0 }, { count: 5, error: 2 }] }
+        ], [1, 1e-9], 0);
+
+        new GSplatBudgetBalancer().balance(instances, 15);
+
+        expect(lodsOf(inst)).to.deep.equal([1, 0]);
+    });
+
+    it('matches the exact path at the default falloff', function () {
+        // falloff 1 must keep the exact value path, bit-identical to ranking without the feature
+        const { nodes, coverage } = makeScene(300, 5, 21);
+        const a = singleWithFalloff(nodes, coverage, 1);
+        const b = single(nodes, coverage);
+
+        const balancer = new GSplatBudgetBalancer();
+        balancer.balance(a.instances, 20000);
+        balancer.balance(b.instances, 20000);
+
+        expect(lodsOf(a.inst)).to.deep.equal(lodsOf(b.inst));
     });
 
     it('moves few nodes when the camera moves slightly', function () {

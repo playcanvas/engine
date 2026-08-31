@@ -26,6 +26,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLATDATA_LARGE,
     GSPLAT_DEBUG_NONE,
+    GSPLAT_LODMODE_ERROR,
     GSPLAT_RENDERER_AUTO,
     GSplatComponentSystem,
     GSplatHandler,
@@ -261,6 +262,8 @@ data.set('culling', device.isWebGPU);
 data.set('compact', true);
 data.set('debug', GSPLAT_DEBUG_NONE);
 data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
+data.set('lodMode', GSPLAT_LODMODE_ERROR);
+data.set('lodFalloff', 1);
 data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');
 data.set('fogDensity', 0);
@@ -495,6 +498,7 @@ const loadGSplat = async (/** @type {string|null} */ url) => {
     gsplatEntity.setLocalScale(1, 1, 1);
     app.root.addChild(gsplatEntity);
     gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
+    gsplatGs.lodFalloff = data.get('lodFalloff');
 
     // Start with lowest LOD for fast initial display, then stream up
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
@@ -535,6 +539,16 @@ const loadGSplat = async (/** @type {string|null} */ url) => {
 await loadGSplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);
+
+data.on('lodMode:set', () => {
+    app.scene.gsplat.lodMode = data.get('lodMode');
+});
+
+data.on('lodFalloff:set', () => {
+    if (gsplatGs) {
+        gsplatGs.lodFalloff = data.get('lodFalloff');
+    }
+});
 
 const applySplatBudget = () => {
     const millions = data.get('splatBudget');

@@ -219,6 +219,28 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
+                <LabelGroup text='LOD Mode'>
+                    <SelectInput
+                        type='string'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'lodMode' }}
+                        value={observer.get('lodMode') || 'error'}
+                        options={[
+                            { v: 'error', t: 'Error' },
+                            { v: 'distance', t: 'Distance' }
+                        ]}
+                    />
+                </LabelGroup>
+                <LabelGroup text='LOD Falloff'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'lodFalloff' }}
+                        min={0}
+                        max={8}
+                        precision={2}
+                        step={0.01}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Splat Budget'>
                     <SliderInput
                         binding={new BindingTwoWay()}

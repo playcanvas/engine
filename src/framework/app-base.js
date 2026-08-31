@@ -1443,6 +1443,7 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.
      * @param {number} [settings.render.gsplatLodUnderfillLimit] - Maximum number of gsplat LOD levels allowed below the optimal level when optimal data is not resident. Defaults to 0.
      * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. LOD levels are chosen globally to stay within it; a non-positive value is not a way to disable this and the default is used instead. Defaults to 1000000.
+     * @param {string} [settings.render.gsplatLodMode] - How LOD levels are chosen for streamed GSplats: 'error' (default) spends the budget by measured approximation error, 'distance' orders detail by camera distance alone and ignores error metadata.
      * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
      * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
