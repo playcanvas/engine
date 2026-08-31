@@ -202,7 +202,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
         const ua = (typeof navigator !== 'undefined') && navigator.userAgent;
-        this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
+        this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('Version/15.4') || ua.includes('OS 15_4'));
         if (this.forceDisableMultisampling) {
             options.antialias = false;
             Debug.log('Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4');
