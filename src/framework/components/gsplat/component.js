@@ -381,9 +381,9 @@ class GSplatComponent extends Component {
      * Sets how quickly this splat's level of detail drops with distance from the camera. The
      * default of 1 gives a balanced falloff. Higher values concentrate detail near the camera at
      * the cost of the far field, while values towards 0 spread it evenly across the scene
-     * regardless of the view. This redistributes the detail this splat receives from the global
-     * {@link GSplatParams#splatBudget} without changing its overall share of it. Clamped to
-     * [0, 8].
+     * regardless of the view. This primarily redistributes the detail this splat receives from
+     * the global {@link GSplatParams#splatBudget} between its near and far field, though it can
+     * also shift how the budget divides between splats. Clamped to [0, 8].
      *
      * @type {number}
      */

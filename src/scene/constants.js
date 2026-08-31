@@ -1291,10 +1291,9 @@ export const GSPLAT_RENDERER_COMPUTE = 3;
 export const GSPLAT_LODMODE_ERROR = 'error';
 
 /**
- * LOD selection with a guaranteed coarser-with-distance progression: detail steps down in
- * concentric distance bands around the camera, with the band edges adapting to the splat budget.
- * Any error metadata in the asset is ignored. Useful when a capture's quality makes its error
- * tables unreliable.
+ * LOD selection ordered by camera distance alone: detail steps down in concentric distance bands
+ * around the camera, with the band edges adapting to the splat budget. Any error metadata in the
+ * asset is ignored. Useful when a capture's quality makes its error tables unreliable.
  *
  * @category Graphics
  */
