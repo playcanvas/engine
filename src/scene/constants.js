@@ -1282,12 +1282,6 @@ export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 export const GSPLAT_RENDERER_COMPUTE = 3;
 
 /**
- * No debug rendering for Gaussian splats. Normal rendering mode.
- *
- * @type {number}
- * @category Graphics
- */
-/**
  * LOD selection driven by per-level approximation errors: the splat budget is spent where it
  * removes the most error per splat, using the manifest's error tables when present and errors
  * derived from splat counts otherwise. The default.
@@ -1306,6 +1300,12 @@ export const GSPLAT_LODMODE_ERROR = 'error';
  */
 export const GSPLAT_LODMODE_DISTANCE = 'distance';
 
+/**
+ * No debug rendering for Gaussian splats. Normal rendering mode.
+ *
+ * @type {number}
+ * @category Graphics
+ */
 export const GSPLAT_DEBUG_NONE = 0;
 
 /**
