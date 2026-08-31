@@ -11,7 +11,9 @@ import {
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
-    GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS
+    GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS,
+    GSPLAT_LODMODE_DISTANCE,
+    GSPLAT_LODMODE_ERROR
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -497,6 +499,39 @@ class GSplatParams {
         return this._splatBudget;
     }
 
+    /** @private */
+    _lodMode = GSPLAT_LODMODE_ERROR;
+
+    /**
+     * How LOD levels are chosen for streamed GSplats, within {@link GSplatParams#splatBudget}.
+     * {@link GSPLAT_LODMODE_ERROR} (default) spends the budget where it removes the most
+     * approximation error per splat. {@link GSPLAT_LODMODE_DISTANCE} ignores error metadata and
+     * guarantees a coarser-with-distance progression instead - detail steps down in concentric
+     * distance bands around the camera, with band edges adapting to the budget. Useful when a
+     * capture's quality makes its error tables unreliable.
+     *
+     * @type {string}
+     */
+    set lodMode(value) {
+        if (value !== GSPLAT_LODMODE_ERROR && value !== GSPLAT_LODMODE_DISTANCE) {
+            Debug.warnOnce(`GSplatParams#lodMode: ignoring invalid value '${value}', expected GSPLAT_LODMODE_ERROR or GSPLAT_LODMODE_DISTANCE.`);
+            return;
+        }
+        if (this._lodMode !== value) {
+            this._lodMode = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the LOD selection mode.
+     *
+     * @type {string}
+     */
+    get lodMode() {
+        return this._lodMode;
+    }
+
     /**
      * @type {import('../../platform/graphics/texture.js').Texture|null}
      * @private
@@ -978,6 +1013,7 @@ class GSplatParams {
         this.lodBehindPenalty = render.gsplatLodBehindPenalty ?? this.lodBehindPenalty;
         this.lodUnderfillLimit = render.gsplatLodUnderfillLimit ?? this.lodUnderfillLimit;
         this.splatBudget = render.gsplatSplatBudget ?? this.splatBudget;
+        this.lodMode = render.gsplatLodMode ?? this.lodMode;
 
         this.alphaClip = render.gsplatAlphaClip ?? this.alphaClip;
         this.alphaClipForward = render.gsplatAlphaClipForward ?? this.alphaClipForward;

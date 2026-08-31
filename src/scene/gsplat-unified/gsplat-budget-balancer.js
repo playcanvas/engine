@@ -33,6 +33,18 @@ const KEY_LO = keyOf(1e-24);
 const KEY_HI = keyOf(1e3);
 const KEY_SCALE = (NUM_VALUE_BUCKETS - 1) / (KEY_HI - KEY_LO);
 
+// The bit key of 1.0 - log2 of 0 in key units. Subtracted when adding two keys, since each
+// carries the exponent bias once.
+const KEY_ONE = keyOf(1);
+
+// GSplatPlacement#lodFalloff is an exponent on coverage. It is applied in key space - the bit key
+// is piecewise-linear in log2, so cov^falloff becomes one multiply instead of a Math.pow per node,
+// at a cost of at most a bucket or two of quantisation. The exponent pivots around a mid-field
+// coverage (a node roughly a hundred radii away) rather than around 1: at the pivot the value is
+// unchanged by falloff, so the slider tilts a placement's budget between its near and far field
+// instead of deflating the whole placement against other instances.
+const KEY_PIVOT = keyOf(1e-4);
+
 /**
  * Distributes a splat budget across octree instances by choosing a LOD level per node.
  *
@@ -89,6 +101,15 @@ class GSplatBudgetBalancer {
     _coverage = new Float32Array(0);
 
     /**
+     * Per node, the falloff-scaled bit key of its coverage, used instead of {@link _coverage} when
+     * any instance has a non-default lodFalloff. See KEY_PIVOT.
+     *
+     * @type {Float64Array}
+     * @private
+     */
+    _coverageKey = new Float64Array(0);
+
+    /**
      * Which instance owns each global node index.
      *
      * @type {Uint16Array}
@@ -120,6 +141,7 @@ class GSplatBudgetBalancer {
         this._next = new Int32Array(size);
         this._pending = new Int32Array(size);
         this._coverage = new Float32Array(size);
+        this._coverageKey = new Float64Array(size);
         this._instanceOf = new Uint16Array(size);
     }
 
@@ -133,6 +155,19 @@ class GSplatBudgetBalancer {
      */
     _bucketOf(value) {
         const bucket = ((keyOf(value) - KEY_LO) * KEY_SCALE) | 0;
+        return bucket < 0 ? 0 : (bucket >= NUM_VALUE_BUCKETS ? NUM_VALUE_BUCKETS - 1 : bucket);
+    }
+
+    /**
+     * Maps a value already expressed as a bit key - the sum of a falloff-scaled coverage key and a
+     * ratio key - to a bucket.
+     *
+     * @param {number} key - Bit-key of the value.
+     * @returns {number} Bucket index.
+     * @private
+     */
+    _bucketOfKey(key) {
+        const bucket = ((key - KEY_LO) * KEY_SCALE) | 0;
         return bucket < 0 ? 0 : (bucket >= NUM_VALUE_BUCKETS ? NUM_VALUE_BUCKETS - 1 : bucket);
     }
 
@@ -170,6 +205,10 @@ class GSplatBudgetBalancer {
         let nodeTotal = 0;
         let totalStartCount = 0;
         let totalFinestCount = 0;
+        // With every instance at the default falloff the exact value path is used, bit-identical
+        // to ranking without the feature; any non-default falloff switches all ranking to the
+        // key-space path, where the exponent is a multiply. See KEY_PIVOT.
+        let useKeys = false;
         for (const [, inst] of octreeInstances) {
             // resolveLodRange() already built this for the instance's range; resolving it again
             // here would rebuild whenever two instances of one octree differ in range
@@ -180,6 +219,7 @@ class GSplatBudgetBalancer {
             nodeTotal += inst.octree.nodes.length;
             totalStartCount += table.totalStartCount;
             totalFinestCount += table.totalFinestCount;
+            if (inst.placement.lodFalloff !== 1) useKeys = true;
         }
         if (instances.length === 0) return;
 
@@ -199,6 +239,7 @@ class GSplatBudgetBalancer {
         const next = this._next;
         const pending = this._pending;
         const coverage = this._coverage;
+        const coverageKey = this._coverageKey;
         const instanceOf = this._instanceOf;
 
         // Seed pass: floor every node and queue its first upgrade.
@@ -208,6 +249,7 @@ class GSplatBudgetBalancer {
             const nodeInfos = inst.nodeInfos;
             const base = bases[i];
             const { startLod, firstUpgrade, upgradeRatio } = table;
+            const falloff = inst.placement.lodFalloff;
 
             for (let n = 0, len = nodeInfos.length; n < len; n++) {
                 const nodeInfo = nodeInfos[n];
@@ -223,7 +265,12 @@ class GSplatBudgetBalancer {
                 coverage[g] = cov;
                 instanceOf[g] = i;
                 pending[g] = first;
-                this._push(this._bucketOf(cov * upgradeRatio[first]), g);
+                if (useKeys) {
+                    coverageKey[g] = falloff * (keyOf(cov) - KEY_PIVOT) + KEY_PIVOT;
+                    this._push(this._bucketOfKey(coverageKey[g] + keyOf(upgradeRatio[first]) - KEY_ONE), g);
+                } else {
+                    this._push(this._bucketOf(cov * upgradeRatio[first]), g);
+                }
             }
         }
 
@@ -259,7 +306,9 @@ class GSplatBudgetBalancer {
                     // above the sweep would be dropped on every update, not merely delayed, and
                     // could never finish the run it started. Requeueing it here instead completes
                     // the run in this sweep, at the priority of the step that opened it.
-                    const target = this._bucketOf(coverage[g] * table.upgradeRatio[k2]);
+                    const target = useKeys ?
+                        this._bucketOfKey(coverageKey[g] + keyOf(table.upgradeRatio[k2]) - KEY_ONE) :
+                        this._bucketOf(coverage[g] * table.upgradeRatio[k2]);
                     this._push(target > bucket ? bucket : target, g);
                 }
                 g = this._bucketHead[bucket];

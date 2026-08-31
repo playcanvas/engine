@@ -1135,7 +1135,7 @@ class GSplatWorld {
         // Phase 1: resolve each instance's LOD range and evaluate per-node coverage, and collect
         // padding for active placements
         for (const [, inst] of this._octreeInstances) {
-            inst.resolveLodRange();
+            inst.resolveLodRange(this._scene.gsplat.lodMode);
             inst.evaluateNodeCoverage(camera, this._scene.gsplat);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);

@@ -1,5 +1,6 @@
 import { GSplatOctreeNode } from './gsplat-octree-node.js';
 import { GSplatLodTable } from './gsplat-lod-table.js';
+import { GSPLAT_LODMODE_ERROR } from '../constants.js';
 import { path } from '../../core/path.js';
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
@@ -347,16 +348,17 @@ class GSplatOctree {
      *
      * @param {number} rangeMin - Finest allowed LOD index.
      * @param {number} rangeMax - Coarsest allowed LOD index.
+     * @param {string} [lodMode] - GSPLAT_LODMODE_ERROR (default) or GSPLAT_LODMODE_DISTANCE.
      * @returns {GSplatLodTable} The selection table, with its reference count incremented.
      */
-    acquireLodTable(rangeMin, rangeMax) {
+    acquireLodTable(rangeMin, rangeMax, lodMode = GSPLAT_LODMODE_ERROR) {
         // A string key rather than packed arithmetic: nothing bounds lodLevels or the configured
         // range, and a packed key would alias pairs once rangeMax passes the pack base, silently
         // handing an instance a table for the wrong range.
-        const key = `${rangeMin},${rangeMax}`;
+        const key = `${rangeMin},${rangeMax},${lodMode}`;
         let table = this._lodTables.get(key);
         if (!table) {
-            table = new GSplatLodTable(this, rangeMin, rangeMax);
+            table = new GSplatLodTable(this, rangeMin, rangeMax, lodMode);
             this._lodTables.set(key, table);
         }
         table.refCount++;
@@ -374,7 +376,7 @@ class GSplatOctree {
         if (!table) return;
         Debug.assert(table.refCount > 0, `GSplatOctree: releasing a LOD table for range [${table.rangeMin}, ${table.rangeMax}] that holds no references.`);
         if (--table.refCount <= 0) {
-            this._lodTables.delete(`${table.rangeMin},${table.rangeMax}`);
+            this._lodTables.delete(`${table.rangeMin},${table.rangeMax},${table.lodMode}`);
         }
     }
 
