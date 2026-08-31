@@ -32,6 +32,7 @@ import { Color } from '../../core/math/color.js';
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const translation = new Vec3();
+const splatAxis = new Vec3();
 const invModelMat = new Mat4();
 
 // Color instances used by debug wireframe rendering (GSPLAT_DEBUG_AABBS)
@@ -815,17 +816,26 @@ class GSplatManager {
         cameraMat.getTranslation(cameraPosition);
         cameraMat.getZ(cameraDirection).normalize();
 
+        const radialSort = this.scene.gsplat.radialSorting;
+
         const sorterRequest = [];
         lastState.splats.forEach((splat) => {
             const modelMat = splat.node.getWorldTransform();
             invModelMat.copy(modelMat).invert();
 
-            // uniform scale
-            const uniformScale = modelMat.getScale().x;
+            // scale folded into the per-axis weights below, except on the radial path
+            const uniformScale = radialSort ? modelMat.getScale().x : 1;
 
-            // camera direction in splat's rotated space
-            // transform by the full inverse matrix and then normalize, which cancels the (1/s) scaling factor
-            const transformedDirection = invModelMat.transformVector(cameraDirection).normalize();
+            // camera direction in splat's rotated space: each local axis weighted by the
+            // model matrix's own basis vector, which holds for a non-uniform scale too
+            // (normalizing the inverse-transformed direction only cancels a uniform one)
+            const transformedDirection = radialSort ?
+                invModelMat.transformVector(cameraDirection).normalize() :
+                new Vec3(
+                    modelMat.getX(splatAxis).dot(cameraDirection),
+                    modelMat.getY(splatAxis).dot(cameraDirection),
+                    modelMat.getZ(splatAxis).dot(cameraDirection)
+                );
 
             // camera position in splat's local space (for circular sorting)
             const transformedPosition = invModelMat.transformPoint(cameraPosition);
