@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 
+import { GSPLAT_LODMODE_DISTANCE } from '../../../src/scene/constants.js';
 import { GSplatLodTable } from '../../../src/scene/gsplat-unified/gsplat-lod-table.js';
 import { GSplatOctree } from '../../../src/scene/gsplat-unified/gsplat-octree.js';
 
@@ -299,5 +300,57 @@ describe('GSplatLodTable', function () {
                 lod = table.finerOnChain(0, lod);
             }
         });
+    });
+});
+
+describe('GSplatLodTable distance mode', function () {
+
+    const distanceTable = octree => octree.acquireLodTable(0, octree.lodLevels - 1, GSPLAT_LODMODE_DISTANCE);
+
+    it('prices every step by the per-level band weight, whatever the node holds', function () {
+        // step to the finer of levels (i, i-1) costs error dCost * 3^(2*(i-1)), so error-per-splat
+        // is exactly 3^(2*(i-1)) - node content cancels and the ranking is pure coverage,
+        // which is what guarantees the coarser-with-distance progression
+        const a = distanceTable(makeOctree([100, 50, 20], [0, 1, 3], true));
+        const b = distanceTable(makeOctree([1000, 300, 7], [0, 900, 901], true));
+
+        for (const table of [a, b]) {
+            const ratios = upgradesOf(table).map(u => u.ratio);
+            expect(ratios.length).to.equal(2);
+            expect(ratios[0]).to.be.closeTo(9, 1e-6);   // step to lod1, weight 3^2
+            expect(ratios[1]).to.be.closeTo(1, 1e-6);   // step to lod0, weight 3^0
+        }
+    });
+
+    it('ignores authored error tables', function () {
+        // these errors would reorder the frontier in error mode; distance mode never reads them
+        const octree = makeOctree([100, 50, 20], [0, 40, 3], true);
+        const table = distanceTable(octree);
+
+        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
+    });
+
+    it('still drops levels dominated by count inversions', function () {
+        // level 4 holds more splats than level 3 for the same or worse band error
+        const octree = makeOctree([78, 38, 19, 6, 7], undefined, undefined);
+        const table = distanceTable(octree);
+
+        expect(chainOf(table)).to.not.include(4);
+    });
+
+    it('is cached separately from the error-mode table of the same range', function () {
+        const octree = makeOctree([100, 50, 20], [0, 1, 3], true);
+        const error = octree.acquireLodTable(0, 2);
+        const distance = distanceTable(octree);
+
+        expect(distance).to.not.equal(error);
+        expect(octree.acquireLodTable(0, 2)).to.equal(error);
+        expect(distanceTable(octree)).to.equal(distance);
+
+        // releasing one mode leaves the other alone
+        octree.releaseLodTable(distance);
+        octree.releaseLodTable(distance);
+        expect(octree.acquireLodTable(0, 2)).to.equal(error);
+        expect(distanceTable(octree)).to.not.equal(distance);
     });
 });

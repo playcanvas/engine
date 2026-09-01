@@ -1,4 +1,3 @@
-import { calculateTangents } from './geometry-utils.js';
 import { Geometry } from './geometry.js';
 
 /**
@@ -119,7 +118,7 @@ class CircleGeometry extends Geometry {
         this.indices = indices;
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(positions, normals, uvs, indices);
+            this.calculateTangents();
         }
     }
 }

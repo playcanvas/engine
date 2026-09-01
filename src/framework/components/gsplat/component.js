@@ -98,6 +98,13 @@ class GSplatComponent extends Component {
     _materialTmp = null;
 
     /**
+     * How fast quality falls off away from the camera, exponent on projected coverage.
+     *
+     * @private
+     */
+    _lodFalloff = 1;
+
+    /**
      * Minimum allowed LOD index (inclusive).
      *
      * @private
@@ -368,6 +375,32 @@ class GSplatComponent extends Component {
      */
     get castShadows() {
         return this._castShadows;
+    }
+
+    /**
+     * Sets how quickly this splat's level of detail drops with distance from the camera. The
+     * default of 1 gives a balanced falloff. Higher values concentrate detail near the camera at
+     * the cost of the far field, while values towards 0 spread it evenly across the scene
+     * regardless of the view. This primarily redistributes the detail this splat receives from
+     * the global {@link GSplatParams#splatBudget} between its near and far field, though it can
+     * also shift how the budget divides between splats. Clamped to [0, 8].
+     *
+     * @type {number}
+     */
+    set lodFalloff(value) {
+        this._lodFalloff = Math.min(Math.max(value, 0), 8);
+        if (this._placement) {
+            this._placement.lodFalloff = this._lodFalloff;
+        }
+    }
+
+    /**
+     * Gets how quickly this splat's level of detail drops with distance from the camera.
+     *
+     * @type {number}
+     */
+    get lodFalloff() {
+        return this._lodFalloff;
     }
 
     /**
@@ -977,6 +1010,7 @@ class GSplatComponent extends Component {
             this._placement = null;
 
             this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
+            this._placement.lodFalloff = this._lodFalloff;
             this._placement.lodRangeMin = this._lodRangeMin;
             this._placement.lodRangeMax = this._lodRangeMax;
             this._placement.workBufferUpdate = this._workBufferUpdate;

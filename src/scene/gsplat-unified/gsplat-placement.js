@@ -78,6 +78,33 @@ class GSplatPlacement {
     /**
      * @type {number}
      */
+    /**
+     * How fast quality falls off away from the camera for this placement's nodes, applied as an
+     * exponent on projected coverage in the budget ranking. 1 is neutral, 0 spreads the budget with
+     * no view preference, 2 concentrates it near the camera. In distance LOD mode this sets the
+     * band spacing.
+     *
+     * @private
+     */
+    _lodFalloff = 1;
+
+    /**
+     * @type {number}
+     */
+    set lodFalloff(value) {
+        if (this._lodFalloff !== value) {
+            this._lodFalloff = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodFalloff() {
+        return this._lodFalloff;
+    }
+
+    /**
+     * @type {number}
+     */
     set lodRangeMin(value) {
         if (this._lodRangeMin !== value) {
             this._lodRangeMin = value;

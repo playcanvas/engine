@@ -959,7 +959,7 @@ class Texture {
     }
 
     get gpuSize() {
-        const mips = this.pot && this._mipmaps && !(this._compressed && this._levels.length === 1);
+        const mips = this._mipmaps && !(this._compressed && this._levels.length === 1);
         return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap) * this._samples;
     }
 
