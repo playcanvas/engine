@@ -374,9 +374,10 @@ class FramePassCameraFrame extends FramePass {
 
         // The depth prepass, which this camera needs as well, publishes its depth to the same uniform
         // as the scene textures do, and so the two have to store it the same way - the shaders sampling
-        // it are generated once, from a single declaration of the encoding. Where a float texture cannot
-        // be rendered to, the prepass falls back to packing the depth into RGBA8, which the scene
-        // textures cannot do, as packed values cannot be blended into.
+        // it are generated once, from a single declaration of the encoding. They do not: the prepass
+        // writes the depth outright, while the scene textures accumulate an average of its reciprocal,
+        // which is what lets the blended gaussian splats contribute to it. So the two cannot coexist,
+        // and the prepass wins - it is the one the materials rendering in the scene pass sample.
         //
         // This restriction could be lifted by giving the passes which consume the depth after the scene
         // pass a uniform of their own, separate from the one the prepass publishes to. Each would then
@@ -387,8 +388,8 @@ class FramePassCameraFrame extends FramePass {
         // that the choice of which uniform to sample would have to be made per consuming pass rather
         // than per camera, as SSAO applied during shading runs before the scene pass and so has to keep
         // reading the depth of the prepass.
-        if (this.needsInSceneDepth(options) && !this.device.textureFloatRenderable) {
-            return 'the depth prepass this camera also needs stores the depth packed into RGBA8 on this device, which the scene depth cannot be stored as';
+        if (this.needsInSceneDepth(options)) {
+            return 'the depth prepass this camera also needs stores the depth differently, and the two cannot be told apart by the shaders sampling them';
         }
 
         return null;
