@@ -825,7 +825,7 @@ class GSplatManager {
 
             // the radial path multiplies local-space distances by this to get world units; the
             // linear path has the scale folded into the per-axis weights below, so it needs none
-            const scale = radialSort ? modelMat.getScale().x : 1;
+            const scale = radialSort ? modelMat.getX(splatAxis).length() : 1;
 
             // camera direction in splat's rotated space, used by the linear path: each local axis
             // is weighted by the model matrix's own basis vector, which is exact for any affine
@@ -853,7 +853,6 @@ class GSplatManager {
                 transformedPosition,
                 offset,
                 scale,
-                modelMat: modelMat.data.slice(),
                 aabbMin: [aabbMin.x, aabbMin.y, aabbMin.z],
                 aabbMax: [aabbMax.x, aabbMax.y, aabbMax.z]
             });
