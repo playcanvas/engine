@@ -91,6 +91,15 @@ class SceneDepthReader {
      */
     _depthRendered = true;
 
+    /**
+     * False once the device has been destroyed, after which nothing further is rendered and there is
+     * nothing left to read from.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _deviceValid = true;
+
     /** @private */
     device;
 
@@ -112,6 +121,9 @@ class SceneDepthReader {
 
     /** @private */
     _onPostRender;
+
+    /** @private */
+    _onDeviceDestroy;
 
     // the uniform scope ids the pass writes, and the scratch values written through them
 
@@ -177,6 +189,14 @@ class SceneDepthReader {
             }
         };
         camera.system.app.scene.on(EVENT_POSTRENDER, this._onPostRender);
+
+        // a destroyed device renders nothing further, so reads are turned away from then on and anything
+        // already queued is settled rather than left waiting on a frame which will never come
+        this._onDeviceDestroy = () => {
+            this._deviceValid = false;
+            this._settleRequests();
+        };
+        device.on('destroy', this._onDeviceDestroy);
     }
 
     /**
@@ -206,7 +226,7 @@ class SceneDepthReader {
         // a disabled camera renders nothing, so it would never service the read - the request would sit
         // in the queue unanswered rather than the caller being told there is nothing to read
         const { camera } = this;
-        if (!this._depthRendered || !camera.enabled || !camera.entity.enabled) {
+        if (!this._deviceValid || !this._depthRendered || !camera.enabled || !camera.entity.enabled) {
             return null;
         }
 
@@ -247,11 +267,7 @@ class SceneDepthReader {
 
         // nothing rendered the depth, so nothing was hit anywhere
         if (!this._depthRendered) {
-            requests.forEach((request) => {
-                request.target.fill(Infinity, 0, request.width * request.height);
-                request.resolve(request.target);
-            });
-            requests.length = 0;
+            this._settleRequests();
             return;
         }
 
@@ -438,18 +454,29 @@ class SceneDepthReader {
     }
 
     /**
+     * Reports every queued read as empty, for the cases where the frame which would have serviced them
+     * is never going to arrive.
+     *
+     * @private
+     */
+    _settleRequests() {
+        this._requests.forEach((request) => {
+            request.target.fill(Infinity, 0, request.width * request.height);
+            request.resolve(request.target);
+        });
+        this._requests.length = 0;
+    }
+
+    /**
      * Frees the resources the reader owns and stops reading for this camera. Reads still in flight
      * report their region as empty.
      */
     destroy() {
 
         this.camera.system.app.scene.off(EVENT_POSTRENDER, this._onPostRender);
+        this.device.off('destroy', this._onDeviceDestroy);
 
-        this._requests.forEach((request) => {
-            request.target.fill(Infinity, 0, request.width * request.height);
-            request.resolve(request.target);
-        });
-        this._requests.length = 0;
+        this._settleRequests();
 
         this.pass.destroy();
         this._destroyRenderTarget();
