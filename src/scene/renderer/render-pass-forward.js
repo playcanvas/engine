@@ -6,7 +6,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { LayerRenderStep } from './layer-render-step.js';
-import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD, sceneTextureUniformNames } from '../constants.js';
+import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SCENETEXTURE_DEPTH, SHADER_FORWARD, sceneTextureUniformNames } from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
@@ -79,15 +79,15 @@ class RenderPassForward extends RenderPass {
     sceneTextures;
 
     /**
-     * True if this pass publishes the scene textures it rendered when it finishes, making them
-     * available to the passes which consume them. Only the last pass rendering to the render target
-     * they are attached to sets this - publishing earlier would expose an attachment of a render target
-     * the remaining passes still render into, and the materials they render could then sample it, which
-     * is not allowed.
+     * The camera whose scene textures this pass publishes when it finishes, making them available to
+     * the passes which consume them, or null if it publishes none. Only the last pass rendering to the
+     * render target they are attached to sets this - publishing earlier would expose an attachment of a
+     * render target the remaining passes still render into, and the materials they render could then
+     * sample it, which is not allowed.
      *
-     * @type {boolean}
+     * @type {CameraComponent|null}
      */
-    publishSceneTextures = false;
+    sceneTexturesCamera = null;
 
     /**
      * True if this pass clears the uniforms the scene textures are published to before it renders. Only
@@ -293,7 +293,7 @@ class RenderPassForward extends RenderPass {
         // later, so the scene texture depth, which additionally covers the blended geometry, is what
         // the consumers sample.
         const sceneTextures = this.sceneTextures;
-        if (this.publishSceneTextures && sceneTextures?.length) {
+        if (this.sceneTexturesCamera && sceneTextures?.length) {
             const { renderTarget } = this;
             Debug.assert(renderTarget.colorBufferCount > sceneTextures.length,
                 'The render target of a pass rendering the scene textures needs an attachment for each of them, in addition to the one holding the scene color.');
@@ -301,7 +301,14 @@ class RenderPassForward extends RenderPass {
             for (let i = 0; i < sceneTextures.length; i++) {
                 const uniformName = sceneTextureUniformNames[sceneTextures[i]];
                 Debug.assert(uniformName, `Scene texture '${sceneTextures[i]}' has no uniform to be published under, see sceneTextureUniformNames.`);
-                this.device.scope.resolve(uniformName).setValue(renderTarget.getColorBuffer(i + 1));
+                const texture = renderTarget.getColorBuffer(i + 1);
+                this.device.scope.resolve(uniformName).setValue(texture);
+
+                // the uniforms are global, so the depth is recorded on the camera as well - that is what
+                // anything wanting this camera's depth in particular reads, see SceneDepthReader
+                if (sceneTextures[i] === SCENETEXTURE_DEPTH) {
+                    this.sceneTexturesCamera.camera.publishSceneDepthMap(texture, this.device.renderVersion);
+                }
             }
         }
 

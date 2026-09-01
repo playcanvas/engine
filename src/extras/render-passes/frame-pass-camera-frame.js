@@ -82,14 +82,6 @@ const _defaultOptions = new CameraFrameOptions();
 // the formats the scene depth can be rendered to, in the order of preference
 const _sceneDepthFormats = [PIXELFORMAT_R32F, PIXELFORMAT_R16F];
 
-// the largest value a half float can store, and so the furthest the scene depth can reach when it falls
-// back to that format
-const _maxHalfFloat = 65504;
-
-// how far inside the far clip the scene depth is cleared to, as a fraction of it. Large enough to survive
-// being stored as a half float, which steps by around a thousandth of the value it holds.
-const _sceneDepthClearEpsilon = 1e-3;
-
 /**
  * Render pass implementation of a common camera frame rendering with integrated post-processing
  * effects.
@@ -217,6 +209,7 @@ class FramePassCameraFrame extends FramePass {
             const { shaderParams } = this.cameraComponent;
             shaderParams.sceneDepthMapLinear = false;
             shaderParams.sceneDepthMapPacked = false;
+            shaderParams.sceneDepthMapReciprocal = false;
         }
 
         if (this.rtSceneColor) {
@@ -362,13 +355,6 @@ class FramePassCameraFrame extends FramePass {
         // - it would also clear the scene textures
         if (!this.cameraComponent.camera.fullSizeClearRect) {
             return 'this camera does not clear the whole render target, and the clear it uses instead would also clear the scene depth';
-        }
-
-        // the depth is stored in linear view space units, so the far clip has to fit in the format. Half
-        // float stops being able to represent it at all beyond 65504, and steps by tens of units well
-        // before that, so the effects consuming it need the far clip considerably lower still.
-        if (this.sceneDepthFormat === PIXELFORMAT_R16F && this.cameraComponent.camera.farClip > _maxHalfFloat) {
-            return `the far clip of this camera is too far for a half float scene depth - keep it below ${_maxHalfFloat}, and well below that for the depth to stay precise enough`;
         }
 
         // The depth prepass, which this camera needs as well, publishes its depth to the same uniform
@@ -563,6 +549,10 @@ class FramePassCameraFrame extends FramePass {
             const { shaderParams } = cameraComponent;
             shaderParams.sceneDepthMapLinear = true;
             shaderParams.sceneDepthMapPacked = false;
+
+            // the scene pass accumulates an average of the reciprocals, as the blended splats
+            // contribute to it - unlike the prepass, which writes the depth outright
+            shaderParams.sceneDepthMapReciprocal = true;
 
             // the passes blending into the scene color after the scene pass sample the scene depth, so
             // they cannot render to the render target it is attached to
@@ -801,7 +791,7 @@ class FramePassCameraFrame extends FramePass {
         // expose an attachment of the render target the remaining passes still render into, which the
         // materials they render could then sample - reading a texture attached to the render target
         // being rendered into is not allowed.
-        (this.scenePassTransparent ?? this.scenePass).publishSceneTextures = true;
+        (this.scenePassTransparent ?? this.scenePass).sceneTexturesCamera = this.cameraComponent;
 
         // Without a prepass nothing has published the scene depth by the time the scene renders, so the
         // first pass clears the uniform it is published to. This has to happen as the pass renders rather
@@ -938,12 +928,14 @@ class FramePassCameraFrame extends FramePass {
             // texture with the scene render target, which the scene pass resizes
             this.rtSceneColor.resize(this.rt.width, this.rt.height);
 
-            // pixels no geometry covers read as the far clip, nudged just inside it so that a consumer
-            // testing for the far plane is not caught by rounding. Only the first pass rendering to the
-            // scene render target clears it - the one rendering the transparent layers after the grab
-            // pass blends into what the first one accumulated.
+            // cleared to the reciprocal of the far clip, which makes the background a surface at
+            // that distance taking part in the average the blended geometry accumulates - whatever
+            // coverage the splats leave over falls to it. That keeps a pixel a splat covers only
+            // faintly reporting close to the background rather than the splat's own distance. Only the
+            // first pass rendering to the scene render target clears it - the one rendering the
+            // transparent layers after the grab pass blends into what the first one accumulated.
             const clearValue = this._sceneDepthClearValue;
-            clearValue.r = this.cameraComponent.camera.farClip * (1 - _sceneDepthClearEpsilon);
+            clearValue.r = 1 / this.cameraComponent.camera.farClip;
             this.scenePass.setClearColor(clearValue, this.sceneDepthSlot);
         }
 

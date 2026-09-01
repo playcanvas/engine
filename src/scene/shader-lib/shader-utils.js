@@ -201,8 +201,14 @@ class ShaderUtils {
      * @ignore
      */
     static getScreenDepthChunkKey(cameraShaderParams) {
-        const { sceneDepthMapLinear, sceneDepthMapPacked } = cameraShaderParams;
-        return sceneDepthMapLinear ? (sceneDepthMapPacked ? '-linearPacked' : '-linear') : '';
+        const { sceneDepthMapLinear, sceneDepthMapPacked, sceneDepthMapReciprocal } = cameraShaderParams;
+        if (!sceneDepthMapLinear) {
+            return '';
+        }
+        if (sceneDepthMapPacked) {
+            return '-linearPacked';
+        }
+        return sceneDepthMapReciprocal ? '-linearReciprocal' : '-linear';
     }
 
     /**
@@ -225,6 +231,11 @@ class ShaderUtils {
             // the decode in the screenDepth chunk relies on
             if (cameraShaderParams.sceneDepthMapPacked) {
                 defines.set('SCENE_DEPTHMAP_PACKED', '');
+            }
+
+            // likewise nested - the reciprocal decode inverts what the linear map holds
+            if (cameraShaderParams.sceneDepthMapReciprocal) {
+                defines.set('SCENE_DEPTHMAP_RECIPROCAL', '');
             }
         }
 

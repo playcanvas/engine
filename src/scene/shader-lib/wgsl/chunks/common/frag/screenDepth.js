@@ -47,7 +47,15 @@ fn getLinearScreenDepth(uv: vec2f) -> f32 {
     let texel: vec2i = vec2i(uv * vec2f(textureSize));
 
     #ifdef SCENE_DEPTHMAP_LINEAR
-        return textureLoad(uSceneDepthMap, texel, 0).r;
+        #ifdef SCENE_DEPTHMAP_RECIPROCAL
+
+            // a coverage weighted average of the reciprocals of the depths, inverted back into a
+            // depth. Zero is a pixel nothing was rendered to, which reads as the far clip.
+            let recip: f32 = textureLoad(uSceneDepthMap, texel, 0).r;
+            return select(uniform.camera_params.y, 1.0 / recip, recip > 0.0);
+        #else
+            return textureLoad(uSceneDepthMap, texel, 0).r;
+        #endif
     #else
         return linearizeDepth(textureLoad(uSceneDepthMap, texel, 0).r);
     #endif

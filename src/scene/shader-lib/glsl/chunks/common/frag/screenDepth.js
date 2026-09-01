@@ -48,6 +48,12 @@ float getLinearScreenDepth(vec2 uv) {
             // any filtering to keep the individual bytes intact
             ivec2 texel = ivec2(uv * vec2(textureSize(uSceneDepthMap, 0)));
             return uint2float(texelFetch(uSceneDepthMap, texel, 0));
+        #elif defined(SCENE_DEPTHMAP_RECIPROCAL)
+
+            // a coverage weighted average of the reciprocals of the depths, inverted back into a
+            // depth. Zero is a pixel nothing was rendered to, which reads as the far clip.
+            float recip = texture2D(uSceneDepthMap, uv).r;
+            return recip > 0.0 ? 1.0 / recip : camera_params.y;
         #else
             return texture2D(uSceneDepthMap, uv).r;
         #endif

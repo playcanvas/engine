@@ -111,9 +111,9 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         modifySplatColor(vec2f(gaussianUV), &fragColor);
         output.color = vec4f(fragColor.xyz * fragColor.a, fragColor.a);
 
-        // The same premultiplied blending which composites the color accumulates a transmittance
-        // weighted depth, so the splats gain a depth without being rendered a second time. Dithered
-        // splats render as opaque, and the fragments which survive the dither have full coverage.
+        // The same premultiplied blending which composites the color accumulates the scene depth, so
+        // the splats gain a depth without being rendered a second time. Dithered splats render as
+        // opaque, and the fragments which survive the dither have full coverage.
         // Guarded by the define the write function tests internally, as vLinearDepth is only generated
         // when the depth is written.
         #ifdef SCENE_TEXTURE_DEPTH

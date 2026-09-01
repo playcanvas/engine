@@ -352,6 +352,7 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 // FRAMEWORK / GRAPHICS
 export { Picker } from './framework/graphics/picker.js';
 export { RenderPassPicker } from './framework/graphics/render-pass-picker.js';
+export { SceneDepthReader } from './framework/graphics/scene-depth-reader.js';
 
 // FRAMEWORK / HANDLERS
 export { basisInitialize } from './framework/handlers/basis.js';

@@ -55,6 +55,7 @@ class RenderPassPrepass extends RenderPass {
         super.destroy();
         this.camera.shaderParams.sceneDepthMapLinear = false;
         this.camera.shaderParams.sceneDepthMapPacked = false;
+        this.camera.shaderParams.sceneDepthMapReciprocal = false;
         this.renderTarget?.destroy();
         this.renderTarget = null;
         this.linearDepthTexture?.destroy();
@@ -90,6 +91,9 @@ class RenderPassPrepass extends RenderPass {
         shaderParams.sceneDepthMapLinear = true;
         shaderParams.sceneDepthMapPacked = this.linearDepthFormat === PIXELFORMAT_RGBA8;
 
+        // this pass writes the depth outright, rather than the reciprocal average the scene pass accumulates
+        shaderParams.sceneDepthMapReciprocal = false;
+
         // the WGSL screenDepth chunk implements no packed decode, as WebGPU always supports
         // rendering to float textures
         Debug.assert(!(device.isWebGPU && shaderParams.sceneDepthMapPacked));
@@ -98,8 +102,10 @@ class RenderPassPrepass extends RenderPass {
     }
 
     after() {
-        // Assign the linear depth texture to the uniform
+        // Assign the linear depth texture to the uniform, and record it on the camera - the uniform is
+        // global, so anything after this frame wanting this camera's depth needs the camera's own record
         this.device.scope.resolve(DEPTH_UNIFORM_NAME).setValue(this.linearDepthTexture);
+        this.camera.camera.publishSceneDepthMap(this.linearDepthTexture, this.device.renderVersion);
     }
 
     execute() {
