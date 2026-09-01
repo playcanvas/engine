@@ -9,21 +9,23 @@ const version = '$_CURRENT_SDK_VERSION';
  */
 const revision = '$_CURRENT_SDK_REVISION';
 
+import { Debug } from './debug.js';
+
 /**
  * Merge the contents of two objects into a single object.
  *
  * @param {object} target - The target object of the merge.
- * @param {object} ex - The object that is merged with target.
+ * @param {object} ex - The object to be merged into the target.
  * @returns {object} The target object.
  * @example
- * const A = {
+ * var A = {
  *     a: function () {
- *         console.log(this.a);
+ *         console.log('a');
  *     }
  * };
- * const B = {
+ * var B = {
  *     b: function () {
- *         console.log(this.b);
+ *         console.log('b');
  *     }
  * };
  *
@@ -36,12 +38,28 @@ const revision = '$_CURRENT_SDK_REVISION';
  */
 function extend(target, ex) {
     for (const prop in ex) {
+        if (!Object.prototype.hasOwnProperty.call(ex, prop)) {
+            continue;
+        }
+
+        const isForbidden = prop === '__proto__' || prop === 'constructor' || prop === 'prototype';
+        if (isForbidden) {
+            Debug.warnOnce(`Ignoring forbidden property: ${prop}`);
+            continue;
+        }
+
         const copy = ex[prop];
 
         if (Array.isArray(copy)) {
-            target[prop] = extend([], copy);
+            if (!Array.isArray(target[prop])) {
+                target[prop] = [];
+            }
+            extend(target[prop], copy);
         } else if (copy && typeof copy === 'object') {
-            target[prop] = extend({}, copy);
+            if (!target[prop] || typeof target[prop] !== 'object') {
+                target[prop] = {};
+            }
+            extend(target[prop], copy);
         } else {
             target[prop] = copy;
         }
@@ -49,5 +67,6 @@ function extend(target, ex) {
 
     return target;
 }
+
 
 export { extend, revision, version };
