@@ -1022,6 +1022,86 @@ class StandardMaterial extends Material {
 
         super.destroy();
     }
+
+    /**
+     * Sets the shininess in the range 0 to 100, mapping to {@link StandardMaterial#gloss} in the
+     * range 0 to 1.
+     *
+     * @type {number}
+     * @ignore
+     * @deprecated Use {@link StandardMaterial#gloss} instead.
+     */
+    set shininess(value) {
+        // Object.assign stops tsc declaration emit synthesizing a duplicate 'gloss' member
+        Object.assign(this, { gloss: value * 0.01 });
+    }
+
+    /**
+     * Gets the shininess.
+     *
+     * @type {number}
+     * @ignore
+     * @deprecated Use {@link StandardMaterial#gloss} instead.
+     */
+    get shininess() {
+        return this.gloss * 100;
+    }
+
+    /**
+     * Sets whether tonemapping is applied. Note: no deprecation warning is logged, to keep
+     * existing code working without warnings.
+     *
+     * @type {boolean}
+     * @ignore
+     * @deprecated Use {@link StandardMaterial#useTonemap} instead.
+     */
+    set useGammaTonemap(value) {
+        // Object.assign stops tsc declaration emit synthesizing a duplicate 'useTonemap' member
+        Object.assign(this, { useTonemap: value });
+    }
+
+    /**
+     * Gets whether tonemapping is applied.
+     *
+     * @type {boolean}
+     * @ignore
+     * @deprecated Use {@link StandardMaterial#useTonemap} instead.
+     */
+    get useGammaTonemap() {
+        return this.useTonemap;
+    }
+
+    /**
+     * Sets the anisotropy as a signed intensity, mapping to {@link StandardMaterial#anisotropyIntensity}
+     * and {@link StandardMaterial#anisotropyRotation}.
+     *
+     * @type {number}
+     * @ignore
+     * @deprecated Use {@link StandardMaterial#anisotropyIntensity} and
+     * {@link StandardMaterial#anisotropyRotation} instead.
+     */
+    set anisotropy(value) {
+        Debug.deprecated('StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.');
+        // Object.assign stops tsc declaration emit synthesizing duplicate member declarations
+        Object.assign(this, {
+            anisotropyIntensity: Math.abs(value),
+            anisotropyRotation: value >= 0 ? 0 : 90
+        });
+    }
+
+    /**
+     * Gets the anisotropy as a signed intensity.
+     *
+     * @type {number}
+     * @ignore
+     * @deprecated Use {@link StandardMaterial#anisotropyIntensity} and
+     * {@link StandardMaterial#anisotropyRotation} instead.
+     */
+    get anisotropy() {
+        Debug.deprecated('StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.');
+        const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
+        return this.anisotropyIntensity * sign;
+    }
 }
 
 // define a uniform get function
@@ -1486,3 +1566,46 @@ function _defineMaterialProps() {
 _defineMaterialProps();
 
 export { StandardMaterial };
+
+function _defineDeprecatedAlias(newName, oldName) {
+    Object.defineProperty(StandardMaterial.prototype, oldName, {
+        get: function () {
+            Debug.deprecated(`StandardMaterial#${oldName} is deprecated. Use StandardMaterial#${newName} instead.`);
+            return this[newName];
+        },
+        set: function (value) {
+            Debug.deprecated(`StandardMaterial#${oldName} is deprecated. Use StandardMaterial#${newName} instead.`);
+            this[newName] = value;
+        }
+    });
+}
+
+function _defineRemovedTint(name) {
+    Object.defineProperty(StandardMaterial.prototype, name, {
+        get: function () {
+            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
+            return true;
+        },
+        set: function (value) {
+            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
+        }
+    });
+}
+
+_defineRemovedTint('sheenTint');
+_defineRemovedTint('diffuseTint');
+_defineRemovedTint('emissiveTint');
+_defineRemovedTint('ambientTint');
+_defineRemovedTint('specularTint');
+
+_defineDeprecatedAlias('aoVertexColor', 'aoMapVertexColor');
+_defineDeprecatedAlias('diffuseVertexColor', 'diffuseMapVertexColor');
+_defineDeprecatedAlias('specularVertexColor', 'specularMapVertexColor');
+_defineDeprecatedAlias('emissiveVertexColor', 'emissiveMapVertexColor');
+_defineDeprecatedAlias('metalnessVertexColor', 'metalnessMapVertexColor');
+_defineDeprecatedAlias('glossVertexColor', 'glossMapVertexColor');
+_defineDeprecatedAlias('opacityVertexColor', 'opacityMapVertexColor');
+_defineDeprecatedAlias('lightVertexColor', 'lightMapVertexColor');
+
+_defineDeprecatedAlias('sheenGloss', 'sheenGlossiness');
+_defineDeprecatedAlias('clearCoatGloss', 'clearCoatGlossiness');

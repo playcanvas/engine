@@ -1116,6 +1116,50 @@ class Material {
     removeMeshInstanceRef(meshInstance) {
         this.meshInstances.delete(meshInstance);
     }
+
+    /**
+     * Sets the material's shader. Not supported.
+     *
+     * @ignore
+     * @deprecated Use {@link ShaderMaterial} instead.
+     */
+    set shader(value) {
+        Debug.removed('Material#shader was removed. Use ShaderMaterial instead.');
+    }
+
+    /**
+     * Gets the material's shader. Always returns null.
+     *
+     * @ignore
+     * @deprecated Use {@link ShaderMaterial} instead.
+     */
+    get shader() {
+        Debug.removed('Material#shader was removed. Use ShaderMaterial instead.');
+        return null;
+    }
+
+    /**
+     * Sets whether blending is enabled. Note: this is used by the Editor.
+     *
+     * @type {boolean}
+     * @ignore
+     * @deprecated Use {@link Material#blendState} instead.
+     */
+    set blend(value) {
+        Debug.deprecated('Material#blend is deprecated, use Material.blendState.');
+        this.blendState.blend = value;
+    }
+
+    /**
+     * Gets whether blending is enabled.
+     *
+     * @type {boolean}
+     * @ignore
+     * @deprecated Use {@link Material#blendState} instead.
+     */
+    get blend() {
+        return this.blendState.blend;
+    }
 }
 
 export { Material };

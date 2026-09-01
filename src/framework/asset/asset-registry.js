@@ -864,6 +864,19 @@ class AssetRegistry extends EventHandler {
         Debug.trace(TRACEID_ASSETS, `Types: ${Object.entries(byType).map(([type, count]) => `${type}:${count}`).join(', ')}`);
         // #endif
     }
+
+    /**
+     * Retrieve an asset from the registry by its id.
+     *
+     * @param {number} id - The id of the asset to get.
+     * @returns {Asset|undefined} The asset.
+     * @ignore
+     * @deprecated Use {@link AssetRegistry#get} instead.
+     */
+    getAssetById(id) {
+        Debug.deprecated('AssetRegistry#getAssetById is deprecated. Use AssetRegistry#get instead.');
+        return this.get(id);
+    }
 }
 
 export { AssetRegistry };
