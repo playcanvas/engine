@@ -823,19 +823,18 @@ class GSplatManager {
             const modelMat = splat.node.getWorldTransform();
             invModelMat.copy(modelMat).invert();
 
-            // scale folded into the per-axis weights below, except on the radial path
-            const uniformScale = radialSort ? modelMat.getScale().x : 1;
+            // the radial path multiplies local-space distances by this to get world units; the
+            // linear path has the scale folded into the per-axis weights below, so it needs none
+            const scale = radialSort ? modelMat.getScale().x : 1;
 
-            // camera direction in splat's rotated space: each local axis weighted by the
-            // model matrix's own basis vector, which holds for a non-uniform scale too
-            // (normalizing the inverse-transformed direction only cancels a uniform one)
-            const transformedDirection = radialSort ?
-                invModelMat.transformVector(cameraDirection).normalize() :
-                new Vec3(
-                    modelMat.getX(splatAxis).dot(cameraDirection),
-                    modelMat.getY(splatAxis).dot(cameraDirection),
-                    modelMat.getZ(splatAxis).dot(cameraDirection)
-                );
+            // camera direction in splat's rotated space, used by the linear path: each local axis
+            // is weighted by the model matrix's own basis vector, which is exact for any affine
+            // transform (normalizing the inverse-transformed direction only cancels a uniform scale)
+            const transformedDirection = new Vec3(
+                modelMat.getX(splatAxis).dot(cameraDirection),
+                modelMat.getY(splatAxis).dot(cameraDirection),
+                modelMat.getZ(splatAxis).dot(cameraDirection)
+            );
 
             // camera position in splat's local space (for circular sorting)
             const transformedPosition = invModelMat.transformPoint(cameraPosition);
@@ -853,14 +852,14 @@ class GSplatManager {
                 transformedDirection,
                 transformedPosition,
                 offset,
-                scale: uniformScale,
+                scale,
                 modelMat: modelMat.data.slice(),
                 aabbMin: [aabbMin.x, aabbMin.y, aabbMin.z],
                 aabbMax: [aabbMax.x, aabbMax.y, aabbMax.z]
             });
         });
 
-        this.cpuSorter.setSortParams(sorterRequest, this.scene.gsplat.radialSorting);
+        this.cpuSorter.setSortParams(sorterRequest, radialSort);
     }
 }
 
