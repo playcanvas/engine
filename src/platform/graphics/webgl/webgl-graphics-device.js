@@ -954,7 +954,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const contextAttribs = gl.getContextAttributes();
         this.supportsMsaa = contextAttribs?.antialias ?? false;
-        this.supportsStencil = contextAttribs?.stencil ?? false;
 
         // Query parameter values from the WebGL context
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
