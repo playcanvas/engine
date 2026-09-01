@@ -551,7 +551,8 @@ class AppBase extends EventHandler {
     init(appOptions) {
         const {
             assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
-            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr
+            lightmapper, mouse, physicsWorld, resourceHandlers, scriptsOrder, scriptPrefix, soundManager,
+            touch, xr
         } = appOptions;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
@@ -637,6 +638,13 @@ class AppBase extends EventHandler {
         componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
+
+        // Install a user-supplied physics backend. When omitted, the rigid body system
+        // auto-detects Ammo once application libraries have loaded (see onLibrariesLoaded).
+        if (physicsWorld) {
+            Debug.assert(this.systems.rigidbody, 'AppOptions.physicsWorld requires RigidBodyComponentSystem to be included in AppOptions.componentSystems.');
+            this.systems.rigidbody?.setPhysicsWorld(physicsWorld);
+        }
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
