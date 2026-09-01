@@ -317,6 +317,10 @@ app.on('update', (/** @type {number} */ dt) => {
     reticle.style.borderColor = focusClamped ? 'rgba(255, 90, 30, 0.95)' : 'rgba(255, 255, 255, 0.9)';
 
     // Read every frame, with no regard for whether earlier reads have landed - several can be in flight.
+    // They all fill the same array, which SceneDepthReader asks callers not to do when reads overlap, so
+    // a read can resolve against samples a later one has already overwritten. That only ever means the
+    // focus eases toward a distance a frame or two stale, which the easing below absorbs, and it saves
+    // allocating an array per frame - a reader whose result mattered exactly would pass its own.
     // The median rather than the nearest sample, as captures are full of faint floaters which would
     // otherwise grab the focus, and thinly covered pixels read too far - the splat depth is weighted by
     // transmittance, so it blends toward the value the depth was cleared to where coverage is partial.

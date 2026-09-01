@@ -249,6 +249,16 @@ class SceneDepthReader {
 
         this._updateShader();
 
+        // sized to the largest request before any of them render, as growing it part way through would
+        // destroy the texture the readback of an already rendered one is still to be sourced from
+        let width = 0;
+        let height = 0;
+        for (let i = 0; i < requests.length; i++) {
+            width = Math.max(width, requests[i].width);
+            height = Math.max(height, requests[i].height);
+        }
+        this._updateRenderTarget(width, height);
+
         for (let i = 0; i < requests.length; i++) {
             this._readRequest(requests[i]);
         }
@@ -266,8 +276,6 @@ class SceneDepthReader {
         const { camera } = this;
         const { width, height } = request;
         const internal = camera.camera;
-
-        this._updateRenderTarget(width, height);
 
         const { rectValue, gridValue } = this;
         rectValue[0] = request.x;
