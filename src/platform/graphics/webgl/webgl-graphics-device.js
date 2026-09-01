@@ -952,9 +952,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.maxPrecision = this.precision = this.getPrecision();
 
-        const contextAttribs = gl.getContextAttributes();
-        this.supportsMsaa = contextAttribs?.antialias ?? false;
-
         // Query parameter values from the WebGL context
         this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
         this.maxCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
