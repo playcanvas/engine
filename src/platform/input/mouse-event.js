@@ -168,6 +168,17 @@ class MouseEvent {
 
         this.event = event;
     }
+
+    /**
+     * Gets the mouse wheel value.
+     *
+     * @type {number}
+     * @ignore
+     * @deprecated Use {@link MouseEvent#wheelDelta} instead.
+     */
+    get wheel() {
+        return this.wheelDelta * -2;
+    }
 }
 
 export { isMousePointerLocked, MouseEvent };

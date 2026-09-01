@@ -1273,6 +1273,18 @@ class ModelComponent extends Component {
             }
         }
     }
+
+    /**
+     * Sets the visibility of the model.
+     *
+     * @param {boolean} visible - True to enable the model.
+     * @ignore
+     * @deprecated Use {@link ModelComponent#enabled} instead.
+     */
+    setVisible(visible) {
+        Debug.deprecated('ModelComponent#setVisible is deprecated. Use ModelComponent#enabled instead.');
+        this.enabled = visible;
+    }
 }
 
 export { ModelComponent };

@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { LitShaderOptions } from '../shader-lib/programs/lit-shader-options.js';
 
 /**
@@ -88,3 +89,25 @@ class StandardMaterialOptions {
 }
 
 export { StandardMaterialOptions };
+
+function _defineDeprecatedOption(name, newName) {
+    if (name !== 'pass') {
+        Object.defineProperty(StandardMaterialOptions.prototype, name, {
+            get: function () {
+                Debug.deprecated(`Getting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`);
+                return this.litOptions[newName || name];
+            },
+            set: function (value) {
+                Debug.deprecated(`Setting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`);
+                this.litOptions[newName || name] = value;
+            }
+        });
+    }
+}
+_defineDeprecatedOption('refraction', 'useRefraction');
+
+const tempOptions = new LitShaderOptions();
+const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
+for (const litOption in litOptionProperties) {
+    _defineDeprecatedOption(litOptionProperties[litOption]);
+}
