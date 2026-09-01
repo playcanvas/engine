@@ -84,19 +84,17 @@ class RenderPassPrepass extends RenderPass {
             samples: 1
         });
 
+        // the WGSL screenDepth chunk implements no packed decode, as WebGPU always supports
+        // rendering to float textures
+        Debug.assert(!(device.isWebGPU && this.linearDepthFormat === PIXELFORMAT_RGBA8));
+
         // declare how this pass stores the depth, so that the shaders sampling it decode what was
-        // actually written instead of inferring it from the device capabilities - other producers of
-        // the scene depth map store it in other formats
+        // actually written instead of inferring it from the device capabilities. Declared at setup,
+        // because the post-processing passes resolve these defines when they are constructed.
         const { shaderParams } = this.camera;
         shaderParams.sceneDepthMapLinear = true;
         shaderParams.sceneDepthMapPacked = this.linearDepthFormat === PIXELFORMAT_RGBA8;
-
-        // this pass writes the depth outright, rather than the reciprocal average the scene pass accumulates
         shaderParams.sceneDepthMapReciprocal = false;
-
-        // the WGSL screenDepth chunk implements no packed decode, as WebGPU always supports
-        // rendering to float textures
-        Debug.assert(!(device.isWebGPU && shaderParams.sceneDepthMapPacked));
 
         this.init(renderTarget, options);
     }

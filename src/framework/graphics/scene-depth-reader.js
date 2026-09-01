@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import {
-    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8, SEMANTIC_POSITION,
+    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_R16F, PIXELFORMAT_RGBA8, SEMANTIC_POSITION,
     SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -20,10 +20,14 @@ import wgslSceneDepthReadPS from '../../scene/shader-lib/wgsl/chunks/render-pass
 /**
  * How close to the far clip a sample has to be to count as nothing having been rendered, as a fraction
  * of the far clip. Both producers report the far clip itself for a pixel nothing covered - the prepass
- * clears to it, and the scene pass clears to its reciprocal, which decodes back to it - so the margin
- * is only here to absorb the rounding of that round trip.
+ * clears to it, and the scene pass clears to its reciprocal, which decodes back to it - so the margin is
+ * only here to absorb the rounding of that round trip. A whole float survives it to within a few parts
+ * in a million, a half float to a few parts in ten thousand, and the margin is picked to match, as a
+ * surface which happens to lie inside it reads as empty.
  */
-const _farLimitFraction = 1 - 1.5e-3;
+const _farLimitFractionFull = 1 - 1e-5;
+
+const _farLimitFractionHalf = 1 - 1.5e-3;
 
 /**
  * Reads the scene depth of a camera back to the CPU.
@@ -180,7 +184,8 @@ class SceneDepthReader {
      * region is point sampled rather than averaged - one sample per cell, taken at its centre - so
      * asking for more samples than the region resolves to repeats them.
      *
-     * Samples where nothing was rendered read as `Infinity`.
+     * Samples where nothing was rendered read as `Infinity`, as do the few which land within a hair of
+     * the far clip, that being the depth an empty pixel reports.
      *
      * @param {Vec4} rect - The region of the view to sample, normalized, with its origin in the bottom
      * left as {@link CameraComponent#rect}.
@@ -189,8 +194,8 @@ class SceneDepthReader {
      * @param {Float32Array} [target] - An array to fill, at least `width * height` long. One is
      * allocated when not given. It is filled when the returned promise resolves, so an array must not
      * be shared between reads which overlap in time.
-     * @returns {Promise<Float32Array>|null} The samples, in world units, or null when the camera is not
-     * rendering a scene depth, leaving nothing to read.
+     * @returns {Promise<Float32Array>|null} The samples, in world units, or null when the camera is
+     * disabled or is not rendering a scene depth, leaving nothing to read.
      */
     read(rect, width, height, target) {
 
@@ -198,7 +203,10 @@ class SceneDepthReader {
         const count = width * height;
         Debug.assert(!target || target.length >= count, `SceneDepthReader#read needs an array of at least ${count} samples.`);
 
-        if (!this._depthRendered) {
+        // a disabled camera renders nothing, so it would never service the read - the request would sit
+        // in the queue unanswered rather than the caller being told there is nothing to read
+        const { camera } = this;
+        if (!this._depthRendered || !camera.enabled || !camera.entity.enabled) {
             return null;
         }
 
@@ -288,7 +296,8 @@ class SceneDepthReader {
         gridValue[1] = height;
         this.gridId.setValue(gridValue);
 
-        this.farId.setValue(internal.farClip * _farLimitFraction);
+        const halfFloat = internal.sceneDepthMap.format === PIXELFORMAT_R16F;
+        this.farId.setValue(internal.farClip * (halfFloat ? _farLimitFractionHalf : _farLimitFractionFull));
         this.emptyId.setValue(Infinity);
         this.cameraParamsId.setValue(internal.fillShaderParams(this.cameraParams));
 

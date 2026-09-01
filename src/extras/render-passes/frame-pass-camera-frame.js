@@ -543,9 +543,9 @@ class FramePassCameraFrame extends FramePass {
 
         if (this.sceneDepthTexture) {
 
-            // declare how the depth is stored, for the shaders which sample it. Note that the prepass
-            // declares the same when both are rendered, as the scene textures are only used on a
-            // device which can render the depth to a float texture.
+
+            // declare how the depth is stored, for the shaders which sample it. Declared at setup,
+            // because the post-processing passes resolve these defines when they are constructed.
             const { shaderParams } = cameraComponent;
             shaderParams.sceneDepthMapLinear = true;
             shaderParams.sceneDepthMapPacked = false;
