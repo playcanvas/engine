@@ -88,7 +88,7 @@ class ShadowMap {
 
         let filter = FILTER_LINEAR;
         if (shadowType === SHADOW_VSM_32F) {
-            filter = device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
+            filter = device.textureFloatFilterable ? FILTER_LINEAR : FILTER_NEAREST;
         }
         if (shadowType === SHADOW_PCSS_32F) {
             // we're sampling and comparing depth, so need nearest filtering
