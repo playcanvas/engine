@@ -56,13 +56,23 @@ app.start();
 const DISTANCES = [10, 15, 20];
 const BOX_SIZE = 2;
 
+/**
+ * Where a box stands. Each sits at a height of its own, so that a read which mirrored the region
+ * vertically would land on empty space rather than back on the same box - which is what a placement
+ * symmetrical about the centre of the view would hide.
+ *
+ * @param {number} i - The index of the box.
+ * @returns {[number, number, number]} Its world position.
+ */
+const boxPosition = (i) => [(i - 1) * 3, (i - 1) * 2.5, -DISTANCES[i] - BOX_SIZE / 2];
+
 DISTANCES.forEach((distance, i) => {
     const box = new Entity(`box-${i}`);
     box.addComponent('render', { type: 'box' });
     box.setLocalScale(BOX_SIZE, BOX_SIZE, BOX_SIZE);
 
     // spread across the view, with the front face at the distance being tested
-    box.setLocalPosition((i - 1) * 3, 0, -distance - BOX_SIZE / 2);
+    box.setLocalPosition(...boxPosition(i));
     app.root.addChild(box);
 });
 
@@ -242,7 +252,7 @@ app.on('update', () => {
 
     // one read per box, plus one clear of them - which also exercises several reads in flight at once
     DISTANCES.forEach((distance, i) => {
-        placeRegion(boxRegions[i], (i - 1) * 3, 0, -distance - BOX_SIZE / 2);
+        placeRegion(boxRegions[i], ...boxPosition(i));
     });
     placeRegion(emptyRegion, 0, 4.5, -15);
 

@@ -326,12 +326,13 @@ app.on('update', (/** @type {number} */ dt) => {
     // otherwise grab the focus, and thinly covered pixels read too far - the splat depth is weighted by
     // transmittance, so it blends toward the value the depth was cleared to where coverage is partial.
     depthReader.read(focusRect, FOCUS_SAMPLES, FOCUS_SAMPLES, focusSamples)?.then((samples) => {
+        // a region with nothing in it reads as every sample infinite, which is a read of the distance
+        // like any other and clamps the same way - rather than being dropped, which would leave the
+        // focus wherever it happened to be
         const finite = samples.filter(Number.isFinite).sort();
-        if (finite.length) {
-            const median = finite[finite.length >> 1];
-            focusClamped = median > CAPTURE.focusMaxDistance;
-            focusTarget = Math.min(median, CAPTURE.focusMaxDistance);
-        }
+        const median = finite.length ? finite[finite.length >> 1] : Infinity;
+        focusClamped = median > CAPTURE.focusMaxDistance;
+        focusTarget = Math.min(median, CAPTURE.focusMaxDistance);
     });
 
     if (focusTarget !== null) {

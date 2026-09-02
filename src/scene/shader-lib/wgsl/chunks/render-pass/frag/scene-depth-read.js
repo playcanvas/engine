@@ -21,7 +21,11 @@ export default /* wgsl */`
 
         // the centre of this output pixel, as a fraction of the region
         let cell = (floor(pcPosition.xy) + vec2f(0.5)) / uniform.uDepthReadGrid;
-        let uv = uniform.uDepthReadRect.xy + cell * uniform.uDepthReadRect.zw;
+
+        // The region is given with its origin in the bottom left, as the camera's own rect is, while
+        // the depth is addressed however the API stores it - so the same conversion every other image
+        // effect makes. Without it the region read is the one mirrored about the middle of the view.
+        let uv = getImageEffectUV(uniform.uDepthReadRect.xy + cell * uniform.uDepthReadRect.zw);
 
         // snap to the centre of the nearest depth texel. The WGSL depth chunk fetches texels rather
         // than sampling, so this only has to land inside the intended texel, but it keeps both

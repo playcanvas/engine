@@ -234,7 +234,8 @@ class SceneDepthReader {
      */
     read(rect, width, height, target) {
 
-        Debug.assert(width > 0 && height > 0, 'SceneDepthReader#read needs a positive number of samples.');
+        Debug.assert(width > 0 && height > 0 && Number.isInteger(width) && Number.isInteger(height),
+            'SceneDepthReader#read needs a whole positive number of samples, as they become the dimensions of a texture.');
         const count = width * height;
         Debug.assert(!target || target.length >= count, `SceneDepthReader#read needs an array of at least ${count} samples.`);
 
