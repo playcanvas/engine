@@ -140,7 +140,8 @@ const PHASES = [
         name: 'depth prepass',
         expect: 'linear',
         setup: () => {
-            camera.camera.requestSceneDepthMap(false);
+            // the request the first phase made was already given back by the one before this, and the
+            // count it keeps must not go below zero
             cameraFrame.rendering.samples = 4;
             cameraFrame.enabled = true;
             cameraFrame.update();
