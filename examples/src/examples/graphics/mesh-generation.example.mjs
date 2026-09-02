@@ -85,7 +85,7 @@ function createLight(color, scale) {
     light.addComponent('light', {
         type: 'omni',
         color: color,
-        radius: 10,
+        range: 10,
         castShadows: false
     });
 

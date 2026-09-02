@@ -76,7 +76,7 @@ const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
     color: new Color(1, 0, 0),
-    radius: 10
+    range: 10
 });
 light.addComponent('render', {
     type: 'sphere'
