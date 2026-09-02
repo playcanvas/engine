@@ -10,6 +10,7 @@ import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PREREN
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Camera } from '../camera.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Layer } from '../layer.js'
  * @import { Renderer } from './renderer.js'
@@ -85,7 +86,7 @@ class RenderPassForward extends RenderPass {
      * render target the remaining passes still render into, and the materials they render could then
      * sample it, which is not allowed.
      *
-     * @type {CameraComponent|null}
+     * @type {Camera|null}
      */
     sceneTexturesCamera = null;
 
@@ -307,7 +308,7 @@ class RenderPassForward extends RenderPass {
                 // the uniforms are global, so the depth is recorded on the camera as well - that is what
                 // anything wanting this camera's depth in particular reads, see SceneDepthReader
                 if (sceneTextures[i] === SCENETEXTURE_DEPTH) {
-                    this.sceneTexturesCamera.camera.publishSceneDepthMap(texture, this.device.renderVersion);
+                    this.sceneTexturesCamera.publishSceneDepthMap(texture, this.device.renderVersion);
                 }
             }
         }

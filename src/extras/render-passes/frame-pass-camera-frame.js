@@ -792,7 +792,7 @@ class FramePassCameraFrame extends FramePass {
         // expose an attachment of the render target the remaining passes still render into, which the
         // materials they render could then sample - reading a texture attached to the render target
         // being rendered into is not allowed.
-        (this.scenePassTransparent ?? this.scenePass).sceneTexturesCamera = this.cameraComponent;
+        (this.scenePassTransparent ?? this.scenePass).sceneTexturesCamera = this.cameraComponent.camera;
 
         // Without a prepass nothing has published the scene depth by the time the scene renders, so the
         // first pass clears the uniform it is published to. This has to happen as the pass renders rather
