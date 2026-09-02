@@ -889,9 +889,9 @@ class CameraComponent extends Component {
      *
      * @example
      * // frame content that is `pitch` degrees above the horizon, without tilting the camera
-     * const fovY = entity.camera.fov * pc.math.DEG_TO_RAD;
-     * const shift = Math.tan(pitch * pc.math.DEG_TO_RAD) / Math.tan(fovY / 2);
-     * entity.camera.projectionOffset = new pc.Vec2(0, shift);
+     * const fovY = entity.camera.fov * math.DEG_TO_RAD;
+     * const shift = Math.tan(pitch * math.DEG_TO_RAD) / Math.tan(fovY / 2);
+     * entity.camera.projectionOffset = new Vec2(0, shift);
      * @type {Vec2}
      */
     set projectionOffset(value) {

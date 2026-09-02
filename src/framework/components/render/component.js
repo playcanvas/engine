@@ -465,7 +465,7 @@ class RenderComponent extends Component {
      * @type {number}
      * @example
      * // only cast shadows into the two cascades closest to the camera
-     * entity.render.shadowCascadeMask = pc.SHADOW_CASCADE_0 | pc.SHADOW_CASCADE_1;
+     * entity.render.shadowCascadeMask = SHADOW_CASCADE_0 | SHADOW_CASCADE_1;
      */
     set shadowCascadeMask(value) {
         if (this._shadowCascadeMask !== value) {
