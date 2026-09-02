@@ -2475,8 +2475,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             readPromise.then((data) => {
 
-                // return if the device was destroyed
-                if (this._destroyed) return;
+                // The device was destroyed while the read was in flight, so there is nothing valid to
+                // return - but the promise still has to settle, or whoever is waiting on it waits for
+                // good. Rejecting rather than resolving, as a caller cannot be handed data which was
+                // never read, and this is the same way every other failure on this path reports.
+                if (this._destroyed) {
+                    reject(new Error('Texture read did not complete, as the graphics device was destroyed.'));
+                    return;
+                }
 
                 // destroy RT if we created it
                 if (!options.renderTarget) {
