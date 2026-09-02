@@ -37,6 +37,17 @@ class CameraShaderParams {
     _sceneDepthMapPacked = false;
 
     /**
+     * True when the linear scene depth map holds a coverage weighted average of the reciprocals of the
+     * depths, which a consumer inverts to recover the depth. This is how the scene pass accumulates a
+     * depth the blended gaussian splats contribute to. A pixel nothing was rendered to holds the
+     * reciprocal of the far clip the map was cleared to, and so reads back as the far clip itself. Only
+     * meaningful when {@link CameraShaderParams#sceneDepthMapLinear} is set.
+     *
+     * @private
+     */
+    _sceneDepthMapReciprocal = false;
+
+    /**
      * The names of the scene textures the scene pass renders alongside the scene color, in the order
      * of the color attachments they are rendered to - the name at index i goes to the attachment at
      * index i + 1, as attachment 0 is the scene color itself. Empty when the scene pass renders the
@@ -84,7 +95,7 @@ class CameraShaderParams {
      */
     get hash() {
         if (this._hash === undefined) {
-            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}_${this._sceneTextures.join('-')}`;
+            const key = `${this.gammaCorrection}_${this.toneMapping}_${this.srgbRenderTarget}_${this.fog}_${this.ssaoEnabled}_${this.sceneDepthMapLinear}_${this.sceneDepthMapPacked}_${this.sceneDepthMapReciprocal}_${this._sceneTextures.join('-')}`;
             this._hash = hashCode(key);
         }
         return this._hash;
@@ -104,6 +115,7 @@ class CameraShaderParams {
                 // nested, so that the packed define never appears without the linear one, which is
                 // what the decode in the screenDepth chunk relies on
                 if (this._sceneDepthMapPacked) defines.set('SCENE_DEPTHMAP_PACKED', '');
+                if (this._sceneDepthMapReciprocal) defines.set('SCENE_DEPTHMAP_RECIPROCAL', '');
             }
 
             // each scene texture supplies a pair of defines - one enabling its write, and one giving
@@ -203,6 +215,17 @@ class CameraShaderParams {
 
     get sceneDepthMapPacked() {
         return this._sceneDepthMapPacked;
+    }
+
+    set sceneDepthMapReciprocal(value) {
+        if (this._sceneDepthMapReciprocal !== value) {
+            this._sceneDepthMapReciprocal = value;
+            this.markDirty();
+        }
+    }
+
+    get sceneDepthMapReciprocal() {
+        return this._sceneDepthMapReciprocal;
     }
 
     /**

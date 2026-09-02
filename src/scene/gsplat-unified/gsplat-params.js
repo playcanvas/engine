@@ -886,7 +886,10 @@ class GSplatParams {
      * {@link CameraFrame} - see {@link CameraFrame.isSplatSceneDepthSupported}.
      *
      * On some devices enabling this stores the scene depth at a lower precision, which the other
-     * effects using it share.
+     * effects using it share. The depth stays accurate over camera clip distances of roughly 0.000015
+     * to 16384 there; past the far end of that a distant depth loses accuracy, and the pixels nothing
+     * covers stop reading as far away as they are. Keep the far clip inside that range on those
+     * devices, or leave the effects which read the depth off.
      *
      * @type {boolean}
      */

@@ -113,9 +113,10 @@ class FramePassDepthGrab extends FramePass {
             this.depthRenderTarget = this.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer);
         }
 
-        // assign uniform
+        // assign uniform, and record it on the camera - see RenderPassPrepass for why both
         const colorBuffer = useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer;
         device.scope.resolve(_depthUniformName).setValue(colorBuffer);
+        camera.publishSceneDepthMap(colorBuffer, device.renderVersion);
     }
 
     execute() {

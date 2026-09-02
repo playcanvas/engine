@@ -18,6 +18,7 @@ import { CameraShaderParams } from './camera-shader-params.js';
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
  * @import { FogParams } from './fog-params.js'
  * @import { Layer } from './layer.js'
  * @import { RenderView } from './render-view.js'
@@ -131,6 +132,25 @@ class Camera {
      */
     beforePasses = [];
 
+    /**
+     * The scene depth texture most recently published for this camera, or null. The uniform it is
+     * published to is global - the last camera to render owns it - so anything wanting the depth of
+     * one camera in particular reads it from here instead. See {@link SceneDepthReader}.
+     *
+     * @type {Texture|null}
+     * @ignore
+     */
+    sceneDepthMap = null;
+
+    /**
+     * The render version {@link Camera#sceneDepthMap} was published in, so a consumer can tell a
+     * texture rendered this frame from one left over from an earlier one.
+     *
+     * @type {number}
+     * @ignore
+     */
+    sceneDepthMapVersion = -1;
+
     /** @type {number} */
     jitter = 0;
 
@@ -229,6 +249,20 @@ class Camera {
 
         this.framePasses.length = 0;
         this.beforePasses.length = 0;
+        this.sceneDepthMap = null;
+    }
+
+    /**
+     * Records the scene depth texture a producer has published for this camera, alongside the render
+     * version it was published in.
+     *
+     * @param {Texture} texture - The texture the depth was rendered to.
+     * @param {number} renderVersion - The render version it was rendered in.
+     * @ignore
+     */
+    publishSceneDepthMap(texture, renderVersion) {
+        this.sceneDepthMap = texture;
+        this.sceneDepthMapVersion = renderVersion;
     }
 
     /**

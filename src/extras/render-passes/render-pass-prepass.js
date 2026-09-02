@@ -55,6 +55,7 @@ class RenderPassPrepass extends RenderPass {
         super.destroy();
         this.camera.shaderParams.sceneDepthMapLinear = false;
         this.camera.shaderParams.sceneDepthMapPacked = false;
+        this.camera.shaderParams.sceneDepthMapReciprocal = false;
         this.renderTarget?.destroy();
         this.renderTarget = null;
         this.linearDepthTexture?.destroy();
@@ -83,23 +84,26 @@ class RenderPassPrepass extends RenderPass {
             samples: 1
         });
 
+        // the WGSL screenDepth chunk implements no packed decode, as WebGPU always supports
+        // rendering to float textures
+        Debug.assert(!(device.isWebGPU && this.linearDepthFormat === PIXELFORMAT_RGBA8));
+
         // declare how this pass stores the depth, so that the shaders sampling it decode what was
-        // actually written instead of inferring it from the device capabilities - other producers of
-        // the scene depth map store it in other formats
+        // actually written instead of inferring it from the device capabilities. Declared at setup,
+        // because the post-processing passes resolve these defines when they are constructed.
         const { shaderParams } = this.camera;
         shaderParams.sceneDepthMapLinear = true;
         shaderParams.sceneDepthMapPacked = this.linearDepthFormat === PIXELFORMAT_RGBA8;
-
-        // the WGSL screenDepth chunk implements no packed decode, as WebGPU always supports
-        // rendering to float textures
-        Debug.assert(!(device.isWebGPU && shaderParams.sceneDepthMapPacked));
+        shaderParams.sceneDepthMapReciprocal = false;
 
         this.init(renderTarget, options);
     }
 
     after() {
-        // Assign the linear depth texture to the uniform
+        // Assign the linear depth texture to the uniform, and record it on the camera - the uniform is
+        // global, so anything after this frame wanting this camera's depth needs the camera's own record
         this.device.scope.resolve(DEPTH_UNIFORM_NAME).setValue(this.linearDepthTexture);
+        this.camera.camera.publishSceneDepthMap(this.linearDepthTexture, this.device.renderVersion);
     }
 
     execute() {
