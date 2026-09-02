@@ -42,8 +42,8 @@ const _farLimitFractionHalf = 1 - 1.5e-3;
  * consumes it, or {@link CameraComponent#requestSceneDepthMap}.
  *
  * ```javascript
- * const reader = new pc.SceneDepthReader(camera.camera);
- * const rect = new pc.Vec4(0.45, 0.45, 0.1, 0.1);
+ * const reader = new SceneDepthReader(camera.camera);
+ * const rect = new Vec4(0.45, 0.45, 0.1, 0.1);
  *
  * app.on('update', () => {
  *     reader.read(rect, 8, 8)?.then((samples) => {
