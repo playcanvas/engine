@@ -82,10 +82,6 @@ const _defaultOptions = new CameraFrameOptions();
 // the formats the scene depth can be rendered to, in the order of preference
 const _sceneDepthFormats = [PIXELFORMAT_R32F, PIXELFORMAT_R16F];
 
-// the smallest half float which is still normal, and so the smallest one whose precision is relative to
-// its own magnitude. Below it the format is subnormal, where precision falls away in absolute terms
-const _minHalfFloatNormal = 6.103515625e-5;
-
 /**
  * Render pass implementation of a common camera frame rendering with integrated post-processing
  * effects.
@@ -352,17 +348,6 @@ class FramePassCameraFrame extends FramePass {
         // empty space
         if (options.samples > 1) {
             return 'multi-sampling is enabled on the CameraFrame, which the scene depth cannot be rendered with';
-        }
-
-        // The depth is stored as its reciprocal, so what has to be representable is one over the far
-        // clip rather than the far clip itself. A half float holds that to a few parts in ten thousand
-        // while it stays normal, but below that it turns subnormal and the precision falls away
-        // absolutely - far enough out that the reciprocal of the cleared far clip no longer decodes to
-        // anything near it, and a pixel nothing covered stops being recognisable as empty.
-        if (this.sceneDepthFormat === PIXELFORMAT_R16F &&
-            1 / this.cameraComponent.camera.farClip < _minHalfFloatNormal) {
-            const limit = Math.floor(1 / _minHalfFloatNormal);
-            return `the far clip of this camera is too far for a half float scene depth - keep it below ${limit}, as the depth is stored as its reciprocal`;
         }
 
         // a camera which does not clear the whole render target, or which is not the first one

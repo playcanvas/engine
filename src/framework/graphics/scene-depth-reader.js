@@ -217,6 +217,11 @@ class SceneDepthReader {
      * Samples where nothing was rendered read as `Infinity`, as do the few which land within a hair of
      * the far clip, that being the depth an empty pixel reports.
      *
+     * Note that on a device which stores the scene depth at a lower precision - see
+     * {@link GSplatParams#sceneDepthWrite} - a far clip beyond about 16384 leaves an empty pixel
+     * reporting a large distance rather than `Infinity`, as the two stop being far enough apart to
+     * tell one from the other.
+     *
      * @param {Vec4} rect - The region of the view to sample, normalized, with its origin in the bottom
      * left as {@link CameraComponent#rect}.
      * @param {number} width - The number of samples across the region. Not pixels.
@@ -339,10 +344,23 @@ class SceneDepthReader {
         const buffer = this._borrowBuffer(count * 4);
         const { target, resolve } = request;
 
-        this.renderTarget.colorBuffer.read(0, 0, width, height, {
+        const read = this.renderTarget.colorBuffer.read(0, 0, width, height, {
             renderTarget: this.renderTarget,
             data: buffer.bytes
-        }).then(() => {
+        });
+
+        // a backend which implements no readback at all - the null device among them - hands back
+        // nothing rather than a promise, so the region is reported as empty instead of the request
+        // being left with no way to be answered
+        if (!read) {
+            Debug.warnOnce('SceneDepthReader: this device implements no texture readback, so the depth reads as empty.');
+            target.fill(Infinity, 0, count);
+            this._returnBuffer(buffer);
+            resolve(target);
+            return;
+        }
+
+        read.then(() => {
 
             // the reader, its camera or the device went while this was in flight, so the bytes mean
             // nothing and the buffers they would be unpacked through have been let go of
