@@ -69,10 +69,18 @@ describe('AnimationComponent', function () {
             });
 
             entity.addComponent('animation', {
-                asset: assets.animation
+                assets: [assets.animation]
             });
 
             expect(entity.animation).to.exist;
+
+            // the assets are assigned as given, accepting Asset instances as well as asset ids
+            expect(entity.animation.assets).to.have.lengthOf(1);
+            expect(entity.animation.assets[0]).to.equal(assets.animation);
+
+            // the asset is already loaded, so its animation is registered straight away
+            expect(entity.animation.animations[assets.animation.name]).to.equal(assets.animation.resource);
+            expect(entity.animation.animationsIndex[assets.animation.id]).to.equal(assets.animation.name);
         });
 
         it('can create animation and auto play them', function () {
