@@ -240,7 +240,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Add a component system to the registry.
      *
-     * @param {ComponentSystem} system - The {@link ComponentSystem} instance.
+     * @param {ComponentSystem} system - The ComponentSystem instance.
      * @ignore
      */
     add(system) {
@@ -258,7 +258,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Remove a component system from the registry.
      *
-     * @param {ComponentSystem} system - The {@link ComponentSystem} instance.
+     * @param {ComponentSystem} system - The ComponentSystem instance.
      * @ignore
      */
     remove(system) {
