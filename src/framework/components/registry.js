@@ -233,7 +233,10 @@ class ComponentSystemRegistry extends EventHandler {
     constructor() {
         super();
 
-        // An array of ComponentSystem objects
+        /**
+         * @type {ComponentSystem[]}
+         * @ignore
+         */
         this.list = [];
     }
 
@@ -276,6 +279,11 @@ class ComponentSystemRegistry extends EventHandler {
         delete this[id];
     }
 
+    /**
+     * Destroys all registered component systems.
+     *
+     * @ignore
+     */
     destroy() {
         this.off();
 
