@@ -39,8 +39,9 @@ class CameraShaderParams {
     /**
      * True when the linear scene depth map holds a coverage weighted average of the reciprocals of the
      * depths, which a consumer inverts to recover the depth. This is how the scene pass accumulates a
-     * depth the blended gaussian splats contribute to, and a zero marks a pixel nothing was rendered
-     * to. Only meaningful when {@link CameraShaderParams#sceneDepthMapLinear} is set.
+     * depth the blended gaussian splats contribute to. A pixel nothing was rendered to holds the
+     * reciprocal of the far clip the map was cleared to, and so reads back as the far clip itself. Only
+     * meaningful when {@link CameraShaderParams#sceneDepthMapLinear} is set.
      *
      * @private
      */

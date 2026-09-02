@@ -521,6 +521,9 @@ class SceneDepthReader {
 
         this._invalidate();
 
+        // clearing the shader is what releases the quad the pass renders with - the pass itself has
+        // no teardown of its own, and the shader stays owned by the program library which cached it
+        this.pass.shader = null;
         this.pass.destroy();
         this._destroyRenderTarget();
         this._buffers.clear();

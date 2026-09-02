@@ -65,10 +65,11 @@ const gfxOptions = {
 const device = await createGraphicsDevice(canvas, gfxOptions);
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
-// The scene depth is stored in linear view space units, in R32F where a float render target can be
-// blended into and R16F where it cannot - and half float quantizes with distance, stepping by a quarter
-// of a unit at 500. So the far clip is generous on the format which can carry it and stays tight on the
-// fallback, which costs the far mountains there rather than the precision the fog and the DOF need.
+// The scene depth is stored as the reciprocal of the distance, in the widest float format the device
+// can render and blend into - R32F for preference, R16F where that is not available. One over the far
+// clip has to stay a normal half float on the fallback, which caps the far clip at 16384 there, so it
+// is kept well inside that: generous where the format can carry it, tight where it cannot, which costs
+// the far mountains rather than the precision the fog and the DOF need.
 const FAR_CLIP = device.textureFloatBlendable ? 1000 : 200;
 
 const createOptions = new AppOptions();
