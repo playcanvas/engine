@@ -266,13 +266,13 @@ class ComponentSystemRegistry extends EventHandler {
             throw new Error(`No ComponentSystem named '${id}' registered`);
         }
 
-        delete this[id];
-
         // Update the component system array
         const index = this.list.indexOf(this[id]);
         if (index !== -1) {
             this.list.splice(index, 1);
         }
+
+        delete this[id];
     }
 
     destroy() {
