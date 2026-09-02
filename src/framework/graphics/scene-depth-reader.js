@@ -92,13 +92,13 @@ class SceneDepthReader {
     _depthRendered = true;
 
     /**
-     * False once the device has been destroyed, after which nothing further is rendered and there is
-     * nothing left to read from.
+     * False once this reader, the camera it reads or the device has gone, after which nothing further
+     * is rendered for it and a read in flight has nothing meaningful left to report.
      *
      * @type {boolean}
      * @private
      */
-    _deviceValid = true;
+    _valid = true;
 
     /** @private */
     device;
@@ -124,6 +124,9 @@ class SceneDepthReader {
 
     /** @private */
     _onDeviceDestroy;
+
+    /** @private */
+    _onCameraRemove;
 
     // the uniform scope ids the pass writes, and the scratch values written through them
 
@@ -190,13 +193,20 @@ class SceneDepthReader {
         };
         camera.system.app.scene.on(EVENT_POSTRENDER, this._onPostRender);
 
-        // a destroyed device renders nothing further, so reads are turned away from then on and anything
-        // already queued is settled rather than left waiting on a frame which will never come
+        // A destroyed device renders nothing further, and neither does a camera whose component has
+        // been removed - which notably leaves its enabled flag set, so the check in read cannot see it.
+        // Either way reads are turned away from then on, and anything already queued is settled rather
+        // than left waiting on a frame which will never come.
         this._onDeviceDestroy = () => {
-            this._deviceValid = false;
-            this._settleRequests();
+            this._invalidate();
         };
         device.on('destroy', this._onDeviceDestroy);
+
+        // fired before the component sheds its own listeners, so this is still reached
+        this._onCameraRemove = () => {
+            this._invalidate();
+        };
+        camera.on('beforeremove', this._onCameraRemove);
     }
 
     /**
@@ -226,7 +236,7 @@ class SceneDepthReader {
         // a disabled camera renders nothing, so it would never service the read - the request would sit
         // in the queue unanswered rather than the caller being told there is nothing to read
         const { camera } = this;
-        if (!this._deviceValid || !this._depthRendered || !camera.enabled || !camera.entity.enabled) {
+        if (!this._valid || !this._depthRendered || !camera.enabled || !camera.entity.enabled) {
             return null;
         }
 
@@ -334,6 +344,14 @@ class SceneDepthReader {
             data: buffer.bytes
         }).then(() => {
 
+            // the reader, its camera or the device went while this was in flight, so the bytes mean
+            // nothing and the buffers they would be unpacked through have been let go of
+            if (!this._valid) {
+                target.fill(Infinity, 0, count);
+                resolve(target);
+                return;
+            }
+
             // the chunk packs the float with its high byte in red, which is a big endian read
             const view = buffer.view;
             for (let i = 0; i < count; i++) {
@@ -342,10 +360,17 @@ class SceneDepthReader {
             this._returnBuffer(buffer);
             resolve(target);
 
-        }).catch(() => {
+        }).catch((error) => {
 
-            // a lost device, or a destroyed reader - report the region as empty rather than leaving the
-            // promise hanging
+            // The region is reported as empty rather than the promise being left hanging, which is the
+            // answer a read has when the device or the reader went away under it. A read can also fail
+            // for a reason of its own, though, and reporting that as an empty region alone would leave
+            // nothing to go on - so it is warned about, as reads are issued from an update loop and
+            // rejecting would ask every caller to handle what is usually not theirs to handle.
+            if (this._valid) {
+                Debug.warnOnce(`SceneDepthReader read failed: ${error?.message ?? error}`);
+            }
+
             target.fill(Infinity, 0, count);
             this._returnBuffer(buffer);
             resolve(target);
@@ -454,6 +479,18 @@ class SceneDepthReader {
     }
 
     /**
+     * Marks the reader as having nothing left to read, and settles what is queued. Called when the
+     * device is destroyed, when the camera component is removed, and when the reader itself is
+     * destroyed - each of which means no frame will ever service a read again.
+     *
+     * @private
+     */
+    _invalidate() {
+        this._valid = false;
+        this._settleRequests();
+    }
+
+    /**
      * Reports every queued read as empty, for the cases where the frame which would have serviced them
      * is never going to arrive.
      *
@@ -468,15 +505,17 @@ class SceneDepthReader {
     }
 
     /**
-     * Frees the resources the reader owns and stops reading for this camera. Reads still in flight
-     * report their region as empty.
+     * Frees the resources the reader owns and stops reading for this camera. Reads which have not been
+     * rendered yet report their region as empty, and one already in flight does the same once it
+     * completes, rather than writing samples read through resources this has let go of.
      */
     destroy() {
 
         this.camera.system.app.scene.off(EVENT_POSTRENDER, this._onPostRender);
+        this.camera.off('beforeremove', this._onCameraRemove);
         this.device.off('destroy', this._onDeviceDestroy);
 
-        this._settleRequests();
+        this._invalidate();
 
         this.pass.destroy();
         this._destroyRenderTarget();
