@@ -2470,17 +2470,37 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.gl.flush();
         }
 
+        // A render target made here is this method's to free, and freeing it goes through the device, so
+        // it has to happen while the device is still usable. The destroy event fires before the backend
+        // is torn down for exactly this, and the read settling is the other way it can come about -
+        // whichever happens first releases it once.
+        let released = !!options.renderTarget;
+        const release = () => {
+            if (released) {
+                return;
+            }
+            released = true;
+            this.off('destroy', release);
+            renderTarget.destroy();
+        };
+        if (!released) {
+            this.on('destroy', release);
+        }
+
         return new Promise((resolve, reject) => {
             const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback);
 
             readPromise.then((data) => {
 
-                // return if the device was destroyed
-                if (this._destroyed) return;
+                release();
 
-                // destroy RT if we created it
-                if (!options.renderTarget) {
-                    renderTarget.destroy();
+                // The device was destroyed while the read was in flight, so there is nothing valid to
+                // return - but the promise still has to settle, or whoever is waiting on it waits for
+                // good. Rejecting rather than resolving, as a caller cannot be handed data which was
+                // never read, and this is the same way every other failure on this path reports.
+                if (this._destroyed) {
+                    reject(new Error('Texture read did not complete, as the graphics device was destroyed.'));
+                    return;
                 }
 
                 // Extract channels from RGBA data if needed
@@ -2495,7 +2515,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 } else {
                     resolve(data);
                 }
-            }).catch(reject);
+            }).catch((error) => {
+                release();
+                reject(error);
+            });
         });
     }
 
