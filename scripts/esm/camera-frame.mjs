@@ -1,19 +1,23 @@
-// Camera Frame v 1.2
+// Camera Frame v 1.3
 
-import { CameraFrame as EngineCameraFrame, Script, Color } from 'playcanvas';
+import {
+    CameraFrame as EngineCameraFrame, Script, Color,
+    TONEMAP_LINEAR, TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL,
+    PIXELFORMAT_RGBA8, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+} from 'playcanvas';
 
 /**
  * @import { Asset, Entity } from 'playcanvas';
  */
 
-/** @enum {number} */
+/** @enum {string} */
 const ToneMapping = {
-    LINEAR: 0,  // TONEMAP_LINEAR
-    FILMIC: 1,  // TONEMAP_FILMIC
-    HEJL: 2,    // TONEMAP_HEJL
-    ACES: 3,    // TONEMAP_ACES
-    ACES2: 4,   // TONEMAP_ACES2
-    NEUTRAL: 5  // TONEMAP_NEUTRAL
+    LINEAR: 'linear',
+    FILMIC: 'filmic',
+    HEJL: 'hejl',
+    ACES: 'aces',
+    ACES2: 'aces2',
+    NEUTRAL: 'neutral'
 };
 
 /** @enum {string} */
@@ -23,12 +27,52 @@ const SsaoType = {
     COMBINE: 'combine'      // SSAOTYPE_COMBINE
 };
 
-/** @enum {number} */
+/** @enum {string} */
 const RenderFormat = {
-    RGBA8: 7,       // PIXELFORMAT_RGBA8
-    RG11B10: 18,    // PIXELFORMAT_111110F
-    RGBA16: 12,     // PIXELFORMAT_RGBA16F
-    RGBA32: 14      // PIXELFORMAT_RGBA32F
+    RGBA8: 'rgba8',
+    RG11B10: 'rg11b10',
+    RGBA16: 'rgba16',
+    RGBA32: 'rgba32'
+};
+
+const toneMappingMap = new Map([
+    [ToneMapping.LINEAR, TONEMAP_LINEAR],
+    [ToneMapping.FILMIC, TONEMAP_FILMIC],
+    [ToneMapping.HEJL, TONEMAP_HEJL],
+    [ToneMapping.ACES, TONEMAP_ACES],
+    [ToneMapping.ACES2, TONEMAP_ACES2],
+    [ToneMapping.NEUTRAL, TONEMAP_NEUTRAL]
+]);
+
+const renderFormatMap = new Map([
+    [RenderFormat.RGBA8, PIXELFORMAT_RGBA8],
+    [RenderFormat.RG11B10, PIXELFORMAT_111110F],
+    [RenderFormat.RGBA16, PIXELFORMAT_RGBA16F],
+    [RenderFormat.RGBA32, PIXELFORMAT_RGBA32F]
+]);
+
+/**
+ * Resolves a {@link ToneMapping} string to the engine's tone mapping constant. Numeric values
+ * are passed through unchanged for backward compatibility with attribute data that stored the
+ * engine constants directly.
+ *
+ * @param {ToneMapping|number} value - The tone mapping.
+ * @returns {number} The engine tone mapping constant.
+ */
+const resolveToneMapping = (value) => {
+    return typeof value === 'number' ? value : (toneMappingMap.get(value) ?? TONEMAP_LINEAR);
+};
+
+/**
+ * Resolves a {@link RenderFormat} string to the engine's pixel format constant. Numeric values
+ * are passed through unchanged for backward compatibility with attribute data that stored the
+ * engine constants directly.
+ *
+ * @param {RenderFormat|number} value - The render format.
+ * @returns {number} The engine pixel format constant.
+ */
+const resolveRenderFormat = (value) => {
+    return typeof value === 'number' ? value : (renderFormatMap.get(value) ?? PIXELFORMAT_111110F);
 };
 
 /** @enum {string} */
@@ -640,6 +684,7 @@ class VolumetricFog {
  * cameraEntity.addComponent('script');
  * cameraEntity.script.create(CameraFrame, {
  *     properties: {
+ *         rendering: { toneMapping: 'aces' },
  *         bloom: { intensity: 0.02 }
  *     }
  * });
@@ -744,15 +789,15 @@ class CameraFrame extends Script {
 
         const dstRendering = cf.rendering;
         dstRendering.renderFormats.length = 0;
-        dstRendering.renderFormats.push(rendering.renderFormat);
-        dstRendering.renderFormats.push(rendering.renderFormatFallback0);
-        dstRendering.renderFormats.push(rendering.renderFormatFallback1);
+        dstRendering.renderFormats.push(resolveRenderFormat(rendering.renderFormat));
+        dstRendering.renderFormats.push(resolveRenderFormat(rendering.renderFormatFallback0));
+        dstRendering.renderFormats.push(resolveRenderFormat(rendering.renderFormatFallback1));
         dstRendering.stencil = rendering.stencil;
         dstRendering.renderTargetScale = rendering.renderTargetScale;
         dstRendering.samples = rendering.samples;
         dstRendering.sceneColorMap = rendering.sceneColorMap;
         dstRendering.sceneDepthMap = rendering.sceneDepthMap;
-        dstRendering.toneMapping = rendering.toneMapping;
+        dstRendering.toneMapping = resolveToneMapping(rendering.toneMapping);
         dstRendering.sharpness = rendering.sharpness;
 
         // ssao

@@ -247,6 +247,14 @@ class Picker {
         }
         return this._readTexture(this.renderTarget.colorBuffer, x, y, width, height, this.renderTarget).then((pixels) => {
             return this.decodePixels(pixels, this.mapping);
+        }).catch((error) => {
+            // a read which could not complete because the device has gone reports an empty selection,
+            // which is what decodePixels reports for the same reason. Every other failure is a real one
+            // and is passed on, rather than being disguised as nothing having been selected.
+            if (this.deviceValid) {
+                throw error;
+            }
+            return [];
         });
     }
 
@@ -343,7 +351,17 @@ class Picker {
             return null;
         }
 
-        const pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
+        let pixels;
+        try {
+            pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
+        } catch (error) {
+            // as in getSelectionAsync - only a device which has gone reports as nothing picked, and
+            // every other failure is passed on
+            if (this.deviceValid) {
+                throw error;
+            }
+            return null;
+        }
 
         // reconstruct uint bits from RGBA8
         const intBits = ((pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3]) >>> 0;

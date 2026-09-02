@@ -107,18 +107,32 @@ class CoreExporter {
             fragmentChunk: 'outputTex2DPS'
         });
 
+        // Freeing these goes through the device, so it has to happen while the device is still usable.
+        // The destroy event fires before the backend is torn down for exactly this, and the read
+        // settling is the other way it can come about - whichever happens first releases them once.
+        let released = false;
+        const release = () => {
+            if (released) {
+                return;
+            }
+            released = true;
+            device.off('destroy', release);
+            dstTexture.destroy();
+            renderTarget.destroy();
+        };
+        device.on('destroy', release);
+
         device.scope.resolve('source').setValue(texture);
         device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(device, renderTarget, shader);
 
         // async read back the pixels of the texture
+        // released as soon as the read settles, before the pixels are copied out and turned into a
+        // canvas - holding them for that would raise the peak cost of a large export for nothing
         return dstTexture.read(0, 0, width, height, {
             renderTarget: renderTarget,
             immediate: true
-        }).then((textureData) => {
-
-            dstTexture.destroy();
-            renderTarget.destroy();
+        }).finally(release).then((textureData) => {
 
             const pixels = new Uint8ClampedArray(width * height * 4);
             pixels.set(textureData);

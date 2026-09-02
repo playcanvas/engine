@@ -301,7 +301,19 @@ Always address the root cause of issues rather than implementing workarounds tha
 - Include descriptive comments
 - Keep examples simple and focused on one feature
 
-### 22. When Writing PR Descriptions
+### 22. When Authoring Scripts
+
+- Reusable scripts live in `scripts/esm/` and expose their configuration as script attributes
+- **Attribute enums must use readable string values**: declare them as `@enum {string}` with
+  human-readable values (e.g., `LINEAR: 'linear'`), never as raw numeric engine constants
+  - Numeric constant values (e.g., `PIXELFORMAT_RGBA16F = 12`) are implementation details that
+    can change between releases and make attribute data unreadable (`"renderFormat": 12`)
+  - Import the engine constants and resolve the strings via lookup maps where the script applies
+    them (see `scripts/esm/camera-frame.mjs` for the pattern)
+  - Keep accepting raw numeric values (pass them through unchanged) so existing attribute data
+    continues to work
+
+### 23. When Writing PR Descriptions
 
 - **Format as a single code block**: Always deliver PR descriptions wrapped in triple backticks for easy copy/paste
 - **Structure**:
