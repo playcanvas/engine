@@ -77,7 +77,13 @@ describe('ComponentSystemRegistry', function () {
         });
 
         it('throws if no system with that id is registered', function () {
+            // 'render' is a declared class field, so it is an own property holding undefined
             expect(() => registry.remove(createSystem('render'))).to.throw('No ComponentSystem named');
+        });
+
+        it('throws if the id resolves to an inherited property', function () {
+            // this['constructor'] is truthy, but no system is registered under it
+            expect(() => registry.remove(createSystem('constructor'))).to.throw('No ComponentSystem named');
         });
 
     });

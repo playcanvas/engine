@@ -262,7 +262,9 @@ class ComponentSystemRegistry extends EventHandler {
      */
     remove(system) {
         const id = system.id;
-        if (!this[id]) {
+
+        // the id must be an own property, as inherited members (eg 'constructor') are never registered
+        if (!this[id] || !Object.hasOwn(this, id)) {
             throw new Error(`No ComponentSystem named '${id}' registered`);
         }
 
