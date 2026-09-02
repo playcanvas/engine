@@ -127,10 +127,12 @@ class CoreExporter {
         drawQuadWithShader(device, renderTarget, shader);
 
         // async read back the pixels of the texture
+        // released as soon as the read settles, before the pixels are copied out and turned into a
+        // canvas - holding them for that would raise the peak cost of a large export for nothing
         return dstTexture.read(0, 0, width, height, {
             renderTarget: renderTarget,
             immediate: true
-        }).then((textureData) => {
+        }).finally(release).then((textureData) => {
 
             const pixels = new Uint8ClampedArray(width * height * 4);
             pixels.set(textureData);
@@ -147,7 +149,7 @@ class CoreExporter {
             newContext.putImageData(newImage, 0, 0);
 
             return Promise.resolve(canvas);
-        }).finally(release);
+        });
     }
 
     calcTextureSize(width, height, maxTextureSize) {
