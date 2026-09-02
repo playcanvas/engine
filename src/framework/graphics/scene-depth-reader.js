@@ -369,10 +369,14 @@ class SceneDepthReader {
             // rejecting would ask every caller to handle what is usually not theirs to handle.
             if (this._valid) {
                 Debug.warnOnce(`SceneDepthReader read failed: ${error?.message ?? error}`);
+
+                // handed back only while the reader is valid - the pool is let go of as it is
+                // invalidated, and a buffer arriving after that would build it again, which is why the
+                // path above drops its own the same way
+                this._returnBuffer(buffer);
             }
 
             target.fill(Infinity, 0, count);
-            this._returnBuffer(buffer);
             resolve(target);
         });
     }
