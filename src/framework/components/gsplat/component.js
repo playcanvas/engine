@@ -52,8 +52,9 @@ const UNIFIED_LEGACY_HINT = 'GSplatComponent#unified now defaults to true (unifi
  * Relevant Engine API examples:
  *
  * - [Simple Splat Loading](https://playcanvas.github.io/#/gaussian-splatting/simple)
+ * - [Billions of Splats](https://playcanvas.github.io/#/gaussian-splatting/billions)
+ * - [Downtown Streaming](https://playcanvas.github.io/#/gaussian-splatting/downtown)
  * - [Global Sorting](https://playcanvas.github.io/#/gaussian-splatting/global-sorting)
- * - [LOD](https://playcanvas.github.io/#/gaussian-splatting/lod)
  * - [LOD Instances](https://playcanvas.github.io/#/gaussian-splatting/lod-instances)
  * - [LOD Streaming](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming)
  * - [LOD Streaming with Spherical Harmonics](https://playcanvas.github.io/#/gaussian-splatting/lod-streaming-sh)
