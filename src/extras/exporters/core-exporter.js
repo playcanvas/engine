@@ -107,6 +107,21 @@ class CoreExporter {
             fragmentChunk: 'outputTex2DPS'
         });
 
+        // Freeing these goes through the device, so it has to happen while the device is still usable.
+        // The destroy event fires before the backend is torn down for exactly this, and the read
+        // settling is the other way it can come about - whichever happens first releases them once.
+        let released = false;
+        const release = () => {
+            if (released) {
+                return;
+            }
+            released = true;
+            device.off('destroy', release);
+            dstTexture.destroy();
+            renderTarget.destroy();
+        };
+        device.on('destroy', release);
+
         device.scope.resolve('source').setValue(texture);
         device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(device, renderTarget, shader);
@@ -132,13 +147,7 @@ class CoreExporter {
             newContext.putImageData(newImage, 0, 0);
 
             return Promise.resolve(canvas);
-        }).finally(() => {
-
-            // freed however the read turned out - it rejects when the device is lost or destroyed
-            // while it is in flight, and these are of no use to anyone either way
-            dstTexture.destroy();
-            renderTarget.destroy();
-        });
+        }).finally(release);
     }
 
     calcTextureSize(width, height, maxTextureSize) {
