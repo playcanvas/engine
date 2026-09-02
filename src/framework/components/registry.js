@@ -7,6 +7,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @import { ButtonComponentSystem } from './button/system.js'
  * @import { CameraComponentSystem } from './camera/system.js'
  * @import { CollisionComponentSystem } from './collision/system.js'
+ * @import { ComponentSystem } from './system.js'
  * @import { ElementComponentSystem } from './element/system.js'
  * @import { GSplatComponentSystem } from './gsplat/system.js'
  * @import { JointComponentSystem } from './joint/system.js'
@@ -239,7 +240,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Add a component system to the registry.
      *
-     * @param {object} system - The {@link ComponentSystem} instance.
+     * @param {ComponentSystem} system - The {@link ComponentSystem} instance.
      * @ignore
      */
     add(system) {
@@ -257,7 +258,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Remove a component system from the registry.
      *
-     * @param {object} system - The {@link ComponentSystem} instance.
+     * @param {ComponentSystem} system - The {@link ComponentSystem} instance.
      * @ignore
      */
     remove(system) {
