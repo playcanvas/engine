@@ -117,9 +117,6 @@ class CoreExporter {
             immediate: true
         }).then((textureData) => {
 
-            dstTexture.destroy();
-            renderTarget.destroy();
-
             const pixels = new Uint8ClampedArray(width * height * 4);
             pixels.set(textureData);
 
@@ -135,6 +132,12 @@ class CoreExporter {
             newContext.putImageData(newImage, 0, 0);
 
             return Promise.resolve(canvas);
+        }).finally(() => {
+
+            // freed however the read turned out - it rejects when the device is lost or destroyed
+            // while it is in flight, and these are of no use to anyone either way
+            dstTexture.destroy();
+            renderTarget.destroy();
         });
     }
 

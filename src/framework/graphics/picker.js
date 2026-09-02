@@ -247,6 +247,11 @@ class Picker {
         }
         return this._readTexture(this.renderTarget.colorBuffer, x, y, width, height, this.renderTarget).then((pixels) => {
             return this.decodePixels(pixels, this.mapping);
+        }).catch(() => {
+            // the read did not complete, most likely because the device was destroyed while it was in
+            // flight - reported as an empty selection, which is what decodePixels returns for a device
+            // which has gone
+            return [];
         });
     }
 
@@ -343,7 +348,14 @@ class Picker {
             return null;
         }
 
-        const pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
+        let pixels;
+        try {
+            pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
+        } catch (_e) {
+            // the read did not complete, most likely because the device was destroyed while it was in
+            // flight - reported the same way as nothing having been picked
+            return null;
+        }
 
         // reconstruct uint bits from RGBA8
         const intBits = ((pixels[0] << 24) | (pixels[1] << 16) | (pixels[2] << 8) | pixels[3]) >>> 0;
