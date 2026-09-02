@@ -139,6 +139,12 @@ class Shader {
     constructor(graphicsDevice, definition) {
         this.id = id++;
         this.device = graphicsDevice;
+
+        // shallow copy the definition, as the code below replaces the shader sources with their
+        // pre-processed versions and may add extracted attributes. The object supplied by the
+        // caller must not be modified.
+        definition = { ...definition };
+
         this.definition = definition;
         this.name = definition.name || 'Untitled';
         this.init();
@@ -158,8 +164,9 @@ class Shader {
 
             const cshader = enablesCode + definesCode + definition.cshader;
 
-            // Add built-in halfTypesCS include for compute shaders (if not already provided by user)
-            const cincludes = definition.cincludes ?? new Map();
+            // Add built-in halfTypesCS include for compute shaders (if not already provided by
+            // user). Note this copies the supplied map, which must not be modified.
+            const cincludes = new Map(definition.cincludes);
             if (!cincludes.has('halfTypesCS')) {
                 cincludes.set('halfTypesCS', halfTypes);
             }
