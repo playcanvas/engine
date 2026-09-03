@@ -81,7 +81,7 @@ app.start();
 ```
 
 Elsewhere in your code, or from the browser console, retrieve the running application with
-`Application.getApplication()`. You do not need to assign it to `window` yourself.
+`AppBase.getApplication()`. You do not need to assign it to `window` yourself.
 
 Ready-made `Script` classes — camera and character controllers, post-processing, water, sky, XR and
 more — ship in the same package under the `playcanvas/scripts/esm/` subpath.

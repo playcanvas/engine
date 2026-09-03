@@ -63,9 +63,7 @@ const isBlack = (color) => {
  * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
  * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
- * A property assignment only reaches the GPU once {@link Material#update} is called. The uniform
- * values below are recomputed solely inside `updateUniforms`, which the renderer skips unless
- * `update()` has incremented the material's update version since the last render — so a `diffuse`
+ * A property assignment only reaches the GPU once {@link Material#update} is called: a `diffuse`
  * or `emissive` change made after the material's first frame is silently ignored until
  * `material.update()` runs.
  *

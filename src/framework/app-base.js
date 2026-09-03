@@ -121,7 +121,7 @@ let app = null;
  * `new AppBase(canvas)` only constructs the instance and its root entity. You must then call
  * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
  * `componentSystems` and `resourceHandlers` before adding components or calling
- * {@link AppBase#start}. {@link Application} assembles those options for you.
+ * {@link AppBase#start}. Create the `graphicsDevice` with {@link createGraphicsDevice}.
  */
 class AppBase extends EventHandler {
     /**

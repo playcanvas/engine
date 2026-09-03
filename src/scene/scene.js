@@ -28,12 +28,8 @@ import { getDefaultMaterial } from './materials/default-material.js';
  * A scene is a graphical representation of an environment. It manages the scene hierarchy, all
  * graphical objects, lights, and scene-wide properties.
  *
- * Tone mapping and gamma correction are configured per camera, not on the scene: use
- * {@link CameraComponent#toneMapping} and {@link CameraComponent#gammaCorrection}. `Scene` has no
- * such properties and no deprecation shim, so assigning to them silently does nothing. Fog remains
- * scene-wide, but {@link Scene#fog} is a read-only {@link FogParams} object rather than a mode
- * constant — set its `type`, `color`, `start` and `end` — and {@link CameraComponent#fog} can
- * override it for a single camera.
+ * Fog is scene-wide: {@link Scene#fog} is a read-only {@link FogParams} whose `type`, `color`,
+ * `start` and `end` you set, and {@link CameraComponent#fog} can override it for a single camera.
  *
  * @category Graphics
  */
@@ -447,10 +443,10 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Sets the environment lighting atlas, an octahedral atlas of prefiltered mip levels. To build
-     * one from an equirectangular or cubemap source, use `EnvLighting.generateLightingSource`
-     * followed by `EnvLighting.generateAtlas`; a raw HDR texture assigned here will not light the
-     * scene correctly.
+     * Sets the environment lighting atlas: prefiltered mip levels of the environment packed into a
+     * single equirectangular texture. To build one from an equirectangular or cubemap source, use
+     * `EnvLighting.generateLightingSource` followed by `EnvLighting.generateAtlas`; a raw HDR
+     * texture assigned here will not light the scene correctly.
      *
      * @type {Texture|null}
      */
@@ -630,7 +626,7 @@ class Scene extends EventHandler {
      * For a sky that needs no cubemap asset, `playcanvas/scripts/esm/sky/procedural-sky.mjs`
      * renders an analytic daylight sky and keeps a directional light aligned with the sun so
      * direct lighting and shadows match. Related scene-dressing scripts ship alongside it:
-     * `water.mjs`, `grid.mjs`, `shadow-catcher.mjs` and `blurred-planar-reflection.mjs`.
+     * `water.mjs`, `grid.mjs` and `shadow-catcher.mjs`.
      *
      * @type {Texture|null}
      */

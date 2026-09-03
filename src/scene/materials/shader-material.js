@@ -21,9 +21,7 @@ import { Material } from './material.js';
  * @property {string} [fragmentWGSL] - The fragment shader code in WGSL.
  * @property {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
- * inputs to the shader. Defaults to undefined, which generates the default attributes. Must be
- * supplied when the material is applied to a skinned or morphed mesh, as the skinning and morph
- * attributes the engine adds automatically are merged into this object.
+ * inputs to the shader. Defaults to undefined, which generates the default attributes.
  * @property {string | string[]} [fragmentOutputTypes] - Fragment shader output types, which default to
  * vec4. Passing a string will set the output type for all color attachments. Passing an array will
  * set the output type for each color attachment. @see ShaderDefinitionUtils.createDefinition

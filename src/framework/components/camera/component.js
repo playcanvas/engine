@@ -1158,9 +1158,7 @@ class CameraComponent extends Component {
      * near clip, and for an orthographic camera it is negative across the whole near half of the
      * depth range. To reject points behind the camera, test the view space depth instead - pass
      * the world position through {@link CameraComponent#viewMatrix} and discard it when the
-     * resulting `z` is zero or greater. For DOM labels anchored to world positions,
-     * `playcanvas/scripts/esm/annotations.mjs` provides `Annotation` and `AnnotationManager`,
-     * which handle behind-camera rejection and occlusion fading.
+     * resulting `z` is zero or greater.
      *
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
