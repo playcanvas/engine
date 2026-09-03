@@ -925,9 +925,19 @@ class FramePassCameraFrame extends FramePass {
 
         if (this.sceneDepthTexture) {
 
-            // the alias of the scene color is not resized by a pass of its own, as it shares its
-            // texture with the scene render target, which the scene pass resizes
-            this.rtSceneColor.resize(this.rt.width, this.rt.height);
+            // The alias of the scene color is not resized by a pass of its own, as it shares its
+            // texture with the scene render target, which the scene pass resizes. Its size is
+            // evaluated the same way that pass evaluates it, instead of read back from the render
+            // target - the frame graph updates the passes this frame pass owns after it, so on the
+            // frame the canvas resizes the render target is still the previous size. Reading it back
+            // would leave this alias attached to the texture the shared one has replaced, and the
+            // passes rendering into it writing to nothing for that frame.
+            const { scenePass } = this;
+            const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
+            this.rtSceneColor.resize(
+                Math.floor(resizeSource.width * scenePass.scaleX),
+                Math.floor(resizeSource.height * scenePass.scaleY)
+            );
 
             // cleared to the reciprocal of the far clip, which makes the background a surface at
             // that distance taking part in the average the blended geometry accumulates - whatever
