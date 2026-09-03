@@ -80,12 +80,6 @@ app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
 app.start();
 ```
 
-Elsewhere in your code, or from the browser console, retrieve the running application with
-`AppBase.getApplication()`. You do not need to assign it to `window` yourself.
-
-Ready-made `Script` classes — camera and character controllers, post-processing, water, sky, XR and
-more — ship in the same package under the `playcanvas/scripts/esm/` subpath.
-
 Want to play with the code yourself? Edit it on [CodePen](https://codepen.io/playcanvas/pen/NPbxMj).
 
 A full guide to setting up a local development environment based on the PlayCanvas Engine can be found [here](https://developer.playcanvas.com/user-manual/engine/standalone/).
@@ -145,8 +139,3 @@ Now you can run various build options:
 | ------- | ----------- | ---------- |
 | `npm run build` | Build all engine flavors and type declarations | `build` |
 | `npm run docs` | Build engine [API reference docs](https://api.playcanvas.com/engine/) | `docs` |
-
-The ESM builds are emitted as per-module trees — `build/playcanvas/src/**`,
-`build/playcanvas.dbg/src/**` and `build/playcanvas.prf/src/**` — mirroring `src/` one file per
-module, each with its own `.d.ts`. These ship in the npm package and are the easiest way to read
-engine source or types for a single class without loading the whole `playcanvas.d.ts` bundle.
