@@ -7,7 +7,6 @@ import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Color } from '../core/math/color.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { math } from '../core/math/math.js';
 import { Quat } from '../core/math/quat.js';
@@ -61,6 +60,7 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 /**
  * @import { AppOptions } from './app-options.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { GamePads } from '../platform/input/game-pads.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
@@ -1711,45 +1711,19 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Draws a wireframe sphere with center, radius and color.
-     *
-     * @param {Vec3} center - The center of the sphere.
-     * @param {number} radius - The radius of the sphere.
-     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {number} [segments] - Number of line segments used to render the circles forming the
-     * sphere. Defaults to 20.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
-     * depth buffer. Defaults to true.
-     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @example
-     * // Render a red wire sphere with radius of 1
-     * const center = new Vec3(0, 0, 0);
-     * app.drawWireSphere(center, 1.0, Color.RED);
+     * @deprecated Use {@link WireRenderer#sphere} instead.
      * @ignore
      */
-    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
+    drawWireSphere() {
+        Debug.removed('AppBase#drawWireSphere is removed. Use WireRenderer#sphere instead.');
     }
 
     /**
-     * Draws a wireframe axis aligned box specified by min and max points and color.
-     *
-     * @param {Vec3} minPoint - The min corner point of the box.
-     * @param {Vec3} maxPoint - The max corner point of the box.
-     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
-     * depth buffer. Defaults to true.
-     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @param {Mat4} [mat] - Matrix to transform the box before rendering.
-     * @example
-     * // Render a red wire aligned box
-     * const min = new Vec3(-1, -1, -1);
-     * const max = new Vec3(1, 1, 1);
-     * app.drawWireAlignedBox(min, max, Color.RED);
+     * @deprecated Use {@link WireRenderer#boxMinMax} instead.
      * @ignore
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
-        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer, mat);
+    drawWireAlignedBox() {
+        Debug.removed('AppBase#drawWireAlignedBox is removed. Use WireRenderer#boxMinMax instead.');
     }
 
     /**
