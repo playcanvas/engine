@@ -347,7 +347,13 @@ class SceneDepthReader {
 
         const read = this.renderTarget.colorBuffer.read(0, 0, width, height, {
             renderTarget: this.renderTarget,
-            data: buffer.bytes
+            data: buffer.bytes,
+
+            // Flushed as the read is issued, which is what keeps the copy out of it from blocking. On
+            // WebGL that copy is a synchronous call, and without the flush it waits on the work the
+            // frame still has queued behind the read - which for a read issued every frame is most of
+            // a frame's worth, every frame.
+            immediate: true
         });
 
         // a backend which implements no readback at all - the null device among them - hands back
