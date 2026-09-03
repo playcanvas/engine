@@ -35,6 +35,7 @@ import {
     TouchDevice,
     TranslateGizmo,
     Vec3,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -98,6 +99,9 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// Renderer for the tree edit handles, colored per handle as they are drawn
+const wire = new WireRenderer(app);
 
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 1;
@@ -408,12 +412,8 @@ app.on('update', (dt) => {
     }
 
     treeItems.forEach((entity, i) => {
-        app.drawWireSphere(
-            entity.getPosition(),
-            entity.getLocalScale().x,
-            i === selectedIndex ? Color.YELLOW : Color.GRAY,
-            20
-        );
+        wire.color = i === selectedIndex ? Color.YELLOW : Color.GRAY;
+        wire.sphere(entity.getPosition(), entity.getLocalScale().x);
     });
 
     if (dragging) {
