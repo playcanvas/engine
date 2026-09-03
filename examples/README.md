@@ -176,7 +176,7 @@ const app = new Application(canvas, {});
 ```
 
 This is the only file that's required to run an example. The code defined in this function is executed each time the example play button is pressed. It takes the example's canvas element from the DOM and usually begins by creating a new PlayCanvas `Application` or `AppBase` using that canvas.
-The examples loader finds and destroys applications registered to canvases it owns, so the `app` does not need to be exported. Export a `destroy` function only when the example creates non-app resources such as timers, DOM overlays, or animation frames that need cleanup.
+The examples loader finds and destroys applications registered to canvases it owns, so the `app` does not need to be exported. Export a `destroy` function only when the example creates non-app resources such as timers, DOM overlays, or animation frames that need cleanup. An example that creates its own `MiniStats` (to pass custom options) should export it as `miniStats`, so the examples browser toolbar toggle drives that instance instead of adding a second overlay.
 
 Examples can also contain comments which allow you to define the default configuration for your examples as well as overrides to particular settings such as `deviceType`. Check the possible values to set in `ExampleConfig` in `utils/example-source.mjs` file for the full list.
 

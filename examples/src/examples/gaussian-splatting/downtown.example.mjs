@@ -3,7 +3,6 @@
 // Streams a large real-world city downtown (Lublin, Poland) reconstructed as Gaussian splats.
 // 259M splats at full detail (517M across 10 LOD levels), 20767 files, 6.1 GB for streaming.
 //
-// @flag NO_MINISTATS
 // @flag PREFERRED_DEVICE=webgpu
 //
 // @credit
@@ -149,7 +148,7 @@ await new Promise((resolve) => {
 app.start();
 
 // Custom mini stats showing gsplat counts
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
 
 // --- scene-wide gsplat defaults ---
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -402,3 +401,5 @@ app.on('update', () => {
         }
     }
 });
+
+export { miniStats };

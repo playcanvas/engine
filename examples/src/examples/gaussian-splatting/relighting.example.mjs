@@ -5,8 +5,6 @@
 // lights and rendered into an offscreen texture (lit color in RGB, mesh coverage mask in A),
 // which is then used to relight the splats.
 //
-// @flag NO_MINISTATS
-//
 // @credit
 // title: Roman Parish
 // author: Andrii Shramko
@@ -218,7 +216,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
 
 // Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -816,3 +814,5 @@ app.on('update', () => {
     const bb = app.graphicsDevice.backBufferSize;
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 });
+
+export { miniStats };
