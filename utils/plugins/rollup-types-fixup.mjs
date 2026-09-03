@@ -8,7 +8,7 @@ const REGULAR_OUT = '\x1b[22m';
 const TYPES_PATH = './build/playcanvas/src';
 
 const STANDARD_MAT_PROPS = [
-    ['alphaFade', 'boolean'],
+    ['alphaFade', 'number'],
     ['ambient', 'Color'],
     ['anisotropyIntensity', 'number'],
     ['anisotropyRotation', 'number'],
@@ -136,7 +136,7 @@ const STANDARD_MAT_PROPS = [
     ['normalMapRotation', 'number'],
     ['normalMapTiling', 'Vec2'],
     ['normalMapUv', 'number'],
-    ['occludeDirect', 'number'],
+    ['occludeDirect', 'boolean'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
     ['opacity', 'number'],
@@ -196,7 +196,8 @@ const STANDARD_MAT_PROPS = [
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
-        guard: 'set alphaFade(arg: boolean);',
+        // first injected accessor - its presence means the file has already been fixed up
+        guard: `set ${STANDARD_MAT_PROPS[0][0]}(arg: ${STANDARD_MAT_PROPS[0][1]});`,
         transformer: (contents) => {
 
             // Find the jsdoc block description using eg "@property {Type} {name}"
