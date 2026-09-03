@@ -19,6 +19,7 @@ import { getLayout } from '../utils.mjs';
 /**
  * @typedef {object} State
  * @property {boolean} showMiniStats - Show MiniStats state.
+ * @property {boolean} hasMiniStats - Whether the loaded example allows the MiniStats overlay.
  * @property {boolean} fullscreen - Fullscreen state.
  * @property {boolean} hasCredits - Whether the loaded example has any credits.
  * @property {boolean} shareDialogOpen - Whether the share dialog is visible.
@@ -36,6 +37,7 @@ class Menu extends TypedComponent {
         return {
             showMiniStats: typeof ui.miniStats === 'boolean' ? ui.miniStats : getLayout() === 'desktop',
             fullscreen: typeof ui.fullscreen === 'boolean' ? ui.fullscreen : false,
+            hasMiniStats: true,
             hasCredits: false,
             shareDialogOpen: false,
             shareUrl: '',
@@ -51,6 +53,7 @@ class Menu extends TypedComponent {
     constructor(props) {
         super(props);
         this._handleKeyDown = this._handleKeyDown.bind(this);
+        this._handleExampleLoading = this._handleExampleLoading.bind(this);
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
         this._handleMiniStats = this._handleMiniStats.bind(this);
         this.toggleMiniStats = this.toggleMiniStats.bind(this);
@@ -128,6 +131,7 @@ class Menu extends TypedComponent {
             console.warn('Menu#useEffect> iframe undefined');
         }
         document.addEventListener('keydown', this._handleKeyDown);
+        window.addEventListener('exampleLoading', this._handleExampleLoading);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('miniStats', this._handleMiniStats);
     }
@@ -141,6 +145,7 @@ class Menu extends TypedComponent {
             }
         }
         document.removeEventListener('keydown', this._handleKeyDown);
+        window.removeEventListener('exampleLoading', this._handleExampleLoading);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
         window.removeEventListener('miniStats', this._handleMiniStats);
     }
@@ -175,6 +180,14 @@ class Menu extends TypedComponent {
     }
 
     /**
+     * @param {Event} event - exampleLoading event.
+     */
+    _handleExampleLoading(event) {
+        const detail = /** @type {CustomEvent<{ showMiniStats?: boolean }>} */ (event).detail;
+        this.setState({ hasMiniStats: detail?.showMiniStats !== false });
+    }
+
+    /**
      * @param {Event} event - exampleLoad event.
      */
     _handleExampleLoad(event) {
@@ -201,7 +214,7 @@ class Menu extends TypedComponent {
     }
 
     render() {
-        const { showMiniStats, hasCredits, shareDialogOpen, shareUrl, shareTitle } = this.state;
+        const { showMiniStats, hasMiniStats, hasCredits, shareDialogOpen, shareUrl, shareTitle } = this.state;
         const { layout, showCredits } = this.props;
         return jsx(
             Container,
@@ -243,7 +256,7 @@ class Menu extends TypedComponent {
                 jsx('line', { x1: 8.59, y1: 13.51, x2: 15.42, y2: 17.49 }),
                 jsx('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
                 )),
-                jsx(Button, {
+                hasMiniStats && jsx(Button, {
                     icon: 'E149',
                     id: 'showMiniStatsButton',
                     class: showMiniStats ? 'selected' : undefined,

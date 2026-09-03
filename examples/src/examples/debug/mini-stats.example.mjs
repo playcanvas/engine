@@ -1,6 +1,5 @@
 // @config
 // @flag ENGINE=performance
-// @flag NO_MINISTATS
 // @flag WEBGPU_DISABLED
 
 import {
@@ -147,7 +146,7 @@ options.stats = [
 ];
 
 // Create mini-stats system
-const miniStats = new MiniStats(app, options); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, options);
 
 // Add directional lights to the scene
 const light = new Entity();
@@ -281,3 +280,5 @@ app.on('update', () => {
         }
     }
 });
+
+export { miniStats };

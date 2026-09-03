@@ -3,8 +3,6 @@
 // This example demonstrates gsplat flipbook animation using dynamically loaded splat sequence of ply
 // files.
 //
-// @flag NO_MINISTATS
-//
 // @credit
 // title: Mirror's Edge Apartment - Interior Scene
 // author: Aurélien Martel
@@ -120,7 +118,7 @@ const roomEntity = assets.apartment.resource.instantiateRenderEntity({
 roomEntity.setLocalScale(30, 30, 30);
 app.root.addChild(roomEntity);
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats']));
 
 // Create an Entity with a camera component
 const camera = new Entity();
@@ -216,3 +214,5 @@ directionalLight.addComponent('light', {
 });
 directionalLight.setEulerAngles(55, 70, 0);
 app.root.addChild(directionalLight);
+
+export { miniStats };

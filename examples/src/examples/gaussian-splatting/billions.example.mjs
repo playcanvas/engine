@@ -4,7 +4,6 @@
 // each at a different position / rotation. The LOD streaming system keeps performance stable while
 // the combined splat count reaches into the billions.
 //
-// @flag NO_MINISTATS
 // @flag PREFERRED_DEVICE=webgpu
 //
 // @credit
@@ -166,7 +165,7 @@ await new Promise((resolve) => {
 app.start();
 
 // Custom mini stats showing gsplat counts
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
 
 // --- infinite skybox backdrop from the equirectangular LDR image ---
 // The built-in infinite sky samples a cubemap, so the equirect is reprojected once into a
@@ -417,3 +416,5 @@ data.on('splatBudget:set', applySplatBudget);
 app.on('update', () => {
     data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
 });
+
+export { miniStats };

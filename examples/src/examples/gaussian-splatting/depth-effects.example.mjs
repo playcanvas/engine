@@ -3,8 +3,6 @@
 // Volumetric fog and depth of field in a Gaussian Splat scene, with no proxy geometry of any kind -
 // both read a scene depth the splats write themselves, see {accent:Scene#gsplat.sceneDepthWrite}.
 //
-// @flag NO_MINISTATS
-//
 // @credit
 // title: SplatGen_demo_addon
 // author: shehab mekky
@@ -137,7 +135,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats']));
 
 // The sun climbs from the horizon at 06:00 to this elevation at noon
 const MAX_SUN_ELEVATION = 65;
@@ -418,3 +416,5 @@ await new Promise((resolve) => {
     };
     app.systems.gsplat.on('frame:ready', onFrameReady);
 });
+
+export { miniStats };
