@@ -102,6 +102,10 @@ const getPixelFormatChannelsForRgbaReadback = (format) => {
 
 const invalidateAttachments = [];
 
+// How long a pixel buffer copy waits for the start of the next frame before going ahead without it,
+// long enough that a frame arriving at a badly degraded rate still counts as arriving.
+const READBACK_FRAME_START_WAIT = 100;
+
 /**
  * WebglGraphicsDevice extends the base {@link GraphicsDevice} to provide rendering capabilities
  * utilizing the WebGL 2.0 specification.
@@ -141,6 +145,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _xrMsaaCopy = null;
+
+    /**
+     * Copies out of a pixel buffer waiting to run at the start of the next frame, for the reads
+     * which asked for that, see {@link WebglGraphicsDevice#readPixelsAsync}.
+     *
+     * @type {Set<{ timer: number, run: () => void }>}
+     * @private
+     */
+    _readbackCopies = new Set();
 
     /**
      * Creates a new WebglGraphicsDevice instance.
@@ -668,6 +681,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     destroy() {
         super.destroy();
+
+        // rendering stops here, so a copy still waiting for the start of a next frame would never
+        // run, and the read it belongs to would never settle
+        for (const copy of [...this._readbackCopies]) {
+            copy.run();
+        }
         const gl = this.gl;
 
         if (this.feedback) {
@@ -1367,6 +1386,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     frameStart() {
         super.frameStart();
+
+        // pixel buffer copies run here, ahead of any rendering this frame queues for them to wait on
+        if (this._readbackCopies.size > 0) {
+            for (const copy of [...this._readbackCopies]) {
+                copy.run();
+            }
+        }
 
         this.updateBackbuffer();
 
@@ -2398,9 +2424,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * data.
      * @param {boolean} [forceRgba] - If true, forces RGBA/UNSIGNED_BYTE format for guaranteed
      * WebGL support. Used for reading non-RGBA 8-bit normalized textures. Defaults to false.
+     * @param {boolean} [deferCopy] - If true, the copy out of the pixel buffer runs at the start of
+     * the next frame instead of as soon as the data is available. Defaults to false.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false) {
+    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false, deferCopy = false) {
         const gl = this.gl;
 
         let format, pixelType;
@@ -2423,11 +2451,47 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // async wait for previous read to finish
         await this.clientWaitAsync(0, 16);
 
-        // copy the resulting data once it's arrived
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
-        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
-        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
-        gl.deleteBuffer(buf);
+        // The copy out of the pixel buffer is synchronous, and the driver services it by submitting
+        // and then waiting for whatever commands are outstanding when it runs. This read's own fence
+        // has signalled by now, so that wait is spent entirely on unrelated work queued behind it,
+        // which on a heavy scene is a frame's worth of rendering.
+        const copyOut = () => {
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+            gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+            gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+            gl.deleteBuffer(buf);
+        };
+
+        if (!deferCopy) {
+            copyOut();
+            return pixels;
+        }
+
+        // Running the copy at the start of the next frame leaves nothing of that frame queued in
+        // front of it, at the cost of the read settling a frame later.
+        await new Promise((resolve) => {
+            let copied = false;
+            const copy = {
+                timer: 0,
+
+                run: () => {
+                    if (copied) {
+                        return;
+                    }
+                    copied = true;
+                    clearTimeout(copy.timer);
+                    this._readbackCopies.delete(copy);
+                    copyOut();
+                    resolve();
+                }
+            };
+
+            // A read cannot be left waiting on frames which may not come - rendering stops
+            // altogether for a hidden tab, and whoever awaits the read would wait for good. So the
+            // next frame is used when it starts soon enough, and this stands in when it does not.
+            copy.timer = setTimeout(copy.run, READBACK_FRAME_START_WAIT);
+            this._readbackCopies.add(copy);
+        });
 
         return pixels;
     }
@@ -2488,7 +2552,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         return new Promise((resolve, reject) => {
-            const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback);
+            const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback,
+                options.deferCopy ?? false);
 
             readPromise.then((data) => {
 

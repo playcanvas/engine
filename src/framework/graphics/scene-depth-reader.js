@@ -349,11 +349,16 @@ class SceneDepthReader {
             renderTarget: this.renderTarget,
             data: buffer.bytes,
 
-            // Flushed as the read is issued, which is what keeps the copy out of it from blocking. On
-            // WebGL that copy is a synchronous call, and without the flush it waits on the work the
-            // frame still has queued behind the read - which for a read issued every frame is most of
-            // a frame's worth, every frame.
-            immediate: true
+            // Flushed as the read is issued, so the depth this read wants is on its way to the GPU
+            // rather than sitting in the queue behind the rest of the frame.
+            immediate: true,
+
+            // The copy out of the read is a blocking one on WebGL, and it waits for whatever
+            // rendering is queued in front of it - most of a frame's worth for a read issued every
+            // frame, every frame. Taking it at the start of the next frame instead costs this read
+            // a frame of latency, which the caller of a depth read can absorb far more easily than
+            // the stall.
+            deferCopy: true
         });
 
         // a backend which implements no readback at all - the null device among them - hands back
