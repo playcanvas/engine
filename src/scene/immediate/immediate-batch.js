@@ -123,6 +123,22 @@ class ImmediateBatch {
     }
 
     /**
+     * Claims a range of vertices for the caller to write into directly, and accounts for it
+     * immediately. The caller must fill all of it, as unwritten vertices are left at whatever the
+     * storage already held.
+     *
+     * @param {number} count - The number of vertices to claim.
+     * @returns {number} The first vertex of the claimed range.
+     * @ignore
+     */
+    allocate(count) {
+        this._reserve(count);
+        const first = this._vertexCount;
+        this._vertexCount += count;
+        return first;
+    }
+
+    /**
      * Writes a single color to every vertex of a range.
      *
      * @param {Color} color - The color to write.
