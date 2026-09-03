@@ -110,7 +110,7 @@ const CAPTURE = {
     // round behind it so the shafts rake across the frame
     cameraPosition: [1.9, 3.66, 7.49],
     focusPoint: [0.21, 3.18, -0.22],
-    moveSpeed: 0.25,
+    moveSpeed: 1.5,
     sceneSize: 4,
     shadowDistance: 15,
 
