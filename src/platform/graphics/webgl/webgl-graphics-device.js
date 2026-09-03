@@ -148,9 +148,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     /**
      * Copies out of a pixel buffer waiting to run at the start of the next frame, for the reads
-     * which asked for that, see {@link WebglGraphicsDevice#readPixelsAsync}.
+     * which asked for that, see {@link WebglGraphicsDevice#readPixelsAsync}. Drained by
+     * {@link WebglGraphicsDevice#frameStart}, and on device destruction and context loss.
      *
-     * @type {Set<{ timer: number, run: () => void }>}
+     * @type {Set<{ run: () => void, abandon: () => void, fail: () => void }>}
      * @private
      */
     _readbackCopies = new Set();
@@ -682,10 +683,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
     destroy() {
         super.destroy();
 
-        // rendering stops here, so a copy still waiting for the start of a next frame would never
-        // run, and the read it belongs to would never settle
+        // rendering stops here, so a copy still waiting for the start of a frame would never run,
+        // and the read it belongs to would never settle
         for (const copy of [...this._readbackCopies]) {
-            copy.run();
+            copy.abandon();
         }
         const gl = this.gl;
 
@@ -1139,6 +1140,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         super.loseContext();
 
+        // The pixel buffers these copies would read went with the context, and rendering stops
+        // while it is lost, so nothing is coming to run them. Failed rather than settled, so a read
+        // cannot come back holding whatever its destination was last filled with - a caller reusing
+        // a buffer between reads would have no way to tell that from a fresh result.
+        for (const copy of [...this._readbackCopies]) {
+            copy.fail();
+        }
+
         // release shaders
         for (const shader of this.shaders) {
             shader.loseContext();
@@ -1387,7 +1396,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
     frameStart() {
         super.frameStart();
 
-        // pixel buffer copies run here, ahead of any rendering this frame queues for them to wait on
+        // pixel buffer copies run here, ahead of the rendering this frame queues for them to wait
+        // on - though after whatever the update phase issued, this being the start of the render
         if (this._readbackCopies.size > 0) {
             for (const copy of [...this._readbackCopies]) {
                 copy.run();
@@ -2469,21 +2479,39 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Running the copy at the start of the next frame leaves nothing of that frame queued in
         // front of it, at the cost of the read settling a frame later.
-        await new Promise((resolve) => {
-            let copied = false;
+        await new Promise((resolve, reject) => {
             const copy = {
                 timer: 0,
+                settled: false,
 
-                run: () => {
-                    if (copied) {
+                // a read settles once, whichever of the ways below gets to it first
+                end: (settle) => {
+                    if (copy.settled) {
                         return;
                     }
-                    copied = true;
+                    copy.settled = true;
                     clearTimeout(copy.timer);
                     this._readbackCopies.delete(copy);
+                    settle();
+                },
+
+                // the copy this was all deferred for, at the start of a frame or once the wait for
+                // one has run out
+                run: () => copy.end(() => {
                     copyOut();
                     resolve();
-                }
+                }),
+
+                // The device is going away, which the caller of the read is told about instead of
+                // being given data. Settling without the copy, as the bytes it waits for would go
+                // straight in the bin, and the wait is the one this deferral exists to avoid.
+                abandon: () => copy.end(resolve),
+
+                // the pixel buffer went with the context, so there is nothing left to read and the
+                // read has to fail rather than hand back whatever the destination happens to hold
+                fail: () => copy.end(() => {
+                    reject(new Error('Texture read did not complete, as the WebGL context was lost.'));
+                })
             };
 
             // A read cannot be left waiting on frames which may not come - rendering stops
