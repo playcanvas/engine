@@ -208,6 +208,56 @@ describe('WireRenderer', function () {
             expect(corners.has('10,10,-10')).to.equal(true);
         });
 
+        it('draws a camera frustum the same whether or not its parent is scaled', function () {
+            const makeCamera = (parentScale) => {
+                const parent = new Entity();
+                parent.setLocalScale(parentScale, parentScale, parentScale);
+                const camera = new Entity();
+                camera.addComponent('camera', { fov: 45, nearClip: 1, farClip: 10 });
+                camera.camera.aspectRatio = 1;
+                parent.addChild(camera);
+                app.root.addChild(parent);
+                return camera;
+            };
+
+            const corners = (camera) => {
+                batchFor(true).clear();
+                wire.frustum(camera.camera);
+                const out = positionsOf(24).map(v => +v.toFixed(4));
+                batchFor(true).clear();
+                return out;
+            };
+
+            // the renderer builds a scale-free view transform, so the drawn volume must not grow
+            // with the parent's scale
+            expect(corners(makeCamera(1))).to.deep.equal(corners(makeCamera(4)));
+        });
+
+        it('honors a camera calculateTransform override', function () {
+            const camera = new Entity();
+            camera.addComponent('camera', { fov: 45, nearClip: 1, farClip: 10 });
+            camera.camera.aspectRatio = 1;
+            app.root.addChild(camera);
+
+            batchFor(true).clear();
+            wire.frustum(camera.camera);
+            const before = positionsOf(24).map(v => +v.toFixed(4));
+            batchFor(true).clear();
+
+            // the renderer uses this in place of the node transform, so the frustum must move
+            camera.camera.calculateTransform = (mat) => {
+                mat.setTranslate(100, 0, 0);
+            };
+            wire.frustum(camera.camera);
+            const after = positionsOf(24).map(v => +v.toFixed(4));
+            batchFor(true).clear();
+
+            expect(after).to.not.deep.equal(before);
+            for (let i = 0; i < 24; i++) {
+                expect(after[i * 3] - before[i * 3]).to.be.closeTo(100, 1e-3);
+            }
+        });
+
         it('marks a point with three axis aligned arms', function () {
             wire.point(new Vec3(1, 1, 1), 2);
             expect(positionsOf(6)).to.deep.equal([
@@ -351,6 +401,14 @@ describe('WireRenderer', function () {
                 wire.lines([new Vec3(), new Vec3(), new Vec3()]);
             });
             expect(count).to.be.at.least(1);
+        });
+
+        it('asserts when packed positions do not form whole segments', function () {
+            // not a multiple of three leaves a partial position
+            expect(withAssertCount(() => wire.linesPacked([0, 0, 0, 1, 1]))).to.be.at.least(1);
+
+            // a multiple of three but not of six leaves an unpaired vertex
+            expect(withAssertCount(() => wire.linesPacked([0, 0, 0, 1, 1, 1, 2, 2, 2]))).to.be.at.least(1);
         });
     });
 
