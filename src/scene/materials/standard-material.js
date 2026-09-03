@@ -88,7 +88,7 @@ const isBlack = (color) => {
  * map.
  * @property {Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse
  * map. Each component is between 0 and 1.
- * @property {number} diffuseDetailMapRotation Controls the 2D rotation (in degrees) of the main
+ * @property {number} diffuseDetailMapRotation Controls the 2D rotation (in degrees) of the detail
  * (secondary) diffuse map.
  * @property {string} diffuseDetailMapChannel Color channels of the detail (secondary) diffuse map
  * to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
@@ -197,6 +197,9 @@ const isBlack = (color) => {
  * the assigned main clearcoat normal map. It should be normally between 0 (no bump mapping) and 1
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {boolean} useIridescence Enable thin-film iridescence.
+ * @property {number} iridescence Defines the intensity of the iridescence layer from 0 to 1. Only
+ * used when useIridescence is enabled, and the layer is disabled when iridescence == 0. If an
+ * iridescenceMap is specified, it is multiplied by this value. Default value is 0 (disabled).
  * @property {Texture|null} iridescenceMap The per-pixel iridescence intensity. Only used when
  * useIridescence is enabled.
  * @property {number} iridescenceMapUv Iridescence map UV channel.
@@ -216,7 +219,7 @@ const isBlack = (color) => {
  * @property {Vec2} iridescenceThicknessMapOffset Controls the 2D offset of the iridescence
  * thickness map. Each component is between 0 and 1.
  * @property {number} iridescenceThicknessMapRotation Controls the 2D rotation (in degrees)
- * of the iridescence map.
+ * of the iridescence thickness map.
  * @property {string} iridescenceThicknessMapChannel Color channels of the iridescence thickness
  * map to use. Can be "r", "g", "b" or "a".
  * @property {number} iridescenceThicknessMin The minimum thickness for the iridescence layer.
@@ -233,7 +236,6 @@ const isBlack = (color) => {
  * metallic, and diffuse color is used as specular color instead.
  * @property {boolean} useMetalnessSpecularColor When metalness is enabled, use the
  * specular map to apply color tint to specular reflections.
- * at direct angles.
  * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
  * (metal).
  * @property {Texture|null} metalnessMap Monochrome metalness map (default is null).
@@ -272,13 +274,13 @@ const isBlack = (color) => {
  * @property {Vec2} refractionMapTiling Controls the 2D tiling of the refraction map.
  * @property {Vec2} refractionMapOffset Controls the 2D offset of the refraction map. Each component
  * is between 0 and 1.
- * @property {number} refractionMapRotation Controls the 2D rotation (in degrees) of the emissive
- * map.
+ * @property {number} refractionMapRotation Controls the 2D rotation (in degrees) of the
+ * refraction map.
  * @property {string} refractionMapChannel Color channels of the refraction map to use. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} refractionVertexColor Use mesh vertex colors for refraction. If
  * refraction map is set, it will be multiplied by vertex colors.
- * @property {boolean} refractionVertexColorChannel Vertex color channel to use for refraction.
+ * @property {string} refractionVertexColorChannel Vertex color channel to use for refraction.
  * Can be "r", "g", "b" or "a".
  * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of
  * distortion. The value is calculated as (outerIor / surfaceIor), where inputs are measured
@@ -303,6 +305,8 @@ const isBlack = (color) => {
  * "g", "b" or "a".
  * @property {boolean} thicknessVertexColor Use mesh vertex colors for thickness. If
  * thickness map is set, it will be multiplied by vertex colors.
+ * @property {string} thicknessVertexColorChannel Vertex color channel to use for thickness. Can
+ * be "r", "g", "b" or "a".
  * @property {Color} attenuation The attenuation color for refractive materials, specified in sRGB
  * color space. Only used when useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
@@ -342,13 +346,15 @@ const isBlack = (color) => {
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenVertexColor Use mesh vertex colors for sheen. If sheen map or
  * sheen tint are set, they'll be multiplied by vertex colors.
+ * @property {string} sheenVertexColorChannel Vertex color channels to use for sheen. Can be "r",
+ * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
  * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
  * Enabling this flag results in material treating the sheen gloss members as roughness.
  * @property {Texture|null} sheenGlossMap The sheen glossiness microstructure color map of the
  * material (default is null).
- * @property {number} sheenGlossMapUv Sheen map UV channel.
+ * @property {number} sheenGlossMapUv Sheen glossiness map UV channel.
  * @property {Vec2} sheenGlossMapTiling Controls the 2D tiling of the sheen glossiness map.
  * @property {Vec2} sheenGlossMapOffset Controls the 2D offset of the sheen glossiness map.
  * Each component is between 0 and 1.
@@ -393,7 +399,7 @@ const isBlack = (color) => {
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
- * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
+ * @property {string} opacityShadowDither Used to specify whether shadow opacity is dithered, which
  * allows shadow transparency without alpha blending. Can be:
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
