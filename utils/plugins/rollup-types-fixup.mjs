@@ -193,32 +193,44 @@ const STANDARD_MAT_PROPS = [
     ['useSkybox', 'boolean']
 ];
 
+// The accessors are injected directly after this member of the tsc-emitted class body.
+const STANDARD_MAT_ANCHOR = 'reset(): void;';
+
+// The anchor plus any block injected by an earlier run. tsc indents the class body with four
+// spaces while the injected lines are tab-indented, so a run of tab-indented (or blank) lines
+// directly after the anchor can only be a previous injection. Matching it lets the transformer
+// replace a stale block in place rather than add a second copy, which matters when an incremental
+// tsc run leaves behind a declaration file that was fixed up with an older STANDARD_MAT_PROPS.
+const STANDARD_MAT_INJECTED = /reset\(\): void;(?:\r?\n(?: *\t[^\n]*)?)*(?=\r?\n)/;
+
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
-        // first injected accessor - its presence means the file has already been fixed up
-        guard: `set ${STANDARD_MAT_PROPS[0][0]}(arg: ${STANDARD_MAT_PROPS[0][1]});`,
         transformer: (contents) => {
+            if (!STANDARD_MAT_INJECTED.test(contents)) {
+                throw new Error(`types-fixup: '${STANDARD_MAT_ANCHOR}' not found in the StandardMaterial declarations`);
+            }
 
             // Find the jsdoc block description using eg "@property {Type} {name}"
-            return contents.replace('reset(): void;', `reset(): void;
-                ${STANDARD_MAT_PROPS.map((prop) => {
-        const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
-        const typeDescriptionIndex = contents.match(typeDefinition);
-        const typeDescription = typeDescriptionIndex ?
-            contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
-            '';
+            const accessors = STANDARD_MAT_PROPS.map((prop) => {
+                const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
+                const typeDescriptionIndex = contents.match(typeDefinition);
+                const typeDescription = typeDescriptionIndex ?
+                    contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
+                    '';
 
-        // Strip newlines, asterisks, and tabs from the type description
-        const cleanTypeDescription = typeDescription
-        .trim()
-        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
-        .replace(/\s+/g, ' '); // collapse whitespace
+                // Strip newlines, asterisks, and tabs from the type description
+                const cleanTypeDescription = typeDescription
+                .trim()
+                .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
+                .replace(/\s+/g, ' '); // collapse whitespace
 
-        const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
-        return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
-    }).join('')}`
-            );
+                const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
+                return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
+            }).join('');
+
+            // a function replacement keeps '$' in the descriptions from being read as patterns
+            return contents.replace(STANDARD_MAT_INJECTED, () => `${STANDARD_MAT_ANCHOR}\n${accessors}`);
         },
         footer: `
 import { Color } from '../../core/math/color.js';
