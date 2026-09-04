@@ -285,7 +285,9 @@ class AppBase extends EventHandler {
     };
 
     /**
-     * Scales the global time delta. Defaults to 1.
+     * Scales the global time delta. Defaults to 1. Scripts, animation and physics all receive
+     * the scaled delta, so 0 stops them together. To pause or slow down physics alone while the
+     * rest of the application keeps running, use {@link RigidBodyComponentSystem#timeScale}.
      *
      * @example
      * // Set the app to run at half speed

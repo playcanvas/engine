@@ -799,8 +799,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * The system calls this once per frame with the frame delta time multiplied by
      * {@link RigidBodyComponentSystem#timeScale}, unless that is 0. Call it directly to step the
      * simulation manually: to advance it while paused, to fast forward it by stepping several
-     * times in one frame, or to drive it from a custom time source. The delta is used as given,
-     * without applying timeScale. Does nothing when no physics backend is installed.
+     * times in one frame, or to drive it from a custom time source. Automatic stepping continues
+     * while timeScale is above 0, so calling this every frame as well advances the simulation
+     * twice per frame. Set timeScale to 0 first when taking over stepping entirely. The delta is
+     * used as given, without applying timeScale. Does nothing when no physics backend is
+     * installed.
      *
      * @param {number} dt - The amount of time to advance the simulation by, in seconds.
      * @example
