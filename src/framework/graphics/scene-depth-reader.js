@@ -353,12 +353,11 @@ class SceneDepthReader {
             // rather than sitting in the queue behind the rest of the frame.
             immediate: true,
 
-            // The copy out of the read is a blocking one on WebGL, and it waits for whatever
-            // rendering is queued in front of it - most of a frame's worth for a read issued every
-            // frame, every frame. Taking it at the start of the next frame instead costs this read
-            // a frame of latency, which the caller of a depth read can absorb far more easily than
-            // the stall.
-            deferCopy: true
+            // Depth reads come every frame, which is what a readback is worst at - on WebGL its
+            // blocking step waits for the rendering queued in front of it, most of a frame's worth
+            // every frame. Saying so buys a frame of latency in exchange, which the caller of a
+            // depth read absorbs far more easily than the stall.
+            frequent: true
         });
 
         // a backend which implements no readback at all - the null device among them - hands back

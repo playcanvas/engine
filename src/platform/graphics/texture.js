@@ -1418,12 +1418,11 @@ class Texture {
      * @param {boolean} [options.immediate] - If true, the read operation will be executed as soon as
      * possible. This has a performance impact, so it should be used only when necessary. Defaults
      * to false.
-     * @param {boolean} [options.deferCopy] - If true, the pixel data is copied out at the start of
-     * the next frame rather than as soon as it is available. The copy is a blocking operation which
-     * waits for the rendering queued in front of it, so keeping it out of the frame costs the read a
-     * frame of latency and saves that wait. Worth it for a read issued every frame, and not
-     * otherwise. Only utilized on the WebGL platform, ignored on WebGPU, whose readback does not
-     * block. Defaults to false.
+     * @param {boolean} [options.frequent] - Set this when the read is one of many, issued every
+     * frame or every few frames. Such a read is given the treatment which costs it a frame of
+     * latency and keeps it from stalling the frame it is issued in, which is the trade a one-off
+     * read would not want. Only utilized on the WebGL platform, where a readback has a blocking
+     * step; ignored on WebGPU, whose readback does not block. Defaults to false.
      * @returns {Promise<Uint8Array|Uint16Array|Uint32Array|Float32Array>} A promise that resolves
      * with the pixel data of the texture.
      */

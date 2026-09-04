@@ -2434,11 +2434,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * data.
      * @param {boolean} [forceRgba] - If true, forces RGBA/UNSIGNED_BYTE format for guaranteed
      * WebGL support. Used for reading non-RGBA 8-bit normalized textures. Defaults to false.
-     * @param {boolean} [deferCopy] - If true, the copy out of the pixel buffer runs at the start of
-     * the next frame instead of as soon as the data is available. Defaults to false.
+     * @param {boolean} [frequent] - Set for a read issued every frame or every few frames, which
+     * runs the copy out of the pixel buffer at the start of the next frame instead of as soon as
+     * the data is available. Defaults to false.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false, deferCopy = false) {
+    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false, frequent = false) {
         const gl = this.gl;
 
         let format, pixelType;
@@ -2472,9 +2473,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.deleteBuffer(buf);
         };
 
-        if (!deferCopy) {
+        if (!frequent) {
             copyOut();
             return pixels;
+        }
+
+        // The device can go away while the fence above is being waited on, and a read is not being
+        // tracked below until that wait is over - so it is reached by neither the drain on
+        // destruction nor the one on context loss, and has to answer for itself here. There is no
+        // await between this and being tracked, so nothing slips through in between.
+        if (this._destroyed) {
+
+            // settled without the copy, exactly as an already tracked read is - the caller is told
+            // the device went away rather than handed data, so the bytes would go nowhere
+            gl.deleteBuffer(buf);
+            return pixels;
+        }
+        if (this.contextLost) {
+
+            // the pixel buffer went with the context, so the destination was never written and
+            // handing it back would pass off whatever it last held as a result
+            gl.deleteBuffer(buf);
+            throw new Error('Texture read did not complete, as the WebGL context was lost.');
         }
 
         // Running the copy at the start of the next frame leaves nothing of that frame queued in
@@ -2581,7 +2601,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         return new Promise((resolve, reject) => {
             const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback,
-                options.deferCopy ?? false);
+                options.frequent ?? false);
 
             readPromise.then((data) => {
 
