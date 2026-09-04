@@ -280,16 +280,19 @@ class FramePassCameraFrame extends FramePass {
 
         Debug.call(() => {
 
-            // the splats contribute only when the scene depth is rendered by the scene pass and they are
-            // set to write it. Note that the first alone is not enough - the scene textures can be
-            // rendered while the splats stay out of them.
-            const splatsContribute = options.sceneTextureDepth && splatDepth;
-            if (postProcessDepth && !splatsContribute && this.rendersGSplats()) {
-                const reason = !deviceSupported ?
-                    'this device cannot render the scene depth the splats contribute to - see CameraFrame.isSplatSceneDepthSupported' :
-                    unsupportedReason ??
-                    'Scene#gsplat.sceneDepthWrite is not set - setting it includes them, at the cost of an additional render target attachment';
-                Debug.warnOnce(`CameraFrame: the gaussian splats this camera renders do not contribute to the scene depth, and so the effects using it (the volumetric fog and the depth of field) are not bound by them: ${reason}.`);
+            // Reported only where what was asked for and what happens disagree: the splats are set to
+            // write the scene depth and this camera cannot render it, which is not visible in the
+            // result beyond effects which quietly ignore the splats. Splats left out of the depth are
+            // a choice like any other - a scene giving the effects a depth by other means, a proxy
+            // mesh among them, is not missing anything and is not told about it.
+            if (postProcessDepth && splatDepth && !options.sceneTextureDepth && this.rendersGSplats()) {
+
+                // one of the two holds whenever the scene textures are off with the splats asking for
+                // them, so there is always a reason to give
+                const reason = deviceSupported ?
+                    unsupportedReason :
+                    'this device cannot render the scene depth the splats contribute to - see CameraFrame.isSplatSceneDepthSupported';
+                Debug.warnOnce(`CameraFrame: the gaussian splats this camera renders are set to write the scene depth, but this camera cannot render it, so the effects using it (the volumetric fog and the depth of field) are not bound by them: ${reason}.`);
             }
         });
 
