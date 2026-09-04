@@ -3,7 +3,7 @@ import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextI
 import { Component } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
-import { exampleMetaData } from '../../../cache/metadata.mjs';
+import { byName, getCategories } from '../categories.mjs';
 import { VERSION } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
@@ -13,9 +13,11 @@ import { getLayout } from '../utils.mjs';
 
 /** @import { ReactElement } from 'react' */
 
+const CATEGORY_PANEL_ID = 'category-panel-';
+
 /**
  * @typedef {object} Props
- * @property {{ pathname: string, hash: string }} location - The router location.
+ * @property {{ pathname: string, hash: string, state?: any }} location - The router location.
  * @property {'mobile'|'desktop'} [layout] - Current layout.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
@@ -28,6 +30,7 @@ import { getLayout } from '../utils.mjs';
  * @property {Record<string, Record<string, object>>|null} filteredCategories - The filtered categories.
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.
+ * @property {Record<string, boolean>} collapsedCategories - Collapsed state per category.
  * @property {string} filterText - The current filter.
  * @property {'mobile'|'desktop'} layout - Current layout.
  */
@@ -38,28 +41,34 @@ import { getLayout } from '../utils.mjs';
 const TypedComponent = Component;
 
 /**
- * @returns {Record<string, { examples: Record<string, string> }>} - The category files.
+ * @param {Props['location']} location - The router location.
+ * @returns {string | null} Category the URL asked to focus on, if any.
  */
-function getDefaultExampleFiles() {
-    /** @type {Record<string, { examples: Record<string, string> }>} */
-    const categories = {};
-    for (let i = 0; i < exampleMetaData.length; i++) {
-        const { categoryKebab, exampleNameKebab, hidden } = exampleMetaData[i];
+const focusedCategory = (location) => {
+    const focus = location?.state?.focusCategory;
+    return typeof focus === 'string' ? focus : null;
+};
 
-        // hidden examples are always built and reachable via URL, but are only listed in the
-        // sidebar during development (`npm run develop`), not in production builds (`npm run build`)
-        if (hidden && process.env.NODE_ENV !== 'development') {
-            continue;
-        }
-
-        if (!categories[categoryKebab]) {
-            categories[categoryKebab] = { examples: {} };
-        }
-
-        categories[categoryKebab].examples[exampleNameKebab] = exampleNameKebab;
+/**
+ * Every category other than `focusCategory` starts collapsed, so a bare
+ * `#/<category>` URL opens the sidebar showing just that category. Without a
+ * focus category (any normal example URL) all categories stay expanded.
+ *
+ * @param {Record<string, any>} categories - The default categories.
+ * @param {string | null} focusCategory - Category to keep expanded.
+ * @returns {Record<string, boolean>} Collapsed state per category.
+ */
+const collapseAllBut = (categories, focusCategory) => {
+    /** @type {Record<string, boolean>} */
+    const collapsedCategories = {};
+    if (!focusCategory) {
+        return collapsedCategories;
     }
-    return categories;
-}
+    for (const category of Object.keys(categories)) {
+        collapsedCategories[category] = category !== focusCategory;
+    }
+    return collapsedCategories;
+};
 
 /**
  * Split a filter string into exact-match `category:`/`example:` tags and fuzzy free-text terms.
@@ -126,27 +135,35 @@ function filterCategories(defaultCategories, filter) {
     return updatedCategories;
 }
 
-const createState = () => {
+/**
+ * @param {Props['location']} location - The router location.
+ * @returns {State} The initial state.
+ */
+const createState = (location) => {
     const ui = readState().ui ?? {};
     const filter = typeof ui.filter === 'string' ? ui.filter : '';
     const largeThumbnails = typeof ui.largeThumbnails === 'boolean' ? ui.largeThumbnails : false;
     const collapsed = typeof ui.sideBarCollapsed === 'boolean' ?
         ui.sideBarCollapsed :
         localStorage.getItem('sideBarCollapsed') === 'true' || getLayout() === 'mobile';
-    const defaultCategories = getDefaultExampleFiles();
+    const defaultCategories = getCategories();
     return {
         defaultCategories,
         filteredCategories: filterCategories(defaultCategories, filter),
         filterText: filter,
         observer: new Observer({ largeThumbnails }),
         collapsed,
+        collapsedCategories: collapseAllBut(defaultCategories, focusedCategory(location)),
         layout: getLayout()
     };
 };
 
 class SideBar extends TypedComponent {
     /** @type {State} */
-    state = createState();
+    state = createState(this.props.location);
+
+    /** @type {WeakSet<object>} */
+    _categoryPanels = new WeakSet();
 
     /** @type {HTMLElement | null} */
     _sideBar = null;
@@ -165,6 +182,44 @@ class SideBar extends TypedComponent {
         this._onLayoutChange = this._onLayoutChange.bind(this);
         this._onClickExample = this._onClickExample.bind(this);
         this._onLargeThumbnailsSet = this._onLargeThumbnailsSet.bind(this);
+    }
+
+    /**
+     * PCUI owns the visual collapse of a category panel, but the React wrapper writes
+     * every prop with a setter back onto the element on each render — so a header click
+     * has to be mirrored into state, or the next render snaps the panel back.
+     *
+     * @param {string} category - Category name.
+     * @param {boolean} collapsed - Collapsed state after the click.
+     */
+    _onCategoryToggle(category, collapsed) {
+        this.setState((prevState) => {
+            // while filtering, panels are force-expanded so matches can't hide in one
+            if (prevState.filterText || Boolean(prevState.collapsedCategories[category]) === collapsed) {
+                return null;
+            }
+            return {
+                collapsedCategories: { ...prevState.collapsedCategories, [category]: collapsed }
+            };
+        });
+    }
+
+    /**
+     * Category panels are created by PCUI, so their collapse events are only reachable
+     * through the element behind the DOM node. Each panel is subscribed once.
+     */
+    setupCategoryPanels() {
+        const panels = document.querySelectorAll(`[id^="${CATEGORY_PANEL_ID}"]`);
+        for (const dom of panels) {
+            const panel = /** @type {any} */ (dom).ui;
+            if (!panel || this._categoryPanels.has(panel)) {
+                continue;
+            }
+            this._categoryPanels.add(panel);
+            const category = dom.id.slice(CATEGORY_PANEL_ID.length);
+            panel.on('collapse', () => this._onCategoryToggle(category, true));
+            panel.on('expand', () => this._onCategoryToggle(category, false));
+        }
     }
 
     setupSideBar() {
@@ -192,12 +247,14 @@ class SideBar extends TypedComponent {
     componentDidMount() {
         this._largeThumbnailsHandle = this.state.observer.on('largeThumbnails:set', this._onLargeThumbnailsSet);
         this.setupSideBar();
+        this.setupCategoryPanels();
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('orientationchange', this._onLayoutChange);
     }
 
     componentDidUpdate() {
         this.setupSideBar();
+        this.setupCategoryPanels();
     }
 
     componentWillUnmount() {
@@ -301,17 +358,19 @@ class SideBar extends TypedComponent {
             return jsx(Label, { text: 'No results' });
         }
         const { pathname } = this.props.location;
+        const { collapsedCategories, filterText } = this.state;
         return Object.keys(categories)
-        .sort((a, b) => (a > b ? 1 : -1))
+        .sort(byName)
         .map((category) => {
             return jsx(
                 Panel,
                 {
                     key: category,
+                    id: `${CATEGORY_PANEL_ID}${category}`,
                     class: 'categoryPanel',
                     headerText: category.split('-').join(' ').toUpperCase(),
                     collapsible: true,
-                    collapsed: false
+                    collapsed: !filterText && collapsedCategories[category] === true
                 },
                 jsx(
                     'ul',
@@ -319,7 +378,7 @@ class SideBar extends TypedComponent {
                         className: 'category-nav'
                     },
                     Object.keys(categories[category].examples)
-                    .sort((a, b) => (a > b ? 1 : -1))
+                    .sort(byName)
                     .map((example) => {
                         const path = `/${category}/${example}`;
                         const isSelected = pathname === path;
