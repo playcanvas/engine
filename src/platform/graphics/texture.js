@@ -1015,21 +1015,37 @@ class Texture {
         return this._type;
     }
 
+    /**
+     * @deprecated Use Texture#type instead.
+     * @ignore
+     */
     set rgbm(value) {
         Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
         this.type = value ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
     }
 
+    /**
+     * @deprecated Use Texture#type instead.
+     * @ignore
+     */
     get rgbm() {
         Debug.deprecated('Texture#rgbm is deprecated. Use Texture#type instead.');
         return this.type === TEXTURETYPE_RGBM;
     }
 
+    /**
+     * @deprecated Use Texture#type instead.
+     * @ignore
+     */
     set swizzleGGGR(value) {
         Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
         this.type = value ? TEXTURETYPE_SWIZZLEGGGR : TEXTURETYPE_DEFAULT;
     }
 
+    /**
+     * @deprecated Use Texture#type instead.
+     * @ignore
+     */
     get swizzleGGGR() {
         Debug.deprecated('Texture#swizzleGGGR is deprecated. Use Texture#type instead.');
         return this.type === TEXTURETYPE_SWIZZLEGGGR;

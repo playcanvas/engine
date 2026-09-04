@@ -61,6 +61,10 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
  *
+ * For ready-made camera behaviour, attach the `CameraControls` script from
+ * `playcanvas/scripts/esm/camera-controls.mjs`, which provides orbit, fly and pan driven by mouse,
+ * touch and gamepad input.
+ *
  * Relevant Engine API examples:
  *
  * - [First Person Camera](https://playcanvas.github.io/#/camera/first-person)
@@ -1148,6 +1152,13 @@ class CameraComponent extends Component {
 
     /**
      * Convert a point from 3D world space to 2D screen space.
+     *
+     * The returned `z` is the unnormalized clip space depth, not a behind-the-camera flag: it also
+     * goes negative for points in front of a perspective camera that are nearer than twice the
+     * near clip, and for an orthographic camera it is negative across the whole near half of the
+     * depth range. To reject points behind the camera, test the view space depth instead - pass
+     * the world position through {@link CameraComponent#viewMatrix} and discard it when the
+     * resulting `z` is zero or greater.
      *
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.

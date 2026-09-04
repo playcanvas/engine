@@ -236,6 +236,11 @@ class VertexFormat {
         });
     }
 
+    /**
+     * @deprecated Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).
+     * @returns {null} Always null.
+     * @ignore
+     */
     static get defaultInstancingFormat() {
         Debug.removed('VertexFormat.defaultInstancingFormat was removed. Use VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
         return null;

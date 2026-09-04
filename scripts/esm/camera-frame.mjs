@@ -678,16 +678,21 @@ class VolumetricFog {
  * of field and volumetric fog.
  *
  * Attach the script to an entity with a camera component and adjust the attribute groups to
- * configure the post-processing stack.
+ * configure the post-processing stack. Most groups are gated by their own `enabled` flag, which
+ * defaults to false. Three are not: `rendering` is always applied, `ssao` is gated by its `type`
+ * (`SsaoType.NONE` by default) and `colorLUT` by its `texture` (null by default) — setting
+ * `enabled` on those two does nothing.
+ *
+ * Set the fields on the groups after creating the script. Do not pass a group through the
+ * `properties` argument of {@link ScriptComponent#create}: that assignment is shallow, so it
+ * replaces the whole group object and drops its `enabled` flag, leaving the effect switched off.
  *
  * @example
  * cameraEntity.addComponent('script');
- * cameraEntity.script.create(CameraFrame, {
- *     properties: {
- *         rendering: { toneMapping: 'aces' },
- *         bloom: { intensity: 0.02 }
- *     }
- * });
+ * const cameraFrame = cameraEntity.script.create(CameraFrame);
+ * cameraFrame.rendering.toneMapping = 'aces';
+ * cameraFrame.bloom.enabled = true;
+ * cameraFrame.bloom.intensity = 0.02;
  * @category Post-Processing
  */
 class CameraFrame extends Script {

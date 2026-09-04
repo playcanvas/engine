@@ -952,71 +952,129 @@ class GraphicsDevice extends EventHandler {
 
     // ---- deprecated block start ----
 
+    /**
+     * @deprecated The limit has been removed.
+     * @ignore
+     */
     get boneLimit() {
         Debug.deprecated('GraphicsDevice#boneLimit is deprecated and the limit has been removed.');
         return 1024;
     }
 
+    /**
+     * @deprecated Use GraphicsDevice#isWebGL2 instead.
+     * @ignore
+     */
     get webgl2() {
         Debug.deprecated('GraphicsDevice#webgl2 is deprecated, use GraphicsDevice#isWebGL2 instead.');
         return this.isWebGL2;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get textureFloatHighPrecision() {
         Debug.deprecated('GraphicsDevice#textureFloatHighPrecision is deprecated and always returns true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get extBlendMinmax() {
         Debug.deprecated('GraphicsDevice#extBlendMinmax is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get extTextureHalfFloat() {
         Debug.deprecated('GraphicsDevice#extTextureHalfFloat is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get extTextureLod() {
         Debug.deprecated('GraphicsDevice#extTextureLod is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get textureHalfFloatFilterable() {
         Debug.deprecated('GraphicsDevice#textureHalfFloatFilterable is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get supportsMrt() {
         Debug.deprecated('GraphicsDevice#supportsMrt is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get supportsVolumeTextures() {
         Debug.deprecated('GraphicsDevice#supportsVolumeTextures is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get supportsInstancing() {
         Debug.deprecated('GraphicsDevice#supportsInstancing is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get textureHalfFloatUpdatable() {
         Debug.deprecated('GraphicsDevice#textureHalfFloatUpdatable is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get extTextureFloat() {
         Debug.deprecated('GraphicsDevice#extTextureFloat is deprecated as it is always true');
         return true;
     }
 
+    /**
+     * @deprecated Always returns true.
+     * @ignore
+     */
     get extStandardDerivatives() {
         Debug.deprecated('GraphicsDevice#extStandardDerivatives is deprecated as it is always true.');
         return true;
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendSrc - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendDst - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @ignore
+     */
     setBlendFunction(blendSrc, blendDst) {
         Debug.deprecated('GraphicsDevice#setBlendFunction is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
@@ -1026,6 +1084,14 @@ class GraphicsDevice extends EventHandler {
         this.setBlendState(_tempBlendState);
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendSrc - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendDst - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendSrcAlpha - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @param {number} blendDstAlpha - The blend mode. Can be any of the BLENDMODE_* constants.
+     * @ignore
+     */
     setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
         Debug.deprecated('GraphicsDevice#setBlendFunctionSeparate is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
@@ -1035,6 +1101,12 @@ class GraphicsDevice extends EventHandler {
         this.setBlendState(_tempBlendState);
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendEquation - The blend equation. Can be any of the BLENDEQUATION_*
+     * constants.
+     * @ignore
+     */
     setBlendEquation(blendEquation) {
         Debug.deprecated('GraphicsDevice#setBlendEquation is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
@@ -1044,6 +1116,14 @@ class GraphicsDevice extends EventHandler {
         this.setBlendState(_tempBlendState);
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {number} blendEquation - The blend equation. Can be any of the BLENDEQUATION_*
+     * constants.
+     * @param {number} blendAlphaEquation - The blend equation. Can be any of the BLENDEQUATION_*
+     * constants.
+     * @ignore
+     */
     setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
         Debug.deprecated('GraphicsDevice#setBlendEquationSeparate is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
@@ -1053,6 +1133,14 @@ class GraphicsDevice extends EventHandler {
         this.setBlendState(_tempBlendState);
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {boolean} redWrite - True to enable writing of the red channel and false otherwise.
+     * @param {boolean} greenWrite - True to enable writing of the green channel and false otherwise.
+     * @param {boolean} blueWrite - True to enable writing of the blue channel and false otherwise.
+     * @param {boolean} alphaWrite - True to enable writing of the alpha channel and false otherwise.
+     * @ignore
+     */
     setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite) {
         Debug.deprecated('GraphicsDevice#setColorWrite is deprecated, use GraphicsDevice.setBlendState instead.');
         const currentBlendState = this.blendState;
@@ -1065,6 +1153,11 @@ class GraphicsDevice extends EventHandler {
         return this.blendState.blend;
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setBlendState instead.
+     * @param {boolean} blending - True to enable blending and false to disable it.
+     * @ignore
+     */
     setBlending(blending) {
         Debug.deprecated('GraphicsDevice#setBlending is deprecated, use GraphicsDevice.setBlendState instead.');
         _tempBlendState.copy(this.blendState);
@@ -1072,6 +1165,11 @@ class GraphicsDevice extends EventHandler {
         this.setBlendState(_tempBlendState);
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setDepthState instead.
+     * @param {boolean} write - True to enable depth writing and false otherwise.
+     * @ignore
+     */
     setDepthWrite(write) {
         Debug.deprecated('GraphicsDevice#setDepthWrite is deprecated, use GraphicsDevice.setDepthState instead.');
         _tempDepthState.copy(this.depthState);
@@ -1079,6 +1177,11 @@ class GraphicsDevice extends EventHandler {
         this.setDepthState(_tempDepthState);
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setDepthState instead.
+     * @param {number} func - The depth testing function. Can be any of the FUNC_* constants.
+     * @ignore
+     */
     setDepthFunc(func) {
         Debug.deprecated('GraphicsDevice#setDepthFunc is deprecated, use GraphicsDevice.setDepthState instead.');
         _tempDepthState.copy(this.depthState);
@@ -1086,6 +1189,11 @@ class GraphicsDevice extends EventHandler {
         this.setDepthState(_tempDepthState);
     }
 
+    /**
+     * @deprecated Use GraphicsDevice.setDepthState instead.
+     * @param {boolean} test - True to enable depth testing and false otherwise.
+     * @ignore
+     */
     setDepthTest(test) {
         Debug.deprecated('GraphicsDevice#setDepthTest is deprecated, use GraphicsDevice.setDepthState instead.');
         _tempDepthState.copy(this.depthState);

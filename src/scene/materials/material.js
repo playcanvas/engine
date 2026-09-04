@@ -367,11 +367,23 @@ class Material {
         return this.shaderChunks.version;
     }
 
+    /**
+     * @deprecated Use Material.getShaderChunks instead. For example:
+     * material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
+     * @type {Object<string, string>}
+     * @ignore
+     */
     set chunks(value) {
         Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         this._oldChunks = value;
     }
 
+    /**
+     * @deprecated Use Material.getShaderChunks instead. For example:
+     * material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")
+     * @type {Object<string, string>}
+     * @ignore
+     */
     get chunks() {
         Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));

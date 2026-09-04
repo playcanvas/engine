@@ -63,6 +63,10 @@ const isBlack = (color) => {
  * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
  * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
  *
+ * A property assignment only reaches the GPU once {@link Material#update} is called: a `diffuse`
+ * or `emissive` change made after the material's first frame is silently ignored until
+ * `material.update()` runs.
+ *
  * @property {Color} ambient The ambient color of the material, specified in sRGB color space. This
  * color value is 3-component (RGB), where each component is between 0 and 1.
  * @property {Color} diffuse The diffuse color of the material, specified in sRGB color space. This
@@ -252,6 +256,8 @@ const isBlack = (color) => {
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be
  * "r", "g", "b" or "a".
  * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
+ * Materials imported from glTF enable {@link StandardMaterial#glossInvert}, which reverses this:
+ * on those materials gloss holds roughness, so 0 is shiny and 1 is rough.
  * @property {Texture|null} glossMap Gloss map (default is null). If specified, will be multiplied
  * by normalized gloss value and/or vertex colors.
  * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this

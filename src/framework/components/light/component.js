@@ -415,6 +415,10 @@ class LightComponent extends Component {
     /**
      * Sets whether the light will cast shadows. Defaults to false.
      *
+     * For a directional light, shadows are only rendered out to
+     * {@link LightComponent#shadowDistance} from the viewpoint, which defaults to 40. Size that to
+     * the area the camera actually sees, or shadows simply stop appearing beyond it.
+     *
      * @type {boolean}
      */
     set castShadows(value) {
