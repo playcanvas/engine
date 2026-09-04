@@ -8,8 +8,8 @@ PlayCanvas is an open-source WebGL/WebGPU game engine written in JavaScript. It'
 
 - **Language**: JavaScript (ES2022) with JSDoc for TypeScript type definitions
 - **Module System**: ES Modules
-- **Node Version**: >=18.0.0
-- **Build System**: Rollup
+- **Node Version**: >=18.3.0 (see `engines` in `package.json`)
+- **Build System**: esbuild for the JavaScript bundles (`build.mjs`); TypeScript plus Rollup (`rollup-plugin-dts`) for the bundled `.d.ts`
 - **Testing**: Mocha + Chai + Sinon
 - **Linting**: ESLint with @playcanvas/eslint-config
 - **License**: MIT
@@ -38,6 +38,7 @@ PlayCanvas is an open-source WebGL/WebGPU game engine written in JavaScript. It'
   - `src/scene/` - Scene graph, rendering, materials, shaders
   - `src/framework/` - High-level components and application framework
   - `src/extras/` - Optional extras and utilities
+  - `src/deprecated/` - Side-effect-free aliases for deprecated APIs (see section 9)
 - **Build output**: Generated files go in `build/` (never edit these directly)
 - **Examples**: Live in `examples/src/examples/`
 - **Tests**: Unit tests go in `test/` with `.mjs` extension
@@ -117,6 +118,7 @@ This hierarchy ensures:
 - **Test location**: `test/` directory, organized by module
 - **Test naming**: Use descriptive names that explain what is being tested
 - **Run tests**: `npm test` (or `npm run test:coverage` for coverage)
+- **Bundle tests**: `test/bundles/` checks the built bundles (exports, tree shaking, live bindings). Run `npm run build` first, then `npm run test:build`
 - **Test structure**:
   ```javascript
   describe('ClassName', function () {
@@ -165,6 +167,14 @@ This is a **performance-critical** engine. Always consider:
 
 - **Source is in `src/`**: Never edit files in `build/` directory
 - **Module exports**: Main exports defined in `src/index.js`
+- **Bundler**: `build.mjs` drives esbuild (`utils/esbuild-build-target.mjs`). Each build type (`rel`, `dbg`, `prf`, `min`) is emitted as a UMD bundle (`build/playcanvas*.js`) and an ESM bundle (`build/playcanvas*.mjs`). The `rel`, `dbg` and `prf` ESM builds also emit an unbundled module tree (`build/playcanvas/src/`, `build/playcanvas.dbg/src/`, `build/playcanvas.prf/src/`), which is what `import 'playcanvas'` resolves to
+- **Type declarations**: `npm run build:types` runs `tsc` over the JSDoc, patches the output with `utils/plugins/rollup-types-fixup.mjs` (hand-declared `StandardMaterial` accessors) and bundles it with Rollup (`rollup-plugin-dts`) into `build/playcanvas.d.ts`
+- **Debug stripping**: the `Debug`, `DebugHelper`, `DebugGraphics` and `WebgpuDebug` calls listed in `STRIP_FUNCTIONS` (`utils/esbuild-build-target.mjs`) are removed from every build except `dbg`. `// #if _DEBUG` blocks survive only in `dbg`; `// #if _PROFILER` blocks survive in `dbg` and `prf`
+- **Tree shaking**: `package.json` declares `"sideEffects": false`, so consumers' bundlers drop every module they don't import from. Therefore:
+  - Never add module-scope side effects (top-level calls, prototype patches, registry writes, `window` access). Do registration inside constructors or functions
+  - Deprecated constant aliases and helper functions go in `src/deprecated/deprecated.js`, which must stay free of module-scope side effects
+  - Deprecated prototype shims (e.g. `Object.defineProperty(Foo.prototype, ...)`) go at the bottom of the module that defines the class, so they ship only when that class does
+  - `test/bundles/treeshake.test.mjs` guards both rules
 
 ### 10. Dependencies
 
@@ -174,7 +184,7 @@ This is a **performance-critical** engine. Always consider:
 ### 11. Error Handling
 
 - **Debug class**: Use `Debug` class (`src/core/debug.js`) for logging and assertions
-  - Methods include: `assert()`, `warn()`, `warnOnce()`, `error()`, `deprecated()`, `log()`, `trace()`
+  - Methods include: `assert()`, `warn()`, `warnOnce()`, `error()`, `errorOnce()`, `deprecated()`, `removed()`, `log()`, `logOnce()`, `trace()`
   - **Important**: All Debug methods are stripped out in production builds
   - Use `*Once()` variants to avoid spam in loops or frequent calls
   - Don't use Debug in hot paths - even in debug builds, excessive logging impacts performance
@@ -207,7 +217,7 @@ This is a **performance-critical** engine. Always consider:
 ### 14. Browser Compatibility
 
 - **Modern browsers only**: ES6+ features are allowed
-- **No polyfills in engine**: Users can add their own if needed (except `src/polyfill/`)
+- **No polyfills in engine**: Users can add their own if needed
 - **WebGL 2.0 minimum**: WebGL 1.0 is not supported
 - **WebGPU support**: Must maintain compatibility with WebGPU API
 
