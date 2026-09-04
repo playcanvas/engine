@@ -6,7 +6,9 @@ import {
     JOINTTYPE_6DOF, JOINTTYPE_BALL, JOINTTYPE_FIXED, JOINTTYPE_HINGE, JOINTTYPE_SLIDER,
     MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED
 } from '../../../../src/framework/components/joint/constants.js';
+import { BODYTYPE_DYNAMIC } from '../../../../src/framework/components/rigid-body/constants.js';
 import { Entity } from '../../../../src/framework/entity.js';
+import { NullPhysicsWorld } from '../../../../src/framework/physics/null/null-physics-world.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -421,6 +423,136 @@ describe('JointComponent', function () {
                 targetB.destroy();
                 e.destroy();
             }).to.not.throw();
+        });
+
+    });
+
+    // A change to the constraint has no effect on a sleeping simulation island unless the bodies
+    // are woken, so creating and destroying the constraint must activate both of them. Run
+    // against the null physics backend, which takes joints through their full lifecycle.
+    describe('body activation', function () {
+
+        beforeEach(function () {
+            app.systems.rigidbody.setPhysicsWorld(new NullPhysicsWorld());
+        });
+
+        function addBodyEntity(name) {
+            const e = new Entity(name);
+            app.root.addChild(e);
+            e.addComponent('collision');
+            e.addComponent('rigidbody', { type: BODYTYPE_DYNAMIC });
+            return e;
+        }
+
+        /**
+         * Counts activations of each entity's backend body.
+         *
+         * @param {...Entity} entities - The body entities to instrument.
+         * @returns {() => number[]} A function returning the per-entity activation counts.
+         */
+        function countActivations(...entities) {
+            const counts = entities.map(() => 0);
+            entities.forEach((entity, i) => {
+                const body = entity.rigidbody._body;
+                const activate = body.activate;
+                body.activate = function () {
+                    counts[i]++;
+                    activate.call(this);
+                };
+            });
+            return () => counts;
+        }
+
+        /**
+         * Creates a joint entity that is not yet armed, so that the constraint is only created
+         * once the activation counters are in place.
+         *
+         * @param {object} data - The joint component data.
+         * @returns {Entity} The joint entity.
+         */
+        function addDisabledJoint(data) {
+            const e = new Entity('joint');
+            app.root.addChild(e);
+            e.addComponent('joint', { ...data, enabled: false });
+            expect(e.joint._joint).to.equal(null);
+            return e;
+        }
+
+        it('wakes both bodies when the constraint is created', function () {
+            const bodyA = addBodyEntity('bodyA');
+            const bodyB = addBodyEntity('bodyB');
+            const e = addDisabledJoint({ entityA: bodyA, entityB: bodyB });
+
+            const counts = countActivations(bodyA, bodyB);
+            e.joint.enabled = true;
+
+            expect(e.joint._joint).to.exist;
+            expect(counts()).to.deep.equal([1, 1]);
+        });
+
+        it('wakes both bodies when the component is disabled', function () {
+            const bodyA = addBodyEntity('bodyA');
+            const bodyB = addBodyEntity('bodyB');
+            const e = addDisabledJoint({ entityA: bodyA, entityB: bodyB });
+            e.joint.enabled = true;
+
+            const counts = countActivations(bodyA, bodyB);
+            e.joint.enabled = false;
+
+            expect(e.joint._joint).to.equal(null);
+            expect(counts()).to.deep.equal([1, 1]);
+        });
+
+        it('wakes both bodies when the component is removed', function () {
+            const bodyA = addBodyEntity('bodyA');
+            const bodyB = addBodyEntity('bodyB');
+            const e = addDisabledJoint({ entityA: bodyA, entityB: bodyB });
+            e.joint.enabled = true;
+
+            const counts = countActivations(bodyA, bodyB);
+            e.removeComponent('joint');
+
+            expect(counts()).to.deep.equal([1, 1]);
+        });
+
+        // the entity references are dropped as part of the change, so the wake has to happen
+        // while the outgoing references are still in hand
+        it('wakes the previously constrained bodies when an entity reference is cleared', function () {
+            const bodyA = addBodyEntity('bodyA');
+            const bodyB = addBodyEntity('bodyB');
+            const e = addDisabledJoint({ entityA: bodyA, entityB: bodyB });
+            e.joint.enabled = true;
+
+            const counts = countActivations(bodyA, bodyB);
+            e.joint.entityA = null;
+
+            expect(e.joint._joint).to.equal(null);
+            expect(counts()).to.deep.equal([1, 1]);
+        });
+
+        it('wakes both bodies when the constraint is rebuilt by refreshFrames', function () {
+            const bodyA = addBodyEntity('bodyA');
+            const bodyB = addBodyEntity('bodyB');
+            const e = addDisabledJoint({ entityA: bodyA, entityB: bodyB });
+            e.joint.enabled = true;
+
+            const counts = countActivations(bodyA, bodyB);
+            e.joint.refreshFrames();
+
+            // once for the teardown and once for the rebuild
+            expect(e.joint._joint).to.exist;
+            expect(counts()).to.deep.equal([2, 2]);
+        });
+
+        it('wakes nothing when there is no constraint to tear down', function () {
+            const bodyA = addBodyEntity('bodyA');
+            const bodyB = addBodyEntity('bodyB');
+            const e = addDisabledJoint({ entityA: bodyA, entityB: bodyB });
+
+            const counts = countActivations(bodyA, bodyB);
+            e.joint.enableCollision = true;
+
+            expect(counts()).to.deep.equal([0, 0]);
         });
 
     });

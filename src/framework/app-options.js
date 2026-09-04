@@ -7,6 +7,7 @@
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Lightmapper } from './lightmapper/lightmapper.js'
  * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { PhysicsWorld } from './physics/physics-world.js'
  * @import { ResourceHandler } from './handlers/handler.js'
  * @import { SoundManager } from '../platform/sound/manager.js'
  * @import { TouchDevice } from '../platform/input/touch-device.js'
@@ -80,6 +81,23 @@ class AppOptions {
      * @type {SoundManager}
      */
     soundManager;
+
+    /**
+     * The physics backend used to simulate rigid bodies, collisions and joints, such as
+     * {@link AmmoPhysicsWorld} or {@link NullPhysicsWorld}. When set, the application installs
+     * it into the {@link RigidBodyComponentSystem} during {@link AppBase#init}, so
+     * {@link AppOptions#componentSystems} must include {@link RigidBodyComponentSystem}. A
+     * useful simulation also requires {@link CollisionComponentSystem} - rigid bodies and
+     * triggers obtain their shapes from collision components - and {@link JointComponentSystem}
+     * if joints are used. The rigid body system registers itself as the world's contact
+     * listener. When omitted, an {@link AmmoPhysicsWorld} is created automatically once
+     * application libraries have loaded, if the Ammo.js WasmModule is present. The application
+     * takes ownership of the world and destroys it with the application.
+     *
+     * @type {PhysicsWorld}
+     * @alpha
+     */
+    physicsWorld;
 
     /**
      * The graphics device.

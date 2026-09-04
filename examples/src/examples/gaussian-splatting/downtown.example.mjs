@@ -1,9 +1,8 @@
 // @config
 //
 // Streams a large real-world city downtown (Lublin, Poland) reconstructed as Gaussian splats.
-// 250M splats, 18856 files, 6.0 GB for streaming.
+// 259M splats at full detail (517M across 10 LOD levels), 20767 files, 6.1 GB for streaming.
 //
-// @flag NO_MINISTATS
 // @flag PREFERRED_DEVICE=webgpu
 //
 // @credit
@@ -33,6 +32,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_DEBUG_LOD,
     GSPLAT_DEBUG_NONE,
+    GSPLAT_LODMODE_ERROR,
     GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSplatComponentSystem,
@@ -52,7 +52,6 @@ import {
     TouchDevice,
     Vec3,
     createGraphicsDevice,
-    math,
     platform
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -116,22 +115,17 @@ app.on('destroy', () => {
 
 const config = {
     name: 'Lublin-downtown',
-    // The capture was split into 4 balanced pieces, each built as a multi-LOD streamed SOG bundle.
-    // All pieces share the original world coordinates, so they load at the origin and reassemble.
-    urls: [
-        'https://code.playcanvas.com/examples_data/downtown_01/ssog0/lod-meta.json',
-        'https://code.playcanvas.com/examples_data/downtown_01/ssog1/lod-meta.json',
-        'https://code.playcanvas.com/examples_data/downtown_01/ssog2/lod-meta.json',
-        'https://code.playcanvas.com/examples_data/downtown_01/ssog3/lod-meta.json'
-    ],
+    // The whole capture as ONE multi-LOD streamed SOG bundle, built from a full-scene adaptive
+    // (error-metric) LOD chain — no splitting. Supersedes downtown_01, which was the same capture
+    // cut into 4 pieces because the decimator could not hold the 17.6 GB source in one pass.
+    url: 'https://code.playcanvas.com/examples_data/downtown_02/lod-meta.json',
     // Whole-scene orientation (euler degrees). The capture stores height on Z; this rotates it to
-    // be Y-up for the fly camera. VERIFY/ADJUST once the real data is loaded.
+    // be Y-up for the fly camera.
     sceneRotation: [-90, 0, 0],
     lodUpdateDistance: 4,
     lodUnderfillLimit: 5,
     // Distance-based LOD ramp base distance (LOD = 1 + log(d / base) / log(mult)); the multiplier
     // is derived from the splat budget — see the budget section below
-    lodBaseDistance: 20,
     // Fly speeds
     moveSpeed: 13,
     moveFastSpeed: 100,
@@ -143,10 +137,7 @@ const config = {
 };
 
 const assets = {
-    ssog0: new Asset('ssog0', 'gsplat', { url: config.urls[0] }),
-    ssog1: new Asset('ssog1', 'gsplat', { url: config.urls[1] }),
-    ssog2: new Asset('ssog2', 'gsplat', { url: config.urls[2] }),
-    ssog3: new Asset('ssog3', 'gsplat', { url: config.urls[3] }),
+    scene: new Asset('scene', 'gsplat', { url: config.url }),
     sky: new Asset('hdri', 'texture', { url: config.skyUrl }, { mipmaps: false })
 };
 
@@ -157,9 +148,7 @@ await new Promise((resolve) => {
 app.start();
 
 // Custom mini stats showing gsplat counts
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
-
-const pieces = [assets.ssog0, assets.ssog1, assets.ssog2, assets.ssog3];
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
 
 // --- scene-wide gsplat defaults ---
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -172,6 +161,16 @@ app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
 app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
 
+// How the splat budget picks LOD levels: 'error' spends it where the bundle's per-node error
+// metadata says detail is worth most; 'distance' orders detail by camera distance alone and
+// ignores that metadata. Error is the default and the reason the bundle carries the metrics.
+data.set('lodMode', GSPLAT_LODMODE_ERROR);
+const applyLodMode = () => {
+    app.scene.gsplat.lodMode = data.get('lodMode');
+};
+applyLodMode();
+data.on('lodMode:set', applyLodMode);
+
 // Colorize LODs debug toggle (off by default)
 data.set('colorizeLods', false);
 const applyColorizeLods = () => {
@@ -183,49 +182,31 @@ data.on('colorizeLods:set', applyColorizeLods);
 // Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
 app.scene.gsplat.renderer = device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
 
-// --- create the 4 streamed pieces under a single root (shared coordinate frame) ---
-const root = new Entity('downtown');
-root.setLocalEulerAngles(config.sceneRotation[0], config.sceneRotation[1], config.sceneRotation[2]);
-app.root.addChild(root);
+// --- the streamed scene, rotated into a Y-up frame ---
+const entity = new Entity(config.name);
+entity.setLocalEulerAngles(config.sceneRotation[0], config.sceneRotation[1], config.sceneRotation[2]);
+entity.addComponent('gsplat', { asset: assets.scene });
+app.root.addChild(entity);
 
-/** @type {any[]} */
-const gsInstances = [];
-let totalSplats = 0;
-let lodLevels = 1;
-for (let i = 0; i < pieces.length; i++) {
-    const entity = new Entity(`${config.name}-${i}`);
-    entity.addComponent('gsplat', { asset: pieces[i] });
-    root.addChild(entity);
-    gsInstances.push(/** @type {any} */ (entity.gsplat));
-
-    const res = /** @type {any} */ (pieces[i].resource);
-    totalSplats += res.numSplats ?? 0;
-    lodLevels = Math.max(lodLevels, res.octree?.lodLevels ?? 1);
-}
+const gs = /** @type {any} */ (entity.gsplat);
+const resource = /** @type {any} */ (assets.scene.resource);
+const lodLevels = resource.octree?.lodLevels ?? 1;
 const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
-data.set('data.stats.splatsTotal', toM(totalSplats));
+data.set('data.stats.splatsTotal', toM(resource.numSplats ?? 0));
 
-// Combined world-space bounds, for framing the camera
+// World-space bounds, for framing the camera and sizing the reveal
 const worldAabb = new BoundingBox();
-root.children.forEach((entity, i) => {
-    const res = /** @type {any} */ (pieces[i].resource);
-    const b = new BoundingBox();
-    b.setFromTransformedAabb(res.aabb, entity.getWorldTransform());
-    if (i === 0) worldAabb.copy(b);
-    else worldAabb.add(b);
-});
+worldAabb.setFromTransformedAabb(resource.aabb, entity.getWorldTransform());
 const center = worldAabb.center.clone();
 const radius = worldAabb.halfExtents.length();
 
 // --- circular reveal: keep all splats hidden until the first frame is ready, then sweep them
-// in from the INITIAL CAMERA POSITION. Runs on the shared (unified) gsplat material, so one
-// instance drives all four pieces. While loading, the effect time is pinned negative
+// in from the INITIAL CAMERA POSITION. While loading, the effect time is pinned negative
 // (everything hidden, see the update loop); it is released on frame:ready below. ---
 const camStart = new Vec3(config.cameraPosition[0], config.cameraPosition[1], config.cameraPosition[2]);
 const revealReach = camStart.distance(center) + radius; // furthest splat from the camera start
-const revealHost = /** @type {Entity} */ (root.children[0]);
-revealHost.addComponent('script');
-const reveal = /** @type {any} */ (/** @type {any} */ (revealHost.script).create(GSplatRevealRadial));
+entity.addComponent('script');
+const reveal = /** @type {any} */ (/** @type {any} */ (entity.script).create(GSplatRevealRadial));
 reveal.center.copy(camStart);
 reveal.endRadius = revealReach * 1.1; // reaches the whole scene from the camera start
 reveal.speed = (revealReach * 1.1) / 3; // sweep across in ~3s
@@ -248,10 +229,8 @@ app.scene.sky.type = SKYTYPE_INFINITE;
 // Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
 // nearby detail, then open up to the full range once the first frame's data is ready.
 const worstLod = lodLevels - 1;
-gsInstances.forEach((gs) => {
-    gs.lodRangeMin = Math.max(0, worstLod - 3);
-    gs.lodRangeMax = worstLod;
-});
+gs.lodRangeMin = Math.max(0, worstLod - 3);
+gs.lodRangeMax = worstLod;
 const gsplatSystem = /** @type {any} */ (app.systems.gsplat);
 const onFrameReady = (
     /** @type {any} */ cam,
@@ -261,10 +240,8 @@ const onFrameReady = (
 ) => {
     if (ready && loadingCount === 0) {
         gsplatSystem.off('frame:ready', onFrameReady);
-        gsInstances.forEach((gs) => {
-            gs.lodRangeMin = 0;
-            gs.lodRangeMax = worstLod;
-        });
+        gs.lodRangeMin = 0;
+        gs.lodRangeMax = worstLod;
         // Reveal the backdrop and sweep the splats in, together, now that the scene is ready
         app.scene.skybox = skyboxCubemap;
         revealStarted = true;
@@ -306,21 +283,12 @@ Object.assign(cc, {
     focusPoint: focusPoint
 });
 
-// --- Splat budget (millions; 0 = no cap), driving both the cap and the LOD multiplier.
-// Base distance is fixed (config.lodBaseDistance); the multiplier interpolates 1.5 (at 2M) to
-// 2.5 (at the Extreme budget), clamped — coarser falloff as the budget grows. Default to the
-// Medium quality preset (desktop 8M / mobile 2M), so a quality button is lit at launch. ---
-const extremeBudget = platform.mobile ? 8 : 25;
+// --- Splat budget (millions). LOD levels are chosen to fit it, spending splats where they remove
+// the most approximation error. Default to the Medium quality preset (desktop 8M / mobile 4M), so
+// a quality button is lit at launch. ---
 data.set('splatBudget', platform.mobile ? 4 : 8);
 const applySplatBudget = () => {
-    const budget = data.get('splatBudget');
-    app.scene.gsplat.splatBudget = Math.round(budget * 1000000);
-    const t = math.clamp((budget - 2) / (extremeBudget - 2), 0, 1);
-    const mult = 1.5 + t * (2.5 - 1.5);
-    for (let i = 0; i < gsInstances.length; i++) {
-        gsInstances[i].lodBaseDistance = config.lodBaseDistance;
-        gsInstances[i].lodMultiplier = mult;
-    }
+    app.scene.gsplat.splatBudget = Math.round(data.get('splatBudget') * 1000000);
 };
 applySplatBudget();
 data.on('splatBudget:set', applySplatBudget);
@@ -433,3 +401,5 @@ app.on('update', () => {
         }
     }
 });
+
+export { miniStats };

@@ -6,10 +6,11 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { LayerRenderStep } from './layer-render-step.js';
-import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SHADER_FORWARD } from '../constants.js';
+import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SCENETEXTURE_DEPTH, SHADER_FORWARD, sceneTextureUniformNames } from '../constants.js';
 
 /**
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Camera } from '../camera.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Layer } from '../layer.js'
  * @import { Renderer } from './renderer.js'
@@ -61,11 +62,43 @@ class RenderPassForward extends RenderPass {
     gammaCorrection;
 
     /**
-     * The tone mapping setting for the render pass. In not set, setting from the camera is used.
+     * The tone mapping setting for the render pass. If not set, setting from the camera is used.
      *
      * @type {number|undefined}
      */
     toneMapping;
+
+    /**
+     * The names of the scene textures this pass renders alongside the scene color, in the order of
+     * the color attachments they are rendered to. If not set, setting from the camera is used. Only
+     * the passes rendering to a render target the scene textures are attached to set this, so that
+     * the camera's other passes, for example the one rendering the UI to the output render target,
+     * do not write them.
+     *
+     * @type {string[]|undefined}
+     */
+    sceneTextures;
+
+    /**
+     * The camera whose scene textures this pass publishes when it finishes, making them available to
+     * the passes which consume them, or null if it publishes none. Only the last pass rendering to the
+     * render target they are attached to sets this - publishing earlier would expose an attachment of a
+     * render target the remaining passes still render into, and the materials they render could then
+     * sample it, which is not allowed.
+     *
+     * @type {Camera|null}
+     */
+    sceneTexturesCamera = null;
+
+    /**
+     * True if this pass clears the uniforms the scene textures are published to before it renders. Only
+     * the first pass rendering to the render target they are attached to sets this, and only when no
+     * depth prepass has published to those uniforms already - it is what stops a material from sampling
+     * a scene texture which nothing has produced yet.
+     *
+     * @type {boolean}
+     */
+    clearSceneTextures = false;
 
     /**
      * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
@@ -179,7 +212,11 @@ class RenderPassForward extends RenderPass {
             const camera = cameraComponent.camera;
             const fullSizeClearRect = camera.fullSizeClearRect;
 
-            this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined);
+            // when this pass renders the scene textures, the camera's clear color describes the scene
+            // color attachment alone - the clear values of the scene texture attachments belong to
+            // whoever owns them, and are left alone here
+            const colorIndex = this.sceneTextures?.length ? 0 : undefined;
+            this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined, colorIndex);
             this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }
@@ -207,6 +244,18 @@ class RenderPassForward extends RenderPass {
 
     before() {
         const { layerRenderSteps } = this;
+
+        // Clear the uniforms the scene textures are published to, so that a material sampling them
+        // reports that they are not available - which is the case, as nothing has produced them for this
+        // frame yet - instead of silently reading a texture this pass renders into, or one that another
+        // camera published earlier in the frame. Only the first pass rendering to the render target they
+        // are attached to does this, and only when no depth prepass published to those uniforms before it.
+        if (this.clearSceneTextures) {
+            const { scope } = this.device;
+            this.sceneTextures.forEach((name) => {
+                scope.resolve(sceneTextureUniformNames[name]).setValue(null);
+            });
+        }
 
         // onPreRender events
         for (let i = 0; i < layerRenderSteps.length; i++) {
@@ -237,6 +286,32 @@ class RenderPassForward extends RenderPass {
     }
 
     after() {
+
+        // Publish the scene textures this pass rendered, making them available to the passes which
+        // consume them. This happens before the events below, so that a handler reading them sees the
+        // ones from this frame. Note that the depth prepass publishes its own depth to the same
+        // uniform, from its own after - the two are producers of the same thing, and this pass runs
+        // later, so the scene texture depth, which additionally covers the blended geometry, is what
+        // the consumers sample.
+        const sceneTextures = this.sceneTextures;
+        if (this.sceneTexturesCamera && sceneTextures?.length) {
+            const { renderTarget } = this;
+            Debug.assert(renderTarget.colorBufferCount > sceneTextures.length,
+                'The render target of a pass rendering the scene textures needs an attachment for each of them, in addition to the one holding the scene color.');
+
+            for (let i = 0; i < sceneTextures.length; i++) {
+                const uniformName = sceneTextureUniformNames[sceneTextures[i]];
+                Debug.assert(uniformName, `Scene texture '${sceneTextures[i]}' has no uniform to be published under, see sceneTextureUniformNames.`);
+                const texture = renderTarget.getColorBuffer(i + 1);
+                this.device.scope.resolve(uniformName).setValue(texture);
+
+                // the uniforms are global, so the depth is recorded on the camera as well - that is what
+                // anything wanting this camera's depth in particular reads, see SceneDepthReader
+                if (sceneTextures[i] === SCENETEXTURE_DEPTH) {
+                    this.sceneTexturesCamera.publishSceneDepthMap(texture, this.device.renderVersion);
+                }
+            }
+        }
 
         // onPostRender events
         for (let i = 0; i < this.layerRenderSteps.length; i++) {
@@ -270,9 +345,11 @@ class RenderPassForward extends RenderPass {
 
         if (cameraComponent) {
 
-            // override gamma correction and tone mapping settings
+            // override gamma correction, tone mapping and scene texture settings
             const originalGammaCorrection = cameraComponent.gammaCorrection;
             const originalToneMapping = cameraComponent.toneMapping;
+            const originalSceneTextures = cameraComponent.shaderParams.sceneTextures;
+            if (this.sceneTextures !== undefined) cameraComponent.shaderParams.sceneTextures = this.sceneTextures;
             if (this.gammaCorrection !== undefined) cameraComponent.gammaCorrection = this.gammaCorrection;
             if (this.toneMapping !== undefined) cameraComponent.toneMapping = this.toneMapping;
 
@@ -292,6 +369,12 @@ class RenderPassForward extends RenderPass {
                 options.clearColor = step.clearColor;
                 options.clearDepth = step.clearDepth;
                 options.clearStencil = step.clearStencil;
+
+                // unlike the clear of the render pass itself, this clear is not attachment aware - it
+                // clears all the color attachments of the render target, and so would also clear the
+                // scene textures, which this pass does not own the content of
+                Debug.assert(!(options.clearColor && this.sceneTextures?.length),
+                    'Clearing the color inside a render pass which renders the scene textures is not supported, as the clear would also clear those. This happens when the camera does not clear the whole render target, or when it is not the first one rendering to it.', this);
             }
 
             const renderTarget = step.renderTarget ?? device.backBuffer;
@@ -308,9 +391,10 @@ class RenderPassForward extends RenderPass {
             // layer post render event
             scene.fire(EVENT_POSTRENDER_LAYER, cameraComponent, layer, transparent);
 
-            // restore gamma correction and tone mapping settings
+            // restore gamma correction, tone mapping and scene texture settings
             if (this.gammaCorrection !== undefined) cameraComponent.gammaCorrection = originalGammaCorrection;
             if (this.toneMapping !== undefined) cameraComponent.toneMapping = originalToneMapping;
+            if (this.sceneTextures !== undefined) cameraComponent.shaderParams.sceneTextures = originalSceneTextures;
         }
 
         DebugGraphics.popGpuMarker(this.device);

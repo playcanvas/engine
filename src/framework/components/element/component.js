@@ -1264,8 +1264,8 @@ class ElementComponent extends Component {
 
     /**
      * Sets the color of the image for {@link ELEMENTTYPE_IMAGE} elements or the color of the text for
-     * {@link ELEMENTTYPE_TEXT} elements. Only the RGB channels are used; the alpha channel is ignored,
-     * so use {@link opacity} to control transparency.
+     * {@link ELEMENTTYPE_TEXT} elements, specified in sRGB color space. Only the RGB channels are
+     * used; the alpha channel is ignored, so use {@link opacity} to control transparency.
      *
      * @type {Color}
      */
@@ -1401,6 +1401,32 @@ class ElementComponent extends Component {
     get wrapLines() {
         if (this._text) {
             return this._text.wrapLines;
+        }
+
+        return null;
+    }
+
+    /**
+     * Sets whether wrapped lines are stretched to be flush with both edges of the element, by
+     * widening the gaps between their words. The last line of the text and any line ended by an
+     * explicit line break are not stretched, and follow {@link alignment} instead - as does a line
+     * with no gaps to widen. Only works for {@link ELEMENTTYPE_TEXT} elements, and only has an
+     * effect when {@link wrapLines} is set to true and the element has a fixed width.
+     *
+     * @type {boolean}
+     */
+    set justify(arg) {
+        this._setValue('justify', arg);
+    }
+
+    /**
+     * Gets whether wrapped lines are stretched to be flush with both edges of the element.
+     *
+     * @type {boolean}
+     */
+    get justify() {
+        if (this._text) {
+            return this._text.justify;
         }
 
         return null;
@@ -1859,7 +1885,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} elements.
+     * Sets the text outline effect color and opacity, with the color specified in sRGB color space.
+     * Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Color}
      */
@@ -1904,7 +1931,8 @@ class ElementComponent extends Component {
     }
 
     /**
-     * Sets the text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} elements.
+     * Sets the text shadow effect color and opacity, with the color specified in sRGB color space.
+     * Only works for {@link ELEMENTTYPE_TEXT} elements.
      *
      * @type {Color}
      */
@@ -2524,11 +2552,18 @@ class ElementComponent extends Component {
     }
 
     onLayersChanged(oldComp, newComp) {
-        this.addModelToLayers(this._image ? this._image._renderable.model : this._text._model);
-        oldComp.off('add', this.onLayerAdded, this);
-        oldComp.off('remove', this.onLayerRemoved, this);
-        newComp.on('add', this.onLayerAdded, this);
-        newComp.on('remove', this.onLayerRemoved, this);
+        // group elements have neither an image nor a text element
+        if (this._image) {
+            this.addModelToLayers(this._image._renderable.model);
+        } else if (this._text) {
+            this.addModelToLayers(this._text._model);
+        }
+
+        // store the new handles, so that onDisable can unsubscribe from the current composition
+        this._evtLayerAdded?.off();
+        this._evtLayerAdded = newComp.on('add', this.onLayerAdded, this);
+        this._evtLayerRemoved?.off();
+        this._evtLayerRemoved = newComp.on('remove', this.onLayerRemoved, this);
     }
 
     onLayerAdded(layer) {
@@ -2613,6 +2648,12 @@ class ElementComponent extends Component {
     }
 
     onBeforeRemove() {
+        // removing a component does not disable it first, so undo what onEnable set up. This runs
+        // before the image / text elements are destroyed below, as onDisable uses them.
+        if (this.enabled && this.entity.enabled) {
+            this.onDisable();
+        }
+
         this.entity.off('insert', this._onInsert, this);
         this._unpatch();
         if (this._image) {

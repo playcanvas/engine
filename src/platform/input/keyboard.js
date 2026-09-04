@@ -59,7 +59,20 @@ const _keyCodeToKeyIdentifier = {
  * changes and window blur events by clearing key states. The Keyboard instance must be attached to
  * a DOM element before it can detect key events.
  *
+ * Key state is derived from the legacy `KeyboardEvent.keyCode` property. Browsers populate it for
+ * real input, but a hand-constructed `new KeyboardEvent(...)` leaves it at 0, so synthesized events
+ * must set `keyCode` explicitly in order to be observed.
+ *
+ * {@link Keyboard#wasPressed} and {@link Keyboard#wasReleased} compare against a snapshot taken
+ * once per frame, so a keydown and keyup delivered within the same task are seen by neither. Hold
+ * the key across at least one frame.
+ *
  * Your application's Keyboard instance is managed and accessible via {@link AppBase#keyboard}.
+ *
+ * For pointer-lock-aware, frame-accumulated input deltas rather than raw events, see
+ * {@link KeyboardMouseSource}, {@link GamepadSource} and {@link MultiTouchSource}, which feed
+ * {@link InputController}s such as {@link OrbitController}, {@link FlyController} and
+ * {@link FocusController}.
  *
  * @category Input
  */

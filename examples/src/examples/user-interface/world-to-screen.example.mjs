@@ -38,7 +38,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    checkboard: new Asset('checkboard', 'texture', { url: './assets/textures/checkboard.png' }),
+    checkboard: new Asset('checkboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true }),
     font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 

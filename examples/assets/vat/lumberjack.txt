@@ -1,0 +1,11 @@
+The lumberjack model has been obtained from this address:
+https://sketchfab.com/3d-models/low-poly-lumberjack-a93a29105fc44bf594f8100b7726bcec
+
+Title: Low Poly Lumberjack
+Author: Daz (https://sketchfab.com/Darren.Hogan)
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/
+
+lumberjack.vat was generated from this file by the converter in scripts/esm/vat/vat-converter.mjs,
+sampled at 10 frames per second.

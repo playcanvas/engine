@@ -554,6 +554,12 @@ class Asset extends EventHandler {
      * Take a callback which is called as soon as the asset is loaded. If the asset is already
      * loaded the callback is called straight away.
      *
+     * The callback fires on success only, and a failed load still marks the asset as loaded while
+     * firing `error` rather than `load`. So a callback registered before the failure never runs,
+     * and one registered after it runs immediately with {@link Asset#resource} still null. Listen
+     * for the `error` event as well whenever a failure has to be handled, check `asset.resource`
+     * inside the callback, and never await this callback alone.
+     *
      * @param {AssetReadyCallback} callback - The function called when the asset is ready. Passed
      * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
@@ -598,7 +604,7 @@ class Asset extends EventHandler {
         }
 
         this.fire('unload', this);
-        this.registry.fire(`unload:${this.id}`, this);
+        this.registry?.fire(`unload:${this.id}`, this);
 
         const old = this._resources;
 
@@ -613,7 +619,7 @@ class Asset extends EventHandler {
 
         // remove resource from loader cache
         if (this.file) {
-            this.registry._loader.clearCache(this.getFileUrl(), this.type);
+            this.registry?._loader.clearCache(this.getFileUrl(), this.type);
         }
 
         // destroy resources

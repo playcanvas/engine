@@ -13,7 +13,7 @@ varying gaussianColor: half4;
 
 const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
 
-#ifdef PREPASS_PASS
+#if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
     varying vLinearDepth: f32;
 #endif
 
@@ -73,7 +73,11 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     // evaluate spherical harmonics
     #if SH_BANDS > 0
         // calculate the model-space view direction
-        let modelView3x3 = mat3x3f(center.modelView[0].xyz, center.modelView[1].xyz, center.modelView[2].xyz);
+        // Firefox on Windows (D3D12) returns a transposed matrix when a struct member is indexed
+        // through a pointer, so load the whole matrix into a local first. Remove the local once the
+        // fix has shipped: https://bugzilla.mozilla.org/show_bug.cgi?id=2059727
+        let modelView = center.modelView;
+        let modelView3x3 = mat3x3f(modelView[0].xyz, modelView[1].xyz, modelView[2].xyz);
         let dir = normalize(center.view * modelView3x3);
 
         // read sh coefficients
@@ -133,7 +137,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         output.id = f32(splat.index);
     #endif
 
-    #ifdef PREPASS_PASS
+    #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
         output.vLinearDepth = -center.view.z;
     #endif
 

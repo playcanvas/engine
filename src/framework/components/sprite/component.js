@@ -805,6 +805,12 @@ class SpriteComponent extends Component {
     }
 
     onBeforeRemove() {
+        // removing a component does not disable it first, so undo what onEnable set up. This runs
+        // before the clips are torn down below, as onDisable stops the current clip.
+        if (this.enabled && this.entity.enabled) {
+            this.onDisable();
+        }
+
         this._currentClip = null;
 
         if (this._defaultClip) {
@@ -1059,10 +1065,11 @@ class SpriteComponent extends Component {
     }
 
     _onLayersChanged(oldComp, newComp) {
-        oldComp.off('add', this._onLayerAdded, this);
-        oldComp.off('remove', this._onLayerRemoved, this);
-        newComp.on('add', this._onLayerAdded, this);
-        newComp.on('remove', this._onLayerRemoved, this);
+        // store the new handles, so that onDisable can unsubscribe from the current composition
+        this._evtLayerAdded?.off();
+        this._evtLayerAdded = newComp.on('add', this._onLayerAdded, this);
+        this._evtLayerRemoved?.off();
+        this._evtLayerRemoved = newComp.on('remove', this._onLayerRemoved, this);
 
         if (this.enabled && this.entity.enabled) {
             this.addToLayers();

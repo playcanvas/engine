@@ -11,6 +11,7 @@ import {
     SHADER_PREPASS
 } from '../../scene/constants.js';
 import { Color } from '../../core/math/color.js';
+import { Debug } from '../../core/debug.js';
 import { FloatPacking } from '../../core/math/float-packing.js';
 
 const tempMeshInstances = [];
@@ -53,6 +54,8 @@ class RenderPassPrepass extends RenderPass {
     destroy() {
         super.destroy();
         this.camera.shaderParams.sceneDepthMapLinear = false;
+        this.camera.shaderParams.sceneDepthMapPacked = false;
+        this.camera.shaderParams.sceneDepthMapReciprocal = false;
         this.renderTarget?.destroy();
         this.renderTarget = null;
         this.linearDepthTexture?.destroy();
@@ -63,6 +66,10 @@ class RenderPassPrepass extends RenderPass {
 
         const { device } = this;
 
+        // when float textures cannot be rendered to, the depth is bit-packed into RGBA8 instead,
+        // which is lossless and so preferable to a lower precision float format. Note that the
+        // shader side of the packing (float2vec4) selects its encoding using the global
+        // CAPS_TEXTURE_FLOAT_RENDERABLE define, which has to agree with the format chosen here.
         this.linearDepthFormat = device.textureFloatRenderable ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
         this.linearDepthTexture = Texture.createDataTexture2D(device, 'SceneLinearDepthTexture', 1, 1, this.linearDepthFormat);
 
@@ -77,15 +84,26 @@ class RenderPassPrepass extends RenderPass {
             samples: 1
         });
 
-        // scene depth will be linear
-        this.camera.shaderParams.sceneDepthMapLinear = true;
+        // the WGSL screenDepth chunk implements no packed decode, as WebGPU always supports
+        // rendering to float textures
+        Debug.assert(!(device.isWebGPU && this.linearDepthFormat === PIXELFORMAT_RGBA8));
+
+        // declare how this pass stores the depth, so that the shaders sampling it decode what was
+        // actually written instead of inferring it from the device capabilities. Declared at setup,
+        // because the post-processing passes resolve these defines when they are constructed.
+        const { shaderParams } = this.camera;
+        shaderParams.sceneDepthMapLinear = true;
+        shaderParams.sceneDepthMapPacked = this.linearDepthFormat === PIXELFORMAT_RGBA8;
+        shaderParams.sceneDepthMapReciprocal = false;
 
         this.init(renderTarget, options);
     }
 
     after() {
-        // Assign the linear depth texture to the uniform
+        // Assign the linear depth texture to the uniform, and record it on the camera - the uniform is
+        // global, so anything after this frame wanting this camera's depth needs the camera's own record
         this.device.scope.resolve(DEPTH_UNIFORM_NAME).setValue(this.linearDepthTexture);
+        this.camera.camera.publishSceneDepthMap(this.linearDepthTexture, this.device.renderVersion);
     }
 
     execute() {

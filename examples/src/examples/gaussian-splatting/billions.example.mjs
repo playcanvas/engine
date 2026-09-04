@@ -4,7 +4,6 @@
 // each at a different position / rotation. The LOD streaming system keeps performance stable while
 // the combined splat count reaches into the billions.
 //
-// @flag NO_MINISTATS
 // @flag PREFERRED_DEVICE=webgpu
 //
 // @credit
@@ -153,16 +152,6 @@ const LAYOUT = {
 const DEFAULT_INSTANCES_DESKTOP = 50;
 const DEFAULT_INSTANCES_MOBILE = 2;
 
-// Default per-instance LOD ramp tuned for this instanced-world scale. The multiplier sets how
-// fast detail falls off with distance (LOD = 1 + log(d/base)/log(mult)): a smaller multiplier
-// drops distant tiles to coarse LODs sooner, which flattens how the active-splat count grows
-// with instance count. The base distance sets the LOD0 radius and barely affects the far-tile
-// growth, so it stays as-is.
-// Mobile uses the aggressive 1.6 falloff (~3M active at 20 instances) to keep the load light;
-// desktop uses a gentler 1.8 so distant tiles stay more detailed (~6M active at 20 instances).
-const DEFAULT_LOD_BASE_DISTANCE = 40;
-const DEFAULT_LOD_MULTIPLIER = platform.mobile ? 1.6 : 1.8;
-
 const assets = {
     scene: new Asset('gsplat', 'gsplat', { url: config.url }),
     // equirectangular (360) LDR backdrop image
@@ -176,7 +165,7 @@ await new Promise((resolve) => {
 app.start();
 
 // Custom mini stats showing gsplat counts
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
 
 // --- infinite skybox backdrop from the equirectangular LDR image ---
 // The built-in infinite sky samples a cubemap, so the equirect is reprojected once into a
@@ -241,18 +230,6 @@ const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
 const toB = (v) => `${(v / 1e9).toFixed(1)}B`;
 
 // --- LOD tuning (temporary): seed defaults and live-apply on change ---
-data.set('lodBaseDistance', DEFAULT_LOD_BASE_DISTANCE);
-data.set('lodMultiplier', DEFAULT_LOD_MULTIPLIER);
-const applyLod = () => {
-    const base = data.get('lodBaseDistance');
-    const mult = data.get('lodMultiplier');
-    for (let i = 0; i < gsInstances.length; i++) {
-        gsInstances[i].lodBaseDistance = base;
-        gsInstances[i].lodMultiplier = mult;
-    }
-};
-data.on('lodBaseDistance:set', applyLod);
-data.on('lodMultiplier:set', applyLod);
 
 // Each instance's grid slot is a fixed function of its index — independent of the current
 // instance count — so changing the count never moves (and never re-streams) the tiles we
@@ -335,8 +312,6 @@ const rebuildInstances = () => {
         app.root.addChild(entity);
         instanceEntities.push(entity);
         const gs = /** @type {any} */ (entity.gsplat);
-        gs.lodBaseDistance = data.get('lodBaseDistance');
-        gs.lodMultiplier = data.get('lodMultiplier');
         gs.lodRangeMin = lodRange.min;
         gs.lodRangeMax = lodRange.max;
         gsInstances.push(gs);
@@ -423,10 +398,11 @@ if (USE_CYLINDER_CONTROLLER) {
 }
 
 // --- Splat budget ---
-// Hardcoded to 0 (no cap): the LOD ramp on each instance is what gates splat count, the
-// budget is left disabled. Kept as an observer so the value can still be overridden via
-// share-URL state if needed.
-data.set('splatBudget', 0);
+// The budget is what gates splat count across every tile: LOD levels are chosen globally to fit it,
+// so nearby tiles get the fine levels and distant ones stay coarse. One asset at its finest level is
+// ~106M splats, so with tens of tiles on screen the budget is doing all the work here. Kept as an
+// observer so the value can still be overridden via share-URL state.
+data.set('splatBudget', platform.mobile ? 4 : 8);
 const applySplatBudget = () => {
     const millions = data.get('splatBudget');
     app.scene.gsplat.splatBudget = Math.round(millions * 1000000);
@@ -440,3 +416,5 @@ data.on('splatBudget:set', applySplatBudget);
 app.on('update', () => {
     data.set('data.stats.gsplats', toM(app.stats.frame.gsplats));
 });
+
+export { miniStats };

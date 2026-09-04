@@ -1,7 +1,8 @@
 // @config
 //
-// This example demonstrates the clear coat material. Visually, the Coated column should contain
-// highlights from both the Base and Boating layers.
+// The Khronos PrimitiveModeNormalsTest sample - point, line and triangle modes, without normals on
+// the left and with them on the right. The glTF spec requires flat shading where normals are missing,
+// so those triangles are faceted. Points and lines there should be unlit, see engine issue #7639.
 //
 // @flag HIDDEN
 

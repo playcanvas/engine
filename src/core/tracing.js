@@ -3,6 +3,10 @@
  * Note that the trace logging only takes place in the debug build of the engine and is stripped
  * out in other builds.
  *
+ * The debug build ships in the npm package: import from `'playcanvas/debug'` instead of
+ * `'playcanvas'` to enable trace channels, assertions and validation warnings. A
+ * `'playcanvas/profiler'` build is also available for per-frame timings.
+ *
  * @category Debug
  */
 class Tracing {

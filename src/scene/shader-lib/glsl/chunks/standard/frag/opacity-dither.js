@@ -1,6 +1,6 @@
 export default /* glsl */`
 
-#if STD_OPACITY_DITHER == BAYER8
+#if STD_OPACITY_DITHER == BAYER2 || STD_OPACITY_DITHER == BAYER4 || STD_OPACITY_DITHER == BAYER8 || STD_OPACITY_DITHER == BAYER16
     #include "bayerPS"
 #endif
 
@@ -22,6 +22,18 @@ void opacityDither(float alpha, float id) {
         float noise = bayer8(floor(mod(gl_FragCoord.xy + blueNoiseJitter.xy + id, 8.0))) / 64.0;
 
     #else
+
+        #if STD_OPACITY_DITHER == BAYER2
+            float noise = bayer2(floor(mod(gl_FragCoord.xy + blueNoiseJitter.xy + id, 2.0))) / 4.0;
+        #endif
+
+        #if STD_OPACITY_DITHER == BAYER4
+            float noise = bayer4(floor(mod(gl_FragCoord.xy + blueNoiseJitter.xy + id, 4.0))) / 16.0;
+        #endif
+
+        #if STD_OPACITY_DITHER == BAYER16
+            float noise = bayer16(floor(mod(gl_FragCoord.xy + blueNoiseJitter.xy + id, 16.0))) / 256.0;
+        #endif
 
         #if STD_OPACITY_DITHER == BLUENOISE
             vec2 uv = fract(gl_FragCoord.xy / 32.0 + blueNoiseJitter.xy + id);

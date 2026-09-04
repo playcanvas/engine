@@ -135,6 +135,13 @@ void evaluateLight{i}(
 
     #endif
 
+    // Relief self shadowing, which is a property of the surface rather than of the light, so it
+    // applies whether or not the light casts a shadow map. Directional lights only for now: they are
+    // never clustered, so a pixel sees at most a handful of them and the cost stays bounded.
+    #if defined(STD_PARALLAX_SELF_SHADOW) && LIGHT{i}TYPE == DIRECTIONAL
+        dAtten *= getParallaxSelfShadow(dLightDirNormW);
+    #endif
+
     #if LIGHT{i}SHAPE != PUNCTUAL
         // area light - they do not mix diffuse lighting into specular attenuation
         #ifdef LIT_SPECULAR

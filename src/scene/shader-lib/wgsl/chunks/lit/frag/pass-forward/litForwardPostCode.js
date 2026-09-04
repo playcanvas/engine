@@ -7,8 +7,8 @@ export default /* wgsl */`
     #include "envProcPS"
 #endif
 
-// ----- specular or reflections -----
-#ifdef LIT_SPECULAR_OR_REFLECTION
+// ----- specular or reflections (also needed by refraction, which uses specularity) -----
+#if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
     #ifdef LIT_METALNESS
         #include "metalnessModulatePS"
     #endif
@@ -56,7 +56,8 @@ export default /* wgsl */`
 #ifdef LIT_REFRACTION
     #if defined(LIT_DYNAMIC_REFRACTION)
         #include "refractionDynamicPS"
-    #elif defined(LIT_REFLECTIONS)
+    #elif LIT_REFLECTION_SOURCE != NONE
+        // cube refraction only needs a reflection source, not the specular reflection path
         #include "refractionCubePS"
     #endif
 #endif

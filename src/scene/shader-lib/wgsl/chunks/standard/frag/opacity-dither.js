@@ -1,6 +1,6 @@
 export default /* wgsl */`
 
-#if STD_OPACITY_DITHER == BAYER8
+#if STD_OPACITY_DITHER == BAYER2 || STD_OPACITY_DITHER == BAYER4 || STD_OPACITY_DITHER == BAYER8 || STD_OPACITY_DITHER == BAYER16
     #include "bayerPS"
 #endif
 
@@ -25,6 +25,18 @@ fn opacityDither(alpha: f32, id: f32) {
         var noise: f32 = bayer8(floor((pcPosition.xy + uniform.blueNoiseJitter.xy + id) % vec2f(8.0))) / 64.0;
 
     #else
+
+        #if STD_OPACITY_DITHER == BAYER2
+            var noise: f32 = bayer2(floor((pcPosition.xy + uniform.blueNoiseJitter.xy + id) % vec2f(2.0))) / 4.0;
+        #endif
+
+        #if STD_OPACITY_DITHER == BAYER4
+            var noise: f32 = bayer4(floor((pcPosition.xy + uniform.blueNoiseJitter.xy + id) % vec2f(4.0))) / 16.0;
+        #endif
+
+        #if STD_OPACITY_DITHER == BAYER16
+            var noise: f32 = bayer16(floor((pcPosition.xy + uniform.blueNoiseJitter.xy + id) % vec2f(16.0))) / 256.0;
+        #endif
 
         #if STD_OPACITY_DITHER == BLUENOISE
             var uv = fract(pcPosition.xy / 32.0 + uniform.blueNoiseJitter.xy + id);

@@ -32,9 +32,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvasGreyTexture: new Asset('playcanvasGreyTexture', 'texture', {
-        url: './assets/textures/playcanvas-grey.png'
-    })
+    playcanvasGreyTexture: new Asset(
+        'playcanvasGreyTexture',
+        'texture',
+        {
+            url: './assets/textures/playcanvas-grey.png'
+        },
+        { srgb: true }
+    )
 };
 const gfxOptions = {
     deviceTypes: [deviceType]

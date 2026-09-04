@@ -3,8 +3,6 @@
 // Procedural infinite weather particles rendered as Gaussian splats over a LOD-streamed scene.
 // Particles follow the camera using a deterministic 3D grid with hash-based positioning and animation.
 //
-// @flag NO_MINISTATS
-//
 // @credit
 // title: Roman Parish
 // author: Andrii Shramko
@@ -83,7 +81,7 @@ app.on('destroy', () => {
 
 const assets = {
     scene: new Asset('gsplat', 'gsplat', {
-        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json'
     })
 };
 
@@ -93,7 +91,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats']));
 
 // LOD streaming settings
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -131,9 +129,6 @@ gsplatEntity.addComponent('gsplat', {
 });
 gsplatEntity.setLocalEulerAngles(270, 0, 0);
 app.root.addChild(gsplatEntity);
-
-gsplatEntity.gsplat.lodBaseDistance = 5;
-gsplatEntity.gsplat.lodMultiplier = 4;
 
 // Procedural weather
 const weatherEntity = new Entity('Weather');
@@ -306,3 +301,5 @@ data.on('extents.0:set', rebuild);
 data.on('extents.1:set', rebuild);
 data.on('extents.2:set', rebuild);
 data.on('density:set', rebuild);
+
+export { miniStats };

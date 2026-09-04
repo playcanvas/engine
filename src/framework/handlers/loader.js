@@ -20,6 +20,13 @@ import { http } from '../../platform/net/http.js';
 /**
  * Load resource data, potentially from remote sources. Caches resource on load to prevent multiple
  * requests. Add ResourceHandlers to handle different types of resources.
+ *
+ * Parsers for formats the engine does not load by default ship in the package and are registered
+ * on an existing handler rather than added as one:
+ * `playcanvas/scripts/esm/parsers/obj-model.mjs` adds `.obj` model loading via
+ * `loader.getHandler('model').addParser(new ObjModelParser(device))`, and
+ * `playcanvas/scripts/esm/parsers/spz-parser.mjs` adds `.spz` Gaussian-splat loading via
+ * `loader.getHandler('gsplat').addParser(new SpzParser(app))`.
  */
 class ResourceLoader {
     /**
@@ -425,6 +432,7 @@ class ResourceLoader {
         this._handlers = {};
         this._requests = {};
         this._cache = {};
+        this._app = null;
     }
 }
 

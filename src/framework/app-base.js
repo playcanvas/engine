@@ -7,7 +7,6 @@ import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Color } from '../core/math/color.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { math } from '../core/math/math.js';
 import { Quat } from '../core/math/quat.js';
@@ -61,6 +60,7 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 /**
  * @import { AppOptions } from './app-options.js'
  * @import { BatchManager } from '../scene/batching/batch-manager.js'
+ * @import { Color } from '../core/math/color.js'
  * @import { ElementInput } from './input/element-input.js'
  * @import { GamePads } from '../platform/input/game-pads.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
@@ -114,6 +114,14 @@ let app = null;
  * {@link ResourceHandler}s yourself. This facilitates
  * [tree-shaking](https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking) when bundling
  * your application.
+ *
+ * It is the preferred entry point for new code - {@link Application} is a convenience subclass
+ * that registers everything for you, and is expected to be deprecated in a future release.
+ *
+ * `new AppBase(canvas)` only constructs the instance and its root entity. You must then call
+ * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
+ * `componentSystems` and `resourceHandlers` before adding components or calling
+ * {@link AppBase#start}. Create the `graphicsDevice` with {@link createGraphicsDevice}.
  */
 class AppBase extends EventHandler {
     /**
@@ -277,7 +285,9 @@ class AppBase extends EventHandler {
     };
 
     /**
-     * Scales the global time delta. Defaults to 1.
+     * Scales the global time delta. Defaults to 1. Scripts, animation and physics all receive
+     * the scaled delta, so 0 stops them together. To pause or slow down physics alone while the
+     * rest of the application keeps running, use {@link RigidBodyComponentSystem#timeScale}.
      *
      * @example
      * // Set the app to run at half speed
@@ -548,7 +558,8 @@ class AppBase extends EventHandler {
     init(appOptions) {
         const {
             assetPrefix, batchManager, componentSystems, elementInput, gamepads, graphicsDevice, keyboard,
-            lightmapper, mouse, resourceHandlers, scriptsOrder, scriptPrefix, soundManager, touch, xr
+            lightmapper, mouse, physicsWorld, resourceHandlers, scriptsOrder, scriptPrefix, soundManager,
+            touch, xr
         } = appOptions;
 
         Debug.assert(graphicsDevice, 'The application cannot be created without a valid GraphicsDevice');
@@ -560,7 +571,7 @@ class AppBase extends EventHandler {
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(graphicsDevice);
+        this.stats = new ApplicationStats(this);
 
         this._soundManager = soundManager;
         this.scene = new Scene(graphicsDevice);
@@ -634,6 +645,13 @@ class AppBase extends EventHandler {
         componentSystems.forEach((componentSystem) => {
             this.systems.add(new componentSystem(this));
         });
+
+        // Install a user-supplied physics backend. When omitted, the rigid body system
+        // auto-detects Ammo once application libraries have loaded (see onLibrariesLoaded).
+        if (physicsWorld) {
+            Debug.assert(this.systems.rigidbody, 'AppOptions.physicsWorld requires RigidBodyComponentSystem to be included in AppOptions.componentSystems.');
+            this.systems.rigidbody?.setPhysicsWorld(physicsWorld);
+        }
 
         this._visibilityChangeHandler = this.onVisibilityChange.bind(this);
 
@@ -1174,7 +1192,10 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Controls how the canvas fills the window and resizes when the window changes.
+     * Controls how the canvas fills the window. The canvas is sized when this is called and on
+     * every {@link AppBase#resizeCanvas}; the engine installs no window `resize` listener of its
+     * own, so call `resizeCanvas` from your own handler to keep the window-relative modes tracking
+     * the window.
      *
      * @param {string} mode - The mode to use when setting the size of the canvas. Can be:
      *
@@ -1417,6 +1438,9 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.lightingShadowAtlasResolution] - Resolution of the atlas texture storing all non-directional shadow textures. Defaults to 2048.
      * @param {number} [settings.render.lightingCookieAtlasResolution] - Resolution of the atlas texture storing all non-directional cookie textures. Defaults to 2048.
      * @param {number} [settings.render.lightingMaxLightsPerCell] - Maximum number of lights a cell can store. Defaults to 255.
+     * @param {number} [settings.render.lightingMaxLights] - Maximum number of lights the clustered lighting can use in a single
+     * frame. Keep this as low as the scene allows, as a larger value has a per-frame cost. The value is limited by the maximum
+     * texture size supported by the device. Defaults to 255.
      * @param {number} [settings.render.lightingShadowType] - The type of shadow filtering used by all shadows. Can be:
      *
      * - {@link SHADOW_PCF1_32F}
@@ -1436,7 +1460,8 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 0.
      * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.
      * @param {number} [settings.render.gsplatLodUnderfillLimit] - Maximum number of gsplat LOD levels allowed below the optimal level when optimal data is not resident. Defaults to 0.
-     * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. 0 disables budget enforcement. Defaults to 0.
+     * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. LOD levels are chosen globally to stay within it; a non-positive value is not a way to disable this and the default is used instead. Defaults to 1000000.
+     * @param {string} [settings.render.gsplatLodMode] - How LOD levels are chosen for streamed GSplats: 'error' (default) spends the budget by measured approximation error, 'distance' orders detail by camera distance alone and ignores error metadata.
      * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
      * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
@@ -1445,6 +1470,8 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatFoveationCenter] - Protected centre radius for foveated contribution culling. Defaults to 0.3.
      * @param {boolean} [settings.render.gsplatAntiAlias] - Enables anti-aliasing compensation for Gaussian splats. Defaults to false.
      * @param {boolean} [settings.render.gsplatUseFog] - Whether to apply scene fog to Gaussian splats. Defaults to true.
+     * @param {boolean} [settings.render.gsplatUseTonemap] - Whether to apply the camera's tonemapping and the
+     * scene exposure to Gaussian splats. Defaults to true.
      * @param {number} [settings.render.gsplatColorUpdateAngle] - Viewing angle threshold in degrees for triggering gsplat spherical harmonics color updates. Defaults to 10.
      * @param {number} [settings.render.gsplatCooldownTicks] - Number of update ticks before unloading unused streamed gsplat resources. Defaults to 100.
      * @param {string} [settings.render.gsplatDataFormat] - Work buffer data format for gsplat rendering. One of the GSPLATDATA_* constants. Defaults to {@link GSPLATDATA_COMPACT}.
@@ -1586,7 +1613,8 @@ class AppBase extends EventHandler {
      *
      * @param {Vec3} start - The start world space coordinate of the line.
      * @param {Vec3} end - The end world space coordinate of the line.
-     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {Color} [color] - The color of the line, specified in sRGB color space. It defaults
+     * to white if not specified.
      * @param {boolean} [depthTest] - Specifies if the line is depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1693,45 +1721,19 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * Draws a wireframe sphere with center, radius and color.
-     *
-     * @param {Vec3} center - The center of the sphere.
-     * @param {number} radius - The radius of the sphere.
-     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {number} [segments] - Number of line segments used to render the circles forming the
-     * sphere. Defaults to 20.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
-     * depth buffer. Defaults to true.
-     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @example
-     * // Render a red wire sphere with radius of 1
-     * const center = new Vec3(0, 0, 0);
-     * app.drawWireSphere(center, 1.0, Color.RED);
+     * @deprecated Use {@link WireRenderer#sphere} instead.
      * @ignore
      */
-    drawWireSphere(center, radius, color = Color.WHITE, segments = 20, depthTest = true, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawWireSphere(center, radius, color, segments, depthTest, layer);
+    drawWireSphere() {
+        Debug.removed('AppBase#drawWireSphere is removed. Use WireRenderer#sphere instead.');
     }
 
     /**
-     * Draws a wireframe axis aligned box specified by min and max points and color.
-     *
-     * @param {Vec3} minPoint - The min corner point of the box.
-     * @param {Vec3} maxPoint - The max corner point of the box.
-     * @param {Color} [color] - The color of the sphere. It defaults to white if not specified.
-     * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
-     * depth buffer. Defaults to true.
-     * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @param {Mat4} [mat] - Matrix to transform the box before rendering.
-     * @example
-     * // Render a red wire aligned box
-     * const min = new Vec3(-1, -1, -1);
-     * const max = new Vec3(1, 1, 1);
-     * app.drawWireAlignedBox(min, max, Color.RED);
+     * @deprecated Use {@link WireRenderer#boxMinMax} instead.
      * @ignore
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
-        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer, mat);
+    drawWireAlignedBox() {
+        Debug.removed('AppBase#drawWireAlignedBox is removed. Use WireRenderer#boxMinMax instead.');
     }
 
     /**
@@ -1950,7 +1952,8 @@ class AppBase extends EventHandler {
             assets[i].unload();
             assets[i].off();
         }
-        this.assets.off();
+        this.assets.destroy();
+        this.assets = null;
 
         // destroy scene after assets are unloaded (components need scene.layers during asset cleanup)
         this.scene.destroy();
@@ -1970,6 +1973,12 @@ class AppBase extends EventHandler {
 
         if (getApplication() === this) {
             setApplication(null);
+        }
+
+        // clear the module scoped reference, which would otherwise keep the destroyed application
+        // alive. Skipped if another application has already taken over.
+        if (app === this) {
+            app = null;
         }
 
         AppBase.cancelTick(this);
@@ -2005,6 +2014,147 @@ class AppBase extends EventHandler {
             this.stats.frame.gsplatSort += sortTime;
         });
     }
+
+    /**
+     * Reports whether the document is in fullscreen mode.
+     *
+     * @returns {boolean} True if the document is in fullscreen.
+     * @ignore
+     * @deprecated Use the Fullscreen API directly.
+     */
+    isFullscreen() {
+        Debug.deprecated('AppBase#isFullscreen is deprecated. Use the Fullscreen API directly.');
+
+        return !!document.fullscreenElement;
+    }
+
+    /**
+     * Requests fullscreen mode on the given element.
+     *
+     * @param {Element} [element] - The element to make fullscreen. Defaults to the graphics
+     * device canvas.
+     * @param {Function} [success] - Called once fullscreen has been entered.
+     * @param {Function} [error] - Called if entering fullscreen fails.
+     * @ignore
+     * @deprecated Use the Fullscreen API directly.
+     */
+    enableFullscreen(element, success, error) {
+        Debug.deprecated('AppBase#enableFullscreen is deprecated. Use the Fullscreen API directly.');
+
+        element = element || this.graphicsDevice.canvas;
+
+        // success callback
+        const s = function () {
+            success();
+            document.removeEventListener('fullscreenchange', s);
+        };
+
+        // error callback
+        const e = function () {
+            error();
+            document.removeEventListener('fullscreenerror', e);
+        };
+
+        if (success) {
+            document.addEventListener('fullscreenchange', s, false);
+        }
+
+        if (error) {
+            document.addEventListener('fullscreenerror', e, false);
+        }
+
+        if (element.requestFullscreen) {
+            element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        } else {
+            error();
+        }
+    }
+
+    /**
+     * Exits fullscreen mode.
+     *
+     * @param {Function} [success] - Called once fullscreen has been exited.
+     * @ignore
+     * @deprecated Use the Fullscreen API directly.
+     */
+    disableFullscreen(success) {
+        Debug.deprecated('AppBase#disableFullscreen is deprecated. Use the Fullscreen API directly.');
+
+        // success callback
+        const s = function () {
+            success();
+            document.removeEventListener('fullscreenchange', s);
+        };
+
+        if (success) {
+            document.addEventListener('fullscreenchange', s, false);
+        }
+
+        document.exitFullscreen();
+    }
+
+    /**
+     * Gets the URL of a scene by name.
+     *
+     * @param {string} name - The name of the scene.
+     * @returns {string|null} The URL of the scene, or null if not found.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#find} instead.
+     */
+    getSceneUrl(name) {
+        Debug.deprecated('AppBase#getSceneUrl is deprecated. Use AppBase#scenes and SceneRegistry#find instead.');
+        const entry = this.scenes.find(name);
+        if (entry) {
+            return entry.url;
+        }
+        return null;
+    }
+
+    /**
+     * Loads a scene.
+     *
+     * @param {string} url - The URL of the scene file.
+     * @param {Function} callback - Called when the scene has loaded.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#loadScene} instead.
+     */
+    loadScene(url, callback) {
+        Debug.deprecated('AppBase#loadScene is deprecated. Use AppBase#scenes and SceneRegistry#loadScene instead.');
+        this.scenes.loadScene(url, callback);
+    }
+
+    /**
+     * Loads a scene hierarchy.
+     *
+     * @param {string} url - The URL of the scene file.
+     * @param {Function} callback - Called when the scene hierarchy has loaded.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#loadSceneHierarchy} instead.
+     */
+    loadSceneHierarchy(url, callback) {
+        Debug.deprecated('AppBase#loadSceneHierarchy is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneHierarchy instead.');
+        this.scenes.loadSceneHierarchy(url, callback);
+    }
+
+    /**
+     * Loads scene settings.
+     *
+     * @param {string} url - The URL of the scene file.
+     * @param {Function} callback - Called when the scene settings have loaded.
+     * @ignore
+     * @deprecated Use {@link AppBase#scenes} and {@link SceneRegistry#loadSceneSettings} instead.
+     */
+    loadSceneSettings(url, callback) {
+        Debug.deprecated('AppBase#loadSceneSettings is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneSettings instead.');
+        this.scenes.loadSceneSettings(url, callback);
+    }
 }
 
 export { app, AppBase };
+
+// ForwardRenderer#renderComposition is deprecated and patched here, rather than declared on the
+// class, because it needs getApplication and scene code must not import from framework.
+ForwardRenderer.prototype.renderComposition = function (comp) {
+    Debug.deprecated('ForwardRenderer#renderComposition is deprecated. Use AppBase.renderComposition instead.');
+    getApplication().renderComposition(comp);
+};

@@ -17,6 +17,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
  * @import { FogParams } from '../../../scene/fog-params.js'
+ * @import { Vec2 } from '../../../core/math/vec2.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
  * @import { Vec4 } from '../../../core/math/vec4.js'
  * @import { XrErrorCallback } from '../../xr/xr-manager.js'
@@ -59,6 +60,10 @@ import { PostEffectQueue } from './post-effect-queue.js';
  *
  * console.log(entity.camera.nearClip); // Get the near clip of the camera
  * ```
+ *
+ * For ready-made camera behaviour, attach the `CameraControls` script from
+ * `playcanvas/scripts/esm/camera-controls.mjs`, which provides orbit, fly and pan driven by mouse,
+ * touch and gamepad input.
  *
  * Relevant Engine API examples:
  *
@@ -877,6 +882,36 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets the offset of the projection window from the view direction, creating an off-center
+     * (asymmetric) projection. The offset is expressed in half-frustum units - an offset of
+     * `(0, 1)` moves the projection window up by half of the frustum height. Applies to both
+     * perspective and orthographic projections and is ignored in XR, where the projection is
+     * supplied by the XR system. Defaults to `(0, 0)`.
+     *
+     * A typical use case is perspective correction (shift lens): keep the camera level and use
+     * a vertical offset to frame a tall object, so its vertical lines stay parallel:
+     *
+     * @example
+     * // frame content that is `pitch` degrees above the horizon, without tilting the camera
+     * const fovY = entity.camera.fov * math.DEG_TO_RAD;
+     * const shift = Math.tan(pitch * math.DEG_TO_RAD) / Math.tan(fovY / 2);
+     * entity.camera.projectionOffset = new Vec2(0, shift);
+     * @type {Vec2}
+     */
+    set projectionOffset(value) {
+        this._camera.projectionOffset = value;
+    }
+
+    /**
+     * Gets the offset of the projection window.
+     *
+     * @type {Vec2}
+     */
+    get projectionOffset() {
+        return this._camera.projectionOffset;
+    }
+
+    /**
      * Sets the rendering rectangle for the camera. This controls where on the screen the camera
      * will render in normalized screen coordinates. Defaults to `[0, 0, 1, 1]`.
      *
@@ -1118,6 +1153,13 @@ class CameraComponent extends Component {
     /**
      * Convert a point from 3D world space to 2D screen space.
      *
+     * The returned `z` is the unnormalized clip space depth, not a behind-the-camera flag: it also
+     * goes negative for points in front of a perspective camera that are nearer than twice the
+     * near clip, and for an orthographic camera it is negative across the whole near half of the
+     * depth range. To reject points behind the camera, test the view space depth instead - pass
+     * the world position through {@link CameraComponent#viewMatrix} and discard it when the
+     * resulting `z` is zero or greater.
+     *
      * @param {Vec3} worldCoord - The world space coordinate.
      * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
      * @returns {Vec3} The screen space coordinate.
@@ -1167,10 +1209,12 @@ class CameraComponent extends Component {
      */
     onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
-        oldComp.off('add', this.onLayerAdded, this);
-        oldComp.off('remove', this.onLayerRemoved, this);
-        newComp.on('add', this.onLayerAdded, this);
-        newComp.on('remove', this.onLayerRemoved, this);
+
+        // store the new handles, so that onDisable can unsubscribe from the current composition
+        this._evtLayerAdded?.off();
+        this._evtLayerAdded = newComp.on('add', this.onLayerAdded, this);
+        this._evtLayerRemoved?.off();
+        this._evtLayerRemoved = newComp.on('remove', this.onLayerRemoved, this);
     }
 
     /**
@@ -1373,6 +1417,7 @@ class CameraComponent extends Component {
         this.orthoHeight = source.orthoHeight;
         this.priority = source.priority;
         this.projection = source.projection;
+        this.projectionOffset = source.projectionOffset;
         this.rect = source.rect;
         this.renderTarget = source.renderTarget;
         this.scissorRect = source.scissorRect;

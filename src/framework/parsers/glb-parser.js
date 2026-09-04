@@ -52,7 +52,11 @@ import { createVariants, registerMeshVariants } from './glb/extensions/khr-mater
 import { getTextureSource } from './glb/extensions/texture-source.js';
 import { glbMaterialExtensions } from './glb/extensions/index.js';
 import { extractTextureTransform } from './glb/extensions/khr-texture-transform.js';
-import { GltfAccessor, getPrimitiveType, gltfToEngineSemanticMap } from './glb/gltf-accessor.js';
+import { GltfAccessor, getPrimitiveType, isTriangleMode, gltfToEngineSemanticMap } from './glb/gltf-accessor.js';
+
+/**
+ * @import { Material } from '../../scene/materials/material.js'
+ */
 
 // resources loaded from GLB file that the parser returns
 class GlbResources {
@@ -410,7 +414,7 @@ const createSkin = (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) =
     return skin;
 };
 
-const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, assetOptions, promises) => {
+const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, flatShadedMeshes, assetOptions, promises) => {
     const meshes = [];
 
     gltfMesh.primitives.forEach((primitive) => {
@@ -422,7 +426,7 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
 
         if (primitive.extensions?.KHR_draco_mesh_compression) {
             // handle draco compressed mesh
-            meshes.push(createDracoMesh(device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, promises));
+            meshes.push(createDracoMesh(device, primitive, accessors, bufferViews, meshVariants, meshDefaultMaterials, flatShadedMeshes, promises));
         } else {
             // handle uncompressed mesh
             let indices = primitive.hasOwnProperty('indices') ? GltfAccessor.getData(accessors[primitive.indices], bufferViews, true) : null;
@@ -464,6 +468,13 @@ const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, 
             registerMeshVariants(primitive, mesh.id, meshVariants);
 
             meshDefaultMaterials[mesh.id] = primitive.material;
+
+            // the spec requires flat shading when the mesh does not supply normals - we still
+            // generate smooth normals for the vertex buffer, so that the user can turn the flat
+            // shading off and get the previous behavior back
+            if (!primitive.attributes.hasOwnProperty('NORMAL') && isTriangleMode(primitiveType)) {
+                flatShadedMeshes.add(mesh.id);
+            }
 
             let accessor = accessors[primitive.attributes.POSITION];
             mesh.aabb = GltfAccessor.getBoundingBox(accessor);
@@ -526,7 +537,6 @@ const createMaterial = (gltfMaterial, textures) => {
     material.occludeSpecular = SPECOCC_AO;
 
     material.diffuseVertexColor = true;
-    material.specularTint = true;
     material.specularVertexColor = true;
 
     // Set glTF spec defaults
@@ -943,7 +953,7 @@ const createNode = (gltfNode, nodeIndex, nodeInstancingMap) => {
 };
 
 // creates a camera component on the supplied node, and returns it
-const createCamera = (gltfCamera, node) => {
+const createCamera = (gltfCamera, node, app) => {
     const isOrthographic = gltfCamera.type === 'orthographic';
     const gltfProperties = isOrthographic ? gltfCamera.orthographic : gltfCamera.perspective;
 
@@ -975,7 +985,7 @@ const createCamera = (gltfCamera, node) => {
         }
     }
 
-    const cameraEntity = new Entity(gltfCamera.name);
+    const cameraEntity = new Entity(gltfCamera.name, app);
     cameraEntity.addComponent('camera', componentData);
     return cameraEntity;
 };
@@ -998,17 +1008,19 @@ const createMeshes = (device, gltf, bufferViews, options) => {
     const vertexBufferDict = {};
     const meshVariants = {};
     const meshDefaultMaterials = {};
+    const flatShadedMeshes = new Set();
     const promises = [];
 
     const valid = (!options.skipMeshes && gltf?.meshes?.length && gltf?.accessors?.length && gltf?.bufferViews?.length);
     const meshes = valid ? gltf.meshes.map((gltfMesh) => {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, options, promises);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, flatShadedMeshes, options, promises);
     }) : [];
 
     return {
         meshes,
         meshVariants,
         meshDefaultMaterials,
+        flatShadedMeshes,
         promises
     };
 };
@@ -1031,6 +1043,55 @@ const createMaterials = (gltf, textures, options) => {
             postprocess(gltfMaterial, material);
         }
         return material;
+    });
+};
+
+/**
+ * The glTF spec requires flat shading for primitives which do not supply normals. Materials are
+ * shared between primitives, and only some of those might be missing normals, so a flat shaded clone
+ * of the material is created and used by those primitives only. New materials are appended to the
+ * supplied array.
+ *
+ * Note that smooth normals are still generated for the vertex buffer, and so setting
+ * {@link Material#flatShading} back to false restores the shading used by previous engine versions.
+ *
+ * @param {Set<number>} flatShadedMeshes - Ids of the meshes which need flat shading.
+ * @param {object} meshDefaultMaterials - Map of mesh id to material index.
+ * @param {object} meshVariants - Map of mesh id to variant index to material index.
+ * @param {Material[]} materials - The materials of the container, appended to.
+ */
+const applyFlatShading = (flatShadedMeshes, meshDefaultMaterials, meshVariants, materials) => {
+
+    // maps the source material index (undefined for the default material) to the index of its
+    // flat shaded clone, so that primitives sharing a material also share the clone
+    const clones = new Map();
+
+    const flatShadedIndex = (index) => {
+        if (!clones.has(index)) {
+            // a primitive without a material of its own is rendered with the glTF default material,
+            // which is shared by the container - build a matching one instead of modifying it, see
+            // GlbParser.createDefaultMaterial
+            const material = index === undefined ?
+                createMaterial({ name: 'defaultGlbMaterial' }, []) :
+                materials[index].clone();
+            material.name = `${material.name}-flatShaded`;
+            material.flatShading = true;
+            material.update();
+            clones.set(index, materials.push(material) - 1);
+        }
+        return clones.get(index);
+    };
+
+    flatShadedMeshes.forEach((meshId) => {
+        meshDefaultMaterials[meshId] = flatShadedIndex(meshDefaultMaterials[meshId]);
+
+        // material variants of the primitive need the same treatment
+        const variants = meshVariants[meshId];
+        if (variants) {
+            for (const variant in variants) {
+                variants[variant] = flatShadedIndex(variants[variant]);
+            }
+        }
     });
 };
 
@@ -1124,14 +1185,14 @@ const createScenes = (gltf, nodes) => {
     return scenes;
 };
 
-const createCameras = (gltf, nodes, options) => {
+const createCameras = (gltf, nodes, options, app) => {
 
     let cameras = null;
 
     if (gltf.hasOwnProperty('nodes') && gltf.hasOwnProperty('cameras') && gltf.cameras.length > 0) {
 
         const preprocess = options?.camera?.preprocess;
-        const process = options?.camera?.process ?? createCamera;
+        const process = options?.camera?.process;
         const postprocess = options?.camera?.postprocess;
 
         gltf.nodes.forEach((gltfNode, nodeIndex) => {
@@ -1141,7 +1202,9 @@ const createCameras = (gltf, nodes, options) => {
                     if (preprocess) {
                         preprocess(gltfCamera);
                     }
-                    const camera = process(gltfCamera, nodes[nodeIndex]);
+                    const camera = process ?
+                        process(gltfCamera, nodes[nodeIndex]) :
+                        createCamera(gltfCamera, nodes[nodeIndex], app);
                     if (postprocess) {
                         postprocess(gltfCamera, camera);
                     }
@@ -1172,7 +1235,7 @@ const linkSkins = (gltf, renders, skins) => {
 };
 
 // create engine resources from the downloaded GLB data
-const createResources = async (device, gltf, bufferViews, textures, options) => {
+const createResources = async (device, gltf, bufferViews, textures, options, app) => {
     const preprocess = options?.global?.preprocess;
     const postprocess = options?.global?.postprocess;
 
@@ -1193,13 +1256,13 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     const nodeInstancingMap = new Map();
     const nodes = createNodes(gltf, options, nodeInstancingMap);
     const scenes = createScenes(gltf, nodes);
-    const lights = createLights(gltf, nodes, options);
-    const cameras = createCameras(gltf, nodes, options);
+    const lights = createLights(gltf, nodes, options, app);
+    const cameras = createCameras(gltf, nodes, options, app);
     const variants = createVariants(gltf);
 
     // buffer data must have finished loading in order to create meshes and animations
     const bufferViewData = await Promise.all(bufferViews);
-    const { meshes, meshVariants, meshDefaultMaterials, promises } = createMeshes(device, gltf, bufferViewData, options);
+    const { meshes, meshVariants, meshDefaultMaterials, flatShadedMeshes, promises } = createMeshes(device, gltf, bufferViewData, options);
     const gsplats = options.skipMeshes ? [] : createGSplats(device, gltf, bufferViewData);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
     createInstancing(device, gltf, nodeInstancingMap, bufferViewData);
@@ -1209,6 +1272,11 @@ const createResources = async (device, gltf, bufferViews, textures, options) => 
     const textureInstances = textureAssets.map(t => t.resource);
     const materials = createMaterials(gltf, textureInstances, options);
     const skins = createSkins(device, gltf, nodes, bufferViewData);
+
+    // primitives without normals are flat shaded, using clones of their materials
+    if (flatShadedMeshes.size > 0) {
+        applyFlatShading(flatShadedMeshes, meshDefaultMaterials, meshVariants, materials);
+    }
 
     // create renders to wrap meshes
     const renders = [];
@@ -1778,7 +1846,7 @@ class GlbParser {
                 const images = createImages(gltf, bufferViews, urlBase, registry, options);
                 const textures = createTextures(gltf, images, options);
 
-                createResources(device, gltf, bufferViews, textures, options)
+                createResources(device, gltf, bufferViews, textures, options, registry.loader._app)
                 .then(result => callback(null, result))
                 .catch(err => callback(err));
             });

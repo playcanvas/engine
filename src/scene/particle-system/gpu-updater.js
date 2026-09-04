@@ -145,9 +145,6 @@ class ParticleGPUUpdater {
 
         emitter.swapTex = !emitter.swapTex;
 
-        emitter.prevWorldBoundsSize.copy(emitter.worldBoundsSize);
-        emitter.prevWorldBoundsCenter.copy(emitter.worldBounds.center);
-
         DebugGraphics.popGpuMarker(device);
     }
 }

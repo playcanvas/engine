@@ -18,6 +18,7 @@ export {
     WideLine
 } from './renderers/wide-line.js';
 export { LINEWIDTH_SCREEN, LINEWIDTH_WORLD, WideLineRenderer } from './renderers/wide-line-renderer.js';
+export { WireRenderer } from './renderers/wire-renderer.js';
 
 // EXPORTERS
 export { UsdzExporter } from './exporters/usdz-exporter.js';

@@ -1,6 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
-import { SEMANTIC_POSITION, getGlslShaderType } from '../../platform/graphics/constants.js';
+import { RENDERTARGET_ORIGIN_BOTTOM, SEMANTIC_POSITION, getGlslShaderType } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
@@ -343,7 +343,7 @@ class GSplatProcessor {
                 name: 'GSplatProcessor-MRT',
                 colorBuffers: colorBuffers,
                 depth: false,
-                flipY: true
+                origin: RENDERTARGET_ORIGIN_BOTTOM
             });
         }
     }

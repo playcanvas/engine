@@ -38,6 +38,7 @@ import {
     TextureHandler,
     TouchDevice,
     Vec3,
+    WireRenderer,
     createGraphicsDevice,
     platform
 } from 'playcanvas';
@@ -121,6 +122,10 @@ await new Promise((resolve) => {
 
 app.start();
 
+// Renderer for the clipping box outline
+const wire = new WireRenderer(app);
+wire.color = Color.YELLOW;
+
 // Setup skydome
 app.scene.envAtlas = assets.envatlas.resource;
 app.scene.skyboxMip = 3;
@@ -170,8 +175,6 @@ for (let z = 0; z < GRID_SIZE; z++) {
         entity.setLocalPosition(px, 0, pz);
         entity.setLocalEulerAngles(180, 0, 0);
         app.root.addChild(entity);
-        const gs = /** @type {any} */ (entity.gsplat);
-        gs.lodBaseDistance = 1.2;
     }
 }
 
@@ -236,7 +239,7 @@ app.on('update', (dt) => {
     // Draw the clipping box
     boxMin.copy(clipCenter).sub(clipHalf);
     boxMax.copy(clipCenter).add(clipHalf);
-    app.drawWireAlignedBox(boxMin, boxMax, Color.YELLOW);
+    wire.boxMinMax(boxMin, boxMax);
 
     // stats
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());

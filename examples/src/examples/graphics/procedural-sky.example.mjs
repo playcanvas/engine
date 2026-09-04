@@ -278,7 +278,11 @@ data.set('data', {
     sky: {
         turbidity: 7,
         rayleigh: 1,
-        exposure: 1.8
+        exposure: 1.8,
+
+        // turns the whole sky, and the sun with it, around Y - orients the sky over the scene
+        // without disturbing the time of day driving the azimuth and elevation
+        rotation: 0
     },
     effects: {
         ssao: true,
@@ -355,6 +359,7 @@ app.on('update', (dt) => {
 
     // Sky look
     skyScript.luminance = luminance;
+    skyScript.rotation = data.get('data.sky.rotation');
     skyScript.turbidity = data.get('data.sky.turbidity');
     skyScript.rayleigh = data.get('data.sky.rayleigh');
     app.scene.exposure = data.get('data.sky.exposure');

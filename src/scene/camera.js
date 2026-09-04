@@ -1,6 +1,7 @@
 import { Color } from '../core/math/color.js';
 import { Debug } from '../core/debug.js';
 import { Mat4 } from '../core/math/mat4.js';
+import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
@@ -17,6 +18,7 @@ import { CameraShaderParams } from './camera-shader-params.js';
  * @import { FramePass } from '../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { RenderTarget } from '../platform/graphics/render-target.js'
+ * @import { Texture } from '../platform/graphics/texture.js'
  * @import { FogParams } from './fog-params.js'
  * @import { Layer } from './layer.js'
  * @import { RenderView } from './render-view.js'
@@ -130,6 +132,25 @@ class Camera {
      */
     beforePasses = [];
 
+    /**
+     * The scene depth texture most recently published for this camera, or null. The uniform it is
+     * published to is global - the last camera to render owns it - so anything wanting the depth of
+     * one camera in particular reads it from here instead. See {@link SceneDepthReader}.
+     *
+     * @type {Texture|null}
+     * @ignore
+     */
+    sceneDepthMap = null;
+
+    /**
+     * The render version {@link Camera#sceneDepthMap} was published in, so a consumer can tell a
+     * texture rendered this frame from one left over from an earlier one.
+     *
+     * @type {number}
+     * @ignore
+     */
+    sceneDepthMapVersion = -1;
+
     /** @type {number} */
     jitter = 0;
 
@@ -171,6 +192,7 @@ class Camera {
         this._node = null;
         this._orthoHeight = 10;
         this._projection = PROJECTION_PERSPECTIVE;
+        this._projectionOffset = new Vec2();
         this._rect = new Vec4(0, 0, 1, 1);
         this._renderTarget = null;
         this._scissorRect = new Vec4(0, 0, 1, 1);
@@ -227,6 +249,20 @@ class Camera {
 
         this.framePasses.length = 0;
         this.beforePasses.length = 0;
+        this.sceneDepthMap = null;
+    }
+
+    /**
+     * Records the scene depth texture a producer has published for this camera, alongside the render
+     * version it was published in.
+     *
+     * @param {Texture} texture - The texture the depth was rendered to.
+     * @param {number} renderVersion - The render version it was rendered in.
+     * @ignore
+     */
+    publishSceneDepthMap(texture, renderVersion) {
+        this.sceneDepthMap = texture;
+        this.sceneDepthMapVersion = renderVersion;
     }
 
     /**
@@ -476,6 +512,15 @@ class Camera {
         return this._projMat;
     }
 
+    set projectionOffset(newValue) {
+        this._projectionOffset.copy(newValue);
+        this._projMatDirty = true;
+    }
+
+    get projectionOffset() {
+        return this._projectionOffset;
+    }
+
     set rect(newValue) {
         this._rect.copy(newValue);
         this._projMatDirty = true;
@@ -668,6 +713,7 @@ class Camera {
         this.layers = other.layers;
         this.orthoHeight = other.orthoHeight;
         this.projection = other.projection;
+        this.projectionOffset = other.projectionOffset;
         this.rect = other.rect;
         this.renderTarget = other.renderTarget;
         this.scissorRect = other.scissorRect;
@@ -857,9 +903,11 @@ class Camera {
             // calculate half width and height at the near clip plane
             Mat4._getPerspectiveHalfSize(_halfSize, this.fov, this.aspectRatio, this.nearClip, this.horizontalFov);
 
-            // scale by normalized screen coordinates
-            _halfSize.x *= _deviceCoord.x;
-            _halfSize.y *= _deviceCoord.y;
+            // scale by normalized screen coordinates, taking the projection offset into account
+            // (the offset is ignored in XR, where projection matrices are supplied by the XR system)
+            const offset = this.xrActive ? Vec2.ZERO : this._projectionOffset;
+            _halfSize.x *= _deviceCoord.x + offset.x;
+            _halfSize.y *= _deviceCoord.y + offset.y;
 
             // transform to world space
             const invView = this._node.getWorldTransform();
@@ -891,14 +939,27 @@ class Camera {
         // no other input changes)
         const aspect = this.aspectRatio;
         if (this._projMatDirty) {
+            const offset = this._projectionOffset;
             if (this._projection === PROJECTION_PERSPECTIVE) {
                 this._projMat.setPerspective(this.fov, aspect, this.nearClip, this.farClip, this.horizontalFov);
+
+                // off-center projection - the offset is directly the frustum off-center terms
+                // (right+left)/(right-left) and (top+bottom)/(top-bottom), in half-frustum units
+                this._projMat.data[8] = offset.x;
+                this._projMat.data[9] = offset.y;
                 this._projMatSkybox.copy(this._projMat);
             } else {
                 const y = this._orthoHeight;
                 const x = y * aspect;
                 this._projMat.setOrtho(-x, x, -y, y, this.nearClip, this.farClip);
+
+                // off-center projection - translate the ortho window by the offset in half-window
+                // units, matching the perspective sign convention
+                this._projMat.data[12] = -offset.x;
+                this._projMat.data[13] = -offset.y;
                 this._projMatSkybox.setPerspective(this.fov, aspect, this.nearClip, this.farClip);
+                this._projMatSkybox.data[8] = offset.x;
+                this._projMatSkybox.data[9] = offset.y;
             }
 
             this._projMatDirty = false;
@@ -957,6 +1018,7 @@ class Camera {
     getFrustumCorners(near = this.nearClip, far = this.farClip) {
 
         const fov = this.fov * math.DEG_TO_RAD;
+        const offset = this.xrActive ? Vec2.ZERO : this._projectionOffset;
         let x, y;
 
         if (this.projection === PROJECTION_PERSPECTIVE) {
@@ -972,18 +1034,22 @@ class Camera {
             x = y * this.aspectRatio;
         }
 
+        // center of the projection window, offset for off-center projections
+        let cx = offset.x * x;
+        let cy = offset.y * y;
+
         const points = _frustumPoints;
-        points[0].x = x;
-        points[0].y = -y;
+        points[0].x = cx + x;
+        points[0].y = cy - y;
         points[0].z = -near;
-        points[1].x = x;
-        points[1].y = y;
+        points[1].x = cx + x;
+        points[1].y = cy + y;
         points[1].z = -near;
-        points[2].x = -x;
-        points[2].y = y;
+        points[2].x = cx - x;
+        points[2].y = cy + y;
         points[2].z = -near;
-        points[3].x = -x;
-        points[3].y = -y;
+        points[3].x = cx - x;
+        points[3].y = cy - y;
         points[3].z = -near;
 
         if (this._projection === PROJECTION_PERSPECTIVE) {
@@ -994,18 +1060,20 @@ class Camera {
                 y = far * Math.tan(fov / 2.0);
                 x = y * this.aspectRatio;
             }
+            cx = offset.x * x;
+            cy = offset.y * y;
         }
-        points[4].x = x;
-        points[4].y = -y;
+        points[4].x = cx + x;
+        points[4].y = cy - y;
         points[4].z = -far;
-        points[5].x = x;
-        points[5].y = y;
+        points[5].x = cx + x;
+        points[5].y = cy + y;
         points[5].z = -far;
-        points[6].x = -x;
-        points[6].y = y;
+        points[6].x = cx - x;
+        points[6].y = cy + y;
         points[6].z = -far;
-        points[7].x = -x;
-        points[7].y = -y;
+        points[7].x = cx - x;
+        points[7].y = cy - y;
         points[7].z = -far;
 
         return points;

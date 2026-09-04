@@ -43,6 +43,15 @@ export default /* glsl */`
         return vec3((0.5 - uv) * vec2(uAspect, 1.0) * linearDepth, linearDepth);
     }
 
+    // snap the uv to the center of the depth texture texel it falls into, so that the
+    // reconstructed view-space position matches the surface point the depth was rendered at.
+    // Without this, when the AO resolution is lower than the depth resolution, positions are
+    // reconstructed slightly off the true surface, causing self-occlusion banding artifacts.
+    highp vec2 snapToDepthTexelCenter(const highp vec2 uv) {
+        vec2 size = vec2(textureSize(uSceneDepthMap, 0));
+        return (floor(uv * size) + 0.5) / size;
+    }
+
     highp vec3 faceNormal(highp vec3 dpdx, highp vec3 dpdy) {
         return normalize(cross(dpdx, dpdy));
     }
@@ -60,8 +69,8 @@ export default /* glsl */`
     //       are essentially equivalent to textureGather (which we don't have on ES3.0),
     //       and this is executed just once.
     highp vec3 computeViewSpaceNormal(const highp vec3 position, const highp vec2 uv) {
-        highp vec2 uvdx = uv + vec2(uInvResolution.x, 0.0);
-        highp vec2 uvdy = uv + vec2(0.0, uInvResolution.y);
+        highp vec2 uvdx = snapToDepthTexelCenter(uv + vec2(uInvResolution.x, 0.0));
+        highp vec2 uvdy = snapToDepthTexelCenter(uv + vec2(0.0, uInvResolution.y));
         highp vec3 px = computeViewSpacePositionFromDepth(uvdx, -getLinearScreenDepth(uvdx));
         highp vec3 py = computeViewSpacePositionFromDepth(uvdy, -getLinearScreenDepth(uvdy));
         highp vec3 dpdx = px - position;
@@ -116,7 +125,7 @@ export default /* glsl */`
 
         mediump float ssRadius = max(1.0, tap.z * ssDiskRadius); // at least 1 pixel screen-space radius
 
-        mediump vec2 uvSamplePos = uv + vec2(ssRadius * tap.xy) * uInvResolution;
+        mediump vec2 uvSamplePos = snapToDepthTexelCenter(uv + vec2(ssRadius * tap.xy) * uInvResolution);
 
         // TODO: level is not used, but could be used with mip-mapped depth texture
         mediump float level = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, float(uMaxLevel));
@@ -166,9 +175,9 @@ export default /* glsl */`
     uniform float uPower;
 
     void main() {
-        highp vec2 uv = uv0; // interpolated to pixel center
+        highp vec2 uv = snapToDepthTexelCenter(uv0);
 
-        highp float depth = -getLinearScreenDepth(uv0);
+        highp float depth = -getLinearScreenDepth(uv);
         highp vec3 origin = computeViewSpacePositionFromDepth(uv, depth);
         vec3 normal = computeViewSpaceNormal(origin, uv);
 

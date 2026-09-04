@@ -86,11 +86,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
     /** @type {Set<string>} */
     _internalDefines = new Set();
 
-    /** @type {boolean} */
-    forceCopyMaterial = true;
-
     /** @type {string} */
     _lastSourceChunksKey = '';
+
+    /** @type {number} */
+    _sourceMaterialVersion = -1;
 
     /**
      * The projection cache stride in u32 words: the base layout plus user varying stream words.
@@ -158,7 +158,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @param {Layer} layer - The layer to add mesh instances to.
      * @param {GSplatWorkBuffer} workBuffer - The work buffer (kept for parent compatibility;
      * the hybrid renderer does not bind work-buffer textures itself).
-     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch] -
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch]
      * Manager-owned shared scratch; forwarded to the interval compaction (shared with the shadow cull).
      */
     constructor(device, node, cameraNode, layer, workBuffer, scratch = null) {
@@ -191,6 +191,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('PICK_CUSTOM_ID');
         this._internalDefines.add('GSPLAT_OVERDRAW');
         this._internalDefines.add('GSPLAT_NO_FOG');
+        this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_XR');
 
         // GPU sort pipeline resources (gpuSorter, projector, intervalCompaction) are created lazily
@@ -456,7 +457,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
             foveationCenter: params.foveationCenter,
             viewportWidth,
             viewportHeight,
-            flipY: !!cameraNode.camera.renderTarget?.flipY,
             pickMode,
             fisheyeProj,
             antiAlias: params.antiAlias,
@@ -716,8 +716,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @private
      */
     _computeClipToViewZ(cameraNode, dst) {
-        const camComp = cameraNode.camera;
-        const cam = camComp.camera;
+        const cam = cameraNode.camera.camera;
         if (this.fisheyeProj.enabled) {
             const near = cam.nearClip;
             const far = cam.farClip;
@@ -727,8 +726,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
             dst[3] = near;
             return;
         }
-        const flipY = !!camComp.renderTarget?.flipY;
-        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, flipY, this.device.isWebGPU)).invert();
+        // canonical (unflipped) projection - matches the projector cache; the raster-time flip
+        // (projectionFlipY) is applied to the output position only and does not affect depth
+        _invProjMat.copy(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, this.device.isWebGPU)).invert();
         const d = _invProjMat.data;
         dst[0] = -d[2];
         dst[1] = -d[6];
@@ -751,6 +751,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
     }
 
     frameUpdate(params) {
+
+        // Whether the splats contribute to the scene depth. This only selects the blend state, as the
+        // write itself is enabled by a define coming from the camera, so it needs no shader rebuild and
+        // can follow the scene setting from frame to frame.
+        this._material.sceneTexturesWrite = params.sceneDepthWrite;
+
         this._material.setParameter('alphaClip', params.alphaClip);
         this._material.setParameter('alphaClipForward', params.alphaClipForward);
         this._pickMaterial?.setParameter('alphaClip', params.alphaClip);
@@ -761,9 +767,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
         }
 
         const noFog = !params.useFog;
-        if (noFog !== this._lastNoFog) {
+        const noTonemap = !params.useTonemap;
+        if (noFog !== this._lastNoFog || noTonemap !== this._lastNoTonemap) {
             this._lastNoFog = noFog;
+            this._lastNoTonemap = noTonemap;
             this._material.setDefine('GSPLAT_NO_FOG', noFog);
+            this._material.setDefine('GSPLAT_NO_TONEMAP', noTonemap);
             this._material.update();
         }
 
@@ -779,10 +788,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
             }
         }
 
-        // Copy material settings from params.material if dirty or on first update
-        if (this.forceCopyMaterial || params.material.dirty) {
+        // Copy material settings when the source material has been updated
+        const sourceMaterialVersion = params.material.updateVersion;
+        if (this._sourceMaterialVersion !== sourceMaterialVersion) {
             this.copyMaterialSettings(params.material);
-            this.forceCopyMaterial = false;
+            this._sourceMaterialVersion = sourceMaterialVersion;
         }
     }
 

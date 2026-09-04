@@ -47,6 +47,7 @@ import {
     TranslateGizmo,
     Vec3,
     WORKBUFFER_UPDATE_ONCE,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 
@@ -112,6 +113,10 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// Renderer for the selection box outline
+const wire = new WireRenderer(app);
+wire.color = Color.YELLOW;
 
 data.on('renderer:set', () => {
     app.scene.gsplat.renderer = data.get('renderer');
@@ -563,7 +568,7 @@ app.on('update', () => {
     // Sync selection box center with entity position (gizmo moves the entity)
     if (selectionBox && selectionBoxVisible) {
         selectionBox.center.copy(selectionBoxEntity.getPosition());
-        app.drawWireAlignedBox(selectionBox.getMin(), selectionBox.getMax(), Color.YELLOW);
+        wire.boxMinMax(selectionBox.getMin(), selectionBox.getMax());
 
         // Update selection highlighting for all editables
         const boxMin = selectionBox.getMin();

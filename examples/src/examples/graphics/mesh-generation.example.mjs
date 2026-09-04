@@ -28,9 +28,14 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    playcanvasGrey: new Asset('playcanvasGrey', 'texture', {
-        url: './assets/textures/playcanvas-grey.png'
-    })
+    playcanvasGrey: new Asset(
+        'playcanvasGrey',
+        'texture',
+        {
+            url: './assets/textures/playcanvas-grey.png'
+        },
+        { srgb: true }
+    )
 };
 
 const gfxOptions = {
@@ -80,7 +85,7 @@ function createLight(color, scale) {
     light.addComponent('light', {
         type: 'omni',
         color: color,
-        radius: 10,
+        range: 10,
         castShadows: false
     });
 
@@ -167,7 +172,6 @@ for (let x = 0; x < resolution - 1; x++) {
 function updateMesh(mesh, initAll) {
     // Set updated positions and normal each frame
     mesh.setPositions(positions);
-    // @ts-ignore engine-tsd
     mesh.setNormals(calculateNormals(positions, indexArray));
 
     // Update mesh Uvs and Indices only one time, as they do not change each frame

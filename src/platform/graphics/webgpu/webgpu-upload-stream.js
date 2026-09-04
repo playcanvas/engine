@@ -70,14 +70,19 @@ class WebgpuUploadStream {
      */
     update(minByteSize) {
 
+        const device = this.uploadStream.device;
+
         // map all pending buffers
         const pending = this.pendingStagingBuffers;
         for (let i = 0; i < pending.length; i++) {
             const buffer = pending[i];
-            buffer.mapAsync(GPUMapMode.WRITE).then(() => {
-                if (!this._destroyed) {
+            // @ts-ignore - mapBufferAsync is available on WebgpuGraphicsDevice
+            device.mapBufferAsync(buffer, GPUMapMode.WRITE).then((mapped) => {
+                if (mapped && !this._destroyed) {
                     this.availableStagingBuffers.push(buffer);
                 } else {
+                    // the buffer cannot be reused when the mapping fails (device lost) or when
+                    // this instance was destroyed in the meantime
                     buffer.destroy();
                 }
             });

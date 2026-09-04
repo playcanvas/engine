@@ -33,6 +33,9 @@ class ParticleMaterial extends Material {
     constructor(emitter) {
         super();
 
+        // particles use their own shader, which does not generate the scene textures
+        this.sceneTexturesWrite = false;
+
         this.emitter = emitter;
         Debug.assert(emitter);
     }

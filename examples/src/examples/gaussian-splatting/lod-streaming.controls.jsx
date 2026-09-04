@@ -102,6 +102,16 @@ export function Controls({ observer }) {
                         step={0.0001}
                     />
                 </LabelGroup>
+                <LabelGroup text='Vertical Correction'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'verticalCorrection' }}
+                        min={0}
+                        max={1}
+                        precision={2}
+                        step={0.01}
+                    />
+                </LabelGroup>
                 <LabelGroup text='High Res'>
                     <BooleanInput
                         type='toggle'
@@ -209,22 +219,26 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='LOD Base Dist'>
-                    <SliderInput
+                <LabelGroup text='LOD Mode'>
+                    <SelectInput
+                        type='string'
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodBaseDistance' }}
-                        min={1}
-                        max={50}
-                        precision={1}
+                        link={{ observer, path: 'lodMode' }}
+                        value={observer.get('lodMode') || 'error'}
+                        options={[
+                            { v: 'error', t: 'Error' },
+                            { v: 'distance', t: 'Distance' }
+                        ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='LOD Multiplier'>
+                <LabelGroup text='LOD Falloff'>
                     <SliderInput
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodMultiplier' }}
-                        min={1.2}
-                        max={5}
-                        precision={1}
+                        link={{ observer, path: 'lodFalloff' }}
+                        min={0}
+                        max={8}
+                        precision={2}
+                        step={0.01}
                     />
                 </LabelGroup>
                 <LabelGroup text='Splat Budget'>

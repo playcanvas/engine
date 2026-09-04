@@ -8,9 +8,8 @@ const REGULAR_OUT = '\x1b[22m';
 const TYPES_PATH = './build/playcanvas/src';
 
 const STANDARD_MAT_PROPS = [
-    ['alphaFade', 'boolean'],
+    ['alphaFade', 'number'],
     ['ambient', 'Color'],
-    ['anisotropy', 'number'],
     ['anisotropyIntensity', 'number'],
     ['anisotropyRotation', 'number'],
     ['anisotropyMap', 'Texture|null'],
@@ -137,7 +136,7 @@ const STANDARD_MAT_PROPS = [
     ['normalMapRotation', 'number'],
     ['normalMapTiling', 'Vec2'],
     ['normalMapUv', 'number'],
-    ['occludeDirect', 'number'],
+    ['occludeDirect', 'boolean'],
     ['occludeSpecular', 'number'],
     ['occludeSpecularIntensity', 'number'],
     ['opacity', 'number'],
@@ -165,7 +164,6 @@ const STANDARD_MAT_PROPS = [
     ['specularMapRotation', 'number'],
     ['specularMapTiling', 'Vec2'],
     ['specularMapUv', 'number'],
-    ['specularTint', 'boolean'],
     ['specularVertexColor', 'boolean'],
     ['specularVertexColorChannel', 'string'],
     ['specularityFactor', 'number'],
@@ -195,31 +193,57 @@ const STANDARD_MAT_PROPS = [
     ['useSkybox', 'boolean']
 ];
 
+// The accessors are injected directly after this member of the tsc-emitted class body.
+const STANDARD_MAT_ANCHOR = 'reset(): void;';
+
+// A block injected by an earlier run, found directly after the anchor. tsc indents the class body
+// with four spaces while the injected lines are tab-indented, so a run of tab-indented (or blank)
+// lines there can only be a previous injection. Matching it lets the transformer replace a stale
+// block in place rather than add a second copy, which matters when an incremental tsc run leaves
+// behind a declaration file that was fixed up with an older STANDARD_MAT_PROPS.
+const STANDARD_MAT_INJECTED = /^(?:\r?\n(?: *\t[^\n]*)?)*(?=\r?\n)/;
+
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
-        guard: 'set alphaFade(arg: boolean);',
         transformer: (contents) => {
+            const anchorIndex = contents.indexOf(STANDARD_MAT_ANCHOR);
+            if (anchorIndex === -1) {
+                throw new Error(`types-fixup: '${STANDARD_MAT_ANCHOR}' not found in the StandardMaterial declarations`);
+            }
+            const anchorEnd = anchorIndex + STANDARD_MAT_ANCHOR.length;
+            const rest = contents.slice(anchorEnd);
+            const previous = rest.match(STANDARD_MAT_INJECTED);
+            const remainder = rest.slice(previous ? previous[0].length : 0);
 
-            // Find the jsdoc block description using eg "@property {Type} {name}"
-            return contents.replace('reset(): void;', `reset(): void;
-                ${STANDARD_MAT_PROPS.map((prop) => {
-        const typeDefinition = `@property {${prop[1]}} ${prop[0]}`;
-        const typeDescriptionIndex = contents.match(typeDefinition);
-        const typeDescription = typeDescriptionIndex ?
-            contents.slice(typeDescriptionIndex.index + typeDefinition.length, contents.indexOf('\n * @property', typeDescriptionIndex.index + typeDefinition.length)) :
-            '';
+            // Each description is looked up in the class JSDoc by its "@property {Type} name" tag.
+            // This is a plain string search on purpose: the type can contain characters that mean
+            // something in a regex (e.g. Texture|null), which used to match the wrong tag.
+            const accessors = STANDARD_MAT_PROPS.map((prop) => {
+                const tag = `@property {${prop[1]}} ${prop[0]} `;
+                const tagIndex = contents.indexOf(tag);
+                let typeDescription = '';
+                if (tagIndex !== -1) {
+                    // the description runs up to the next block tag, or to the end of the comment
+                    const start = tagIndex + tag.length;
+                    let end = contents.indexOf('\n * @', start);
+                    if (end === -1) {
+                        end = contents.indexOf('\n */', start);
+                    }
+                    typeDescription = end === -1 ? contents.slice(start) : contents.slice(start, end);
+                }
 
-        // Strip newlines, asterisks, and tabs from the type description
-        const cleanTypeDescription = typeDescription
-        .trim()
-        .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
-        .replace(/\s+/g, ' '); // collapse whitespace
+                // Strip newlines, asterisks, and tabs from the type description
+                const cleanTypeDescription = typeDescription
+                .trim()
+                .replace(/[\n\t*]/g, ' ') // remove newlines, tabs, and asterisks
+                .replace(/\s+/g, ' '); // collapse whitespace
 
-        const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
-        return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
-    }).join('')}`
-            );
+                const jsdoc = cleanTypeDescription ? `/** ${cleanTypeDescription} */` : '';
+                return `\t${jsdoc}\n\tset ${prop[0]}(arg: ${prop[1]});\n\tget ${prop[0]}(): ${prop[1]};\n\n`;
+            }).join('');
+
+            return `${contents.slice(0, anchorEnd)}\n${accessors}${remainder}`;
         },
         footer: `
 import { Color } from '../../core/math/color.js';

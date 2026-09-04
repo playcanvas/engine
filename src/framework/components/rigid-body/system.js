@@ -38,14 +38,19 @@ const _properties = [
 
 /**
  * The RigidBodyComponentSystem manages the physics simulation for all rigid body components
- * in the application. It creates and maintains the underlying Ammo.js physics world, handles
- * physics object creation and destruction, performs physics raycasting, detects and reports
- * collisions, and updates the transforms of entities with rigid bodies after each physics step.
+ * in the application and is accessed as `app.systems.rigidbody`. It owns the physics world,
+ * creates and destroys the bodies behind rigid body and collision components, steps the
+ * simulation once per frame and writes the resulting transforms back to their entities. It also
+ * holds global settings such as {@link RigidBodyComponentSystem#gravity}, performs raycasts
+ * and reports collisions.
  *
- * The system controls global physics settings like gravity and provides methods for raycasting
- * and collision detection.
+ * The system is only functional once a physics backend is installed: either by supplying
+ * {@link AppOptions#physicsWorld} when creating the application, or automatically when the
+ * application has loaded the Ammo.js {@link WasmModule}.
  *
- * This system is only functional if your application has loaded the Ammo.js {@link WasmModule}.
+ * Set {@link RigidBodyComponentSystem#timeScale} to slow the simulation down, speed it up or
+ * pause it, for example while a pause menu is open, and call
+ * {@link RigidBodyComponentSystem#step} to advance it manually.
  *
  * @category Physics
  */
@@ -70,6 +75,37 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @ignore
      */
     fixedTimeStep = 1 / 60;
+
+    /**
+     * Scales the time the simulation is advanced by each frame. Defaults to 1. Values below 1
+     * run physics in slow motion and values above 1 speed it up. 0 pauses the simulation: the
+     * system stops advancing it, bodies freeze in place, entity transforms are no longer driven
+     * by their bodies and no contact or trigger events fire. The rest of the application keeps
+     * running, so this suits a pause menu or inventory screen that must stay interactive while
+     * the game world stands still. Negative values are treated as 0.
+     *
+     * This scale is applied on top of {@link AppBase#timeScale}. The simulation can still be
+     * advanced manually with {@link RigidBodyComponentSystem#step} while paused, for example to
+     * drive it from a custom time source.
+     *
+     * How slow motion below one fixed substep per frame looks depends on the backend: the Ammo
+     * backend interpolates body transforms between substeps so motion stays smooth, while other
+     * backends may only move bodies on the frames in which a substep runs. Fast forward is
+     * limited by the maximum number of substeps the simulation may take per frame, beyond which
+     * it runs slower than requested.
+     *
+     * Forces applied with {@link RigidBodyComponent#applyForce} while paused accumulate on the
+     * body and are applied together on the next step, because forces are only cleared when the
+     * simulation steps. Impulses and velocity changes take effect immediately.
+     *
+     * @example
+     * // Freeze the game world while the pause menu is open
+     * app.systems.rigidbody.timeScale = 0;
+     * @example
+     * // Run physics at quarter speed for a slow motion effect
+     * app.systems.rigidbody.timeScale = 0.25;
+     */
+    timeScale = 1;
 
     /**
      * The world space vector representing global gravity in the physics simulation. Defaults to
@@ -136,22 +172,21 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Called once Ammo has been loaded. Responsible for creating the physics world.
+     * Called once application libraries have loaded. Creates the Ammo backend when the Ammo
+     * global is present and no backend was injected via {@link AppOptions#physicsWorld}.
      *
      * @ignore
      */
     onLibraryLoaded() {
         if (!this._world && typeof Ammo !== 'undefined') {
-            this.setPhysicsWorld(new AmmoPhysicsWorld({ contactListener: this }));
-        } else if (!this._world) {
-            // Unbind the update function if we haven't loaded Ammo by now
-            this.app.systems.off('update', this.onUpdate, this);
+            this.setPhysicsWorld(new AmmoPhysicsWorld());
         }
     }
 
     /**
-     * Installs a physics backend. Used internally for Ammo auto-detection and by tests to
-     * inject a NullPhysicsWorld. A backend can be installed at most once.
+     * Installs a physics backend and registers this system as its contact listener. Called by
+     * {@link AppBase#init} when {@link AppOptions#physicsWorld} is supplied, and internally by
+     * Ammo auto-detection. A backend can be installed at most once.
      *
      * @param {PhysicsWorld} world - The physics backend.
      * @ignore
@@ -159,6 +194,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     setPhysicsWorld(world) {
         Debug.assert(!this._world, 'RigidBodyComponentSystem#setPhysicsWorld: a physics world is already installed.');
         this._world = world;
+        world.contactListener = this;
 
         this.contactPointPool = new ObjectPool(ContactPoint, 1);
         this.contactResultPool = new ObjectPool(ContactResult, 1);
@@ -168,10 +204,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * The installed physics backend, or null when no physics library has loaded.
+     * Gets the installed physics backend, or null when no backend is installed. Supply a
+     * backend via {@link AppOptions#physicsWorld}, or load the Ammo.js library to have one
+     * installed automatically.
      *
      * @type {PhysicsWorld|null}
-     * @ignore
+     * @alpha
      */
     get physicsWorld() {
         return this._world;
@@ -751,13 +789,42 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.singleContactResultPool.freeAll();
     }
 
-    onUpdate(dt) {
+    /**
+     * Advances the physics simulation by dt seconds. Synchronizes triggers, compound shapes and
+     * kinematic bodies from their entities, steps the backend in fixed-length substeps (up to a
+     * maximum number per call), writes the resulting transforms of dynamic bodies back to their
+     * entities and fires contact and trigger events.
+     *
+     * The system calls this once per frame with the frame delta time multiplied by
+     * {@link RigidBodyComponentSystem#timeScale}, unless that is 0. Call it directly to step the
+     * simulation manually: to advance it while paused, to fast forward it by stepping several
+     * times in one frame, or to drive it from a custom time source. Automatic stepping continues
+     * while timeScale is above 0, so calling this every frame as well advances the simulation
+     * twice per frame. Set timeScale to 0 first when taking over stepping entirely. The delta is
+     * used as given, without applying timeScale. Does nothing when no physics backend is
+     * installed.
+     *
+     * @param {number} dt - The amount of time to advance the simulation by, in seconds.
+     * @example
+     * // Pause automatic stepping and advance the simulation by 1/60 s per key press
+     * const physics = app.systems.rigidbody;
+     * physics.timeScale = 0;
+     * app.keyboard.on('keydown', (event) => {
+     *     if (event.key === KEY_SPACE) {
+     *         physics.step(1 / 60);
+     *     }
+     * });
+     */
+    step(dt) {
+        const world = this._world;
+        if (!world) return;
+
         let i, len;
 
         this._stats.physicsStart = now();
 
         // Check to see whether we need to update gravity on the physics world
-        this._world.setGravity(this.gravity);
+        world.setGravity(this.gravity);
 
         const triggers = this._triggers;
         for (i = 0, len = triggers.length; i < len; i++) {
@@ -776,7 +843,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // Step the physics simulation
-        this._world.step(dt, this.maxSubSteps, this.fixedTimeStep);
+        world.step(dt, this.maxSubSteps, this.fixedTimeStep);
 
         // Update the transforms of all entities referencing a dynamic body
         const dynamic = this._dynamic;
@@ -785,9 +852,28 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // no-op on backends that report contacts from inside step()
-        this._world.flushContacts();
+        world.flushContacts();
 
         this._stats.physicsTime = now() - this._stats.physicsStart;
+    }
+
+    /**
+     * Steps the simulation by the frame delta time scaled by
+     * {@link RigidBodyComponentSystem#timeScale}, or skips the frame entirely when the scale is
+     * 0. Registered on the application's update event when a physics backend is installed.
+     *
+     * @param {number} dt - The frame delta time in seconds.
+     * @ignore
+     */
+    onUpdate(dt) {
+        const timeScale = this.timeScale;
+        if (!(timeScale > 0)) {
+            // paused: nothing was simulated this frame
+            this._stats.physicsTime = 0;
+            return;
+        }
+
+        this.step(dt * timeScale);
     }
 
     destroy() {
@@ -798,6 +884,25 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (this._world) {
             this._world.destroy();
             this._world = null;
+        }
+    }
+
+    /**
+     * Sets the world space gravity. Accepts either a Vec3 or three numbers.
+     *
+     * @param {number|Vec3} x - A Vec3 holding the gravity, or the x-component of the gravity.
+     * @param {number} [y] - The y-component of the gravity.
+     * @param {number} [z] - The z-component of the gravity.
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponentSystem#gravity} instead.
+     */
+    setGravity(x, y, z) {
+        Debug.deprecated('RigidBodyComponentSystem#setGravity is deprecated. Use RigidBodyComponentSystem#gravity instead.');
+
+        if (y === undefined) {
+            this.gravity.copy(x);
+        } else {
+            this.gravity.set(x, y, z);
         }
     }
 }

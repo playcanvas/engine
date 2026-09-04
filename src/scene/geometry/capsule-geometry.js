@@ -1,5 +1,4 @@
 import { ConeBaseGeometry } from './cone-base-geometry.js';
-import { calculateTangents } from './geometry-utils.js';
 
 /**
  * A procedural capsule-shaped geometry.
@@ -69,7 +68,7 @@ class CapsuleGeometry extends ConeBaseGeometry {
         super(radius, radius, height - 2 * radius, heightSegments, sides, true);
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(this.positions, this.normals, this.uvs, this.indices);
+            this.calculateTangents();
         }
     }
 }

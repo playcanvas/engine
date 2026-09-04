@@ -26,6 +26,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
         if (options.useMorphPosition)           key += '_morphp';
         if (options.useMorphNormal)             key += '_morphn';
         if (options.useMorphTextureBasedInt)    key += '_morphi';
+        if (options.useDualSourceBlending)       key += '_dualSource';
 
         return key;
     }
@@ -104,6 +105,7 @@ class ShaderGeneratorShader extends ShaderGenerator {
             name: `ShaderMaterial-${desc.uniqueName}`,
             shaderLanguage: wgsl ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL,
             fragmentOutputTypes: desc.fragmentOutputTypes,
+            useDualSourceBlending: options.useDualSourceBlending,
             meshUniformBufferFormat: desc.meshUniformBufferFormat,
             meshBindGroupFormat: desc.meshBindGroupFormat
         };

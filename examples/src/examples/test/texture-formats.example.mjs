@@ -1,3 +1,9 @@
+// @config
+//
+// Test example for texture asset loading — png, dds, ktx2, basis, and hdr parsers.
+//
+// @flag HIDDEN
+
 import {
     AppBase,
     AppOptions,

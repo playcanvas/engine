@@ -13,6 +13,7 @@ export default /* wgsl */`
     uniform uFogAmbient: vec3f;
     uniform uFogParams: vec4f;        // x: density, y: height base, z: height falloff, w: max distance
     uniform uFogScatterParams: vec4f; // x: anisotropy, y: step count, z: temporal noise offset, w: shadow intensity
+    uniform uFogExtinction: f32;      // scales the absorption without affecting the scattering
 
     #ifdef FOG_SHADOWS
         uniform uFogShadowMatrixPalette: array<mat4x4f, 4>;
@@ -105,7 +106,7 @@ export default /* wgsl */`
             // accumulate in-scattered light and update transmittance (Beer-Lambert)
             let radiance: vec3f = sunLight * shadow + uniform.uFogAmbient;
             inscatter += transmittance * uniform.uFogTint * radiance * (density * dt);
-            transmittance *= exp(-density * dt);
+            transmittance *= exp(-uniform.uFogExtinction * density * dt);
 
             if (transmittance < 0.005) {
                 break;

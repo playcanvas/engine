@@ -11,6 +11,8 @@ import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compo
 import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
 
 /**
+ * @import { CameraComponent } from '../../framework/components/camera/component.js';
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
  * @import { Texture } from '../../platform/graphics/texture.js';
  */
 
@@ -108,6 +110,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _debug = null;
 
+    _sceneDepthAvailable = false;
+
     // track user-provided custom compose chunks
     _customComposeChunks = new Map([
         ['composeDeclarationsPS', ''],
@@ -115,8 +119,15 @@ class RenderPassCompose extends RenderPassShaderQuad {
         ['composeMainEndPS', '']
     ]);
 
-    constructor(graphicsDevice) {
+    /**
+     * @param {GraphicsDevice} graphicsDevice - The graphics device.
+     * @param {CameraComponent} cameraComponent - The camera this composes the frame of. Only the depth
+     * debug mode needs it, for the depth encoding the camera renders and its clip range.
+     */
+    constructor(graphicsDevice, cameraComponent) {
         super(graphicsDevice);
+
+        this.cameraComponent = cameraComponent;
 
         // register compose shader chunks
         ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).add(composeChunksGLSL, false);
@@ -143,6 +154,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.colorLUTParamsId = scope.resolve('colorLUTParams');
         this.colorEnhanceParamsId = scope.resolve('colorEnhanceParams');
         this.colorEnhanceMidtonesId = scope.resolve('colorEnhanceMidtones');
+        this.composeTargetFlipYId = scope.resolve('composeTargetFlipY');
+        this.cameraParams = new Float32Array(4);
+        this.cameraParamsId = scope.resolve('camera_params');
     }
 
     set debug(value) {
@@ -153,6 +167,37 @@ class RenderPassCompose extends RenderPassShaderQuad {
     }
 
     get debug() {
+        return this._debug;
+    }
+
+    /**
+     * Whether the scene depth this frame renders is available to sample, which the depth debug mode
+     * displays instead of producing a depth of its own - a debug mode never changes what is rendered.
+     *
+     * @type {boolean}
+     */
+    set sceneDepthAvailable(value) {
+        if (this._sceneDepthAvailable !== value) {
+            this._sceneDepthAvailable = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get sceneDepthAvailable() {
+        return this._sceneDepthAvailable;
+    }
+
+    /**
+     * The debug mode the shader is built for. This is the requested mode, except that a request for the
+     * depth with no depth to sample renders black instead.
+     *
+     * @type {string|null}
+     * @private
+     */
+    get _debugMode() {
+        if (this._debug === 'depth' && !this._sceneDepthAvailable) {
+            return 'depthmissing';
+        }
         return this._debug;
     }
 
@@ -364,6 +409,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
             const startHash = hashCode(customChunks.get('composeMainStartPS') ?? '');
             const endHash = hashCode(customChunks.get('composeMainEndPS') ?? '');
 
+            // the depth debug mode samples the scene depth, whose encoding varies with what produced it
+            const debugMode = this._debugMode;
+            const depthDefines = new Map();
+            const depthKey = debugMode === 'depth' ?
+                ShaderUtils.addScreenDepthChunkDefines(this.cameraComponent.shaderParams, depthDefines) : '';
+
             const key =
                 `${this.toneMapping}` +
                 `-${gammaCorrectionName}` +
@@ -379,7 +430,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
                 `-${this.taaEnabled ? 'taa' : 'notaa'}` +
                 `-${this.isSharpnessEnabled ? (this._hdrScene ? 'cashdr' : 'cas') : 'nocas'}` +
-                `-${this._debug ?? ''}` +
+                `-${debugMode ?? ''}${depthKey}` +
                 `-decl${declHash}-start${startHash}-end${endHash}`;
 
             if (this._key !== key) {
@@ -403,7 +454,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                     defines.set('CAS', true);
                     if (this._hdrScene) defines.set('CAS_HDR', true);
                 }
-                if (this._debug) defines.set('DEBUG_COMPOSE', this._debug);
+                if (debugMode) defines.set('DEBUG_COMPOSE', debugMode);
+                depthDefines.forEach((value, name) => defines.set(name, value));
 
                 this.shader = ShaderUtils.createShader(this.device, {
                     uniqueName: `ComposeShader-${key}`,
@@ -418,11 +470,22 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     execute() {
 
+        // the clip range the depth debug mode maps to its ramp, and what the depth chunk linearizes
+        // with. Only set for that mode, so the rest of the composition leaves the camera state alone.
+        if (this._debugMode === 'depth') {
+            this.cameraParamsId.setValue(this.cameraComponent.camera.fillShaderParams(this.cameraParams));
+        }
+
         const sceneTex = this.sceneTexture;
         this.sceneTextureId.setValue(sceneTex);
         this.sceneTextureInvResValue[0] = 1.0 / sceneTex.width;
         this.sceneTextureInvResValue[1] = 1.0 / sceneTex.height;
         this.sceneTextureInvResId.setValue(this.sceneTextureInvResValue);
+
+        // the scene chain renders with the API-native orientation - when the target render
+        // target stores a flipped image, flip the sampling vertically so the composed result
+        // lands in the requested row order
+        this.composeTargetFlipYId.setValue(this.renderTarget?.flipY ? 1 : 0);
 
         if (this._bloomTexture) {
             this.bloomTextureId.setValue(this._bloomTexture);

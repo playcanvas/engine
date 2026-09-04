@@ -37,7 +37,7 @@ const assets = {
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
     normal: new Asset('normal', 'texture', { url: './assets/textures/flakes5n.png' }),
-    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/flakes5c.png' }),
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/flakes5c.png' }, { srgb: true }),
     other: new Asset('other', 'texture', { url: './assets/textures/flakes5o.png' })
 };
 

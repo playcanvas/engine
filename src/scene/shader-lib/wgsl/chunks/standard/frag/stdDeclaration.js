@@ -24,6 +24,11 @@ export default /* wgsl */`
         #ifdef LIT_REFRACTION
             var<private> dTransmission: f32;
             var<private> dThickness: f32;
+
+            // ior, unless it is declared by the metalness path below
+            #ifndef LIT_METALNESS
+                var<private> dIor: f32;
+            #endif
         #endif
 
         #ifdef LIT_SCENE_COLOR
@@ -43,6 +48,14 @@ export default /* wgsl */`
         // parallax
         #ifdef STD_HEIGHT_MAP
             var<private> dUvOffset: vec2f;
+            #ifdef STD_PARALLAX_SELF_SHADOW
+                // The depth the view ray hit the height field at, and the mip level the march read.
+                // Both are carried to the per light self shadow march, which starts where the
+                // shading does. The depth already has the distance fade applied, so it reaches zero
+                // with the fade and the shadow goes with it.
+                var<private> dParallaxHitDepth: f32;
+                var<private> dParallaxLod: f32;
+            #endif
             #ifdef STD_HEIGHT_TEXTURE_ALLOCATE
                 var texture_heightMap : texture_2d<f32>;
                 var texture_heightMapSampler : sampler;
@@ -107,8 +120,8 @@ export default /* wgsl */`
             var<private> dAnisotropyRotation: vec2f;
         #endif
 
-        // specularity & glossiness
-        #ifdef LIT_SPECULAR_OR_REFLECTION
+        // specularity & glossiness (also needed by refraction, which uses specularity and gloss)
+        #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
 
             // sheen
             #ifdef LIT_SHEEN

@@ -3,6 +3,7 @@ import {
     LabelGroup,
     BooleanInput,
     Panel,
+    SelectInput,
     SliderInput,
     Label
 } from '@playcanvas/pcui/react';
@@ -28,6 +29,18 @@ export function Controls({ observer }) {
                         max={40}
                         precision={1}
                         step={0.1}
+                    />
+                </LabelGroup>
+                <LabelGroup text='LOD Mode'>
+                    <SelectInput
+                        type='string'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'lodMode' }}
+                        value={observer.get('lodMode') || 'error'}
+                        options={[
+                            { v: 'error', t: 'Error' },
+                            { v: 'distance', t: 'Distance' }
+                        ]}
                     />
                 </LabelGroup>
                 <LabelGroup text='Colorize LODs'>

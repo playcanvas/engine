@@ -26,6 +26,15 @@
       "rangeStrategy": "widen"
     },
     {
+      "matchManagers": [
+        "npm"
+      ],
+      "matchPackageNames": [
+        "npm"
+      ],
+      "allowedVersions": "<12.0.0"
+    },
+    {
       "matchPackageNames": [
         "monaco-editor"
       ],

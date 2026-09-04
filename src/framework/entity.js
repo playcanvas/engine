@@ -14,6 +14,7 @@ import { getApplication } from './globals.js';
  * @import { Component } from './components/component.js'
  * @import { ElementComponent } from './components/element/component.js'
  * @import { GSplatComponent } from './components/gsplat/component.js'
+ * @import { JointComponent } from './components/joint/component.js'
  * @import { LayoutChildComponent } from './components/layout-child/component.js'
  * @import { LayoutGroupComponent } from './components/layout-group/component.js'
  * @import { LightComponent } from './components/light/component.js'
@@ -177,6 +178,15 @@ class Entity extends GraphNode {
      * @readonly
      */
     gsplat;
+
+    /**
+     * Gets the {@link JointComponent} attached to this entity.
+     *
+     * @type {JointComponent|undefined}
+     * @readonly
+     * @alpha
+     */
+    joint;
 
     /**
      * Gets the {@link LayoutChildComponent} attached to this entity.

@@ -57,6 +57,16 @@ const lightBufferDefines = `\n
 class LightsBuffer {
     areaLightsEnabled = false;
 
+    /**
+     * Texture storing properties of all lights, one row of pixels per light.
+     *
+     * @type {Texture|null}
+     */
+    lightsTexture = null;
+
+    /** @type {number} */
+    _maxLights = 0;
+
     constructor(device) {
 
         this.device = device;
@@ -70,21 +80,46 @@ class LightsBuffer {
         this.shadowsEnabled = false;
         this.areaLightsEnabled = false;
 
-        // using 8 bit index so this is maximum supported number of lights
-        this.maxLights = 255;
-
-        // float texture
-        const pixelsPerLightFloat = TextureIndexFloat.COUNT;
-        this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
-        this.lightsUint = new Uint32Array(this.lightsFloat.buffer);
-        this.lightsTexture = this.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTexture');
         this._lightsTextureId = this.device.scope.resolve('lightsTexture');
+
+        // allocates the storage for the lights - 255 lights and the reserved 'no light' slot
+        this.maxLights = 256;
 
         // compression ranges
         this.invMaxColorValue = 0;
         this.invMaxAttenuation = 0;
         this.boundsMin = new Vec3();
         this.boundsDelta = new Vec3();
+    }
+
+    /**
+     * Sets the number of light slots the buffer can store, and allocates the storage for them. This
+     * includes slot 0, which is reserved for the 'no light' index, and so the number of usable
+     * lights is one less than this.
+     *
+     * @type {number}
+     */
+    set maxLights(value) {
+        if (this._maxLights !== value) {
+            this._maxLights = value;
+
+            // float texture, one row of pixels per light
+            const pixelsPerLightFloat = TextureIndexFloat.COUNT;
+            this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * value);
+            this.lightsUint = new Uint32Array(this.lightsFloat.buffer);
+
+            this.lightsTexture?.destroy();
+            this.lightsTexture = this.createTexture(this.device, pixelsPerLightFloat, value, PIXELFORMAT_RGBA32F, 'LightsTexture');
+        }
+    }
+
+    /**
+     * Gets the number of light slots the buffer can store.
+     *
+     * @type {number}
+     */
+    get maxLights() {
+        return this._maxLights;
     }
 
     destroy() {
@@ -155,7 +190,7 @@ class LightsBuffer {
         return tempAreaLightSizes;
     }
 
-    // fill up both float and 8bit texture data with light properties
+    // fill up the float texture data with light properties
     addLightData(light, lightIndex) {
 
         const isSpot = light._type === LIGHTTYPE_SPOT;

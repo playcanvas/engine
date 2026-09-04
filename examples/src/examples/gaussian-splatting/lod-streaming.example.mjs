@@ -2,8 +2,6 @@
 //
 // Demonstrates LOD streaming with radial reveal effect for progressive loading of Gaussian Splats.
 //
-// @flag NO_MINISTATS
-//
 // @credit
 // title: Roman Parish
 // author: Andrii Shramko
@@ -26,6 +24,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLATDATA_LARGE,
     GSPLAT_DEBUG_NONE,
+    GSPLAT_LODMODE_ERROR,
     GSPLAT_RENDERER_AUTO,
     GSplatComponentSystem,
     GSplatHandler,
@@ -49,6 +48,7 @@ import {
     createGraphicsDevice,
     platform
 } from 'playcanvas';
+import { PerspectiveCorrection } from 'playcanvas/scripts/esm/camera/perspective-correction.mjs';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 
@@ -123,7 +123,7 @@ app.on('destroy', () => {
 // Original dataset: https://www.youtube.com/watch?v=3RtY_cLK13k
 const config = {
     name: 'Roman-Parish',
-    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_02/lod-meta.json',
+    url: 'https://code.playcanvas.com/examples_data/example_roman_parish_03/lod-meta.json',
     lodUpdateDistance: 0.5,
     lodUnderfillLimit: 5,
     cameraPosition: [10.3, 2, -10],
@@ -174,27 +174,19 @@ const ENV_PRESETS = {
 };
 
 // LOD preset definitions
-/** @type {Record<string, { range: number[], lodBaseDistance: number, lodMultiplier: number }>} */
+/** @type {Record<string, { range: number[] }>} */
 const LOD_PRESETS = {
     'desktop-max': {
-        range: [0, 5],
-        lodBaseDistance: 7,
-        lodMultiplier: 3
+        range: [0, 5]
     },
     desktop: {
-        range: [1, 5],
-        lodBaseDistance: 5,
-        lodMultiplier: 4
+        range: [1, 5]
     },
     'mobile-max': {
-        range: [2, 5],
-        lodBaseDistance: 5,
-        lodMultiplier: 2
+        range: [2, 5]
     },
     mobile: {
-        range: [3, 5],
-        lodBaseDistance: 2,
-        lodMultiplier: 2
+        range: [3, 5]
     }
 };
 
@@ -215,7 +207,7 @@ await new Promise((resolve) => {
 
 app.start();
 
-const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy'])); // eslint-disable-line no-unused-vars
+const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']));
 
 // Enable rotation-based LOD updates and behind-camera penalty
 app.scene.gsplat.lodUpdateAngle = 90;
@@ -268,6 +260,8 @@ data.set('culling', device.isWebGPU);
 data.set('compact', true);
 data.set('debug', GSPLAT_DEBUG_NONE);
 data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
+data.set('lodMode', GSPLAT_LODMODE_ERROR);
+data.set('lodFalloff', 1);
 data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');
 data.set('fogDensity', 0);
@@ -281,6 +275,11 @@ const camera = new Entity('camera');
 camera.addComponent('camera', {
     clearColor: new Color(1, 1, 1),
     fov: 75,
+    // Generous, because this example loads arbitrary captures via the `url` hash parameter and some
+    // span kilometres. The far plane cuts on view-space depth, so at the default 1000 a distant node
+    // vanishes when looked at head-on and returns when it moves off to the side - which reads as
+    // patches popping around the horizon rather than as a clipped horizon.
+    farClip: 100000,
     toneMapping: TONEMAP_LINEAR
 });
 
@@ -300,6 +299,13 @@ Object.assign(cc, {
     enableOrbit: false,
     enablePan: false,
     focusPoint: focusPoint
+});
+
+// Perspective correction (shift lens): keeps vertical lines parallel when looking up or down
+data.set('verticalCorrection', 0);
+const correction = /** @type {PerspectiveCorrection} */ (camera.script.create(PerspectiveCorrection));
+data.on('verticalCorrection:set', () => {
+    correction.verticalCorrection = data.get('verticalCorrection');
 });
 
 // CameraFrame for HDR linear rendering (created lazily on first enable)
@@ -447,11 +453,7 @@ const applyPreset = () => {
     if (gsplatGs) {
         gsplatGs.lodRangeMin = presetData.range[0];
         gsplatGs.lodRangeMax = presetData.range[1];
-        gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
-        gsplatGs.lodMultiplier = presetData.lodMultiplier;
     }
-    data.set('lodBaseDistance', presetData.lodBaseDistance);
-    data.set('lodMultiplier', presetData.lodMultiplier);
 };
 
 const loadGSplat = async (/** @type {string|null} */ url) => {
@@ -494,10 +496,7 @@ const loadGSplat = async (/** @type {string|null} */ url) => {
     gsplatEntity.setLocalScale(1, 1, 1);
     app.root.addChild(gsplatEntity);
     gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
-
-    const presetData = LOD_PRESETS[data.get('lodPreset')] || LOD_PRESETS.desktop;
-    gsplatGs.lodBaseDistance = presetData.lodBaseDistance;
-    gsplatGs.lodMultiplier = presetData.lodMultiplier;
+    gsplatGs.lodFalloff = data.get('lodFalloff');
 
     // Start with lowest LOD for fast initial display, then stream up
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
@@ -539,11 +538,14 @@ await loadGSplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);
 
-data.on('lodBaseDistance:set', () => {
-    if (gsplatGs) gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
+data.on('lodMode:set', () => {
+    app.scene.gsplat.lodMode = data.get('lodMode');
 });
-data.on('lodMultiplier:set', () => {
-    if (gsplatGs) gsplatGs.lodMultiplier = data.get('lodMultiplier');
+
+data.on('lodFalloff:set', () => {
+    if (gsplatGs) {
+        gsplatGs.lodFalloff = data.get('lodFalloff');
+    }
 });
 
 const applySplatBudget = () => {
@@ -590,3 +592,5 @@ app.on('update', () => {
     const bb = app.graphicsDevice.backBufferSize;
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 });
+
+export { miniStats };

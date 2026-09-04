@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
@@ -57,6 +58,11 @@ const _vecB = new Vec3();
  * entity.rigidbody.mass = 10;
  * console.log(entity.rigidbody.mass);
  * ```
+ *
+ * For player movement, `playcanvas/scripts/esm/first-person-controller.mjs` and
+ * `playcanvas/scripts/esm/third-person-controller.mjs` ship complete rigidbody character
+ * controllers with capsule collision, damped ground and air movement, sprinting, jumping and
+ * camera control. Attach one instead of driving the body by hand.
  *
  * Relevant Engine API examples:
  *
@@ -1119,6 +1125,41 @@ class RigidBodyComponent extends Component {
     /** @ignore */
     onDisable() {
         this.disableSimulation();
+    }
+
+    /**
+     * Sets the rigid body type.
+     *
+     * @type {string}
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponent#type} instead.
+     */
+    set bodyType(type) {
+        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
+        this.type = type;
+    }
+
+    /**
+     * Gets the rigid body type.
+     *
+     * @type {string}
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponent#type} instead.
+     */
+    get bodyType() {
+        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
+        return this.type;
+    }
+
+    /**
+     * Writes the entity transform into the rigid body.
+     *
+     * @ignore
+     * @deprecated Not public API.
+     */
+    syncBodyToEntity() {
+        Debug.deprecated('RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
+        this._updateDynamic();
     }
 }
 

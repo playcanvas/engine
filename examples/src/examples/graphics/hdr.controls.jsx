@@ -61,6 +61,15 @@ export function Controls({ observer }) {
                     precision={2}
                 />
             </LabelGroup>
+            <LabelGroup text='Vertical Correction'>
+                <SliderInput
+                    binding={new BindingTwoWay()}
+                    link={{ observer, path: 'data.verticalCorrection' }}
+                    min={0}
+                    max={1}
+                    precision={2}
+                />
+            </LabelGroup>
         </>
     );
 }

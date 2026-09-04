@@ -211,5 +211,46 @@ describe('ElementComponent', function () {
             expect(e.element._addedModels).to.include(e.element._text._model);
         });
 
+        it('does not accumulate graph nodes when the type changes (#4333)', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+
+            e.addComponent('element', { type: 'text' });
+            expect(e.children.length).to.equal(1);
+
+            e.element.type = 'image';
+            expect(e.children.length).to.equal(1);
+
+            e.element.type = 'text';
+            expect(e.children.length).to.equal(1);
+
+            e.element.type = 'group';
+            expect(e.children.length).to.equal(0);
+        });
+
+    });
+
+    describe('#onBeforeRemove', function () {
+
+        it('removes the text element graph node from the entity (#4333)', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+
+            e.addComponent('element', { type: 'text' });
+            e.removeComponent('element');
+
+            expect(e.children.length).to.equal(0);
+        });
+
+        it('removes the image element graph node from the entity (#4333)', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+
+            e.addComponent('element', { type: 'image' });
+            e.removeComponent('element');
+
+            expect(e.children.length).to.equal(0);
+        });
+
     });
 });

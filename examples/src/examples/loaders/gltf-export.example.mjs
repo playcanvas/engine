@@ -83,7 +83,7 @@ const assets = {
     model: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
     board: new Asset('statue', 'container', { url: './assets/models/chess-board.glb' }),
     boombox: new Asset('statue', 'container', { url: './assets/models/boom-box.glb' }),
-    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.basis' })
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.basis' }, { srgb: true })
 };
 
 const gfxOptions = {

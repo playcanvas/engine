@@ -198,6 +198,10 @@ class ScriptComponent extends Component {
         this._postUpdateList = new SortedLoopArray({ sortBy: '__executionOrder' });
 
         this._scriptsIndex = {};
+        // the names of all scripts declared on this component, created or still awaiting their
+        // script type, in the order they were declared. Unlike the key order of `_scriptsIndex`
+        // this is reliable for any script name, and unlike `_scripts` it is not affected by move()
+        this._declarationOrder = [];
         this._destroyedScripts = [];
         this._destroyed = false;
         this._scriptsData = null;
@@ -427,10 +431,12 @@ class ScriptComponent extends Component {
                 return;
             }
 
-            // Fetch schema and warn if it doesn't exist
+            // Fetch schema and warn if it doesn't exist. Without one there is nothing to assign
+            // the data against, so there is no point in carrying on
             const schema = this.system.app.scripts?.getSchema(name);
             if (!schema) {
                 Debug.warnOnce(`No schema exists for the script '${name}'. A schema must exist for data to be instantiated on the script.`);
+                return;
             }
 
             // Assign the attributes to the script instance based on the attribute schema
@@ -512,6 +518,27 @@ class ScriptComponent extends Component {
         }
 
         this._endLooping(wasLooping);
+    }
+
+    /**
+     * Returns the index in {@link ScriptComponent#scripts} at which a script that has been
+     * awaiting its script type should be created: directly after the script it was declared
+     * after, skipping any scripts that do not exist yet. Unlike an index captured when the script
+     * was first declared this holds whichever order the script types end up being registered in,
+     * and it follows the preceding script if that has since been moved.
+     *
+     * @param {string} scriptName - The name of the awaiting script.
+     * @returns {number} The index to create the script instance at.
+     * @private
+     */
+    _awaitingInsertIndex(scriptName) {
+        let previous = null;
+        for (const name of this._declarationOrder) {
+            if (name === scriptName) break;
+            previous = this._scriptsIndex[name]?.instance ?? previous;
+        }
+
+        return previous ? this._scripts.indexOf(previous) + 1 : 0;
     }
 
     /**
@@ -751,6 +778,10 @@ class ScriptComponent extends Component {
 
                 this._insertScriptInstance(scriptInstance, ind, len);
 
+                if (!this._scriptsIndex[scriptName]) {
+                    this._declarationOrder.push(scriptName);
+                }
+
                 this._scriptsIndex[scriptName] = {
                     instance: scriptInstance,
                     onSwap: function () {
@@ -793,9 +824,19 @@ class ScriptComponent extends Component {
 
             Debug.warn(`script '${scriptName}' is already added to entity '${this.entity.name}'`);
         } else {
+            if (!this._scriptsIndex[scriptName]) {
+                this._declarationOrder.push(scriptName);
+            }
+
             this._scriptsIndex[scriptName] = {
                 awaiting: true,
-                ind: this._scripts.length
+                ind: this._scripts.length,
+                // remember what the script was asked to be created with, the deferred creation in
+                // ScriptRegistry#add has nothing else to go on for a script that was not declared
+                // through component data
+                enabled: args.hasOwnProperty('enabled') ? args.enabled : true,
+                attributes: args.attributes,
+                properties: args.properties
             };
 
             Debug.warn(`script '${scriptName}' is not found, awaiting it to be added to registry`);
@@ -826,6 +867,11 @@ class ScriptComponent extends Component {
         const scriptData = this._scriptsIndex[scriptName];
         delete this._scriptsIndex[scriptName];
         if (!scriptData) return false;
+
+        const declarationIndex = this._declarationOrder.indexOf(scriptName);
+        if (declarationIndex !== -1) {
+            this._declarationOrder.splice(declarationIndex, 1);
+        }
 
         this._attributeDataMap.delete(scriptName);
 

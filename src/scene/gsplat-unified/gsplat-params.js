@@ -11,7 +11,9 @@ import {
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
-    GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS
+    GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS,
+    GSPLAT_LODMODE_DISTANCE,
+    GSPLAT_LODMODE_ERROR
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -22,6 +24,7 @@ import wgslCompactRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/conta
 import wgslCompactWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerCompactWrite.js';
 import wgslPackedRead from '../shader-lib/wgsl/chunks/gsplat/vert/formats/containerPackedRead.js';
 import wgslPackedWrite from '../shader-lib/wgsl/chunks/gsplat/frag/formats/containerPackedWrite.js';
+import { SPLAT_BUDGET_DEFAULT } from './constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -467,12 +470,16 @@ class GSplatParams {
     }
 
     /** @private */
-    _splatBudget = 0;
+    _splatBudget = SPLAT_BUDGET_DEFAULT;
 
     /**
-     * Target number of splats across all GSplats in the scene. When set > 0,
-     * the system adjusts LOD levels globally to stay within this budget.
-     * Set to 0 to disable budget enforcement and use LOD distances only (default).
+     * Target number of splats across all GSplats in the scene. LOD levels are chosen globally to
+     * stay within this budget, spending it where it removes the most approximation error per splat.
+     * A budget larger than the scene resolves to every node at its finest level. Defaults to
+     * 1000000.
+     *
+     * There is no way to disable budgeted LOD selection: a non-positive value would pin every node
+     * to its coarsest level rather than lift the cap, so it warns and the default is used instead.
      *
      * @type {number}
      */
@@ -490,6 +497,39 @@ class GSplatParams {
      */
     get splatBudget() {
         return this._splatBudget;
+    }
+
+    /** @private */
+    _lodMode = GSPLAT_LODMODE_ERROR;
+
+    /**
+     * How LOD levels are chosen for streamed GSplats, within {@link GSplatParams#splatBudget}.
+     * {@link GSPLAT_LODMODE_ERROR} (default) spends the budget where it removes the most
+     * approximation error per splat. {@link GSPLAT_LODMODE_DISTANCE} ignores error metadata and
+     * orders detail by camera distance alone instead - it steps down in concentric distance bands
+     * around the camera, with band edges adapting to the budget. Useful when a capture's quality
+     * makes its error tables unreliable.
+     *
+     * @type {string}
+     */
+    set lodMode(value) {
+        if (value !== GSPLAT_LODMODE_ERROR && value !== GSPLAT_LODMODE_DISTANCE) {
+            Debug.warnOnce(`GSplatParams#lodMode: ignoring invalid value '${value}', expected GSPLAT_LODMODE_ERROR or GSPLAT_LODMODE_DISTANCE.`);
+            return;
+        }
+        if (this._lodMode !== value) {
+            this._lodMode = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the LOD selection mode.
+     *
+     * @type {string}
+     */
+    get lodMode() {
+        return this._lodMode;
     }
 
     /**
@@ -534,6 +574,14 @@ class GSplatParams {
      * even if the scene or camera has fog configured. Defaults to true.
      */
     useFog = true;
+
+    /**
+     * Whether to apply the camera's tonemapping and the scene exposure to Gaussian splats. When
+     * false, splats render with their stored colors, unaffected by {@link Scene#exposure} and the
+     * camera's {@link CameraComponent#toneMapping}. Fog, when enabled, still applies. Defaults to
+     * true.
+     */
+    useTonemap = true;
 
     /** @deprecated Use {@link debug} with {@link GSPLAT_DEBUG_SH_UPDATE} instead. */
     set colorizeColorUpdate(value) {
@@ -830,6 +878,24 @@ class GSplatParams {
     cooldownTicks = 100;
 
     /**
+     * Whether the gaussian splats contribute to the scene depth, which the volumetric fog and the depth
+     * of field need in order to be bounded by the splats instead of drawing through them.
+     *
+     * This costs an extra full screen render target, and so defaults to false. Enable it for a scene
+     * where the splats need to take part in those effects. Requires the camera to render using
+     * {@link CameraFrame} - see {@link CameraFrame.isSplatSceneDepthSupported}.
+     *
+     * On some devices enabling this stores the scene depth at a lower precision, which the other
+     * effects using it share. The depth stays accurate over camera clip distances of roughly 0.000015
+     * to 16384 there; past the far end of that a distant depth loses accuracy, and the pixels nothing
+     * covers stop reading as far away as they are. Keep the far clip inside that range on those
+     * devices, or leave the effects which read the depth off.
+     *
+     * @type {boolean}
+     */
+    sceneDepthWrite = false;
+
+    /**
      * Work buffer data format. Controls the precision and bandwidth of the intermediate work buffer
      * used during GSplat rendering. Can be set to {@link GSPLATDATA_COMPACT} (20 bytes/splat)
      * or {@link GSPLATDATA_LARGE} (32 bytes/splat). Defaults to {@link GSPLATDATA_COMPACT}.
@@ -950,6 +1016,7 @@ class GSplatParams {
         this.lodBehindPenalty = render.gsplatLodBehindPenalty ?? this.lodBehindPenalty;
         this.lodUnderfillLimit = render.gsplatLodUnderfillLimit ?? this.lodUnderfillLimit;
         this.splatBudget = render.gsplatSplatBudget ?? this.splatBudget;
+        this.lodMode = render.gsplatLodMode ?? this.lodMode;
 
         this.alphaClip = render.gsplatAlphaClip ?? this.alphaClip;
         this.alphaClipForward = render.gsplatAlphaClipForward ?? this.alphaClipForward;
@@ -960,6 +1027,7 @@ class GSplatParams {
 
         this.antiAlias = render.gsplatAntiAlias ?? this.antiAlias;
         this.useFog = render.gsplatUseFog ?? this.useFog;
+        this.useTonemap = render.gsplatUseTonemap ?? this.useTonemap;
         this.colorUpdateAngle = render.gsplatColorUpdateAngle ?? this.colorUpdateAngle;
         this.cooldownTicks = render.gsplatCooldownTicks ?? this.cooldownTicks;
         this.dataFormat = render.gsplatDataFormat ?? this.dataFormat;
@@ -967,12 +1035,11 @@ class GSplatParams {
     }
 
     /**
-     * Called at the end of the frame to clear dirty flags.
+     * Called at the end of the frame to clear the parameter dirty flag.
      *
      * @ignore
      */
     frameEnd() {
-        this._material.dirty = false;
         this.dirty = false;
     }
 
