@@ -2473,28 +2473,30 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.deleteBuffer(buf);
         };
 
-        if (!frequent) {
-            copyOut();
-            return pixels;
-        }
-
-        // The device can go away while the fence above is being waited on, and a read is not being
-        // tracked below until that wait is over - so it is reached by neither the drain on
-        // destruction nor the one on context loss, and has to answer for itself here. There is no
-        // await between this and being tracked, so nothing slips through in between.
+        // The device can go away while the fence above is being waited on, which no drain reaches -
+        // a frequent read is not queued for its copy until the wait is over, and a read taking the
+        // copy below is not tracked at all - so it is answered for here. Nothing slips through in
+        // between, there being no await between this and either.
         if (this._destroyed) {
 
-            // settled without the copy, exactly as an already tracked read is - the caller is told
-            // the device went away rather than handed data, so the bytes would go nowhere
+            // settled without the copy, exactly as a queued read is - the caller is told the device
+            // went away rather than handed data, so the bytes would go nowhere
             gl.deleteBuffer(buf);
             return pixels;
         }
         if (this.contextLost) {
 
-            // the pixel buffer went with the context, so the destination was never written and
-            // handing it back would pass off whatever it last held as a result
+            // The pixel buffer went with the context, so the destination was never written and the
+            // copy has nothing to write to it. Handing it back would pass off whatever it last held
+            // as a result, which a caller has no way to tell from a real one - an all-zero pick
+            // reads as nothing picked rather than as a failed read.
             gl.deleteBuffer(buf);
             throw new Error('Texture read did not complete, as the WebGL context was lost.');
+        }
+
+        if (!frequent) {
+            copyOut();
+            return pixels;
         }
 
         // Running the copy at the start of the next frame leaves nothing of that frame queued in
