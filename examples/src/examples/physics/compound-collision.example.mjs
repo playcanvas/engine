@@ -356,7 +356,7 @@ const scene = [
             {
                 type: 'camera',
                 options: {
-                    color: [0.5, 0.5, 0.5]
+                    clearColor: new Color(0.5, 0.5, 0.5)
                 }
             }
         ]
