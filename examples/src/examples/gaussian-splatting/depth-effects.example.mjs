@@ -268,7 +268,18 @@ const FOCUS_SAMPLES = 8;
 
 const depthReader = new SceneDepthReader(camera.camera);
 const focusRect = new Vec4();
-const focusSamples = new Float32Array(FOCUS_SAMPLES * FOCUS_SAMPLES);
+
+// Reads are issued every frame and take a few to land, so several are in flight at once and each
+// needs an array of its own - one shared between them would have a read resolving against samples a
+// later one had already overwritten. These are lent out and taken back as reads settle, rather than
+// allocating one per frame, which is a pool the reader cannot keep for callers: it hands the samples
+// over and has no way of knowing when the caller is done reading them.
+const freeSamples = new Set();
+const takeSamples = () => {
+    const samples = freeSamples.values().next().value ?? new Float32Array(FOCUS_SAMPLES * FOCUS_SAMPLES);
+    freeSamples.delete(samples);
+    return samples;
+};
 
 /** Marks the region the autofocus samples. */
 const reticle = document.createElement('div');
@@ -315,23 +326,30 @@ app.on('update', (/** @type {number} */ dt) => {
     // focus is sitting at its limit rather than on what the reticle covers
     reticle.style.borderColor = focusClamped ? 'rgba(255, 90, 30, 0.95)' : 'rgba(255, 255, 255, 0.9)';
 
-    // Read every frame, with no regard for whether earlier reads have landed - several can be in flight.
-    // They all fill the same array, which SceneDepthReader asks callers not to do when reads overlap, so
-    // a read can resolve against samples a later one has already overwritten. That only ever means the
-    // focus eases toward a distance a frame or two stale, which the easing below absorbs, and it saves
-    // allocating an array per frame - a reader whose result mattered exactly would pass its own.
+    // Read every frame, with no regard for whether earlier reads have landed - several can be in
+    // flight, and a read landing after a newer one only means the focus eases toward a distance a
+    // frame or two stale, which the easing below absorbs.
     // The median rather than the nearest sample, as captures are full of faint floaters which would
     // otherwise grab the focus, and thinly covered pixels read too far - the splat depth is weighted by
     // transmittance, so it blends toward the value the depth was cleared to where coverage is partial.
-    depthReader.read(focusRect, FOCUS_SAMPLES, FOCUS_SAMPLES, focusSamples)?.then((samples) => {
-        // a region with nothing in it reads as every sample infinite, which is a read of the distance
-        // like any other and clamps the same way - rather than being dropped, which would leave the
-        // focus wherever it happened to be
-        const finite = samples.filter(Number.isFinite).sort();
-        const median = finite.length ? finite[finite.length >> 1] : Infinity;
-        focusClamped = median > CAPTURE.focusMaxDistance;
-        focusTarget = Math.min(median, CAPTURE.focusMaxDistance);
-    });
+    const samples = takeSamples();
+    const read = depthReader.read(focusRect, FOCUS_SAMPLES, FOCUS_SAMPLES, samples);
+    if (read) {
+        read.then(() => {
+            // a region with nothing in it reads as every sample infinite, which is a read of the distance
+            // like any other and clamps the same way - rather than being dropped, which would leave the
+            // focus wherever it happened to be
+            const finite = samples.filter(Number.isFinite).sort();
+            const median = finite.length ? finite[finite.length >> 1] : Infinity;
+            focusClamped = median > CAPTURE.focusMaxDistance;
+            focusTarget = Math.min(median, CAPTURE.focusMaxDistance);
+        }).finally(() => {
+            freeSamples.add(samples);
+        });
+    } else {
+        // there was nothing to read, so the array was never lent out
+        freeSamples.add(samples);
+    }
 
     if (focusTarget !== null) {
         // ease toward the read distance, frame rate independent, snapping on the first one

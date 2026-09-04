@@ -1434,6 +1434,11 @@ class Texture {
      * @param {boolean} [options.immediate] - If true, the read operation will be executed as soon as
      * possible. This has a performance impact, so it should be used only when necessary. Defaults
      * to false.
+     * @param {boolean} [options.frequent] - Set this when the read is one of many, issued every
+     * frame or every few frames. Such a read is given the treatment which costs it a frame of
+     * latency and keeps it from stalling the frame it is issued in, which is the trade a one-off
+     * read would not want. Only utilized on the WebGL platform, where a readback has a blocking
+     * step; ignored on WebGPU, whose readback does not block. Defaults to false.
      * @returns {Promise<Uint8Array|Uint16Array|Uint32Array|Float32Array>} A promise that resolves
      * with the pixel data of the texture.
      */
