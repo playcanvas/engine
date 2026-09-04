@@ -317,7 +317,10 @@ class RigidBodyComponent extends Component {
 
     /**
      * Sets the collision group this body belongs to. Combine the group and the mask to prevent bodies
-     * colliding with each other. Defaults to 1.
+     * colliding with each other. The default depends on the body {@link RigidBodyComponent#type}:
+     * static bodies use `BODYGROUP_STATIC` (2), dynamic bodies use `BODYGROUP_DYNAMIC` (1) and
+     * kinematic bodies use `BODYGROUP_KINEMATIC` (4). Setting the type resets the group to the
+     * default for the new type, so set the group after the type.
      *
      * @type {number}
      */
@@ -420,7 +423,11 @@ class RigidBodyComponent extends Component {
 
     /**
      * Sets the collision mask sets which groups this body collides with. It is a bit field of 16
-     * bits, the first 8 bits are reserved for engine use. Defaults to 65535.
+     * bits, the first 8 bits are reserved for engine use. The default depends on the body
+     * {@link RigidBodyComponent#type}: static bodies use `BODYMASK_NOT_STATIC` (65533, which
+     * collides with everything except other static bodies), while dynamic and kinematic bodies use
+     * `BODYMASK_ALL` (65535). Setting the type resets the mask to the default for the new type, so
+     * set the mask after the type.
      *
      * @type {number}
      */
@@ -538,7 +545,9 @@ class RigidBodyComponent extends Component {
      * - {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be
      * moved by setting the position and rotation of component's {@link Entity}).
      *
-     * Defaults to {@link BODYTYPE_STATIC}.
+     * Defaults to {@link BODYTYPE_STATIC}. Changing the type also resets
+     * {@link RigidBodyComponent#group} and {@link RigidBodyComponent#mask} to the defaults for
+     * the new type.
      *
      * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
