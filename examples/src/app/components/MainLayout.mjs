@@ -1,15 +1,18 @@
 import { Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
+import { getFirstExample } from '../categories.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
+
+/** @import { ReactElement } from 'react' */
 
 const MOBILE_DOCK_HEIGHT = 48;
 const MOBILE_DOCK_WIDTH = 48;
@@ -66,6 +69,28 @@ function getDefaultMobilePanelWidth() {
         MOBILE_PANEL_DEFAULT_MAX_WIDTH,
         Math.max(MOBILE_PANEL_DEFAULT_MIN_WIDTH, window.innerWidth * MOBILE_PANEL_DEFAULT_WIDTH_SCALE)
     ));
+}
+
+/**
+ * Resolves a bare `#/<category>` URL to the first example of that category, so a
+ * category can be linked directly. `focusCategory` rides along in the location
+ * state to tell the sidebar to show just that category and collapse the rest;
+ * the hash query is carried over so a shared `?s=` state survives the redirect.
+ *
+ * @returns {ReactElement} Redirect to the first example of the category.
+ */
+function CategoryRedirect() {
+    const { category = '' } = useParams();
+    const { search } = useLocation();
+    const example = getFirstExample(category);
+    if (!example) {
+        return jsx(Navigate, { to: { pathname: '/misc/hello-world', search }, replace: true });
+    }
+    return jsx(Navigate, {
+        to: { pathname: `/${category}/${example}`, search },
+        replace: true,
+        state: { focusCategory: category }
+    });
 }
 
 // eslint-disable-next-line jsdoc/require-property
@@ -286,6 +311,10 @@ class MainLayout extends TypedComponent {
                     jsx(Route, {
                         path: '/',
                         element: jsx(Navigate, { to: '/misc/hello-world', replace: true })
+                    }),
+                    jsx(Route, {
+                        path: '/:category',
+                        element: jsx(CategoryRedirect, null)
                     }),
                     jsx(Route, {
                         path: '/:category/:example',
