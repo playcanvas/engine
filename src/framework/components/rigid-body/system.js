@@ -441,7 +441,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Raycast the world and return all entities the ray hits. It returns an array of
      * {@link RaycastResult}, one for each hit. If no hits are detected, the returned array will be
-     * of length 0. Results are sorted by distance with closest first.
+     * of length 0. Results are returned in no particular order unless `options.sort` is true, in
+     * which case they are sorted by distance with the closest first.
      *
      * @param {Vec3} start - The world space point where the ray starts.
      * @param {Vec3} end - The world space point where the ray ends.
