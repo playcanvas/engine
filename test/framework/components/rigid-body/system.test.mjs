@@ -89,7 +89,7 @@ describe('RigidBodyComponentSystem', function () {
             const system = app.systems.rigidbody;
             const step = spy(world, 'step');
 
-            expect(system.paused).to.be.false;
+            expect(system.timeScale).to.equal(1);
 
             app.update(1 / 60);
 
@@ -97,12 +97,23 @@ describe('RigidBodyComponentSystem', function () {
             expect(step.firstCall.args).to.deep.equal([1 / 60, system.maxSubSteps, system.fixedTimeStep]);
         });
 
-        it('skips the whole simulation update while paused', function () {
+        it('scales the delta passed to the world by the time scale', function () {
+            const system = app.systems.rigidbody;
+            const step = spy(world, 'step');
+
+            system.timeScale = 0.5;
+            app.update(1 / 60);
+
+            expect(step.calledOnce).to.be.true;
+            expect(step.firstCall.args[0]).to.be.closeTo(1 / 120, 1e-12);
+        });
+
+        it('skips the whole simulation update when the time scale is 0', function () {
             const setGravity = spy(world, 'setGravity');
             const step = spy(world, 'step');
             const flushContacts = spy(world, 'flushContacts');
 
-            app.systems.rigidbody.paused = true;
+            app.systems.rigidbody.timeScale = 0;
             app.update(1 / 60);
             app.update(1 / 60);
 
@@ -111,24 +122,33 @@ describe('RigidBodyComponentSystem', function () {
             expect(flushContacts.called).to.be.false;
         });
 
-        it('resumes automatic stepping when unpaused', function () {
+        it('resumes automatic stepping when the time scale is restored', function () {
             const step = spy(world, 'step');
 
-            app.systems.rigidbody.paused = true;
+            app.systems.rigidbody.timeScale = 0;
             app.update(1 / 60);
-            app.systems.rigidbody.paused = false;
+            app.systems.rigidbody.timeScale = 1;
             app.update(1 / 60);
 
             expect(step.calledOnce).to.be.true;
         });
 
-        it('advances the world through step() while paused', function () {
+        it('treats a negative time scale as paused', function () {
+            const step = spy(world, 'step');
+
+            app.systems.rigidbody.timeScale = -1;
+            app.update(1 / 60);
+
+            expect(step.called).to.be.false;
+        });
+
+        it('advances the world through step() while paused, without scaling the delta', function () {
             const system = app.systems.rigidbody;
             const setGravity = spy(world, 'setGravity');
             const step = spy(world, 'step');
             const flushContacts = spy(world, 'flushContacts');
 
-            system.paused = true;
+            system.timeScale = 0;
             system.step(0.01);
 
             expect(setGravity.calledOnce).to.be.true;

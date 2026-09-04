@@ -50,9 +50,9 @@ const _properties = [
  * application has loaded the Ammo.js {@link WasmModule}.
  *
  * The simulation is stepped automatically once per frame. Set
- * {@link RigidBodyComponentSystem#paused} to stop automatic stepping, for example while a pause
- * menu is open, and call {@link RigidBodyComponentSystem#step} to advance the simulation
- * manually.
+ * {@link RigidBodyComponentSystem#timeScale} to slow it down, speed it up or pause it, for
+ * example while a pause menu is open, and call {@link RigidBodyComponentSystem#step} to advance
+ * the simulation manually.
  *
  * @category Physics
  */
@@ -90,26 +90,35 @@ class RigidBodyComponentSystem extends ComponentSystem {
     fixedTimeStep = 1 / 60;
 
     /**
-     * Whether automatic stepping of the physics simulation is paused. While true, the system
-     * stops advancing the simulation each frame: bodies freeze in place, entity transforms are
-     * no longer driven by their bodies and no contact or trigger events fire. The rest of the
-     * application keeps running, so this suits a pause menu or inventory screen that must stay
-     * interactive while the game world stands still.
+     * Scales the time the simulation is advanced by each frame. Defaults to 1. Values below 1
+     * run physics in slow motion and values above 1 speed it up. 0 pauses the simulation: the
+     * system stops advancing it, bodies freeze in place, entity transforms are no longer driven
+     * by their bodies and no contact or trigger events fire. The rest of the application keeps
+     * running, so this suits a pause menu or inventory screen that must stay interactive while
+     * the game world stands still. Negative values are treated as 0.
      *
-     * The simulation can still be advanced manually with
-     * {@link RigidBodyComponentSystem#step} while paused, for example to run physics in slow
-     * motion or to drive it from a custom time source.
+     * This scale is applied on top of {@link AppBase#timeScale}. The simulation can still be
+     * advanced manually with {@link RigidBodyComponentSystem#step} while paused, for example to
+     * drive it from a custom time source.
+     *
+     * Slow motion that advances less than one {@link RigidBodyComponentSystem#fixedTimeStep}
+     * per frame steps the simulation intermittently; the Ammo backend interpolates body
+     * transforms between steps so motion stays smooth. Fast forward is limited to
+     * {@link RigidBodyComponentSystem#maxSubSteps} substeps per frame, beyond which the
+     * simulation runs slower than requested.
      *
      * Forces applied with {@link RigidBodyComponent#applyForce} while paused accumulate on the
      * body and are applied together on the next step, because forces are only cleared when the
-     * simulation steps. Impulses and velocity changes take effect immediately. Defaults to
-     * false.
+     * simulation steps. Impulses and velocity changes take effect immediately.
      *
      * @example
      * // Freeze the game world while the pause menu is open
-     * app.systems.rigidbody.paused = true;
+     * app.systems.rigidbody.timeScale = 0;
+     * @example
+     * // Run physics at quarter speed for a slow motion effect
+     * app.systems.rigidbody.timeScale = 0.25;
      */
-    paused = false;
+    timeScale = 1;
 
     /**
      * The world space vector representing global gravity in the physics simulation. Defaults to
@@ -800,18 +809,21 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * {@link RigidBodyComponentSystem#maxSubSteps} of them), writes the resulting transforms of
      * dynamic bodies back to their entities and fires contact and trigger events.
      *
-     * The system calls this once per frame with the frame delta time unless
-     * {@link RigidBodyComponentSystem#paused} is true. Call it directly to step the simulation
-     * manually: to run physics in slow motion, to fast forward it by stepping several times in
-     * one frame, or to advance it while paused. Does nothing when no physics backend is
-     * installed.
+     * The system calls this once per frame with the frame delta time multiplied by
+     * {@link RigidBodyComponentSystem#timeScale}, unless that is 0. Call it directly to step the
+     * simulation manually: to advance it while paused, to fast forward it by stepping several
+     * times in one frame, or to drive it from a custom time source. The delta is used as given,
+     * without applying timeScale. Does nothing when no physics backend is installed.
      *
      * @param {number} dt - The amount of time to advance the simulation by, in seconds.
      * @example
-     * // Take over stepping and run physics at half speed
-     * app.systems.rigidbody.paused = true;
-     * app.on('update', (dt) => {
-     *     app.systems.rigidbody.step(dt * 0.5);
+     * // Pause automatic stepping and advance the simulation one fixed step per key press
+     * const physics = app.systems.rigidbody;
+     * physics.timeScale = 0;
+     * app.keyboard.on('keydown', (event) => {
+     *     if (event.key === KEY_SPACE) {
+     *         physics.step(physics.fixedTimeStep);
+     *     }
      * });
      */
     step(dt) {
@@ -857,21 +869,22 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Steps the simulation by the frame delta time unless
-     * {@link RigidBodyComponentSystem#paused} is true. Registered on the application's update
-     * event when a physics backend is installed.
+     * Steps the simulation by the frame delta time scaled by
+     * {@link RigidBodyComponentSystem#timeScale}, or skips the frame entirely when the scale is
+     * 0. Registered on the application's update event when a physics backend is installed.
      *
      * @param {number} dt - The frame delta time in seconds.
      * @ignore
      */
     onUpdate(dt) {
-        if (this.paused) {
-            // nothing was simulated this frame
+        const timeScale = this.timeScale;
+        if (!(timeScale > 0)) {
+            // paused: nothing was simulated this frame
             this._stats.physicsTime = 0;
             return;
         }
 
-        this.step(dt);
+        this.step(dt * timeScale);
     }
 
     destroy() {
