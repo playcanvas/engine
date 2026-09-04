@@ -38,16 +38,19 @@ const _properties = [
 
 /**
  * The RigidBodyComponentSystem manages the physics simulation for all rigid body components
- * in the application. It creates and maintains the underlying physics world, handles
- * physics object creation and destruction, performs physics raycasting, detects and reports
- * collisions, and updates the transforms of entities with rigid bodies after each physics step.
+ * in the application and is accessed as `app.systems.rigidbody`. It owns the physics world,
+ * creates and destroys the bodies behind rigid body and collision components, steps the
+ * simulation once per frame and writes the resulting transforms back to their entities. It also
+ * holds global settings such as {@link RigidBodyComponentSystem#gravity}, performs raycasts
+ * and reports collisions.
  *
- * The system controls global physics settings like gravity and provides methods for raycasting
- * and collision detection.
- *
- * This system is only functional once a physics backend is installed: either by supplying
+ * The system is only functional once a physics backend is installed: either by supplying
  * {@link AppOptions#physicsWorld} when creating the application, or automatically when the
  * application has loaded the Ammo.js {@link WasmModule}.
+ *
+ * Set {@link RigidBodyComponentSystem#timeScale} to slow the simulation down, speed it up or
+ * pause it, for example while a pause menu is open, and call
+ * {@link RigidBodyComponentSystem#step} to advance it manually.
  *
  * @category Physics
  */
@@ -72,6 +75,37 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @ignore
      */
     fixedTimeStep = 1 / 60;
+
+    /**
+     * Scales the time the simulation is advanced by each frame. Defaults to 1. Values below 1
+     * run physics in slow motion and values above 1 speed it up. 0 pauses the simulation: the
+     * system stops advancing it, bodies freeze in place, entity transforms are no longer driven
+     * by their bodies and no contact or trigger events fire. The rest of the application keeps
+     * running, so this suits a pause menu or inventory screen that must stay interactive while
+     * the game world stands still. Negative values are treated as 0.
+     *
+     * This scale is applied on top of {@link AppBase#timeScale}. The simulation can still be
+     * advanced manually with {@link RigidBodyComponentSystem#step} while paused, for example to
+     * drive it from a custom time source.
+     *
+     * How slow motion below one fixed substep per frame looks depends on the backend: the Ammo
+     * backend interpolates body transforms between substeps so motion stays smooth, while other
+     * backends may only move bodies on the frames in which a substep runs. Fast forward is
+     * limited by the maximum number of substeps the simulation may take per frame, beyond which
+     * it runs slower than requested.
+     *
+     * Forces applied with {@link RigidBodyComponent#applyForce} while paused accumulate on the
+     * body and are applied together on the next step, because forces are only cleared when the
+     * simulation steps. Impulses and velocity changes take effect immediately.
+     *
+     * @example
+     * // Freeze the game world while the pause menu is open
+     * app.systems.rigidbody.timeScale = 0;
+     * @example
+     * // Run physics at quarter speed for a slow motion effect
+     * app.systems.rigidbody.timeScale = 0.25;
+     */
+    timeScale = 1;
 
     /**
      * The world space vector representing global gravity in the physics simulation. Defaults to
@@ -755,13 +789,42 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.singleContactResultPool.freeAll();
     }
 
-    onUpdate(dt) {
+    /**
+     * Advances the physics simulation by dt seconds. Synchronizes triggers, compound shapes and
+     * kinematic bodies from their entities, steps the backend in fixed-length substeps (up to a
+     * maximum number per call), writes the resulting transforms of dynamic bodies back to their
+     * entities and fires contact and trigger events.
+     *
+     * The system calls this once per frame with the frame delta time multiplied by
+     * {@link RigidBodyComponentSystem#timeScale}, unless that is 0. Call it directly to step the
+     * simulation manually: to advance it while paused, to fast forward it by stepping several
+     * times in one frame, or to drive it from a custom time source. Automatic stepping continues
+     * while timeScale is above 0, so calling this every frame as well advances the simulation
+     * twice per frame. Set timeScale to 0 first when taking over stepping entirely. The delta is
+     * used as given, without applying timeScale. Does nothing when no physics backend is
+     * installed.
+     *
+     * @param {number} dt - The amount of time to advance the simulation by, in seconds.
+     * @example
+     * // Pause automatic stepping and advance the simulation by 1/60 s per key press
+     * const physics = app.systems.rigidbody;
+     * physics.timeScale = 0;
+     * app.keyboard.on('keydown', (event) => {
+     *     if (event.key === KEY_SPACE) {
+     *         physics.step(1 / 60);
+     *     }
+     * });
+     */
+    step(dt) {
+        const world = this._world;
+        if (!world) return;
+
         let i, len;
 
         this._stats.physicsStart = now();
 
         // Check to see whether we need to update gravity on the physics world
-        this._world.setGravity(this.gravity);
+        world.setGravity(this.gravity);
 
         const triggers = this._triggers;
         for (i = 0, len = triggers.length; i < len; i++) {
@@ -780,7 +843,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // Step the physics simulation
-        this._world.step(dt, this.maxSubSteps, this.fixedTimeStep);
+        world.step(dt, this.maxSubSteps, this.fixedTimeStep);
 
         // Update the transforms of all entities referencing a dynamic body
         const dynamic = this._dynamic;
@@ -789,9 +852,28 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // no-op on backends that report contacts from inside step()
-        this._world.flushContacts();
+        world.flushContacts();
 
         this._stats.physicsTime = now() - this._stats.physicsStart;
+    }
+
+    /**
+     * Steps the simulation by the frame delta time scaled by
+     * {@link RigidBodyComponentSystem#timeScale}, or skips the frame entirely when the scale is
+     * 0. Registered on the application's update event when a physics backend is installed.
+     *
+     * @param {number} dt - The frame delta time in seconds.
+     * @ignore
+     */
+    onUpdate(dt) {
+        const timeScale = this.timeScale;
+        if (!(timeScale > 0)) {
+            // paused: nothing was simulated this frame
+            this._stats.physicsTime = 0;
+            return;
+        }
+
+        this.step(dt * timeScale);
     }
 
     destroy() {
