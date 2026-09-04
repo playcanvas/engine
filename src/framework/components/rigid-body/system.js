@@ -69,23 +69,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     static EVENT_CONTACT = 'contact';
 
-    /**
-     * The maximum number of fixed substeps the simulation may take in one
-     * {@link RigidBodyComponentSystem#step} to catch up with elapsed time. When a frame takes
-     * longer than maxSubSteps * fixedTimeStep seconds, the remaining time is dropped and the
-     * simulation runs slower than real time instead of falling further behind. Defaults to 10.
-     */
+    /** @ignore */
     maxSubSteps = 10;
 
     /**
-     * The duration of a fixed simulation substep in seconds. Each
-     * {@link RigidBodyComponentSystem#step} advances the simulation in substeps of this length.
-     * Smaller values give a more accurate and stable simulation at a higher CPU cost. Defaults
-     * to 1/60.
-     *
-     * @example
-     * // Simulate at 120Hz for a more stable ragdoll
-     * app.systems.rigidbody.fixedTimeStep = 1 / 120;
+     * @type {number}
+     * @ignore
      */
     fixedTimeStep = 1 / 60;
 
@@ -101,11 +90,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * advanced manually with {@link RigidBodyComponentSystem#step} while paused, for example to
      * drive it from a custom time source.
      *
-     * Slow motion that advances less than one {@link RigidBodyComponentSystem#fixedTimeStep}
-     * per frame steps the simulation intermittently; the Ammo backend interpolates body
-     * transforms between steps so motion stays smooth. Fast forward is limited to
-     * {@link RigidBodyComponentSystem#maxSubSteps} substeps per frame, beyond which the
-     * simulation runs slower than requested.
+     * Slow motion that advances the simulation by less than one fixed substep per frame steps
+     * it intermittently; the Ammo backend interpolates body transforms between steps so motion
+     * stays smooth. Fast forward is limited by the maximum number of substeps the simulation
+     * may take per frame, beyond which it runs slower than requested.
      *
      * Forces applied with {@link RigidBodyComponent#applyForce} while paused accumulate on the
      * body and are applied together on the next step, because forces are only cleared when the
@@ -804,10 +792,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Advances the physics simulation by dt seconds. Synchronizes triggers, compound shapes and
-     * kinematic bodies from their entities, steps the backend in fixed substeps of
-     * {@link RigidBodyComponentSystem#fixedTimeStep} (at most
-     * {@link RigidBodyComponentSystem#maxSubSteps} of them), writes the resulting transforms of
-     * dynamic bodies back to their entities and fires contact and trigger events.
+     * kinematic bodies from their entities, steps the backend in fixed-length substeps (up to a
+     * maximum number per call), writes the resulting transforms of dynamic bodies back to their
+     * entities and fires contact and trigger events.
      *
      * The system calls this once per frame with the frame delta time multiplied by
      * {@link RigidBodyComponentSystem#timeScale}, unless that is 0. Call it directly to step the
@@ -817,12 +804,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      *
      * @param {number} dt - The amount of time to advance the simulation by, in seconds.
      * @example
-     * // Pause automatic stepping and advance the simulation one fixed step per key press
+     * // Pause automatic stepping and advance the simulation by 1/60 s per key press
      * const physics = app.systems.rigidbody;
      * physics.timeScale = 0;
      * app.keyboard.on('keydown', (event) => {
      *     if (event.key === KEY_SPACE) {
-     *         physics.step(physics.fixedTimeStep);
+     *         physics.step(1 / 60);
      *     }
      * });
      */
