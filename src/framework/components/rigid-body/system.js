@@ -49,6 +49,11 @@ const _properties = [
  * {@link AppOptions#physicsWorld} when creating the application, or automatically when the
  * application has loaded the Ammo.js {@link WasmModule}.
  *
+ * The simulation is stepped automatically once per frame. Set
+ * {@link RigidBodyComponentSystem#paused} to stop automatic stepping, for example while a pause
+ * menu is open, and call {@link RigidBodyComponentSystem#step} to advance the simulation
+ * manually.
+ *
  * @category Physics
  */
 class RigidBodyComponentSystem extends ComponentSystem {
@@ -64,14 +69,47 @@ class RigidBodyComponentSystem extends ComponentSystem {
      */
     static EVENT_CONTACT = 'contact';
 
-    /** @ignore */
+    /**
+     * The maximum number of fixed substeps the simulation may take in one
+     * {@link RigidBodyComponentSystem#step} to catch up with elapsed time. When a frame takes
+     * longer than maxSubSteps * fixedTimeStep seconds, the remaining time is dropped and the
+     * simulation runs slower than real time instead of falling further behind. Defaults to 10.
+     */
     maxSubSteps = 10;
 
     /**
-     * @type {number}
-     * @ignore
+     * The duration of a fixed simulation substep in seconds. Each
+     * {@link RigidBodyComponentSystem#step} advances the simulation in substeps of this length.
+     * Smaller values give a more accurate and stable simulation at a higher CPU cost. Defaults
+     * to 1/60.
+     *
+     * @example
+     * // Simulate at 120Hz for a more stable ragdoll
+     * app.systems.rigidbody.fixedTimeStep = 1 / 120;
      */
     fixedTimeStep = 1 / 60;
+
+    /**
+     * Whether automatic stepping of the physics simulation is paused. While true, the system
+     * stops advancing the simulation each frame: bodies freeze in place, entity transforms are
+     * no longer driven by their bodies and no contact or trigger events fire. The rest of the
+     * application keeps running, so this suits a pause menu or inventory screen that must stay
+     * interactive while the game world stands still.
+     *
+     * The simulation can still be advanced manually with
+     * {@link RigidBodyComponentSystem#step} while paused, for example to run physics in slow
+     * motion or to drive it from a custom time source.
+     *
+     * Forces applied with {@link RigidBodyComponent#applyForce} while paused accumulate on the
+     * body and are applied together on the next step, because forces are only cleared when the
+     * simulation steps. Impulses and velocity changes take effect immediately. Defaults to
+     * false.
+     *
+     * @example
+     * // Freeze the game world while the pause menu is open
+     * app.systems.rigidbody.paused = true;
+     */
+    paused = false;
 
     /**
      * The world space vector representing global gravity in the physics simulation. Defaults to
@@ -755,13 +793,37 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.singleContactResultPool.freeAll();
     }
 
-    onUpdate(dt) {
+    /**
+     * Advances the physics simulation by dt seconds. Synchronizes triggers, compound shapes and
+     * kinematic bodies from their entities, steps the backend in fixed substeps of
+     * {@link RigidBodyComponentSystem#fixedTimeStep} (at most
+     * {@link RigidBodyComponentSystem#maxSubSteps} of them), writes the resulting transforms of
+     * dynamic bodies back to their entities and fires contact and trigger events.
+     *
+     * The system calls this once per frame with the frame delta time unless
+     * {@link RigidBodyComponentSystem#paused} is true. Call it directly to step the simulation
+     * manually: to run physics in slow motion, to fast forward it by stepping several times in
+     * one frame, or to advance it while paused. Does nothing when no physics backend is
+     * installed.
+     *
+     * @param {number} dt - The amount of time to advance the simulation by, in seconds.
+     * @example
+     * // Take over stepping and run physics at half speed
+     * app.systems.rigidbody.paused = true;
+     * app.on('update', (dt) => {
+     *     app.systems.rigidbody.step(dt * 0.5);
+     * });
+     */
+    step(dt) {
+        const world = this._world;
+        if (!world) return;
+
         let i, len;
 
         this._stats.physicsStart = now();
 
         // Check to see whether we need to update gravity on the physics world
-        this._world.setGravity(this.gravity);
+        world.setGravity(this.gravity);
 
         const triggers = this._triggers;
         for (i = 0, len = triggers.length; i < len; i++) {
@@ -780,7 +842,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // Step the physics simulation
-        this._world.step(dt, this.maxSubSteps, this.fixedTimeStep);
+        world.step(dt, this.maxSubSteps, this.fixedTimeStep);
 
         // Update the transforms of all entities referencing a dynamic body
         const dynamic = this._dynamic;
@@ -789,9 +851,27 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
 
         // no-op on backends that report contacts from inside step()
-        this._world.flushContacts();
+        world.flushContacts();
 
         this._stats.physicsTime = now() - this._stats.physicsStart;
+    }
+
+    /**
+     * Steps the simulation by the frame delta time unless
+     * {@link RigidBodyComponentSystem#paused} is true. Registered on the application's update
+     * event when a physics backend is installed.
+     *
+     * @param {number} dt - The frame delta time in seconds.
+     * @ignore
+     */
+    onUpdate(dt) {
+        if (this.paused) {
+            // nothing was simulated this frame
+            this._stats.physicsTime = 0;
+            return;
+        }
+
+        this.step(dt);
     }
 
     destroy() {
