@@ -24,9 +24,11 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -36,7 +38,6 @@ window.focus();
 const assets = {
     torus: new Asset('heart', 'container', { url: './assets/models/torus.glb' }),
     color: new Asset('color', 'texture', { url: './assets/textures/clouds.jpg' }, { srgb: true }),
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -101,18 +102,14 @@ cameraEntity.rotateLocal(0, 0, 0);
 cameraEntity.setPosition(0, 4, 20);
 
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 50,
-        frameOnStart: false
+app.root.addChild(cameraEntity);
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 5, 0),
+        zoomRange: new Vec2(0.01, 50),
+        enableFly: false
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
-app.root.addChild(cameraEntity);
-cameraEntity.script.orbitCamera.pivotPoint = new Vec3(0, 5, 0);
 
 // Create an Entity for the ground
 const material = new StandardMaterial();

@@ -27,9 +27,11 @@ import {
     Texture,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -41,7 +43,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script1: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     script2: new Asset('script', 'script', { url: './scripts/utils/cubemap-renderer.js' }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' })
 };
@@ -289,18 +290,16 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(270, 90, -260);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 390,
-        frameOnStart: false
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 390)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 // Create a probe object with cubemapRenderer script which takes care of rendering dynamic cubemap
 const probe = new Entity('probeCamera');

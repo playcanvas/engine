@@ -53,9 +53,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -102,7 +104,6 @@ app.on('destroy', () => {
 
 const assets = {
     hall: new Asset('gsplat', 'gsplat', { url: './assets/splats/knock-community-hall.sog' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     // HDRI environment referenced directly from Poly Haven (no local copy needed)
     hdri: new Asset(
         'hdri',
@@ -481,20 +482,19 @@ camera.addComponent('camera', {
 // positioned slightly above the shape so the top face is visible
 camera.setLocalPosition(0.8, 1.35, 2.9);
 
-// add orbit camera script with a mouse and a touch support
+// add camera controls with a mouse and a touch support
 camera.addComponent('script');
-camera.script?.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: glass,
-        distanceMin: 1.2,
-        distanceMax: 8,
-        frameOnStart: false
-    }
-});
-camera.script?.create('orbitCameraInputMouse');
-camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
+const orbitPivot = glass.getPosition().clone();
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            focusPoint: orbitPivot,
+            zoomRange: new Vec2(1.2, 8),
+            enableFly: false
+        }
+    })
+);
 
 // Camera frame with the scene color map enabled for dynamic refraction. The grab boundary is
 // moved past the splat layer, so the grabbed scene color includes the splat.
@@ -544,11 +544,20 @@ app.on('update', (dt) => {
         autoRotateEnabled = true;
     }
 
-    // Apply auto-rotation
+    // Apply auto-rotation by advancing the camera's azimuth around the pivot
     if (autoRotateEnabled) {
-        const orbitCamera = camera.script?.get('orbitCamera');
-        if (orbitCamera) {
-            orbitCamera.yaw += autoRotateSpeed * dt;
-        }
+        const offset = camera.getPosition().clone().sub(orbitPivot);
+        const r = offset.length();
+        const pitch = Math.asin(Math.max(-1, Math.min(1, offset.y / r)));
+        const yaw = Math.atan2(offset.x, offset.z) + (autoRotateSpeed * dt * Math.PI) / 180;
+        const cp = Math.cos(pitch);
+        cameraControls.reset(
+            orbitPivot,
+            new Vec3(
+                orbitPivot.x + r * Math.sin(yaw) * cp,
+                orbitPivot.y + r * Math.sin(pitch),
+                orbitPivot.z + r * Math.cos(yaw) * cp
+            )
+        );
     }
 });

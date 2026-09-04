@@ -26,8 +26,11 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -35,7 +38,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -97,19 +99,17 @@ const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.4, 0.45, 0.5)
 });
-camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 2,
-        distanceMax: 15
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 camera.translate(0, 1, 4);
 camera.lookAt(0, 0, 0);
+camera.addComponent('script');
 app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        zoomRange: new Vec2(2, 15),
+        enableFly: false
+    }
+});
 
 // Create an Entity with a omni light component and a sphere model component.
 const light = new Entity();

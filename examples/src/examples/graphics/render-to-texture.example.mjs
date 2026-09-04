@@ -30,9 +30,11 @@ import {
     Texture,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -55,8 +57,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true }),
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -245,18 +246,15 @@ camera.translate(0, 9, 15);
 camera.lookAt(1, 4, 0);
 app.root.addChild(camera);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: plane,
-        distanceMax: 20,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(1, 4, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 20)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 
 // Create texture camera, which renders entities in world and skybox layers into the texture
 const textureCamera = new Entity('TextureCamera');

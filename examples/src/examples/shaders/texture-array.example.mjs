@@ -30,8 +30,11 @@ import {
     TextureHandler,
     TorusGeometry,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -108,8 +111,7 @@ const assets = {
         'texture',
         { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' },
         { srgb: true }
-    ),
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    )
 };
 
 const gfxOptions = {
@@ -264,23 +266,22 @@ camera.addComponent('camera', {
 });
 
 // Adjust the camera position
-camera.translate(3, -2, 4);
+camera.setLocalPosition(5.099, 0.169, 6.799);
 camera.lookAt(0, 0, 0);
 
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2, // Override default of 0 (no inertia),
-        distanceMax: 10.0
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, -5.1, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 10)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 
 // Add the new Entities to the hierarchy
 app.root.addChild(light);
 app.root.addChild(shape);
-app.root.addChild(camera);
 
 // Set an update function on the app's update event
 let angle = 0;

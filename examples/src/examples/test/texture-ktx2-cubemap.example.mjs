@@ -29,9 +29,11 @@ import {
     TextureHandler,
     TouchDevice,
     TONEMAP_ACES,
+    Vec3,
     basisInitialize,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -55,8 +57,7 @@ const assets = {
         'texture',
         { url: './assets/cubemaps/yokohama-cubemap.ktx2' },
         { srgb: true }
-    ),
-    orbit: new Asset('orbit-camera', 'script', { url: './scripts/camera/orbit-camera.js' })
+    )
 };
 
 const createOptions = new AppOptions();
@@ -114,16 +115,13 @@ camera.addComponent('camera', {
 });
 camera.setPosition(0, 0, 3);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        focusEntity: sphere,
-        frameOnStart: false,
-        inertiaFactor: 0.2
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 app.start();
 

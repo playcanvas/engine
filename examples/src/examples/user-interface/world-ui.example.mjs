@@ -25,9 +25,11 @@ import {
     TextureHandler,
     TouchDevice,
     Vec2,
+    Vec3,
     Vec4,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -36,8 +38,7 @@ window.focus();
 
 const assets = {
     checkboard: new Asset('checkboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true }),
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' }),
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
@@ -89,17 +90,15 @@ const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(30 / 255, 30 / 255, 30 / 255)
 });
-camera.rotateLocal(-30, 0, 0);
-camera.translateLocal(0, 0, 7);
+camera.setLocalPosition(0, 0.98, 1.697);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2 // Override default of 0 (no inertia)
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 // Create an Entity for the ground
 const material = new StandardMaterial();

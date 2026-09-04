@@ -29,8 +29,11 @@ import {
     StandardMaterial,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -38,7 +41,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
     rocks: new Asset(
         'rocks',
@@ -98,19 +100,16 @@ camera.addComponent('camera', {
 });
 camera.translate(10, 6, 22);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 12,
-        distanceMax: 100
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false,
+        zoomRange: new Vec2(12, 100)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-
-app.root.addChild(camera);
 
 const NUM_BOXES = 5;
 

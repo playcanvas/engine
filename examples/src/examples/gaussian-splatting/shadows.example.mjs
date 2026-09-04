@@ -35,9 +35,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { ShadowCatcher } from 'playcanvas/scripts/esm/shadow-catcher.mjs';
 
 import { data, deviceType } from 'examples/context';
@@ -88,8 +90,7 @@ app.on('destroy', () => {
 
 const assets = {
     biker: new Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    hdri: new Asset('hdri', 'texture', { url: './assets/hdri/st-peters-square.hdr' }, { mipmaps: false }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    hdri: new Asset('hdri', 'texture', { url: './assets/hdri/st-peters-square.hdr' }, { mipmaps: false })
 };
 
 await new Promise((resolve) => {
@@ -181,19 +182,16 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(-3, 2, 4);
 
-// Add orbit camera script with mouse and touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script?.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: biker,
-        distanceMax: 10,
-        frameOnStart: false
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(-1.5, 0.05, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 10)
     }
 });
-camera.script?.create('orbitCameraInputMouse');
-camera.script?.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 // Create shadow catcher
 const shadowCatcher = new Entity('ShadowCatcher');
