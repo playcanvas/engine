@@ -46,6 +46,13 @@ class GpuProfiler {
     _frameTime = 0;
 
     /**
+     * Whether a valid frame timing has arrived since profiling was enabled or reset.
+     *
+     * @private
+     */
+    _frameTimeValid = false;
+
+    /**
      * Per-pass timing data, with accumulated timings for passes with the same name.
      *
      * @type {Map<string, number>}
@@ -67,7 +74,20 @@ class GpuProfiler {
     maxCount = 9999;
 
     loseContext() {
+        this.invalidateTimings();
+    }
+
+    /**
+     * Invalidate timings and discard pending reports so asynchronous results from an earlier
+     * profiling session cannot become the latest sample after a reset.
+     *
+     * @ignore
+     */
+    invalidateTimings() {
+        this._frameTime = 0;
+        this._frameTimeValid = false;
         this.pastFrameAllocations.clear();
+        this._passTimings.clear();
     }
 
     /**
@@ -76,11 +96,24 @@ class GpuProfiler {
      * @type {boolean}
      */
     set enabled(value) {
-        this._enableRequest = value;
+        if (this._enableRequest !== value) {
+            this._enableRequest = value;
+            this.invalidateTimings();
+        }
     }
 
     get enabled() {
         return this._enableRequest;
+    }
+
+    /**
+     * The latest valid GPU frame duration, or undefined when no timing is available.
+     *
+     * @type {number|undefined}
+     * @ignore
+     */
+    get frameTime() {
+        return this._enableRequest && this._enabled && this._frameTimeValid ? this._frameTime : undefined;
     }
 
     /**
@@ -146,6 +179,7 @@ class GpuProfiler {
             // whole frame with a single query, so its timings do not overlap).
             if (timings.length > 0) {
                 this._frameTime = frameTime ?? timings.reduce((sum, t) => sum + t, 0);
+                this._frameTimeValid = true;
             }
 
             // clear old pass timings

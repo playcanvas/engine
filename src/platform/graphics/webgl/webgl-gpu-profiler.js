@@ -62,6 +62,7 @@ class WebglGpuProfiler extends GpuProfiler {
     }
 
     destroy() {
+        this.invalidateTimings();
         this.freeQueries.forEach(query => this.device.gl.deleteQuery(query));
         this.frameQueries.forEach(query => this.device.gl.deleteQuery(query));
         this.previousFrameQueries.forEach(frameQueriesInfo => frameQueriesInfo.destroy(this.device.gl));
@@ -183,6 +184,9 @@ class WebglGpuProfiler extends GpuProfiler {
                         frameQueriesInfo.destroy(gl);
                     });
                     this.previousFrameQueries.length = 0;
+                    this.invalidateTimings();
+                    this.frameAllocations.length = 0;
+                    return;
                 }
             }
 

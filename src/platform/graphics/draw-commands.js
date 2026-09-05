@@ -72,12 +72,16 @@ class DrawCommands {
      */
     slotIndex = 0;
 
-    /**
-     * Total number of primitives across all sub-draws (pre-calculated).
-     *
-     * @ignore
-     */
-    primitiveCount = 0;
+    // #if _PROFILER
+    /** @private */
+    _primitiveCount = 0;
+
+    /** @private */
+    _primitiveType = -1;
+
+    /** @private */
+    _primitiveInstanced = false;
+    // #endif
 
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
@@ -105,6 +109,9 @@ class DrawCommands {
     allocate(maxCount) {
         this._maxCount = maxCount;
         this.impl.allocate?.(maxCount);
+        // #if _PROFILER
+        this._primitiveType = -1;
+        // #endif
     }
 
     /**
@@ -129,8 +136,31 @@ class DrawCommands {
      */
     update(count) {
         this._count = count;
-        this.primitiveCount = this.impl.update?.(count) ?? 0;
+        this.impl.update?.(count);
+        // #if _PROFILER
+        this._primitiveType = -1;
+        // #endif
     }
+
+    // #if _PROFILER
+    /**
+     * Count primitives using the topology at submission time, which is not known when commands
+     * are populated. Cache the result across passes and frames until update is called again.
+     *
+     * @param {number} type - Primitive topology.
+     * @param {boolean} [instanced] - Whether to apply per-command instance counts. Defaults to true.
+     * @returns {number} Primitive count, or zero for GPU-authored indirect commands.
+     * @ignore
+     */
+    getPrimitiveCount(type, instanced = true) {
+        if (this._primitiveType !== type || this._primitiveInstanced !== instanced) {
+            this._primitiveCount = this.impl.getPrimitiveCount?.(this._count, type, instanced) ?? 0;
+            this._primitiveType = type;
+            this._primitiveInstanced = instanced;
+        }
+        return this._primitiveCount;
+    }
+    // #endif
 }
 
 export { DrawCommands };

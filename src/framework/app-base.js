@@ -51,7 +51,7 @@ import { ScriptRegistry } from './script/script-registry.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
-import { ApplicationStats } from './stats.js';
+import { AppStats } from './app-stats.js';
 import { getApplication, setApplication } from './globals.js';
 import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
@@ -338,12 +338,10 @@ class AppBase extends EventHandler {
     scriptsOrder = [];
 
     /**
-     * The application's performance stats.
-     *
-     * @type {ApplicationStats}
-     * @ignore
+     * @type {AppStats}
+     * @private
      */
-    stats;
+    _stats;
 
     /**
      * When true, the application's render function is called every frame. Setting autoRender to
@@ -571,7 +569,7 @@ class AppBase extends EventHandler {
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(this);
+        this._stats = new AppStats(this);
 
         this._soundManager = soundManager;
         this.scene = new Scene(graphicsDevice);
@@ -722,6 +720,16 @@ class AppBase extends EventHandler {
      */
     get fillMode() {
         return this._fillMode;
+    }
+
+    /**
+     * The application's read-only performance statistics. Returns the same {@link AppStats}
+     * instance on every access. See {@link AppStats} for units, sampling and GPU profiling setup.
+     *
+     * @type {AppStats}
+     */
+    get stats() {
+        return this._stats;
     }
 
     /**
@@ -1108,9 +1116,7 @@ class AppBase extends EventHandler {
 
         this.graphicsDevice.update();
 
-        // #if _PROFILER
         this.stats.frame.updateStart = now();
-        // #endif
 
         // script update
         this.stats.frame.scriptUpdateStart = now();
@@ -1133,9 +1139,7 @@ class AppBase extends EventHandler {
         // update input devices
         this.inputUpdate(dt);
 
-        // #if _PROFILER
         this.stats.frame.updateTime = now() - this.stats.frame.updateStart;
-        // #endif
     }
 
     /**
@@ -1150,9 +1154,7 @@ class AppBase extends EventHandler {
 
         this.graphicsDevice.frameStart();
 
-        // #if _PROFILER
         this.stats.frame.renderStart = now();
-        // #endif
 
         this.fire('prerender');
         this.root.syncHierarchy();

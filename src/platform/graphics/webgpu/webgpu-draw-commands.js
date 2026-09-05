@@ -1,6 +1,7 @@
 import { BUFFERUSAGE_COPY_DST, BUFFERUSAGE_INDIRECT } from '../constants.js';
 import { StorageBuffer } from '../storage-buffer.js';
 import { DebugHelper } from '../../../core/debug.js';
+import { getPrimitiveCount } from '../primitive-utils.js';
 
 /**
  * @import { GraphicsDevice } from '../graphics-device.js'
@@ -70,30 +71,37 @@ class WebgpuDrawCommands {
     /**
      * Upload AoS data to storage buffer.
      * @param {number} count - Number of active draws.
-     * @returns {number} Total primitive count.
      */
     update(count) {
         if (this.storage && count > 0) {
             const used = count * 5; // 5 uints per draw
             this.storage.write(0, this.gpuIndirect, 0, used);
         }
+    }
 
-        // calculate total primitives for stats
+    // #if _PROFILER
+    /**
+     * Calculate primitives per sub-draw before accumulating, so strip overhead and incomplete
+     * list primitives are handled separately for each instance.
+     * @param {number} count - Number of active draws.
+     * @param {number} type - Primitive topology.
+     * @returns {number} Total primitive count. Zero for GPU-authored indirect commands.
+     */
+    getPrimitiveCount(count, type) {
         let totalPrimitives = 0;
 
-        // #if _PROFILER
         if (this.gpuIndirect && count > 0) {
             for (let d = 0; d < count; d++) {
                 const offset = d * 5;
                 const indexOrVertexCount = this.gpuIndirect[offset + 0];
                 const instanceCount = this.gpuIndirect[offset + 1];
-                totalPrimitives += indexOrVertexCount * instanceCount;
+                totalPrimitives += getPrimitiveCount(type, indexOrVertexCount) * instanceCount;
             }
         }
-        // #endif
 
         return totalPrimitives;
     }
+    // #endif
 
     destroy() {
         this.storage?.destroy();
