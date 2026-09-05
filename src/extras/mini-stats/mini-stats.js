@@ -11,6 +11,7 @@ import { Render2d } from './render2d.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
+ * @import { AppStats } from '../../framework/app-stats.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
@@ -89,14 +90,13 @@ const compareGraphs = (a, b) => graphOrder(a) - graphOrder(b);
 
 /**
  * MiniStats is a small graphical overlay that displays realtime performance metrics. By default,
- * it shows CPU and GPU utilization, frame timings and draw call count. It can also be configured
- * to display additional graphs based on data collected into `AppBase#stats`.
+ * it shows CPU and GPU durations, frame intervals, draw call count and estimated GPU resource
+ * memory. It can also display additional counters from {@link AppBase#stats}.
  *
- * The detailed per-frame sub-timings — script, anim, physics and gsplat sort — are measured in
- * every build. The render timing is the exception: its start timestamp is only recorded in the
- * debug and profiler builds, so in the release build the render graph reports the time elapsed
- * since page load rather than a frame time. Import from `'playcanvas/debug'` or
- * `'playcanvas/profiler'` for a meaningful render figure.
+ * The default CPU timings, including render time, draw call count and memory estimates are
+ * available in all builds. GPU timing requires device support and is enabled when MiniStats
+ * creates its GPU timer. Some additional counters, such as {@link AppStats#primitiveCount},
+ * require a debug or profiler build. See {@link AppStats} for measurement scope and availability.
  */
 class MiniStats {
     /**
