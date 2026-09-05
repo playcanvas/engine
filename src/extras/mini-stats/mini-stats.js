@@ -254,7 +254,7 @@ class MiniStats {
     static getDefaultOptions(extraStats = []) {
         const options = {
             sizes: [
-                { width: 128, height: 24, spacing: 0, graphs: false, detailed: false, peak: false },
+                { width: 128, height: 22, spacing: 0, graphs: false, detailed: false, peak: false },
                 { width: 176, height: 20, spacing: 0, graphs: false, detailed: true, peak: false },
                 { width: 224, height: 22, spacing: 0, graphs: true, detailed: true, peak: true }
             ],
