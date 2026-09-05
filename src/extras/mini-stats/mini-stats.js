@@ -1,6 +1,6 @@
 import { math } from '../../core/math/math.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { ADDRESS_REPEAT, FILTER_NEAREST } from '../../platform/graphics/constants.js';
+import { ADDRESS_REPEAT, FILTER_LINEAR } from '../../platform/graphics/constants.js';
 import { LAYERID_UI } from '../../scene/constants.js';
 import { CpuTimer } from './cpu-timer.js';
 import { GpuTimer } from './gpu-timer.js';
@@ -14,20 +14,28 @@ import { Render2d } from './render2d.js';
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
-// CPU stat name mappings: full property name -> shortened display name
 const cpuStatDisplayNames = {
-    animUpdate: 'anim',
-    physicsTime: 'physics',
-    renderTime: 'render',
-    gsplatSort: 'gsplatSort'
+    scriptUpdate: 'Script update',
+    scriptPostUpdate: 'Script post-update',
+    animUpdate: 'Animation',
+    physicsTime: 'Physics',
+    renderTime: 'Render',
+    gsplatSort: 'Splat sort'
 };
+const vramStatDisplayNames = { tex: 'Textures', geom: 'Geometry', buffers: 'Buffers' };
+const cpuStatNames = ['renderTime', 'scriptUpdate', 'scriptPostUpdate', 'animUpdate', 'physicsTime', 'gsplatSort'];
+const vramStatNames = ['tex', 'geom', 'buffers'];
 
-// CPU stats with delayed creation (only shown once non-zero, but never removed)
-const delayedStartStats = new Set([
-    'physicsTime',
-    'animUpdate',
-    'gsplatSort'
-]);
+// Packed RGBA bytes for the vertex color attribute. The overlay is authored in display space.
+const BACKGROUND = 0xff231b15;
+const GROUP_BACKGROUND = 0xff372b22;
+const BORDER = 0xff4e3d30;
+const TEXT = 0xfffaf5f2;
+const MUTED = 0xffc8b8ad;
+const graphColors = [0xff6db1d9, 0xfff7b884, 0xffb6d16d, 0xffdda0b8];
+
+const graphOrder = graph => (graph.label === 'Draw calls' ? 0 : graph.name === 'Frame' ? 1 : graph.group + 2);
+const compareGraphs = (a, b) => graphOrder(a) - graphOrder(b);
 
 /**
  * @typedef {object} MiniStatsSizeOptions
@@ -35,6 +43,9 @@ const delayedStartStats = new Set([
  * @property {number} height - Height of the graph area.
  * @property {number} spacing - Spacing between graphs.
  * @property {boolean} graphs - Whether to show graphs.
+ * @property {boolean} [detailed] - Show category headers and sub-counters. Defaults to true for
+ * sizes after the first, or when graphs are enabled.
+ * @property {boolean} [peak] - Show a peak column in the detailed view. Defaults to the graphs setting.
  */
 
 /**
@@ -50,6 +61,8 @@ const delayedStartStats = new Set([
  * @property {string[]} stats - Path to data inside Application.stats.
  * @property {number} [decimalPlaces] - Number of decimal places (defaults to none).
  * @property {string} [unitsName] - Units (defaults to "").
+ * @property {number} [multiplier=1] - Multiplier applied to sampled values, for example to convert
+ * bytes to megabytes.
  * @property {number} [watermark] - Watermark - shown as a line on the graph, useful for displaying
  * a budget.
  */
@@ -59,7 +72,9 @@ const delayedStartStats = new Set([
  * @property {MiniStatsSizeOptions[]} sizes - Sizes of area to render individual graphs in and
  * spacing between individual graphs.
  * @property {number} startSizeIndex - Index into sizes array for initial setting.
- * @property {number} textRefreshRate - Refresh rate of text stats in ms.
+ * @property {number} textRefreshRate - Text update interval and averaging window in ms (500 in the
+ * default options). Each update shows the arithmetic mean and peak of the frame samples collected
+ * since the previous update, then starts a new window. Graph history samples every frame.
  * @property {MiniStatsProcessorOptions} cpu - CPU graph options.
  * @property {MiniStatsProcessorOptions} gpu - GPU graph options.
  * @property {MiniStatsGraphOptions[]} stats - Array of options to render additional graphs based
@@ -90,137 +105,127 @@ class MiniStats {
      * @param {AppBase} app - The application.
      * @param {MiniStatsOptions} [options] - Options for the MiniStats instance.
      * @example
-     * // create a new MiniStats instance using default options
      * const miniStats = new MiniStats(app);
      */
     constructor(app, options = MiniStats.getDefaultOptions()) {
-        const device = app.graphicsDevice;
+        this.app = app;
+        this.device = app.graphicsDevice;
+        this.sizes = options.sizes.map(size => ({ ...size }));
+        this.graphRows = new Map();
+        this.freeRows = [];
+        this.nextRowIndex = 0;
+        this.gpuPassGraphs = new Map();
+        this.cpuGraphs = new Map();
+        this.vramGraphs = new Map();
+        this.gpuTimingMinSize = options.gpuTimingMinSize ?? 1;
+        this.cpuTimingMinSize = options.cpuTimingMinSize ?? 1;
+        this.vramTimingMinSize = options.vramTimingMinSize ?? 1;
+        this.textRefreshRate = options.textRefreshRate;
+        this._averageLabel = `Avg (${this.textRefreshRate / 1000}s)`;
+        this.frameIndex = 0;
+        this._enabled = true;
+        this._destroyed = false;
+        this._geometryDirty = true;
+        this._layoutDirty = true;
+        this._scroll = 0;
+        this._maxScroll = 0;
+        this._overallHeight = 0;
+        this.clr = [1, 1, 1, 0.95];
+        this.initGraphs(app, this.device, options);
 
-        // Persistent texture row allocation (must be initialized before initGraphs)
-        this.graphRows = new Map();  // Map<Graph, rowIndex>
-        this.freeRows = [];          // Available rows for reuse
-        this.nextRowIndex = 0;       // Next new row to allocate
-
-        // sizes must be set before initGraphs (needed by ensureTextureHeight)
-        this.sizes = options.sizes;
-
-        // create graphs
-        this.initGraphs(app, device, options);
-
-        // extract list of words
-        const words = new Set(
-            ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '-', ' ']
-            .concat(this.graphs.map(graph => graph.name))
-            .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
-            .filter(item => !!item)
-        );
-
-        // always add lowercase and uppercase letters (needed for "max" display and GPU pass names)
-        for (let i = 97; i <= 122; i++) {
-            words.add(String.fromCharCode(i));
+        const words = ['Metric', this._averageLabel, 'Peak', 'ms', 'MB'];
+        for (const graph of this.graphs) {
+            words.push(graph.label, graph.timer.unitsName || '');
         }
-        for (let i = 65; i <= 90; i++) {
-            words.add(String.fromCharCode(i));
-        }
+        words.push(...Object.values(cpuStatDisplayNames), ...Object.values(vramStatDisplayNames));
+        this.wordAtlas = new WordAtlas(this.device, words);
+        this.render2d = new Render2d(this.device);
+        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
 
-        this.wordAtlas = new WordAtlas(device, words);
-        this._activeSizeIndex = options.startSizeIndex;
-
-        // if GPU pass tracking, CPU timing or VRAM detail is enabled, use the last width for medium/large sizes
-        const gpuTimingMinSize = options.gpuTimingMinSize ?? 1;
-        const cpuTimingMinSize = options.cpuTimingMinSize ?? 1;
-        const vramTimingMinSize = options.vramTimingMinSize ?? 1;
-        if (gpuTimingMinSize < this.sizes.length || cpuTimingMinSize < this.sizes.length || vramTimingMinSize < this.sizes.length) {
-            const lastWidth = this.sizes[this.sizes.length - 1].width;
-            for (let i = 1; i < this.sizes.length - 1; i++) {
-                this.sizes[i].width = lastWidth;
-            }
-        }
-
-        // create click region so we can resize
         const div = document.createElement('div');
-        div.setAttribute('id', 'mini-stats');
-        div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
+        div.id = 'mini-stats';
+        div.style.cssText = 'position:fixed;background:transparent;cursor:pointer;touch-action:none;user-select:none;';
+        div.setAttribute('role', 'button');
+        div.tabIndex = 0;
+        div.title = 'Click to change size. Scroll or drag to view more metrics.';
         document.body.appendChild(div);
-
-        div.addEventListener('mouseenter', (event) => {
-            this.opacity = 1.0;
+        this.div = div;
+        let dragging = false;
+        let pointerY = 0;
+        let startY = 0;
+        div.addEventListener('mouseenter', () => {
+            this.opacity = 1;
         });
-
-        div.addEventListener('mouseleave', (event) => {
-            // larger sizes have higher default opacity
-            this.opacity = this._activeSizeIndex > 0 ? 0.85 : 0.7;
+        div.addEventListener('mouseleave', () => {
+            this.opacity = 0.95;
         });
-
         div.addEventListener('click', (event) => {
             event.preventDefault();
-            if (this._enabled) {
+            if (this._enabled && !dragging) this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
+            dragging = false;
+        });
+        div.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
                 this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
-                this.resize(this.sizes[this.activeSizeIndex].width, this.sizes[this.activeSizeIndex].height, this.sizes[this.activeSizeIndex].graphs);
+            }
+        });
+        div.addEventListener('wheel', (event) => {
+            if (this._maxScroll > 0) {
+                event.preventDefault();
+                const multiplier = event.deltaMode === 1 ? this.height : event.deltaMode === 2 ? this._panelHeight : 1;
+                this.scroll(event.deltaY * multiplier);
+            }
+        }, { passive: false });
+        div.addEventListener('pointerdown', (event) => {
+            dragging = false;
+            startY = pointerY = event.clientY;
+            if (event.pointerType !== 'mouse') div.setPointerCapture(event.pointerId);
+        });
+        div.addEventListener('pointermove', (event) => {
+            if (event.buttons && event.pointerType !== 'mouse' && this._maxScroll > 0) {
+                dragging ||= Math.abs(event.clientY - startY) > 5;
+                if (dragging) this.scroll(pointerY - event.clientY);
+                pointerY = event.clientY;
             }
         });
 
-        device.on('resizecanvas', this.updateDiv, this);
-        device.on('losecontext', this.loseContext, this);
+        this.device.on('resizecanvas', this.updateDiv, this);
+        this.device.on('losecontext', this.loseContext, this);
+        app.on('frameupdate', this.update, this);
         app.on('postrender', this.postRender, this);
-
-        this.app = app;
-        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
-        this.device = device;
-        this.render2d = new Render2d(device);
-        this.div = div;
-
-        this.width = 0;
-        this.height = 0;
-        this.gspacing = 2;
-        // initial opacity depends on starting size
-        this.clr = [1, 1, 1, options.startSizeIndex > 0 ? 0.85 : 0.7];
-
-        this._enabled = true;
-
-        // GPU pass tracking
-        this.gpuTimingMinSize = gpuTimingMinSize;
-        this.gpuPassGraphs = new Map(); // Map<passName, { graph, lastNonZeroFrame }>
-
-        // CPU sub-timing tracking
-        this.cpuTimingMinSize = cpuTimingMinSize;
-        this.cpuGraphs = new Map(); // Map<statName, { graph, lastNonZeroFrame }>
-
-        // VRAM subcategory tracking
-        this.vramTimingMinSize = vramTimingMinSize;
-        this.vramGraphs = new Map(); // Map<statName, { graph, lastNonZeroFrame }>
-
-        this.frameIndex = 0;
-        this.textRefreshRate = options.textRefreshRate;
-
-        // initial resize
-        this.activeSizeIndex = this._activeSizeIndex;
+        app.on('destroy', this.destroy, this);
+        this.activeSizeIndex = options.startSizeIndex;
     }
 
     /**
-     * Destroy the MiniStats instance.
+     * Destroy the MiniStats instance and release its event listeners, textures and mesh.
      *
      * @example
      * miniStats.destroy();
      */
     destroy() {
+        if (this._destroyed) return;
+        this._destroyed = true;
         this.device.off('resizecanvas', this.updateDiv, this);
         this.device.off('losecontext', this.loseContext, this);
+        this.app.off('frameupdate', this.update, this);
         this.app.off('postrender', this.postRender, this);
-
-        this.graphs.forEach(graph => graph.destroy());
+        this.app.off('destroy', this.destroy, this);
+        this.removeQueuedMesh();
+        for (let i = 0; i < this.graphs.length; i++) this.graphs[i].destroy();
         this.gpuPassGraphs.clear();
         this.cpuGraphs.clear();
         this.vramGraphs.clear();
+        this.graphRows.clear();
         this.wordAtlas.destroy();
         this.texture.destroy();
+        this.render2d.destroy();
         this.div.remove();
     }
 
     /**
-     * Predefined stat groups that can be included via {@link MiniStats.getDefaultOptions}. Each
-     * key maps to an array of {@link MiniStatsGraphOptions} entries that are inserted after the
-     * 'Frame' stat in the default options.
+     * Predefined stat groups included via {@link MiniStats.getDefaultOptions}.
      *
      * @type {Object<string, MiniStatsGraphOptions[]>}
      * @ignore
@@ -235,618 +240,456 @@ class MiniStats {
     };
 
     /**
-     * Returns the default options for MiniStats. The default options configure the overlay to
-     * show the following graphs:
+     * Returns options for three sizes: compact core counters, grouped averages, and grouped
+     * averages and peaks with graph history. Draw calls and frame time appear first, followed by
+     * ungrouped counters in their configured order, then CPU, GPU and VRAM.
      *
-     * - CPU utilization
-     * - GPU utilization
-     * - Overall frame time
-     * - Draw call count
-     * - Total VRAM usage
-     *
-     * @param {string[]} [extraStats] - Optional array of preset names from
-     * {@link MiniStats.statPresets} to include. The preset stats are inserted after the 'Frame'
-     * entry. Can be: 'gsplats', 'gsplatsCopy'.
-     * @returns {object} The default options for MiniStats.
+     * @param {string[]} [extraStats] - Presets to include: 'gsplats' or 'gsplatsCopy'.
+     * @returns {MiniStatsOptions} The default options for MiniStats.
      * @example
-     * // default options without extra stats
-     * const options = MiniStats.getDefaultOptions();
-     * @example
-     * // include gsplat stats
-     * const options = MiniStats.getDefaultOptions(['gsplats', 'gsplatsCopy']);
+     * const options = MiniStats.getDefaultOptions(['gsplats']);
+     * options.sizes[2].width = 280;
+     * const miniStats = new MiniStats(app, options);
      */
     static getDefaultOptions(extraStats = []) {
         const options = {
-
-            // sizes of area to render individual graphs in and spacing between individual graphs
             sizes: [
-                { width: 100, height: 16, spacing: 0, graphs: false },
-                { width: 128, height: 32, spacing: 2, graphs: true },
-                { width: 256, height: 64, spacing: 2, graphs: true }
+                { width: 128, height: 24, spacing: 0, graphs: false, detailed: false, peak: false },
+                { width: 176, height: 20, spacing: 0, graphs: false, detailed: true, peak: false },
+                { width: 224, height: 22, spacing: 0, graphs: true, detailed: true, peak: true }
             ],
-
-            // index into sizes array for initial setting
             startSizeIndex: 0,
-
-            // refresh rate of text stats in ms
             textRefreshRate: 500,
-
-            // cpu graph options
-            cpu: {
-                enabled: true,
-                watermark: 33
-            },
-
-            // gpu graph options
-            gpu: {
-                enabled: true,
-                watermark: 33
-            },
-
-            // array of options to render additional graphs based on stats collected into Application.stats
+            cpu: { enabled: true, watermark: 33 },
+            gpu: { enabled: true, watermark: 33 },
             stats: [
-                {
-                    // display name
-                    name: 'Frame',
-
-                    // path to data inside Application.stats
-                    stats: ['frame.ms'],
-
-                    // number of decimal places (defaults to none)
-                    decimalPlaces: 1,
-
-                    // units (defaults to "")
-                    unitsName: 'ms',
-
-                    // watermark - shown as a line on the graph, useful for displaying a budget
-                    watermark: 33
-                },
-
-                // total number of draw calls
-                {
-                    name: 'DrawCalls',
-                    stats: ['drawCalls.total'],
-                    watermark: 1000
-                },
-
-                // used VRAM in MB
-                {
-                    name: 'VRAM',
-                    stats: ['vram.totalUsed'],
-                    decimalPlaces: 1,
-                    multiplier: 1 / (1024 * 1024),
-                    unitsName: 'MB',
-                    watermark: 1024
-                }
+                { name: 'DrawCalls', stats: ['drawCalls.total'], watermark: 1000 },
+                { name: 'Frame', stats: ['frame.ms'], decimalPlaces: 1, unitsName: 'ms', watermark: 33 },
+                { name: 'VRAM', stats: ['vram.totalUsed'], decimalPlaces: 1, multiplier: 1 / (1024 * 1024), unitsName: 'MB', watermark: 1024 }
             ],
-
-            // minimum size index to show GPU pass timing graphs
             gpuTimingMinSize: 1,
-
-            // minimum size index to show CPU sub-timing graphs
             cpuTimingMinSize: 1,
-
-            // minimum size index to show VRAM subcategory graphs
             vramTimingMinSize: 1
         };
-
-        if (extraStats.length > 0) {
-            const frameIndex = options.stats.findIndex(s => s.name === 'Frame');
-            const insertIndex = frameIndex !== -1 ? frameIndex + 1 : options.stats.length;
-            // reverse so user-specified order matches visual top-to-bottom order
-            const extra = extraStats.flatMap(name => MiniStats.statPresets[name] ?? []).reverse();
-            options.stats.splice(insertIndex, 0, ...extra);
-        }
-
+        for (const name of extraStats) options.stats.push(...(MiniStats.statPresets[name] ?? []));
         return options;
     }
 
     /**
-     * Sets the active size index. Setting the active size index will resize the overlay to the
-     * size specified by the corresponding entry in the sizes array.
+     * Selects the corresponding entry in the sizes array.
      *
      * @type {number}
      * @ignore
      */
     set activeSizeIndex(value) {
+        const size = this.sizes[value];
+        if (!size) return;
         this._activeSizeIndex = value;
-        this.gspacing = this.sizes[value].spacing;
-
-        this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
-
-        // update opacity based on size (larger sizes have higher default opacity)
-        this.opacity = value > 0 ? 0.85 : 0.7;
-
-        // delete sub-stat graphs when switching below their thresholds
-        if (value < this.gpuTimingMinSize && this.gpuPassGraphs) {
-            this.clearSubGraphs(this.gpuPassGraphs, 'GPU', 0.33);
-        }
-        if (value < this.cpuTimingMinSize && this.cpuGraphs) {
-            this.clearSubGraphs(this.cpuGraphs, 'CPU', 0.66);
-        }
-        if (value < this.vramTimingMinSize && this.vramGraphs) {
-            this.clearSubGraphs(this.vramGraphs);
-        }
+        this._detailed = size.detailed ?? (value > 0 || size.graphs);
+        this._showPeak = this._detailed && (size.peak ?? size.graphs);
+        this.gspacing = size.spacing;
+        this._scroll = 0;
+        if (!this._detailed || value < this.gpuTimingMinSize) this.clearSubGraphs(this.gpuPassGraphs);
+        if (!this._detailed || value < this.cpuTimingMinSize) this.clearSubGraphs(this.cpuGraphs);
+        if (!this._detailed || value < this.vramTimingMinSize) this.clearSubGraphs(this.vramGraphs);
+        this.resize(size.width, size.height, size.graphs);
+        this.div.setAttribute('aria-label', !this._detailed ? 'MiniStats: compact counters. Change size.' :
+            size.graphs ? 'MiniStats: averages, peaks and history. Change size.' : 'MiniStats: grouped averages. Change size.');
     }
 
-    /**
-     * Gets the active size index.
-     *
-     * @type {number}
-     * @ignore
-     */
+    /** @type {number} @ignore */
     get activeSizeIndex() {
         return this._activeSizeIndex;
     }
 
-    /**
-     * Sets the opacity of the MiniStats overlay.
-     *
-     * @type {number}
-     * @ignore
-     */
+    /** @type {number} @ignore */
     set opacity(value) {
         this.clr[3] = value;
     }
 
-    /**
-     * Gets the opacity of the MiniStats overlay.
-     *
-     * @type {number}
-     * @ignore
-     */
+    /** @type {number} @ignore */
     get opacity() {
         return this.clr[3];
     }
 
-    /**
-     * Gets the overall height of the MiniStats overlay.
-     *
-     * @type {number}
-     * @ignore
-     */
+    /** @type {number} @ignore */
     get overallHeight() {
-        const graphs = this.graphs;
-        const spacing = this.gspacing;
-        return this.height * graphs.length + spacing * (graphs.length - 1);
+        return this._overallHeight;
     }
 
     /**
-     * Sets the enabled state of the MiniStats overlay.
+     * Whether the overlay and its counter sampling are enabled. Defaults to true.
      *
      * @type {boolean}
      */
     set enabled(value) {
         if (value !== this._enabled) {
             this._enabled = value;
-            for (let i = 0; i < this.graphs.length; ++i) {
-                this.graphs[i].enabled = value;
+            for (let i = 0; i < this.graphs.length; i++) {
+                this.graphs[i].enabled = value && this._showGraphs;
                 this.graphs[i].timer.enabled = value;
+            }
+            this.div.style.display = value ? 'block' : 'none';
+            if (!value) this.removeQueuedMesh();
+        }
+    }
+
+    /** @type {boolean} */
+    get enabled() {
+        return this._enabled;
+    }
+
+    /** @private */
+    removeQueuedMesh() {
+        // postrender submits the overlay for the next frame. Remove that pending reference
+        // before freeing the mesh, including when its UI layer was not rendered this frame.
+        const queued = this.app.scene.immediate?.layerMeshInstances.get(this.drawLayer);
+        if (queued) {
+            for (let i = queued.length - 1; i >= 0; i--) {
+                if (queued[i] === this.render2d.meshInstance) queued.splice(i, 1);
             }
         }
     }
 
     /**
-     * Gets the enabled state of the MiniStats overlay.
-     *
-     * @type {boolean}
-     */
-    get enabled() {
-        return this._enabled;
-    }
-
-
-    /**
-     * Create the graphs requested by the user and add them to the MiniStats instance.
-     *
+     * @private
      * @param {AppBase} app - The application.
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {object} options - Options for the MiniStats instance.
-     * @private
+     * @param {MiniStatsOptions} options - Counter configuration.
      */
     initGraphs(app, device, options) {
         this.graphs = [];
-
-        // Add VRAM first so it appears at the bottom in the compact stacked view.
-        // Graphs are rendered bottom-to-top.
-        if (options.stats) {
-            options.stats.forEach((entry) => {
-                if (entry.name === 'VRAM') {
-                    const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
-                    const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
-                    this.graphs.push(graph);
-                }
-            });
-        }
-
         if (options.cpu.enabled) {
-            const timer = new CpuTimer(app);
-            const graph = new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, timer);
-            graph.graphType = 0.66;
-            this.graphs.push(graph);
+            this.cpuGraph = new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, new CpuTimer(app));
+            this.cpuGraph.group = 1;
+            this.graphs.push(this.cpuGraph);
         }
-
         if (options.gpu.enabled) {
-            const timer = new GpuTimer(device);
-            const graph = new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, timer);
-            graph.graphType = 0.33;
+            this.gpuGraph = new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, new GpuTimer(device));
+            this.gpuGraph.group = 2;
+            this.graphs.push(this.gpuGraph);
+        }
+        for (const entry of options.stats ?? []) {
+            const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
+            const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
+            if (entry.name === 'VRAM') {
+                graph.group = 3;
+                this.vramGraph = graph;
+            }
             this.graphs.push(graph);
         }
-
-        if (options.stats) {
-            options.stats.forEach((entry) => {
-                if (entry.name === 'VRAM') {
-                    return;
-                }
-                const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
-                const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
-                this.graphs.push(graph);
-            });
-        }
-
+        this.graphs.sort(compareGraphs);
         this.texture = new Texture(device, {
             name: 'mini-stats-graph-texture',
             width: 1,
             height: 1,
             mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST,
+            minFilter: FILTER_LINEAR,
+            magFilter: FILTER_LINEAR,
             addressU: ADDRESS_REPEAT,
             addressV: ADDRESS_REPEAT
         });
-
-        this.graphs.forEach((graph) => {
+        for (const graph of this.graphs) {
             graph.texture = this.texture;
             this.allocateRow(graph);
-        });
-    }
-
-    /**
-     * Render the MiniStats overlay. This is called automatically when the `postrender` event is
-     * fired by the application.
-     *
-     * @private
-     */
-    render() {
-        const graphs = this.graphs;
-        const wordAtlas = this.wordAtlas;
-        const render2d = this.render2d;
-        const width = this.width;
-        const height = this.height;
-        const gspacing = this.gspacing;
-
-        render2d.startFrame();
-
-        for (let i = 0; i < graphs.length; ++i) {
-            const graph = graphs[i];
-
-            let y = i * (height + gspacing);
-
-            // render the graph
-            graph.render(render2d, 0, y, width, height);
-
-            // render the text
-            let x = 1;
-            y += height - 13;
-
-            // name + space
-            x += wordAtlas.render(render2d, graph.name, x, y) + 10;
-
-            // timing (average value)
-            const timingText = graph.timingText;
-            for (let j = 0; j < timingText.length; ++j) {
-                x += wordAtlas.render(render2d, timingText[j], x, y);
-            }
-
-            // max value (only on larger sizes)
-            if (graph.maxText && this._activeSizeIndex > 0) {
-                x += 5;
-                x += wordAtlas.render(render2d, 'max', x, y);
-                x += 5;
-
-                const maxText = graph.maxText;
-                for (let j = 0; j < maxText.length; ++j) {
-                    x += wordAtlas.render(render2d, maxText[j], x, y);
-                }
-            }
-
-            // units (at the end, after both average and max)
-            if (graph.timer.unitsName) {
-                x += wordAtlas.render(render2d, graph.timer.unitsName, x, y);
-            }
         }
-
-        render2d.render(this.app, this.drawLayer, this.texture, this.wordAtlas.texture, this.clr, height);
     }
 
     /**
-     * Resize the MiniStats overlay.
-     *
-     * @param {number} width - The new width.
-     * @param {number} height - The new height.
-     * @param {boolean} showGraphs - Whether to show the graphs.
      * @private
+     * @param {number} width - Panel width in CSS pixels.
+     * @param {number} height - Row height in CSS pixels.
+     * @param {boolean} showGraphs - Whether to collect and display history.
      */
     resize(width, height, showGraphs) {
-        const graphs = this.graphs;
-        for (let i = 0; i < graphs.length; ++i) {
-            graphs[i].enabled = showGraphs;
-        }
-
         this.width = width;
         this.height = height;
-
+        this._showGraphs = showGraphs;
+        for (let i = 0; i < this.graphs.length; i++) this.graphs[i].enabled = this._enabled && showGraphs;
         this.updateDiv();
     }
 
-    /**
-     * Update the size and position of the MiniStats overlay. This is called automatically when the
-     * `resizecanvas` event is fired by the graphics device.
-     *
-     * @private
-     */
+    /** @private */
     updateDiv() {
         const rect = this.device.canvas.getBoundingClientRect();
-        this.div.style.left = `${rect.left}px`;
-        this.div.style.bottom = `${window.innerHeight - rect.bottom}px`;
-        this.div.style.width = `${this.width}px`;
-        this.div.style.height = `${this.overallHeight}px`;
+        this.render2d.targetWidth = rect.width;
+        this.render2d.targetHeight = rect.height;
+        let total = this._detailed ? 31 : 8;
+        let previousGroup = -1;
+        for (let i = 0; i < this.graphs.length; i++) {
+            const group = this.graphs[i].group;
+            if (this._detailed && i > 0 && group !== previousGroup) total += 5;
+            total += this.height + (i ? this.gspacing : 0);
+            previousGroup = group;
+        }
+        this._overallHeight = total;
+        this._fixedRows = 0;
+        while (this._fixedRows < this.graphs.length && (this.graphs[this._fixedRows].label === 'Draw calls' || this.graphs[this._fixedRows].name === 'Frame')) {
+            this._fixedRows++;
+        }
+        this._panelWidth = Math.max(0, Math.min(this.width, rect.width - 16));
+        this._panelHeight = Math.max(0, Math.min(total, rect.height - 16));
+        this._maxScroll = Math.max(0, total - this._panelHeight);
+        this._scroll = Math.min(this._scroll, this._maxScroll);
+        this.div.style.left = `${rect.left + 8}px`;
+        this.div.style.bottom = `${window.innerHeight - rect.bottom + 8}px`;
+        this.div.style.width = `${this._panelWidth}px`;
+        this.div.style.height = `${this._panelHeight}px`;
+        this._layoutDirty = false;
+        this._geometryDirty = true;
     }
 
     /**
-     * Called when the graphics device is lost.
-     *
      * @private
+     * @param {number} delta - Scroll distance in CSS pixels.
      */
+    scroll(delta) {
+        const value = math.clamp(this._scroll + delta, 0, this._maxScroll);
+        if (value !== this._scroll) {
+            this._scroll = value;
+            this._geometryDirty = true;
+        }
+    }
+
+    /**
+     * @private
+     * @param {number} ms - Elapsed frame time in milliseconds.
+     */
+    update(ms) {
+        if (!this._enabled) return;
+        const data = this._showGraphs ? this.texture.lock() : null;
+        for (let i = 0; i < this.graphs.length; i++) {
+            const changed = this.graphs[i].update(ms, data);
+            if (changed & (this._showPeak ? 3 : 1)) this._geometryDirty = true;
+        }
+        if (data) this.texture.unlock();
+    }
+
+    /** @private */
+    render() {
+        if (this._layoutDirty) this.updateDiv();
+        if (this._geometryDirty) {
+            this.rebuildGeometry();
+            this._geometryDirty = false;
+        } else if (this._showGraphs) {
+            for (let i = 0; i < this.graphs.length; i++) this.render2d.graphCursor(this.graphs[i]);
+        }
+        this.render2d.render(this.app, this.drawLayer, this.texture, this.wordAtlas.texture, this.clr);
+    }
+
+    /** @private */
+    rebuildGeometry() {
+        const renderer = this.render2d;
+        const atlas = this.wordAtlas;
+        const x = 8;
+        const bottom = 8;
+        const width = this._panelWidth;
+        const top = bottom + this._panelHeight;
+        const right = x + width - 10;
+        const avgRight = right - (this._showPeak ? 44 : 0);
+        renderer.startFrame();
+        renderer.setClip(x, bottom, width, this._panelHeight);
+        renderer.rect(x, bottom, width, this._panelHeight, BACKGROUND);
+        let rowTop = top - 4;
+        if (this._detailed) {
+            const baseline = top - 16;
+            atlas.render(renderer, 'Metric', x + 10, baseline, 0, MUTED);
+            atlas.render(renderer, this._averageLabel, avgRight - atlas.measure(this._averageLabel), baseline, 0, MUTED);
+            if (this._showPeak) atlas.render(renderer, 'Peak', right - atlas.measure('Peak'), baseline, 0, MUTED);
+            renderer.rect(x, top - 23, width, 1, BORDER);
+            rowTop = top - 27;
+            renderer.setClip(x, bottom, width, this._panelHeight - 23);
+        }
+        let previousGroup = -1;
+        for (let i = 0; i < this.graphs.length; i++) {
+            // Keep draw calls and frame time visible even when a long pass list is scrolled.
+            if (i === this._fixedRows) {
+                renderer.setClip(x, bottom, width, Math.max(0, rowTop - bottom));
+                rowTop += this._scroll;
+            }
+            const graph = this.graphs[i];
+            graph.quad = -1;
+            if (this._detailed && i > 0 && graph.group !== previousGroup) rowTop -= 5;
+            const y = rowTop - this.height;
+            if (y < top && rowTop > bottom) {
+                const heading = this._detailed && graph.group > 0 && !graph.parent;
+                const color = graphColors[graph.group];
+                if (heading) {
+                    renderer.rect(x, y, width, this.height, GROUP_BACKGROUND);
+                    renderer.rect(x, y + 5, 2, this.height - 10, color);
+                }
+                if (this._showGraphs) renderer.graph(graph, x, y, width, this.height, color);
+                const baseline = Math.round(y + (this.height - 14) / 2 + 3);
+                const units = graph.timer.unitsName || '';
+                const valueWidth = atlas.measure(graph.timingText, 1);
+                let valueRight = avgRight;
+                if (!this._detailed && units) {
+                    const unitsWidth = atlas.measure(units);
+                    atlas.render(renderer, units, right - unitsWidth, baseline, 0, MUTED);
+                    valueRight -= unitsWidth + 4;
+                }
+                const valueX = Math.max(x + 10, valueRight - valueWidth);
+                atlas.render(renderer, graph.timingText, valueX, baseline, 1, TEXT, valueRight - valueX);
+                if (this._showPeak) {
+                    const peakWidth = atlas.measure(graph.maxText);
+                    atlas.render(renderer, graph.maxText, right - Math.min(peakWidth, 40), baseline, 0, MUTED, 40);
+                }
+                const labelX = x + 10 + (this._detailed && graph.parent ? 5 : 0);
+                const labelStyle = heading ? 1 : 0;
+                const labelWidth = atlas.render(renderer, graph.label, labelX, baseline, labelStyle, heading ? TEXT : MUTED,
+                    valueX - labelX - 8 - (this._detailed && units && !graph.parent ? atlas.measure(units) + 4 : 0));
+                if (this._detailed && units && !graph.parent) {
+                    atlas.render(renderer, units, labelX + labelWidth + 4, baseline, 0, MUTED, valueX - labelX - labelWidth - 8);
+                }
+            }
+            rowTop = y - this.gspacing;
+            previousGroup = graph.group;
+        }
+    }
+
+    /** @private */
     loseContext() {
-        this.graphs.forEach(graph => graph.loseContext());
+        for (let i = 0; i < this.graphs.length; i++) this.graphs[i].loseContext();
+        this.render2d.dirty = true;
     }
 
     /**
-     * Update sub-stat graphs (GPU passes or CPU timings).
-     * @param {Map} subGraphs - Map to store graph data (gpuPassGraphs or cpuGraphs)
-     * @param {string} mainGraphName - Name of main graph ('GPU' or 'CPU')
-     * @param {Map<string,number>|Object} stats - Stats data (Map for GPU, object for CPU)
-     * @param {string} statPathPrefix - Prefix for stat path ('gpu' for GPU, 'frame' for CPU)
-     * @param {number} removeAfterFrames - Frames of zero before removal
      * @private
-     */
-    updateSubStats(subGraphs, mainGraphName, stats, statPathPrefix, removeAfterFrames) {
-        const passesToRemove = [];
-
-        // check existing sub-stats for removal
-        for (const [statName, statData] of subGraphs) {
-            const timing = (stats instanceof Map) ? (stats.get(statName) || 0) : (stats[statName] || 0);
-
-            if (timing > 0) {
-                // update last non-zero frame
-                statData.lastNonZeroFrame = this.frameIndex;
-            } else if (removeAfterFrames > 0) {
-                // Only GPU passes auto-hide; CPU stats are never removed
-                const shouldAutoHide = statPathPrefix === 'gpu';
-                if (shouldAutoHide && this.frameIndex - statData.lastNonZeroFrame > removeAfterFrames) {
-                    passesToRemove.push(statName);
-                }
-            }
-        }
-
-        // remove stats that have been zero for too long
-        for (const statName of passesToRemove) {
-            const statData = subGraphs.get(statName);
-            if (statData) {
-                // remove from graphs array
-                const index = this.graphs.indexOf(statData.graph);
-                if (index !== -1) {
-                    this.graphs.splice(index, 1);
-                }
-                this.freeRow(statData.graph);
-                statData.graph.destroy();
-                subGraphs.delete(statName);
-            }
-        }
-
-        // scan for new sub-stats
-        const statsEntries = (stats instanceof Map) ? stats : Object.entries(stats);
-        const mainGraph = this.graphs.find(g => g.name === mainGraphName);
-        for (const [statName, timing] of statsEntries) {
-            if (!subGraphs.has(statName)) {
-                // Skip creating graph for auto-hide stats with zero timing
-                // Skip creating graph for GPU passes or delayed-start CPU stats with zero timing
-                const isDelayedStart = statPathPrefix === 'gpu' || delayedStartStats.has(statName);
-                if (isDelayedStart && timing === 0) {
-                    continue;
-                }
-
-                // create new graph for this stat
-                // shorten display name for CPU stats
-                let displayName = statName;
-                if (statPathPrefix === 'frame') {
-                    displayName = cpuStatDisplayNames[statName] || statName;
-                }
-                const graphName = `  ${displayName}`;  // indent with 2 spaces
-
-                // use main graph watermark when available
-                const watermark = mainGraph?.watermark ?? 10.0;
-
-                const decimalPlaces = 1;
-                const unitsName = statPathPrefix === 'vram' ? 'MB' : 'ms';
-                const multiplier = statPathPrefix === 'vram' ? 1 / (1024 * 1024) : 1;
-
-                const statPath = `${statPathPrefix}.${statName}`;
-                const timer = new StatsTimer(this.app, [statPath], decimalPlaces, unitsName, multiplier);
-                const graph = new Graph(graphName, this.app, watermark, this.textRefreshRate, timer);
-
-                // Set graph type for background tinting
-                if (statPathPrefix === 'gpu') {
-                    graph.graphType = 0.33;  // GPU sub-graphs
-                } else if (statPathPrefix === 'frame') {
-                    graph.graphType = 0.66;  // CPU sub-graphs
-                }
-
-                graph.texture = this.texture;
-                this.allocateRow(graph);
-
-                // match the current display mode
-                const currentSize = this.sizes[this._activeSizeIndex];
-                graph.enabled = currentSize.graphs;
-
-                // find the main graph index and insert before it (graphs render bottom to top)
-                let mainGraphIndex = this.graphs.findIndex(g => g.name === mainGraphName);
-                if (mainGraphIndex === -1) {
-                    mainGraphIndex = 0;  // fallback to start if main graph not found
-                }
-
-                // find where to insert - right before the main graph, after any existing sub-stats
-                let insertIndex = mainGraphIndex;
-                for (let i = mainGraphIndex - 1; i >= 0; i--) {
-                    // check if this is an indented sub-stat (starts with spaces)
-                    if (this.graphs[i].name.startsWith(' ')) {
-                        insertIndex = i;
-                    } else {
-                        break;
-                    }
-                }
-
-                // insert the new graph at the correct position
-                this.graphs.splice(insertIndex, 0, graph);
-
-                subGraphs.set(statName, {
-                    graph: graph,
-                    lastNonZeroFrame: timing > 0 ? this.frameIndex : this.frameIndex - removeAfterFrames - 1
-                });
-            }
-        }
-
-        // sync all sub-stat watermarks to match main graph
-        if (mainGraph) {
-            for (const statData of subGraphs.values()) {
-                statData.graph.watermark = mainGraph.watermark;
-            }
-        }
-    }
-
-    /**
-     * Allocates a texture row for a graph. Reuses free rows when available.
-     *
-     * @param {Graph} graph - The graph to allocate a row for.
-     * @returns {number} The allocated row index.
-     * @private
+     * @param {Graph} graph - The graph receiving a persistent history row.
+     * @returns {number} Allocated row index.
      */
     allocateRow(graph) {
-        let row;
-        if (this.freeRows.length > 0) {
-            row = this.freeRows.pop();
-        } else {
-            row = this.nextRowIndex++;
-            this.ensureTextureHeight(this.nextRowIndex);
-        }
+        const row = this.freeRows.length ? this.freeRows.pop() : this.nextRowIndex++;
+        this.ensureTextureHeight(this.nextRowIndex);
         this.graphRows.set(graph, row);
         graph.yOffset = row;
-        graph.needsClear = true;  // Will clear on first update()
+        graph.needsClear = true;
         return row;
     }
 
     /**
-     * Frees a texture row when a graph is destroyed.
-     *
-     * @param {Graph} graph - The graph whose row to free.
      * @private
-     */
-    freeRow(graph) {
-        const row = this.graphRows.get(graph);
-        if (row !== undefined) {
-            this.freeRows.push(row);
-            this.graphRows.delete(graph);
-        }
-    }
-
-    /**
-     * Remove all sub-stat graphs from a tracking map when collapsing below a size threshold.
-     *
-     * @param {Map} subGraphs - The sub-graph map to clear.
-     * @param {string} [mainGraphName] - If provided, reset the main graph's graphType.
-     * @param {number} [graphType] - The graphType value to restore on the main graph.
-     * @private
-     */
-    clearSubGraphs(subGraphs, mainGraphName, graphType) {
-        for (const statData of subGraphs.values()) {
-            const index = this.graphs.indexOf(statData.graph);
-            if (index !== -1) {
-                this.graphs.splice(index, 1);
-            }
-            this.freeRow(statData.graph);
-            statData.graph.destroy();
-        }
-        subGraphs.clear();
-
-        if (mainGraphName) {
-            const mainGraph = this.graphs.find(g => g.name === mainGraphName);
-            if (mainGraph) mainGraph.graphType = graphType;
-        }
-    }
-
-    /**
-     * Ensures the texture has enough rows. Only grows, never shrinks.
-     *
-     * @param {number} requiredRows - The minimum number of rows needed.
-     * @private
+     * @param {number} requiredRows - Minimum number of texture rows.
      */
     ensureTextureHeight(requiredRows) {
-        const maxWidth = this.sizes[this.sizes.length - 1].width;
-        const requiredWidth = math.nextPowerOfTwo(maxWidth);
-        const requiredHeight = math.nextPowerOfTwo(requiredRows);
-
-        // Only grow, never shrink
-        if (requiredHeight > this.texture.height) {
-            this.texture.resize(requiredWidth, requiredHeight);
+        let maxWidth = 1;
+        for (let i = 0; i < this.sizes.length; i++) maxWidth = Math.max(maxWidth, this.sizes[i].width);
+        const width = math.nextPowerOfTwo(maxWidth);
+        const height = math.nextPowerOfTwo(Math.max(1, requiredRows));
+        if (width > this.texture.width || height > this.texture.height) {
+            const oldWidth = this.texture.width;
+            const oldHeight = this.texture.height;
+            const oldData = this.texture.lock();
+            this.texture.unlock();
+            this.texture.resize(Math.max(width, oldWidth), Math.max(height, oldHeight));
+            const data = this.texture.lock();
+            for (let row = 0; row < oldHeight; row++) {
+                data.set(oldData.subarray(row * oldWidth * 4, (row + 1) * oldWidth * 4), row * this.texture.width * 4);
+            }
+            this.texture.unlock();
+            this._geometryDirty = true;
         }
     }
 
     /**
-     * Called when the `postrender` event is fired by the application.
-     *
      * @private
+     * @param {Graph} graph - The sub-counter to remove.
      */
+    removeGraph(graph) {
+        const index = this.graphs.indexOf(graph);
+        if (index !== -1) this.graphs.splice(index, 1);
+        this.freeRows.push(this.graphRows.get(graph));
+        this.graphRows.delete(graph);
+        graph.destroy();
+        this._layoutDirty = true;
+    }
+
+    /**
+     * @private
+     * @param {Map<string, Graph>} map - Sub-counters to remove.
+     */
+    clearSubGraphs(map) {
+        map.forEach(this.removeGraph, this);
+        map.clear();
+    }
+
+    /**
+     * @private
+     * @param {Map<string, Graph>} map - Sub-counter lookup.
+     * @param {Graph} parent - The category total.
+     * @param {string} name - The literal stat key.
+     * @param {number} value - Current sampled value.
+     * @param {string} prefix - The stats object containing the key.
+     * @param {boolean} delayed - Wait for a positive sample before adding the row.
+     */
+    updateSubStat(map, parent, name, value, prefix, delayed) {
+        if (!parent) return;
+        let graph = map.get(name);
+        if (!graph) {
+            if (delayed && !(value > 0)) return;
+            const units = prefix === 'vram' ? 'MB' : 'ms';
+            const timer = new StatsTimer(this.app, [name], 1, units, prefix === 'vram' ? 1 / (1024 * 1024) : 1);
+            // GPU pass names are literal Map keys and may themselves contain dots.
+            timer.paths[0] = [prefix, name];
+            graph = new Graph(name, this.app, parent.watermark, this.textRefreshRate, timer);
+            graph.label = prefix === 'frame' ? cpuStatDisplayNames[name] : prefix === 'vram' ? vramStatDisplayNames[name] : name;
+            graph.parent = parent;
+            graph.group = parent.group;
+            graph.statName = name;
+            graph.texture = this.texture;
+            graph.enabled = this._showGraphs;
+            this.allocateRow(graph);
+            let index = this.graphs.indexOf(parent) + 1;
+            while (index < this.graphs.length && this.graphs[index].parent === parent) index++;
+            this.graphs.splice(index, 0, graph);
+            map.set(name, graph);
+            this._layoutDirty = true;
+        }
+        graph.watermark = parent.watermark;
+        if (value > 0) graph.lastNonZeroFrame = this.frameIndex;
+    }
+
+    /**
+     * @private
+     * @param {number} value - Pass duration in milliseconds.
+     * @param {string} name - Literal GPU pass name.
+     */
+    updateGpuPass(value, name) {
+        this.updateSubStat(this.gpuPassGraphs, this.gpuGraph, name, value, 'gpu', true);
+    }
+
+    /** @private */
     postRender() {
-        if (this._enabled) {
-            this.render();
-
-            // Update GPU pass graphs when size index meets threshold
-            if (this._activeSizeIndex >= this.gpuTimingMinSize) {
-                const gpuStats = this.app.stats.gpu;
-                if (gpuStats) {
-                    this.updateSubStats(this.gpuPassGraphs, 'GPU', gpuStats, 'gpu', 240);
+        if (!this._enabled) return;
+        this.frameIndex++;
+        if (this._detailed) {
+            if (this.gpuGraph && this.activeSizeIndex >= this.gpuTimingMinSize) {
+                this.app.stats.gpu?.forEach(this.updateGpuPass, this);
+                for (let i = this.graphs.length - 1; i >= 0; i--) {
+                    const graph = this.graphs[i];
+                    if (graph.parent === this.gpuGraph && this.frameIndex - graph.lastNonZeroFrame > 240) {
+                        this.gpuPassGraphs.delete(graph.statName);
+                        this.removeGraph(graph);
+                    }
                 }
             }
-
-            // Update CPU sub-timing graphs when size index meets threshold
-            if (this._activeSizeIndex >= this.cpuTimingMinSize) {
-                const cpuStats = {
-                    scriptUpdate: this.app.stats.frame.scriptUpdate,
-                    scriptPostUpdate: this.app.stats.frame.scriptPostUpdate,
-                    animUpdate: this.app.stats.frame.animUpdate,
-                    physicsTime: this.app.stats.frame.physicsTime,
-                    renderTime: this.app.stats.frame.renderTime,
-                    gsplatSort: this.app.stats.frame.gsplatSort
-                };
-                this.updateSubStats(this.cpuGraphs, 'CPU', cpuStats, 'frame', 240);
+            if (this.cpuGraph && this.activeSizeIndex >= this.cpuTimingMinSize) {
+                const frame = this.app.stats.frame;
+                for (let i = 0; i < cpuStatNames.length; i++) {
+                    const name = cpuStatNames[i];
+                    this.updateSubStat(this.cpuGraphs, this.cpuGraph, name, frame[name], 'frame', i >= 3);
+                }
             }
-
-            // Update VRAM subcategory graphs when size index meets threshold
-            if (this._activeSizeIndex >= this.vramTimingMinSize) {
+            if (this.vramGraph && this.activeSizeIndex >= this.vramTimingMinSize) {
                 const vram = this.app.stats.vram;
-                const vramStats = {
-                    tex: vram.tex,
-                    geom: vram.geom
-                };
-                if (this.device.isWebGPU) {
-                    vramStats.buffers = vram.buffers;
+                const count = this.device.isWebGPU ? 3 : 2;
+                for (let i = 0; i < count; i++) {
+                    const name = vramStatNames[i];
+                    this.updateSubStat(this.vramGraphs, this.vramGraph, name, vram[name], 'vram', false);
                 }
-                this.updateSubStats(this.vramGraphs, 'VRAM', vramStats, 'vram', 0);
             }
         }
-
-        this.frameIndex++;
+        this.render();
     }
 }
 
