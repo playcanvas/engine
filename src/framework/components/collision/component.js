@@ -213,6 +213,15 @@ class CollisionComponent extends Component {
      * - "mesh": A collision volume that uses a model asset as its shape.
      * - "sphere": A sphere-shaped collision volume.
      *
+     * Primitive volumes are sized by their own properties ({@link CollisionComponent#halfExtents},
+     * {@link CollisionComponent#radius} and {@link CollisionComponent#height}) and ignore the
+     * scale of the entity. Mesh volumes follow the world scale of the entity, including the scale
+     * of its ancestors, and are rebuilt at the start of the next physics step when that scale
+     * changes. All instances of a mesh share one set of collision triangle data, so rescaling is
+     * cheap. This requires an Ammo.js build that exposes `btScaledBvhTriangleMeshShape`; with
+     * older builds, colliders sharing a mesh use the scale of the first one built and rescaling
+     * an entity at runtime does not affect its mesh collider.
+     *
      * Defaults to "box".
      *
      * @type {string}
@@ -403,6 +412,9 @@ class CollisionComponent extends Component {
 
     /**
      * Sets the asset or asset id for the model of the mesh collision volume. Defaults to null.
+     * The node hierarchy of the model is interpreted in the local space of the entity: the
+     * transform of each node is applied to its mesh and the world scale of the entity multiplies
+     * the result.
      *
      * @type {Asset|number|null}
      */
@@ -450,7 +462,8 @@ class CollisionComponent extends Component {
 
     /**
      * Sets the render asset or asset id of the mesh collision volume. Defaults to null.
-     * If not set then the asset property will be checked instead.
+     * If not set then the asset property will be checked instead. The meshes are used in the
+     * local space of the entity, scaled by the world scale of the entity.
      *
      * @type {Asset|number|null}
      */
@@ -499,7 +512,9 @@ class CollisionComponent extends Component {
     /**
      * Sets whether the collision mesh should be treated as a convex hull. When false, the mesh can
      * only be used with a static body. When true, the mesh can be used with a static, dynamic or
-     * kinematic body. Defaults to `false`.
+     * kinematic body. The hull is built from the mesh vertices at the world scale of the entity.
+     * Only applies to meshes from {@link CollisionComponent#renderAsset} or
+     * {@link CollisionComponent#render}. Defaults to `false`.
      *
      * @type {boolean}
      */
