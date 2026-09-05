@@ -11,6 +11,7 @@ import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { GraphicsDevice } from '../graphics-device.js';
+import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
@@ -987,11 +988,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // track primitive count
             if (drawCommands) {
                 // use pre-calculated primitive count from drawCommands
-                this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type);
             } else {
                 // single draw
-                const primCount = primitive.count * (numInstances > 1 ? numInstances : 1);
-                this._primsPerFrame[primitive.type] += primCount;
+                this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * numInstances;
             }
             // #endif
 

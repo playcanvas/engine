@@ -12,7 +12,7 @@ import {
     CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32,
+    SEMANTIC_POSITION, TYPE_FLOAT32,
     PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
@@ -747,10 +747,7 @@ class GraphicsDevice extends EventHandler {
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
 
-        this._primsPerFrame = [];
-        for (let i = PRIMITIVE_POINTS; i <= PRIMITIVE_TRIFAN; i++) {
-            this._primsPerFrame[i] = 0;
-        }
+        this._primitiveCount = 0;
         this._renderTargetCreationTime = 0;
 
         // Create the ScopeNamespace for shader attributes and variables

@@ -28,6 +28,7 @@ import {
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
+import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -2272,10 +2273,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // #if _PROFILER
                 if (drawCommands) {
                     // use pre-calculated primitive count from drawCommands
-                    this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                    this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type, numInstances > 0);
                 } else {
                     // single draw
-                    this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances > 0 ? numInstances : 1);
                 }
                 // #endif
             }

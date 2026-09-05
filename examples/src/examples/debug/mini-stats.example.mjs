@@ -85,10 +85,10 @@ options.stats = [
         watermark: 2000
     },
 
-    // Total number of triangles, in 1000s
+    // Total number of primitives, in 1000s (debug / profiler builds)
     {
-        name: 'triCount',
-        stats: ['frame.triangles'],
+        name: 'Primitives',
+        stats: ['primitiveCount'],
         decimalPlaces: 1,
         multiplier: 1 / 1000,
         unitsName: 'k',

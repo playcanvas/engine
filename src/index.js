@@ -237,6 +237,7 @@ export * from './framework/constants.js';
 export { script } from './framework/script.js';
 export { AppBase, app } from './framework/app-base.js';
 export { AppOptions } from './framework/app-options.js';
+export { AppStats } from './framework/app-stats.js';
 export { Application } from './framework/application.js';
 export { AmmoPhysicsWorld } from './framework/physics/ammo/ammo-physics-world.js';
 export { AnimationComponent } from './framework/components/animation/component.js';

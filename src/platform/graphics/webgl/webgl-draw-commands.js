@@ -1,3 +1,5 @@
+import { getPrimitiveCount } from '../primitive-utils.js';
+
 /**
  * WebGL implementation of DrawCommands.
  *
@@ -50,27 +52,29 @@ class WebglDrawCommands {
         this.glInstanceCounts[i] = instanceCount;
     }
 
+    // #if _PROFILER
     /**
-     * Calculate total primitives for stats (profiler builds only).
+     * Calculate primitives per sub-draw before accumulating, so strip overhead and incomplete
+     * list primitives are handled separately for each instance.
      * @param {number} count - Number of active draws.
+     * @param {number} type - Primitive topology.
+     * @param {boolean} instanced - Whether to apply per-command instance counts.
      * @returns {number} Total primitive count.
      */
-    update(count) {
-        // calculate total primitives for stats
+    getPrimitiveCount(count, type, instanced) {
         let totalPrimitives = 0;
 
-        // #if _PROFILER
         if (this.glCounts && this.glInstanceCounts && count > 0) {
             for (let d = 0; d < count; d++) {
                 const indexOrVertexCount = this.glCounts[d];
-                const instanceCount = this.glInstanceCounts[d];
-                totalPrimitives += indexOrVertexCount * instanceCount;
+                const instanceCount = instanced ? this.glInstanceCounts[d] : 1;
+                totalPrimitives += getPrimitiveCount(type, indexOrVertexCount) * instanceCount;
             }
         }
-        // #endif
 
         return totalPrimitives;
     }
+    // #endif
 }
 
 export { WebglDrawCommands };
