@@ -1,110 +1,74 @@
-// Realtime performance graph visual
 class Graph {
     constructor(name, app, watermark, textRefreshRate, timer) {
-        this.app = app;
         this.name = name;
-        this.device = app.graphicsDevice;
+        this.label = name === 'DrawCalls' ? 'Draw calls' : name;
         this.timer = timer;
-        this.watermark = watermark;
+        this.watermark = watermark ?? 100;
         this.enabled = false;
         this.textRefreshRate = textRefreshRate;
-
         this.avgTotal = 0;
         this.avgTimer = 0;
         this.avgCount = 0;
         this.maxValue = 0;
-        this.timingText = '';
-        this.maxText = '';
-
+        this.timingText = '—';
+        this.maxText = '—';
         this.texture = null;
         this.yOffset = 0;
-        this.graphType = 0.0;
         this.cursor = 0;
-        this.sample = new Uint8ClampedArray(4);
-        this.sample.set([0, 0, 0, 255]);
-        this.needsClear = false;
-
-        this.counter = 0;
-
-        this.app.on('frameupdate', this.update, this);
+        this.needsClear = true;
+        this.quad = -1;
+        this.renderWidth = 0;
+        this.parent = null;
+        this.group = 0;
+        this.lastNonZeroFrame = 0;
+        this.statName = '';
     }
 
     destroy() {
-        this.app.off('frameupdate', this.update, this);
+        if (typeof this.timer.destroy === 'function') this.timer.destroy();
     }
 
-    // called when context was lost, function releases all context related resources
     loseContext() {
-        // if timer implements loseContext
-        if (this.timer && (typeof this.timer.loseContext === 'function')) {
-            this.timer.loseContext();
-        }
+        if (typeof this.timer.loseContext === 'function') this.timer.loseContext();
     }
 
-    update(ms) {
+    // Returns a bitmask of changed average (1) and peak (2) text. The shared texture is
+    // locked once by MiniStats, so all rows are updated before a single unlock/upload.
+    update(ms, data) {
         const timings = this.timer.timings;
-
-        // calculate total
-        const total = timings.reduce((a, v) => a + v, 0);
-
-        // update averages and max
+        let total = 0;
+        for (let i = 0; i < timings.length; i++) total += timings[i];
+        if (!Number.isFinite(total)) total = 0;
         this.avgTotal += total;
         this.avgTimer += ms;
         this.avgCount++;
         this.maxValue = Math.max(this.maxValue, total);
-
-        if (this.avgTimer > this.textRefreshRate) {
-            this.timingText = (this.avgTotal / this.avgCount).toFixed(this.timer.decimalPlaces);
-            this.maxText = this.maxValue.toFixed(this.timer.decimalPlaces);
-            this.avgTimer = 0;
+        let changed = 0;
+        if (this.avgTimer >= this.textRefreshRate) {
+            const timingText = (this.avgTotal / this.avgCount).toFixed(this.timer.decimalPlaces);
+            const maxText = this.maxValue.toFixed(this.timer.decimalPlaces);
+            changed = (this.timingText !== timingText ? 1 : 0) | (this.maxText !== maxText ? 2 : 0);
+            this.timingText = timingText;
+            this.maxText = maxText;
             this.avgTotal = 0;
+            this.avgTimer = 0;
             this.avgCount = 0;
             this.maxValue = 0;
         }
-
-        if (this.enabled) {
-            // update total timing sample
-            const range = 1.5 * this.watermark;
-            this.sample[0] = Math.floor(total / range * 255);
-            this.sample[1] = 0;
-            this.sample[2] = 0;
-
-            // .a store watermark
-            this.sample[3] = this.watermark / range * 255;
-
-            // bounds check - skip if texture is too small
-            if (this.yOffset >= this.texture.height) {
-                return;
-            }
-
-            // write latest sample
-            const data = this.texture.lock();
-
-            // clear entire row if needed (when row is newly allocated)
+        if (data && this.enabled) {
+            const width = this.texture.width;
+            const rowOffset = this.yOffset * width * 4;
             if (this.needsClear) {
-                const rowOffset = this.yOffset * this.texture.width * 4;
-                data.fill(0, rowOffset, rowOffset + this.texture.width * 4);
+                data.fill(0, rowOffset, rowOffset + width * 4);
                 this.needsClear = false;
             }
-
-            data.set(this.sample, (this.cursor + this.yOffset * this.texture.width) * 4);
-            this.texture.unlock();
-
-            // update cursor position
-            this.cursor++;
-            if (this.cursor === this.texture.width) {
-                this.cursor = 0;
-            }
+            const offset = rowOffset + this.cursor * 4;
+            const range = 1.5 * (this.watermark > 0 ? this.watermark : 100);
+            data[offset] = Math.min(255, Math.max(0, Math.round(total / range * 255)));
+            data[offset + 3] = 170;
+            this.cursor = (this.cursor + 1) % width;
         }
-    }
-
-    render(render2d, x, y, w, h) {
-        render2d.quad(x + w, y, -w, h,
-            this.enabled ? this.cursor : 0,
-            this.enabled ? 0.5 + this.yOffset : this.texture.height - 1,
-            -w, 0,
-            this.texture,
-            this.graphType);
+        return changed;
     }
 }
 

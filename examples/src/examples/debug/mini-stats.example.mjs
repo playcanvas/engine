@@ -1,6 +1,5 @@
 // @config
 // @flag ENGINE=performance
-// @flag WEBGPU_DISABLED
 
 import {
     AppBase,
@@ -63,14 +62,8 @@ app.on('destroy', () => {
 // Set up options for mini-stats, start with the default options
 const options = MiniStats.getDefaultOptions();
 
-// Configure sizes
-options.sizes = [
-    { width: 128, height: 16, spacing: 0, graphs: false },
-    { width: 256, height: 32, spacing: 2, graphs: true },
-    { width: 500, height: 64, spacing: 2, graphs: true }
-];
-
-// When the application starts, use the largest size
+// Click the overlay to cycle between core counters, grouped averages and graph history.
+// Panel width and row height can be customized independently for each mode.
 options.startSizeIndex = 2;
 
 // Display additional counters
