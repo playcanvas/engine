@@ -7,6 +7,10 @@ import { Debug } from '../../../core/debug.js';
  * @import { Vec3 } from '../../../core/math/vec3.js'
  */
 
+// A rotated but unscaled entity extracts a scale like 0.9999999 from its world matrix - treat
+// scales within this tolerance of unity as unit
+const UNIT_SCALE_TOLERANCE = 1e-5;
+
 /**
  * Writes a position/rotation pair into the world's cached btTransform and returns it.
  *
@@ -29,17 +33,39 @@ function getTransform(world, position, rotation) {
 }
 
 /**
- * Returns the built triangle mesh for a source, building and caching it on first use. The
- * cache is keyed by the source id so sources sharing geometry share triangle data - source
- * data accessors are only read on a cache miss.
+ * Returns whether a source scale is unit (or absent), within the float noise a rotated but
+ * unscaled entity carries in the scale extracted from its world matrix.
+ *
+ * @param {Vec3|null} scale - The source scale, or null.
+ * @returns {boolean} True for unit scale.
+ */
+function isUnitScale(scale) {
+    return !scale || (
+        Math.abs(scale.x - 1) <= UNIT_SCALE_TOLERANCE &&
+        Math.abs(scale.y - 1) <= UNIT_SCALE_TOLERANCE &&
+        Math.abs(scale.z - 1) <= UNIT_SCALE_TOLERANCE
+    );
+}
+
+/**
+ * Returns the cached triangle data entry for a source, building it on first use. The cache is
+ * keyed by the source id so sources sharing geometry share triangle data - source data
+ * accessors are only read on a cache miss.
+ *
+ * The cached triangle data is unit scale; each instance applies its own scale through the
+ * btScaledBvhTriangleMeshShape wrapper built by createTriMeshChild. Ammo builds without that
+ * binding cannot scale a sub-shape independently of the shared data (btTriangleMeshShape
+ * stores its local scaling on the shared btStridingMeshInterface), so on those the source scale
+ * is baked into the cached data instead and the first shape to build a mesh decides the scale
+ * for every later shape sharing it - the behaviour before the binding existed.
  *
  * @param {AmmoPhysicsWorld} world - The owning world.
  * @param {PhysicsMeshSource} source - The geometry source.
- * @returns {object} The btTriangleMesh.
+ * @returns {{ triMesh: object, bvhShape: object|null }} The cache entry.
  */
 function getTriMesh(world, source) {
-    let triMesh = world._triMeshCache.get(source.id);
-    if (!triMesh) {
+    let entry = world._triMeshCache.get(source.id);
+    if (!entry) {
         const positions = source.positions;
         const stride = source.stride;
         const indices = source.indices;
@@ -50,15 +76,17 @@ function getTriMesh(world, source) {
         const v1 = new Ammo.btVector3();
         let i1, i2, i3;
 
-        triMesh = new Ammo.btTriangleMesh();
-        world._triMeshCache.set(source.id, triMesh);
+        const triMesh = new Ammo.btTriangleMesh();
+        entry = { triMesh, bvhShape: null };
+        world._triMeshCache.set(source.id, entry);
 
         const vertexCache = new Map();
         Debug.assert(typeof triMesh.getIndexedMeshArray === 'function', 'Ammo.js version is too old, please update to a newer Ammo.');
         const indexedArray = triMesh.getIndexedMeshArray();
         indexedArray.at(0).m_numTriangles = numTriangles;
 
-        const bakeScale = source.bakeScale;
+        // legacy builds bake the scale into the shared data (see above)
+        const bakeScale = world._hasScaledTriMesh ? null : source.scale;
         const sx = bakeScale ? bakeScale.x : 1;
         const sy = bakeScale ? bakeScale.y : 1;
         const sz = bakeScale ? bakeScale.z : 1;
@@ -101,7 +129,7 @@ function getTriMesh(world, source) {
         Ammo.destroy(v1);
     }
 
-    return triMesh;
+    return entry;
 }
 
 /**
@@ -118,10 +146,10 @@ function createHullChild(world, compound, source) {
 
     const positions = source.positions;
     const stride = source.stride;
-    const bakeScale = source.bakeScale;
-    const sx = bakeScale ? bakeScale.x : 1;
-    const sy = bakeScale ? bakeScale.y : 1;
-    const sz = bakeScale ? bakeScale.z : 1;
+    const scale = source.scale;
+    const sx = scale ? scale.x : 1;
+    const sy = scale ? scale.y : 1;
+    const sz = scale ? scale.z : 1;
 
     for (let i = 0; i < positions.length; i += stride) {
         point.setValue(positions[i] * sx, positions[i + 1] * sy, positions[i + 2] * sz);
@@ -139,25 +167,40 @@ function createHullChild(world, compound, source) {
 }
 
 /**
- * Builds a triangle mesh sub-shape from a source and adds it to a compound.
+ * Builds a triangle mesh sub-shape from a source and adds it to a compound. The sub-shape is a
+ * btScaledBvhTriangleMeshShape carrying the source scale around the shared unit-scale BVH of
+ * the cached triangle data, so instances of one mesh share its triangle data and BVH whatever
+ * their scale. Never call setLocalScaling on the shared btBvhTriangleMeshShape - Bullet stores
+ * that scaling on the shared btStridingMeshInterface, which would rescale every instance.
  *
  * @param {AmmoPhysicsWorld} world - The owning world.
  * @param {object} compound - The btCompoundShape to add to.
  * @param {PhysicsMeshSource} source - The geometry source.
  */
 function createTriMeshChild(world, compound, source) {
-    const triMesh = getTriMesh(world, source);
+    const entry = getTriMesh(world, source);
+    const scale = source.scale;
+    let child;
 
-    const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, true /* useQuantizedAabbCompression */);
+    if (world._hasScaledTriMesh) {
+        if (!entry.bvhShape) {
+            entry.bvhShape = new Ammo.btBvhTriangleMeshShape(entry.triMesh, true /* useQuantizedAabbCompression */);
+        }
 
-    const shapeScale = source.shapeScale;
-    if (shapeScale) {
-        const vec = world._btVec1;
-        vec.setValue(shapeScale.x, shapeScale.y, shapeScale.z);
-        triMeshShape.setLocalScaling(vec);
+        // every instance gets a wrapper, unit scale included, so no sub-shape object is ever
+        // shared between compounds
+        const vec = world._btVec2;
+        vec.setValue(scale ? scale.x : 1, scale ? scale.y : 1, scale ? scale.z : 1);
+        child = new Ammo.btScaledBvhTriangleMeshShape(entry.bvhShape, vec);
+    } else {
+        // legacy build: getTriMesh baked the scale into the shared triangle data
+        if (!isUnitScale(scale)) {
+            Debug.warnOnce('This Ammo.js build does not expose btScaledBvhTriangleMeshShape: mesh colliders sharing a mesh at different scales, and rescaling a mesh collider at runtime, are not supported. Update Ammo.js.');
+        }
+        child = new Ammo.btBvhTriangleMeshShape(entry.triMesh, true /* useQuantizedAabbCompression */);
     }
 
-    compound.addChildShape(getTransform(world, source.position, source.rotation), triMeshShape);
+    compound.addChildShape(getTransform(world, source.position, source.rotation), child);
 }
 
 /**
@@ -234,12 +277,6 @@ const shapeFactories = {
             }
         }
 
-        if (desc.scale) {
-            const vec = new Ammo.btVector3(desc.scale.x, desc.scale.y, desc.scale.z);
-            shape.setLocalScaling(vec);
-            Ammo.destroy(vec);
-        }
-
         return shape;
     },
 
@@ -267,7 +304,7 @@ function createShape(world, desc) {
  */
 function destroyShape(shape) {
     // mesh shapes own their sub-shapes (compound children are owned by other components,
-    // and the cached triangle data outlives the shape)
+    // and the cached triangle data and its shared BVH outlive the shape)
     if (shape._shapeType === 'mesh') {
         const numShapes = shape.getNumChildShapes();
         for (let i = 0; i < numShapes; i++) {

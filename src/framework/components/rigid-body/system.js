@@ -46,7 +46,8 @@ const _properties = [
  *
  * The system is only functional once a physics backend is installed: either by supplying
  * {@link AppOptions#physicsWorld} when creating the application, or automatically when the
- * application has loaded the Ammo.js {@link WasmModule}.
+ * application has loaded the Ammo.js {@link WasmModule}. Use a recent Ammo.js build: mesh
+ * colliders only follow entity scale with a build that exposes `btScaledBvhTriangleMeshShape`.
  *
  * Set {@link RigidBodyComponentSystem#timeScale} to slow the simulation down, speed it up or
  * pause it, for example while a pause menu is open, and call
@@ -826,6 +827,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         // Check to see whether we need to update gravity on the physics world
         world.setGravity(this.gravity);
+
+        // rebuild the mesh collision shapes whose entity world scale changed since they were
+        // built, before the trigger and body loops below capture their list lengths
+        this.app.systems.collision?._updateMeshScales();
 
         const triggers = this._triggers;
         for (i = 0, len = triggers.length; i < len; i++) {
