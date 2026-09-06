@@ -238,6 +238,24 @@ class Vec3 {
     }
 
     /**
+     * Returns the squared distance between the two specified 3-dimensional vectors.
+     *
+     * @param {Vec3} rhs - The second 3-dimensional vector to test.
+     * @returns {number} The squared distance between the two vectors.
+     * @example
+     * const v1 = new Vec3(5, 10, 20);
+     * const v2 = new Vec3(10, 20, 40);
+     * const d = v1.distanceSq(v2);
+     * console.log("The squared distance between v1 and v2 is: " + d);
+     */
+    distanceSq(rhs) {
+        const x = this.x - rhs.x;
+        const y = this.y - rhs.y;
+        const z = this.z - rhs.z;
+        return x * x + y * y + z * z;
+    }
+
+    /**
      * Divides a 3-dimensional vector by another in place.
      *
      * @param {Vec3} rhs - The vector to divide the specified vector by.
