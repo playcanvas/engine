@@ -1,9 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { GSPLATDATA_COMPACT } from '../constants.js';
 import { Mesh } from '../mesh.js';
-import { ShaderMaterial } from '../materials/shader-material.js';
-import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js';
 import { GSplatStreams } from './gsplat-streams.js';
 import { GSplatResourceCleanup } from './gsplat-resource-cleanup.js';
 
@@ -13,12 +10,13 @@ import { GSplatResourceCleanup } from './gsplat-resource-cleanup.js';
  * @import { GSplatCompressedData } from './gsplat-compressed-data.js'
  * @import { GSplatSogData } from './gsplat-sog-data.js'
  * @import { GSplatFormat } from './gsplat-format.js'
+ * @import { ShaderMaterial } from '../materials/shader-material.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { Vec2 } from '../../core/math/vec2.js'
+ * @import { WorkBufferRenderInfo } from '../gsplat-unified/gsplat-work-buffer.js'
  */
 
 let id = 0;
-const tempMap = new Map();
 
 /**
  * Base class for a GSplat resource and defines common properties.
@@ -253,81 +251,6 @@ class GSplatResourceBase {
      */
     get supportsWorkBufferGeometry() {
         return false;
-    }
-
-    /**
-     * Get or create a QuadRender for rendering to work buffer.
-     *
-     * @param {boolean} colorOnly - Whether to render only color (not full MRT).
-     * @param {{ code: string, hash: number }|null} workBufferModifier - Optional custom modifier (object with code and pre-computed hash).
-     * @param {number} formatHash - Captured format hash for shader caching.
-     * @param {string} formatDeclarations - Captured format declarations for shader compilation.
-     * @param {GSplatFormat} workBufferFormat - The work buffer format descriptor.
-     * @returns {WorkBufferRenderInfo} The WorkBufferRenderInfo instance.
-     * @ignore
-     */
-    getWorkBufferRenderInfo(colorOnly, workBufferModifier, formatHash, formatDeclarations, workBufferFormat) {
-
-        // configure defines to fetch cached data
-        this.configureMaterialDefines(tempMap);
-        tempMap.set('GSPLAT_LOD', '');
-        if (colorOnly) {
-            tempMap.set('GSPLAT_COLOR_ONLY', '');
-
-            // source geometry from the work buffer instead of source textures
-            if (this.supportsWorkBufferGeometry) {
-                tempMap.set('GSPLAT_WORKBUFFER_GEOMETRY', '');
-                if (workBufferFormat.dataFormat === GSPLATDATA_COMPACT) {
-                    tempMap.set('GSPLAT_WORKBUFFER_COMPACT', '');
-                }
-            }
-        }
-
-        let definesKey = '';
-        for (const [k, v] of tempMap) {
-            if (definesKey) definesKey += ';';
-            definesKey += `${k}=${v}`;
-        }
-        const key = `${formatHash};${workBufferFormat.hash};${workBufferModifier?.hash ?? 0};${definesKey}`;
-
-        // get or create quad render
-        let info = this.workBufferRenderInfos.get(key);
-        if (!info) {
-
-            const material = new ShaderMaterial();
-            this.configureMaterial(material, workBufferModifier, formatDeclarations);
-
-            // Inject work buffer output declarations
-            const chunks = this.device.isWebGPU ? material.shaderChunks.wgsl : material.shaderChunks.glsl;
-            // For color-only mode, only output color stream; otherwise output all streams
-            const outputStreams = colorOnly ?
-                [workBufferFormat.getStream('dataColor')] :
-                [...workBufferFormat.streams, ...workBufferFormat.extraStreams];
-            let outputCode = workBufferFormat.getOutputDeclarations(outputStreams);
-
-            // In color-only mode, generate no-op stubs for extra streams so user modifiers compile
-            if (colorOnly && workBufferFormat.extraStreams.length > 0) {
-                outputCode += `\n${workBufferFormat.getOutputStubs(workBufferFormat.extraStreams)}`;
-            }
-
-            chunks.set('gsplatWorkBufferOutputVS', outputCode);
-
-            // Inject format-specific write encoding chunk
-            const writeCode = workBufferFormat.getWriteCode();
-            if (writeCode) {
-                chunks.set('gsplatWriteVS', writeCode);
-            }
-
-            // copy tempMap to material defines
-            tempMap.forEach((v, k) => material.setDefine(k, v));
-
-            // create new cache entry
-            info = new WorkBufferRenderInfo(this.device, key, material, colorOnly, workBufferFormat);
-            this.workBufferRenderInfos.set(key, info);
-        }
-
-        tempMap.clear();
-        return info;
     }
 
     static createMesh(device) {
