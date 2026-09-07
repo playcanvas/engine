@@ -22,6 +22,20 @@ import { SingleContactResult } from './single-contact-result.js';
  * @import { Trigger } from '../collision/trigger.js'
  */
 
+/**
+ * Options of the `rigidbody` component accepted by {@link RigidBodyComponentSystem} that differ
+ * from the properties of {@link RigidBodyComponent}. Each replaces the same-named property of the
+ * options that {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} RigidBodyComponentOptionsOverrides
+ * @property {Vec3 | number[]} [angularFactor] - Same as {@link RigidBodyComponent#angularFactor},
+ * also accepting an `[x, y, z]` array.
+ * @property {Vec3 | number[]} [linearFactor] - Same as {@link RigidBodyComponent#linearFactor},
+ * also accepting an `[x, y, z]` array.
+ * @ignore
+ */
+
 const _properties = [
     'mass',
     'linearDamping',

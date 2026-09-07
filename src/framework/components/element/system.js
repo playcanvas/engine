@@ -11,6 +11,27 @@ import { ElementComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
+ * Options of the `element` component accepted by {@link ElementComponentSystem} that differ from
+ * the properties of {@link ElementComponent}. Each replaces the same-named property of the options
+ * that {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} ElementComponentOptionsOverrides
+ * @property {Vec4 | number[]} [anchor] - Same as {@link ElementComponent#anchor}, also accepting an
+ * `[x, y, z, w]` array.
+ * @property {number | null} [batchGroupId] - Same as {@link ElementComponent#batchGroupId}. `null`
+ * selects no batch group.
+ * @property {Color | number[]} [color] - Same as {@link ElementComponent#color}, also accepting an
+ * `[r, g, b]` array.
+ * @property {Vec4 | number[]} [margin] - Same as {@link ElementComponent#margin}, also accepting an
+ * `[x, y, z, w]` array.
+ * @property {Vec2 | number[]} [pivot] - Same as {@link ElementComponent#pivot}, also accepting an
+ * `[x, y]` array.
+ * @ignore
  */
 
 /**

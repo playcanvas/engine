@@ -6,6 +6,23 @@ import { RenderComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
+ * Options of the `render` component accepted by {@link RenderComponentSystem} that differ from the
+ * properties of {@link RenderComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} RenderComponentOptionsOverrides
+ * @property {number[]} [aabbCenter] - Center `[x, y, z]` of a custom bounding box; with
+ * `aabbHalfExtents`, sets {@link RenderComponent#customAabb}.
+ * @property {number[]} [aabbHalfExtents] - Half-extents `[x, y, z]` of a custom bounding box; with
+ * `aabbCenter`, sets {@link RenderComponent#customAabb}.
+ * @property {number | null} [batchGroupId] - Same as {@link RenderComponent#batchGroupId}. `null`
+ * selects no batch group.
+ * @ignore
  */
 
 // order matters here

@@ -7,6 +7,30 @@ import { CameraComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { CalculateMatrixCallback } from './component.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
+ * Options of the `camera` component accepted by {@link CameraComponentSystem} that differ from the
+ * properties of {@link CameraComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} CameraComponentOptionsOverrides
+ * @property {CalculateMatrixCallback} [calculateProjection] - Same as
+ * {@link CameraComponent#calculateProjection}.
+ * @property {CalculateMatrixCallback} [calculateTransform] - Same as
+ * {@link CameraComponent#calculateTransform}.
+ * @property {Color | number[]} [clearColor] - Same as {@link CameraComponent#clearColor}, also
+ * accepting an `[r, g, b, a]` array.
+ * @property {Vec2 | number[]} [projectionOffset] - Same as
+ * {@link CameraComponent#projectionOffset}, also accepting an `[x, y]` array.
+ * @property {Vec4 | number[]} [rect] - Same as {@link CameraComponent#rect}, also accepting an `[x,
+ * y, w, h]` array.
+ * @property {Vec4 | number[]} [scissorRect] - Same as {@link CameraComponent#scissorRect}, also
+ * accepting an `[x, y, w, h]` array.
+ * @ignore
  */
 
 const _properties = [

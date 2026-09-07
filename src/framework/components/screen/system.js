@@ -5,6 +5,21 @@ import { ScreenComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
+ * Options of the `screen` component accepted by {@link ScreenComponentSystem} that differ from the
+ * properties of {@link ScreenComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} ScreenComponentOptionsOverrides
+ * @property {Vec2 | number[]} [referenceResolution] - Same as
+ * {@link ScreenComponent#referenceResolution}, also accepting an `[width, height]` array.
+ * @property {Vec2 | number[]} [resolution] - Same as {@link ScreenComponent#resolution}, also
+ * accepting an `[width, height]` array.
+ * @ignore
  */
 
 /**
