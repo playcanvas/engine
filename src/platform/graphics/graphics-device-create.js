@@ -4,6 +4,10 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
 import { NullGraphicsDevice } from './null/null-graphics-device.js';
 
 /**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
+/**
  * Creates a graphics device.
  *
  * @param {HTMLCanvasElement} canvas - The canvas element.
@@ -16,6 +20,11 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * default spec limits, useful for testing on constrained devices.
  * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
  * anti-aliasing if possible. Defaults to true.
+ * @param {boolean} [options.alpha] - Boolean that indicates if the canvas contains an alpha
+ * buffer, allowing the canvas to composite with the page behind it. Defaults to true. For
+ * {@link DEVICETYPE_WEBGL2} this is forwarded as a WebGL context attribute, and for
+ * {@link DEVICETYPE_WEBGPU} it selects the canvas alpha mode ('premultiplied' when true,
+ * 'opaque' when false).
  * @param {string} [options.displayFormat] - The display format of the canvas. Defaults to
  * {@link DISPLAYFORMAT_LDR}. Can be:
  *
@@ -58,7 +67,7 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * transient attachment support. Incompatible with a scene depth grab pass (`sceneDepthMap`), a
  * depth prepass, or any depth resolve, as the depth cannot be sampled or copied out. Defaults to
  * false.
- * @returns {Promise} - Promise object representing the created graphics device.
+ * @returns {Promise<GraphicsDevice>} - Promise object representing the created graphics device.
  * @category Graphics
  */
 function createGraphicsDevice(canvas, options = {}) {
