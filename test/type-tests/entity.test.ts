@@ -5,7 +5,7 @@ import {
     Asset, CameraComponent, CollisionComponent, Color, Component, ElementComponent, Entity,
     LightComponent, RenderComponent, ScriptComponent, Vec3
 } from '../../build/playcanvas.js';
-import type { ComponentMap, ComponentOptions } from '../../build/playcanvas.js';
+import type { ComponentMap, ComponentName, ComponentOptions } from '../../build/playcanvas.js';
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
 type Expect<T extends true> = T;
@@ -104,6 +104,10 @@ const options: ComponentOptions<'camera'> = { fov: 30, clearColor: [0, 0, 0, 1] 
 entity.addComponent('camera', options);
 type T12 = Expect<Equal<ComponentOptions<'light'>['enable'], boolean | undefined>>;
 type T13 = Expect<Equal<ComponentOptions<'mything'>['speed'], number | undefined>>;
+type T17 = Expect<Equal<ComponentName, keyof ComponentMap>>;
+const componentName: ComponentName = 'mything';
+// @ts-expect-error not a component name
+const notAComponentName: ComponentName = 'nope';
 
 // ---- findComponent, findComponents and removeComponent follow ComponentMap
 const found = entity.findComponent('light');
@@ -115,4 +119,4 @@ type T16 = Expect<Equal<typeof anyFound, Component | null>>;
 entity.removeComponent('camera');
 entity.removeComponent(name);
 
-export type Checks = [T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16];
+export type Checks = [T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17];

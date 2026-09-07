@@ -2,6 +2,7 @@ import { EventHandler } from '../../core/event-handler.js';
 
 /**
  * @import { ComponentMap } from '../entity.js'
+ * @import { ComponentName } from '../entity.js'
  * @import { ComponentOptionsOverrides } from './registry.js'
  * @import { ComponentSystem } from './system.js'
  * @import { Entity } from '../entity.js'
@@ -51,7 +52,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * {@link ComponentOptionsOverrides}), or an empty object type when it has none, as for an
  * application-defined component.
  *
- * @template {keyof ComponentMap} K
+ * @template {ComponentName} K
  * @typedef {K extends keyof ComponentOptionsOverrides ? ComponentOptionsOverrides[K] : {}} ComponentOptionsOverridesOf
  * @ignore
  */
@@ -61,7 +62,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * system-level overrides replacing same-named properties. {@link ComponentOptions} flattens this
  * into a single object type.
  *
- * @template {keyof ComponentMap} K
+ * @template {ComponentName} K
  * @typedef {Omit<ComponentOptionsOf<ComponentMap[K]>, keyof ComponentOptionsOverridesOf<K>> & ComponentOptionsOverridesOf<K>} MergedComponentOptions
  * @ignore
  */

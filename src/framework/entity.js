@@ -52,6 +52,19 @@ import { getApplication } from './globals.js';
  * @typedef {{ [K in keyof Entity as NonNullable<Entity[K]> extends Component ? K : never]: NonNullable<Entity[K]> }} ComponentMap
  */
 
+// Spelled `keyof ComponentMap & string` rather than `keyof ComponentMap` on purpose: the intersection
+// gives the resulting union its own identity, which carries this alias, so hovers and the API
+// reference show `ComponentName` instead of the expanded list of names. Every key is a string, so
+// the two spellings denote the same type.
+/**
+ * The name of a component an {@link Entity} can hold, such as `'camera'` or `'light'`: the keys of
+ * {@link ComponentMap}. This is what {@link Entity#addComponent}, {@link Entity#findComponent},
+ * {@link Entity#findComponents} and {@link Entity#removeComponent} take, and what
+ * {@link ComponentOptions} is indexed by.
+ *
+ * @typedef {keyof ComponentMap & string} ComponentName
+ */
+
 /**
  * The options {@link Entity#addComponent} accepts for the component named `K`, for example
  * `ComponentOptions<'camera'>`. These are the public, settable, non-function properties of the
@@ -60,7 +73,7 @@ import { getApplication } from './globals.js';
  * also accept a plain array in place of a math object, such as `clearColor: [0, 0, 0, 1]`.
  * Application-defined components get the same derivation from their component class.
  *
- * @template {keyof ComponentMap} K
+ * @template {ComponentName} K
  * @typedef {{ [P in keyof MergedComponentOptions<K>]: MergedComponentOptions<K>[P] }} ComponentOptions
  */
 
@@ -409,8 +422,8 @@ class Entity extends GraphNode {
      * {@link CameraComponent} and returns a `CameraComponent`. See {@link ComponentOptions} for the
      * rule and {@link ComponentMap} for extending this to application-defined components.
      *
-     * @template {keyof ComponentMap | (string & {})} K
-     * @param {K} type - The name of the component to add. Valid strings are:
+     * @template {ComponentName | (string & {})} K
+     * @param {K} type - The name of the component to add (a {@link ComponentName}). Valid strings are:
      *
      * - "anim" - see {@link AnimComponent}
      * - "animation" - see {@link AnimationComponent}
@@ -434,11 +447,11 @@ class Entity extends GraphNode {
      * - "sound" - see {@link SoundComponent}
      * - "sprite" - see {@link SpriteComponent}
      *
-     * @param {K extends keyof ComponentMap ? ComponentOptions<K> : object} [data] - The
+     * @param {K extends ComponentName ? ComponentOptions<K> : object} [data] - The
      * initialization data for the specific component type: the settable properties of the component
      * class plus the extras its system understands (see {@link ComponentOptions}). Any object is
      * accepted for a component name that is not in {@link ComponentMap}.
-     * @returns {(K extends keyof ComponentMap ? ComponentMap[K] : Component) | null} The new
+     * @returns {(K extends ComponentName ? ComponentMap[K] : Component) | null} The new
      * Component that was attached to the entity or null if there was an error.
      * @example
      * const entity = new Entity();
@@ -468,7 +481,7 @@ class Entity extends GraphNode {
     /**
      * Remove a component from the Entity.
      *
-     * @param {keyof ComponentMap | (string & {})} type - The name of the Component type.
+     * @param {ComponentName | (string & {})} type - The name of the Component type.
      * @example
      * const entity = new Entity();
      * entity.addComponent("light"); // add new light component
@@ -491,9 +504,9 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for the first component of specified type.
      *
-     * @template {keyof ComponentMap | (string & {})} K
+     * @template {ComponentName | (string & {})} K
      * @param {K} type - The name of the component type to retrieve.
-     * @returns {(K extends keyof ComponentMap ? ComponentMap[K] : Component) | null} A component of
+     * @returns {(K extends ComponentName ? ComponentMap[K] : Component) | null} A component of
      * specified type, if the entity or any of its descendants has one. Returns null otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
@@ -507,9 +520,9 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for all components of specified type.
      *
-     * @template {keyof ComponentMap | (string & {})} K
+     * @template {ComponentName | (string & {})} K
      * @param {K} type - The name of the component type to retrieve.
-     * @returns {(K extends keyof ComponentMap ? ComponentMap[K] : Component)[]} All components of
+     * @returns {(K extends ComponentName ? ComponentMap[K] : Component)[]} All components of
      * specified type in the entity or any of its descendants. Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
