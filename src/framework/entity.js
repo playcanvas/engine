@@ -419,8 +419,8 @@ class Entity extends GraphNode {
      *
      * For the built-in components the `type` also types the options and the result:
      * `entity.addComponent('camera', { fov: 45 })` accepts any settable property of
-     * {@link CameraComponent} and returns a `CameraComponent`. See {@link ComponentOptions} for the
-     * rule and {@link ComponentMap} for extending this to application-defined components.
+     * {@link CameraComponent} and returns `CameraComponent | null`. See {@link ComponentOptions} for
+     * the rule and {@link ComponentMap} for extending this to application-defined components.
      *
      * @template {ComponentName | (string & {})} K
      * @param {K} type - The name of the component to add (a {@link ComponentName}). Valid strings are:
