@@ -11,7 +11,7 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * Creates a graphics device.
  *
  * @param {HTMLCanvasElement} canvas - The canvas element.
- * @param {object} options - Graphics device options.
+ * @param {object} [options] - Graphics device options.
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
  * order in which the devices are attempted to get created. Defaults to an empty array. If the
  * specified array does not contain {@link DEVICETYPE_WEBGL2}, it is internally added to its end.
