@@ -4,20 +4,22 @@ import { GraphNode } from '../scene/graph-node.js';
 import { getApplication } from './globals.js';
 
 /**
- * @import { AnimComponent } from './components/anim/component.js'
  * @import { AnimationComponent } from './components/animation/component.js'
+ * @import { AnimComponent } from './components/anim/component.js'
  * @import { AppBase } from './app-base.js'
  * @import { AudioListenerComponent } from './components/audio-listener/component.js'
  * @import { ButtonComponent } from './components/button/component.js'
  * @import { CameraComponent } from './components/camera/component.js'
  * @import { CollisionComponent } from './components/collision/component.js'
  * @import { Component } from './components/component.js'
+ * @import { ComponentSystem } from './components/system.js'
  * @import { ElementComponent } from './components/element/component.js'
  * @import { GSplatComponent } from './components/gsplat/component.js'
  * @import { JointComponent } from './components/joint/component.js'
  * @import { LayoutChildComponent } from './components/layout-child/component.js'
  * @import { LayoutGroupComponent } from './components/layout-group/component.js'
  * @import { LightComponent } from './components/light/component.js'
+ * @import { MergedComponentOptions } from './components/component.js'
  * @import { ModelComponent } from './components/model/component.js'
  * @import { ParticleSystemComponent } from './components/particle-system/component.js'
  * @import { RenderComponent } from './components/render/component.js'
@@ -25,10 +27,41 @@ import { getApplication } from './globals.js';
  * @import { ScreenComponent } from './components/screen/component.js'
  * @import { ScriptComponent } from './components/script/component.js'
  * @import { ScriptType } from './script/script-type.js'
- * @import { ScrollViewComponent } from './components/scroll-view/component.js'
  * @import { ScrollbarComponent } from './components/scrollbar/component.js'
+ * @import { ScrollViewComponent } from './components/scroll-view/component.js'
  * @import { SoundComponent } from './components/sound/component.js'
  * @import { SpriteComponent } from './components/sprite/component.js'
+ */
+
+/**
+ * The components an {@link Entity} can hold, keyed by the name passed to
+ * {@link Entity#addComponent}: `'camera'` maps to {@link CameraComponent}, `'light'` to
+ * {@link LightComponent} and so on. The map is derived from the component properties declared on
+ * `Entity`, so an application that registers its own {@link ComponentSystem} extends it - and
+ * with it the typing of {@link Entity#addComponent}, {@link Entity#findComponent} and
+ * {@link Entity#findComponents} - by declaring the matching property on `Entity`:
+ *
+ * ```ts
+ * declare module 'playcanvas' {
+ *     interface Entity {
+ *         readonly mything: MyComponent | undefined;
+ *     }
+ * }
+ * ```
+ *
+ * @typedef {{ [K in keyof Entity as NonNullable<Entity[K]> extends Component ? K : never]: NonNullable<Entity[K]> }} ComponentMap
+ */
+
+/**
+ * The options {@link Entity#addComponent} accepts for the component named `K`, for example
+ * `ComponentOptions<'camera'>`. These are the public, settable, non-function properties of the
+ * component class (see {@link ComponentMap}), all optional, plus the extras the component's system
+ * understands: option names that are not component properties, callbacks, and properties that
+ * also accept a plain array in place of a math object, such as `clearColor: [0, 0, 0, 1]`.
+ * Application-defined components get the same derivation from their component class.
+ *
+ * @template {keyof ComponentMap} K
+ * @typedef {{ [P in keyof MergedComponentOptions<K>]: MergedComponentOptions<K>[P] }} ComponentOptions
  */
 
 /**
@@ -371,7 +404,13 @@ class Entity extends GraphNode {
      * Create a new component and add it to the entity. Use this to add functionality to the entity
      * like rendering a model, playing sounds and so on.
      *
-     * @param {string} type - The name of the component to add. Valid strings are:
+     * For the built-in components the `type` also types the options and the result:
+     * `entity.addComponent('camera', { fov: 45 })` accepts any settable property of
+     * {@link CameraComponent} and returns a `CameraComponent`. See {@link ComponentOptions} for the
+     * rule and {@link ComponentMap} for extending this to application-defined components.
+     *
+     * @template {keyof ComponentMap | (string & {})} K
+     * @param {K} type - The name of the component to add. Valid strings are:
      *
      * - "anim" - see {@link AnimComponent}
      * - "animation" - see {@link AnimationComponent}
@@ -395,10 +434,12 @@ class Entity extends GraphNode {
      * - "sound" - see {@link SoundComponent}
      * - "sprite" - see {@link SpriteComponent}
      *
-     * @param {object} [data] - The initialization data for the specific component type. Refer to
-     * each specific component's API reference page for details on valid values for this parameter.
-     * @returns {Component|null} The new Component that was attached to the entity or null if there
-     * was an error.
+     * @param {K extends keyof ComponentMap ? ComponentOptions<K> : object} [data] - The
+     * initialization data for the specific component type: the settable properties of the component
+     * class plus the extras its system understands (see {@link ComponentOptions}). Any object is
+     * accepted for a component name that is not in {@link ComponentMap}.
+     * @returns {(K extends keyof ComponentMap ? ComponentMap[K] : Component) | null} The new
+     * Component that was attached to the entity or null if there was an error.
      * @example
      * const entity = new Entity();
      *
@@ -412,7 +453,7 @@ class Entity extends GraphNode {
      * });
      */
     addComponent(type, data) {
-        const system = this._app.systems[type];
+        const system = this._app.systems[/** @type {string} */ (type)];
         if (!system) {
             Debug.error(`addComponent: System '${type}' doesn't exist`);
             return null;
@@ -421,13 +462,13 @@ class Entity extends GraphNode {
             Debug.warn(`addComponent: Entity already has '${type}' component`);
             return null;
         }
-        return system.addComponent(this, data);
+        return /** @type {any} */ (system.addComponent(this, data));
     }
 
     /**
      * Remove a component from the Entity.
      *
-     * @param {string} type - The name of the Component type.
+     * @param {keyof ComponentMap | (string & {})} type - The name of the Component type.
      * @example
      * const entity = new Entity();
      * entity.addComponent("light"); // add new light component
@@ -435,7 +476,7 @@ class Entity extends GraphNode {
      * entity.removeComponent("light"); // remove light component
      */
     removeComponent(type) {
-        const system = this._app.systems[type];
+        const system = this._app.systems[/** @type {string} */ (type)];
         if (!system) {
             Debug.error(`removeComponent: System '${type}' doesn't exist`);
             return;
@@ -450,30 +491,32 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for the first component of specified type.
      *
-     * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component|null} A component of specified type, if the entity or any of its
-     * descendants has one. Returns null otherwise.
+     * @template {keyof ComponentMap | (string & {})} K
+     * @param {K} type - The name of the component type to retrieve.
+     * @returns {(K extends keyof ComponentMap ? ComponentMap[K] : Component) | null} A component of
+     * specified type, if the entity or any of its descendants has one. Returns null otherwise.
      * @example
      * // Get the first found light component in the hierarchy tree that starts with this entity
      * const light = entity.findComponent("light");
      */
     findComponent(type) {
         const entity = this.findOne(entity => entity.c?.[type]);
-        return entity && entity.c[type];
+        return /** @type {any} */ (entity && entity.c[type]);
     }
 
     /**
      * Search the entity and all of its descendants for all components of specified type.
      *
-     * @param {string} type - The name of the component type to retrieve.
-     * @returns {Component[]} All components of specified type in the entity or any of its
-     * descendants. Returns empty array if none found.
+     * @template {keyof ComponentMap | (string & {})} K
+     * @param {K} type - The name of the component type to retrieve.
+     * @returns {(K extends keyof ComponentMap ? ComponentMap[K] : Component)[]} All components of
+     * specified type in the entity or any of its descendants. Returns empty array if none found.
      * @example
      * // Get all light components in the hierarchy tree that starts with this entity
      * const lights = entity.findComponents("light");
      */
     findComponents(type) {
-        return this.find(entity => entity.c?.[type]).map(entity => entity.c[type]);
+        return /** @type {any} */ (this.find(entity => entity.c?.[type]).map(entity => entity.c[type]));
     }
 
     /**

@@ -3,6 +3,20 @@ import { ButtonComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Vec4 } from '../../../core/math/vec4.js'
+ */
+
+/**
+ * Options of the `button` component accepted by {@link ButtonComponentSystem} that differ from the
+ * properties of {@link ButtonComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} ButtonComponentOptionsOverrides
+ * @property {Vec4 | number[]} [hitPadding] - Same as {@link ButtonComponent#hitPadding}, also
+ * accepting an `[x, y, z, w]` array.
+ * @ignore
  */
 
 const _properties = [

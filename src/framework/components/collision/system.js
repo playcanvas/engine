@@ -14,6 +14,22 @@ import { Trigger } from './trigger.js';
  * @import { GraphNode } from '../../../scene/graph-node.js'
  */
 
+/**
+ * Options of the `collision` component accepted by {@link CollisionComponentSystem} that differ
+ * from the properties of {@link CollisionComponent}. Each replaces the same-named property of the
+ * options that {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} CollisionComponentOptionsOverrides
+ * @property {Quat | number[]} [angularOffset] - Same as {@link CollisionComponent#angularOffset},
+ * also accepting `[x, y, z]` Euler angles in degrees or an `[x, y, z, w]` quaternion array.
+ * @property {Vec3 | number[]} [halfExtents] - Same as {@link CollisionComponent#halfExtents}, also
+ * accepting an `[x, y, z]` array.
+ * @property {Vec3 | number[]} [linearOffset] - Same as {@link CollisionComponent#linearOffset},
+ * also accepting an `[x, y, z]` array.
+ * @ignore
+ */
+
 const mat4 = new Mat4();
 const p1 = new Vec3();
 const p2 = new Vec3();

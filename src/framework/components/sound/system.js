@@ -4,7 +4,22 @@ import { SoundComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
  * @import { SoundManager } from '../../../platform/sound/manager.js'
+ * @import { SoundSlot } from './slot.js'
+ */
+
+/**
+ * Options of the `sound` component accepted by {@link SoundComponentSystem} that differ from the
+ * properties of {@link SoundComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} SoundComponentOptionsOverrides
+ * @property {{ [name: string]: SoundSlot | { volume?: number, pitch?: number, loop?: boolean, startTime?: number, duration?: number, overlap?: boolean, autoPlay?: boolean, asset?: number } }} [slots] -
+ * Same as {@link SoundComponent#slots}, also accepting the plain {@link SoundSlot} settings of each
+ * slot.
+ * @ignore
  */
 
 const _properties = [

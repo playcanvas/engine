@@ -1,8 +1,69 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
+ * @import { ComponentMap } from '../entity.js'
+ * @import { ComponentOptionsOverrides } from './registry.js'
  * @import { ComponentSystem } from './system.js'
  * @import { Entity } from '../entity.js'
+ */
+
+/**
+ * Resolves to `A` when the types `X` and `Y` are identical, otherwise to `B`.
+ *
+ * @template X
+ * @template Y
+ * @template [A=X]
+ * @template [B=never]
+ * @typedef {(<T>() => T extends X ? 1 : 2) extends (<T>() => T extends Y ? 1 : 2) ? A : B} IfEquals
+ * @ignore
+ */
+
+/**
+ * The names of the writable (not readonly) properties of `T`.
+ *
+ * @template T
+ * @typedef {{ [P in keyof T]-?: IfEquals<{ [Q in P]: T[P] }, { -readonly [Q in P]: T[P] }, P> }[keyof T]} WritableKeys
+ * @ignore
+ */
+
+/**
+ * The names of the properties of component class `C` that {@link Entity#addComponent} accepts as
+ * options based on the class alone: its public, writable, non-function properties. Getter-only and
+ * `@readonly` properties, methods and callbacks, underscore-prefixed internals and the `system`
+ * and `entity` references are excluded.
+ *
+ * @template C
+ * @typedef {{ [K in WritableKeys<C>]: K extends 'system' | 'entity' | `_${string}` ? never : NonNullable<C[K]> extends Function ? never : K }[WritableKeys<C>]} ComponentOptionKeys
+ * @ignore
+ */
+
+/**
+ * The options derived from component class `C` alone: each {@link ComponentOptionKeys} property,
+ * optional, with the type of the property.
+ *
+ * @template C
+ * @typedef {Partial<Pick<C, Extract<ComponentOptionKeys<C>, keyof C>>>} ComponentOptionsOf
+ * @ignore
+ */
+
+/**
+ * The system-level option overrides of the component named `K` (see
+ * {@link ComponentOptionsOverrides}), or an empty object type when it has none, as for an
+ * application-defined component.
+ *
+ * @template {keyof ComponentMap} K
+ * @typedef {K extends keyof ComponentOptionsOverrides ? ComponentOptionsOverrides[K] : {}} ComponentOptionsOverridesOf
+ * @ignore
+ */
+
+/**
+ * The options of the component named `K`: those derived from its component class, with the
+ * system-level overrides replacing same-named properties. {@link ComponentOptions} flattens this
+ * into a single object type.
+ *
+ * @template {keyof ComponentMap} K
+ * @typedef {Omit<ComponentOptionsOf<ComponentMap[K]>, keyof ComponentOptionsOverridesOf<K>> & ComponentOptionsOverridesOf<K>} MergedComponentOptions
+ * @ignore
  */
 
 /**

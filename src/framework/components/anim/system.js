@@ -5,6 +5,22 @@ import { AnimComponent } from './component.js';
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Component } from '../component.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
+ * Options of the `anim` component accepted by {@link AnimComponentSystem} that differ from the
+ * properties of {@link AnimComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} AnimComponentOptionsOverrides
+ * @property {{ name: string, weight?: number, mask?: object, blendType?: string }[]} [layers] -
+ * Layers to add with {@link AnimComponent#addLayer}, each with a `name` and optional `weight`,
+ * `mask` and `blendType`.
+ * @property {{ [layer: string]: { mask: object } }} [masks] - Bone masks to assign to the added
+ * layers, keyed by layer name.
+ * @ignore
  */
 
 /**

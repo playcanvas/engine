@@ -94,7 +94,7 @@ This hierarchy ensures:
 
 - JSDoc comments are used to generate TypeScript definitions
 - Run `npm run build:types` to generate `.d.ts` files
-- Test types with `npm run test:types`
+- Test types with `npm run test:types`. This compiles the bundled declarations and the consumer-side type tests in `test/type-tests`, which check inference and augmentation against `build/playcanvas.d.ts`
 - Use proper JSDoc type annotations:
   - `@type {TypeName}` for variables
   - `@param {TypeName} paramName` for parameters

@@ -19,8 +19,23 @@ Debug.call(() => {
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Camera } from '../../../scene/camera.js'
+ * @import { Entity } from '../../entity.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
+ */
+
+/**
+ * Options of the `gsplat` component accepted by {@link GSplatComponentSystem} that differ from the
+ * properties of {@link GSplatComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} GSplatComponentOptionsOverrides
+ * @property {number[]} [aabbCenter] - Center `[x, y, z]` of a custom bounding box; with
+ * `aabbHalfExtents`, sets {@link GSplatComponent#customAabb}.
+ * @property {number[]} [aabbHalfExtents] - Half-extents `[x, y, z]` of a custom bounding box; with
+ * `aabbCenter`, sets {@link GSplatComponent#customAabb}.
+ * @ignore
  */
 
 // order matters here

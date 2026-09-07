@@ -1,30 +1,77 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * @import { AnimComponentSystem } from './anim/system.js'
  * @import { AnimationComponentSystem } from './animation/system.js'
+ * @import { AnimComponentOptionsOverrides } from './anim/system.js'
+ * @import { AnimComponentSystem } from './anim/system.js'
  * @import { AudioListenerComponentSystem } from './audio-listener/system.js'
+ * @import { ButtonComponentOptionsOverrides } from './button/system.js'
  * @import { ButtonComponentSystem } from './button/system.js'
+ * @import { CameraComponentOptionsOverrides } from './camera/system.js'
  * @import { CameraComponentSystem } from './camera/system.js'
+ * @import { CollisionComponentOptionsOverrides } from './collision/system.js'
  * @import { CollisionComponentSystem } from './collision/system.js'
  * @import { ComponentSystem } from './system.js'
+ * @import { ElementComponentOptionsOverrides } from './element/system.js'
  * @import { ElementComponentSystem } from './element/system.js'
+ * @import { Entity } from '../entity.js'
+ * @import { GSplatComponentOptionsOverrides } from './gsplat/system.js'
  * @import { GSplatComponentSystem } from './gsplat/system.js'
  * @import { JointComponentSystem } from './joint/system.js'
  * @import { LayoutChildComponentSystem } from './layout-child/system.js'
+ * @import { LayoutGroupComponentOptionsOverrides } from './layout-group/system.js'
  * @import { LayoutGroupComponentSystem } from './layout-group/system.js'
+ * @import { LightComponentOptionsOverrides } from './light/system.js'
  * @import { LightComponentSystem } from './light/system.js'
+ * @import { ModelComponentOptionsOverrides } from './model/system.js'
  * @import { ModelComponentSystem } from './model/system.js'
+ * @import { ParticleSystemComponentOptionsOverrides } from './particle-system/system.js'
  * @import { ParticleSystemComponentSystem } from './particle-system/system.js'
+ * @import { RenderComponentOptionsOverrides } from './render/system.js'
  * @import { RenderComponentSystem } from './render/system.js'
+ * @import { RigidBodyComponentOptionsOverrides } from './rigid-body/system.js'
  * @import { RigidBodyComponentSystem } from './rigid-body/system.js'
+ * @import { ScreenComponentOptionsOverrides } from './screen/system.js'
  * @import { ScreenComponentSystem } from './screen/system.js'
+ * @import { ScriptComponentOptionsOverrides } from './script/system.js'
  * @import { ScriptComponentSystem } from './script/system.js'
- * @import { ScrollViewComponentSystem } from './scroll-view/system.js'
  * @import { ScrollbarComponentSystem } from './scrollbar/system.js'
+ * @import { ScrollViewComponentOptionsOverrides } from './scroll-view/system.js'
+ * @import { ScrollViewComponentSystem } from './scroll-view/system.js'
+ * @import { SoundComponentOptionsOverrides } from './sound/system.js'
  * @import { SoundComponentSystem } from './sound/system.js'
+ * @import { SpriteComponentOptionsOverrides } from './sprite/system.js'
  * @import { SpriteComponentSystem } from './sprite/system.js'
  * @import { ZoneComponentSystem } from './zone/system.js'
+ */
+
+/**
+ * Options accepted by {@link Entity#addComponent} for each built-in component beyond what its
+ * component class declares - option names that are not component properties (see
+ * {@link ComponentSystem#extraDataProperties}), callbacks, and properties that also accept a plain
+ * array or plain data. Each property replaces the same-named property of the options derived from
+ * the component class; {@link ComponentOptions} applies them. Keyed by component name, like the
+ * systems in this registry.
+ *
+ * @typedef {object} ComponentOptionsOverrides
+ * @property {AnimComponentOptionsOverrides} anim - Overrides of the `anim` component.
+ * @property {ButtonComponentOptionsOverrides} button - Overrides of the `button` component.
+ * @property {CameraComponentOptionsOverrides} camera - Overrides of the `camera` component.
+ * @property {CollisionComponentOptionsOverrides} collision - Overrides of the `collision` component.
+ * @property {ElementComponentOptionsOverrides} element - Overrides of the `element` component.
+ * @property {GSplatComponentOptionsOverrides} gsplat - Overrides of the `gsplat` component.
+ * @property {LayoutGroupComponentOptionsOverrides} layoutgroup - Overrides of the `layoutgroup` component.
+ * @property {LightComponentOptionsOverrides} light - Overrides of the `light` component.
+ * @property {ModelComponentOptionsOverrides} model - Overrides of the `model` component.
+ * @property {ParticleSystemComponentOptionsOverrides} particlesystem - Overrides of the `particlesystem` component.
+ * @property {RenderComponentOptionsOverrides} render - Overrides of the `render` component.
+ * @property {RigidBodyComponentOptionsOverrides} rigidbody - Overrides of the `rigidbody` component.
+ * @property {ScreenComponentOptionsOverrides} screen - Overrides of the `screen` component.
+ * @property {ScriptComponentOptionsOverrides} script - Overrides of the `script` component.
+ * @property {ScrollViewComponentOptionsOverrides} scrollview - Overrides of the `scrollview` component.
+ * @property {SoundComponentOptionsOverrides} sound - Overrides of the `sound` component.
+ * @property {SpriteComponentOptionsOverrides} sprite - Overrides of the `sprite` component.
+ * @ignore
  */
 
 /**

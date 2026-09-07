@@ -4,6 +4,22 @@ import { ScriptComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
+ * Options of the `script` component accepted by {@link ScriptComponentSystem} that differ from the
+ * properties of {@link ScriptComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} ScriptComponentOptionsOverrides
+ * @property {string[]} [order] - Names of the scripts to create, in execution order. Used together
+ * with `scripts`.
+ * @property {{ [name: string]: { enabled?: boolean, attributes?: object } }} [scripts] -
+ * Initialization of each script to create, keyed by script name: its `enabled` state and
+ * `attributes` values. Used together with `order`.
+ * @ignore
  */
 
 const METHOD_INITIALIZE_ATTRIBUTES = '_onInitializeAttributes';
