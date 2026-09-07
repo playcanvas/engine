@@ -465,6 +465,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.targetToSlot[gl.TEXTURE_2D] = 0;
         this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
         this.targetToSlot[gl.TEXTURE_3D] = 2;
+        this.targetToSlot[gl.TEXTURE_2D_ARRAY] = 3;
 
         // Define the uniform commit functions
         let scopeX, scopeY, scopeZ, scopeW;
@@ -1103,7 +1104,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initTextureUnits(count = 16) {
         this.textureUnits = [];
         for (let i = 0; i < count; i++) {
-            this.textureUnits.push([null, null, null]);
+            this.textureUnits.push([null, null, null, null]);
         }
     }
 
