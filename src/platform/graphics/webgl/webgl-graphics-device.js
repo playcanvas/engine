@@ -260,9 +260,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const isSafari = platform.browserName === 'safari';
 
-        // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = isSafari;
-
         canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
         canvas.addEventListener('webglcontextrestored', this._contextRestoredHandler, false);
 
@@ -1638,15 +1635,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, 'UPDATE-BEGIN');
 
         this.boundVao = null;
-
-        // clear texture units once a frame on desktop safari
-        if (this._tempEnableSafariTextureUnitWorkaround) {
-            for (let unit = 0; unit < this.textureUnits.length; ++unit) {
-                for (let slot = 0; slot < 3; ++slot) {
-                    this.textureUnits[unit][slot] = null;
-                }
-            }
-        }
 
         // Set the render target
         const target = this.renderTarget ?? this.backBuffer;
