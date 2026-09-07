@@ -33,9 +33,11 @@ import {
     TONEMAP_NEUTRAL,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -81,7 +83,6 @@ app.on('destroy', () => {
 
 const assets = {
     logo: new Asset('gsplat', 'gsplat', { url: './assets/splats/playcanvas-logo/meta.json' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -128,21 +129,20 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(-2, -0.5, 2);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls with a mouse and a touch support
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 14,
-        distanceMax: 50
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            zoomRange: new Vec2(14, 50),
+            enableFly: false
+        }
+    })
+);
 
 // Set camera position looking at origin
-camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(10, 4, 10), Vec3.ZERO);
+cameraControls.reset(Vec3.ZERO, new Vec3(10, 4, 10));
 
 // Custom render passes set up with bloom
 const cameraFrame = new CameraFrame(app, camera.camera);

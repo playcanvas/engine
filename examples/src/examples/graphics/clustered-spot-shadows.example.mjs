@@ -20,9 +20,11 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -35,7 +37,6 @@ window.focus();
 
 const observer = data;
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     channels: new Asset('channels', 'texture', { url: './assets/textures/channels.png' }),
     heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/normal-map.png' }),
@@ -196,7 +197,7 @@ function createPrimitive(primitiveType, position, scale, mat) {
 }
 
 // Create some visible geometry
-const ground = createPrimitive('box', new Vec3(0, 0, 0), new Vec3(500, 1, 500), groundMaterial);
+createPrimitive('box', new Vec3(0, 0, 0), new Vec3(500, 1, 500), groundMaterial);
 
 const numTowers = 8;
 for (let i = 0; i < numTowers; i++) {
@@ -281,18 +282,15 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.setLocalPosition(300 * Math.sin(0), 150, 300 * Math.cos(0));
 
-// Add orbit camera script with mouse and touch support
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: ground,
-        distanceMax: 1200,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 1200)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 
 // Handle HUD changes - update properties on the scene
 data.on('*:set', (/** @type {string} */ path, value) => {

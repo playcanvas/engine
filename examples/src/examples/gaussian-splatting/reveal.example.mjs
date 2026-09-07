@@ -24,8 +24,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatRevealGridEruption } from 'playcanvas/scripts/esm/gsplat/reveal-grid-eruption.mjs';
 import { GSplatRevealRadial } from 'playcanvas/scripts/esm/gsplat/reveal-radial.mjs';
 import { GSplatRevealRain } from 'playcanvas/scripts/esm/gsplat/reveal-rain.mjs';
@@ -74,8 +77,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' })
 };
 
 await new Promise((resolve) => {
@@ -227,19 +229,19 @@ camera.addComponent('camera', {
 });
 camera.setLocalPosition(3, 1, 0.5);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls with a mouse and a touch support
 camera.addComponent('script');
-camera.script?.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: hotel,
-        distanceMax: 3.2,
-        frameOnStart: false
-    }
-});
-camera.script?.create('orbitCameraInputMouse');
-camera.script?.create('orbitCameraInputTouch');
 app.root.addChild(camera);
+const orbitPivot = hotel.getPosition().clone();
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            focusPoint: orbitPivot,
+            zoomRange: new Vec2(0.01, 3.2),
+            enableFly: false
+        }
+    })
+);
 
 // Auto-rotate camera when idle
 let autoRotateEnabled = true;
@@ -269,11 +271,20 @@ app.on('update', (dt) => {
         autoRotateEnabled = true;
     }
 
-    // Apply auto-rotation
+    // Apply auto-rotation by advancing the camera's azimuth around the pivot
     if (autoRotateEnabled) {
-        const orbitCamera = camera.script?.get('orbitCamera');
-        if (orbitCamera) {
-            orbitCamera.yaw += autoRotateSpeed * dt;
-        }
+        const offset = camera.getPosition().clone().sub(orbitPivot);
+        const r = offset.length();
+        const pitch = Math.asin(Math.max(-1, Math.min(1, offset.y / r)));
+        const yaw = Math.atan2(offset.x, offset.z) + (autoRotateSpeed * dt * Math.PI) / 180;
+        const cp = Math.cos(pitch);
+        cameraControls.reset(
+            orbitPivot,
+            new Vec3(
+                orbitPivot.x + r * Math.sin(yaw) * cp,
+                orbitPivot.y + r * Math.sin(pitch),
+                orbitPivot.z + r * Math.cos(yaw) * cp
+            )
+        );
     }
 });

@@ -25,8 +25,10 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -34,7 +36,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -103,20 +104,18 @@ leftEntity.setPosition(0, 0, 1);
 leftEntity.setLocalScale(0.8, 0.8, 0.8);
 app.root.addChild(leftEntity);
 
-// Create a camera with an orbit camera script
+// Create a camera with camera controls, viewing from the side (yaw 90) at a distance of 0.3
 const camera = new Entity();
 camera.addComponent('camera', {
     toneMapping: TONEMAP_ACES
 });
+camera.setLocalPosition(0.3, 0, 1);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 1),
+        enableFly: false
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
-camera.script.orbitCamera.yaw = 90;
-camera.script.orbitCamera.distance = 0.3;
 camera.camera.requestSceneColorMap(true);

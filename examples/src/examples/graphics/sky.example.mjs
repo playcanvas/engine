@@ -38,9 +38,11 @@ import {
     TONEMAP_NONE,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -48,7 +50,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
     hdri_street: new Asset('hdri', 'texture', { url: './assets/hdri/wide-street.hdr' }, { mipmaps: false }),
     hdri_room: new Asset('hdri', 'texture', { url: './assets/hdri/empty-room.hdr' }, { mipmaps: false })
@@ -107,23 +108,20 @@ cameraEntity.addComponent('camera', {
     gammaCorrection: GAMMA_SRGB
 });
 
-// Add orbit camera script with a mouse and a touch support
-cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: statueEntity,
-        distanceMax: 500,
-        frameOnStart: false
-    }
-});
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
 // Position the camera in the world
 cameraEntity.setLocalPosition(-4, 5, 22);
 cameraEntity.lookAt(0, 0, 1);
+cameraEntity.addComponent('script');
 app.root.addChild(cameraEntity);
+
+// Add camera controls
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0.173, 7.523, 0.018),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 500)
+    }
+});
 
 // ------ Custom render passes set up ------
 const cameraFrame = new CameraFrame(app, cameraEntity.camera);

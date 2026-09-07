@@ -38,8 +38,10 @@ import {
     UNIFORMTYPE_UINT,
     UniformBufferFormat,
     UniformFormat,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -52,7 +54,6 @@ const assets = {
     color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -143,15 +144,13 @@ cameraEntity.translate(0, 0, 5);
 
 // Add orbit camera script with a mouse and a touch support
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: entity
+app.root.addChild(cameraEntity);
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false
     }
 });
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-app.root.addChild(cameraEntity);
 
 // a compute shader that will modify the vertex buffer of the mesh every frame
 const shader = device.supportsCompute

@@ -38,10 +38,12 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     WasmModule,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType, win } from 'examples/context';
 
@@ -59,7 +61,6 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -283,17 +284,16 @@ camera.setLocalPosition(0, 5, 11);
 
 camera.camera.requestSceneColorMap(true);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: occluder,
-        distanceMax: 500,
-        frameOnStart: false
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            focusPoint: occluder.getPosition(),
+            zoomRange: new Vec2(0.01, 500),
+            enableFly: false
+        }
+    })
+);
 
 data.on('*:set', (/** @type {string} */ path, value) => {
     switch (path) {
@@ -348,8 +348,9 @@ let timeDiff = 0;
 let index = 0;
 app.on('update', (dt) => {
     if (time === 0) {
-        // @ts-ignore engine-tsd
-        camera.script.orbitCamera.distance = 25;
+        const focus = occluder.getPosition();
+        const dir = camera.getPosition().clone().sub(focus).normalize();
+        cameraControls.reset(focus, focus.clone().add(dir.mulScalar(25)));
     }
     timeDiff += dt;
 

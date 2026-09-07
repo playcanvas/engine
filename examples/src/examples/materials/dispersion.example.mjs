@@ -19,8 +19,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { deviceType } from 'examples/context';
 
@@ -28,7 +31,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     model: new Asset('cube', 'container', { url: './assets/models/dispersion-test.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -100,16 +102,14 @@ camera.addComponent('camera', {
 // The color grab pass is needed
 camera.camera.requestSceneColorMap(true);
 
-// Adjust the camera position
-camera.translate(0, 0.3, 1);
-
+// position the camera close to the small model (was orbitCamera distanceMax 0.15)
+camera.setLocalPosition(0, 0.043, 0.144);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 0.15
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        zoomRange: new Vec2(0.01, 0.15),
+        enableFly: false
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);

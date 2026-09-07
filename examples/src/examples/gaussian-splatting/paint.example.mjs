@@ -46,6 +46,7 @@ import {
     WORKBUFFER_UPDATE_ONCE,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -179,7 +180,6 @@ data.set('paintIntensity', 0.5);
 data.set('brushSize', 0.15);
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     biker: new Asset('biker', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
     apartment: new Asset('apartment', 'gsplat', { url: './assets/splats/apartment.sog' })
 };
@@ -268,18 +268,18 @@ camera.setLocalPosition(cameraPos);
 camera.lookAt(focusPos);
 app.root.addChild(camera);
 
-// Add orbit camera script with native mouse input (LMB orbit, MMB pan, wheel zoom)
+// Add camera controls with native mouse input (LMB orbit, MMB pan, wheel zoom)
 camera.addComponent('script');
-const orbitCamera = camera.script.create('orbitCamera', {
-    attributes: {
-        frameOnStart: false,
-        inertiaFactor: 0.07
-    }
-});
-const orbitInput = camera.script.create('orbitCameraInputMouse');
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            enableFly: false
+        }
+    })
+);
 
-// Initialize orbit camera to match current camera position and focus
-orbitCamera.resetAndLookAtPoint(cameraPos, focusPos);
+// Initialize camera controls to match current camera position and focus
+cameraControls.reset(focusPos, cameraPos);
 
 // Paint state
 let isPainting = false;
@@ -370,8 +370,7 @@ app.mouse.on(EVENT_MOUSEDOWN, (e) => {
     if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = true;
         pickerDirty = true;
-        orbitInput.enabled = false;
-        orbitInput.panButtonDown = false; // Cancel pan that orbit-camera started
+        cameraControls.enabled = false;
         paintAt(e.x, e.y);
     }
 });
@@ -383,13 +382,13 @@ app.mouse.on(EVENT_MOUSEMOVE, (e) => {
 app.mouse.on(EVENT_MOUSEUP, (e) => {
     if (e.button === MOUSEBUTTON_RIGHT) {
         isPainting = false;
-        orbitInput.enabled = true;
+        cameraControls.enabled = true;
     }
 });
 
 window.addEventListener('mouseup', () => {
     isPainting = false;
-    orbitInput.enabled = true;
+    cameraControls.enabled = true;
 });
 
 // Cleanup on destroy

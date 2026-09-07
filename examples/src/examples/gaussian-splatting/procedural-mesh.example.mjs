@@ -32,8 +32,11 @@ import {
     TEXTURETYPE_RGBP,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 import { GSplatMesh } from 'playcanvas/scripts/esm/gsplat/gsplat-mesh.mjs';
 import { GSplatBoxShaderEffect } from 'playcanvas/scripts/esm/gsplat/shader-effect-box.mjs';
 
@@ -43,7 +46,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -217,9 +219,7 @@ srcClouds.forEach((srcCloud, srcIndex) => {
 // Shuffle the clouds array for random order (same as shadow-cascades)
 clouds.sort(() => Math.random() - 0.5);
 
-// Find a tree to use as focus point (same as shadow-cascades)
 // @ts-ignore
-const tree = terrain.findOne('name', 'Arbol 2.002');
 
 // Create camera with orbit controls (same setup as shadow-cascades)
 const camera = new Entity('Camera');
@@ -233,16 +233,16 @@ camera.setLocalPosition(-500, 160, 300);
 
 // Add orbit camera script with mouse and touch support
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: tree,
-        distanceMax: 600
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            focusPoint: new Vec3(-4.473, 37.152, 27.631),
+            zoomRange: new Vec2(0.01, 600),
+            enableFly: false
+        }
+    })
+);
 
 // Animate clouds (same as shadow-cascades)
 const cloudSpeed = 0.2;
@@ -254,8 +254,8 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // On the first frame, move camera further away
     if (frameNumber === 0) {
-        // @ts-ignore
-        camera.script.orbitCamera.distance = 470;
+        // match the original orbit-camera framing of the focus tree
+        cameraControls.reset(new Vec3(-4.473, 37.152, 27.631), new Vec3(-401.718, 135.635, 245.979));
     }
 
     // Disable reveal effect when complete
