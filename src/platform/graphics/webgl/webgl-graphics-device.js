@@ -257,15 +257,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
 
-        const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
-        const isMac = platform.browser && navigator.appVersion.indexOf('Mac') !== -1;
 
         // enable temporary texture unit workaround on desktop safari
         this._tempEnableSafariTextureUnitWorkaround = isSafari;
-
-        // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
         canvas.addEventListener('webglcontextrestored', this._contextRestoredHandler, false);
