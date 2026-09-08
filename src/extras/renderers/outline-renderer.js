@@ -319,7 +319,7 @@ class OutlineRenderer {
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(rt.colorBuffer);
         uSrcMultiplier.setValue(0.0);
-        drawQuadWithShader(device, tempRt, shaderExtend);
+        drawQuadWithShader(device, tempRt, shaderExtend, undefined, undefined, 'OutlineExpand');
 
         // vertical extend pass
         _tempFloatArray[0] = 0;
@@ -327,7 +327,7 @@ class OutlineRenderer {
         uOffset.setValue(_tempFloatArray);
         uColorBuffer.setValue(tempRt.colorBuffer);
         uSrcMultiplier.setValue(1.0);
-        drawQuadWithShader(device, rt, shaderExtend);
+        drawQuadWithShader(device, rt, shaderExtend, undefined, undefined, 'OutlineExpand');
     }
 
     createRenderTarget(name, width, height, depth) {

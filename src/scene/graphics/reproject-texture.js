@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { random } from '../../core/math/random.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import {
@@ -497,10 +497,16 @@ function reprojectTexture(source, target, options = {}) {
                 depth: false,
                 origin: RENDERTARGET_ORIGIN_BOTTOM
             });
+            DebugHelper.setName(renderTarget, {
+                none: 'Reproject',
+                phong: 'PrefilterPhong',
+                ggx: 'PrefilterGGX',
+                lambert: 'PrefilterLambert'
+            }[distribution] ?? 'Reproject');
             params[0] = f;
             constantParams.setValue(params);
 
-            drawQuadWithShader(device, renderTarget, shader, options?.rect);
+            drawQuadWithShader(device, renderTarget, shader, options?.rect, undefined, renderTarget.name);
 
             renderTarget.destroy();
         }
