@@ -133,7 +133,7 @@ export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
         viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
     }
 
-    drawQuadWithShader(device, target, shader, viewport);
+    drawQuadWithShader(device, target, shader, viewport, undefined, shader.name);
 }
 
 // SCENE

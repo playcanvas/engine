@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
 import { GlbParser } from '../../../src/framework/parsers/glb-parser.js';
 import { createApp } from '../../app.mjs';
@@ -14,6 +15,7 @@ describe('GlbParser', function () {
     });
 
     afterEach(function () {
+        restore();
         app?.destroy();
         app = null;
         jsdomTeardown();
@@ -29,7 +31,7 @@ describe('GlbParser', function () {
         const data = new TextEncoder().encode(JSON.stringify(gltf));
 
         return new Promise((resolve, reject) => {
-            GlbParser.parse('material.gltf', '', data, app.graphicsDevice, app.assets, {}, (err, result) => {
+            GlbParser.parse('material.gltf', '', data, app.graphicsDevice, app.assets, {}, [], (err, result) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -91,7 +93,7 @@ describe('GlbParser', function () {
 
         try {
             const result = await new Promise((resolve, reject) => {
-                GlbParser.parse('components.gltf', '', data, app.graphicsDevice, app.assets, {}, (err, result) => {
+                GlbParser.parse('components.gltf', '', data, app.graphicsDevice, app.assets, {}, [], (err, result) => {
                     if (err) reject(err);
                     else resolve(result);
                 });
@@ -134,9 +136,12 @@ describe('GlbParser', function () {
          * the glTF default.
          * @param {boolean} [options.material] - False to leave the primitive without a material of its
          * own. Defaults to true.
+         * @param {object} [options.extensions] - Extensions placed on the primitive.
+         * @param {object[]} [options.resourceExtensions] - Resource extensions registered with the
+         * parser.
          * @returns {Promise<object>} The parse result.
          */
-        const parsePrimitive = ({ normals = false, mode, material = true } = {}) => {
+        const parsePrimitive = ({ normals = false, mode, material = true, extensions, resourceExtensions = [] } = {}) => {
             const primitive = {
                 attributes: normals ? { POSITION: 0, NORMAL: 1 } : { POSITION: 0 },
                 indices: 2
@@ -146,6 +151,9 @@ describe('GlbParser', function () {
             }
             if (mode !== undefined) {
                 primitive.mode = mode;
+            }
+            if (extensions) {
+                primitive.extensions = extensions;
             }
 
             const gltf = {
@@ -169,7 +177,7 @@ describe('GlbParser', function () {
             const data = new TextEncoder().encode(JSON.stringify(gltf));
 
             return new Promise((resolve, reject) => {
-                GlbParser.parse('primitive.gltf', '', data, app.graphicsDevice, app.assets, {}, (err, result) => {
+                GlbParser.parse('primitive.gltf', '', data, app.graphicsDevice, app.assets, {}, resourceExtensions, (err, result) => {
                     if (err) reject(err);
                     else resolve(result);
                 });
@@ -212,6 +220,51 @@ describe('GlbParser', function () {
 
             expect(result.materials.length).to.equal(1);
             expect(result.materials[0].flatShading).to.equal(false);
+        });
+
+        it('uses the point mesh fallback when a primitive resource extension is not registered', async function () {
+            const result = await parsePrimitive({
+                mode: MODE_POINTS,
+                extensions: { TEST_points: {} }
+            });
+
+            expect(result.renders[0].meshes).to.have.lengthOf(1);
+            expect(result.testResources).to.be.undefined;
+        });
+
+        it('uses a registered primitive resource extension instead of the point mesh fallback', async function () {
+            const resource = {};
+            const extension = {
+                name: 'TEST_points',
+                resourceName: 'testResources',
+                handlesPrimitive: primitive => !!primitive.extensions?.TEST_points,
+                createResources: () => [[resource]]
+            };
+            const result = await parsePrimitive({
+                mode: MODE_POINTS,
+                extensions: { TEST_points: {} },
+                resourceExtensions: [extension]
+            });
+
+            expect(result.renders[0].meshes).to.be.empty;
+            expect(result.testResources).to.deep.equal([[resource]]);
+        });
+
+        it('asserts when a resource extension overwrites a core parse result member', async function () {
+            const error = stub(console, 'error');
+            const extension = {
+                name: 'TEST_collision',
+                resourceName: 'destroy',
+                handlesPrimitive: () => false,
+                createResources: () => []
+            };
+
+            await parsePrimitive({ resourceExtensions: [extension] });
+
+            expect(error.calledWith(
+                'ASSERT FAILED: ',
+                'GLB resource extension \'TEST_collision\' would overwrite \'destroy\''
+            )).to.equal(true);
         });
 
         it('builds a flat shaded default material for a primitive with no material of its own', async function () {

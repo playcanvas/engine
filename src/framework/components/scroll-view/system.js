@@ -3,6 +3,20 @@ import { ScrollViewComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Vec2 } from '../../../core/math/vec2.js'
+ */
+
+/**
+ * Options of the `scrollview` component accepted by {@link ScrollViewComponentSystem} that differ
+ * from the properties of {@link ScrollViewComponent}. Each replaces the same-named property of the
+ * options that {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} ScrollViewComponentOptionsOverrides
+ * @property {Vec2 | number[]} [mouseWheelSensitivity] - Same as
+ * {@link ScrollViewComponent#mouseWheelSensitivity}, also accepting an `[x, y]` array.
+ * @ignore
  */
 
 // Order matters: scalars/booleans/visibility flags must precede the four entity refs.

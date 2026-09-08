@@ -170,4 +170,11 @@ const createGSplats = (device, gltf, bufferViews) => {
     });
 };
 
-export { createGSplats, hasGSplatExtension };
+const khrGaussianSplatting = {
+    name: extensionName,
+    resourceName: 'gsplats',
+    handlesPrimitive: hasGSplatExtension,
+    createResources: createGSplats
+};
+
+export { khrGaussianSplatting };

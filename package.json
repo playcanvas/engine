@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "2.23.0-beta.1",
+  "version": "2.23.0-beta.4",
   "packageManager": "npm@11.18.0",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
@@ -148,7 +148,7 @@
     "test": "mocha --ignore \"test/assets/scripts/*.js\" --ignore \"test/bundles/**\" --recursive --require test/fixtures.mjs --timeout 5000",
     "test:build": "mocha --recursive \"test/bundles/**/*.test.mjs\" --timeout 30000",
     "test:coverage": "c8 npm test",
-    "test:types": "tsc --pretty false build/playcanvas.d.ts"
+    "test:types": "tsc --pretty false build/playcanvas.d.ts && tsc -p test/type-tests --pretty false"
   },
   "engines": {
     "node": ">=18.3.0"

@@ -198,6 +198,36 @@ describe('Vec3', function () {
 
     });
 
+    describe('#distanceSq', function () {
+
+        it('calculates the squared distance between two vectors', function () {
+            const v1 = new Vec3();
+            const v2 = new Vec3(10, 0, 0);
+            const distanceSq = v1.distanceSq(v2);
+            expect(distanceSq).to.equal(100);
+        });
+
+        it('squares the difference of every component', function () {
+            const v1 = new Vec3(1, 2, 3);
+            const v2 = new Vec3(4, 6, 8);
+            const distanceSq = v1.distanceSq(v2);
+            expect(distanceSq).to.equal(50);
+        });
+
+        it('returns the same squared distance in either direction', function () {
+            const v1 = new Vec3(1, 2, 3);
+            const v2 = new Vec3(4, 6, 8);
+            expect(v1.distanceSq(v2)).to.equal(v2.distanceSq(v1));
+        });
+
+        it('returns zero for the squared distance between the same vector', function () {
+            const v1 = new Vec3(10, 0, 0);
+            const distanceSq = v1.distanceSq(v1);
+            expect(distanceSq).to.equal(0);
+        });
+
+    });
+
     describe('#div', function () {
 
         it('divides a vector by another in place', function () {

@@ -8,6 +8,7 @@ import { Vec4 } from '../../core/math/vec4.js';
 /**
  * @import { AppBase } from '../app-base.js'
  * @import { Component } from './component.js'
+ * @import { ComponentOptionsOverrides } from './registry.js'
  * @import { Entity } from '../entity.js'
  */
 
@@ -28,7 +29,9 @@ class ComponentSystem extends EventHandler {
      * A list of option names accepted by {@link ComponentSystem#addComponent} that are not settable
      * properties of the component itself - for example keys the system consumes to build derived
      * state (such as `aabbCenter`) or deprecated aliases. Used only by debug-build validation to
-     * avoid false-positive warnings; subclasses that accept such options should override this.
+     * avoid false-positive warnings; subclasses that accept such options should override this and
+     * declare the options in their `...OptionsOverrides` typedef (see
+     * {@link ComponentOptionsOverrides}) so that the typed {@link Entity#addComponent} accepts them.
      *
      * @type {string[]}
      * @ignore

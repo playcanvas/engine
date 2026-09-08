@@ -189,6 +189,9 @@ class Application extends AppBase {
         if (platform.browser && !!navigator.xr) {
             options.graphicsDeviceOptions.xrCompatible = true;
         }
+        // note this defaults alpha to false, unlike GraphicsDevice and createGraphicsDevice,
+        // which default it to true. Kept for backwards compatibility - changing it would make
+        // existing canvases composite with the page.
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
         return new WebglGraphicsDevice(canvas, options.graphicsDeviceOptions);

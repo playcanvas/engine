@@ -258,15 +258,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
 
-        const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
-        const isMac = platform.browser && navigator.appVersion.indexOf('Mac') !== -1;
-
-        // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = isSafari;
-
-        // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
         canvas.addEventListener('webglcontextrestored', this._contextRestoredHandler, false);
@@ -473,6 +465,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.targetToSlot[gl.TEXTURE_2D] = 0;
         this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
         this.targetToSlot[gl.TEXTURE_3D] = 2;
+        this.targetToSlot[gl.TEXTURE_2D_ARRAY] = 3;
 
         // Define the uniform commit functions
         let scopeX, scopeY, scopeZ, scopeW;
@@ -1111,7 +1104,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initTextureUnits(count = 16) {
         this.textureUnits = [];
         for (let i = 0; i < count; i++) {
-            this.textureUnits.push([null, null, null]);
+            this.textureUnits.push([null, null, null, null]);
         }
     }
 
@@ -1643,15 +1636,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, 'UPDATE-BEGIN');
 
         this.boundVao = null;
-
-        // clear texture units once a frame on desktop safari
-        if (this._tempEnableSafariTextureUnitWorkaround) {
-            for (let unit = 0; unit < this.textureUnits.length; ++unit) {
-                for (let slot = 0; slot < 3; ++slot) {
-                    this.textureUnits[unit][slot] = null;
-                }
-            }
-        }
 
         // Set the render target
         const target = this.renderTarget ?? this.backBuffer;

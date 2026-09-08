@@ -4,10 +4,14 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
 import { NullGraphicsDevice } from './null/null-graphics-device.js';
 
 /**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
+/**
  * Creates a graphics device.
  *
  * @param {HTMLCanvasElement} canvas - The canvas element.
- * @param {object} options - Graphics device options.
+ * @param {object} [options] - Graphics device options.
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
  * order in which the devices are attempted to get created. Defaults to an empty array. If the
  * specified array does not contain {@link DEVICETYPE_WEBGL2}, it is internally added to its end.
@@ -16,6 +20,26 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * default spec limits, useful for testing on constrained devices.
  * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
  * anti-aliasing if possible. Defaults to true.
+ * @param {boolean} [options.alpha] - Boolean that indicates whether the canvas composites with
+ * the page behind it. Defaults to true. This is a compositing option rather than a memory one -
+ * neither backend has an alpha-less backbuffer format that saves any space. The backends
+ * implement it differently:
+ *
+ * - {@link DEVICETYPE_WEBGL2}: forwarded as the WebGL `alpha` context attribute, so the browser
+ * decides whether the drawing buffer actually has an alpha channel. When it does not, the device's
+ * `backBufferFormat` becomes {@link PIXELFORMAT_RGB8} rather than {@link PIXELFORMAT_RGBA8}, which
+ * also changes the format of the scene color grab pass.
+ * - {@link DEVICETYPE_WEBGPU}: selects the canvas alpha mode ('premultiplied' when true, 'opaque'
+ * when false). The backbuffer always has an alpha channel, so `backBufferFormat` is unaffected and
+ * 'opaque' simply tells the compositor to ignore the alpha that is already there.
+ *
+ * Compositing is premultiplied on both backends, so a transparent canvas needs a camera
+ * {@link CameraComponent#clearColor} with both its alpha and its RGB set to zero. A non-zero color
+ * with zero alpha is not valid premultiplied data and composites inconsistently across browsers.
+ *
+ * Note that this default applies to this function. The legacy {@link Application} constructor
+ * instead defaults `alpha` to false.
+ *
  * @param {string} [options.displayFormat] - The display format of the canvas. Defaults to
  * {@link DISPLAYFORMAT_LDR}. Can be:
  *
@@ -58,7 +82,7 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * transient attachment support. Incompatible with a scene depth grab pass (`sceneDepthMap`), a
  * depth prepass, or any depth resolve, as the depth cannot be sampled or copied out. Defaults to
  * false.
- * @returns {Promise} - Promise object representing the created graphics device.
+ * @returns {Promise<GraphicsDevice>} - Promise object representing the created graphics device.
  * @category Graphics
  */
 function createGraphicsDevice(canvas, options = {}) {

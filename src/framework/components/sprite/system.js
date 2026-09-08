@@ -11,6 +11,25 @@ import { SpriteComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { SpriteAnimationClip } from './sprite-animation-clip.js'
+ */
+
+/**
+ * Options of the `sprite` component accepted by {@link SpriteComponentSystem} that differ from the
+ * properties of {@link SpriteComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} SpriteComponentOptionsOverrides
+ * @property {number | null} [batchGroupId] - Same as {@link SpriteComponent#batchGroupId}. `null`
+ * selects no batch group.
+ * @property {{ [name: string]: SpriteAnimationClip | { name?: string, fps?: number, loop?: boolean, spriteAsset?: number } }} [clips] -
+ * Same as {@link SpriteComponent#clips}, also accepting the plain clip data of
+ * {@link SpriteComponent#addClip}.
+ * @property {Color | number[]} [color] - Same as {@link SpriteComponent#color}, also accepting an
+ * `[r, g, b]` array.
+ * @ignore
  */
 
 /**

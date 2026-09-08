@@ -11,6 +11,65 @@ import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { Mesh } from '../../../scene/mesh.js'
+ */
+
+/**
+ * Options of the `particlesystem` component accepted by {@link ParticleSystemComponentSystem} that
+ * differ from the properties of {@link ParticleSystemComponent}. Each replaces the same-named
+ * property of the options that {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} ParticleSystemComponentOptionsOverrides
+ * @property {Curve | { type?: number, keys: number[] }} [alphaGraph] - Same as
+ * {@link ParticleSystemComponent#alphaGraph}, also accepting plain `{ type, keys }` curve data.
+ * @property {Curve | { type?: number, keys: number[] }} [alphaGraph2] - Same as
+ * {@link ParticleSystemComponent#alphaGraph2}, also accepting plain `{ type, keys }` curve data.
+ * @property {CurveSet | { type?: number, keys: number[][] }} [colorGraph] - Same as
+ * {@link ParticleSystemComponent#colorGraph}, also accepting plain `{ type, keys }` curve set data.
+ * @property {CurveSet | { type?: number, keys: number[][] }} [colorGraph2] - Same as
+ * {@link ParticleSystemComponent#colorGraph2}, also accepting plain `{ type, keys }` curve set
+ * data.
+ * @property {Vec3 | number[]} [emitterExtents] - Same as
+ * {@link ParticleSystemComponent#emitterExtents}, also accepting an `[x, y, z]` array.
+ * @property {Vec3 | number[]} [emitterExtentsInner] - Same as
+ * {@link ParticleSystemComponent#emitterExtentsInner}, also accepting an `[x, y, z]` array.
+ * @property {CurveSet | { type?: number, keys: number[][] }} [localVelocityGraph] - Same as
+ * {@link ParticleSystemComponent#localVelocityGraph}, also accepting plain `{ type, keys }` curve
+ * set data.
+ * @property {CurveSet | { type?: number, keys: number[][] }} [localVelocityGraph2] - Same as
+ * {@link ParticleSystemComponent#localVelocityGraph2}, also accepting plain `{ type, keys }` curve
+ * set data.
+ * @property {Mesh | Asset | number} [mesh] - Same as {@link ParticleSystemComponent#mesh}. An
+ * {@link Asset} or asset id is assigned to {@link ParticleSystemComponent#meshAsset} instead.
+ * @property {Vec3 | number[]} [particleNormal] - Same as
+ * {@link ParticleSystemComponent#particleNormal}, also accepting an `[x, y, z]` array.
+ * @property {Curve | { type?: number, keys: number[] }} [radialSpeedGraph] - Same as
+ * {@link ParticleSystemComponent#radialSpeedGraph}, also accepting plain `{ type, keys }` curve
+ * data.
+ * @property {Curve | { type?: number, keys: number[] }} [radialSpeedGraph2] - Same as
+ * {@link ParticleSystemComponent#radialSpeedGraph2}, also accepting plain `{ type, keys }` curve
+ * data.
+ * @property {Curve | { type?: number, keys: number[] }} [rotationSpeedGraph] - Same as
+ * {@link ParticleSystemComponent#rotationSpeedGraph}, also accepting plain `{ type, keys }` curve
+ * data.
+ * @property {Curve | { type?: number, keys: number[] }} [rotationSpeedGraph2] - Same as
+ * {@link ParticleSystemComponent#rotationSpeedGraph2}, also accepting plain `{ type, keys }` curve
+ * data.
+ * @property {Curve | { type?: number, keys: number[] }} [scaleGraph] - Same as
+ * {@link ParticleSystemComponent#scaleGraph}, also accepting plain `{ type, keys }` curve data.
+ * @property {Curve | { type?: number, keys: number[] }} [scaleGraph2] - Same as
+ * {@link ParticleSystemComponent#scaleGraph2}, also accepting plain `{ type, keys }` curve data.
+ * @property {CurveSet | { type?: number, keys: number[][] }} [velocityGraph] - Same as
+ * {@link ParticleSystemComponent#velocityGraph}, also accepting plain `{ type, keys }` curve set
+ * data.
+ * @property {CurveSet | { type?: number, keys: number[][] }} [velocityGraph2] - Same as
+ * {@link ParticleSystemComponent#velocityGraph2}, also accepting plain `{ type, keys }` curve set
+ * data.
+ * @property {Vec3 | number[]} [wrapBounds] - Same as {@link ParticleSystemComponent#wrapBounds},
+ * also accepting an `[x, y, z]` array.
+ * @ignore
  */
 
 const _propertyTypes = {

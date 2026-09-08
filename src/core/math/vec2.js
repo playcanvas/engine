@@ -211,6 +211,23 @@ class Vec2 {
     }
 
     /**
+     * Returns the squared distance between the two specified 2-dimensional vectors.
+     *
+     * @param {Vec2} rhs - The second 2-dimensional vector to test.
+     * @returns {number} The squared distance between the two vectors.
+     * @example
+     * const v1 = new Vec2(5, 10);
+     * const v2 = new Vec2(10, 20);
+     * const d = v1.distanceSq(v2);
+     * console.log("The squared distance between v1 and v2 is: " + d);
+     */
+    distanceSq(rhs) {
+        const x = this.x - rhs.x;
+        const y = this.y - rhs.y;
+        return x * x + y * y;
+    }
+
+    /**
      * Divides a 2-dimensional vector by another in place.
      *
      * @param {Vec2} rhs - The vector to divide the specified vector by.

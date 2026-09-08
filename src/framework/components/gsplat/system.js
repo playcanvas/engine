@@ -2,12 +2,15 @@ import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
+import { GSplatParams } from '../../../scene/gsplat-unified/gsplat-params.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
+import { khrGaussianSplatting } from '../../parsers/glb/extensions/khr-gaussian-splatting.js';
+import { registerGlbResourceExtension, unregisterGlbResourceExtension } from '../../parsers/glb-resource-extension.js';
 
 // Register warning for removed customization chunk
 Debug.call(() => {
@@ -19,8 +22,24 @@ Debug.call(() => {
 /**
  * @import { AppBase } from '../../app-base.js'
  * @import { Camera } from '../../../scene/camera.js'
+ * @import { Entity } from '../../entity.js'
  * @import { Layer } from '../../../scene/layer.js'
+ * @import { ResourceHandler } from '../../handlers/handler.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
+ */
+
+/**
+ * Options of the `gsplat` component accepted by {@link GSplatComponentSystem} that differ from the
+ * properties of {@link GSplatComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} GSplatComponentOptionsOverrides
+ * @property {number[]} [aabbCenter] - Center `[x, y, z]` of a custom bounding box; with
+ * `aabbHalfExtents`, sets {@link GSplatComponent#customAabb}.
+ * @property {number[]} [aabbHalfExtents] - Half-extents `[x, y, z]` of a custom bounding box; with
+ * `aabbCenter`, sets {@link GSplatComponent#customAabb}.
+ * @ignore
  */
 
 // order matters here
@@ -42,6 +61,14 @@ const _properties = [
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {
+    /**
+     * Container handler this system registered its glTF extension with.
+     *
+     * @type {ResourceHandler|null}
+     * @private
+     */
+    _containerHandler = null;
+
     /**
      * Fired when a GSplat material is created for a camera and layer combination. Materials are
      * created during the first frame update when the GSplat is rendered. The handler is passed
@@ -134,7 +161,18 @@ class GSplatComponentSystem extends ComponentSystem {
         // consumed to build customAabb, not settable component properties
         this.extraDataProperties = ['aabbCenter', 'aabbHalfExtents'];
 
-        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
+        // Resource handlers are created before component systems, so register glTF splat support
+        // here to keep its resource implementation tree-shakeable when this system is omitted.
+        const containerHandler = app.loader.getHandler('container');
+        if (containerHandler && registerGlbResourceExtension(containerHandler, khrGaussianSplatting)) {
+            this._containerHandler = containerHandler;
+        }
+
+        // Own the scene-wide parameters here so apps that omit this system also tree-shake the
+        // GSplat formats, varyings and shader chunks imported by GSplatParams.
+        const gsplatParams = new GSplatParams(app.graphicsDevice);
+        app.scene.setGsplatParams(gsplatParams);
+        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this, gsplatParams);
 
         // register gsplat shader chunks
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
@@ -239,6 +277,13 @@ class GSplatComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
         this.app.off('framerender', this.onFrameRender, this);
+        this.app.renderer.gsplatDirector?.destroy();
+        this.app.renderer.gsplatDirector = null;
+        this.app.scene.setGsplatParams(null);
+        if (this._containerHandler) {
+            unregisterGlbResourceExtension(this._containerHandler, khrGaussianSplatting.name);
+            this._containerHandler = null;
+        }
     }
 }
 

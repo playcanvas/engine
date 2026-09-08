@@ -25,6 +25,7 @@ describe('build / treeshake', function () {
         bundle: true,
         minify: true,
         write: false,
+        metafile: true,
         format,
         target: 'es2020',
         // the engine's worker sources import these for node support; real app bundlers must
@@ -38,6 +39,41 @@ describe('build / treeshake', function () {
         const bytes = result.outputFiles[0].contents.length;
         expect(bytes, 'bundle size').to.be.greaterThan(500);
         expect(bytes, 'bundle size').to.be.lessThan(10240);
+    });
+
+    it('AppBase with container loading does not retain the gsplat implementation', async function () {
+        const result = await bundle(`
+            import { AppBase, ContainerHandler } from "playcanvas";
+            globalThis.__appBaseImports = { AppBase, ContainerHandler };
+        `);
+
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter(path => path.includes('/scene/gsplat/') ||
+            path.includes('/scene/gsplat-unified/') ||
+            path.includes('/chunks/gsplat/') ||
+            path.includes('/gsplat-chunks-') ||
+            path.endsWith('/khr-gaussian-splatting.js'));
+
+        expect(retained, 'retained gsplat implementation modules').to.deep.equal([]);
+    });
+
+    it('ContainerHandler does not retain the gsplat resource implementation', async function () {
+        const result = await bundle(`
+            import { ContainerHandler } from "playcanvas";
+            globalThis.__containerHandler = ContainerHandler;
+        `);
+
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter((path) => {
+            return path.includes('/scene/gsplat/') ||
+                path.includes('/scene/gsplat-unified/') ||
+                path.includes('/chunks/gsplat/') ||
+                path.endsWith('/khr-gaussian-splatting.js');
+        });
+
+        expect(retained, 'retained gsplat resource modules').to.deep.equal([]);
     });
 
     it('deprecated shims survive tree-shaking and still apply', async function () {

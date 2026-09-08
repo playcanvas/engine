@@ -32,7 +32,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_DEBUG_LOD,
     GSPLAT_DEBUG_NONE,
-    GSPLAT_LODMODE_ERROR,
+    GSPLAT_LODMODE_DISTANCE,
     GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSplatComponentSystem,
@@ -161,10 +161,11 @@ app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
 app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
 
-// How the splat budget picks LOD levels: 'error' spends it where the bundle's per-node error
-// metadata says detail is worth most; 'distance' orders detail by camera distance alone and
-// ignores that metadata. Error is the default and the reason the bundle carries the metrics.
-data.set('lodMode', GSPLAT_LODMODE_ERROR);
+// How the splat budget picks LOD levels: 'distance' (the default) orders detail by camera
+// distance alone and ignores error metadata; 'error' spends it where the bundle's per-node
+// error metadata says detail is worth most - that metadata is why the bundle carries the
+// metrics, and it lifts sparse regions that distance leaves coarse.
+data.set('lodMode', GSPLAT_LODMODE_DISTANCE);
 const applyLodMode = () => {
     app.scene.gsplat.lodMode = data.get('lodMode');
 };
