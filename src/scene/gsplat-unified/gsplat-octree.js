@@ -180,7 +180,10 @@ class GSplatOctree {
                 if (lodData) {
                     lods.push({
                         file: this.files[lodData.file].url || '',
-                        fileIndex: lodData.file,
+                        // A level listed with no splats has nothing to load: give it no file, the
+                        // same as a level the manifest omits, so nothing downstream places or
+                        // fetches it (see GSplatLodTable's empty level).
+                        fileIndex: (lodData.count || 0) > 0 ? lodData.file : -1,
                         offset: lodData.offset || 0,
                         count: lodData.count || 0,
                         error: 0
@@ -348,7 +351,8 @@ class GSplatOctree {
      *
      * @param {number} rangeMin - Finest allowed LOD index.
      * @param {number} rangeMax - Coarsest allowed LOD index.
-     * @param {string} [lodMode] - GSPLAT_LODMODE_ERROR (default) or GSPLAT_LODMODE_DISTANCE.
+     * @param {string} [lodMode] - GSPLAT_LODMODE_ERROR or GSPLAT_LODMODE_DISTANCE; callers pass the
+     * scene's GSplatParams#lodMode. GSPLAT_LODMODE_ERROR when omitted.
      * @returns {GSplatLodTable} The selection table, with its reference count incremented.
      */
     acquireLodTable(rangeMin, rangeMax, lodMode = GSPLAT_LODMODE_ERROR) {
