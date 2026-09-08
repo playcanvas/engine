@@ -18,7 +18,7 @@ class GlbAnimationParser {
             if (err) {
                 callback(`Error loading animation resource: ${original} [${err}]`);
             } else {
-                GlbParser.parse('filename.glb', '', response, this.handler.device, this.handler.assets, asset?.options ?? {}, (err, parseResult) => {
+                GlbParser.parse('filename.glb', '', response, this.handler.device, this.handler.assets, asset?.options ?? {}, [], (err, parseResult) => {
                     if (err) {
                         callback(err);
                     } else {

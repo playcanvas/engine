@@ -46,7 +46,6 @@ import { ABSOLUTE_URL } from '../asset/constants.js';
 
 import { createInstancing } from './glb/extensions/ext-mesh-gpu-instancing.js';
 import { createDracoMesh } from './glb/extensions/khr-draco-mesh-compression.js';
-import { createGSplats, hasGSplatExtension } from './glb/extensions/khr-gaussian-splatting.js';
 import { createLights } from './glb/extensions/khr-lights-punctual.js';
 import { createVariants, registerMeshVariants } from './glb/extensions/khr-materials-variants.js';
 import { getTextureSource } from './glb/extensions/texture-source.js';
@@ -55,7 +54,9 @@ import { extractTextureTransform } from './glb/extensions/khr-texture-transform.
 import { GltfAccessor, getPrimitiveType, isTriangleMode, gltfToEngineSemanticMap } from './glb/gltf-accessor.js';
 
 /**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Material } from '../../scene/materials/material.js'
+ * @import { GlbResourceExtension } from './glb-resource-extension.js'
  */
 
 // resources loaded from GLB file that the parser returns
@@ -414,13 +415,14 @@ const createSkin = (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) =
     return skin;
 };
 
-const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, flatShadedMeshes, assetOptions, promises) => {
+const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, flatShadedMeshes, assetOptions, resourceExtensions, promises) => {
     const meshes = [];
+    const extensions = /** @type {GlbResourceExtension[]} */ (resourceExtensions);
 
     gltfMesh.primitives.forEach((primitive) => {
 
-        if (hasGSplatExtension(primitive)) {
-            // gaussian splat primitives are handled by createGSplats instead
+        if (extensions.some(extension => extension.handlesPrimitive(primitive))) {
+            // the registered extension creates its own resource instead of a mesh
             return;
         }
 
@@ -1003,7 +1005,7 @@ const createSkins = (device, gltf, nodes, bufferViews) => {
     });
 };
 
-const createMeshes = (device, gltf, bufferViews, options) => {
+const createMeshes = (device, gltf, bufferViews, options, resourceExtensions) => {
     // dictionary of vertex buffers to avoid duplicates
     const vertexBufferDict = {};
     const meshVariants = {};
@@ -1013,7 +1015,7 @@ const createMeshes = (device, gltf, bufferViews, options) => {
 
     const valid = (!options.skipMeshes && gltf?.meshes?.length && gltf?.accessors?.length && gltf?.bufferViews?.length);
     const meshes = valid ? gltf.meshes.map((gltfMesh) => {
-        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, flatShadedMeshes, options, promises);
+        return createMesh(device, gltfMesh, gltf.accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, flatShadedMeshes, options, resourceExtensions, promises);
     }) : [];
 
     return {
@@ -1235,7 +1237,7 @@ const linkSkins = (gltf, renders, skins) => {
 };
 
 // create engine resources from the downloaded GLB data
-const createResources = async (device, gltf, bufferViews, textures, options, app) => {
+const createResources = async (device, gltf, bufferViews, textures, options, app, resourceExtensions) => {
     const preprocess = options?.global?.preprocess;
     const postprocess = options?.global?.postprocess;
 
@@ -1262,8 +1264,7 @@ const createResources = async (device, gltf, bufferViews, textures, options, app
 
     // buffer data must have finished loading in order to create meshes and animations
     const bufferViewData = await Promise.all(bufferViews);
-    const { meshes, meshVariants, meshDefaultMaterials, flatShadedMeshes, promises } = createMeshes(device, gltf, bufferViewData, options);
-    const gsplats = options.skipMeshes ? [] : createGSplats(device, gltf, bufferViewData);
+    const { meshes, meshVariants, meshDefaultMaterials, flatShadedMeshes, promises } = createMeshes(device, gltf, bufferViewData, options, resourceExtensions);
     const animations = createAnimations(gltf, nodes, bufferViewData, options);
     createInstancing(device, gltf, nodeInstancingMap, bufferViewData);
 
@@ -1299,11 +1300,16 @@ const createResources = async (device, gltf, bufferViews, textures, options, app
     result.meshVariants = meshVariants;
     result.meshDefaultMaterials = meshDefaultMaterials;
     result.renders = renders;
-    result.gsplats = gsplats;
     result.skins = skins;
     result.lights = lights;
     result.cameras = cameras;
     result.nodeInstancingMap = nodeInstancingMap;
+
+    /** @type {GlbResourceExtension[]} */ (resourceExtensions).forEach((extension) => {
+        Debug.assert(!(extension.resourceName in result) || result[extension.resourceName] === undefined,
+            `GLB resource extension '${extension.name}' would overwrite '${extension.resourceName}'`);
+        result[extension.resourceName] = options.skipMeshes ? [] : extension.createResources(device, gltf, bufferViewData);
+    });
 
     if (postprocess) {
         postprocess(gltf, result);
@@ -1826,7 +1832,7 @@ const createBufferViews = (gltf, buffers, options) => {
 
 class GlbParser {
     // parse the gltf or glb data asynchronously, loading external resources
-    static parse(filename, urlBase, data, device, registry, options, callback) {
+    static parse(filename, urlBase, data, device, registry, options, resourceExtensions, callback) {
         // parse the data
         parseChunk(filename, data, (err, chunks) => {
             if (err) {
@@ -1846,7 +1852,7 @@ class GlbParser {
                 const images = createImages(gltf, bufferViews, urlBase, registry, options);
                 const textures = createTextures(gltf, images, options);
 
-                createResources(device, gltf, bufferViews, textures, options, registry.loader._app)
+                createResources(device, gltf, bufferViews, textures, options, registry.loader._app, resourceExtensions)
                 .then(result => callback(null, result))
                 .catch(err => callback(err));
             });

@@ -8,6 +8,8 @@ import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsp
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
+import { khrGaussianSplatting } from '../../parsers/glb/extensions/khr-gaussian-splatting.js';
+import { registerGlbResourceExtension, unregisterGlbResourceExtension } from '../../parsers/glb-resource-extension.js';
 
 // Register warning for removed customization chunk
 Debug.call(() => {
@@ -21,6 +23,7 @@ Debug.call(() => {
  * @import { Camera } from '../../../scene/camera.js'
  * @import { Entity } from '../../entity.js'
  * @import { Layer } from '../../../scene/layer.js'
+ * @import { ResourceHandler } from '../../handlers/handler.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
 
@@ -57,6 +60,14 @@ const _properties = [
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {
+    /**
+     * Container handler this system registered its glTF extension with.
+     *
+     * @type {ResourceHandler|null}
+     * @private
+     */
+    _containerHandler = null;
+
     /**
      * Fired when a GSplat material is created for a camera and layer combination. Materials are
      * created during the first frame update when the GSplat is rendered. The handler is passed
@@ -148,6 +159,13 @@ class GSplatComponentSystem extends ComponentSystem {
 
         // consumed to build customAabb, not settable component properties
         this.extraDataProperties = ['aabbCenter', 'aabbHalfExtents'];
+
+        // Resource handlers are created before component systems, so register glTF splat support
+        // here to keep its resource implementation tree-shakeable when this system is omitted.
+        const containerHandler = app.loader.getHandler('container');
+        if (containerHandler && registerGlbResourceExtension(containerHandler, khrGaussianSplatting)) {
+            this._containerHandler = containerHandler;
+        }
 
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
@@ -254,6 +272,10 @@ class GSplatComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
         this.app.off('framerender', this.onFrameRender, this);
+        if (this._containerHandler) {
+            unregisterGlbResourceExtension(this._containerHandler, khrGaussianSplatting.name);
+            this._containerHandler = null;
+        }
     }
 }
 
