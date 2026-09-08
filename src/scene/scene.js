@@ -9,7 +9,6 @@ import { Mat4 } from '../core/math/mat4.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 import { BAKE_COLORDIR, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
-import { GSplatParams } from './gsplat-unified/gsplat-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
@@ -22,6 +21,7 @@ import { getDefaultMaterial } from './materials/default-material.js';
  * @import { LayerComposition } from './composition/layer-composition.js'
  * @import { Layer } from './layer.js'
  * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { GSplatParams } from './gsplat-unified/gsplat-params.js'
  */
 
 /**
@@ -332,8 +332,12 @@ class Scene extends EventHandler {
          */
         this.gsplatCentersEnabled = true;
 
-        // gsplat params
-        this._gsplatParams = new GSplatParams(this.device);
+        // gsplat params are initialized by GSplatComponentSystem when it is included in the app
+        /**
+         * @type {GSplatParams|null}
+         * @ignore
+         */
+        this._gsplatParams = null;
 
         // skybox
         this._sky = new Sky(this);
@@ -526,7 +530,28 @@ class Scene extends EventHandler {
      * @type {GSplatParams}
      */
     get gsplat() {
+        Debug.assert(this._gsplatParams, 'Scene#gsplat requires GSplatComponentSystem to be included in the app.');
+        return /** @type {GSplatParams} */ (this._gsplatParams);
+    }
+
+    /**
+     * Gets the GSplat parameters, or null when GSplatComponentSystem is not included in the app.
+     *
+     * @returns {GSplatParams|null} The GSplat parameters.
+     * @ignore
+     */
+    getGsplatParams() {
         return this._gsplatParams;
+    }
+
+    /**
+     * Sets the GSplat parameters owned by GSplatComponentSystem.
+     *
+     * @param {GSplatParams|null} value - The GSplat parameters.
+     * @ignore
+     */
+    setGsplatParams(value) {
+        this._gsplatParams = value;
     }
 
     /**
@@ -821,7 +846,7 @@ class Scene extends EventHandler {
         this.clusteredLightingEnabled = render.clusteredLightingEnabled ?? false;
         this.lighting.applySettings(render);
 
-        this.gsplat.applySettings(render);
+        this.getGsplatParams()?.applySettings(render);
 
         // bake settings
         [
