@@ -224,7 +224,7 @@ export function Controls({ observer }) {
                         type='string'
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'lodMode' }}
-                        value={observer.get('lodMode') || 'error'}
+                        value={observer.get('lodMode') || 'distance'}
                         options={[
                             { v: 'error', t: 'Error' },
                             { v: 'distance', t: 'Distance' }
