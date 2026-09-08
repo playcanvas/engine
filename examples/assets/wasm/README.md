@@ -7,9 +7,9 @@ ammo.js
 Direct port of the Bullet physics engine to JavaScript using Emscripten.
 https://github.com/kripken/ammo.js
 
-The shipped build adds the btScaledBvhTriangleMeshShape binding from
-https://github.com/kripken/ammo.js/pull/448 (branch willeastcott/ammo.js@fa7502f, built with
-emsdk 3.1.35 and CLOSURE=1). Mesh colliders need it to follow entity scale.
+The shipped build is kripken/ammo.js commit 7dec46e (PR #448, merged 2026-09-08), built with
+emsdk 3.1.35 and CLOSURE=1. It adds the btScaledBvhTriangleMeshShape binding that mesh
+colliders need to follow entity scale.
 
 
 basis.js
