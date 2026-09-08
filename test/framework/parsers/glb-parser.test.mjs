@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
 import { GlbParser } from '../../../src/framework/parsers/glb-parser.js';
 import { createApp } from '../../app.mjs';
@@ -14,6 +15,7 @@ describe('GlbParser', function () {
     });
 
     afterEach(function () {
+        restore();
         app?.destroy();
         app = null;
         jsdomTeardown();
@@ -246,6 +248,23 @@ describe('GlbParser', function () {
 
             expect(result.renders[0].meshes).to.be.empty;
             expect(result.testResources).to.deep.equal([[resource]]);
+        });
+
+        it('asserts when a resource extension overwrites a core parse result', async function () {
+            const error = stub(console, 'error');
+            const extension = {
+                name: 'TEST_collision',
+                resourceName: 'renders',
+                handlesPrimitive: () => false,
+                createResources: () => []
+            };
+
+            await parsePrimitive({ resourceExtensions: [extension] });
+
+            expect(error.calledWith(
+                'ASSERT FAILED: ',
+                'GLB resource extension \'TEST_collision\' would overwrite \'renders\''
+            )).to.equal(true);
         });
 
         it('builds a flat shaded default material for a primitive with no material of its own', async function () {

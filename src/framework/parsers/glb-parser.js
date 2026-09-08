@@ -56,19 +56,7 @@ import { GltfAccessor, getPrimitiveType, isTriangleMode, gltfToEngineSemanticMap
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { Material } from '../../scene/materials/material.js'
- */
-
-/**
- * An optional glTF extension which replaces normal mesh creation for primitives it handles and
- * creates an aligned resource collection on the parse result.
- *
- * @typedef {object} GlbResourceExtension
- * @property {string} name - The glTF extension name.
- * @property {string} resourceName - Name of the property populated on {@link GlbResources}.
- * @property {(primitive: object) => boolean} handlesPrimitive - Returns true when the extension
- * handles the primitive instead of the normal mesh path.
- * @property {(device: GraphicsDevice, gltf: object, bufferViews: Uint8Array[]) => *} createResources -
- * Creates resources for all matching primitives.
+ * @import { GlbResourceExtension } from './glb-resource-extension.js'
  */
 
 // resources loaded from GLB file that the parser returns
@@ -429,10 +417,11 @@ const createSkin = (device, gltfSkin, accessors, bufferViews, nodes, glbSkins) =
 
 const createMesh = (device, gltfMesh, accessors, bufferViews, vertexBufferDict, meshVariants, meshDefaultMaterials, flatShadedMeshes, assetOptions, resourceExtensions, promises) => {
     const meshes = [];
+    const extensions = /** @type {GlbResourceExtension[]} */ (resourceExtensions);
 
     gltfMesh.primitives.forEach((primitive) => {
 
-        if (resourceExtensions.some(extension => extension.handlesPrimitive(primitive))) {
+        if (extensions.some(extension => extension.handlesPrimitive(primitive))) {
             // the registered extension creates its own resource instead of a mesh
             return;
         }
@@ -1316,7 +1305,9 @@ const createResources = async (device, gltf, bufferViews, textures, options, app
     result.cameras = cameras;
     result.nodeInstancingMap = nodeInstancingMap;
 
-    resourceExtensions.forEach((extension) => {
+    /** @type {GlbResourceExtension[]} */ (resourceExtensions).forEach((extension) => {
+        Debug.assert(!Object.hasOwn(result, extension.resourceName) || result[extension.resourceName] === undefined,
+            `GLB resource extension '${extension.name}' would overwrite '${extension.resourceName}'`);
         result[extension.resourceName] = options.skipMeshes ? [] : extension.createResources(device, gltf, bufferViewData);
     });
 

@@ -9,6 +9,7 @@ import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsp
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
 import { khrGaussianSplatting } from '../../parsers/glb/extensions/khr-gaussian-splatting.js';
+import { registerGlbResourceExtension, unregisterGlbResourceExtension } from '../../parsers/glb-resource-extension.js';
 
 // Register warning for removed customization chunk
 Debug.call(() => {
@@ -21,8 +22,8 @@ Debug.call(() => {
  * @import { AppBase } from '../../app-base.js'
  * @import { Camera } from '../../../scene/camera.js'
  * @import { Entity } from '../../entity.js'
- * @import { GlbContainerParser } from '../../parsers/glb-container-parser.js'
  * @import { Layer } from '../../../scene/layer.js'
+ * @import { ResourceHandler } from '../../handlers/handler.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
 
@@ -60,12 +61,12 @@ const _properties = [
  */
 class GSplatComponentSystem extends ComponentSystem {
     /**
-     * GLB container parsers this system registered its glTF extension with.
+     * Container handler this system registered its glTF extension with.
      *
-     * @type {GlbContainerParser[]}
+     * @type {ResourceHandler|null}
      * @private
      */
-    _glbContainerParsers = [];
+    _containerHandler = null;
 
     /**
      * Fired when a GSplat material is created for a camera and layer combination. Materials are
@@ -161,15 +162,10 @@ class GSplatComponentSystem extends ComponentSystem {
 
         // Resource handlers are created before component systems, so register glTF splat support
         // here to keep its resource implementation tree-shakeable when this system is omitted.
-        const containerParsers = app.loader.getHandler('container')?.parsers ?? [];
-        containerParsers.forEach((parser) => {
-            const glbParser = /** @type {GlbContainerParser} */ (parser);
-            if (typeof glbParser.registerGltfExtension === 'function' &&
-                typeof glbParser.unregisterGltfExtension === 'function') {
-                glbParser.registerGltfExtension(khrGaussianSplatting);
-                this._glbContainerParsers.push(glbParser);
-            }
-        });
+        const containerHandler = app.loader.getHandler('container');
+        if (containerHandler && registerGlbResourceExtension(containerHandler, khrGaussianSplatting)) {
+            this._containerHandler = containerHandler;
+        }
 
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
@@ -276,10 +272,10 @@ class GSplatComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
         this.app.off('framerender', this.onFrameRender, this);
-        this._glbContainerParsers.forEach((parser) => {
-            parser.unregisterGltfExtension(khrGaussianSplatting.name);
-        });
-        this._glbContainerParsers.length = 0;
+        if (this._containerHandler) {
+            unregisterGlbResourceExtension(this._containerHandler, khrGaussianSplatting.name);
+            this._containerHandler = null;
+        }
     }
 }
 
