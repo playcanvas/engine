@@ -229,16 +229,19 @@ class GSplatLodTable {
                 // The manifest carries no error for a level it holds no data at. Extrapolate the
                 // node's last decimation step, so the empty level is strictly worse than its coarsest
                 // data and error mode can still choose to lift the node when that is worth its splats.
+                // The step is taken from the node's own finer levels, including any below rangeMin,
+                // so its magnitude is the asset's: only a node with data at a single level overall
+                // falls through to the constant, one halving in derived-error units.
                 if (emptyLod >= 0) {
                     const ec = err[coarsestData];
                     let step = 0;
-                    for (let lod = coarsestData - 1; lod >= rangeMin; lod--) {
+                    for (let lod = coarsestData - 1; lod >= 0; lod--) {
                         if (lods[lod].count > 0) {
-                            step = ec - err[lod];
+                            step = ec - lods[lod].error;
                             break;
                         }
                     }
-                    err[emptyLod] = ec + (step > 0 ? step : (ec > 0 ? ec : 1));
+                    err[emptyLod] = ec + (step > 0 ? step : Math.LN2);
                 }
             }
 

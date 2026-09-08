@@ -474,9 +474,9 @@ class GSplatParams {
 
     /**
      * Target number of splats across all GSplats in the scene. LOD levels are chosen globally to
-     * stay within this budget, spending it where it removes the most approximation error per splat.
-     * A budget larger than the scene resolves to every node at its finest level. Defaults to
-     * 1000000.
+     * stay within this budget, spending it as {@link GSplatParams#lodMode} directs - by distance
+     * band (the default), or where it removes the most approximation error per splat. A budget
+     * larger than the scene resolves to every node at its finest level. Defaults to 1000000.
      *
      * There is no way to disable budgeted LOD selection: a non-positive value would pin every node
      * to its coarsest level rather than lift the cap, so it warns and the default is used instead.
@@ -509,7 +509,8 @@ class GSplatParams {
      * and ignores any error metadata. {@link GSPLAT_LODMODE_ERROR} instead spends the budget where
      * it removes the most approximation error per splat, using the asset's error tables when
      * present. That lifts sparse, low-quality regions such as sky and distant background that
-     * distance alone leaves coarse, at the cost of holding noticeably more source data in memory.
+     * distance alone leaves coarse, at the cost of holding noticeably more source data in memory -
+     * prefer the default on memory-constrained devices.
      *
      * @type {string}
      */

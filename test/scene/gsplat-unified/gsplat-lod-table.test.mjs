@@ -267,6 +267,38 @@ describe('GSplatLodTable', function () {
         expect(upgradesOf(table)[0].ratio).to.be.closeTo(9, 1e-6);
     });
 
+    it('takes the empty level\'s error step from the node\'s own finer levels below rangeMin', function () {
+        // With range [1, 3] this node has data at a single level in range (level 1), so the step
+        // has to come from level 0 - outside the range, but the node's own last decimation step
+        // and therefore in the asset's units: 1.5 error over 40 splats.
+        const octree = makeOctree([100, 40, 0, 0], [0, 1.5, 0, 0], true);
+        const table = new GSplatLodTable(octree, 1, 3);
+
+        expect(chainOf(table)).to.deep.equal([2, 1]);
+        expect(upgradesOf(table)[0]).to.include({ toLod: 1, cost: 40 });
+        expect(upgradesOf(table)[0].ratio).to.be.closeTo(1.5 / 40, 1e-6);
+    });
+
+    it('falls back to one halving step for a node with data at a single level overall', function () {
+        const octree = makeOctree([50, 0, 0], [0, 0, 0], true);
+        const table = new GSplatLodTable(octree, 0, 2);
+
+        expect(chainOf(table)).to.deep.equal([1, 0]);
+        expect(upgradesOf(table)[0].ratio).to.be.closeTo(Math.LN2 / 50, 1e-6);
+    });
+
+    it('places the empty level above the coarsest data, not in an interior gap', function () {
+        // Level 1 is a hole below present data, so it stays excluded; the empty level goes above
+        // level 2, priced by the node's last step (2 error from level 0 to level 2).
+        const octree = makeOctree([100, 0, 20, 0], [0, 0, 2, 0], true);
+        const table = new GSplatLodTable(octree, 0, 3);
+
+        expect(chainOf(table)).to.deep.equal([3, 2, 0]);
+        expect(upgradesOf(table)[0]).to.include({ toLod: 2, cost: 20 });
+        // reach 2: (4 - 2) / 20 = 0.1; reach 0: (4 - 0) / 100 = 0.04 -> best deal 0.1
+        expect(upgradesOf(table)[0].ratio).to.be.closeTo(0.1, 1e-6);
+    });
+
     it('marks a node with nothing renderable as having no start level', function () {
         const octree = makeOctree([0, 0], [0, 0], true);
         const table = new GSplatLodTable(octree, 0, 1);
