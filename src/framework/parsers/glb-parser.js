@@ -1306,7 +1306,7 @@ const createResources = async (device, gltf, bufferViews, textures, options, app
     result.nodeInstancingMap = nodeInstancingMap;
 
     /** @type {GlbResourceExtension[]} */ (resourceExtensions).forEach((extension) => {
-        Debug.assert(!Object.hasOwn(result, extension.resourceName) || result[extension.resourceName] === undefined,
+        Debug.assert(!(extension.resourceName in result) || result[extension.resourceName] === undefined,
             `GLB resource extension '${extension.name}' would overwrite '${extension.resourceName}'`);
         result[extension.resourceName] = options.skipMeshes ? [] : extension.createResources(device, gltf, bufferViewData);
     });

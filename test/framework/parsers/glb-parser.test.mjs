@@ -250,11 +250,11 @@ describe('GlbParser', function () {
             expect(result.testResources).to.deep.equal([[resource]]);
         });
 
-        it('asserts when a resource extension overwrites a core parse result', async function () {
+        it('asserts when a resource extension overwrites a core parse result member', async function () {
             const error = stub(console, 'error');
             const extension = {
                 name: 'TEST_collision',
-                resourceName: 'renders',
+                resourceName: 'destroy',
                 handlesPrimitive: () => false,
                 createResources: () => []
             };
@@ -263,7 +263,7 @@ describe('GlbParser', function () {
 
             expect(error.calledWith(
                 'ASSERT FAILED: ',
-                'GLB resource extension \'TEST_collision\' would overwrite \'renders\''
+                'GLB resource extension \'TEST_collision\' would overwrite \'destroy\''
             )).to.equal(true);
         });
 
