@@ -24,7 +24,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLATDATA_LARGE,
     GSPLAT_DEBUG_NONE,
-    GSPLAT_LODMODE_ERROR,
+    GSPLAT_LODMODE_DISTANCE,
     GSPLAT_RENDERER_AUTO,
     GSplatComponentSystem,
     GSplatHandler,
@@ -260,7 +260,7 @@ data.set('culling', device.isWebGPU);
 data.set('compact', true);
 data.set('debug', GSPLAT_DEBUG_NONE);
 data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
-data.set('lodMode', GSPLAT_LODMODE_ERROR);
+data.set('lodMode', GSPLAT_LODMODE_DISTANCE);
 data.set('lodFalloff', 1);
 data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');

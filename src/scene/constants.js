@@ -1284,7 +1284,8 @@ export const GSPLAT_RENDERER_COMPUTE = 3;
 /**
  * LOD selection driven by per-level approximation errors: the splat budget is spent where it
  * removes the most error per splat, using the manifest's error tables when present and errors
- * derived from splat counts otherwise. The default.
+ * derived from splat counts otherwise. Lifts sparse, low-quality regions that distance alone
+ * leaves coarse, at the cost of holding noticeably more source data in memory.
  *
  * @category Graphics
  */
@@ -1293,7 +1294,7 @@ export const GSPLAT_LODMODE_ERROR = 'error';
 /**
  * LOD selection ordered by camera distance alone: detail steps down in concentric distance bands
  * around the camera, with the band edges adapting to the splat budget. Any error metadata in the
- * asset is ignored. Useful when a capture's quality makes its error tables unreliable.
+ * asset is ignored. The default.
  *
  * @category Graphics
  */

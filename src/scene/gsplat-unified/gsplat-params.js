@@ -500,15 +500,16 @@ class GSplatParams {
     }
 
     /** @private */
-    _lodMode = GSPLAT_LODMODE_ERROR;
+    _lodMode = GSPLAT_LODMODE_DISTANCE;
 
     /**
      * How LOD levels are chosen for streamed GSplats, within {@link GSplatParams#splatBudget}.
-     * {@link GSPLAT_LODMODE_ERROR} (default) spends the budget where it removes the most
-     * approximation error per splat. {@link GSPLAT_LODMODE_DISTANCE} ignores error metadata and
-     * orders detail by camera distance alone instead - it steps down in concentric distance bands
-     * around the camera, with band edges adapting to the budget. Useful when a capture's quality
-     * makes its error tables unreliable.
+     * {@link GSPLAT_LODMODE_DISTANCE} (default) orders detail by camera distance alone - it steps
+     * down in concentric distance bands around the camera, with band edges adapting to the budget,
+     * and ignores any error metadata. {@link GSPLAT_LODMODE_ERROR} instead spends the budget where
+     * it removes the most approximation error per splat, using the asset's error tables when
+     * present. That lifts sparse, low-quality regions such as sky and distant background that
+     * distance alone leaves coarse, at the cost of holding noticeably more source data in memory.
      *
      * @type {string}
      */
