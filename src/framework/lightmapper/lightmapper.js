@@ -923,10 +923,11 @@ class Lightmapper {
 
                     this.lightmapFilters.setSourceTexture(lightmap);
                     const bilateralFilterEnabled = filterLightmap && pass === 0 && i === 0;
-                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? denoiseShader : dilateShader);
+                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? denoiseShader : dilateShader,
+                        undefined, undefined, bilateralFilterEnabled ? 'LightmapDenoise' : 'LightmapDilate');
 
                     this.lightmapFilters.setSourceTexture(tempTex);
-                    drawQuadWithShader(device, nodeRT, dilateShader);
+                    drawQuadWithShader(device, nodeRT, dilateShader, undefined, undefined, 'LightmapDilate');
                 }
             }
 

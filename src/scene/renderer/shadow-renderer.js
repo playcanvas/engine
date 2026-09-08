@@ -773,14 +773,14 @@ class ShadowRenderer {
         pixelOffset[1] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
         if (blurMode === BLUR_GAUSSIAN) this.weightId.setValue(this.blurVsmWeights[filterSize]);
-        drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect);
+        drawQuadWithShader(device, tempRt, blurShader, null, blurScissorRect, 'VSMShadowBlur');
 
         // Blur vertical
         this.sourceId.setValue(tempRt.colorBuffer);
         pixelOffset[1] = pixelOffset[0];
         pixelOffset[0] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
-        drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect);
+        drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
 
         // return the temporary shadow map back to the cache
         this.renderer.shadowMapCache.add(light, tempShadowMap);

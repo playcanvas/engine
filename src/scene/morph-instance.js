@@ -219,7 +219,7 @@ class MorphInstance {
         this.morphIndex.setValue(this._shaderMorphIndex);
 
         // render quad with shader
-        drawQuadWithShader(device, renderTarget, this.shader);
+        drawQuadWithShader(device, renderTarget, this.shader, undefined, undefined, 'MorphBlend');
     }
 
     _updateTextureMorph(activeCount) {
