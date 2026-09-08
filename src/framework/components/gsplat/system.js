@@ -171,7 +171,7 @@ class GSplatComponentSystem extends ComponentSystem {
         // Own the scene-wide parameters here so apps that omit this system also tree-shake the
         // GSplat formats, varyings and shader chunks imported by GSplatParams.
         const gsplatParams = new GSplatParams(app.graphicsDevice);
-        app.scene._gsplatParams = gsplatParams;
+        app.scene.setGsplatParams(gsplatParams);
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this, gsplatParams);
 
         // register gsplat shader chunks
@@ -279,7 +279,7 @@ class GSplatComponentSystem extends ComponentSystem {
         this.app.off('framerender', this.onFrameRender, this);
         this.app.renderer.gsplatDirector?.destroy();
         this.app.renderer.gsplatDirector = null;
-        this.app.scene._gsplatParams = null;
+        this.app.scene.setGsplatParams(null);
         if (this._containerHandler) {
             unregisterGlbResourceExtension(this._containerHandler, khrGaussianSplatting.name);
             this._containerHandler = null;

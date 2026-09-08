@@ -996,7 +996,7 @@ class GSplatOctreeInstance {
     // debug render world space bounds for octree nodes based on current LOD selection
     debugRender(scene) {
         Debug.call(() => {
-            if (scene.gsplat?.debug === GSPLAT_DEBUG_NODE_AABBS) {
+            if (scene.gsplat.debug === GSPLAT_DEBUG_NODE_AABBS) {
                 const modelMat = this.placement.node.getWorldTransform();
                 const nodes = this.octree.nodes;
                 for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {

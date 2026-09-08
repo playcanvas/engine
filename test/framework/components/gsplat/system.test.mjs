@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
 import { AppBase } from '../../../../src/framework/app-base.js';
 import { AppOptions } from '../../../../src/framework/app-options.js';
@@ -18,6 +19,7 @@ describe('GSplatComponentSystem', function () {
         app?.destroy();
         app = null;
         jsdomTeardown();
+        restore();
     });
 
     const createApp = (componentSystems) => {
@@ -34,16 +36,29 @@ describe('GSplatComponentSystem', function () {
     it('leaves scene GSplat parameters uninitialized when the system is omitted', function () {
         createApp([]);
 
+        expect(app.scene.getGsplatParams()).to.equal(null);
+    });
+
+    it('asserts when public GSplat parameters are accessed without the system', function () {
+        createApp([]);
+        const errorSpy = stub(console, 'error');
+
         expect(app.scene.gsplat).to.equal(null);
+        expect(errorSpy.calledWith(
+            'ASSERT FAILED: ',
+            'Scene#gsplat requires GSplatComponentSystem to be included in the app.'
+        )).to.be.true;
     });
 
     it('owns the scene GSplat parameters for its lifetime', function () {
         createApp([GSplatComponentSystem]);
 
         expect(app.scene.gsplat).to.be.an.instanceof(GSplatParams);
+        expect(app.renderer.gsplatDirector).not.to.equal(null);
 
         app.systems.gsplat.destroy();
 
-        expect(app.scene.gsplat).to.equal(null);
+        expect(app.scene.getGsplatParams()).to.equal(null);
+        expect(app.renderer.gsplatDirector).to.equal(null);
     });
 });

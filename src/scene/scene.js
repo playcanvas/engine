@@ -333,7 +333,10 @@ class Scene extends EventHandler {
         this.gsplatCentersEnabled = true;
 
         // gsplat params are initialized by GSplatComponentSystem when it is included in the app
-        /** @type {GSplatParams|null} */
+        /**
+         * @type {GSplatParams|null}
+         * @ignore
+         */
         this._gsplatParams = null;
 
         // skybox
@@ -524,12 +527,31 @@ class Scene extends EventHandler {
     /**
      * Gets the GSplat parameters.
      *
-     * Returns null when the application does not include {@link GSplatComponentSystem}.
-     *
-     * @type {GSplatParams|null}
+     * @type {GSplatParams}
      */
     get gsplat() {
+        Debug.assert(this._gsplatParams, 'Scene#gsplat requires GSplatComponentSystem to be included in the app.');
+        return /** @type {GSplatParams} */ (this._gsplatParams);
+    }
+
+    /**
+     * Gets the GSplat parameters, or null when GSplatComponentSystem is not included in the app.
+     *
+     * @returns {GSplatParams|null} The GSplat parameters.
+     * @ignore
+     */
+    getGsplatParams() {
         return this._gsplatParams;
+    }
+
+    /**
+     * Sets the GSplat parameters owned by GSplatComponentSystem.
+     *
+     * @param {GSplatParams|null} value - The GSplat parameters.
+     * @ignore
+     */
+    setGsplatParams(value) {
+        this._gsplatParams = value;
     }
 
     /**
@@ -824,7 +846,7 @@ class Scene extends EventHandler {
         this.clusteredLightingEnabled = render.clusteredLightingEnabled ?? false;
         this.lighting.applySettings(render);
 
-        this.gsplat?.applySettings(render);
+        this.getGsplatParams()?.applySettings(render);
 
         // bake settings
         [
