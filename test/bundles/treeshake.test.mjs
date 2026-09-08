@@ -59,6 +59,24 @@ describe('build / treeshake', function () {
         expect(retained, 'retained gsplat work buffer rendering modules').to.deep.equal([]);
     });
 
+    it('ContainerHandler does not retain the gsplat resource implementation', async function () {
+        const result = await bundle(`
+            import { ContainerHandler } from "playcanvas";
+            globalThis.__containerHandler = ContainerHandler;
+        `);
+
+        const output = Object.values(result.metafile.outputs)[0];
+        const inputs = Object.keys(output.inputs);
+        const retained = inputs.filter((path) => {
+            return path.includes('/scene/gsplat/') ||
+                path.includes('/scene/gsplat-unified/') ||
+                path.includes('/chunks/gsplat/') ||
+                path.endsWith('/khr-gaussian-splatting.js');
+        });
+
+        expect(retained, 'retained gsplat resource modules').to.deep.equal([]);
+    });
+
     it('deprecated shims survive tree-shaking and still apply', async function () {
         // representative shims of each kind: class members (shininess), the computed-name alias
         // and tint loops (sheenGlossiness, diffuseTint), the options forwarding loop (refraction)

@@ -8,6 +8,7 @@ import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsp
 import { gsplatChunksWGSL } from '../../../scene/shader-lib/wgsl/collections/gsplat-chunks-wgsl.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../platform/graphics/constants.js';
 import { ShaderChunks } from '../../../scene/shader-lib/shader-chunks.js';
+import { khrGaussianSplatting } from '../../parsers/glb/extensions/khr-gaussian-splatting.js';
 
 // Register warning for removed customization chunk
 Debug.call(() => {
@@ -20,6 +21,7 @@ Debug.call(() => {
  * @import { AppBase } from '../../app-base.js'
  * @import { Camera } from '../../../scene/camera.js'
  * @import { Entity } from '../../entity.js'
+ * @import { GlbContainerParser } from '../../parsers/glb-container-parser.js'
  * @import { Layer } from '../../../scene/layer.js'
  * @import { ShaderMaterial } from '../../../scene/materials/shader-material.js'
  */
@@ -57,6 +59,14 @@ const _properties = [
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {
+    /**
+     * GLB container parsers this system registered its glTF extension with.
+     *
+     * @type {GlbContainerParser[]}
+     * @private
+     */
+    _glbContainerParsers = [];
+
     /**
      * Fired when a GSplat material is created for a camera and layer combination. Materials are
      * created during the first frame update when the GSplat is rendered. The handler is passed
@@ -148,6 +158,18 @@ class GSplatComponentSystem extends ComponentSystem {
 
         // consumed to build customAabb, not settable component properties
         this.extraDataProperties = ['aabbCenter', 'aabbHalfExtents'];
+
+        // Resource handlers are created before component systems, so register glTF splat support
+        // here to keep its resource implementation tree-shakeable when this system is omitted.
+        const containerParsers = app.loader.getHandler('container')?.parsers ?? [];
+        containerParsers.forEach((parser) => {
+            const glbParser = /** @type {GlbContainerParser} */ (parser);
+            if (typeof glbParser.registerGltfExtension === 'function' &&
+                typeof glbParser.unregisterGltfExtension === 'function') {
+                glbParser.registerGltfExtension(khrGaussianSplatting);
+                this._glbContainerParsers.push(glbParser);
+            }
+        });
 
         app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
 
@@ -254,6 +276,10 @@ class GSplatComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
         this.app.off('framerender', this.onFrameRender, this);
+        this._glbContainerParsers.forEach((parser) => {
+            parser.unregisterGltfExtension(khrGaussianSplatting.name);
+        });
+        this._glbContainerParsers.length = 0;
     }
 }
 

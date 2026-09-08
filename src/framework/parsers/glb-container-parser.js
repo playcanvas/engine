@@ -4,6 +4,8 @@ import { GlbParser } from './glb-parser.js';
 import { GlbContainerResource } from './glb-container-resource.js';
 
 class GlbContainerParser {
+    _gltfExtensions = new Map();
+
     constructor(device, assets) {
         this._device = device;
         this._assets = assets;
@@ -14,6 +16,26 @@ class GlbContainerParser {
         // GLB is the only built-in container format (it handles both .glb and .gltf); it acts as the
         // catch-all, so any container asset resolves to it unless a more specific parser is registered
         return true;
+    }
+
+    /**
+     * Registers a glTF resource extension used by this parser.
+     *
+     * @param {object} extension - The extension implementation.
+     * @ignore
+     */
+    registerGltfExtension(extension) {
+        this._gltfExtensions.set(extension.name, extension);
+    }
+
+    /**
+     * Unregisters a glTF resource extension used by this parser.
+     *
+     * @param {string} name - The glTF extension name.
+     * @ignore
+     */
+    unregisterGltfExtension(name) {
+        this._gltfExtensions.delete(name);
     }
 
     _getUrlWithoutParams(url) {
@@ -32,6 +54,7 @@ class GlbContainerParser {
                     this._device,
                     asset.registry,
                     asset.options,
+                    Array.from(this._gltfExtensions.values()),
                     (err, result) => {
                         if (err) {
                             callback(err);
