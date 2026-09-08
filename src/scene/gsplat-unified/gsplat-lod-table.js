@@ -39,6 +39,13 @@ const DISTANCE_BAND_MULTIPLIER = 3;
  * distance bands: every node steps coarser at fixed distance ratios, which is the guarantee that
  * mode exists to provide.
  *
+ * A node whose data stops before `rangeMax` - the generator decimated the region to nothing at the
+ * coarser levels - gets one *empty* level at the first missing index: zero splats, no file, and an
+ * error one decimation step worse than its coarsest data. It is the chain's start, so the node draws
+ * nothing until the allocator buys its real coarsest level, exactly as it would for a node that held
+ * that level with zero splats. Without it such a node was pinned to its finest available data at any
+ * distance, which loads a whole file for a handful of splats.
+ *
  * @ignore
  */
 class GSplatLodTable {
@@ -76,7 +83,8 @@ class GSplatLodTable {
 
     /**
      * Per node, the cheapest renderable level in range - where the allocator starts before it
-     * spends anything. -1 when the node has no renderable level in range at all.
+     * spends anything. May be the node's empty level (see above): zero splats and a file index of
+     * -1. -1 when the node has no renderable level in range at all.
      *
      * @type {Int16Array}
      */
@@ -145,7 +153,8 @@ class GSplatLodTable {
      * @param {GSplatOctree} octree - The octree to build the table for.
      * @param {number} rangeMin - Finest allowed LOD index.
      * @param {number} rangeMax - Coarsest allowed LOD index.
-     * @param {string} [lodMode] - GSPLAT_LODMODE_ERROR (default) or GSPLAT_LODMODE_DISTANCE.
+     * @param {string} [lodMode] - GSPLAT_LODMODE_ERROR or GSPLAT_LODMODE_DISTANCE; callers pass the
+     * scene's GSplatParams#lodMode. GSPLAT_LODMODE_ERROR when omitted.
      */
     constructor(octree, rangeMin, rangeMax, lodMode = GSPLAT_LODMODE_ERROR) {
         this.rangeMin = rangeMin;
@@ -187,6 +196,17 @@ class GSplatLodTable {
             const lods = nodes[n].lods;
             this.firstUpgrade[n] = upgradeCount;
 
+            // The coarsest level in range holding data. When that is finer than rangeMax, the level
+            // just above it becomes the node's empty level - see the class notes.
+            let coarsestData = -1;
+            for (let lod = rangeMax; lod >= rangeMin; lod--) {
+                if (lods[lod].count > 0) {
+                    coarsestData = lod;
+                    break;
+                }
+            }
+            const emptyLod = (coarsestData >= 0 && coarsestData < rangeMax) ? coarsestData + 1 : -1;
+
             if (distanceMode) {
                 let finerCount = -1;
                 let e = 0;
@@ -198,18 +218,37 @@ class GSplatLodTable {
                     err[lod] = e;
                     finerCount = lods[lod].count;
                 }
+                // one more band step: dropping the coarsest data altogether
+                if (emptyLod >= 0) {
+                    err[emptyLod] = e + Math.max(finerCount, 1) * bandWeight[emptyLod];
+                }
             } else {
                 for (let lod = rangeMin; lod <= rangeMax; lod++) {
                     err[lod] = lods[lod].error;
+                }
+                // The manifest carries no error for a level it holds no data at. Extrapolate the
+                // node's last decimation step, so the empty level is strictly worse than its coarsest
+                // data and error mode can still choose to lift the node when that is worth its splats.
+                if (emptyLod >= 0) {
+                    const ec = err[coarsestData];
+                    let step = 0;
+                    for (let lod = coarsestData - 1; lod >= rangeMin; lod--) {
+                        if (lods[lod].count > 0) {
+                            step = ec - err[lod];
+                            break;
+                        }
+                    }
+                    err[emptyLod] = ec + (step > 0 ? step : (ec > 0 ? ec : 1));
                 }
             }
 
             // Collect renderable levels in range, ordered by ascending cost and then ascending
             // error. Insertion sort: the list is at most spanLength long and, since coarser levels
-            // normally hold fewer splats, usually already in order.
+            // normally hold fewer splats, usually already in order. The empty level holds no splats,
+            // so it sorts first and starts the chain.
             let candidateCount = 0;
             for (let lod = rangeMax; lod >= rangeMin; lod--) {
-                if (lods[lod].count <= 0) continue;
+                if (lods[lod].count <= 0 && lod !== emptyLod) continue;
                 let j = candidateCount++;
                 while (j > 0) {
                     const prev = scratch[j - 1];

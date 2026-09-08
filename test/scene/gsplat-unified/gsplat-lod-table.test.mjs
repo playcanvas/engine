@@ -230,6 +230,43 @@ describe('GSplatLodTable', function () {
         expect(chainOf(table)).to.deep.equal([2, 0]);
     });
 
+    it('gives a node whose data ends before rangeMax an empty start level just above it', function () {
+        // The generator decimated this region to nothing at levels 2 and 3, so at those distances
+        // the node should draw nothing - not be pinned to its finest available data, which would
+        // load a whole file for a few splats.
+        const octree = makeOctree([100, 40, 0, 0], [0, 1, 0, 0], true);
+        const table = new GSplatLodTable(octree, 0, 3);
+
+        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
+        expect(table.startCount[0]).to.equal(0);
+        expect(octree.nodes[0].lods[2].fileIndex).to.equal(-1);
+        expect(table.totalStartCount).to.equal(0);
+        expect(table.totalFinestCount).to.equal(100);
+        // buying the real coarsest level costs exactly its splats, priced one decimation step
+        // beyond the node's own last error step (1 -> 2, so 1 error over 40 splats)
+        expect(upgradesOf(table)[0]).to.include({ toLod: 1, cost: 40 });
+        expect(upgradesOf(table)[0].ratio).to.be.closeTo(1 / 40, 1e-6);
+    });
+
+    it('adds no empty level when the coarsest data already sits at rangeMax', function () {
+        const octree = makeOctree([100, 40, 0, 0], [0, 1, 0, 0], true);
+        const table = new GSplatLodTable(octree, 0, 1);
+
+        expect(chainOf(table)).to.deep.equal([1, 0]);
+        expect(table.totalStartCount).to.equal(40);
+    });
+
+    it('prices the empty level as one more distance band in distance mode', function () {
+        // The step from empty to the coarsest data is a band step like any other, so a node appears
+        // exactly when the camera enters the band of its coarsest data: band weight of level 2 is
+        // 3^(2 * (2 - 1)) = 9, and content cancels as for every step.
+        const octree = makeOctree([100, 40, 0, 0], undefined, undefined);
+        const table = new GSplatLodTable(octree, 0, 3, GSPLAT_LODMODE_DISTANCE);
+
+        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
+        expect(upgradesOf(table)[0].ratio).to.be.closeTo(9, 1e-6);
+    });
+
     it('marks a node with nothing renderable as having no start level', function () {
         const octree = makeOctree([0, 0], [0, 0], true);
         const table = new GSplatLodTable(octree, 0, 1);

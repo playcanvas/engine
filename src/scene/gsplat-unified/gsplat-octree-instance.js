@@ -401,10 +401,12 @@ class GSplatOctreeInstance {
             const table = this.lodTable;
             const node = this.octree.nodes[nodeIndex];
 
-            // prefer the finest already-loaded level within the allowed window
+            // prefer the finest already-loaded level within the allowed window. A node's empty level
+            // (no data, no file, see GSplatLodTable) always qualifies: while its real coarsest data
+            // streams in the node draws nothing, instead of being pinned to finer data early.
             const loaded = table.findCoarserAccepted(nodeIndex, optimalLodIndex, lodUnderfillLimit, (lod) => {
                 const fi = node.lods[lod].fileIndex;
-                return fi !== -1 && !!this.octree.getFileResource(fi);
+                return fi === -1 || !!this.octree.getFileResource(fi);
             });
             if (loaded >= 0) return loaded;
 
