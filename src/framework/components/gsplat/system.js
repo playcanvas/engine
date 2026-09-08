@@ -2,6 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
 import { GSplatDirector } from '../../../scene/gsplat-unified/gsplat-director.js';
+import { GSplatParams } from '../../../scene/gsplat-unified/gsplat-params.js';
 import { ComponentSystem } from '../system.js';
 import { GSplatComponent } from './component.js';
 import { gsplatChunksGLSL } from '../../../scene/shader-lib/glsl/collections/gsplat-chunks-glsl.js';
@@ -167,7 +168,11 @@ class GSplatComponentSystem extends ComponentSystem {
             this._containerHandler = containerHandler;
         }
 
-        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this);
+        // Own the scene-wide parameters here so apps that omit this system also tree-shake the
+        // GSplat formats, varyings and shader chunks imported by GSplatParams.
+        const gsplatParams = new GSplatParams(app.graphicsDevice);
+        app.scene._gsplatParams = gsplatParams;
+        app.renderer.gsplatDirector = new GSplatDirector(app.graphicsDevice, app.renderer, app.scene, this, gsplatParams);
 
         // register gsplat shader chunks
         ShaderChunks.get(app.graphicsDevice, SHADERLANGUAGE_GLSL).add(gsplatChunksGLSL);
@@ -272,6 +277,9 @@ class GSplatComponentSystem extends ComponentSystem {
     destroy() {
         super.destroy();
         this.app.off('framerender', this.onFrameRender, this);
+        this.app.renderer.gsplatDirector?.destroy();
+        this.app.renderer.gsplatDirector = null;
+        this.app.scene._gsplatParams = null;
         if (this._containerHandler) {
             unregisterGlbResourceExtension(this._containerHandler, khrGaussianSplatting.name);
             this._containerHandler = null;

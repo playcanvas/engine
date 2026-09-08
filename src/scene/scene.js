@@ -9,7 +9,6 @@ import { Mat4 } from '../core/math/mat4.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 import { BAKE_COLORDIR, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
-import { GSplatParams } from './gsplat-unified/gsplat-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
@@ -22,6 +21,7 @@ import { getDefaultMaterial } from './materials/default-material.js';
  * @import { LayerComposition } from './composition/layer-composition.js'
  * @import { Layer } from './layer.js'
  * @import { Texture } from '../platform/graphics/texture.js'
+ * @import { GSplatParams } from './gsplat-unified/gsplat-params.js'
  */
 
 /**
@@ -332,8 +332,9 @@ class Scene extends EventHandler {
          */
         this.gsplatCentersEnabled = true;
 
-        // gsplat params
-        this._gsplatParams = new GSplatParams(this.device);
+        // gsplat params are initialized by GSplatComponentSystem when it is included in the app
+        /** @type {GSplatParams|null} */
+        this._gsplatParams = null;
 
         // skybox
         this._sky = new Sky(this);
@@ -523,7 +524,9 @@ class Scene extends EventHandler {
     /**
      * Gets the GSplat parameters.
      *
-     * @type {GSplatParams}
+     * Returns null when the application does not include {@link GSplatComponentSystem}.
+     *
+     * @type {GSplatParams|null}
      */
     get gsplat() {
         return this._gsplatParams;
@@ -821,7 +824,7 @@ class Scene extends EventHandler {
         this.clusteredLightingEnabled = render.clusteredLightingEnabled ?? false;
         this.lighting.applySettings(render);
 
-        this.gsplat.applySettings(render);
+        this.gsplat?.applySettings(render);
 
         // bake settings
         [

@@ -41,7 +41,7 @@ describe('build / treeshake', function () {
         expect(bytes, 'bundle size').to.be.lessThan(10240);
     });
 
-    it('AppBase with container loading does not retain gsplat work buffer rendering', async function () {
+    it('AppBase with container loading does not retain the gsplat implementation', async function () {
         const result = await bundle(`
             import { AppBase, ContainerHandler } from "playcanvas";
             globalThis.__appBaseImports = { AppBase, ContainerHandler };
@@ -49,14 +49,13 @@ describe('build / treeshake', function () {
 
         const output = Object.values(result.metafile.outputs)[0];
         const inputs = Object.keys(output.inputs);
-        const retained = inputs.filter((path) => {
-            return path.endsWith('/gsplat-work-buffer.js') ||
-                path.endsWith('/gsplat-work-buffer-render-pass.js') ||
-                path.endsWith('/gsplatCopyToWorkbuffer.js') ||
-                path.endsWith('/gsplatCopyInstancedQuad.js');
-        });
+        const retained = inputs.filter(path => path.includes('/scene/gsplat/') ||
+            path.includes('/scene/gsplat-unified/') ||
+            path.includes('/chunks/gsplat/') ||
+            path.includes('/gsplat-chunks-') ||
+            path.endsWith('/khr-gaussian-splatting.js'));
 
-        expect(retained, 'retained gsplat work buffer rendering modules').to.deep.equal([]);
+        expect(retained, 'retained gsplat implementation modules').to.deep.equal([]);
     });
 
     it('ContainerHandler does not retain the gsplat resource implementation', async function () {

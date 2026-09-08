@@ -258,7 +258,7 @@ class FramePassCameraFrame extends FramePass {
             options.volumetricFogEnabled || options.ssaoType === SSAOTYPE_COMBINE;
 
         const inSceneDepth = this.needsInSceneDepth(options);
-        const splatDepth = this.app.scene.gsplat.sceneDepthWrite;
+        const splatDepth = this.app.scene.gsplat?.sceneDepthWrite ?? false;
         const deviceSupported = FramePassCameraFrame.isSceneTextureDepthSupported(this.device);
         const unsupportedReason = this.sceneTexturesUnsupportedReason(options);
 

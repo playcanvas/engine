@@ -12,6 +12,7 @@ import { GSplatResourceCleanup } from '../gsplat/gsplat-resource-cleanup.js';
  * @import { Scene } from '../scene.js'
  * @import { Renderer } from '../renderer/renderer.js'
  * @import { EventHandler } from '../../core/event-handler.js'
+ * @import { GSplatParams } from './gsplat-params.js'
  */
 
 const tempLayersToRemove = [];
@@ -183,6 +184,11 @@ class GSplatDirector {
     scene;
 
     /**
+     * @type {GSplatParams}
+     */
+    gsplat;
+
+    /**
      * @type {EventHandler}
      */
     eventHandler;
@@ -208,12 +214,14 @@ class GSplatDirector {
      * @param {Renderer} renderer - The renderer.
      * @param {Scene} scene - The scene.
      * @param {EventHandler} eventHandler - Event handler for firing events.
+     * @param {GSplatParams} gsplat - The GSplat parameters.
      */
-    constructor(device, renderer, scene, eventHandler) {
+    constructor(device, renderer, scene, eventHandler, gsplat) {
         this.device = device;
         this.renderer = renderer;
         this.scene = scene;
         this.eventHandler = eventHandler;
+        this.gsplat = gsplat;
     }
 
     destroy() {
@@ -266,7 +274,7 @@ class GSplatDirector {
     updateStreaming() {
 
         // apply pending gsplat params changes (e.g. varying streams) before the world reads them
-        this.scene.gsplat.frameUpdate();
+        this.gsplat.frameUpdate();
 
         // process any pending resource destructions
         GSplatResourceCleanup.process(this.device);
@@ -301,7 +309,7 @@ class GSplatDirector {
         // setup. Material changes are tracked independently by each renderer using the material's
         // update version, so they do not need to be cleared here.
         if (streamed) {
-            this.scene.gsplat.dirty = false;
+            this.gsplat.dirty = false;
         }
 
         // request a render when streaming advanced, or a CPU sort result is waiting to be applied
@@ -422,7 +430,7 @@ class GSplatDirector {
             (bufferCopyUploaded / bufferCopyTotal * 100) : 0;
 
         // clear dirty flags
-        this.scene.gsplat.frameEnd();
+        this.gsplat.frameEnd();
 
         // clear dirty flags on all layers of the composition
         for (let i = 0; i < comp.layerList.length; i++) {

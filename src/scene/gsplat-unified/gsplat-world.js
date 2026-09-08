@@ -21,6 +21,7 @@ import { SPLAT_BUDGET_DEFAULT } from './constants.js';
  * @import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js'
  * @import { Scene } from '../scene.js'
  * @import { MemBlock } from '../../core/block-allocator.js'
+ * @import { GSplatParams } from './gsplat-params.js'
  */
 
 // Module-scope scratch (stateless)
@@ -68,6 +69,9 @@ const ALLOCATOR_GROW_MULTIPLIER = 1.15;
  * @ignore
  */
 class GSplatWorld {
+    /** @type {GSplatParams} */
+    _gsplat;
+
     /** @type {GraphicsDevice} */
     _device;
 
@@ -172,15 +176,17 @@ class GSplatWorld {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Scene} scene - The scene.
+     * @param {GSplatParams} gsplat - The GSplat parameters.
      */
-    constructor(device, scene) {
+    constructor(device, scene, gsplat) {
         this._device = device;
         this._scene = scene;
+        this._gsplat = gsplat;
 
-        const budget = scene.gsplat.splatBudget;
+        const budget = gsplat.splatBudget;
         this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * ALLOCATOR_GROW_MULTIPLIER) : 0, ALLOCATOR_GROW_MULTIPLIER);
 
-        this._workBuffer = new GSplatWorkBuffer(device, scene.gsplat.format);
+        this._workBuffer = new GSplatWorkBuffer(device, gsplat.format);
         this._workBufferFormatVersion = this._workBuffer.format.extraStreamsVersion;
     }
 
@@ -339,7 +345,7 @@ class GSplatWorld {
         result.sortNeeded = false;
 
         // wholesale format-object swap (e.g. dataFormat changed): recreate the work buffer
-        const currentFormat = this._scene.gsplat.format;
+        const currentFormat = this._gsplat.format;
         if (this._workBuffer.format !== currentFormat) {
             this._workBuffer.destroy();
             this._workBuffer = new GSplatWorkBuffer(this._device, currentFormat);
@@ -504,7 +510,7 @@ class GSplatWorld {
             });
 
             // check if any octree instances have moved enough to require LOD update
-            const threshold = this._scene.gsplat.lodUpdateDistance;
+            const threshold = this._gsplat.lodUpdateDistance;
             for (const [, inst] of this._octreeInstances) {
                 const moved = inst.testMoved(threshold);
                 anyOctreeMoved ||= moved;
@@ -523,7 +529,7 @@ class GSplatWorld {
         });
 
         // if parameters are dirty, rebuild world state
-        if (this._scene.gsplat.dirty) {
+        if (this._gsplat.dirty) {
             this._layerPlacementsDirty = true;
             result.overdrawDirty = true;
 
@@ -540,7 +546,7 @@ class GSplatWorld {
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
-        if (cameraMovedOrRotatedForLod || anyOctreeMoved || this._scene.gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
+        if (cameraMovedOrRotatedForLod || anyOctreeMoved || this._gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
 
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this._octreeInstances) {
@@ -556,7 +562,7 @@ class GSplatWorld {
             // resolves to every node at its finest level, so there is no separate unbudgeted path -
             // which also means a non-positive budget is not a way to disable LOD selection, it would
             // simply pin every node to its coarsest level. Substitute the default and say so.
-            let budget = this._scene.gsplat.splatBudget;
+            let budget = this._gsplat.splatBudget;
             if (budget <= 0) {
                 Debug.warnOnce(`GSplatParams#splatBudget is ${budget}, which is not a way to disable LOD selection - LOD levels are always chosen to fit the budget, so a non-positive one would render everything at its coarsest level. Using the default of ${SPLAT_BUDGET_DEFAULT} instead; set a budget that suits the scene.`);
                 budget = SPLAT_BUDGET_DEFAULT;
@@ -849,7 +855,7 @@ class GSplatWorld {
 
         // apply pending file-release requests
         if (worldState.pendingReleases && worldState.pendingReleases.length) {
-            const cooldownTicks = this._scene.gsplat.cooldownTicks;
+            const cooldownTicks = this._gsplat.cooldownTicks;
             for (const [octree, fileIndex] of worldState.pendingReleases) {
                 // decrement once for each staged release; refcount system guards against premature unload
                 octree.decRefCount(fileIndex, cooldownTicks);
@@ -925,7 +931,7 @@ class GSplatWorld {
      */
     applyWorkBufferUpdates(state, camera) {
         // color update thresholds
-        const { colorUpdateAngle } = this._scene.gsplat;
+        const { colorUpdateAngle } = this._gsplat;
         const ratio = Math.tan(colorUpdateAngle * math.DEG_TO_RAD);
         const cameraPos = camera.getPosition();
 
@@ -1022,7 +1028,7 @@ class GSplatWorld {
     testCameraMovedForLod(camera) {
 
         // distance-based movement check
-        const distanceThreshold = this._scene.gsplat.lodUpdateDistance;
+        const distanceThreshold = this._gsplat.lodUpdateDistance;
         const currentCameraPos = camera.getPosition();
         const cameraMoved = this._lastLodCameraPos.distance(currentCameraPos) > distanceThreshold;
         if (cameraMoved) {
@@ -1031,7 +1037,7 @@ class GSplatWorld {
 
         // rotation-based movement check (optional)
         let cameraRotated = false;
-        const lodUpdateAngleDeg = this._scene.gsplat.lodUpdateAngle;
+        const lodUpdateAngleDeg = this._gsplat.lodUpdateAngle;
         if (lodUpdateAngleDeg > 0) {
             if (Number.isFinite(this._lastLodCameraFwd.x)) {
                 const currentCameraFwd = camera.forward;
@@ -1068,7 +1074,7 @@ class GSplatWorld {
      * @returns {Array<number[]>|undefined} Color array for debug visualization, or undefined for normal rendering.
      */
     getDebugColors() {
-        const debug = this._scene.gsplat.debug;
+        const debug = this._gsplat.debug;
         if (debug === GSPLAT_DEBUG_SH_UPDATE) {
             _randomColorRaw ??= [];
             const r = Math.random();
@@ -1135,8 +1141,8 @@ class GSplatWorld {
         // Phase 1: resolve each instance's LOD range and evaluate per-node coverage, and collect
         // padding for active placements
         for (const [, inst] of this._octreeInstances) {
-            inst.resolveLodRange(this._scene.gsplat.lodMode);
-            inst.evaluateNodeCoverage(camera, this._scene.gsplat);
+            inst.resolveLodRange(this._gsplat.lodMode);
+            inst.evaluateNodeCoverage(camera, this._gsplat);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1152,7 +1158,7 @@ class GSplatWorld {
 
         // Phase 3: apply LOD changes
         for (const [, inst] of this._octreeInstances) {
-            inst.applyLodChanges(this._scene.gsplat);
+            inst.applyLodChanges(this._gsplat);
         }
     }
 
@@ -1199,7 +1205,7 @@ class GSplatWorld {
      */
     tickCooldowns() {
         if (this._octreeInstances.size) {
-            const cooldownTicks = this._scene.gsplat.cooldownTicks;
+            const cooldownTicks = this._gsplat.cooldownTicks;
             for (const [, inst] of this._octreeInstances) {
                 const octree = inst.octree;
                 if (!tempOctreesTicked.has(octree)) {
