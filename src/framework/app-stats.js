@@ -5,7 +5,8 @@
  */
 
 /**
- * Read-only performance statistics for an application, accessed through {@link AppBase#stats}.
+ * Performance statistics for an application, accessed through {@link AppBase#stats}. Engine
+ * measurements are read-only; {@link user} holds writable application-defined counters.
  * Includes frame cadence, CPU phase timings, overall GPU frame timing, and estimated GPU resource
  * memory usage. CPU timings, GPU timings and memory statistics are available in all builds, subject
  * to graphics capabilities. Primitive counting requires a debug or profiler build; see each getter
@@ -48,6 +49,12 @@ class AppStats {
      * @private
      */
     _app;
+
+    /**
+     * @type {Map<string, number>}
+     * @private
+     */
+    _user = new Map();
 
     /**
      * Create a new AppStats instance.
@@ -150,6 +157,29 @@ class AppStats {
                 return this.ub + this.sb;
             }
         });
+    }
+
+    /**
+     * Application-defined numeric counters. Returns the same map on every access. Entries can be
+     * added, updated, deleted or cleared by the application; the engine never resets them.
+     * Available in all builds. Values and their units are defined by the application.
+     *
+     * To display a counter in {@link MiniStats}, configure a graph with a path such as `user.ai`.
+     * Counter names used in MiniStats must not contain dots, which separate path segments.
+     * Initialize counters before accumulating values and reset per-frame totals on `frameupdate`.
+     *
+     * @type {Map<string, number>}
+     * @example
+     * app.stats.user.set('ai', 0);
+     * app.on('frameupdate', () => app.stats.user.set('ai', 0));
+     *
+     * // Accumulate time spent in application code during this frame.
+     * const start = performance.now();
+     * // ... run AI logic ...
+     * app.stats.user.set('ai', app.stats.user.get('ai') + performance.now() - start);
+     */
+    get user() {
+        return this._user;
     }
 
     /**

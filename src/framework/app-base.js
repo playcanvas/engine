@@ -723,8 +723,9 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * The application's read-only performance statistics. Returns the same {@link AppStats}
-     * instance on every access. See {@link AppStats} for units, sampling and GPU profiling setup.
+     * The application's performance statistics. Returns the same {@link AppStats} instance on
+     * every access. Engine measurements are read-only; {@link AppStats#user} holds writable
+     * application-defined counters. See {@link AppStats} for units, sampling and GPU profiling setup.
      *
      * @type {AppStats}
      */
