@@ -14,7 +14,8 @@ import { createJoint, destroyJoint, destroyFixedBody } from './ammo-physics-join
  * @import { AmmoPhysicsJoint } from './ammo-physics-joint.js'
  */
 import {
-    createShape, destroyShape, addCompoundChild, updateCompoundChild, removeCompoundChild
+    createShape, destroyShape, releaseUnusedTriMeshShapes, addCompoundChild, updateCompoundChild,
+    removeCompoundChild
 } from './ammo-physics-shape.js';
 
 /**
@@ -98,12 +99,34 @@ class AmmoPhysicsWorld extends PhysicsWorld {
 
     /**
      * Built triangle data cached per geometry source id, shared by all mesh shapes created
-     * from the same geometry. Entries live until the world is destroyed.
+     * from the same geometry. Each entry holds the btTriangleMesh, which lives until the world
+     * is destroyed, and the unit-scale btBvhTriangleMeshShape that every instance wraps in its
+     * own btScaledBvhTriangleMeshShape, reference counted by those wrappers and released at the
+     * end of a step once none is left.
      *
-     * @type {Map<number, object>}
+     * @type {Map<number, { triMesh: object, bvhShape: object|null, refCount: number }>}
      * @ignore
      */
     _triMeshCache = new Map();
+
+    /**
+     * Cache entries whose reference count dropped to zero since the last step. Their BVH shapes
+     * are released at the end of the step if still unused.
+     *
+     * @type {Set<object>}
+     * @ignore
+     */
+    _unusedTriMeshEntries = new Set();
+
+    /**
+     * Whether this Ammo build exposes btScaledBvhTriangleMeshShape, which lets mesh shape
+     * instances share one BVH while carrying their own scale. Older builds fall back to baking
+     * the scale into the shared triangle data.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _hasScaledTriMesh = false;
 
     /**
      * The shared static body world-pinned joints attach to, lazily created.
@@ -189,6 +212,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
 
         Debug.assert(typeof Ammo !== 'undefined', 'AmmoPhysicsWorld: the Ammo.js library must be loaded before the Ammo backend is constructed.');
 
+        this._hasScaledTriMesh = typeof Ammo.btScaledBvhTriangleMeshShape === 'function';
+
         this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
         this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
         this.overlappingPairCache = new Ammo.btDbvtBroadphase();
@@ -217,8 +242,14 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     destroy() {
-        this._triMeshCache.forEach(triMesh => Ammo.destroy(triMesh));
+        this._triMeshCache.forEach((entry) => {
+            if (entry.bvhShape) {
+                Ammo.destroy(entry.bvhShape);
+            }
+            Ammo.destroy(entry.triMesh);
+        });
         this._triMeshCache.clear();
+        this._unusedTriMeshEntries.clear();
 
         destroyFixedBody(this);
 
@@ -330,8 +361,12 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         return createShape(this, desc);
     }
 
+    get supportsMeshScaling() {
+        return this._hasScaledTriMesh;
+    }
+
     destroyShape(shape) {
-        destroyShape(shape);
+        destroyShape(this, shape);
     }
 
     addCompoundChild(compound, child, position, rotation) {
@@ -388,6 +423,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     step(dt, maxSubSteps, fixedTimeStep) {
         this._fixedTimeStep = fixedTimeStep;
         this.nativeWorld.stepSimulation(dt, maxSubSteps, fixedTimeStep);
+
+        releaseUnusedTriMeshShapes(this);
     }
 
     flushContacts() {

@@ -30,8 +30,9 @@ import { PhysicsJoint } from './physics-joint.js';
 
 /**
  * @typedef {object} PhysicsMeshSource
- * @property {number} id - A stable cache key for the source geometry (mesh id). Backends may
- * cache built triangle data per id for the lifetime of the world.
+ * @property {number} id - A stable cache key for the source geometry (mesh id). Sources sharing
+ * an id must describe identical unit-scale geometry - backends may cache built triangle data per
+ * id for the lifetime of the world.
  * @property {Float32Array|number[]} positions - Vertex positions, possibly interleaved.
  * @property {number} stride - The number of floats between consecutive positions (3 when
  * tightly packed).
@@ -42,8 +43,9 @@ import { PhysicsJoint } from './physics-joint.js';
  * convexHull is true - hulls consume every position.
  * @property {boolean} convexHull - Build a convex hull instead of a triangle mesh.
  * @property {boolean} checkDuplicates - Weld duplicate vertices while building triangle data.
- * @property {Vec3|null} bakeScale - Scaling to bake into the positions while building, or null.
- * @property {Vec3|null} shapeScale - Scaling to apply to the built sub-shape, or null.
+ * @property {Vec3|null} scale - The per-instance scale of the source geometry, or null for unit
+ * scale. Backends apply it to the built sub-shape, or bake it into the triangle data when they
+ * cannot - data baked at one scale must never be reused at another.
  * @property {Vec3} position - The sub-shape position within the mesh shape. Collision component
  * offsets are already applied by the caller.
  * @property {Quat} rotation - The sub-shape rotation within the mesh shape.
@@ -61,7 +63,6 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {number} [axis] - The capsule/cylinder/cone alignment axis: 0 (X), 1 (Y) or 2 (Z).
  * @property {PhysicsMeshSource[]} [sources] - The geometry sources of a 'mesh' shape. Mesh
  * shapes are created in one atomic call so backends may build immutable composites.
- * @property {Vec3|null} [scale] - Whole-shape scaling of a 'mesh' shape, or null.
  * @ignore
  */
 
@@ -179,6 +180,19 @@ class PhysicsWorld {
      * @type {object|null}
      */
     nativeWorld = null;
+
+    /**
+     * Whether mesh shapes honour the per-instance {@link PhysicsMeshSource} scale, so that a
+     * mesh shape is rebuilt when the world scale of its entity changes. Backends that cannot
+     * scale mesh instances independently return false, and mesh shapes are then left alone when
+     * their entity is rescaled.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get supportsMeshScaling() {
+        return true;
+    }
 
     /**
      * Destroys the world and all native resources it owns. The world is unusable afterwards.
