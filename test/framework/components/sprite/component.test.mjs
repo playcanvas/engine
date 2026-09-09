@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 
+import { Color } from '../../../../src/core/math/color.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { createApp } from '../../../app.mjs';
@@ -77,6 +78,38 @@ describe('SpriteComponent', function () {
         e.addComponent('sprite');
 
         expect(e.sprite).to.exist;
+    });
+
+    [true, false].forEach((tintBeforeSprite) => {
+        it(`Converts sRGB tint set ${tintBeforeSprite ? 'before' : 'after'} the sprite is assigned`, function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('sprite');
+
+            const color = new Color(0.5, 0.25, 0.75);
+            e.sprite.opacity = 0.4;
+
+            if (!tintBeforeSprite) {
+                e.sprite.spriteAsset = spriteAsset;
+            }
+
+            e.sprite.color = color;
+
+            if (tintBeforeSprite) {
+                e.sprite.spriteAsset = spriteAsset;
+            }
+
+            const emissive = e.sprite._meshInstance.getParameter('material_emissive').data;
+            expect(emissive[0]).to.be.closeTo(0.217638, 0.000001);
+            expect(emissive[1]).to.be.closeTo(0.047366, 0.000001);
+            expect(emissive[2]).to.be.closeTo(0.531049, 0.000001);
+            expect(e.sprite.color.r).to.equal(0.5);
+            expect(e.sprite.color.g).to.equal(0.25);
+            expect(e.sprite.color.b).to.equal(0.75);
+            expect(color).to.deep.equal(new Color(0.5, 0.25, 0.75));
+            expect(e.sprite.opacity).to.equal(0.4);
+            expect(e.sprite._meshInstance.getParameter('material_opacity').data).to.equal(0.4);
+        });
     });
 
     it('Add / Remove Component', function () {

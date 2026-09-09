@@ -29,6 +29,7 @@ const PARAM_OPACITY = 'material_opacity';
 const PARAM_INNER_OFFSET = 'innerOffset';
 const PARAM_OUTER_SCALE = 'outerScale';
 const PARAM_ATLAS_RECT = 'atlasRect';
+const tempColor = new Color();
 
 /**
  * The SpriteComponent enables an {@link Entity} to render a simple static sprite or sprite
@@ -406,7 +407,7 @@ class SpriteComponent extends Component {
     }
 
     /**
-     * Sets the color tint of the sprite.
+     * Sets the color tint of the sprite, specified in sRGB color space.
      *
      * @type {Color}
      */
@@ -416,15 +417,12 @@ class SpriteComponent extends Component {
         this._color.b = value.b;
 
         if (this._meshInstance) {
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
-            this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
+            this._updateColor();
         }
     }
 
     /**
-     * Gets the color tint of the sprite. Use the setter to update the tint.
+     * Gets the color tint of the sprite in sRGB color space. Use the setter to update the tint.
      *
      * @type {Readonly<Color>}
      */
@@ -868,6 +866,16 @@ class SpriteComponent extends Component {
         this._inLayers = false;
     }
 
+    /** @private */
+    _updateColor() {
+        // Color uniforms are in linear space.
+        tempColor.linear(this._color);
+        this._colorUniform[0] = tempColor.r;
+        this._colorUniform[1] = tempColor.g;
+        this._colorUniform[2] = tempColor.b;
+        this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
+    }
+
     // Set the desired mesh on the mesh instance
     _showFrame(frame) {
         if (!this.sprite) return;
@@ -900,10 +908,7 @@ class SpriteComponent extends Component {
             this._meshInstance.drawOrder = this._drawOrder;
 
             // set overrides on mesh instance
-            this._colorUniform[0] = this._color.r;
-            this._colorUniform[1] = this._color.g;
-            this._colorUniform[2] = this._color.b;
-            this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
+            this._updateColor();
             this._meshInstance.setParameter(PARAM_OPACITY, this._color.a);
 
             // now that we created the mesh instance, add it to the layers
