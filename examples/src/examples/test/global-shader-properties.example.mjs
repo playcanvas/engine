@@ -288,11 +288,19 @@ data.on('*:set', (path, value) => {
     if (propertyName === 'gamma') {
         camera.camera.gammaCorrection = value ? GAMMA_SRGB : GAMMA_NONE;
     }
+    if (propertyName === 'particleFog') {
+        entity.particlesystem.useFog = value;
+    }
+    if (propertyName === 'particleTonemap') {
+        entity.particlesystem.useTonemap = value;
+    }
 });
 
 // Initial values
 data.set('data', {
     tonemapping: TONEMAP_ACES,
     fog: FOG_LINEAR,
-    gamma: true
+    gamma: true,
+    particleFog: true,
+    particleTonemap: true
 });

@@ -1,12 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import {
-    GAMMA_NONE,
-    PARTICLEORIENTATION_SCREEN,
-    SHADER_FORWARD,
-    SHADERDEF_UV0,
-    TONEMAP_LINEAR
-} from '../constants.js';
+import { PARTICLEORIENTATION_SCREEN, SHADER_FORWARD, SHADERDEF_UV0 } from '../constants.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { Material } from '../materials/material.js';
 import { particle } from '../shader-lib/programs/particle.js';
@@ -43,10 +37,17 @@ class ParticleMaterial extends Material {
     /** @ignore */
     getShaderVariant(params) {
 
-        const { device, scene, cameraShaderParams, objDefs } = params;
+        const { device, objDefs } = params;
         const { emitter } = this;
+
+        // the camera's fog and tonemapping arrive as defines which take precedence over the
+        // material's own, so the emitter's per-system opt-outs are applied on top of the merge
+        const defines = ShaderUtils.getCoreDefines(this, params);
+        if (!emitter.useFog) defines.set('FOG', 'NONE');
+        if (!emitter.useTonemap) defines.set('TONEMAP', 'NONE');
+
         const options = {
-            defines: ShaderUtils.getCoreDefines(this, params),
+            defines,
             pass: SHADER_FORWARD,
             useCpu: this.emitter.useCpu,
             normal: emitter.lighting ? ((emitter.normalMap !== null) ? 2 : 1) : 0,
@@ -56,9 +57,6 @@ class ParticleMaterial extends Material {
             soft: this.emitter.depthSoftening,
             mesh: this.emitter.useMesh,
             meshUv: objDefs & SHADERDEF_UV0,
-            gamma: cameraShaderParams?.shaderOutputGamma ?? GAMMA_NONE,
-            toneMap: cameraShaderParams?.toneMapping ?? TONEMAP_LINEAR,
-            fog: (scene && !this.emitter.noFog) ? scene.fog.type : 'none',
             wrap: this.emitter.wrap && this.emitter.wrapBounds,
             localSpace: this.emitter.localSpace,
 

@@ -68,6 +68,22 @@ export function Controls({ observer }) {
                     />
                 </LabelGroup>
             </Panel>
+            <Panel headerText='Particles'>
+                <LabelGroup text='Fog'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.particleFog' }}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Tonemapping'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.particleTonemap' }}
+                    />
+                </LabelGroup>
+            </Panel>
         </>
     );
 }

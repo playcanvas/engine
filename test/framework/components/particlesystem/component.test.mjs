@@ -90,7 +90,8 @@ describe('ParticleSystemComponent', function () {
         expect(c.halfLambert).to.be.false;
         expect(c.intensity).to.equal(1);
         expect(c.depthWrite).to.be.false;
-        expect(c.noFog).to.be.false;
+        expect(c.useFog).to.be.true;
+        expect(c.useTonemap).to.be.true;
         expect(c.depthSoftening).to.equal(0);
         expect(c.sort).to.equal(0);
         expect(c.blendType).to.equal(BLEND_NORMAL);
@@ -474,5 +475,61 @@ describe('ParticleSystemComponent', function () {
         expect(assets.mesh.hasEvent('unload')).to.be.false;
         expect(assets.mesh.hasEvent('change')).to.be.false;
         expect(assets.mesh.hasEvent('remove')).to.be.false;
+    });
+
+    describe('fog and tonemapping', function () {
+
+        beforeEach(function () {
+            // the null device skips particle systems by default - enable them so the emitter is created
+            app.graphicsDevice.disableParticleSystem = false;
+        });
+
+        it('forwards useFog and useTonemap to the emitter', function () {
+            const e = new Entity();
+            e.addComponent('particlesystem', { useFog: false, useTonemap: false });
+            app.root.addChild(e);
+
+            const c = e.particlesystem;
+            expect(c.useFog).to.be.false;
+            expect(c.useTonemap).to.be.false;
+            expect(c.emitter.useFog).to.be.false;
+            expect(c.emitter.useTonemap).to.be.false;
+
+            c.useFog = true;
+            c.useTonemap = true;
+            expect(c.emitter.useFog).to.be.true;
+            expect(c.emitter.useTonemap).to.be.true;
+        });
+
+        it('maps the deprecated noFog onto useFog', function () {
+            const e = new Entity();
+            e.addComponent('particlesystem', { noFog: true });
+            app.root.addChild(e);
+
+            const c = e.particlesystem;
+            expect(c.useFog).to.be.false;
+            expect(c.noFog).to.be.true;
+            expect(c.emitter.useFog).to.be.false;
+
+            c.noFog = false;
+            expect(c.useFog).to.be.true;
+            expect(c.emitter.useFog).to.be.true;
+        });
+
+        it('lets an explicit useFog win over legacy noFog data', function () {
+            const e = new Entity();
+            e.addComponent('particlesystem', { noFog: true, useFog: true });
+            expect(e.particlesystem.useFog).to.be.true;
+        });
+
+        it('clones useFog and useTonemap', function () {
+            const e = new Entity();
+            e.addComponent('particlesystem', { useFog: false, useTonemap: false });
+            app.root.addChild(e);
+
+            const c = e.clone().particlesystem;
+            expect(c.useFog).to.be.false;
+            expect(c.useTonemap).to.be.false;
+        });
     });
 });

@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_DEPTH, LAYERID_WORLD, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
 import { Mesh } from '../../../scene/mesh.js';
@@ -29,7 +30,8 @@ const _properties = [
     'halfLambert',
     'intensity',
     'depthWrite',
-    'noFog',
+    'useFog',
+    'useTonemap',
     'depthSoftening',
     'sort',
     'blendType',
@@ -220,7 +222,10 @@ class ParticleSystemComponent extends Component {
     _depthWrite = false;
 
     /** @private */
-    _noFog = false;
+    _useFog = true;
+
+    /** @private */
+    _useTonemap = true;
 
     /** @private */
     _depthSoftening = 0;
@@ -679,21 +684,66 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Sets whether fogging is ignored.
+     * Sets whether the camera's fog is applied to the particles. When false, the particles ignore
+     * fog even if the rendering camera has it enabled. Defaults to true.
      *
      * @type {boolean}
      */
+    set useFog(arg) {
+        this._setComplexProperty('useFog', arg);
+    }
+
+    /**
+     * Gets whether the camera's fog is applied to the particles.
+     *
+     * @type {boolean}
+     */
+    get useFog() {
+        return this._useFog;
+    }
+
+    /**
+     * Sets whether the camera's tonemapping and the scene exposure are applied to the particles.
+     * When false, the particles keep their authored colors, unaffected by {@link Scene#exposure}
+     * and {@link CameraComponent#toneMapping}. Fog, when enabled, still applies. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set useTonemap(arg) {
+        this._setComplexProperty('useTonemap', arg);
+    }
+
+    /**
+     * Gets whether the camera's tonemapping and the scene exposure are applied to the particles.
+     *
+     * @type {boolean}
+     */
+    get useTonemap() {
+        return this._useTonemap;
+    }
+
+    /**
+     * Sets whether fogging is ignored.
+     *
+     * @type {boolean}
+     * @deprecated Use {@link ParticleSystemComponent#useFog} instead.
+     * @ignore
+     */
     set noFog(arg) {
-        this._setComplexProperty('noFog', arg);
+        Debug.deprecated('ParticleSystemComponent#noFog is deprecated. Use ParticleSystemComponent#useFog instead.');
+        this.useFog = !arg;
     }
 
     /**
      * Gets whether fogging is ignored.
      *
      * @type {boolean}
+     * @deprecated Use {@link ParticleSystemComponent#useFog} instead.
+     * @ignore
      */
     get noFog() {
-        return this._noFog;
+        Debug.deprecated('ParticleSystemComponent#noFog is deprecated. Use ParticleSystemComponent#useFog instead.');
+        return !this.useFog;
     }
 
     /**
@@ -2180,7 +2230,8 @@ class ParticleSystemComponent extends Component {
                 scene: this.system.app.scene,
                 mesh: this._mesh,
                 depthWrite: this._depthWrite,
-                noFog: this._noFog,
+                useFog: this._useFog,
+                useTonemap: this._useTonemap,
                 node: this.entity,
                 blendType: this._blendType
             });
