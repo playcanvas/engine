@@ -1,6 +1,6 @@
 export default /* wgsl */`
 #ifdef PIXELSNAP
-    uniform uScreenSize: vec4f;
+    uniform screen_size: vec4f;
 #endif
 
 #ifdef SCREENSPACE
@@ -59,9 +59,9 @@ fn getPosition() -> vec4f {
         #ifdef PIXELSNAP
             // snap vertex to a pixel boundary
             screenPos.xy = (screenPos.xy * 0.5) + 0.5;
-            screenPos.xy *= uniforms.uScreenSize.xy;
+            screenPos.xy *= uniform.screen_size.xy;
             screenPos.xy = floor(screenPos.xy);
-            screenPos.xy *= uniforms.uScreenSize.zw;
+            screenPos.xy *= uniform.screen_size.zw;
             screenPos.xy = (screenPos.xy * 2.0) - 1.0;
         #endif
     #endif

@@ -1,6 +1,6 @@
 export default /* glsl */`
 #ifdef PIXELSNAP
-uniform vec4 uScreenSize;
+uniform vec4 screen_size;
 #endif
 
 #ifdef SCREENSPACE
@@ -60,9 +60,9 @@ vec4 getPosition() {
         #ifdef PIXELSNAP
             // snap vertex to a pixel boundary
             screenPos.xy = (screenPos.xy * 0.5) + 0.5;
-            screenPos.xy *= uScreenSize.xy;
+            screenPos.xy *= screen_size.xy;
             screenPos.xy = floor(screenPos.xy);
-            screenPos.xy *= uScreenSize.zw;
+            screenPos.xy *= screen_size.zw;
             screenPos.xy = (screenPos.xy * 2.0) - 1.0;
         #endif
     #endif

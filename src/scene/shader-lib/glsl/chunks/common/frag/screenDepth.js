@@ -7,7 +7,7 @@ uniform highp sampler2D uSceneDepthMap;
 
 #ifndef SCREENSIZE
     #define SCREENSIZE
-    uniform vec4 uScreenSize;
+    uniform vec4 screen_size;
 #endif
 
 #ifndef VIEWMATRIX
@@ -65,7 +65,7 @@ float getLinearScreenDepth(vec2 uv) {
 #ifndef VERTEXSHADER
     // Retrieves rendered linear camera depth under the current pixel
     float getLinearScreenDepth() {
-        vec2 uv = gl_FragCoord.xy * uScreenSize.zw;
+        vec2 uv = gl_FragCoord.xy * screen_size.zw;
         return getLinearScreenDepth(uv);
     }
 #endif

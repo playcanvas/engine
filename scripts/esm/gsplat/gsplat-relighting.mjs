@@ -25,13 +25,13 @@ const meshOutputWGSL = /* wgsl */`
 // mesh material (2 for 0.5 gray albedo) and allows the overall lighting to be brightened.
 const splatModifyGLSL = /* glsl */`
 uniform sampler2D uRelightMap;
-uniform vec4 uScreenSize;
+uniform vec4 screen_size;
 uniform float uRelightBlend;
 uniform float uRelightBrightness;
 uniform float uRelightBackground;
 
 void modifySplatColor(vec2 gaussianUV, inout vec4 color) {
-    vec4 lit = textureLod(uRelightMap, gl_FragCoord.xy * uScreenSize.zw, 0.0);
+    vec4 lit = textureLod(uRelightMap, gl_FragCoord.xy * screen_size.zw, 0.0);
 
     // the texture alpha is a mesh coverage mask - splats not covered by the mesh (e.g. the sky)
     // are modulated by the background multiplier instead of the mesh lighting
@@ -43,13 +43,13 @@ void modifySplatColor(vec2 gaussianUV, inout vec4 color) {
 const splatModifyWGSL = /* wgsl */`
 var uRelightMap: texture_2d<f32>;
 var uRelightMapSampler: sampler;
-uniform uScreenSize: vec4f;
+uniform screen_size: vec4f;
 uniform uRelightBlend: f32;
 uniform uRelightBrightness: f32;
 uniform uRelightBackground: f32;
 
 fn modifySplatColor(gaussianUV: vec2f, color: ptr<function, vec4f>) {
-    let lit = textureSampleLevel(uRelightMap, uRelightMapSampler, pcPosition.xy * uniform.uScreenSize.zw, 0.0);
+    let lit = textureSampleLevel(uRelightMap, uRelightMapSampler, pcPosition.xy * uniform.screen_size.zw, 0.0);
 
     // the texture alpha is a mesh coverage mask - splats not covered by the mesh (e.g. the sky)
     // are modulated by the background multiplier instead of the mesh lighting

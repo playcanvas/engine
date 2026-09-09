@@ -37,7 +37,7 @@ export default /* wgsl */`
         #endif
 
         #ifdef LIT_SCREEN_SIZE
-            uniform uScreenSize: vec4f;
+            uniform screen_size: vec4f;
         #endif
 
         #ifdef LIT_TRANSFORMS
