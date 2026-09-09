@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 
+import { Color } from '../../src/core/math/color.js';
 import { Vec2 } from '../../src/core/math/vec2.js';
 import { Vec3 } from '../../src/core/math/vec3.js';
 import { Vec4 } from '../../src/core/math/vec4.js';
@@ -40,6 +41,52 @@ describe('Camera', function () {
         it('defaults to ASPECT_AUTO', function () {
             const camera = new Camera(app.graphicsDevice);
             expect(camera.aspectRatioMode).to.equal(ASPECT_AUTO);
+        });
+    });
+
+    describe('#setClearColor', function () {
+
+        it('sets the attachment 0 color, which is the clearColor', function () {
+            const camera = new Camera(app.graphicsDevice);
+            camera.setClearColor(0, new Color(0.1, 0.2, 0.3, 0.4));
+            expect(camera.clearColor.equals(new Color(0.1, 0.2, 0.3, 0.4))).to.equal(true);
+            expect(camera.getClearColor(0)).to.equal(camera.clearColor);
+        });
+
+        it('other attachments clear to the attachment 0 color until given their own', function () {
+            const camera = new Camera(app.graphicsDevice);
+            expect(camera.getClearColor(1)).to.equal(camera.clearColor);
+
+            camera.setClearColor(1, new Color(1, 0, 0, 1));
+            expect(camera.getClearColor(1).equals(new Color(1, 0, 0, 1))).to.equal(true);
+            expect(camera.getClearColor(2)).to.equal(camera.clearColor);
+        });
+
+        it('copies the color rather than referencing it', function () {
+            const camera = new Camera(app.graphicsDevice);
+            const color = new Color(1, 0, 0, 1);
+            camera.setClearColor(1, color);
+            color.set(0, 1, 0, 1);
+            expect(camera.getClearColor(1).equals(new Color(1, 0, 0, 1))).to.equal(true);
+        });
+
+        it('null removes the color of an attachment', function () {
+            const camera = new Camera(app.graphicsDevice);
+            camera.setClearColor(1, new Color(1, 0, 0, 1));
+            camera.setClearColor(1, null);
+            expect(camera.getClearColor(1)).to.equal(camera.clearColor);
+        });
+
+        it('is copied by clone()', function () {
+            const camera = new Camera(app.graphicsDevice);
+            camera.setClearColor(1, new Color(1, 0, 0, 1));
+            camera.setClearColor(3, new Color(0, 0, 1, 1));
+
+            const clone = camera.clone();
+            expect(clone.getClearColor(1).equals(new Color(1, 0, 0, 1))).to.equal(true);
+            expect(clone.getClearColor(2)).to.equal(clone.clearColor);
+            expect(clone.getClearColor(3).equals(new Color(0, 0, 1, 1))).to.equal(true);
+            expect(clone.getClearColor(1)).to.not.equal(camera.getClearColor(1));
         });
     });
 

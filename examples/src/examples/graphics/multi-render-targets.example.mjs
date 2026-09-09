@@ -13,6 +13,7 @@ import {
     Asset,
     AssetListLoader,
     CameraComponentSystem,
+    Color,
     ContainerHandler,
     ElementComponentSystem,
     Entity,
@@ -176,6 +177,11 @@ textureCamera.addComponent('camera', {
     renderTarget: renderTarget
 });
 app.root.addChild(textureCamera);
+
+// The color buffers of the render target clear to the camera's clear color by default. Give the
+// normals and gloss buffers their own clear colors, matching what the shader outputs for empty space.
+textureCamera.camera.setClearColor(1, new Color(0.5, 0.5, 1, 1));
+textureCamera.camera.setClearColor(2, new Color(0, 0, 0, 1));
 
 // Set the shader pass to use MRT output
 textureCamera.camera.setShaderPass('MyMRT');

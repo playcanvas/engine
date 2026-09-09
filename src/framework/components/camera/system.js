@@ -149,7 +149,12 @@ class CameraComponentSystem extends ComponentSystem {
             data[property] = c[property];
         }
 
-        return this.addComponent(clone, data);
+        const component = this.addComponent(clone, data);
+
+        // the clear colors of the other color attachments are not component data
+        c._camera._clearColors?.forEach((color, index) => component.setClearColor(index, color));
+
+        return component;
     }
 
     onBeforeRemove(entity, component) {
