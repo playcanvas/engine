@@ -145,7 +145,7 @@ class TextElement {
         this._font = null;
 
         this._color = new Color(1, 1, 1, 1);
-        this._colorUniform = new Float32Array(3);
+        this._colorUniform = new Float32Array([1, 1, 1, 1]);
 
         this._spacing = 1;
         this._fontSize = 32;
@@ -609,7 +609,7 @@ class TextElement {
             this._symbolShadowParams = null;
         }
 
-        this._updateMaterialEmissive();
+        this._updateColorUniform();
         this._updateMaterialOutline();
         this._updateMaterialShadow();
 
@@ -699,8 +699,8 @@ class TextElement {
 
                 this._setTextureParams(mi, this._font.textures[i]);
 
-                mi.setParameter('material_emissive', this._colorUniform);
-                mi.setParameter('material_opacity', this._color.a);
+                // Text materials are system-supplied and always enable MESH_COLOR.
+                mi.setParameter('mesh_color', this._colorUniform);
                 mi.setParameter('font_sdfIntensity', this._font.intensity);
                 mi.setParameter('font_pxrange', this._getPxRange(this._font));
 
@@ -790,9 +790,9 @@ class TextElement {
         }
     }
 
-    _updateMaterialEmissive() {
+    _updateColorUniform() {
         if (this._symbolColors) {
-            // when per-vertex coloring is present, disable material emissive color
+            // Markup supplies vertex colors, so keep the uniform tint white.
             this._colorUniform[0] = 1;
             this._colorUniform[1] = 1;
             this._colorUniform[2] = 1;
@@ -1725,7 +1725,7 @@ class TextElement {
 
             for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                 const mi = this._model.meshInstances[i];
-                mi.setParameter('material_emissive', this._colorUniform);
+                mi.setParameter('mesh_color', this._colorUniform);
             }
         }
 
@@ -1741,11 +1741,12 @@ class TextElement {
     set opacity(value) {
         if (this._color.a !== value) {
             this._color.a = value;
+            this._colorUniform[3] = value;
 
             if (this._model) {
                 for (let i = 0, len = this._model.meshInstances.length; i < len; i++) {
                     const mi = this._model.meshInstances[i];
-                    mi.setParameter('material_opacity', value);
+                    mi.setParameter('mesh_color', this._colorUniform);
                 }
             }
         }

@@ -1361,29 +1361,33 @@ describe('TextElement', function () {
     });
 
     it('defaults to white color and opacity 1', function () {
+        element.fontAsset = fontAsset.id;
+        element.text = 'test';
         expect(element.color.r).to.equal(1);
         expect(element.color.g).to.equal(1);
         expect(element.color.b).to.equal(1);
         expect(element.opacity).to.equal(1);
 
         const meshes = element._text._model.meshInstances;
+        expect(meshes.length).to.be.greaterThan(0);
         for (let i = 0; i < meshes.length; i++) {
-            const color = meshes[i].getParameter('material_emissive').data;
+            const color = meshes[i].getParameter('mesh_color').data;
             expect(color[0]).to.equal(1);
             expect(color[1]).to.equal(1);
             expect(color[2]).to.equal(1);
 
-            const opacity = meshes[i].getParameter('material_opacity').data;
+            const opacity = meshes[i].getParameter('mesh_color').data[3];
             expect(opacity).to.equal(1);
         }
     });
 
     it('uses color and opacity passed in addComponent data', function () {
         const e = new Entity();
+        app.root.addChild(e);
         e.addComponent('element', {
             type: 'text',
             text: 'test',
-            fontAsset: element.fontAsset,
+            fontAsset: fontAsset.id,
             color: [0.1, 0.2, 0.3],
             opacity: 0.4
         });
@@ -1393,19 +1397,23 @@ describe('TextElement', function () {
         expect(e.element.color.b).to.be.closeTo(0.3, 0.001);
         expect(e.element.opacity).to.be.closeTo(0.4, 0.001);
 
+        const linear = new Color(0.1, 0.2, 0.3).linear();
         const meshes = e.element._text._model.meshInstances;
+        expect(meshes.length).to.be.greaterThan(0);
         for (let i = 0; i < meshes.length; i++) {
-            const color = meshes[i].getParameter('material_emissive').data;
-            expect(color[0]).to.be.closeTo(0.1, 0.001);
-            expect(color[1]).to.be.closeTo(0.2, 0.001);
-            expect(color[2]).to.be.closeTo(0.3, 0.001);
+            const color = meshes[i].getParameter('mesh_color').data;
+            expect(color[0]).to.be.closeTo(linear.r, 0.001);
+            expect(color[1]).to.be.closeTo(linear.g, 0.001);
+            expect(color[2]).to.be.closeTo(linear.b, 0.001);
 
-            const opacity = meshes[i].getParameter('material_opacity').data;
+            const opacity = meshes[i].getParameter('mesh_color').data[3];
             expect(opacity).to.be.closeTo(0.4, 0.001);
         }
     });
 
     it('changes color', function () {
+        element.fontAsset = fontAsset.id;
+        element.text = 'test';
         element.color = new Color(0.1, 0.2, 0.3);
 
         expect(element.color.r).to.be.closeTo(0.1, 0.001);
@@ -1413,29 +1421,93 @@ describe('TextElement', function () {
         expect(element.color.b).to.be.closeTo(0.3, 0.001);
         expect(element.opacity).to.be.closeTo(1, 0.001);
 
+        const linear = new Color(0.1, 0.2, 0.3).linear();
         const meshes = element._text._model.meshInstances;
+        expect(meshes.length).to.be.greaterThan(0);
         for (let i = 0; i < meshes.length; i++) {
-            const color = meshes[i].getParameter('material_emissive').data;
-            expect(color[0]).to.be.closeTo(0.1, 0.001);
-            expect(color[1]).to.be.closeTo(0.2, 0.001);
-            expect(color[2]).to.be.closeTo(0.3, 0.001);
+            const color = meshes[i].getParameter('mesh_color').data;
+            expect(color[0]).to.be.closeTo(linear.r, 0.001);
+            expect(color[1]).to.be.closeTo(linear.g, 0.001);
+            expect(color[2]).to.be.closeTo(linear.b, 0.001);
 
-            const opacity = meshes[i].getParameter('material_opacity').data;
+            const opacity = meshes[i].getParameter('mesh_color').data[3];
             expect(opacity).to.be.closeTo(1, 0.001);
         }
     });
 
     it('changes opacity', function () {
+        element.fontAsset = fontAsset.id;
+        element.text = 'test';
         element.opacity = 0.4;
         expect(element.opacity).to.be.closeTo(0.4, 0.001);
 
         const meshes = element._text._model.meshInstances;
+        expect(meshes.length).to.be.greaterThan(0);
         for (let i = 0; i < meshes.length; i++) {
-            const opacity = meshes[i].getParameter('material_opacity').data;
+            const opacity = meshes[i].getParameter('mesh_color').data[3];
             expect(opacity).to.be.closeTo(0.4, 0.001);
         }
     });
 
+
+    it('Preserves independent text tint and opacity when switching markup', function () {
+        element.fontAsset = fontAsset.id;
+        element.text = 'test';
+        const other = new Entity();
+        app.root.addChild(other);
+        other.addComponent('element', { type: 'text', fontAsset: fontAsset.id, text: 'test' });
+        const otherMesh = other.element._text._model.meshInstances[0];
+        const mi = element._text._model.meshInstances[0];
+        expect(mi.material).to.equal(otherMesh.material);
+        element.color = new Color(0.5, 0.25, 0.75);
+        element.opacity = 0.25;
+        const color = mi.getParameter('mesh_color').data;
+        const rgb = Array.from(color).slice(0, 3);
+        element.opacity = 0.75;
+        expect(Array.from(color).slice(0, 3)).to.deep.equal(rgb);
+        expect(color[3]).to.equal(0.75);
+        expect(mi.material.getParameter('mesh_color')).to.be.undefined;
+        expect(mi.getParameter('material_emissive')).to.be.undefined;
+        expect(mi.getParameter('material_opacity')).to.be.undefined;
+        expect(Array.from(otherMesh.getParameter('mesh_color').data)).to.deep.equal([1, 1, 1, 1]);
+
+        element.enableMarkup = true;
+        element.text = '[color="#ff0000"]test[/color]';
+        expect(Array.from(color)).to.deep.equal([1, 1, 1, 0.75]);
+        element.color = new Color(0.25, 0.5, 0.75);
+        element.opacity = 0.5;
+        expect(Array.from(color)).to.deep.equal([1, 1, 1, 0.5]);
+        element.enableMarkup = false;
+        const linear = element.color.clone().linear();
+        expect(color[0]).to.be.closeTo(linear.r, 0.000001);
+        expect(color[1]).to.be.closeTo(linear.g, 0.000001);
+        expect(color[2]).to.be.closeTo(linear.b, 0.000001);
+        expect(color[3]).to.equal(0.5);
+    });
+
+    it('Updates mesh color on every bitmap font atlas mesh', function () {
+        const font = new CanvasFont(app, { fontName: 'Arial', fontSize: 40, width: 128, height: 128 });
+        const text = 'ABCDEFGHIJKLMNOP0123456789';
+        font.createTextures(`${text} `);
+        element.font = font;
+        element.text = text;
+        const meshes = element._text._model.meshInstances;
+        expect(meshes.length).to.be.greaterThan(1);
+        element.color = new Color(0.5, 0.25, 0.75);
+        element.opacity = 0.25;
+        const color = meshes[0].getParameter('mesh_color').data;
+        for (const mi of meshes) {
+            expect(mi.getParameter('mesh_color').data).to.equal(color);
+            expect(mi.getParameter('material_emissive')).to.be.undefined;
+            expect(mi.getParameter('material_opacity')).to.be.undefined;
+        }
+        element.opacity = 0.75;
+        for (const mi of meshes) {
+            expect(mi.getParameter('mesh_color').data[3]).to.equal(0.75);
+        }
+        entity.destroy();
+        font.destroy();
+    });
 
     it('cloned text component is complete', function () {
         const e = new Entity();
