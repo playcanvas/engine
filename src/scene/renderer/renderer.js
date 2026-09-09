@@ -680,24 +680,25 @@ class Renderer {
                 new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
                 new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
                 new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('screen_size', UNIFORMTYPE_VEC4),
-                new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('view_index', UNIFORMTYPE_UINT)
             ];
 
             if (isClustered) {
+                // Fill the common uniforms' trailing 8 bytes, then pair vec3s with scalars.
                 uniforms.push(...[
-                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
-                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
+                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
                     new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
-                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
+                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3)
                 ]);
             }
 
