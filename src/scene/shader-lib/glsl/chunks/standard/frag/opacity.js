@@ -1,9 +1,15 @@
 export default /* glsl */`
-uniform float material_opacity;
+#ifndef MESH_COLOR
+    uniform float material_opacity;
+#endif
 uniform float material_alphaDitherScale;
 
 void getOpacity() {
-    dAlpha = material_opacity;
+    #ifdef MESH_COLOR
+        dAlpha = mesh_color.a;
+    #else
+        dAlpha = material_opacity;
+    #endif
 
     #ifdef STD_OPACITY_TEXTURE
     dAlpha *= texture2DBias({STD_OPACITY_TEXTURE_NAME}, {STD_OPACITY_TEXTURE_UV}, textureBias).{STD_OPACITY_TEXTURE_CHANNEL};

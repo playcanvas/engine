@@ -2,6 +2,11 @@
 // by the fragment shader of the standard shader.
 export default /* wgsl */`
 
+    #ifdef MESH_COLOR
+        // Linear RGB replaces material emission; alpha replaces material opacity.
+        uniform mesh_color: vec4f;
+    #endif
+
     // globals
     var<private> dAlpha: f32 = 1.0;
 
