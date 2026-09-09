@@ -61,7 +61,7 @@ function isUnitScale(scale) {
  *
  * @param {AmmoPhysicsWorld} world - The owning world.
  * @param {PhysicsMeshSource} source - The geometry source.
- * @returns {{ triMesh: object, bvhShape: object|null }} The cache entry.
+ * @returns {{ triMesh: object, bvhShape: object|null, refCount: number }} The cache entry.
  */
 function getTriMesh(world, source) {
     let entry = world._triMeshCache.get(source.id);
@@ -77,7 +77,7 @@ function getTriMesh(world, source) {
         let i1, i2, i3;
 
         const triMesh = new Ammo.btTriangleMesh();
-        entry = { triMesh, bvhShape: null };
+        entry = { triMesh, bvhShape: null, refCount: 0 };
         world._triMeshCache.set(source.id, entry);
 
         const vertexCache = new Map();
@@ -192,6 +192,14 @@ function createTriMeshChild(world, compound, source) {
         const vec = world._btVec2;
         vec.setValue(scale ? scale.x : 1, scale ? scale.y : 1, scale ? scale.z : 1);
         child = new Ammo.btScaledBvhTriangleMeshShape(entry.bvhShape, vec);
+
+        // the compound holds a reference to the shared BVH for each wrapper it owns, dropped
+        // when the compound is destroyed (see releaseUnusedTriMeshShapes)
+        entry.refCount++;
+        if (!compound._triMeshEntries) {
+            compound._triMeshEntries = [];
+        }
+        compound._triMeshEntries.push(entry);
     } else {
         // legacy build: getTriMesh baked the scale into the shared triangle data
         if (!isUnitScale(scale)) {
@@ -300,19 +308,53 @@ function createShape(world, desc) {
 }
 
 /**
+ * @param {AmmoPhysicsWorld} world - The owning world.
  * @param {object} shape - The native shape to destroy.
  */
-function destroyShape(shape) {
-    // mesh shapes own their sub-shapes (compound children are owned by other components,
-    // and the cached triangle data and its shared BVH outlive the shape)
+function destroyShape(world, shape) {
+    // mesh shapes own their sub-shapes (compound children are owned by other components, and
+    // the cached triangle data outlives the shape)
     if (shape._shapeType === 'mesh') {
         const numShapes = shape.getNumChildShapes();
         for (let i = 0; i < numShapes; i++) {
             Ammo.destroy(shape.getChildShape(i));
         }
+
+        // drop the references the wrappers held on the shared BVH shapes - the ones left
+        // unreferenced are released at the end of the step
+        const entries = shape._triMeshEntries;
+        if (entries) {
+            for (let i = 0; i < entries.length; i++) {
+                const entry = entries[i];
+                if (--entry.refCount === 0) {
+                    world._unusedTriMeshEntries.add(entry);
+                }
+            }
+        }
     }
 
     Ammo.destroy(shape);
+}
+
+/**
+ * Destroys the shared BVH shapes of cached triangle data that no collider wraps any more. Runs at
+ * the end of a physics step rather than when the last wrapper is destroyed, so a collider rebuilt
+ * within a frame (after a rescale, say) keeps the BVH it is about to wrap again. The triangle data
+ * itself stays cached for the lifetime of the world and the BVH is rebuilt from it on next use.
+ *
+ * @param {AmmoPhysicsWorld} world - The owning world.
+ */
+function releaseUnusedTriMeshShapes(world) {
+    const entries = world._unusedTriMeshEntries;
+    if (entries.size === 0) return;
+
+    entries.forEach((entry) => {
+        if (entry.refCount === 0 && entry.bvhShape) {
+            Ammo.destroy(entry.bvhShape);
+            entry.bvhShape = null;
+        }
+    });
+    entries.clear();
 }
 
 /**
@@ -382,4 +424,4 @@ function removeCompoundChild(compound, child) {
     }
 }
 
-export { createShape, destroyShape, addCompoundChild, updateCompoundChild, removeCompoundChild };
+export { createShape, destroyShape, releaseUnusedTriMeshShapes, addCompoundChild, updateCompoundChild, removeCompoundChild };

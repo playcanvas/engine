@@ -14,7 +14,8 @@ import { createJoint, destroyJoint, destroyFixedBody } from './ammo-physics-join
  * @import { AmmoPhysicsJoint } from './ammo-physics-joint.js'
  */
 import {
-    createShape, destroyShape, addCompoundChild, updateCompoundChild, removeCompoundChild
+    createShape, destroyShape, releaseUnusedTriMeshShapes, addCompoundChild, updateCompoundChild,
+    removeCompoundChild
 } from './ammo-physics-shape.js';
 
 /**
@@ -98,14 +99,24 @@ class AmmoPhysicsWorld extends PhysicsWorld {
 
     /**
      * Built triangle data cached per geometry source id, shared by all mesh shapes created
-     * from the same geometry. Each entry holds the btTriangleMesh and, once a shape has used
-     * it, the unit-scale btBvhTriangleMeshShape that every instance wraps in its own
-     * btScaledBvhTriangleMeshShape. Entries live until the world is destroyed.
+     * from the same geometry. Each entry holds the btTriangleMesh, which lives until the world
+     * is destroyed, and the unit-scale btBvhTriangleMeshShape that every instance wraps in its
+     * own btScaledBvhTriangleMeshShape, reference counted by those wrappers and released at the
+     * end of a step once none is left.
      *
-     * @type {Map<number, { triMesh: object, bvhShape: object|null }>}
+     * @type {Map<number, { triMesh: object, bvhShape: object|null, refCount: number }>}
      * @ignore
      */
     _triMeshCache = new Map();
+
+    /**
+     * Cache entries whose reference count dropped to zero since the last step. Their BVH shapes
+     * are released at the end of the step if still unused.
+     *
+     * @type {Set<object>}
+     * @ignore
+     */
+    _unusedTriMeshEntries = new Set();
 
     /**
      * Whether this Ammo build exposes btScaledBvhTriangleMeshShape, which lets mesh shape
@@ -238,6 +249,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
             Ammo.destroy(entry.triMesh);
         });
         this._triMeshCache.clear();
+        this._unusedTriMeshEntries.clear();
 
         destroyFixedBody(this);
 
@@ -354,7 +366,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     destroyShape(shape) {
-        destroyShape(shape);
+        destroyShape(this, shape);
     }
 
     addCompoundChild(compound, child, position, rotation) {
@@ -411,6 +423,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     step(dt, maxSubSteps, fixedTimeStep) {
         this._fixedTimeStep = fixedTimeStep;
         this.nativeWorld.stepSimulation(dt, maxSubSteps, fixedTimeStep);
+
+        releaseUnusedTriMeshShapes(this);
     }
 
     flushContacts() {

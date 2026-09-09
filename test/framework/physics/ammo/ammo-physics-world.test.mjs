@@ -220,9 +220,11 @@ describe('AmmoPhysicsWorld', function () {
             expect(hitHeightAt(0)).to.be.closeTo(1.0, 1e-3);
         });
 
-        it('keeps a single cache entry while a collider is tweened', function () {
+        it('keeps a single cache entry and the same BVH while a collider is tweened', function () {
             const mesh = createCubeMesh();
             const e = createMeshEntity(mesh);
+            const entry = world._triMeshCache.get(mesh.id);
+            const bvhShape = Ammo.getPointer(entry.bvhShape);
 
             for (let i = 1; i <= 200; i++) {
                 const scale = 1 + i / 200;
@@ -231,7 +233,41 @@ describe('AmmoPhysicsWorld', function () {
                 expect(world._triMeshCache.size).to.equal(1);
             }
 
+            // every rebuild dropped and re-took the only reference within the step, so the shared
+            // BVH was never released
+            expect(Ammo.getPointer(entry.bvhShape)).to.equal(bvhShape);
+            expect(entry.refCount).to.equal(1);
             expect(hitHeightAt(0)).to.be.closeTo(1.0, 1e-3);
+        });
+
+        it('releases the shared BVH at the end of a step once no collider uses the mesh', function () {
+            const mesh = createCubeMesh();
+            const a = createMeshEntity(mesh, { x: 0 });
+            const b = createMeshEntity(mesh, { x: 10, scale: 2 });
+            const entry = world._triMeshCache.get(mesh.id);
+            expect(entry.refCount).to.equal(2);
+
+            a.destroy();
+            step();
+
+            // still wrapped by the second collider
+            expect(entry.refCount).to.equal(1);
+            expect(entry.bvhShape).to.exist;
+
+            b.destroy();
+
+            // released at the end of the next step, not immediately
+            expect(entry.bvhShape).to.exist;
+            step();
+            expect(entry.refCount).to.equal(0);
+            expect(entry.bvhShape).to.equal(null);
+
+            // the triangle data stays cached and the BVH is rebuilt from it on next use
+            expect(world._triMeshCache.size).to.equal(1);
+            createMeshEntity(mesh, { x: 20, scale: 0.5 });
+            expect(entry.bvhShape).to.exist;
+            expect(entry.refCount).to.equal(1);
+            expect(hitHeightAt(20)).to.be.closeTo(0.25, 1e-3);
         });
 
         it('applies the node and entity scale of a model source', function () {
