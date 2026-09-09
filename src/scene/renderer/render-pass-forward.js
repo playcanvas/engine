@@ -214,9 +214,17 @@ class RenderPassForward extends RenderPass {
 
             // when this pass renders the scene textures, the camera's clear color describes the scene
             // color attachment alone - the clear values of the scene texture attachments belong to
-            // whoever owns them, and are left alone here
-            const colorIndex = this.sceneTextures?.length ? 0 : undefined;
-            this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined, colorIndex);
+            // whoever owns them, and are left alone here. Otherwise each color attachment of the
+            // render target clears to the color the camera specifies for it.
+            const clearColor = fullSizeClearRect && step.clearColor;
+            if (this.sceneTextures?.length) {
+                this.setClearColor(clearColor ? camera.clearColor : undefined, 0);
+            } else {
+                const count = this.colorArrayOps.length;
+                for (let i = 0; i < count; i++) {
+                    this.setClearColor(clearColor ? camera.getClearColor(i) : undefined, i);
+                }
+            }
             this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }

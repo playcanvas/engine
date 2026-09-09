@@ -473,6 +473,8 @@ class Renderer {
             const device = this.device;
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
+            // this clear is not attachment aware, and clears all the color attachments of the
+            // render target to the color of the attachment 0
             const c = camera._clearColor;
             _tempClearColor[0] = c.r;
             _tempClearColor[1] = c.g;

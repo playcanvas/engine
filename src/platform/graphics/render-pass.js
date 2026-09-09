@@ -321,7 +321,6 @@ class RenderPass extends FramePass {
      */
     setClearColor(color, index) {
 
-        // TODO: expose per color buffer clear parameters on the camera, and copy them here.
         const count = this.colorArrayOps.length;
         Debug.assert(index === undefined || (index >= 0 && index < count),
             `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);

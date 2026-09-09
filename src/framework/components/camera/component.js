@@ -469,7 +469,10 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera component's clear color. Defaults to `[0.75, 0.75, 0.75, 1]`.
+     * Sets the camera component's clear color. Defaults to `[0.75, 0.75, 0.75, 1]`. When the camera
+     * renders to a {@link RenderTarget} with multiple color buffers, this is the clear color of
+     * the color attachment 0, and also of the other attachments unless they are given their own
+     * using {@link CameraComponent#setClearColor}.
      *
      * @type {Color}
      */
@@ -484,6 +487,35 @@ class CameraComponent extends Component {
      */
     get clearColor() {
         return this._camera.clearColor;
+    }
+
+    /**
+     * Sets the clear color of a color attachment of the camera's render target, which allows the
+     * color buffers of a {@link RenderTarget} with multiple color buffers to clear to different
+     * colors. The attachment 0 clears to {@link CameraComponent#clearColor}, and the other
+     * attachments clear to the same color unless given their own here. Pass null to remove the
+     * color of an attachment, so that it clears to the attachment 0 color again. The components
+     * of the clear color of an integer format attachment are the integer values to clear to.
+     *
+     * @param {number} index - The index of the color attachment.
+     * @param {Color|null} color - The clear color, specified in sRGB space, or null to clear to
+     * the color of the attachment 0.
+     * @example
+     * // clear the second color buffer of the render target to a different color
+     * entity.camera.setClearColor(1, new pc.Color(0.5, 0.5, 1, 1));
+     */
+    setClearColor(index, color) {
+        this._camera.setClearColor(index, color);
+    }
+
+    /**
+     * Gets the clear color of a color attachment of the camera's render target.
+     *
+     * @param {number} index - The index of the color attachment.
+     * @returns {Color} The clear color of the attachment.
+     */
+    getClearColor(index) {
+        return this._camera.getClearColor(index);
     }
 
     /**
@@ -1402,6 +1434,8 @@ class CameraComponent extends Component {
         this.calculateProjection = source.calculateProjection;
         this.calculateTransform = source.calculateTransform;
         this.clearColor = source.clearColor;
+        this._camera._clearColors = null;
+        source._camera._clearColors?.forEach((color, index) => this.setClearColor(index, color));
         this.clearColorBuffer = source.clearColorBuffer;
         this.clearDepthBuffer = source.clearDepthBuffer;
         this.clearStencilBuffer = source.clearStencilBuffer;

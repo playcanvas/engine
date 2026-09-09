@@ -175,6 +175,7 @@ class Camera {
         this._calculateProjection = null;
         this._calculateTransform = null;
         this._clearColor = new Color(0.75, 0.75, 0.75, 1);
+        this._clearColors = null;
         this._clearColorBuffer = true;
         this._clearDepth = 1;
         this._clearDepthBuffer = true;
@@ -348,6 +349,40 @@ class Camera {
 
     get clearColor() {
         return this._clearColor;
+    }
+
+    /**
+     * Sets the clear color of a color attachment of the render target. Attachment 0 is
+     * {@link Camera#clearColor}, and the other attachments of a multiple render target clear to the
+     * same color unless given their own. Passing null removes the color of an attachment, so it
+     * clears to the attachment 0 color again.
+     *
+     * @param {number} index - The index of the color attachment.
+     * @param {Color|null} color - The clear color, or null to clear to the attachment 0 color.
+     */
+    setClearColor(index, color) {
+        Debug.assert(Number.isInteger(index) && index >= 0, `Invalid color attachment index ${index}.`);
+
+        if (index === 0) {
+            Debug.assert(color, 'The clear color of the color attachment 0 cannot be removed.');
+            this._clearColor.copy(color);
+        } else if (color) {
+            // stored sparsely, most cameras render to a single color attachment
+            this._clearColors ??= [];
+            (this._clearColors[index] ??= new Color()).copy(color);
+        } else if (this._clearColors) {
+            this._clearColors[index] = undefined;
+        }
+    }
+
+    /**
+     * Gets the clear color of a color attachment of the render target.
+     *
+     * @param {number} index - The index of the color attachment.
+     * @returns {Color} The clear color of the attachment.
+     */
+    getClearColor(index) {
+        return this._clearColors?.[index] ?? this._clearColor;
     }
 
     set clearColorBuffer(newValue) {
@@ -702,6 +737,8 @@ class Camera {
         this.calculateProjection = other.calculateProjection;
         this.calculateTransform = other.calculateTransform;
         this.clearColor = other.clearColor;
+        this._clearColors = null;
+        other._clearColors?.forEach((color, index) => this.setClearColor(index, color));
         this.clearColorBuffer = other.clearColorBuffer;
         this.clearDepth = other.clearDepth;
         this.clearDepthBuffer = other.clearDepthBuffer;

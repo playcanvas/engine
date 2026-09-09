@@ -104,6 +104,9 @@ describe('CameraComponent', function () {
                 toneMapping: TONEMAP_ACES
             });
 
+            // per-attachment clear colors are script API only, not addComponent options
+            e.camera.setClearColor(1, new Color(0.5, 0.6, 0.7, 0.8));
+
             const clone = e.clone();
             const c = clone.camera;
 
@@ -114,6 +117,9 @@ describe('CameraComponent', function () {
             expect(c.calculateProjection).to.equal(calculateProjection);
             expect(c.calculateTransform).to.equal(calculateTransform);
             expect(c.clearColor.equals(new Color(0.1, 0.2, 0.3, 0.4))).to.equal(true);
+            expect(c.getClearColor(1).equals(new Color(0.5, 0.6, 0.7, 0.8))).to.equal(true);
+            expect(c.getClearColor(1)).to.not.equal(e.camera.getClearColor(1));
+            expect(c.getClearColor(2)).to.equal(c.clearColor);
             expect(c.clearColorBuffer).to.equal(false);
             expect(c.clearDepth).to.equal(0.5);
             expect(c.clearDepthBuffer).to.equal(false);
