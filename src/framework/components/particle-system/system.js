@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Curve } from '../../../core/math/curve.js';
 import { CurveSet } from '../../../core/math/curve-set.js';
 import { Vec3 } from '../../../core/math/vec3.js';
@@ -130,6 +131,13 @@ class ParticleSystemComponentSystem extends ComponentSystem {
             // migrate into meshAsset property
             data.meshAsset = data.mesh;
             delete data.mesh;
+        }
+
+        // 'noFog' was replaced by 'useFog' - migrate legacy data, letting an explicit 'useFog' win
+        if (data.noFog !== undefined) {
+            Debug.deprecated('ParticleSystemComponent#noFog is deprecated. Use ParticleSystemComponent#useFog instead.');
+            if (data.useFog === undefined) data.useFog = !data.noFog;
+            delete data.noFog;
         }
 
         for (const prop in data) {
