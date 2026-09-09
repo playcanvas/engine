@@ -15,7 +15,7 @@ fn evalRefractionColor(refractionVector: vec3f, gloss: f32, refractionIndex: f32
 
     // Use IOR and roughness to select mip
     let iorToRoughness: f32 = (1.0 - gloss) * clamp((1.0 / refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
-    let refractionLod: f32 = log2(uniform.uScreenSize.x) * iorToRoughness;
+    let refractionLod: f32 = log2(uniform.screen_size.x) * iorToRoughness;
     var refraction: vec3f = textureSampleLevel(uSceneColorMap, uSceneColorMapSampler, uv, refractionLod).rgb;
 
     // Convert from gamma to linear space if needed

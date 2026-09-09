@@ -100,6 +100,12 @@ class UniformLine {
             this.arraySize = 0;
         }
 
+        Debug.call(() => {
+            if (this.name === 'uScreenSize') {
+                Debug.deprecated('Shader uniform uScreenSize is deprecated. Use screen_size instead.');
+            }
+        });
+
         this.isSampler = this.type.indexOf('sampler') !== -1;
         this.isSignedInt = this.type.indexOf('isampler') !== -1;
         this.isUnsignedInt = this.type.indexOf('usampler') !== -1;

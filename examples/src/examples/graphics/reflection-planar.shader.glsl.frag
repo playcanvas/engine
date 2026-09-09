@@ -1,7 +1,7 @@
 #include "gammaPS"
 
 // engine built-in constant storing render target size in .xy and inverse size in .zw
-uniform vec4 uScreenSize;
+uniform vec4 screen_size;
 
 // reflection texture
 uniform sampler2D uDiffuseMap;
@@ -9,7 +9,7 @@ uniform sampler2D uDiffuseMap;
 void main(void)
 {
     // sample reflection texture
-    vec2 coord = gl_FragCoord.xy * uScreenSize.zw;
+    vec2 coord = gl_FragCoord.xy * screen_size.zw;
     coord.y = 1.0 - coord.y;
     vec4 reflection = texture2D(uDiffuseMap, coord);
 

@@ -35,7 +35,7 @@ export default /* glsl */`
         #endif
 
         #ifdef LIT_SCREEN_SIZE
-            uniform vec4 uScreenSize;
+            uniform vec4 screen_size;
         #endif
 
         #ifdef LIT_TRANSFORMS

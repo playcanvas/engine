@@ -267,6 +267,12 @@ class UniformLine {
         this.name = parts[0];
         this.type = parts.slice(1).join(' ');
 
+        Debug.call(() => {
+            if (this.name === 'uScreenSize') {
+                Debug.deprecated('Shader uniform uScreenSize is deprecated. Use screen_size instead.');
+            }
+        });
+
         // array of uniforms (e.g. array<f32, 5>)
         if (this.type.includes('array<')) {
 

@@ -445,7 +445,7 @@ const fragmentGLSL = /* glsl */`
 
     #ifndef SCREENSIZE
         #define SCREENSIZE
-        uniform vec4 uScreenSize;
+        uniform vec4 screen_size;
     #endif
 
     uniform sampler2D uNormalMap;
@@ -526,7 +526,7 @@ const fragmentGLSL = /* glsl */`
         // screen uv to sample the planar textures. The refraction camera matches the main camera,
         // so its texture is sampled without a flip; the reflection camera is mirrored by the
         // water plane, which flips the image vertically.
-        vec2 screenUV = gl_FragCoord.xy * uScreenSize.zw;
+        vec2 screenUV = gl_FragCoord.xy * screen_size.zw;
         vec2 refractionUV = screenUV + N.xz * uDistortion;
         vec2 reflectionUV = vec2(screenUV.x, 1.0 - screenUV.y) + N.xz * uDistortion;
 
@@ -712,7 +712,7 @@ const fragmentWGSL = /* wgsl */`
 
     #ifndef SCREENSIZE
         #define SCREENSIZE
-        uniform uScreenSize: vec4f;
+        uniform screen_size: vec4f;
     #endif
 
     var uNormalMap: texture_2d<f32>;
@@ -799,7 +799,7 @@ const fragmentWGSL = /* wgsl */`
         // screen uv to sample the planar textures. The refraction camera matches the main camera,
         // so its texture is sampled without a flip; the reflection camera is mirrored by the
         // water plane, which flips the image vertically.
-        let screenUV: vec2f = pcPosition.xy * uniform.uScreenSize.zw;
+        let screenUV: vec2f = pcPosition.xy * uniform.screen_size.zw;
         let refractionUV: vec2f = screenUV + N.xz * uniform.uDistortion;
         let reflectionUV: vec2f = vec2f(screenUV.x, 1.0 - screenUV.y) + N.xz * uniform.uDistortion;
 

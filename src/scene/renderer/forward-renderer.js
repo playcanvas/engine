@@ -137,7 +137,8 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeBlendId = [];
         this.shadowCascadeRadiiId = [];
 
-        this.screenSizeId = scope.resolve('uScreenSize');
+        this.screenSizeId = scope.resolve('screen_size');
+        this.screenSizeLegacyId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
 
         this.fogColor = new Float32Array(3);
@@ -926,6 +927,8 @@ class ForwardRenderer extends Renderer {
         this._screenSize[2] = 1 / device.width;
         this._screenSize[3] = 1 / device.height;
         this.screenSizeId.setValue(this._screenSize);
+        // Keep legacy shader declarations working through the non-view uniform path.
+        this.screenSizeLegacyId.setValue(this._screenSize);
 
         this.pcssDiskSamplesId.setValue(this.pcssDiskSamples);
         this.pcssSphereSamplesId.setValue(this.pcssSphereSamples);

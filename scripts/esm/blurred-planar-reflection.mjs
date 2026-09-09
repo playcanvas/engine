@@ -86,7 +86,7 @@ const vertexShaderGLSL = /* glsl */`
 const fragmentShaderGLSL = /* glsl */`
     #include "gammaPS"
 
-    uniform vec4 uScreenSize;
+    uniform vec4 screen_size;
     uniform sampler2D planarReflectionMap;
     uniform sampler2D planarReflectionDepthMap;
     uniform vec4 planarReflectionParams; // x: intensity, y: blurAmount, z: fadePower, w: fresnelPower
@@ -134,7 +134,7 @@ const fragmentShaderGLSL = /* glsl */`
 
     void main(void) {
         // UV coordinates in planar reflection map
-        vec2 screenUV = gl_FragCoord.xy * uScreenSize.zw;
+        vec2 screenUV = gl_FragCoord.xy * screen_size.zw;
         screenUV.y = 1.0 - screenUV.y;
 
         // Sample depth to get distance from plane (0..1 range based on heightRange)
@@ -209,7 +209,7 @@ const vertexShaderWGSL = /* wgsl */`
 const fragmentShaderWGSL = /* wgsl */`
     #include "gammaPS"
 
-    uniform uScreenSize: vec4f;
+    uniform screen_size: vec4f;
     var planarReflectionMap: texture_2d<f32>;
     var planarReflectionMapSampler: sampler;
     var planarReflectionDepthMap: texture_2d<f32>;
@@ -261,7 +261,7 @@ const fragmentShaderWGSL = /* wgsl */`
         var output: FragmentOutput;
 
         // UV coordinates in planar reflection map
-        var screenUV: vec2f = pcPosition.xy * uniform.uScreenSize.zw;
+        var screenUV: vec2f = pcPosition.xy * uniform.screen_size.zw;
         screenUV.y = 1.0 - screenUV.y;
 
         // Sample depth to get distance from plane (0..1 range based on heightRange)
