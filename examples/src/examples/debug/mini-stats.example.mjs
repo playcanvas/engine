@@ -2,7 +2,8 @@
 // @flag ENGINE=performance
 //
 // Watch a field of objects build and dissolve as entities, materials, vertex buffers and textures
-// are allocated and released. Click the MiniStats panel to cycle through its three views.
+// are allocated and released. A user counter plots a sine wave independently of the engine stats.
+// Click the MiniStats panel to cycle through its three views.
 
 import {
     AppBase,
@@ -66,6 +67,14 @@ options.startSizeIndex = 2;
 // Display additional counters
 // Note: for most of these to report values, either debug or profiling engine build needs to be used.
 options.stats = [
+    // Application-defined counter stored in AppStats.user
+    {
+        name: 'Wave',
+        stats: ['user.wave'],
+        decimalPlaces: 1,
+        watermark: 20
+    },
+
     // Frame update time in ms
     {
         name: 'Update',
@@ -136,6 +145,7 @@ options.stats = [
 ];
 
 // Create mini-stats system
+app.stats.user.set('wave', 10);
 const miniStats = new MiniStats(app, options);
 
 const step = 10;
@@ -288,7 +298,12 @@ let vertexBuffer;
 /** @type {Texture} */
 let texture;
 let statusTime = 0;
+let time = 0;
 app.on('update', (dt) => {
+    time += dt;
+    // Offset the sine wave to keep the graph between 0 and 20.
+    app.stats.user.set('wave', 10 + 10 * Math.sin(time));
+
     orbit += dt * 0.06;
     frameScene();
 

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { stub } from 'sinon';
 
+import { StatsTimer } from '../../src/extras/mini-stats/stats-timer.js';
 import { AppStats } from '../../src/framework/app-stats.js';
 import { INDEXFORMAT_UINT16, SEMANTIC_POSITION, TYPE_FLOAT32 } from '../../src/platform/graphics/constants.js';
 import { IndexBuffer } from '../../src/platform/graphics/index-buffer.js';
@@ -34,6 +35,37 @@ describe('AppStats', function () {
                 expect(descriptor.set, name).to.equal(undefined);
             }
         }
+    });
+
+    it('preserves application-owned counters across frames and samples map changes in MiniStats', function () {
+        const user = app.stats.user;
+        const otherApp = createApp();
+        try {
+            expect(otherApp.stats.user).not.to.equal(user);
+            expect(otherApp.stats.user.size).to.equal(0);
+        } finally {
+            otherApp.destroy();
+        }
+        const timer = new StatsTimer(app, ['user.ai']);
+        user.set('ai', 2.5);
+
+        app.stats.updateBasic(1000, 0.016, 16, app.renderer, app.graphicsDevice);
+        app.stats.updateDetailed(app.renderer, app.graphicsDevice);
+        app.stats.frameEnd();
+
+        expect(app.stats.user).to.equal(user);
+        expect(timer.timings[0]).to.equal(2.5);
+
+        user.set('ai', 4);
+        expect(timer.timings[0]).to.equal(4);
+        user.delete('ai');
+        expect(timer.timings[0]).to.equal(0);
+        user.set('ai', 1);
+        user.clear();
+        expect(timer.timings[0]).to.equal(0);
+        expect(() => {
+            app.stats.user = new Map();
+        }).to.throw(TypeError);
     });
 
     it('publishes frame cadence independently of scaled simulation time and consumes draw counts once', function () {
