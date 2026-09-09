@@ -398,7 +398,6 @@ class ElementComponentSystem extends ComponentSystem {
         material.useFog = false;
         material.useSkybox = false;
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-        material.opacity = 0.5;
         material.blendType = BLEND_PREMULTIPLIED;
         material.depthWrite = false;
         material.emissiveVertexColor = true;

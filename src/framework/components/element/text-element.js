@@ -609,7 +609,7 @@ class TextElement {
             this._symbolShadowParams = null;
         }
 
-        this._updateMaterialEmissive();
+        this._updateColorUniform();
         this._updateMaterialOutline();
         this._updateMaterialShadow();
 
@@ -699,6 +699,7 @@ class TextElement {
 
                 this._setTextureParams(mi, this._font.textures[i]);
 
+                // Text materials are system-supplied and always enable MESH_COLOR.
                 mi.setParameter('mesh_color', this._colorUniform);
                 mi.setParameter('font_sdfIntensity', this._font.intensity);
                 mi.setParameter('font_pxrange', this._getPxRange(this._font));
@@ -789,7 +790,7 @@ class TextElement {
         }
     }
 
-    _updateMaterialEmissive() {
+    _updateColorUniform() {
         if (this._symbolColors) {
             // Markup supplies vertex colors, so keep the uniform tint white.
             this._colorUniform[0] = 1;
