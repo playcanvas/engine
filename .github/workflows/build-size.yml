@@ -91,13 +91,18 @@ jobs:
             const pr = read('pr/sizes.json');
 
             const kb = n => `${(n / 1024).toFixed(1)} KB`;
+            const delta = n => {
+              if (n < 1024) return `${n} B`;
+              if (n < 1024 * 1024) return kb(n);
+              return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+            };
             const cell = (b, p) => {
               const d = p - b;
               if (!b) return `${kb(p)} (new)`;
               if (!d) return `${kb(p)} —`;
               const sign = d > 0 ? '+' : '−';
               const pct = (Math.abs(d) / b * 100).toFixed(2);
-              return `${kb(p)} (${sign}${kb(Math.abs(d))}, ${sign}${pct}%)`;
+              return `${kb(p)} (${sign}${delta(Math.abs(d))}, ${sign}${pct}%)`;
             };
 
             const bundles = [...new Set([...Object.keys(base), ...Object.keys(pr)])].sort();
