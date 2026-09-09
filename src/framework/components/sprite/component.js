@@ -24,8 +24,7 @@ import { SpriteAnimationClip } from './sprite-animation-clip.js';
 
 const PARAM_EMISSIVE_MAP = 'texture_emissiveMap';
 const PARAM_OPACITY_MAP = 'texture_opacityMap';
-const PARAM_EMISSIVE = 'material_emissive';
-const PARAM_OPACITY = 'material_opacity';
+const PARAM_COLOR = 'mesh_color';
 const PARAM_INNER_OFFSET = 'innerOffset';
 const PARAM_OUTER_SCALE = 'outerScale';
 const PARAM_ATLAS_RECT = 'atlasRect';
@@ -164,7 +163,7 @@ class SpriteComponent extends Component {
     _color = new Color(1, 1, 1, 1);
 
     /** @private */
-    _colorUniform = new Float32Array(3);
+    _colorUniform = new Float32Array(4);
 
     /** @private */
     _speed = 1;
@@ -438,7 +437,8 @@ class SpriteComponent extends Component {
     set opacity(value) {
         this._color.a = value;
         if (this._meshInstance) {
-            this._meshInstance.setParameter(PARAM_OPACITY, value);
+            this._colorUniform[3] = value;
+            this._meshInstance.setParameter(PARAM_COLOR, this._colorUniform);
         }
     }
 
@@ -873,7 +873,8 @@ class SpriteComponent extends Component {
         this._colorUniform[0] = tempColor.r;
         this._colorUniform[1] = tempColor.g;
         this._colorUniform[2] = tempColor.b;
-        this._meshInstance.setParameter(PARAM_EMISSIVE, this._colorUniform);
+        this._colorUniform[3] = this._color.a;
+        this._meshInstance.setParameter(PARAM_COLOR, this._colorUniform);
     }
 
     // Set the desired mesh on the mesh instance
@@ -907,9 +908,7 @@ class SpriteComponent extends Component {
             this._meshInstance.receiveShadow = false;
             this._meshInstance.drawOrder = this._drawOrder;
 
-            // set overrides on mesh instance
             this._updateColor();
-            this._meshInstance.setParameter(PARAM_OPACITY, this._color.a);
 
             // now that we created the mesh instance, add it to the layers
             if (this.enabled && this.entity.enabled) {

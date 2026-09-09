@@ -84,6 +84,8 @@ class SpriteComponentSystem extends ComponentSystem {
             texture.unlock();
 
             const material = new StandardMaterial();
+            // Sprite color is per-instance data, independent of the shared material uniforms.
+            material.setDefine('MESH_COLOR', true);
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
             material.emissive.set(1, 1, 1);
             material.emissiveMap = texture;
