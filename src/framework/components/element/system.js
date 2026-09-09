@@ -368,6 +368,7 @@ class ElementComponentSystem extends ComponentSystem {
         let name = 'TextMaterial';
 
         material = new StandardMaterial();
+        material.setDefine('MESH_COLOR', true);
 
         if (msdf) {
             material.msdfMap = this._defaultTexture;
@@ -410,6 +411,7 @@ class ElementComponentSystem extends ComponentSystem {
 
     _createBaseImageMaterial() {
         const material = new StandardMaterial();
+        material.setDefine('MESH_COLOR', true);
 
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
         material.emissive.set(1, 1, 1);
