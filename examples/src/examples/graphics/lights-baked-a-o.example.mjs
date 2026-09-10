@@ -208,8 +208,12 @@ app.scene.lightmapMaxResolution = 1024;
 // Multiplier for lightmap resolution
 app.scene.lightmapSizeMultiplier = 512;
 
-// Bake when settings are changed only
+// Bake when settings change or GPU-generated lightmaps need restoring
 let needBake = false;
+
+device.on('devicerestored', () => {
+    needBake = true;
+});
 
 // Handle data changes from HUD to modify baking properties
 data.on('*:set', (/** @type {string} */ path, value) => {
@@ -280,7 +284,7 @@ data.set('data', {
 
 // Set an update function on the app's update event
 app.on('update', (_dt) => {
-    // Bake lightmaps when HUD properties change
+    // Bake lightmaps when requested
     if (needBake) {
         needBake = false;
         app.lightmapper.bake(null, bakeType);
