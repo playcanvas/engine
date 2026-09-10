@@ -224,7 +224,21 @@ let revealStarted = false;
 // scene.envAtlas — the splats are pre-lit, so the sky contributes no lighting, just a backdrop.
 // Generated up front but revealed together with the scene (on frame:ready), so it doesn't pop
 // in before the splats.
-const skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+let skyboxCubemap;
+const applyHdri = () => {
+    const oldSkybox = skyboxCubemap;
+    skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+    // Keep the backdrop hidden until the first splat frame is ready.
+    if (oldSkybox && app.scene.skybox === oldSkybox) {
+        app.scene.skybox = skyboxCubemap;
+    }
+    oldSkybox?.destroy();
+    app.renderNextFrame = true;
+};
+
+// The skybox is generated on the GPU and needs rebuilding after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
 app.scene.sky.type = SKYTYPE_INFINITE;
 
 // Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some
