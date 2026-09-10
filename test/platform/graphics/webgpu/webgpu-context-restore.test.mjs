@@ -4,6 +4,7 @@ import sinon from 'sinon';
 import { BindGroupFormat } from '../../../../src/platform/graphics/bind-group-format.js';
 import { BindGroup } from '../../../../src/platform/graphics/bind-group.js';
 import { SHADERLANGUAGE_WGSL } from '../../../../src/platform/graphics/constants.js';
+import { GpuProfiler } from '../../../../src/platform/graphics/gpu-profiler.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { WebgpuBindGroupFormat } from '../../../../src/platform/graphics/webgpu/webgpu-bind-group-format.js';
 import { WebgpuBindGroup } from '../../../../src/platform/graphics/webgpu/webgpu-bind-group.js';
@@ -13,6 +14,66 @@ import { WebgpuShaderProcessorWGSL } from '../../../../src/platform/graphics/web
 import { WebgpuShader } from '../../../../src/platform/graphics/webgpu/webgpu-shader.js';
 
 describe('WebGPU context restoration', function () {
+    for (const enabled of [true, false]) {
+        it(`preserves the requested profiler enabled state (${enabled}) on recovery`, async function () {
+            const device = {
+                gpuProfiler: new GpuProfiler(),
+                loseContext() {
+                    this.gpuProfiler = null;
+                },
+                createDevice() {
+                    this.gpuProfiler = new GpuProfiler();
+                    return Promise.resolve();
+                },
+                restoreContext() {},
+                fire(event) {
+                    if (event === 'devicerestored') {
+                        expect(this.gpuProfiler.enabled).to.equal(enabled);
+                    }
+                }
+            };
+            device.gpuProfiler.enabled = enabled;
+            // The pending enable request must survive even before the next frame applies it.
+            expect(device.gpuProfiler._enabled).to.be.false;
+            await WebgpuGraphicsDevice.prototype.handleDeviceLost.call(device, { reason: 'unknown', message: 'test loss' });
+            expect(device.gpuProfiler.enabled).to.equal(enabled);
+        });
+    }
+
+    it('clears cached timestamp writes when profiling cannot assign a query', function () {
+        const profiler = new GpuProfiler();
+        profiler.timestampQueriesSet = { querySet: {} };
+        profiler.enabled = true;
+        profiler.processEnableRequest();
+        const device = { gpuProfiler: profiler };
+        const setup = descriptor => WebgpuGraphicsDevice.prototype.setupTimeStampWrites.call(device, descriptor, 'test pass');
+        const descriptor = setup(undefined);
+        expect(descriptor.timestampWrites.querySet).to.equal(profiler.timestampQueriesSet.querySet);
+
+        profiler.enabled = false;
+        profiler.processEnableRequest();
+        expect(setup(descriptor)).to.equal(descriptor);
+        expect(descriptor.timestampWrites).to.be.undefined;
+        expect(setup(undefined)).to.be.undefined;
+
+        profiler.enabled = true;
+        profiler.processEnableRequest();
+        const replacement = { querySet: {} };
+        profiler.timestampQueriesSet = replacement;
+        setup(descriptor);
+        expect(descriptor.timestampWrites.querySet).to.equal(replacement.querySet);
+
+        profiler.timestampQueriesSet = null;
+        setup(descriptor);
+        expect(descriptor.timestampWrites).to.be.undefined;
+
+        profiler.timestampQueriesSet = replacement;
+        setup(descriptor);
+        profiler.maxCount = profiler.slotCount;
+        setup(descriptor);
+        expect(descriptor.timestampWrites).to.be.undefined;
+    });
+
     it('rebuilds unchanged bind groups and layouts against the replacement device', function () {
         const device = new NullGraphicsDevice({ width: 1, height: 1 });
         const createDevice = () => ({
