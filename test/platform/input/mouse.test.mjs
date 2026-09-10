@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT } from '../../../src/platform/input/constants.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
 
@@ -16,17 +17,79 @@ describe('Mouse', function () {
     let mouse;
 
     beforeEach(function () {
+        jsdomSetup();
         mouse = new Mouse(document.body);
     });
 
     afterEach(function () {
         mouse.detach();
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {
 
         it('should create a new instance', function () {
             expect(mouse).to.be.an.instanceOf(Mouse);
+        });
+
+    });
+
+    describe('#detach', function () {
+
+        ['pressed', 'held', 'released'].forEach((state) => {
+            it(`should clear all button states when detached with ${state} buttons`, function () {
+                for (const button of buttons) {
+                    window.dispatchEvent(new MouseEvent('mousedown', { button }));
+                }
+                if (state !== 'pressed') {
+                    mouse.update();
+                }
+                if (state === 'released') {
+                    for (const button of buttons) {
+                        window.dispatchEvent(new MouseEvent('mouseup', { button }));
+                    }
+                }
+
+                mouse.detach();
+
+                for (const button of buttons) {
+                    expect(mouse.isPressed(button)).to.be.false;
+                    expect(mouse.wasPressed(button)).to.be.false;
+                    expect(mouse.wasReleased(button)).to.be.false;
+                }
+            });
+        });
+
+        it('should detect fresh presses after buttons are released while detached', function () {
+            for (const button of buttons) {
+                window.dispatchEvent(new MouseEvent('mousedown', { button }));
+            }
+            mouse.update();
+            let releases = 0;
+            mouse.on('mouseup', () => releases++);
+
+            mouse.detach();
+            for (const button of buttons) {
+                window.dispatchEvent(new MouseEvent('mouseup', { button }));
+            }
+            mouse.attach(document.body);
+
+            expect(releases).to.equal(0);
+            for (const button of buttons) {
+                expect(mouse.isPressed(button)).to.be.false;
+                expect(mouse.wasPressed(button)).to.be.false;
+                expect(mouse.wasReleased(button)).to.be.false;
+
+                window.dispatchEvent(new MouseEvent('mousedown', { button }));
+                expect(mouse.isPressed(button)).to.be.true;
+                expect(mouse.wasPressed(button)).to.be.true;
+            }
+            mouse.update();
+            for (const button of buttons) {
+                window.dispatchEvent(new MouseEvent('mouseup', { button }));
+                expect(mouse.wasReleased(button)).to.be.true;
+            }
+            expect(releases).to.equal(buttons.length);
         });
 
     });

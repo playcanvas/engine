@@ -217,7 +217,8 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * Detach the keyboard event handlers from the element it is attached to.
+     * Detach the keyboard event handlers from the element it is attached to and clear current and
+     * previous key states. This does not fire `keyup` events.
      */
     detach() {
         if (!this._element) {
@@ -232,6 +233,9 @@ class Keyboard extends EventHandler {
 
         document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.removeEventListener('blur', this._windowBlurHandler, false);
+
+        this._keymap = {};
+        this._lastmap = {};
     }
 
     /**

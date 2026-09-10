@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 
-import { KEY_UP } from '../../../src/platform/input/constants.js';
+import { KEY_DOWN, KEY_UP } from '../../../src/platform/input/constants.js';
 import { Keyboard } from '../../../src/platform/input/keyboard.js';
+import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Keyboard', function () {
 
@@ -9,18 +10,89 @@ describe('Keyboard', function () {
     let keyboard;
 
     beforeEach(function () {
+        jsdomSetup();
         keyboard = new Keyboard();
         keyboard.attach(window);
     });
 
     afterEach(function () {
         keyboard.detach();
+        jsdomTeardown();
     });
 
     describe('#constructor', function () {
 
         it('should create a new instance', function () {
             expect(keyboard).to.be.an.instanceOf(Keyboard);
+        });
+
+    });
+
+    describe('#detach', function () {
+
+        ['pressed', 'held', 'released'].forEach((state) => {
+            it(`should clear all key states when detached with ${state} keys`, function () {
+                const keys = [KEY_UP, KEY_DOWN];
+                for (const keyCode of keys) {
+                    window.dispatchEvent(new KeyboardEvent('keydown', { keyCode }));
+                }
+                if (state !== 'pressed') {
+                    keyboard.update();
+                }
+                if (state === 'released') {
+                    for (const keyCode of keys) {
+                        window.dispatchEvent(new KeyboardEvent('keyup', { keyCode }));
+                    }
+                }
+
+                keyboard.detach();
+
+                for (const key of keys) {
+                    expect(keyboard.isPressed(key)).to.be.false;
+                    expect(keyboard.wasPressed(key)).to.be.false;
+                    expect(keyboard.wasReleased(key)).to.be.false;
+                }
+                keyboard.attach(window);
+            });
+        });
+
+        it('should detect a fresh press after a key is released while detached', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { keyCode: KEY_UP }));
+            keyboard.update();
+            let releases = 0;
+            keyboard.on('keyup', () => releases++);
+
+            keyboard.detach();
+            window.dispatchEvent(new KeyboardEvent('keyup', { keyCode: KEY_UP }));
+            keyboard.attach(window);
+
+            expect(releases).to.equal(0);
+            expect(keyboard.isPressed(KEY_UP)).to.be.false;
+            expect(keyboard.wasPressed(KEY_UP)).to.be.false;
+            expect(keyboard.wasReleased(KEY_UP)).to.be.false;
+
+            window.dispatchEvent(new KeyboardEvent('keydown', { keyCode: KEY_UP }));
+            expect(keyboard.isPressed(KEY_UP)).to.be.true;
+            expect(keyboard.wasPressed(KEY_UP)).to.be.true;
+            keyboard.update();
+            window.dispatchEvent(new KeyboardEvent('keyup', { keyCode: KEY_UP }));
+            expect(releases).to.equal(1);
+            expect(keyboard.wasReleased(KEY_UP)).to.be.true;
+        });
+
+        it('should clear key states when attaching to another element', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { keyCode: KEY_UP }));
+            keyboard.update();
+
+            const element = document.createElement('div');
+            keyboard.attach(element);
+
+            expect(keyboard.isPressed(KEY_UP)).to.be.false;
+            expect(keyboard.wasPressed(KEY_UP)).to.be.false;
+            expect(keyboard.wasReleased(KEY_UP)).to.be.false;
+
+            element.dispatchEvent(new KeyboardEvent('keydown', { keyCode: KEY_UP }));
+            expect(keyboard.wasPressed(KEY_UP)).to.be.true;
         });
 
     });

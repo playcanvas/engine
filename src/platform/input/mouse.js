@@ -168,7 +168,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * Remove mouse events from the element that it is attached to.
+     * Remove mouse events from the element that it is attached to and clear current and previous
+     * button states. This does not fire `mouseup` events.
      */
     detach() {
         if (!this._attached) return;
@@ -181,6 +182,9 @@ class Mouse extends EventHandler {
         window.removeEventListener('mousedown', this._downHandler, options);
         window.removeEventListener('mousemove', this._moveHandler, options);
         window.removeEventListener('wheel', this._wheelHandler, options);
+
+        this._buttons.fill(false);
+        this._lastbuttons.fill(false);
     }
 
     /**
