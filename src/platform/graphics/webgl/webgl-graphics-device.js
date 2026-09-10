@@ -1170,6 +1170,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
             shader.restoreContext();
         }
 
+        // Restore the supplied framebuffer before callbacks or update-time rendering (such as
+        // transform feedback) can use the backbuffer, without waiting for frameStart.
+        this.updateBackbuffer();
+
         this.fire('devicerestored');
     }
 
