@@ -38,16 +38,16 @@ class MouseEvent {
     /**
      * The change in x coordinate since the last mouse movement event. When the pointer is not
      * locked, this is zero until an unlocked movement establishes a position after creation,
-     * detachment, focus loss or pointer-locked movement. Under pointer lock, this uses the
-     * browser's relative movement delta.
+     * detachment, focus loss, movement outside the target or pointer-locked movement. Under
+     * pointer lock, this uses the browser's relative movement delta.
      */
     dx = 0;
 
     /**
      * The change in y coordinate since the last mouse movement event. When the pointer is not
      * locked, this is zero until an unlocked movement establishes a position after creation,
-     * detachment, focus loss or pointer-locked movement. Under pointer lock, this uses the
-     * browser's relative movement delta.
+     * detachment, focus loss, movement outside the target or pointer-locked movement. Under
+     * pointer lock, this uses the browser's relative movement delta.
      */
     dy = 0;
 

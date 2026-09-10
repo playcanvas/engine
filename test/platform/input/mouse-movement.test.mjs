@@ -83,6 +83,18 @@ describe('Mouse movement', function () {
         expect(moves[1]).to.deep.equal({ x: 120, y: 90, dx: 20, dy: -10 });
     });
 
+    it('should establish a new baseline when the pointer re-enters the target', function () {
+        move(100, 100);
+        move(1200, 900);
+        expect(moves).to.have.length(1);
+
+        move(900, 700);
+        move(905, 690);
+
+        expect(moves[1]).to.deep.equal({ x: 900, y: 700, dx: 0, dy: 0 });
+        expect(moves[2]).to.deep.equal({ x: 905, y: 690, dx: 5, dy: -10 });
+    });
+
     it('should wait for a movement inside the target after focus loss', function () {
         move(100, 100);
         window.dispatchEvent(new window.Event('blur'));

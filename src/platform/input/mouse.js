@@ -20,7 +20,8 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * mouse events.
  *
  * The first unlocked mouse movement after creation, detachment or focus loss establishes a new
- * position and reports zero movement delta. Pointer-locked movement uses the browser's relative
+ * position and reports zero movement delta. Movement outside the target also invalidates the
+ * position, so re-entry reports zero delta. Pointer-locked movement uses the browser's relative
  * movement deltas.
  *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
@@ -396,7 +397,11 @@ class Mouse extends EventHandler {
 
     _handleMove(event) {
         const e = new MouseEvent(this, event);
-        if (!e.event) return;
+        if (!e.event) {
+            // Filtered movement outside the target must not leave a stale baseline for re-entry.
+            this._lastPositionValid = false;
+            return;
+        }
 
         // Update before firing so a callback that loses focus or detaches can invalidate the baseline.
         this._lastX = e.x;
