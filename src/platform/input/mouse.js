@@ -19,6 +19,10 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * `mouseup` events. The Mouse instance must be attached to a DOM element before it can detect
  * mouse events.
  *
+ * The first unlocked mouse movement after creation, detachment or focus loss establishes a new
+ * position and reports zero movement delta. Pointer-locked movement uses the browser's relative
+ * movement deltas.
+ *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
  * For pointer-lock-aware, frame-accumulated input deltas rather than raw events, see
@@ -78,6 +82,9 @@ class Mouse extends EventHandler {
 
     /** @private */
     _lastY = 0;
+
+    /** @private */
+    _lastPositionValid = false;
 
     /** @private */
     _buttons = [false, false, false];
@@ -188,7 +195,8 @@ class Mouse extends EventHandler {
 
     /**
      * Remove mouse events from the element that it is attached to and clear current and previous
-     * button states. This does not fire `mouseup` events.
+     * button states. The previous mouse position is also invalidated so the next unlocked movement
+     * reports zero delta. This does not fire `mouseup` events.
      */
     detach() {
         if (!this._attached) return;
@@ -362,6 +370,7 @@ class Mouse extends EventHandler {
     _handleWindowBlur() {
         this._buttons.fill(false);
         this._lastbuttons.fill(false);
+        this._lastPositionValid = false;
     }
 
     _handleUp(event) {
@@ -389,11 +398,12 @@ class Mouse extends EventHandler {
         const e = new MouseEvent(this, event);
         if (!e.event) return;
 
-        this.fire('mousemove', e);
-
-        // Store the last offset position to calculate deltas
+        // Update before firing so a callback that loses focus or detaches can invalidate the baseline.
         this._lastX = e.x;
         this._lastY = e.y;
+        this._lastPositionValid = !isMousePointerLocked();
+
+        this.fire('mousemove', e);
     }
 
     _handleWheel(event) {
