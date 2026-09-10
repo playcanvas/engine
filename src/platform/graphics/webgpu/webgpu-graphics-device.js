@@ -683,6 +683,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (recover && !this._destroyed) {
             Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
 
+            const profilerEnabled = this.gpuProfiler.enabled;
             this.loseContext();
             this.fire('devicelost');
 
@@ -701,6 +702,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
 
             this.restoreContext();
+            this.gpuProfiler.enabled = profilerEnabled;
             this.fire('devicerestored');
         }
     }
@@ -1211,6 +1213,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setupTimeStampWrites(passDesc, name) {
+        // Cached descriptors can retain queries from an earlier frame or device.
+        if (passDesc) {
+            passDesc.timestampWrites = undefined;
+        }
         if (this.gpuProfiler._enabled) {
             if (this.gpuProfiler.timestampQueriesSet) {
                 const slot = this.gpuProfiler.getSlot(name);
