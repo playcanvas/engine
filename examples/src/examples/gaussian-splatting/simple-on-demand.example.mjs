@@ -217,6 +217,11 @@ app.systems.gsplat.on('frame:request', () => {
     app.renderNextFrame = true;
 });
 
+// Device recovery needs a fresh frame even when the camera and scene have not changed.
+device.on('devicerestored', () => {
+    app.renderNextFrame = true;
+});
+
 // Once the splat has loaded, sorted and drawn its first complete frame, switch to on-demand.
 // This also guarantees the one render needed to register the camera before going idle.
 const onFrameReady = (
