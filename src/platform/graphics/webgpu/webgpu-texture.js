@@ -96,7 +96,9 @@ class WebgpuTexture {
         this.format = gpuTextureFormats[texture.format];
         Debug.assert(this.format !== '', `WebGPU does not support texture format ${texture.format} [${pixelFormatInfo.get(texture.format)?.name}] for texture ${texture.name}`, texture);
 
-        this.create(texture.device);
+        if (!texture.device.contextLost) {
+            this.create(texture.device);
+        }
     }
 
     create(device) {
@@ -331,6 +333,10 @@ class WebgpuTexture {
     }
 
     loseContext() {
+        this.gpuTexture = null;
+        this.view = null;
+        this.viewCache.clear();
+        this.samplers.length = 0;
     }
 
     /**
@@ -338,6 +344,9 @@ class WebgpuTexture {
      * @param {Texture} texture - The texture.
      */
     uploadImmediate(device, texture) {
+
+        // Downloads can finish while a replacement device is still being requested.
+        if (device.contextLost || device._destroyed) return;
 
         if (texture._needsUpload || texture._needsMipmapsUpload) {
             Debug.assert(!device.insideRenderPass,

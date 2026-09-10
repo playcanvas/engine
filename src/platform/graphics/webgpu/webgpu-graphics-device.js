@@ -72,6 +72,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     _deferredDestroys = [];
 
     /**
+     * Strong references used for device recovery. Owners must explicitly destroy bind groups
+     * when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuBindGroup>}
+     * @private
+     */
+    _bindGroups = new Set();
+
+    /**
+     * Strong references used for device recovery. Owners must explicitly destroy bind group
+     * formats when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuBindGroupFormat>}
+     * @private
+     */
+    _bindGroupFormats = new Set();
+
+    /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
@@ -279,20 +297,39 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     destroy() {
 
-        this.clearRenderer.destroy();
-        this.clearRenderer = null;
-
-        this.mipmapRenderer.destroy();
-        this.mipmapRenderer = null;
-
-        this.resolver.destroy();
-        this.resolver = null;
+        this.destroyDeviceResources();
 
         this._clearXrState();
-
         this.externalBackbuffer = null;
 
         super.destroy();
+    }
+
+    /** @private */
+    destroyDeviceResources() {
+
+        this.clearRenderer?.destroy();
+        this.clearRenderer = null;
+
+        this.mipmapRenderer?.destroy();
+        this.mipmapRenderer = null;
+
+        this.resolver?.destroy();
+        this.resolver = null;
+
+        this.quadVertexBuffer?.destroy();
+        this.quadVertexBuffer = null;
+        this.quadIndexBuffer?.destroy();
+        this.quadIndexBuffer = null;
+        this.emptyBindGroup?.format.destroy();
+        this.emptyBindGroup?.destroy();
+        this.emptyBindGroup = null;
+        this.dynamicBuffers?.destroy();
+        this.dynamicBuffers = null;
+        this.gpuProfiler?.destroy();
+        this.gpuProfiler = null;
+        this.backBuffer?.destroy();
+        this.backBuffer = null;
     }
 
     /**
@@ -646,7 +683,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (recover && !this._destroyed) {
             Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
 
-            super.loseContext(); // 'super' works correctly here
+            this.loseContext();
             this.fire('devicelost');
 
             let restoreDelay;
@@ -663,9 +700,50 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
 
-            super.restoreContext(); // 'super' works correctly here
+            this.restoreContext();
             this.fire('devicerestored');
         }
+    }
+
+    /** @ignore */
+    loseContext() {
+        // Nothing recorded against the old device can be submitted to its replacement.
+        this.commandEncoder = null;
+        this.commandBuffers.length = 0;
+        this.passEncoder = null;
+        this.pipeline = null;
+        this.insideRenderPass = false;
+        this.bindGroupFormats.length = 0;
+        this.renderPipeline.cache.clear();
+        this.computePipeline.cache.clear();
+        // Release owned buffers before their handles are invalidated, so destruction also
+        // removes their VRAM accounting. The remaining application resources are restored below.
+        this.destroyDeviceResources();
+        super.loseContext();
+
+        for (const bindGroup of this._bindGroups) {
+            bindGroup.loseContext();
+        }
+        for (const format of this._bindGroupFormats) {
+            format.loseContext();
+        }
+
+        for (const resource of this._deferredDestroys) {
+            resource.destroy();
+        }
+        this._deferredDestroys.length = 0;
+    }
+
+    /** @ignore */
+    restoreContext() {
+        for (const texture of this.textures) {
+            texture.impl.create(this);
+        }
+        for (const format of this._bindGroupFormats) {
+            format.restoreContext();
+        }
+        // Bind groups rebuild through their normal dirty update after buffer allocations are ready.
+        super.restoreContext();
     }
 
     postInit() {
@@ -817,7 +895,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createBindGroupImpl(bindGroup) {
-        return new WebgpuBindGroup();
+        return new WebgpuBindGroup(bindGroup);
     }
 
     createComputeImpl(compute) {

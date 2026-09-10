@@ -13,6 +13,20 @@ class WebgpuDynamicBuffers extends DynamicBuffers {
      */
     pendingStagingBuffers = [];
 
+    destroy() {
+        // Loss can interrupt a frame before its active allocations have been submitted.
+        this.scheduleSubmit();
+        for (const { gpuBuffer, stagingBuffer } of this.usedBuffers) {
+            gpuBuffer.destroy(this.device);
+            stagingBuffer.destroy(this.device);
+        }
+        for (const stagingBuffer of this.pendingStagingBuffers) {
+            stagingBuffer.destroy(this.device);
+        }
+        this.pendingStagingBuffers.length = 0;
+        super.destroy();
+    }
+
     createBuffer(device, size, isStaging) {
         return new WebgpuDynamicBuffer(device, size, isStaging);
     }
