@@ -1073,6 +1073,19 @@ class ImageElement {
         }
 
         if (value) {
+            Debug.call(() => {
+                if (!value.transparent) {
+                    const composition = this._system.app.scene.layers;
+                    const hasOpaquePass = this._element.layers.some((id) => {
+                        const layer = composition.getLayerById(id);
+                        return layer && composition.getOpaqueIndex(layer) !== -1;
+                    });
+                    if (!hasOpaquePass) {
+                        Debug.warnOnce('Image element assigned an opaque material, but none of its layers has an opaque render pass. Enable material blending or assign the element to a layer with an opaque pass.', this._entity, value);
+                    }
+                }
+            });
+
             this._renderable.setMaterial(value);
 
             // Preserve custom material colors until the element setters are used again.
