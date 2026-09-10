@@ -268,8 +268,12 @@ app.scene.lightmapMaxResolution = 2048;
 // For baked lights, this property perhaps has the biggest impact on lightmap resolution:
 app.scene.lightmapSizeMultiplier = 32;
 
-// Bake when settings are changed only
+// Bake when settings change or GPU-generated lightmaps need restoring
 let needBake = false;
+
+device.on('devicerestored', () => {
+    needBake = true;
+});
 
 // Handle data changes from HUD to modify light enabled state
 data.on('*:set', (/** @type {string} */ path, value) => {
@@ -312,7 +316,7 @@ data.set('data', {
 
 // Set an update function on the app's update event
 app.on('update', (_dt) => {
-    // Bake lightmaps when HUD properties change
+    // Bake lightmaps when requested
     if (needBake) {
         needBake = false;
         app.lightmapper.bake(null, bakeType);
