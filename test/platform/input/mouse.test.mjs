@@ -7,11 +7,6 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 const buttons = [MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT];
 
-// Mock the _getTargetCoords method, otherwise it returns null
-Mouse.prototype._getTargetCoords = function (event) {
-    return { x: 0, y: 0 };
-};
-
 describe('Mouse', function () {
 
     /** @type { Mouse } */
@@ -20,6 +15,7 @@ describe('Mouse', function () {
     beforeEach(function () {
         jsdomSetup();
         mouse = new Mouse(document.body);
+        sinon.stub(mouse, '_getTargetCoords').returns({ x: 0, y: 0 });
     });
 
     afterEach(function () {

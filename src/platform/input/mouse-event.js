@@ -36,12 +36,18 @@ class MouseEvent {
     y = 0;
 
     /**
-     * The change in x coordinate since the last mouse event.
+     * The change in x coordinate since the last mouse movement event. When the pointer is not
+     * locked, this is zero until an unlocked movement establishes a position after creation,
+     * detachment, focus loss, movement outside the target or pointer-locked movement. Under
+     * pointer lock, this uses the browser's relative movement delta.
      */
     dx = 0;
 
     /**
-     * The change in y coordinate since the last mouse event.
+     * The change in y coordinate since the last mouse movement event. When the pointer is not
+     * locked, this is zero until an unlocked movement establishes a position after creation,
+     * detachment, focus loss, movement outside the target or pointer-locked movement. Under
+     * pointer lock, this uses the browser's relative movement delta.
      */
     dy = 0;
 
@@ -149,7 +155,7 @@ class MouseEvent {
         if (isMousePointerLocked()) {
             this.dx = event.movementX || event.webkitMovementX || event.mozMovementX || 0;
             this.dy = event.movementY || event.webkitMovementY || event.mozMovementY || 0;
-        } else {
+        } else if (mouse._lastPositionValid) {
             this.dx = this.x - mouse._lastX;
             this.dy = this.y - mouse._lastY;
         }
