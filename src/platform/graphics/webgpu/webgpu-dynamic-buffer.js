@@ -36,6 +36,11 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
 
     destroy(device) {
 
+        this.bindGroupCache.forEach(bindGroup => bindGroup.destroy());
+        this.bindGroupCache.clear();
+        this.bindGroupFormat.destroy();
+        this.mappedRange = null;
+
         device._vram.ub -= this.buffer.size;
 
         this.buffer.destroy();
