@@ -1127,7 +1127,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     /** @ignore */
     isContextLost() {
-        return this.contextLost || this.gl.isContextLost();
+        return this.contextLost || (this.gl?.isContextLost() ?? true);
     }
 
     /**
