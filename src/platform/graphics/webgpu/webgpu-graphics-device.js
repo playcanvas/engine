@@ -71,10 +71,22 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     _deferredDestroys = [];
 
-    /** @type {Set<WebgpuBindGroup>} @private */
+    /**
+     * Strong references used for device recovery. Owners must explicitly destroy bind groups
+     * when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuBindGroup>}
+     * @private
+     */
     _bindGroups = new Set();
 
-    /** @type {Set<WebgpuBindGroupFormat>} @private */
+    /**
+     * Strong references used for device recovery. Owners must explicitly destroy bind group
+     * formats when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuBindGroupFormat>}
+     * @private
+     */
     _bindGroupFormats = new Set();
 
     /**

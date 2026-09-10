@@ -245,6 +245,9 @@ class BindStorageTextureFormat extends BindBaseFormat {
  * Currently this class is only used on WebGPU platform to specify the input and output resources
  * for vertex, fragment and compute shaders written in {@link SHADERLANGUAGE_WGSL} language.
  *
+ * Call {@link BindGroupFormat#destroy} when no longer needed. On WebGPU, the graphics device
+ * retains bind group formats for device recovery until they are explicitly destroyed.
+ *
  * @category Graphics
  */
 class BindGroupFormat {

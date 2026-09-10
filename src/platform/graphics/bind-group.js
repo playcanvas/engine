@@ -32,6 +32,9 @@ class DynamicBindGroup {
  * A bind group represents a collection of {@link UniformBuffer}, {@link Texture} and
  * {@link StorageBuffer} instanced, which can be bind on a GPU for rendering.
  *
+ * Call {@link BindGroup#destroy} when no longer needed. On WebGPU, the graphics device retains
+ * bind groups for device recovery until they are explicitly destroyed.
+ *
  * @ignore
  */
 class BindGroup {

@@ -194,6 +194,7 @@ class WebgpuShader {
     }
 
     processGLSL() {
+        Debug.assert(this._ownedMeshBindGroupFormat === null, 'Shader processing must not replace an owned mesh bind group format.');
         const shader = this.shader;
 
         // process the shader source to allow for uniforms
@@ -250,6 +251,7 @@ class WebgpuShader {
     }
 
     processWGSL() {
+        Debug.assert(this._ownedMeshBindGroupFormat === null, 'Shader processing must not replace an owned mesh bind group format.');
         const shader = this.shader;
 
         // process the shader source to allow for uniforms
