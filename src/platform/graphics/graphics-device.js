@@ -919,6 +919,17 @@ class GraphicsDevice extends EventHandler {
         this.gpuProfiler?.restoreContext?.();
     }
 
+    /**
+     * Reports whether the device is lost or destroyed, including a native loss whose event has not
+     * arrived yet.
+     *
+     * @returns {boolean} Whether the device is lost or destroyed.
+     * @ignore
+     */
+    isContextLost() {
+        return !!this.contextLost || this._destroyed;
+    }
+
     // don't stringify GraphicsDevice to JSON by JSON.stringify
     toJSON(key) {
         return undefined;

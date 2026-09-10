@@ -46,6 +46,18 @@ describe('GraphicsDevice', function () {
         });
     });
 
+    describe('#isContextLost', function () {
+
+        it('reports a destroyed device as lost without a context loss event', function () {
+            const device = new NullGraphicsDevice({ id: 'mock' });
+            expect(device.isContextLost()).to.be.false;
+
+            device.destroy();
+
+            expect(device.isContextLost()).to.be.true;
+        });
+    });
+
     describe('#getRenderableHdrFormat', function () {
 
         let device;
