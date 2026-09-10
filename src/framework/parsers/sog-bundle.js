@@ -349,7 +349,13 @@ class SogBundleParser {
                 // no need to prepare gpu data if decompressing
                 data.prepareCodebook();
                 if (gsplatCentersEnabledAtLoad) {
-                    await data.prepareGpuData();
+                    // An unload must cancel preparation even if the device never recovers.
+                    const onUnload = asset.once('unload', () => data.destroy());
+                    try {
+                        await data.prepareGpuData();
+                    } finally {
+                        onUnload.off();
+                    }
                 }
             }
 

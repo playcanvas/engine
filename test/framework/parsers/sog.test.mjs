@@ -1,10 +1,13 @@
 import { expect } from 'chai';
+import { strToU8, zipSync } from 'fflate';
 import { restore, stub } from 'sinon';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { SogBundleParser } from '../../../src/framework/parsers/sog-bundle.js';
 import { SogParser } from '../../../src/framework/parsers/sog.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { http } from '../../../src/platform/net/http.js';
+import { GSplatSogData } from '../../../src/scene/gsplat/gsplat-sog-data.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -87,6 +90,54 @@ describe('SogParser', function () {
             ]);
             done();
         }, sog);
+    });
+
+    [SogParser, SogBundleParser].forEach((Parser) => {
+        it(`${Parser.name} cancels a recovery wait when the asset unloads`, async function () {
+            const parser = new Parser(app);
+            parser.handler = app.loader.getHandler('gsplat');
+            const archive = zipSync({ 'meta.json': strToU8(JSON.stringify(META)) }, { level: 0 });
+            const sog = new Asset('sog', 'gsplat', {
+                url: META_URL,
+                contents: archive.buffer
+            });
+            app.assets.add(sog);
+
+            stub(http, 'get').callsFake((url, options, callback) => callback(null, META));
+            stub(app.assets, 'load').callsFake((asset) => {
+                asset.resource = new Texture(app.graphicsDevice, { width: 1, height: 1 });
+                asset.loaded = true;
+                asset.fire('load', asset);
+            });
+            stub(GSplatSogData.prototype, 'prepareCodebook');
+
+            let started;
+            const preparing = new Promise((resolve) => {
+                started = resolve;
+            });
+            const prepare = GSplatSogData.prototype.prepareGpuData;
+            stub(GSplatSogData.prototype, 'prepareGpuData').callsFake(function () {
+                const pending = prepare.call(this);
+                started();
+                return pending;
+            });
+
+            const device = app.graphicsDevice;
+            device.loseContext();
+            const listenersBefore = device._callbacks.get('devicerestored')?.length ?? 0;
+            const loaded = new Promise((resolve) => {
+                parser.load({ load: META_URL, original: META_URL }, (err, resource) => {
+                    resolve({ err, resource });
+                }, sog);
+            });
+
+            await preparing;
+            // The streaming loader fires unload explicitly for assets still being loaded.
+            sog.fire('unload', sog);
+            expect(await loaded).to.deep.equal({ err: null, resource: null });
+            expect(device.contextLost).to.be.true;
+            expect(device._callbacks.get('devicerestored')?.length ?? 0).to.equal(listenersBefore);
+        });
     });
 
     // Nothing cancels an in-flight request, so a load callback can run after app.destroy(). That

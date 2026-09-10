@@ -1125,6 +1125,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initTextureUnits(this.maxCombinedTextures);
     }
 
+    /** @ignore */
+    isContextLost() {
+        return this.contextLost || this.gl.isContextLost();
+    }
+
     /**
      * Called when the WebGL context was lost. It releases all context related resources.
      *
