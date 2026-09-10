@@ -244,7 +244,7 @@ export const patchState = (patch) => {
  * crawler-friendly share page provides social-unfurl meta tags; that page
  * uses history.replaceState to swap to the canonical `#/<path>?s=...` URL
  * before the SPA boots, so the recipient lands on the normal examples
- * browser. Falls back to the canonical hash URL on the index route.
+ * browser. Uses the canonical hash URL for category and index routes.
  *
  * @returns {string} Shareable URL.
  */
@@ -252,9 +252,13 @@ export const buildShareUrl = () => {
     const { path } = hashParts();
     const encoded = encodeState();
     const origin = window.location.origin;
-    const trimmed = path.replace(/^\//, '');
+    const trimmed = path.replace(/^\/|\/$/g, '');
     if (!trimmed) {
         return encoded ? `${origin}/#/?${STATE_PARAM}=${encoded}` : `${origin}/`;
+    }
+    if (!trimmed.includes('/')) {
+        const base = `${origin}/#/${trimmed}`;
+        return encoded ? `${base}?${STATE_PARAM}=${encoded}` : base;
     }
     const slug = trimmed.replace(/\//g, '_');
     const base = `${origin}/share/${slug}/`;

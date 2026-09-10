@@ -1,23 +1,27 @@
 import { Observer } from '@playcanvas/observer';
 import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { byName, getCategories } from '../categories.mjs';
+import { CATEGORY_PANEL_ID, CategoryPanel } from './CategoryPanel.mjs';
+import { byName, getCategories, getFirstExample } from '../categories.mjs';
 import { VERSION } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
-import { getHashPath, patchState, readState } from '../url-state.mjs';
+import { patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
 
-/** @import { ReactElement } from 'react' */
-
-const CATEGORY_PANEL_ID = 'category-panel-';
+/**
+ * @import { ReactElement } from 'react'
+ * @import { Location, NavigateFunction } from 'react-router-dom'
+ */
 
 /**
  * @typedef {object} Props
- * @property {{ pathname: string, hash: string, state?: any }} location - The router location.
+ * @property {Location} location - The router location.
+ * @property {string} examplePath - The resolved example path.
+ * @property {NavigateFunction} navigate - Navigate to another route.
  * @property {'mobile'|'desktop'} [layout] - Current layout.
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
@@ -45,8 +49,8 @@ const TypedComponent = Component;
  * @returns {string | null} Category the URL asked to focus on, if any.
  */
 const focusedCategory = (location) => {
-    const focus = location?.state?.focusCategory;
-    return typeof focus === 'string' ? focus : null;
+    const [, category, example] = location.pathname.split('/');
+    return !example && category && getFirstExample(category) ? category : null;
 };
 
 /**
@@ -141,7 +145,7 @@ function filterCategories(defaultCategories, filter) {
  */
 const createState = (location) => {
     const ui = readState().ui ?? {};
-    const filter = typeof ui.filter === 'string' ? ui.filter : '';
+    const filter = !focusedCategory(location) && typeof ui.filter === 'string' ? ui.filter : '';
     const largeThumbnails = typeof ui.largeThumbnails === 'boolean' ? ui.largeThumbnails : false;
     const collapsed = typeof ui.sideBarCollapsed === 'boolean' ?
         ui.sideBarCollapsed :
@@ -173,6 +177,8 @@ class SideBar extends TypedComponent {
 
     /** @type {{ unbind: () => void } | null} */
     _largeThumbnailsHandle = null;
+
+    _scrollFrame = 0;
 
     /**
      * @param {Props} props - Component properties.
@@ -245,6 +251,9 @@ class SideBar extends TypedComponent {
     }
 
     componentDidMount() {
+        if (focusedCategory(this.props.location)) {
+            patchState({ ui: { filter: '' } });
+        }
         this._largeThumbnailsHandle = this.state.observer.on('largeThumbnails:set', this._onLargeThumbnailsSet);
         this.setupSideBar();
         this.setupCategoryPanels();
@@ -260,11 +269,53 @@ class SideBar extends TypedComponent {
         this.setupSideBar();
         this.setupCategoryPanels();
         if (prevState.filterText && !this.state.filterText) {
-            document.querySelector('#sideBar-contents .nav-item.selected')?.scrollIntoView({ block: 'nearest' });
+            this._scrollToElement('#sideBar-contents .nav-item.selected');
+        }
+        const category = focusedCategory(this.props.location);
+        const expandAll = this.props.location.state?.expandAllCategories === true;
+        if ((category || expandAll) && prevProps.location.key !== this.props.location.key) {
+            patchState({ ui: { filter: '' } });
+            this.setState({
+                filterText: '',
+                filteredCategories: null,
+                collapsedCategories: collapseAllBut(this.state.defaultCategories, category)
+            }, () => {
+                if (category) {
+                    this._scrollToCategory(category);
+                } else {
+                    this._scrollToElement('#sideBar-contents .nav-item.selected');
+                }
+            });
         }
     }
 
+    _expandAll = () => {
+        this.props.navigate(this.props.examplePath, { state: { expandAllCategories: true } });
+    };
+
+    /**
+     * @param {string} category - Category whose header should be visible.
+     */
+    _scrollToCategory(category) {
+        this._scrollToElement(`#${CATEGORY_PANEL_ID}${category} .pcui-panel-header`);
+    }
+
+    /**
+     * @param {string} selector - Element to reveal after category panels finish resizing.
+     */
+    _scrollToElement(selector) {
+        cancelAnimationFrame(this._scrollFrame);
+        // PCUI applies collapsed panel sizes in an animation frame after the React update.
+        this._scrollFrame = requestAnimationFrame(() => {
+            this._scrollFrame = requestAnimationFrame(() => {
+                this._scrollFrame = 0;
+                document.querySelector(selector)?.scrollIntoView({ block: 'nearest' });
+            });
+        });
+    }
+
     componentWillUnmount() {
+        cancelAnimationFrame(this._scrollFrame);
         this._largeThumbnailsHandle?.unbind();
         this._largeThumbnailsHandle = null;
         window.removeEventListener('resize', this._onLayoutChange);
@@ -304,8 +355,13 @@ class SideBar extends TypedComponent {
         // when first opening the examples browser via a specific example, scroll it into view
         // @ts-ignore
         if (!window._scrolledToExample) {
-            const examplePath = getHashPath().split('/');
-            document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
+            const category = focusedCategory(this.props.location);
+            if (category) {
+                this._scrollToCategory(category);
+            } else {
+                const examplePath = this.props.examplePath.split('/');
+                document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
+            }
             // @ts-ignore
             window._scrolledToExample = true;
         }
@@ -368,19 +424,19 @@ class SideBar extends TypedComponent {
         if (Object.keys(categories).length === 0) {
             return jsx(Label, { text: 'No results' });
         }
-        const { pathname } = this.props.location;
-        const { collapsedCategories, filterText } = this.state;
+        const { examplePath } = this.props;
+        const { collapsedCategories, defaultCategories, filterText } = this.state;
+        const expandedCategories = Object.keys(defaultCategories).filter(category => !collapsedCategories[category]);
+        const onlyExpandedCategory = expandedCategories.length === 1 ? expandedCategories[0] : null;
         return Object.keys(categories)
         .sort(byName)
         .map((category) => {
             return jsx(
-                Panel,
+                CategoryPanel,
                 {
                     key: category,
-                    id: `${CATEGORY_PANEL_ID}${category}`,
-                    class: 'categoryPanel',
-                    headerText: category.split('-').join(' ').toUpperCase(),
-                    collapsible: true,
+                    category,
+                    onExpandAll: category === onlyExpandedCategory ? this._expandAll : undefined,
                     collapsed: !filterText && collapsedCategories[category] === true
                 },
                 jsx(
@@ -392,7 +448,7 @@ class SideBar extends TypedComponent {
                     .sort(byName)
                     .map((example) => {
                         const path = `/${category}/${example}`;
-                        const isSelected = pathname === path;
+                        const isSelected = examplePath === path;
                         const className = `nav-item ${isSelected ? 'selected' : ''}`;
                         return jsx(
                             Link,
@@ -487,12 +543,14 @@ class SideBar extends TypedComponent {
 }
 
 /**
- * @param {Omit<Props, 'location'>} props - Component properties.
+ * @param {Omit<Props, 'location'|'examplePath'|'navigate'>} props - Component properties.
  * @returns {ReactElement} The SideBar component with router location.
  */
 function SideBarWithRouter(props) {
     const location = useLocation();
-    return jsx(SideBar, { ...props, location });
+    const navigate = useNavigate();
+    const { category = '', example = getFirstExample(category) } = useParams();
+    return jsx(SideBar, { ...props, location, navigate, examplePath: `/${category}/${example}` });
 }
 
 export { SideBarWithRouter as SideBar };
