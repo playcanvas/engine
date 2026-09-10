@@ -8,7 +8,8 @@ describe('WebglTexture upload during context loss', function () {
     it('skips uploads after the device has been destroyed', function () {
         const device = {
             contextLost: false,
-            gl: null,
+            _destroyed: true,
+            gl: { isContextLost: () => false },
             isContextLost: WebglGraphicsDevice.prototype.isContextLost,
             setTexture: sinon.spy()
         };
@@ -19,6 +20,13 @@ describe('WebglTexture upload during context loss', function () {
         expect(device.setTexture.called).to.be.false;
         expect(texture._needsUpload).to.be.true;
         expect(texture._needsMipmapsUpload).to.be.true;
+
+        device.gl = null;
+        expect(device.isContextLost()).to.be.true;
+
+        // A missing native context must also be safe independently of the base device state.
+        device._destroyed = false;
+        expect(device.isContextLost()).to.be.true;
     });
 
     it('keeps uploads pending until both native and engine recovery have completed', function () {

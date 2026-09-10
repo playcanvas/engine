@@ -930,6 +930,21 @@ class GraphicsDevice extends EventHandler {
         return !!this.contextLost || this._destroyed;
     }
 
+    /**
+     * Forces an actual graphics context or device loss for testing, then attempts recovery after
+     * the specified delay. Only has an effect in debug builds on WebGL and WebGPU. Calls made while
+     * a loss or recovery is pending are ignored. Recovery is asynchronous and is not guaranteed
+     * to succeed. Listen for `devicelost` and `devicerestored` to observe the recovery lifecycle.
+     *
+     * @param {number} [delay] - Delay in milliseconds after loss is observed before attempting
+     * recovery. Defaults to 100.
+     * @ignore
+     * @example
+     * app.graphicsDevice.debugLoseContext(1000);
+     */
+    debugLoseContext(delay = 100) {
+    }
+
     // don't stringify GraphicsDevice to JSON by JSON.stringify
     toJSON(key) {
         return undefined;

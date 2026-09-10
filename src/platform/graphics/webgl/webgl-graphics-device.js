@@ -1127,7 +1127,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     /** @ignore */
     isContextLost() {
-        return this.contextLost || (this.gl?.isContextLost() ?? true);
+        return super.isContextLost() || (this.gl?.isContextLost() ?? true);
     }
 
     /**
@@ -3165,13 +3165,38 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     // #if _DEBUG
-    // debug helper to force lost context
-    debugLoseContext(sleep = 100) {
-        const context = this.gl.getExtension('WEBGL_lose_context');
-        context.loseContext();
-        setTimeout(() => context.restoreContext(), sleep);
-    }
+    /** @private */
+    _debugContextLossPending = false;
     // #endif
+
+    /** @ignore */
+    debugLoseContext(delay = 100) {
+        Debug.call(() => {
+            if (this._destroyed || this.contextLost || this._debugContextLossPending) {
+                return;
+            }
+
+            const context = this.gl.getExtension('WEBGL_lose_context');
+            if (!context) {
+                Debug.warn('WEBGL_lose_context is unavailable.');
+                return;
+            }
+
+            this._debugContextLossPending = true;
+            this.once('devicerestored', () => {
+                this._debugContextLossPending = false;
+            });
+            this.once('devicelost', () => {
+                // The browser must dispatch the loss event before restoration can be requested.
+                setTimeout(() => {
+                    if (!this._destroyed) {
+                        context.restoreContext();
+                    }
+                }, delay);
+            });
+            context.loseContext();
+        });
+    }
 }
 
 export { WebglGraphicsDevice };

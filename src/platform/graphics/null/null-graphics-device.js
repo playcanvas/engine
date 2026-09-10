@@ -42,6 +42,10 @@ class NullGraphicsDevice extends GraphicsDevice {
         super.destroy();
     }
 
+    /** @ignore */
+    debugLoseContext(delay = 100) {
+    }
+
     initDeviceCaps() {
 
         this.disableParticleSystem = true;
