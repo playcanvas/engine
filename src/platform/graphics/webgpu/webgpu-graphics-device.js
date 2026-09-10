@@ -612,13 +612,54 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return this;
     }
 
+    // #if _DEBUG
+    /**
+     * @type {(() => Promise<void>) | null}
+     * @private
+     */
+    _debugRestoreDelay = null;
+    // #endif
+
+    /** @ignore */
+    debugLoseContext(delay = 100) {
+        Debug.call(() => {
+            if (this._destroyed || this.contextLost || this._debugRestoreDelay) {
+                return;
+            }
+
+            // Distinguish this deliberate loss from normal device destruction. Start the timer
+            // in the loss handler so the application stops rendering throughout the delay.
+            this._debugRestoreDelay = () => new Promise((resolve) => {
+                setTimeout(resolve, delay);
+            });
+            this.wgpu.destroy();
+        });
+    }
+
     async handleDeviceLost(info) {
+        let recover = info.reason !== 'destroyed';
+        Debug.call(() => {
+            recover ||= !!this._debugRestoreDelay;
+        });
+
         // reason is 'destroyed' if we intentionally destroy the device
-        if (info.reason !== 'destroyed') {
+        if (recover && !this._destroyed) {
             Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
 
             super.loseContext(); // 'super' works correctly here
             this.fire('devicelost');
+
+            let restoreDelay;
+            Debug.call(() => {
+                restoreDelay = this._debugRestoreDelay?.();
+                this._debugRestoreDelay = null;
+            });
+            if (restoreDelay) {
+                await restoreDelay;
+            }
+            if (this._destroyed) {
+                return;
+            }
 
             await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
 
