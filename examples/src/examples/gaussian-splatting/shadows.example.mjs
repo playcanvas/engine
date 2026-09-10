@@ -99,17 +99,26 @@ await new Promise((resolve) => {
 app.start();
 
 // Setup projected skydome from HDR
-const hdriTexture = assets.hdri.resource;
+const applyHdri = () => {
+    const hdriTexture = assets.hdri.resource;
+    const oldSkybox = app.scene.skybox;
+    const oldEnvAtlas = app.scene.envAtlas;
 
-// Generate high resolution cubemap for skybox
-const skybox = EnvLighting.generateSkyboxCubemap(hdriTexture);
-app.scene.skybox = skybox;
+    // Generate high resolution cubemap for skybox
+    app.scene.skybox = EnvLighting.generateSkyboxCubemap(hdriTexture);
 
-// Generate env-atlas for lighting
-const lighting = EnvLighting.generateLightingSource(hdriTexture);
-const envAtlas = EnvLighting.generateAtlas(lighting);
-lighting.destroy();
-app.scene.envAtlas = envAtlas;
+    // Generate env-atlas for lighting
+    const lighting = EnvLighting.generateLightingSource(hdriTexture);
+    app.scene.envAtlas = EnvLighting.generateAtlas(lighting);
+    lighting.destroy();
+
+    oldSkybox?.destroy();
+    oldEnvAtlas?.destroy();
+};
+
+// These textures are generated on the GPU, so their contents must be rebuilt after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
 
 // Set exposure and projected dome
 app.scene.exposure = 0.4;

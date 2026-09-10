@@ -177,7 +177,21 @@ const miniStats = new MiniStats(app, MiniStats.getDefaultOptions(['gsplats', 'gs
 // Generated up front (one-off GPU work) but NOT assigned to scene.skybox yet — the backdrop is
 // revealed together with the splats once their first (worst-LOD) frame is ready (see below),
 // so the sky doesn't pop in before the scene.
-const skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+let skyboxCubemap;
+const applyHdri = () => {
+    const oldSkybox = skyboxCubemap;
+    skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+    // Keep the backdrop hidden until the first splat frame is ready.
+    if (oldSkybox && app.scene.skybox === oldSkybox) {
+        app.scene.skybox = skyboxCubemap;
+    }
+    oldSkybox?.destroy();
+    app.renderNextFrame = true;
+};
+
+// The skybox is generated on the GPU and needs rebuilding after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
 app.scene.sky.type = SKYTYPE_INFINITE;
 
 // Sky rotation (degrees about the vertical axis), exposed in the UI to aim a feature of the

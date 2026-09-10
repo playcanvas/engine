@@ -392,7 +392,7 @@ document.body.appendChild(phCredit);
 app.on('destroy', () => phCredit.remove());
 
 // HDRI environment loading
-/** @type {Map<string, { skybox: Texture, envAtlas: Texture }>} */
+/** @type {Map<string, { source: Texture, skybox: Texture, envAtlas: Texture }>} */
 const hdriCache = new Map();
 
 const applyEnvironment = async (/** @type {string} */ name) => {
@@ -422,7 +422,7 @@ const applyEnvironment = async (/** @type {string} */ name) => {
         const lighting = EnvLighting.generateLightingSource(source);
         const envAtlas = EnvLighting.generateAtlas(lighting);
         lighting.destroy();
-        hdriCache.set(preset.url, { skybox, envAtlas });
+        hdriCache.set(preset.url, { source, skybox, envAtlas });
     }
 
     const cached = /** @type {{ skybox: Texture, envAtlas: Texture }} */ (hdriCache.get(preset.url));
@@ -432,6 +432,22 @@ const applyEnvironment = async (/** @type {string} */ name) => {
     data.set('exposure', preset.exposure ?? 1);
     phCredit.style.display = 'block';
 };
+
+// Rebuild every cached preset so switching environments after recovery remains valid.
+device.on('devicerestored', () => {
+    hdriCache.forEach((cached) => {
+        const oldSkybox = cached.skybox;
+        cached.skybox = EnvLighting.generateSkyboxCubemap(cached.source);
+        const lighting = EnvLighting.generateLightingSource(cached.source);
+        EnvLighting.generateAtlas(lighting, { target: cached.envAtlas });
+        lighting.destroy();
+
+        if (app.scene.skybox === oldSkybox) {
+            app.scene.skybox = cached.skybox;
+        }
+        oldSkybox.destroy();
+    });
+});
 
 data.on('environment:set', () => {
     applyEnvironment(data.get('environment')).catch((err) => {

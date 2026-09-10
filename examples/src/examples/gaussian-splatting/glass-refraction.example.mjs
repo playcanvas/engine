@@ -281,11 +281,23 @@ app.start();
 // Use the HDRI as both the visible background and the lighting/reflection environment.
 // generateSkyboxCubemap gives a high-resolution skybox for the background, while the
 // prefiltered env-atlas drives the glass reflections and scene lighting.
-const hdri = assets.hdri.resource;
-app.scene.skybox = EnvLighting.generateSkyboxCubemap(hdri);
-const lightingSource = EnvLighting.generateLightingSource(hdri);
-app.scene.envAtlas = EnvLighting.generateAtlas(lightingSource);
-lightingSource.destroy();
+const applyHdri = () => {
+    const oldSkybox = app.scene.skybox;
+    const oldEnvAtlas = app.scene.envAtlas;
+
+    const hdri = assets.hdri.resource;
+    app.scene.skybox = EnvLighting.generateSkyboxCubemap(hdri);
+    const lightingSource = EnvLighting.generateLightingSource(hdri);
+    app.scene.envAtlas = EnvLighting.generateAtlas(lightingSource);
+    lightingSource.destroy();
+
+    oldSkybox?.destroy();
+    oldEnvAtlas?.destroy();
+};
+
+// Generated environment textures need to be rebuilt after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
 app.scene.skyboxMip = 1;
 app.scene.exposure = 1.5;
 

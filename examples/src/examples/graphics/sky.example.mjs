@@ -168,6 +168,8 @@ const presetRoom = {
 
 // Apply hdri texture
 const applyHdri = (source) => {
+    const oldSkybox = app.scene.skybox;
+    const oldEnvAtlas = app.scene.envAtlas;
     // Convert it to high resolution cubemap for the skybox
     // This is optional in case you want a really high resolution skybox
     const skybox = EnvLighting.generateSkyboxCubemap(source);
@@ -179,7 +181,15 @@ const applyHdri = (source) => {
     const envAtlas = EnvLighting.generateAtlas(lighting);
     lighting.destroy();
     app.scene.envAtlas = envAtlas;
+
+    oldSkybox?.destroy();
+    oldEnvAtlas?.destroy();
 };
+
+// Restore the selected HDRI without resetting the other sky settings.
+device.on('devicerestored', () => {
+    applyHdri(data.get('data.skybox.preset') === 'Room' ? assets.hdri_room.resource : assets.hdri_street.resource);
+});
 
 // When UI value changes, update skybox data
 data.on('*:set', (/** @type {string} */ path, value) => {
