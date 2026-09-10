@@ -2,6 +2,7 @@ import MonacoEditor, { loader } from '@monaco-editor/react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 
 import { CodeEditorBase } from './CodeEditorBase.mjs';
+import { getFirstExample } from '../../categories.mjs';
 import { downloadExampleProject } from '../../download-project.mjs';
 import { iframe } from '../../iframe.mjs';
 import { jsx } from '../../jsx.mjs';
@@ -581,7 +582,8 @@ class CodeEditorDesktop extends CodeEditorBase {
                         icon: 'E259',
                         text: '',
                         onClick: () => {
-                            const examplePath = getHashPath() === '/' ? 'misc/hello-world' : getHashPath().slice(1);
+                            const [, category, example] = getHashPath().split('/');
+                            const examplePath = `${category}/${example || getFirstExample(category)}`;
                             window.open(
                                 `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.example.mjs`
                             );

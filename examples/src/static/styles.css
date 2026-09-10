@@ -244,6 +244,37 @@ body {
     background-color: #20292b;
 }
 
+#sideBar .categoryPanel .pcui-panel-header-title {
+    min-width: 0;
+    flex: 1;
+}
+
+.category-share {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 28px;
+    height: 28px;
+    margin: 2px 2px 2px 0;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: transparent;
+    color: #9ba9ad;
+    cursor: pointer;
+}
+
+.category-share:hover,
+.category-share:focus-visible {
+    color: #f60;
+    background-color: #334044;
+}
+
+.category-share:focus-visible {
+    outline: 1px solid #f60;
+    outline-offset: -1px;
+}
+
 .nav-item {
     margin: 12px;
     overflow: auto;

@@ -3,13 +3,14 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
 import * as ReactJsxRuntime from 'react/jsx-runtime';
-import { useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { SelectInput as OverlaySelectInput } from './OverlaySelectInput.mjs';
 import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from '../../../utils/inline-markdown.mjs';
+import { getFirstExample } from '../categories.mjs';
 import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
 import { setExampleSnapshotProvider } from '../example-snapshot.mjs';
 import { iframe } from '../iframe.mjs';
@@ -1048,13 +1049,18 @@ class Example extends TypedComponent {
 }
 
 /**
+ * Category routes display their first example without replacing the shareable URL.
+ *
  * @param {Omit<Props, 'match'>} props - Component properties.
  * @returns {ReactElement} The Example component with router params.
  */
 function ExampleWithRouter(props) {
-    const params = useParams();
-    // @ts-ignore
-    return jsx(Example, { ...props, match: { params } });
+    const { category = '', example = getFirstExample(category) } = useParams();
+    const { search } = useLocation();
+    if (!example) {
+        return jsx(Navigate, { to: { pathname: '/misc/hello-world', search }, replace: true });
+    }
+    return jsx(Example, { ...props, match: { params: { category, example } } });
 }
 
 export { ExampleWithRouter as Example };
