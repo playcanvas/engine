@@ -80,6 +80,23 @@ describe('Keyboard', function () {
             expect(keyboard.wasReleased(KEY_UP)).to.be.true;
         });
 
+    });
+
+    describe('#attach', function () {
+
+        it('should clear key states when attaching to the same element', function () {
+            window.dispatchEvent(new KeyboardEvent('keydown', { keyCode: KEY_UP }));
+            keyboard.update();
+
+            keyboard.attach(window);
+
+            expect(keyboard.isPressed(KEY_UP)).to.be.false;
+            expect(keyboard.wasPressed(KEY_UP)).to.be.false;
+            expect(keyboard.wasReleased(KEY_UP)).to.be.false;
+            window.dispatchEvent(new KeyboardEvent('keydown', { keyCode: KEY_UP }));
+            expect(keyboard.wasPressed(KEY_UP)).to.be.true;
+        });
+
         it('should clear key states when attaching to another element', function () {
             window.dispatchEvent(new KeyboardEvent('keydown', { keyCode: KEY_UP }));
             keyboard.update();

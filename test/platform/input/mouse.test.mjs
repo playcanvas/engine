@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 
 import { MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT } from '../../../src/platform/input/constants.js';
 import { Mouse } from '../../../src/platform/input/mouse.js';
@@ -23,6 +24,7 @@ describe('Mouse', function () {
 
     afterEach(function () {
         mouse.detach();
+        sinon.restore();
         jsdomTeardown();
     });
 
@@ -90,6 +92,96 @@ describe('Mouse', function () {
                 expect(mouse.wasReleased(button)).to.be.true;
             }
             expect(releases).to.equal(buttons.length);
+        });
+
+    });
+
+    describe('focus loss', function () {
+
+        ['blur', 'hidden'].forEach((event) => {
+            it(`should reset button states without firing mouseup on ${event}`, function () {
+                // Cover a pending press, a held button and a pending release together.
+                window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_MIDDLE }));
+                window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_RIGHT }));
+                mouse.update();
+                window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT }));
+                window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_RIGHT }));
+                const onMouseUp = sinon.spy();
+                mouse.on('mouseup', onMouseUp);
+
+                if (event === 'blur') {
+                    window.dispatchEvent(new window.Event('blur'));
+                } else {
+                    sinon.stub(document, 'visibilityState').get(() => 'hidden');
+                    document.dispatchEvent(new window.Event('visibilitychange'));
+                }
+
+                expect(onMouseUp.called).to.be.false;
+                for (const button of buttons) {
+                    expect(mouse.isPressed(button)).to.be.false;
+                    expect(mouse.wasPressed(button)).to.be.false;
+                    expect(mouse.wasReleased(button)).to.be.false;
+                }
+
+                window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_MIDDLE }));
+                expect(mouse.wasPressed(MOUSEBUTTON_MIDDLE)).to.be.true;
+                mouse.update();
+                window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_MIDDLE }));
+                expect(mouse.wasReleased(MOUSEBUTTON_MIDDLE)).to.be.true;
+                expect(onMouseUp.calledOnce).to.be.true;
+            });
+        });
+
+        it('should preserve button states when the document becomes visible', function () {
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT }));
+            mouse.update();
+            sinon.stub(document, 'visibilityState').get(() => 'visible');
+
+            document.dispatchEvent(new window.Event('visibilitychange'));
+
+            expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.be.true;
+            expect(mouse.wasPressed(MOUSEBUTTON_LEFT)).to.be.false;
+            expect(mouse.wasReleased(MOUSEBUTTON_LEFT)).to.be.false;
+        });
+
+        it('should remove focus listeners on detach and restore them on reattachment', function () {
+            mouse.detach();
+            const windowAdd = sinon.spy(window, 'addEventListener');
+            const documentAdd = sinon.spy(document, 'addEventListener');
+            const windowRemove = sinon.spy(window, 'removeEventListener');
+            const documentRemove = sinon.spy(document, 'removeEventListener');
+            mouse.attach(document.body);
+            const blurListener = windowAdd.getCalls().find(call => call.args[0] === 'blur')?.args[1];
+            const visibilityListener = documentAdd.getCalls().find(call => call.args[0] === 'visibilitychange')?.args[1];
+            expect(blurListener).to.be.a('function');
+            expect(visibilityListener).to.be.a('function');
+
+            mouse.detach();
+
+            expect(windowRemove.calledWith('blur', blurListener)).to.be.true;
+            expect(documentRemove.calledWith('visibilitychange', visibilityListener)).to.be.true;
+
+            mouse.attach(document.body);
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT }));
+            window.dispatchEvent(new window.Event('blur'));
+            expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.be.false;
+        });
+
+    });
+
+    describe('#attach', function () {
+
+        it('should preserve button states when attaching to another element', function () {
+            window.dispatchEvent(new MouseEvent('mousedown', { button: MOUSEBUTTON_LEFT }));
+            mouse.update();
+
+            mouse.attach(document.createElement('div'));
+
+            expect(mouse.isPressed(MOUSEBUTTON_LEFT)).to.be.true;
+            expect(mouse.wasPressed(MOUSEBUTTON_LEFT)).to.be.false;
+            expect(mouse.wasReleased(MOUSEBUTTON_LEFT)).to.be.false;
+            window.dispatchEvent(new MouseEvent('mouseup', { button: MOUSEBUTTON_LEFT }));
+            expect(mouse.wasReleased(MOUSEBUTTON_LEFT)).to.be.true;
         });
 
     });

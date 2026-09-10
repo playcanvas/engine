@@ -14,8 +14,10 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  *
  * Allows the state of mouse buttons to be queried to check if they are currently pressed or were
  * pressed/released since the last update. Provides methods to enable/disable pointer lock for
- * raw mouse movement input and control over the context menu. The Mouse instance must be attached
- * to a DOM element before it can detect mouse events.
+ * raw mouse movement input and control over the context menu. The class automatically clears
+ * button states when the window loses focus or the document becomes hidden, without firing
+ * `mouseup` events. The Mouse instance must be attached to a DOM element before it can detect
+ * mouse events.
  *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
  *
@@ -120,6 +122,18 @@ class Mouse extends EventHandler {
     _contextMenuHandler;
 
     /**
+     * @type {() => void}
+     * @private
+     */
+    _visibilityChangeHandler;
+
+    /**
+     * @type {() => void}
+     * @private
+     */
+    _windowBlurHandler;
+
+    /**
      * Create a new Mouse instance.
      *
      * @param {Element} [element] - The Element that the mouse events are attached to.
@@ -132,6 +146,8 @@ class Mouse extends EventHandler {
         this._downHandler = this._handleDown.bind(this);
         this._moveHandler = this._handleMove.bind(this);
         this._wheelHandler = this._handleWheel.bind(this);
+        this._visibilityChangeHandler = this._handleVisibilityChange.bind(this);
+        this._windowBlurHandler = this._handleWindowBlur.bind(this);
         this._contextMenuHandler = (event) => {
             event.preventDefault();
         };
@@ -149,7 +165,8 @@ class Mouse extends EventHandler {
     }
 
     /**
-     * Attach mouse events to an Element.
+     * Attach mouse events to an Element. If already attached, this changes the target element
+     * while preserving current and previous button states, unlike {@link Keyboard#attach}.
      *
      * @param {Element} element - The DOM element to attach the mouse to.
      */
@@ -165,6 +182,8 @@ class Mouse extends EventHandler {
         window.addEventListener('mousedown', this._downHandler, options);
         window.addEventListener('mousemove', this._moveHandler, options);
         window.addEventListener('wheel', this._wheelHandler, options);
+        document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
+        window.addEventListener('blur', this._windowBlurHandler, false);
     }
 
     /**
@@ -182,9 +201,10 @@ class Mouse extends EventHandler {
         window.removeEventListener('mousedown', this._downHandler, options);
         window.removeEventListener('mousemove', this._moveHandler, options);
         window.removeEventListener('wheel', this._wheelHandler, options);
+        document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
+        window.removeEventListener('blur', this._windowBlurHandler, false);
 
-        this._buttons.fill(false);
-        this._lastbuttons.fill(false);
+        this._handleWindowBlur();
     }
 
     /**
@@ -321,6 +341,27 @@ class Mouse extends EventHandler {
      */
     wasReleased(button) {
         return (!this._buttons[button] && this._lastbuttons[button]);
+    }
+
+    /**
+     * Handle the browser visibilitychange event.
+     *
+     * @private
+     */
+    _handleVisibilityChange() {
+        if (document.visibilityState === 'hidden') {
+            this._handleWindowBlur();
+        }
+    }
+
+    /**
+     * Handle the browser blur event.
+     *
+     * @private
+     */
+    _handleWindowBlur() {
+        this._buttons.fill(false);
+        this._lastbuttons.fill(false);
     }
 
     _handleUp(event) {

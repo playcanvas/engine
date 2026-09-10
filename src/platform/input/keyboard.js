@@ -198,7 +198,9 @@ class Keyboard extends EventHandler {
     }
 
     /**
-     * Attach the keyboard event handlers to an Element.
+     * Attach the keyboard event handlers to an Element. If already attached, this first detaches
+     * and clears current and previous key states, even when attaching to the same element. No
+     * `keyup` events are fired. Unlike {@link Mouse#attach}, held input states are not preserved.
      *
      * @param {Element|Window} element - The element to listen for keyboard events on.
      */
@@ -234,8 +236,7 @@ class Keyboard extends EventHandler {
         document.removeEventListener('visibilitychange', this._visibilityChangeHandler, false);
         window.removeEventListener('blur', this._windowBlurHandler, false);
 
-        this._keymap = {};
-        this._lastmap = {};
+        this._handleWindowBlur();
     }
 
     /**
