@@ -252,9 +252,16 @@ class SideBar extends TypedComponent {
         window.addEventListener('orientationchange', this._onLayoutChange);
     }
 
-    componentDidUpdate() {
+    /**
+     * @param {Props} prevProps - The previous properties.
+     * @param {State} prevState - The previous state.
+     */
+    componentDidUpdate(prevProps, prevState) {
         this.setupSideBar();
         this.setupCategoryPanels();
+        if (prevState.filterText && !this.state.filterText) {
+            document.querySelector('#sideBar-contents .nav-item.selected')?.scrollIntoView({ block: 'nearest' });
+        }
     }
 
     componentWillUnmount() {
@@ -328,10 +335,14 @@ class SideBar extends TypedComponent {
      * @param {string} filter - The filter string.
      */
     onChangeFilter(filter) {
-        const { defaultCategories } = this.state;
+        const { defaultCategories, collapsedCategories } = this.state;
+        const category = this.props.location.pathname.split('/')[1];
         this.mergeState({
             filterText: filter,
-            filteredCategories: filterCategories(defaultCategories, filter)
+            filteredCategories: filterCategories(defaultCategories, filter),
+            // Keep the current example visible when restoring the unfiltered categories.
+            collapsedCategories: !filter && collapsedCategories[category] ?
+                { ...collapsedCategories, [category]: false } : collapsedCategories
         });
         patchState({ ui: { filter } });
     }
