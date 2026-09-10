@@ -766,7 +766,14 @@ class ProceduralSky extends Script {
         // force a lighting bake on the first update
         this._bakedParams = '';
 
+        device.on('devicerestored', this._onDeviceRestored, this);
         this.on('destroy', this._onDestroy, this);
+    }
+
+    /** @private */
+    _onDeviceRestored() {
+        // Rebuild GPU-generated lighting on the next update, after the sky uniforms are set.
+        this._bakedParams = '';
     }
 
     /** @private */
@@ -998,6 +1005,7 @@ class ProceduralSky extends Script {
     /** @private */
     _onDestroy() {
         const device = this.app.graphicsDevice;
+        device.off('devicerestored', this._onDeviceRestored, this);
 
         // restore the original sky shader chunks
         if (this._origSkyboxGLSL !== null) {
