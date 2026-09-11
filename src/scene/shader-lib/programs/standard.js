@@ -21,9 +21,7 @@ import { MapUtils } from '../../../core/map-utils.js';
  */
 
 /**
- * Texture map names mapped to their channel count, in registration order. Iterated through its own
- * iterator rather than for...in, so enumerable properties that user code adds to the built-in
- * prototypes are never treated as texture maps.
+ * Texture map names mapped to their channel count, in registration order.
  *
  * @type {Map<string, number>}
  */
