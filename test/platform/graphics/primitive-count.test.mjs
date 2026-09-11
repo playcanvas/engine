@@ -60,6 +60,7 @@ describe('Primitive counting', function () {
                     passEncoder: { draw() {}, drawIndirect() {} },
                     _vram: { sb: 0 },
                     buffers: new Set(),
+                    _drawCommands: new Set(),
                     createBufferImpl: () => ({ buffer: {}, allocate() {}, write() {}, destroy() {} })
                 };
                 const webgl = backend === 'WebGL';

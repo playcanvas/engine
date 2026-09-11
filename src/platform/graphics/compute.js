@@ -25,6 +25,9 @@ class ComputeParameter {
 /**
  * A representation of a compute shader with the associated resources, that can be executed on the
  * GPU. Only supported on WebGPU platform.
+ *
+ * Call {@link Compute#destroy} when no longer needed. The graphics device retains compute
+ * instances for device recovery until they are explicitly destroyed.
  */
 class Compute {
     /**

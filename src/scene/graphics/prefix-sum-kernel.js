@@ -251,6 +251,8 @@ class PrefixSumKernel {
      */
     destroyPasses() {
         for (const pass of this.passes) {
+            pass.scanCompute.destroy();
+            pass.addBlockCompute?.destroy();
             pass.blockSumBuffer?.destroy();
         }
         this.passes.length = 0;

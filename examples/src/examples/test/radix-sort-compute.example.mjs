@@ -161,6 +161,21 @@ let sortedIndicesBuffer = null;
 let originalValues = [];
 /** @type {boolean} */
 let needsRegen = true;
+let readGeneration = 0;
+
+const deviceLost = device.on('devicelost', () => {
+    readGeneration++;
+    pendingVerification = null;
+});
+const deviceRestored = device.on('devicerestored', () => {
+    // Storage buffers are recreated empty; preserve the same input for comparison.
+    keysBuffer?.write(0, new Uint32Array(originalValues));
+});
+app.on('destroy', () => {
+    readGeneration++;
+    deviceLost.off();
+    deviceRestored.off();
+});
 
 // Valid radix modes. After benchmarking across NVIDIA / Apple / Mali / IMG
 // The surviving variants are:
@@ -489,7 +504,14 @@ async function doVerification(sortedIndices, capturedOriginalValues, capturedNum
 
     // Read the sorted indices buffer
     const indicesData = new Uint32Array(capturedNumElements);
-    await sortedIndices.read(0, capturedNumElements * 4, indicesData, true);
+    const generation = readGeneration;
+    try {
+        await sortedIndices.read(0, capturedNumElements * 4, indicesData, true);
+    } catch (error) {
+        if (error.name === 'AbortError' || generation !== readGeneration) return;
+        throw error;
+    }
+    if (generation !== readGeneration) return;
 
     // Get sorted values by looking up original values
     const sortedValues = [];

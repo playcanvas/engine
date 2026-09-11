@@ -100,7 +100,8 @@ class StorageBuffer {
      * possible. This has a performance impact, so it should be used only when necessary. Defaults
      * to false.
      * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the
-     * storage buffer.
+     * storage buffer. Rejects with an `AbortError` if the read is cancelled, for example by device
+     * loss. Other read failures also reject the promise.
      */
     read(offset = 0, size = this.byteSize, data = null, immediate = false) {
         return this.impl.read(this.device, offset, size, data, immediate);

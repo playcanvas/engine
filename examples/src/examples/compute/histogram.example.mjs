@@ -170,6 +170,16 @@ solid.setLocalScale(0.35, 0.35, 0.35);
 app.root.addChild(solid);
 
 let firstFrame = true;
+let readGeneration = 0;
+const onDeviceLost = device.on('devicelost', () => {
+    readGeneration++;
+    firstFrame = true;
+});
+app.on('destroy', () => {
+    readGeneration++;
+    onDeviceLost.off();
+});
+
 app.on('update', (/** @type {number} */ _dt) => {
     // The update function runs every frame before the frame gets rendered. On the first time it
     // runs, the scene color map has not been rendered yet, so we skip the first frame.
@@ -190,16 +200,28 @@ app.on('update', (/** @type {number} */ _dt) => {
         // will be resolved later, when the GPU is done running it, and so the histogram on the
         // screen will be up to few frames behind.
         const histogramData = new Uint32Array(numBins);
-        histogramStorageBuffer.read(0, undefined, histogramData).then((data) => {
-            // Render the histogram using lines
-            const scale = 1 / 50000;
-            const positions = [];
-            for (let x = 0; x < data.length; x++) {
-                const value = math.clamp(data[x] * scale, 0, 0.2);
-                positions.push(x * 0.001, -0.35, 4);
-                positions.push(x * 0.001, value - 0.35, 4);
-            }
-            app.drawLineArrays(positions, Color.YELLOW);
-        });
+        const generation = readGeneration;
+        histogramStorageBuffer
+            .read(0, undefined, histogramData)
+            .then((data) => {
+                // A request can settle after recovery or application destruction.
+                if (generation !== readGeneration) return;
+
+                // Render the histogram using lines
+                const scale = 1 / 50000;
+                const positions = [];
+                for (let x = 0; x < data.length; x++) {
+                    const value = math.clamp(data[x] * scale, 0, 0.2);
+                    positions.push(x * 0.001, -0.35, 4);
+                    positions.push(x * 0.001, value - 0.35, 4);
+                }
+                app.drawLineArrays(positions, Color.YELLOW);
+            })
+            .catch((error) => {
+                // Interrupted reads are replaced by fresh results on subsequent frames.
+                if (error.name !== 'AbortError' && generation === readGeneration && !device.isContextLost()) {
+                    throw error;
+                }
+            });
     }
 });

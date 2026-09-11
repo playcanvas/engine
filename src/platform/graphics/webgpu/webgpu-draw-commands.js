@@ -4,16 +4,17 @@ import { DebugHelper } from '../../../core/debug.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 
 /**
- * @import { GraphicsDevice } from '../graphics-device.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 /**
  * WebGPU implementation of DrawCommands.
+ * Retained by the device for recovery until destroyed by the owning DrawCommands.
  *
  * @ignore
  */
 class WebgpuDrawCommands {
-    /** @type {GraphicsDevice} */
+    /** @type {WebgpuGraphicsDevice} */
     device;
 
     /** @type {Uint32Array|null} */
@@ -27,11 +28,15 @@ class WebgpuDrawCommands {
      */
     storage = null;
 
+    /** @type {number} */
+    count = 0;
+
     /**
-     * @param {GraphicsDevice} device - Graphics device.
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
      */
     constructor(device) {
         this.device = device;
+        device._drawCommands.add(this);
     }
 
     /**
@@ -44,6 +49,7 @@ class WebgpuDrawCommands {
             return;
         }
         this.storage?.destroy();
+        this.count = 0;
         this.gpuIndirect = new Uint32Array(5 * maxCount);
         this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
         this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
@@ -73,6 +79,7 @@ class WebgpuDrawCommands {
      * @param {number} count - Number of active draws.
      */
     update(count) {
+        this.count = count;
         if (this.storage && count > 0) {
             const used = count * 5; // 5 uints per draw
             this.storage.write(0, this.gpuIndirect, 0, used);
@@ -103,7 +110,13 @@ class WebgpuDrawCommands {
     }
     // #endif
 
+    restoreContext() {
+        // The storage buffer is recreated empty, but CPU-authored commands are still available.
+        this.update(this.count);
+    }
+
     destroy() {
+        this.device._drawCommands.delete(this);
         this.storage?.destroy();
         this.storage = null;
     }

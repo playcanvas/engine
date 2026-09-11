@@ -229,6 +229,10 @@ const results = [];
  * @param {number} readH - Height to read back from dest.
  */
 const runRow = async (label, source, dest, options, expected, readW, readH) => {
+    // The copied pixels only exist on the GPU, so repeat the copy after restoration.
+    const restored = device.on('devicerestored', () => dest.copy(source, options));
+    app.on('destroy', () => restored.off());
+
     const ok = dest.copy(source, options);
     addImage(source, 0, rowY);
     addImage(dest, 1, rowY);

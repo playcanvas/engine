@@ -295,6 +295,12 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
     destroy() {
         this._destroyBuffers();
 
+        this._globalHistCompute?.destroy();
+        this._scanCompute?.destroy();
+        for (const compute of this._binningComputes) {
+            compute.destroy();
+        }
+
         this._globalHistShader?.destroy();
         this._scanShader?.destroy();
         this._binningShader?.destroy();

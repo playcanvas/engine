@@ -2,6 +2,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
  * @import { UploadStream } from '../upload-stream.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 let id = 0;
@@ -49,18 +50,20 @@ class WebgpuUploadStream {
 
     /**
      * Handles device lost event.
-     * TODO: Implement proper WebGPU device lost handling if needed.
      *
      * @protected
      */
     _onDeviceLost() {
-        // WebGPU device lost handling not yet implemented
+        this.availableStagingBuffers.forEach(buffer => buffer.destroy());
+        this.availableStagingBuffers.length = 0;
+        this.pendingStagingBuffers.forEach(buffer => buffer.destroy());
+        this.pendingStagingBuffers.length = 0;
+        this._lastUploadSubmitVersion = -1;
     }
 
     destroy() {
         this._destroyed = true;
-        this.availableStagingBuffers.forEach(buffer => buffer.destroy());
-        this.pendingStagingBuffers.forEach(buffer => buffer.destroy());
+        this._onDeviceLost();
     }
 
     /**
@@ -70,7 +73,8 @@ class WebgpuUploadStream {
      */
     update(minByteSize) {
 
-        const device = this.uploadStream.device;
+        const device = /** @type {WebgpuGraphicsDevice} */ (this.uploadStream.device);
+        const wgpu = device.wgpu;
 
         // map all pending buffers
         const pending = this.pendingStagingBuffers;
@@ -78,7 +82,7 @@ class WebgpuUploadStream {
             const buffer = pending[i];
             // @ts-ignore - mapBufferAsync is available on WebgpuGraphicsDevice
             device.mapBufferAsync(buffer, GPUMapMode.WRITE).then((mapped) => {
-                if (mapped && !this._destroyed) {
+                if (mapped && !this._destroyed && !device.contextLost && device.wgpu === wgpu) {
                     this.availableStagingBuffers.push(buffer);
                 } else {
                     // the buffer cannot be reused when the mapping fails (device lost) or when
