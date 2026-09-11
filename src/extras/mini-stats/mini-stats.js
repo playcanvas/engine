@@ -122,7 +122,7 @@ class MiniStats {
         this.app = app;
         this.device = app.graphicsDevice;
         this.sizes = options.sizes.map(size => ({ ...size }));
-        /** @type {Graph[]} */
+        /** @type {Graph[]} @private */
         this.graphs = [];
         this.graphRows = new Map();
         this.freeRows = [];
