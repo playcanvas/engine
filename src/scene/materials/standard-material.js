@@ -768,10 +768,20 @@ class StandardMaterial extends Material {
         });
     }
 
-    _processParameters(paramsName) {
+    /**
+     * Replaces the set of parameters published by one update path with the parameters published
+     * since the previous call, deleting the ones that were dropped. A parameter that the other
+     * update path currently publishes is kept: material and scene environment textures share
+     * uniform names, so it would otherwise delete a value the other path has just set.
+     *
+     * @param {string} paramsName - The name of the tracked set to update.
+     * @param {Set<string>} otherParams - The set tracked by the other update path.
+     * @private
+     */
+    _processParameters(paramsName, otherParams) {
         const prevParams = this[paramsName];
         prevParams.forEach((param) => {
-            if (!_params.has(param)) {
+            if (!_params.has(param) && !otherParams.has(param)) {
                 delete this.parameters[param];
             }
         });
@@ -952,7 +962,7 @@ class StandardMaterial extends Material {
         this._setParameter('material_reflectivity', this.reflectivity);
 
         // remove unused params
-        this._processParameters('_activeParams');
+        this._processParameters('_activeParams', this._activeLightingParams);
 
         // Clear variants dirtied by compatibility processing above.
         super.updateUniforms(device, scene);
@@ -972,7 +982,7 @@ class StandardMaterial extends Material {
             }
         }
 
-        this._processParameters('_activeLightingParams');
+        this._processParameters('_activeLightingParams', this._activeParams);
     }
 
     /** @ignore */
@@ -1327,24 +1337,31 @@ function _defineFloat(name, defaultValue, getUniformFunc) {
         name: name,
         defaultValue: defaultValue,
         dirtyShaderFunc: (oldValue, newValue) => {
-            // This is not always optimal and will sometimes trigger redundant shader
-            // recompilation. However, no number property on a standard material
-            // triggers a shader recompile if the previous and current values both
-            // have a fractional part.
-            return (oldValue === 0 || oldValue === 1) !== (newValue === 0 || newValue === 1);
+            // Shader options only ever depend on a number property being 0 or 1 (e.g. metalness < 1,
+            // clearCoat > 0), so a change involving either of those values may need a new shader,
+            // including a direct 0 <-> 1 change. This is not always optimal and will sometimes trigger
+            // a redundant shader recompilation, but a change between two fractional values never does.
+            return oldValue === 0 || oldValue === 1 || newValue === 0 || newValue === 1;
         }
     });
 
     defineUniform(name, getUniformFunc);
 }
 
-function _defineObject(name, getUniformFunc) {
+// Adding or removing an object selects different shader code (e.g. the reflection or ambient
+// source), while replacing one object with another only changes uniform data.
+const dirtyShaderOnPresence = (oldValue, newValue) => !!oldValue !== !!newValue;
+
+// Environment textures additionally need a different decode when the encoding changes.
+const dirtyShaderOnEnvTexture = (oldValue, newValue) => {
+    return !!oldValue !== !!newValue || (!!oldValue && !!newValue && oldValue.encoding !== newValue.encoding);
+};
+
+function _defineObject(name, getUniformFunc, dirtyShaderFunc = dirtyShaderOnPresence) {
     defineProp({
         name: name,
         defaultValue: null,
-        dirtyShaderFunc: (oldValue, newValue) => {
-            return !!oldValue === !!newValue;
-        }
+        dirtyShaderFunc: dirtyShaderFunc
     });
 
     defineUniform(name, getUniformFunc);
@@ -1444,6 +1461,7 @@ function _defineMaterialProps() {
 
     _defineObject('ambientSH');
 
+    // the box only feeds uniforms, the projection mode flag selects the shader code
     _defineObject('cubeMapProjectionBox', (material, device, scene) => {
         const uniform = material._allocUniform('cubeMapProjectionBox', () => {
             return [{
@@ -1468,7 +1486,7 @@ function _defineMaterialProps() {
         maxUniform[2] = bboxMax.z;
 
         return uniform;
-    });
+    }, () => false);
 
     _defineFlag('specularityFactorTint', false);
     _defineFlag('useMetalness', false);
@@ -1529,9 +1547,9 @@ function _defineMaterialProps() {
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
     _defineFlag('aoDetailMode', DETAILMODE_MUL);
 
-    _defineObject('cubeMap');
-    _defineObject('sphereMap');
-    _defineObject('envAtlas');
+    _defineObject('cubeMap', undefined, dirtyShaderOnEnvTexture);
+    _defineObject('sphereMap', undefined, dirtyShaderOnEnvTexture);
+    _defineObject('envAtlas', undefined, dirtyShaderOnEnvTexture);
 
     // prefiltered cubemap getter
     const getterFunc = function () {
