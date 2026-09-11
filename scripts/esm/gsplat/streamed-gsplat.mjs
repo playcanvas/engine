@@ -3,9 +3,10 @@ import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } 
 /**
  * Loads and displays a streamed gaussian splat scene ({@link StreamedGSplat#splatUrl}), plus an
  * optional environment splat ({@link StreamedGSplat#environmentUrl}) on a child entity, using
- * unified gsplat components. Rendering quality is controlled by one of four LOD presets — ultra,
- * high, medium or low — each with a configurable LOD base distance, multiplier and range. The
- * initial preset is low on mobile and medium on desktop, and can be switched at runtime by
+ * unified gsplat components. The main splat has four LOD presets — ultra, high, medium or low —
+ * each with a configurable detail falloff and allowed LOD range. The scene-wide splat budget
+ * and LOD mode are configured through `app.scene.gsplat` in code or the Editor's scene settings.
+ * The initial preset is low on mobile and medium on desktop, and can be switched at runtime by
  * firing the `preset:ultra`, `preset:high`, `preset:medium` or `preset:low` app events. Firing
  * `colorize:toggle` toggles the LOD debug visualization.
  *
@@ -13,7 +14,7 @@ import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } 
  * splatEntity.addComponent('script');
  * splatEntity.script.create(StreamedGSplat, {
  *     properties: {
- *         splatUrl: 'scene.sog',
+ *         splatUrl: 'scene.lod-meta.json',
  *         environmentUrl: 'environment.sog'
  *     }
  * });
@@ -35,52 +36,42 @@ class StreamedGSplat extends Script {
     environmentUrl = '';
 
     /**
+     * Detail falloff for the ultra preset. Higher values concentrate detail near the camera;
+     * values towards 0 spread it more evenly. See
+     * [GSplatComponent.lodFalloff](https://api.playcanvas.com/engine/classes/GSplatComponent.html#lodfalloff).
+     *
      * @attribute
      * @type {number}
+     * @range [0, 8]
      */
-    ultraLodBaseDistance = 7;
+    ultraLodFalloff = 1;
 
     /**
+     * Detail falloff for the high preset. See {@link StreamedGSplat#ultraLodFalloff}.
+     *
      * @attribute
      * @type {number}
+     * @range [0, 8]
      */
-    ultraLodMultiplier = 3;
+    highLodFalloff = 1;
 
     /**
+     * Detail falloff for the medium preset. See {@link StreamedGSplat#ultraLodFalloff}.
+     *
      * @attribute
      * @type {number}
+     * @range [0, 8]
      */
-    highLodBaseDistance = 5;
+    mediumLodFalloff = 1;
 
     /**
+     * Detail falloff for the low preset. See {@link StreamedGSplat#ultraLodFalloff}.
+     *
      * @attribute
      * @type {number}
+     * @range [0, 8]
      */
-    highLodMultiplier = 3;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    mediumLodBaseDistance = 5;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    mediumLodMultiplier = 2;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    lowLodBaseDistance = 5;
-
-    /**
-     * @attribute
-     * @type {number}
-     */
-    lowLodMultiplier = 2;
+    lowLodFalloff = 1;
 
     /**
      * @attribute
@@ -121,13 +112,6 @@ class StreamedGSplat extends Script {
 
         this._currentPreset = platform.mobile ? 'low' : 'medium';
 
-        // global settings
-        app.scene.gsplat.radialSorting = true;
-        app.scene.gsplat.lodUpdateAngle = 90;
-        app.scene.gsplat.lodBehindPenalty = 5;
-        app.scene.gsplat.lodUpdateDistance = 1;
-        app.scene.gsplat.lodUnderfillLimit = 10;
-
         // Listen for UI events
         app.on('preset:ultra', () => this._setPreset('ultra'), this);
         app.on('preset:high', () => this._setPreset('high'), this);
@@ -155,8 +139,7 @@ class StreamedGSplat extends Script {
                 // Add component directly to this entity
                 this.entity.addComponent('gsplat', {
                     unified: true,
-                    lodBaseDistance: this._getCurrentLodBaseDistance(),
-                    lodMultiplier: this._getCurrentLodMultiplier(),
+                    lodFalloff: this._getCurrentLodFalloff(),
                     asset: a
                 });
 
@@ -189,8 +172,6 @@ class StreamedGSplat extends Script {
                 // Add the component while entity is disabled
                 child.addComponent('gsplat', {
                     unified: true,
-                    lodBaseDistance: this._getCurrentLodBaseDistance(),
-                    lodMultiplier: this._getCurrentLodMultiplier(),
                     asset: a
                 });
 
@@ -204,33 +185,18 @@ class StreamedGSplat extends Script {
         });
     }
 
-    _getCurrentLodBaseDistance() {
+    _getCurrentLodFalloff() {
         switch (this._currentPreset) {
             case 'ultra':
-                return this.ultraLodBaseDistance;
+                return this.ultraLodFalloff;
             case 'high':
-                return this.highLodBaseDistance;
+                return this.highLodFalloff;
             case 'medium':
-                return this.mediumLodBaseDistance;
+                return this.mediumLodFalloff;
             case 'low':
-                return this.lowLodBaseDistance;
+                return this.lowLodFalloff;
             default:
-                return 5;
-        }
-    }
-
-    _getCurrentLodMultiplier() {
-        switch (this._currentPreset) {
-            case 'ultra':
-                return this.ultraLodMultiplier;
-            case 'high':
-                return this.highLodMultiplier;
-            case 'medium':
-                return this.mediumLodMultiplier;
-            case 'low':
-                return this.lowLodMultiplier;
-            default:
-                return 3;
+                return 1;
         }
     }
 
@@ -263,8 +229,7 @@ class StreamedGSplat extends Script {
         if (this.entity.gsplat) {
             this.entity.gsplat.lodRangeMin = range[0];
             this.entity.gsplat.lodRangeMax = range[1];
-            this.entity.gsplat.lodBaseDistance = this._getCurrentLodBaseDistance();
-            this.entity.gsplat.lodMultiplier = this._getCurrentLodMultiplier();
+            this.entity.gsplat.lodFalloff = this._getCurrentLodFalloff();
         }
     }
 
