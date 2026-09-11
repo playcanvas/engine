@@ -104,6 +104,8 @@ class ForwardRenderer extends Renderer {
         this.ambientId = scope.resolve('light_globalAmbient');
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
         this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
+        this.sceneEnvAtlasId = scope.resolve('scene_envAtlas');
+        this.sceneSkyboxId = scope.resolve('scene_skybox');
         this.pcssDiskSamplesId = scope.resolve('pcssDiskSamples[0]');
         this.pcssSphereSamplesId = scope.resolve('pcssSphereSamples[0]');
         this.lightColorId = [];
@@ -182,6 +184,10 @@ class ForwardRenderer extends Renderer {
 
         this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
         this.cubeMapRotationMatrixId.setValue(scene._skyboxRotationMat3.data);
+
+        // the scene environment textures, sampled by materials without an environment of their own
+        this.sceneEnvAtlasId.setValue(scene.envAtlas);
+        this.sceneSkyboxId.setValue(scene.skybox);
     }
 
     _resolveLight(scope, i) {

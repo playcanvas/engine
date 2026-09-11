@@ -37,9 +37,9 @@ const chunkVersions = {
     reflDirPS: '1.62',
     reflDirAnisoPS: '1.62',
     reflectionCCPS: '1.62',
-    reflectionCubePS: '2.6',
-    reflectionEnvPS: '2.6',
-    reflectionEnvHQPS: '2.6',
+    reflectionCubePS: '2.23',
+    reflectionEnvPS: '2.23',
+    reflectionEnvHQPS: '2.23',
     reflectionSpherePS: '2.6',
     reflectionSheenPS: '1.62',
     shadowCommonPS: '1.62',
@@ -60,7 +60,8 @@ const chunkVersions = {
     refractionDynamicPS: '1.70',
 
     // text
-    msdfPS: '2.20'
+    msdfPS: '2.20',
+    ambientPS: '2.23'
 };
 
 // removed

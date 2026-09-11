@@ -3,7 +3,11 @@ import { expect } from 'chai';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
-import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
+import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
+import {
+    AMBIENTSRC_CONSTANT, AMBIENTSRC_ENVALATLAS, CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK,
+    REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_NONE, SHADER_FORWARD, SPECOCC_AO
+} from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
@@ -755,64 +759,81 @@ describe('StandardMaterial', function () {
 
     });
 
-    describe('#updateEnvUniforms()', function () {
+    describe('environment textures', function () {
         const envTexture = name => ({ name, encoding: 'rgbm' });
-        const scene = { envAtlas: envTexture('sceneAtlas'), skybox: envTexture('sceneSkybox') };
+        const scene = {
+            envAtlas: envTexture('sceneAtlas'),
+            skybox: envTexture('sceneSkybox'),
+            _skyboxRotationShaderInclude: false
+        };
+        const cameraShaderParams = new CameraShaderParams();
+        const noLights = [[], [], []];
 
-        // mirrors the renderer: the version-gated uniform update, then the shader variant request
-        const prepare = (material) => {
-            material.updateUniforms(null, scene);
-            material.updateEnvUniforms(null, scene);
+        const resolve = (material) => {
+            const options = new StandardMaterialOptions();
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights);
+            return options.litOptions;
         };
 
-        it('publishes the scene environment textures when the material has none', function () {
+        it('publishes only the material environment textures', function () {
             const material = new StandardMaterial();
             material.update();
-            prepare(material);
-
-            expect(material.getParameter('texture_envAtlas').data).to.equal(scene.envAtlas);
-            expect(material.getParameter('texture_cubeMap').data).to.equal(scene.skybox);
-        });
-
-        it('keeps a material environment texture published when it replaces the scene one', function () {
-            const material = new StandardMaterial();
-            material.update();
-            prepare(material);
-
-            const atlas = envTexture('materialAtlas');
-            material.envAtlas = atlas;
-            material.update();
-            prepare(material);
-
-            expect(material.getParameter('texture_envAtlas').data).to.equal(atlas);
-            expect(material.getParameter('texture_cubeMap')).to.be.undefined;
-        });
-
-        it('publishes the scene environment textures again when the material texture is removed', function () {
-            const material = new StandardMaterial();
-            material.envAtlas = envTexture('materialAtlas');
-            material.update();
-            prepare(material);
-
-            material.envAtlas = null;
-            material.update();
-            prepare(material);
-
-            expect(material.getParameter('texture_envAtlas').data).to.equal(scene.envAtlas);
-            expect(material.getParameter('texture_cubeMap').data).to.equal(scene.skybox);
-        });
-
-        it('drops the scene environment textures when useSkybox is disabled', function () {
-            const material = new StandardMaterial();
-            material.update();
-            prepare(material);
-
-            material.useSkybox = false;
-            material.update();
-            prepare(material);
-
+            material.updateUniforms(null, scene);
             expect(material.getParameter('texture_envAtlas')).to.be.undefined;
             expect(material.getParameter('texture_cubeMap')).to.be.undefined;
+
+            const atlas = envTexture('materialAtlas');
+            const cubemap = envTexture('materialCubemap');
+            material.envAtlas = atlas;
+            material.cubeMap = cubemap;
+            material.update();
+            material.updateUniforms(null, scene);
+            expect(material.getParameter('texture_envAtlas').data).to.equal(atlas);
+            expect(material.getParameter('texture_cubeMap').data).to.equal(cubemap);
+
+            material.envAtlas = null;
+            material.cubeMap = null;
+            material.update();
+            material.updateUniforms(null, scene);
+            expect(material.getParameter('texture_envAtlas')).to.be.undefined;
+            expect(material.getParameter('texture_cubeMap')).to.be.undefined;
+        });
+
+        it('uses the scene environment only when the material has none', function () {
+            const material = new StandardMaterial();
+            let lit = resolve(material);
+            expect(lit.useSceneEnv).to.equal(true);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_ENVATLASHQ);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_ENVALATLAS);
+
+            material.useSkybox = false;
+            lit = resolve(material);
+            expect(lit.useSceneEnv).to.equal(false);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_NONE);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_CONSTANT);
+        });
+
+        it('switches every role to the material when it has an environment texture', function () {
+            const material = new StandardMaterial();
+            material.cubeMap = envTexture('materialCubemap');
+            let lit = resolve(material);
+            expect(lit.useSceneEnv).to.equal(false);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_CUBEMAP);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_CONSTANT);
+            expect(lit.skyboxIntensity).to.equal(false);
+
+            material.envAtlas = envTexture('materialAtlas');
+            lit = resolve(material);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_ENVATLASHQ);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_ENVALATLAS);
+        });
+
+        it('includes the environment ownership in the shader key', function () {
+            const options = new StandardMaterialOptions();
+            const materialKey = standard.generateKey(options);
+
+            options.litOptions.useSceneEnv = true;
+            expect(standard.generateKey(options)).to.not.equal(materialKey);
         });
     });
 

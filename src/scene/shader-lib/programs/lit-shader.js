@@ -532,6 +532,10 @@ class LitShader {
         this.fDefineSet(true, '{reflectionCubemapDecode}', ChunkUtils.decodeFunc(options.reflectionCubemapEncoding));
         this.fDefineSet(true, '{ambientDecode}', ChunkUtils.decodeFunc(options.ambientEncoding));
 
+        // environment textures are owned by the scene or by the material, under different uniform names
+        this.fDefineSet(true, '{LIT_ENV_ATLAS}', options.useSceneEnv ? 'scene_envAtlas' : 'texture_envAtlas');
+        this.fDefineSet(true, '{LIT_ENV_CUBEMAP}', options.useSceneEnv ? 'scene_skybox' : 'texture_cubeMap');
+
         // lighting defines
         this._setupLightingDefines(hasAreaLights, options.clusteredLightingEnabled);
     }

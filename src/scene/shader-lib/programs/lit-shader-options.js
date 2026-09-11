@@ -245,6 +245,13 @@ class LitShaderOptions {
      */
     useCubeMapRotation = false;
 
+    /**
+     * If the environment chunks sample the scene environment, published by the renderer as
+     * `scene_envAtlas` and `scene_skybox`, instead of the textures owned by the material
+     * (`texture_envAtlas`, `texture_cubeMap`).
+     */
+    useSceneEnv = false;
+
     lightMapWithoutAmbient = false;
 
     lights = [];

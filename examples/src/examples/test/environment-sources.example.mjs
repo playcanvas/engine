@@ -1,9 +1,10 @@
 // @config
 //
 // Environment lighting sources test. Engine rules: the scene atlas and cubemap combine (atlas = rough
-// reflections + ambient, cubemap = sharp mirror term); a material environment texture overrides the
-// scene, priority atlas + cubemap > atlas > cubemap > sphere map; useSkybox lets the scene fill roles
-// the material does not cover; ambient follows the atlas unless SH is set; refraction reuses reflections.
+// reflections + ambient, cubemap = sharp mirror term); a material environment texture replaces the scene
+// environment for every role, priority atlas + cubemap > atlas > cubemap > sphere map, and roles it does
+// not cover fall back to constant ambient; useSkybox allows the scene environment when the material has
+// none; ambient follows the atlas unless SH is set; refraction reuses reflections.
 // Reference sphere: scene env (wide street, an HDR). Test spheres: material env from the controls (empty room; its
 // atlas, cubemap, sphere map and SH come from one HDR and should match). The green neighbour probe draws
 // before the test spheres: green on them means a leaked texture. The overlay attributes each role.
@@ -327,16 +328,15 @@ data.on('rebuild', () => {
 // meshInstanceId right before each draw, which identifies the draw call without any renderer hooks
 const testMeshInstance = testSphere.findByName('sphere').render.meshInstances[0];
 const meshInstanceIdScope = device.scope.resolve('meshInstanceId');
-const envScopes = ['texture_envAtlas', 'texture_cubeMap', 'texture_sphereMap'].map((name) =>
-    device.scope.resolve(name)
+const envScopes = ['texture_envAtlas', 'texture_cubeMap', 'texture_sphereMap', 'scene_envAtlas', 'scene_skybox'].map(
+    (name) => device.scope.resolve(name)
 );
 let scopeAtTestDraw = 'not drawn yet';
 const originalDraw = device.draw;
 device.draw = function (...args) {
     if (meshInstanceIdScope.value === testMeshInstance.id) {
-        scopeAtTestDraw = envScopes
-            .map((scope) => `${scope.name.replace('texture_', '')}=${scope.value?.name ?? 'NONE'}`)
-            .join(', ');
+        const values = envScopes.map((scope) => `${scope.name}=${scope.value?.name ?? 'NONE'}`);
+        scopeAtTestDraw = `    ${values.slice(0, 3).join(', ')}\n    ${values.slice(3).join(', ')}`;
     }
     return originalDraw.apply(this, args);
 };
@@ -453,7 +453,8 @@ const describeSources = () => {
     const matSphere = mat.env === 'spheremap';
     const sceneAtlasOn = hasAtlas(scene.env);
     const sceneCubemapOn = hasCubemap(scene.env);
-    const sceneUsable = mat.useSkybox;
+    const materialEnv = matAtlas || matCubemap || matSphere;
+    const sceneUsable = mat.useSkybox && !materialEnv;
 
     // marks the first available candidate as the one in use
     const pick = (items) => {
@@ -485,7 +486,7 @@ const describeSources = () => {
     const ambientItems = [
         { text: 'material SH', available: mat.ambientSH, source: AMBIENTSRC_AMBIENTSH },
         { text: 'material atlas', available: matAtlas, source: AMBIENTSRC_ENVALATLAS },
-        { text: 'scene atlas', available: sceneUsable && sceneAtlasOn && !matSphere, source: AMBIENTSRC_ENVALATLAS },
+        { text: 'scene atlas', available: sceneUsable && sceneAtlasOn, source: AMBIENTSRC_ENVALATLAS },
         { text: 'constant ambientLight', available: true, source: AMBIENTSRC_CONSTANT }
     ];
     const ambient = pick(ambientItems);
@@ -512,14 +513,11 @@ const describeSources = () => {
     pick(backgroundItems);
 
     const notes = [];
-    if (materialReflections && ambient.text === 'scene atlas') {
-        notes.push('!! mixed: ambient reads texture_envAtlas, which this material does not publish');
+    if (materialEnv && !matAtlas && !mat.ambientSH) {
+        notes.push('the material environment has no atlas: ambient falls back to constant ambientLight');
     }
     if (matSphere) {
         notes.push('a sphere map is view-space: orbit the camera and its reflection follows the view');
-    }
-    if (matSphere && sceneUsable && sceneAtlasOn && !mat.ambientSH) {
-        notes.push('a sphere map disables scene atlas ambient (#7201)');
     }
     if (refraction.text === 'the reflections') {
         notes.push(
@@ -531,7 +529,7 @@ const describeSources = () => {
     if (!mat.useSkybox && !materialReflections) {
         notes.push('useSkybox off: the scene environment is ignored by this material');
     }
-    if (materialReflections && mat.useSkybox && (sceneAtlasOn || sceneCubemapOn) && ambient.text !== 'scene atlas') {
+    if (materialEnv && mat.useSkybox && (sceneAtlasOn || sceneCubemapOn)) {
         notes.push('the scene environment is present but overridden by the material');
     }
 
@@ -592,7 +590,7 @@ app.on('update', () => {
         `${notes}  ${escapeHtml(check)}\n\n` +
         `<b>COMPILED SHADER</b> (${compiles}x): ${escapeHtml(shaderInfo)}\n` +
         `  publishes: ${escapeHtml(published || '(no textures)')}\n` +
-        `  scope at test sphere draw:\n    ${escapeHtml(scopeAtTestDraw)}\n\n` +
+        `  scope at test sphere draw:\n${escapeHtml(scopeAtTestDraw)}\n\n` +
         `MISSING TEXTURE ERRORS: ${textureErrors}${lastTextureError ? `\n  ${escapeHtml(lastTextureError)}` : ''}\n` +
         'Drag to orbit the middle sphere. Green on a test sphere = a neighbour texture leaked through the scope.';
 });
