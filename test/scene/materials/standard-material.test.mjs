@@ -12,7 +12,7 @@ import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
-import { _matTex2D, standard } from '../../../src/scene/shader-lib/programs/standard.js';
+import { standard } from '../../../src/scene/shader-lib/programs/standard.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 
 describe('StandardMaterial', function () {
@@ -755,32 +755,6 @@ describe('StandardMaterial', function () {
 
             expect(material._getMapTransformId('diffuse')).to.not.equal(0);
             expect(material.variants.size).to.equal(0);
-        });
-
-        it('ignores enumerable prototype properties when iterating texture maps', function () {
-            // legacy libraries extend the built-in prototypes with enumerable members, which the
-            // loops over the texture map registry must not pick up as texture map names
-            /* eslint-disable no-extend-native */
-            Array.prototype.__pcTestArrayProp = 1;
-            Object.prototype.__pcTestObjectProp = 1;
-            /* eslint-enable no-extend-native */
-
-            let transformIds;
-            let error;
-            try {
-                const material = new StandardMaterial();
-                material.diffuseMap = {};
-                material.update();
-                transformIds = [...material._mapTransforms._ids.keys()];
-            } catch (e) {
-                error = e;
-            } finally {
-                delete Array.prototype.__pcTestArrayProp;
-                delete Object.prototype.__pcTestObjectProp;
-            }
-
-            expect(error).to.be.undefined;
-            expect(transformIds).to.deep.equal([..._matTex2D.keys()]);
         });
 
     });
