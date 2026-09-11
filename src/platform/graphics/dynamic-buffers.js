@@ -119,6 +119,16 @@ class DynamicBuffers {
     }
 
     /**
+     * Number of backing GPU uniform buffers, including free and in-flight buffers.
+     * Staging buffers and individual suballocations are excluded.
+     *
+     * @type {number}
+     */
+    get bufferCount() {
+        return (this.gpuBuffers?.length ?? 0) + (this.usedBuffers?.length ?? 0) + (this.activeBuffer ? 1 : 0);
+    }
+
+    /**
      * Destroy the system of dynamic buffers.
      */
     destroy() {

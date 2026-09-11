@@ -40,6 +40,185 @@ describe('MiniStats', function () {
         jsdomTeardown();
     });
 
+    it('enables Resources collapsed by default and preserves its state across sizes and toggles', function () {
+        stats = new MiniStats(app);
+        const resources = stats.graphs.find(graph => graph.name === 'Resources');
+        const query = spy(device, 'getResourceCounts');
+        expect(stats.resourcesEnabled).to.be.true;
+        expect(stats.resourcesCollapsed).to.be.true;
+        for (const mode of [0, 1, 2]) {
+            stats.activeSizeIndex = mode;
+            stats.postRender();
+            stats.update(500);
+            expect(resources.headerTop > resources.headerBottom).to.equal(mode > 0);
+            expect(query.callCount).to.equal(mode);
+        }
+        query.resetHistory();
+        stats.div.dispatchEvent(new window.MouseEvent('click', {
+            clientY: stats.div.getBoundingClientRect().bottom + 8 - (resources.headerTop + resources.headerBottom) / 2
+        }));
+        expect(stats.resourcesCollapsed).to.be.false;
+        expect(stats.activeSizeIndex).to.equal(2);
+        stats.resourcesEnabled = false;
+        stats.postRender();
+        stats.update(500);
+        expect(query.called).to.be.false;
+        expect(resources.headerTop).to.equal(0);
+        stats.resourcesEnabled = true;
+        expect(stats.resourcesCollapsed).to.be.false;
+        stats.activeSizeIndex = 0;
+        stats.update(500);
+        expect(query.called).to.be.false;
+        stats.activeSizeIndex = 1;
+        stats.update(16);
+        expect(query.calledOnce).to.be.true;
+    });
+
+    it('graphs current resource counts at visible refresh intervals without averaging or peaks', function () {
+        const options = MiniStats.getDefaultOptions();
+        options.startSizeIndex = 2;
+        options.resourcesCollapsed = false;
+        stats = new MiniStats(app, options);
+        // Keep the entire Resources section on screen for geometry assertions.
+        stats.engineCollapsed = stats.cpuCollapsed = stats.gpuCollapsed = stats.vramCollapsed = true;
+        const query = spy(device, 'getResourceCounts');
+        const render = spy(stats.wordAtlas, 'render');
+        const textures = stats._resourceGraphs.get('textures');
+        stats.update(16);
+        stats.postRender();
+        expect(query.calledOnce).to.be.true;
+        expect(textures.timingText).to.equal(String(device.textures.size));
+        expect(render.getCalls().some(call => call.args[1] === 'Count')).to.be.true;
+        for (const graph of stats._resourceGraphs.values()) {
+            expect(stats.graphRows.has(graph)).to.be.true;
+            expect(graph.quad).to.be.at.least(0);
+            expect(graph.cursor).to.equal(1);
+            expect(graph.maxText).to.equal('—');
+        }
+        const texture = stats.texture;
+        device.textures.delete(texture);
+        stats.update(499);
+        expect(query.calledOnce).to.be.true;
+        stats.update(1);
+        expect(query.calledTwice).to.be.true;
+        expect(textures.timingText).to.equal(String(device.textures.size));
+        device.textures.add(texture);
+        stats.resourcesCollapsed = true;
+        stats.update(500);
+        stats.resourcesCollapsed = false;
+        stats.enabled = false;
+        stats.update(500);
+        expect(query.calledThrice).to.be.true;
+        stats.enabled = true;
+        stats.update(1);
+        expect(query.callCount).to.equal(4);
+        expect(textures.timingText).to.equal(String(device.textures.size));
+    });
+
+    it('preserves resource history while collapsed and pauses it in hidden or text views', function () {
+        const options = MiniStats.getDefaultOptions();
+        options.startSizeIndex = 2;
+        stats = new MiniStats(app, options);
+        const graph = stats._resourceGraphs.get('vertexBuffers');
+        const query = spy(device, 'getResourceCounts');
+        stats.update(16);
+        stats.update(16);
+        expect(query.calledOnce).to.be.true;
+        expect(graph.cursor).to.equal(2);
+        stats.resourcesCollapsed = false;
+        stats.update(16);
+        expect(graph.cursor).to.equal(3);
+        stats.resourcesEnabled = false;
+        stats.update(500);
+        expect(graph.cursor).to.equal(3);
+        stats.resourcesEnabled = true;
+        stats.activeSizeIndex = 1;
+        stats.update(500);
+        expect(graph.cursor).to.equal(3);
+        stats.activeSizeIndex = 2;
+        stats.update(16);
+        expect(graph.cursor).to.equal(4);
+    });
+
+    it('rescales resource history without clipping large counts or changing current values', function () {
+        const graph = new Graph('Resources', app, 0, 500, new StatsTimer(app, []));
+        graph.countOnly = true;
+        graph.enabled = true;
+        graph.texture = { width: 8 };
+        const data = new Uint8ClampedArray(32);
+        graph.count = 8;
+        graph.timingText = '8';
+        graph.update(16, data);
+        const initial = data[0];
+        graph.count = 1024;
+        graph.timingText = '1024';
+        graph.update(16, data);
+        expect(graph.historyRange).to.equal(1024);
+        expect(data[0]).to.equal(Math.round(initial * 16 / 1024));
+        expect(data[4]).to.equal(255);
+        graph.count = 256;
+        graph.update(16, data);
+        expect(graph.historyRange).to.equal(1024);
+        expect(data[8]).to.equal(64);
+        expect(graph.timingText).to.equal('1024');
+        expect(graph.maxText).to.equal('—');
+    });
+
+    it('shows a live sum in the collapsed Resources heading and Count when expanded', function () {
+        const options = MiniStats.getDefaultOptions();
+        options.startSizeIndex = 1;
+        stats = new MiniStats(app, options);
+        let textures = 3;
+        const query = stub(device, 'getResourceCounts').callsFake((counts) => {
+            counts.set('vertexBuffers', 2);
+            counts.set('indexBuffers', 1);
+            counts.set('uniformBuffers', 4);
+            counts.set('textures', textures);
+            counts.set('renderTargets', 1);
+            // Only sum categories displayed for this backend.
+            counts.set('undisplayed', 1000);
+        });
+        const render = spy(stats.wordAtlas, 'render');
+        stats.update(16);
+        stats.postRender();
+        expect(stats._resourceGraph.timingText).to.equal('11');
+        expect(render.getCalls().some(call => call.args[1] === '11')).to.be.true;
+        expect(render.getCalls().some(call => call.args[1] === 'Count')).to.be.false;
+        textures = 8;
+        stats.update(499);
+        expect(query.calledOnce).to.be.true;
+        expect(stats._resourceGraph.timingText).to.equal('11');
+        stats.update(1);
+        expect(query.calledTwice).to.be.true;
+        expect(stats._resourceGraph.timingText).to.equal('16');
+        textures = 1;
+        stats.update(500);
+        expect(stats._resourceGraph.timingText).to.equal('9');
+        stats.resourcesCollapsed = false;
+        render.resetHistory();
+        stats.postRender();
+        expect(render.getCalls().some(call => call.args[1] === 'Count')).to.be.true;
+        expect(render.getCalls().some(call => call.args[1] === '9')).to.be.false;
+    });
+
+    it('accepts initial resource visibility and uses backend-specific rows', function () {
+        device.isWebGPU = true;
+        const options = MiniStats.getDefaultOptions();
+        options.resourcesEnabled = false;
+        stats = new MiniStats(app, options);
+        expect(stats.resourcesEnabled).to.be.false;
+        expect(stats._resourceGraphs.has('computes')).to.be.true;
+        expect(stats._resourceGraphs.has('renderPipelines')).to.be.true;
+        expect(stats._resourceGraphs.has('shaders')).to.be.false;
+        stats.destroy();
+        device.isWebGPU = false;
+        device.isWebGL2 = true;
+        stats = new MiniStats(app);
+        expect(stats._resourceGraphs.has('shaders')).to.be.true;
+        expect(stats._resourceGraphs.has('computes')).to.be.false;
+        expect(stats._resourceGraphs.has('renderPipelines')).to.be.false;
+    });
+
     it('groups custom counters under User above the CPU, GPU and VRAM groups', function () {
         const options = MiniStats.getDefaultOptions();
         options.stats.unshift({ name: 'Custom first', stats: ['user.first'] });
@@ -52,7 +231,7 @@ describe('MiniStats', function () {
             stats.activeSizeIndex = mode;
             stats.postRender();
             expect(stats.graphs.filter(graph => !graph.parent).map(graph => graph.label)).to.deep.equal([
-                'Engine', 'User', 'CPU', 'GPU', 'VRAM'
+                'Engine', 'User', 'CPU', 'GPU', 'VRAM', 'Resources'
             ]);
             const user = stats.graphs.find(graph => graph.headerOnly && graph.name === 'User');
             const engine = stats.graphs.find(graph => graph.headerOnly && graph.name === 'Engine');
@@ -144,7 +323,7 @@ describe('MiniStats', function () {
         stats = new MiniStats(app, options);
         expect(options.sizes[1].width).to.equal(192);
         expect(stats.sizes[1]).not.to.equal(options.sizes[1]);
-        expect(stats.graphs.filter(graph => graph.headerOnly).map(graph => graph.name)).to.deep.equal(['Engine']);
+        expect(stats.graphs.filter(graph => graph.headerOnly).map(graph => graph.name)).to.deep.equal(['Engine', 'Resources']);
     });
 
     it('supports collapse properties before sub-counters exist and keeps them synchronized with clicks', function () {
@@ -225,7 +404,7 @@ describe('MiniStats', function () {
         for (const mode of [0, 2, 1]) {
             stats.activeSizeIndex = mode;
             stats.postRender();
-            expect([...stats.collapsedGroups]).to.deep.equal([1, 3]);
+            expect([...stats.collapsedGroups]).to.deep.equal([6, 1, 3]);
             expect(stats.graphs.filter(graph => graph.parent && (graph.group === 1 || graph.group === 3)).every(graph => graph.quad === -1)).to.be.true;
         }
         // The column heading still cycles sizes.
@@ -253,7 +432,7 @@ describe('MiniStats', function () {
             clientY: stats.div.getBoundingClientRect().bottom - stats._panelHeight + 12
         }));
         expect(stats.activeSizeIndex).to.equal(0);
-        expect([...stats.collapsedGroups]).to.deep.equal([3]);
+        expect([...stats.collapsedGroups]).to.deep.equal([6, 3]);
     });
 
     it('does not interpret dragging or scrolling as a category click', function () {
@@ -269,7 +448,7 @@ describe('MiniStats', function () {
         stats.div.dispatchEvent(new window.WheelEvent('wheel', { deltaY: 100 }));
         stats.div.dispatchEvent(new window.MouseEvent('click'));
         expect(stats.activeSizeIndex).to.equal(2);
-        expect(stats.collapsedGroups.size).to.equal(0);
+        expect([...stats.collapsedGroups]).to.deep.equal([6]);
     });
 
     it('reuses cached geometry without uploads, text work or history writes in text modes', function () {
@@ -303,6 +482,9 @@ describe('MiniStats', function () {
         stats = new MiniStats(app);
         stats.activeSizeIndex = 2;
         stats.postRender();
+        // Populate initial resource counts before checking geometry between refreshes.
+        stats.update(0);
+        stats.postRender();
         const data = stats.render2d.data;
         const unlock = spy(stats.texture, 'unlock');
         const measure = spy(stats.wordAtlas, 'measure');
@@ -315,7 +497,7 @@ describe('MiniStats', function () {
         expect(upload.callCount).to.equal(10);
         expect(measure.callCount).to.equal(0);
         expect(stats.render2d.data).to.equal(data);
-        expect(stats.graphs.filter(graph => !graph.headerOnly).every(graph => graph.cursor === 10)).to.be.true;
+        expect(stats.graphs.filter(graph => !graph.headerOnly && !graph.countOnly).every(graph => graph.cursor === 11)).to.be.true;
     });
 
     it('preserves existing history when new GPU passes grow the texture', function () {
@@ -369,7 +551,7 @@ describe('MiniStats', function () {
         stats = new MiniStats(app, options);
         app.stats.gpu.set('Pass', 2);
         stats.postRender();
-        expect(stats.graphs).to.have.length(3);
+        expect(stats.graphs.filter(graph => !graph.countOnly)).to.have.length(3);
     });
 
     it('keeps the panel inside a short viewport and clamps scrolling', function () {

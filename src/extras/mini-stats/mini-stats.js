@@ -33,7 +33,7 @@ const GROUP_BACKGROUND = 0xff372b22;
 const BORDER = 0xff4e3d30;
 const TEXT = 0xfffaf5f2;
 const MUTED = 0xffc8b8ad;
-const graphColors = [0xff6db1d9, 0xfff7b884, 0xffb6d16d, 0xffdda0b8, 0xff6db1d9, 0xffc8b8ad];
+const graphColors = [0xff6db1d9, 0xfff7b884, 0xffb6d16d, 0xffdda0b8, 0xff6db1d9, 0xffc8b8ad, 0xffa4cfb0];
 
 const graphOrder = (graph) => {
     if (graph.headerOnly) return 0;
@@ -82,6 +82,8 @@ const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) -
  * @property {number} textRefreshRate - Text update interval and averaging window in ms (500 in the
  * default options). Each update shows the arithmetic mean and peak of the frame samples collected
  * since the previous update, then starts a new window. Graph history samples every frame.
+ * @property {boolean} [resourcesEnabled=true] - Show tracked resource counts in detailed views.
+ * @property {boolean} [resourcesCollapsed=true] - Initially collapse the Resources section.
  * @property {MiniStatsProcessorOptions} cpu - CPU graph options.
  * @property {MiniStatsProcessorOptions} gpu - GPU graph options.
  * @property {MiniStatsGraphOptions[]} stats - Array of options to render additional graphs based
@@ -107,7 +109,11 @@ const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) -
  * require a debug or profiler build. See {@link AppStats} for measurement scope and availability.
  * In the detailed views, click a category heading to collapse or expand its sub-counters.
  * Click elsewhere in the overlay to change size. Collapsing a category preserves its sampling
- * and graph history.
+ * and graph history. Resources is enabled and collapsed by default, and displays current counts
+ * of existing tracked resources, including internal resources, in detailed views. Resource counts
+ * refresh at textRefreshRate while visible, including their sum in the collapsed heading; they
+ * have no average or peak. In graph views, resource histories use the latest sampled counts
+ * and scale to accommodate the highest count seen.
  */
 class MiniStats {
     /**
@@ -132,6 +138,15 @@ class MiniStats {
         this.vramGraphs = new Map();
         /** @private */
         this.collapsedGroups = new Set();
+        if (options.resourcesCollapsed ?? true) this.collapsedGroups.add(6);
+        /** @private */
+        this._resourcesEnabled = options.resourcesEnabled ?? true;
+        /** @private */
+        this._resourceElapsed = Infinity;
+        /** @type {Map<string, number>} @private */
+        this._resourceCounts = new Map();
+        /** @type {Map<string, Graph>} @private */
+        this._resourceGraphs = new Map();
         this.gpuTimingMinSize = options.gpuTimingMinSize ?? 1;
         this.cpuTimingMinSize = options.cpuTimingMinSize ?? 1;
         this.vramTimingMinSize = options.vramTimingMinSize ?? 1;
@@ -149,7 +164,7 @@ class MiniStats {
         this.clr = [1, 1, 1, 0.95];
         this.initGraphs(app, this.device, options);
 
-        const words = ['Metric', this._averageLabel, 'Peak', 'ms', 'MB'];
+        const words = ['Metric', this._averageLabel, 'Peak', 'Count', 'ms', 'MB'];
         for (const graph of this.graphs) {
             words.push(graph.label, graph.timer.unitsName || '');
         }
@@ -239,6 +254,8 @@ class MiniStats {
         this.gpuPassGraphs.clear();
         this.cpuGraphs.clear();
         this.vramGraphs.clear();
+        this._resourceGraphs.clear();
+        this._resourceCounts.clear();
         this.graphRows.clear();
         this.wordAtlas.destroy();
         this.texture.destroy();
@@ -283,6 +300,8 @@ class MiniStats {
             ],
             startSizeIndex: 0,
             textRefreshRate: 500,
+            resourcesEnabled: true,
+            resourcesCollapsed: true,
             cpu: { enabled: true, watermark: 33 },
             gpu: { enabled: true, watermark: 33 },
             stats: [
@@ -308,6 +327,7 @@ class MiniStats {
         const size = this.sizes[value];
         if (!size) return;
         this._activeSizeIndex = value;
+        this._resourceElapsed = Infinity;
         this._detailed = size.detailed ?? (value > 0 || size.graphs);
         this._showPeak = this._detailed && (size.peak ?? size.graphs);
         this.gspacing = size.spacing;
@@ -348,6 +368,7 @@ class MiniStats {
     set enabled(value) {
         if (value !== this._enabled) {
             this._enabled = value;
+            this._resourceElapsed = Infinity;
             for (let i = 0; i < this.graphs.length; i++) {
                 this.graphs[i].enabled = value && this._showGraphs;
                 this.graphs[i].timer.enabled = value;
@@ -360,6 +381,49 @@ class MiniStats {
     /** @type {boolean} */
     get enabled() {
         return this._enabled;
+    }
+
+    /**
+     * Whether the Resources section is shown in detailed views. Defaults to true. Counts use
+     * existing engine resource tracking, including internal resources, and are not a complete
+     * inventory of native GPU objects. Uniform buffers include pooled GPU backing buffers, but
+     * exclude staging buffers and individual transient allocations. Render targets are counted
+     * once initialized; WebGPU pipelines count cached entries.
+     *
+     * @type {boolean}
+     * @example
+     * miniStats.resourcesEnabled = false;
+     */
+    set resourcesEnabled(value) {
+        if (this._resourcesEnabled !== value) {
+            this._resourcesEnabled = value;
+            this._resourceElapsed = Infinity;
+            this.updateDiv();
+        }
+    }
+
+    /** @type {boolean} */
+    get resourcesEnabled() {
+        return this._resourcesEnabled;
+    }
+
+    /**
+     * Whether the Resources section is collapsed in detailed views. Defaults to true. Current
+     * counts are sampled at the configured textRefreshRate while the section is visible and
+     * MiniStats is enabled. The collapsed heading shows their sum to help spot resource growth.
+     * Changing size preserves the collapsed state.
+     *
+     * @type {boolean}
+     * @example
+     * miniStats.resourcesCollapsed = false;
+     */
+    set resourcesCollapsed(value) {
+        this.setGroupCollapsed(6, value);
+    }
+
+    /** @type {boolean} */
+    get resourcesCollapsed() {
+        return this.collapsedGroups.has(6);
     }
 
     /**
@@ -462,6 +526,7 @@ class MiniStats {
      */
     setGroupCollapsed(group, collapsed) {
         if (this.collapsedGroups.has(group) === collapsed) return;
+        if (group === 6) this._resourceElapsed = Infinity;
         if (collapsed) {
             this.collapsedGroups.add(group);
         } else {
@@ -539,6 +604,38 @@ class MiniStats {
             }
             this.graphs.push(graph);
         }
+        const resources = new Graph('Resources', app, 0, options.textRefreshRate, new StatsTimer(app, []));
+        resources.group = 6;
+        resources.headerOnly = true;
+        resources.countOnly = true;
+        /** @type {Graph} @private */
+        this._resourceGraph = resources;
+        this.graphs.push(resources);
+        const resourceLabels = new Map([
+            ['vertexBuffers', 'Vertex buffers'],
+            ['indexBuffers', 'Index buffers'],
+            ['uniformBuffers', 'Uniform buffers'],
+            ['textures', 'Textures'],
+            ['renderTargets', 'Render targets']
+        ]);
+        if (device.isWebGL2) resourceLabels.set('shaders', 'Shaders');
+        if (device.isWebGPU) {
+            resourceLabels.set('storageBuffers', 'Storage buffers');
+            resourceLabels.set('computes', 'Computes');
+            resourceLabels.set('bindGroups', 'Bind groups');
+            resourceLabels.set('bindGroupFormats', 'Bind group formats');
+            resourceLabels.set('drawCommands', 'Draw commands');
+            resourceLabels.set('renderPipelines', 'Render pipelines');
+            resourceLabels.set('computePipelines', 'Compute pipelines');
+        }
+        for (const [key, label] of resourceLabels) {
+            const graph = new Graph(label, app, 0, options.textRefreshRate, new StatsTimer(app, []));
+            graph.group = resources.group;
+            graph.parent = resources;
+            graph.countOnly = true;
+            this._resourceGraphs.set(key, graph);
+            this.graphs.push(graph);
+        }
         this.graphs.sort(compareGraphs);
         this.texture = new Texture(device, {
             name: 'mini-stats-graph-texture',
@@ -570,6 +667,17 @@ class MiniStats {
         this.updateDiv();
     }
 
+    /**
+     * @private
+     * @param {Graph} graph - The row to check.
+     * @returns {boolean} Whether the row participates in the current layout.
+     */
+    isGraphVisible(graph) {
+        if (graph.countOnly && (!this._resourcesEnabled || !this._detailed)) return false;
+        if (!this._detailed) return !graph.headerOnly;
+        return !graph.parent || !this.collapsedGroups.has(graph.group);
+    }
+
     /** @private */
     updateDiv() {
         const rect = this.device.canvas.getBoundingClientRect();
@@ -580,7 +688,7 @@ class MiniStats {
         let visibleRows = 0;
         for (let i = 0; i < this.graphs.length; i++) {
             const graph = this.graphs[i];
-            if ((!this._detailed && graph.headerOnly) || (this._detailed && graph.parent && this.collapsedGroups.has(graph.group))) continue;
+            if (!this.isGraphVisible(graph)) continue;
             const group = graph.group;
             if (this._detailed && visibleRows > 0 && group !== previousGroup) total += 5;
             total += this.height + (visibleRows ? this.gspacing : 0);
@@ -618,9 +726,34 @@ class MiniStats {
      */
     update(ms) {
         if (!this._enabled) return;
+        if (this._resourcesEnabled && this._detailed) {
+            this._resourceElapsed += ms;
+            if (this._resourceElapsed >= this.textRefreshRate) {
+                this._resourceElapsed = 0;
+                this.device.getResourceCounts(this._resourceCounts);
+                let total = 0;
+                for (const [key, graph] of this._resourceGraphs) {
+                    const count = this._resourceCounts.get(key) ?? 0;
+                    graph.count = count;
+                    total += count;
+                    const text = String(count);
+                    if (graph.timingText !== text) {
+                        graph.timingText = text;
+                        this._geometryDirty = true;
+                    }
+                }
+                const totalText = String(total);
+                if (this._resourceGraph.timingText !== totalText) {
+                    this._resourceGraph.timingText = totalText;
+                    this._geometryDirty = true;
+                }
+            }
+        }
         const data = this._showGraphs ? this.texture.lock() : null;
         for (let i = 0; i < this.graphs.length; i++) {
-            const changed = this.graphs[i].update(ms, data);
+            const graph = this.graphs[i];
+            if (graph.countOnly && (!this._resourcesEnabled || !this._detailed)) continue;
+            const changed = graph.update(ms, data);
             if (changed & (this._showPeak ? 3 : 1)) this._geometryDirty = true;
         }
         if (data) this.texture.unlock();
@@ -669,7 +802,7 @@ class MiniStats {
             const graph = this.graphs[i];
             graph.quad = -1;
             graph.headerTop = graph.headerBottom = 0;
-            if ((!this._detailed && graph.headerOnly) || (this._detailed && graph.parent && this.collapsedGroups.has(graph.group))) continue;
+            if (!this.isGraphVisible(graph)) continue;
             if (this._detailed && i > 0 && graph.group !== previousGroup) rowTop -= 5;
             const y = rowTop - this.height;
             if (y < top && rowTop > bottom) {
@@ -686,16 +819,20 @@ class MiniStats {
                 const baseline = Math.round(y + (this.height - 14) / 2 + 3);
                 const units = graph.timer.unitsName || '';
                 const showUnits = this._detailed && units && (!graph.parent || graph.parent.headerOnly);
-                const valueWidth = graph.headerOnly ? 0 : atlas.measure(graph.timingText, 1);
-                let valueRight = avgRight;
+                const hasValue = !graph.headerOnly || (graph.countOnly && this.resourcesCollapsed);
+                const valueWidth = hasValue ? atlas.measure(graph.timingText, 1) : 0;
+                let valueRight = graph.countOnly ? right : avgRight;
+                if (heading && graph.countOnly && !this.resourcesCollapsed) {
+                    atlas.render(renderer, 'Count', right - atlas.measure('Count'), baseline, 0, MUTED);
+                }
                 if (!this._detailed && units) {
                     const unitsWidth = atlas.measure(units);
                     atlas.render(renderer, units, right - unitsWidth, baseline, 0, MUTED);
                     valueRight -= unitsWidth + 4;
                 }
-                const valueX = graph.headerOnly ? right : Math.max(x + 10, valueRight - valueWidth);
-                if (!graph.headerOnly) atlas.render(renderer, graph.timingText, valueX, baseline, 1, TEXT, valueRight - valueX);
-                if (this._showPeak && !graph.headerOnly) {
+                const valueX = hasValue ? Math.max(x + 10, valueRight - valueWidth) : right;
+                if (hasValue) atlas.render(renderer, graph.timingText, valueX, baseline, 1, TEXT, valueRight - valueX);
+                if (this._showPeak && !graph.headerOnly && !graph.countOnly) {
                     const peakWidth = atlas.measure(graph.maxText);
                     atlas.render(renderer, graph.maxText, right - Math.min(peakWidth, 40), baseline, 0, MUTED, 40);
                 }
