@@ -3,7 +3,7 @@
 //
 // Watch a field of objects build and dissolve as entities, materials, vertex buffers and textures
 // are allocated and released. A user counter plots a sine wave independently of the engine stats.
-// Click the MiniStats panel to cycle through its three views.
+// Click category headings to collapse or expand them, or elsewhere to cycle through three views.
 
 import {
     AppBase,
@@ -61,6 +61,7 @@ app.on('destroy', () => {
 const options = MiniStats.getDefaultOptions();
 
 // Click the overlay to cycle between core counters, grouped averages and graph history.
+// In the larger views, click Engine, User, CPU, GPU or VRAM to collapse or expand its sub-counters.
 // Panel width and row height can be customized independently for each mode.
 options.startSizeIndex = 2;
 
