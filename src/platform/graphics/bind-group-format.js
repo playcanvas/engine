@@ -110,7 +110,7 @@ class BindStorageBufferFormat extends BindBaseFormat {
 
     /** @ignore */
     get key() {
-        return `SB${super.key}:${this.readOnly ? 1 : 0}`;
+        return `SB${super.key}:${this.readOnly ? 1 : 0}:${this.format}`;
     }
 }
 
@@ -356,10 +356,10 @@ class BindGroupFormat {
             }
         });
 
-        /** @type {GraphicsDevice} */
         // the slots are assigned above, so the resource keys are complete
         this.key = formats.map(format => format.key).join(',');
 
+        /** @type {GraphicsDevice} */
         this.device = graphicsDevice;
         const scope = graphicsDevice.scope;
 

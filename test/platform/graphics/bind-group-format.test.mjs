@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
-import { BindGroupFormat, BindTextureFormat } from '../../../src/platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat } from '../../../src/platform/graphics/bind-group-format.js';
 import {
-    SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D
+    SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SHADERSTAGE_COMPUTE, SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D
 } from '../../../src/platform/graphics/constants.js';
 import { ScopeSpace } from '../../../src/platform/graphics/scope-space.js';
 
@@ -113,6 +113,24 @@ describe('BindTextureFormat', function () {
             expect(unfilterable.key).to.not.equal(base.key);
             expect(reordered.key).to.not.equal(base.key);
             [base, renamed, noSampler, unfilterable, reordered].forEach(f => f.destroy());
+        });
+
+        it('differs when a storage buffer element type or access mode differs', function () {
+            const device = createDevice();
+            const storage = (type, readOnly = true) => {
+                const format = new BindStorageBufferFormat('data', SHADERSTAGE_COMPUTE, readOnly);
+                format.format = type;
+                return format;
+            };
+            const u32 = new BindGroupFormat(device, [storage('array<u32>')]);
+            const sameType = new BindGroupFormat(device, [storage('array<u32>')]);
+            const vec4 = new BindGroupFormat(device, [storage('array<vec4f>')]);
+            const writable = new BindGroupFormat(device, [storage('array<u32>', false)]);
+
+            expect(sameType.key).to.equal(u32.key);
+            expect(vec4.key).to.not.equal(u32.key);
+            expect(writable.key).to.not.equal(u32.key);
+            [u32, sameType, vec4, writable].forEach(f => f.destroy());
         });
 
         it('is empty for a format without resources', function () {
