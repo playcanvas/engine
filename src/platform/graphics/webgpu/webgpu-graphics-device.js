@@ -99,6 +99,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     _computes = new Set();
 
     /**
+     * Strong references used to restore CPU-authored draw commands. Owners must explicitly
+     * destroy draw commands when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuDrawCommands>}
+     * @private
+     */
+    _drawCommands = new Set();
+
+    /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
@@ -764,6 +773,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
         // Bind groups rebuild through their normal dirty update after buffer allocations are ready.
         super.restoreContext();
+
+        // Reupload commands after their storage buffers have been recreated.
+        for (const drawCommands of this._drawCommands) {
+            drawCommands.restoreContext();
+        }
     }
 
     postInit() {

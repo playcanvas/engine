@@ -4,16 +4,17 @@ import { DebugHelper } from '../../../core/debug.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 
 /**
- * @import { GraphicsDevice } from '../graphics-device.js'
+ * @import { WebgpuGraphicsDevice } from './webgpu-graphics-device.js'
  */
 
 /**
  * WebGPU implementation of DrawCommands.
+ * Retained by the device for recovery until destroyed by the owning DrawCommands.
  *
  * @ignore
  */
 class WebgpuDrawCommands {
-    /** @type {GraphicsDevice} */
+    /** @type {WebgpuGraphicsDevice} */
     device;
 
     /** @type {Uint32Array|null} */
@@ -31,11 +32,11 @@ class WebgpuDrawCommands {
     count = 0;
 
     /**
-     * @param {GraphicsDevice} device - Graphics device.
+     * @param {WebgpuGraphicsDevice} device - Graphics device.
      */
     constructor(device) {
         this.device = device;
-        device.on('devicerestored', this.restoreContext, this);
+        device._drawCommands.add(this);
     }
 
     /**
@@ -115,7 +116,7 @@ class WebgpuDrawCommands {
     }
 
     destroy() {
-        this.device.off('devicerestored', this.restoreContext, this);
+        this.device._drawCommands.delete(this);
         this.storage?.destroy();
         this.storage = null;
     }

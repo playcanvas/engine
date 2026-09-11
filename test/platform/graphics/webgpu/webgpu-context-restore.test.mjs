@@ -42,6 +42,7 @@ describe('WebGPU context restoration', function () {
         device._bindGroups = new Set();
         device._bindGroupFormats = new Set();
         device._computes = new Set();
+        device._drawCommands = new Set();
         device.commandBuffers = [];
         device.bindGroupFormats = [];
         device._deferredDestroys = [];
@@ -158,6 +159,7 @@ describe('WebGPU context restoration', function () {
         device._bindGroups = new Set();
         device._bindGroupFormats = new Set();
         device._computes = new Set();
+        device._drawCommands = new Set();
         device.createBindGroupFormatImpl = format => new WebgpuBindGroupFormat(format);
         device.createBindGroupImpl = bindGroup => new WebgpuBindGroup(bindGroup);
         const format = new BindGroupFormat(device, []);
