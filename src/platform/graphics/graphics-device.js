@@ -832,6 +832,7 @@ class GraphicsDevice extends EventHandler {
             else if (buffer instanceof IndexBuffer) indexBuffers++;
             else if (buffer instanceof UniformBuffer) uniformBuffers++;
             else if (buffer instanceof StorageBuffer) storageBuffers++;
+            else Debug.assert(false);
         }
         counts.set('vertexBuffers', vertexBuffers);
         counts.set('indexBuffers', indexBuffers);
