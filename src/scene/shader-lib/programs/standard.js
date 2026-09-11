@@ -20,7 +20,11 @@ import { MapUtils } from '../../../core/map-utils.js';
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
 
-const _matTex2D = [];
+// Texture map names mapped to their channel count. A null-prototype object keeps the for...in loops
+// over it limited to own keys, so enumerable properties that user code adds to Array.prototype or
+// Object.prototype are never treated as texture maps.
+/** @type {Record<string, number>} */
+const _matTex2D = Object.create(null);
 
 const buildPropertiesList = (options) => {
     return Object.keys(options)

@@ -12,7 +12,7 @@ import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
-import { standard } from '../../../src/scene/shader-lib/programs/standard.js';
+import { _matTex2D, standard } from '../../../src/scene/shader-lib/programs/standard.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 
 describe('StandardMaterial', function () {
@@ -755,6 +755,36 @@ describe('StandardMaterial', function () {
 
             expect(material._getMapTransformId('diffuse')).to.not.equal(0);
             expect(material.variants.size).to.equal(0);
+        });
+
+        it('ignores enumerable prototype properties when iterating texture maps', function () {
+            // legacy libraries extend the built-in prototypes with enumerable members, which the
+            // for...in loops over the texture map registry must not pick up as texture map names
+            /* eslint-disable no-extend-native */
+            Array.prototype.__pcTestArrayProp = 1;
+            Object.prototype.__pcTestObjectProp = 1;
+            /* eslint-enable no-extend-native */
+
+            let iterated;
+            let error;
+            try {
+                const material = new StandardMaterial();
+                material.diffuseMap = {};
+                material.update();
+
+                iterated = [];
+                for (const p in _matTex2D) {
+                    iterated.push(p);
+                }
+            } catch (e) {
+                error = e;
+            } finally {
+                delete Array.prototype.__pcTestArrayProp;
+                delete Object.prototype.__pcTestObjectProp;
+            }
+
+            expect(error).to.be.undefined;
+            expect(iterated).to.deep.equal(Object.keys(_matTex2D));
         });
 
     });
