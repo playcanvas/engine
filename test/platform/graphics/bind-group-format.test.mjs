@@ -77,4 +77,49 @@ describe('BindTextureFormat', function () {
             format.destroy();
         });
     });
+
+    describe('BindGroupFormat key', function () {
+
+        const createDevice = () => {
+            let implKey = 0;
+            return {
+                scope: new ScopeSpace('test'),
+                createBindGroupFormatImpl() {
+                    return { key: implKey++, destroy() {} };
+                }
+            };
+        };
+
+        it('is the same for formats describing the same resources', function () {
+            const device = createDevice();
+            const a = new BindGroupFormat(device, [new BindTextureFormat('color', SHADERSTAGE_FRAGMENT), new BindTextureFormat('depth', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, false)]);
+            const b = new BindGroupFormat(device, [new BindTextureFormat('color', SHADERSTAGE_FRAGMENT), new BindTextureFormat('depth', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, false)]);
+            expect(a.key).to.be.a('string').that.is.not.empty;
+            expect(a.key).to.equal(b.key);
+            a.destroy();
+            b.destroy();
+        });
+
+        it('differs when a texture name, sampler, sample type or order differs', function () {
+            const device = createDevice();
+            const base = new BindGroupFormat(device, [new BindTextureFormat('color', SHADERSTAGE_FRAGMENT), new BindTextureFormat('depth', SHADERSTAGE_FRAGMENT)]);
+            const renamed = new BindGroupFormat(device, [new BindTextureFormat('albedo', SHADERSTAGE_FRAGMENT), new BindTextureFormat('depth', SHADERSTAGE_FRAGMENT)]);
+            const noSampler = new BindGroupFormat(device, [new BindTextureFormat('color', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT, false), new BindTextureFormat('depth', SHADERSTAGE_FRAGMENT)]);
+            const unfilterable = new BindGroupFormat(device, [new BindTextureFormat('color', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT), new BindTextureFormat('depth', SHADERSTAGE_FRAGMENT)]);
+            const reordered = new BindGroupFormat(device, [new BindTextureFormat('depth', SHADERSTAGE_FRAGMENT), new BindTextureFormat('color', SHADERSTAGE_FRAGMENT)]);
+
+            expect(renamed.key).to.not.equal(base.key);
+            expect(noSampler.key).to.not.equal(base.key);
+            expect(unfilterable.key).to.not.equal(base.key);
+            expect(reordered.key).to.not.equal(base.key);
+            [base, renamed, noSampler, unfilterable, reordered].forEach(f => f.destroy());
+        });
+
+        it('is empty for a format without resources', function () {
+            const device = createDevice();
+            const empty = new BindGroupFormat(device, []);
+            expect(empty.key).to.equal('');
+            empty.destroy();
+        });
+    });
 });

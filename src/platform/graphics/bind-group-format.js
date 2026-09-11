@@ -46,6 +46,19 @@ class BindBaseFormat {
         // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
         this.visibility = visibility;
     }
+
+    /**
+     * A string describing the resource for the purpose of keying caches of shaders processed
+     * against it. Subclasses prefix it with the kind of the resource and append the properties
+     * that select their shader declaration. Valid once the slot has been assigned by the
+     * {@link BindGroupFormat}.
+     *
+     * @type {string}
+     * @ignore
+     */
+    get key() {
+        return `${this.slot}:${this.name}:${this.visibility}`;
+    }
 }
 
 /**
@@ -54,6 +67,10 @@ class BindBaseFormat {
  * @category Graphics
  */
 class BindUniformBufferFormat extends BindBaseFormat {
+    /** @ignore */
+    get key() {
+        return `U${super.key}`;
+    }
 }
 
 /**
@@ -89,6 +106,11 @@ class BindStorageBufferFormat extends BindBaseFormat {
         // whether the buffer is read-only
         this.readOnly = readOnly;
         Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), 'Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.');
+    }
+
+    /** @ignore */
+    get key() {
+        return `SB${super.key}:${this.readOnly ? 1 : 0}`;
     }
 }
 
@@ -187,6 +209,12 @@ class BindTextureFormat extends BindBaseFormat {
             Debug.assert(textureDimension === TEXTUREDIMENSION_2D, `Multisampled texture binding '${name}' requires TEXTUREDIMENSION_2D.`);
         }
     }
+
+    /** @ignore */
+    get key() {
+        const sampler = this.hasSampler ? this.samplerName : '';
+        return `T${super.key}:${this.textureDimension}:${this.sampleType}:${sampler}:${this.multisampled ? 1 : 0}`;
+    }
 }
 
 /**
@@ -236,6 +264,11 @@ class BindStorageTextureFormat extends BindBaseFormat {
         // whether the texture is readable
         this.read = read;
     }
+
+    /** @ignore */
+    get key() {
+        return `ST${super.key}:${this.format}:${this.textureDimension}:${this.write ? 1 : 0}:${this.read ? 1 : 0}`;
+    }
 }
 
 /**
@@ -276,6 +309,16 @@ class BindGroupFormat {
     storageBufferFormats = [];
 
     /**
+     * A string uniquely describing the resources of the format (their kinds, names, slots and
+     * the properties that select the shader declaration), used to key caches of shaders
+     * processed against this format.
+     *
+     * @type {string}
+     * @ignore
+     */
+    key;
+
+    /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
@@ -314,6 +357,9 @@ class BindGroupFormat {
         });
 
         /** @type {GraphicsDevice} */
+        // the slots are assigned above, so the resource keys are complete
+        this.key = formats.map(format => format.key).join(',');
+
         this.device = graphicsDevice;
         const scope = graphicsDevice.scope;
 

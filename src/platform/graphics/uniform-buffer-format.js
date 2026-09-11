@@ -217,6 +217,15 @@ class UniformBufferFormat {
     map = new Map();
 
     /**
+     * A string uniquely describing the layout of the buffer (the names, types and array sizes
+     * of its uniforms, in order), used to key caches of shaders processed against this format.
+     *
+     * @type {string}
+     * @ignore
+     */
+    key;
+
+    /**
      * Create a new UniformBufferFormat instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
@@ -243,6 +252,8 @@ class UniformBufferFormat {
 
         // round up buffer size
         this.byteSize = math.roundUp(offset, 16);
+
+        this.key = uniforms.map(uniform => `${uniform.name}:${uniform.type}:${uniform.count}`).join(',');
     }
 
     /**
