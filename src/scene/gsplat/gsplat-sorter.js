@@ -33,6 +33,9 @@ class GSplatSorter extends EventHandler {
      */
     pendingSorted = null;
 
+    /** @type {number} */
+    count = 0;
+
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {import('../scene.js').Scene} [scene] - The scene to fire sort timing events on.
@@ -44,6 +47,14 @@ class GSplatSorter extends EventHandler {
         // PBO + texSubImage2D path on Chrome's renderer→GPU IPC for multi-MB
         // integer-format uploads. WebGPU keeps the staging path.
         this.uploadStream = new UploadStream(device, !device.isWebGPU);
+        this._deviceRestoredEvent = device.on('devicerestored', () => {
+            if (this.orderData) {
+                // Storage buffers lose their contents. Reuse the latest CPU order even when
+                // the camera has not moved enough to request another sort from the worker.
+                this.pendingSorted = { count: this.count, data: new Uint32Array(this.orderData) };
+                this.fire('updated');
+            }
+        });
 
         const messageHandler = (message) => {
             const msgData = message.data ?? message;
@@ -63,6 +74,7 @@ class GSplatSorter extends EventHandler {
             // Store result for deferred GPU upload. Only the latest result is kept,
             // avoiding redundant uploads when multiple worker messages arrive between frames.
             this.orderData = newOrder;
+            this.count = msgData.count;
             this.pendingSorted = {
                 count: msgData.count,
                 data: new Uint32Array(newOrder)
@@ -88,6 +100,7 @@ class GSplatSorter extends EventHandler {
     }
 
     destroy() {
+        this._deviceRestoredEvent.off();
         this.worker.terminate();
         this.worker = null;
         this.uploadStream.destroy();

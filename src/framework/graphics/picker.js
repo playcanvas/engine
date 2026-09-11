@@ -249,9 +249,9 @@ class Picker {
             return this.decodePixels(pixels, this.mapping);
         }).catch((error) => {
             // a read which could not complete because the device has gone reports an empty selection,
-            // which is what decodePixels reports for the same reason. Every other failure is a real one
+            // including cancellation before the device loss notification arrives. Every other failure is a real one
             // and is passed on, rather than being disguised as nothing having been selected.
-            if (this.deviceValid) {
+            if (this.deviceValid && !this.device.isContextLost() && error.name !== 'AbortError') {
                 throw error;
             }
             return [];
@@ -355,9 +355,9 @@ class Picker {
         try {
             pixels = await this._readTexture(this.depthBuffer, x, y, 1, 1, this.renderTargetDepth);
         } catch (error) {
-            // as in getSelectionAsync - only a device which has gone reports as nothing picked, and
-            // every other failure is passed on
-            if (this.deviceValid) {
+            // Mapping can be cancelled before the device loss notification arrives. Other failures
+            // on a valid device must still be reported.
+            if (this.deviceValid && !this.device.isContextLost() && error.name !== 'AbortError') {
                 throw error;
             }
             return null;

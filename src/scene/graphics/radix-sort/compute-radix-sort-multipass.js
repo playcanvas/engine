@@ -196,6 +196,8 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      */
     _destroyPasses() {
         for (const pass of this._passes) {
+            pass.histogramCompute.destroy();
+            pass.reorderCompute.destroy();
             pass.histogramCompute.shader?.destroy();
             pass.reorderCompute.shader?.destroy();
         }

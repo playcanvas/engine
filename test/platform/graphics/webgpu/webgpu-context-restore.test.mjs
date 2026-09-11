@@ -3,17 +3,89 @@ import sinon from 'sinon';
 
 import { BindGroupFormat } from '../../../../src/platform/graphics/bind-group-format.js';
 import { BindGroup } from '../../../../src/platform/graphics/bind-group.js';
+import { Compute } from '../../../../src/platform/graphics/compute.js';
 import { SHADERLANGUAGE_WGSL } from '../../../../src/platform/graphics/constants.js';
 import { GpuProfiler } from '../../../../src/platform/graphics/gpu-profiler.js';
 import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { WebgpuBindGroupFormat } from '../../../../src/platform/graphics/webgpu/webgpu-bind-group-format.js';
 import { WebgpuBindGroup } from '../../../../src/platform/graphics/webgpu/webgpu-bind-group.js';
+import { WebgpuComputePipeline } from '../../../../src/platform/graphics/webgpu/webgpu-compute-pipeline.js';
+import { WebgpuCompute } from '../../../../src/platform/graphics/webgpu/webgpu-compute.js';
 import { WebgpuDynamicBuffers } from '../../../../src/platform/graphics/webgpu/webgpu-dynamic-buffers.js';
 import { WebgpuGraphicsDevice } from '../../../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
 import { WebgpuShaderProcessorWGSL } from '../../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
 import { WebgpuShader } from '../../../../src/platform/graphics/webgpu/webgpu-shader.js';
 
 describe('WebGPU context restoration', function () {
+    it('stops rendering before debug destruction detaches mapped buffers', function () {
+        const device = {
+            contextLost: false,
+            wgpu: { destroy: sinon.spy(() => expect(device.contextLost).to.be.true) }
+        };
+        WebgpuGraphicsDevice.prototype.debugLoseContext.call(device, 100);
+        expect(device.wgpu.destroy.calledOnce).to.be.true;
+        WebgpuGraphicsDevice.prototype.debugLoseContext.call(device, 100);
+        expect(device.wgpu.destroy.calledOnce).to.be.true;
+    });
+
+    it('restores shared compute pipelines before dispatch and unregisters destroyed computes', function () {
+        const device = new NullGraphicsDevice({ width: 1, height: 1 });
+        const createDevice = () => ({
+            createBindGroupLayout: desc => ({ desc }),
+            createPipelineLayout: desc => ({ desc }),
+            createComputePipeline: sinon.spy(desc => ({ desc })),
+            pushErrorScope() {},
+            popErrorScope: () => Promise.resolve(null)
+        });
+        device.wgpu = createDevice();
+        device.supportsCompute = true;
+        device._bindGroups = new Set();
+        device._bindGroupFormats = new Set();
+        device._computes = new Set();
+        device.commandBuffers = [];
+        device.bindGroupFormats = [];
+        device._deferredDestroys = [];
+        device.renderPipeline = { cache: new Map() };
+        device.computePipeline = new WebgpuComputePipeline(device);
+        device.destroyDeviceResources = () => {};
+        device.createBindGroupFormatImpl = format => new WebgpuBindGroupFormat(format);
+        device.createBindGroupImpl = bindGroup => new WebgpuBindGroup(bindGroup);
+        device.createComputeImpl = compute => new WebgpuCompute(compute);
+        const format = new BindGroupFormat(device, []);
+        const shader = { impl: {
+            computeBindGroupFormat: format,
+            computeKey: 1,
+            getComputeShaderModule: () => ({}),
+            computeEntryPoint: 'main'
+        } };
+        const first = new Compute(device, shader);
+        const second = new Compute(device, shader);
+        const oldPipeline = first.impl.pipeline;
+        expect(second.impl.pipeline).to.equal(oldPipeline);
+        expect(device.wgpu.createComputePipeline.calledOnce).to.be.true;
+
+        for (let cycle = 0; cycle < 2; cycle++) {
+            WebgpuGraphicsDevice.prototype.loseContext.call(device);
+            expect(first.impl.pipeline).to.equal(null);
+            expect(second.impl.pipeline).to.equal(null);
+            device.wgpu = createDevice();
+            WebgpuGraphicsDevice.prototype.restoreContext.call(device);
+            expect(first.impl.pipeline).not.to.equal(oldPipeline);
+            expect(second.impl.pipeline).to.equal(first.impl.pipeline);
+            expect(first.impl.pipeline.desc.layout.desc.bindGroupLayouts[0]).to.equal(format.impl.bindGroupLayout);
+            expect(device.wgpu.createComputePipeline.calledOnce).to.be.true;
+            device.passEncoder = { setPipeline: sinon.spy(), dispatchWorkgroups() {} };
+            first.impl.dispatch(1, 1, 1);
+            expect(device.passEncoder.setPipeline.calledOnceWithExactly(first.impl.pipeline)).to.be.true;
+        }
+
+        first.destroy();
+        second.destroy();
+        expect(device._computes.size).to.equal(0);
+        format.destroy();
+        device.destroy();
+    });
+
     for (const enabled of [true, false]) {
         it(`preserves the requested profiler enabled state (${enabled}) on recovery`, async function () {
             const device = {
@@ -85,6 +157,7 @@ describe('WebGPU context restoration', function () {
         device.wgpu = createDevice();
         device._bindGroups = new Set();
         device._bindGroupFormats = new Set();
+        device._computes = new Set();
         device.createBindGroupFormatImpl = format => new WebgpuBindGroupFormat(format);
         device.createBindGroupImpl = bindGroup => new WebgpuBindGroup(bindGroup);
         const format = new BindGroupFormat(device, []);

@@ -90,6 +90,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     _bindGroupFormats = new Set();
 
     /**
+     * Strong references used to restore compute pipelines. Owners must explicitly destroy
+     * compute instances when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuCompute>}
+     * @private
+     */
+    _computes = new Set();
+
+    /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
@@ -669,6 +678,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this._debugRestoreDelay = () => new Promise((resolve) => {
                 setTimeout(resolve, delay);
             });
+            // destroy() detaches mapped buffers immediately, before the asynchronous lost
+            // notification. Stop subsequent frames from allocating out of those buffers.
+            this.contextLost = true;
             this.wgpu.destroy();
         });
     }
@@ -729,6 +741,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         for (const format of this._bindGroupFormats) {
             format.loseContext();
         }
+        for (const compute of this._computes) {
+            compute.loseContext();
+        }
 
         for (const resource of this._deferredDestroys) {
             resource.destroy();
@@ -743,6 +758,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
         for (const format of this._bindGroupFormats) {
             format.restoreContext();
+        }
+        for (const compute of this._computes) {
+            compute.restoreContext();
         }
         // Bind groups rebuild through their normal dirty update after buffer allocations are ready.
         super.restoreContext();
@@ -1630,50 +1648,31 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return this.readBuffer(stagingBuffer, size, data, immediate);
     }
 
-    readBuffer(stagingBuffer, size, data = null, immediate = false) {
-
+    async readBuffer(stagingBuffer, size, data = null, immediate = false) {
         const destBuffer = stagingBuffer.buffer;
-
-        // return a promise that resolves with the data
-        return new Promise((resolve, reject) => {
-
-            const read = () => {
-
-                this.mapBufferAsync(destBuffer, GPUMapMode.READ).then((mapped) => {
-
-                    if (!mapped) {
-                        stagingBuffer.destroy(this);
-                        reject(new Error('Failed to map a staging buffer for reading, most likely because the device was lost.'));
-                        return;
-                    }
-
-                    // copy data to a buffer
-                    data ??= new Uint8Array(size);
-                    const copySrc = destBuffer.getMappedRange(0, size);
-
-                    // use the same type as the target
-                    const srcType = data.constructor;
-                    data.set(new srcType(copySrc));
-
-                    // release staging buffer
-                    destBuffer.unmap();
-                    stagingBuffer.destroy(this);
-
-                    resolve(data);
-                });
-            };
-
+        try {
             if (immediate) {
-                // submit the command buffer immediately
                 this.submit();
-                read();
             } else {
-                // map the buffer during the next event handling cycle, when the command buffer is submitted
-                setTimeout(() => {
-                    read();
+                // Wait until recorded copies have been submitted before mapping.
+                await new Promise((resolve) => {
+                    setTimeout(resolve);
                 });
             }
-        });
+
+            // Preserve the native AbortError so callers can distinguish interrupted reads,
+            // even when mapping rejects before the device-lost event arrives.
+            await destBuffer.mapAsync(GPUMapMode.READ);
+
+            data ??= new Uint8Array(size);
+            const copySrc = destBuffer.getMappedRange(0, size);
+            const srcType = data.constructor;
+            data.set(new srcType(copySrc));
+            return data;
+        } finally {
+            destBuffer.unmap();
+            stagingBuffer.destroy(this);
+        }
     }
 
     /**

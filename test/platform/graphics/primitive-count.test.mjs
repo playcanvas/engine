@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
+import { EventHandler } from '../../../src/core/event-handler.js';
 import {
     PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN
@@ -46,7 +47,7 @@ describe('Primitive counting', function () {
             let draw;
 
             beforeEach(function () {
-                device = {
+                device = Object.assign(new EventHandler(), {
                     _primitiveCount: 0,
                     _drawCallsPerFrame: 0,
                     shader: { ready: true, impl: { samplers: [], uniforms: [] } },
@@ -61,7 +62,7 @@ describe('Primitive counting', function () {
                     _vram: { sb: 0 },
                     buffers: new Set(),
                     createBufferImpl: () => ({ buffer: {}, allocate() {}, write() {}, destroy() {} })
-                };
+                });
                 const webgl = backend === 'WebGL';
                 device.createDrawCommandImpl = () => (webgl ? new WebglDrawCommands(0) : new WebgpuDrawCommands(device));
                 commands = new DrawCommands(device);

@@ -27,11 +27,15 @@ class WebgpuDrawCommands {
      */
     storage = null;
 
+    /** @type {number} */
+    count = 0;
+
     /**
      * @param {GraphicsDevice} device - Graphics device.
      */
     constructor(device) {
         this.device = device;
+        device.on('devicerestored', this.restoreContext, this);
     }
 
     /**
@@ -44,6 +48,7 @@ class WebgpuDrawCommands {
             return;
         }
         this.storage?.destroy();
+        this.count = 0;
         this.gpuIndirect = new Uint32Array(5 * maxCount);
         this.gpuIndirectSigned = new Int32Array(this.gpuIndirect.buffer);
         this.storage = new StorageBuffer(this.device, this.gpuIndirect.byteLength, BUFFERUSAGE_INDIRECT | BUFFERUSAGE_COPY_DST);
@@ -73,6 +78,7 @@ class WebgpuDrawCommands {
      * @param {number} count - Number of active draws.
      */
     update(count) {
+        this.count = count;
         if (this.storage && count > 0) {
             const used = count * 5; // 5 uints per draw
             this.storage.write(0, this.gpuIndirect, 0, used);
@@ -103,7 +109,13 @@ class WebgpuDrawCommands {
     }
     // #endif
 
+    restoreContext() {
+        // The storage buffer is recreated empty, but CPU-authored commands are still available.
+        this.update(this.count);
+    }
+
     destroy() {
+        this.device.off('devicerestored', this.restoreContext, this);
         this.storage?.destroy();
         this.storage = null;
     }

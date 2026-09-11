@@ -82,17 +82,29 @@ class WebgpuCompute {
 
         // pipeline
         this.pipeline = device.computePipeline.get(shader, formats);
+        device._computes.add(this);
 
         DebugGraphics.popGpuMarker(device);
     }
 
     destroy() {
+        this.compute.device._computes.delete(this);
+        this.pipeline = null;
 
         this.uniformBuffers.forEach(ub => ub.destroy());
         this.uniformBuffers.length = 0;
 
         this.bindGroups.forEach(bindGroup => bindGroup.destroy());
         this.bindGroups.length = 0;
+    }
+
+    loseContext() {
+        this.pipeline = null;
+    }
+
+    restoreContext() {
+        const { device, shader } = this.compute;
+        this.pipeline = device.computePipeline.get(shader, this.bindGroups.map(bindGroup => bindGroup.format));
     }
 
     updateBindGroup() {

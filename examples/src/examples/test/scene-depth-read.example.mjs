@@ -20,6 +20,7 @@ import {
     Color,
     Entity,
     FILLMODE_FILL_WINDOW,
+    GSplatComponentSystem,
     LightComponentSystem,
     PROJECTION_ORTHOGRAPHIC,
     RESOLUTION_AUTO,
@@ -39,7 +40,12 @@ const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType], a
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    GSplatComponentSystem
+];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

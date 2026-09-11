@@ -248,11 +248,13 @@ class GSplatProjector {
         this.binWeightsBuffer?.destroy();
 
         for (const compute of this._projectorComputes.values()) {
+            compute.destroy();
             compute.shader?.destroy();
         }
         this._projectorComputes.clear();
 
         this._projectorBindGroupFormat?.destroy();
+        this._writeIndirectArgsCompute?.destroy();
         this._writeIndirectArgsCompute?.shader?.destroy();
         this._writeArgsBindGroupFormat?.destroy();
 
@@ -362,6 +364,7 @@ class GSplatProjector {
      */
     _destroyProjectorComputes() {
         for (const compute of this._projectorComputes.values()) {
+            compute.destroy();
             compute.shader?.destroy();
         }
         this._projectorComputes.clear();

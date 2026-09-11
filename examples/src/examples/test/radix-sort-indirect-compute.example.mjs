@@ -107,6 +107,20 @@ let originalValues = [];
 let needsRegen = true;
 /** @type {boolean} */
 let verificationPending = false;
+let readGeneration = 0;
+
+const deviceLost = device.on('devicelost', () => {
+    readGeneration++;
+});
+const deviceRestored = device.on('devicerestored', () => {
+    // Keep the CPU reference and the recreated GPU input buffer in agreement.
+    keysBuffer?.write(0, new Uint32Array(originalValues));
+});
+app.on('destroy', () => {
+    readGeneration++;
+    deviceLost.off();
+    deviceRestored.off();
+});
 
 let totalTests = 0;
 let totalPassed = 0;
@@ -260,7 +274,14 @@ async function doVerification(sortedIndices, capturedValues, maxElements, visibl
 
     // Read back sorted indices (only visibleCount entries matter)
     const indicesData = new Uint32Array(visibleCount);
-    await sortedIndices.read(0, visibleCount * 4, indicesData, true);
+    const generation = readGeneration;
+    try {
+        await sortedIndices.read(0, visibleCount * 4, indicesData, true);
+    } catch (error) {
+        if (error.name === 'AbortError' || generation !== readGeneration) return;
+        throw error;
+    }
+    if (generation !== readGeneration) return;
 
     // Check 1: All indices in range [0, visibleCount)
     let outOfRangeCount = 0;
