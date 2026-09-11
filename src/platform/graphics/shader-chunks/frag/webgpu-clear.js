@@ -1,5 +1,7 @@
 // Shader used by WebgpuClearRenderer to clear the color and / or depth of the viewport area, by
 // rendering a fullscreen quad.
+import { BINDGROUP_MESH_UB } from '../../constants.js';
+
 export default /* wgsl */`
 
     struct ub_mesh {
@@ -7,7 +9,7 @@ export default /* wgsl */`
         depth: f32
     }
 
-    @group(2) @binding(0) var<uniform> ubMesh : ub_mesh;
+    @group(${BINDGROUP_MESH_UB}) @binding(0) var<uniform> ubMesh : ub_mesh;
 
     var<private> pos : array<vec2f, 4> = array<vec2f, 4>(
         vec2(-1.0, 1.0), vec2(1.0, 1.0), vec2(-1.0, -1.0), vec2(1.0, -1.0)

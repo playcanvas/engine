@@ -85,13 +85,26 @@ class ShaderProcessorOptions {
      * @returns {string} - Returns the key.
      */
     generateKey(device) {
-        // TODO: Optimize. Uniform and BindGroup formats should have their keys evaluated in their
-        // constructors, and here we should simply concatenate those.
-        let key = JSON.stringify(this.uniformFormats) + JSON.stringify(this.bindGroupFormats);
+        // the formats describe their layout in a key computed once in their constructors, and
+        // the bind group index they are assigned to is part of the emitted declaration
+        let key = '';
+        const { uniformFormats, bindGroupFormats } = this;
+        for (let i = 0; i < uniformFormats.length; i++) {
+            const format = uniformFormats[i];
+            if (format) {
+                key += `|u${i}:${format.key}`;
+            }
+        }
+        for (let i = 0; i < bindGroupFormats.length; i++) {
+            const format = bindGroupFormats[i];
+            if (format) {
+                key += `|b${i}:${format.key}`;
+            }
+        }
 
         // WebGPU shaders are processed per vertex format
         if (device.isWebGPU) {
-            key += this.vertexFormat?.shaderProcessingHashString;
+            key += `|v:${this.vertexFormat?.shaderProcessingHashString}`;
         }
 
         return key;
