@@ -20,11 +20,14 @@ import { MapUtils } from '../../../core/map-utils.js';
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
 
-// Texture map names mapped to their channel count. A null-prototype object keeps the for...in loops
-// over it limited to own keys, so enumerable properties that user code adds to Array.prototype or
-// Object.prototype are never treated as texture maps.
-/** @type {Record<string, number>} */
-const _matTex2D = Object.create(null);
+/**
+ * Texture map names mapped to their channel count, in registration order. Iterated through its own
+ * iterator rather than for...in, so enumerable properties that user code adds to the built-in
+ * prototypes are never treated as texture maps.
+ *
+ * @type {Map<string, number>}
+ */
+const _matTex2D = new Map();
 
 const buildPropertiesList = (options) => {
     return Object.keys(options)
@@ -241,13 +244,14 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     }
 
     _correctChannel(p, chan, _matTex2D) {
-        if (_matTex2D[p] > 0) {
-            if (_matTex2D[p] < chan.length) {
-                return chan.substring(0, _matTex2D[p]);
-            } else if (_matTex2D[p] > chan.length) {
+        const channelCount = _matTex2D.get(p);
+        if (channelCount > 0) {
+            if (channelCount < chan.length) {
+                return chan.substring(0, channelCount);
+            } else if (channelCount > chan.length) {
                 let str = chan;
                 const chr = str.charAt(str.length - 1);
-                const addLen = _matTex2D[p] - str.length;
+                const addLen = channelCount - str.length;
                 for (let i = 0; i < addLen; i++) str += chr;
                 return str;
             }
@@ -262,7 +266,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const mapTransforms = [];
         const maxUvSets = 2;
 
-        for (const p in _matTex2D) {
+        for (const p of _matTex2D.keys()) {
             const mapName = `${p}Map`;
 
             if (options[`${p}VertexColor`]) {

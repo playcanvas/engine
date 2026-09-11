@@ -759,23 +759,19 @@ describe('StandardMaterial', function () {
 
         it('ignores enumerable prototype properties when iterating texture maps', function () {
             // legacy libraries extend the built-in prototypes with enumerable members, which the
-            // for...in loops over the texture map registry must not pick up as texture map names
+            // loops over the texture map registry must not pick up as texture map names
             /* eslint-disable no-extend-native */
             Array.prototype.__pcTestArrayProp = 1;
             Object.prototype.__pcTestObjectProp = 1;
             /* eslint-enable no-extend-native */
 
-            let iterated;
+            let transformIds;
             let error;
             try {
                 const material = new StandardMaterial();
                 material.diffuseMap = {};
                 material.update();
-
-                iterated = [];
-                for (const p in _matTex2D) {
-                    iterated.push(p);
-                }
+                transformIds = [...material._mapTransforms._ids.keys()];
             } catch (e) {
                 error = e;
             } finally {
@@ -784,7 +780,7 @@ describe('StandardMaterial', function () {
             }
 
             expect(error).to.be.undefined;
-            expect(iterated).to.deep.equal(Object.keys(_matTex2D));
+            expect(transformIds).to.deep.equal([..._matTex2D.keys()]);
         });
 
     });
