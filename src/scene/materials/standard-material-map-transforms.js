@@ -90,7 +90,7 @@ class StandardMaterialMapTransforms {
 
         let transformsChanged = false;
 
-        for (const p in _matTex2D) {
+        for (const p of _matTex2D.keys()) {
             const active = material[`_${p}Map`] ? 1 : 0;
             const uv = material[`_${p}MapUv`];
             const tiling = material[`_${p}MapTiling`];
@@ -142,7 +142,7 @@ class StandardMaterialMapTransforms {
         let groupTopologyChanged = false;
         let mapId = 1;
 
-        for (const p in _matTex2D) {
+        for (const p of _matTex2D.keys()) {
             let id = 0;
 
             if (material[`_${p}Map`]) {

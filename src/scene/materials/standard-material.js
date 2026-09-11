@@ -908,7 +908,7 @@ class StandardMaterial extends Material {
             this._setParameter(getUniform('cubeMapProjectionBox'));
         }
 
-        for (const p in _matTex2D) {
+        for (const p of _matTex2D.keys()) {
             this._updateMap(p);
         }
 
@@ -1198,7 +1198,7 @@ const markMapTransformsMutable = function () {
 
 function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     // store texture name
-    _matTex2D[name] = channel.length || -1;
+    _matTex2D.set(name, channel.length || -1);
 
     defineProp({
         name: `${name}Map`,

@@ -100,7 +100,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.vertexColors = false;
 
         const uniqueTextureMap = {};
-        for (const p in _matTex2D) {
+        for (const p of _matTex2D.keys()) {
             this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
         }
 
