@@ -669,7 +669,6 @@ class StandardMaterial extends Material {
         this._assetReferences = {};
 
         this._activeParams = new Set();
-        this._activeLightingParams = new Set();
 
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
@@ -769,24 +768,20 @@ class StandardMaterial extends Material {
     }
 
     /**
-     * Replaces the set of parameters published by one update path with the parameters published
-     * since the previous call, deleting the ones that were dropped. A parameter that the other
-     * update path currently publishes is kept: material and scene environment textures share
-     * uniform names, so it would otherwise delete a value the other path has just set.
+     * Replaces the set of parameters published by the previous update with the parameters published
+     * since, deleting the ones that were dropped.
      *
-     * @param {string} paramsName - The name of the tracked set to update.
-     * @param {Set<string>} otherParams - The set tracked by the other update path.
      * @private
      */
-    _processParameters(paramsName, otherParams) {
-        const prevParams = this[paramsName];
+    _processParameters() {
+        const prevParams = this._activeParams;
         prevParams.forEach((param) => {
-            if (!_params.has(param) && !otherParams.has(param)) {
+            if (!_params.has(param)) {
                 delete this.parameters[param];
             }
         });
 
-        this[paramsName] = _params;
+        this._activeParams = _params;
         _params = prevParams;
         _params.clear();
     }
@@ -962,36 +957,16 @@ class StandardMaterial extends Material {
         this._setParameter('material_reflectivity', this.reflectivity);
 
         // remove unused params
-        this._processParameters('_activeParams', this._activeLightingParams);
+        this._processParameters();
 
         // Clear variants dirtied by compatibility processing above.
         super.updateUniforms(device, scene);
-    }
-
-    updateEnvUniforms(device, scene) {
-        const hasLocalEnvOverride = this.envAtlas || this.cubeMap || this.sphereMap;
-
-        if (!hasLocalEnvOverride && this.useSkybox) {
-            if (scene.envAtlas && scene.skybox) {
-                this._setParameter('texture_envAtlas', scene.envAtlas);
-                this._setParameter('texture_cubeMap', scene.skybox);
-            } else if (scene.envAtlas) {
-                this._setParameter('texture_envAtlas', scene.envAtlas);
-            } else if (scene.skybox) {
-                this._setParameter('texture_cubeMap', scene.skybox);
-            }
-        }
-
-        this._processParameters('_activeLightingParams', this._activeParams);
     }
 
     /** @ignore */
     getShaderVariant(params) {
 
         const { device, scene, pass, objDefs, sortedLights, cameraShaderParams } = params;
-
-        // update prefiltered lighting data
-        this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);

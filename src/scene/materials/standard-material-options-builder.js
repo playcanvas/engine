@@ -305,6 +305,9 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.gamma = cameraShaderParams.shaderOutputGamma;
         options.litOptions.toneMap = stdMat.useTonemap ? cameraShaderParams.toneMapping : TONEMAP_NONE;
 
+        // A material environment texture replaces the scene environment for every role (reflections,
+        // ambient, refraction); the scene environment is used only when the material has none.
+        const useSceneEnv = stdMat.useSkybox && !stdMat.envAtlas && !stdMat.cubeMap && !stdMat.sphereMap;
         let usingSceneEnv = false;
 
         // source of environment reflections is as follows:
@@ -321,16 +324,16 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.sphereMap) {
             options.litOptions.reflectionSource = REFLECTIONSRC_SPHEREMAP;
             options.litOptions.reflectionEncoding = stdMat.sphereMap.encoding;
-        } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox) {
+        } else if (useSceneEnv && scene.envAtlas && scene.skybox) {
             options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLASHQ;
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
             usingSceneEnv = true;
-        } else if (stdMat.useSkybox && scene.envAtlas) {
+        } else if (useSceneEnv && scene.envAtlas) {
             options.litOptions.reflectionSource = REFLECTIONSRC_ENVATLAS;
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             usingSceneEnv = true;
-        } else if (stdMat.useSkybox && scene.skybox) {
+        } else if (useSceneEnv && scene.skybox) {
             options.litOptions.reflectionSource = REFLECTIONSRC_CUBEMAP;
             options.litOptions.reflectionEncoding = scene.skybox.encoding;
             usingSceneEnv = true;
@@ -344,8 +347,8 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.ambientSource = AMBIENTSRC_AMBIENTSH;
             options.litOptions.ambientEncoding = null;
         } else {
-            const envAtlas = stdMat.envAtlas || (stdMat.useSkybox && scene.envAtlas ? scene.envAtlas : null);
-            if (envAtlas && !stdMat.sphereMap) {
+            const envAtlas = stdMat.envAtlas || (useSceneEnv ? scene.envAtlas : null);
+            if (envAtlas) {
                 options.litOptions.ambientSource = AMBIENTSRC_ENVALATLAS;
                 options.litOptions.ambientEncoding = envAtlas.encoding;
             } else {
@@ -357,6 +360,9 @@ class StandardMaterialOptionsBuilder {
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
         options.litOptions.skyboxIntensity = usingSceneEnv;
         options.litOptions.useCubeMapRotation = usingSceneEnv && scene._skyboxRotationShaderInclude;
+
+        // the environment chunks sample either the scene or the material textures, which use different uniforms
+        options.litOptions.useSceneEnv = usingSceneEnv;
     }
 
     _updateLightOptions(options, scene, stdMat, objDefs, sortedLights) {

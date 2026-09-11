@@ -22,8 +22,9 @@ const sceneEnvOptions = [
     { v: 'atlas+cubemap', t: 'atlas+cubemap' }
 ];
 
-// A material environment texture overrides the scene, priority atlas+cubemap > atlas > cubemap >
-// sphere map. 'none' uses the scene environment when useSkybox is set.
+// A material environment texture replaces the scene environment for every role, priority
+// atlas+cubemap > atlas > cubemap > sphere map. 'none' uses the scene environment when useSkybox
+// is set.
 const materialEnvOptions = [
     { v: 'none', t: 'none' },
     { v: 'atlas', t: 'atlas' },
@@ -75,7 +76,7 @@ export function Controls({ observer }) {
                 <LabelGroup text='Environment'>
                     {select('data.material.env', materialEnvOptions)}
                 </LabelGroup>
-                <LabelGroup text='Scene fills gaps (useSkybox)'>
+                <LabelGroup text='Use scene env (useSkybox)'>
                     {toggle('data.material.useSkybox')}
                 </LabelGroup>
                 <LabelGroup text='Ambient SH (overrides atlas)'>
