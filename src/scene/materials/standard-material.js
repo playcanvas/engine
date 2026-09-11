@@ -1332,17 +1332,22 @@ function _defineColor(name, defaultValue) {
     });
 }
 
-function _defineFloat(name, defaultValue, getUniformFunc) {
+// Shader options mostly depend on a number property being 0 or 1 (e.g. metalness < 1, clearCoat > 0),
+// so a change involving either of those values may need a new shader, including a direct 0 <-> 1
+// change. This is not always optimal and will sometimes trigger a redundant shader recompilation, but
+// a change between two fractional values never does. Properties with other thresholds pass their own
+// predicate.
+const dirtyShaderOnZeroOrOne = (oldValue, newValue) => {
+    return oldValue === 0 || oldValue === 1 || newValue === 0 || newValue === 1;
+};
+
+const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
+
+function _defineFloat(name, defaultValue, getUniformFunc, dirtyShaderFunc = dirtyShaderOnZeroOrOne) {
     defineProp({
         name: name,
         defaultValue: defaultValue,
-        dirtyShaderFunc: (oldValue, newValue) => {
-            // Shader options only ever depend on a number property being 0 or 1 (e.g. metalness < 1,
-            // clearCoat > 0), so a change involving either of those values may need a new shader,
-            // including a direct 0 <-> 1 change. This is not always optimal and will sometimes trigger
-            // a redundant shader recompilation, but a change between two fractional values never does.
-            return oldValue === 0 || oldValue === 1 || newValue === 0 || newValue === 1;
-        }
+        dirtyShaderFunc: dirtyShaderFunc
     });
 
     defineUniform(name, getUniformFunc);
@@ -1438,10 +1443,16 @@ function _defineMaterialProps() {
     _defineFloat('normalDetailMapBumpiness', 1);
     _defineFloat('reflectivity', 1);
     _defineFloat('occludeSpecularIntensity', 1);
-    _defineFloat('refraction', 0);
-    // approx. (air ior / glass ior), clamped to avoid division by zero in shader
-    _defineFloat('refractionIndex', 1.0 / 1.5, (material, device, scene) => {
+    // the shader options treat a refraction close to 1 as a constant (see StandardMaterialOptionsBuilder)
+    _defineFloat('refraction', 0, undefined, (oldValue, newValue) => {
+        return dirtyShaderOnZeroOrOne(oldValue, newValue) || equalish(oldValue, 1) !== equalish(newValue, 1);
+    });
+    // approx. (air ior / glass ior), clamped to avoid division by zero in shader. The shader uses a
+    // constant for the default value and a uniform otherwise, so moving across it needs a new shader.
+    _defineFloat('refractionIndex', DEFAULT_REFRACTION_INDEX, (material, device, scene) => {
         return Math.max(0.001, material.refractionIndex);
+    }, (oldValue, newValue) => {
+        return equalish(oldValue, DEFAULT_REFRACTION_INDEX) !== equalish(newValue, DEFAULT_REFRACTION_INDEX);
     });
     _defineFloat('dispersion', 0);
     _defineFloat('thickness', 0);

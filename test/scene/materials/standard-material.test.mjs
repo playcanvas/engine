@@ -5,6 +5,7 @@ import { Vec2 } from '../../../src/core/math/vec2.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
 import { Material } from '../../../src/scene/materials/material.js';
+import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { standard } from '../../../src/scene/shader-lib/programs/standard.js';
@@ -494,6 +495,41 @@ describe('StandardMaterial', function () {
             material.clearCoat = 0.7;
             material.update();
             expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('invalidates shaders when refractionIndex moves across its default constant', function () {
+            const defaultIndex = StandardMaterialOptionsBuilder.DEFAULT_REFRACTION_INDEX;
+            const material = new StandardMaterial();
+            material.update();
+            addVariant(material);
+
+            material.refractionIndex = defaultIndex + 0.0002;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+
+            const variant = addVariant(material);
+            material.refractionIndex = 0.8;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.refractionIndex = defaultIndex;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+        });
+
+        it('invalidates shaders when refraction moves across the constant tint tolerance', function () {
+            const material = new StandardMaterial();
+            material.refraction = 0.9;
+            material.update();
+            const variant = addVariant(material);
+
+            material.refraction = 0.6;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.refraction = 0.99995;
+            material.update();
+            expect(material.variants.size).to.equal(0);
         });
 
         const envTexture = encoding => ({ encoding });
