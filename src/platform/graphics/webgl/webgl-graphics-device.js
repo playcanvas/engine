@@ -672,6 +672,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * @param {Map<string, number>} counts - Receives current tracked resource counts.
+     * @ignore
+     */
+    getResourceCounts(counts) {
+        super.getResourceCounts(counts);
+        counts.set('shaders', this.shaders.length);
+    }
+
+    /**
      * Destroy the graphics device.
      */
     destroy() {

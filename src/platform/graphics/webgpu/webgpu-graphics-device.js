@@ -311,6 +311,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * @param {Map<string, number>} counts - Receives current tracked resource counts.
+     * @ignore
+     */
+    getResourceCounts(counts) {
+        super.getResourceCounts(counts);
+        counts.set('bindGroups', this._bindGroups.size);
+        counts.set('bindGroupFormats', this._bindGroupFormats.size);
+        counts.set('computes', this._computes.size);
+        counts.set('drawCommands', this._drawCommands.size);
+        let renderPipelines = 0;
+        let computePipelines = 0;
+        // Hash collisions share a cache bucket, so Map.size is not the pipeline count.
+        for (const bucket of this.renderPipeline.cache.values()) renderPipelines += bucket.length;
+        for (const bucket of this.computePipeline.cache.values()) computePipelines += bucket.length;
+        counts.set('renderPipelines', renderPipelines);
+        counts.set('computePipelines', computePipelines);
+    }
+
+    /**
      * Destroy the graphics device.
      */
     destroy() {

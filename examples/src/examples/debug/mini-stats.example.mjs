@@ -25,7 +25,7 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 
-import { deviceType } from 'examples/context';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -61,7 +61,7 @@ app.on('destroy', () => {
 const options = MiniStats.getDefaultOptions();
 
 // Click the overlay to cycle between core counters, grouped averages and graph history.
-// In the larger views, click Engine, User, CPU, GPU or VRAM to collapse or expand its sub-counters.
+// In the larger views, click Engine, User, CPU, GPU, VRAM or Resources to collapse or expand its sub-counters.
 // Panel width and row height can be customized independently for each mode.
 options.startSizeIndex = 2;
 
@@ -148,6 +148,35 @@ options.stats = [
 // Create mini-stats system
 app.stats.user.set('wave', 10);
 const miniStats = new MiniStats(app, options);
+// Mirror the public boolean APIs in the controls panel.
+const toggleProperties = /** @type {const} */ ([
+    'enabled',
+    'resourcesEnabled',
+    'engineCollapsed',
+    'userCollapsed',
+    'cpuCollapsed',
+    'gpuCollapsed',
+    'vramCollapsed',
+    'resourcesCollapsed'
+]);
+data.set('settings', Object.fromEntries(toggleProperties.map((property) => [property, miniStats[property]])));
+const settingsEvents = toggleProperties.map((property) =>
+    data.on(`settings.${property}:set`, (value) => {
+        miniStats[property] = value;
+    })
+);
+
+// Clicking the overlay headings also changes these properties.
+const syncControls = () => {
+    for (const property of toggleProperties) {
+        data.set(`settings.${property}`, miniStats[property]);
+    }
+};
+const statsDiv = document.getElementById('mini-stats');
+statsDiv.addEventListener('click', syncControls);
+// The examples browser's toolbar can independently show or hide the overlay.
+const visibilityObserver = new MutationObserver(syncControls);
+visibilityObserver.observe(statsDiv, { attributes: true, attributeFilter: ['style'] });
 
 const step = 10;
 const max = 2000;
@@ -385,6 +414,9 @@ app.on('update', (dt) => {
 });
 
 app.on('destroy', () => {
+    for (const event of settingsEvents) event.unbind();
+    statsDiv.removeEventListener('click', syncControls);
+    visibilityObserver.disconnect();
     device.off('resizecanvas', fitScene);
     for (const item of entities) item.render.material.destroy();
     for (const buffer of vertexBuffers) buffer.destroy();

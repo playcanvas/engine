@@ -28,6 +28,7 @@ import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { StorageBuffer } from './storage-buffer.js';
+import { UniformBuffer } from './uniform-buffer.js';
 
 /**
  * @import { Compute } from './compute.js'
@@ -811,6 +812,33 @@ class GraphicsDevice extends EventHandler {
         if (platform.mobile) capsDefines.set('PLATFORM_MOBILE', '');
         if (platform.android) capsDefines.set('PLATFORM_ANDROID', '');
         if (platform.ios) capsDefines.set('PLATFORM_IOS', '');
+    }
+
+    /**
+     * Samples existing resource registries for diagnostic overlays. Counts include internal
+     * resources; dynamic uniform buffers count backing GPU buffers, not suballocations or staging
+     * buffers. This walks the buffer registry and should only be called at diagnostic refresh rates.
+     *
+     * @param {Map<string, number>} counts - Receives the current counts, replacing previous values.
+     * @ignore
+     */
+    getResourceCounts(counts) {
+        let vertexBuffers = 0;
+        let indexBuffers = 0;
+        let uniformBuffers = this.dynamicBuffers?.bufferCount ?? 0;
+        let storageBuffers = 0;
+        for (const buffer of this.buffers) {
+            if (buffer instanceof VertexBuffer) vertexBuffers++;
+            else if (buffer instanceof IndexBuffer) indexBuffers++;
+            else if (buffer instanceof UniformBuffer) uniformBuffers++;
+            else if (buffer instanceof StorageBuffer) storageBuffers++;
+        }
+        counts.set('vertexBuffers', vertexBuffers);
+        counts.set('indexBuffers', indexBuffers);
+        counts.set('uniformBuffers', uniformBuffers);
+        counts.set('storageBuffers', storageBuffers);
+        counts.set('textures', this.textures.size);
+        counts.set('renderTargets', this.targets.size);
     }
 
     /**
