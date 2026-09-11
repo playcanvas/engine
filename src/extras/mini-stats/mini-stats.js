@@ -33,10 +33,16 @@ const GROUP_BACKGROUND = 0xff372b22;
 const BORDER = 0xff4e3d30;
 const TEXT = 0xfffaf5f2;
 const MUTED = 0xffc8b8ad;
-const graphColors = [0xff6db1d9, 0xfff7b884, 0xffb6d16d, 0xffdda0b8];
+const graphColors = [0xff6db1d9, 0xfff7b884, 0xffb6d16d, 0xffdda0b8, 0xff6db1d9, 0xffc8b8ad];
 
-const graphOrder = graph => (graph.label === 'Draw calls' ? 0 : graph.name === 'Frame' ? 1 : graph.group + 2);
-const compareGraphs = (a, b) => graphOrder(a) - graphOrder(b);
+const graphOrder = (graph) => {
+    if (graph.headerOnly) return 0;
+    if (graph.name === 'DrawCalls') return 1;
+    if (graph.name === 'Frame') return 2;
+    return 3;
+};
+const groupOrder = graph => (graph.group === 5 ? 0 : graph.group === 4 ? 1 : graph.group + 1);
+const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) - graphOrder(b);
 
 /**
  * @typedef {object} MiniStatsSizeOptions
@@ -79,7 +85,9 @@ const compareGraphs = (a, b) => graphOrder(a) - graphOrder(b);
  * @property {MiniStatsProcessorOptions} cpu - CPU graph options.
  * @property {MiniStatsProcessorOptions} gpu - GPU graph options.
  * @property {MiniStatsGraphOptions[]} stats - Array of options to render additional graphs based
- * on stats collected into Application.stats.
+ * on stats collected into Application.stats. Counters sourced exclusively from AppStats.user
+ * are displayed in a collapsible User section in the detailed views. Other additional counters
+ * are grouped under Engine, including DrawCalls and Frame. VRAM keeps its own category.
  * @property {number} [gpuTimingMinSize] - Minimum size index at which to show GPU pass timing
  * graphs. Defaults to 1.
  * @property {number} [cpuTimingMinSize] - Minimum size index at which to show CPU sub-timing
@@ -97,6 +105,9 @@ const compareGraphs = (a, b) => graphOrder(a) - graphOrder(b);
  * available in all builds. GPU timing requires device support and is enabled when MiniStats
  * creates its GPU timer. Some additional counters, such as {@link AppStats#primitiveCount},
  * require a debug or profiler build. See {@link AppStats} for measurement scope and availability.
+ * In the detailed views, click a category heading to collapse or expand its sub-counters.
+ * Click elsewhere in the overlay to change size. Collapsing a category preserves its sampling
+ * and graph history.
  */
 class MiniStats {
     /**
@@ -111,12 +122,16 @@ class MiniStats {
         this.app = app;
         this.device = app.graphicsDevice;
         this.sizes = options.sizes.map(size => ({ ...size }));
+        /** @type {Graph[]} */
+        this.graphs = [];
         this.graphRows = new Map();
         this.freeRows = [];
         this.nextRowIndex = 0;
         this.gpuPassGraphs = new Map();
         this.cpuGraphs = new Map();
         this.vramGraphs = new Map();
+        /** @private */
+        this.collapsedGroups = new Set();
         this.gpuTimingMinSize = options.gpuTimingMinSize ?? 1;
         this.cpuTimingMinSize = options.cpuTimingMinSize ?? 1;
         this.vramTimingMinSize = options.vramTimingMinSize ?? 1;
@@ -124,6 +139,7 @@ class MiniStats {
         this._averageLabel = `Avg (${this.textRefreshRate / 1000}s)`;
         this.frameIndex = 0;
         this._enabled = true;
+        this._showGraphs = false;
         this._destroyed = false;
         this._geometryDirty = true;
         this._layoutDirty = true;
@@ -147,11 +163,12 @@ class MiniStats {
         div.style.cssText = 'position:fixed;background:transparent;cursor:pointer;touch-action:none;user-select:none;';
         div.setAttribute('role', 'button');
         div.tabIndex = 0;
-        div.title = 'Click to change size. Scroll or drag to view more metrics.';
+        div.title = 'Click a category to expand or collapse it. Click elsewhere to change size. Scroll or drag to view more metrics.';
         document.body.appendChild(div);
         this.div = div;
         let dragging = false;
         let pointerY = 0;
+        let startX = 0;
         let startY = 0;
         div.addEventListener('mouseenter', () => {
             this.opacity = 1;
@@ -161,11 +178,11 @@ class MiniStats {
         });
         div.addEventListener('click', (event) => {
             event.preventDefault();
-            if (this._enabled && !dragging) this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
+            if (this._enabled && !dragging) this.handleClick(event);
             dragging = false;
         });
         div.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') {
+            if (this._enabled && (event.key === 'Enter' || event.key === ' ')) {
                 event.preventDefault();
                 this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
             }
@@ -173,21 +190,26 @@ class MiniStats {
         div.addEventListener('wheel', (event) => {
             if (this._maxScroll > 0) {
                 event.preventDefault();
+                dragging = true;
                 const multiplier = event.deltaMode === 1 ? this.height : event.deltaMode === 2 ? this._panelHeight : 1;
                 this.scroll(event.deltaY * multiplier);
             }
         }, { passive: false });
         div.addEventListener('pointerdown', (event) => {
             dragging = false;
+            startX = event.clientX;
             startY = pointerY = event.clientY;
             if (event.pointerType !== 'mouse') div.setPointerCapture(event.pointerId);
         });
         div.addEventListener('pointermove', (event) => {
-            if (event.buttons && event.pointerType !== 'mouse' && this._maxScroll > 0) {
-                dragging ||= Math.abs(event.clientY - startY) > 5;
-                if (dragging) this.scroll(pointerY - event.clientY);
+            if (event.buttons) {
+                dragging ||= Math.abs(event.clientY - startY) > 5 || Math.abs(event.clientX - startX) > 5;
+                if (dragging && event.pointerType !== 'mouse' && this._maxScroll > 0) this.scroll(pointerY - event.clientY);
                 pointerY = event.clientY;
             }
+        });
+        div.addEventListener('pointercancel', () => {
+            dragging = true;
         });
 
         this.device.on('resizecanvas', this.updateDiv, this);
@@ -241,8 +263,9 @@ class MiniStats {
 
     /**
      * Returns options for three sizes: compact core counters, grouped averages, and grouped
-     * averages and peaks with graph history. Draw calls and frame time appear first, followed by
-     * ungrouped counters in their configured order, then CPU, GPU and VRAM.
+     * averages and peaks with graph history. Engine counters appear first, starting with draw
+     * calls and frame time, followed by User, CPU, GPU and VRAM. In the detailed views, Engine
+     * and User have collapsible headings, omitted when empty.
      *
      * @param {string[]} [extraStats] - Presets to include: 'gsplats' or 'gsplatsCopy'.
      * @returns {MiniStatsOptions} The default options for MiniStats.
@@ -339,6 +362,131 @@ class MiniStats {
         return this._enabled;
     }
 
+    /**
+     * Whether the Engine section is collapsed in detailed views. Defaults to false.
+     * Collapsing hides its counters without stopping sampling or discarding history. The state
+     * is preserved when changing sizes and updated when the heading is clicked.
+     *
+     * @type {boolean}
+     * @example
+     * miniStats.engineCollapsed = true;
+     */
+    set engineCollapsed(value) {
+        this.setGroupCollapsed(5, value);
+    }
+
+    /** @type {boolean} */
+    get engineCollapsed() {
+        return this.collapsedGroups.has(5);
+    }
+
+    /**
+     * Whether the User section is collapsed in detailed views. Defaults to false.
+     * Collapsing hides its counters without stopping sampling or discarding history. The state
+     * is preserved when changing sizes and updated when the heading is clicked.
+     *
+     * @type {boolean}
+     * @example
+     * miniStats.userCollapsed = true;
+     */
+    set userCollapsed(value) {
+        this.setGroupCollapsed(4, value);
+    }
+
+    /** @type {boolean} */
+    get userCollapsed() {
+        return this.collapsedGroups.has(4);
+    }
+
+    /**
+     * Whether the CPU section is collapsed in detailed views. Defaults to false.
+     * Collapsing hides its sub-counters while keeping the total visible, without stopping sampling
+     * or discarding history. The state is preserved when changing sizes and updated when the
+     * heading is clicked.
+     *
+     * @type {boolean}
+     * @example
+     * miniStats.cpuCollapsed = true;
+     */
+    set cpuCollapsed(value) {
+        this.setGroupCollapsed(1, value);
+    }
+
+    /** @type {boolean} */
+    get cpuCollapsed() {
+        return this.collapsedGroups.has(1);
+    }
+
+    /**
+     * Whether the GPU section is collapsed in detailed views. Defaults to false.
+     * Collapsing hides its sub-counters while keeping the total visible, without stopping sampling
+     * or discarding history. The state is preserved when changing sizes and updated when the
+     * heading is clicked.
+     *
+     * @type {boolean}
+     * @example
+     * miniStats.gpuCollapsed = true;
+     */
+    set gpuCollapsed(value) {
+        this.setGroupCollapsed(2, value);
+    }
+
+    /** @type {boolean} */
+    get gpuCollapsed() {
+        return this.collapsedGroups.has(2);
+    }
+
+    /**
+     * Whether the VRAM section is collapsed in detailed views. Defaults to false.
+     * Collapsing hides its sub-counters while keeping the total visible, without stopping sampling
+     * or discarding history. The state is preserved when changing sizes and updated when the
+     * heading is clicked.
+     *
+     * @type {boolean}
+     * @example
+     * miniStats.vramCollapsed = true;
+     */
+    set vramCollapsed(value) {
+        this.setGroupCollapsed(3, value);
+    }
+
+    /** @type {boolean} */
+    get vramCollapsed() {
+        return this.collapsedGroups.has(3);
+    }
+
+    /**
+     * @private
+     * @param {number} group - Section group.
+     * @param {boolean} collapsed - Whether to hide the section's counters.
+     */
+    setGroupCollapsed(group, collapsed) {
+        if (this.collapsedGroups.has(group) === collapsed) return;
+        if (collapsed) {
+            this.collapsedGroups.add(group);
+        } else {
+            this.collapsedGroups.delete(group);
+        }
+        this.updateDiv();
+    }
+
+    /**
+     * @private
+     * @param {MouseEvent} event - Click in the overlay.
+     */
+    handleClick(event) {
+        if (this._detailed) {
+            const y = this.div.getBoundingClientRect().bottom - event.clientY + 8;
+            for (const graph of this.graphs) {
+                if (y >= graph.headerBottom && y < graph.headerTop) {
+                    this.setGroupCollapsed(graph.group, !this.collapsedGroups.has(graph.group));
+                    return;
+                }
+            }
+        }
+        this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
+    }
+
     /** @private */
     removeQueuedMesh() {
         // postrender submits the overlay for the next frame. Remove that pending reference
@@ -358,7 +506,6 @@ class MiniStats {
      * @param {MiniStatsOptions} options - Counter configuration.
      */
     initGraphs(app, device, options) {
-        this.graphs = [];
         if (options.cpu.enabled) {
             this.cpuGraph = new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, new CpuTimer(app));
             this.cpuGraph.group = 1;
@@ -369,12 +516,26 @@ class MiniStats {
             this.gpuGraph.group = 2;
             this.graphs.push(this.gpuGraph);
         }
+        const counterGroups = new Map();
         for (const entry of options.stats ?? []) {
             const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
             const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
             if (entry.name === 'VRAM') {
                 graph.group = 3;
                 this.vramGraph = graph;
+            } else {
+                const user = entry.stats.length > 0 && entry.stats.every(path => path.startsWith('user.'));
+                const name = user ? 'User' : 'Engine';
+                let parent = counterGroups.get(name);
+                if (!parent) {
+                    parent = new Graph(name, app, 0, options.textRefreshRate, new StatsTimer(app, []));
+                    parent.group = user ? 4 : 5;
+                    parent.headerOnly = true;
+                    counterGroups.set(name, parent);
+                    this.graphs.push(parent);
+                }
+                graph.group = parent.group;
+                graph.parent = parent;
             }
             this.graphs.push(graph);
         }
@@ -391,7 +552,7 @@ class MiniStats {
         });
         for (const graph of this.graphs) {
             graph.texture = this.texture;
-            this.allocateRow(graph);
+            if (!graph.headerOnly) this.allocateRow(graph);
         }
     }
 
@@ -416,17 +577,17 @@ class MiniStats {
         this.render2d.targetHeight = rect.height;
         let total = this._detailed ? 31 : 8;
         let previousGroup = -1;
+        let visibleRows = 0;
         for (let i = 0; i < this.graphs.length; i++) {
-            const group = this.graphs[i].group;
-            if (this._detailed && i > 0 && group !== previousGroup) total += 5;
-            total += this.height + (i ? this.gspacing : 0);
+            const graph = this.graphs[i];
+            if ((!this._detailed && graph.headerOnly) || (this._detailed && graph.parent && this.collapsedGroups.has(graph.group))) continue;
+            const group = graph.group;
+            if (this._detailed && visibleRows > 0 && group !== previousGroup) total += 5;
+            total += this.height + (visibleRows ? this.gspacing : 0);
+            visibleRows++;
             previousGroup = group;
         }
         this._overallHeight = total;
-        this._fixedRows = 0;
-        while (this._fixedRows < this.graphs.length && (this.graphs[this._fixedRows].label === 'Draw calls' || this.graphs[this._fixedRows].name === 'Frame')) {
-            this._fixedRows++;
-        }
         this._panelWidth = Math.max(0, Math.min(this.width, rect.width - 16));
         this._panelHeight = Math.max(0, Math.min(total, rect.height - 16));
         this._maxScroll = Math.max(0, total - this._panelHeight);
@@ -501,44 +662,48 @@ class MiniStats {
             renderer.setClip(x, bottom, width, this._panelHeight - 23);
         }
         let previousGroup = -1;
+        const clipTop = rowTop;
+        renderer.setClip(x, bottom, width, Math.max(0, rowTop - bottom));
+        rowTop += this._scroll;
         for (let i = 0; i < this.graphs.length; i++) {
-            // Keep draw calls and frame time visible even when a long pass list is scrolled.
-            if (i === this._fixedRows) {
-                renderer.setClip(x, bottom, width, Math.max(0, rowTop - bottom));
-                rowTop += this._scroll;
-            }
             const graph = this.graphs[i];
             graph.quad = -1;
+            graph.headerTop = graph.headerBottom = 0;
+            if ((!this._detailed && graph.headerOnly) || (this._detailed && graph.parent && this.collapsedGroups.has(graph.group))) continue;
             if (this._detailed && i > 0 && graph.group !== previousGroup) rowTop -= 5;
             const y = rowTop - this.height;
             if (y < top && rowTop > bottom) {
                 const heading = this._detailed && graph.group > 0 && !graph.parent;
                 const color = graphColors[graph.group];
                 if (heading) {
+                    // Keep scrolled headings from receiving clicks through the column labels.
+                    graph.headerTop = Math.min(rowTop, clipTop);
+                    graph.headerBottom = Math.max(y, bottom);
                     renderer.rect(x, y, width, this.height, GROUP_BACKGROUND);
                     renderer.rect(x, y + 5, 2, this.height - 10, color);
                 }
-                if (this._showGraphs) renderer.graph(graph, x, y, width, this.height, color);
+                if (this._showGraphs && !graph.headerOnly) renderer.graph(graph, x, y, width, this.height, color);
                 const baseline = Math.round(y + (this.height - 14) / 2 + 3);
                 const units = graph.timer.unitsName || '';
-                const valueWidth = atlas.measure(graph.timingText, 1);
+                const showUnits = this._detailed && units && (!graph.parent || graph.parent.headerOnly);
+                const valueWidth = graph.headerOnly ? 0 : atlas.measure(graph.timingText, 1);
                 let valueRight = avgRight;
                 if (!this._detailed && units) {
                     const unitsWidth = atlas.measure(units);
                     atlas.render(renderer, units, right - unitsWidth, baseline, 0, MUTED);
                     valueRight -= unitsWidth + 4;
                 }
-                const valueX = Math.max(x + 10, valueRight - valueWidth);
-                atlas.render(renderer, graph.timingText, valueX, baseline, 1, TEXT, valueRight - valueX);
-                if (this._showPeak) {
+                const valueX = graph.headerOnly ? right : Math.max(x + 10, valueRight - valueWidth);
+                if (!graph.headerOnly) atlas.render(renderer, graph.timingText, valueX, baseline, 1, TEXT, valueRight - valueX);
+                if (this._showPeak && !graph.headerOnly) {
                     const peakWidth = atlas.measure(graph.maxText);
                     atlas.render(renderer, graph.maxText, right - Math.min(peakWidth, 40), baseline, 0, MUTED, 40);
                 }
                 const labelX = x + 10 + (this._detailed && graph.parent ? 5 : 0);
                 const labelStyle = heading ? 1 : 0;
                 const labelWidth = atlas.render(renderer, graph.label, labelX, baseline, labelStyle, heading ? TEXT : MUTED,
-                    valueX - labelX - 8 - (this._detailed && units && !graph.parent ? atlas.measure(units) + 4 : 0));
-                if (this._detailed && units && !graph.parent) {
+                    valueX - labelX - 8 - (showUnits ? atlas.measure(units) + 4 : 0));
+                if (showUnits) {
                     atlas.render(renderer, units, labelX + labelWidth + 4, baseline, 0, MUTED, valueX - labelX - labelWidth - 8);
                 }
             }

@@ -20,6 +20,9 @@ class Graph {
         this.renderWidth = 0;
         this.parent = null;
         this.group = 0;
+        this.headerOnly = false;
+        this.headerTop = 0;
+        this.headerBottom = 0;
         this.lastNonZeroFrame = 0;
         this.statName = '';
     }
@@ -35,6 +38,7 @@ class Graph {
     // Returns a bitmask of changed average (1) and peak (2) text. The shared texture is
     // locked once by MiniStats, so all rows are updated before a single unlock/upload.
     update(ms, data) {
+        if (this.headerOnly) return 0;
         const timings = this.timer.timings;
         let total = 0;
         for (let i = 0; i < timings.length; i++) total += timings[i];
