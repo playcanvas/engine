@@ -27,6 +27,29 @@ const notBlack = (color) => {
 };
 
 class StandardMaterialOptionsBuilder {
+    /**
+     * The refraction index for which the shader uses a built-in constant instead of the
+     * material_refractionIndex uniform. Shared with StandardMaterial, which needs to invalidate its
+     * shaders when refractionIndex moves across this value.
+     *
+     * @type {number}
+     * @ignore
+     */
+    static DEFAULT_REFRACTION_INDEX = 1.0 / 1.5;
+
+    /**
+     * Compares two material numbers with the tolerance used to decide whether a shader constant can
+     * replace a uniform.
+     *
+     * @param {number} a - The first value.
+     * @param {number} b - The second value.
+     * @returns {boolean} True when the values are equal within tolerance.
+     * @ignore
+     */
+    static equalish(a, b) {
+        return Math.abs(a - b) < 1e-4;
+    }
+
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, scene, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
@@ -207,7 +230,7 @@ class StandardMaterialOptionsBuilder {
 
         const isPackedNormalMap = texture => (texture ? (texture.format === PIXELFORMAT_DXT5 || texture.type === TEXTURETYPE_SWIZZLEGGGR) : false);
 
-        const equalish = (a, b) => Math.abs(a - b) < 1e-4;
+        const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
 
         options.specularityFactorTint = specularityFactorTint;
         options.metalnessTint = (stdMat.useMetalness && stdMat.metalness < 1);
@@ -218,7 +241,7 @@ class StandardMaterialOptionsBuilder {
         options.lightMapEncoding = stdMat.lightMap?.encoding;
         options.packedNormal = isPackedNormalMap(stdMat.normalMap);
         options.refractionTint = !equalish(stdMat.refraction, 1.0);
-        options.refractionIndexTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
+        options.refractionIndexTint = !equalish(stdMat.refractionIndex, DEFAULT_REFRACTION_INDEX);
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
         options.specularEncoding = stdMat.specularMap?.encoding;
         options.sheenEncoding = stdMat.sheenMap?.encoding;
@@ -231,7 +254,7 @@ class StandardMaterialOptionsBuilder {
         options.aoDetailMode = stdMat.aoDetailMode;
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatPackedNormal = isPackedNormalMap(stdMat.clearCoatNormalMap);
-        options.iorTint = !equalish(stdMat.refractionIndex, 1.0 / 1.5);
+        options.iorTint = !equalish(stdMat.refractionIndex, DEFAULT_REFRACTION_INDEX);
 
         options.iridescenceTint = stdMat.iridescence !== 1.0;
 
