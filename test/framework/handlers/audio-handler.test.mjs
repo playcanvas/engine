@@ -38,28 +38,32 @@ describe('AudioHandler', function () {
         expect(result.buffer).to.equal(fakeAudioBuffer);
     });
 
-    it('rejects an unsupported format without fetching, with the exact error message', function () {
+    it('loads a url without a file extension (the format is decided by the decoder, not the url)', function () {
         const handler = createHandler();
-        const warnStub = stub(console, 'warn');
-        const getStub = stub(http, 'get');
-
-        let err;
-        handler.load({ load: 'x.xyz', original: 'x.xyz' }, (e) => {
-            err = e;
+        let requestOptions;
+        stub(http, 'get').callsFake((url, options, callback) => {
+            requestOptions = options;
+            callback(null, new ArrayBuffer(8));
         });
-        expect(err).to.equal('Error loading audio url: x.xyz: Audio format for x.xyz not supported');
-        expect(getStub.called).to.be.false;
-        expect(warnStub.called).to.be.true;
+
+        let result;
+        handler.load({ load: 'sounds/mysound', original: 'sounds/mysound' }, (err, res) => {
+            expect(err).to.equal(null);
+            result = res;
+        });
+        expect(requestOptions.responseType).to.equal(Http.ResponseType.ARRAY_BUFFER);
+        expect(result).to.be.an.instanceof(Sound);
+        expect(result.buffer).to.equal(fakeAudioBuffer);
     });
 
-    it('accepts supported formats regardless of extension case', function () {
+    it('loads a format the browser can decode even if its extension is not a well-known one', function () {
         const handler = createHandler();
         stub(http, 'get').callsFake((url, options, callback) => {
             callback(null, new ArrayBuffer(8));
         });
 
         let result;
-        handler.load({ load: 'SOUND.MP3', original: 'SOUND.MP3' }, (err, res) => {
+        handler.load({ load: 'x.webm', original: 'x.webm' }, (err, res) => {
             expect(err).to.equal(null);
             result = res;
         });
