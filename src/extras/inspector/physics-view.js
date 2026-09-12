@@ -161,20 +161,43 @@ function jointRows(app) {
 }
 
 /**
- * Outlines a joint: its frame as axes at the joint entity, and a line to each body it connects.
+ * Outlines a joint. The joint entity's own frame is drawn as axes, and for each connected body the
+ * joint frame the constraint was created with is drawn where that body currently carries it: axes
+ * at the anchor (red is the primary joint axis, green the secondary), a line from the body's center
+ * to the anchor, and a line from the joint entity to the anchor. Where the two anchor frames have
+ * drifted apart, the constraint is being violated by that much.
  *
  * @param {WireRenderer} wire - The renderer to draw with. Its color and depth test are used as set.
  * @param {Entity} entity - The entity carrying the joint component.
+ * @param {number} size - The axis length.
  * @returns {boolean} False when the entity has no joint component.
  */
-function drawJoint(wire, entity) {
-    const joint = entity.joint;
+function drawJoint(wire, entity, size) {
+    const joint = /** @type {any} */ (entity.joint);
     if (!joint) return false;
 
     const position = entity.getPosition();
-    wire.axes(entity.getWorldTransform(), 0.3);
-    for (const body of [joint.entityA, joint.entityB]) {
-        if (body) wire.line(position, body.getPosition());
+    wire.axes(entity.getWorldTransform(), size);
+
+    const frames = [[joint.entityA, joint._frameA], [joint.entityB, joint._frameB]];
+    for (const [body, frame] of frames) {
+        if (!frame) {
+            // no constraint yet: at least show what the joint connects
+            if (body) wire.line(position, body.getPosition());
+            continue;
+        }
+
+        // bodies ignore entity scale, so the anchor follows the body's unscaled transform
+        if (body) {
+            _mat.setTRS(body.getPosition(), body.getRotation(), Vec3.ONE).mul(frame);
+        } else {
+            _mat.copy(frame);
+        }
+        _mat.getTranslation(_a);
+
+        wire.axes(_mat, size * 0.75);
+        wire.line(position, _a);
+        if (body) wire.line(body.getPosition(), _a);
     }
     return true;
 }

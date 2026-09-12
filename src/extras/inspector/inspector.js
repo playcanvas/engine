@@ -48,6 +48,11 @@ import { styles } from './styles.js';
  * to false.
  * @property {InspectorPhysicsDrawOptions} [physicsDrawOptions] - Which parts of the physics world
  * are drawn. Defaults to the wireframe only.
+ * @property {string|null} [storageKey] - The local storage key the panel's settings are kept
+ * under, so they survive a reload or a restart of the app: the physics drawing switch and options,
+ * the bodies excluded from it (by entity path), the active tab, the panel width and the GPU
+ * timings switch. Stored settings take precedence over the defaults given here. Defaults to
+ * 'pc-inspector'; null keeps nothing.
  */
 
 /**
@@ -459,6 +464,27 @@ class Inspector extends EventHandler {
     _hiddenBodies = new Map();
 
     /**
+     * Entity paths of excluded bodies restored from storage, waiting for the entities to exist.
+     *
+     * @type {Set<string>}
+     * @private
+     */
+    _pendingHiddenPaths = new Set();
+
+    /**
+     * @type {string|null}
+     * @private
+     */
+    _storageKey = 'pc-inspector';
+
+    /**
+     * True while the panel is being built and restored, when nothing should be saved.
+     *
+     * @private
+     */
+    _restoring = true;
+
+    /**
      * Model builder for the property view when a pass is selected.
      *
      * @param {FramePass} pass - The pass.
@@ -510,10 +536,13 @@ class Inspector extends EventHandler {
         this.physicsDrawOptions = { wireframe: true, ...options.physicsDrawOptions };
         this.physicsDraw = !!options.physicsDraw;
         this._setTab('hierarchy');
+        this._storageKey = options.storageKey === undefined ? 'pc-inspector' : options.storageKey;
+        this._loadSettings();
         this._applyLayout();
         this._applyVisibility();
         this._applyPauseState();
         this.refresh();
+        this._restoring = false;
 
         window.addEventListener('keydown', this._onKeyDown);
         // the app fires 'update' after every component system has updated, so the physics step of
@@ -591,6 +620,7 @@ class Inspector extends EventHandler {
     set width(value) {
         this._width = Math.max(240, Math.min(1600, value || 420));
         this._applyLayout();
+        this._saveSettings();
     }
 
     get width() {
@@ -814,7 +844,7 @@ class Inspector extends EventHandler {
                 if (entity) {
                     this._wire.color.copy(this.highlightColor);
                     this._wire.depthTest = false;
-                    const jointDrawn = drawJoint(this._wire, entity);
+                    const jointDrawn = drawJoint(this._wire, entity, this._highlightSize(entity));
                     const shapeDrawn = drawCollisionShape(this._wire, entity);
                     if (!jointDrawn && !shapeDrawn) this._drawHighlight(entity);
                 }
@@ -968,6 +998,7 @@ class Inspector extends EventHandler {
         this._gpuToggle.addEventListener('change', () => {
             const profiler = this.app.graphicsDevice.gpuProfiler;
             if (profiler) profiler.enabled = this._gpuToggle.checked;
+            this._saveSettings();
         });
         this._freezeToggle.addEventListener('change', () => {
             this._frozen = this._freezeToggle.checked;
@@ -1063,6 +1094,80 @@ class Inspector extends EventHandler {
     }
 
     /**
+     * @returns {Storage|null} The window's local storage, or null where there is none or reading
+     * it throws, as in some sandboxed frames.
+     * @private
+     */
+    static _storage() {
+        try {
+            return typeof window !== 'undefined' ? window.localStorage ?? null : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * Restores the settings kept under {@link InspectorOptions#storageKey}, if any.
+     *
+     * @private
+     */
+    _loadSettings() {
+        if (!this._storageKey) return;
+
+        let stored;
+        try {
+            const json = Inspector._storage()?.getItem(this._storageKey);
+            stored = json ? JSON.parse(json) : null;
+        } catch (e) {
+            // storage unavailable, e.g. a sandboxed frame, or unreadable content
+        }
+        if (!stored || typeof stored !== 'object') return;
+
+        if (stored.physicsDrawOptions && typeof stored.physicsDrawOptions === 'object') {
+            this.physicsDrawOptions = stored.physicsDrawOptions;
+        }
+        if (typeof stored.physicsDraw === 'boolean') this.physicsDraw = stored.physicsDraw;
+        if (Array.isArray(stored.hiddenBodies)) {
+            this._pendingHiddenPaths = new Set(stored.hiddenBodies.filter(path => typeof path === 'string'));
+        }
+        if (typeof stored.width === 'number') this.width = stored.width;
+        if (typeof stored.gpuTimings === 'boolean') {
+            this._gpuToggle.checked = stored.gpuTimings;
+            const profiler = this.app.graphicsDevice.gpuProfiler;
+            if (profiler) profiler.enabled = stored.gpuTimings;
+        }
+        if (stored.tab in this._panels) this._setTab(stored.tab);
+    }
+
+    /**
+     * Writes the settings kept under {@link InspectorOptions#storageKey}, if any. Called whenever
+     * one of them changes; suppressed while the panel is being built and restored.
+     *
+     * @private
+     */
+    _saveSettings() {
+        if (!this._storageKey || this._restoring || !this._host) return;
+
+        const hiddenBodies = [...this._pendingHiddenPaths];
+        for (const entity of this._hiddenBodies.keys()) {
+            hiddenBodies.push(entity.path);
+        }
+
+        try {
+            Inspector._storage()?.setItem(this._storageKey, JSON.stringify({
+                physicsDraw: this.physicsDraw,
+                physicsDrawOptions: this.physicsDrawOptions,
+                hiddenBodies,
+                tab: this._tab,
+                width: this._width,
+                gpuTimings: this._gpuToggle.checked
+            }));
+        } catch (e) {
+            // storage unavailable or full: settings simply do not persist
+        }
+    }
+
+    /**
      * Includes or excludes one body from the physics drawing, from its checkbox in the list.
      *
      * @param {Entity} entity - The entity carrying the rigid body.
@@ -1081,6 +1186,7 @@ class Inspector extends EventHandler {
             if (body && physics) physics.hideBody(body);
         }
         if (this._tab === 'physics') this._refreshLists(false);
+        this._saveSettings();
     }
 
     /**
@@ -1092,6 +1198,20 @@ class Inspector extends EventHandler {
      */
     _pruneHiddenBodies() {
         const physics = this._physics;
+
+        // exclusions restored from storage attach to the entities once they exist
+        if (this._pendingHiddenPaths.size) {
+            const store = this.app.systems.rigidbody?.store;
+            for (const record of Object.values(store ?? {})) {
+                const entity = record.entity;
+                if (this._pendingHiddenPaths.delete(entity.path)) {
+                    const body = entity.rigidbody?.body ?? null;
+                    this._hiddenBodies.set(entity, body);
+                    if (body && physics) physics.hideBody(body);
+                }
+            }
+        }
+
         for (const [entity, body] of this._hiddenBodies) {
             const rigidbody = entity.rigidbody;
             const current = rigidbody?.body ?? null;
@@ -1132,6 +1252,7 @@ class Inspector extends EventHandler {
             input.disabled = !draw;
         }
         if (this._tab === 'physics') this._refreshLists(false);
+        this._saveSettings();
     }
 
     /**
@@ -1170,6 +1291,7 @@ class Inspector extends EventHandler {
             this._properties.setSubject(this._hierarchy.selected, buildNodeModel);
         }
         this._updateStatus();
+        this._saveSettings();
     }
 
     /**

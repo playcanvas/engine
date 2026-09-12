@@ -282,6 +282,46 @@ describe('Inspector', function () {
         inspector.destroy();
     });
 
+    it('keeps its settings in storage and restores them for the next instance', function () {
+        const stored = {};
+        Object.defineProperty(window, 'localStorage', {
+            configurable: true,
+            value: {
+                getItem: key => stored[key] ?? null,
+                setItem: (key, value) => {
+                    stored[key] = value;
+                }
+            }
+        });
+
+        const first = new Inspector(app, { storageKey: 'test-inspector' });
+        first.physicsDraw = true;
+        first.physicsDrawOptions = { contacts: true, range: 5 };
+        first.width = 600;
+        [...panel(first).querySelectorAll('.pci-tab')].find(tab => tab.textContent === 'Frame graph').click();
+        first.destroy();
+
+        expect(stored['test-inspector']).to.be.a('string');
+        const saved = JSON.parse(stored['test-inspector']);
+        expect(saved.tab).to.equal('passes');
+
+        // the constructor defaults lose to what the user left behind
+        const second = new Inspector(app, { storageKey: 'test-inspector', physicsDraw: false });
+        expect(second.physicsDraw).to.be.true;
+        expect(second.physicsDrawOptions.contacts).to.be.true;
+        expect(second.physicsDrawOptions.range).to.equal(5);
+        expect(second.width).to.equal(600);
+        expect(panel(second).querySelector('.pci-tab.pci-active').textContent).to.equal('Frame graph');
+        second.destroy();
+
+        // nothing is kept without a key
+        delete stored['test-inspector'];
+        const third = new Inspector(app, { storageKey: null });
+        third.physicsDraw = true;
+        third.destroy();
+        expect(Object.keys(stored)).to.deep.equal([]);
+    });
+
     it('explains a missing physics system on the physics tab', function () {
         const inspector = new Inspector(app);
         const tabs = [...panel(inspector).querySelectorAll('.pci-tab')];
