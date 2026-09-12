@@ -5,16 +5,16 @@ export default /* wgsl */`
 #include "gsplatCommonVS"
 
 varying gaussianUV: half2;
-varying gaussianColor: half4;
+varying @interpolate(flat) gaussianColor: half4;
 
 #ifndef DITHER_NONE
-    varying id: f32;
+    varying @interpolate(flat) id: f32;
 #endif
 
 const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
 
 #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
-    varying vLinearDepth: f32;
+    varying @interpolate(flat) vLinearDepth: f32;
 #endif
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)

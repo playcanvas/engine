@@ -77,8 +77,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
     _threadBlocks = 0;
 
     /**
-     * Allocated thread-block capacity (buffer sizing). Buffers are only
-     * reallocated when this value changes. Always `>= _threadBlocks`.
+     * Allocated thread-block capacity (sizes `_passHist`). Always `>= _threadBlocks`.
      *
      * @type {number}
      */
@@ -380,13 +379,17 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
         const allocThreadBlocks = Math.max(1, Math.ceil(effectiveCount / PART_SIZE));
         const currentThreadBlocks = Math.max(1, Math.ceil(elementCount / PART_SIZE));
 
-        const needRealloc = forceRealloc || allocThreadBlocks !== this._allocatedThreadBlocks || !this._keys0;
+        // See ComputeRadixSortMultipass._allocateBuffers: grow on any effective-count increase,
+        // shrink only when a lowered capacity drops the thread-block count.
+        const needRealloc = forceRealloc || !this._keys0 ||
+            effectiveCount > this._allocatedElementCount ||
+            allocThreadBlocks < this._allocatedThreadBlocks;
 
         if (needRealloc) {
             this._destroyBuffers();
 
             this._allocatedThreadBlocks = allocThreadBlocks;
-            this.capacity = effectiveCount;
+            this._capacity = effectiveCount;
 
             const device = this.device;
 
