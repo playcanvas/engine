@@ -15,6 +15,7 @@ const booleanFlags = new Set([
     'HIDDEN',
     'NO_DEVICE_SELECTOR',
     'NO_MINISTATS',
+    'NO_INSPECTOR',
     'WEBGPU_DISABLED',
     'WEBGPU_BARE_DISABLED',
     'WEBGL_DISABLED'

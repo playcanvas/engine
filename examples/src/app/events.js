@@ -7,6 +7,7 @@
  * @typedef {object} LoadingEventDetail
  * @property {boolean} showDeviceSelector - Show device selector
  * @property {boolean} showMiniStats - Show the MiniStats toggle
+ * @property {boolean} showInspector - Show the Inspector toggle
  *
  * @typedef {CustomEvent<LoadingEventDetail>} LoadingEvent.
  */
