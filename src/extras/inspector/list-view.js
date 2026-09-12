@@ -5,6 +5,10 @@
  * @property {string} [title] - A tooltip.
  * @property {*} [target] - A link target. Clicking the cell calls {@link ListView#onLink} with it
  * instead of selecting the row.
+ * @property {boolean} [toggle] - Render the cell as a checkbox instead of text. Changing it calls
+ * {@link ListView#onToggle} with the row's item and the new state, without selecting the row.
+ * @property {boolean} [checked] - The state of a checkbox cell.
+ * @property {boolean} [disabled] - Whether a checkbox cell is disabled.
  */
 
 /**
@@ -52,6 +56,13 @@ class ListView {
      * @type {((target: *) => void)|undefined}
      */
     onLink;
+
+    /**
+     * Called with a row's item and the new state when one of its checkbox cells changes.
+     *
+     * @type {((item: *, checked: boolean) => void)|undefined}
+     */
+    onToggle;
 
     /**
      * Case-insensitive filter on the rows' names.
@@ -212,25 +223,68 @@ class ListView {
 
         cells.forEach((cell, i) => {
             let cellEl = entry.cells[i];
+            const wantInput = !!cell.toggle;
+            if (cellEl && (cellEl.tagName === 'INPUT') !== wantInput) {
+                cellEl.remove();
+                cellEl = undefined;
+            }
             if (!cellEl) {
-                cellEl = document.createElement('span');
-                cellEl.addEventListener('click', (e) => {
-                    const current = entry.row.cells[i];
-                    if (current && current.target !== undefined) {
-                        e.stopPropagation();
-                        this.onLink?.(current.target);
-                    }
-                });
-                entry.el.appendChild(cellEl);
+                cellEl = wantInput ? this._createToggleCell(entry, i) : this._createTextCell(entry, i);
+                const next = entry.cells[i + 1] ?? null;
+                entry.el.insertBefore(cellEl, next);
                 entry.cells[i] = cellEl;
             }
 
-            const cls = `pci-cell ${cell.cls ?? ''}${cell.target !== undefined ? ' pci-link' : ''}`;
-            if (cellEl.className !== cls) cellEl.className = cls;
-            if (cellEl.textContent !== cell.text) cellEl.textContent = cell.text;
+            if (wantInput) {
+                const input = /** @type {HTMLInputElement} */ (cellEl);
+                const checked = !!cell.checked;
+                if (input.checked !== checked) input.checked = checked;
+                const disabled = !!cell.disabled;
+                if (input.disabled !== disabled) input.disabled = disabled;
+            } else {
+                const cls = `pci-cell ${cell.cls ?? ''}${cell.target !== undefined ? ' pci-link' : ''}`;
+                if (cellEl.className !== cls) cellEl.className = cls;
+                if (cellEl.textContent !== cell.text) cellEl.textContent = cell.text;
+            }
             const title = cell.title ?? '';
             if (cellEl.title !== title) cellEl.title = title;
         });
+    }
+
+    /**
+     * @param {ListEntry} entry - The row entry.
+     * @param {number} index - The cell index.
+     * @returns {HTMLElement} A text cell, clicking a link cell calls {@link onLink}.
+     * @private
+     */
+    _createTextCell(entry, index) {
+        const cellEl = document.createElement('span');
+        cellEl.addEventListener('click', (e) => {
+            const current = entry.row.cells[index];
+            if (current && current.target !== undefined) {
+                e.stopPropagation();
+                this.onLink?.(current.target);
+            }
+        });
+        return cellEl;
+    }
+
+    /**
+     * @param {ListEntry} entry - The row entry.
+     * @param {number} index - The cell index.
+     * @returns {HTMLInputElement} A checkbox cell that reports through {@link onToggle}.
+     * @private
+     */
+    _createToggleCell(entry, index) {
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.className = 'pci-toggle pci-cell-toggle';
+        input.addEventListener('click', e => e.stopPropagation());
+        input.addEventListener('dblclick', e => e.stopPropagation());
+        input.addEventListener('change', () => {
+            if (entry.row.cells[index]?.toggle) this.onToggle?.(entry.row.item, input.checked);
+        });
+        return input;
     }
 
     /**

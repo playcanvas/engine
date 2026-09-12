@@ -245,6 +245,45 @@ const styles = /* css */ `
         accent-color: #ff8a20;
     }
 
+    .pci-check.pci-strong {
+        color: #f0f2f5;
+        font-weight: 600;
+    }
+
+    .pci-subbar.pci-master {
+        gap: 10px;
+    }
+
+    .pci-subbar .pci-hint {
+        color: #6b7079;
+    }
+
+    .pci-subbar.pci-options {
+        margin-left: 12px;
+        border-left: 2px solid #3a3e46;
+    }
+
+    .pci-subbar.pci-inactive {
+        opacity: 0.45;
+    }
+
+    .pci-cell-toggle {
+        flex: 0 0 auto;
+        width: 12px;
+        height: 12px;
+        margin: 0;
+        accent-color: #ff8a20;
+        cursor: pointer;
+    }
+
+    .pci-cell-toggle:disabled {
+        cursor: default;
+    }
+
+    .pci-cell-spacer {
+        flex: 0 0 12px;
+    }
+
     .pci-list {
         flex: 1 1 auto;
         overflow: auto;

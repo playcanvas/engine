@@ -232,6 +232,56 @@ describe('Inspector', function () {
         inspector.destroy();
     });
 
+    it('excludes a body from the physics drawing through its checkbox', function () {
+        // a rigid body system stub with one static body whose native flags we can watch
+        const nativeBody = {
+            flags: 1,
+            getCollisionFlags() {
+                return this.flags;
+            },
+            setCollisionFlags(flags) {
+                this.flags = flags;
+            }
+        };
+        const crate = /** @type {any} */ (new GraphNode('crate'));
+        crate.guid = 'crate-guid';
+        crate.rigidbody = { type: 'static', enabled: true, entity: crate, body: nativeBody, mass: 0, isActive: () => false };
+        app.root.addChild(crate);
+        app.systems.rigidbody = { store: { [crate.guid]: { entity: crate } } };
+
+        const inspector = new Inspector(app, { physicsDraw: true });
+        [...panel(inspector).querySelectorAll('.pci-tab')].find(tab => tab.textContent === 'Physics').click();
+
+        const row = [...panel(inspector).querySelectorAll('.pci-lrow')].find(r => r.textContent.includes('crate'));
+        const toggle = /** @type {HTMLInputElement} */ (row.querySelector('.pci-cell-toggle'));
+        expect(toggle.checked).to.be.true;
+        expect(toggle.disabled).to.be.false;
+
+        toggle.checked = false;
+        toggle.dispatchEvent(new window.Event('change'));
+        expect(nativeBody.flags & 32).to.equal(32);
+        expect(nativeBody.flags & 1).to.equal(1);
+
+        // the engine rebuilt the body: the exclusion follows the new one on the next frame
+        const rebuilt = { ...nativeBody, flags: 1 };
+        crate.rigidbody.body = rebuilt;
+        app.fire('update', 0.016);
+        expect(rebuilt.flags & 32).to.equal(32);
+
+        const rowAfter = [...panel(inspector).querySelectorAll('.pci-lrow')].find(r => r.textContent.includes('crate'));
+        const toggleAfter = /** @type {HTMLInputElement} */ (rowAfter.querySelector('.pci-cell-toggle'));
+        toggleAfter.checked = true;
+        toggleAfter.dispatchEvent(new window.Event('change'));
+        expect(rebuilt.flags).to.equal(1);
+
+        // the master switch disables the per-body checkboxes
+        inspector.physicsDraw = false;
+        const rowOff = [...panel(inspector).querySelectorAll('.pci-lrow')].find(r => r.textContent.includes('crate'));
+        expect(/** @type {HTMLInputElement} */ (rowOff.querySelector('.pci-cell-toggle')).disabled).to.be.true;
+
+        inspector.destroy();
+    });
+
     it('explains a missing physics system on the physics tab', function () {
         const inspector = new Inspector(app);
         const tabs = [...panel(inspector).querySelectorAll('.pci-tab')];

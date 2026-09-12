@@ -35,6 +35,9 @@ const DEBUG_DRAW = {
 const DRAW_FLAGS = DEBUG_DRAW.WIREFRAME | DEBUG_DRAW.AABB | DEBUG_DRAW.CONTACT_POINTS | DEBUG_DRAW.CONSTRAINTS |
     DEBUG_DRAW.CONSTRAINT_LIMITS | DEBUG_DRAW.NORMALS | DEBUG_DRAW.FRAMES;
 
+// btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT: debugDrawWorld skips objects carrying this flag
+const CF_DISABLE_VISUALIZE_OBJECT = 32;
+
 const CONTACT_NORMAL_LENGTH = 0.25;
 const CONTACT_CROSS_SIZE = 0.04;
 const INITIAL_SEGMENTS = 4096;
@@ -191,6 +194,14 @@ class AmmoDebugDraw {
     _world = null;
 
     /**
+     * Native bodies excluded from the drawing, see {@link hideBody}.
+     *
+     * @type {Set<any>}
+     * @private
+     */
+    _hiddenBodies = new Set();
+
+    /**
      * Whether a debug drawer can be attached right now: Ammo is loaded with `DebugDrawer` support
      * and the rigid body system has created its world.
      *
@@ -238,8 +249,8 @@ class AmmoDebugDraw {
         drawer.setDebugMode = (mode) => {
             this.mode = mode;
         };
-        // while disabled, only the simulation flags are reported so Bullet stops calling back
-        drawer.getDebugMode = () => (this.enabled ? this.mode : (this.mode & DEBUG_DRAW.NO_DEACTIVATION));
+        // while disabled nothing is reported, so Bullet neither calls back nor keeps bodies awake
+        drawer.getDebugMode = () => (this.enabled ? this.mode : 0);
 
         this._world = this.app.systems.rigidbody.dynamicsWorld;
         this._world.setDebugDrawer(drawer);
@@ -251,6 +262,11 @@ class AmmoDebugDraw {
      * Removes the debug drawer from the world and frees it.
      */
     detach() {
+        for (const body of this._hiddenBodies) {
+            this._setVisualizeFlag(body, true);
+        }
+        this._hiddenBodies.clear();
+
         if (!this._drawer) return;
         try {
             this._world?.setDebugDrawer(null);
@@ -258,6 +274,60 @@ class AmmoDebugDraw {
             // the world may already be gone
         }
         this._releaseDrawer();
+    }
+
+    /**
+     * Excludes a body from the drawing by flagging it for Bullet. The flag is re-applied every
+     * frame, as the engine rewrites collision flags when it rebuilds a body.
+     *
+     * @param {any} body - The native `btRigidBody`.
+     */
+    hideBody(body) {
+        this._hiddenBodies.add(body);
+        this._setVisualizeFlag(body, false);
+    }
+
+    /**
+     * Draws a body again after {@link hideBody}.
+     *
+     * @param {any} body - The native `btRigidBody`.
+     */
+    showBody(body) {
+        if (this._hiddenBodies.delete(body)) {
+            this._setVisualizeFlag(body, true);
+        }
+    }
+
+    /**
+     * Drops a hidden body without touching it, for a body the engine has destroyed.
+     *
+     * @param {any} body - The native `btRigidBody`.
+     */
+    forgetBody(body) {
+        this._hiddenBodies.delete(body);
+    }
+
+    /**
+     * @param {any} body - The native `btRigidBody`.
+     * @returns {boolean} Whether the body is excluded from the drawing.
+     */
+    isBodyHidden(body) {
+        return this._hiddenBodies.has(body);
+    }
+
+    /**
+     * @param {any} body - The native `btRigidBody`.
+     * @param {boolean} visible - Whether Bullet should draw it.
+     * @private
+     */
+    _setVisualizeFlag(body, visible) {
+        try {
+            const flags = body.getCollisionFlags();
+            const next = visible ? (flags & ~CF_DISABLE_VISUALIZE_OBJECT) : (flags | CF_DISABLE_VISUALIZE_OBJECT);
+            if (next !== flags) body.setCollisionFlags(next);
+        } catch (e) {
+            // a body without a native counterpart yet
+        }
     }
 
     /**
@@ -283,6 +353,9 @@ class AmmoDebugDraw {
         if (!this._drawer && !this.attach()) return;
 
         if (this.mode & DRAW_FLAGS) {
+            for (const body of this._hiddenBodies) {
+                this._setVisualizeFlag(body, false);
+            }
             this._world.debugDrawWorld();
         }
         this._flush();

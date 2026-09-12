@@ -79,13 +79,16 @@ function bodyState(rigidbody) {
 }
 
 /**
- * One row per rigid body: name linking to the entity, type, shape, mass, and state with the speed
- * of awake bodies. Sleeping and disabled bodies are dimmed.
+ * One row per rigid body: a checkbox that excludes the body from the debug drawing, name linking
+ * to the entity, type, shape, mass, and state with the speed of awake bodies. Sleeping and
+ * disabled bodies are dimmed.
  *
  * @param {AppBase} app - The app.
+ * @param {{ has: (entity: Entity) => boolean }} hidden - The bodies excluded from the drawing.
+ * @param {boolean} drawing - Whether the world is drawn at all; the checkboxes are disabled otherwise.
  * @returns {ListRow[]} The rows.
  */
-function bodyRows(app) {
+function bodyRows(app, hidden, drawing) {
     return bodyEntities(app).map((entity) => {
         const rigidbody = entity.rigidbody;
         const state = bodyState(rigidbody);
@@ -98,6 +101,7 @@ function bodyRows(app) {
             name: entity.name,
             dim: state === 'sleeping' || state === 'disabled',
             cells: [
+                { toggle: true, checked: !hidden.has(entity), disabled: !drawing, title: 'Draw this body' },
                 { text: entity.name, cls: 'pci-cell-name', target: entity },
                 { text: rigidbody.type, cls: 'pci-cell-tag pci-cell-tag-info' },
                 { text: shapeText(entity.collision), cls: 'pci-cell-info' },
@@ -143,6 +147,7 @@ function jointRows(app) {
             name: entity.name,
             dim: !joint.enabled || !entity.enabled || broken,
             cells: [
+                { text: '', cls: 'pci-cell-spacer' },
                 { text: entity.name, cls: 'pci-cell-name', target: entity },
                 { text: `${joint.type} joint`, cls: 'pci-cell-tag pci-cell-tag-info' },
                 { text: a ? a.name : 'world', cls: 'pci-cell-info', target: a ?? undefined },

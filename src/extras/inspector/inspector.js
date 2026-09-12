@@ -62,7 +62,7 @@ import { styles } from './styles.js';
  * @property {boolean} [limits] - Joint limits.
  * @property {boolean} [normals] - Face normals of mesh shapes.
  * @property {boolean} [frames] - Local axes of each body.
- * @property {boolean} [keepAwake] - Stop bodies from falling asleep, even while not drawing.
+ * @property {boolean} [keepAwake] - Stop bodies from falling asleep while drawing.
  * @property {boolean} [depthTest] - Hide lines behind geometry.
  * @property {number} [range] - Only draw lines within this distance of the camera, in meters. Zero
  * draws everything.
@@ -442,6 +442,23 @@ class Inspector extends EventHandler {
     _physicsNote;
 
     /**
+     * The bar holding the options governed by the Draw switch.
+     *
+     * @type {HTMLElement}
+     * @private
+     */
+    _physicsOptionsBar;
+
+    /**
+     * Bodies excluded from the physics drawing, with the native body the exclusion was applied to,
+     * or null while the entity has no native body yet.
+     *
+     * @type {Map<Entity, any>}
+     * @private
+     */
+    _hiddenBodies = new Map();
+
+    /**
      * Model builder for the property view when a pass is selected.
      *
      * @param {FramePass} pass - The pass.
@@ -521,8 +538,10 @@ class Inspector extends EventHandler {
         this.paused = false;
         const profiler = app.graphicsDevice?.gpuProfiler;
         if (profiler) profiler.enabled = this._gpuWasEnabled;
+        this._pruneHiddenBodies();
         this._physics?.detach();
         this._physics = null;
+        this._hiddenBodies.clear();
 
         if (this._popup) this.dockBack();
         this._host?.remove();
@@ -821,6 +840,7 @@ class Inspector extends EventHandler {
             const camera = this.app.systems.camera?.cameras[0];
             physics.center = camera ? camera.entity.getPosition() : null;
         }
+        this._pruneHiddenBodies();
         physics.update();
     }
 
@@ -893,10 +913,15 @@ class Inspector extends EventHandler {
 
         const targetList = el('div', 'pci-list');
 
-        // physics: draw options over the list of bodies
+        // physics: a master switch, the options it governs, then the list of bodies
         const physicsPanel = el('div', 'pci-listpanel');
-        const physicsBar = el('div', 'pci-subbar pci-wrap');
-        this._drawToggle = this._makeToggle(physicsBar, 'Draw', 'Draw the physics world through the engine\'s debug drawer');
+        const physicsMaster = el('div', 'pci-subbar pci-master');
+        this._drawToggle = this._makeToggle(physicsMaster, 'Draw physics world',
+            'Draw the physics world over the scene through the engine\'s debug drawer. The options below only apply while this is on');
+        this._drawToggle.parentElement.classList.add('pci-strong');
+        physicsMaster.appendChild(el('span', 'pci-hint', 'options below apply while on'));
+        const physicsBar = el('div', 'pci-subbar pci-wrap pci-options');
+        this._physicsOptionsBar = physicsBar;
         const options = [
             ['wireframe', 'Wireframe', 'Collision shapes. White: awake, green: asleep, cyan: about to sleep, red: never sleeps, yellow: not simulated'],
             ['aabb', 'AABB', 'Axis-aligned bounds of each body'],
@@ -905,7 +930,7 @@ class Inspector extends EventHandler {
             ['limits', 'Limits', 'Joint limits'],
             ['normals', 'Normals', 'Face normals of mesh shapes'],
             ['frames', 'Frames', 'Local axes of each body'],
-            ['keepAwake', 'Keep awake', 'Stop bodies from falling asleep, even while not drawing']
+            ['keepAwake', 'Keep awake', 'Stop bodies from falling asleep while drawing']
         ];
         this._physicsToggles = {};
         for (const [key, label, title] of options) {
@@ -926,7 +951,7 @@ class Inspector extends EventHandler {
         physicsBar.appendChild(range);
         this._physicsNote = el('div', 'pci-note');
         const bodyList = el('div', 'pci-list');
-        physicsPanel.append(physicsBar, this._physicsNote, bodyList);
+        physicsPanel.append(physicsMaster, physicsBar, this._physicsNote, bodyList);
 
         for (const input of [this._drawToggle, this._depthToggle, this._rangeInput]) {
             input.addEventListener('change', () => this._applyPhysicsSettings());
@@ -1013,6 +1038,7 @@ class Inspector extends EventHandler {
             if (this._tab === 'physics') this._properties.setSubject(entity, buildNodeModel);
             this._updateStatus();
         }, target => this._selectAny(target));
+        this._bodyList.onToggle = (entity, drawn) => this._setBodyDrawn(entity, drawn);
     }
 
     /**
@@ -1037,6 +1063,50 @@ class Inspector extends EventHandler {
     }
 
     /**
+     * Includes or excludes one body from the physics drawing, from its checkbox in the list.
+     *
+     * @param {Entity} entity - The entity carrying the rigid body.
+     * @param {boolean} drawn - Whether the body is drawn.
+     * @private
+     */
+    _setBodyDrawn(entity, drawn) {
+        const physics = this._physics;
+        if (drawn) {
+            const body = this._hiddenBodies.get(entity);
+            this._hiddenBodies.delete(entity);
+            if (body && physics) physics.showBody(body);
+        } else {
+            const body = entity.rigidbody?.body ?? null;
+            this._hiddenBodies.set(entity, body);
+            if (body && physics) physics.hideBody(body);
+        }
+        if (this._tab === 'physics') this._refreshLists(false);
+    }
+
+    /**
+     * Keeps the exclusions in step with the engine: a body the engine rebuilt is excluded again, a
+     * destroyed one is forgotten without being touched, and an entity that lost its component
+     * drops out.
+     *
+     * @private
+     */
+    _pruneHiddenBodies() {
+        const physics = this._physics;
+        for (const [entity, body] of this._hiddenBodies) {
+            const rigidbody = entity.rigidbody;
+            const current = rigidbody?.body ?? null;
+            if (current === body) continue;
+            if (body && physics) physics.forgetBody(body);
+            if (!rigidbody) {
+                this._hiddenBodies.delete(entity);
+            } else {
+                this._hiddenBodies.set(entity, current);
+                if (current && physics) physics.hideBody(current);
+            }
+        }
+    }
+
+    /**
      * Pushes the physics tab's controls into the debug drawer.
      *
      * @private
@@ -1050,10 +1120,18 @@ class Inspector extends EventHandler {
             if (this._physicsToggles[key].checked) mode |= flag;
         }
 
-        physics.enabled = this._visible && this._drawToggle.checked;
+        const draw = this._drawToggle.checked;
+        physics.enabled = this._visible && draw;
         physics.mode = mode;
         physics.depthTest = this._depthToggle.checked;
         physics.range = Math.max(0, parseFloat(this._rangeInput.value) || 0);
+
+        // the options and the per-body checkboxes mean nothing while the master switch is off
+        this._physicsOptionsBar.classList.toggle('pci-inactive', !draw);
+        for (const input of this._physicsOptionsBar.querySelectorAll('input')) {
+            input.disabled = !draw;
+        }
+        if (this._tab === 'physics') this._refreshLists(false);
     }
 
     /**
@@ -1115,7 +1193,7 @@ class Inspector extends EventHandler {
             this._physicsNote.textContent = note;
             this._physicsNote.style.display = note ? '' : 'none';
 
-            this._bodyList.setRows([...bodyRows(this.app), ...jointRows(this.app)]);
+            this._bodyList.setRows([...bodyRows(this.app, this._hiddenBodies, this._drawToggle.checked), ...jointRows(this.app)]);
             const entity = this._bodyList.selected;
             if (entity !== this._properties.subject) {
                 this._properties.setSubject(entity, buildNodeModel);
