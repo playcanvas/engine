@@ -6,6 +6,9 @@
 
 export { MiniStats } from './mini-stats/mini-stats.js';
 
+// INSPECTOR
+export { Inspector } from './inspector/inspector.js';
+
 // RENDERERS
 export { OutlineRenderer } from './renderers/outline-renderer.js';
 export {

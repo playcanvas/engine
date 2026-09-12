@@ -11,6 +11,7 @@ import { getLayout } from '../utils.mjs';
 /**
  * @typedef {object} Props
  * @property {(value: boolean) => void} setShowMiniStats - The state set function .
+ * @property {(value: boolean) => void} setShowInspector - Sets whether the inspector panel is shown.
  * @property {'mobile'|'desktop'} [layout] - Current layout.
  * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
  * @property {(value: boolean) => void} setShowCredits - Set credits overlay visibility.
@@ -20,6 +21,8 @@ import { getLayout } from '../utils.mjs';
  * @typedef {object} State
  * @property {boolean} showMiniStats - Show MiniStats state.
  * @property {boolean} hasMiniStats - Whether the loaded example allows the MiniStats overlay.
+ * @property {boolean} showInspector - Show Inspector state.
+ * @property {boolean} hasInspector - Whether the loaded example allows the Inspector toggle.
  * @property {boolean} fullscreen - Fullscreen state.
  * @property {boolean} hasCredits - Whether the loaded example has any credits.
  * @property {boolean} shareDialogOpen - Whether the share dialog is visible.
@@ -38,6 +41,8 @@ class Menu extends TypedComponent {
             showMiniStats: typeof ui.miniStats === 'boolean' ? ui.miniStats : getLayout() === 'desktop',
             fullscreen: typeof ui.fullscreen === 'boolean' ? ui.fullscreen : false,
             hasMiniStats: true,
+            showInspector: typeof ui.inspector === 'boolean' ? ui.inspector : false,
+            hasInspector: true,
             hasCredits: false,
             shareDialogOpen: false,
             shareUrl: '',
@@ -57,6 +62,8 @@ class Menu extends TypedComponent {
         this._handleExampleLoad = this._handleExampleLoad.bind(this);
         this._handleMiniStats = this._handleMiniStats.bind(this);
         this.toggleMiniStats = this.toggleMiniStats.bind(this);
+        this._handleInspector = this._handleInspector.bind(this);
+        this.toggleInspector = this.toggleInspector.bind(this);
         this.toggleCredits = this.toggleCredits.bind(this);
         this.openShareDialog = this.openShareDialog.bind(this);
         this.closeShareDialog = this.closeShareDialog.bind(this);
@@ -134,6 +141,7 @@ class Menu extends TypedComponent {
         window.addEventListener('exampleLoading', this._handleExampleLoading);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('miniStats', this._handleMiniStats);
+        window.addEventListener('inspector', this._handleInspector);
     }
 
     componentWillUnmount() {
@@ -148,6 +156,7 @@ class Menu extends TypedComponent {
         window.removeEventListener('exampleLoading', this._handleExampleLoading);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
         window.removeEventListener('miniStats', this._handleMiniStats);
+        window.removeEventListener('inspector', this._handleInspector);
     }
 
     openShareDialog() {
@@ -183,8 +192,11 @@ class Menu extends TypedComponent {
      * @param {Event} event - exampleLoading event.
      */
     _handleExampleLoading(event) {
-        const detail = /** @type {CustomEvent<{ showMiniStats?: boolean }>} */ (event).detail;
-        this.setState({ hasMiniStats: detail?.showMiniStats !== false });
+        const detail = /** @type {CustomEvent<{ showMiniStats?: boolean, showInspector?: boolean }>} */ (event).detail;
+        this.setState({
+            hasMiniStats: detail?.showMiniStats !== false,
+            hasInspector: detail?.showInspector !== false
+        });
     }
 
     /**
@@ -192,6 +204,7 @@ class Menu extends TypedComponent {
      */
     _handleExampleLoad(event) {
         this.props.setShowMiniStats(this.state.showMiniStats);
+        this.props.setShowInspector(this.state.showInspector);
         this.setFullscreen(this.state.fullscreen, true);
         const detail = /** @type {CustomEvent<{ credits?: unknown[] }>} */ (event).detail;
         this.setState({ hasCredits: (detail?.credits?.length ?? 0) > 0 });
@@ -213,8 +226,27 @@ class Menu extends TypedComponent {
         }, () => patchState({ ui: { miniStats: this.state.showMiniStats } }));
     }
 
+    toggleInspector() {
+        const value = !this.state.showInspector;
+        this.setState({ showInspector: value }, () => patchState({ ui: { inspector: this.state.showInspector } }));
+        this.props.setShowInspector(value);
+    }
+
+    /**
+     * @param {Event} event - Inspector state event.
+     */
+    _handleInspector(event) {
+        const customEvent = /** @type {CustomEvent<{ state: boolean }>} */ (event);
+        // an example that owns its panel reports its state too, but that is not the toggle's state:
+        // it must neither persist nor carry over to the next example
+        if (!this.state.hasInspector) return;
+        this.setState({
+            showInspector: !!customEvent.detail.state
+        }, () => patchState({ ui: { inspector: this.state.showInspector } }));
+    }
+
     render() {
-        const { showMiniStats, hasMiniStats, hasCredits, shareDialogOpen, shareUrl, shareTitle } = this.state;
+        const { showMiniStats, hasMiniStats, showInspector, hasInspector, hasCredits, shareDialogOpen, shareUrl, shareTitle } = this.state;
         const { layout, showCredits } = this.props;
         return jsx(
             Container,
@@ -262,6 +294,13 @@ class Menu extends TypedComponent {
                     class: showMiniStats ? 'selected' : undefined,
                     text: '',
                     onClick: this.toggleMiniStats
+                }),
+                hasInspector && jsx(Button, {
+                    icon: 'E147',
+                    id: 'showInspectorButton',
+                    class: showInspector ? 'selected' : undefined,
+                    text: '',
+                    onClick: this.toggleInspector
                 }),
                 hasCredits && layout === 'desktop' && jsx(Button, {
                     id: 'showCreditsButton',
