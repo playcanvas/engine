@@ -3,7 +3,7 @@ export default /* glsl */`
 #ifndef DITHER_NONE
     #include "bayerPS"
     #include "opacityDitherPS"
-    varying float id;
+    flat varying float id;
 #endif
 
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
@@ -11,13 +11,13 @@ export default /* glsl */`
 #endif
 
 #ifdef PREPASS_PASS
-    varying float vLinearDepth;
+    flat varying float vLinearDepth;
     #include "floatAsUintPS"
 #endif
 
 // the prepass declares this varying above, and the two passes are never generated as one
 #if defined(SCENE_TEXTURE_DEPTH) && !defined(PREPASS_PASS)
-    varying float vLinearDepth;
+    flat varying float vLinearDepth;
 #endif
 
 #include "sceneTexturesPS"
@@ -27,7 +27,7 @@ export default /* glsl */`
 #endif
 
 varying mediump vec2 gaussianUV;
-varying mediump vec4 gaussianColor;
+flat varying mediump vec4 gaussianColor;
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
     flat varying uint vPickId;
