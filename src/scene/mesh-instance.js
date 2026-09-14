@@ -194,6 +194,11 @@ class ShaderInstance {
  * meshInstance.instancingCount = numInstances;
  * ```
  *
+ * The default matrix format, {@link VertexFormat.getDefaultInstancingFormat}, occupies the
+ * attribute locations of `TEXCOORD6` and `TEXCOORD7`. A material sampling those UV sets on an
+ * instanced mesh needs a custom instancing vertex format on other attributes, as shown by the
+ * instancing-custom example.
+ *
  * **Examples**
  *
  * - {@link https://playcanvas.github.io/#graphics/instancing-basic graphics/instancing-basic}

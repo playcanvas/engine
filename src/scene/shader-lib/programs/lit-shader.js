@@ -5,7 +5,8 @@ import {
     SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL,
-    primitiveGlslToWgslTypeMap
+    primitiveGlslToWgslTypeMap,
+    semanticToLocation
 } from '../../../platform/graphics/constants.js';
 import {
     LIGHTSHAPE_PUNCTUAL,
@@ -365,6 +366,19 @@ class LitShader {
                 this.sharedDefineSet(true, 'SKIN', true);
             }
         }
+
+        // attribute locations are fixed per semantic, so two attributes on one location cannot share
+        // a shader. UV sets 6 and 7 sit on the locations of the default instancing format and UV
+        // sets 3 and 4 on those of the MSDF text attributes.
+        Debug.call(() => {
+            const used = new Map();
+            for (const name in attributes) {
+                const location = semanticToLocation[attributes[name]];
+                Debug.assert(!used.has(location),
+                    `Vertex attributes ${used.get(location)} and ${name} both use attribute location ${location} and cannot be combined in one shader. UV sets 6 and 7 share their locations with the default instancing vertex format, UV sets 3 and 4 with the MSDF text attributes - use a custom instancing vertex format or a different UV set.`);
+                used.set(location, name);
+            }
+        });
 
         // object level defines, exposed to both vertex and fragment shaders
         this.sharedDefineSet(options.useInstancing, 'INSTANCING', true);

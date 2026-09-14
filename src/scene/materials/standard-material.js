@@ -63,7 +63,9 @@ const isBlack = (color) => {
  * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
  * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together. A texture
  * samples one of the mesh's UV sets, selected by the map's UV channel property (0 to 7), and is
- * ignored when the mesh does not provide that set.
+ * ignored when the mesh does not provide that set. UV sets 6 and 7 share their vertex attribute
+ * locations with the default hardware instancing format, so an instanced mesh sampling them needs a
+ * custom instancing vertex format, see {@link MeshInstance#setInstancing}.
  *
  * A property assignment only reaches the GPU once {@link Material#update} is called: a `diffuse`
  * or `emissive` change made after the material's first frame is silently ignored until

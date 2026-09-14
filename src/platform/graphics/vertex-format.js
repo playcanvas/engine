@@ -243,6 +243,10 @@ class VertexFormat {
 
     /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
+     * The matrix rows use {@link SEMANTIC_ATTR11}, {@link SEMANTIC_ATTR12}, {@link SEMANTIC_ATTR14}
+     * and {@link SEMANTIC_ATTR15}. The first two share their attribute locations with
+     * {@link SEMANTIC_TEXCOORD6} and {@link SEMANTIC_TEXCOORD7}, so a shader reading those texture
+     * coordinate sets needs a custom instancing format on other attributes.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to create this vertex
      * format.

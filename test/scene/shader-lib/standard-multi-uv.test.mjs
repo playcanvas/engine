@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { stub } from 'sinon';
 
 import {
     SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TEXCOORD, TYPE_FLOAT32
@@ -6,7 +7,7 @@ import {
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
-import { SHADER_FORWARD } from '../../../src/scene/constants.js';
+import { SHADER_FORWARD, SHADERDEF_INSTANCING } from '../../../src/scene/constants.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -60,14 +61,15 @@ describe('StandardMaterial uv sets', function () {
     /**
      * @param {StandardMaterial} material - The material.
      * @param {number[]} [uvSets] - The uv sets the mesh provides, all eight by default.
+     * @param {number} [objDefs] - The object shader defines, none by default.
      * @returns {{ vshader: string, fshader: string, attributes: object }} The generated forward
      * pass shader.
      */
-    const generate = (material, uvSets = allSets) => {
+    const generate = (material, uvSets = allSets, objDefs = 0) => {
         const shader = material.getShaderVariant({
             device: app.graphicsDevice,
             scene: app.scene,
-            objDefs: 0,
+            objDefs: objDefs,
             pass: SHADER_FORWARD,
             sortedLights: [[], [], []],
             cameraShaderParams: new CameraShaderParams(),
@@ -138,6 +140,50 @@ describe('StandardMaterial uv sets', function () {
         expect(vshader).to.include('vUv5');
         expect(fshader).to.include('texture_lightMap');
         expect(fshader).to.include('vUv5');
+    });
+
+    /**
+     * @param {StandardMaterial} material - The material.
+     * @param {number} objDefs - The object shader defines.
+     * @returns {string[]} The attribute location collisions asserted while generating the shader,
+     * each as the message of one assert.
+     */
+    const collisions = (material, objDefs) => {
+        const error = stub(console, 'error');
+        try {
+            generate(material, allSets, objDefs);
+        } finally {
+            error.restore();
+        }
+        return error.getCalls().map(call => call.args.join(' ')).filter(message => message.includes('attribute location'));
+    };
+
+    it('asserts when a uv set shares its attribute location with the default instancing format', function () {
+        // uv sets 6 and 7 sit on the locations of the first two instance matrix rows
+        for (const [set, line] of [[6, 'instance_line1'], [7, 'instance_line2']]) {
+            const messages = collisions(createMaterial({ diffuse: set }), SHADERDEF_INSTANCING);
+            expect(messages).to.have.lengthOf(1);
+            expect(messages[0]).to.include(line);
+            expect(messages[0]).to.include(`vertex_texCoord${set}`);
+        }
+
+        // the other sets are free to combine with instancing
+        for (const set of [0, 1, 2, 3, 4, 5]) {
+            expect(collisions(createMaterial({ diffuse: set }), SHADERDEF_INSTANCING)).to.have.lengthOf(0);
+        }
+    });
+
+    it('asserts when a uv set shares its attribute location with the msdf text attributes', function () {
+        const msdf = (set) => {
+            const material = createMaterial({ msdf: 0, diffuse: set });
+            material.msdfTextAttribute = true;
+            material.update();
+            return material;
+        };
+
+        expect(collisions(msdf(3), 0)[0]).to.include('vertex_outlineParameters');
+        expect(collisions(msdf(4), 0)[0]).to.include('vertex_shadowParameters');
+        expect(collisions(msdf(5), 0)).to.have.lengthOf(0);
     });
 
     it('drops a map assigned to a uv set the mesh does not provide', function () {
