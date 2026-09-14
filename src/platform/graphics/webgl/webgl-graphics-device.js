@@ -944,6 +944,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.supportsIndependentBlending = !!this.extDrawBuffersIndexed;
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
+        this.extProvokingVertex = this.getExtension('WEBGL_provoking_vertex');
 
         this.extMultiDraw = this.getExtension('WEBGL_multi_draw');
         this.supportsMultiDraw = !!this.extMultiDraw;
@@ -1039,6 +1040,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
 
         // Initialize render state to a known start state
+
+        // The extension is exposed when the first-vertex convention is more efficient.
+        const ext = this.extProvokingVertex;
+        if (ext) {
+            ext.provokingVertexWEBGL(ext.FIRST_VERTEX_CONVENTION_WEBGL);
+        }
 
         // default blend state
         gl.disable(gl.BLEND);
