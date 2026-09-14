@@ -89,15 +89,23 @@ class WebgpuBuffer {
             // this.buffer.unmap();
         }
 
-        // src size needs to be a multiple of 4 as well
-        const srcOffset = storage.byteOffset ?? 0;
-        const srcData = new Uint8Array(storage.buffer ?? storage, srcOffset, storage.byteLength);
-        const data = new Uint8Array(this.buffer.size);
-        data.set(srcData);
-
         // copy data to the gpu buffer
         Debug.trace(TRACEID_RENDER_QUEUE, `writeBuffer: ${this.buffer.label}`);
-        wgpu.queue.writeBuffer(this.buffer, 0, data, 0, data.length);
+        const byteLength = storage.byteLength;
+        const srcOffset = storage.byteOffset ?? 0;
+        const srcBuffer = storage.buffer ?? storage;
+        Debug.assert(byteLength <= this.buffer.size, 'Buffer data does not fit the allocated GPU buffer', this);
+
+        if ((byteLength & 3) === 0) {
+            // the size written must be a multiple of 4, which the data already is (uniform buffers
+            // always, vertex and index buffers mostly) - write it directly from its storage
+            wgpu.queue.writeBuffer(this.buffer, 0, srcBuffer, srcOffset, byteLength);
+        } else {
+            // odd-sized data is padded through a temporary copy
+            const data = new Uint8Array((byteLength + 3) & ~3);
+            data.set(new Uint8Array(srcBuffer, srcOffset, byteLength));
+            wgpu.queue.writeBuffer(this.buffer, 0, data, 0, data.length);
+        }
     }
 
     read(device, offset, size, data, immediate) {
