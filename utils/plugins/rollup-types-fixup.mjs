@@ -62,7 +62,6 @@ const STANDARD_MAT_PROPS = [
     ['cubeMap', 'Texture|null'],
     ['cubeMapProjection', 'number'],
     ['cubeMapProjectionBox', 'BoundingBox'],
-    ['diffuse', 'Color'],
     ['diffuseDetailMap', 'Texture|null'],
     ['diffuseDetailMapChannel', 'string'],
     ['diffuseDetailMapOffset', 'Vec2'],
@@ -294,8 +293,13 @@ export function fixTypes(root = '.') {
         if (!guard || !contents.includes(guard)) {
             contents = transformer ? transformer(contents) : contents.replace(from, to);
         }
-        if (footer && !contents.includes(footer.trim())) {
-            contents += footer;
+        if (footer) {
+            // append only the footer lines the file does not already contain - tsc emits the import
+            // itself when the source references the type (e.g. an explicit accessor)
+            const missing = footer.split('\n').filter(line => line.trim() && !contents.includes(line.trim()));
+            if (missing.length > 0) {
+                contents += `\n${missing.join('\n')}\n`;
+            }
         }
         fs.writeFileSync(path.resolve(root, item.path), contents, 'utf-8');
         console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);

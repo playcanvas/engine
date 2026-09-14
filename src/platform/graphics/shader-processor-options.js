@@ -45,15 +45,23 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the uniform exists, false otherwise.
      */
     hasUniform(name) {
+        return this.getUniformBindGroup(name) >= 0;
+    }
 
+    /**
+     * Get the index of the bind group whose uniform buffer contains the uniform.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {number} - The bind group index, or -1 if no uniform buffer contains the uniform.
+     */
+    getUniformBindGroup(name) {
         for (let i = 0; i < this.uniformFormats.length; i++) {
             const uniformFormat = this.uniformFormats[i];
             if (uniformFormat?.get(name)) {
-                return true;
+                return i;
             }
         }
-
-        return false;
+        return -1;
     }
 
     /**

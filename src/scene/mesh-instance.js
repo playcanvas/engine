@@ -1346,6 +1346,9 @@ class MeshInstance {
             if (arguments[2] !== undefined) {
                 Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
             }
+            if (this._material?.propertyDescriptors?.some(property => property.uniformName === name)) {
+                Debug.warnOnce(`MeshInstance#setParameter: '${name}' is stored in the material uniform buffer and cannot be overridden per mesh instance yet, the value is ignored. Set the material property instead.`, this);
+            }
         });
 
         const param = this.parameters[name];

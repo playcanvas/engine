@@ -782,6 +782,22 @@ class Renderer {
         }
     }
 
+    /**
+     * Binds the material's uniform buffer bind group at the material bind group index, or the
+     * empty bind group for a material without one, so the pipeline layout has no gap.
+     *
+     * @param {Material} material - The material.
+     */
+    setupMaterialBindGroup(material) {
+        const device = this.device;
+        const bindGroup = material.uniformBufferBindGroup;
+        if (bindGroup) {
+            device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
+        } else if (device.supportsUniformBuffers) {
+            device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
+        }
+    }
+
     setupMeshUniformBuffers(shaderInstance) {
 
         const device = this.device;

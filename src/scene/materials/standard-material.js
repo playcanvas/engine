@@ -3,6 +3,7 @@ import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+import { BINDGROUP_MATERIAL, UNIFORMTYPE_VEC3 } from '../../platform/graphics/constants.js';
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
@@ -20,6 +21,8 @@ import { EnvLighting } from '../graphics/env-lighting.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
+import { MaterialProperty, convertColorToLinear } from './material-property.js';
+import { getMaterialLayout } from './material-uniform-buffer-layout.js';
 import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
@@ -42,6 +45,13 @@ const _uniforms = {};
 let _params = new Set();
 
 const _tempColor = new Color();
+
+// typed properties, stored in the material uniform buffer rather than published as parameters,
+// keyed by name so that each accessor references its descriptor directly
+const _properties = {
+    diffuse: new MaterialProperty('diffuse', 'material_diffuse', UNIFORMTYPE_VEC3, convertColorToLinear)
+};
+const _propertyList = Object.values(_properties);
 
 const isBlack = (color) => {
     return color.r === 0 && color.g === 0 && color.b === 0;
@@ -68,14 +78,12 @@ const isBlack = (color) => {
  * custom instancing vertex format, see {@link MeshInstance#setInstancing}.
  *
  * A property assignment only reaches the GPU once {@link Material#update} is called: a `diffuse`
- * or `emissive` change made after the material's first frame is silently ignored until
- * `material.update()` runs.
+ * or `emissive` change made after the material's first frame is not applied until
+ * `material.update()` runs. The debug build reports unapplied changes to the properties stored in
+ * the material uniform buffer, such as `diffuse`.
  *
  * @property {Color} ambient The ambient color of the material, specified in sRGB color space. This
  * color value is 3-component (RGB), where each component is between 0 and 1.
- * @property {Color} diffuse The diffuse color of the material, specified in sRGB color space. This
- * color value is 3-component (RGB), where each component is between 0 and 1. Defines basic surface
- * color (aka albedo).
  * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
  * null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel. Valid values are 0 to 7.
@@ -686,8 +694,44 @@ class StandardMaterial extends Material {
             this[`_${name}`] = _props[name].value();
         });
 
+        // typed properties are written to the uniform buffer again; the snapshots of exposed
+        // values refer to the replaced objects
+        this._mutableProperties?.clear();
+        for (const property of _propertyList) {
+            this._markPropertyModified(property);
+        }
+
         this._uniformCache = { };
         this._mapTransforms.reset();
+    }
+
+    /** @ignore */
+    get propertyDescriptors() {
+        return _propertyList;
+    }
+
+    /**
+     * Sets the diffuse color of the material, specified in sRGB color space. This color value is
+     * 3-component (RGB), where each component is between 0 and 1. Defines basic surface color (aka
+     * albedo).
+     *
+     * @type {Color}
+     */
+    set diffuse(value) {
+        if (!this._diffuse.equals(value)) {
+            this._diffuse.copy(value);
+            this._markPropertyModified(_properties.diffuse);
+        }
+    }
+
+    /**
+     * Gets the diffuse color of the material.
+     *
+     * @type {Color}
+     */
+    get diffuse() {
+        this._markPropertyMutable(_properties.diffuse, this._diffuse);
+        return this._diffuse;
     }
 
     /**
@@ -829,7 +873,6 @@ class StandardMaterial extends Material {
         };
 
         this._setParameter('material_ambient', getUniform('ambient'));
-        this._setParameter('material_diffuse', getUniform('diffuse'));
         this._setParameter('material_specular', getUniform('specular'));
         this._setParameter('material_aoIntensity', this.aoIntensity);
 
@@ -1003,6 +1046,9 @@ class StandardMaterial extends Material {
 
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
 
+        // the shader is processed against the layout of the material uniform buffer
+        processingOptions.uniformFormats[BINDGROUP_MATERIAL] = getMaterialLayout(device, _propertyList).uniformBufferFormat;
+
         const library = getProgramLibrary(device);
         library.register('standard', standard);
         const shader = library.getProgram('standard', options, processingOptions, this.userId);
@@ -1110,6 +1156,15 @@ const defineUniform = (name, getUniformFunc) => {
     _uniforms[name] = getUniformFunc;
 };
 
+// registers the default value and copy behaviour of a property, used by reset and copy
+const registerProp = (name, constructorFunc, copyFromBacking = false) => {
+    _props[name] = {
+        value: constructorFunc,
+        copyFromBacking
+    };
+};
+
+// registers a property and defines its accessor on the prototype
 const definePropInternal = (name, constructorFunc, setterFunc, getterFunc, copyFromBacking = false) => {
     Object.defineProperty(StandardMaterial.prototype, name, {
         get: getterFunc || function () {
@@ -1118,10 +1173,7 @@ const definePropInternal = (name, constructorFunc, setterFunc, getterFunc, copyF
         set: setterFunc
     });
 
-    _props[name] = {
-        value: constructorFunc,
-        copyFromBacking
-    };
+    registerProp(name, constructorFunc, copyFromBacking);
 };
 
 // define a simple value property (float, string etc)
@@ -1359,8 +1411,11 @@ function _defineFlag(name, defaultValue) {
 }
 
 function _defineMaterialProps() {
+    // typed properties have explicit accessors on the class; they are registered for reset and
+    // copy only, copying from the backing value so the source is not marked as mutated
+    registerProp('diffuse', () => new Color(1, 1, 1), true);
+
     _defineColor('ambient', new Color(1, 1, 1));
-    _defineColor('diffuse', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
     _defineColor('emissive', new Color(0, 0, 0));
     _defineColor('sheen', new Color(1, 1, 1));

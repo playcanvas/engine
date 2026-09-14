@@ -11,6 +11,12 @@ import {
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
+import { BindGroup } from '../../platform/graphics/bind-group.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { getMaterialLayout } from './material-uniform-buffer-layout.js';
+import {
+    getUnappliedMaterialProperties, initMaterialDebug, recordMaterialChange, warnUnappliedMaterialProperties
+} from './material-debug.js';
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
@@ -21,6 +27,7 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { MaterialProperty } from './material-property.js'
  * @import { Light } from '../light.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { CameraShaderParams } from '../camera-shader-params.js'
@@ -226,6 +233,9 @@ class Material {
         if (new.target === Material) {
             Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
         }
+
+        // debug state (creation site, last change site, warning flag) exists in debug builds only
+        Debug.call(() => initMaterialDebug(this));
     }
 
     /**
@@ -452,6 +462,58 @@ class Material {
     _preparedVersion = -1;
 
     /**
+     * Typed properties whose public value changed and has not been written to the uniform buffer
+     * yet. Allocated on first use.
+     *
+     * @type {Set<MaterialProperty>|null}
+     * @private
+     */
+    _modifiedProperties = null;
+
+    /**
+     * Snapshots of the aggregate typed property values handed out by a getter, by property.
+     * Compared on update to detect in-place mutation of the returned object. Allocated on first
+     * use.
+     *
+     * @type {Map<MaterialProperty, object>|null}
+     * @private
+     */
+    _mutableProperties = null;
+
+    /**
+     * The uniform buffer storing the typed properties, created on the first preparation for
+     * rendering. Null for materials without typed properties.
+     *
+     * @type {UniformBuffer|null}
+     * @private
+     */
+    _uniformBuffer = null;
+
+    /**
+     * The bind group holding the material uniform buffer.
+     *
+     * @type {BindGroup|null}
+     * @private
+     */
+    _uniformBufferBindGroup = null;
+
+    /**
+     * Incremented each time typed property data is written to the uniform buffer storage.
+     *
+     * @type {number}
+     * @private
+     */
+    _uniformDataVersion = 0;
+
+    /**
+     * The uniform data version most recently uploaded to the GPU.
+     *
+     * @type {number}
+     * @private
+     */
+    _uniformUploadedVersion = -1;
+
+    /**
      * The version incremented each time {@link Material#update} is called.
      *
      * @type {number}
@@ -459,6 +521,28 @@ class Material {
      */
     get updateVersion() {
         return this._updateVersion;
+    }
+
+    /**
+     * The typed properties of the material, stored in its uniform buffer, or null for a material
+     * without typed properties.
+     *
+     * @type {MaterialProperty[]|null}
+     * @ignore
+     */
+    get propertyDescriptors() {
+        return null;
+    }
+
+    /**
+     * The bind group holding the material uniform buffer, or null until the material has been
+     * prepared for rendering, or when it has no typed properties.
+     *
+     * @type {BindGroup|null}
+     * @ignore
+     */
+    get uniformBufferBindGroup() {
+        return this._uniformBufferBindGroup;
     }
 
     /** @ignore */
@@ -864,7 +948,114 @@ class Material {
     }
 
     /**
+     * Records that the public value of a typed property changed. The value is written to the
+     * uniform buffer by the next {@link Material#update}.
+     *
+     * @param {MaterialProperty} property - The property.
+     * @protected
+     */
+    _markPropertyModified(property) {
+        this._modifiedProperties ??= new Set();
+        this._modifiedProperties.add(property);
+        Debug.call(() => recordMaterialChange(this));
+    }
+
+    /**
+     * Records that the aggregate value of a typed property was handed out by its getter, so that
+     * an in-place mutation of the returned object can be detected by the next
+     * {@link Material#update}. Only the first exposure allocates a snapshot.
+     *
+     * @param {MaterialProperty} property - The property.
+     * @param {object} value - The value returned by the getter, with clone, equals and copy.
+     * @protected
+     */
+    _markPropertyMutable(property, value) {
+        this._mutableProperties ??= new Map();
+        if (!this._mutableProperties.has(property)) {
+            this._mutableProperties.set(property, value.clone());
+        }
+        Debug.call(() => recordMaterialChange(this));
+    }
+
+    /**
+     * Processes the typed property changes: in-place mutations of exposed values are detected and
+     * treated as modifications, and modified values are converted into the uniform buffer storage.
+     * Until the uniform buffer exists, the modified properties stay pending and are written when it
+     * is created. Runs from {@link Material#update} - the renderer does not process changes, so a
+     * change made without a subsequent update is not applied (and reported in the debug build).
+     *
+     * @private
+     */
+    _updateProperties() {
+        const mutable = this._mutableProperties;
+        if (mutable) {
+            for (const [property, snapshot] of mutable) {
+                const value = this[property.backingName];
+                if (!snapshot.equals(value)) {
+                    snapshot.copy(value);
+                    this._markPropertyModified(property);
+                }
+            }
+        }
+
+        const modified = this._modifiedProperties;
+        const uniformBuffer = this._uniformBuffer;
+        if (modified?.size && uniformBuffer) {
+            const storage = uniformBuffer.storageFloat32;
+            const format = uniformBuffer.format;
+            for (const property of modified) {
+                property.convert(this[property.backingName], storage, format.get(property.uniformName).offset);
+            }
+            modified.clear();
+            this._uniformDataVersion++;
+        }
+    }
+
+    /**
+     * Creates the material uniform buffer and its bind group on first use, and uploads the
+     * uniform buffer when its data changed.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @private
+     */
+    _prepareUniformBuffer(device) {
+        const properties = this.propertyDescriptors;
+        if (!properties) {
+            return;
+        }
+
+        let uniformBuffer = this._uniformBuffer;
+        if (!uniformBuffer) {
+            const layout = getMaterialLayout(device, properties);
+            uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
+            this._uniformBuffer = uniformBuffer;
+            this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
+
+            // every property is written into the new storage
+            this._modifiedProperties ??= new Set();
+            for (const property of properties) {
+                this._modifiedProperties.add(property);
+            }
+            this._updateProperties();
+            this._uniformUploadedVersion = -1;
+        }
+
+        Debug.assert(uniformBuffer.device === device, 'A material can only be rendered by the graphics device that created its uniform buffer.', this);
+
+        if (this._uniformUploadedVersion !== this._uniformDataVersion) {
+            uniformBuffer.upload();
+            this._uniformUploadedVersion = this._uniformDataVersion;
+        }
+
+        // the bind group is (re)built when dirty: on creation, which needs the uploaded buffer, and
+        // after a lost context
+        this._uniformBufferBindGroup.update();
+    }
+
+    /**
      * Prepares the material for rendering when it has been updated since the previous preparation.
+     * Typed property changes are applied by {@link Material#update} only; the debug build reports
+     * changes that were made without a subsequent update, as they are not applied.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Scene} scene - The scene.
@@ -876,6 +1067,19 @@ class Material {
             this.updateUniforms(device, scene);
             this._preparedVersion = version;
         }
+
+        this._prepareUniformBuffer(device);
+
+        Debug.call(() => {
+            // detect once per update cycle: after the warning, nothing is checked until the next update
+            if (!this._debugWarnedUnapplied) {
+                const names = getUnappliedMaterialProperties(this);
+                if (names.length > 0) {
+                    this._debugWarnedUnapplied = true;
+                    warnUnappliedMaterialProperties(this, names);
+                }
+            }
+        });
     }
 
     /**
@@ -922,7 +1126,12 @@ class Material {
         }
 
         this._clearVariantsIfDirty();
+        this._updateProperties();
         this._updateVersion++;
+
+        Debug.call(() => {
+            this._debugWarnedUnapplied = false;
+        });
     }
 
     // Parameter management
@@ -1091,6 +1300,11 @@ class Material {
      */
     destroy() {
         this.variants.clear();
+
+        this._uniformBufferBindGroup?.destroy();
+        this._uniformBufferBindGroup = null;
+        this._uniformBuffer?.destroy();
+        this._uniformBuffer = null;
 
         for (const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();

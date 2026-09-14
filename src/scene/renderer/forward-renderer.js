@@ -663,6 +663,7 @@ class ForwardRenderer extends Renderer {
 
                 // Uniforms I: material
                 material.setParameters(device);
+                this.setupMaterialBindGroup(material);
 
                 if (lightMaskChanged) {
                     const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightMask, camera);

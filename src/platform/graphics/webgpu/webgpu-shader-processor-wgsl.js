@@ -673,11 +673,8 @@ class WebgpuShaderProcessorWGSL {
                 meshUniforms.push(uniformFormat);
             } else {
 
-                // TODO: when we add material ub, this name will need to be updated
-                uniform.ubName = 'ub_view';
-
-                // Validate types here if needed
-                Debug.assert(true, `Uniform ${uniform.name} already processed, skipping additional validation.`);
+                // the uniform is provided by one of the supplied uniform buffers (view, material)
+                uniform.ubName = `ub_${bindGroupNames[processingOptions.getUniformBindGroup(uniform.name)]}`;
             }
         });
 

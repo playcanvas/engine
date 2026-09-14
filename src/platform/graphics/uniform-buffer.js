@@ -376,6 +376,18 @@ class UniformBuffer {
     }
 
     /**
+     * Uploads the storage of a persistent uniform buffer to the GPU. Use this after writing to
+     * the storage directly, instead of {@link UniformBuffer#update} which reads the values from
+     * the scope.
+     *
+     * @ignore
+     */
+    upload() {
+        Debug.assert(this.persistent, 'UniformBuffer#upload is only valid for a persistent uniform buffer.');
+        this.impl.unlock(this);
+    }
+
+    /**
      * @param {DynamicBindGroup} [dynamicBindGroup] - The function fills in the info about the
      * dynamic bind group for this frame, which uses this uniform buffer. Only used if the uniform
      * buffer is non-persistent. This allows the uniform buffer to be used without having to create

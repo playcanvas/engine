@@ -569,6 +569,7 @@ class ShadowRenderer {
 
             // Uniforms I (shadow): material
             material.setParameters(device);
+            renderer.setupMaterialBindGroup(material);
 
             // Uniforms II (shadow): meshInstance overrides
             meshInstance.setParameters(device);
