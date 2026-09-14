@@ -39,8 +39,6 @@ import { styles } from './styles.js';
  * @property {boolean} [highlight] - Whether the selected node is outlined in the viewport.
  * Defaults to true.
  * @property {Color} [highlightColor] - The color of the outline. Defaults to orange.
- * @property {number} [hierarchyInterval] - Seconds between list refreshes. Defaults to 0.5.
- * @property {number} [propertyInterval] - Seconds between property refreshes. Defaults to 0.1.
  * @property {GraphNode|null} [lockedNode] - A node whose enabled checkbox, and those of its
  * ancestors, are withheld. A script hosting the inspector passes its own entity so the panel
  * cannot switch itself off. Defaults to null.
@@ -84,6 +82,10 @@ const PHYSICS_FLAGS = {
     frames: DEBUG_DRAW.FRAMES,
     keepAwake: DEBUG_DRAW.NO_DEACTIVATION
 };
+
+// seconds between refreshes of the active list, and of the selected item's properties
+const LIST_INTERVAL = 0.5;
+const PROPERTY_INTERVAL = 0.1;
 
 // events the panel swallows so that they never reach the input handlers of the app underneath
 const SWALLOWED_EVENTS = ['keydown', 'keyup', 'keypress', 'pointerdown', 'mousedown', 'wheel', 'touchstart', 'contextmenu'];
@@ -166,70 +168,34 @@ class Inspector extends EventHandler {
     static EVENT_VISIBLE = 'visible';
 
     /**
-     * The app being inspected.
-     *
      * @type {AppBase}
+     * @private
      */
-    app;
+    _app;
+
+    /** @private */
+    _toggleKey = 'Backquote';
+
+    /** @private */
+    _pauseKey = 'F9';
+
+    /** @private */
+    _stepKey = 'F10';
+
+    /** @private */
+    _highlight = true;
 
     /**
-     * The `KeyboardEvent.code` or `key` that shows and hides the panel. Empty disables the key.
-     *
-     * @type {string}
-     */
-    toggleKey = 'Backquote';
-
-    /**
-     * The key that pauses and resumes the app. Empty disables the key.
-     *
-     * @type {string}
-     */
-    pauseKey = 'F9';
-
-    /**
-     * The key that advances one frame while paused. Empty disables the key.
-     *
-     * @type {string}
-     */
-    stepKey = 'F10';
-
-    /**
-     * Outline the selected node in the viewport: the bounds of its mesh instances, the frustum of
-     * its camera, the shape of its light, or its axes when it has none of those. On the Physics
-     * tab, the collision shape or joint of the selected entity.
-     *
-     * @type {boolean}
-     */
-    highlight = true;
-
-    /**
-     * The color of the viewport outline.
-     *
      * @type {Color}
+     * @private
      */
-    highlightColor = new Color(1, 0.55, 0.1);
+    _highlightColor = new Color(1, 0.55, 0.1);
 
     /**
-     * Seconds between refreshes of the active list while the app runs. Structure changes show up
-     * within this interval. Refreshes are cheap, but not free on very large scenes.
-     *
-     * @type {number}
-     */
-    hierarchyInterval = 0.5;
-
-    /**
-     * Seconds between property refreshes of the selected item while the app runs.
-     *
-     * @type {number}
-     */
-    propertyInterval = 0.1;
-
-    /**
-     * A node whose enabled checkbox, and those of its ancestors, are withheld from the hierarchy.
-     *
      * @type {GraphNode|null}
+     * @private
      */
-    lockedNode = null;
+    _lockedNode = null;
 
     /** @private */
     _visible = true;
@@ -513,16 +479,14 @@ class Inspector extends EventHandler {
      */
     constructor(app, options = {}) {
         super();
-        this.app = app;
+        this._app = app;
 
-        if (options.toggleKey !== undefined) this.toggleKey = options.toggleKey;
-        if (options.pauseKey !== undefined) this.pauseKey = options.pauseKey;
-        if (options.stepKey !== undefined) this.stepKey = options.stepKey;
-        if (options.highlight !== undefined) this.highlight = options.highlight;
-        if (options.highlightColor) this.highlightColor.copy(options.highlightColor);
-        if (options.hierarchyInterval !== undefined) this.hierarchyInterval = options.hierarchyInterval;
-        if (options.propertyInterval !== undefined) this.propertyInterval = options.propertyInterval;
-        this.lockedNode = options.lockedNode ?? null;
+        if (options.toggleKey !== undefined) this._toggleKey = options.toggleKey;
+        if (options.pauseKey !== undefined) this._pauseKey = options.pauseKey;
+        if (options.stepKey !== undefined) this._stepKey = options.stepKey;
+        if (options.highlight !== undefined) this._highlight = options.highlight;
+        if (options.highlightColor) this._highlightColor.copy(options.highlightColor);
+        this._lockedNode = options.lockedNode ?? null;
         this._visible = options.visible ?? true;
         this._dock = options.dock === 'left' ? 'left' : 'right';
         this._width = Math.max(240, Math.min(1600, options.width ?? 420));
@@ -541,7 +505,7 @@ class Inspector extends EventHandler {
         this._applyLayout();
         this._applyVisibility();
         this._applyPauseState();
-        this.refresh();
+        this._refresh();
         this._restoring = false;
 
         window.addEventListener('keydown', this._onKeyDown);
@@ -559,7 +523,7 @@ class Inspector extends EventHandler {
         if (this._destroyed) return;
         this._destroyed = true;
 
-        const app = this.app;
+        const app = this._app;
         app.off('update', this._onUpdate, this);
         app.off('destroy', this.destroy, this);
         window.removeEventListener('keydown', this._onKeyDown);
@@ -572,13 +536,13 @@ class Inspector extends EventHandler {
         this._physics = null;
         this._hiddenBodies.clear();
 
-        if (this._popup) this.dockBack();
+        if (this._popup) this._dockBack();
         this._host?.remove();
         this._host = null;
     }
 
     /**
-     * Whether the panel is shown. Toggled by {@link toggleKey}.
+     * Whether the panel is shown. Toggled by the toggle key.
      *
      * @type {boolean}
      */
@@ -587,58 +551,15 @@ class Inspector extends EventHandler {
         const changed = value !== this._visible;
         this._visible = value;
         if (this._host) {
-            if (!value && this._popup) this.dockBack();
+            if (!value && this._popup) this._dockBack();
             this._applyVisibility();
-            if (value) this.refresh();
+            if (value) this._refresh();
         }
         if (changed) this.fire(Inspector.EVENT_VISIBLE, value);
     }
 
     get visible() {
         return this._visible;
-    }
-
-    /**
-     * The side of the viewport the panel docks to.
-     *
-     * @type {'left'|'right'}
-     */
-    set dock(value) {
-        this._dock = value === 'left' ? 'left' : 'right';
-        this._applyLayout();
-    }
-
-    get dock() {
-        return this._dock;
-    }
-
-    /**
-     * The width of the docked panel in CSS pixels. Also adjustable by dragging its inner edge.
-     *
-     * @type {number}
-     */
-    set width(value) {
-        this._width = Math.max(240, Math.min(1600, value || 420));
-        this._applyLayout();
-        this._saveSettings();
-    }
-
-    get width() {
-        return this._width;
-    }
-
-    /**
-     * A gap left above the docked panel in CSS pixels, to keep it clear of other overlays.
-     *
-     * @type {number}
-     */
-    set top(value) {
-        this._top = Math.max(0, value || 0);
-        this._applyLayout();
-    }
-
-    get top() {
-        return this._top;
     }
 
     /**
@@ -652,7 +573,7 @@ class Inspector extends EventHandler {
         if (value === this._paused) return;
         this._paused = value;
 
-        const app = this.app;
+        const app = this._app;
         if (value) {
             this._savedTimeScale = app.timeScale;
             app.timeScale = 0;
@@ -663,7 +584,7 @@ class Inspector extends EventHandler {
         }
 
         this._applyPauseState();
-        if (value) this.refresh();
+        if (value) this._refresh();
     }
 
     get paused() {
@@ -738,7 +659,7 @@ class Inspector extends EventHandler {
      */
     step() {
         if (!this._paused) return;
-        const app = this.app;
+        const app = this._app;
         app.timeScale = this._savedTimeScale;
         app.once('frameend', () => {
             if (this._paused) app.timeScale = 0;
@@ -747,8 +668,10 @@ class Inspector extends EventHandler {
 
     /**
      * Refreshes the active list and the property view immediately.
+     *
+     * @private
      */
-    refresh() {
+    _refresh() {
         if (!this._host) return;
         this._refreshLists(true);
         this._properties.refresh();
@@ -757,8 +680,10 @@ class Inspector extends EventHandler {
     /**
      * Moves the panel into its own browser window, leaving the canvas unobscured. Must be called
      * from a user gesture, or the browser blocks the window.
+     *
+     * @private
      */
-    popOut() {
+    _popOut() {
         if (this._popup) {
             this._popup.focus();
             return;
@@ -788,8 +713,10 @@ class Inspector extends EventHandler {
 
     /**
      * Brings a popped-out panel back into the page and closes its window.
+     *
+     * @private
      */
-    dockBack() {
+    _dockBack() {
         const popup = this._popup;
         if (!popup) return;
         this._popup = null;
@@ -804,7 +731,7 @@ class Inspector extends EventHandler {
             const selected = this._selected;
             this._host.remove?.();
             this._buildDom();
-            this._hierarchy.setRoot(this.app.root);
+            this._hierarchy.setRoot(this._app.root);
             if (selected) this._hierarchy.select(selected);
             this._applyPauseState();
         }
@@ -822,28 +749,28 @@ class Inspector extends EventHandler {
         this._drawPhysics();
 
         // the user closed the pop-out window: bring the panel home
-        if (this._popup?.closed) this.dockBack();
+        if (this._popup?.closed) this._dockBack();
 
         if (!this._visible) return;
 
         // wall clock, as the frame delta is zero while paused
         const now = performance.now();
         if (now >= this._nextListRefresh) {
-            this._nextListRefresh = now + this.hierarchyInterval * 1000;
+            this._nextListRefresh = now + LIST_INTERVAL * 1000;
             this._refreshLists(true);
         }
         if (now >= this._nextPropertyRefresh) {
-            this._nextPropertyRefresh = now + this.propertyInterval * 1000;
+            this._nextPropertyRefresh = now + PROPERTY_INTERVAL * 1000;
             this._properties.refresh();
         }
 
-        if (this.highlight) {
+        if (this._highlight) {
             if (this._tab === 'hierarchy' && this._selected) {
                 this._drawHighlight(this._selected);
             } else if (this._tab === 'physics') {
                 const entity = this._bodyList.selected;
                 if (entity) {
-                    this._wire.color.copy(this.highlightColor);
+                    this._wire.color.copy(this._highlightColor);
                     this._wire.depthTest = false;
                     const jointDrawn = drawJoint(this._wire, entity, this._highlightSize(entity));
                     const shapeDrawn = drawCollisionShape(this._wire, entity);
@@ -868,7 +795,7 @@ class Inspector extends EventHandler {
         physics.enabled = this._visible && this._drawToggle.checked;
 
         if (physics.range > 0) {
-            const camera = this.app.systems.camera?.cameras[0];
+            const camera = this._app.systems.camera?.cameras[0];
             physics.center = camera ? camera.entity.getPosition() : null;
         }
         this._pruneHiddenBodies();
@@ -897,7 +824,7 @@ class Inspector extends EventHandler {
         const refreshBtn = el('button', 'pci-btn', 'Refresh');
         this._popBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Pop out'));
         const closeBtn = el('button', 'pci-btn', '✕');
-        const toggleLabel = Inspector._keyLabel(this.toggleKey);
+        const toggleLabel = Inspector._keyLabel(this._toggleKey);
         closeBtn.title = `Hide the panel${toggleLabel ? `. Press ${toggleLabel} to show it again` : ''}`;
         toolbar.append(title, this._pauseBtn, this._stepBtn, refreshBtn, el('span', 'pci-spacer'), this._popBtn, closeBtn);
 
@@ -905,10 +832,10 @@ class Inspector extends EventHandler {
             this.paused = !this._paused;
         });
         this._stepBtn.addEventListener('click', () => this.step());
-        refreshBtn.addEventListener('click', () => this.refresh());
+        refreshBtn.addEventListener('click', () => this._refresh());
         this._popBtn.addEventListener('click', () => {
-            if (this._popup) this.dockBack();
-            else this.popOut();
+            if (this._popup) this._dockBack();
+            else this._popOut();
         });
         closeBtn.addEventListener('click', () => {
             this.visible = false;
@@ -997,7 +924,7 @@ class Inspector extends EventHandler {
         body.append(this._hierarchyEl, splitter, properties);
 
         this._gpuToggle.addEventListener('change', () => {
-            const profiler = this.app.graphicsDevice.gpuProfiler;
+            const profiler = this._app.graphicsDevice.gpuProfiler;
             if (profiler) profiler.enabled = this._gpuToggle.checked;
             this._saveSettings();
         });
@@ -1032,7 +959,7 @@ class Inspector extends EventHandler {
         const edge = el('div', 'pci-edge');
         this._makeDraggable(edge, (e) => {
             const view = /** @type {Window} */ (edge.ownerDocument.defaultView);
-            this.width = this._dock === 'right' ? view.innerWidth - e.clientX : e.clientX;
+            this._setWidth(this._dock === 'right' ? view.innerWidth - e.clientX : e.clientX);
         });
 
         panel.append(toolbar, body, status, edge);
@@ -1131,10 +1058,10 @@ class Inspector extends EventHandler {
         if (Array.isArray(stored.hiddenBodies)) {
             this._pendingHiddenPaths = new Set(stored.hiddenBodies.filter(path => typeof path === 'string'));
         }
-        if (typeof stored.width === 'number') this.width = stored.width;
+        if (typeof stored.width === 'number') this._setWidth(stored.width);
         if (typeof stored.gpuTimings === 'boolean') {
             this._gpuToggle.checked = stored.gpuTimings;
-            const profiler = this.app.graphicsDevice.gpuProfiler;
+            const profiler = this._app.graphicsDevice.gpuProfiler;
             if (profiler) profiler.enabled = stored.gpuTimings;
         }
         if (stored.tab in this._panels) this._setTab(stored.tab);
@@ -1202,7 +1129,7 @@ class Inspector extends EventHandler {
 
         // exclusions restored from storage attach to the entities once they exist
         if (this._pendingHiddenPaths.size) {
-            const store = this.app.systems.rigidbody?.store;
+            const store = this._app.systems.rigidbody?.store;
             for (const record of Object.values(store ?? {})) {
                 const entity = record.entity;
                 if (this._pendingHiddenPaths.delete(entity.path)) {
@@ -1304,26 +1231,26 @@ class Inspector extends EventHandler {
      * @private
      */
     _refreshLists(capture) {
-        const device = this.app.graphicsDevice;
+        const device = this._app.graphicsDevice;
 
         if (this._tab === 'hierarchy') {
             this._hierarchy.refresh();
         } else if (this._tab === 'physics') {
-            const system = this.app.systems.rigidbody;
+            const system = this._app.systems.rigidbody;
             const note = !system ? 'No rigid body component system is registered in this app.' :
                 !system.dynamicsWorld ? 'The physics world has not been created. Is Ammo loaded?' :
-                    !AmmoDebugDraw.isAvailable(this.app) ? 'This Ammo build has no DebugDrawer, so the world cannot be drawn.' : '';
+                    !AmmoDebugDraw.isAvailable(this._app) ? 'This Ammo build has no DebugDrawer, so the world cannot be drawn.' : '';
             this._physicsNote.textContent = note;
             this._physicsNote.style.display = note ? '' : 'none';
 
-            this._bodyList.setRows([...bodyRows(this.app, this._hiddenBodies, this._drawToggle.checked), ...jointRows(this.app)]);
+            this._bodyList.setRows([...bodyRows(this._app, this._hiddenBodies, this._drawToggle.checked), ...jointRows(this._app)]);
             const entity = this._bodyList.selected;
             if (entity !== this._properties.subject) {
                 this._properties.setSubject(entity, buildNodeModel);
             }
         } else {
             if ((capture && !this._frozen) || !this._frame) {
-                this._frame = captureFrameGraph(this.app);
+                this._frame = captureFrameGraph(this._app);
             }
             if (this._tab === 'passes') {
                 this._passList.setRows(passRows(this._frame, device));
@@ -1381,7 +1308,7 @@ class Inspector extends EventHandler {
      * @private
      */
     _context() {
-        return { device: this.app.graphicsDevice, frame: this._frame };
+        return { device: this._app.graphicsDevice, frame: this._frame };
     }
 
     /**
@@ -1394,13 +1321,13 @@ class Inspector extends EventHandler {
         // match on either the physical code ('Backquote') or the logical key ('`')
         const matches = key => !!key && (e.code === key || e.key === key);
 
-        if (matches(this.toggleKey)) {
+        if (matches(this._toggleKey)) {
             e.preventDefault();
             this.visible = !this._visible;
-        } else if (matches(this.pauseKey)) {
+        } else if (matches(this._pauseKey)) {
             e.preventDefault();
             this.paused = !this._paused;
-        } else if (matches(this.stepKey)) {
+        } else if (matches(this._stepKey)) {
             e.preventDefault();
             this.step();
         }
@@ -1410,7 +1337,7 @@ class Inspector extends EventHandler {
      * @private
      */
     _onPopupHide = () => {
-        this.dockBack();
+        this._dockBack();
     };
 
     /**
@@ -1419,6 +1346,16 @@ class Inspector extends EventHandler {
     _applyVisibility() {
         if (!this._host) return;
         this._host.style.display = this._visible ? '' : 'none';
+    }
+
+    /**
+     * @param {number} value - The panel width in CSS pixels, clamped to a usable range.
+     * @private
+     */
+    _setWidth(value) {
+        this._width = Math.max(240, Math.min(1600, value || 420));
+        this._applyLayout();
+        this._saveSettings();
     }
 
     /**
@@ -1461,10 +1398,10 @@ class Inspector extends EventHandler {
     _applyPauseState() {
         if (!this._pauseBtn) return;
         const paused = this._paused;
-        this._pauseBtn.textContent = `${paused ? 'Resume' : 'Pause'}${Inspector._keyHint(this.pauseKey)}`;
+        this._pauseBtn.textContent = `${paused ? 'Resume' : 'Pause'}${Inspector._keyHint(this._pauseKey)}`;
         this._pauseBtn.title = paused ? 'Resume the app' : 'Pause the app: rendering continues, time stands still';
         this._pauseBtn.classList.toggle('pci-active', paused);
-        this._stepBtn.textContent = `Step${Inspector._keyHint(this.stepKey)}`;
+        this._stepBtn.textContent = `Step${Inspector._keyHint(this._stepKey)}`;
         this._stepBtn.title = 'Advance one frame while paused';
         this._stepBtn.disabled = !paused;
         this._pausedEl.textContent = paused ? 'PAUSED' : '';
@@ -1475,7 +1412,7 @@ class Inspector extends EventHandler {
      */
     _updateStatus() {
         if (!this._countsEl) return;
-        const device = this.app.graphicsDevice;
+        const device = this._app.graphicsDevice;
         let counts = '';
         let selected = '';
 
@@ -1497,7 +1434,7 @@ class Inspector extends EventHandler {
                 break;
             }
             case 'physics': {
-                const stats = physicsStats(this.app);
+                const stats = physicsStats(this._app);
                 const physics = this._physics;
                 counts = `${stats.bodies} bodies · ${stats.active} awake · ${stats.contacts} contacts` +
                     `${stats.joints ? ` · ${stats.joints} joints` : ''}` +
@@ -1526,7 +1463,7 @@ class Inspector extends EventHandler {
      */
     _drawHighlight(node) {
         const wire = this._wire;
-        wire.color.copy(this.highlightColor);
+        wire.color.copy(this._highlightColor);
         wire.depthTest = false;
 
         let drawn = false;
@@ -1579,7 +1516,7 @@ class Inspector extends EventHandler {
      * @private
      */
     _isLocked(node) {
-        for (let current = this.lockedNode; current; current = current.parent) {
+        for (let current = this._lockedNode; current; current = current.parent) {
             if (current === node) return true;
         }
         return false;
@@ -1591,7 +1528,7 @@ class Inspector extends EventHandler {
      * @private
      */
     _highlightSize(node) {
-        const cameras = this.app.systems.camera?.cameras;
+        const cameras = this._app.systems.camera?.cameras;
         let distance = 10;
         if (cameras?.length) {
             distance = Infinity;

@@ -100,9 +100,6 @@ describe('Inspector', function () {
         expect(panelEl.style.width).to.equal('500px');
         expect(panelEl.style.top).to.equal('40px');
 
-        inspector.dock = 'right';
-        expect(panelEl.classList.contains('pci-dock-left')).to.be.false;
-
         inspector.destroy();
     });
 
@@ -297,7 +294,7 @@ describe('Inspector', function () {
         const first = new Inspector(app, { storageKey: 'test-inspector' });
         first.physicsDraw = true;
         first.physicsDrawOptions = { contacts: true, range: 5 };
-        first.width = 600;
+        /** @type {any} */ (first)._setWidth(600);
         [...panel(first).querySelectorAll('.pci-tab')].find(tab => tab.textContent === 'Frame graph').click();
         first.destroy();
 
@@ -310,7 +307,7 @@ describe('Inspector', function () {
         expect(second.physicsDraw).to.be.true;
         expect(second.physicsDrawOptions.contacts).to.be.true;
         expect(second.physicsDrawOptions.range).to.equal(5);
-        expect(second.width).to.equal(600);
+        expect(panel(second).querySelector('.pci-panel').style.width).to.equal('600px');
         expect(panel(second).querySelector('.pci-tab.pci-active').textContent).to.equal('Frame graph');
         second.destroy();
 
