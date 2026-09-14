@@ -48,7 +48,7 @@ const _tempBoneAabb = new BoundingBox();
 const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
-const lookupHashes = new Uint32Array(4);
+const lookupHashes = new Uint32Array(5);
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -546,8 +546,8 @@ class MeshInstance {
 
         if (mesh.vertexBuffer) {
             const format = mesh.vertexBuffer.format;
-            this._shaderDefs |= format.hasUv0 ? SHADERDEF_UV0 : 0;
-            this._shaderDefs |= format.hasUv1 ? SHADERDEF_UV1 : 0;
+            this._shaderDefs |= format.hasUv(0) ? SHADERDEF_UV0 : 0;
+            this._shaderDefs |= format.hasUv(1) ? SHADERDEF_UV1 : 0;
             this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
             this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
         }
@@ -770,6 +770,9 @@ class MeshInstance {
         lookupHashes[1] = lightHash;
         lookupHashes[2] = shaderDefs;
         lookupHashes[3] = cameraShaderParams.hash;
+
+        // the uv sets the mesh provides decide which of the material's maps the shader samples
+        lookupHashes[4] = this.mesh.vertexBuffer?.format.uvMask ?? 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // look up the cache

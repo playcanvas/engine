@@ -1,9 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
+import { BitPacking } from '../../core/math/bit-packing.js';
 import { math } from '../../core/math/math.js';
 import { StringIds } from '../../core/string-ids.js';
 import {
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
+    SEMANTIC_TEXCOORD, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
 import { DeviceCache } from './device-cache.js';
@@ -138,8 +139,10 @@ class VertexFormat {
     constructor(graphicsDevice, description, vertexCount) {
         this.device = graphicsDevice;
         this._elements = [];
-        this.hasUv0 = false;
-        this.hasUv1 = false;
+
+        // bit i is set when the format contains SEMANTIC_TEXCOORDi
+        this._uvMask = 0;
+
         this.hasColor = false;
         this.hasTangents = false;
         this.verticesByteSize = 0;
@@ -194,10 +197,10 @@ class VertexFormat {
                 offset += Math.ceil(elementSize / 4) * 4;
             }
 
-            if (elementDesc.semantic === SEMANTIC_TEXCOORD0) {
-                this.hasUv0 = true;
-            } else if (elementDesc.semantic === SEMANTIC_TEXCOORD1) {
-                this.hasUv1 = true;
+            if (elementDesc.semantic.startsWith(SEMANTIC_TEXCOORD)) {
+                const uvIndex = parseInt(elementDesc.semantic.substring(SEMANTIC_TEXCOORD.length), 10);
+                Debug.assert(uvIndex >= 0 && uvIndex < 8, `Unsupported texture coordinate semantic ${elementDesc.semantic}`);
+                this._uvMask = BitPacking.set(this._uvMask, 1, uvIndex);
             } else if (elementDesc.semantic === SEMANTIC_COLOR) {
                 this.hasColor = true;
             } else if (elementDesc.semantic === SEMANTIC_TANGENT) {
@@ -214,6 +217,28 @@ class VertexFormat {
 
     get elements() {
         return this._elements;
+    }
+
+    /**
+     * The texture coordinate sets contained in the format, as a bit mask with bit i set when the
+     * format contains the semantic {@link SEMANTIC_TEXCOORD0} + i.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get uvMask() {
+        return this._uvMask;
+    }
+
+    /**
+     * Returns true if the format contains the texture coordinate set with the specified index.
+     *
+     * @param {number} index - The index of the texture coordinate set, from 0 for
+     * {@link SEMANTIC_TEXCOORD0} to 7 for {@link SEMANTIC_TEXCOORD7}.
+     * @returns {boolean} True if the format contains the texture coordinate set.
+     */
+    hasUv(index) {
+        return BitPacking.any(this._uvMask, index);
     }
 
     /**

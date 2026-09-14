@@ -262,7 +262,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
         const useUv = [];
         const useUnmodifiedUv = [];
         const mapTransforms = [];
-        const maxUvSets = 2;
+        const maxUvSets = 8;
 
         for (const p of _matTex2D.keys()) {
             const mapName = `${p}Map`;

@@ -1,7 +1,8 @@
 import {
     SEMANTIC_ATTR8, SEMANTIC_ATTR9, SEMANTIC_ATTR12, SEMANTIC_ATTR11, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
-    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
+    SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3,
+    SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL,
     primitiveGlslToWgslTypeMap
@@ -32,6 +33,12 @@ const builtinAttributes = {
     vertex_tangent: SEMANTIC_TANGENT,
     vertex_texCoord0: SEMANTIC_TEXCOORD0,
     vertex_texCoord1: SEMANTIC_TEXCOORD1,
+    vertex_texCoord2: SEMANTIC_TEXCOORD2,
+    vertex_texCoord3: SEMANTIC_TEXCOORD3,
+    vertex_texCoord4: SEMANTIC_TEXCOORD4,
+    vertex_texCoord5: SEMANTIC_TEXCOORD5,
+    vertex_texCoord6: SEMANTIC_TEXCOORD6,
+    vertex_texCoord7: SEMANTIC_TEXCOORD7,
     vertex_color: SEMANTIC_COLOR,
     vertex_boneWeights: SEMANTIC_BLENDWEIGHT,
     vertex_boneIndices: SEMANTIC_BLENDINDICES
@@ -267,17 +274,30 @@ class LitShader {
             }
         }
 
-        const maxUvSets = 2;
-        for (let i = 0; i < maxUvSets; i++) {
+        // uv sets 0 and 1 have dedicated chunks (uv0VS handles nine-slicing), the additional sets
+        // are expanded by looped includes indexed through the UV_SET defines
+        let numUvSets = 0;
+        let numUvVaryings = 0;
+        for (let i = 0; i < useUv.length; i++) {
             if (useUv[i]) {
                 vDefines.set(`UV${i}`, true);
                 attributes[`vertex_texCoord${i}`] = `TEXCOORD${i}`;
+                if (i >= 2) {
+                    vDefines.set(`{UV_SET_${numUvSets++}}`, i);
+                }
             }
             if (useUnmodifiedUv[i]) {
                 vDefines.set(`UV${i}_UNMODIFIED`, true);
                 varyings.set(`vUv${i}`, 'vec2');
+                if (i >= 2) {
+                    vDefines.set(`{UV_VARYING_SET_${numUvVaryings++}}`, i);
+                }
             }
         }
+
+        // number of additional uv sets, these drive the looped includes
+        vDefines.set('UV_SET_COUNT', numUvSets);
+        vDefines.set('UV_VARYING_SET_COUNT', numUvVaryings);
 
         // prepare defines for texture transforms
         let numTransforms = 0;
