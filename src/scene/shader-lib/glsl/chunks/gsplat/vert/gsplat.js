@@ -5,16 +5,16 @@ export default /* glsl */`
 #include "gsplatCommonVS"
 
 varying mediump vec2 gaussianUV;
-varying mediump vec4 gaussianColor;
+flat varying mediump vec4 gaussianColor;
 
 #ifndef DITHER_NONE
-    varying float id;
+    flat varying float id;
 #endif
 
 mediump vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
-    varying float vLinearDepth;
+    flat varying float vLinearDepth;
 #endif
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
