@@ -38,6 +38,8 @@ var<private> dModelMatrix: mat4x4f;
     #include "uv1VS"
 #endif
 
+// expand attributes for additional uv sets (UV2 and up)
+#include "uvSetAttributeVS, UV_SET_COUNT"
 
 #ifdef LINEAR_DEPTH
     #ifndef VIEWMATRIX
@@ -108,6 +110,10 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
             output.vUv1 = uv1;
         #endif
     #endif
+
+    // expand code for additional uv sets (UV2 and up)
+    #include "uvSetVS, UV_SET_COUNT"
+    #include "uvSetVaryingVS, UV_VARYING_SET_COUNT"
 
     // expand code for uv transforms
     #include "uvTransformVS, UV_TRANSFORMS_COUNT"

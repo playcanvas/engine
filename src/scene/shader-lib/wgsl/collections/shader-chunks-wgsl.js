@@ -151,6 +151,9 @@ import transmissionPS from '../chunks/standard/frag/transmission.js';
 import twoSidedLightingPS from '../chunks/lit/frag/twoSidedLighting.js';
 import uv0VS from '../chunks/lit/vert/uv0.js';
 import uv1VS from '../chunks/lit/vert/uv1.js';
+import uvSetAttributeVS from '../chunks/lit/vert/uvSetAttribute.js';
+import uvSetVS from '../chunks/lit/vert/uvSet.js';
+import uvSetVaryingVS from '../chunks/lit/vert/uvSetVarying.js';
 import uvTransformVS from '../chunks/lit/vert/uvTransform.js';
 import uvTransformUniformsPS from '../chunks/lit/vert/uvTransformUniforms.js';
 import viewDirPS from '../chunks/lit/frag/viewDir.js';
@@ -328,6 +331,9 @@ const shaderChunksWGSL = {
     twoSidedLightingPS,
     uv0VS,
     uv1VS,
+    uvSetAttributeVS,
+    uvSetVS,
+    uvSetVaryingVS,
     uvTransformVS,
     uvTransformUniformsPS,
     viewDirPS,

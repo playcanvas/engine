@@ -61,7 +61,11 @@ const isBlack = (color) => {
  * A standard material is the main, general purpose material that is most often used for rendering.
  * It can approximate a wide variety of surface types and can simulate dynamic reflected light.
  * Most maps can use 3 types of input values in any combination: constant ({@link Color} or number),
- * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together.
+ * mesh vertex colors and a {@link Texture}. All enabled inputs are multiplied together. A texture
+ * samples one of the mesh's UV sets, selected by the map's UV channel property (0 to 7), and is
+ * ignored when the mesh does not provide that set. UV sets 6 and 7 share their vertex attribute
+ * locations with the default hardware instancing format, so an instanced mesh sampling them needs a
+ * custom instancing vertex format, see {@link MeshInstance#setInstancing}.
  *
  * A property assignment only reaches the GPU once {@link Material#update} is called: a `diffuse`
  * or `emissive` change made after the material's first frame is silently ignored until
@@ -74,7 +78,7 @@ const isBlack = (color) => {
  * color (aka albedo).
  * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
  * null).
- * @property {number} diffuseMapUv Main (primary) diffuse map UV channel.
+ * @property {number} diffuseMapUv Main (primary) diffuse map UV channel. Valid values are 0 to 7.
  * @property {Vec2} diffuseMapTiling Controls the 2D tiling of the main (primary) diffuse map.
  * @property {Vec2} diffuseMapOffset Controls the 2D offset of the main (primary) diffuse map. Each
  * component is between 0 and 1.
@@ -87,7 +91,7 @@ const isBlack = (color) => {
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {Texture|null} diffuseDetailMap The detail (secondary) diffuse map of the material
  * (default is null). Will only be used if main (primary) diffuse map is non-null.
- * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel.
+ * @property {number} diffuseDetailMapUv Detail (secondary) diffuse map UV channel. Valid values are 0 to 7.
  * @property {Vec2} diffuseDetailMapTiling Controls the 2D tiling of the detail (secondary) diffuse
  * map.
  * @property {Vec2} diffuseDetailMapOffset Controls the 2D offset of the detail (secondary) diffuse
@@ -113,7 +117,7 @@ const isBlack = (color) => {
  * This color value is 3-component (RGB), where each component is between 0 and 1. Defines surface
  * reflection/specular color. Affects specular intensity and tint.
  * @property {Texture|null} specularMap The specular map of the material (default is null).
- * @property {number} specularMapUv Specular map UV channel.
+ * @property {number} specularMapUv Specular map UV channel. Valid values are 0 to 7.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
  * @property {Vec2} specularMapOffset Controls the 2D offset of the specular map. Each component is
  * between 0 and 1.
@@ -130,7 +134,7 @@ const isBlack = (color) => {
  * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is
  * null).
- * @property {number} specularityFactorMapUv Specularity factor map UV channel.
+ * @property {number} specularityFactorMapUv Specularity factor map UV channel. Valid values are 0 to 7.
  * @property {Vec2} specularityFactorMapTiling Controls the 2D tiling of the specularity factor map.
  * @property {Vec2} specularityFactorMapOffset Controls the 2D offset of the specularity factor map. Each component is
  * between 0 and 1.
@@ -148,7 +152,7 @@ const isBlack = (color) => {
  * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
  * @property {number} anisotropyRotation Defines the rotation (in degrees) of anisotropy.
  * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
- * @property {number} anisotropyMapUv Anisotropy map UV channel.
+ * @property {number} anisotropyMapUv Anisotropy map UV channel. Valid values are 0 to 7.
  * @property {Vec2} anisotropyMapTiling Controls the 2D tiling of the anisotropy map.
  * @property {Vec2} anisotropyMapOffset Controls the 2D offset of the anisotropy map. Each
  * component is between 0 and 1.
@@ -157,7 +161,7 @@ const isBlack = (color) => {
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If
  * specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
- * @property {number} clearCoatMapUv Clearcoat intensity map UV channel.
+ * @property {number} clearCoatMapUv Clearcoat intensity map UV channel. Valid values are 0 to 7.
  * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clearcoat intensity map.
  * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clearcoat intensity map. Each
  * component is between 0 and 1.
@@ -176,7 +180,7 @@ const isBlack = (color) => {
  * @property {Texture|null} clearCoatGlossMap Monochrome clearcoat glossiness map (default is
  * null). If specified, will be multiplied by normalized 'clearCoatGloss' value and/or vertex
  * colors.
- * @property {number} clearCoatGlossMapUv Clearcoat gloss map UV channel.
+ * @property {number} clearCoatGlossMapUv Clearcoat gloss map UV channel. Valid values are 0 to 7.
  * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clearcoat gloss map.
  * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clearcoat gloss map.
  * Each component is between 0 and 1.
@@ -190,7 +194,7 @@ const isBlack = (color) => {
  * glossiness. Can be "r", "g", "b" or "a".
  * @property {Texture|null} clearCoatNormalMap The clearcoat normal map of the material (default is
  * null). The texture must contains normalized, tangent space normals.
- * @property {number} clearCoatNormalMapUv Clearcoat normal map UV channel.
+ * @property {number} clearCoatNormalMapUv Clearcoat normal map UV channel. Valid values are 0 to 7.
  * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clearcoat normal
  * map.
  * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clearcoat normal
@@ -206,7 +210,7 @@ const isBlack = (color) => {
  * iridescenceMap is specified, it is multiplied by this value. Default value is 0 (disabled).
  * @property {Texture|null} iridescenceMap The per-pixel iridescence intensity. Only used when
  * useIridescence is enabled.
- * @property {number} iridescenceMapUv Iridescence map UV channel.
+ * @property {number} iridescenceMapUv Iridescence map UV channel. Valid values are 0 to 7.
  * @property {Vec2} iridescenceMapTiling Controls the 2D tiling of the iridescence map.
  * @property {Vec2} iridescenceMapOffset Controls the 2D offset of the iridescence map. Each component is
  * between 0 and 1.
@@ -217,7 +221,7 @@ const isBlack = (color) => {
  * @property {Texture|null} iridescenceThicknessMap The per-pixel iridescence thickness. Defines a
  * gradient weight between iridescenceThicknessMin and iridescenceThicknessMax. Only used when
  * useIridescence is enabled.
- * @property {number} iridescenceThicknessMapUv Iridescence thickness map UV channel.
+ * @property {number} iridescenceThicknessMapUv Iridescence thickness map UV channel. Valid values are 0 to 7.
  * @property {Vec2} iridescenceThicknessMapTiling Controls the 2D tiling of the iridescence
  * thickness map.
  * @property {Vec2} iridescenceThicknessMapOffset Controls the 2D offset of the iridescence
@@ -243,7 +247,7 @@ const isBlack = (color) => {
  * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
  * (metal).
  * @property {Texture|null} metalnessMap Monochrome metalness map (default is null).
- * @property {number} metalnessMapUv Metalness map UV channel.
+ * @property {number} metalnessMapUv Metalness map UV channel. Valid values are 0 to 7.
  * @property {Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
  * @property {Vec2} metalnessMapOffset Controls the 2D offset of the metalness map. Each component
  * is between 0 and 1.
@@ -262,7 +266,7 @@ const isBlack = (color) => {
  * by normalized gloss value and/or vertex colors.
  * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
  * flag results in material treating the gloss members as roughness.
- * @property {number} glossMapUv Gloss map UV channel.
+ * @property {number} glossMapUv Gloss map UV channel. Valid values are 0 to 7.
  * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b"
  * or "a".
  * @property {Vec2} glossMapTiling Controls the 2D tiling of the gloss map.
@@ -276,7 +280,7 @@ const isBlack = (color) => {
  * @property {number} refraction Defines the visibility of refraction. Material can refract the
  * same cube map as used for reflections.
  * @property {Texture|null} refractionMap The map of the refraction visibility.
- * @property {number} refractionMapUv Refraction map UV channel.
+ * @property {number} refractionMapUv Refraction map UV channel. Valid values are 0 to 7.
  * @property {Vec2} refractionMapTiling Controls the 2D tiling of the refraction map.
  * @property {Vec2} refractionMapOffset Controls the 2D offset of the refraction map. Each component
  * is between 0 and 1.
@@ -301,7 +305,7 @@ const isBlack = (color) => {
  * is enabled. The unit is in base units, and scales with the size of the object.
  * @property {Texture|null} thicknessMap The per-pixel thickness of the medium, only used when
  * useDynamicRefraction is enabled.
- * @property {number} thicknessMapUv Thickness map UV channel.
+ * @property {number} thicknessMapUv Thickness map UV channel. Valid values are 0 to 7.
  * @property {Vec2} thicknessMapTiling Controls the 2D tiling of the thickness map.
  * @property {Vec2} thicknessMapOffset Controls the 2D offset of the thickness map. Each component is
  * between 0 and 1.
@@ -324,7 +328,7 @@ const isBlack = (color) => {
  * map. Since the emissive color is black by default, the emissive map won't be visible unless the
  * emissive color is changed.
  * @property {number} emissiveIntensity Emissive color multiplier.
- * @property {number} emissiveMapUv Emissive map UV channel.
+ * @property {number} emissiveMapUv Emissive map UV channel. Valid values are 0 to 7.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
  * @property {Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is
  * between 0 and 1.
@@ -342,7 +346,7 @@ const isBlack = (color) => {
  * and 1.
  * @property {Texture|null} sheenMap The sheen microstructure color map of the material (default is
  * null).
- * @property {number} sheenMapUv Sheen map UV channel.
+ * @property {number} sheenMapUv Sheen map UV channel. Valid values are 0 to 7.
  * @property {Vec2} sheenMapTiling Controls the 2D tiling of the sheen map.
  * @property {Vec2} sheenMapOffset Controls the 2D offset of the sheen map. Each component is
  * between 0 and 1.
@@ -360,7 +364,7 @@ const isBlack = (color) => {
  * Enabling this flag results in material treating the sheen gloss members as roughness.
  * @property {Texture|null} sheenGlossMap The sheen glossiness microstructure color map of the
  * material (default is null).
- * @property {number} sheenGlossMapUv Sheen glossiness map UV channel.
+ * @property {number} sheenGlossMapUv Sheen glossiness map UV channel. Valid values are 0 to 7.
  * @property {Vec2} sheenGlossMapTiling Controls the 2D tiling of the sheen glossiness map.
  * @property {Vec2} sheenGlossMapOffset Controls the 2D offset of the sheen glossiness map.
  * Each component is between 0 and 1.
@@ -379,7 +383,7 @@ const isBlack = (color) => {
  * want {@link Material#depthWrite} to be false, otherwise they can fully occlude objects behind
  * them.
  * @property {Texture|null} opacityMap The opacity map of the material (default is null).
- * @property {number} opacityMapUv Opacity map UV channel.
+ * @property {number} opacityMapUv Opacity map UV channel. Valid values are 0 to 7.
  * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g",
  * "b" or "a".
  * @property {Vec2} opacityMapTiling Controls the 2D tiling of the opacity map.
@@ -431,7 +435,7 @@ const isBlack = (color) => {
  * alpha.
  * @property {Texture|null} normalMap The main (primary) normal map of the material (default is
  * null). The texture must contains normalized, tangent space normals.
- * @property {number} normalMapUv Main (primary) normal map UV channel.
+ * @property {number} normalMapUv Main (primary) normal map UV channel. Valid values are 0 to 7.
  * @property {Vec2} normalMapTiling Controls the 2D tiling of the main (primary) normal map.
  * @property {Vec2} normalMapOffset Controls the 2D offset of the main (primary) normal map. Each
  * component is between 0 and 1.
@@ -442,7 +446,7 @@ const isBlack = (color) => {
  * mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {Texture|null} normalDetailMap The detail (secondary) normal map of the material
  * (default is null). Will only be used if main (primary) normal map is non-null.
- * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel.
+ * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel. Valid values are 0 to 7.
  * @property {Vec2} normalDetailMapTiling Controls the 2D tiling of the detail (secondary) normal
  * map.
  * @property {Vec2} normalDetailMapOffset Controls the 2D offset of the detail (secondary) normal
@@ -458,7 +462,7 @@ const isBlack = (color) => {
  * value that sits at the level of the original geometry. It is recommended to use it together with
  * a normal map. Note that the parallax offset is applied to all other maps of the material, so the
  * height map should use the same tiling and offset as those maps.
- * @property {number} heightMapUv Height map UV channel.
+ * @property {number} heightMapUv Height map UV channel. Valid values are 0 to 7.
  * @property {string} heightMapChannel Color channel of the height map to use. Can be "r", "g", "b"
  * or "a".
  * @property {Vec2} heightMapTiling Controls the 2D tiling of the height map.
@@ -510,7 +514,7 @@ const isBlack = (color) => {
  * @property {number} reflectivity Environment map intensity.
  * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps
  * are textures that contain pre-rendered lighting. Can be HDR.
- * @property {number} lightMapUv Lightmap UV channel
+ * @property {number} lightMapUv Lightmap UV channel. Valid values are 0 to 7.
  * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b",
  * "a", "rgb" or any swizzled combination.
  * @property {Vec2} lightMapTiling Controls the 2D tiling of the lightmap.
@@ -524,7 +528,7 @@ const isBlack = (color) => {
  * @property {number} aoIntensity Ambient occlusion intensity. Defaults to 1.
  * @property {Texture|null} aoMap The main (primary) baked ambient occlusion (AO) map (default is
  * null). Modulates ambient color.
- * @property {number} aoMapUv Main (primary) AO map UV channel
+ * @property {number} aoMapUv Main (primary) AO map UV channel. Valid values are 0 to 7.
  * @property {string} aoMapChannel Color channel of the main (primary) AO map to use. Can be "r", "g", "b" or "a".
  * @property {Vec2} aoMapTiling Controls the 2D tiling of the main (primary) AO map.
  * @property {Vec2} aoMapOffset Controls the 2D offset of the main (primary) AO map. Each component is between 0
@@ -536,7 +540,7 @@ const isBlack = (color) => {
  * "b" or "a".
  * @property {Texture|null} aoDetailMap The detail (secondary) baked ambient occlusion (AO) map of
  * the material (default is null). Will only be used if main (primary) ao map is non-null.
- * @property {number} aoDetailMapUv Detail (secondary) AO map UV channel.
+ * @property {number} aoDetailMapUv Detail (secondary) AO map UV channel. Valid values are 0 to 7.
  * @property {Vec2} aoDetailMapTiling Controls the 2D tiling of the detail (secondary) AO map.
  * @property {Vec2} aoDetailMapOffset Controls the 2D offset of the detail (secondary) AO map. Each
  * component is between 0 and 1.
@@ -966,7 +970,7 @@ class StandardMaterial extends Material {
     /** @ignore */
     getShaderVariant(params) {
 
-        const { device, scene, pass, objDefs, sortedLights, cameraShaderParams } = params;
+        const { device, scene, pass, objDefs, sortedLights, cameraShaderParams, vertexFormat } = params;
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
@@ -975,9 +979,9 @@ class StandardMaterial extends Material {
         options.defines = ShaderUtils.getCoreDefines(this, params);
 
         if (minimalOptions) {
-            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights, vertexFormat);
         } else {
-            this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights, vertexFormat);
         }
 
         const useDualSourceBlending = shaderPassInfo.isForward && this.blendState.usesDualSourceBlending;

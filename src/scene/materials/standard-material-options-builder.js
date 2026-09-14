@@ -8,7 +8,7 @@ import {
     MASK_AFFECT_DYNAMIC,
     SHADER_PREPASS,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW,
-    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
+    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_NONE,
     DITHER_NONE,
     PARALLAX_OCCLUSION,
@@ -51,19 +51,19 @@ class StandardMaterialOptionsBuilder {
     }
 
     // Minimal options for Depth and Shadow passes
-    updateMinRef(options, scene, stdMat, objDefs, pass, sortedLights) {
+    updateMinRef(options, scene, stdMat, objDefs, pass, sortedLights, vertexFormat) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat, pass);
-        this._updateUVOptions(options, stdMat, objDefs, true);
+        this._updateUVOptions(options, stdMat, objDefs, vertexFormat, true);
     }
 
-    updateRef(options, scene, cameraShaderParams, stdMat, objDefs, pass, sortedLights) {
+    updateRef(options, scene, cameraShaderParams, stdMat, objDefs, pass, sortedLights, vertexFormat) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass, cameraShaderParams);
         this._updateEnvOptions(options, stdMat, scene, cameraShaderParams);
         this._updateMaterialOptions(options, stdMat, scene);
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
-        this._updateUVOptions(options, stdMat, objDefs, false, cameraShaderParams);
+        this._updateUVOptions(options, stdMat, objDefs, vertexFormat, false, cameraShaderParams);
     }
 
     _updateSharedOptions(options, scene, stdMat, objDefs, pass, cameraShaderParams) {
@@ -110,21 +110,14 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateUVOptions(options, stdMat, objDefs, minimalOptions, cameraShaderParams) {
-        let hasUv0 = false;
-        let hasUv1 = false;
-        let hasVcolor = false;
-        if (objDefs) {
-            hasUv0 = (objDefs & SHADERDEF_UV0) !== 0;
-            hasUv1 = (objDefs & SHADERDEF_UV1) !== 0;
-            hasVcolor = (objDefs & SHADERDEF_VCOLOR) !== 0;
-        }
+    _updateUVOptions(options, stdMat, objDefs, vertexFormat, minimalOptions, cameraShaderParams) {
+        const hasVcolor = (objDefs & SHADERDEF_VCOLOR) !== 0;
 
         options.litOptions.vertexColors = false;
 
         const uniqueTextureMap = {};
         for (const p of _matTex2D.keys()) {
-            this._updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap);
+            this._updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, uniqueTextureMap);
         }
 
         // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
@@ -148,7 +141,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
-    _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
+    _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, uniqueTextureMap) {
         const isOpacity = p === 'opacity';
 
         if (!minimalOptions || isOpacity) {
@@ -182,28 +175,24 @@ class StandardMaterialOptionsBuilder {
                     options.litOptions.vertexColors = true;
                 }
             }
-            if (stdMat[mname]) {
-                let allow = true;
-                if (stdMat[uname] === 0 && !hasUv0) allow = false;
-                if (stdMat[uname] === 1 && !hasUv1) allow = false;
-                if (allow) {
+            // a map is only sampled when the mesh provides the uv set it is assigned to
+            if (stdMat[mname] && vertexFormat?.hasUv(stdMat[uname])) {
 
-                    // create an intermediate map between the textures and their slots
-                    // to ensure the unique texture mapping isn't dependent on the texture id
-                    // as that will change when textures are changed, even if the sharing is the same
-                    const mapId = stdMat[mname].id;
-                    let identifier = uniqueTextureMap[mapId];
-                    if (identifier === undefined) {
-                        uniqueTextureMap[mapId] = p;
-                        identifier = p;
-                    }
-
-                    options[mname] = !!stdMat[mname];
-                    options[iname] = identifier;
-                    options[tname] = stdMat._getMapTransformId(p);
-                    options[cname] = stdMat[cname];
-                    options[uname] = stdMat[uname];
+                // create an intermediate map between the textures and their slots
+                // to ensure the unique texture mapping isn't dependent on the texture id
+                // as that will change when textures are changed, even if the sharing is the same
+                const mapId = stdMat[mname].id;
+                let identifier = uniqueTextureMap[mapId];
+                if (identifier === undefined) {
+                    uniqueTextureMap[mapId] = p;
+                    identifier = p;
                 }
+
+                options[mname] = !!stdMat[mname];
+                options[iname] = identifier;
+                options[tname] = stdMat._getMapTransformId(p);
+                options[cname] = stdMat[cname];
+                options[uname] = stdMat[uname];
             }
         }
     }

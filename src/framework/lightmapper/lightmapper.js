@@ -335,7 +335,7 @@ class Lightmapper {
             let hasUv1 = true;
 
             for (let i = 0; i < meshInstances.length; i++) {
-                if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
+                if (!meshInstances[i].mesh.vertexBuffer.format.hasUv(1)) {
                     Debug.log(`Lightmapper - node [${node.name}] contains meshes without required uv1, excluding it from baking.`);
                     hasUv1 = false;
                     break;
