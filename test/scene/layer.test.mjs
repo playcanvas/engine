@@ -51,7 +51,7 @@ describe('Layer mesh membership', function () {
         expect(casterIterator.called).to.be.false;
     });
 
-    it('coalesces removals and additions until each cache is read', function () {
+    it('coalesces removals and additions until either cache is read', function () {
         layer.addMeshInstances(instances.slice(0, 4));
         const meshes = layer.meshInstances;
         const casters = layer.shadowCasters;
@@ -67,7 +67,7 @@ describe('Layer mesh membership', function () {
         expect(layer.meshInstances).to.equal(meshes);
         expect(meshes).to.deep.equal([instances[1], instances[4], instances[0]]);
         expect(meshIterator.callCount).to.equal(1);
-        expect(casterIterator.called).to.be.false;
+        expect(casterIterator.callCount).to.equal(1);
         expect(layer.shadowCasters).to.equal(casters);
         expect(casters).to.deep.equal(meshes);
         expect(casterIterator.callCount).to.equal(1);
@@ -91,6 +91,48 @@ describe('Layer mesh membership', function () {
         expect(casterIterator.called).to.be.false;
     });
 
+    it('releases removed references without another getter or render', function () {
+        layer.addMeshInstances(instances.slice(0, 6));
+        const meshes = layer.meshInstances;
+        const casters = layer.shadowCasters;
+
+        layer.removeMeshInstances(instances.slice(0, 6));
+        layer.addMeshInstances(instances.slice(6));
+
+        // Inspect the retained arrays directly: a getter would hide a reference-retention bug.
+        expect(meshes).to.be.empty;
+        expect(casters).to.be.empty;
+        expect([...layer.meshInstancesSet]).to.deep.equal(instances.slice(6));
+        expect([...layer.shadowCastersSet]).to.deep.equal(instances.slice(6));
+    });
+
+    it('refreshes both caches through the shadow getter and resumes cheap appends', function () {
+        layer.addMeshInstances(instances.slice(0, 3));
+        const meshes = layer.meshInstances;
+        const casters = layer.shadowCasters;
+        layer.removeMeshInstances([instances[0]]);
+        const meshIterator = sinon.spy(layer.meshInstancesSet, Symbol.iterator);
+        const casterIterator = sinon.spy(layer.shadowCastersSet, Symbol.iterator);
+
+        expect(layer.shadowCasters).to.equal(casters);
+        expect(meshes).to.deep.equal(instances.slice(1, 3));
+        expect(casters).to.deep.equal(meshes);
+        layer.addMeshInstances([instances[3]]);
+        expect(layer.meshInstances).to.equal(meshes);
+        expect(meshes).to.deep.equal(instances.slice(1, 4));
+        expect(casters).to.deep.equal(meshes);
+        expect(meshIterator.callCount).to.equal(1);
+        expect(casterIterator.callCount).to.equal(1);
+    });
+
+    it('releases cached references for shadow-only removals', function () {
+        layer.addShadowCasters(instances);
+        const casters = layer.shadowCasters;
+        layer.removeShadowCasters(instances);
+        expect(casters).to.be.empty;
+        expect(layer.shadowCastersSet.size).to.equal(0);
+    });
+
     it('removes every entry when passed the layer arrays themselves', function () {
         layer.addMeshInstances(instances);
         layer.removeMeshInstances(layer.meshInstances);
@@ -100,6 +142,23 @@ describe('Layer mesh membership', function () {
         layer.addShadowCasters(instances);
         layer.removeShadowCasters(layer.shadowCasters);
         expect(layer.shadowCasters).to.be.empty;
+    });
+
+    it('accepts either cached array as input to either removal method', function () {
+        layer.addMeshInstances(instances);
+        layer.removeMeshInstances(layer.shadowCasters);
+        expect(layer.meshInstancesSet.size).to.equal(0);
+        expect(layer.shadowCastersSet.size).to.equal(0);
+
+        layer.addMeshInstances(instances);
+        layer.removeShadowCasters(layer.meshInstances);
+        expect(layer.shadowCastersSet.size).to.equal(0);
+        expect(layer.meshInstances).to.deep.equal(instances);
+
+        layer.addShadowCasters(instances);
+        layer.removeMeshInstances(layer.meshInstances, true);
+        expect(layer.meshInstancesSet.size).to.equal(0);
+        expect(layer.shadowCasters).to.deep.equal(instances);
     });
 
     it('keeps shadow-only membership independent from visible membership', function () {
