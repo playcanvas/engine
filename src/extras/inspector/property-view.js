@@ -2,6 +2,7 @@
 
 /**
  * @typedef {object} RowElements
+ * @ignore
  * @property {HTMLElement} el - The row.
  * @property {HTMLElement} labelEl - The label.
  * @property {HTMLElement} valueEl - The value.
@@ -13,6 +14,7 @@
 
 /**
  * @typedef {object} SectionElements
+ * @ignore
  * @property {HTMLElement} el - The section.
  * @property {HTMLElement} titleEl - The clickable title.
  * @property {HTMLElement} rowsEl - The container the rows live in.
@@ -35,6 +37,8 @@ function el(tag, className) {
  * a render target. Sections and rows are keyed and reconciled in place, so refreshing at a high
  * rate only touches the text that actually changed and never resets the scroll position or the
  * collapsed sections.
+ *
+ * @ignore
  */
 class PropertyView {
     /**

@@ -15,6 +15,7 @@ import { formatName, makeSection, passDisplayName, push, read, reflectRows, rend
  * One pass of a captured frame.
  *
  * @typedef {object} PassEntry
+ * @ignore
  * @property {FramePass} pass - The pass.
  * @property {number} index - The position in execution order.
  * @property {string} key - A key stable across frames for passes that are recreated each frame.
@@ -30,6 +31,7 @@ import { formatName, makeSection, passDisplayName, push, read, reflectRows, rend
  * The frame graph of one frame, flattened.
  *
  * @typedef {object} FrameSnapshot
+ * @ignore
  * @property {PassEntry[]} entries - The passes in execution order.
  * @property {Map<RenderTarget, PassEntry[]>} usage - The passes rendering into each target.
  * @property {Map<string, number>} nameCounts - How many passes share each profiler name.

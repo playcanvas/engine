@@ -4,6 +4,7 @@ import { Entity } from '../../framework/entity.js';
 
 /**
  * @typedef {object} HierarchyEntry
+ * @ignore
  * @property {HTMLElement} el - The node container, holding the row and the children container.
  * @property {HTMLElement} row - The clickable row.
  * @property {HTMLElement} arrowEl - The expand and collapse arrow.
@@ -33,6 +34,8 @@ function el(tag, className) {
  * A tree view over a {@link GraphNode} hierarchy. Rows are keyed by node and reconciled in place on
  * every refresh, so the expansion state, the selection and the scroll position survive the scene
  * changing underneath. Collapsed subtrees are not materialized, which keeps large scenes cheap.
+ *
+ * @ignore
  */
 class HierarchyView {
     /**

@@ -713,6 +713,7 @@ class Inspector extends EventHandler {
     }
 
     get physicsDrawOptions() {
+        /** @type {InspectorPhysicsDrawOptions} */
         const options = {};
         for (const key of Object.keys(PHYSICS_FLAGS)) {
             options[key] = this._physicsToggles[key].checked;
@@ -1436,6 +1437,7 @@ class Inspector extends EventHandler {
     /**
      * @param {string} key - A `KeyboardEvent.code` or `key`.
      * @returns {string} The key as shown on a button, or an empty string when unset.
+     * @private
      */
     static _keyLabel(key) {
         if (!key) return '';
@@ -1446,6 +1448,7 @@ class Inspector extends EventHandler {
     /**
      * @param {string} key - A `KeyboardEvent.code` or `key`.
      * @returns {string} The key in brackets for a button label, or an empty string when unset.
+     * @private
      */
     static _keyHint(key) {
         const label = Inspector._keyLabel(key);

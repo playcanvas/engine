@@ -1,5 +1,6 @@
 /**
  * @typedef {object} ListCell
+ * @ignore
  * @property {string} text - The text.
  * @property {string} [cls] - Extra classes, e.g. 'pci-cell-name'.
  * @property {string} [title] - A tooltip.
@@ -13,6 +14,7 @@
 
 /**
  * @typedef {object} ListRow
+ * @ignore
  * @property {string} key - A key unique within the list, stable across refreshes.
  * @property {*} item - The subject selected when the row is clicked.
  * @property {string} name - The text the filter matches against.
@@ -24,6 +26,7 @@
 
 /**
  * @typedef {object} ListEntry
+ * @ignore
  * @property {HTMLElement} el - The row element.
  * @property {HTMLElement[]} cells - The cell elements.
  * @property {ListRow} row - The row last rendered.
@@ -34,6 +37,8 @@
  * A flat, selectable list of rows with cells. Rows are keyed and reconciled in place, so a list
  * rebuilt from scratch a couple of times a second keeps its selection and scroll position and only
  * touches the text that changed.
+ *
+ * @ignore
  */
 class ListView {
     /**

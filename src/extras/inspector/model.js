@@ -9,6 +9,7 @@ import { collectProperties, describeValue } from './describe.js';
 
 /**
  * @typedef {object} PropertyRow
+ * @ignore
  * @property {string} key - A key unique within the section, stable across refreshes.
  * @property {string} label - The label.
  * @property {Described} value - The value.
@@ -17,6 +18,7 @@ import { collectProperties, describeValue } from './describe.js';
 
 /**
  * @typedef {object} PropertySection
+ * @ignore
  * @property {string} key - A key unique within the view, stable across refreshes.
  * @property {string} title - The title.
  * @property {PropertyRow[]} rows - The rows.

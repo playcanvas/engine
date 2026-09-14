@@ -26,6 +26,7 @@ import { Sprite } from '../../scene/sprite.js';
  * A value rendered by the property view.
  *
  * @typedef {object} Described
+ * @ignore
  * @property {string} text - The display text.
  * @property {string} [cls] - A class suffix selecting the color: 'num', 'bool', 'str', 'null',
  * 'obj', 'ref' or 'err'.
