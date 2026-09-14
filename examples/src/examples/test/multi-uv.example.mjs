@@ -139,7 +139,10 @@ const createBoxMesh = (uvSetCount) => {
         for (let set = 0; set < uvSetCount; set++) {
             const column = set % columns;
             const row = Math.floor(set / columns);
-            iterator.element[SEMANTIC_TEXCOORD + set].set((column + uvs[i * 2]) / columns, (row + uvs[i * 2 + 1]) / rows);
+            iterator.element[SEMANTIC_TEXCOORD + set].set(
+                (column + uvs[i * 2]) / columns,
+                (row + uvs[i * 2 + 1]) / rows
+            );
         }
         iterator.next();
     }
@@ -147,7 +150,13 @@ const createBoxMesh = (uvSetCount) => {
 
     const mesh = new Mesh(device);
     mesh.vertexBuffer = vertexBuffer;
-    mesh.indexBuffer[0] = new IndexBuffer(device, INDEXFORMAT_UINT16, indices.length, BUFFER_STATIC, new Uint16Array(indices));
+    mesh.indexBuffer[0] = new IndexBuffer(
+        device,
+        INDEXFORMAT_UINT16,
+        indices.length,
+        BUFFER_STATIC,
+        new Uint16Array(indices)
+    );
     mesh.primitive[0] = { type: PRIMITIVE_TRIANGLES, base: 0, count: indices.length, indexed: true };
     mesh.aabb.compute(positions);
     return mesh;
