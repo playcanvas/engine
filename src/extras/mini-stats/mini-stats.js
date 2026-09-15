@@ -230,6 +230,9 @@ class MiniStats {
         this.device.on('resizecanvas', this.updateDiv, this);
         this.device.on('losecontext', this.loseContext, this);
         app.on('frameupdate', this.update, this);
+        app.on('prerender', this.render2d.frameUpdate, this.render2d);
+        app.scene.on('prerender:layer', this.render2d.onPreRenderLayer, this.render2d);
+        app.scene.on('postrender:layer', this.render2d.onPostRenderLayer, this.render2d);
         app.on('postrender', this.postRender, this);
         app.on('destroy', this.destroy, this);
         this.activeSizeIndex = options.startSizeIndex;
@@ -247,6 +250,9 @@ class MiniStats {
         this.device.off('resizecanvas', this.updateDiv, this);
         this.device.off('losecontext', this.loseContext, this);
         this.app.off('frameupdate', this.update, this);
+        this.app.off('prerender', this.render2d.frameUpdate, this.render2d);
+        this.app.scene.off('prerender:layer', this.render2d.onPreRenderLayer, this.render2d);
+        this.app.scene.off('postrender:layer', this.render2d.onPostRenderLayer, this.render2d);
         this.app.off('postrender', this.postRender, this);
         this.app.off('destroy', this.destroy, this);
         for (let i = 0; i < this.graphs.length; i++) this.graphs[i].destroy();

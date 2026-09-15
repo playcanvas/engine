@@ -131,10 +131,12 @@ class Render2d {
         this.meshInstance = new MeshInstance(this.mesh, this.material, new GraphNode('MiniStatsMesh'));
         this.meshInstance.cull = false;
         this.meshInstance.castShadow = false;
+        this.meshInstance.shaderPassMask = 0;
         // The overlay must sort after UI elements when the layer uses manual sorting.
         this.meshInstance.drawOrder = Infinity;
         this.meshInstances = [this.meshInstance];
         this.layer = null;
+        this.rendered = false;
         this.clr = new Float32Array(4);
         this.material.setParameter('clr', this.clr);
         this.targetWidth = 1;
@@ -254,10 +256,29 @@ class Render2d {
 
     setLayer(layer) {
         if (this.layer !== layer) {
+            this.meshInstance.shaderPassMask = 0;
             this.layer?.removeMeshInstances(this.meshInstances);
             this.layer = layer;
             layer?.addMeshInstances(this.meshInstances);
         }
+    }
+
+    frameUpdate() {
+        this.rendered = false;
+        this.meshInstance.shaderPassMask = 0;
+    }
+
+    onPreRenderLayer(camera, layer, transparent) {
+        if (!this.rendered && layer === this.layer && transparent === this.meshInstance.transparent) {
+            // Cameras already have their culled lists. The pass mask suppresses later draws
+            // without removing the overlay from its layer or changing those lists.
+            this.meshInstance.shaderPassMask = 0xFFFFFFFF;
+            this.rendered = true;
+        }
+    }
+
+    onPostRenderLayer() {
+        this.meshInstance.shaderPassMask = 0;
     }
 
     render(layer, graphTexture, wordsTexture, clr) {

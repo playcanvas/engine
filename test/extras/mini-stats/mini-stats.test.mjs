@@ -7,7 +7,11 @@ import { Graph } from '../../../src/extras/mini-stats/graph.js';
 import { MiniStats } from '../../../src/extras/mini-stats/mini-stats.js';
 import { StatsTimer } from '../../../src/extras/mini-stats/stats-timer.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { Camera } from '../../../src/scene/camera.js';
+import { SHADER_FORWARD } from '../../../src/scene/constants.js';
 import { Layer } from '../../../src/scene/layer.js';
+import { Culler } from '../../../src/scene/renderer/culler.js';
+import { ForwardRenderer } from '../../../src/scene/renderer/forward-renderer.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('MiniStats', function () {
@@ -24,7 +28,8 @@ describe('MiniStats', function () {
         app = new EventHandler();
         app.graphicsDevice = device;
         const layer = new Layer({ id: 4 });
-        app.scene = { layers: { getLayerById: () => layer } };
+        app.scene = new EventHandler();
+        app.scene.layers = { getLayerById: () => layer };
         app.stats = {
             drawCalls: { total: 123 },
             frame: { ms: 16.7, renderTime: 3, scriptUpdate: 1, scriptPostUpdate: 0.2, animUpdate: 0, physicsTime: 0, gsplatSort: 0 },
@@ -617,6 +622,55 @@ describe('MiniStats', function () {
         expect(second.meshInstances).to.have.length(0);
     });
 
+    it('prepares one overlay draw per frame across two cameras with precomputed visibility', function () {
+        stats = new MiniStats(app);
+        stats.postRender();
+        app.scene.fog = { type: 'none' };
+        const renderer = { device, scene: app.scene, _materialSwitches: 0 };
+        const culler = new Culler(renderer);
+        const left = new Camera(device);
+        const right = new Camera(device);
+        left.rect.set(0, 0, 0.5, 1);
+        right.rect.set(0.5, 0, 0.5, 1);
+        right.frustumCulling = false;
+        const layer = stats.drawLayer;
+        const meshInstance = stats.render2d.meshInstance;
+        // Keep real culling and draw preparation; only shader compilation needs a GPU.
+        stub(meshInstance, 'getShaderInstance').returns({});
+
+        const renderFrame = (cameras) => {
+            app.fire('prerender');
+            for (const camera of cameras) {
+                culler.cullMeshInstances(camera, layer.meshInstances, layer.getCulledInstances(camera));
+            }
+            const draws = [];
+            for (const camera of cameras) {
+                for (const transparent of [false, true]) {
+                    app.scene.fire('prerender:layer', { camera }, layer, transparent);
+                    const culled = layer.getCulledInstances(camera);
+                    const prepared = ForwardRenderer.prototype.renderForwardPrepareMaterials.call(
+                        renderer, camera, null, transparent ? culled.transparent : culled.opaque,
+                        [[], [], []], layer, SHADER_FORWARD
+                    );
+                    if (prepared.drawCalls.includes(meshInstance)) draws.push(camera);
+                    app.scene.fire('postrender:layer', { camera }, layer, transparent);
+                }
+            }
+            return draws;
+        };
+
+        expect(renderFrame([left, right])).to.deep.equal([left]);
+        expect(renderFrame([right, left])).to.deep.equal([right]);
+        expect(renderFrame([])).to.have.length(0);
+        expect(renderFrame([left, right])).to.deep.equal([left]);
+        stats.enabled = false;
+        expect(renderFrame([left, right])).to.have.length(0);
+        stats.enabled = true;
+        stats.postRender();
+        expect(renderFrame([right, left])).to.deep.equal([right]);
+        expect(layer.meshInstances).to.deep.equal([meshInstance]);
+    });
+
     it('releases event listeners and GPU resources when the application is destroyed', function () {
         stats = new MiniStats(app);
         stats.postRender();
@@ -628,6 +682,9 @@ describe('MiniStats', function () {
         expect(app.hasEvent('framerender')).to.be.false;
         expect(app.hasEvent('frameend')).to.be.false;
         expect(app.hasEvent('postrender')).to.be.false;
+        expect(app.hasEvent('prerender')).to.be.false;
+        expect(app.scene.hasEvent('prerender:layer')).to.be.false;
+        expect(app.scene.hasEvent('postrender:layer')).to.be.false;
         expect(texture.calledOnce).to.be.true;
         expect(buffer.calledOnce).to.be.true;
         expect(stats.drawLayer.meshInstances).to.have.length(0);
