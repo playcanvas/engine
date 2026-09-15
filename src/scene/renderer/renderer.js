@@ -758,7 +758,7 @@ class Renderer {
 
         // the material bind group is reserved for the material uniform buffer, which no material
         // owns yet - bind it empty so the pipeline layout has no gap at its index
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
             device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
         }
 
@@ -785,7 +785,7 @@ class Renderer {
     setupMeshUniformBuffers(shaderInstance) {
 
         const device = this.device;
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
 
             // update mesh bind group / uniform buffer
             const meshBindGroup = shaderInstance.getBindGroup(device);

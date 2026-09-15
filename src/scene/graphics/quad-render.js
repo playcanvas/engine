@@ -75,7 +75,7 @@ class QuadRender {
         this.shader = shader;
         Debug.assert(shader);
 
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
 
             // add uniform buffer support to shader
             const processingOptions = new ShaderProcessorOptions();
@@ -142,7 +142,7 @@ class QuadRender {
         const shader = this.shader;
         device.setShader(shader);
 
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
 
             // not using view bind group
             device.setBindGroup(BINDGROUP_VIEW, device.emptyBindGroup);
