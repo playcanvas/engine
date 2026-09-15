@@ -793,7 +793,7 @@ class Renderer {
         const bindGroup = material.uniformBufferBindGroup;
         if (bindGroup) {
             device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
-        } else if (device.supportsUniformBuffers) {
+        } else if (device.usesMeshBindGroups) {
             device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
         }
     }
