@@ -3,7 +3,7 @@ import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { BINDGROUP_MATERIAL, UNIFORMTYPE_VEC3 } from '../../platform/graphics/constants.js';
+import { BINDGROUP_MATERIAL, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC3 } from '../../platform/graphics/constants.js';
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
@@ -21,7 +21,7 @@ import { EnvLighting } from '../graphics/env-lighting.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
-import { MaterialProperty, convertColorToLinear } from './material-property.js';
+import { MaterialProperty, convertColorToLinear, convertFloat } from './material-property.js';
 import { getMaterialLayout } from './material-uniform-buffer-layout.js';
 import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
@@ -49,7 +49,9 @@ const _tempColor = new Color();
 // typed properties, stored in the material uniform buffer rather than published as parameters,
 // keyed by name so that each accessor references its descriptor directly
 const _properties = {
-    diffuse: new MaterialProperty('diffuse', 'material_diffuse', UNIFORMTYPE_VEC3, convertColorToLinear)
+    diffuse: new MaterialProperty('diffuse', 'material_diffuse', UNIFORMTYPE_VEC3, convertColorToLinear),
+    emissive: new MaterialProperty('emissive', 'material_emissive', UNIFORMTYPE_VEC3, convertColorToLinear),
+    emissiveIntensity: new MaterialProperty('emissiveIntensity', 'material_emissiveIntensity', UNIFORMTYPE_FLOAT, convertFloat)
 };
 const _propertyList = Object.values(_properties);
 const _propertiesByUniform = new Map(_propertyList.map(property => [property.uniformName, property]));
@@ -330,13 +332,10 @@ const isBlack = (color) => {
  * color space. Only used when useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
  * within the medium. Only used when useDynamicRefraction is enabled.
- * @property {Color} emissive The emissive color of the material, specified in sRGB color space.
- * This color value is 3-component (RGB), where each component is between 0 and 1.
  * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
  * HDR. When the emissive map is applied, the emissive color is multiplied by the texel color in the
  * map. Since the emissive color is black by default, the emissive map won't be visible unless the
  * emissive color is changed.
- * @property {number} emissiveIntensity Emissive color multiplier.
  * @property {number} emissiveMapUv Emissive map UV channel. Valid values are 0 to 7.
  * @property {Vec2} emissiveMapTiling Controls the 2D tiling of the emissive map.
  * @property {Vec2} emissiveMapOffset Controls the 2D offset of the emissive map. Each component is
@@ -741,6 +740,52 @@ class StandardMaterial extends Material {
     }
 
     /**
+     * Sets the emissive color of the material, specified in sRGB color space. This color value is
+     * 3-component (RGB), where each component is between 0 and 1. The emission is this color
+     * multiplied by {@link StandardMaterial#emissiveIntensity}, and by the emissive map when one is
+     * set.
+     *
+     * @type {Color}
+     */
+    set emissive(value) {
+        if (!this._emissive.equals(value)) {
+            this._emissive.copy(value);
+            this._markPropertyModified(_properties.emissive);
+        }
+    }
+
+    /**
+     * Gets the emissive color of the material.
+     *
+     * @type {Color}
+     */
+    get emissive() {
+        this._markPropertyMutable(_properties.emissive, this._emissive);
+        return this._emissive;
+    }
+
+    /**
+     * Sets the emissive color multiplier. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set emissiveIntensity(value) {
+        if (this._emissiveIntensity !== value) {
+            this._emissiveIntensity = value;
+            this._markPropertyModified(_properties.emissiveIntensity);
+        }
+    }
+
+    /**
+     * Gets the emissive color multiplier.
+     *
+     * @type {number}
+     */
+    get emissiveIntensity() {
+        return this._emissiveIntensity;
+    }
+
+    /**
      * Copy a `StandardMaterial`.
      *
      * @param {StandardMaterial} source - The material to copy from.
@@ -914,9 +959,6 @@ class StandardMaterial extends Material {
                 Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
             }
         });
-
-        this._setParameter('material_emissive', getUniform('emissive'));
-        this._setParameter('material_emissiveIntensity', this.emissiveIntensity);
 
         if (this.refraction > 0) {
             this._setParameter('material_refraction', this.refraction);
@@ -1420,13 +1462,13 @@ function _defineMaterialProps() {
     // typed properties have explicit accessors on the class; they are registered for reset and
     // copy only, copying from the backing value so the source is not marked as mutated
     registerProp('diffuse', () => new Color(1, 1, 1), true);
+    registerProp('emissive', () => new Color(0, 0, 0), true);
+    registerProp('emissiveIntensity', () => 1);
 
     _defineColor('ambient', new Color(1, 1, 1));
     _defineColor('specular', new Color(0, 0, 0));
-    _defineColor('emissive', new Color(0, 0, 0));
     _defineColor('sheen', new Color(1, 1, 1));
     _defineColor('attenuation', new Color(1, 1, 1));
-    _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
     _defineFloat('sheenGloss', 0.0);
     _defineFloat('gloss', 0.25);

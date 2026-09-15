@@ -5,7 +5,7 @@ import { TRACEID_MATERIAL_UPDATE } from '../../../src/core/constants.js';
 import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Tracing } from '../../../src/core/tracing.js';
-import { UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
+import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -51,15 +51,24 @@ describe('StandardMaterial uniform buffer', function () {
         }
     };
 
+    // the value of a uniform currently stored in the material uniform buffer
+    const expectStored = (material, uniformName, expected) => {
+        const uniformBuffer = material._uniformBuffer;
+        const offset = uniformBuffer.format.get(uniformName).offset;
+        const stored = uniformBuffer.storageFloat32.subarray(offset, offset + expected.length);
+        for (let i = 0; i < expected.length; i++) {
+            expect(stored[i]).to.be.closeTo(expected[i], 1e-6);
+        }
+    };
+
     describe('descriptors', function () {
 
-        it('describe diffuse as a linear vec3 uniform', function () {
+        it('describe diffuse and emissive as vec3 uniforms and emissiveIntensity as a float', function () {
             const material = new StandardMaterial();
             const descriptors = material.propertyDescriptors;
-            expect(descriptors).to.have.lengthOf(1);
-            expect(descriptors[0].name).to.equal('diffuse');
-            expect(descriptors[0].uniformName).to.equal('material_diffuse');
-            expect(descriptors[0].type).to.equal(UNIFORMTYPE_VEC3);
+            expect(descriptors.map(descriptor => descriptor.name)).to.deep.equal(['diffuse', 'emissive', 'emissiveIntensity']);
+            expect(descriptors.map(descriptor => descriptor.uniformName)).to.deep.equal(['material_diffuse', 'material_emissive', 'material_emissiveIntensity']);
+            expect(descriptors.map(descriptor => descriptor.type)).to.deep.equal([UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC3, UNIFORMTYPE_FLOAT]);
         });
 
         it('are static and shared between materials', function () {
@@ -75,10 +84,10 @@ describe('StandardMaterial uniform buffer', function () {
             material.update();
             expect(material.uniformBufferBindGroup).to.equal(null);
             expect(material._uniformBuffer).to.equal(null);
-            expect(material._modifiedProperties.size).to.equal(1);
+            expect(material._modifiedProperties.size).to.equal(3);
         });
 
-        it('creates the uniform buffer and bind group on the first preparation, holding the default diffuse', function () {
+        it('creates the uniform buffer and bind group on the first preparation, holding the defaults', function () {
             const material = prepare(new StandardMaterial());
             expect(material._uniformBuffer).to.exist;
             expect(material._uniformBuffer.persistent).to.equal(true);
@@ -86,11 +95,15 @@ describe('StandardMaterial uniform buffer', function () {
             expect(material.uniformBufferBindGroup.uniformBuffers[0]).to.equal(material._uniformBuffer);
             expect(material._modifiedProperties.size).to.equal(0);
             expectStoredDiffuse(material, [1, 1, 1]);
+            expectStored(material, 'material_emissive', [0, 0, 0]);
+            expectStored(material, 'material_emissiveIntensity', [1]);
         });
 
-        it('no longer publishes diffuse as a parameter', function () {
+        it('no longer publishes the typed properties as parameters', function () {
             const material = prepare(new StandardMaterial());
             expect(material.parameters.material_diffuse).to.equal(undefined);
+            expect(material.parameters.material_emissive).to.equal(undefined);
+            expect(material.parameters.material_emissiveIntensity).to.equal(undefined);
             expect(material.parameters.material_ambient).to.exist;
         });
 
@@ -130,6 +143,53 @@ describe('StandardMaterial uniform buffer', function () {
             prepare(material);
             prepare(material);
             expect(upload.callCount).to.equal(1);
+        });
+
+        it('writes an assigned emissive color and intensity, each marking only its own property', function () {
+            const material = prepare(new StandardMaterial());
+
+            material.emissive = new Color(0.5, 0.25, 0.75);
+            expect(material._modifiedProperties.size).to.equal(1);
+            material.update();
+            expectStored(material, 'material_emissive', linear(0.5, 0.25, 0.75));
+            expectStored(material, 'material_emissiveIntensity', [1]);
+
+            material.emissiveIntensity = 3;
+            expect(material._modifiedProperties.size).to.equal(1);
+            expect(material._modifiedProperties.has(material.propertyDescriptors[2])).to.equal(true);
+            const version = material._uniformDataVersion;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(version + 1);
+            expectStored(material, 'material_emissiveIntensity', [3]);
+            expectStored(material, 'material_emissive', linear(0.5, 0.25, 0.75));
+
+            // an equal intensity is ignored
+            material.emissiveIntensity = 3;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(version + 1);
+        });
+
+        it('detects an in-place mutation of the emissive color returned by the getter', function () {
+            const material = prepare(new StandardMaterial());
+            material.emissive.set(1, 1, 1);
+            expect(material._mutableProperties.size).to.equal(1);
+            material.update();
+            expectStored(material, 'material_emissive', [1, 1, 1]);
+        });
+
+        it('keeps the shader variants when emissiveIntensity moves between 0 and 1', function () {
+            const material = new StandardMaterial();
+            material.update();
+            const variant = {};
+            material.variants.set(1, variant);
+
+            material.emissiveIntensity = 0;
+            material.update();
+            material.emissiveIntensity = 1;
+            material.update();
+            material.emissiveIntensity = 2.5;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
         });
 
         it('does not mark a property modified when the assigned value is equal', function () {
@@ -174,15 +234,21 @@ describe('StandardMaterial uniform buffer', function () {
             expect(material.variants.get(1)).to.equal(variant);
         });
 
-        it('writes the default diffuse again after reset', function () {
+        it('writes the defaults again after reset', function () {
             const material = prepare(new StandardMaterial());
             material.diffuse = new Color(0, 0, 0);
+            material.emissive = new Color(1, 1, 1);
+            material.emissiveIntensity = 2;
             material.update();
             expectStoredDiffuse(material, [0, 0, 0]);
+            expectStored(material, 'material_emissive', [1, 1, 1]);
+            expectStored(material, 'material_emissiveIntensity', [2]);
 
             material.reset();
             material.update();
             expectStoredDiffuse(material, [1, 1, 1]);
+            expectStored(material, 'material_emissive', [0, 0, 0]);
+            expectStored(material, 'material_emissiveIntensity', [1]);
         });
 
     });
@@ -202,6 +268,23 @@ describe('StandardMaterial uniform buffer', function () {
 
             prepare(clone);
             expectStoredDiffuse(clone, linear(0.5, 0.25, 0.75));
+        });
+
+        it('copies emissive and emissiveIntensity through the setters', function () {
+            const source = new StandardMaterial();
+            source.emissive = new Color(0.5, 0.25, 0.75);
+            source.emissiveIntensity = 4;
+            source.update();
+
+            const clone = source.clone();
+            expect(clone._emissive.equals(source._emissive)).to.equal(true);
+            expect(clone._emissive).to.not.equal(source._emissive);
+            expect(clone.emissiveIntensity).to.equal(4);
+            expect(source._mutableProperties).to.equal(null);
+
+            prepare(clone);
+            expectStored(clone, 'material_emissive', linear(0.5, 0.25, 0.75));
+            expectStored(clone, 'material_emissiveIntensity', [4]);
         });
 
     });
