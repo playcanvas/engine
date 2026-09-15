@@ -27,6 +27,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     Vec3,
     createGraphicsDevice,
     reprojectTexture
@@ -71,6 +72,8 @@ createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -304,36 +307,31 @@ app.on('update', (dt) => {
     reprojectTexture(srcCube, textureEqui, {
         numSamples: 1
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
+    textures.draw(textureEqui, 0.05, 0.075, 0.3, 0.15);
 
     // Cube -> octa1
     reprojectTexture(srcCube, textureOcta, {
         numSamples: 1
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
+    textures.draw(textureOcta, 0.75, 0.05, 0.2, 0.2);
 
     // Equi1 -> octa2
     reprojectTexture(textureEqui, textureOcta2, {
         specularPower: 32,
         numSamples: 1024
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
+    textures.draw(textureOcta2, 0.05, 0.75, 0.2, 0.2);
 
     // Octa1 -> equi2
     reprojectTexture(textureOcta, textureEqui2, {
         specularPower: 16,
         numSamples: 512
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
+    textures.draw(textureEqui2, 0.65, 0.775, 0.3, 0.15);
 
     // Cube -> envAtlas
     EnvLighting.generateAtlas(srcCube, {
         target: textureAtlas
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(0, -0.7, 0.5, 0.4, textureAtlas);
+    textures.draw(textureAtlas, 0.375, 0.75, 0.25, 0.2);
 });

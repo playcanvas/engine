@@ -36,6 +36,7 @@ import {
     TEXTURETYPE_RGBP,
     Texture,
     TextureHandler,
+    TextureRenderer,
     Vec3,
     WasmModule,
     createGraphicsDevice
@@ -88,6 +89,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -280,9 +283,9 @@ app.on('update', (dt) => {
         const gap = 0.02;
 
         // Top half: original RT texture
-        app.drawTexture(0, 0.5 - gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, renderTarget.colorBuffer);
+        textures.draw(renderTarget.colorBuffer, gap * 0.5, gap * 0.75, 1 - gap, 0.5 - gap);
 
         // Bottom half: compute-processed texture
-        app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, storageTexture);
+        textures.draw(storageTexture, gap * 0.5, 0.5 + gap * 0.25, 1 - gap, 0.5 - gap);
     }
 });
