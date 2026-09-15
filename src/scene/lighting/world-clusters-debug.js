@@ -1,5 +1,4 @@
 import { Color } from '../../core/math/color.js';
-import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
@@ -10,20 +9,51 @@ import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { StandardMaterial } from '../materials/standard-material.js';
 
+/**
+ * @import { Layer } from '../layer.js'
+ */
+
 class WorldClustersDebug {
-    static gridPositions = [];
+    gridPositions = [];
 
-    static gridColors = [];
+    gridColors = [];
 
-    static mesh = null;
+    mesh = null;
 
-    static meshInstance = null;
+    meshInstance = null;
 
-    static colorLow = new Vec3(1, 1, 1);
+    /** @type {MeshInstance|null} */
+    _pendingMeshInstance = null;
 
-    static colorHigh = new Vec3(40, 0, 0);
+    /** @type {Layer|null} */
+    _layer = null;
 
-    static render(worldClusters, scene) {
+    colorLow = new Vec3(1, 1, 1);
+
+    colorHigh = new Vec3(40, 0, 0);
+
+    frameUpdate() {
+        // Discard debug output if its destination layer was not rendered last frame.
+        this._pendingMeshInstance = null;
+        this._layer = null;
+    }
+
+    /**
+     * @param {Layer} layer - The layer being rendered.
+     * @param {MeshInstance[]} visibleList - The visible mesh instances for the layer.
+     */
+    onPreRenderLayer(layer, visibleList) {
+        // Cluster occupancy is generated during rendering, after scene visibility culling.
+        if (this._pendingMeshInstance && layer === this._layer) {
+            visibleList.push(this._pendingMeshInstance);
+            this._pendingMeshInstance = null;
+            this._layer = null;
+        }
+    }
+
+    render(worldClusters, scene) {
+
+        this.frameUpdate();
 
         const device = scene.device;
         const cells = worldClusters.cells;
@@ -33,8 +63,8 @@ class WorldClustersDebug {
         const boundsMax = boundsMin.clone().add(boundsDelta);
         const cellDelta = lightsBuffer.boundsDelta.clone().div(cells);
 
-        const gridPositions = WorldClustersDebug.gridPositions;
-        const gridColors = WorldClustersDebug.gridColors;
+        const gridPositions = this.gridPositions;
+        const gridColors = this.gridColors;
 
         const c1 = new Color(0.3, 0.3, 0.3);
 
@@ -76,11 +106,11 @@ class WorldClustersDebug {
         }
 
         // render cell occupancy
-        let mesh = WorldClustersDebug.mesh;
+        let mesh = this.mesh;
         if (!mesh) {
             mesh = new Mesh(device);
             mesh.clear(true, true);
-            WorldClustersDebug.mesh = mesh;
+            this.mesh = mesh;
         }
 
         const positions = [];
@@ -124,7 +154,7 @@ class WorldClustersDebug {
                         positions.push(min.x, max.y, min.z);
                         positions.push(max.x, max.y, min.z);
 
-                        col.lerp(WorldClustersDebug.colorLow, WorldClustersDebug.colorHigh, count / limit).round();
+                        col.lerp(this.colorLow, this.colorHigh, count / limit).round();
                         for (let c = 0; c < 8; c++) {
                             colors.push(col.x, col.y, col.z, 1);
                         }
@@ -166,8 +196,7 @@ class WorldClustersDebug {
             mesh.setIndices(indices);
             mesh.update(PRIMITIVE_TRIANGLES, false);
 
-
-            if (!WorldClustersDebug.meshInstance) {
+            if (!this.meshInstance) {
                 const material = new StandardMaterial();
                 material.useLighting = false;
                 material.emissive = new Color(1, 1, 1);
@@ -177,17 +206,27 @@ class WorldClustersDebug {
                 material.update();
 
                 const node = new GraphNode('WorldClustersDebug');
-                node.worldTransform = Mat4.IDENTITY;
-                node._dirtyWorld = node._dirtyNormal = false;
-
-                WorldClustersDebug.meshInstance = new MeshInstance(mesh, material, node);
-                WorldClustersDebug.meshInstance.cull = false;
+                this.meshInstance = new MeshInstance(mesh, material, node);
+                this.meshInstance.cull = false;
+                this.meshInstance.castShadow = false;
             }
 
-            // render
-            const meshInstance = WorldClustersDebug.meshInstance;
-            scene.immediate.drawMesh(meshInstance.material, meshInstance.node.worldTransform, null, meshInstance, scene.defaultDrawLayer);
+            this._pendingMeshInstance = this.meshInstance;
+            this._layer = scene.defaultDrawLayer;
         }
+    }
+
+    destroy() {
+        this.frameUpdate();
+        if (this.meshInstance) {
+            const material = this.meshInstance.material;
+            this.meshInstance.destroy();
+            material.destroy();
+            this.meshInstance = null;
+        } else {
+            this.mesh?.destroy();
+        }
+        this.mesh = null;
     }
 }
 

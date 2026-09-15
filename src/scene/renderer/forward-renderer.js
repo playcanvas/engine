@@ -76,6 +76,9 @@ function vogelSpherePrecalculationSamples(numSamples) {
  * @ignore
  */
 class ForwardRenderer extends Renderer {
+    /** @type {WorldClustersDebug|null} */
+    _worldClustersDebug = null;
+
     /**
      * Create a new ForwardRenderer instance.
      *
@@ -151,6 +154,8 @@ class ForwardRenderer extends Renderer {
     }
 
     destroy() {
+        this._worldClustersDebug?.destroy();
+        this._worldClustersDebug = null;
         super.destroy();
     }
 
@@ -823,8 +828,10 @@ class ForwardRenderer extends Renderer {
             const culledInstances = layer.getCulledInstances(camera);
             visible = transparent ? culledInstances.transparent : culledInstances.opaque;
 
-            // add debug mesh instances to visible list
+            // add debug lines to visible list
             scene.immediate.onPreRenderLayer(layer, visible, transparent);
+
+            this._worldClustersDebug?.onPreRenderLayer(layer, visible);
 
             // set up layer uniforms
             if (layer.requiresLightCube) {
@@ -850,7 +857,8 @@ class ForwardRenderer extends Renderer {
             if (layer) {
                 if (!this.clustersDebugRendered && scene.lighting.debugLayer === layer.id) {
                     this.clustersDebugRendered = true;
-                    WorldClustersDebug.render(lightClusters, this.scene);
+                    this._worldClustersDebug ??= new WorldClustersDebug();
+                    this._worldClustersDebug.render(lightClusters, scene);
                 }
             }
         }
@@ -1116,6 +1124,7 @@ class ForwardRenderer extends Renderer {
      */
     update(comp) {
 
+        this._worldClustersDebug?.frameUpdate();
         this.frameUpdate();
         this.shadowRenderer.frameUpdate();
 

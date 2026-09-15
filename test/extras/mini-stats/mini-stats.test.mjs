@@ -6,7 +6,10 @@ import { CpuTimer } from '../../../src/extras/mini-stats/cpu-timer.js';
 import { Graph } from '../../../src/extras/mini-stats/graph.js';
 import { MiniStats } from '../../../src/extras/mini-stats/mini-stats.js';
 import { StatsTimer } from '../../../src/extras/mini-stats/stats-timer.js';
+import { Entity } from '../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { Layer } from '../../../src/scene/layer.js';
+import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('MiniStats', function () {
@@ -22,8 +25,9 @@ describe('MiniStats', function () {
         device = new NullGraphicsDevice(canvas);
         app = new EventHandler();
         app.graphicsDevice = device;
-        app.scene = { layers: { getLayerById: () => ({ id: 4 }) } };
-        app.drawMeshInstance = spy();
+        const layer = new Layer({ id: 4 });
+        app.scene = new EventHandler();
+        app.scene.layers = { getLayerById: () => layer };
         app.stats = {
             drawCalls: { total: 123 },
             frame: { ms: 16.7, renderTime: 3, scriptUpdate: 1, scriptPostUpdate: 0.2, animUpdate: 0, physicsTime: 0, gsplatSort: 0 },
@@ -462,7 +466,7 @@ describe('MiniStats', function () {
             const upload = spy(stats.render2d.buffer, 'setData');
             const unlock = spy(stats.texture, 'unlock');
             const measure = spy(stats.wordAtlas, 'measure');
-            app.drawMeshInstance.resetHistory();
+            const add = spy(stats.drawLayer, 'addMeshInstances');
             for (let i = 0; i < 10; i++) {
                 stats.update(16);
                 stats.postRender();
@@ -471,7 +475,9 @@ describe('MiniStats', function () {
             expect(upload.callCount).to.equal(0);
             expect(unlock.callCount).to.equal(0);
             expect(measure.callCount).to.equal(0);
-            expect(app.drawMeshInstance.callCount).to.equal(10);
+            expect(add.called).to.be.false;
+            expect(stats.drawLayer.meshInstances).to.deep.equal([stats.render2d.meshInstance]);
+            add.restore();
             upload.restore();
             unlock.restore();
             measure.restore();
@@ -589,10 +595,86 @@ describe('MiniStats', function () {
         expect(stats.graphs.every(graph => !graph.enabled)).to.be.true;
     });
 
+    it('keeps one layer member, moves it between layers and removes it while disabled', function () {
+        stats = new MiniStats(app);
+        const first = stats.drawLayer;
+        const second = new Layer();
+        const meshInstance = stats.render2d.meshInstance;
+        stats.postRender();
+        stats.postRender();
+        expect(first.meshInstances).to.deep.equal([meshInstance]);
+        expect(first.shadowCasters).to.have.length(0);
+
+        stats.drawLayer = second;
+        stats.postRender();
+        expect(first.meshInstances).to.have.length(0);
+        expect(second.meshInstances).to.deep.equal([meshInstance]);
+
+        stats.enabled = false;
+        stats.postRender();
+        expect(second.meshInstances).to.have.length(0);
+        stats.enabled = true;
+        stats.postRender();
+        expect(second.meshInstances).to.deep.equal([meshInstance]);
+        stats.destroy();
+        expect(second.meshInstances).to.have.length(0);
+    });
+
+    it('renders one overlay per frame through the application pipeline across cameras', function () {
+        const renderApp = createApp();
+        try {
+            stats = new MiniStats(renderApp);
+            const left = new Entity('Left');
+            left.addComponent('camera', { priority: 0 });
+            left.camera.rect.set(0, 0, 0.5, 1);
+            renderApp.root.addChild(left);
+            const right = new Entity('Right');
+            right.addComponent('camera', { priority: 1, frustumCulling: false });
+            right.camera.rect.set(0.5, 0, 0.5, 1);
+            renderApp.root.addChild(right);
+            const meshInstance = stats.render2d.meshInstance;
+            const draws = [];
+            // Keep the real frame graph, layer events, culling and shader preparation. Only GPU
+            // draw submission is replaced because this application uses the null graphics device.
+            stub(renderApp.renderer, 'renderForwardInternal').callsFake((camera, prepared) => {
+                for (const instance of prepared.drawCalls) {
+                    if (instance === meshInstance) draws.push(camera.node.name);
+                }
+            });
+            const renderFrame = () => {
+                draws.length = 0;
+                renderApp.render();
+                return draws;
+            };
+
+            // MiniStats prepares its geometry in postrender for the following frame.
+            expect(renderFrame()).to.deep.equal([]);
+            expect(renderFrame()).to.deep.equal(['Left']);
+            expect(renderFrame()).to.deep.equal(['Left']);
+            right.camera.priority = -1;
+            expect(renderFrame()).to.deep.equal(['Right']);
+            stats.enabled = false;
+            expect(renderFrame()).to.deep.equal([]);
+            stats.enabled = true;
+            expect(renderFrame()).to.deep.equal([]);
+            expect(renderFrame()).to.deep.equal(['Right']);
+            right.enabled = false;
+            expect(renderFrame()).to.deep.equal(['Left']);
+            left.enabled = false;
+            expect(renderFrame()).to.deep.equal([]);
+            left.enabled = true;
+            expect(renderFrame()).to.deep.equal(['Left']);
+            expect(stats.drawLayer.meshInstances).to.deep.equal([meshInstance]);
+        } finally {
+            renderApp.destroy();
+            stats = null;
+        }
+    });
+
     it('releases event listeners and GPU resources when the application is destroyed', function () {
         stats = new MiniStats(app);
-        const queued = [stats.render2d.meshInstance];
-        app.scene.immediate = { layerMeshInstances: new Map([[stats.drawLayer, queued]]) };
+        stats.postRender();
+        expect(stats.drawLayer.meshInstances).to.have.length(1);
         const texture = spy(stats.texture, 'destroy');
         const buffer = spy(stats.render2d.buffer, 'destroy');
         app.fire('destroy');
@@ -600,9 +682,12 @@ describe('MiniStats', function () {
         expect(app.hasEvent('framerender')).to.be.false;
         expect(app.hasEvent('frameend')).to.be.false;
         expect(app.hasEvent('postrender')).to.be.false;
+        expect(app.hasEvent('prerender')).to.be.false;
+        expect(app.scene.hasEvent('prerender:layer')).to.be.false;
+        expect(app.scene.hasEvent('postrender:layer')).to.be.false;
         expect(texture.calledOnce).to.be.true;
         expect(buffer.calledOnce).to.be.true;
-        expect(queued).to.have.length(0);
+        expect(stats.drawLayer.meshInstances).to.have.length(0);
         expect(document.getElementById('mini-stats')).to.equal(null);
         stats.destroy();
         expect(texture.calledOnce).to.be.true;
