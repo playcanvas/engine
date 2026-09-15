@@ -1200,8 +1200,9 @@ export const isIntegerPixelFormat = (format) => {
  *
  * {@link PIXELFORMAT_111110F} is reported as capable even though it is gated on the
  * 'rg11b10ufloat-renderable' device feature - the feature is near-universally available, and on a
- * device without it the WebGPU validation reports the failure. Snorm formats (RG8S, RGBA8S) would
- * become capable via 'texture-formats-tier1', which the engine does not currently request.
+ * device without it the WebGPU validation reports the failure. Snorm formats (RG8S, RGBA8S) become
+ * capable when the device reports supportsTextureFormatsTier1, which this static table does not yet
+ * reflect.
  *
  * @param {number} format - The pixel format.
  * @returns {boolean} True if the format supports multisampling.

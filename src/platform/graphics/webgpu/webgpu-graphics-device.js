@@ -539,9 +539,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         this.supportsClipDistances = requireFeature('clip-distances');
         this.supportsDualSourceBlending = requireFeature('dual-source-blending');
-        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
-        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
-        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
+        this.supportsTextureFormatsTier1 = requireFeature('texture-formats-tier1');
+        this.supportsTextureFormatsTier2 = requireFeature('texture-formats-tier2');
+        this.supportsTextureFormatsTier1 ||= this.supportsTextureFormatsTier2;
         this.supportsPrimitiveIndex = requireFeature('primitive-index');
         this.supportsSubgroups = requireFeature('subgroups');
         this.supportsSubgroupSizeControl = requireFeature('subgroup-size-control');
