@@ -472,22 +472,24 @@ class GraphicsDevice extends EventHandler {
     supportsTransientAttachments = false;
 
     /**
-     * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
-     * set of normalized texture formats can be used as render targets and storage textures.
+     * True if the device supports the WebGPU 'texture-formats-tier1' feature (WebGPU only). When
+     * available, 16-bit unorm and snorm texture formats become usable, the 8-bit snorm formats
+     * become renderable, blendable and multisample-capable, and a wider set of 8-bit and 16-bit
+     * formats can be bound as storage textures. Implied by {@link supportsTextureFormatsTier2}.
      *
      * @type {boolean}
      * @readonly
      */
-    supportsTextureFormatTier1 = false;
+    supportsTextureFormatsTier1 = false;
 
     /**
-     * True if the device supports WebGPU texture format tier 2 capabilities. This extends tier 1
-     * and enables read-write storage access for selected texture formats.
+     * True if the device supports the WebGPU 'texture-formats-tier2' feature (WebGPU only). This
+     * extends tier 1 and enables read-write storage access for additional texture formats.
      *
      * @type {boolean}
      * @readonly
      */
-    supportsTextureFormatTier2 = false;
+    supportsTextureFormatsTier2 = false;
 
     /**
      * True if the device supports primitive index in fragment shaders (WebGPU only). When
