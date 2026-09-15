@@ -1,11 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import {
     CULLFACE_NONE, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
-    PIXELFORMAT_R8, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_R8, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
     PRIMITIVE_TRISTRIP, isIntegerPixelFormat, isSrgbPixelFormat
 } from '../../platform/graphics/constants.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { BLEND_NORMAL, EVENT_PRERENDER_LAYER } from '../../scene/constants.js';
+import { BLEND_NORMAL, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER_LAYER } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { Mesh } from '../../scene/mesh.js';
@@ -18,6 +17,7 @@ const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Camera } from '../../scene/camera.js'
  * @import { Layer } from '../../scene/layer.js'
@@ -32,8 +32,6 @@ const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
  * @property {string} encoding - The last source encoding.
  * @property {Int32Array} channelIndices - Channels selected for this preview.
  * @property {Texture|null} texture - The texture shown this frame, or null.
- * @property {number} scaleX - Node scale of the quad while it is drawn.
- * @property {number} scaleY - Node scale of the quad while it is drawn.
  * @ignore
  */
 
@@ -132,20 +130,6 @@ class TextureRenderer {
     /** @private */
     _channels = 'rgb';
 
-    /**
-     * 1x1 textures bound in place of a preview's texture by passes that must not sample it.
-     *
-     * @type {Texture|null}
-     * @private
-     */
-    _colorPlaceholder = null;
-
-    /**
-     * @type {Texture|null}
-     * @private
-     */
-    _depthPlaceholder = null;
-
     /** @private */
     _channelIndices = new Int32Array([0, 1, 2]);
 
@@ -211,6 +195,7 @@ class TextureRenderer {
         app.on('frameend', this._endFrame, this);
         app.on('destroy', this.destroy, this);
         app.scene.on(EVENT_PRERENDER_LAYER, this._onPreRenderLayer, this);
+        app.scene.on(EVENT_POSTRENDER_LAYER, this._onPostRenderLayer, this);
     }
 
     /**
@@ -325,7 +310,8 @@ class TextureRenderer {
             meshInstance.castShadow = false;
             meshInstance.pick = false;
             meshInstance.cull = false;
-            slot = { meshInstance, material, mode: '', encoding: '', channelIndices: new Int32Array(3), texture: null, scaleX: 1, scaleY: 1 };
+            meshInstance.shaderPassMask = 0;
+            slot = { meshInstance, material, mode: '', encoding: '', channelIndices: new Int32Array(3), texture: null };
             pool.slots.push(slot);
             pool.meshInstances.push(meshInstance);
             layer.addMeshInstances([meshInstance], true);
@@ -349,13 +335,10 @@ class TextureRenderer {
         }
         slot.material.setParameter('colorMap', texture);
         slot.texture = texture;
-        // the placeholder a pass may swap in has to exist, and be uploaded, before rendering starts
-        if (texture) this._placeholder(mode);
         const meshInstance = slot.meshInstance;
         meshInstance.node.setLocalPosition(2 * x + width - 1, 1 - 2 * y - height, 0);
-        slot.scaleX = 2 * width;
-        slot.scaleY = -2 * height;
-        meshInstance.node.setLocalScale(slot.scaleX, slot.scaleY, 1);
+        meshInstance.node.setLocalScale(2 * width, -2 * height, 1);
+        meshInstance.shaderPassMask = 0;
         meshInstance.visible = true;
     }
 
@@ -375,10 +358,8 @@ class TextureRenderer {
     }
 
     /**
-     * Applies the drawing rules for one layer of one render pass, right before it is rendered. A
-     * preview the pass must not draw is collapsed to nothing and samples a placeholder instead,
-     * so the pass rasterizes nothing and never binds the texture it renders into. Culling has
-     * already happened, so this is what keeps a pass from drawing an instance it culled in.
+     * Applies camera and attachment restrictions after culling, using the actual pass target.
+     * The pass mask skips shader preparation and resource binding as well as the draw itself.
      *
      * @param {CameraComponent} cameraComponent - The camera rendering the layer.
      * @param {Layer} layer - The layer about to be rendered.
@@ -391,44 +372,23 @@ class TextureRenderer {
         const renderTarget = this._app.graphicsDevice.renderTarget;
         for (let i = 0; i < pool.used; i++) {
             const slot = pool.slots[i];
-            const drawn = this._isDrawnBy(slot, camera, renderTarget);
-            slot.meshInstance.node.setLocalScale(drawn ? slot.scaleX : 0, drawn ? slot.scaleY : 0, 1);
-            if (slot.texture) {
-                slot.material.setParameter('colorMap', drawn ? slot.texture : this._placeholder(slot.mode));
-            }
+            slot.meshInstance.shaderPassMask = this._isDrawnBy(slot, camera, renderTarget) ? 0xFFFFFFFF : 0;
         }
     }
 
     /**
-     * The 1x1 texture a mode's shader can bind in place of a preview's texture. Created and
-     * uploaded on first request, which must happen outside a render pass: WebGPU does not allow a
-     * first upload from inside one.
+     * Keeps previews out of other passes until their destination layer explicitly enables them.
      *
-     * @param {string} mode - The sampling mode of the preview being replaced.
-     * @returns {Texture} The placeholder.
+     * @param {CameraComponent} cameraComponent - The camera that rendered the layer.
+     * @param {Layer} layer - The layer that was rendered.
      * @private
      */
-    _placeholder(mode) {
-        const depth = mode === 'depth';
-        let placeholder = depth ? this._depthPlaceholder : this._colorPlaceholder;
-        if (!placeholder) {
-            placeholder = new Texture(this._app.graphicsDevice, {
-                name: depth ? 'TextureRenderer depth placeholder' : 'TextureRenderer placeholder',
-                width: 1,
-                height: 1,
-                format: depth ? PIXELFORMAT_DEPTH : PIXELFORMAT_RGBA8,
-                mipmaps: false,
-                minFilter: FILTER_NEAREST,
-                magFilter: FILTER_NEAREST
-            });
-            placeholder.upload();
-            if (depth) {
-                this._depthPlaceholder = placeholder;
-            } else {
-                this._colorPlaceholder = placeholder;
-            }
+    _onPostRenderLayer(cameraComponent, layer) {
+        const pool = this._pools.get(layer);
+        if (!pool) return;
+        for (let i = 0; i < pool.used; i++) {
+            pool.slots[i].meshInstance.shaderPassMask = 0;
         }
-        return placeholder;
     }
 
     /** @private */
@@ -437,6 +397,7 @@ class TextureRenderer {
             for (let i = 0; i < pool.used; i++) {
                 const slot = pool.slots[i];
                 slot.meshInstance.visible = false;
+                slot.meshInstance.shaderPassMask = 0;
                 // A dormant debug renderer must not keep caller-owned textures alive.
                 slot.material.setParameter('colorMap', null);
                 slot.texture = null;
@@ -455,10 +416,7 @@ class TextureRenderer {
         this._app.off('frameend', this._endFrame, this);
         this._app.off('destroy', this.destroy, this);
         this._app.scene.off(EVENT_PRERENDER_LAYER, this._onPreRenderLayer, this);
-        this._colorPlaceholder?.destroy();
-        this._colorPlaceholder = null;
-        this._depthPlaceholder?.destroy();
-        this._depthPlaceholder = null;
+        this._app.scene.off(EVENT_POSTRENDER_LAYER, this._onPostRenderLayer, this);
         for (const [layer, pool] of this._pools) {
             layer.removeMeshInstances(pool.meshInstances, true);
             for (const slot of pool.slots) {
