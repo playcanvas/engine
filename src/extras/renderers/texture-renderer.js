@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import {
     CULLFACE_NONE, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
-    PIXELFORMAT_R32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PRIMITIVE_TRISTRIP,
+    PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PRIMITIVE_TRISTRIP,
     isIntegerPixelFormat, isSrgbPixelFormat
 } from '../../platform/graphics/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -190,7 +190,7 @@ class TextureRenderer {
             return;
         }
         const unfilterable = !device.textureFloatFilterable &&
-            (format === PIXELFORMAT_R32F || format === PIXELFORMAT_RGB32F || format === PIXELFORMAT_RGBA32F);
+            (format === PIXELFORMAT_R32F || format === PIXELFORMAT_RG32F || format === PIXELFORMAT_RGB32F || format === PIXELFORMAT_RGBA32F);
         // WebGL still checks sampler completeness for texelFetch, even though no filtering occurs.
         // Do not change caller-owned sampler state just to make a debug preview render.
         if (device.isWebGL2 && (depth || unfilterable)) {
