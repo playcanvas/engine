@@ -4,9 +4,13 @@ export default /* glsl */`
     #include "envProcPS"
     #include "gammaPS"
     #include "tonemappingPS"
+    #include "sceneTexturesPS"
+
+    #if defined(PREPASS_PASS) || (defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH))
+        varying float vLinearDepth;
+    #endif
 
     #ifdef PREPASS_PASS
-        varying float vLinearDepth;
         #include "floatAsUintPS"
     #endif
 
@@ -102,6 +106,10 @@ export default /* glsl */`
             }
 
             gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
+
+            #if defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH)
+                writeSceneTextureDepth(vLinearDepth, 1.0);
+            #endif
 
         #endif
     }
