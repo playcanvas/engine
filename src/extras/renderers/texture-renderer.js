@@ -1,18 +1,25 @@
 import { Debug } from '../../core/debug.js';
 import {
     CULLFACE_NONE, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
-    PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PRIMITIVE_TRISTRIP,
-    isIntegerPixelFormat, isSrgbPixelFormat
+    PIXELFORMAT_R8, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
+    PRIMITIVE_TRISTRIP, isIntegerPixelFormat, isSrgbPixelFormat
 } from '../../platform/graphics/constants.js';
+import { BLEND_NORMAL, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER_LAYER } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { createTextureShaderDesc } from './texture-renderer-shaders.js';
 
+// the red channel replicated, for single-channel formats shown with the default selection
+const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
+
 /**
  * @import { AppBase } from '../../framework/app-base.js'
+ * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { Camera } from '../../scene/camera.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { ShaderDesc } from '../../scene/materials/shader-material.js'
  */
@@ -24,6 +31,7 @@ import { createTextureShaderDesc } from './texture-renderer-shaders.js';
  * @property {string} mode - The last sampling mode.
  * @property {string} encoding - The last source encoding.
  * @property {Int32Array} channelIndices - Channels selected for this preview.
+ * @property {Texture|null} texture - The texture shown this frame, or null.
  * @ignore
  */
 
@@ -36,6 +44,19 @@ import { createTextureShaderDesc } from './texture-renderer-shaders.js';
  */
 
 /**
+ * @param {RenderTarget} rt - A render target.
+ * @param {Texture} texture - A texture.
+ * @returns {boolean} Whether the texture is one of the target's attachments.
+ */
+function rendersInto(rt, texture) {
+    if (rt.depthBuffer === texture || rt.depthResolveBuffer === texture) return true;
+    for (let i = 0; i < rt.colorBufferCount; i++) {
+        if (rt.getColorBuffer(i) === texture || rt.getResolveBuffer(i) === texture) return true;
+    }
+    return false;
+}
+
+/**
  * Displays textures for a single frame, for debugging. Call {@link draw} or {@link sceneDepth}
  * during update or prerender on every frame the preview should be visible. Positions specify
  * the top-left corner in normalized camera-viewport coordinates: (0, 0) is top-left and (1, 1)
@@ -44,7 +65,8 @@ import { createTextureShaderDesc } from './texture-renderer-shaders.js';
  *
  * Supports 2D color textures in normalized, floating-point and device-supported compressed
  * formats. Linear and sRGB color, and RGBM, RGBE and RGBP encoded HDR color, are detected
- * automatically with the default {@link channels} selection. Other selections display stored
+ * automatically with the default {@link channels} selection, and single-channel formats such as
+ * {@link PIXELFORMAT_R8} display their channel as grayscale. Other selections display stored
  * channel values, including alpha, as opaque previews.
  *
  * Depth textures using {@link PIXELFORMAT_DEPTH}, {@link PIXELFORMAT_DEPTH16} or
@@ -60,9 +82,19 @@ import { createTextureShaderDesc } from './texture-renderer-shaders.js';
  * Resources are released automatically when the application is destroyed, or earlier by calling
  * {@link destroy}. Supplied textures are never destroyed by this helper.
  *
- * Previews are opaque, do not write or test depth, and do not cast shadows. Ordering against
- * other opaque geometry follows the destination layer's opaque sort mode. The default Immediate
- * layer uses no opaque sorting.
+ * Previews produce fully opaque pixels but are drawn as alpha-blended instances, so they render in
+ * layers that only draw their transparent sub-layer, such as the default UI layer, which is also
+ * where they escape a camera frame's post-processing. They do not write or test depth and do not
+ * cast shadows. Ordering against other transparent geometry follows the destination layer's
+ * transparent sort mode.
+ *
+ * Every camera rendering the destination layer draws the previews, including cameras rendering
+ * into a texture. Set {@link camera} to limit them to a single camera, typically the one rendering
+ * to the screen. A render pass whose target has the previewed texture among its attachments never
+ * draws that preview: sampling a texture while rendering into it is undefined on WebGL and an
+ * error on WebGPU. Both rules are applied as each layer is rendered, against the target the pass
+ * really renders into, so they hold for camera frames and custom render passes and do not depend
+ * on frustum culling.
  *
  * @example
  * const textures = new TextureRenderer(app);
@@ -87,6 +119,14 @@ class TextureRenderer {
      */
     layer = null;
 
+    /**
+     * The only camera that draws the previews, or null to let every camera rendering the
+     * destination layer draw them. Defaults to null.
+     *
+     * @type {CameraComponent|null}
+     */
+    camera = null;
+
     /** @private */
     _channels = 'rgb';
 
@@ -95,8 +135,9 @@ class TextureRenderer {
 
     /**
      * Channels displayed by subsequent {@link draw} calls. Must be exactly three characters from
-     * 'r', 'g', 'b' and 'a'. Defaults to 'rgb', which displays automatically decoded color. Other
-     * selections display stored channel values without color decoding: for example, 'rrr' displays
+     * 'r', 'g', 'b' and 'a'. Defaults to 'rgb', which displays automatically decoded color, or the
+     * stored channel as grayscale for single-channel formats. Other selections display stored
+     * channel values without color decoding: for example, 'rrr' displays
      * red as grayscale, 'aaa' displays alpha, and 'bgr' swaps red and blue. Values from 0 to 1 map
      * directly from black to white. Output is always opaque. Ignored for depth textures and
      * {@link sceneDepth}. Invalid values leave the previous selection unchanged.
@@ -153,6 +194,8 @@ class TextureRenderer {
         app.on('postrender', this._endFrame, this);
         app.on('frameend', this._endFrame, this);
         app.on('destroy', this.destroy, this);
+        app.scene.on(EVENT_PRERENDER_LAYER, this._onPreRenderLayer, this);
+        app.scene.on(EVENT_POSTRENDER_LAYER, this._onPostRenderLayer, this);
     }
 
     /**
@@ -202,10 +245,14 @@ class TextureRenderer {
                 return;
             }
         }
-        const encoding = depth ? 'linear' : this._channels === 'rgb' ? texture.encoding :
+        // a single stored channel reads as grayscale rather than as red with black behind it
+        const singleChannel = format === PIXELFORMAT_R8 || format === PIXELFORMAT_R16F || format === PIXELFORMAT_R32F;
+        const decoded = this._channels === 'rgb' && !singleChannel;
+        const channelIndices = this._channels === 'rgb' ? SINGLE_CHANNEL_INDICES : this._channelIndices;
+        const encoding = depth ? 'linear' : decoded ? texture.encoding :
             isSrgbPixelFormat(format) ? 'raw-srgb' : 'raw';
         this._draw(texture, depth ? 'depth' : unfilterable ? 'unfilterable' : 'filtered',
-            encoding, x, y, width, height);
+            encoding, x, y, width, height, channelIndices);
     }
 
     /**
@@ -219,7 +266,7 @@ class TextureRenderer {
      * @param {number} height - Height as a fraction of the camera viewport height.
      */
     sceneDepth(x, y, width, height) {
-        this._draw(null, 'scene-depth', 'linear', x, y, width, height);
+        this._draw(null, 'scene-depth', 'linear', x, y, width, height, SINGLE_CHANNEL_INDICES);
     }
 
     /**
@@ -230,9 +277,10 @@ class TextureRenderer {
      * @param {number} y - Normalized top edge.
      * @param {number} width - Normalized width.
      * @param {number} height - Normalized height.
+     * @param {Int32Array} channelIndices - The channels shown by a raw encoding.
      * @private
      */
-    _draw(texture, mode, encoding, x, y, width, height) {
+    _draw(texture, mode, encoding, x, y, width, height, channelIndices) {
         if (!this._app || !Number.isFinite(x) || !Number.isFinite(y) ||
             !Number.isFinite(width) || !Number.isFinite(height) || width === 0 || height === 0) return;
 
@@ -256,11 +304,14 @@ class TextureRenderer {
             material.cull = CULLFACE_NONE;
             material.depthTest = false;
             material.depthWrite = false;
+            // blended so the quad counts as transparent: layers such as UI only render that sub-layer
+            material.blendType = BLEND_NORMAL;
             const meshInstance = new MeshInstance(this._mesh, material, new GraphNode(`Debug texture ${pool.slots.length}`));
-            meshInstance.cull = false;
             meshInstance.castShadow = false;
             meshInstance.pick = false;
-            slot = { meshInstance, material, mode: '', encoding: '', channelIndices: new Int32Array(3) };
+            meshInstance.cull = false;
+            meshInstance.shaderPassMask = 0;
+            slot = { meshInstance, material, mode: '', encoding: '', channelIndices: new Int32Array(3), texture: null };
             pool.slots.push(slot);
             pool.meshInstances.push(meshInstance);
             layer.addMeshInstances([meshInstance], true);
@@ -279,14 +330,65 @@ class TextureRenderer {
             slot.encoding = encoding;
         }
         if (encoding === 'raw' || encoding === 'raw-srgb') {
-            slot.channelIndices.set(this._channelIndices);
+            slot.channelIndices.set(channelIndices);
             slot.material.setParameter('textureChannels', slot.channelIndices);
         }
         slot.material.setParameter('colorMap', texture);
+        slot.texture = texture;
         const meshInstance = slot.meshInstance;
         meshInstance.node.setLocalPosition(2 * x + width - 1, 1 - 2 * y - height, 0);
         meshInstance.node.setLocalScale(2 * width, -2 * height, 1);
+        meshInstance.shaderPassMask = 0;
         meshInstance.visible = true;
+    }
+
+    /**
+     * Whether a pass draws a preview: only the selected camera if one is set, and never a pass
+     * rendering into the texture the preview samples.
+     *
+     * @param {TextureSlot} slot - The preview.
+     * @param {Camera} camera - The camera rendering the layer.
+     * @param {RenderTarget|null} renderTarget - The target the pass renders into.
+     * @returns {boolean} True to draw the preview in this pass.
+     * @private
+     */
+    _isDrawnBy(slot, camera, renderTarget) {
+        if (this.camera && camera !== this.camera.camera) return false;
+        return !slot.texture || !renderTarget || !rendersInto(renderTarget, slot.texture);
+    }
+
+    /**
+     * Applies camera and attachment restrictions after culling, using the actual pass target.
+     * The pass mask skips shader preparation and resource binding as well as the draw itself.
+     *
+     * @param {CameraComponent} cameraComponent - The camera rendering the layer.
+     * @param {Layer} layer - The layer about to be rendered.
+     * @private
+     */
+    _onPreRenderLayer(cameraComponent, layer) {
+        const pool = this._pools.get(layer);
+        if (!pool) return;
+        const camera = cameraComponent.camera;
+        const renderTarget = this._app.graphicsDevice.renderTarget;
+        for (let i = 0; i < pool.used; i++) {
+            const slot = pool.slots[i];
+            slot.meshInstance.shaderPassMask = this._isDrawnBy(slot, camera, renderTarget) ? 0xFFFFFFFF : 0;
+        }
+    }
+
+    /**
+     * Keeps previews out of other passes until their destination layer explicitly enables them.
+     *
+     * @param {CameraComponent} cameraComponent - The camera that rendered the layer.
+     * @param {Layer} layer - The layer that was rendered.
+     * @private
+     */
+    _onPostRenderLayer(cameraComponent, layer) {
+        const pool = this._pools.get(layer);
+        if (!pool) return;
+        for (let i = 0; i < pool.used; i++) {
+            pool.slots[i].meshInstance.shaderPassMask = 0;
+        }
     }
 
     /** @private */
@@ -295,8 +397,10 @@ class TextureRenderer {
             for (let i = 0; i < pool.used; i++) {
                 const slot = pool.slots[i];
                 slot.meshInstance.visible = false;
+                slot.meshInstance.shaderPassMask = 0;
                 // A dormant debug renderer must not keep caller-owned textures alive.
                 slot.material.setParameter('colorMap', null);
+                slot.texture = null;
             }
             pool.used = 0;
         }
@@ -311,6 +415,8 @@ class TextureRenderer {
         this._app.off('postrender', this._endFrame, this);
         this._app.off('frameend', this._endFrame, this);
         this._app.off('destroy', this.destroy, this);
+        this._app.scene.off(EVENT_PRERENDER_LAYER, this._onPreRenderLayer, this);
+        this._app.scene.off(EVENT_POSTRENDER_LAYER, this._onPostRenderLayer, this);
         for (const [layer, pool] of this._pools) {
             layer.removeMeshInstances(pool.meshInstances, true);
             for (const slot of pool.slots) {
