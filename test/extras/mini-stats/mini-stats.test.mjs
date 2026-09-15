@@ -7,6 +7,7 @@ import { Graph } from '../../../src/extras/mini-stats/graph.js';
 import { MiniStats } from '../../../src/extras/mini-stats/mini-stats.js';
 import { StatsTimer } from '../../../src/extras/mini-stats/stats-timer.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { Layer } from '../../../src/scene/layer.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('MiniStats', function () {
@@ -22,8 +23,8 @@ describe('MiniStats', function () {
         device = new NullGraphicsDevice(canvas);
         app = new EventHandler();
         app.graphicsDevice = device;
-        app.scene = { layers: { getLayerById: () => ({ id: 4 }) } };
-        app.drawMeshInstance = spy();
+        const layer = new Layer({ id: 4 });
+        app.scene = { layers: { getLayerById: () => layer } };
         app.stats = {
             drawCalls: { total: 123 },
             frame: { ms: 16.7, renderTime: 3, scriptUpdate: 1, scriptPostUpdate: 0.2, animUpdate: 0, physicsTime: 0, gsplatSort: 0 },
@@ -462,7 +463,7 @@ describe('MiniStats', function () {
             const upload = spy(stats.render2d.buffer, 'setData');
             const unlock = spy(stats.texture, 'unlock');
             const measure = spy(stats.wordAtlas, 'measure');
-            app.drawMeshInstance.resetHistory();
+            const add = spy(stats.drawLayer, 'addMeshInstances');
             for (let i = 0; i < 10; i++) {
                 stats.update(16);
                 stats.postRender();
@@ -471,7 +472,9 @@ describe('MiniStats', function () {
             expect(upload.callCount).to.equal(0);
             expect(unlock.callCount).to.equal(0);
             expect(measure.callCount).to.equal(0);
-            expect(app.drawMeshInstance.callCount).to.equal(10);
+            expect(add.called).to.be.false;
+            expect(stats.drawLayer.meshInstances).to.deep.equal([stats.render2d.meshInstance]);
+            add.restore();
             upload.restore();
             unlock.restore();
             measure.restore();
@@ -589,10 +592,35 @@ describe('MiniStats', function () {
         expect(stats.graphs.every(graph => !graph.enabled)).to.be.true;
     });
 
+    it('keeps one layer member, moves it between layers and removes it while disabled', function () {
+        stats = new MiniStats(app);
+        const first = stats.drawLayer;
+        const second = new Layer();
+        const meshInstance = stats.render2d.meshInstance;
+        stats.postRender();
+        stats.postRender();
+        expect(first.meshInstances).to.deep.equal([meshInstance]);
+        expect(first.shadowCasters).to.have.length(0);
+
+        stats.drawLayer = second;
+        stats.postRender();
+        expect(first.meshInstances).to.have.length(0);
+        expect(second.meshInstances).to.deep.equal([meshInstance]);
+
+        stats.enabled = false;
+        stats.postRender();
+        expect(second.meshInstances).to.have.length(0);
+        stats.enabled = true;
+        stats.postRender();
+        expect(second.meshInstances).to.deep.equal([meshInstance]);
+        stats.destroy();
+        expect(second.meshInstances).to.have.length(0);
+    });
+
     it('releases event listeners and GPU resources when the application is destroyed', function () {
         stats = new MiniStats(app);
-        const queued = [stats.render2d.meshInstance];
-        app.scene.immediate = { layerMeshInstances: new Map([[stats.drawLayer, queued]]) };
+        stats.postRender();
+        expect(stats.drawLayer.meshInstances).to.have.length(1);
         const texture = spy(stats.texture, 'destroy');
         const buffer = spy(stats.render2d.buffer, 'destroy');
         app.fire('destroy');
@@ -602,7 +630,7 @@ describe('MiniStats', function () {
         expect(app.hasEvent('postrender')).to.be.false;
         expect(texture.calledOnce).to.be.true;
         expect(buffer.calledOnce).to.be.true;
-        expect(queued).to.have.length(0);
+        expect(stats.drawLayer.meshInstances).to.have.length(0);
         expect(document.getElementById('mini-stats')).to.equal(null);
         stats.destroy();
         expect(texture.calledOnce).to.be.true;

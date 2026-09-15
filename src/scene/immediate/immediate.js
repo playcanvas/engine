@@ -1,10 +1,7 @@
 import { Debug } from '../../core/debug.js';
-import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
-import { GraphNode } from '../graph-node.js';
-import { Mesh } from '../mesh.js';
-import { MeshInstance } from '../mesh-instance.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { ImmediateBatches } from './immediate-batches.js';
 import { LineWriter } from './line-writer.js';
@@ -18,7 +15,6 @@ const vec = new Vec3();
 class Immediate {
     constructor(device) {
         this.device = device;
-        this.quadMesh = null;
         this.cubeLocalPos = null;
         this.cubeWorldPos = null;
 
@@ -28,18 +24,12 @@ class Immediate {
         // set of all batches that were used in the frame
         this.allBatches = new Set();
 
-        // set of all layers updated during this frame
-        this.updatedLayers = new Set();
-
         // single cursor handed out by allocateLines, so allocating costs no garbage
         this.lineWriter = new LineWriter();
 
         // line materials
         this._materialDepth = null;
         this._materialNoDepth = null;
-
-        // map of meshes instances added to a layer. The key is layer, the value is an array of mesh instances
-        this.layerMeshInstances = new Map();
     }
 
     // creates material for line rendering
@@ -124,39 +114,6 @@ class Immediate {
         return writer;
     }
 
-    // creates mesh used to render a quad
-    getQuadMesh() {
-        if (!this.quadMesh) {
-            this.quadMesh = new Mesh(this.device);
-            this.quadMesh.setPositions([
-                -0.5, -0.5, 0,
-                0.5, -0.5, 0,
-                -0.5, 0.5, 0,
-                0.5, 0.5, 0
-            ]);
-            this.quadMesh.update(PRIMITIVE_TRISTRIP);
-        }
-        return this.quadMesh;
-    }
-
-    // Draw mesh at this frame
-    drawMesh(material, matrix, mesh, meshInstance, layer) {
-
-        // create a mesh instance for the mesh if needed
-        if (!meshInstance) {
-            const graphNode = this.getGraphNode(matrix);
-            meshInstance = new MeshInstance(mesh, material, graphNode);
-        }
-
-        // add the mesh instance to an array per layer, they get added to layers before rendering
-        let layerMeshInstances = this.layerMeshInstances.get(layer);
-        if (!layerMeshInstances) {
-            layerMeshInstances = [];
-            this.layerMeshInstances.set(layer, layerMeshInstances);
-        }
-        layerMeshInstances.push(meshInstance);
-    }
-
     drawWireAlignedBox(min, max, color, depthTest, layer, mat) {
         if (mat) {
             const mulPoint = (x, y, z) => {
@@ -224,14 +181,6 @@ class Immediate {
         tempPoints.length = 0;
     }
 
-    getGraphNode(matrix) {
-        const graphNode = new GraphNode('ImmediateDebug');
-        graphNode.worldTransform = matrix;
-        graphNode._dirtyWorld = graphNode._dirtyNormal = false;
-
-        return graphNode;
-    }
-
     // This is called just before the layer is rendered to allow lines for the layer to be added from inside
     // the frame getting rendered
     onPreRenderLayer(layer, visibleList, transparent) {
@@ -242,20 +191,6 @@ class Immediate {
                 batches.onPreRender(visibleList, transparent);
             }
         });
-
-        // only update meshes once for each layer (they're not per sub-layer at the moment)
-        if (!this.updatedLayers.has(layer)) {
-            this.updatedLayers.add(layer);
-
-            // add mesh instances for specified layer to visible list
-            const meshInstances = this.layerMeshInstances.get(layer);
-            if (meshInstances) {
-                for (let i = 0; i < meshInstances.length; i++) {
-                    visibleList.push(meshInstances[i]);
-                }
-                meshInstances.length = 0;
-            }
-        }
     }
 
     // called after the frame was rendered, clears data
@@ -264,9 +199,6 @@ class Immediate {
         // clean up line batches
         this.allBatches.forEach(batch => batch.clear());
         this.allBatches.clear();
-
-        // all batches need updating next frame
-        this.updatedLayers.clear();
     }
 }
 

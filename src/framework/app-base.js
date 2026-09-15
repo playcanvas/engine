@@ -61,10 +61,6 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Lightmapper } from './lightmapper/lightmapper.js'
- * @import { Mat4 } from '../core/math/mat4.js'
- * @import { Material } from '../scene/materials/material.js'
- * @import { MeshInstance } from '../scene/mesh-instance.js'
- * @import { Mesh } from '../scene/mesh.js'
  * @import { Mouse } from '../platform/input/mouse.js'
  * @import { SoundManager } from '../platform/sound/manager.js'
  * @import { TouchDevice } from '../platform/input/touch-device.js'
@@ -1735,42 +1731,16 @@ class AppBase extends EventHandler {
         Debug.removed('AppBase#drawWireAlignedBox is removed. Use WireRenderer#boxMinMax instead.');
     }
 
-    /**
-     * Draw meshInstance at this frame
-     *
-     * @param {MeshInstance} meshInstance - The mesh instance
-     * to draw.
-     * @param {Layer} [layer] - The layer to render the mesh instance into. Defaults to
-     * {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawMeshInstance(meshInstance, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
+    drawMeshInstance() {
+        Debug.removed('AppBase#drawMeshInstance is removed. Use Layer#addMeshInstances instead.');
     }
 
-    /**
-     * Draw mesh at this frame.
-     *
-     * @param {Mesh} mesh - The mesh to draw.
-     * @param {Material} material - The material to use to render the mesh.
-     * @param {Mat4} matrix - The matrix to use to render the mesh.
-     * @param {Layer} [layer] - The layer to render the mesh into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawMesh(mesh, material, matrix, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
+    drawMesh() {
+        Debug.removed('AppBase#drawMesh is removed. Create a MeshInstance and use Layer#addMeshInstances instead.');
     }
 
-    /**
-     * Draw quad of size [-0.5, 0.5] at this frame.
-     *
-     * @param {Mat4} matrix - The matrix to use to render the quad.
-     * @param {Material} material - The material to use to render the quad.
-     * @param {Layer} [layer] - The layer to render the quad into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawQuad(matrix, material, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawMesh(material, matrix, this.scene.immediate.getQuadMesh(), null, layer);
+    drawQuad() {
+        Debug.removed('AppBase#drawQuad is removed. Create a quad MeshInstance and use Layer#addMeshInstances, or use TextureRenderer#draw for texture previews.');
     }
 
     drawTexture() {
