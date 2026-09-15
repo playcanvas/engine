@@ -40,43 +40,108 @@ describe('TextureRenderer', function () {
         const [instance] = layer.meshInstances;
         expect(instance.node.getLocalPosition().toArray()).to.deep.equal([0, 0.5, 0]);
         expect(instance.node.getLocalScale().toArray()).to.deep.equal([1, -0.5, 1]);
-        expect(instance.cull).to.equal(true);
+        expect(instance.cull).to.equal(false);
         expect(instance.material.depthTest).to.equal(false);
         expect(instance.material.depthWrite).to.equal(false);
         expect(layer.shadowCasters).to.not.include(instance);
     });
 
-    it('is drawn by every camera except those rendering into the previewed texture', function () {
+    /**
+     * @param {Camera} camera - The camera rendering the layer.
+     * @param {RenderTarget} renderTarget - The target the pass renders into.
+     */
+    function renderLayer(camera, renderTarget) {
+        // what RenderPassForward does for each layer: the pass target is set on the device, the
+        // layer culls with the real culler, then the event fires right before drawing
+        app.graphicsDevice.renderTarget = renderTarget;
+        app.renderer.culler.cullMeshInstances(camera, layer.meshInstances, layer.getCulledInstances(camera));
+        app.scene.fire('prerender:layer', { camera }, layer, true);
+    }
+
+    it('collapses previews in passes rendering into the previewed texture, whatever the camera targets', function () {
+        renderer.draw(texture, 0.25, 0.125, 0.5, 0.25);
+        const [instance] = layer.meshInstances;
+        const camera = new Camera(app.graphicsDevice);
+        camera.frustumCulling = false;
+        const toTexture = new RenderTarget({ colorBuffer: texture, depth: false });
+        const toOther = new RenderTarget({ colorBuffer: other, depth: false });
+
+        // the placeholder exists before any pass runs: WebGPU rejects a first upload inside one
+        expect(renderer._colorPlaceholder).to.be.an.instanceOf(Texture);
+
+        // a camera frame or custom pass can render a camera whose own target is null into the texture
+        renderLayer(camera, toTexture);
+        expect(layer.getCulledInstances(camera).transparent).to.include(instance);
+        expect(instance.node.getLocalScale().toArray()).to.deep.equal([0, 0, 1]);
+        const placeholder = instance.material.getParameter('colorMap').data;
+        expect(placeholder).to.not.equal(texture);
+        expect(placeholder.format).to.equal(PIXELFORMAT_RGBA8);
+
+        renderLayer(camera, toOther);
+        expect(instance.node.getLocalScale().toArray()).to.deep.equal([1, -0.5, 1]);
+        expect(instance.material.getParameter('colorMap').data).to.equal(texture);
+
+        renderLayer(camera, app.graphicsDevice.backBuffer);
+        expect(instance.node.getLocalScale().toArray()).to.deep.equal([1, -0.5, 1]);
+
+        toTexture.destroy();
+        toOther.destroy();
+    });
+
+    it('treats every color, resolve and depth attachment as rendering into the texture', function () {
+        const depth = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_DEPTH, mipmaps: false, minFilter: FILTER_NEAREST, magFilter: FILTER_NEAREST });
+        const third = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+        renderer.draw(texture, 0, 0, 1, 1);
+        renderer.draw(depth, 0, 0, 1, 1);
+        const [color, raw] = layer.meshInstances;
+        const camera = new Camera(app.graphicsDevice);
+
+        // the null device has no multisampling, so stand in for a target resolving its second attachment
+        const resolveLater = new RenderTarget({ colorBuffers: [other, third], depth: false });
+        sinon.stub(resolveLater, 'getResolveBuffer').callsFake(index => (index === 1 ? texture : null));
+        renderLayer(camera, resolveLater);
+        expect(color.node.getLocalScale().x).to.equal(0);
+        expect(raw.node.getLocalScale().x).to.equal(2);
+
+        const depthTarget = new RenderTarget({ colorBuffer: other, depthBuffer: depth });
+        renderLayer(camera, depthTarget);
+        expect(color.node.getLocalScale().x).to.equal(2);
+        expect(raw.node.getLocalScale().x).to.equal(0);
+        // the depth shader binds a depth texture, so its placeholder is one too
+        expect(raw.material.getParameter('colorMap').data.format).to.equal(PIXELFORMAT_DEPTH);
+
+        resolveLater.destroy();
+        depthTarget.destroy();
+        depth.destroy();
+        third.destroy();
+    });
+
+    it('draws only with the selected camera, and forgets the texture with the frame', function () {
         renderer.draw(texture, 0, 0, 1, 1);
         renderer.sceneDepth(0, 0, 1, 1);
         const [preview, depth] = layer.meshInstances;
-        const screen = new Camera(app.graphicsDevice);
-        const toTexture = new Camera(app.graphicsDevice);
-        toTexture.renderTarget = new RenderTarget({ colorBuffer: texture, depth: false });
-        const toOther = new Camera(app.graphicsDevice);
-        toOther.renderTarget = new RenderTarget({ colorBuffer: other, depth: false });
+        const selected = new Camera(app.graphicsDevice);
+        const another = new Camera(app.graphicsDevice);
+        const backBuffer = app.graphicsDevice.backBuffer;
 
-        expect(preview._isVisible(screen)).to.equal(true);
-        expect(preview._isVisible(toTexture)).to.equal(false);
-        expect(preview._isVisible(toOther)).to.equal(true);
-        expect(depth._isVisible(toTexture)).to.equal(true);
-
-        // a selected camera is the only one left drawing
-        renderer.camera = /** @type {any} */ ({ camera: toOther });
-        expect(preview._isVisible(screen)).to.equal(false);
-        expect(preview._isVisible(toOther)).to.equal(true);
-        renderer.camera = /** @type {any} */ ({ camera: toTexture });
-        expect(preview._isVisible(toTexture)).to.equal(false);
+        renderer.camera = /** @type {any} */ ({ camera: selected });
+        renderLayer(another, backBuffer);
+        expect(preview.node.getLocalScale().x).to.equal(0);
+        expect(depth.node.getLocalScale().x).to.equal(0);
+        expect(depth.material.getParameter('colorMap').data).to.equal(null);
+        renderLayer(selected, backBuffer);
+        expect(preview.node.getLocalScale().x).to.equal(2);
+        expect(depth.node.getLocalScale().x).to.equal(2);
 
         // the check follows the texture the slot shows on the next frame
+        const toTexture = new RenderTarget({ colorBuffer: texture, depth: false });
         app.fire('postrender');
         renderer.camera = null;
         renderer.draw(other, 0, 0, 1, 1);
-        expect(preview._isVisible(toTexture)).to.equal(true);
-        expect(preview._isVisible(toOther)).to.equal(false);
-
-        toTexture.renderTarget.destroy();
-        toOther.renderTarget.destroy();
+        renderLayer(selected, toTexture);
+        expect(preview.node.getLocalScale().x).to.equal(2);
+        expect(preview.material.getParameter('colorMap').data).to.equal(other);
+        toTexture.destroy();
     });
 
     it('reuses slots by submission order with unique materials and a shared mesh', function () {

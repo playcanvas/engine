@@ -1,10 +1,11 @@
 import { Debug } from '../../core/debug.js';
 import {
     CULLFACE_NONE, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
-    PIXELFORMAT_R8, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PRIMITIVE_TRISTRIP,
-    isIntegerPixelFormat, isSrgbPixelFormat
+    PIXELFORMAT_R8, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8,
+    PRIMITIVE_TRISTRIP, isIntegerPixelFormat, isSrgbPixelFormat
 } from '../../platform/graphics/constants.js';
-import { BLEND_NORMAL } from '../../scene/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { BLEND_NORMAL, EVENT_PRERENDER_LAYER } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { Mesh } from '../../scene/mesh.js';
@@ -18,7 +19,6 @@ const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
- * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { Camera } from '../../scene/camera.js'
  * @import { Layer } from '../../scene/layer.js'
  * @import { ShaderDesc } from '../../scene/materials/shader-material.js'
@@ -32,6 +32,8 @@ const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
  * @property {string} encoding - The last source encoding.
  * @property {Int32Array} channelIndices - Channels selected for this preview.
  * @property {Texture|null} texture - The texture shown this frame, or null.
+ * @property {number} scaleX - Node scale of the quad while it is drawn.
+ * @property {number} scaleY - Node scale of the quad while it is drawn.
  * @ignore
  */
 
@@ -49,9 +51,9 @@ const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
  * @returns {boolean} Whether the texture is one of the target's attachments.
  */
 function rendersInto(rt, texture) {
-    if (rt.depthBuffer === texture || rt.resolveBuffer === texture || rt.depthResolveBuffer === texture) return true;
+    if (rt.depthBuffer === texture || rt.depthResolveBuffer === texture) return true;
     for (let i = 0; i < rt.colorBufferCount; i++) {
-        if (rt.getColorBuffer(i) === texture) return true;
+        if (rt.getColorBuffer(i) === texture || rt.getResolveBuffer(i) === texture) return true;
     }
     return false;
 }
@@ -90,8 +92,11 @@ function rendersInto(rt, texture) {
  *
  * Every camera rendering the destination layer draws the previews, including cameras rendering
  * into a texture. Set {@link camera} to limit them to a single camera, typically the one rendering
- * to the screen. A camera whose render target is the texture being previewed never draws it:
- * sampling a texture while rendering into it is undefined on WebGL and an error on WebGPU.
+ * to the screen. A render pass whose target has the previewed texture among its attachments never
+ * draws that preview: sampling a texture while rendering into it is undefined on WebGL and an
+ * error on WebGPU. Both rules are applied as each layer is rendered, against the target the pass
+ * really renders into, so they hold for camera frames and custom render passes and do not depend
+ * on frustum culling.
  *
  * @example
  * const textures = new TextureRenderer(app);
@@ -126,6 +131,20 @@ class TextureRenderer {
 
     /** @private */
     _channels = 'rgb';
+
+    /**
+     * 1x1 textures bound in place of a preview's texture by passes that must not sample it.
+     *
+     * @type {Texture|null}
+     * @private
+     */
+    _colorPlaceholder = null;
+
+    /**
+     * @type {Texture|null}
+     * @private
+     */
+    _depthPlaceholder = null;
 
     /** @private */
     _channelIndices = new Int32Array([0, 1, 2]);
@@ -191,6 +210,7 @@ class TextureRenderer {
         app.on('postrender', this._endFrame, this);
         app.on('frameend', this._endFrame, this);
         app.on('destroy', this.destroy, this);
+        app.scene.on(EVENT_PRERENDER_LAYER, this._onPreRenderLayer, this);
     }
 
     /**
@@ -304,11 +324,8 @@ class TextureRenderer {
             const meshInstance = new MeshInstance(this._mesh, material, new GraphNode(`Debug texture ${pool.slots.length}`));
             meshInstance.castShadow = false;
             meshInstance.pick = false;
-            slot = { meshInstance, material, mode: '', encoding: '', channelIndices: new Int32Array(3), texture: null };
-            // culling decides per camera whether the quad is drawn, in place of a frustum test
-            const drawn = slot;
-            meshInstance.cull = true;
-            meshInstance.isVisibleFunc = camera => this._isDrawnBy(drawn, camera);
+            meshInstance.cull = false;
+            slot = { meshInstance, material, mode: '', encoding: '', channelIndices: new Int32Array(3), texture: null, scaleX: 1, scaleY: 1 };
             pool.slots.push(slot);
             pool.meshInstances.push(meshInstance);
             layer.addMeshInstances([meshInstance], true);
@@ -332,25 +349,86 @@ class TextureRenderer {
         }
         slot.material.setParameter('colorMap', texture);
         slot.texture = texture;
+        // the placeholder a pass may swap in has to exist, and be uploaded, before rendering starts
+        if (texture) this._placeholder(mode);
         const meshInstance = slot.meshInstance;
         meshInstance.node.setLocalPosition(2 * x + width - 1, 1 - 2 * y - height, 0);
-        meshInstance.node.setLocalScale(2 * width, -2 * height, 1);
+        slot.scaleX = 2 * width;
+        slot.scaleY = -2 * height;
+        meshInstance.node.setLocalScale(slot.scaleX, slot.scaleY, 1);
         meshInstance.visible = true;
     }
 
     /**
-     * Whether a camera draws a preview: the selected camera if one is set, and never a camera
+     * Whether a pass draws a preview: only the selected camera if one is set, and never a pass
      * rendering into the texture the preview samples.
      *
      * @param {TextureSlot} slot - The preview.
-     * @param {Camera} camera - The camera culling the layer.
-     * @returns {boolean} True to draw the preview for this camera.
+     * @param {Camera} camera - The camera rendering the layer.
+     * @param {RenderTarget|null} renderTarget - The target the pass renders into.
+     * @returns {boolean} True to draw the preview in this pass.
      * @private
      */
-    _isDrawnBy(slot, camera) {
+    _isDrawnBy(slot, camera, renderTarget) {
         if (this.camera && camera !== this.camera.camera) return false;
-        const rt = camera.renderTarget;
-        return !rt || !slot.texture || !rendersInto(rt, slot.texture);
+        return !slot.texture || !renderTarget || !rendersInto(renderTarget, slot.texture);
+    }
+
+    /**
+     * Applies the drawing rules for one layer of one render pass, right before it is rendered. A
+     * preview the pass must not draw is collapsed to nothing and samples a placeholder instead,
+     * so the pass rasterizes nothing and never binds the texture it renders into. Culling has
+     * already happened, so this is what keeps a pass from drawing an instance it culled in.
+     *
+     * @param {CameraComponent} cameraComponent - The camera rendering the layer.
+     * @param {Layer} layer - The layer about to be rendered.
+     * @private
+     */
+    _onPreRenderLayer(cameraComponent, layer) {
+        const pool = this._pools.get(layer);
+        if (!pool) return;
+        const camera = cameraComponent.camera;
+        const renderTarget = this._app.graphicsDevice.renderTarget;
+        for (let i = 0; i < pool.used; i++) {
+            const slot = pool.slots[i];
+            const drawn = this._isDrawnBy(slot, camera, renderTarget);
+            slot.meshInstance.node.setLocalScale(drawn ? slot.scaleX : 0, drawn ? slot.scaleY : 0, 1);
+            if (slot.texture) {
+                slot.material.setParameter('colorMap', drawn ? slot.texture : this._placeholder(slot.mode));
+            }
+        }
+    }
+
+    /**
+     * The 1x1 texture a mode's shader can bind in place of a preview's texture. Created and
+     * uploaded on first request, which must happen outside a render pass: WebGPU does not allow a
+     * first upload from inside one.
+     *
+     * @param {string} mode - The sampling mode of the preview being replaced.
+     * @returns {Texture} The placeholder.
+     * @private
+     */
+    _placeholder(mode) {
+        const depth = mode === 'depth';
+        let placeholder = depth ? this._depthPlaceholder : this._colorPlaceholder;
+        if (!placeholder) {
+            placeholder = new Texture(this._app.graphicsDevice, {
+                name: depth ? 'TextureRenderer depth placeholder' : 'TextureRenderer placeholder',
+                width: 1,
+                height: 1,
+                format: depth ? PIXELFORMAT_DEPTH : PIXELFORMAT_RGBA8,
+                mipmaps: false,
+                minFilter: FILTER_NEAREST,
+                magFilter: FILTER_NEAREST
+            });
+            placeholder.upload();
+            if (depth) {
+                this._depthPlaceholder = placeholder;
+            } else {
+                this._colorPlaceholder = placeholder;
+            }
+        }
+        return placeholder;
     }
 
     /** @private */
@@ -376,6 +454,11 @@ class TextureRenderer {
         this._app.off('postrender', this._endFrame, this);
         this._app.off('frameend', this._endFrame, this);
         this._app.off('destroy', this.destroy, this);
+        this._app.scene.off(EVENT_PRERENDER_LAYER, this._onPreRenderLayer, this);
+        this._colorPlaceholder?.destroy();
+        this._colorPlaceholder = null;
+        this._depthPlaceholder?.destroy();
+        this._depthPlaceholder = null;
         for (const [layer, pool] of this._pools) {
             layer.removeMeshInstances(pool.meshInstances, true);
             for (const slot of pool.slots) {
