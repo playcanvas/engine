@@ -1,4 +1,5 @@
 import files from './files.mjs';
+import Inspector from './inspector.mjs';
 import MiniStats from './ministats.mjs';
 import { fetchFile, importModule, clearImports, parseConfig, fire, win } from './runtime.mjs';
 import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
@@ -58,6 +59,13 @@ class ExampleLoader {
     _miniStatsEnabled = false;
 
     /**
+     * The last requested Inspector visibility, re-applied on hot reload.
+     *
+     * @type {boolean}
+     */
+    _inspectorEnabled = false;
+
+    /**
      * @type {Function[]}
      * @private
      */
@@ -97,6 +105,7 @@ class ExampleLoader {
         // here after a hot reload - otherwise the panel stays hidden until the button is toggled twice.
         if (!firstStart) {
             this.setMiniStats(this._miniStatsEnabled);
+            this.setInspector(this._inspectorEnabled);
         }
 
         // Updates controls UI
@@ -217,7 +226,8 @@ class ExampleLoader {
             // just notify to clean UI, but not during hot-reload
             fire('exampleLoading', {
                 showDeviceSelector: !this._config.NO_DEVICE_SELECTOR,
-                showMiniStats: !this._config.NO_MINISTATS
+                showMiniStats: !this._config.NO_MINISTATS,
+                showInspector: !this._config.NO_INSPECTOR
             });
         }
 
@@ -231,6 +241,9 @@ class ExampleLoader {
             // an example creating its own MiniStats (to pass custom options) hands it over here,
             // so that the UI toggle drives that instance
             MiniStats.adopt(module.miniStats);
+
+            // likewise for an example that creates its own Inspector
+            Inspector.adopt(module.inspector);
 
             // additional destroy handler for non-app resources
             if (typeof module.destroy === 'function') {
@@ -296,6 +309,19 @@ class ExampleLoader {
         fire('miniStats', { state: MiniStats.enable(this._app, enabled) });
     }
 
+    /**
+     * @param {boolean} enabled - The requested visibility of the inspector panel
+     */
+    setInspector(enabled = false) {
+        this._inspectorEnabled = enabled;
+        if (this._config.NO_INSPECTOR) {
+            // no button, but the example may own a panel whose state the UI still wants to know
+            fire('inspector', { state: Inspector.instance?.visible ?? false });
+            return;
+        }
+        fire('inspector', { state: Inspector.enable(this._app, enabled) });
+    }
+
     hotReload() {
         if (!this._allowRestart) {
             console.warn('Dropping restart while still restarting');
@@ -321,6 +347,7 @@ class ExampleLoader {
 
     destroy() {
         MiniStats.destroy();
+        Inspector.destroy();
         this._destroyApps();
         const handlers = this.destroyHandlers;
         this.destroyHandlers = [];

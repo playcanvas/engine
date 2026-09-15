@@ -1191,6 +1191,7 @@ body {
 }
 
 #menu #showMiniStatsButton.selected,
+#showInspectorButton.selected,
 #menu #showCreditsButton.selected {
     color: white;
     background-color: #F60;
