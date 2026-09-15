@@ -569,9 +569,9 @@ class ShadowRenderer {
 
             // Uniforms I (shadow): material
             material.setParameters(device);
-            renderer.setupMaterialBindGroup(material);
 
             // Uniforms II (shadow): meshInstance overrides
+            renderer.setupMaterialBindGroup(material, meshInstance);
             meshInstance.setParameters(device);
 
             const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);

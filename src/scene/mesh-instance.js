@@ -31,6 +31,16 @@ import { PickerId } from './picker-id.js';
  * @import { MorphInstance } from './morph-instance.js'
  * @import { CameraShaderParams } from './camera-shader-params.js'
  * @import { Scene } from './scene.js'
+ * @import { UniformFormat } from '../platform/graphics/uniform-buffer-format.js'
+ * @typedef {object} MeshInstanceParameter - A parameter of a mesh instance, overriding the value of
+ * the material for that instance.
+ * @property {string} name - The name of the uniform.
+ * @property {*} data - The value.
+ * @property {ScopeId|null} scopeId - The scope id, resolved on first use for scope parameters.
+ * @property {boolean} override - True when the uniform is stored in the material uniform buffer, so
+ * the parameter is applied through the mesh instance's copy of it rather than through the scope.
+ * @property {UniformFormat|null} uniformFormat - The format of the uniform in the material uniform
+ * buffer, resolved on first use for overrides.
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
  * @import { SkinInstance } from './skin-instance.js'
@@ -387,10 +397,81 @@ class MeshInstance {
     meshMetaData = null;
 
     /**
-     * @type {Record<string, {scopeId: ScopeId|null, data: any}>}
+     * The parameters overriding the material values for this mesh instance, by name. A parameter
+     * naming the uniform of a typed material property is applied through a per-instance copy of the
+     * material uniform buffer (an override), any other parameter is set on the scope before the
+     * draw. The two groups are also kept in dense lists for the render loop.
+     *
+     * @type {Map<string, MeshInstanceParameter>}
      * @ignore
      */
-    parameters = {};
+    parameters = new Map();
+
+    /**
+     * The parameters set on the scope before the draw.
+     *
+     * @type {MeshInstanceParameter[]}
+     * @private
+     */
+    _scopeParameters = [];
+
+    /**
+     * The parameters overriding uniforms of the material uniform buffer.
+     *
+     * @type {MeshInstanceParameter[]}
+     * @private
+     */
+    _materialOverrides = [];
+
+    /**
+     * The layout version of the material the parameters were last split against, see
+     * {@link Material#layoutVersion}.
+     *
+     * @type {number}
+     * @private
+     */
+    _materialLayoutVersion = -1;
+
+    /**
+     * Incremented when an override of the material uniform buffer is added, removed or changed.
+     *
+     * @type {number}
+     * @private
+     */
+    _materialOverridesVersion = 0;
+
+    /**
+     * The per-instance copy of the material uniform buffer with the overrides applied, created on
+     * first use, or null.
+     *
+     * @type {UniformBuffer|null}
+     * @private
+     */
+    _materialUniformBuffer = null;
+
+    /**
+     * The bind group holding {@link MeshInstance#_materialUniformBuffer}.
+     *
+     * @type {BindGroup|null}
+     * @private
+     */
+    _materialBindGroup = null;
+
+    /**
+     * The material uniform data version the copy was last synchronized with.
+     *
+     * @type {number}
+     * @private
+     */
+    _syncedMaterialDataVersion = -1;
+
+    /**
+     * The overrides version the copy was last synchronized with.
+     *
+     * @type {number}
+     * @private
+     */
+    _syncedOverridesVersion = -1;
 
     /**
      * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
@@ -852,6 +933,9 @@ class MeshInstance {
 
         this._material = material;
 
+        // which parameters override the material uniform buffer depends on the material
+        this._rebuildParameterLists();
+
         if (material) {
 
             // Record that the material is referenced by this mesh instance
@@ -1062,6 +1146,8 @@ class MeshInstance {
         this.morphInstance = null;
 
         this.clearShaders();
+
+        this._destroyMaterialUniformBuffer();
 
         // make sure material clears references to this meshInstance
         this.material = null;
@@ -1315,7 +1401,10 @@ class MeshInstance {
 
     // Parameter management
     clearParameters() {
-        this.parameters = {};
+        this.parameters.clear();
+        this._scopeParameters.length = 0;
+        this._materialOverrides.length = 0;
+        this._materialOverridesVersion++;
     }
 
     getParameters() {
@@ -1330,7 +1419,7 @@ class MeshInstance {
      * name is set on this mesh instance.
      */
     getParameter(name) {
-        return this.parameters[name];
+        return this.parameters.get(name);
     }
 
     /**
@@ -1346,19 +1435,26 @@ class MeshInstance {
             if (arguments[2] !== undefined) {
                 Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
             }
-            if (this._material?.propertyDescriptors?.some(property => property.uniformName === name)) {
-                Debug.warnOnce(`MeshInstance#setParameter: '${name}' is stored in the material uniform buffer and cannot be overridden per mesh instance yet, the value is ignored. Set the material property instead.`, this);
-            }
         });
 
-        const param = this.parameters[name];
+        const param = this.parameters.get(name);
         if (param) {
             param.data = data;
+
+            // a new value for an override of the material uniform buffer
+            if (param.override) {
+                this._materialOverridesVersion++;
+            }
         } else {
-            this.parameters[name] = {
+            const parameter = {
+                name: name,
+                data: data,
                 scopeId: null,
-                data: data
+                override: false,
+                uniformFormat: null
             };
+            this.parameters.set(name, parameter);
+            this._addParameter(parameter);
         }
     }
 
@@ -1397,27 +1493,141 @@ class MeshInstance {
      * @param {string} name - The name of the parameter to delete.
      */
     deleteParameter(name) {
-        if (this.parameters[name]) {
-            delete this.parameters[name];
+        const parameter = this.parameters.get(name);
+        if (parameter) {
+            this.parameters.delete(name);
+            const list = parameter.override ? this._materialOverrides : this._scopeParameters;
+            list.splice(list.indexOf(parameter), 1);
+            if (parameter.override) {
+                this._materialOverridesVersion++;
+            }
         }
     }
 
     /**
      * Used to apply parameters from this mesh instance into scope of uniforms, called internally
-     * by forward-renderer.
+     * by forward-renderer. Parameters overriding uniforms of the material uniform buffer are not
+     * part of this, they are applied by {@link MeshInstance#getMaterialBindGroup}.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @ignore
      */
     setParameters(device) {
-        const parameters = this.parameters;
-        for (const paramName in parameters) {
-            const parameter = parameters[paramName];
+        const parameters = this._scopeParameters;
+        for (let i = 0; i < parameters.length; i++) {
+            const parameter = parameters[i];
             if (!parameter.scopeId) {
-                parameter.scopeId = device.scope.resolve(paramName);
+                parameter.scopeId = device.scope.resolve(parameter.name);
             }
             parameter.scopeId.setValue(parameter.data);
         }
+    }
+
+    /**
+     * Adds a parameter to the scope list, or to the overrides of the material uniform buffer when
+     * its name is the uniform of a typed property of the material.
+     *
+     * @param {MeshInstanceParameter} parameter - The parameter.
+     * @private
+     */
+    _addParameter(parameter) {
+        parameter.override = !!this._material?.getUniformBufferProperty(parameter.name);
+        parameter.uniformFormat = null;
+        if (parameter.override) {
+            this._materialOverrides.push(parameter);
+            this._materialOverridesVersion++;
+        } else {
+            this._scopeParameters.push(parameter);
+        }
+    }
+
+    /**
+     * Splits the parameters between the scope and the material uniform buffer again, after the
+     * material or its set of typed properties changed.
+     *
+     * @private
+     */
+    _rebuildParameterLists() {
+        this._scopeParameters.length = 0;
+        this._materialOverrides.length = 0;
+        for (const parameter of this.parameters.values()) {
+            this._addParameter(parameter);
+        }
+        this._materialLayoutVersion = this._material?.layoutVersion ?? -1;
+        this._materialOverridesVersion++;
+    }
+
+    /**
+     * Returns the bind group to use at the material bind group index for this mesh instance: a
+     * per-instance copy of the material uniform buffer with the overriding parameters applied, or
+     * null when no parameter overrides a uniform of that buffer, in which case the material's own
+     * bind group is used. The copy is synchronized when the material data or the overrides changed.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {BindGroup|null} The bind group of the overriding copy, or null.
+     * @ignore
+     */
+    getMaterialBindGroup(device) {
+        const material = this._material;
+
+        // the set of typed properties of the material changed - split the parameters again
+        if (this._materialLayoutVersion !== material.layoutVersion) {
+            this._rebuildParameterLists();
+        }
+
+        const overrides = this._materialOverrides;
+        const materialUniformBuffer = material.uniformBuffer;
+        if (overrides.length === 0 || !materialUniformBuffer) {
+            return null;
+        }
+
+        // the copy follows the layout of the material buffer
+        const format = materialUniformBuffer.format;
+        let uniformBuffer = this._materialUniformBuffer;
+        if (!uniformBuffer || uniformBuffer.format !== format) {
+            this._destroyMaterialUniformBuffer();
+            uniformBuffer = new UniformBuffer(device, format, true);
+            this._materialUniformBuffer = uniformBuffer;
+            this._materialBindGroup = new BindGroup(device, material.uniformBufferBindGroup.format, uniformBuffer);
+            this._syncedMaterialDataVersion = -1;
+
+            // the uniform formats of the overrides belong to the previous layout
+            for (let i = 0; i < overrides.length; i++) {
+                overrides[i].uniformFormat = null;
+            }
+        }
+
+        Debug.assert(uniformBuffer.device === device, 'A mesh instance can only be rendered by the graphics device that created its material uniform buffer copy.', this);
+
+        if (this._syncedMaterialDataVersion !== material.uniformDataVersion || this._syncedOverridesVersion !== this._materialOverridesVersion) {
+            // the material values, with the overrides applied on top
+            uniformBuffer.storageFloat32.set(materialUniformBuffer.storageFloat32);
+            for (let i = 0; i < overrides.length; i++) {
+                const override = overrides[i];
+                override.uniformFormat ??= format.get(override.name);
+                Debug.assert(override.uniformFormat, `Uniform '${override.name}' is not part of the material uniform buffer.`, this);
+                uniformBuffer.setUniform(override.uniformFormat, override.data);
+            }
+            uniformBuffer.upload();
+            this._syncedMaterialDataVersion = material.uniformDataVersion;
+            this._syncedOverridesVersion = this._materialOverridesVersion;
+        }
+
+        // (re)built when dirty: on creation, which needs the uploaded buffer, and after a lost context
+        this._materialBindGroup.update();
+        return this._materialBindGroup;
+    }
+
+    /**
+     * Releases the per-instance copy of the material uniform buffer.
+     *
+     * @private
+     */
+    _destroyMaterialUniformBuffer() {
+        this._materialBindGroup?.destroy();
+        this._materialBindGroup = null;
+        this._materialUniformBuffer?.destroy();
+        this._materialUniformBuffer = null;
     }
 
     /**
