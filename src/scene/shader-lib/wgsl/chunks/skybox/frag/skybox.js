@@ -4,9 +4,13 @@ export default /* wgsl */`
     #include "envProcPS"
     #include "gammaPS"
     #include "tonemappingPS"
+    #include "sceneTexturesPS"
+
+    #if defined(PREPASS_PASS) || (defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH))
+        varying vLinearDepth: f32;
+    #endif
 
     #ifdef PREPASS_PASS
-        varying vLinearDepth: f32;
         #include "floatAsUintPS"
     #endif
 
@@ -120,6 +124,10 @@ export default /* wgsl */`
             }
             
             output.color = vec4f(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
+
+            #if defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH)
+                writeSceneTextureDepth(&output, input.vLinearDepth, 1.0);
+            #endif
 
         #endif
 
