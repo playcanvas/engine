@@ -35,6 +35,7 @@ import {
     TEXTURETYPE_RGBP,
     TONEMAP_ACES,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     createGraphicsDevice
 } from 'playcanvas';
@@ -83,6 +84,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -216,5 +219,5 @@ app.on('update', (dt) => {
     material.setParameter('uSoftening', data.get('data.softness') ? 50 : 1000);
 
     // Debug rendering of the depth texture in the corner
-    app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
+    textures.sceneDepth(0.725, 0.725, 0.25, 0.25);
 });

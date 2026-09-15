@@ -58,6 +58,7 @@ import {
     TRACEID_BUFFERS,
     TRACEID_TEXTURES,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Tracing,
     TranslateGizmo,
@@ -122,6 +123,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -815,8 +818,7 @@ data.on('logBuffers', () => {
 app.on('update', () => {
     // debug display of the relighting texture
     if (data.get('debugRt') && relighting.texture) {
-        // @ts-ignore engine-tsd
-        app.drawTexture(0.6, -0.6, 0.7, 0.7, relighting.texture);
+        textures.draw(relighting.texture, 0.625, 0.625, 0.35, 0.35);
     }
 
     // Log textures for one frame if requested

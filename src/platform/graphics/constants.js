@@ -2361,11 +2361,12 @@ export const TEXPROPERTY_ALL = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
 
 // indices of commonly used bind groups, sorted from the least commonly changing to avoid internal rebinding
 export const BINDGROUP_VIEW = 0;        // view bind group, textures, samplers and uniforms
-export const BINDGROUP_MESH = 1;        // mesh bind group - textures and samplers
-export const BINDGROUP_MESH_UB = 2;     // mesh bind group - a single uniform buffer
+export const BINDGROUP_MATERIAL = 1;    // material bind group - reserved for the material uniform buffer and textures, bound empty until materials own one
+export const BINDGROUP_MESH = 2;        // mesh bind group - textures and samplers
+export const BINDGROUP_MESH_UB = 3;     // mesh bind group - a single uniform buffer
 
 // names of bind groups
-export const bindGroupNames = ['view', 'mesh', 'mesh_ub'];
+export const bindGroupNames = ['view', 'material', 'mesh', 'mesh_ub'];
 
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';

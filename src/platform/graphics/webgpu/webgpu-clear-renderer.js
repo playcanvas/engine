@@ -4,7 +4,7 @@ import { BlendState } from '../blend-state.js';
 import {
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_MESH_UB
+    BINDGROUP_MESH_UB, BINDGROUP_MATERIAL
 } from '../constants.js';
 import { Shader } from '../shader.js';
 import { DynamicBindGroup } from '../bind-group.js';
@@ -76,6 +76,9 @@ class WebgpuClearRenderer {
 
             // not using mesh bind group
             device.setBindGroup(BINDGROUP_MESH, device.emptyBindGroup);
+
+            // not using material bind group
+            device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
 
             // setup clear color
             let blendState;

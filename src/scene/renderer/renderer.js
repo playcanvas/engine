@@ -11,7 +11,7 @@ import {
     BINDGROUP_MESH, BINDGROUP_VIEW,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT, UNIFORMTYPE_UINT,
     CULLFACE_NONE,
-    BINDGROUP_MESH_UB,
+    BINDGROUP_MESH_UB, BINDGROUP_MATERIAL,
     FRONTFACE_CCW,
     FRONTFACE_CW
 } from '../../platform/graphics/constants.js';
@@ -756,6 +756,12 @@ class Renderer {
         const { device } = this;
         const ub = this.getViewUniformBuffer(viewUniformFormat);
 
+        // the material bind group is reserved for the material uniform buffer, which no material
+        // owns yet - bind it empty so the pipeline layout has no gap at its index
+        if (device.usesMeshBindGroups) {
+            device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
+        }
+
         if (viewList) {
 
             // multiview: set up a dynamic bind group + offset per view, captured for per-view
@@ -779,7 +785,7 @@ class Renderer {
     setupMeshUniformBuffers(shaderInstance) {
 
         const device = this.device;
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
 
             // update mesh bind group / uniform buffer
             const meshBindGroup = shaderInstance.getBindGroup(device);

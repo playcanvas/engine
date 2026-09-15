@@ -183,12 +183,19 @@ class Layer {
     // --- Mesh instances & shadow casters ---
 
     /**
-     * Mesh instances assigned to this layer.
+     * Cached mesh instances, rebuilt from the set after removals.
      *
      * @type {MeshInstance[]}
-     * @ignore
+     * @private
      */
-    meshInstances = [];
+    _meshInstances = [];
+
+    /**
+     * Whether both membership caches need rebuilding from their sets.
+     *
+     * @private
+     */
+    _meshInstancesDirty = false;
 
     /**
      * Mesh instances assigned to this layer, stored in a set.
@@ -199,12 +206,12 @@ class Layer {
     meshInstancesSet = new Set();
 
     /**
-     * Shadow casting instances assigned to this layer.
+     * Cached shadow casters, rebuilt from the set after removals.
      *
      * @type {MeshInstance[]}
-     * @ignore
+     * @private
      */
-    shadowCasters = [];
+    _shadowCasters = [];
 
     /**
      * Shadow casting instances assigned to this layer, stored in a set.
@@ -392,6 +399,57 @@ class Layer {
         if (this._enabled && this.onEnable) {
             this.onEnable();
         }
+    }
+
+    /**
+     * Mesh instances assigned to this layer. The cached array is refreshed on access after
+     * removals; callers should use the layer's add/remove methods to change membership.
+     *
+     * @type {MeshInstance[]}
+     * @ignore
+     */
+    get meshInstances() {
+        if (this._meshInstancesDirty) {
+            this._updateMeshInstanceCaches();
+        }
+        return this._meshInstances;
+    }
+
+    /**
+     * Shadow casting instances assigned to this layer. The cached array is refreshed on access
+     * after removals; callers should use the layer's add/remove methods to change membership.
+     *
+     * @type {MeshInstance[]}
+     * @ignore
+     */
+    get shadowCasters() {
+        if (this._meshInstancesDirty) {
+            this._updateMeshInstanceCaches();
+        }
+        return this._shadowCasters;
+    }
+
+    /** @private */
+    _updateMeshInstanceCaches() {
+        let index = 0;
+        for (const meshInstance of this.meshInstancesSet) {
+            this._meshInstances[index++] = meshInstance;
+        }
+        this._meshInstances.length = index;
+
+        index = 0;
+        for (const meshInstance of this.shadowCastersSet) {
+            this._shadowCasters[index++] = meshInstance;
+        }
+        this._shadowCasters.length = index;
+        this._meshInstancesDirty = false;
+    }
+
+    /** @private */
+    _clearMeshInstanceCaches() {
+        // Release removed instances even if the layer is never rendered or read again.
+        this._meshInstances.length = 0;
+        this._shadowCasters.length = 0;
     }
 
     /**
@@ -604,14 +662,15 @@ class Layer {
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
 
-        const destMeshInstances = this.meshInstances;
+        // Adds do not dirty the caches: append while they are clean, or update only the set if a
+        // removal already dirtied them. Either getter then rebuilds both arrays with those additions.
+        const destMeshInstances = this._meshInstancesDirty ? null : this._meshInstances;
         const destMeshInstancesSet = this.meshInstancesSet;
 
-        // add mesh instances to the layer's array and the set
         for (let i = 0; i < meshInstances.length; i++) {
             const mi = meshInstances[i];
             if (!destMeshInstancesSet.has(mi)) {
-                destMeshInstances.push(mi);
+                destMeshInstances?.push(mi);
                 destMeshInstancesSet.add(mi);
                 _tempMaterials.add(mi.material);
             }
@@ -649,7 +708,6 @@ class Layer {
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
 
-        const destMeshInstances = this.meshInstances;
         const destMeshInstancesSet = this.meshInstancesSet;
 
         // mesh instances
@@ -657,18 +715,19 @@ class Layer {
             const mi = meshInstances[i];
 
             // remove from mesh instances list
-            if (destMeshInstancesSet.has(mi)) {
-                destMeshInstancesSet.delete(mi);
-                const j = destMeshInstances.indexOf(mi);
-                if (j >= 0) {
-                    destMeshInstances.splice(j, 1);
-                }
+            if (destMeshInstancesSet.delete(mi)) {
+                this._meshInstancesDirty = true;
             }
         }
 
         // shadow casters
         if (!skipShadowCasters) {
             this.removeShadowCasters(meshInstances);
+        }
+
+        // The input can alias either cache, so consume it for both sets before clearing arrays.
+        if (this._meshInstancesDirty) {
+            this._clearMeshInstanceCaches();
         }
     }
 
@@ -679,14 +738,14 @@ class Layer {
      * @param {MeshInstance[]} meshInstances - Array of {@link MeshInstance}.
      */
     addShadowCasters(meshInstances) {
-        const shadowCasters = this.shadowCasters;
+        const shadowCasters = this._meshInstancesDirty ? null : this._shadowCasters;
         const shadowCastersSet = this.shadowCastersSet;
 
         for (let i = 0; i < meshInstances.length; i++) {
             const mi = meshInstances[i];
             if (mi.castShadow && !shadowCastersSet.has(mi)) {
                 shadowCastersSet.add(mi);
-                shadowCasters.push(mi);
+                shadowCasters?.push(mi);
             }
         }
     }
@@ -699,18 +758,17 @@ class Layer {
      * this layer, they will be removed.
      */
     removeShadowCasters(meshInstances) {
-        const shadowCasters = this.shadowCasters;
         const shadowCastersSet = this.shadowCastersSet;
 
         for (let i = 0; i < meshInstances.length; i++) {
             const mi = meshInstances[i];
-            if (shadowCastersSet.has(mi)) {
-                shadowCastersSet.delete(mi);
-                const j = shadowCasters.indexOf(mi);
-                if (j >= 0) {
-                    shadowCasters.splice(j, 1);
-                }
+            if (shadowCastersSet.delete(mi)) {
+                this._meshInstancesDirty = true;
             }
+        }
+
+        if (this._meshInstancesDirty) {
+            this._clearMeshInstanceCaches();
         }
     }
 
@@ -721,12 +779,13 @@ class Layer {
      * instances to cast shadows. Defaults to false, which removes shadow casters as well.
      */
     clearMeshInstances(skipShadowCasters = false) {
-        this.meshInstances.length = 0;
+        this._meshInstances.length = 0;
         this.meshInstancesSet.clear();
 
         if (!skipShadowCasters) {
-            this.shadowCasters.length = 0;
+            this._shadowCasters.length = 0;
             this.shadowCastersSet.clear();
+            this._meshInstancesDirty = false;
         }
     }
 

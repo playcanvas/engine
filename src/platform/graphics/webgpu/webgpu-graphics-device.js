@@ -424,7 +424,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxAnisotropy = 16;
         this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
-        this.supportsUniformBuffers = true;
+        this.usesMeshBindGroups = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = true;
         this.supportsCompute = true;
@@ -1175,9 +1175,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         if (last) {
-            // empty array of vertex buffers
+            // Clear pending vertex buffers; encoder state remains bound until the pass ends.
             this.clearVertexBuffer();
-            this.pipeline = null;
         }
     }
 

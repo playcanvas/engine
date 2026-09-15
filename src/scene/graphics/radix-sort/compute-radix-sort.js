@@ -154,7 +154,10 @@ class ComputeRadixSort {
     /**
      * High-water mark for internal buffer allocation. Setting this raises
      * the floor for the next sort's allocation; lowering it requests
-     * shrinkage at the next sort call.
+     * shrinkage at the next sort call. Raising it above the current
+     * allocation releases the undersized result buffers, so
+     * {@link sortedIndices} and {@link sortedKeys} return `null` until the
+     * next sort has run at the new size.
      *
      * @type {number}
      */

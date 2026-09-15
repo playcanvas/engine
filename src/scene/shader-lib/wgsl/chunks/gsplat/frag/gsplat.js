@@ -3,7 +3,7 @@ export default /* wgsl */`
 #ifndef DITHER_NONE
     #include "bayerPS"
     #include "opacityDitherPS"
-    varying id: f32;
+    varying @interpolate(flat, either) id: f32;
 #endif
 
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
@@ -11,13 +11,13 @@ export default /* wgsl */`
 #endif
 
 #ifdef PREPASS_PASS
-    varying vLinearDepth: f32;
+    varying @interpolate(flat, either) vLinearDepth: f32;
     #include "floatAsUintPS"
 #endif
 
 // the prepass declares this varying above, and the two passes are never generated as one
 #if defined(SCENE_TEXTURE_DEPTH) && !defined(PREPASS_PASS)
-    varying vLinearDepth: f32;
+    varying @interpolate(flat, either) vLinearDepth: f32;
 #endif
 
 #include "sceneTexturesPS"
@@ -34,10 +34,10 @@ fn normExp(x: half) -> half {
 }
 
 varying gaussianUV: half2;
-varying gaussianColor: half4;
+varying @interpolate(flat, either) gaussianColor: half4;
 
 #if defined(GSPLAT_UNIFIED_ID) && defined(PICK_PASS)
-    varying @interpolate(flat) vPickId: u32;
+    varying @interpolate(flat, either) vPickId: u32;
 #endif
 
 #ifdef PICK_PASS

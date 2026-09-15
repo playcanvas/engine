@@ -142,7 +142,7 @@ class CacheEntry {
 }
 
 class WebgpuRenderPipeline extends WebgpuPipeline {
-    lookupHashes = new Uint32Array(16);
+    lookupHashes = new Uint32Array(17);
 
     constructor(device) {
         super(device);
@@ -184,7 +184,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
     get(primitive, vertexFormat0, vertexFormat1, ibFormat, shader, renderTarget, bindGroupFormats, blendState,
         depthState, cullMode, stencilEnabled, stencilFront, stencilBack, frontFace, alphaToCoverage) {
 
-        Debug.assert(bindGroupFormats.length <= 3);
+        Debug.assert(bindGroupFormats.length <= bindGroupNames.length);
 
         // ibFormat is used only for stripped primitives, clear it otherwise to avoid additional render pipelines
         const primitiveType = primitive.type;
@@ -194,9 +194,11 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         // all bind groups must be set as the WebGPU layout cannot have skipped indices. Not having a bind
         // group would assign incorrect slots to the following bind groups, causing a validation errors.
-        Debug.assert(bindGroupFormats[0], `BindGroup with index 0 [${bindGroupNames[0]}] is not set.`);
-        Debug.assert(bindGroupFormats[1], `BindGroup with index 1 [${bindGroupNames[1]}] is not set.`);
-        Debug.assert(bindGroupFormats[2], `BindGroup with index 2 [${bindGroupNames[2]}] is not set.`);
+        Debug.call(() => {
+            for (let i = 0; i < bindGroupNames.length; i++) {
+                Debug.assert(bindGroupFormats[i], `BindGroup with index ${i} [${bindGroupNames[i]}] is not set.`);
+            }
+        });
 
         // alpha to coverage is dropped when the render target cannot support it, so the effective
         // state is what needs to take part in the hash
@@ -215,11 +217,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         lookupHashes[8] = bindGroupFormats[0]?.key ?? 0;
         lookupHashes[9] = bindGroupFormats[1]?.key ?? 0;
         lookupHashes[10] = bindGroupFormats[2]?.key ?? 0;
-        lookupHashes[11] = stencilEnabled ? stencilFront.key : 0;
-        lookupHashes[12] = stencilEnabled ? stencilBack.key : 0;
-        lookupHashes[13] = ibFormat ?? 0;
-        lookupHashes[14] = frontFace;
-        lookupHashes[15] = alphaToCoverageEnabled ? 1 : 0;
+        lookupHashes[11] = bindGroupFormats[3]?.key ?? 0;
+        lookupHashes[12] = stencilEnabled ? stencilFront.key : 0;
+        lookupHashes[13] = stencilEnabled ? stencilBack.key : 0;
+        lookupHashes[14] = ibFormat ?? 0;
+        lookupHashes[15] = frontFace;
+        lookupHashes[16] = alphaToCoverageEnabled ? 1 : 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline

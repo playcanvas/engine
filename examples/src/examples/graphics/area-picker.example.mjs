@@ -25,6 +25,7 @@ import {
     StandardMaterial,
     TEXTURETYPE_RGBP,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Vec2,
     Vec3,
@@ -63,6 +64,8 @@ createOptions.resourceHandlers = [TextureHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -365,12 +368,10 @@ app.on('update', (/** @type {number} */ dt) => {
     // Display the picker's buffers side by side in the bottom right corner
     // color buffer (left) and depth buffer (right), with equal margins from edges
     if (picker.colorBuffer) {
-        // @ts-ignore engine-tsd
-        app.drawTexture(0.55, -0.77, 0.2, 0.2, picker.colorBuffer);
+        textures.draw(picker.colorBuffer, 0.725, 0.835, 0.1, 0.1);
     }
 
     if (picker.depthBuffer) {
-        // @ts-ignore engine-tsd
-        app.drawTexture(0.77, -0.77, 0.2, 0.2, picker.depthBuffer);
+        textures.draw(picker.depthBuffer, 0.835, 0.835, 0.1, 0.1);
     }
 });

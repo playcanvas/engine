@@ -43,15 +43,22 @@ class ComputeRadixSortBase {
     }
 
     /**
-     * Minimum element capacity for internal buffers. Set by the caller as a high-water mark to
-     * avoid reallocation churn when the workload shrinks; can be lowered to request shrinkage at
-     * the next sort call. Concrete backends size allocations using max(element count for the sort,
-     * `capacity`); reallocation is deferred until the next sort when that effective size changes.
-     * Updated by implementations after allocation.
+     * Backing store for {@link capacity}.
      *
      * @type {number}
+     * @protected
      */
-    capacity = 0;
+    _capacity = 0;
+
+    /**
+     * Element count the ping-pong key/value buffers were last allocated for (0 when unallocated).
+     * The buffers hold exactly this many `u32` entries, so a sort over more elements must
+     * reallocate even when its partition count is unchanged.
+     *
+     * @type {number}
+     * @protected
+     */
+    _allocatedElementCount = 0;
 
     /**
      * Current element count for the last or in-progress sort.
@@ -137,6 +144,29 @@ class ComputeRadixSortBase {
      * @protected
      */
     _indirectInfo = new Uint32Array(4);
+
+    /**
+     * Minimum element capacity for internal buffers. Set by the caller as a high-water mark to
+     * avoid reallocation churn when the workload shrinks; can be lowered to request shrinkage at
+     * the next sort call. Concrete backends size allocations using max(element count for the sort,
+     * `capacity`) and update it after allocation.
+     *
+     * Raising it above the current allocation releases the undersized element buffers, so
+     * {@link sortedIndices} and {@link sortedKeys} return `null` until the next sort allocates at
+     * the new size. Lowering it keeps the existing, larger buffers until the next sort.
+     *
+     * @type {number}
+     */
+    set capacity(value) {
+        this._capacity = value;
+        if (value > this._allocatedElementCount) {
+            this._destroyPingPongBuffers();
+        }
+    }
+
+    get capacity() {
+        return this._capacity;
+    }
 
     /**
      * Returns the sorted indices (or values, when `initialValues` was passed) buffer of the last
@@ -264,6 +294,7 @@ class ComputeRadixSortBase {
         this._values1 = new StorageBuffer(device, elementSize, usage);
         DebugHelper.setName(this._values0, 'ComputeRadixSort.values0');
         DebugHelper.setName(this._values1, 'ComputeRadixSort.values1');
+        this._allocatedElementCount = effectiveCount;
     }
 
     /**
@@ -282,6 +313,7 @@ class ComputeRadixSortBase {
         this._keys1 = null;
         this._values0 = null;
         this._values1 = null;
+        this._allocatedElementCount = 0;
     }
 
     /**

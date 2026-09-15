@@ -27,10 +27,14 @@ class WebgpuPipeline {
      */
     getPipelineLayout(bindGroupFormats) {
 
+        // the layout cannot skip an index - a gap would shift every following bind group to a
+        // wrong slot, so each index up to the highest bound group needs a format
         const bindGroupLayouts = [];
-        bindGroupFormats.forEach((format) => {
+        for (let i = 0; i < bindGroupFormats.length; i++) {
+            const format = bindGroupFormats[i];
+            Debug.assert(format, `Bind group format at index ${i} is not set, the pipeline layout cannot have a gap.`);
             bindGroupLayouts.push(format.bindGroupLayout);
-        });
+        }
 
         const desc = {
             bindGroupLayouts: bindGroupLayouts

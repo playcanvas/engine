@@ -11,6 +11,7 @@ export { Inspector } from './inspector/inspector.js';
 
 // RENDERERS
 export { OutlineRenderer } from './renderers/outline-renderer.js';
+export { TextureRenderer } from './renderers/texture-renderer.js';
 export {
     LINECAP_BUTT,
     LINECAP_ROUND,

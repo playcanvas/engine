@@ -2,7 +2,7 @@
 // function; the private value is copied to the output struct by the flush template
 // Placeholders: {name}, {type}, {funcName}
 export default /* wgsl */`
-varying @interpolate(flat) user_{name}: {type};
+varying @interpolate(flat, either) user_{name}: {type};
 var<private> _user_{name}: {type};
 fn set{funcName}(value: {type}) { _user_{name} = value; }
 `;

@@ -28,7 +28,7 @@ var<private> processOutput: FragmentOutput;
 #include "gsplatModifyVS"
 
 // Packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
-varying @interpolate(flat) vSubDraw: vec4i;
+varying @interpolate(flat, either) vSubDraw: vec4i;
 
 uniform uColorMultiply: vec3f;
 
