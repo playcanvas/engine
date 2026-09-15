@@ -79,10 +79,9 @@ describe('Inspector', function () {
         inspector.destroy();
     });
 
-    it('reports visibility changes as an event', function () {
-        const inspector = new Inspector(app);
+    it('reports visibility changes through the callback', function () {
         const states = [];
-        inspector.on('visible', state => states.push(state));
+        const inspector = new Inspector(app, { onVisibleChange: state => states.push(state) });
 
         inspector.visible = false;
         inspector.visible = false;
@@ -119,12 +118,12 @@ describe('Inspector', function () {
 
         // the leaf sits in a collapsed subtree until its parent is expanded
         expect(byName.leaf).to.be.undefined;
-        inspector.select(leaf);
+        /** @type {any} */ (inspector)._selectAny(leaf);
         const leafRow = [...panel(inspector).querySelectorAll('.pci-row')].find(row => row.querySelector('.pci-name').textContent === 'leaf');
         expect(leafRow).to.exist;
         expect(leafRow.classList.contains('pci-selected')).to.be.true;
         expect(leafRow.querySelector('.pci-toggle').style.visibility).to.equal('');
-        expect(inspector.selected).to.equal(leaf);
+        expect(/** @type {any} */ (inspector)._selected).to.equal(leaf);
 
         inspector.destroy();
     });
@@ -172,9 +171,10 @@ describe('Inspector', function () {
     });
 
     it('suspends physics drawing while the panel is hidden', function () {
-        const inspector = new Inspector(app, { physicsDraw: true });
-        const physics = /** @type {any} */ (inspector)._physics;
-        expect(inspector.physicsDraw).to.be.true;
+        const inspector = /** @type {any} */ (new Inspector(app));
+        inspector._physicsDraw = true;
+        const physics = inspector._physics;
+        expect(inspector._physicsDraw).to.be.true;
 
         app.fire('update', 0.016);
         expect(physics.enabled).to.be.true;
@@ -182,7 +182,7 @@ describe('Inspector', function () {
         inspector.visible = false;
         app.fire('update', 0.016);
         expect(physics.enabled).to.be.false;
-        expect(inspector.physicsDraw).to.be.true;
+        expect(inspector._physicsDraw).to.be.true;
 
         inspector.visible = true;
         app.fire('update', 0.016);
@@ -191,11 +191,12 @@ describe('Inspector', function () {
         inspector.destroy();
     });
 
-    it('exposes the physics draw options as booleans mirroring the checkboxes', function () {
-        const inspector = new Inspector(app, { physicsDrawOptions: { constraints: true, depthTest: true, range: 12 } });
-        const physics = /** @type {any} */ (inspector)._physics;
+    it('mirrors the physics draw checkboxes as boolean options', function () {
+        const inspector = /** @type {any} */ (new Inspector(app));
+        inspector._physicsDrawOptions = { constraints: true, depthTest: true, range: 12 };
+        const physics = inspector._physics;
 
-        expect(inspector.physicsDrawOptions).to.deep.equal({
+        expect(inspector._physicsDrawOptions).to.deep.equal({
             wireframe: true,
             aabb: false,
             contacts: false,
@@ -212,10 +213,10 @@ describe('Inspector', function () {
         expect(physics.range).to.equal(12);
 
         // a partial assignment leaves the other options alone
-        inspector.physicsDrawOptions = { wireframe: false, aabb: true };
-        expect(inspector.physicsDrawOptions.wireframe).to.be.false;
-        expect(inspector.physicsDrawOptions.aabb).to.be.true;
-        expect(inspector.physicsDrawOptions.constraints).to.be.true;
+        inspector._physicsDrawOptions = { wireframe: false, aabb: true };
+        expect(inspector._physicsDrawOptions.wireframe).to.be.false;
+        expect(inspector._physicsDrawOptions.aabb).to.be.true;
+        expect(inspector._physicsDrawOptions.constraints).to.be.true;
         expect(physics.mode).to.equal(2 | 2048);
 
         // the checkboxes drive the same state
@@ -223,7 +224,7 @@ describe('Inspector', function () {
         const toggle = /** @type {HTMLInputElement} */ (label.querySelector('input'));
         toggle.checked = true;
         toggle.dispatchEvent(new window.Event('change'));
-        expect(inspector.physicsDrawOptions.contacts).to.be.true;
+        expect(inspector._physicsDrawOptions.contacts).to.be.true;
         expect(physics.mode & 8).to.equal(8);
 
         inspector.destroy();
@@ -246,7 +247,8 @@ describe('Inspector', function () {
         app.root.addChild(crate);
         app.systems.rigidbody = { store: { [crate.guid]: { entity: crate } } };
 
-        const inspector = new Inspector(app, { physicsDraw: true });
+        const inspector = /** @type {any} */ (new Inspector(app));
+        inspector._physicsDraw = true;
         [...panel(inspector).querySelectorAll('.pci-tab')].find(tab => tab.textContent === 'Physics').click();
 
         const row = [...panel(inspector).querySelectorAll('.pci-lrow')].find(r => r.textContent.includes('crate'));
@@ -272,7 +274,7 @@ describe('Inspector', function () {
         expect(rebuilt.flags).to.equal(1);
 
         // the master switch disables the per-body checkboxes
-        inspector.physicsDraw = false;
+        inspector._physicsDraw = false;
         const rowOff = [...panel(inspector).querySelectorAll('.pci-lrow')].find(r => r.textContent.includes('crate'));
         expect(/** @type {HTMLInputElement} */ (rowOff.querySelector('.pci-cell-toggle')).disabled).to.be.true;
 
@@ -291,10 +293,10 @@ describe('Inspector', function () {
             }
         });
 
-        const first = new Inspector(app, { storageKey: 'test-inspector' });
-        first.physicsDraw = true;
-        first.physicsDrawOptions = { contacts: true, range: 5 };
-        /** @type {any} */ (first)._setWidth(600);
+        const first = /** @type {any} */ (new Inspector(app, { storageKey: 'test-inspector' }));
+        first._physicsDraw = true;
+        first._physicsDrawOptions = { contacts: true, range: 5 };
+        first._setWidth(600);
         [...panel(first).querySelectorAll('.pci-tab')].find(tab => tab.textContent === 'Frame graph').click();
         first.destroy();
 
@@ -302,19 +304,19 @@ describe('Inspector', function () {
         const saved = JSON.parse(stored['test-inspector']);
         expect(saved.tab).to.equal('passes');
 
-        // the constructor defaults lose to what the user left behind
-        const second = new Inspector(app, { storageKey: 'test-inspector', physicsDraw: false });
-        expect(second.physicsDraw).to.be.true;
-        expect(second.physicsDrawOptions.contacts).to.be.true;
-        expect(second.physicsDrawOptions.range).to.equal(5);
+        // what the user left behind comes back
+        const second = /** @type {any} */ (new Inspector(app, { storageKey: 'test-inspector' }));
+        expect(second._physicsDraw).to.be.true;
+        expect(second._physicsDrawOptions.contacts).to.be.true;
+        expect(second._physicsDrawOptions.range).to.equal(5);
         expect(panel(second).querySelector('.pci-panel').style.width).to.equal('600px');
         expect(panel(second).querySelector('.pci-tab.pci-active').textContent).to.equal('Frame graph');
         second.destroy();
 
         // nothing is kept without a key
         delete stored['test-inspector'];
-        const third = new Inspector(app, { storageKey: null });
-        third.physicsDraw = true;
+        const third = /** @type {any} */ (new Inspector(app, { storageKey: null }));
+        third._physicsDraw = true;
         third.destroy();
         expect(Object.keys(stored)).to.deep.equal([]);
     });

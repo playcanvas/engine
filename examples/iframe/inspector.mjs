@@ -24,7 +24,7 @@ export default class Inspector {
      */
     static _bind(instance) {
         Inspector.instance = instance;
-        instance.on('visible', state => fire('inspector', { state }));
+        instance.onVisibleChange = state => fire('inspector', { state });
     }
 
     /**

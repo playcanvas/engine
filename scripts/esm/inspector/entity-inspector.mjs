@@ -1,4 +1,4 @@
-import { Color, Inspector, Script } from 'playcanvas';
+import { Inspector, Script } from 'playcanvas';
 
 /**
  * Hosts an {@link Inspector} on an entity, so the debug panel can be added to a project from the
@@ -82,30 +82,6 @@ class EntityInspector extends Script {
     stepKey = 'F10';
 
     /**
-     * Outline the selected node in the viewport.
-     *
-     * @attribute
-     * @type {boolean}
-     */
-    highlight = true;
-
-    /**
-     * The color of the viewport outline.
-     *
-     * @attribute
-     * @type {Color}
-     */
-    highlightColor = new Color(1, 0.55, 0.1);
-
-    /**
-     * Whether the physics world is drawn over the scene from the start.
-     *
-     * @attribute
-     * @type {boolean}
-     */
-    physicsDraw = false;
-
-    /**
      * @type {Inspector|null}
      * @private
      */
@@ -129,9 +105,6 @@ class EntityInspector extends Script {
             toggleKey: this.toggleKey,
             pauseKey: this.pauseKey,
             stepKey: this.stepKey,
-            highlight: this.highlight,
-            highlightColor: this.highlightColor,
-            physicsDraw: this.physicsDraw,
             lockedNode: this.entity
         });
 

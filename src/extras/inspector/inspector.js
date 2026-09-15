@@ -1,4 +1,3 @@
-import { EventHandler } from '../../core/event-handler.js';
 import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
@@ -36,16 +35,12 @@ import { styles } from './styles.js';
  * panel. Defaults to 'Backquote'. Empty disables the key.
  * @property {string} [pauseKey] - The key that pauses and resumes the app. Defaults to 'F9'.
  * @property {string} [stepKey] - The key that advances one frame while paused. Defaults to 'F10'.
- * @property {boolean} [highlight] - Whether the selected node is outlined in the viewport.
- * Defaults to true.
- * @property {Color} [highlightColor] - The color of the outline. Defaults to orange.
  * @property {GraphNode|null} [lockedNode] - A node whose enabled checkbox, and those of its
  * ancestors, are withheld. A script hosting the inspector passes its own entity so the panel
  * cannot switch itself off. Defaults to null.
- * @property {boolean} [physicsDraw] - Whether the physics world is drawn from the start. Defaults
- * to false.
- * @property {InspectorPhysicsDrawOptions} [physicsDrawOptions] - Which parts of the physics world
- * are drawn. Defaults to the wireframe only.
+ * @property {(visible: boolean) => void} [onVisibleChange] - Called with the new visibility
+ * whenever the panel is shown or hidden, whether through {@link Inspector#visible}, the toggle key
+ * or the panel's own close button.
  * @property {string|null} [storageKey] - The local storage key the panel's settings are kept
  * under, so they survive a reload or a restart of the app: the physics drawing switch and options,
  * the bodies excluded from it (by entity path), the active tab, the panel width and the GPU
@@ -57,6 +52,7 @@ import { styles } from './styles.js';
  * Which parts of the physics world the Physics tab draws. Each option is a checkbox on the tab.
  *
  * @typedef {object} InspectorPhysicsDrawOptions
+ * @ignore
  * @property {boolean} [wireframe] - Collision shapes, colored by activation state. Defaults to
  * true.
  * @property {boolean} [aabb] - Axis-aligned bounds of each body.
@@ -141,7 +137,7 @@ function isTextTarget(e) {
  *
  * ```javascript
  * const inspector = new Inspector(app, { dock: 'left' });
- * inspector.visible = false; // toggle with the backquote key
+ * inspector.visible = false; // show again with the backquote key
  * ```
  *
  * Default keys: backquote toggles the panel, F9 pauses and resumes, F10 steps one frame while
@@ -154,18 +150,15 @@ function isTextTarget(e) {
  *
  * @category Debug
  */
-class Inspector extends EventHandler {
+class Inspector {
     /**
-     * Fired when the panel is shown or hidden, whether through {@link visible}, the toggle key or
-     * the panel's own close button. The handler is passed the new visibility.
+     * Called with the new visibility whenever the panel is shown or hidden, whether through
+     * {@link visible}, the toggle key or the panel's own close button. Set from the
+     * {@link InspectorOptions#onVisibleChange} option, or assigned later.
      *
-     * @event
-     * @example
-     * inspector.on('visible', (visible) => {
-     *     console.log(`inspector ${visible ? 'shown' : 'hidden'}`);
-     * });
+     * @type {((visible: boolean) => void)|null}
      */
-    static EVENT_VISIBLE = 'visible';
+    onVisibleChange = null;
 
     /**
      * @type {AppBase}
@@ -181,9 +174,6 @@ class Inspector extends EventHandler {
 
     /** @private */
     _stepKey = 'F10';
-
-    /** @private */
-    _highlight = true;
 
     /**
      * @type {Color}
@@ -478,15 +468,13 @@ class Inspector extends EventHandler {
      * const inspector = new Inspector(app, { dock: 'left', width: 480 });
      */
     constructor(app, options = {}) {
-        super();
         this._app = app;
 
         if (options.toggleKey !== undefined) this._toggleKey = options.toggleKey;
         if (options.pauseKey !== undefined) this._pauseKey = options.pauseKey;
         if (options.stepKey !== undefined) this._stepKey = options.stepKey;
-        if (options.highlight !== undefined) this._highlight = options.highlight;
-        if (options.highlightColor) this._highlightColor.copy(options.highlightColor);
         this._lockedNode = options.lockedNode ?? null;
+        this.onVisibleChange = options.onVisibleChange ?? null;
         this._visible = options.visible ?? true;
         this._dock = options.dock === 'left' ? 'left' : 'right';
         this._width = Math.max(240, Math.min(1600, options.width ?? 420));
@@ -497,8 +485,8 @@ class Inspector extends EventHandler {
         this._hierarchy.setRoot(app.root);
         this._gpuWasEnabled = !!app.graphicsDevice.gpuProfiler?.enabled;
         this._physics = new AmmoDebugDraw(app);
-        this.physicsDrawOptions = { wireframe: true, ...options.physicsDrawOptions };
-        this.physicsDraw = !!options.physicsDraw;
+        this._physicsDrawOptions = { wireframe: true };
+        this._physicsDraw = false;
         this._setTab('hierarchy');
         this._storageKey = options.storageKey === undefined ? 'pc-inspector' : options.storageKey;
         this._loadSettings();
@@ -555,7 +543,7 @@ class Inspector extends EventHandler {
             this._applyVisibility();
             if (value) this._refresh();
         }
-        if (changed) this.fire(Inspector.EVENT_VISIBLE, value);
+        if (changed) this.onVisibleChange?.(value);
     }
 
     get visible() {
@@ -592,27 +580,18 @@ class Inspector extends EventHandler {
     }
 
     /**
-     * The node selected in the hierarchy, or null.
-     *
-     * @type {GraphNode|null}
-     */
-    get selected() {
-        return this._selected;
-    }
-
-    /**
-     * Whether the physics world is drawn over the scene while the panel is shown. The same as the
-     * Draw checkbox of the Physics tab. Hiding the panel suspends the drawing; showing it again
-     * resumes it.
+     * Whether the physics world is drawn over the scene while the panel is shown: the Draw checkbox
+     * of the Physics tab. Hiding the panel suspends the drawing; showing it again resumes it.
      *
      * @type {boolean}
+     * @private
      */
-    set physicsDraw(value) {
+    set _physicsDraw(value) {
         this._drawToggle.checked = !!value;
         this._applyPhysicsSettings();
     }
 
-    get physicsDraw() {
+    get _physicsDraw() {
         return this._drawToggle.checked;
     }
 
@@ -621,10 +600,9 @@ class Inspector extends EventHandler {
      * Assigning a partial object changes only the options it names.
      *
      * @type {InspectorPhysicsDrawOptions}
-     * @example
-     * inspector.physicsDrawOptions = { constraints: true, limits: true };
+     * @private
      */
-    set physicsDrawOptions(value) {
+    set _physicsDrawOptions(value) {
         for (const key of Object.keys(PHYSICS_FLAGS)) {
             if (value[key] !== undefined) this._physicsToggles[key].checked = !!value[key];
         }
@@ -633,7 +611,7 @@ class Inspector extends EventHandler {
         this._applyPhysicsSettings();
     }
 
-    get physicsDrawOptions() {
+    get _physicsDrawOptions() {
         /** @type {InspectorPhysicsDrawOptions} */
         const options = {};
         for (const key of Object.keys(PHYSICS_FLAGS)) {
@@ -642,16 +620,6 @@ class Inspector extends EventHandler {
         options.depthTest = this._depthToggle.checked;
         options.range = Math.max(0, parseFloat(this._rangeInput.value) || 0);
         return options;
-    }
-
-    /**
-     * Selects a node, revealing it in the hierarchy and showing its properties.
-     *
-     * @param {GraphNode|null} node - The node, or null to clear the selection.
-     */
-    select(node) {
-        if (node) this._setTab('hierarchy');
-        this._hierarchy.select(node);
     }
 
     /**
@@ -764,18 +732,16 @@ class Inspector extends EventHandler {
             this._properties.refresh();
         }
 
-        if (this._highlight) {
-            if (this._tab === 'hierarchy' && this._selected) {
-                this._drawHighlight(this._selected);
-            } else if (this._tab === 'physics') {
-                const entity = this._bodyList.selected;
-                if (entity) {
-                    this._wire.color.copy(this._highlightColor);
-                    this._wire.depthTest = false;
-                    const jointDrawn = drawJoint(this._wire, entity, this._highlightSize(entity));
-                    const shapeDrawn = drawCollisionShape(this._wire, entity);
-                    if (!jointDrawn && !shapeDrawn) this._drawHighlight(entity);
-                }
+        if (this._tab === 'hierarchy' && this._selected) {
+            this._drawHighlight(this._selected);
+        } else if (this._tab === 'physics') {
+            const entity = this._bodyList.selected;
+            if (entity) {
+                this._wire.color.copy(this._highlightColor);
+                this._wire.depthTest = false;
+                const jointDrawn = drawJoint(this._wire, entity, this._highlightSize(entity));
+                const shapeDrawn = drawCollisionShape(this._wire, entity);
+                if (!jointDrawn && !shapeDrawn) this._drawHighlight(entity);
             }
         }
     }
@@ -1052,9 +1018,9 @@ class Inspector extends EventHandler {
         if (!stored || typeof stored !== 'object') return;
 
         if (stored.physicsDrawOptions && typeof stored.physicsDrawOptions === 'object') {
-            this.physicsDrawOptions = stored.physicsDrawOptions;
+            this._physicsDrawOptions = stored.physicsDrawOptions;
         }
-        if (typeof stored.physicsDraw === 'boolean') this.physicsDraw = stored.physicsDraw;
+        if (typeof stored.physicsDraw === 'boolean') this._physicsDraw = stored.physicsDraw;
         if (Array.isArray(stored.hiddenBodies)) {
             this._pendingHiddenPaths = new Set(stored.hiddenBodies.filter(path => typeof path === 'string'));
         }
@@ -1083,8 +1049,8 @@ class Inspector extends EventHandler {
 
         try {
             Inspector._storage()?.setItem(this._storageKey, JSON.stringify({
-                physicsDraw: this.physicsDraw,
-                physicsDrawOptions: this.physicsDrawOptions,
+                physicsDraw: this._physicsDraw,
+                physicsDrawOptions: this._physicsDrawOptions,
                 hiddenBodies,
                 tab: this._tab,
                 width: this._width,
