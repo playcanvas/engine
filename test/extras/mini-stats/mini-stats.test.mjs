@@ -6,12 +6,10 @@ import { CpuTimer } from '../../../src/extras/mini-stats/cpu-timer.js';
 import { Graph } from '../../../src/extras/mini-stats/graph.js';
 import { MiniStats } from '../../../src/extras/mini-stats/mini-stats.js';
 import { StatsTimer } from '../../../src/extras/mini-stats/stats-timer.js';
+import { Entity } from '../../../src/framework/entity.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
-import { Camera } from '../../../src/scene/camera.js';
-import { SHADER_FORWARD } from '../../../src/scene/constants.js';
 import { Layer } from '../../../src/scene/layer.js';
-import { Culler } from '../../../src/scene/renderer/culler.js';
-import { ForwardRenderer } from '../../../src/scene/renderer/forward-renderer.js';
+import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('MiniStats', function () {
@@ -622,53 +620,55 @@ describe('MiniStats', function () {
         expect(second.meshInstances).to.have.length(0);
     });
 
-    it('prepares one overlay draw per frame across two cameras with precomputed visibility', function () {
-        stats = new MiniStats(app);
-        stats.postRender();
-        app.scene.fog = { type: 'none' };
-        const renderer = { device, scene: app.scene, _materialSwitches: 0 };
-        const culler = new Culler(renderer);
-        const left = new Camera(device);
-        const right = new Camera(device);
-        left.rect.set(0, 0, 0.5, 1);
-        right.rect.set(0.5, 0, 0.5, 1);
-        right.frustumCulling = false;
-        const layer = stats.drawLayer;
-        const meshInstance = stats.render2d.meshInstance;
-        // Keep real culling and draw preparation; only shader compilation needs a GPU.
-        stub(meshInstance, 'getShaderInstance').returns({});
-
-        const renderFrame = (cameras) => {
-            app.fire('prerender');
-            for (const camera of cameras) {
-                culler.cullMeshInstances(camera, layer.meshInstances, layer.getCulledInstances(camera));
-            }
+    it('renders one overlay per frame through the application pipeline across cameras', function () {
+        const renderApp = createApp();
+        try {
+            stats = new MiniStats(renderApp);
+            const left = new Entity('Left');
+            left.addComponent('camera', { priority: 0 });
+            left.camera.rect.set(0, 0, 0.5, 1);
+            renderApp.root.addChild(left);
+            const right = new Entity('Right');
+            right.addComponent('camera', { priority: 1, frustumCulling: false });
+            right.camera.rect.set(0.5, 0, 0.5, 1);
+            renderApp.root.addChild(right);
+            const meshInstance = stats.render2d.meshInstance;
             const draws = [];
-            for (const camera of cameras) {
-                for (const transparent of [false, true]) {
-                    app.scene.fire('prerender:layer', { camera }, layer, transparent);
-                    const culled = layer.getCulledInstances(camera);
-                    const prepared = ForwardRenderer.prototype.renderForwardPrepareMaterials.call(
-                        renderer, camera, null, transparent ? culled.transparent : culled.opaque,
-                        [[], [], []], layer, SHADER_FORWARD
-                    );
-                    if (prepared.drawCalls.includes(meshInstance)) draws.push(camera);
-                    app.scene.fire('postrender:layer', { camera }, layer, transparent);
+            // Keep the real frame graph, layer events, culling and shader preparation. Only GPU
+            // draw submission is replaced because this application uses the null graphics device.
+            stub(renderApp.renderer, 'renderForwardInternal').callsFake((camera, prepared) => {
+                for (const instance of prepared.drawCalls) {
+                    if (instance === meshInstance) draws.push(camera.node.name);
                 }
-            }
-            return draws;
-        };
+            });
+            const renderFrame = () => {
+                draws.length = 0;
+                renderApp.render();
+                return draws;
+            };
 
-        expect(renderFrame([left, right])).to.deep.equal([left]);
-        expect(renderFrame([right, left])).to.deep.equal([right]);
-        expect(renderFrame([])).to.have.length(0);
-        expect(renderFrame([left, right])).to.deep.equal([left]);
-        stats.enabled = false;
-        expect(renderFrame([left, right])).to.have.length(0);
-        stats.enabled = true;
-        stats.postRender();
-        expect(renderFrame([right, left])).to.deep.equal([right]);
-        expect(layer.meshInstances).to.deep.equal([meshInstance]);
+            // MiniStats prepares its geometry in postrender for the following frame.
+            expect(renderFrame()).to.deep.equal([]);
+            expect(renderFrame()).to.deep.equal(['Left']);
+            expect(renderFrame()).to.deep.equal(['Left']);
+            right.camera.priority = -1;
+            expect(renderFrame()).to.deep.equal(['Right']);
+            stats.enabled = false;
+            expect(renderFrame()).to.deep.equal([]);
+            stats.enabled = true;
+            expect(renderFrame()).to.deep.equal([]);
+            expect(renderFrame()).to.deep.equal(['Right']);
+            right.enabled = false;
+            expect(renderFrame()).to.deep.equal(['Left']);
+            left.enabled = false;
+            expect(renderFrame()).to.deep.equal([]);
+            left.enabled = true;
+            expect(renderFrame()).to.deep.equal(['Left']);
+            expect(stats.drawLayer.meshInstances).to.deep.equal([meshInstance]);
+        } finally {
+            renderApp.destroy();
+            stats = null;
+        }
     });
 
     it('releases event listeners and GPU resources when the application is destroyed', function () {
