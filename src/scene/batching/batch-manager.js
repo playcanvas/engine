@@ -860,7 +860,11 @@ class BatchManager {
             // Create meshInstance
             const meshInstance = new MeshInstance(mesh, material, this.rootNode);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
-            meshInstance.parameters = batch.origMeshInstances[0].parameters;
+            // copy the parameters through setParameter, which splits them between the scope and the
+            // material uniform buffer for the material of the batch
+            for (const [name, parameter] of batch.origMeshInstances[0].parameters) {
+                meshInstance.setParameter(name, parameter.data);
+            }
             meshInstance.layer = batch.origMeshInstances[0].layer;
             meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
             meshInstance.batching = true;
