@@ -238,6 +238,24 @@ const styles = /* css */ `
         font-size: 11px;
     }
 
+    .pci-note.pci-note-info {
+        color: #9aa0aa;
+    }
+
+    .pci-select {
+        font: inherit;
+        color: #e8eaee;
+        background: #14161a;
+        border: 1px solid #33363d;
+        border-radius: 3px;
+        padding: 1px 4px;
+        outline: none;
+    }
+
+    .pci-select:focus {
+        border-color: #ff8a20;
+    }
+
     .pci-check input {
         width: 12px;
         height: 12px;

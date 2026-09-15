@@ -2,7 +2,9 @@ import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { LAYERID_UI } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { TextureRenderer } from '../renderers/texture-renderer.js';
 import { WireRenderer } from '../renderers/wire-renderer.js';
 
 import { buildPassModel, captureFrameGraph, passRows } from './frame-graph-view.js';
@@ -13,7 +15,7 @@ import { buildNodeModel } from './node-model.js';
 import { AmmoDebugDraw, DEBUG_DRAW } from './physics-debug.js';
 import { bodyRows, drawCollisionShape, drawJoint, jointRows, physicsStats } from './physics-view.js';
 import { PropertyView } from './property-view.js';
-import { buildRenderTargetModel, renderTargetRows } from './render-target-view.js';
+import { buildRenderTargetModel, previewAttachments, previewSupport, renderTargetRows } from './render-target-view.js';
 import { styles } from './styles.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
@@ -353,6 +355,45 @@ class Inspector {
     _bodyList;
 
     /**
+     * Draws the selected render target's texture over the canvas, straight from the GPU.
+     *
+     * @type {TextureRenderer}
+     * @private
+     */
+    _textures;
+
+    /**
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _previewToggle;
+
+    /**
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _previewAttachment;
+
+    /**
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _previewChannels;
+
+    /**
+     * @type {HTMLElement}
+     * @private
+     */
+    _previewNote;
+
+    /**
+     * The attachment keys the selector currently offers, to rebuild it only when they change.
+     *
+     * @private
+     */
+    _previewKeys = '';
+
+    /**
      * @type {HTMLInputElement}
      * @private
      */
@@ -481,6 +522,7 @@ class Inspector {
         this._top = Math.max(0, options.top ?? 0);
 
         this._wire = new WireRenderer(app);
+        this._textures = new TextureRenderer(app);
         this._buildDom();
         this._hierarchy.setRoot(app.root);
         this._gpuWasEnabled = !!app.graphicsDevice.gpuProfiler?.enabled;
@@ -525,6 +567,7 @@ class Inspector {
         this._hiddenBodies.clear();
 
         if (this._popup) this._dockBack();
+        this._textures.destroy();
         this._host?.remove();
         this._host = null;
     }
@@ -744,6 +787,8 @@ class Inspector {
                 if (!jointDrawn && !shapeDrawn) this._drawHighlight(entity);
             }
         }
+
+        if (this._tab === 'targets') this._drawTargetPreview();
     }
 
     /**
@@ -835,7 +880,24 @@ class Inspector {
         const passList = el('div', 'pci-list');
         passPanel.append(passBar, passList);
 
+        // render targets: a live preview of the selected target, drawn over the canvas
+        const targetPanel = el('div', 'pci-listpanel');
+        const targetBar = el('div', 'pci-subbar');
+        this._previewToggle = this._makeToggle(targetBar, 'Preview',
+            'Draw the selected target\'s texture in the corner of the viewport, sampled on the GPU every frame');
+        this._previewToggle.checked = true;
+        this._previewAttachment = this._makeSelect(targetBar, 'Attachment', [['color0', 'color']]);
+        this._previewChannels = this._makeSelect(targetBar, 'Channels', [
+            ['rgb', 'color'], ['rrr', 'red'], ['ggg', 'green'], ['bbb', 'blue'], ['aaa', 'alpha']
+        ]);
+        this._previewNote = el('div', 'pci-note pci-note-info');
+        this._previewNote.style.display = 'none';
         const targetList = el('div', 'pci-list');
+        targetPanel.append(targetBar, this._previewNote, targetList);
+
+        for (const input of [this._previewToggle, this._previewAttachment, this._previewChannels]) {
+            input.addEventListener('change', () => this._saveSettings());
+        }
 
         // physics: a master switch, the options it governs, then the list of bodies
         const physicsPanel = el('div', 'pci-listpanel');
@@ -882,8 +944,8 @@ class Inspector {
         }
         this._rangeInput.addEventListener('input', () => this._applyPhysicsSettings());
 
-        this._panels = { hierarchy: tree, passes: passPanel, targets: targetList, physics: physicsPanel };
-        this._hierarchyEl.append(tabs, filter, tree, passPanel, targetList, physicsPanel);
+        this._panels = { hierarchy: tree, passes: passPanel, targets: targetPanel, physics: physicsPanel };
+        this._hierarchyEl.append(tabs, filter, tree, passPanel, targetPanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1030,6 +1092,10 @@ class Inspector {
             const profiler = this._app.graphicsDevice.gpuProfiler;
             if (profiler) profiler.enabled = stored.gpuTimings;
         }
+        if (stored.targetPreview && typeof stored.targetPreview === 'object') {
+            if (typeof stored.targetPreview.enabled === 'boolean') this._previewToggle.checked = stored.targetPreview.enabled;
+            if (typeof stored.targetPreview.channels === 'string') this._previewChannels.value = stored.targetPreview.channels;
+        }
         if (stored.tab in this._panels) this._setTab(stored.tab);
     }
 
@@ -1054,7 +1120,8 @@ class Inspector {
                 hiddenBodies,
                 tab: this._tab,
                 width: this._width,
-                gpuTimings: this._gpuToggle.checked
+                gpuTimings: this._gpuToggle.checked,
+                targetPreview: { enabled: this._previewToggle.checked, channels: this._previewChannels.value }
             }));
         } catch (e) {
             // storage unavailable or full: settings simply do not persist
@@ -1147,6 +1214,93 @@ class Inspector {
         }
         if (this._tab === 'physics') this._refreshLists(false);
         this._saveSettings();
+    }
+
+    /**
+     * @param {HTMLElement} parent - The bar to add the selector to.
+     * @param {string} label - The label.
+     * @param {[string, string][]} options - Value and label pairs.
+     * @returns {HTMLSelectElement} The selector.
+     * @private
+     */
+    _makeSelect(parent, label, options) {
+        const wrap = el('label', 'pci-check', label);
+        const select = /** @type {HTMLSelectElement} */ (document.createElement('select'));
+        select.className = 'pci-select';
+        this._fillSelect(select, options);
+        wrap.appendChild(select);
+        parent.appendChild(wrap);
+        return select;
+    }
+
+    /**
+     * @param {HTMLSelectElement} select - The selector.
+     * @param {[string, string][]} options - Value and label pairs.
+     * @private
+     */
+    _fillSelect(select, options) {
+        const previous = select.value;
+        select.textContent = '';
+        for (const [value, label] of options) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            select.appendChild(option);
+        }
+        if (options.some(([value]) => value === previous)) select.value = previous;
+    }
+
+    /**
+     * Draws the selected render target's texture in the free corner of the viewport, on the UI
+     * layer when the scene has one so post-processing leaves it alone. Runs every frame while the
+     * Render targets tab is active; the renderer only shows what is submitted that frame.
+     *
+     * @private
+     */
+    _drawTargetPreview() {
+        const rt = this._targetList.selected;
+        const device = this._app.graphicsDevice;
+        let note = '';
+
+        if (rt && this._previewToggle.checked) {
+            const attachments = previewAttachments(rt, device);
+            const keys = attachments.map(a => a.key).join(',');
+            if (keys !== this._previewKeys) {
+                this._previewKeys = keys;
+                this._fillSelect(this._previewAttachment, attachments.map(a => [a.key, a.label]));
+            }
+            const attachment = attachments.find(a => a.key === this._previewAttachment.value) ?? attachments[0];
+
+            if (!attachment) {
+                note = rt === device.backBuffer ? 'The backbuffer is the screen itself, there is nothing to preview.' : 'This target has no texture to preview.';
+            } else {
+                const support = previewSupport(attachment.texture, device);
+                if (!support.ok) {
+                    note = `Cannot preview the ${attachment.label} attachment: ${support.reason}.`;
+                } else {
+                    const texture = attachment.texture;
+                    // 30% of the viewport height, keeping the texture's aspect, in the corner the panel leaves free
+                    const margin = 0.02;
+                    const height = 0.3;
+                    const width = texture.height > 0 && device.width > 0 ?
+                        height * (texture.width / texture.height) * (device.height / device.width) : height;
+                    const right = this._dock === 'left' || !!this._popup;
+                    const x = right ? 1 - width - margin : margin;
+                    const y = 1 - height - margin;
+
+                    this._textures.layer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? null;
+                    this._textures.channels = this._previewChannels.value;
+                    this._textures.draw(texture, x, y, width, height);
+
+                    const channels = this._previewChannels.selectedOptions[0]?.textContent ?? this._previewChannels.value;
+                    note = `Previewing the ${attachment.label} attachment (${channels}) at the bottom ${right ? 'right' : 'left'} of the viewport.`;
+                }
+            }
+        }
+
+        if (this._previewNote.textContent !== note) this._previewNote.textContent = note;
+        const display = note ? '' : 'none';
+        if (this._previewNote.style.display !== display) this._previewNote.style.display = display;
     }
 
     /**

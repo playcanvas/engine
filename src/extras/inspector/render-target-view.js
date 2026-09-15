@@ -1,3 +1,10 @@
+import {
+    FILTER_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST,
+    PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
+    PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
+    isIntegerPixelFormat
+} from '../../platform/graphics/constants.js';
+
 import { describeValue } from './describe.js';
 import { attachmentsText, formatName, makeSection, passDisplayName, push, read, reflectRows } from './model.js';
 
@@ -166,4 +173,74 @@ function buildRenderTargetModel(rt, ctx) {
     return sections;
 }
 
-export { buildRenderTargetModel, renderTargetRows };
+/**
+ * A texture of a render target that the preview can sample.
+ *
+ * @typedef {object} PreviewAttachment
+ * @property {string} key - 'color0', 'color1' and so on, or 'depth'.
+ * @property {string} label - The label shown in the attachment selector.
+ * @property {Texture} texture - The texture to sample.
+ * @ignore
+ */
+
+/**
+ * The textures of a render target a preview can sample: each color attachment, using the resolve
+ * texture of the first when the target keeps explicit multisampled color buffers, and the depth
+ * buffer when it is a texture. The backbuffer has none: it is the screen itself.
+ *
+ * @param {RenderTarget} rt - The render target.
+ * @param {GraphicsDevice} device - The device.
+ * @returns {PreviewAttachment[]} The attachments, in selector order.
+ */
+function previewAttachments(rt, device) {
+    /** @type {PreviewAttachment[]} */
+    const attachments = [];
+    if (rt === device.backBuffer) return attachments;
+
+    const count = rt.colorBufferCount ?? 0;
+    for (let i = 0; i < count; i++) {
+        const texture = (i === 0 && rt.resolveBuffer) || rt.getColorBuffer(i);
+        if (texture) attachments.push({ key: `color${i}`, label: count > 1 ? `color ${i}` : 'color', texture });
+    }
+    if (rt.depthBuffer) attachments.push({ key: 'depth', label: 'depth', texture: rt.depthBuffer });
+    return attachments;
+}
+
+/**
+ * Mirrors the checks TextureRenderer applies before drawing, so the panel can say why a texture
+ * cannot be shown instead of letting the renderer warn once and draw nothing.
+ *
+ * @param {Texture|null} texture - The texture.
+ * @param {GraphicsDevice} device - The device.
+ * @returns {{ ok: boolean, reason: string }} Whether it can be previewed, and if not, why.
+ */
+function previewSupport(texture, device) {
+    if (!texture) return { ok: false, reason: 'no texture to sample' };
+    if (texture.cubemap) return { ok: false, reason: 'cube textures cannot be previewed' };
+    if (texture.volume) return { ok: false, reason: 'volume textures cannot be previewed' };
+    if (texture.arrayLength) return { ok: false, reason: 'texture arrays cannot be previewed' };
+    if (texture.samples > 1) return { ok: false, reason: 'multisampled textures cannot be previewed' };
+
+    const format = texture.format;
+    if (isIntegerPixelFormat(format)) return { ok: false, reason: 'integer formats cannot be previewed' };
+
+    const depth = format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16 || format === PIXELFORMAT_DEPTHSTENCIL;
+    if (depth && device.isWebGL2 && texture.compareOnRead) {
+        return { ok: false, reason: 'comparison depth textures cannot be previewed on WebGL2' };
+    }
+
+    const unfilterable = !device.textureFloatFilterable &&
+        (format === PIXELFORMAT_R32F || format === PIXELFORMAT_RG32F || format === PIXELFORMAT_RGB32F || format === PIXELFORMAT_RGBA32F);
+    if (device.isWebGL2 && (depth || unfilterable)) {
+        const minFilter = texture.minFilter;
+        const nearestMin = minFilter === FILTER_NEAREST || minFilter === FILTER_NEAREST_MIPMAP_NEAREST ||
+            (!texture.mipmaps && minFilter === FILTER_NEAREST_MIPMAP_LINEAR);
+        if (!nearestMin || texture.magFilter !== FILTER_NEAREST) {
+            return { ok: false, reason: `${depth ? 'depth' : 'float'} textures need nearest filtering to preview on WebGL2` };
+        }
+    }
+
+    return { ok: true, reason: '' };
+}
+
+export { buildRenderTargetModel, previewAttachments, previewSupport, renderTargetRows };

@@ -6,6 +6,10 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { captureFrameGraph } from '../../../src/extras/inspector/frame-graph-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
+import { previewAttachments, previewSupport } from '../../../src/extras/inspector/render-target-view.js';
+import {
+    FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8
+} from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -325,8 +329,61 @@ describe('Inspector', function () {
         const inspector = new Inspector(app);
         const tabs = [...panel(inspector).querySelectorAll('.pci-tab')];
         tabs.find(tab => tab.textContent === 'Physics').click();
-        expect(panel(inspector).querySelector('.pci-note').textContent).to.match(/No rigid body component system/);
+        const note = /** @type {any} */ (inspector)._panels.physics.querySelector('.pci-note');
+        expect(note.textContent).to.match(/No rigid body component system/);
         inspector.destroy();
+    });
+});
+
+describe('Inspector render target preview', function () {
+    const texture = (props = {}) => ({
+        cubemap: false,
+        volume: false,
+        arrayLength: 0,
+        samples: 1,
+        format: PIXELFORMAT_RGBA8,
+        compareOnRead: false,
+        minFilter: FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        mipmaps: false,
+        width: 256,
+        height: 128,
+        ...props
+    });
+    const webgl2 = { isWebGL2: true, textureFloatFilterable: false };
+    const webgpu = { isWebGL2: false, textureFloatFilterable: true };
+
+    it('lists the color attachments, the resolve texture first, and the depth texture', function () {
+        const color0 = texture();
+        const color1 = texture();
+        const resolve = texture();
+        const depth = texture({ format: PIXELFORMAT_DEPTH });
+        const device = /** @type {any} */ ({ backBuffer: {} });
+        const rt = /** @type {any} */ ({ colorBufferCount: 2, resolveBuffer: resolve, getColorBuffer: i => [color0, color1][i], depthBuffer: depth });
+
+        expect(previewAttachments(rt, device).map(a => [a.key, a.label, a.texture])).to.deep.equal([
+            ['color0', 'color 0', resolve], ['color1', 'color 1', color1], ['depth', 'depth', depth]
+        ]);
+        expect(previewAttachments(device.backBuffer, device)).to.deep.equal([]);
+    });
+
+    it('explains what the texture renderer cannot show', function () {
+        expect(previewSupport(texture(), webgl2).ok).to.be.true;
+        expect(previewSupport(texture({ cubemap: true }), webgpu).reason).to.match(/cube/);
+        expect(previewSupport(texture({ samples: 4 }), webgpu).reason).to.match(/multisampled/);
+        expect(previewSupport(texture({ format: PIXELFORMAT_R32U }), webgpu).reason).to.match(/integer/);
+
+        const shadowMap = texture({ format: PIXELFORMAT_DEPTH, compareOnRead: true, minFilter: FILTER_NEAREST, magFilter: FILTER_NEAREST });
+        expect(previewSupport(shadowMap, webgl2).reason).to.match(/comparison/);
+        expect(previewSupport(shadowMap, webgpu).ok).to.be.true;
+
+        const rawDepth = texture({ format: PIXELFORMAT_DEPTH });
+        expect(previewSupport(rawDepth, webgl2).reason).to.match(/nearest filtering/);
+        expect(previewSupport({ ...rawDepth, minFilter: FILTER_NEAREST, magFilter: FILTER_NEAREST }, webgl2).ok).to.be.true;
+
+        const float = texture({ format: PIXELFORMAT_RGBA32F });
+        expect(previewSupport(float, webgl2).reason).to.match(/float/);
+        expect(previewSupport(float, webgpu).ok).to.be.true;
     });
 });
 
