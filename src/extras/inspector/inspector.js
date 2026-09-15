@@ -1252,8 +1252,10 @@ class Inspector {
 
     /**
      * Draws the selected render target's texture in the free corner of the viewport, on the UI
-     * layer when the scene has one so post-processing leaves it alone. Runs every frame while the
-     * Render targets tab is active; the renderer only shows what is submitted that frame.
+     * layer: it renders after a camera frame's post-processing and into the backbuffer, so
+     * previewing the scene's own color target never samples a texture being rendered to. Runs
+     * every frame while the Render targets tab is active; the renderer only shows what is
+     * submitted that frame.
      *
      * @private
      */
@@ -1271,8 +1273,13 @@ class Inspector {
             }
             const attachment = attachments.find(a => a.key === this._previewAttachment.value) ?? attachments[0];
 
+            const uiLayer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? null;
+            const uiCamera = uiLayer && this._app.systems.camera?.cameras.some(camera => camera.layers.includes(LAYERID_UI));
+
             if (!attachment) {
                 note = rt === device.backBuffer ? 'The backbuffer is the screen itself, there is nothing to preview.' : 'This target has no texture to preview.';
+            } else if (!uiCamera) {
+                note = 'The preview is drawn on the UI layer, which no camera renders in this scene.';
             } else {
                 const support = previewSupport(attachment.texture, device);
                 if (!support.ok) {
@@ -1288,12 +1295,14 @@ class Inspector {
                     const x = right ? 1 - width - margin : margin;
                     const y = 1 - height - margin;
 
-                    this._textures.layer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? null;
+                    this._textures.layer = uiLayer;
                     this._textures.channels = this._previewChannels.value;
                     this._textures.draw(texture, x, y, width, height);
 
-                    const channels = this._previewChannels.selectedOptions[0]?.textContent ?? this._previewChannels.value;
-                    note = `Previewing the ${attachment.label} attachment (${channels}) at the bottom ${right ? 'right' : 'left'} of the viewport.`;
+                    // depth previews are raw grayscale, the channel selection does not apply to them
+                    const channels = attachment.key === 'depth' ? '' :
+                        ` (${this._previewChannels.selectedOptions[0]?.textContent ?? this._previewChannels.value})`;
+                    note = `Previewing the ${attachment.label} attachment${channels} at the bottom ${right ? 'right' : 'left'} of the viewport.`;
                 }
             }
         }

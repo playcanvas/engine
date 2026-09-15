@@ -4,6 +4,7 @@ import {
     PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PRIMITIVE_TRISTRIP,
     isIntegerPixelFormat, isSrgbPixelFormat
 } from '../../platform/graphics/constants.js';
+import { BLEND_NORMAL } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { Mesh } from '../../scene/mesh.js';
@@ -60,9 +61,11 @@ import { createTextureShaderDesc } from './texture-renderer-shaders.js';
  * Resources are released automatically when the application is destroyed, or earlier by calling
  * {@link destroy}. Supplied textures are never destroyed by this helper.
  *
- * Previews are opaque, do not write or test depth, and do not cast shadows. Ordering against
- * other opaque geometry follows the destination layer's opaque sort mode. The default Immediate
- * layer uses no opaque sorting.
+ * Previews produce fully opaque pixels but are drawn as alpha-blended instances, so they render in
+ * layers that only draw their transparent sub-layer, such as the default UI layer, which is also
+ * where they escape a camera frame's post-processing. They do not write or test depth and do not
+ * cast shadows. Ordering against other transparent geometry follows the destination layer's
+ * transparent sort mode.
  *
  * @example
  * const textures = new TextureRenderer(app);
@@ -256,6 +259,8 @@ class TextureRenderer {
             material.cull = CULLFACE_NONE;
             material.depthTest = false;
             material.depthWrite = false;
+            // blended so the quad counts as transparent: layers such as UI only render that sub-layer
+            material.blendType = BLEND_NORMAL;
             const meshInstance = new MeshInstance(this._mesh, material, new GraphNode(`Debug texture ${pool.slots.length}`));
             meshInstance.cull = false;
             meshInstance.castShadow = false;
