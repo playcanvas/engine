@@ -38,6 +38,7 @@ import {
     StandardMaterial,
     TEXTURETYPE_RGBP,
     TextureHandler,
+    TextureRenderer,
     Vec2,
     Vec3,
     Vec4,
@@ -100,6 +101,8 @@ createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -305,8 +308,7 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // Display the depth texture if it was rendered
     if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
-        // @ts-ignore engine-tsd
-        app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
+        textures.sceneDepth(0.725, 0.725, 0.25, 0.25);
     }
 });
 

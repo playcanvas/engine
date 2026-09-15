@@ -38,6 +38,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     Vec3,
     WasmModule,
     createGraphicsDevice
@@ -96,6 +97,8 @@ createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandle
 const app = new AppBase(canvas);
 app.init(createOptions);
 
+const textures = new TextureRenderer(app);
+
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -118,7 +121,7 @@ app.scene.envAtlas = assets.helipad.resource;
 app.scene.skyboxMip = 1;
 
 // Get existing layers
-const worldLayer = app.scene.layers.getLayerByName('World');
+const immediateLayer = app.scene.layers.getLayerByName('Immediate');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
 
@@ -209,7 +212,7 @@ renders.forEach((render) => {
 // Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
-    layers: [worldLayer.id, skyboxLayer.id, uiLayer.id]
+    layers: [skyboxLayer.id, immediateLayer.id, uiLayer.id]
 });
 app.root.addChild(camera);
 
@@ -225,13 +228,10 @@ app.on('update', (/** @type {number} */ dt) => {
     const gd = app.graphicsDevice;
     const ratio = gd.width / gd.height;
 
-    // debug draw the texture on the screen in the world layer of the main camera
-    // @ts-ignore engine-tsd
-    app.drawTexture(0, 0.4, 1, ratio, texture0, null, worldLayer);
+    // Display the textures after the skybox in the main camera
+    textures.draw(texture0, 0.25, 0.3 - 0.25 * ratio, 0.5, 0.5 * ratio);
 
-    // @ts-ignore engine-tsd
-    app.drawTexture(-0.5, -0.5, 0.9, 0.9 * ratio, texture1, null, worldLayer);
+    textures.draw(texture1, 0.025, 0.75 - 0.225 * ratio, 0.45, 0.45 * ratio);
 
-    // @ts-ignore engine-tsd
-    app.drawTexture(0.5, -0.5, 0.9, 0.9 * ratio, texture2, null, worldLayer);
+    textures.draw(texture2, 0.525, 0.75 - 0.225 * ratio, 0.45, 0.45 * ratio);
 });

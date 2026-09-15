@@ -32,6 +32,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Vec3,
     WasmModule,
@@ -82,6 +83,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -282,6 +285,5 @@ app.on('update', () => {
     videoCookie.upload();
 
     // Debug: draw the cookie atlas in the corner so the dynamic updates are visible directly
-    // @ts-ignore engine-tsd
-    app.drawTexture(-0.7, -0.7, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
+    textures.draw(app.renderer.lightTextureAtlas.cookieAtlas, 0.05, 0.75, 0.2, 0.2);
 });

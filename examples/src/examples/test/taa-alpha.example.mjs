@@ -18,10 +18,14 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     FILTER_LINEAR,
+    GraphNode,
     Layer,
     LightComponentSystem,
+    Mesh,
+    MeshInstance,
     Mouse,
     PIXELFORMAT_RGBA8,
+    PRIMITIVE_TRISTRIP,
     RENDERTARGET_ORIGIN_TOP,
     RESOLUTION_AUTO,
     RenderComponentSystem,
@@ -34,6 +38,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Vec3,
     createGraphicsDevice
@@ -74,67 +79,25 @@ const vertWGSL = /* wgsl */ `
     }
 `;
 
-const fragViewGLSL = /* glsl */ `
+// Preserve alpha so the composite panel tests blending over the display camera's clear color.
+const fragCompositeGLSL = /* glsl */ `
     varying vec2 uv0;
     uniform sampler2D colorMap;
     void main(void) {
-        vec4 t = texture2D(colorMap, uv0);
-#ifdef REPRO_VIEW_RGB
-        gl_FragColor = vec4(t.rgb, 1.0);
-#elif defined(REPRO_VIEW_ALPHA)
-        gl_FragColor = vec4(t.a, t.a, t.a, 1.0);
-#elif defined(REPRO_VIEW_COMPOSITE)
-        // Straight alpha for SRC_ALPHA blending over the display clear (simulates compositing onto a canvas).
-        gl_FragColor = vec4(t.rgb, t.a);
-#endif
+        gl_FragColor = texture2D(colorMap, uv0);
     }
 `;
 
-const fragViewWGSL = /* wgsl */ `
+const fragCompositeWGSL = /* wgsl */ `
     varying uv0: vec2f;
     var colorMap: texture_2d<f32>;
     var colorMapSampler: sampler;
     @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         var output: FragmentOutput;
-        let t = textureSample(colorMap, colorMapSampler, input.uv0);
-#ifdef REPRO_VIEW_RGB
-        output.color = vec4f(t.rgb, 1.0);
-#elif defined(REPRO_VIEW_ALPHA)
-        output.color = vec4f(t.a, t.a, t.a, 1.0);
-#elif defined(REPRO_VIEW_COMPOSITE)
-        output.color = vec4f(t.rgb, t.a);
-#endif
+        output.color = textureSample(colorMap, colorMapSampler, input.uv0);
         return output;
     }
 `;
-
-/**
- * Debug view of the scene color texture (`REPRO_VIEW_RGB`, `REPRO_VIEW_ALPHA`, or `REPRO_VIEW_COMPOSITE`).
- *
- * @param {string} defineName - Preprocessor define that selects the fragment branch.
- * @returns {ShaderMaterial} Configured material; set blend on the composite variant if needed.
- */
-function createViewMaterial(defineName) {
-    const mat = new ShaderMaterial();
-    mat.shaderDesc = {
-        uniqueName: 'TaaAlphaReproView',
-        vertexGLSL: vertGLSL,
-        fragmentGLSL: fragViewGLSL,
-        vertexWGSL: vertWGSL,
-        fragmentWGSL: fragViewWGSL,
-        attributes: {
-            vertex_position: SEMANTIC_POSITION
-        }
-    };
-    // Match app.drawTexture fallback: fullscreen quads use negative Y scale, so back-face culling
-    // would discard the whole quad (default Material.cull is CULLFACE_BACK).
-    mat.cull = CULLFACE_NONE;
-    mat.depthTest = false;
-    mat.depthWrite = false;
-    mat.setDefine(defineName, true);
-    mat.update();
-    return mat;
-}
 
 const gfxOptions = {
     deviceTypes: [deviceType],
@@ -160,6 +123,8 @@ createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -333,25 +298,41 @@ displayCamera.addComponent('camera', {
 });
 app.root.addChild(displayCamera);
 
-const matRgb = createViewMaterial('REPRO_VIEW_RGB');
-const matAlpha = createViewMaterial('REPRO_VIEW_ALPHA');
-const matComposite = createViewMaterial('REPRO_VIEW_COMPOSITE');
+textures.layer = worldLayer;
+
+const matComposite = new ShaderMaterial({
+    uniqueName: 'TaaAlphaComposite',
+    vertexGLSL: vertGLSL,
+    fragmentGLSL: fragCompositeGLSL,
+    vertexWGSL: vertWGSL,
+    fragmentWGSL: fragCompositeWGSL,
+    attributes: { vertex_position: SEMANTIC_POSITION }
+});
+matComposite.cull = CULLFACE_NONE;
+matComposite.depthTest = false;
+matComposite.depthWrite = false;
 matComposite.blendType = BLEND_NORMAL;
 matComposite.setParameter('colorMap', sceneColorTex);
-matRgb.setParameter('colorMap', sceneColorTex);
-matAlpha.setParameter('colorMap', sceneColorTex);
 matComposite.update();
-matRgb.update();
-matAlpha.update();
+
+// Register the composite once: its custom shader and alpha blending need a mesh instance.
+const compositeMesh = new Mesh(device);
+compositeMesh.setPositions([-0.5, -0.5, 0, 0.5, -0.5, 0, -0.5, 0.5, 0, 0.5, 0.5, 0]);
+compositeMesh.update(PRIMITIVE_TRISTRIP);
+const compositeNode = new GraphNode('Alpha composite');
+compositeNode.setLocalPosition(0, 0.4, 0);
+const composite = new MeshInstance(compositeMesh, matComposite, compositeNode);
+composite.cull = false;
+composite.castShadow = false;
+worldLayer.addMeshInstances([composite]);
 
 const syncSceneRt = () => {
     const { width, height: devHeight } = device;
     if (width < 2 || devHeight < 2) {
         return;
     }
-    // drawTexture sizes are in projected units where 2 spans the viewport. The top composite
-    // quad uses width=1 and height=width/height, which maps to roughly (width/2)×(width/2)
-    // pixels — ~1:1 texels vs on-screen preview instead of full-buffer supersampling.
+    // Keep the square composite panel at half the viewport width, with one texel per pixel.
+    compositeNode.setLocalScale(1, -width / devHeight, 1);
     const panelPx = Math.max(2, Math.floor(width * 0.5));
     sceneRt.resize(panelPx, panelPx);
     cameraFrame.update();
@@ -362,19 +343,18 @@ device.on('resizecanvas', syncSceneRt);
 
 app.on('destroy', () => {
     device.off('resizecanvas', syncSceneRt);
+    worldLayer.removeMeshInstances([composite]);
+    composite.destroy();
+    matComposite.destroy();
 });
 
 app.on('update', () => {
     const gd = app.graphicsDevice;
     const ratio = gd.width / gd.height;
 
-    // Bottom panels first (opaque), then top: straight-alpha blended over gray (like a transparent canvas).
-    // @ts-ignore engine-tsd
-    app.drawTexture(-0.5, -0.5, 0.9, 0.9 * ratio, null, matRgb, worldLayer);
-
-    // @ts-ignore engine-tsd
-    app.drawTexture(0.5, -0.5, 0.9, 0.9 * ratio, null, matAlpha, worldLayer);
-
-    // @ts-ignore engine-tsd
-    app.drawTexture(0, 0.4, 1, ratio, null, matComposite, worldLayer);
+    // Opaque color and alpha previews; the composite is rendered by the transparent sublayer.
+    textures.channels = 'rgb';
+    textures.draw(sceneColorTex, 0.025, 0.75 - 0.225 * ratio, 0.45, 0.45 * ratio);
+    textures.channels = 'aaa';
+    textures.draw(sceneColorTex, 0.525, 0.75 - 0.225 * ratio, 0.45, 0.45 * ratio);
 });

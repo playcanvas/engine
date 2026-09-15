@@ -7,13 +7,9 @@ import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Mat4 } from '../core/math/mat4.js';
 import { math } from '../core/math/math.js';
-import { Quat } from '../core/math/quat.js';
-import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    CULLFACE_NONE,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
@@ -32,7 +28,6 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Scene } from '../scene/scene.js';
-import { ShaderMaterial } from '../scene/materials/shader-material.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
@@ -66,13 +61,14 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Lightmapper } from './lightmapper/lightmapper.js'
+ * @import { Mat4 } from '../core/math/mat4.js'
  * @import { Material } from '../scene/materials/material.js'
  * @import { MeshInstance } from '../scene/mesh-instance.js'
  * @import { Mesh } from '../scene/mesh.js'
  * @import { Mouse } from '../platform/input/mouse.js'
  * @import { SoundManager } from '../platform/sound/manager.js'
- * @import { Texture } from '../platform/graphics/texture.js'
  * @import { TouchDevice } from '../platform/input/touch-device.js'
+ * @import { Vec3 } from '../core/math/vec3.js'
  * @import { XrManager } from './xr/xr-manager.js'
  */
 
@@ -1777,71 +1773,12 @@ class AppBase extends EventHandler {
         this.scene.immediate.drawMesh(material, matrix, this.scene.immediate.getQuadMesh(), null, layer);
     }
 
-    /**
-     * Draws a texture at [x, y] position on screen, with size [width, height]. The origin of the
-     * screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
-     *
-     * @param {number} x - The x coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
-     * range [0, 2].
-     * @param {number} height - The height of the rectangle of the rendered texture. Should be in
-     * the range [0, 2].
-     * @param {Texture} texture - The texture to render.
-     * @param {Material} material - The material used when rendering the texture.
-     * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @param {boolean} [filterable] - Indicate if the texture can be sampled using filtering.
-     * Passing false uses unfiltered sampling, allowing a depth texture to be sampled on WebGPU.
-     * Defaults to true.
-     * @ignore
-     */
-    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer, filterable = true) {
-
-        // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
-        // map to be fetched (without filtering) and rendered
-        if (filterable === false && !this.graphicsDevice.isWebGPU) {
-            return;
-        }
-
-        // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
-        const matrix = new Mat4();
-        matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, -height, 0.0));
-
-        if (!material) {
-            material = new ShaderMaterial();
-            material.cull = CULLFACE_NONE;
-            material.setParameter('colorMap', texture);
-            material.shaderDesc = filterable ? this.scene.immediate.getTextureShaderDesc(texture.encoding) : this.scene.immediate.getUnfilterableTextureShaderDesc();
-            material.update();
-        }
-
-        this.drawQuad(matrix, material, layer);
+    drawTexture() {
+        Debug.removed('AppBase#drawTexture is removed. Use TextureRenderer#draw instead.');
     }
 
-    /**
-     * Draws a depth texture at [x, y] position on screen, with size [width, height]. The origin of
-     * the screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
-     *
-     * @param {number} x - The x coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
-     * range [0, 2].
-     * @param {number} height - The height of the rectangle of the rendered texture. Should be in
-     * the range [0, 2].
-     * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
-        const material = new ShaderMaterial();
-        material.cull = CULLFACE_NONE;
-        material.shaderDesc = this.scene.immediate.getDepthTextureShaderDesc();
-        material.update();
-
-        this.drawTexture(x, y, width, height, null, material, layer);
+    drawDepthTexture() {
+        Debug.removed('AppBase#drawDepthTexture is removed. Use TextureRenderer#sceneDepth instead.');
     }
 
     /**
