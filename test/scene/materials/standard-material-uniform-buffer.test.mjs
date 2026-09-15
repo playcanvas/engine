@@ -370,32 +370,4 @@ describe('StandardMaterial uniform buffer', function () {
 
     });
 
-    describe('mesh instance overrides', function () {
-
-        let warn;
-
-        beforeEach(function () {
-            warn = sinon.stub(console, 'warn');
-        });
-
-        afterEach(function () {
-            warn.restore();
-            for (const message of Debug._loggedMessages) {
-                if (message.includes('material_diffuse')) Debug._loggedMessages.delete(message);
-            }
-        });
-
-        it('warns when a mesh instance overrides a uniform stored in the material uniform buffer', function () {
-            const material = new StandardMaterial();
-            const meshInstance = new MeshInstance(new Mesh(app.graphicsDevice), material);
-            meshInstance.setParameter('material_emissive', [1, 1, 1]);
-            expect(warn.called).to.equal(false);
-
-            meshInstance.setParameter('material_diffuse', [1, 1, 1]);
-            expect(warn.callCount).to.equal(1);
-            expect(warn.firstCall.args[0]).to.contain('material_diffuse');
-        });
-
-    });
-
 });

@@ -27,6 +27,7 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { ScopeId } from '../../platform/graphics/scope-id.js'
  * @import { MaterialProperty } from './material-property.js'
  * @import { Light } from '../light.js';
  * @import { MeshInstance } from '../mesh-instance.js'
@@ -535,6 +536,39 @@ class Material {
     }
 
     /**
+     * Returns the typed property whose uniform, stored in the material uniform buffer, has the given
+     * name, or null when no typed property uses it. A mesh instance parameter of that name
+     * overrides the uniform through a copy of the buffer rather than through the scope.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {MaterialProperty|null} The property, or null.
+     * @ignore
+     */
+    getUniformBufferProperty(name) {
+        return null;
+    }
+
+    /**
+     * Incremented when the set of typed properties of the material changes, so that mesh instances
+     * re-classify their parameters. Constant for materials with a fixed set of properties.
+     *
+     * @type {number}
+     * @private
+     */
+    _layoutVersion = 0;
+
+    /**
+     * The version of the set of typed properties of the material, see
+     * {@link Material#getUniformBufferProperty}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get layoutVersion() {
+        return this._layoutVersion;
+    }
+
+    /**
      * The bind group holding the material uniform buffer, or null until the material has been
      * prepared for rendering, or when it has no typed properties.
      *
@@ -543,6 +577,28 @@ class Material {
      */
     get uniformBufferBindGroup() {
         return this._uniformBufferBindGroup;
+    }
+
+    /**
+     * The uniform buffer storing the typed properties, or null until the material has been
+     * prepared for rendering, or when it has no typed properties.
+     *
+     * @type {UniformBuffer|null}
+     * @ignore
+     */
+    get uniformBuffer() {
+        return this._uniformBuffer;
+    }
+
+    /**
+     * Incremented each time typed property data is written to the uniform buffer storage, so that
+     * copies of the buffer (mesh instance overrides) can detect a change.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get uniformDataVersion() {
+        return this._uniformDataVersion;
     }
 
     /** @ignore */
@@ -1202,6 +1258,12 @@ class Material {
             data = uniformObject.value;
         }
 
+        Debug.call(() => {
+            if (this.getUniformBufferProperty(name)) {
+                Debug.warnOnce(`Material#setParameter: '${name}' is the uniform of a typed material property, stored in the material uniform buffer, and is ignored as a parameter. Set the material property instead.`, this);
+            }
+        });
+
         this._setParameterSimple(name, data);
     }
 
@@ -1216,20 +1278,43 @@ class Material {
         }
     }
 
-    // used to apply parameters from this material into scope of uniforms, called internally by forward-renderer
-    // optional list of parameter names to be set can be specified, otherwise all parameters are set
-    setParameters(device, names) {
+    /**
+     * Applies the parameters of this material to the scope. Called internally by the renderer at
+     * a material switch, and again after a draw whose mesh instance overrode some of them on the
+     * scope, to restore the material values for the next draw.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {{name: string}[]} [restore] - When specified, only the parameters with the names of
+     * these entries are applied (the scope parameters of a mesh instance), otherwise all are.
+     * @ignore
+     */
+    setParameters(device, restore) {
         const parameters = this.parameters;
-        if (names === undefined) names = parameters;
-        for (const paramName in names) {
-            const parameter = parameters[paramName];
-            if (parameter) {
-                if (!parameter.scopeId) {
-                    parameter.scopeId = device.scope.resolve(paramName);
+        if (restore) {
+            for (let i = 0; i < restore.length; i++) {
+                const parameter = parameters[restore[i].name];
+                if (parameter) {
+                    this._setScopeParameter(device, parameter, restore[i].name);
                 }
-                parameter.scopeId.setValue(parameter.data);
+            }
+        } else {
+            for (const paramName in parameters) {
+                this._setScopeParameter(device, parameters[paramName], paramName);
             }
         }
+    }
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {{scopeId: ScopeId|null, data: any}} parameter - The parameter.
+     * @param {string} name - The name of the parameter.
+     * @private
+     */
+    _setScopeParameter(device, parameter, name) {
+        if (!parameter.scopeId) {
+            parameter.scopeId = device.scope.resolve(name);
+        }
+        parameter.scopeId.setValue(parameter.data);
     }
 
     /**

@@ -52,6 +52,7 @@ const _properties = {
     diffuse: new MaterialProperty('diffuse', 'material_diffuse', UNIFORMTYPE_VEC3, convertColorToLinear)
 };
 const _propertyList = Object.values(_properties);
+const _propertiesByUniform = new Map(_propertyList.map(property => [property.uniformName, property]));
 
 const isBlack = (color) => {
     return color.r === 0 && color.g === 0 && color.b === 0;
@@ -708,6 +709,11 @@ class StandardMaterial extends Material {
     /** @ignore */
     get propertyDescriptors() {
         return _propertyList;
+    }
+
+    /** @ignore */
+    getUniformBufferProperty(name) {
+        return _propertiesByUniform.get(name) ?? null;
     }
 
     /**

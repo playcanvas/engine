@@ -668,7 +668,6 @@ class ForwardRenderer extends Renderer {
 
                 // Uniforms I: material
                 material.setParameters(device);
-                this.setupMaterialBindGroup(material);
 
                 if (lightMaskChanged) {
                     const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightMask, camera);
@@ -695,7 +694,9 @@ class ForwardRenderer extends Renderer {
             const stencilBack = drawCall.stencilBack ?? material.stencilBack;
             device.setStencilState(stencilFront, stencilBack);
 
-            // Uniforms II: meshInstance overrides
+            // Uniforms II: meshInstance overrides - on the scope, and through the material bind group
+            // (the material's, or the mesh instance's copy of the material uniform buffer)
+            this.setupMaterialBindGroup(material, drawCall);
             drawCall.setParameters(device);
 
             // mesh ID - used by the picker
@@ -752,9 +753,9 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            // Unset meshInstance overrides back to material values if next draw call will use the same material
-            if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
-                material.setParameters(device, drawCall.parameters);
+            // Unset meshInstance scope overrides back to material values if next draw call will use the same material
+            if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1] && drawCall._scopeParameters.length > 0) {
+                material.setParameters(device, drawCall._scopeParameters);
             }
 
             DebugGraphics.popGpuMarker(device);

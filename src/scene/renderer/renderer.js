@@ -756,10 +756,12 @@ class Renderer {
         const { device } = this;
         const ub = this.getViewUniformBuffer(viewUniformFormat);
 
-        // the material bind group is reserved for the material uniform buffer, which no material
-        // owns yet - bind it empty so the pipeline layout has no gap at its index
+        // start the pass with the empty bind group at the material index, so the pipeline layout has
+        // no gap for draws whose material has no uniform buffer; materials bind their own per draw
+        this._boundMaterialBindGroup = null;
         if (device.usesMeshBindGroups) {
             device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
+            this._boundMaterialBindGroup = device.emptyBindGroup;
         }
 
         if (viewList) {
@@ -783,18 +785,31 @@ class Renderer {
     }
 
     /**
-     * Binds the material's uniform buffer bind group at the material bind group index, or the
-     * empty bind group for a material without one, so the pipeline layout has no gap.
+     * The bind group bound at the material bind group index by the current pass, or null.
+     *
+     * @type {BindGroup|null}
+     * @private
+     */
+    _boundMaterialBindGroup = null;
+
+    /**
+     * Binds the bind group for the material bind group index of a draw: the mesh instance's copy of
+     * the material uniform buffer when it overrides some of its uniforms, otherwise the material's
+     * own bind group, or the empty bind group for a material without one so the pipeline layout has
+     * no gap. Rebinds only when the group differs from the one bound by the previous draw.
      *
      * @param {Material} material - The material.
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
      */
-    setupMaterialBindGroup(material) {
+    setupMaterialBindGroup(material, meshInstance) {
         const device = this.device;
-        const bindGroup = material.uniformBufferBindGroup;
-        if (bindGroup) {
+        let bindGroup = meshInstance.getMaterialBindGroup(device) ?? material.uniformBufferBindGroup;
+        if (!bindGroup && device.usesMeshBindGroups) {
+            bindGroup = device.emptyBindGroup;
+        }
+        if (bindGroup && bindGroup !== this._boundMaterialBindGroup) {
             device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
-        } else if (device.usesMeshBindGroups) {
-            device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
+            this._boundMaterialBindGroup = bindGroup;
         }
     }
 

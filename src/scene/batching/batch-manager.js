@@ -43,13 +43,11 @@ function paramsIdentical(a, b) {
 }
 
 function equalParamSets(params1, params2) {
-    for (const param in params1) { // compare A -> B
-        if (params1.hasOwnProperty(param) && !paramsIdentical(params1[param], params2[param])) {
-            return false;
-        }
+    if (params1.size !== params2.size) {
+        return false;
     }
-    for (const param in params2) { // compare B -> A
-        if (params2.hasOwnProperty(param) && !paramsIdentical(params2[param], params1[param])) {
+    for (const [name, param] of params1) {
+        if (!paramsIdentical(param, params2.get(name))) {
             return false;
         }
     }
@@ -862,7 +860,11 @@ class BatchManager {
             // Create meshInstance
             const meshInstance = new MeshInstance(mesh, material, this.rootNode);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
-            meshInstance.parameters = batch.origMeshInstances[0].parameters;
+            // copy the parameters through setParameter, which splits them between the scope and the
+            // material uniform buffer for the material of the batch
+            for (const [name, parameter] of batch.origMeshInstances[0].parameters) {
+                meshInstance.setParameter(name, parameter.data);
+            }
             meshInstance.layer = batch.origMeshInstances[0].layer;
             meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
             meshInstance.batching = true;
