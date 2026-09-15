@@ -59,7 +59,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = 8;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
-        this.supportsUniformBuffers = false;
+        this.usesMeshBindGroups = false;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = false;
         this.textureFloatRenderable = true;

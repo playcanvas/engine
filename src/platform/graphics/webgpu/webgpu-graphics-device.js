@@ -424,7 +424,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxAnisotropy = 16;
         this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
-        this.supportsUniformBuffers = true;
+        this.usesMeshBindGroups = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = true;
         this.supportsCompute = true;

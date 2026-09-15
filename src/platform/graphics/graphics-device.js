@@ -444,11 +444,14 @@ class GraphicsDevice extends EventHandler {
     insideRenderPass = false;
 
     /**
-     * True if the device supports uniform buffers.
+     * True if the device binds the mesh resources through bind groups: the textures and samplers
+     * in the mesh bind group and the per-draw mesh uniforms in a dynamic uniform buffer (WebGPU).
+     * Otherwise they are set individually through the scope. Uniform buffers for the view and the
+     * materials are used on every device.
      *
      * @ignore
      */
-    supportsUniformBuffers = false;
+    usesMeshBindGroups = false;
 
     /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
