@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { BINDGROUP_VIEW, bindGroupNames, uniformTypeToName } from '../constants.js';
+import { bindGroupNames, uniformTypeToName } from '../constants.js';
 import { ShaderProcessorGLSL } from '../shader-processor-glsl.js';
 
 /**
@@ -63,14 +63,15 @@ class WebglShaderProcessorGLSL extends ShaderProcessorGLSL {
 
         let code = '';
 
-        // view uniform buffer block - generated from the full view format, so its std140 layout
-        // matches the uniform buffer the renderer uploads
-        const viewFormat = processingOptions.uniformFormats[BINDGROUP_VIEW];
-        if (viewFormat) {
-            code += WebglShaderProcessorGLSL.getUniformShaderDeclarationGL2(viewFormat, BINDGROUP_VIEW);
-        }
+        // a uniform block per supplied format (view, material) - generated from the full format, so
+        // its std140 layout matches the uniform buffer bound at that bind group index
+        processingOptions.uniformFormats.forEach((format, bindGroupIndex) => {
+            if (format) {
+                code += WebglShaderProcessorGLSL.getUniformShaderDeclarationGL2(format, bindGroupIndex);
+            }
+        });
 
-        // re-emit all non-view uniforms (numeric and samplers) as individual uniforms
+        // re-emit all uniforms not provided by a block (numeric and samplers) as individual uniforms
         uniforms.forEach((uniform) => {
             if (!processingOptions.hasUniform(uniform.name)) {
                 code += `uniform ${uniform.line};\n`;

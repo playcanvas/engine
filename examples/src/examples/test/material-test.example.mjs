@@ -156,6 +156,35 @@ createObject(-1, 0, 0, materialSheen, 0.7);
 createObject(1, 0, 0, materialSpecFactor, 0.7);
 createObject(0, 0, 1, materialAO, 0.7);
 
+// Sets a pastel color of the given hue (0..1 around the color wheel) on the color
+const setHue = (color, hue) => {
+    const saturation = 0.45;
+    const value = 0.9;
+    hue -= Math.floor(hue);
+    const sector = Math.floor(hue * 6);
+    const f = hue * 6 - sector;
+    const p = value * (1 - saturation);
+    const q = value * (1 - f * saturation);
+    const t = value * (1 - (1 - f) * saturation);
+    switch (sector) {
+        case 0:
+            return color.set(value, t, p);
+        case 1:
+            return color.set(q, value, p);
+        case 2:
+            return color.set(p, value, t);
+        case 3:
+            return color.set(p, q, value);
+        case 4:
+            return color.set(t, p, value);
+        default:
+            return color.set(value, p, q);
+    }
+};
+
+// a reused color for the pill that gets its diffuse assigned
+const assignedColor = new Color();
+
 // Update things each frame
 let time = 0;
 app.on('update', (dt) => {
@@ -163,4 +192,15 @@ app.on('update', (dt) => {
     time += dt;
     camera.setLocalPosition(4 * Math.sin(time * 0.5), 0, 4 * Math.cos(time * 0.5));
     camera.lookAt(Vec3.ZERO);
+
+    // Cycle the diffuse colors through the hue wheel, the pills a third of a turn apart. Two pills
+    // mutate the color returned by the getter in place and one is assigned a color, which are the
+    // two ways a material property change reaches the material uniform buffer each frame.
+    const hue = time * 0.1;
+    setHue(materialSheen.diffuse, hue);
+    materialSheen.update();
+    materialSpecFactor.diffuse = setHue(assignedColor, hue + 1 / 3);
+    materialSpecFactor.update();
+    setHue(materialAO.diffuse, hue + 2 / 3);
+    materialAO.update();
 });
