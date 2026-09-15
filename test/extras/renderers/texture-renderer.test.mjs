@@ -3,8 +3,10 @@ import sinon from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
 import { TextureRenderer } from '../../../src/extras/renderers/texture-renderer.js';
-import { FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
+import { FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_R8, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
+import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { Camera } from '../../../src/scene/camera.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -38,10 +40,43 @@ describe('TextureRenderer', function () {
         const [instance] = layer.meshInstances;
         expect(instance.node.getLocalPosition().toArray()).to.deep.equal([0, 0.5, 0]);
         expect(instance.node.getLocalScale().toArray()).to.deep.equal([1, -0.5, 1]);
-        expect(instance.cull).to.equal(false);
+        expect(instance.cull).to.equal(true);
         expect(instance.material.depthTest).to.equal(false);
         expect(instance.material.depthWrite).to.equal(false);
         expect(layer.shadowCasters).to.not.include(instance);
+    });
+
+    it('is drawn by every camera except those rendering into the previewed texture', function () {
+        renderer.draw(texture, 0, 0, 1, 1);
+        renderer.sceneDepth(0, 0, 1, 1);
+        const [preview, depth] = layer.meshInstances;
+        const screen = new Camera(app.graphicsDevice);
+        const toTexture = new Camera(app.graphicsDevice);
+        toTexture.renderTarget = new RenderTarget({ colorBuffer: texture, depth: false });
+        const toOther = new Camera(app.graphicsDevice);
+        toOther.renderTarget = new RenderTarget({ colorBuffer: other, depth: false });
+
+        expect(preview._isVisible(screen)).to.equal(true);
+        expect(preview._isVisible(toTexture)).to.equal(false);
+        expect(preview._isVisible(toOther)).to.equal(true);
+        expect(depth._isVisible(toTexture)).to.equal(true);
+
+        // a selected camera is the only one left drawing
+        renderer.camera = /** @type {any} */ ({ camera: toOther });
+        expect(preview._isVisible(screen)).to.equal(false);
+        expect(preview._isVisible(toOther)).to.equal(true);
+        renderer.camera = /** @type {any} */ ({ camera: toTexture });
+        expect(preview._isVisible(toTexture)).to.equal(false);
+
+        // the check follows the texture the slot shows on the next frame
+        app.fire('postrender');
+        renderer.camera = null;
+        renderer.draw(other, 0, 0, 1, 1);
+        expect(preview._isVisible(toTexture)).to.equal(true);
+        expect(preview._isVisible(toOther)).to.equal(false);
+
+        toTexture.renderTarget.destroy();
+        toOther.renderTarget.destroy();
     });
 
     it('reuses slots by submission order with unique materials and a shared mesh', function () {
@@ -170,6 +205,23 @@ describe('TextureRenderer', function () {
         renderer.channels = 'rgb';
         renderer.draw(texture, 0, 0, 1, 1);
         expect(first.material.shaderDesc.uniqueName).to.equal('TextureRenderer-filtered-srgb');
+    });
+
+    it('shows single-channel formats as grayscale with the default selection', function () {
+        const single = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_R8 });
+        renderer.draw(single, 0, 0, 0.5, 1);
+        renderer.draw(texture, 0.5, 0, 0.5, 1);
+        const [gray, color] = layer.meshInstances;
+        expect(gray.material.shaderDesc.uniqueName).to.equal('TextureRenderer-filtered-raw');
+        expect(Array.from(gray.material.getParameter('textureChannels').data)).to.deep.equal([0, 0, 0]);
+        expect(color.material.shaderDesc.uniqueName).to.equal('TextureRenderer-filtered-srgb');
+
+        // an explicit selection still wins
+        app.fire('postrender');
+        renderer.channels = 'aaa';
+        renderer.draw(single, 0, 0, 1, 1);
+        expect(Array.from(gray.material.getParameter('textureChannels').data)).to.deep.equal([3, 3, 3]);
+        single.destroy();
     });
 
     it('rejects invalid channel strings without changing the current selection', function () {
