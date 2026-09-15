@@ -10,12 +10,12 @@ import { WireRenderer } from '../renderers/wire-renderer.js';
 import { buildPassModel, captureFrameGraph, passRows } from './frame-graph-view.js';
 import { HierarchyView } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
-import { passDisplayName } from './model.js';
+import { formatName, passDisplayName } from './model.js';
 import { buildNodeModel } from './node-model.js';
 import { AmmoDebugDraw, DEBUG_DRAW } from './physics-debug.js';
 import { bodyRows, drawCollisionShape, drawJoint, jointRows, physicsStats } from './physics-view.js';
 import { PropertyView } from './property-view.js';
-import { buildRenderTargetModel, previewAttachments, previewSupport, renderTargetRows } from './render-target-view.js';
+import { buildRenderTargetModel, formatChannels, previewAttachments, previewSupport, renderTargetRows } from './render-target-view.js';
 import { styles } from './styles.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
@@ -1273,13 +1273,16 @@ class Inspector {
             }
             const attachment = attachments.find(a => a.key === this._previewAttachment.value) ?? attachments[0];
 
+            // the last camera drawing the UI layer to the screen: cameras rendering into a texture would put
+            // the quad in their target, and possibly sample it at the same time
             const uiLayer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? null;
-            const uiCamera = uiLayer && this._app.systems.camera?.cameras.some(camera => camera.layers.includes(LAYERID_UI));
+            const cameras = uiLayer ? this._app.systems.camera?.cameras ?? [] : [];
+            const uiCamera = cameras.filter(camera => !camera.renderTarget && camera.layers.includes(LAYERID_UI)).at(-1) ?? null;
 
             if (!attachment) {
                 note = rt === device.backBuffer ? 'The backbuffer is the screen itself, there is nothing to preview.' : 'This target has no texture to preview.';
             } else if (!uiCamera) {
-                note = 'The preview is drawn on the UI layer, which no camera renders in this scene.';
+                note = 'The preview is drawn on the UI layer, which no camera renders to the screen in this scene.';
             } else {
                 const support = previewSupport(attachment.texture, device);
                 if (!support.ok) {
@@ -1295,14 +1298,21 @@ class Inspector {
                     const x = right ? 1 - width - margin : margin;
                     const y = 1 - height - margin;
 
+                    // a channel the format does not store samples as a constant, so show the color instead and say why
+                    const selected = this._previewChannels.value;
+                    const selectedLabel = this._previewChannels.selectedOptions[0]?.textContent ?? selected;
+                    const stored = attachment.key === 'depth' ? '' : formatChannels(texture.format);
+                    const missing = selected !== 'rgb' && stored !== '' && !stored.includes(selected[0]);
+
                     this._textures.layer = uiLayer;
-                    this._textures.channels = this._previewChannels.value;
+                    this._textures.camera = uiCamera;
+                    this._textures.channels = missing ? 'rgb' : selected;
                     this._textures.draw(texture, x, y, width, height);
 
                     // depth previews are raw grayscale, the channel selection does not apply to them
-                    const channels = attachment.key === 'depth' ? '' :
-                        ` (${this._previewChannels.selectedOptions[0]?.textContent ?? this._previewChannels.value})`;
+                    const channels = attachment.key === 'depth' ? '' : ` (${missing ? 'color' : selectedLabel})`;
                     note = `Previewing the ${attachment.label} attachment${channels} at the bottom ${right ? 'right' : 'left'} of the viewport.`;
+                    if (missing) note += ` ${formatName(texture.format)} has no ${selectedLabel} channel.`;
                 }
             }
         }

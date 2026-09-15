@@ -6,9 +6,11 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { captureFrameGraph } from '../../../src/extras/inspector/frame-graph-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
-import { previewAttachments, previewSupport } from '../../../src/extras/inspector/render-target-view.js';
+import { formatChannels, previewAttachments, previewSupport } from '../../../src/extras/inspector/render-target-view.js';
 import {
-    FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_R32U, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8
+    FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_111110F, PIXELFORMAT_BGRA8, PIXELFORMAT_DEPTH, PIXELFORMAT_DXT1,
+    PIXELFORMAT_R32U, PIXELFORMAT_R8, PIXELFORMAT_RG16F, PIXELFORMAT_RGB10A2, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8,
+    PIXELFORMAT_SRGB8
 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
@@ -21,7 +23,8 @@ function createApp() {
     const app = /** @type {any} */ (new EventHandler());
     const canvas = document.createElement('canvas');
     app.graphicsDevice = new NullGraphicsDevice(canvas);
-    app.scene = { immediate: {}, defaultDrawLayer: null };
+    // the texture renderer the panel owns listens for layer render events on the scene
+    app.scene = Object.assign(new EventHandler(), { immediate: {}, defaultDrawLayer: null });
     app.systems = {};
     app.stats = { frame: {} };
     app.timeScale = 1;
@@ -384,6 +387,21 @@ describe('Inspector render target preview', function () {
         const float = texture({ format: PIXELFORMAT_RGBA32F });
         expect(previewSupport(float, webgl2).reason).to.match(/float/);
         expect(previewSupport(float, webgpu).ok).to.be.true;
+    });
+
+    it('reads the channels a format stores from its name', function () {
+        expect(formatChannels(PIXELFORMAT_R8)).to.equal('r');
+        expect(formatChannels(PIXELFORMAT_RG16F)).to.equal('rg');
+        expect(formatChannels(PIXELFORMAT_SRGB8)).to.equal('rgb');
+        expect(formatChannels(PIXELFORMAT_RGBA8)).to.equal('rgba');
+        expect(formatChannels(PIXELFORMAT_BGRA8)).to.equal('rgba');
+        expect(formatChannels(PIXELFORMAT_RGB10A2)).to.equal('rgba');
+
+        // nothing to say about depth, packed or compressed formats
+        expect(formatChannels(PIXELFORMAT_DEPTH)).to.equal('');
+        expect(formatChannels(PIXELFORMAT_111110F)).to.equal('');
+        expect(formatChannels(PIXELFORMAT_DXT1)).to.equal('');
+        expect(formatChannels(-1)).to.equal('');
     });
 });
 

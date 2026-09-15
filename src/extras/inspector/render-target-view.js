@@ -2,7 +2,7 @@ import {
     FILTER_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST,
     PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
     PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
-    isIntegerPixelFormat
+    isIntegerPixelFormat, pixelFormatInfo
 } from '../../platform/graphics/constants.js';
 
 import { describeValue } from './describe.js';
@@ -243,4 +243,21 @@ function previewSupport(texture, device) {
     return { ok: true, reason: '' };
 }
 
-export { buildRenderTargetModel, previewAttachments, previewSupport, renderTargetRows };
+/**
+ * The r, g, b and a channels an uncompressed color format stores, read from its name: R8 stores
+ * 'r', RG16F 'rg', SRGB8 'rgb', BGRA8 and RGB10A2 'rgba'. Sampling a channel the format lacks
+ * returns a constant (0, or 1 for alpha), so a preview of it shows nothing. Empty when the name
+ * carries no channel letters: depth, the packed 111110F and compressed formats.
+ *
+ * @param {number} format - A PIXELFORMAT_* constant.
+ * @returns {string} The stored channels as lower-case letters from 'rgba', or ''.
+ */
+function formatChannels(format) {
+    const name = pixelFormatInfo.get(format)?.name ?? '';
+    const match = /^S?([RGBA]+)(?:\d+(A)\d)?/.exec(name);
+    if (!match) return '';
+    const letters = (match[1] + (match[2] ?? '')).toLowerCase();
+    return [...'rgba'].filter(letter => letters.includes(letter)).join('');
+}
+
+export { buildRenderTargetModel, formatChannels, previewAttachments, previewSupport, renderTargetRows };
