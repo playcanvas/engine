@@ -459,11 +459,11 @@ describe('StandardMaterial', function () {
             material.update();
             const variant = addVariant(material);
 
-            // emissive is still published as a parameter (diffuse lives in the material uniform buffer)
-            material.emissive.set(0.5, 0.25, 0.75);
+            // ambient is still published as a parameter (diffuse and emissive live in the material uniform buffer)
+            material.ambient.set(0.5, 0.25, 0.75);
             material.updateUniforms();
 
-            const uniform = material.getParameter('material_emissive').data;
+            const uniform = material.getParameter('material_ambient').data;
             expect(uniform[0]).to.be.closeTo(Math.pow(0.5, 2.2), 1e-6);
             expect(uniform[1]).to.be.closeTo(Math.pow(0.25, 2.2), 1e-6);
             expect(uniform[2]).to.be.closeTo(Math.pow(0.75, 2.2), 1e-6);

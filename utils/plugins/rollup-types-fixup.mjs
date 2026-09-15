@@ -77,8 +77,6 @@ const STANDARD_MAT_PROPS = [
     ['diffuseMapUv', 'number'],
     ['diffuseVertexColor', 'boolean'],
     ['diffuseVertexColorChannel', 'string'],
-    ['emissive', 'Color'],
-    ['emissiveIntensity', 'number'],
     ['emissiveMap', 'Texture|null'],
     ['emissiveMapChannel', 'string'],
     ['emissiveMapOffset', 'Vec2'],
