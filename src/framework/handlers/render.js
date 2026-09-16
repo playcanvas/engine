@@ -3,46 +3,9 @@ import { ResourceHandler } from './handler.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { EventHandle } from '../../core/event-handle.js'
  */
-
-// The scope of this function is the render asset
-function onContainerAssetLoaded(containerAsset) {
-    const renderAsset = this;
-    if (!renderAsset.resource) return;
-
-    const containerResource = containerAsset.resource;
-
-    const render = containerResource.renders && containerResource.renders[renderAsset.data.renderIndex];
-    if (render) {
-        renderAsset.resource.meshes = render.resource.meshes;
-    }
-}
-
-// The scope of this function is the render asset
-function onContainerAssetAdded(containerAsset) {
-    const renderAsset = this;
-
-    renderAsset.registry.off(`load:${containerAsset.id}`, onContainerAssetLoaded, renderAsset);
-    renderAsset.registry.on(`load:${containerAsset.id}`, onContainerAssetLoaded, renderAsset);
-    renderAsset.registry.off(`remove:${containerAsset.id}`, onContainerAssetRemoved, renderAsset);
-    renderAsset.registry.once(`remove:${containerAsset.id}`, onContainerAssetRemoved, renderAsset);
-
-    if (!containerAsset.resource) {
-        renderAsset.registry.load(containerAsset);
-    } else {
-        onContainerAssetLoaded.call(renderAsset, containerAsset);
-    }
-}
-
-function onContainerAssetRemoved(containerAsset) {
-    const renderAsset = this;
-
-    renderAsset.registry.off(`load:${containerAsset.id}`, onContainerAssetLoaded, renderAsset);
-
-    if (renderAsset.resource) {
-        renderAsset.resource.destroy();
-    }
-}
 
 /**
  * Resource handler used for loading {@link Render} resources.
@@ -50,6 +13,18 @@ function onContainerAssetRemoved(containerAsset) {
  * @category Graphics
  */
 class RenderHandler extends ResourceHandler {
+    /**
+     * @type {WeakMap<Asset, () => void>}
+     * @private
+     */
+    _pendingLoads = new WeakMap();
+
+    /**
+     * @type {WeakMap<Asset, () => void>}
+     * @private
+     */
+    _bindings = new WeakMap();
+
     /**
      * Create a new RenderHandler instance.
      *
@@ -62,22 +37,140 @@ class RenderHandler extends ResourceHandler {
         this._registry = app.assets;
     }
 
+    load(url, callback, asset) {
+        this._pendingLoads.get(asset)?.();
+
+        const registry = this._registry;
+        const containerId = asset.data.containerAsset;
+        if (!containerId) {
+            callback(null, null);
+            return;
+        }
+
+        /** @type {EventHandle[]} */
+        const events = [];
+        // Unsubscribing does not remove callbacks from an event dispatch already in progress.
+        let active = true;
+        const cleanup = () => {
+            if (!active) return;
+            active = false;
+            events.forEach(event => event.off());
+            this._pendingLoads.delete(asset);
+        };
+        const cancel = () => {
+            if (!active) return;
+            cleanup();
+            asset.loading = false;
+        };
+        const onError = (err) => {
+            if (!active) return;
+            cleanup();
+            callback(err);
+        };
+        const onLoad = (containerAsset) => {
+            if (!active) return;
+            const render = containerAsset.resource?.renders?.[asset.data.renderIndex]?.resource;
+            if (!render?.meshes) {
+                onError(`Render ${asset.data.renderIndex} is unavailable in container asset ${containerId}`);
+                return;
+            }
+
+            cleanup();
+            callback(null, render);
+        };
+        const onAdd = (containerAsset) => {
+            if (!active) return;
+            events.push(
+                containerAsset.once('load', onLoad),
+                containerAsset.once('error', onError),
+                containerAsset.once('remove', () => onError(`Container asset ${containerId} was removed`))
+            );
+
+            if (containerAsset.resource) {
+                onLoad(containerAsset);
+            } else if (containerAsset.loaded) {
+                onError(`Container asset ${containerId} has no resource`);
+            } else {
+                registry.load(containerAsset);
+            }
+        };
+
+        this._pendingLoads.set(asset, cleanup);
+        events.push(
+            asset.once('unload', cancel),
+            asset.once('remove', cancel),
+            asset.on('change', (changedAsset, property) => {
+                if (active && property === 'data') {
+                    cleanup();
+                    this.load(url, callback, asset);
+                }
+            })
+        );
+
+        const containerAsset = registry.get(containerId);
+        if (containerAsset) {
+            onAdd(containerAsset);
+        } else {
+            events.push(registry.once(`add:${containerId}`, onAdd));
+        }
+    }
+
     open(url, data) {
-        return new Render();
+        const render = new Render();
+        if (data instanceof Render) {
+            render.meshes = data.meshes;
+        }
+        return render;
     }
 
     patch(asset, registry) {
+        this._bindings.get(asset)?.();
         if (!asset.data.containerAsset) {
             return;
         }
 
-        const containerAsset = registry.get(asset.data.containerAsset);
-        if (!containerAsset) {
-            registry.once(`add:${asset.data.containerAsset}`, onContainerAssetAdded, asset);
-            return;
-        }
+        /** @type {EventHandle[]} */
+        const events = [];
+        let active = true;
+        const cleanup = () => {
+            if (!active) return;
+            active = false;
+            events.forEach(event => event.off());
+            this._bindings.delete(asset);
+        };
+        const onLoad = (containerAsset) => {
+            if (!active) return;
+            const render = containerAsset.resource?.renders?.[asset.data.renderIndex]?.resource;
+            // Initial loading already assigned the meshes. Only update them when the dependency changes.
+            if (asset.resource && render && asset.resource.meshes !== render.meshes) {
+                asset.resource.meshes = render.meshes;
+            }
+        };
+        const onAdd = (containerAsset) => {
+            if (!active) return;
+            events.push(
+                registry.on(`load:${containerAsset.id}`, onLoad),
+                registry.once(`remove:${containerAsset.id}`, () => {
+                    if (!active) return;
+                    cleanup();
+                    asset.resource?.destroy();
+                })
+            );
+            if (containerAsset.resource) {
+                onLoad(containerAsset);
+            } else {
+                registry.load(containerAsset);
+            }
+        };
 
-        onContainerAssetAdded.call(asset, containerAsset);
+        this._bindings.set(asset, cleanup);
+        events.push(asset.once('unload', cleanup), asset.once('remove', cleanup));
+        const containerAsset = registry.get(asset.data.containerAsset);
+        if (containerAsset) {
+            onAdd(containerAsset);
+        } else {
+            events.push(registry.once(`add:${asset.data.containerAsset}`, onAdd));
+        }
     }
 }
 

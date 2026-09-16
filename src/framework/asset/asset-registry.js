@@ -509,7 +509,7 @@ class AssetRegistry extends EventHandler {
             }
         };
 
-        if (file || asset.type === 'cubemap') {
+        if (file || asset.type === 'cubemap' || (asset.type === 'render' && asset.data.containerAsset)) {
             // start loading the resource
             this.fire('load:start', asset);
             this.fire(`load:${asset.id}:start`, asset);

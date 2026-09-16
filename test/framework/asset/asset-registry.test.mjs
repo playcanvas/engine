@@ -264,6 +264,27 @@ describe('AssetRegistry', function () {
             });
         });
 
+        it('waits for GLB meshes before reporting a referenced render asset ready', async function () {
+            const container = new Asset('container', 'container', { url: `${assetPath}test.glb` });
+            const render = new Asset('render', 'render', null, {
+                containerAsset: container.id,
+                renderIndex: 0
+            });
+            app.assets.add(container);
+            app.assets.add(render);
+
+            const ready = new Promise((resolve, reject) => {
+                render.ready(resolve);
+                render.once('error', reject);
+            });
+            app.assets.load(render);
+            await ready;
+
+            expect(container.loaded).to.equal(true);
+            expect(render.resource.meshes).to.be.an('array').that.is.not.empty;
+            expect(render.resource.meshes).to.equal(container.resource.renders[0].resource.meshes);
+        });
+
         it('supports retry loading of container assets', (done) => {
             spy(http, 'request');
             app.loader.enableRetry(2);
