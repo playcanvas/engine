@@ -107,6 +107,7 @@ class WebgpuBuffer {
             data.set(new Uint8Array(srcBuffer, srcOffset, byteLength));
             wgpu.queue.writeBuffer(this.buffer, byteOffset, data, 0, data.length);
         } else {
+            // Invalid internal partial uploads should fail WebGPU validation, not overwrite neighbors through padding.
             wgpu.queue.writeBuffer(this.buffer, byteOffset, srcBuffer, srcOffset, byteLength);
         }
     }

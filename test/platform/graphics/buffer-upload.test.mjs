@@ -206,6 +206,48 @@ describe('Buffer uploads', function () {
                 });
 
                 if (kind === 'index') {
+                    [[], [0], [0, 6]].forEach((args) => {
+                        it(`uploads an odd-sized full buffer with unlock(${args.join(', ')}) on first and subsequent calls`, function () {
+                            buffer = new IndexBuffer(device, INDEXFORMAT_UINT16, 3, BUFFER_STATIC);
+                            const data = BufferUtils.createStorageView(buffer, Uint16Array);
+                            const assertion = sinon.stub(Debug, 'assert');
+                            data.set([1, 2, 3]);
+                            buffer.unlock(...args);
+
+                            expect(allocation().callCount).to.equal(1);
+                            expect(Array.from(gpuData().subarray(0, 6))).to.deep.equal([1, 0, 2, 0, 3, 0]);
+                            data.set([4, 5, 6]);
+                            buffer.unlock(...args);
+                            expect(allocation().callCount).to.equal(1);
+                            expect(Array.from(gpuData().subarray(0, 6))).to.deep.equal([4, 0, 5, 0, 6, 0]);
+                            expect(assertion.getCalls().every(call => call.args[0])).to.equal(true);
+                            if (backend === 'WebGPU') {
+                                expect(Array.from(gpuData().subarray(6))).to.deep.equal([0, 0]);
+                            }
+                        });
+                    });
+
+                    it('still rejects unaligned partial ranges in an odd-sized buffer', function () {
+                        buffer = new IndexBuffer(device, INDEXFORMAT_UINT16, 3, BUFFER_STATIC);
+                        const assertion = sinon.stub(Debug, 'assert');
+                        const invalid = [[0, 2], [2, 4], [4, 2]];
+                        invalid.forEach((args) => {
+                            assertion.resetHistory();
+                            buffer.unlock(...args);
+                            expect(assertion.getCalls().some(call => !call.args[0])).to.equal(true);
+                        });
+                        expect(allocation().callCount).to.equal(0);
+                        expect(upload().callCount).to.equal(0);
+
+                        BufferUtils.createStorageView(buffer, Uint8Array).fill(0xaa);
+                        buffer.unlock(0, 6);
+                        BufferUtils.createStorageView(buffer, Uint8Array).fill(0x11);
+                        upload().resetHistory();
+                        invalid.forEach(args => buffer.unlock(...args));
+                        expect(upload().callCount).to.equal(0);
+                        expect(Array.from(gpuData().subarray(0, 6))).to.deep.equal(Array(6).fill(0xaa));
+                    });
+
                     it('preserves full uploads of odd index counts, including first partial upload', function () {
                         buffer = new IndexBuffer(device, INDEXFORMAT_UINT16, 3, BUFFER_STATIC);
                         const data = BufferUtils.createStorageView(buffer, Uint16Array);

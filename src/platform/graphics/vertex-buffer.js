@@ -185,9 +185,9 @@ class VertexBuffer {
      * @param {number} [byteOffset] - Offset in bytes from the start of the buffer's storage.
      * Defaults to 0. Must be a non-negative integer and a multiple of 4 on all graphics backends.
      * @param {number} [byteLength] - Number of bytes to upload. Defaults to the remaining bytes
-     * after byteOffset. When either argument is supplied, the length must be a non-negative integer
-     * and a multiple of 4, and the range must fit within the buffer. Calling without arguments also
-     * supports buffers whose total size is not a multiple of 4.
+     * after byteOffset. The length must be a non-negative integer and the range must fit within
+     * the buffer. Partial ranges require a length that is a multiple of 4. Full-buffer uploads
+     * support any byte length, whether the range is explicit or the arguments are omitted.
      * @example
      * // After modifying bytes 16 through 31 of the CPU storage:
      * vertexBuffer.unlock(16, 16);
@@ -197,10 +197,11 @@ class VertexBuffer {
             byteOffset ??= 0;
             byteLength ??= this.numBytes - byteOffset;
 
+            const fullRange = byteOffset === 0 && byteLength === this.numBytes;
             const valid = Number.isInteger(byteOffset) && byteOffset >= 0 && byteOffset % 4 === 0 &&
-                Number.isInteger(byteLength) && byteLength >= 0 && byteLength % 4 === 0 &&
+                Number.isInteger(byteLength) && byteLength >= 0 && (fullRange || byteLength % 4 === 0) &&
                 byteOffset + byteLength <= this.numBytes;
-            Debug.assert(valid, 'Buffer upload range must contain non-negative integers aligned to 4 bytes and fit within the buffer');
+            Debug.assert(valid, 'Buffer upload range must contain non-negative integers and fit within the buffer; partial ranges must be aligned to 4 bytes');
 
             if (!valid || byteLength === 0) {
                 return;
