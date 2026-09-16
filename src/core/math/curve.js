@@ -2,15 +2,15 @@ import { CURVE_SMOOTHSTEP } from './constants.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
- * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its
- * type that specifies an interpolation scheme for the keys.
+ * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its type
+ * that specifies an interpolation scheme for the keys.
  *
- * Keys are kept sorted by time. Supply them to the constructor as a flat `[time, value, ...]`
- * array or insert them one at a time with {@link Curve#add}, then evaluate the curve at any time
- * with {@link Curve#value}. The {@link Curve#type} selects how values between keys are computed:
+ * Keys are kept sorted by time. Supply them to the constructor as a flat `[time, value, ...]` array
+ * or insert them one at a time with {@link add}, then evaluate the curve at any time with
+ * {@link value}. The {@link type} selects how values between keys are computed:
  * {@link CURVE_LINEAR}, {@link CURVE_SMOOTHSTEP}, {@link CURVE_SPLINE} or {@link CURVE_STEP}.
- * Curves drive values that change over time or over a normalized range, such as particle size
- * over a particle's lifetime.
+ * Curves drive values that change over time or over a normalized range, such as particle size over
+ * a particle's lifetime.
  *
  * @example
  * // Ease a value in over one second and read it back a quarter of the way through

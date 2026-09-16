@@ -8,12 +8,11 @@ import { Vec3 } from '../math/vec3.js';
  * An infinite plane. Internally, it's represented in a parametric equation form:
  * `ax + by + cz + distance = 0`.
  *
- * A plane is a unit {@link Plane#normal} and a {@link Plane#distance} from the origin along that
- * normal. Define one with {@link Plane#setFromPointNormal} from a point it passes through, or with
- * {@link Plane#set} from the four coefficients, calling {@link Plane#normalize} afterwards if the
- * normal was not unit length. {@link Plane#intersectsRay} and {@link Plane#intersectsLine} return
- * whether a hit occurred and write the hit point into an optional vector. The ray's direction must
- * be normalized.
+ * A plane is a unit {@link normal} and a {@link distance} from the origin along that normal. Define
+ * one with {@link setFromPointNormal} from a point it passes through, or with {@link set} from the
+ * four coefficients, calling {@link normalize} afterwards if the normal was not unit length.
+ * {@link intersectsRay} and {@link intersectsLine} return whether a hit occurred and write the hit
+ * point into an optional vector. The ray's direction must be normalized.
  *
  * @example
  * // Find where a ray from the camera meets the ground plane at y = 0

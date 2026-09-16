@@ -5,18 +5,17 @@ import { math } from './math.js';
  *
  * Each color component is a floating point value in the range 0 to 1. The {@link r} (red),
  * {@link g} (green) and {@link b} (blue) components define a color in RGB color space. The
- * {@link a} (alpha) component defines transparency. An alpha of 1 is fully opaque. An alpha of
- * 0 is fully transparent.
+ * {@link a} (alpha) component defines transparency. An alpha of 1 is fully opaque. An alpha of 0 is
+ * fully transparent.
  *
  * A Color stores the values it is given and does not track whether they are in linear or gamma
- * (sRGB) space. Convert explicitly with {@link Color#linear} and {@link Color#gamma} when a value
- * crosses that boundary. {@link Color#fromString} and {@link Color#toString} exchange colors with
- * the `#RRGGBB` and `#RRGGBBAA` notation used by CSS, and {@link Color#lerp} blends two colors.
+ * (sRGB) space. Convert explicitly with {@link linear} and {@link gamma} when a value crosses that
+ * boundary. {@link fromString} and {@link toString} exchange colors with the `#RRGGBB` and
+ * `#RRGGBBAA` notation used by CSS, and {@link lerp} blends two colors.
  *
- * Methods modify the color they are called on and return it for chaining. Use
- * {@link Color#clone} for an independent copy and {@link Color#copy} to overwrite. The named
- * constants such as {@link Color.WHITE} and {@link Color.RED} are frozen shared instances, so
- * copy one before modifying it.
+ * Methods modify the color they are called on and return it for chaining. Use {@link clone} for an
+ * independent copy and {@link copy} to overwrite. The named constants such as {@link WHITE} and
+ * {@link RED} are frozen shared instances, so copy one before modifying it.
  *
  * @example
  * // Set a material color from a CSS hex string

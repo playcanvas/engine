@@ -1,20 +1,19 @@
 import { Debug } from '../debug.js';
 
 /**
- * A 3-dimensional vector. Vec3 is commonly used to represent 3D positions, directions, Euler
- * angles or scales.
+ * A 3-dimensional vector. Vec3 is commonly used to represent 3D positions, directions, Euler angles
+ * or scales.
  *
- * Operations follow one convention throughout the math classes: a method modifies the vector it
- * is called on and returns it, so calls can be chained and nothing is allocated. Two-operand
- * forms such as {@link Vec3#add2}, {@link Vec3#sub2} and {@link Vec3#cross} write the result of
- * `lhs op rhs` into `this`, and it is safe for `this` to also be one of the operands. Use
- * {@link Vec3#clone} for an independent copy and {@link Vec3#copy} to overwrite one vector with
- * another.
+ * Operations follow one convention throughout the math classes: a method modifies the vector it is
+ * called on and returns it, so calls can be chained and nothing is allocated. Two-operand forms
+ * such as {@link add2}, {@link sub2} and {@link cross} write the result of `lhs op rhs` into
+ * `this`, and it is safe for `this` to also be one of the operands. Use {@link clone} for an
+ * independent copy and {@link copy} to overwrite one vector with another.
  *
- * The static constants such as {@link Vec3.ZERO}, {@link Vec3.UP} and {@link Vec3.FORWARD} are
- * frozen shared instances: read them freely, but writing to one throws. Vectors returned by
- * engine getters such as {@link GraphNode#getPosition} are internal storage and should be treated
- * as read-only; clone them if you need to keep or modify the value.
+ * The static constants such as {@link ZERO}, {@link UP} and {@link FORWARD} are frozen shared
+ * instances: read them freely, but writing to one throws. Vectors returned by engine getters such
+ * as {@link GraphNode#getPosition} are internal storage and should be treated as read-only; clone
+ * them if you need to keep or modify the value.
  *
  * @example
  * // Move a point 5 units along a direction without allocating

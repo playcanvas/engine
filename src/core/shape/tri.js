@@ -16,10 +16,10 @@ const EPSILON = 1e-6;
 /**
  * A triangle defined by three {@link Vec3} vectors.
  *
- * The vertices are {@link Tri#v0}, {@link Tri#v1} and {@link Tri#v2}; the constructor and
- * {@link Tri#set} copy the vectors they are given. {@link Tri#intersectsRay} tests a {@link Ray}
- * whose direction is normalized against either face of the triangle and writes the hit point into
- * an optional vector. It is the building block for precise picking against mesh geometry.
+ * The vertices are {@link v0}, {@link v1} and {@link v2}; the constructor and {@link set} copy the
+ * vectors they are given. {@link intersectsRay} tests a {@link Ray} whose direction is normalized
+ * against either face of the triangle and writes the hit point into an optional vector. It is the
+ * building block for precise picking against mesh geometry.
  *
  * @example
  * const tri = new Tri(new Vec3(0, 0, 0), new Vec3(1, 0, 0), new Vec3(0, 1, 0));

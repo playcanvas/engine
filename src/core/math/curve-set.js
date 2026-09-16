@@ -3,13 +3,13 @@ import { Curve } from './curve.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
- * A curve set is a collection of curves that share a time axis and are evaluated together, such
- * as the three channels of a color or the components of a vector changing over time.
+ * A curve set is a collection of curves that share a time axis and are evaluated together, such as
+ * the three channels of a color or the components of a vector changing over time.
  *
  * Build one from an array of `[time, value, ...]` key arrays, one per curve, or from a number of
- * empty curves. Setting {@link CurveSet#type} applies that interpolation to every curve in the
- * set, and {@link CurveSet#value} returns the value of each curve at a time as one array. Reach an
- * individual {@link Curve} with {@link CurveSet#get}.
+ * empty curves. Setting {@link type} applies that interpolation to every curve in the set, and
+ * {@link value} returns the value of each curve at a time as one array. Reach an individual
+ * {@link Curve} with {@link get}.
  *
  * @example
  * // Animate an RGB color over time and sample it at the midpoint

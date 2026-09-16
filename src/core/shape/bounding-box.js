@@ -16,17 +16,15 @@ const tmpVecE = new Vec3();
  * Axis-Aligned Bounding Box. An AABB is commonly used for fast overlap tests in collision
  * detection, spatial indexing and frustum culling.
  *
- * A box is stored as a {@link BoundingBox#center} and {@link BoundingBox#halfExtents}. Set it
- * from its extreme corners with {@link BoundingBox#setMinMax} and read them back with
- * {@link BoundingBox#getMin} and {@link BoundingBox#getMax}. Fit a box to vertex data with
- * {@link BoundingBox#compute}, grow it to enclose another box with {@link BoundingBox#add}, and
- * move a local box into world space with {@link BoundingBox#setFromTransformedAabb}, which is how
- * the engine derives a mesh instance's world bounds from its mesh's local bounds.
+ * A box is stored as a {@link center} and {@link halfExtents}. Set it from its extreme corners with
+ * {@link setMinMax} and read them back with {@link getMin} and {@link getMax}. Fit a box to vertex
+ * data with {@link compute}, grow it to enclose another box with {@link add}, and move a local box
+ * into world space with {@link setFromTransformedAabb}, which is how the engine derives a mesh
+ * instance's world bounds from its mesh's local bounds.
  *
- * Tests such as {@link BoundingBox#intersects}, {@link BoundingBox#containsPoint} and
- * {@link BoundingBox#intersectsRay} return a boolean and allocate nothing; methods that produce a
- * vector take an optional result argument to write into. The constructor copies the vectors it is
- * given.
+ * Tests such as {@link intersects}, {@link containsPoint} and {@link intersectsRay} return a
+ * boolean and allocate nothing; methods that produce a vector take an optional result argument to
+ * write into. The constructor copies the vectors it is given.
  *
  * @example
  * // Enclose every mesh instance of a render component in one box

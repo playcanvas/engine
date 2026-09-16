@@ -9,16 +9,15 @@ import { Vec3 } from './vec3.js';
  * A 3x3 matrix. Mat3 is commonly used to represent rotation matrices, 2D transformations or the
  * upper-left portion of a 4x4 matrix for transforming normals.
  *
- * A new Mat3 is the identity. Elements live in {@link Mat3#data}, a 9-element `Float32Array` in
+ * A new Mat3 is the identity. Elements live in {@link data}, a 9-element `Float32Array` in
  * column-major order, so the first three entries are the first column. Build one from a rotation
- * with {@link Mat3#setFromQuat}, or take the upper-left 3x3 of a {@link Mat4} with
- * {@link Mat3#setFromMat4}, and apply it to a {@link Vec3} with {@link Mat3#transformVector}.
- * {@link Mat3#getX}, {@link Mat3#getY} and {@link Mat3#getZ} read the columns, which for a
- * rotation matrix are its axes.
+ * with {@link setFromQuat}, or take the upper-left 3x3 of a {@link Mat4} with {@link setFromMat4},
+ * and apply it to a {@link Vec3} with {@link transformVector}. {@link getX}, {@link getY} and
+ * {@link getZ} read the columns, which for a rotation matrix are its axes.
  *
- * Methods modify the matrix they are called on and return it for chaining. Use {@link Mat3#clone}
- * for an independent copy and {@link Mat3#copy} to overwrite. {@link Mat3.IDENTITY} and
- * {@link Mat3.ZERO} are frozen shared instances.
+ * Methods modify the matrix they are called on and return it for chaining. Use {@link clone} for an
+ * independent copy and {@link copy} to overwrite. {@link IDENTITY} and {@link ZERO} are frozen
+ * shared instances.
  *
  * @example
  * // Take the rotation and scale of an entity's world transform and apply it to a direction

@@ -3,10 +3,10 @@ import { Vec3 } from '../math/vec3.js';
 /**
  * An infinite ray. Rays are commonly used for picking, raycasting and intersection tests.
  *
- * A ray is an {@link Ray#origin} and a {@link Ray#direction}. It performs no intersection itself:
- * pass it to the `intersectsRay` method of a {@link BoundingBox}, {@link BoundingSphere},
+ * A ray is an {@link origin} and a {@link direction}. It performs no intersection itself: pass it
+ * to the `intersectsRay` method of a {@link BoundingBox}, {@link BoundingSphere},
  * {@link OrientedBox}, {@link Plane} or {@link Tri}. Keep the direction normalized, as those tests
- * require it. The constructor copies the vectors it is given, and {@link Ray#set} updates both in
+ * require it. The constructor copies the vectors it is given, and {@link set} updates both in
  * place.
  *
  * @example
