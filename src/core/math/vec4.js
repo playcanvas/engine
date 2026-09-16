@@ -6,7 +6,7 @@ import { Debug } from '../debug.js';
  *
  * Operations follow one convention throughout the math classes: a method that modifies the vector
  * it is called on returns it, so calls can be chained and nothing is allocated, while queries such
- * as {@link distance} and {@link dot} return a number. Two-operand forms such as {@link add2} and
+ * as {@link length} and {@link dot} return a number. Two-operand forms such as {@link add2} and
  * {@link mul2} write the result of `lhs op rhs` into `this`, and it is safe for `this` to also be
  * one of the operands. Use {@link clone} for an independent copy and {@link copy} to overwrite one
  * vector with another.
