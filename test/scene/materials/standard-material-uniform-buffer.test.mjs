@@ -4,8 +4,10 @@ import sinon from 'sinon';
 import { TRACEID_MATERIAL_UPDATE } from '../../../src/core/constants.js';
 import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
+import { Vec2 } from '../../../src/core/math/vec2.js';
 import { Tracing } from '../../../src/core/tracing.js';
 import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -390,6 +392,157 @@ describe('StandardMaterial uniform buffer', function () {
             prepare(clone);
             expectStored(clone, 'material_emissive', linear(0.5, 0.25, 0.75));
             expectStored(clone, 'material_emissiveIntensity', [4]);
+        });
+
+    });
+
+    describe('texture transforms', function () {
+
+        let texture;
+
+        beforeEach(function () {
+            texture = new Texture(app.graphicsDevice, { width: 4, height: 4 });
+        });
+
+        afterEach(function () {
+            texture.destroy();
+        });
+
+        // the transform of a map as the shader reads it: two vec3s from tiling, offset and rotation
+        const transformOf = (tiling, offset, rotation) => {
+            const cr = Math.cos(rotation * Math.PI / 180);
+            const sr = Math.sin(rotation * Math.PI / 180);
+            return [[cr * tiling[0], -sr * tiling[1], offset[0]], [sr * tiling[0], cr * tiling[1], 1 - tiling[1] - offset[1]]];
+        };
+
+        const assign = (material, name = 'diffuse') => {
+            material[`${name}Map`] = texture;
+            material.update();
+            return prepare(material);
+        };
+
+        it('adds the transform uniforms of an assigned map to the layout and moves the values to a new buffer', function () {
+            const material = prepare(new StandardMaterial());
+            const buffer = material._uniformBuffer;
+            const bindGroup = material.uniformBufferBindGroup;
+            const layoutVersion = material.layoutVersion;
+            expect(buffer.format.get('texture_diffuseMapTransform0')).to.equal(undefined);
+            expect(material.propertyDescriptors).to.have.lengthOf(37);
+
+            material.diffuse = new Color(0.5, 0.25, 0.75);
+            assign(material);
+            expect(material.layoutVersion).to.equal(layoutVersion + 1);
+            expect(material._uniformBuffer).to.not.equal(buffer);
+            expect(material.uniformBufferBindGroup).to.not.equal(bindGroup);
+            expect(material.propertyDescriptors).to.have.lengthOf(39);
+            expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.exist;
+            expect(material._uniformBuffer.format.get('texture_diffuseMapTransform1')).to.exist;
+
+            // the identity transform of the new map, and the values written before the move
+            expectStored(material, 'material_diffuse', linear(0.5, 0.25, 0.75));
+            expectStored(material, 'texture_diffuseMapTransform0', [1, 0, 0]);
+            expectStored(material, 'texture_diffuseMapTransform1', [0, 1, 0]);
+
+            // the sampler stays a parameter, the transform is not one anymore
+            expect(material.parameters.texture_diffuseMap).to.exist;
+            expect(material.parameters.texture_diffuseMapTransform0).to.equal(undefined);
+        });
+
+        it('writes the transform from tiling, offset and rotation, assigned or changed in place', function () {
+            const material = assign(new StandardMaterial());
+            material.diffuseMapTiling = new Vec2(2, 3);
+            material.diffuseMapOffset = new Vec2(0.25, 0.5);
+            material.diffuseMapRotation = 90;
+            const version = material._uniformDataVersion;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(version + 1);
+            const [t0, t1] = transformOf([2, 3], [0.25, 0.5], 90);
+            expectStored(material, 'texture_diffuseMapTransform0', t0);
+            expectStored(material, 'texture_diffuseMapTransform1', t1);
+
+            // a change in place of the vector returned by the getter
+            material.diffuseMapTiling.set(4, 5);
+            material.update();
+            const [u0, u1] = transformOf([4, 5], [0.25, 0.5], 90);
+            expectStored(material, 'texture_diffuseMapTransform0', u0);
+            expectStored(material, 'texture_diffuseMapTransform1', u1);
+
+            // nothing changed - nothing written
+            const settled = material._uniformDataVersion;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(settled);
+        });
+
+        it('removes the transform uniforms when the map is removed, and after reset', function () {
+            const material = assign(new StandardMaterial());
+            material.diffuseMap = null;
+            material.update();
+            prepare(material);
+            expect(material.propertyDescriptors).to.have.lengthOf(37);
+            expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.equal(undefined);
+
+            assign(material);
+            expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.exist;
+            material.reset();
+            material.update();
+            prepare(material);
+            expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.equal(undefined);
+            expectStoredDiffuse(material, [1, 1, 1]);
+        });
+
+        it('groups the maps sharing a transform on a uv set, and gives an identity transform no group', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = texture;
+            material.normalMap = texture;
+            material.glossMap = texture;
+            material.update();
+            expect(material._getMapTransformId('diffuse')).to.equal(0);
+
+            material.diffuseMapTiling = new Vec2(2, 2);
+            material.normalMapTiling = new Vec2(2, 2);
+            material.glossMapTiling = new Vec2(3, 3);
+            material.update();
+            const diffuseId = material._getMapTransformId('diffuse');
+            expect(diffuseId).to.be.greaterThan(0);
+            expect(material._getMapTransformId('normal')).to.equal(diffuseId);
+            expect(material._getMapTransformId('gloss')).to.not.equal(diffuseId);
+
+            // a different uv set is transformed separately
+            material.normalMapUv = 1;
+            material.update();
+            expect(material._getMapTransformId('normal')).to.not.equal(diffuseId);
+        });
+
+        it('lets a mesh instance override a transform uniform once its map is assigned', function () {
+            const material = prepare(new StandardMaterial());
+            const meshInstance = new MeshInstance(new Mesh(app.graphicsDevice), material);
+            meshInstance.setParameter('texture_diffuseMapTransform0', [2, 0, 0.5]);
+            expect(meshInstance.getParameter('texture_diffuseMapTransform0').override).to.equal(false);
+
+            assign(material);
+            const bindGroup = meshInstance.getMaterialBindGroup(app.graphicsDevice);
+            expect(bindGroup).to.exist;
+            expect(meshInstance.getParameter('texture_diffuseMapTransform0').override).to.equal(true);
+            const copy = meshInstance._materialUniformBuffer;
+            const offset = copy.format.get('texture_diffuseMapTransform0').offset;
+            expect(Array.from(copy.storageFloat32.subarray(offset, offset + 3))).to.deep.equal([2, 0, 0.5]);
+            meshInstance.destroy();
+        });
+
+        it('reports a tiling changed in place without update()', function () {
+            const warn = sinon.stub(console, 'warn');
+            try {
+                const material = assign(new StandardMaterial());
+                material.diffuseMapTiling.set(2, 2);
+                prepare(material);
+                expect(warn.callCount).to.equal(1);
+                expect(warn.firstCall.args[0]).to.contain('diffuseMapTiling');
+            } finally {
+                warn.restore();
+                for (const message of Debug._loggedMessages) {
+                    if (message.includes('diffuseMapTiling')) Debug._loggedMessages.delete(message);
+                }
+            }
         });
 
     });
