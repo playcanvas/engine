@@ -16,6 +16,10 @@ import { ResourceHandler } from './handler.js';
  * @category Graphics
  */
 class ContainerResource {
+    // The fields are initialized only so that they are declared, and therefore emitted into the
+    // type declarations, without tripping strictPropertyInitialization. The engine never
+    // instantiates this interface stub: GlbContainerResource implements it without extending it.
+
     /**
      * An array of the render assets. Each holds the meshes of one glTF mesh.
      *

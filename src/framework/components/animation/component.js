@@ -550,14 +550,16 @@ class AnimationComponent extends Component {
      * @private
      */
     _onAssetReady(asset) {
-        const resources = /** @type {Animation[]} */ (asset.resources);
+        // the dictionary is documented as Animation but also holds the AnimTracks of GLB assets
+        // (see onSetAnimations), so the resources are handled dynamically here
+        const resources = /** @type {any[]} */ (asset.resources);
         if (resources.length > 1) {
             for (let i = 0; i < resources.length; i++) {
                 this.animations[resources[i].name] = resources[i];
                 this.animationsIndex[asset.id] = resources[i].name;
             }
         } else {
-            this.animations[asset.name] = /** @type {Animation} */ (asset.resource);
+            this.animations[asset.name] = /** @type {any} */ (asset.resource);
             this.animationsIndex[asset.id] = asset.name;
         }
         /* eslint-disable no-self-assign */
@@ -659,7 +661,7 @@ class AnimationComponent extends Component {
         asset.off('remove', this.onAssetRemoved, this);
 
         if (this.animations) {
-            const resources = /** @type {Animation[]} */ (asset.resources);
+            const resources = /** @type {any[]} */ (asset.resources);
             if (resources.length > 1) {
                 for (let i = 0; i < resources.length; i++) {
                     delete this.animations[resources[i].name];
