@@ -6,12 +6,16 @@ import { Asset } from './asset.js';
  */
 
 /**
- * Used to load a group of assets and fires a callback when all assets are loaded.
+ * An AssetListLoader loads a group of assets together and reports once when every one of them has
+ * loaded or failed. Pass it {@link Asset} instances or asset ids. Assets not yet in the
+ * {@link AssetRegistry} are added, and ids that the registry does not know yet are waited for
+ * until a matching asset is registered. Call {@link AssetListLoader#load} to start loading and
+ * {@link AssetListLoader#ready} to be told when the list is complete without starting anything.
  *
- * ```javascript
+ * @example
  * const assets = [
- *     new Asset('model', 'container', { url: `http://example.com/asset.glb` }),
- *     new Asset('styling', 'css', { url: `http://example.com/asset.css` })
+ *     new Asset('model', 'container', { url: 'http://example.com/asset.glb' }),
+ *     new Asset('styling', 'css', { url: 'http://example.com/asset.css' })
  * ];
  * const assetListLoader = new AssetListLoader(assets, app.assets);
  * assetListLoader.load((err, failed) => {
@@ -19,10 +23,8 @@ import { Asset } from './asset.js';
  *         console.error(`${failed.length} assets failed to load`);
  *     } else {
  *         console.log(`${assets.length} assets loaded`);
- *    }
+ *     }
  * });
- * ```
- *
  * @category Asset
  */
 class AssetListLoader extends EventHandler {

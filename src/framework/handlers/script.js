@@ -16,7 +16,7 @@ import { Script, getScriptRegistryName, toLowerCamelCase } from '../script/scrip
  * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
  * files, such as third-party libraries.
  *
- * @category Script
+ * @category Asset
  */
 class ScriptHandler extends ResourceHandler {
     /**

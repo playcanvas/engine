@@ -7,9 +7,10 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * Resource handler used for loading {@link Animation} resources.
+ * Resource handler for the `animation` asset type. Loads an {@link AnimTrack} from a GLB file, or
+ * a legacy {@link Animation} from a PlayCanvas JSON animation file.
  *
- * @category Animation
+ * @category Asset
  */
 class AnimationHandler extends ResourceHandler {
     /**

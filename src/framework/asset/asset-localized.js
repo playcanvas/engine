@@ -3,6 +3,13 @@ import { I18n } from '../i18n/i18n.js';
 
 import { Asset } from './asset.js';
 
+/**
+ * Tracks a default asset and the localized asset that replaces it for the current locale, as
+ * declared through {@link Asset#addLocalizedAssetId}. Used internally by the text element to
+ * switch fonts when the locale changes.
+ *
+ * @ignore
+ */
 class LocalizedAsset extends EventHandler {
     constructor(app) {
         super();

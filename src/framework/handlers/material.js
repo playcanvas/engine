@@ -40,9 +40,11 @@ const PLACEHOLDER_MAP = {
 };
 
 /**
- * Resource handler used for loading {@link Material} resources.
+ * Resource handler for the `material` asset type. Loads material JSON into a
+ * {@link StandardMaterial} and binds the texture assets it references. A custom parser may
+ * produce another kind of {@link Material}.
  *
- * @category Graphics
+ * @category Asset
  */
 class MaterialHandler extends ResourceHandler {
     /**

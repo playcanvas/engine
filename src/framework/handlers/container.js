@@ -160,8 +160,8 @@ class ContainerResource {
 }
 
 /**
- * Loads files that contain multiple resources. For example glTF files can contain textures, models
- * and animations.
+ * Resource handler for the `container` asset type. Loads glTF and GLB files, whose meshes,
+ * materials, textures, animations and Gaussian splats become one {@link ContainerResource}.
  *
  * For glTF files, the asset options object can be used to pass load time callbacks for handling
  * the various resources at different stages of loading. The table below lists the resource types
@@ -201,7 +201,7 @@ class ContainerResource {
  * });
  * ```
  *
- * @category Graphics
+ * @category Asset
  */
 class ContainerHandler extends ResourceHandler {
     /**

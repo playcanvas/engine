@@ -7,9 +7,10 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * Resource handler used for loading {@link Scene} resources.
+ * Resource handler for the `scene` asset type. Loads a PlayCanvas scene JSON file, instantiates
+ * its entity hierarchy as the root of {@link AppBase#scene} and applies the scene's settings.
  *
- * @category Graphics
+ * @category Asset
  */
 class SceneHandler extends ResourceHandler {
     /**

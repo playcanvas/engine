@@ -19,15 +19,28 @@ import { http } from '../../platform/net/http.js';
  */
 
 /**
- * Load resource data, potentially from remote sources. Caches resource on load to prevent multiple
- * requests. Add ResourceHandlers to handle different types of resources.
+ * The ResourceLoader turns a URL and an asset type into a loaded resource. It owns one
+ * {@link ResourceHandler} per type, dispatches each request to the matching handler, and caches
+ * the result by URL and type so the same request is fetched once. Each application has one at
+ * {@link AppBase#loader}.
+ *
+ * Most code never calls the loader directly: the {@link AssetRegistry} does so on its behalf when
+ * an {@link Asset} loads. Use the loader to add support for a new asset type with
+ * {@link ResourceLoader#addHandler}, to reach an existing handler with
+ * {@link ResourceLoader#getHandler}, or to tune requests with
+ * {@link ResourceLoader#maxConcurrentRequests}, {@link ResourceLoader#withCredentials} and
+ * {@link ResourceLoader#enableRetry}.
  *
  * Parsers for formats the engine does not load by default ship in the package and are registered
- * on an existing handler rather than added as one:
- * `playcanvas/scripts/esm/parsers/obj-model.mjs` adds `.obj` model loading via
- * `loader.getHandler('model').addParser(new ObjModelParser(device))`, and
- * `playcanvas/scripts/esm/parsers/spz-parser.mjs` adds `.spz` Gaussian-splat loading via
- * `loader.getHandler('gsplat').addParser(new SpzParser(app))`.
+ * on an existing handler rather than added as one: `playcanvas/scripts/esm/parsers/obj-model.mjs`
+ * adds `.obj` model loading and `playcanvas/scripts/esm/parsers/spz-parser.mjs` adds `.spz`
+ * Gaussian-splat loading.
+ *
+ * @example
+ * app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
+ * @example
+ * app.loader.getHandler('gsplat').addParser(new SpzParser(app));
+ * @category Asset
  */
 class ResourceLoader {
     /**
@@ -54,8 +67,8 @@ class ResourceLoader {
      * @param {ResourceHandler} handler - An instance of a resource handler
      * supporting at least `load()` and `open()`.
      * @example
-     * const loader = new ResourceLoader();
-     * loader.addHandler("json", new JsonHandler());
+     * // register a handler for a new 'csv' asset type (see ResourceHandler for the class)
+     * app.loader.addHandler('csv', new CsvHandler(app));
      */
     addHandler(type, handler) {
         this._handlers[type] = handler;
