@@ -1434,7 +1434,7 @@ class LightComponent extends Component {
             return;
         }
 
-        this.cookie = this._cookieAsset.resource;
+        this.cookie = /** @type {Texture} */ (this._cookieAsset.resource);
     }
 
     onCookieAssetRemove() {

@@ -12,16 +12,46 @@ import { ResourceHandler } from './handler.js';
 /**
  * Container for a list of animations, textures, materials, renders, gsplats and a model.
  *
- * @property {Asset[]} renders An array of the Render assets.
- * @property {Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
- * @property {Asset[]} textures An array of the {@link Texture} assets.
- * @property {Asset[]} animations An array of the {@link Animation} assets.
- * @property {Asset[]} gsplats An array of the gsplat assets, created for meshes using the
- * KHR_gaussian_splatting glTF extension.
  * @interface
  * @category Graphics
  */
 class ContainerResource {
+    /**
+     * An array of the render assets. Each holds the meshes of one glTF mesh.
+     *
+     * @type {Asset<'render'>[]}
+     */
+    renders = [];
+
+    /**
+     * An array of the {@link Material} and/or {@link StandardMaterial} assets.
+     *
+     * @type {Asset<'material'>[]}
+     */
+    materials = [];
+
+    /**
+     * An array of the {@link Texture} assets.
+     *
+     * @type {Asset<'texture'>[]}
+     */
+    textures = [];
+
+    /**
+     * An array of the animation assets. Each resource is an {@link AnimTrack}.
+     *
+     * @type {Asset<'animation'>[]}
+     */
+    animations = [];
+
+    /**
+     * An array of the gsplat assets, created for meshes using the KHR_gaussian_splatting glTF
+     * extension.
+     *
+     * @type {Asset<'gsplat'>[]}
+     */
+    gsplats = [];
+
     /**
      * Instantiates an entity with a model component.
      *

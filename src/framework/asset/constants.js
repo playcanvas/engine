@@ -38,6 +38,8 @@ export const ASSET_AUDIO = 'audio';
 /**
  * Asset type name for image.
  *
+ * @deprecated No resource handler is registered for `'image'` assets. Use {@link ASSET_TEXTURE}
+ * instead.
  * @category Asset
  */
 export const ASSET_IMAGE = 'image';

@@ -127,7 +127,7 @@ class ScriptHandler extends ResourceHandler {
         // @ts-ignore
         import(importUrl.toString()).then((module) => {
 
-            const filename = importUrl.pathname.split('/').pop();
+            const filename = /** @type {string} */ (importUrl.pathname.split('/').pop());
             const scriptSchema = this._app.assets.find(filename, 'script')?.data?.scripts;
 
             for (const key in module) {

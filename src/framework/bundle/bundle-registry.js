@@ -1,6 +1,7 @@
 /**
  * @import { Asset } from '../asset/asset.js'
  * @import { AssetRegistry } from '../asset/asset-registry.js'
+ * @import { Bundle } from './bundle.js'
  */
 
 /**
@@ -328,11 +329,12 @@ class BundleRegistry {
         // Only load files from bundles that're explicitly requested to be loaded.
         if (bundle.loaded) {
             const decodedUrl = decodeURIComponent(url);
+            const resource = /** @type {Bundle} */ (bundle.resource);
 
-            if (bundle.resource.has(decodedUrl)) {
-                callback(null, bundle.resource.get(decodedUrl));
+            if (resource.has(decodedUrl)) {
+                callback(null, resource.get(decodedUrl));
                 return;
-            } else if (bundle.resource.loaded) {
+            } else if (resource.loaded) {
                 callback(`Bundle ${bundle.id} does not contain URL ${url}`);
                 return;
             }
