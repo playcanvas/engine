@@ -48,12 +48,12 @@ import { Asset } from './asset.js';
  * {@link AssetRegistry#find} and {@link AssetRegistry#findAll}, by URL with
  * {@link AssetRegistry#getByUrl}, or by tag with {@link AssetRegistry#findByTag}. Register an
  * asset with {@link AssetRegistry#add}, or create and load one in a single call with
- * {@link AssetRegistry#loadFromUrl}.
+ * {@link AssetRegistry#loadFromUrl}, which reuses any asset already registered for that URL.
  *
  * Adding an asset does not fetch it unless {@link Asset#preload} is true. Call
  * {@link AssetRegistry#load} to fetch it, then wait with {@link Asset#ready} or listen for the
- * registry's `load`, `error`, `add` and `remove` events. Each event also fires in a per-asset form
- * such as `load:[id]` and `load:url:[url]`.
+ * registry's `load`, `error`, `add` and `remove` events. Each also fires per asset as `load:[id]`
+ * and, except for `error`, per URL as `load:url:[url]`.
  *
  * @example
  * const asset = app.assets.find('brick', 'texture');

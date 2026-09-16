@@ -2,7 +2,8 @@ import { JsonParser } from '../parsers/json.js';
 import { ResourceHandler } from './handler.js';
 
 /**
- * Resource handler for the `json` asset type. Loads a JSON file and parses it into a plain object.
+ * Resource handler for the `json` asset type. Loads a JSON file and parses it into the JavaScript
+ * value it encodes: an object, array, string, number, boolean or null.
  *
  * @category Asset
  */

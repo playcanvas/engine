@@ -52,8 +52,10 @@ import { Asset } from '../asset/asset.js';
 
 /**
  * A ResourceHandler loads and opens resources of one asset type on behalf of the
- * {@link ResourceLoader}. The engine registers a handler for every built-in {@link AssetType};
- * register your own with {@link ResourceLoader#addHandler} to add a new type.
+ * {@link ResourceLoader}. The engine ships a handler for every built-in {@link AssetType}, and an
+ * application registers the ones listed in {@link AppOptions#resourceHandlers}, so a
+ * hand-configured {@link AppBase} may support only some types. Register your own with
+ * {@link ResourceLoader#addHandler} to add a new type.
  *
  * A handler works in two steps. {@link ResourceHandler#load} fetches the raw data for a URL and
  * {@link ResourceHandler#open} turns that data into the resource stored on {@link Asset#resource}.
