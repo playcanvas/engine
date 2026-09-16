@@ -138,12 +138,10 @@ class Material {
     parameters = {};
 
     /**
-     * The alpha test reference value to control which fragments are written to the currently
-     * active render target based on alpha value. All fragments with an alpha value of less than
-     * the alphaTest reference value will be discarded. alphaTest defaults to 0 (all fragments
-     * pass).
+     * @type {number}
+     * @private
      */
-    alphaTest = 0;
+    _alphaTest = 0;
 
     /**
      * Enables or disables alpha to coverage. When enabled, and if hardware anti-aliasing is on,
@@ -399,6 +397,26 @@ class Material {
         Debug.deprecated('Material.chunks has been removed, please use Material.getShaderChunks instead. For example: material.getShaderChunks(SHADERLANGUAGE_GLSL).set("chunkName", "chunkCode")');
         Object.assign(this._oldChunks, Object.fromEntries(this.shaderChunks.glsl));
         return this._oldChunks;
+    }
+
+    /**
+     * Sets the alpha test reference value to control which fragments are written to the currently
+     * active render target based on alpha value. All fragments with an alpha value of less than
+     * the alphaTest reference value will be discarded. Defaults to 0 (all fragments pass).
+     *
+     * @type {number}
+     */
+    set alphaTest(value) {
+        this._alphaTest = value;
+    }
+
+    /**
+     * Gets the alpha test reference value.
+     *
+     * @type {number}
+     */
+    get alphaTest() {
+        return this._alphaTest;
     }
 
     /**

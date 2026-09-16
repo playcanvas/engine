@@ -1633,6 +1633,30 @@ class StandardMaterial extends Material {
     }
 
     /**
+     * Sets the alpha test reference value to control which fragments are written to the currently
+     * active render target based on alpha value. All fragments with an alpha value of less than
+     * the alphaTest reference value will be discarded. Defaults to 0 (all fragments pass).
+     *
+     * @type {number}
+     */
+    set alphaTest(value) {
+        if (this._alphaTest !== value) {
+            // the alpha test is compiled into the shader when the value is above 0
+            this._dirtyShader = this._dirtyShader || (this._alphaTest === 0) !== (value === 0);
+            this._alphaTest = value;
+        }
+    }
+
+    /**
+     * Gets the alpha test reference value.
+     *
+     * @type {number}
+     */
+    get alphaTest() {
+        return this._alphaTest;
+    }
+
+    /**
      * Copy a `StandardMaterial`.
      *
      * @param {StandardMaterial} source - The material to copy from.
@@ -2058,14 +2082,6 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     }
 }
 
-function _defineFloat(name, defaultValue, dirtyShaderFunc = dirtyShaderOnZeroOrOne) {
-    defineProp({
-        name: name,
-        defaultValue: defaultValue,
-        dirtyShaderFunc: dirtyShaderFunc
-    });
-}
-
 // Adding or removing an object selects different shader code (e.g. the reflection or ambient
 // source), while replacing one object with another only changes uniform data.
 const dirtyShaderOnPresence = (oldValue, newValue) => !!oldValue !== !!newValue;
@@ -2133,8 +2149,7 @@ function _defineMaterialProps() {
     registerProp('alphaDither', () => null);
     registerProp('cubeMapProjectionBox', () => null);
 
-    _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
-    _defineFloat('aoUvSet', 0); // legacy
+    registerProp('alphaTest', () => 0);
 
     _defineObject('ambientSH');
 
@@ -2287,6 +2302,7 @@ _defineDeprecatedAlias('metalnessVertexColor', 'metalnessMapVertexColor');
 _defineDeprecatedAlias('glossVertexColor', 'glossMapVertexColor');
 _defineDeprecatedAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineDeprecatedAlias('lightVertexColor', 'lightMapVertexColor');
+_defineDeprecatedAlias('aoMapUv', 'aoUvSet');
 
 _defineDeprecatedAlias('sheenGloss', 'sheenGlossiness');
 _defineDeprecatedAlias('clearCoatGloss', 'clearCoatGlossiness');

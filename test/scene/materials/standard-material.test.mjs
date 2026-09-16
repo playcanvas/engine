@@ -428,6 +428,35 @@ describe('StandardMaterial', function () {
             return variant;
         };
 
+        it('invalidates shaders when alphaTest moves across 0, through the accessor of the subclass', function () {
+            const material = new StandardMaterial();
+            material.update();
+            let variant = addVariant(material);
+
+            // the base class stores the value in a backing field, no own property shadows the accessor
+            expect(Object.getOwnPropertyDescriptor(material, 'alphaTest')).to.equal(undefined);
+            material.alphaTest = 0.5;
+            expect(material.alphaTest).to.equal(0.5);
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            variant = addVariant(material);
+            material.alphaTest = 0.7;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.alphaTest = 0;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+        });
+
+        it('forwards the deprecated aoUvSet to aoMapUv', function () {
+            const material = new StandardMaterial();
+            material.aoUvSet = 1;
+            expect(material.aoMapUv).to.equal(1);
+            expect(material.aoUvSet).to.equal(1);
+        });
+
         it('does not invalidate shaders when color properties are read', function () {
             const material = new StandardMaterial();
             material.update();
@@ -780,6 +809,17 @@ describe('StandardMaterial', function () {
             material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights);
             return options.litOptions;
         };
+
+        it('keeps aoMapUv as the uv set of the ambient occlusion map', function () {
+            const material = new StandardMaterial();
+            material.aoMap = { name: 'ao', encoding: 'linear' };
+            material.aoMapUv = 1;
+            material.update();
+            const options = new StandardMaterialOptions();
+            const vertexFormat = { hasUv: () => true, hasColor: false };
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights, vertexFormat);
+            expect(options.aoMapUv).to.equal(1);
+        });
 
         it('publishes only the material environment textures', function () {
             const material = new StandardMaterial();
