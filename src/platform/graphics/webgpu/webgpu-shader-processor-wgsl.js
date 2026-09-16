@@ -540,7 +540,7 @@ class WebgpuShaderProcessorWGSL {
             meshUniforms.push(new UniformFormat(uniform.name, uniformType, uniform.arraySize));
         });
         // do not synthesize a dummy uniform when empty - reflection must stay strictly additive
-        const computeUniformBufferFormat = meshUniforms.length > 0 ? new UniformBufferFormat(device, meshUniforms) : null;
+        const computeUniformBufferFormat = meshUniforms.length > 0 ? new UniformBufferFormat(device, meshUniforms, { pack: true }) : null;
 
         // parse resource lines (no vertex/fragment merge for compute)
         const parsedResources = WebgpuShaderProcessorWGSL.mergeResources(extracted.resources, [], shader);
@@ -684,7 +684,7 @@ class WebgpuShaderProcessorWGSL {
             meshUniforms.push(new UniformFormat(UNUSED_UNIFORM_NAME, UNIFORMTYPE_FLOAT));
         }
 
-        const meshUniformBufferFormat = new UniformBufferFormat(device, meshUniforms);
+        const meshUniformBufferFormat = new UniformBufferFormat(device, meshUniforms, { pack: true });
 
         // generate code for uniform buffers, starts on the slot 0
         let code = '';

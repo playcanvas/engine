@@ -321,7 +321,7 @@ class ShaderProcessorGLSL {
             meshUniforms.push(new UniformFormat(UNUSED_UNIFORM_NAME, UNIFORMTYPE_FLOAT));
         }
 
-        const meshUniformBufferFormat = meshUniforms.length ? new UniformBufferFormat(device, meshUniforms) : null;
+        const meshUniformBufferFormat = meshUniforms.length ? new UniformBufferFormat(device, meshUniforms, { pack: true }) : null;
 
         // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
         const textureFormats = [];

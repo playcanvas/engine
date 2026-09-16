@@ -797,7 +797,7 @@ class ShadowRenderer {
             // format of the view uniform buffer
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)
-            ]);
+            ], { pack: true });
         }
     }
 
