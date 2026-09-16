@@ -556,8 +556,8 @@ class AssetRegistry extends EventHandler {
      *
      * The `type` also types the loaded asset: `loadFromUrl(url, 'texture', callback)` passes an
      * `Asset<'texture'>` to `callback`, whose `resource` is a {@link Texture}. See {@link AssetMap}.
-     * An asset already registered for the URL is reused when it has the requested type; otherwise
-     * a new asset of the requested type is created.
+     * An asset already registered for the URL is reused, whatever its type, so load a URL as one
+     * type only; otherwise the callback can receive an asset of another type than requested.
      *
      * @template {AssetType | (string & {})} K
      * @param {string} url - The url to load.
@@ -598,10 +598,9 @@ class AssetRegistry extends EventHandler {
             url: url
         };
 
-        // reuse the asset registered for this URL only when it has the requested type: the URL index
-        // is not keyed by type, and the callback promises an asset of the requested type
-        const existing = this.getByUrl(url);
-        let asset = /** @type {Asset<K> | undefined} */ (existing?.type === type ? existing : undefined);
+        // the URL index holds one asset per URL regardless of type, so this hands back whichever
+        // asset is registered for the URL; indexing by URL and type is tracked in #8489
+        let asset = /** @type {Asset<K> | undefined} */ (this.getByUrl(url));
         if (!asset) {
             asset = new Asset(name, type, file);
             this.add(asset);
