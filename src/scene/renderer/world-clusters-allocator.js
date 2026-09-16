@@ -60,6 +60,7 @@ class WorldClustersAllocator {
             cluster.destroy();
         });
         this._allocated.length = 0;
+        this._clusters.clear();
     }
 
     get count() {
