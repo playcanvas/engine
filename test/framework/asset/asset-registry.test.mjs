@@ -332,6 +332,33 @@ describe('AssetRegistry', function () {
             });
         });
 
+        it('reuses the asset registered for the URL when it has the requested type', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', (err, first) => {
+                expect(err).to.be.null;
+                app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', (err, second) => {
+                    expect(err).to.be.null;
+                    expect(second).to.equal(first);
+                    done();
+                });
+            });
+        });
+
+        it('creates a new asset when the URL is registered under a different type', (done) => {
+            app.assets.loadFromUrl(`${assetPath}test.txt`, 'text', (err, text) => {
+                expect(err).to.be.null;
+                app.assets.loadFromUrl(`${assetPath}test.txt`, 'binary', (err, binary) => {
+                    expect(err).to.be.null;
+                    expect(binary).to.not.equal(text);
+                    expect(text.type).to.equal('text');
+                    expect(binary.type).to.equal('binary');
+                    expect(text.resource).to.equal('hello world');
+                    expect(binary.resource).to.be.instanceof(ArrayBuffer);
+                    expect(binary.resource.byteLength).to.equal(11);
+                    done();
+                });
+            });
+        });
+
     });
 
     describe('#remove', function () {
