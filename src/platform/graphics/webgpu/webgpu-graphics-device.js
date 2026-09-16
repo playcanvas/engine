@@ -72,6 +72,26 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     _deferredDestroys = [];
 
     /**
+     * @type {GPUAdapter|null}
+     * @private
+     */
+    gpuAdapter = null;
+
+    /**
+     * @type {GPUDevice|null}
+     * @private
+     */
+    wgpu = null;
+
+    /**
+     * Configuration of the canvas textures returned by getCurrentTexture.
+     *
+     * @type {GPUCanvasConfiguration|null}
+     * @private
+     */
+    canvasConfig = null;
+
+    /**
      * Strong references used for device recovery. Owners must explicitly destroy bind groups
      * when no longer needed to unregister them.
      *
@@ -343,7 +363,19 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // Destroy listeners can enqueue more resources, and no further submit will drain them.
         this.destroyDeferredResources();
+        this.clearDeviceState();
+
+        this._bindGroups.clear();
+        this._bindGroupFormats.clear();
+        this._computes.clear();
+        this._drawCommands.clear();
+
+        this.gpuContext?.unconfigure();
         this.wgpu?.destroy();
+        this.wgpu = null;
+        this.gpuAdapter = null;
+        this.gpuContext = null;
+        this.canvasConfig = null;
     }
 
     /** @private */
@@ -501,10 +533,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             xrCompatible: !!this.initOptions.xrCompatible
         };
 
-        /**
-         * @type {GPUAdapter}
-         * @private
-         */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
         // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
@@ -589,10 +617,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         DebugHelper.setLabel(deviceDescr, 'PlayCanvasWebGPUDevice');
 
-        /**
-         * @type {GPUDevice}
-         * @private
-         */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
         // HTML-in-Canvas support (copyElementImageToTexture)
@@ -650,12 +674,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        /**
-         * Configuration of the main colorframebuffer we obtain using getCurrentTexture
-         *
-         * @type {GPUCanvasConfiguration}
-         * @private
-         */
         this.canvasConfig = {
             device: this.wgpu,
             colorSpace: 'srgb',
@@ -751,9 +769,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /** @ignore */
-    loseContext() {
-        // Nothing recorded against the old device can be submitted to its replacement.
+    /** @private */
+    clearDeviceState() {
+        // Recorded commands and cached pipelines cannot outlive their native device.
         this.commandEncoder = null;
         this.commandBuffers.length = 0;
         this.passEncoder = null;
@@ -762,6 +780,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.bindGroupFormats.length = 0;
         this.renderPipeline.cache.clear();
         this.computePipeline.cache.clear();
+    }
+
+    /** @ignore */
+    loseContext() {
+        this.clearDeviceState();
+
         // Release owned buffers before their handles are invalidated, so destruction also
         // removes their VRAM accounting. The remaining application resources are restored below.
         this.destroyDeviceResources();
