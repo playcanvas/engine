@@ -349,30 +349,32 @@ class LayoutGroupComponent extends Component {
         return (entity === this.entity) || (this.entity.children.indexOf(entity) !== -1);
     }
 
-    _listenForReflowEvents(target, onOff) {
-        if (target.element) {
+    _listenForReflowEvents(target, onOff, component = null) {
+        // Component lifecycle changes must leave the other component's subscriptions intact.
+        // Hierarchy changes omit the component to update both sets of subscriptions.
+        if (target.element && (!component || component === target.element)) {
             target.element[onOff]('enableelement', this._scheduleReflow, this);
             target.element[onOff]('disableelement', this._scheduleReflow, this);
             target.element[onOff]('resize', this._scheduleReflow, this);
             target.element[onOff]('set:pivot', this._scheduleReflow, this);
         }
 
-        if (target.layoutchild) {
+        if (target.layoutchild && (!component || component === target.layoutchild)) {
             target.layoutchild[onOff]('set_enabled', this._scheduleReflow, this);
             target.layoutchild[onOff]('resize', this._scheduleReflow, this);
         }
     }
 
-    _onElementOrLayoutComponentAdd(entity) {
+    _onElementOrLayoutComponentAdd(entity, component) {
         if (this._isSelfOrChild(entity)) {
-            this._listenForReflowEvents(entity, 'on');
+            this._listenForReflowEvents(entity, 'on', component);
             this._scheduleReflow();
         }
     }
 
-    _onElementOrLayoutComponentRemove(entity) {
+    _onElementOrLayoutComponentRemove(entity, component) {
         if (this._isSelfOrChild(entity)) {
-            this._listenForReflowEvents(entity, 'off');
+            this._listenForReflowEvents(entity, 'off', component);
             this._scheduleReflow();
         }
     }
