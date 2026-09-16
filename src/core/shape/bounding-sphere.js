@@ -11,6 +11,19 @@ const tmpVecB = new Vec3();
 /**
  * A bounding sphere is a volume for facilitating fast intersection testing.
  *
+ * A sphere is a {@link BoundingSphere#center} and a {@link BoundingSphere#radius}. It is the
+ * cheapest bounding volume to test, so it suits broad-phase checks made before a finer test.
+ * {@link BoundingSphere#containsPoint}, {@link BoundingSphere#intersectsBoundingSphere} and
+ * {@link BoundingSphere#intersectsRay} return a boolean and allocate nothing. Unlike
+ * {@link BoundingBox}, the constructor keeps a reference to the center vector it is given rather
+ * than copying it, so the sphere follows any later changes to that vector.
+ *
+ * @example
+ * // A trigger volume 2 units around an entity
+ * const sphere = new BoundingSphere(entity.getPosition().clone(), 2);
+ * if (sphere.containsPoint(player.getPosition())) {
+ *     // the player is within 2 units of the entity
+ * }
  * @category Math
  */
 class BoundingSphere {

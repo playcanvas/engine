@@ -5,6 +5,24 @@ import { math } from './math.js';
  * A 2-dimensional vector. Vec2 is commonly used to represent 2D positions, directions, texture
  * coordinates (UVs) or any pair of related numeric values.
  *
+ * Operations follow one convention throughout the math classes: a method modifies the vector it
+ * is called on and returns it, so calls can be chained and nothing is allocated. Two-operand
+ * forms such as {@link Vec2#add2} and {@link Vec2#sub2} write the result of `lhs op rhs` into
+ * `this`, and it is safe for `this` to also be one of the operands. Use {@link Vec2#clone} for
+ * an independent copy and {@link Vec2#copy} to overwrite one vector with another.
+ *
+ * The static constants such as {@link Vec2.ZERO} and {@link Vec2.UP} are frozen shared instances:
+ * read them freely, but writing to one throws. Copy a constant before modifying it.
+ *
+ * @example
+ * // Scroll a texture offset each frame without allocating
+ * const offset = new Vec2(0, 0);
+ * const speed = new Vec2(0.1, 0);
+ * offset.addScaled(speed, dt);
+ * @example
+ * // Chain operations; every method returns the vector it was called on
+ * const toTarget = new Vec2().sub2(target, position).normalize();
+ * const distance = target.distance(position);
  * @category Math
  */
 class Vec2 {

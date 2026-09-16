@@ -8,6 +8,24 @@ import { math } from './math.js';
  * {@link a} (alpha) component defines transparency. An alpha of 1 is fully opaque. An alpha of
  * 0 is fully transparent.
  *
+ * A Color stores the values it is given and does not track whether they are in linear or gamma
+ * (sRGB) space. Convert explicitly with {@link Color#linear} and {@link Color#gamma} when a value
+ * crosses that boundary. {@link Color#fromString} and {@link Color#toString} exchange colors with
+ * the `#RRGGBB` and `#RRGGBBAA` notation used by CSS, and {@link Color#lerp} blends two colors.
+ *
+ * Methods modify the color they are called on and return it for chaining. Use
+ * {@link Color#clone} for an independent copy and {@link Color#copy} to overwrite. The named
+ * constants such as {@link Color.WHITE} and {@link Color.RED} are frozen shared instances, so
+ * copy one before modifying it.
+ *
+ * @example
+ * // Set a material color from a CSS hex string
+ * material.diffuse.fromString('#ff8800');
+ * material.update();
+ * @example
+ * // Fade between two colors without allocating
+ * const tint = new Color();
+ * tint.lerp(Color.RED, Color.BLUE, t);
  * @category Math
  */
 class Color {

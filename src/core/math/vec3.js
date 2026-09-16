@@ -4,6 +4,31 @@ import { Debug } from '../debug.js';
  * A 3-dimensional vector. Vec3 is commonly used to represent 3D positions, directions, Euler
  * angles or scales.
  *
+ * Operations follow one convention throughout the math classes: a method modifies the vector it
+ * is called on and returns it, so calls can be chained and nothing is allocated. Two-operand
+ * forms such as {@link Vec3#add2}, {@link Vec3#sub2} and {@link Vec3#cross} write the result of
+ * `lhs op rhs` into `this`, and it is safe for `this` to also be one of the operands. Use
+ * {@link Vec3#clone} for an independent copy and {@link Vec3#copy} to overwrite one vector with
+ * another.
+ *
+ * The static constants such as {@link Vec3.ZERO}, {@link Vec3.UP} and {@link Vec3.FORWARD} are
+ * frozen shared instances: read them freely, but writing to one throws. Vectors returned by
+ * engine getters such as {@link GraphNode#getPosition} are internal storage and should be treated
+ * as read-only; clone them if you need to keep or modify the value.
+ *
+ * @example
+ * // Move a point 5 units along a direction without allocating
+ * const position = new Vec3(1, 2, 3);
+ * const direction = new Vec3(0, 0, -1);
+ * position.addScaled(direction, 5);   // position is now [1, 2, -2]
+ * @example
+ * // Chain operations; every method returns the vector it was called on
+ * const toTarget = new Vec3().sub2(target, origin).normalize();
+ * const distance = target.distance(origin);
+ * @example
+ * // Keep a copy of an entity's position, then modify it safely
+ * const start = entity.getPosition().clone();
+ * start.y += 1;
  * @category Math
  */
 class Vec3 {
