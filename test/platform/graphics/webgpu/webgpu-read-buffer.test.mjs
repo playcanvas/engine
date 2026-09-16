@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
+import { WebgpuBuffer } from '../../../../src/platform/graphics/webgpu/webgpu-buffer.js';
 import { WebgpuGraphicsDevice } from '../../../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
 
 describe('WebGPU buffer readback', function () {
@@ -53,6 +54,30 @@ describe('WebGPU buffer readback', function () {
             expect(staging.destroy.calledOnceWithExactly(device)).to.be.true;
         });
     }
+
+    it('destroys a pending readback buffer even when its cleanup runs after device destruction', async function () {
+        const device = new WebgpuGraphicsDevice({ width: 1, height: 1 });
+        const error = new DOMException('Device destroyed', 'AbortError');
+        let rejectMapping;
+        const buffer = {
+            mapAsync: () => new Promise((resolve, reject) => {
+                rejectMapping = reject;
+            }),
+            unmap: sinon.spy(),
+            destroy: sinon.spy()
+        };
+        const staging = new WebgpuBuffer();
+        staging.buffer = buffer;
+        device.wgpu = { destroy: () => rejectMapping(error) };
+
+        const result = device.readBuffer(staging, 4, null, true).catch(error => error);
+        device.destroy();
+
+        expect(await result).to.equal(error);
+        expect(buffer.unmap.calledOnce).to.be.true;
+        expect(buffer.destroy.calledOnce).to.be.true;
+        expect(device._deferredDestroys).to.be.empty;
+    });
 
     it('rejects and cleans up when copying the mapped result fails', async function () {
         const error = new Error('Mapped range unavailable');

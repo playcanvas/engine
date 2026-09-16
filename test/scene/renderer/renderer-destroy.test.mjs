@@ -1,0 +1,65 @@
+import { expect } from 'chai';
+import { spy } from 'sinon';
+
+import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { Renderer } from '../../../src/scene/renderer/renderer.js';
+import { Scene } from '../../../src/scene/scene.js';
+
+describe('Renderer destruction', function () {
+    let device;
+    let scene;
+    let renderer;
+
+    beforeEach(function () {
+        device = new NullGraphicsDevice({ width: 1, height: 1 });
+        scene = new Scene(device);
+        renderer = new Renderer(device, scene);
+    });
+
+    afterEach(function () {
+        renderer?.destroy();
+        scene.destroy();
+        device.destroy();
+    });
+
+    it('releases the empty and shared layer cluster textures before device destruction', function () {
+        const allocator = renderer.worldClustersAllocator;
+        const empty = allocator.empty;
+        const layer = {
+            hasClusteredLights: true,
+            meshInstances: [{}],
+            getLightIdHash: () => 1,
+            clusteredLightsSet: new Set()
+        };
+        const steps = [{ layer }, { layer }];
+        allocator.update([{ layerRenderSteps: steps }], scene.lighting);
+        expect(steps[0].lightClusters).to.equal(steps[1].lightClusters);
+        expect(allocator.count).to.equal(1);
+
+        const textures = [empty, steps[0].lightClusters].flatMap(cluster => [
+            cluster.lightsBuffer.lightsTexture, cluster.clusterTexture
+        ]);
+        const destroys = textures.map(texture => spy(texture.impl, 'destroy'));
+
+        const destroyedRenderer = renderer;
+        renderer.destroy();
+        renderer = null;
+
+        for (let i = 0; i < textures.length; i++) {
+            expect(destroys[i].calledOnceWithExactly(device)).to.be.true;
+            expect(textures[i].device).to.be.null;
+        }
+        expect(destroyedRenderer.worldClustersAllocator).to.be.null;
+        expect(allocator._empty).to.be.null;
+        expect(allocator.count).to.equal(0);
+        expect(allocator._clusters.size).to.equal(0);
+        expect(device._destroyed).not.to.be.true;
+    });
+
+    it('can destroy a renderer before any clusters are allocated', function () {
+        const destroyedRenderer = renderer;
+        renderer.destroy();
+        renderer = null;
+        expect(destroyedRenderer.worldClustersAllocator).to.be.null;
+    });
+});

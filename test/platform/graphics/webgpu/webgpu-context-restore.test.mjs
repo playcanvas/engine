@@ -49,6 +49,8 @@ describe('WebGPU context restoration', function () {
         device.renderPipeline = { cache: new Map() };
         device.computePipeline = new WebgpuComputePipeline(device);
         device.destroyDeviceResources = () => {};
+        device.destroyDeferredResources = WebgpuGraphicsDevice.prototype.destroyDeferredResources;
+        device.clearDeviceState = WebgpuGraphicsDevice.prototype.clearDeviceState;
         device.createBindGroupFormatImpl = format => new WebgpuBindGroupFormat(format);
         device.createBindGroupImpl = bindGroup => new WebgpuBindGroup(bindGroup);
         device.createComputeImpl = compute => new WebgpuCompute(compute);
