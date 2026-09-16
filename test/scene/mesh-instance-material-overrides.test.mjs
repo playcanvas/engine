@@ -364,11 +364,35 @@ describe('MeshInstance material uniform buffer overrides', function () {
             expect(warn.called).to.equal(false);
         });
 
+        it('keeps the snapshots off the parameters, reuses them while the length holds, and drops deleted ones', function () {
+            const meshInstance = new MeshInstance(mesh, material);
+            const color = { name: 'uColor', data: [1, 0, 0], uniformFormat: { numComponents: 3, count: 0 } };
+            const scale = { name: 'uScale', data: new Float32Array([2]), uniformFormat: { numComponents: 1, count: 0 } };
+            recordAppliedOverrides(meshInstance, [color, scale]);
+            const snapshots = meshInstance._debugOverrideSnapshots;
+            expect(Object.keys(color)).to.deep.equal(['name', 'data', 'uniformFormat']);
+            expect(snapshots.get(color)).to.deep.equal([1, 0, 0]);
+            expect(snapshots.get(scale)).to.deep.equal([2]);
+
+            // the same array is written again for the same length
+            const snapshot = snapshots.get(color);
+            color.data[1] = 1;
+            recordAppliedOverrides(meshInstance, [color, scale]);
+            expect(snapshots.get(color)).to.equal(snapshot);
+            expect(snapshot).to.deep.equal([1, 1, 0]);
+
+            // a parameter no longer overriding is forgotten
+            recordAppliedOverrides(meshInstance, [color]);
+            expect(snapshots.has(scale)).to.equal(false);
+            expect(snapshots.size).to.equal(1);
+        });
+
         it('records no snapshot for a number', function () {
+            const meshInstance = new MeshInstance(mesh, material);
             const override = { name: 'uValue', data: 2, uniformFormat: { numComponents: 1, count: 0 } };
-            recordAppliedOverrides([override]);
-            expect(override.debugSnapshot).to.equal(null);
-            expect(getMutatedOverrides([override])).to.deep.equal([]);
+            recordAppliedOverrides(meshInstance, [override]);
+            expect(meshInstance._debugOverrideSnapshots.has(override)).to.equal(false);
+            expect(getMutatedOverrides(meshInstance, [override])).to.deep.equal([]);
         });
 
     });

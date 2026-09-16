@@ -111,6 +111,10 @@ const initMeshInstanceDebug = (meshInstance) => {
     // the override version at which the warning about an override changed in place fired, so that
     // nothing is checked again until the next setParameter
     meshInstance._debugWarnedOverridesVersion = -1;
+
+    // the array values of the overrides as last applied to the copy of the material uniform buffer,
+    // by parameter, kept here rather than on the parameters to leave their shape and API untouched
+    meshInstance._debugOverrideSnapshots = new Map();
 };
 
 /**
@@ -118,24 +122,40 @@ const initMeshInstanceDebug = (meshInstance) => {
  * uniform buffer, to detect changes made in place afterwards. Numbers cannot change in place and
  * are not recorded.
  *
+ * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {MeshInstanceParameter[]} overrides - The applied overrides.
  * @ignore
  */
-const recordAppliedOverrides = (overrides) => {
+const recordAppliedOverrides = (meshInstance, overrides) => {
+    const snapshots = meshInstance._debugOverrideSnapshots;
     for (let i = 0; i < overrides.length; i++) {
         const override = overrides[i];
         const data = override.data;
         if (typeof data === 'number') {
-            override.debugSnapshot = null;
+            snapshots.delete(override);
         } else {
-            // only the components the uniform reads, kept as numbers to compare exactly
+            // only the components the uniform reads, kept as numbers to compare exactly; the
+            // per-frame pattern of mutating and setting an array again records on every draw, so
+            // the snapshot array is reused while its length holds
             const format = override.uniformFormat;
             const length = Math.min(data.length, format.numComponents * Math.max(1, format.count));
-            const snapshot = new Array(length);
+            let snapshot = snapshots.get(override);
+            if (!snapshot || snapshot.length !== length) {
+                snapshot = new Array(length);
+                snapshots.set(override, snapshot);
+            }
             for (let j = 0; j < length; j++) {
                 snapshot[j] = data[j];
             }
-            override.debugSnapshot = snapshot;
+        }
+    }
+
+    // drop the snapshots of parameters deleted since the last record
+    if (snapshots.size > overrides.length) {
+        for (const parameter of snapshots.keys()) {
+            if (!overrides.includes(parameter)) {
+                snapshots.delete(parameter);
+            }
         }
     }
 };
@@ -143,15 +163,17 @@ const recordAppliedOverrides = (overrides) => {
 /**
  * Returns the names of the overrides whose array values changed in place since they were applied.
  *
+ * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {MeshInstanceParameter[]} overrides - The overrides.
  * @returns {string[]} The names of the changed overrides.
  * @ignore
  */
-const getMutatedOverrides = (overrides) => {
+const getMutatedOverrides = (meshInstance, overrides) => {
     const names = [];
+    const snapshots = meshInstance._debugOverrideSnapshots;
     for (let i = 0; i < overrides.length; i++) {
         const override = overrides[i];
-        const snapshot = override.debugSnapshot;
+        const snapshot = snapshots.get(override);
         if (snapshot) {
             const data = override.data;
             for (let j = 0; j < snapshot.length; j++) {
@@ -167,7 +189,9 @@ const getMutatedOverrides = (overrides) => {
 
 /**
  * Warns about overrides changed in place without a subsequent {@link MeshInstance#setParameter},
- * identifying the mesh instance by its node and material.
+ * identifying the mesh instance by its node and material. Like the material warning, one report
+ * per message is enough to point at the bug, so the message is deduplicated for the session: the
+ * warned version kept by the mesh instance limits the cost of the detection, not the output.
  *
  * @param {MeshInstance} meshInstance - The mesh instance.
  * @param {string[]} names - The names of the changed overrides.

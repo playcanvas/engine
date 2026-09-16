@@ -42,8 +42,6 @@ import { PickerId } from './picker-id.js';
  * the parameter is applied through the mesh instance's copy of it rather than through the scope.
  * @property {UniformFormat|null} uniformFormat - The format of the uniform in the material uniform
  * buffer, resolved on first use for overrides.
- * @property {number[]|null} [debugSnapshot] - Debug builds only: the array value of an override as
- * it was last applied to the copy of the material uniform buffer, to detect changes made in place.
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
  * @import { SkinInstance } from './skin-instance.js'
@@ -1429,8 +1427,8 @@ class MeshInstance {
     /**
      * Sets a shader parameter on a mesh instance. Note that this parameter will take precedence
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
-     * Array values are read when the parameter is set; after changing an array in place, call this
-     * method again with it to apply the change.
+     * After changing the contents of an array value, call this method again with it to apply the
+     * change.
      *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
@@ -1607,11 +1605,11 @@ class MeshInstance {
 
         Debug.call(() => {
             // an override array changed in place is not applied until the next setParameter. When no
-            // setParameter moved the override version since the last synchronization, warn once about
-            // such a change, and check nothing until a setParameter moves the version
+            // setParameter moved the override version since the last synchronization, warn about such
+            // a change, and check nothing until a setParameter moves the version
             if (this._syncedOverridesVersion === this._materialOverridesVersion &&
                 this._debugWarnedOverridesVersion !== this._materialOverridesVersion) {
-                const names = getMutatedOverrides(overrides);
+                const names = getMutatedOverrides(this, overrides);
                 if (names.length > 0) {
                     this._debugWarnedOverridesVersion = this._materialOverridesVersion;
                     warnMutatedOverrides(this, names);
@@ -1628,7 +1626,7 @@ class MeshInstance {
                 Debug.assert(override.uniformFormat, `Uniform '${override.name}' is not part of the material uniform buffer.`, this);
                 uniformBuffer.setUniform(override.uniformFormat, override.data);
             }
-            Debug.call(() => recordAppliedOverrides(overrides));
+            Debug.call(() => recordAppliedOverrides(this, overrides));
             uniformBuffer.upload();
             this._syncedMaterialDataVersion = material.uniformDataVersion;
             this._syncedOverridesVersion = this._materialOverridesVersion;
