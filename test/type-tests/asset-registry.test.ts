@@ -64,10 +64,10 @@ type T12 = Expect<Equal<Asset<'texture' | 'cubemap'>['resource'], Texture | null
 // ---- per-type nullability and unions live in AssetMap, not in Asset
 type T33 = Expect<Equal<Asset<'cubemap'>['resource'], Texture | null>>;
 type T34 = Expect<Equal<Asset<'cubemap'>['resources'], (Texture | null)[]>>;
+type T35 = Expect<Equal<Asset<'font'>['resource'], Font | CanvasFont>>;
 declare const canvasFont: CanvasFont;
 const fontAsset = new Asset('dynamic', 'font');
 fontAsset.resource = canvasFont;
-type T35 = Expect<Equal<typeof fontAsset.resource, Font | CanvasFont>>;
 assets.add(texture);
 assets.add(plainText);
 assets.load(bundle);
