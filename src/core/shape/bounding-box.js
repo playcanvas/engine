@@ -129,6 +129,16 @@ class BoundingBox {
     }
 
     /**
+     * Reports whether two axis-aligned bounding boxes are equal.
+     *
+     * @param {BoundingBox} other - The AABB to compare to.
+     * @returns {boolean} True if the AABBs have the same center and half extents, false otherwise.
+     */
+    equals(other) {
+        return this.center.equals(other.center) && this.halfExtents.equals(other.halfExtents);
+    }
+
+    /**
      * Test whether two axis-aligned bounding boxes intersect.
      *
      * @param {BoundingBox} other - Bounding box to test against.

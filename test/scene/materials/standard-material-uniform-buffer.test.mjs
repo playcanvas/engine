@@ -5,9 +5,12 @@ import { TRACEID_MATERIAL_UPDATE } from '../../../src/core/constants.js';
 import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
+import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { Tracing } from '../../../src/core/tracing.js';
 import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { CUBEPROJ_BOX, CUBEPROJ_NONE } from '../../../src/scene/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -67,7 +70,7 @@ describe('StandardMaterial uniform buffer', function () {
 
         it('describe the colors as vec3 uniforms and the numbers as floats, named after the property', function () {
             const descriptors = new StandardMaterial().propertyDescriptors;
-            expect(descriptors).to.have.lengthOf(37);
+            expect(descriptors).to.have.lengthOf(39);
             const byName = new Map(descriptors.map(descriptor => [descriptor.name, descriptor]));
             for (const name of ['diffuse', 'emissive', 'ambient', 'specular', 'sheen', 'attenuation']) {
                 expect(byName.get(name).type, name).to.equal(UNIFORMTYPE_VEC3);
@@ -75,11 +78,14 @@ describe('StandardMaterial uniform buffer', function () {
             for (const name of ['emissiveIntensity', 'gloss', 'metalness', 'opacity', 'refractionIndex', 'parallaxShadowSamples']) {
                 expect(byName.get(name).type, name).to.equal(UNIFORMTYPE_FLOAT);
             }
-            // derived uniforms are named after what they hold
+            // derived uniforms are named after what they hold, the projection box feeds two of them
             const derivedUniforms = { attenuationDistance: 'material_invAttenuationDistance', alphaDither: 'material_alphaDitherScale' };
             for (const descriptor of descriptors) {
-                expect(descriptor.uniformName).to.equal(derivedUniforms[descriptor.name] ?? `material_${descriptor.name}`);
+                if (descriptor.name !== 'cubeMapProjectionBox') {
+                    expect(descriptor.uniformName).to.equal(derivedUniforms[descriptor.name] ?? `material_${descriptor.name}`);
+                }
             }
+            expect(descriptors.filter(descriptor => descriptor.name === 'cubeMapProjectionBox').map(descriptor => descriptor.uniformName)).to.deep.equal(['envBoxMin', 'envBoxMax']);
             expect(byName.get('anisotropyRotation').type).to.equal(UNIFORMTYPE_VEC2);
         });
 
@@ -96,7 +102,7 @@ describe('StandardMaterial uniform buffer', function () {
             material.update();
             expect(material.uniformBufferBindGroup).to.equal(null);
             expect(material._uniformBuffer).to.equal(null);
-            expect(material._modifiedProperties.size).to.equal(37);
+            expect(material._modifiedProperties.size).to.equal(39);
         });
 
         it('creates the uniform buffer and bind group on the first preparation, holding the defaults', function () {
@@ -212,7 +218,7 @@ describe('StandardMaterial uniform buffer', function () {
 
         it('stores every typed property, colors as linear values and numbers as they are', function () {
             const material = prepare(new StandardMaterial());
-            const derived = new Set(['anisotropyRotation', 'attenuationDistance', 'heightMapFactor', 'alphaDither']);
+            const derived = new Set(['anisotropyRotation', 'attenuationDistance', 'heightMapFactor', 'alphaDither', 'cubeMapProjectionBox']);
             const descriptors = material.propertyDescriptors.filter(descriptor => !derived.has(descriptor.name));
             descriptors.forEach((descriptor, index) => {
                 if (descriptor.type === UNIFORMTYPE_VEC3) {
@@ -427,14 +433,14 @@ describe('StandardMaterial uniform buffer', function () {
             const bindGroup = material.uniformBufferBindGroup;
             const layoutVersion = material.layoutVersion;
             expect(buffer.format.get('texture_diffuseMapTransform0')).to.equal(undefined);
-            expect(material.propertyDescriptors).to.have.lengthOf(37);
+            expect(material.propertyDescriptors).to.have.lengthOf(39);
 
             material.diffuse = new Color(0.5, 0.25, 0.75);
             assign(material);
             expect(material.layoutVersion).to.equal(layoutVersion + 1);
             expect(material._uniformBuffer).to.not.equal(buffer);
             expect(material.uniformBufferBindGroup).to.not.equal(bindGroup);
-            expect(material.propertyDescriptors).to.have.lengthOf(39);
+            expect(material.propertyDescriptors).to.have.lengthOf(41);
             expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.exist;
             expect(material._uniformBuffer.format.get('texture_diffuseMapTransform1')).to.exist;
 
@@ -478,7 +484,7 @@ describe('StandardMaterial uniform buffer', function () {
             material.diffuseMap = null;
             material.update();
             prepare(material);
-            expect(material.propertyDescriptors).to.have.lengthOf(37);
+            expect(material.propertyDescriptors).to.have.lengthOf(39);
             expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.equal(undefined);
 
             assign(material);
@@ -543,6 +549,111 @@ describe('StandardMaterial uniform buffer', function () {
                     if (message.includes('diffuseMapTiling')) Debug._loggedMessages.delete(message);
                 }
             }
+        });
+
+    });
+
+    describe('cube map projection box', function () {
+
+        const boxOf = (cx, cy, cz, hx, hy, hz) => new BoundingBox(new Vec3(cx, cy, cz), new Vec3(hx, hy, hz));
+
+        const useBox = (material, box) => {
+            material.cubeMapProjection = CUBEPROJ_BOX;
+            material.cubeMapProjectionBox = box;
+            material.update();
+            return prepare(material);
+        };
+
+        it('always holds the box uniforms, zero without a box, and does not change the layout with the projection mode', function () {
+            const material = prepare(new StandardMaterial());
+            const buffer = material._uniformBuffer;
+            const layoutVersion = material.layoutVersion;
+            expectStored(material, 'envBoxMin', [0, 0, 0]);
+            expectStored(material, 'envBoxMax', [0, 0, 0]);
+            expect(material.getUniformBufferProperty('envBoxMin')).to.exist;
+            expect(material.parameters.envBoxMin).to.equal(undefined);
+
+            // the box is stored whatever the projection mode, which only selects the shader code
+            material.cubeMapProjectionBox = boxOf(1, 2, 3, 4, 5, 6);
+            material.update();
+            expectStored(material, 'envBoxMin', [-3, -3, -3]);
+            expectStored(material, 'envBoxMax', [5, 7, 9]);
+
+            material.cubeMapProjection = CUBEPROJ_BOX;
+            material.update();
+            prepare(material);
+            material.cubeMapProjection = CUBEPROJ_NONE;
+            material.update();
+            prepare(material);
+            expect(material.layoutVersion).to.equal(layoutVersion);
+            expect(material._uniformBuffer).to.equal(buffer);
+
+            // removing the box writes zeros again
+            material.cubeMapProjectionBox = null;
+            material.update();
+            expectStored(material, 'envBoxMin', [0, 0, 0]);
+            expectStored(material, 'envBoxMax', [0, 0, 0]);
+        });
+
+        it('applies a box moved through the reference the caller keeps, on update()', function () {
+            const box = boxOf(0, 0, 0, 1, 1, 1);
+            const material = useBox(new StandardMaterial(), box);
+            expectStored(material, 'envBoxMin', [-1, -1, -1]);
+
+            box.center.set(10, 0, 0);
+            box.halfExtents.set(2, 2, 2);
+            const version = material._uniformDataVersion;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(version + 1);
+            expectStored(material, 'envBoxMin', [8, -2, -2]);
+            expectStored(material, 'envBoxMax', [12, 2, 2]);
+
+            // an unchanged box writes nothing
+            material.update();
+            expect(material._uniformDataVersion).to.equal(version + 1);
+
+            // a new box replaces the snapshot of the previous one
+            material.cubeMapProjectionBox = boxOf(0, 5, 0, 1, 1, 1);
+            material.update();
+            expectStored(material, 'envBoxMax', [1, 6, 1]);
+            box.center.set(0, 0, 0);
+            const settled = material._uniformDataVersion;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(settled);
+        });
+
+        it('keeps the shader variants when the box moves, and reports a move without update()', function () {
+            const box = boxOf(0, 0, 0, 1, 1, 1);
+            const material = useBox(new StandardMaterial(), box);
+            const variant = {};
+            material.variants.set(1, variant);
+            box.center.set(1, 1, 1);
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            const warn = sinon.stub(console, 'warn');
+            try {
+                box.center.set(2, 2, 2);
+                prepare(material);
+                expect(warn.callCount).to.equal(1);
+                expect(warn.firstCall.args[0]).to.contain('cubeMapProjectionBox');
+            } finally {
+                warn.restore();
+                for (const message of Debug._loggedMessages) {
+                    if (message.includes('cubeMapProjectionBox')) Debug._loggedMessages.delete(message);
+                }
+            }
+        });
+
+        it('lets a mesh instance override the box uniforms', function () {
+            const material = useBox(new StandardMaterial(), boxOf(0, 0, 0, 1, 1, 1));
+            const meshInstance = new MeshInstance(new Mesh(app.graphicsDevice), material);
+            meshInstance.setParameter('envBoxMax', [3, 3, 3]);
+            expect(meshInstance.getParameter('envBoxMax').override).to.equal(true);
+            const copy = meshInstance._materialUniformBuffer ?? (meshInstance.getMaterialBindGroup(app.graphicsDevice), meshInstance._materialUniformBuffer);
+            const offset = copy.format.get('envBoxMax').offset;
+            expect(Array.from(copy.storageFloat32.subarray(offset, offset + 3))).to.deep.equal([3, 3, 3]);
+            meshInstance.destroy();
         });
 
     });
