@@ -122,7 +122,7 @@ class AnimComponent extends Component {
         }
 
         if (_asset.resource) {
-            this._stateGraph = _asset.resource;
+            this._stateGraph = /** @type {any} */ (_asset.resource);
             this.loadStateGraph(this._stateGraph);
             _asset.on('change', this._onStateGraphAssetChangeEvent, this);
         } else {

@@ -8,8 +8,28 @@ import { getApplication } from '../globals.js';
 import { http } from '../../platform/net/http.js';
 
 /**
+ * @import { AnimStateGraph } from '../anim/state-graph/anim-state-graph.js'
+ * @import { AnimTrack } from '../anim/evaluator/anim-track.js'
+ * @import { Animation } from '../../scene/animation/animation.js'
  * @import { AssetRegistry } from './asset-registry.js'
+ * @import { Bundle } from '../bundle/bundle.js'
+ * @import { CanvasFont } from '../font/canvas-font.js'
+ * @import { ContainerResource } from '../handlers/container.js'
+ * @import { Entity } from '../entity.js'
+ * @import { Font } from '../font/font.js'
+ * @import { GSplatOctreeResource } from '../../scene/gsplat-unified/gsplat-octree.resource.js'
+ * @import { GSplatResourceBase } from '../../scene/gsplat/gsplat-resource-base.js'
+ * @import { Material } from '../../scene/materials/material.js'
+ * @import { Model } from '../../scene/model.js'
+ * @import { Render } from '../../scene/render.js'
  * @import { ResourceLoaderCallback } from '../handlers/loader.js'
+ * @import { Scene } from '../../scene/scene.js'
+ * @import { Script } from '../script/script.js'
+ * @import { Sound } from '../../platform/sound/sound.js'
+ * @import { Sprite } from '../../scene/sprite.js'
+ * @import { Template } from '../template.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
+ * @import { TextureAtlas } from '../../scene/texture-atlas.js'
  */
 
 // auto incrementing number for asset ids
@@ -26,9 +46,87 @@ const VARIANT_SUPPORT = {
 const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
 
 /**
+ * The resource each asset type loads, keyed by the `type` string passed to the {@link Asset}
+ * constructor and to {@link AssetRegistry#find}: `'texture'` maps to {@link Texture}, `'material'`
+ * to {@link Material} and so on. This is what types {@link Asset#resource}: an `Asset<'texture'>`
+ * holds a {@link Texture}. An application that registers its own resource handler with
+ * {@link ResourceLoader#addHandler} extends the map - and with it the typing of
+ * {@link Asset#resource}, {@link AssetRegistry#find}, {@link AssetRegistry#findAll} and
+ * {@link AssetRegistry#loadFromUrl} - by augmenting this interface:
+ *
+ * ```ts
+ * declare module 'playcanvas' {
+ *     interface AssetMap {
+ *         mytype: MyResource;
+ *     }
+ * }
+ * ```
+ *
+ * @typedef {object} AssetMap
+ * @property {Animation | AnimTrack} animation - An animation: an {@link AnimTrack} when loaded from
+ * a glTF or GLB file, or a legacy {@link Animation} when loaded from JSON.
+ * @property {AnimTrack} animclip - An animation clip.
+ * @property {AnimStateGraph} animstategraph - An animation state graph.
+ * @property {Sound} audio - A sound.
+ * @property {ArrayBuffer} binary - The raw contents of the file.
+ * @property {Bundle} bundle - A bundle: an archive whose files back other assets.
+ * @property {ContainerResource} container - The renders, materials, textures, animations and
+ * gsplats of a glTF or GLB file.
+ * @property {string} css - The CSS text.
+ * @property {Texture | null} cubemap - The cube map, or null when the asset provides only prefiltered
+ * levels. {@link Asset#resources} holds the cube map followed by its six prefiltered levels, with
+ * null for each level the asset does not provide.
+ * @property {null} folder - Folders hold no resource.
+ * @property {Font | CanvasFont} font - A font: a {@link Font} loaded from a font file, or a
+ * {@link CanvasFont} rendered at runtime.
+ * @property {GSplatResourceBase | GSplatOctreeResource} gsplat - A Gaussian splat resource, or the
+ * octree resource of a level-of-detail splat scene.
+ * @property {Entity} hierarchy - The root entity of an instantiated scene hierarchy.
+ * @property {string} html - The HTML text.
+ * @property {unknown} json - The parsed JSON data.
+ * @property {Material} material - A material, a {@link StandardMaterial} unless a custom parser
+ * creates another kind.
+ * @property {Model} model - A model.
+ * @property {Render} render - The meshes of one glTF mesh, created when a container asset loads.
+ * @property {Scene} scene - A scene.
+ * @property {object} scenesettings - The settings block of a scene file.
+ * @property {Record<string, typeof Script>} script - The script classes declared by a script file,
+ * keyed by class name.
+ * @property {string} shader - The shader source text.
+ * @property {Sprite} sprite - A sprite.
+ * @property {Template} template - A template.
+ * @property {string} text - The text of the file.
+ * @property {Texture} texture - A texture.
+ * @property {TextureAtlas} textureatlas - A texture atlas.
+ */
+
+// Spelled `keyof AssetMap & string` rather than `keyof AssetMap` on purpose: the intersection gives
+// the resulting union its own identity, which carries this alias, so hovers and the API reference
+// show `AssetType` instead of the expanded list of names. Every key is a string, so the two
+// spellings denote the same type.
+/**
+ * The type of an {@link Asset}, such as `'texture'` or `'material'`: the keys of {@link AssetMap}.
+ * This is what the {@link Asset} constructor, {@link AssetRegistry#find},
+ * {@link AssetRegistry#findAll} and {@link AssetRegistry#loadFromUrl} take, and what
+ * {@link AssetResource} is indexed by.
+ *
+ * @typedef {keyof AssetMap & string} AssetType
+ */
+
+/**
+ * The resource an {@link Asset} of type `K` holds: `AssetMap[K]` for a type in {@link AssetMap}, so
+ * `AssetResource<'texture'>` is {@link Texture}, and `unknown` for any other string, including a
+ * plain `string`. This is the type of {@link Asset#resource}.
+ *
+ * @template {AssetType | (string & {})} K
+ * @typedef {K extends AssetType ? AssetMap[K] : unknown} AssetResource
+ */
+
+/**
+ * @template {AssetType | (string & {})} [K=string]
  * @callback AssetReadyCallback
  * Callback used by {@link Asset#ready} and called when an asset is ready.
- * @param {Asset} asset - The ready asset.
+ * @param {Asset<K>} asset - The ready asset.
  * @returns {void}
  */
 
@@ -46,6 +144,13 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  *
  * See the {@link AssetRegistry} for details on loading resources from assets.
  *
+ * The `type` string selects the resource type: `new Asset('brick', 'texture', file)` creates an
+ * `Asset<'texture'>` whose `resource` is a {@link Texture} once loaded, and
+ * `app.assets.find('brick', 'texture')` returns one. See {@link AssetMap} for the built-in types
+ * and for adding application-defined ones. An asset whose type is only known as a `string` has a
+ * `resource` of type `unknown`.
+ *
+ * @template {AssetType | (string & {})} [K=string]
  * @category Asset
  */
 class Asset extends EventHandler {
@@ -167,7 +272,7 @@ class Asset extends EventHandler {
     /**
      * This is where the loaded resource(s) are stored.
      *
-     * @type {object[]}
+     * @type {AssetResource<K>[]}
      * @private
      */
     _resources = [];
@@ -212,9 +317,10 @@ class Asset extends EventHandler {
     tags = new Tags(this);
 
     /**
-     * The type of the asset.
+     * The type of the asset: one of the {@link AssetType} names, or the name of an
+     * application-defined resource handler. See {@link AssetMap}.
      *
-     * @type {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"}
+     * @type {K}
      */
     type;
 
@@ -232,7 +338,39 @@ class Asset extends EventHandler {
      *
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
-     * @param {"animation"|"audio"|"binary"|"container"|"cubemap"|"css"|"font"|"gsplat"|"json"|"html"|"material"|"model"|"render"|"script"|"shader"|"sprite"|"template"|"text"|"texture"|"textureatlas"} type - Type of asset.
+     * @param {K} type - The type of asset (an {@link AssetType}), which selects the resource
+     * handler and the type of {@link Asset#resource}. Valid strings are:
+     *
+     * - "animation" - see {@link Animation} and {@link AnimTrack}
+     * - "animclip" - see {@link AnimTrack}
+     * - "animstategraph" - see {@link AnimStateGraph}
+     * - "audio" - see {@link Sound}
+     * - "binary" - an `ArrayBuffer`
+     * - "bundle" - a bundle of files backing other assets
+     * - "container" - see {@link ContainerResource}
+     * - "css" - a `string`
+     * - "cubemap" - see {@link Texture}; null when only prefiltered levels are provided
+     * - "folder" - no resource
+     * - "font" - see {@link Font} and {@link CanvasFont}
+     * - "gsplat" - a Gaussian splat resource
+     * - "hierarchy" - see {@link Entity}
+     * - "html" - a `string`
+     * - "json" - the parsed JSON
+     * - "material" - see {@link Material}
+     * - "model" - see {@link Model}
+     * - "render" - the meshes of one glTF mesh, loaded through a container asset
+     * - "scene" - see {@link Scene}
+     * - "scenesettings" - the settings of a scene
+     * - "script" - see {@link Script}
+     * - "shader" - a `string`
+     * - "sprite" - see {@link Sprite}
+     * - "template" - see {@link Template}
+     * - "text" - a `string`
+     * - "texture" - see {@link Texture}
+     * - "textureatlas" - see {@link TextureAtlas}
+     *
+     * Any other string is accepted for an application-defined handler; see {@link AssetMap} for
+     * typing its resource.
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.
@@ -254,6 +392,7 @@ class Asset extends EventHandler {
      * For more details on crossOrigin and its use, see
      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/crossOrigin.
      * @example
+     * // an Asset<'texture'>: once loaded, asset.resource is a Texture
      * const asset = new Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
      * });
@@ -377,9 +516,12 @@ class Asset extends EventHandler {
     }
 
     /**
-     * Sets the asset resource. For example, a {@link StandardMaterial} or a {@link Texture}.
+     * Sets the asset resource. For example, a {@link StandardMaterial} or a {@link Texture}. The
+     * value is checked against the asset's type. As with the elements of an array, the check is
+     * bypassed when assigning through a variable typed as a plain `Asset`, so keep typed assets
+     * typed where their resource is assigned.
      *
-     * @type {object}
+     * @param {AssetResource<K>} value - The resource.
      */
     set resource(value) {
         const _old = this._resources[0];
@@ -388,9 +530,13 @@ class Asset extends EventHandler {
     }
 
     /**
-     * Gets the asset resource.
+     * Gets the asset resource. Its type follows the asset's type: a {@link Texture} for an
+     * `Asset<'texture'>`, a {@link Material} for an `Asset<'material'>` and so on (see
+     * {@link AssetMap}), or `unknown` when the type is only known as a `string`. It is `undefined`
+     * until the asset has loaded and after {@link Asset#unload}, so narrow it before use unless the
+     * asset is known to be loaded, for example inside {@link Asset#ready}.
      *
-     * @type {object}
+     * @type {AssetResource<K> | undefined}
      */
     get resource() {
         return this._resources[0];
@@ -400,7 +546,7 @@ class Asset extends EventHandler {
      * Sets the asset resources. Some assets can hold more than one runtime resource (cube maps,
      * for example).
      *
-     * @type {object[]}
+     * @type {AssetResource<K>[]}
      */
     set resources(value) {
         const _old = this._resources;
@@ -409,9 +555,10 @@ class Asset extends EventHandler {
     }
 
     /**
-     * Gets the asset resources.
+     * Gets the asset resources. For a cube map asset, the first entry is the cube map and the
+     * remaining entries are its prefiltered levels, some of which may be `null`.
      *
-     * @type {object[]}
+     * @type {AssetResource<K>[]}
      */
     get resources() {
         return this._resources;
@@ -467,8 +614,8 @@ class Asset extends EventHandler {
      *
      * @returns {string|null} The URL. Returns null if the asset has no associated file.
      * @example
-     * const assets = app.assets.find("My Image", "texture");
-     * const img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
+     * const asset = app.assets.find("My Image", "texture");
+     * const img = "&lt;img src='" + asset.getFileUrl() + "'&gt;";
      */
     getFileUrl() {
         const file = this.file;
@@ -560,7 +707,7 @@ class Asset extends EventHandler {
      * for the `error` event as well whenever a failure has to be handled, check `asset.resource`
      * inside the callback, and never await this callback alone.
      *
-     * @param {AssetReadyCallback} callback - The function called when the asset is ready. Passed
+     * @param {AssetReadyCallback<K>} callback - The function called when the asset is ready. Passed
      * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
@@ -608,7 +755,7 @@ class Asset extends EventHandler {
         this.fire('unload', this);
         this.registry?.fire(`unload:${this.id}`, this);
 
-        const old = this._resources;
+        const old = /** @type {any[]} */ (this._resources);
 
         if (this.urlObject) {
             URL.revokeObjectURL(this.urlObject);

@@ -5,6 +5,7 @@ import { http } from '../../platform/net/http.js';
  * @import { AppBase } from '../app-base.js'
  * @import { AssetRegistry } from '../asset/asset-registry.js'
  * @import { Asset } from '../asset/asset.js'
+ * @import { AssetType } from '../asset/asset.js'
  * @import { BundlesFilterCallback } from '../asset/asset-registry.js'
  * @import { ResourceHandler } from './handler.js'
  */
@@ -46,24 +47,10 @@ class ResourceLoader {
      * and `open()`. Handlers can optionally support patch(asset, assets) to handle dependencies on
      * other assets.
      *
-     * @param {string} type - The name of the resource type that the handler will be registered
-     * with. Can be:
-     *
-     * - {@link ASSET_ANIMATION}
-     * - {@link ASSET_AUDIO}
-     * - {@link ASSET_IMAGE}
-     * - {@link ASSET_JSON}
-     * - {@link ASSET_MODEL}
-     * - {@link ASSET_MATERIAL}
-     * - {@link ASSET_TEXT}
-     * - {@link ASSET_TEXTURE}
-     * - {@link ASSET_CUBEMAP}
-     * - {@link ASSET_SHADER}
-     * - {@link ASSET_CSS}
-     * - {@link ASSET_HTML}
-     * - {@link ASSET_SCRIPT}
-     * - {@link ASSET_CONTAINER}
-     *
+     * @param {AssetType | (string & {})} type - The name of the resource type that the handler will
+     * be registered with: one of the built-in {@link AssetType} names, such as `'texture'`, `'model'`
+     * or `'container'`, or a new name for an application-defined handler. See {@link AssetMap} for
+     * typing the resource of a new name.
      * @param {ResourceHandler} handler - An instance of a resource handler
      * supporting at least `load()` and `open()`.
      * @example
@@ -78,7 +65,7 @@ class ResourceLoader {
     /**
      * Remove a {@link ResourceHandler} for a resource type.
      *
-     * @param {string} type - The name of the type that the handler will be removed.
+     * @param {AssetType | (string & {})} type - The name of the type that the handler will be removed.
      */
     removeHandler(type) {
         delete this._handlers[type];
@@ -87,7 +74,8 @@ class ResourceLoader {
     /**
      * Get a {@link ResourceHandler} for a resource type.
      *
-     * @param {string} type - The name of the resource type that the handler is registered with.
+     * @param {AssetType | (string & {})} type - The name of the resource type that the handler is
+     * registered with.
      * @returns {ResourceHandler|undefined} The registered handler, or
      * undefined if the requested handler is not registered.
      */

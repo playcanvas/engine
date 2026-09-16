@@ -178,6 +178,12 @@ const STANDARD_MAT_ANCHOR = 'reset(): void;';
 // behind a declaration file that was fixed up with an older STANDARD_MAT_PROPS.
 const STANDARD_MAT_INJECTED = /^(?:\r?\n(?: *\t[^\n]*)?)*(?=\r?\n)/;
 
+// tsc emits the AssetMap typedef as a type alias, which cannot be augmented. Rewriting it into an
+// interface lets an application add its own asset types with
+// `declare module 'playcanvas' { interface AssetMap { mytype: MyResource } }`.
+const ASSET_MAP_ALIAS = 'export type AssetMap = {';
+const ASSET_MAP_INTERFACE = 'export interface AssetMap {';
+
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
     replacement: {
@@ -259,6 +265,27 @@ import { Texture } from '../../platform/graphics/texture.js';
      */
     swap?(old: ScriptType): void;
 `
+    }
+}, {
+    path: `${TYPES_PATH}/framework/asset/asset.d.ts`,
+    replacement: {
+        guard: ASSET_MAP_INTERFACE,
+        transformer: (contents) => {
+            const start = contents.indexOf(ASSET_MAP_ALIAS);
+            if (start === -1) {
+                throw new Error(`types-fixup: '${ASSET_MAP_ALIAS}' not found in the Asset declarations`);
+            }
+
+            // tsc puts each member on its own indented line and the closing `};` at column 0, so
+            // the first line-initial `};` after the alias closes it
+            const closing = contents.slice(start).match(/^\};\r?$/m);
+            if (!closing) {
+                throw new Error('types-fixup: the end of the AssetMap alias was not found in the Asset declarations');
+            }
+            const end = start + closing.index;
+            const body = contents.slice(start + ASSET_MAP_ALIAS.length, end);
+            return `${contents.slice(0, start)}${ASSET_MAP_INTERFACE}${body}}${contents.slice(end + 2)}`;
+        }
     }
 }];
 

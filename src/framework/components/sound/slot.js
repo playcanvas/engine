@@ -7,6 +7,7 @@ import { SoundInstance } from '../../../platform/sound/instance.js';
 import { SoundInstance3d } from '../../../platform/sound/instance3d.js';
 
 /**
+ * @import { Sound } from '../../../platform/sound/sound.js'
  * @import { SoundComponent } from './component.js'
  */
 
@@ -596,8 +597,8 @@ class SoundSlot extends EventHandler {
     get duration() {
         let assetDuration = 0;
         if (this._hasAsset()) {
-            const asset = this._assets.get(this._asset);
-            assetDuration = asset?.resource ? asset.resource.duration : 0;
+            const sound = /** @type {Sound | undefined} */ (this._assets.get(this._asset)?.resource);
+            assetDuration = sound ? sound.duration : 0;
         }
 
         // != intentional

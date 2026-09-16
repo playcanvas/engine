@@ -335,7 +335,7 @@ export { AnimStateGraph } from './framework/anim/state-graph/anim-state-graph.js
 
 // FRAMEWORK / ASSETS
 export * from './framework/asset/constants.js';
-export { Asset } from './framework/asset/asset.js';
+export * from './framework/asset/asset.js';
 export { AssetListLoader } from './framework/asset/asset-list-loader.js';
 export { AssetReference } from './framework/asset/asset-reference.js';
 export { AssetRegistry } from './framework/asset/asset-registry.js';

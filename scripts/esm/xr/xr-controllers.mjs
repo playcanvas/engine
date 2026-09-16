@@ -42,7 +42,7 @@ class XrControllers extends Script {
     /**
      * Map of input sources to their controller data (entity, joint mappings, and asset).
      *
-     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset }>}
+     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset<'container'> }>}
      */
     controllers = new Map();
 
@@ -163,7 +163,7 @@ class XrControllers extends Script {
      * @param {XrInputSource} inputSource - The input source.
      * @param {string[]} profiles - Array of profile IDs to try.
      * @param {number} [index=0] - Current index in the profiles array.
-     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset } | null>} The result or null.
+     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset<'container'> } | null>} The result or null.
      * @private
      */
     async _tryLoadProfiles(inputSource, profiles, index = 0) {
@@ -209,7 +209,8 @@ class XrControllers extends Script {
 
         if (successfulResult) {
             const { asset } = successfulResult;
-            const container = asset.resource;
+            // loaded by _loadProfile, so the resource is present
+            const container = /** @type {import('playcanvas').ContainerResource} */ (asset.resource);
             const entity = container.instantiateRenderEntity();
             this.app.root.addChild(entity);
 
@@ -241,7 +242,7 @@ class XrControllers extends Script {
      *
      * @param {XrInputSource} inputSource - The input source.
      * @param {string} profileId - The profile ID to load.
-     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset } | null>} The result or null on failure.
+     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset<'container'> } | null>} The result or null on failure.
      * @private
      */
     async _loadProfile(inputSource, profileId) {
