@@ -172,13 +172,42 @@ class VertexBuffer {
     }
 
     /**
-     * Notifies the graphics engine that the client side copy of the vertex buffer's memory can be
-     * returned to the control of the graphics driver.
+     * Uploads the client side copy of the vertex buffer to the GPU. When called without arguments,
+     * uploads the entire buffer. An explicit range uploads only those bytes at the same GPU offset.
+     * The first upload always initializes the entire GPU buffer, regardless of the requested range.
+     * A zero byte length does nothing, including before the first upload.
+     *
+     * Partial uploads do not resize the buffer or change its CPU storage. The caller must upload
+     * every modified range before expecting those changes on the GPU. Context restoration uploads
+     * the entire CPU storage.
+     *
+     * @param {number} [byteOffset] - Offset in bytes from the start of the buffer's storage.
+     * Defaults to 0. Must be a non-negative integer and a multiple of 4 on all graphics backends.
+     * @param {number} [byteLength] - Number of bytes to upload. Defaults to the remaining bytes
+     * after byteOffset. When either argument is supplied, the length must be a non-negative integer
+     * and a multiple of 4, and the range must fit within the buffer. Calling without arguments also
+     * supports buffers whose total size is not a multiple of 4.
+     * @example
+     * // After modifying bytes 16 through 31 of the CPU storage:
+     * vertexBuffer.unlock(16, 16);
      */
-    unlock() {
+    unlock(byteOffset, byteLength) {
+        if (byteOffset !== undefined || byteLength !== undefined) {
+            byteOffset ??= 0;
+            byteLength ??= this.numBytes - byteOffset;
 
-        // Upload the new vertex data
-        this.impl.unlock(this);
+            Debug.assert(Number.isInteger(byteOffset) && byteOffset >= 0 && byteOffset % 4 === 0,
+                'Buffer upload byteOffset must be a non-negative integer and a multiple of 4');
+            Debug.assert(Number.isInteger(byteLength) && byteLength >= 0 && byteLength % 4 === 0,
+                'Buffer upload byteLength must be a non-negative integer and a multiple of 4');
+            Debug.assert(byteOffset + byteLength <= this.numBytes, 'Buffer upload range exceeds buffer size');
+
+            if (byteLength === 0) {
+                return;
+            }
+        }
+
+        this.impl.unlock(this, byteOffset, byteLength);
     }
 
     /**
