@@ -340,6 +340,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.externalBackbuffer = null;
 
         super.destroy();
+
+        // Destroy listeners can enqueue more resources, and no further submit will drain them.
+        this.destroyDeferredResources();
+        this.wgpu?.destroy();
     }
 
     /** @private */
@@ -773,10 +777,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             compute.loseContext();
         }
 
-        for (const resource of this._deferredDestroys) {
-            resource.destroy();
-        }
-        this._deferredDestroys.length = 0;
+        this.destroyDeferredResources();
     }
 
     /** @ignore */
@@ -1527,6 +1528,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // destroy deferred resources after submit to ensure they're no longer referenced
+        this.destroyDeferredResources();
+    }
+
+    /** @private */
+    destroyDeferredResources() {
         const deferredDestroys = this._deferredDestroys;
         if (deferredDestroys.length > 0) {
             for (let i = 0; i < deferredDestroys.length; i++) {
@@ -1539,13 +1545,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Defer destruction of a GPU resource until after the current command buffers are submitted.
      * This ensures the resource is not destroyed while still referenced by pending GPU commands.
+     * Resources released after device destruction are destroyed immediately.
      *
      * @param {GPUTexture|GPUBuffer|GPUQuerySet} gpuResource - The GPU resource to destroy.
      * @private
      */
     deferDestroy(gpuResource) {
         if (gpuResource) {
-            this._deferredDestroys.push(gpuResource);
+            if (this._destroyed) {
+                gpuResource.destroy();
+            } else {
+                this._deferredDestroys.push(gpuResource);
+            }
         }
     }
 
