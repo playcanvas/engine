@@ -108,7 +108,7 @@ export async function convertToVat(app, container, options = {}) {
     const device = app.graphicsDevice;
 
     // the whole character has to be a single mesh, as it is rendered with a single instanced draw
-    const meshes = container.renders.map(render => render.resource.meshes).flat();
+    const meshes = container.renders.map(render => render.resource?.meshes ?? []).flat();
     if (meshes.length !== 1) {
         throw new Error(`The glb contains ${meshes.length} meshes, but exactly one is required.`);
     }

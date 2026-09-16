@@ -18,7 +18,7 @@ const concatenateShaders = (assets: AssetRegistry): string => {
         return '';
     }
 
-    return shader1.resource + shader2.resource;
+    return (shader1.resource ?? '') + (shader2.resource ?? '');
 };
 
 const concatenateTextAssets = (assets: AssetRegistry): string => {
@@ -43,11 +43,12 @@ const name: string = 'texture';
 // ---- constructor: the type string types the asset, its resource and its type field
 const texture = new Asset('a', 'texture', { url: 'a.png' });
 type T1 = Expect<Equal<typeof texture, Asset<'texture'>>>;
-type T2 = Expect<Equal<typeof texture.resource, Texture>>;
+type T2 = Expect<Equal<typeof texture.resource, Texture | undefined>>;
+type T36 = Expect<Equal<Asset<'texture'>['resource'], Texture | undefined>>;
 type T3 = Expect<Equal<typeof texture.type, 'texture'>>;
 type T4 = Expect<Equal<typeof texture.resources, Texture[]>>;
 const bundle = new Asset('b', 'bundle');
-type T5 = Expect<Equal<typeof bundle.resource, Bundle>>;
+type T5 = Expect<Equal<typeof bundle.resource, Bundle | undefined>>;
 const other = new Asset('o', 'unregistered');
 type T6 = Expect<Equal<typeof other.resource, unknown>>;
 type T7 = Expect<Equal<typeof other.type, 'unregistered'>>;
@@ -59,12 +60,12 @@ type T8 = Expect<Equal<Asset, Asset<string>>>;
 type T9 = Expect<Equal<Asset['resource'], unknown>>;
 type T10 = Expect<Equal<Asset['type'], string>>;
 type T11 = Expect<Equal<Asset<'texture'> extends Asset ? true : false, true>>;
-type T12 = Expect<Equal<Asset<'texture' | 'cubemap'>['resource'], Texture | null>>;
+type T12 = Expect<Equal<Asset<'texture' | 'cubemap'>['resource'], Texture | null | undefined>>;
 
 // ---- per-type nullability and unions live in AssetMap, not in Asset
-type T33 = Expect<Equal<Asset<'cubemap'>['resource'], Texture | null>>;
+type T33 = Expect<Equal<Asset<'cubemap'>['resource'], Texture | null | undefined>>;
 type T34 = Expect<Equal<Asset<'cubemap'>['resources'], (Texture | null)[]>>;
-type T35 = Expect<Equal<Asset<'font'>['resource'], Font | CanvasFont>>;
+type T35 = Expect<Equal<Asset<'font'>['resource'], Font | CanvasFont | undefined>>;
 declare const canvasFont: CanvasFont;
 const fontAsset = new Asset('dynamic', 'font');
 fontAsset.resource = canvasFont;
@@ -76,7 +77,7 @@ assets.load(bundle);
 const found = assets.find('brick', 'texture');
 type T13 = Expect<Equal<typeof found, Asset<'texture'> | null>>;
 const material = assets.find('brick', 'material');
-type T14 = Expect<Equal<NonNullable<typeof material>['resource'], Material>>;
+type T14 = Expect<Equal<NonNullable<typeof material>['resource'], Material | undefined>>;
 const untyped = assets.find('brick');
 type T15 = Expect<Equal<typeof untyped, Asset | null>>;
 const loose = assets.find('brick', name);
@@ -96,18 +97,23 @@ type T31 = Expect<Equal<typeof maybe, Asset | null>>;
 const allMaybe = assets.findAll('brick', maybeType);
 type T32 = Expect<Equal<typeof allMaybe, Asset[]>>;
 type T22 = Expect<Equal<Asset<'json'>['resource'], unknown>>;
-type T23 = Expect<Equal<Asset<'animation'>['resource'], Animation | AnimTrack>>;
+type T23 = Expect<Equal<Asset<'animation'>['resource'], Animation | AnimTrack | undefined>>;
 
 // ---- loadFromUrl, loadFromUrlAndFilename and ready: the callback's asset follows the type
 assets.loadFromUrl('statue.glb', 'container', (err, asset) => {
     type L1 = Expect<Equal<typeof err, string | null>>;
     type L2 = Expect<Equal<typeof asset, Asset<'container'> | undefined>>;
     if (asset) {
-        type L3 = Expect<Equal<typeof asset.resource, ContainerResource>>;
-        type L4 = Expect<Equal<typeof asset.resource.renders, Asset<'render'>[]>>;
-        type L5 = Expect<Equal<typeof asset.resource.textures, Asset<'texture'>[]>>;
-        const first: Texture | undefined = asset.resource.textures[0]?.resource;
-        return [first] as [Texture | undefined, L1?, L2?, L3?, L4?, L5?];
+        type L3 = Expect<Equal<typeof asset.resource, ContainerResource | undefined>>;
+        // the resource is undefined until loaded, so reads narrow it first
+        const resource = asset.resource;
+        if (resource) {
+            type L4 = Expect<Equal<typeof resource.renders, Asset<'render'>[]>>;
+            type L5 = Expect<Equal<typeof resource.textures, Asset<'texture'>[]>>;
+            const first = resource.textures[0]?.resource;
+            type L5b = Expect<Equal<typeof first, Texture | undefined>>;
+            return [first] as [Texture | undefined, L1?, L2?, L3?, L4?, L5?, L5b?];
+        }
     }
     return null;
 });
@@ -136,7 +142,7 @@ const stringArgument: TypeArgument = name;
 
 // ---- application-defined type, after the augmentation above
 const mine = new Asset('m', 'mytype');
-type T28 = Expect<Equal<typeof mine.resource, MyResource>>;
+type T28 = Expect<Equal<typeof mine.resource, MyResource | undefined>>;
 type T29 = Expect<Equal<AssetMap['mytype'], MyResource>>;
 const foundMine = assets.find('m', 'mytype');
 type T30 = Expect<Equal<typeof foundMine, Asset<'mytype'> | null>>;
@@ -149,6 +155,10 @@ const wrongResource: Material = texture.resource;
 const narrowed: Asset<'texture'> = plain;
 // @ts-expect-error a texture asset does not accept a Material resource
 texture.resource = new Material();
+// @ts-expect-error the resource is undefined until the asset has loaded
+texture.resource.destroy();
+// @ts-expect-error the setter takes the resource type only, never undefined
+texture.resource = undefined;
 // @ts-expect-error not an asset type
 const notAnAssetType: AssetType = 'nope';
 // @ts-expect-error renders are Asset<'render'>, not Asset<'texture'>
@@ -166,5 +176,5 @@ export {
 };
 export type Checks = [
     T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20,
-    T21, T22, T23, T24, T25, T26, T27, T28, T29, T30, T31, T32, T33, T34, T35
+    T21, T22, T23, T24, T25, T26, T27, T28, T29, T30, T31, T32, T33, T34, T35, T36
 ];

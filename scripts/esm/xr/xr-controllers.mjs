@@ -209,7 +209,8 @@ class XrControllers extends Script {
 
         if (successfulResult) {
             const { asset } = successfulResult;
-            const container = asset.resource;
+            // loaded by _loadProfile, so the resource is present
+            const container = /** @type {import('playcanvas').ContainerResource} */ (asset.resource);
             const entity = container.instantiateRenderEntity();
             this.app.root.addChild(entity);
 

@@ -145,7 +145,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * See the {@link AssetRegistry} for details on loading resources from assets.
  *
  * The `type` string selects the resource type: `new Asset('brick', 'texture', file)` creates an
- * `Asset<'texture'>` whose `resource` is a {@link Texture}, and
+ * `Asset<'texture'>` whose `resource` is a {@link Texture} once loaded, and
  * `app.assets.find('brick', 'texture')` returns one. See {@link AssetMap} for the built-in types
  * and for adding application-defined ones. An asset whose type is only known as a `string` has a
  * `resource` of type `unknown`.
@@ -516,9 +516,12 @@ class Asset extends EventHandler {
     }
 
     /**
-     * Sets the asset resource. For example, a {@link StandardMaterial} or a {@link Texture}.
+     * Sets the asset resource. For example, a {@link StandardMaterial} or a {@link Texture}. The
+     * value is checked against the asset's type. As with the elements of an array, the check is
+     * bypassed when assigning through a variable typed as a plain `Asset`, so keep typed assets
+     * typed where their resource is assigned.
      *
-     * @type {AssetResource<K>}
+     * @param {AssetResource<K>} value - The resource.
      */
     set resource(value) {
         const _old = this._resources[0];
@@ -530,9 +533,10 @@ class Asset extends EventHandler {
      * Gets the asset resource. Its type follows the asset's type: a {@link Texture} for an
      * `Asset<'texture'>`, a {@link Material} for an `Asset<'material'>` and so on (see
      * {@link AssetMap}), or `unknown` when the type is only known as a `string`. It is `undefined`
-     * until the asset has loaded.
+     * until the asset has loaded and after {@link Asset#unload}, so narrow it before use unless the
+     * asset is known to be loaded, for example inside {@link Asset#ready}.
      *
-     * @type {AssetResource<K>}
+     * @type {AssetResource<K> | undefined}
      */
     get resource() {
         return this._resources[0];
