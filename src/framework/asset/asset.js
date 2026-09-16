@@ -13,6 +13,7 @@ import { http } from '../../platform/net/http.js';
  * @import { Animation } from '../../scene/animation/animation.js'
  * @import { AssetRegistry } from './asset-registry.js'
  * @import { Bundle } from '../bundle/bundle.js'
+ * @import { CanvasFont } from '../font/canvas-font.js'
  * @import { ContainerResource } from '../handlers/container.js'
  * @import { Entity } from '../entity.js'
  * @import { Font } from '../font/font.js'
@@ -72,10 +73,12 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * @property {ContainerResource} container - The renders, materials, textures, animations and
  * gsplats of a glTF or GLB file.
  * @property {string} css - The CSS text.
- * @property {Texture} cubemap - A cube map texture. The prefiltered mip levels, when present, are
- * held in {@link Asset#resources}.
+ * @property {Texture | null} cubemap - The cube map, or null when the asset provides only prefiltered
+ * levels. {@link Asset#resources} holds the cube map followed by its six prefiltered levels, with
+ * null for each level the asset does not provide.
  * @property {null} folder - Folders hold no resource.
- * @property {Font} font - A font.
+ * @property {Font | CanvasFont} font - A font: a {@link Font} loaded from a font file, or a
+ * {@link CanvasFont} rendered at runtime.
  * @property {GSplatResourceBase | GSplatOctreeResource} gsplat - A Gaussian splat resource, or the
  * octree resource of a level-of-detail splat scene.
  * @property {Entity} hierarchy - The root entity of an instantiated scene hierarchy.
@@ -346,9 +349,9 @@ class Asset extends EventHandler {
      * - "bundle" - a bundle of files backing other assets
      * - "container" - see {@link ContainerResource}
      * - "css" - a `string`
-     * - "cubemap" - see {@link Texture}
+     * - "cubemap" - see {@link Texture}; null when only prefiltered levels are provided
      * - "folder" - no resource
-     * - "font" - see {@link Font}
+     * - "font" - see {@link Font} and {@link CanvasFont}
      * - "gsplat" - a Gaussian splat resource
      * - "hierarchy" - see {@link Entity}
      * - "html" - a `string`

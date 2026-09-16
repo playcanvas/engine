@@ -3,8 +3,8 @@
 // build/playcanvas.d.ts, so they exercise exactly what an application sees.
 import { Asset, Material } from '../../build/playcanvas.js';
 import type {
-    AnimTrack, Animation, AssetMap, AssetRegistry, AssetResource, AssetType, Bundle,
-    ContainerResource, Texture
+    AnimTrack, Animation, AssetMap, AssetRegistry, AssetResource, AssetType, Bundle, CanvasFont,
+    ContainerResource, Font, Texture
 } from '../../build/playcanvas.js';
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -59,7 +59,15 @@ type T8 = Expect<Equal<Asset, Asset<string>>>;
 type T9 = Expect<Equal<Asset['resource'], unknown>>;
 type T10 = Expect<Equal<Asset['type'], string>>;
 type T11 = Expect<Equal<Asset<'texture'> extends Asset ? true : false, true>>;
-type T12 = Expect<Equal<Asset<'texture' | 'cubemap'>['resource'], Texture>>;
+type T12 = Expect<Equal<Asset<'texture' | 'cubemap'>['resource'], Texture | null>>;
+
+// ---- per-type nullability and unions live in AssetMap, not in Asset
+type T33 = Expect<Equal<Asset<'cubemap'>['resource'], Texture | null>>;
+type T34 = Expect<Equal<Asset<'cubemap'>['resources'], (Texture | null)[]>>;
+declare const canvasFont: CanvasFont;
+const fontAsset = new Asset('dynamic', 'font');
+fontAsset.resource = canvasFont;
+type T35 = Expect<Equal<typeof fontAsset.resource, Font | CanvasFont>>;
 assets.add(texture);
 assets.add(plainText);
 assets.load(bundle);
@@ -158,5 +166,5 @@ export {
 };
 export type Checks = [
     T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16, T17, T18, T19, T20,
-    T21, T22, T23, T24, T25, T26, T27, T28, T29, T30, T31, T32
+    T21, T22, T23, T24, T25, T26, T27, T28, T29, T30, T31, T32, T33, T34, T35
 ];
