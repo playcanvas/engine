@@ -364,12 +364,13 @@ describe('MeshInstance material uniform buffer overrides', function () {
             expect(warn.called).to.equal(false);
         });
 
-        it('keeps the snapshots off the parameters, reuses them while the length holds, and drops deleted ones', function () {
+        it('keeps the snapshots off the parameters in a weak map and reuses them while the length holds', function () {
             const meshInstance = new MeshInstance(mesh, material);
             const color = { name: 'uColor', data: [1, 0, 0], uniformFormat: { numComponents: 3, count: 0 } };
             const scale = { name: 'uScale', data: new Float32Array([2]), uniformFormat: { numComponents: 1, count: 0 } };
             recordAppliedOverrides(meshInstance, [color, scale]);
             const snapshots = meshInstance._debugOverrideSnapshots;
+            expect(snapshots).to.be.instanceOf(WeakMap);
             expect(Object.keys(color)).to.deep.equal(['name', 'data', 'uniformFormat']);
             expect(snapshots.get(color)).to.deep.equal([1, 0, 0]);
             expect(snapshots.get(scale)).to.deep.equal([2]);
@@ -380,11 +381,6 @@ describe('MeshInstance material uniform buffer overrides', function () {
             recordAppliedOverrides(meshInstance, [color, scale]);
             expect(snapshots.get(color)).to.equal(snapshot);
             expect(snapshot).to.deep.equal([1, 1, 0]);
-
-            // a parameter no longer overriding is forgotten
-            recordAppliedOverrides(meshInstance, [color]);
-            expect(snapshots.has(scale)).to.equal(false);
-            expect(snapshots.size).to.equal(1);
         });
 
         it('records no snapshot for a number', function () {

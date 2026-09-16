@@ -1427,8 +1427,8 @@ class MeshInstance {
     /**
      * Sets a shader parameter on a mesh instance. Note that this parameter will take precedence
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
-     * After changing the contents of an array value, call this method again with it to apply the
-     * change.
+     * To change an array value, call this method again with it; the contents of an array are not
+     * guaranteed to be re-read on later draws.
      *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.

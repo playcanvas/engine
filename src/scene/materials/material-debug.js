@@ -113,8 +113,9 @@ const initMeshInstanceDebug = (meshInstance) => {
     meshInstance._debugWarnedOverridesVersion = -1;
 
     // the array values of the overrides as last applied to the copy of the material uniform buffer,
-    // by parameter, kept here rather than on the parameters to leave their shape and API untouched
-    meshInstance._debugOverrideSnapshots = new Map();
+    // by parameter, kept here rather than on the parameters to leave their shape and API untouched,
+    // and weakly, so that a deleted parameter is collected without any lifecycle hook
+    meshInstance._debugOverrideSnapshots = new WeakMap();
 };
 
 /**
@@ -146,15 +147,6 @@ const recordAppliedOverrides = (meshInstance, overrides) => {
             }
             for (let j = 0; j < length; j++) {
                 snapshot[j] = data[j];
-            }
-        }
-    }
-
-    // drop the snapshots of parameters deleted since the last record
-    if (snapshots.size > overrides.length) {
-        for (const parameter of snapshots.keys()) {
-            if (!overrides.includes(parameter)) {
-                snapshots.delete(parameter);
             }
         }
     }
