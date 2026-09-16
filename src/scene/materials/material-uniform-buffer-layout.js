@@ -39,7 +39,7 @@ class MaterialUniformBufferLayout {
          */
         this.uniformBufferFormat = new UniformBufferFormat(device, properties.map((property) => {
             return new UniformFormat(property.uniformName, property.type, property.count);
-        }));
+        }), { pack: true });
 
         /**
          * The format of the bind group containing the material uniform buffer.

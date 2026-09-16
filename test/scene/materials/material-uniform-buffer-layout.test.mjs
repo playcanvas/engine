@@ -53,6 +53,17 @@ describe('MaterialUniformBufferLayout', function () {
             expect(a.key).to.equal(getMaterialLayoutKey([diffuse, gloss, tint]));
         });
 
+        it('fills the padding of each vec3 with a scalar whatever the key order', function () {
+            // in key order the scalars would sit between the vec3s, padding the layout to 48 bytes
+            const alpha = new MaterialProperty('alpha', 'material_alpha', UNIFORMTYPE_FLOAT, noop);
+            const beta = new MaterialProperty('beta', 'material_beta', UNIFORMTYPE_VEC3, noop);
+            const delta = new MaterialProperty('delta', 'material_delta', UNIFORMTYPE_VEC3, noop);
+            const gamma = new MaterialProperty('gamma', 'material_gamma', UNIFORMTYPE_FLOAT, noop);
+            const format = getMaterialLayout(app.graphicsDevice, [alpha, beta, delta, gamma]).uniformBufferFormat;
+            expect(format.uniforms.map(uniform => uniform.name)).to.deep.equal(['material_beta', 'material_alpha', 'material_delta', 'material_gamma']);
+            expect(format.byteSize).to.equal(32);
+        });
+
         it('creates a different layout for a different set of properties', function () {
             const device = app.graphicsDevice;
             const a = getMaterialLayout(device, [diffuse]);
@@ -61,11 +72,14 @@ describe('MaterialUniformBufferLayout', function () {
             expect(b.uniformBufferFormat).to.not.equal(a.uniformBufferFormat);
         });
 
-        it('lays the uniforms out in layout key order and describes a single-buffer bind group', function () {
+        it('packs the uniforms, whole rows first and each vec3 followed by a scalar, and describes a single-buffer bind group', function () {
             const device = app.graphicsDevice;
             const layout = getMaterialLayout(device, [tint, diffuse, gloss]);
             const format = layout.uniformBufferFormat;
-            expect(format.uniforms.map(uniform => uniform.name)).to.deep.equal(['material_diffuse', 'material_gloss', 'material_tint']);
+            expect(format.uniforms.map(uniform => uniform.name)).to.deep.equal(['material_tint', 'material_diffuse', 'material_gloss']);
+            expect(format.get('material_diffuse').offset).to.equal(4);
+            expect(format.get('material_gloss').offset).to.equal(7);
+            expect(format.byteSize).to.equal(32);
             expect(format.get('material_diffuse').type).to.equal(UNIFORMTYPE_VEC3);
             expect(layout.bindGroupFormat.uniformBufferFormats).to.have.lengthOf(1);
             expect(layout.bindGroupFormat.textureFormats).to.have.lengthOf(0);

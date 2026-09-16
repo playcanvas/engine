@@ -707,7 +707,7 @@ class Renderer {
                 ]);
             }
 
-            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
+            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms, { pack: true });
         }
     }
 

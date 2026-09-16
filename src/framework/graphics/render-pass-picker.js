@@ -67,7 +67,7 @@ class RenderPassPicker extends RenderPass {
             this._viewUniformFormat = new UniformBufferFormat(this.device, [
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_view', UNIFORMTYPE_MAT4)
-            ]);
+            ], { pack: true });
         }
         return this._viewUniformFormat;
     }

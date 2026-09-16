@@ -202,6 +202,53 @@ class UniformFormat {
 }
 
 /**
+ * Orders uniforms to minimize the padding of the std140 layout: uniforms occupying whole 16-byte
+ * rows first (vec4, matrices and arrays), then each vec3 followed by a scalar, filling the 4 bytes
+ * a vec3 leaves in its row, then vec2s and the remaining scalars. Uniforms of the same kind keep
+ * their relative order.
+ *
+ * @param {UniformFormat[]} uniforms - The uniforms.
+ * @returns {UniformFormat[]} The uniforms in packing order.
+ */
+const packUniforms = (uniforms) => {
+    const packed = [];
+    const vec3s = [];
+    const vec2s = [];
+    const scalars = [];
+    for (let i = 0; i < uniforms.length; i++) {
+        const uniform = uniforms[i];
+        const byteSize = uniform.byteSize;
+        if (uniform.count || byteSize >= 16) {
+            packed.push(uniform);
+        } else if (byteSize === 12) {
+            vec3s.push(uniform);
+        } else if (byteSize === 8) {
+            vec2s.push(uniform);
+        } else {
+            scalars.push(uniform);
+        }
+    }
+
+    // a scalar after each vec3 completes its row
+    let nextScalar = 0;
+    for (let i = 0; i < vec3s.length; i++) {
+        packed.push(vec3s[i]);
+        if (nextScalar < scalars.length) {
+            packed.push(scalars[nextScalar++]);
+        }
+    }
+
+    // vec2s pair up in rows, the remaining scalars fill what is left
+    for (let i = 0; i < vec2s.length; i++) {
+        packed.push(vec2s[i]);
+    }
+    for (; nextScalar < scalars.length; nextScalar++) {
+        packed.push(scalars[nextScalar]);
+    }
+    return packed;
+};
+
+/**
  * A descriptor that defines the layout of data inside the uniform buffer.
  *
  * @category Graphics
@@ -218,7 +265,8 @@ class UniformBufferFormat {
 
     /**
      * A string uniquely describing the layout of the buffer (the names, types and array sizes
-     * of its uniforms, in order), used to key caches of shaders processed against this format.
+     * of its uniforms, in layout order), used to key caches of shaders processed against this
+     * format.
      *
      * @type {string}
      * @ignore
@@ -229,15 +277,24 @@ class UniformBufferFormat {
      * Create a new UniformBufferFormat instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
-     * @param {UniformFormat[]} uniforms - An array of uniforms to be stored in the buffer
+     * @param {UniformFormat[]} uniforms - An array of uniforms to be stored in the buffer.
+     * @param {object} [options] - Options.
+     * @param {boolean} [options.pack] - Reorder the uniforms to minimize the padding of the std140
+     * layout: uniforms occupying whole 16-byte rows first (vec4, matrices and arrays), then each
+     * vec3 followed by a scalar, then vec2s and the remaining scalars. The uniforms of the format
+     * are then in layout order rather than in the order of the array. Only use it when the shader
+     * declaration of the buffer is generated from this format, and never against a hand-written
+     * declaration, whose member order has to match the array. Defaults to false.
      */
-    constructor(graphicsDevice, uniforms) {
+    constructor(graphicsDevice, uniforms, options = {}) {
         this.scope = graphicsDevice.scope;
+
+        if (options.pack) {
+            uniforms = packUniforms(uniforms);
+        }
 
         /** @type {UniformFormat[]} */
         this.uniforms = uniforms;
-
-        // TODO: optimize uniforms ordering
 
         let offset = 0;
         for (let i = 0; i < uniforms.length; i++) {
