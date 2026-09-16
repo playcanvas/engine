@@ -5,7 +5,7 @@ import { TRACEID_MATERIAL_UPDATE } from '../../../src/core/constants.js';
 import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Tracing } from '../../../src/core/tracing.js';
-import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
+import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -65,7 +65,7 @@ describe('StandardMaterial uniform buffer', function () {
 
         it('describe the colors as vec3 uniforms and the numbers as floats, named after the property', function () {
             const descriptors = new StandardMaterial().propertyDescriptors;
-            expect(descriptors).to.have.lengthOf(33);
+            expect(descriptors).to.have.lengthOf(37);
             const byName = new Map(descriptors.map(descriptor => [descriptor.name, descriptor]));
             for (const name of ['diffuse', 'emissive', 'ambient', 'specular', 'sheen', 'attenuation']) {
                 expect(byName.get(name).type, name).to.equal(UNIFORMTYPE_VEC3);
@@ -73,9 +73,12 @@ describe('StandardMaterial uniform buffer', function () {
             for (const name of ['emissiveIntensity', 'gloss', 'metalness', 'opacity', 'refractionIndex', 'parallaxShadowSamples']) {
                 expect(byName.get(name).type, name).to.equal(UNIFORMTYPE_FLOAT);
             }
+            // derived uniforms are named after what they hold
+            const derivedUniforms = { attenuationDistance: 'material_invAttenuationDistance', alphaDither: 'material_alphaDitherScale' };
             for (const descriptor of descriptors) {
-                expect(descriptor.uniformName).to.equal(`material_${descriptor.name}`);
+                expect(descriptor.uniformName).to.equal(derivedUniforms[descriptor.name] ?? `material_${descriptor.name}`);
             }
+            expect(byName.get('anisotropyRotation').type).to.equal(UNIFORMTYPE_VEC2);
         });
 
         it('are static and shared between materials', function () {
@@ -91,7 +94,7 @@ describe('StandardMaterial uniform buffer', function () {
             material.update();
             expect(material.uniformBufferBindGroup).to.equal(null);
             expect(material._uniformBuffer).to.equal(null);
-            expect(material._modifiedProperties.size).to.equal(33);
+            expect(material._modifiedProperties.size).to.equal(37);
         });
 
         it('creates the uniform buffer and bind group on the first preparation, holding the defaults', function () {
@@ -114,9 +117,10 @@ describe('StandardMaterial uniform buffer', function () {
             expect(material.parameters.material_ambient).to.equal(undefined);
             expect(material.parameters.material_gloss).to.equal(undefined);
             expect(material.parameters.material_opacity).to.equal(undefined);
+            expect(material.parameters.material_alphaDitherScale).to.equal(undefined);
 
-            // derived uniforms are still parameters
-            expect(material.parameters.material_alphaDitherScale).to.exist;
+            // a material without maps publishes no parameter at all
+            expect(Object.keys(material.parameters)).to.deep.equal([]);
         });
 
         it('shares the uniform buffer format between materials', function () {
@@ -206,7 +210,8 @@ describe('StandardMaterial uniform buffer', function () {
 
         it('stores every typed property, colors as linear values and numbers as they are', function () {
             const material = prepare(new StandardMaterial());
-            const descriptors = material.propertyDescriptors;
+            const derived = new Set(['anisotropyRotation', 'attenuationDistance', 'heightMapFactor', 'alphaDither']);
+            const descriptors = material.propertyDescriptors.filter(descriptor => !derived.has(descriptor.name));
             descriptors.forEach((descriptor, index) => {
                 if (descriptor.type === UNIFORMTYPE_VEC3) {
                     material[descriptor.name] = new Color(0.5, 0.25, 0.75);
@@ -222,6 +227,51 @@ describe('StandardMaterial uniform buffer', function () {
                     expectStored(material, descriptor.uniformName, [0.125 + index]);
                 }
             });
+        });
+
+        it('derives the anisotropy direction, the inverse attenuation distance and the height map factor', function () {
+            const material = prepare(new StandardMaterial());
+            expectStored(material, 'material_anisotropyRotation', [1, 0]);
+            expectStored(material, 'material_invAttenuationDistance', [0]);
+            expectStored(material, 'material_heightMapFactor', [0.1]);
+
+            material.anisotropyRotation = 90;
+            material.attenuationDistance = 4;
+            material.heightMapFactor = 2;
+            material.update();
+            expectStored(material, 'material_anisotropyRotation', [Math.cos(Math.PI / 2), Math.sin(Math.PI / 2)]);
+            expectStored(material, 'material_invAttenuationDistance', [0.25]);
+            expectStored(material, 'material_heightMapFactor', [0.2]);
+        });
+
+        it('derives the dither scale from the dither alpha and the opacity', function () {
+            const material = prepare(new StandardMaterial());
+            expectStored(material, 'material_alphaDitherScale', [1]);
+
+            // the dither alpha falls back to the opacity, a scale of 1
+            material.opacity = 0.5;
+            material.update();
+            expect(material.alphaDither).to.equal(0.5);
+            expectStored(material, 'material_alphaDitherScale', [1]);
+
+            material.alphaDither = 0.25;
+            material.update();
+            expectStored(material, 'material_alphaDitherScale', [0.5]);
+
+            // a change of the opacity re-derives the scale
+            material.opacity = 0.25;
+            material.update();
+            expectStored(material, 'material_alphaDitherScale', [1]);
+
+            // a zero opacity keeps a safe scale, null restores the fall-through
+            material.opacity = 0;
+            material.update();
+            expectStored(material, 'material_alphaDitherScale', [1]);
+            material.opacity = 0.5;
+            material.alphaDither = null;
+            material.update();
+            expect(material.alphaDither).to.equal(0.5);
+            expectStored(material, 'material_alphaDitherScale', [1]);
         });
 
         it('keeps the shader-dirty predicates of the numbers', function () {
@@ -243,6 +293,8 @@ describe('StandardMaterial uniform buffer', function () {
             expect(dirtyAfter('refractionIndex', 0.5), 'leaving the default').to.equal(true);
             expect(dirtyAfter('refractionIndex', 0.6), 'staying off the default').to.equal(false);
             expect(dirtyAfter('ambient', new Color(0, 0, 0)), 'colors never do').to.equal(false);
+            expect(dirtyAfter('alphaDither', 0.5), 'the dither alpha never does').to.equal(false);
+            expect(dirtyAfter('heightMapFactor', 0.5), 'leaving 1').to.equal(true);
         });
 
         it('does not mark a property modified when the assigned value is equal', function () {
