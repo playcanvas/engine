@@ -169,8 +169,8 @@ const toggled = createSphere('override: toggled', 1.9);
 let toggleTime = 0;
 let toggleOn = false;
 
-// 5. a diffuse override next to overrides of uniforms outside the material uniform buffer, which
-// take the per-draw scope path: a warm emissive glow and a higher gloss
+// 5. diffuse and emissive overrides, both uniforms of the material uniform buffer, next to a gloss
+// override, which is outside the buffer and takes the per-draw scope path
 const mixed = createSphere('override: diffuse\n+ emissive + gloss', 3.8);
 mixed.setParameter('material_diffuse', hueToLinear(0.6, new Float32Array(3)));
 mixed.setParameter('material_emissive', new Float32Array([0.35, 0.12, 0.02]));

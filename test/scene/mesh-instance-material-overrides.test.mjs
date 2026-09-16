@@ -62,14 +62,14 @@ describe('MeshInstance material uniform buffer overrides', function () {
 
         it('keeps the parameters in a map and splits them between the scope and the material buffer', function () {
             const meshInstance = new MeshInstance(mesh, material);
-            meshInstance.setParameter('material_emissive', [1, 1, 1]);
+            meshInstance.setParameter('material_gloss', 0.9);
             meshInstance.setParameter('material_diffuse', [1, 0, 0]);
             meshInstance.setParameter('uTime', 2);
 
             expect(meshInstance.parameters).to.be.instanceOf(Map);
             expect(meshInstance.getParameters()).to.equal(meshInstance.parameters);
             expect(meshInstance.getParameter('uTime').data).to.equal(2);
-            expect(names(meshInstance._scopeParameters)).to.deep.equal(['material_emissive', 'uTime']);
+            expect(names(meshInstance._scopeParameters)).to.deep.equal(['material_gloss', 'uTime']);
             expect(names(meshInstance._materialOverrides)).to.deep.equal(['material_diffuse']);
             expect(meshInstance.getParameter('material_diffuse').override).to.equal(true);
             expect(meshInstance.getParameter('uTime').override).to.equal(false);
@@ -77,10 +77,10 @@ describe('MeshInstance material uniform buffer overrides', function () {
 
         it('removes a deleted parameter from its list and clears everything at once', function () {
             const meshInstance = new MeshInstance(mesh, material);
-            meshInstance.setParameter('material_emissive', [1, 1, 1]);
+            meshInstance.setParameter('material_gloss', 0.9);
             meshInstance.setParameter('material_diffuse', [1, 0, 0]);
 
-            meshInstance.deleteParameter('material_emissive');
+            meshInstance.deleteParameter('material_gloss');
             expect(meshInstance._scopeParameters).to.have.lengthOf(0);
             expect(names(meshInstance._materialOverrides)).to.deep.equal(['material_diffuse']);
 
@@ -121,14 +121,14 @@ describe('MeshInstance material uniform buffer overrides', function () {
 
         it('uses the material bind group when no parameter names a uniform of the material buffer', function () {
             const meshInstance = new MeshInstance(mesh, material);
-            meshInstance.setParameter('material_emissive', [1, 1, 1]);
+            meshInstance.setParameter('material_gloss', 0.9);
 
             expect(meshInstance.getMaterialBindGroup(device)).to.equal(null);
             expect(meshInstance._materialUniformBuffer).to.equal(null);
 
             // a parameter outside the buffer still reaches the scope
             meshInstance.setParameters(device);
-            expect(device.scope.resolve('material_emissive').value).to.deep.equal([1, 1, 1]);
+            expect(device.scope.resolve('material_gloss').value).to.equal(0.9);
         });
 
         it('applies an override through a copy of the material buffer and keeps it off the scope', function () {
@@ -266,13 +266,13 @@ describe('MeshInstance material uniform buffer overrides', function () {
 
         it('does not warn for other material parameters', function () {
             material.setParameter('uTime', 1);
-            material.setParameter('material_emissive', [1, 1, 1]);
+            material.setParameter('material_gloss', 0.5);
             expect(warn.called).to.equal(false);
         });
 
         it('restores only the scope parameters of a mesh instance', function () {
             material.setParameter('uTime', 1);
-            material.setParameter('material_emissive', [0, 0, 0]);
+            material.setParameter('material_gloss', 0.5);
             const meshInstance = new MeshInstance(mesh, material);
             meshInstance.setParameter('uTime', 2);
             meshInstance.setParameter('material_diffuse', [1, 0, 0]);

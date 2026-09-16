@@ -95,4 +95,16 @@ const convertColorToLinear = (color, storage, offset) => {
     storage[offset + 2] = _tempColor.b;
 };
 
-export { MaterialProperty, convertColorToLinear };
+/**
+ * Writes a number to a float uniform value.
+ *
+ * @param {number} value - The number.
+ * @param {Float32Array} storage - The uniform buffer storage.
+ * @param {number} offset - The element offset of the uniform in the storage.
+ * @ignore
+ */
+const convertFloat = (value, storage, offset) => {
+    storage[offset] = value;
+};
+
+export { MaterialProperty, convertColorToLinear, convertFloat };
