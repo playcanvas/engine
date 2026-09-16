@@ -2,10 +2,11 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
 import { Vec2 } from '../../core/math/vec2.js';
+import { Vec3 } from '../../core/math/vec3.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { BINDGROUP_MATERIAL, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3 } from '../../platform/graphics/constants.js';
 import {
-    CUBEPROJ_BOX, CUBEPROJ_NONE,
+    CUBEPROJ_NONE,
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
@@ -67,6 +68,20 @@ const convertAlphaDitherScale = (alphaDither, storage, offset, material) => {
     storage[offset] = opacity > 0 ? (alphaDither ?? opacity) / opacity : 1;
 };
 
+// the corners of the cube map projection box, zero without a box
+const convertBoxMin = (box, storage, offset) => {
+    const min = box ? box.getMin() : Vec3.ZERO;
+    storage[offset] = min.x;
+    storage[offset + 1] = min.y;
+    storage[offset + 2] = min.z;
+};
+const convertBoxMax = (box, storage, offset) => {
+    const max = box ? box.getMax() : Vec3.ZERO;
+    storage[offset] = max.x;
+    storage[offset + 1] = max.y;
+    storage[offset + 2] = max.z;
+};
+
 // typed properties, stored in the material uniform buffer rather than published as parameters,
 // keyed by name so that each accessor references its descriptor directly
 const _properties = {
@@ -108,33 +123,17 @@ const _properties = {
     anisotropyRotation: new MaterialProperty('anisotropyRotation', 'material_anisotropyRotation', UNIFORMTYPE_VEC2, convertDegreesToDirection),
     attenuationDistance: new MaterialProperty('attenuationDistance', 'material_invAttenuationDistance', UNIFORMTYPE_FLOAT, convertToInverse),
     heightMapFactor: new MaterialProperty('heightMapFactor', 'material_heightMapFactor', UNIFORMTYPE_FLOAT, convertHeightMapFactor),
-    alphaDither: new MaterialProperty('alphaDither', 'material_alphaDitherScale', UNIFORMTYPE_FLOAT, convertAlphaDitherScale)
+    alphaDither: new MaterialProperty('alphaDither', 'material_alphaDitherScale', UNIFORMTYPE_FLOAT, convertAlphaDitherScale),
+
+    // the minimum and maximum of the world space box of the cube map projection, two uniforms of
+    // one property: both descriptors are named after the box and read it as their value, so the
+    // material keeps one snapshot of the box per descriptor and rewrites both when the box moves
+    envBoxMin: new MaterialProperty('cubeMapProjectionBox', 'envBoxMin', UNIFORMTYPE_VEC3, convertBoxMin),
+    envBoxMax: new MaterialProperty('cubeMapProjectionBox', 'envBoxMax', UNIFORMTYPE_VEC3, convertBoxMax)
 };
+const _envBoxProperties = [_properties.envBoxMin, _properties.envBoxMax];
 const _propertyList = Object.values(_properties);
 const _propertiesByUniform = new Map(_propertyList.map(property => [property.uniformName, property]));
-
-// the minimum and maximum of the world space box of the cube map projection. Both descriptors are
-// named after the box property and read it as their value, so the material keeps one snapshot of the
-// box per descriptor and rewrites both uniforms when the box moves. They join the layout only while
-// the box projection is in use, the projection mode selecting the shader code.
-const convertBoxMin = (box, storage, offset) => {
-    const min = box.getMin();
-    storage[offset] = min.x;
-    storage[offset + 1] = min.y;
-    storage[offset + 2] = min.z;
-};
-const convertBoxMax = (box, storage, offset) => {
-    const max = box.getMax();
-    storage[offset] = max.x;
-    storage[offset + 1] = max.y;
-    storage[offset + 2] = max.z;
-};
-const _envBoxProperties = [
-    new MaterialProperty('cubeMapProjectionBox', 'envBoxMin', UNIFORMTYPE_VEC3, convertBoxMin),
-    new MaterialProperty('cubeMapProjectionBox', 'envBoxMax', UNIFORMTYPE_VEC3, convertBoxMax)
-];
-const _envBoxPropertiesByUniform = new Map(_envBoxProperties.map(property => [property.uniformName, property]));
-const _propertyListEnvBox = [..._propertyList, ..._envBoxProperties];
 
 const isBlack = (color) => {
     return color.r === 0 && color.g === 0 && color.b === 0;
@@ -623,14 +622,6 @@ class StandardMaterial extends Material {
     _mapTransforms = new StandardMaterialMapTransforms();
 
     /**
-     * True while the uniforms of the cube map projection box are part of the layout.
-     *
-     * @type {boolean}
-     * @private
-     */
-    _envBoxPresent = false;
-
-    /**
      * A custom function that will be called after all shader generator properties are collected
      * and before shader code is generated. This function will receive an object with shader
      * generator settings (based on current material and scene properties), that you can change and
@@ -700,23 +691,20 @@ class StandardMaterial extends Material {
             this._markPropertyModified(property);
         }
 
-        // the transforms of the previously assigned maps and the projection box leave the layout
+        // the transforms of the previously assigned maps leave the layout
         this._mapTransforms.reset();
-        this._envBoxPresent = false;
         this._markLayoutDirty();
     }
 
     /** @ignore */
     get propertyDescriptors() {
-        // the typed properties, the projection box while in use, and the transforms of the assigned maps
-        return this._mapTransforms.getDescriptors(this._envBoxPresent ? _propertyListEnvBox : _propertyList);
+        // the typed properties, and the transforms of the assigned maps
+        return this._mapTransforms.getDescriptors(_propertyList);
     }
 
     /** @ignore */
     getUniformBufferProperty(name) {
-        return _propertiesByUniform.get(name) ??
-            (this._envBoxPresent ? _envBoxPropertiesByUniform.get(name) : null) ??
-            this._mapTransforms.getUniformProperty(name);
+        return _propertiesByUniform.get(name) ?? this._mapTransforms.getUniformProperty(name);
     }
 
     /**
@@ -728,33 +716,6 @@ class StandardMaterial extends Material {
      */
     _collectUnappliedChanges(names) {
         this._mapTransforms.collectUnapplied(this, names);
-        if (this._envBoxInUse() !== this._envBoxPresent) {
-            names.push('cubeMapProjection');
-        }
-    }
-
-    /**
-     * @returns {boolean} True when the box projection is in use: the mode is selected and a box is
-     * assigned.
-     * @private
-     */
-    _envBoxInUse() {
-        return this._cubeMapProjection === CUBEPROJ_BOX && !!this._cubeMapProjectionBox;
-    }
-
-    /**
-     * Keeps the uniforms of the projection box in the layout while the box projection is in use:
-     * the projection mode selects the shader code, and the box supplies its uniforms.
-     *
-     * @private
-     */
-    _updateEnvBoxLayout() {
-        const present = this._envBoxInUse();
-        if (this._envBoxPresent !== present) {
-            this._envBoxPresent = present;
-            this._mapTransforms.invalidateDescriptors();
-            this._markLayoutDirty();
-        }
     }
 
     /**
@@ -1700,7 +1661,6 @@ class StandardMaterial extends Material {
      * @override
      */
     update() {
-        this._updateEnvBoxLayout();
         if (this._mapTransforms.update(this)) {
             this._dirtyShader = true;
         }
@@ -1776,7 +1736,6 @@ class StandardMaterial extends Material {
 
     updateUniforms(device, scene) {
         // Compatibility fallback for materials rendered without calling update().
-        this._updateEnvBoxLayout();
         if (this._mapTransforms.update(this)) {
             this._dirtyShader = true;
         }
