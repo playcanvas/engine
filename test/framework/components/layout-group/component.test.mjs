@@ -108,6 +108,70 @@ describe('LayoutGroupComponent', function () {
         expect(entity0.layoutgroup.reflow.callCount).to.equal(1);
     });
 
+    ['self', 'child'].forEach((targetName) => {
+        ['element', 'layoutchild'].forEach((changedType) => {
+            describe(`${changedType} lifecycle on ${targetName}`, function () {
+                let target;
+                let survivingComponent;
+                let scheduleReflow;
+
+                const addComponent = () => target.addComponent(changedType,
+                    changedType === 'element' ? { type: ELEMENTTYPE_GROUP } : {});
+
+                const expectSingleResizeNotification = () => {
+                    app.systems.fire('postUpdate');
+                    scheduleReflow.resetHistory();
+                    entity0.layoutgroup.reflow.resetHistory();
+
+                    survivingComponent.fire('resize');
+
+                    const calls = scheduleReflow.getCalls().filter(call => call.args[0] === entity0.layoutgroup);
+                    expect(calls.length).to.equal(1);
+
+                    app.systems.fire('postUpdate');
+                    expect(entity0.layoutgroup.reflow.called).to.be.true;
+                };
+
+                beforeEach(function () {
+                    target = targetName === 'self' ? entity0 : entity0_0;
+                    if (changedType === 'element') {
+                        target.removeComponent('element');
+                        target.addComponent('layoutchild');
+                        survivingComponent = target.layoutchild;
+                    } else {
+                        survivingComponent = target.element;
+                    }
+                    scheduleReflow = spy(system, 'scheduleReflow');
+                });
+
+                it('does not duplicate notifications from the existing component when adding', function () {
+                    addComponent();
+                    expectSingleResizeNotification();
+                });
+
+                it('keeps notifications from the surviving component when removing', function () {
+                    const removedComponent = addComponent();
+                    target.removeComponent(changedType);
+                    scheduleReflow.resetHistory();
+                    removedComponent.fire('resize');
+                    expect(scheduleReflow.called).to.be.false;
+                    expectSingleResizeNotification();
+                });
+
+                it('keeps one subscription after repeated removal and re-addition', function () {
+                    for (let i = 0; i < 3; i++) {
+                        addComponent();
+                        expectSingleResizeNotification();
+                        target.removeComponent(changedType);
+                        expectSingleResizeNotification();
+                    }
+                    addComponent();
+                    expectSingleResizeNotification();
+                });
+            });
+        });
+    });
+
     it('bails if the maximum iteration count is reached', function () {
         stub(console, 'warn');
 
