@@ -9,6 +9,16 @@ const int32View = new Int32Array(floatView.buffer);
  * Utility static class providing functionality to pack float values to various storage
  * representations.
  *
+ * {@link float2Half} converts a JavaScript number to the 16-bit half-float encoding used by
+ * half-precision textures and vertex formats, so float data can be uploaded to the GPU at half the
+ * size.
+ *
+ * @example
+ * // Fill a half-float buffer from an array of numbers
+ * const halves = new Uint16Array(values.length);
+ * for (let i = 0; i < values.length; i++) {
+ *     halves[i] = FloatPacking.float2Half(values[i]);
+ * }
  * @category Math
  */
 class FloatPacking {

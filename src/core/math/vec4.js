@@ -4,6 +4,22 @@ import { Debug } from '../debug.js';
  * A 4-dimensional vector. Vec4 is commonly used to represent homogeneous coordinates or shader
  * uniforms requiring four components.
  *
+ * Operations follow one convention throughout the math classes: a method that modifies the vector
+ * it is called on returns it, so calls can be chained and nothing is allocated, while queries such
+ * as {@link length} and {@link dot} return a number. Two-operand forms such as {@link add2} and
+ * {@link mul2} write the result of `lhs op rhs` into `this`, and it is safe for `this` to also be
+ * one of the operands. Use {@link clone} for an independent copy and {@link copy} to overwrite one
+ * vector with another.
+ *
+ * The static constants {@link ZERO}, {@link HALF} and {@link ONE} are frozen shared instances: read
+ * them freely, but writing to one throws.
+ *
+ * @example
+ * // Interpolate between two 4-component values into a third, without allocating
+ * const from = new Vec4(0, 0, 0, 0);
+ * const to = new Vec4(1, 1, 1, 1);
+ * const result = new Vec4();
+ * result.lerp(from, to, 0.25);   // result is now [0.25, 0.25, 0.25, 0.25]
  * @category Math
  */
 class Vec4 {
