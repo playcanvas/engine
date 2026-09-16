@@ -448,6 +448,21 @@ describe('StandardMaterial', function () {
             material.alphaTest = 0;
             material.update();
             expect(material.variants.get(1)).to.equal(undefined);
+
+            // a negative value disables the test like 0 does, but keeps an opacity map in the shader
+            variant = addVariant(material);
+            material.alphaTest = -0.25;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            variant = addVariant(material);
+            material.alphaTest = -0.5;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.alphaTest = 0.5;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
         });
 
         it('forwards the deprecated aoUvSet to aoMapUv', function () {

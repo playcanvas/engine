@@ -1640,9 +1640,11 @@ class StandardMaterial extends Material {
      * @type {number}
      */
     set alphaTest(value) {
-        if (this._alphaTest !== value) {
-            // the alpha test is compiled into the shader when the value is above 0
-            this._dirtyShader = this._dirtyShader || (this._alphaTest === 0) !== (value === 0);
+        const oldValue = this._alphaTest;
+        if (oldValue !== value) {
+            // the alpha test is compiled into the shader when the value is above 0, and an opacity
+            // map is dropped from the shader when the value is exactly 0 and nothing else reads it
+            this._dirtyShader = this._dirtyShader || (oldValue > 0) !== (value > 0) || (oldValue === 0) !== (value === 0);
             this._alphaTest = value;
         }
     }
