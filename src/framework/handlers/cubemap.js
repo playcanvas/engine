@@ -11,7 +11,9 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * Resource handler used for loading cubemap {@link Texture} resources.
+ * Resource handler for the `cubemap` asset type. Assembles a cube map {@link Texture} from six
+ * face texture assets, from a prefiltered environment file, or both, and stores the results in
+ * {@link Asset#resources}.
  *
  * @category Graphics
  */

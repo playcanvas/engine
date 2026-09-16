@@ -5,9 +5,11 @@
  */
 
 /**
- * Keeps track of which assets are in bundles and loads files from bundles.
+ * The BundleRegistry tracks which assets are packed into `bundle` assets and serves their files
+ * from a loaded {@link Bundle} instead of fetching them individually. It watches the
+ * {@link AssetRegistry} for bundle assets and is available at {@link AssetRegistry#bundles}.
  *
- * @ignore
+ * @category Asset
  */
 class BundleRegistry {
     /**
@@ -315,7 +317,7 @@ class BundleRegistry {
      * the second argument is the file blob URL.
      * @example
      * const url = asset.getFileUrl().split('?')[0]; // get normalized asset URL
-     * this.app.bundles.loadFile(url, function (err, data) {
+     * app.assets.bundles.loadUrl(url, (err, data) => {
      *     // do something with the data
      * });
      */

@@ -131,25 +131,37 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  */
 
 /**
- * An asset record of a file or data resource that can be loaded by the engine. The asset contains
- * four important fields:
+ * An Asset is the engine's record of a single resource: a texture, a material, a glTF container,
+ * a sound, a script and so on. Assets live in the application's {@link AssetRegistry} at
+ * {@link AppBase#assets}, which loads them on demand.
  *
- * - `file`: contains the details of a file (filename, url) which contains the resource data, e.g.
- * an image file for a texture asset.
- * - `data`: contains a JSON blob which contains either the resource data for the asset (e.g.
- * material data) or additional data for the file (e.g. material mappings for a model).
- * - `options`: contains a JSON blob with handler-specific load options.
- * - `resource`: contains the final resource when it is loaded. (e.g. a {@link StandardMaterial} or
- * a {@link Texture}).
+ * An asset has five parts:
  *
- * See the {@link AssetRegistry} for details on loading resources from assets.
+ * - `type` selects the {@link ResourceHandler} that loads it and the type of `resource`.
+ * - `file` names the file that holds the data, when there is one.
+ * - `data` carries JSON that either is the resource, as for materials, or describes how to
+ * process the file, as for texture and model mappings.
+ * - `options` carries handler-specific load options.
+ * - `resource` holds the loaded object, such as a {@link Texture}. `resources` holds every object
+ * the handler produced when there is more than one, such as a cube map and its prefiltered levels.
  *
- * The `type` string selects the resource type: `new Asset('brick', 'texture', file)` creates an
+ * Loading is driven by the registry: call {@link AssetRegistry#load}, or set {@link Asset#preload}
+ * so the asset loads when added. Wait for the result with {@link Asset#ready} or listen for the
+ * `load` and `error` events. {@link Asset#unload} releases the resource.
+ *
+ * The `type` string also types the resource: `new Asset('brick', 'texture', file)` creates an
  * `Asset<'texture'>` whose `resource` is a {@link Texture} once loaded, and
  * `app.assets.find('brick', 'texture')` returns one. See {@link AssetMap} for the built-in types
  * and for adding application-defined ones. An asset whose type is only known as a `string` has a
  * `resource` of type `unknown`.
  *
+ * @example
+ * const asset = new Asset('brick', 'texture', { url: 'textures/brick.png' });
+ * app.assets.add(asset);
+ * app.assets.load(asset);
+ * asset.ready((asset) => {
+ *     material.diffuseMap = asset.resource;
+ * });
  * @template {AssetType | (string & {})} [K=string]
  * @category Asset
  */
@@ -333,8 +345,8 @@ class Asset extends EventHandler {
     urlObject = null;
 
     /**
-     * Create a new Asset record. Generally, Assets are created in the loading process and you
-     * won't need to create them by hand.
+     * Create a new Asset record. Add it to the {@link AssetRegistry} with
+     * {@link AssetRegistry#add} so the application can find and load it.
      *
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.

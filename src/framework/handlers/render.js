@@ -10,7 +10,9 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * Resource handler used for loading {@link Render} resources.
+ * Resource handler for the `render` asset type. A render asset has no file of its own: it takes
+ * the meshes of one glTF mesh from the container asset named in its data and exposes them as a
+ * {@link Render}.
  *
  * @category Graphics
  */

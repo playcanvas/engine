@@ -8,7 +8,10 @@ import { ResourceHandler } from './handler.js';
  */
 
 /**
- * Resource handler used for loading {@link Model} resources.
+ * Resource handler for the `model` asset type. Loads legacy PlayCanvas JSON models and GLB files
+ * into a {@link Model}. OBJ files are supported once the `ObjModelParser` shipped in
+ * `playcanvas/scripts/esm/parsers/obj-model.mjs` is registered with
+ * {@link ResourceHandler#addParser}.
  *
  * @category Graphics
  */

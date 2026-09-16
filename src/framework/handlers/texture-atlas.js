@@ -32,7 +32,9 @@ const JSON_FILTER_MODE = {
 const regexFrame = /^data\.frames\.(\d+)$/;
 
 /**
- * Resource handler used for loading {@link TextureAtlas} resources.
+ * Resource handler for the `textureatlas` asset type. Loads a texture and its frame definitions
+ * into a {@link TextureAtlas}. The frames come from the asset data, or from a JSON file with a
+ * texture of the same name beside it.
  *
  * @category Graphics
  */

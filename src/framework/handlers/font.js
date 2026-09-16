@@ -36,7 +36,9 @@ function upgradeDataSchema(data) {
 }
 
 /**
- * Resource handler used for loading {@link Font} resources.
+ * Resource handler for the `font` asset type. Loads a {@link Font} from a JSON glyph description
+ * and the texture pages that accompany it. Bitmap fonts and multi-channel signed distance field
+ * fonts are both supported.
  *
  * @category User Interface
  */

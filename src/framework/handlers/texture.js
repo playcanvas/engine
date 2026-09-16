@@ -113,7 +113,9 @@ const _completePartialMipmapChain = function (texture) {
 };
 
 /**
- * Resource handler used for loading 2D and 3D {@link Texture} resources.
+ * Resource handler for the `texture` asset type. Loads 2D and 3D {@link Texture} resources from
+ * any image format the browser decodes, such as PNG, JPEG, WebP and AVIF, and from DDS, KTX,
+ * KTX2, Basis and HDR files.
  *
  * @category Graphics
  */

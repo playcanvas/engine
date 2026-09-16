@@ -41,9 +41,30 @@ import { Asset } from './asset.js';
  */
 
 /**
- * Container for all assets that are available to this application. Note that PlayCanvas scripts
- * are provided with an AssetRegistry instance as `app.assets`.
+ * The AssetRegistry holds every {@link Asset} an application knows about and drives their loading
+ * through the {@link ResourceLoader}. Each application has one at {@link AppBase#assets}.
  *
+ * Look assets up by id with {@link AssetRegistry#get}, by name and type with
+ * {@link AssetRegistry#find} and {@link AssetRegistry#findAll}, by URL with
+ * {@link AssetRegistry#getByUrl}, or by tag with {@link AssetRegistry#findByTag}. Register an
+ * asset with {@link AssetRegistry#add}, or create and load one in a single call with
+ * {@link AssetRegistry#loadFromUrl}.
+ *
+ * Adding an asset does not fetch it unless {@link Asset#preload} is true. Call
+ * {@link AssetRegistry#load} to fetch it, then wait with {@link Asset#ready} or listen for the
+ * registry's `load`, `error`, `add` and `remove` events. Each event also fires in a per-asset form
+ * such as `load:[id]` and `load:url:[url]`.
+ *
+ * @example
+ * const asset = app.assets.find('brick', 'texture');
+ * app.assets.load(asset);
+ * asset.ready((asset) => {
+ *     material.diffuseMap = asset.resource;
+ * });
+ * @example
+ * app.assets.loadFromUrl('models/robot.glb', 'container', (err, asset) => {
+ *     app.root.addChild(asset.resource.instantiateRenderEntity());
+ * });
  * @category Asset
  */
 class AssetRegistry extends EventHandler {
@@ -209,7 +230,9 @@ class AssetRegistry extends EventHandler {
     prefix = null;
 
     /**
-     * BundleRegistry
+     * The {@link BundleRegistry} that tracks which assets are packed into bundle assets and serves
+     * their files from loaded bundles. Assigned when the application creates its bundle registry;
+     * null until then.
      *
      * @type {BundleRegistry|null}
      */

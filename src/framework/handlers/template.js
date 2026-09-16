@@ -2,6 +2,12 @@ import { TemplateParser } from '../parsers/template.js';
 import { Template } from '../template.js';
 import { ResourceHandler } from './handler.js';
 
+/**
+ * Resource handler for the `template` asset type. Loads template JSON into a {@link Template} that
+ * can be instantiated into the scene with {@link Template#instantiate}.
+ *
+ * @category Asset
+ */
 class TemplateHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.

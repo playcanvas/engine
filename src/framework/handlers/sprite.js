@@ -22,7 +22,8 @@ function onTextureAtlasAdded(atlasAsset) {
 }
 
 /**
- * Resource handler used for loading {@link Sprite} resources.
+ * Resource handler for the `sprite` asset type. Builds a {@link Sprite} from sprite JSON, loaded
+ * from a file or supplied as asset data, and binds the {@link TextureAtlas} asset it references.
  *
  * @category Graphics
  */

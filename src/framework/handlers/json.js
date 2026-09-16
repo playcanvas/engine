@@ -1,6 +1,11 @@
 import { JsonParser } from '../parsers/json.js';
 import { ResourceHandler } from './handler.js';
 
+/**
+ * Resource handler for the `json` asset type. Loads a JSON file and parses it into a plain object.
+ *
+ * @category Asset
+ */
 class JsonHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.

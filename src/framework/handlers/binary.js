@@ -1,6 +1,12 @@
 import { BinaryParser } from '../parsers/binary.js';
 import { ResourceHandler } from './handler.js';
 
+/**
+ * Resource handler for the `binary` asset type. Loads a file as an `ArrayBuffer` without
+ * interpreting its contents.
+ *
+ * @category Asset
+ */
 class BinaryHandler extends ResourceHandler {
     constructor(app) {
         super(app, 'binary');

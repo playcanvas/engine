@@ -1,9 +1,12 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * Represents the resource of a Bundle Asset, which contains an index that maps URLs to DataViews.
+ * A Bundle is the resource of a `bundle` asset: an archive whose files back other assets. As the
+ * archive downloads, each file is indexed by its URL and announced with the `add` event, and
+ * `load` fires once the whole archive has arrived. The {@link BundleRegistry} serves asset files
+ * from bundles before falling back to the network.
  *
- * @ignore
+ * @category Asset
  */
 class Bundle extends EventHandler {
     /**

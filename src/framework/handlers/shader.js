@@ -1,6 +1,12 @@
 import { TextParser } from '../parsers/text.js';
 import { ResourceHandler } from './handler.js';
 
+/**
+ * Resource handler for the `shader` asset type. Loads shader source code as a string. It does not
+ * compile the shader.
+ *
+ * @category Asset
+ */
 class ShaderHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.
