@@ -1060,7 +1060,7 @@ class Material {
             const storage = uniformBuffer.storageFloat32;
             const format = uniformBuffer.format;
             for (const property of modified) {
-                property.convert(this[property.backingName], storage, format.get(property.uniformName).offset);
+                property.convert(this[property.backingName], storage, format.get(property.uniformName).offset, this);
             }
             modified.clear();
             this._uniformDataVersion++;

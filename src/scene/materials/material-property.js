@@ -1,5 +1,9 @@
 import { Color } from '../../core/math/color.js';
 
+/**
+ * @import { Material } from './material.js'
+ */
+
 const _tempColor = new Color();
 
 /**
@@ -48,9 +52,10 @@ class MaterialProperty {
 
     /**
      * Writes the uniform data for a public value into the float storage of a uniform buffer at
-     * the given element offset.
+     * the given element offset. A uniform derived from several properties reads the others from
+     * the material.
      *
-     * @type {(value: any, storage: Float32Array, offset: number) => void}
+     * @type {(value: any, storage: Float32Array, offset: number, material: Material) => void}
      */
     convert;
 
@@ -65,8 +70,9 @@ class MaterialProperty {
      * @param {string} name - The public property name.
      * @param {string} uniformName - The name of the uniform in the material uniform buffer.
      * @param {number} type - The type of the uniform, one of UNIFORMTYPE_***.
-     * @param {(value: any, storage: Float32Array, offset: number) => void} convert - Converts the
-     * public value into the uniform data.
+     * @param {(value: any, storage: Float32Array, offset: number, material: Material) => void} convert - Converts
+     * the public value into the uniform data, reading any other property it depends on from the
+     * material.
      * @param {number} [count] - The array size of the uniform. Defaults to 0 (not an array).
      */
     constructor(name, uniformName, type, convert, count = 0) {

@@ -8,7 +8,6 @@ const REGULAR_OUT = '\x1b[22m';
 const TYPES_PATH = './build/playcanvas/src';
 
 const STANDARD_MAT_PROPS = [
-    ['anisotropyRotation', 'number'],
     ['anisotropyMap', 'Texture|null'],
     ['anisotropyMapOffset', 'Vec2'],
     ['anisotropyMapRotation', 'number'],
@@ -91,7 +90,6 @@ const STANDARD_MAT_PROPS = [
     ['glossVertexColorChannel', 'string'],
     ['heightMap', 'Texture|null'],
     ['heightMapChannel', 'string'],
-    ['heightMapFactor', 'number'],
     ['heightMapOffset', 'Vec2'],
     ['heightMapRotation', 'number'],
     ['heightMapTiling', 'Vec2'],
