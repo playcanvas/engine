@@ -1,6 +1,7 @@
 import { expect } from 'chai';
-import { spy } from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
@@ -28,6 +29,10 @@ describe('RenderHandler', function () {
                 return data;
             }
         });
+    });
+
+    afterEach(function () {
+        restore();
     });
 
     function createContainer(add = true) {
@@ -108,18 +113,29 @@ describe('RenderHandler', function () {
     });
 
     it('waits for a container to be added to the registry', function () {
+        const warn = stub(Debug, 'warnOnce');
         const container = createContainer(false);
         const asset = createRender(container);
         const ready = spy();
         asset.ready(ready);
         registry.load(asset);
         expect(ready.called).to.equal(false);
+        expect(warn.calledOnce).to.equal(true);
+        expect(warn.firstCall.args[0]).to.include(`'${asset.name}' (${asset.id})`);
+        expect(warn.firstCall.args[0]).to.include(`missing container asset ${container.id}`);
 
         registry.add(container);
         expect(ready.called).to.equal(false);
         requests.get(container)(null, createResource());
         expect(ready.calledOnce).to.equal(true);
         expect(registry.hasEvent(`add:${container.id}`)).to.equal(false);
+    });
+
+    it('completes without render data when the optional asset is omitted', function () {
+        const loaded = spy();
+        loader.getHandler('render').load(null, loaded);
+
+        expect(loaded.calledOnceWithExactly(null, null)).to.equal(true);
     });
 
     it('loads multiple render assets from one pending container', function () {

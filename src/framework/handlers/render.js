@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Render } from '../../scene/render.js';
 import { ResourceHandler } from './handler.js';
 
@@ -5,6 +6,7 @@ import { ResourceHandler } from './handler.js';
  * @import { AppBase } from '../app-base.js'
  * @import { Asset } from '../asset/asset.js'
  * @import { EventHandle } from '../../core/event-handle.js'
+ * @import { ResourceHandlerCallback } from './handler.js'
  */
 
 /**
@@ -37,7 +39,21 @@ class RenderHandler extends ResourceHandler {
         this._registry = app.assets;
     }
 
+    /**
+     * Waits for a render asset's container to supply its meshes. Without an asset, completes
+     * with no render data.
+     *
+     * @param {string|{load: string, original: string}} url - The resource URL. Not used for
+     * container-backed render assets.
+     * @param {ResourceHandlerCallback} callback - Called with the container's render data or an error.
+     * @param {Asset} [asset] - The render asset whose container dependency should be loaded.
+     */
     load(url, callback, asset) {
+        if (!asset) {
+            callback(null, null);
+            return;
+        }
+
         this._pendingLoads.get(asset)?.();
 
         const registry = this._registry;
@@ -111,6 +127,7 @@ class RenderHandler extends ResourceHandler {
         if (containerAsset) {
             onAdd(containerAsset);
         } else {
+            Debug.warnOnce(`Render asset '${asset.name}' (${asset.id}) is waiting for missing container asset ${containerId}.`);
             events.push(registry.once(`add:${containerId}`, onAdd));
         }
     }
