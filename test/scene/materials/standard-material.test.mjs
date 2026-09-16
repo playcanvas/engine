@@ -459,14 +459,13 @@ describe('StandardMaterial', function () {
             material.update();
             const variant = addVariant(material);
 
-            // ambient is still published as a parameter (diffuse and emissive live in the material uniform buffer)
+            // all colors live in the material uniform buffer, none is published as a parameter
             material.ambient.set(0.5, 0.25, 0.75);
-            material.updateUniforms();
+            material.attenuation = new Color(0.1, 0.2, 0.3);
+            material.update();
 
-            const uniform = material.getParameter('material_ambient').data;
-            expect(uniform[0]).to.be.closeTo(Math.pow(0.5, 2.2), 1e-6);
-            expect(uniform[1]).to.be.closeTo(Math.pow(0.25, 2.2), 1e-6);
-            expect(uniform[2]).to.be.closeTo(Math.pow(0.75, 2.2), 1e-6);
+            expect(material.parameters.material_ambient).to.equal(undefined);
+            expect(material.parameters.material_attenuation).to.equal(undefined);
             expect(material.variants.get(1)).to.equal(variant);
         });
 

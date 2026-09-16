@@ -9,7 +9,6 @@ import {
     DETAILMODE_MUL,
     DITHER_NONE,
     FRESNEL_SCHLICK,
-    PARALLAX_OCCLUSION,
     PARALLAX_OFFSET,
     SHADER_PICK,
     SHADER_PREPASS,
@@ -44,14 +43,42 @@ const _uniforms = {};
 // temporary set of params
 let _params = new Set();
 
-const _tempColor = new Color();
-
 // typed properties, stored in the material uniform buffer rather than published as parameters,
 // keyed by name so that each accessor references its descriptor directly
 const _properties = {
     diffuse: new MaterialProperty('diffuse', 'material_diffuse', UNIFORMTYPE_VEC3, convertColorToLinear),
     emissive: new MaterialProperty('emissive', 'material_emissive', UNIFORMTYPE_VEC3, convertColorToLinear),
-    emissiveIntensity: new MaterialProperty('emissiveIntensity', 'material_emissiveIntensity', UNIFORMTYPE_FLOAT, convertFloat)
+    emissiveIntensity: new MaterialProperty('emissiveIntensity', 'material_emissiveIntensity', UNIFORMTYPE_FLOAT, convertFloat),
+    ambient: new MaterialProperty('ambient', 'material_ambient', UNIFORMTYPE_VEC3, convertColorToLinear),
+    specular: new MaterialProperty('specular', 'material_specular', UNIFORMTYPE_VEC3, convertColorToLinear),
+    sheen: new MaterialProperty('sheen', 'material_sheen', UNIFORMTYPE_VEC3, convertColorToLinear),
+    attenuation: new MaterialProperty('attenuation', 'material_attenuation', UNIFORMTYPE_VEC3, convertColorToLinear),
+    specularityFactor: new MaterialProperty('specularityFactor', 'material_specularityFactor', UNIFORMTYPE_FLOAT, convertFloat),
+    sheenGloss: new MaterialProperty('sheenGloss', 'material_sheenGloss', UNIFORMTYPE_FLOAT, convertFloat),
+    gloss: new MaterialProperty('gloss', 'material_gloss', UNIFORMTYPE_FLOAT, convertFloat),
+    aoIntensity: new MaterialProperty('aoIntensity', 'material_aoIntensity', UNIFORMTYPE_FLOAT, convertFloat),
+    heightMapBase: new MaterialProperty('heightMapBase', 'material_heightMapBase', UNIFORMTYPE_FLOAT, convertFloat),
+    parallaxSamples: new MaterialProperty('parallaxSamples', 'material_parallaxSamples', UNIFORMTYPE_FLOAT, convertFloat),
+    parallaxShadowSamples: new MaterialProperty('parallaxShadowSamples', 'material_parallaxShadowSamples', UNIFORMTYPE_FLOAT, convertFloat),
+    opacity: new MaterialProperty('opacity', 'material_opacity', UNIFORMTYPE_FLOAT, convertFloat),
+    alphaFade: new MaterialProperty('alphaFade', 'material_alphaFade', UNIFORMTYPE_FLOAT, convertFloat),
+    bumpiness: new MaterialProperty('bumpiness', 'material_bumpiness', UNIFORMTYPE_FLOAT, convertFloat),
+    normalDetailMapBumpiness: new MaterialProperty('normalDetailMapBumpiness', 'material_normalDetailMapBumpiness', UNIFORMTYPE_FLOAT, convertFloat),
+    reflectivity: new MaterialProperty('reflectivity', 'material_reflectivity', UNIFORMTYPE_FLOAT, convertFloat),
+    occludeSpecularIntensity: new MaterialProperty('occludeSpecularIntensity', 'material_occludeSpecularIntensity', UNIFORMTYPE_FLOAT, convertFloat),
+    refraction: new MaterialProperty('refraction', 'material_refraction', UNIFORMTYPE_FLOAT, convertFloat),
+    refractionIndex: new MaterialProperty('refractionIndex', 'material_refractionIndex', UNIFORMTYPE_FLOAT, convertFloat),
+    dispersion: new MaterialProperty('dispersion', 'material_dispersion', UNIFORMTYPE_FLOAT, convertFloat),
+    thickness: new MaterialProperty('thickness', 'material_thickness', UNIFORMTYPE_FLOAT, convertFloat),
+    metalness: new MaterialProperty('metalness', 'material_metalness', UNIFORMTYPE_FLOAT, convertFloat),
+    anisotropyIntensity: new MaterialProperty('anisotropyIntensity', 'material_anisotropyIntensity', UNIFORMTYPE_FLOAT, convertFloat),
+    clearCoat: new MaterialProperty('clearCoat', 'material_clearCoat', UNIFORMTYPE_FLOAT, convertFloat),
+    clearCoatGloss: new MaterialProperty('clearCoatGloss', 'material_clearCoatGloss', UNIFORMTYPE_FLOAT, convertFloat),
+    clearCoatBumpiness: new MaterialProperty('clearCoatBumpiness', 'material_clearCoatBumpiness', UNIFORMTYPE_FLOAT, convertFloat),
+    iridescence: new MaterialProperty('iridescence', 'material_iridescence', UNIFORMTYPE_FLOAT, convertFloat),
+    iridescenceRefractionIndex: new MaterialProperty('iridescenceRefractionIndex', 'material_iridescenceRefractionIndex', UNIFORMTYPE_FLOAT, convertFloat),
+    iridescenceThicknessMin: new MaterialProperty('iridescenceThicknessMin', 'material_iridescenceThicknessMin', UNIFORMTYPE_FLOAT, convertFloat),
+    iridescenceThicknessMax: new MaterialProperty('iridescenceThicknessMax', 'material_iridescenceThicknessMax', UNIFORMTYPE_FLOAT, convertFloat)
 };
 const _propertyList = Object.values(_properties);
 const _propertiesByUniform = new Map(_propertyList.map(property => [property.uniformName, property]));
@@ -59,6 +86,17 @@ const _propertiesByUniform = new Map(_propertyList.map(property => [property.uni
 const isBlack = (color) => {
     return color.r === 0 && color.g === 0 && color.b === 0;
 };
+
+// Shader options mostly depend on a number property being 0 or 1 (e.g. metalness < 1, clearCoat > 0),
+// so a change involving either of those values may need a new shader, including a direct 0 <-> 1
+// change. This is not always optimal and will sometimes trigger a redundant shader recompilation, but
+// a change between two fractional values never does. Properties with other thresholds pass their own
+// predicate.
+const dirtyShaderOnZeroOrOne = (oldValue, newValue) => {
+    return oldValue === 0 || oldValue === 1 || newValue === 0 || newValue === 1;
+};
+
+const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
 
 /**
  * @callback UpdateShaderCallback
@@ -85,8 +123,6 @@ const isBlack = (color) => {
  * `material.update()` runs. The debug build reports unapplied changes to the properties stored in
  * the material uniform buffer, such as `diffuse`.
  *
- * @property {Color} ambient The ambient color of the material, specified in sRGB color space. This
- * color value is 3-component (RGB), where each component is between 0 and 1.
  * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
  * null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel. Valid values are 0 to 7.
@@ -124,9 +160,6 @@ const isBlack = (color) => {
  * component-wise.
  *
  * Defaults to {@link DETAILMODE_MUL}.
- * @property {Color} specular The specular color of the material, specified in sRGB color space.
- * This color value is 3-component (RGB), where each component is between 0 and 1. Defines surface
- * reflection/specular color. Affects specular intensity and tint.
  * @property {Texture|null} specularMap The specular map of the material (default is null).
  * @property {number} specularMapUv Specular map UV channel. Valid values are 0 to 7.
  * @property {Vec2} specularMapTiling Controls the 2D tiling of the specular map.
@@ -142,7 +175,6 @@ const isBlack = (color) => {
  * when compositing with `specularityFactorMap` and/or specularity factor vertex colors. Defaults
  * to `false`. Setting this to `true` is rarely needed - the constant is automatically applied
  * whenever `specularityFactor` differs from 1. Provided as an explicit override.
- * @property {number} specularityFactor The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
  * @property {Texture|null} specularityFactorMap The factor of specularity as a texture (default is
  * null).
  * @property {number} specularityFactorMapUv Specularity factor map UV channel. Valid values are 0 to 7.
@@ -157,10 +189,6 @@ const isBlack = (color) => {
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} enableGGXSpecular Enables GGX specular. Also enables
  * {@link anisotropyIntensity} parameter to set material anisotropy.
- * @property {number} anisotropyIntensity Defines amount of anisotropy. Requires
- * {@link enableGGXSpecular} is set to true.
- * - When anisotropyIntensity == 0, specular is isotropic.
- * - Specular anisotropy increases as anisotropyIntensity value increases to maximum of 1.
  * @property {number} anisotropyRotation Defines the rotation (in degrees) of anisotropy.
  * @property {Texture|null} anisotropyMap The anisotropy map of the material (default is null).
  * @property {number} anisotropyMapUv Anisotropy map UV channel. Valid values are 0 to 7.
@@ -168,8 +196,6 @@ const isBlack = (color) => {
  * @property {Vec2} anisotropyMapOffset Controls the 2D offset of the anisotropy map. Each
  * component is between 0 and 1.
  * @property {number} anisotropyMapRotation Controls the 2D rotation (in degrees) of the anisotropy map.
- * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
- * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {Texture|null} clearCoatMap Monochrome clearcoat intensity map (default is null). If
  * specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
  * @property {number} clearCoatMapUv Clearcoat intensity map UV channel. Valid values are 0 to 7.
@@ -184,8 +210,6 @@ const isBlack = (color) => {
  * clearCoatMap is set, it'll be multiplied by vertex colors.
  * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clearcoat
  * intensity. Can be "r", "g", "b" or "a".
- * @property {number} clearCoatGloss Defines the clearcoat glossiness of the clearcoat layer
- * from 0 (rough) to 1 (mirror).
  * @property {boolean} clearCoatGlossInvert Invert the clearcoat gloss component (default is false).
  * Enabling this flag results in material treating the clear coat gloss members as roughness.
  * @property {Texture|null} clearCoatGlossMap Monochrome clearcoat glossiness map (default is
@@ -212,13 +236,7 @@ const isBlack = (color) => {
  * map. Each component is between 0 and 1.
  * @property {number} clearCoatNormalMapRotation Controls the 2D rotation (in degrees) of the main
  * clearcoat map.
- * @property {number} clearCoatBumpiness The bumpiness of the clearcoat layer. This value scales
- * the assigned main clearcoat normal map. It should be normally between 0 (no bump mapping) and 1
- * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {boolean} useIridescence Enable thin-film iridescence.
- * @property {number} iridescence Defines the intensity of the iridescence layer from 0 to 1. Only
- * used when useIridescence is enabled, and the layer is disabled when iridescence == 0. If an
- * iridescenceMap is specified, it is multiplied by this value. Default value is 0 (disabled).
  * @property {Texture|null} iridescenceMap The per-pixel iridescence intensity. Only used when
  * useIridescence is enabled.
  * @property {number} iridescenceMapUv Iridescence map UV channel. Valid values are 0 to 7.
@@ -241,13 +259,6 @@ const isBlack = (color) => {
  * of the iridescence thickness map.
  * @property {string} iridescenceThicknessMapChannel Color channels of the iridescence thickness
  * map to use. Can be "r", "g", "b" or "a".
- * @property {number} iridescenceThicknessMin The minimum thickness for the iridescence layer.
- * Only used when an iridescence thickness map is used. The unit is in nm.
- * @property {number} iridescenceThicknessMax The maximum thickness for the iridescence layer.
- * Used as the 'base' thickness when no iridescence thickness map is defined. The unit is in nm.
- * @property {number} iridescenceRefractionIndex The index of refraction of the iridescent
- * thin-film. Affects the color phase shift as described here:
- * https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_iridescence
  * @property {boolean} useMetalness Use metalness properties instead of specular. When enabled,
  * diffuse colors also affect specular instead of the dedicated specular map. This can be used as
  * alternative to specular color to save space. With metalness == 0, the pixel is assumed to be
@@ -255,8 +266,6 @@ const isBlack = (color) => {
  * metallic, and diffuse color is used as specular color instead.
  * @property {boolean} useMetalnessSpecularColor When metalness is enabled, use the
  * specular map to apply color tint to specular reflections.
- * @property {number} metalness Defines how much the surface is metallic. From 0 (dielectric) to 1
- * (metal).
  * @property {Texture|null} metalnessMap Monochrome metalness map (default is null).
  * @property {number} metalnessMapUv Metalness map UV channel. Valid values are 0 to 7.
  * @property {Vec2} metalnessMapTiling Controls the 2D tiling of the metalness map.
@@ -270,9 +279,6 @@ const isBlack = (color) => {
  * is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be
  * "r", "g", "b" or "a".
- * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
- * Materials imported from glTF enable {@link StandardMaterial#glossInvert}, which reverses this:
- * on those materials gloss holds roughness, so 0 is shiny and 1 is rough.
  * @property {Texture|null} glossMap Gloss map (default is null). If specified, will be multiplied
  * by normalized gloss value and/or vertex colors.
  * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
@@ -288,8 +294,6 @@ const isBlack = (color) => {
  * it'll be multiplied by vertex colors.
  * @property {string} glossVertexColorChannel Vertex color channel to use for glossiness. Can be
  * "r", "g", "b" or "a".
- * @property {number} refraction Defines the visibility of refraction. Material can refract the
- * same cube map as used for reflections.
  * @property {Texture|null} refractionMap The map of the refraction visibility.
  * @property {number} refractionMapUv Refraction map UV channel. Valid values are 0 to 7.
  * @property {Vec2} refractionMapTiling Controls the 2D tiling of the refraction map.
@@ -303,17 +307,8 @@ const isBlack = (color) => {
  * refraction map is set, it will be multiplied by vertex colors.
  * @property {string} refractionVertexColorChannel Vertex color channel to use for refraction.
  * Can be "r", "g", "b" or "a".
- * @property {number} refractionIndex Defines the index of refraction, i.e. The amount of
- * distortion. The value is calculated as (outerIor / surfaceIor), where inputs are measured
- * indices of refraction, the one around the object and the one of its own surface. In most
- * situations outer medium is air, so outerIor will be approximately 1. Then you only need to do
- * (1.0 / surfaceIor).
- * @property {number} dispersion The strength of the angular separation of colors (chromatic
- * aberration) transmitting through a volume. Defaults to 0, which is equivalent to no dispersion.
  * @property {boolean} useDynamicRefraction Enables higher quality refractions using the grab pass
  * instead of pre-computed cube maps for refractions.
- * @property {number} thickness The thickness of the medium, only used when useDynamicRefraction
- * is enabled. The unit is in base units, and scales with the size of the object.
  * @property {Texture|null} thicknessMap The per-pixel thickness of the medium, only used when
  * useDynamicRefraction is enabled.
  * @property {number} thicknessMapUv Thickness map UV channel. Valid values are 0 to 7.
@@ -328,8 +323,6 @@ const isBlack = (color) => {
  * thickness map is set, it will be multiplied by vertex colors.
  * @property {string} thicknessVertexColorChannel Vertex color channel to use for thickness. Can
  * be "r", "g", "b" or "a".
- * @property {Color} attenuation The attenuation color for refractive materials, specified in sRGB
- * color space. Only used when useDynamicRefraction is enabled.
  * @property {number} attenuationDistance The distance defining the absorption rate of light
  * within the medium. Only used when useDynamicRefraction is enabled.
  * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
@@ -349,9 +342,6 @@ const isBlack = (color) => {
  * @property {string} emissiveVertexColorChannel Vertex color channels to use for emission. Can be
  * "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} useSheen Toggle sheen specular effect on/off.
- * @property {Color} sheen The specular color of the sheen (fabric) microfiber structure, specified
- * in sRGB color space. This color value is 3-component (RGB), where each component is between 0
- * and 1.
  * @property {Texture|null} sheenMap The sheen microstructure color map of the material (default is
  * null).
  * @property {number} sheenMapUv Sheen map UV channel. Valid values are 0 to 7.
@@ -366,8 +356,6 @@ const isBlack = (color) => {
  * sheen tint are set, they'll be multiplied by vertex colors.
  * @property {string} sheenVertexColorChannel Vertex color channels to use for sheen. Can be "r",
  * "g", "b", "a", "rgb" or any swizzled combination.
- * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
- * This color value is a single value between 0 and 1.
  * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
  * Enabling this flag results in material treating the sheen gloss members as roughness.
  * @property {Texture|null} sheenGlossMap The sheen glossiness microstructure color map of the
@@ -384,12 +372,6 @@ const isBlack = (color) => {
  * If sheen glossiness map or sheen glossiness tint are set, they'll be multiplied by vertex colors.
  * @property {string} sheenGlossVertexColorChannel Vertex color channels to use for sheen glossiness.
  * Can be "r", "g", "b" or "a".
- * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where
- * 0 is fully transparent and 1 is fully opaque. If you want the material to be semi-transparent
- * you also need to set the {@link Material#blendType} to {@link BLEND_NORMAL},
- * {@link BLEND_ADDITIVE} or any other mode. Also note that for most semi-transparent objects you
- * want {@link Material#depthWrite} to be false, otherwise they can fully occlude objects behind
- * them.
  * @property {Texture|null} opacityMap The opacity map of the material (default is null).
  * @property {number} opacityMapUv Opacity map UV channel. Valid values are 0 to 7.
  * @property {string} opacityMapChannel Color channel of the opacity map to use. Can be "r", "g",
@@ -429,8 +411,6 @@ const isBlack = (color) => {
  * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
- * @property {number} alphaFade Used to fade out materials when {@link opacityFadesSpecular} is
- * set to false.
  * @property {number} alphaDither The alpha value used by the opacity dither path, in the range
  * [0, 1]. Independent of {@link opacity}, which keeps driving alpha blending. Lets a material be
  * alpha-blended and dithered at the same time with different strengths — useful for fading
@@ -449,9 +429,6 @@ const isBlack = (color) => {
  * component is between 0 and 1.
  * @property {number} normalMapRotation Controls the 2D rotation (in degrees) of the main (primary)
  * normal map.
- * @property {number} bumpiness The bumpiness of the material. This value scales the assigned main
- * (primary) normal map. It should be normally between 0 (no bump mapping) and 1 (full bump
- * mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {Texture|null} normalDetailMap The detail (secondary) normal map of the material
  * (default is null). Will only be used if main (primary) normal map is non-null.
  * @property {number} normalDetailMapUv Detail (secondary) normal map UV channel. Valid values are 0 to 7.
@@ -461,9 +438,6 @@ const isBlack = (color) => {
  * map. Each component is between 0 and 1.
  * @property {number} normalDetailMapRotation Controls the 2D rotation (in degrees) of the detail
  * (secondary) normal map.
- * @property {number} normalDetailMapBumpiness The bumpiness of the material. This value scales the
- * assigned detail (secondary) normal map. It should be normally between 0 (no bump mapping) and 1
- * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {Texture|null} heightMap The height map of the material (default is null). Used for a
  * view-dependent parallax effect. The texture must represent the height of the surface where
  * darker pixels are lower and lighter pixels are higher, with {@link heightMapBase} selecting the
@@ -480,11 +454,6 @@ const isBlack = (color) => {
  * @property {number} heightMapFactor Height map multiplier (default is 1). Affects the strength of
  * the parallax effect. A value of 1 displaces the texture by up to 5% of a UV tile, so useful values
  * are typically in the 0 to 2 range.
- * @property {number} heightMapBase The height map value that sits at the level of the original
- * geometry, in the 0 to 1 range (default is 0.5). Relief above the base appears to stand out of
- * the surface and relief below it appears to sink in. Set it to 1 to treat the map as pure depth
- * carved below the geometry, or to 0 to treat it as pure elevation above it. Both parallax modes
- * honor it.
  * @property {string} parallaxMode Selects how the height map is used to offset the UV of the other
  * maps of the material. Can be:
  *
@@ -497,15 +466,6 @@ const isBlack = (color) => {
  * surface.
  *
  * Defaults to {@link PARALLAX_OFFSET}.
- * @property {number} parallaxSamples The maximum number of height map taps taken along the view ray
- * when {@link parallaxMode} is {@link PARALLAX_OCCLUSION} (default is 16). Fewer taps are taken as
- * the view direction approaches the surface normal, where the ray barely moves. Has no effect in
- * {@link PARALLAX_OFFSET} mode.
- * @property {number} parallaxShadowSamples The maximum number of height map taps taken towards each
- * directional light to shadow the relief against itself, or 0 to disable it (default is 0). The
- * shadow is soft: the march accumulates how far the height field stands above the light ray and
- * weights it by distance, so more taps buy a smoother penumbra rather than an earlier exit. Applies
- * only to directional lights, and only when {@link parallaxMode} is {@link PARALLAX_OCCLUSION}.
  * @property {Texture|null} envAtlas The prefiltered environment lighting atlas (default is null).
  * This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
  * @property {Texture|null} cubeMap The cubic environment map of the material (default is null).
@@ -519,7 +479,6 @@ const isBlack = (color) => {
  * @property {BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box
  * defining the box-projection used for the cubeMap property. Only used when cubeMapProjection is
  * set to {@link CUBEPROJ_BOX}.
- * @property {number} reflectivity Environment map intensity.
  * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps
  * are textures that contain pre-rendered lighting. Can be HDR.
  * @property {number} lightMapUv Lightmap UV channel. Valid values are 0 to 7.
@@ -533,7 +492,6 @@ const isBlack = (color) => {
  * multiplied by vertex colors.
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
- * @property {number} aoIntensity Ambient occlusion intensity. Defaults to 1.
  * @property {Texture|null} aoMap The main (primary) baked ambient occlusion (AO) map (default is
  * null). Modulates ambient color.
  * @property {number} aoMapUv Main (primary) AO map UV channel. Valid values are 0 to 7.
@@ -577,7 +535,6 @@ const isBlack = (color) => {
  * - {@link SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude
  * specular.
  *
- * @property {number} occludeSpecularIntensity Controls visibility of specular occlusion.
  * @property {boolean} occludeDirect Tells if AO should darken directional lighting. Defaults to
  * false.
  * @property {number} fresnelModel Defines the formula used for Fresnel effect.
@@ -786,6 +743,715 @@ class StandardMaterial extends Material {
     }
 
     /**
+     * The ambient color of the material, specified in sRGB color space. This color value is
+     * 3-component (RGB), where each component is between 0 and 1.
+     *
+     * @type {Color}
+     */
+    set ambient(value) {
+        if (!this._ambient.equals(value)) {
+            this._ambient.copy(value);
+            this._markPropertyModified(_properties.ambient);
+        }
+    }
+
+    /**
+     * Gets the ambient color of the material.
+     *
+     * @type {Color}
+     */
+    get ambient() {
+        this._markPropertyMutable(_properties.ambient, this._ambient);
+        return this._ambient;
+    }
+
+    /**
+     * The specular color of the material, specified in sRGB color space. This color value is
+     * 3-component (RGB), where each component is between 0 and 1. Defines surface
+     * reflection/specular color. Affects specular intensity and tint.
+     *
+     * @type {Color}
+     */
+    set specular(value) {
+        if (!this._specular.equals(value)) {
+            this._specular.copy(value);
+            this._markPropertyModified(_properties.specular);
+        }
+    }
+
+    /**
+     * Gets the specular color of the material.
+     *
+     * @type {Color}
+     */
+    get specular() {
+        this._markPropertyMutable(_properties.specular, this._specular);
+        return this._specular;
+    }
+
+    /**
+     * The specular color of the sheen (fabric) microfiber structure, specified in sRGB color space.
+     * This color value is 3-component (RGB), where each component is between 0 and 1.
+     *
+     * @type {Color}
+     */
+    set sheen(value) {
+        if (!this._sheen.equals(value)) {
+            this._sheen.copy(value);
+            this._markPropertyModified(_properties.sheen);
+        }
+    }
+
+    /**
+     * Gets the sheen color of the material.
+     *
+     * @type {Color}
+     */
+    get sheen() {
+        this._markPropertyMutable(_properties.sheen, this._sheen);
+        return this._sheen;
+    }
+
+    /**
+     * The attenuation color for refractive materials, specified in sRGB color space. Only used when
+     * useDynamicRefraction is enabled.
+     *
+     * @type {Color}
+     */
+    set attenuation(value) {
+        if (!this._attenuation.equals(value)) {
+            this._attenuation.copy(value);
+            this._markPropertyModified(_properties.attenuation);
+        }
+    }
+
+    /**
+     * Gets the attenuation color of the material.
+     *
+     * @type {Color}
+     */
+    get attenuation() {
+        this._markPropertyMutable(_properties.attenuation, this._attenuation);
+        return this._attenuation;
+    }
+
+    /**
+     * The factor of specular intensity, used to weight the fresnel and specularity. Default is 1.0.
+     *
+     * @type {number}
+     */
+    set specularityFactor(value) {
+        if (this._specularityFactor !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._specularityFactor, value);
+            this._specularityFactor = value;
+            this._markPropertyModified(_properties.specularityFactor);
+        }
+    }
+
+    /**
+     * Gets the specularity factor of the material.
+     *
+     * @type {number}
+     */
+    get specularityFactor() {
+        return this._specularityFactor;
+    }
+
+    /**
+     * The glossiness of the sheen (fabric) microfiber structure. This color value is a single value
+     * between 0 and 1.
+     *
+     * @type {number}
+     */
+    set sheenGloss(value) {
+        if (this._sheenGloss !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._sheenGloss, value);
+            this._sheenGloss = value;
+            this._markPropertyModified(_properties.sheenGloss);
+        }
+    }
+
+    /**
+     * Gets the sheen glossiness of the material.
+     *
+     * @type {number}
+     */
+    get sheenGloss() {
+        return this._sheenGloss;
+    }
+
+    /**
+     * Defines the glossiness of the material from 0 (rough) to 1 (shiny). Materials imported from
+     * glTF enable {@link StandardMaterial#glossInvert}, which reverses this: on those materials
+     * gloss holds roughness, so 0 is shiny and 1 is rough.
+     *
+     * @type {number}
+     */
+    set gloss(value) {
+        if (this._gloss !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._gloss, value);
+            this._gloss = value;
+            this._markPropertyModified(_properties.gloss);
+        }
+    }
+
+    /**
+     * Gets the glossiness of the material.
+     *
+     * @type {number}
+     */
+    get gloss() {
+        return this._gloss;
+    }
+
+    /**
+     * Ambient occlusion intensity. Defaults to 1.
+     *
+     * @type {number}
+     */
+    set aoIntensity(value) {
+        if (this._aoIntensity !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._aoIntensity, value);
+            this._aoIntensity = value;
+            this._markPropertyModified(_properties.aoIntensity);
+        }
+    }
+
+    /**
+     * Gets the ambient occlusion intensity of the material.
+     *
+     * @type {number}
+     */
+    get aoIntensity() {
+        return this._aoIntensity;
+    }
+
+    /**
+     * The height map value that sits at the level of the original geometry, in the 0 to 1 range
+     * (default is 0.5). Relief above the base appears to stand out of the surface and relief below
+     * it appears to sink in. Set it to 1 to treat the map as pure depth carved below the geometry,
+     * or to 0 to treat it as pure elevation above it. Both parallax modes honor it.
+     *
+     * @type {number}
+     */
+    set heightMapBase(value) {
+        if (this._heightMapBase !== value) {
+            // the base only feeds a uniform, so unlike the generic number property it never invalidates the
+            // shader - the generic rule would rebuild for nothing when a slider lands on 0 or 1
+            this._heightMapBase = value;
+            this._markPropertyModified(_properties.heightMapBase);
+        }
+    }
+
+    /**
+     * Gets the height map base level of the material.
+     *
+     * @type {number}
+     */
+    get heightMapBase() {
+        return this._heightMapBase;
+    }
+
+    /**
+     * The maximum number of height map taps taken along the view ray when {@link parallaxMode} is
+     * {@link PARALLAX_OCCLUSION} (default is 16). Fewer taps are taken as the view direction
+     * approaches the surface normal, where the ray barely moves. Has no effect in {@link
+     * PARALLAX_OFFSET} mode.
+     *
+     * @type {number}
+     */
+    set parallaxSamples(value) {
+        if (this._parallaxSamples !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._parallaxSamples, value);
+            this._parallaxSamples = value;
+            this._markPropertyModified(_properties.parallaxSamples);
+        }
+    }
+
+    /**
+     * Gets the maximum number of height map taps of parallax occlusion mapping of the material.
+     *
+     * @type {number}
+     */
+    get parallaxSamples() {
+        return this._parallaxSamples;
+    }
+
+    /**
+     * The maximum number of height map taps taken towards each directional light to shadow the
+     * relief against itself, or 0 to disable it (default is 0). The shadow is soft: the march
+     * accumulates how far the height field stands above the light ray and weights it by distance,
+     * so more taps buy a smoother penumbra rather than an earlier exit. Applies only to directional
+     * lights, and only when {@link parallaxMode} is {@link PARALLAX_OCCLUSION}.
+     *
+     * @type {number}
+     */
+    set parallaxShadowSamples(value) {
+        if (this._parallaxShadowSamples !== value) {
+            // only crossing zero selects different shader code, that is what takes the march out of the
+            // shader - the generic 0 or 1 rule would rebuild for nothing when dragging the count from 1 to 2
+            this._dirtyShader = this._dirtyShader || (this._parallaxShadowSamples === 0) !== (value === 0);
+            this._parallaxShadowSamples = value;
+            this._markPropertyModified(_properties.parallaxShadowSamples);
+        }
+    }
+
+    /**
+     * Gets the maximum number of height map taps of the parallax self shadowing of the material.
+     *
+     * @type {number}
+     */
+    get parallaxShadowSamples() {
+        return this._parallaxShadowSamples;
+    }
+
+    /**
+     * The opacity of the material. This value can be between 0 and 1, where 0 is fully transparent
+     * and 1 is fully opaque. If you want the material to be semi-transparent you also need to set
+     * the {@link Material#blendType} to {@link BLEND_NORMAL}, {@link BLEND_ADDITIVE} or any other
+     * mode. Also note that for most semi-transparent objects you want {@link Material#depthWrite}
+     * to be false, otherwise they can fully occlude objects behind them.
+     *
+     * @type {number}
+     */
+    set opacity(value) {
+        if (this._opacity !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._opacity, value);
+            this._opacity = value;
+            this._markPropertyModified(_properties.opacity);
+        }
+    }
+
+    /**
+     * Gets the opacity of the material.
+     *
+     * @type {number}
+     */
+    get opacity() {
+        return this._opacity;
+    }
+
+    /**
+     * Used to fade out materials when {@link opacityFadesSpecular} is set to false.
+     *
+     * @type {number}
+     */
+    set alphaFade(value) {
+        if (this._alphaFade !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._alphaFade, value);
+            this._alphaFade = value;
+            this._markPropertyModified(_properties.alphaFade);
+        }
+    }
+
+    /**
+     * Gets the alpha fade of the material.
+     *
+     * @type {number}
+     */
+    get alphaFade() {
+        return this._alphaFade;
+    }
+
+    /**
+     * The bumpiness of the material. This value scales the assigned main (primary) normal map. It
+     * should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to
+     * e.g. 2 to give even more pronounced bump effect.
+     *
+     * @type {number}
+     */
+    set bumpiness(value) {
+        if (this._bumpiness !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._bumpiness, value);
+            this._bumpiness = value;
+            this._markPropertyModified(_properties.bumpiness);
+        }
+    }
+
+    /**
+     * Gets the bumpiness of the material.
+     *
+     * @type {number}
+     */
+    get bumpiness() {
+        return this._bumpiness;
+    }
+
+    /**
+     * The bumpiness of the material. This value scales the assigned detail (secondary) normal map.
+     * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set
+     * to e.g. 2 to give even more pronounced bump effect.
+     *
+     * @type {number}
+     */
+    set normalDetailMapBumpiness(value) {
+        if (this._normalDetailMapBumpiness !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._normalDetailMapBumpiness, value);
+            this._normalDetailMapBumpiness = value;
+            this._markPropertyModified(_properties.normalDetailMapBumpiness);
+        }
+    }
+
+    /**
+     * Gets the detail normal map bumpiness of the material.
+     *
+     * @type {number}
+     */
+    get normalDetailMapBumpiness() {
+        return this._normalDetailMapBumpiness;
+    }
+
+    /**
+     * Environment map intensity.
+     *
+     * @type {number}
+     */
+    set reflectivity(value) {
+        if (this._reflectivity !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._reflectivity, value);
+            this._reflectivity = value;
+            this._markPropertyModified(_properties.reflectivity);
+        }
+    }
+
+    /**
+     * Gets the environment map intensity of the material.
+     *
+     * @type {number}
+     */
+    get reflectivity() {
+        return this._reflectivity;
+    }
+
+    /**
+     * Controls visibility of specular occlusion.
+     *
+     * @type {number}
+     */
+    set occludeSpecularIntensity(value) {
+        if (this._occludeSpecularIntensity !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._occludeSpecularIntensity, value);
+            this._occludeSpecularIntensity = value;
+            this._markPropertyModified(_properties.occludeSpecularIntensity);
+        }
+    }
+
+    /**
+     * Gets the specular occlusion intensity of the material.
+     *
+     * @type {number}
+     */
+    get occludeSpecularIntensity() {
+        return this._occludeSpecularIntensity;
+    }
+
+    /**
+     * Defines the visibility of refraction. Material can refract the same cube map as used for
+     * reflections.
+     *
+     * @type {number}
+     */
+    set refraction(value) {
+        if (this._refraction !== value) {
+            // the shader options treat a refraction close to 1 as a constant (see StandardMaterialOptionsBuilder)
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._refraction, value) || equalish(this._refraction, 1) !== equalish(value, 1);
+            this._refraction = value;
+            this._markPropertyModified(_properties.refraction);
+        }
+    }
+
+    /**
+     * Gets the refraction of the material.
+     *
+     * @type {number}
+     */
+    get refraction() {
+        return this._refraction;
+    }
+
+    /**
+     * Defines the index of refraction, i.e. The amount of distortion. The value is calculated as
+     * (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the
+     * object and the one of its own surface. In most situations outer medium is air, so outerIor
+     * will be approximately 1. Then you only need to do (1.0 / surfaceIor).
+     *
+     * @type {number}
+     */
+    set refractionIndex(value) {
+        if (this._refractionIndex !== value) {
+            // the shader uses a constant for the default value and a uniform otherwise, so moving across it
+            // needs a new shader
+            this._dirtyShader = this._dirtyShader || equalish(this._refractionIndex, DEFAULT_REFRACTION_INDEX) !== equalish(value, DEFAULT_REFRACTION_INDEX);
+            this._refractionIndex = value;
+            this._markPropertyModified(_properties.refractionIndex);
+        }
+    }
+
+    /**
+     * Gets the index of refraction of the material.
+     *
+     * @type {number}
+     */
+    get refractionIndex() {
+        return this._refractionIndex;
+    }
+
+    /**
+     * The strength of the angular separation of colors (chromatic aberration) transmitting through
+     * a volume. Defaults to 0, which is equivalent to no dispersion.
+     *
+     * @type {number}
+     */
+    set dispersion(value) {
+        if (this._dispersion !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._dispersion, value);
+            this._dispersion = value;
+            this._markPropertyModified(_properties.dispersion);
+        }
+    }
+
+    /**
+     * Gets the dispersion of the material.
+     *
+     * @type {number}
+     */
+    get dispersion() {
+        return this._dispersion;
+    }
+
+    /**
+     * The thickness of the medium, only used when useDynamicRefraction is enabled. The unit is in
+     * base units, and scales with the size of the object.
+     *
+     * @type {number}
+     */
+    set thickness(value) {
+        if (this._thickness !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._thickness, value);
+            this._thickness = value;
+            this._markPropertyModified(_properties.thickness);
+        }
+    }
+
+    /**
+     * Gets the thickness of the medium of the material.
+     *
+     * @type {number}
+     */
+    get thickness() {
+        return this._thickness;
+    }
+
+    /**
+     * Defines how much the surface is metallic. From 0 (dielectric) to 1 (metal).
+     *
+     * @type {number}
+     */
+    set metalness(value) {
+        if (this._metalness !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._metalness, value);
+            this._metalness = value;
+            this._markPropertyModified(_properties.metalness);
+        }
+    }
+
+    /**
+     * Gets the metalness of the material.
+     *
+     * @type {number}
+     */
+    get metalness() {
+        return this._metalness;
+    }
+
+    /**
+     * Defines amount of anisotropy. Requires {@link enableGGXSpecular} is set to true. - When
+     * anisotropyIntensity == 0, specular is isotropic. - Specular anisotropy increases as
+     * anisotropyIntensity value increases to maximum of 1.
+     *
+     * @type {number}
+     */
+    set anisotropyIntensity(value) {
+        if (this._anisotropyIntensity !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._anisotropyIntensity, value);
+            this._anisotropyIntensity = value;
+            this._markPropertyModified(_properties.anisotropyIntensity);
+        }
+    }
+
+    /**
+     * Gets the anisotropy intensity of the material.
+     *
+     * @type {number}
+     */
+    get anisotropyIntensity() {
+        return this._anisotropyIntensity;
+    }
+
+    /**
+     * Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer is disabled when clearCoat
+     * == 0. Default value is 0 (disabled).
+     *
+     * @type {number}
+     */
+    set clearCoat(value) {
+        if (this._clearCoat !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._clearCoat, value);
+            this._clearCoat = value;
+            this._markPropertyModified(_properties.clearCoat);
+        }
+    }
+
+    /**
+     * Gets the clearcoat intensity of the material.
+     *
+     * @type {number}
+     */
+    get clearCoat() {
+        return this._clearCoat;
+    }
+
+    /**
+     * Defines the clearcoat glossiness of the clearcoat layer from 0 (rough) to 1 (mirror).
+     *
+     * @type {number}
+     */
+    set clearCoatGloss(value) {
+        if (this._clearCoatGloss !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._clearCoatGloss, value);
+            this._clearCoatGloss = value;
+            this._markPropertyModified(_properties.clearCoatGloss);
+        }
+    }
+
+    /**
+     * Gets the clearcoat glossiness of the material.
+     *
+     * @type {number}
+     */
+    get clearCoatGloss() {
+        return this._clearCoatGloss;
+    }
+
+    /**
+     * The bumpiness of the clearcoat layer. This value scales the assigned main clearcoat normal
+     * map. It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be
+     * set to e.g. 2 to give even more pronounced bump effect.
+     *
+     * @type {number}
+     */
+    set clearCoatBumpiness(value) {
+        if (this._clearCoatBumpiness !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._clearCoatBumpiness, value);
+            this._clearCoatBumpiness = value;
+            this._markPropertyModified(_properties.clearCoatBumpiness);
+        }
+    }
+
+    /**
+     * Gets the clearcoat bumpiness of the material.
+     *
+     * @type {number}
+     */
+    get clearCoatBumpiness() {
+        return this._clearCoatBumpiness;
+    }
+
+    /**
+     * Defines the intensity of the iridescence layer from 0 to 1. Only used when useIridescence is
+     * enabled, and the layer is disabled when iridescence == 0. If an iridescenceMap is specified,
+     * it is multiplied by this value. Default value is 0 (disabled).
+     *
+     * @type {number}
+     */
+    set iridescence(value) {
+        if (this._iridescence !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescence, value);
+            this._iridescence = value;
+            this._markPropertyModified(_properties.iridescence);
+        }
+    }
+
+    /**
+     * Gets the iridescence intensity of the material.
+     *
+     * @type {number}
+     */
+    get iridescence() {
+        return this._iridescence;
+    }
+
+    /**
+     * The index of refraction of the iridescent thin-film. Affects the color phase shift as
+     * described here:
+     * https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_iridescence
+     *
+     * @type {number}
+     */
+    set iridescenceRefractionIndex(value) {
+        if (this._iridescenceRefractionIndex !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescenceRefractionIndex, value);
+            this._iridescenceRefractionIndex = value;
+            this._markPropertyModified(_properties.iridescenceRefractionIndex);
+        }
+    }
+
+    /**
+     * Gets the index of refraction of the iridescent thin-film of the material.
+     *
+     * @type {number}
+     */
+    get iridescenceRefractionIndex() {
+        return this._iridescenceRefractionIndex;
+    }
+
+    /**
+     * The minimum thickness for the iridescence layer. Only used when an iridescence thickness map
+     * is used. The unit is in nm.
+     *
+     * @type {number}
+     */
+    set iridescenceThicknessMin(value) {
+        if (this._iridescenceThicknessMin !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescenceThicknessMin, value);
+            this._iridescenceThicknessMin = value;
+            this._markPropertyModified(_properties.iridescenceThicknessMin);
+        }
+    }
+
+    /**
+     * Gets the minimum iridescence thickness of the material.
+     *
+     * @type {number}
+     */
+    get iridescenceThicknessMin() {
+        return this._iridescenceThicknessMin;
+    }
+
+    /**
+     * The maximum thickness for the iridescence layer. Used as the 'base' thickness when no
+     * iridescence thickness map is defined. The unit is in nm.
+     *
+     * @type {number}
+     */
+    set iridescenceThicknessMax(value) {
+        if (this._iridescenceThicknessMax !== value) {
+            this._dirtyShader = this._dirtyShader || dirtyShaderOnZeroOrOne(this._iridescenceThicknessMax, value);
+            this._iridescenceThicknessMax = value;
+            this._markPropertyModified(_properties.iridescenceThicknessMax);
+        }
+    }
+
+    /**
+     * Gets the maximum iridescence thickness of the material.
+     *
+     * @type {number}
+     */
+    get iridescenceThicknessMax() {
+        return this._iridescenceThicknessMax;
+    }
+
+    /**
      * Copy a `StandardMaterial`.
      *
      * @param {StandardMaterial} source - The material to copy from.
@@ -923,36 +1589,9 @@ class StandardMaterial extends Material {
             return this.getUniform(name, device, scene);
         };
 
-        this._setParameter('material_ambient', getUniform('ambient'));
-        this._setParameter('material_specular', getUniform('specular'));
-        this._setParameter('material_aoIntensity', this.aoIntensity);
-
-        if (this.useMetalness) {
-            if (!this.metalnessMap || this.metalness < 1) {
-                this._setParameter('material_metalness', this.metalness);
-            }
-            if (!this.specularityFactorMap || this.specularityFactorTint || this.specularityFactor !== 1) {
-                this._setParameter('material_specularityFactor', this.specularityFactor);
-            }
-
-            this._setParameter('material_sheen', getUniform('sheen'));
-            this._setParameter('material_sheenGloss', this.sheenGloss);
-
-            this._setParameter('material_refractionIndex', this.refractionIndex);
-        }
-
         if (this.enableGGXSpecular) {
-            this._setParameter('material_anisotropyIntensity', this.anisotropyIntensity);
             this._setParameter('material_anisotropyRotation', [Math.cos(this.anisotropyRotation * math.DEG_TO_RAD), Math.sin(this.anisotropyRotation * math.DEG_TO_RAD)]);
         }
-
-        if (this.clearCoat > 0) {
-            this._setParameter('material_clearCoat', this.clearCoat);
-            this._setParameter('material_clearCoatGloss', this.clearCoatGloss);
-            this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
-        }
-
-        this._setParameter('material_gloss', this.gloss);
 
         Debug.call(() => {
             if (this.emissiveMap && this._emissive.r === 0 && this._emissive.g === 0 && this._emissive.b === 0) {
@@ -960,33 +1599,9 @@ class StandardMaterial extends Material {
             }
         });
 
-        if (this.refraction > 0) {
-            this._setParameter('material_refraction', this.refraction);
-        }
-
-        // refraction needs ior, which is otherwise uploaded by the metalness path above
-        if (!this.useMetalness && (this.refraction > 0 || this.refractionMap)) {
-            this._setParameter('material_refractionIndex', this.refractionIndex);
-        }
-
-        if (this.dispersion > 0) {
-            this._setParameter('material_dispersion', this.dispersion);
-        }
-
         if (this.useDynamicRefraction) {
-            this._setParameter('material_thickness', this.thickness);
-            this._setParameter('material_attenuation', getUniform('attenuation'));
             this._setParameter('material_invAttenuationDistance', this.attenuationDistance === 0 ? 0 : 1.0 / this.attenuationDistance);
         }
-
-        if (this.useIridescence) {
-            this._setParameter('material_iridescence', this.iridescence);
-            this._setParameter('material_iridescenceRefractionIndex', this.iridescenceRefractionIndex);
-            this._setParameter('material_iridescenceThicknessMin', this.iridescenceThicknessMin);
-            this._setParameter('material_iridescenceThicknessMax', this.iridescenceThicknessMax);
-        }
-
-        this._setParameter('material_opacity', this.opacity);
 
         // dither shader does dAlpha * scale; this.alphaDither getter falls back to opacity when
         // the user hasn't opted in, giving scale = 1 and bit-identical legacy behavior. Set the
@@ -995,14 +1610,6 @@ class StandardMaterial extends Material {
         // value rather than an uninitialized one
         const ditherScale = this._opacity > 0 ? this.alphaDither / this._opacity : 1;
         this._setParameter('material_alphaDitherScale', ditherScale);
-
-        if (this.opacityFadesSpecular === false) {
-            this._setParameter('material_alphaFade', this.alphaFade);
-        }
-
-        if (this.occludeSpecular) {
-            this._setParameter('material_occludeSpecularIntensity', this.occludeSpecularIntensity);
-        }
 
         if (this.cubeMapProjection === CUBEPROJ_BOX) {
             this._setParameter(getUniform('cubeMapProjectionBox'));
@@ -1016,25 +1623,8 @@ class StandardMaterial extends Material {
             this._setParameter('ambientSH[0]', this.ambientSH);
         }
 
-        if (this.normalMap) {
-            this._setParameter('material_bumpiness', this.bumpiness);
-        }
-
-        if (this.normalMap && this.normalDetailMap) {
-            this._setParameter('material_normalDetailMapBumpiness', this.normalDetailMapBumpiness);
-        }
-
         if (this.heightMap) {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
-            this._setParameter('material_heightMapBase', this.heightMapBase);
-
-            if (this.parallaxMode === PARALLAX_OCCLUSION) {
-                this._setParameter('material_parallaxSamples', this.parallaxSamples);
-
-                if (this.parallaxShadowSamples > 0) {
-                    this._setParameter('material_parallaxShadowSamples', this.parallaxShadowSamples);
-                }
-            }
         }
 
         // set overridden environment textures
@@ -1048,8 +1638,6 @@ class StandardMaterial extends Material {
         } else if (this.sphereMap) {
             this._setParameter('texture_sphereMap', this.sphereMap);
         }
-
-        this._setParameter('material_reflectivity', this.reflectivity);
 
         // remove unused params
         this._processParameters();
@@ -1390,38 +1978,6 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     });
 }
 
-function _defineColor(name, defaultValue) {
-    defineProp({
-        name: name,
-        defaultValue: defaultValue,
-        dirtyShaderFunc: () => false
-    });
-
-    defineUniform(name, (material, device, scene) => {
-        const uniform = material._allocUniform(name, () => new Float32Array(3));
-        const color = material[`_${name}`];
-
-        // uniforms are always in linear space
-        _tempColor.linear(color);
-        uniform[0] = _tempColor.r;
-        uniform[1] = _tempColor.g;
-        uniform[2] = _tempColor.b;
-
-        return uniform;
-    });
-}
-
-// Shader options mostly depend on a number property being 0 or 1 (e.g. metalness < 1, clearCoat > 0),
-// so a change involving either of those values may need a new shader, including a direct 0 <-> 1
-// change. This is not always optimal and will sometimes trigger a redundant shader recompilation, but
-// a change between two fractional values never does. Properties with other thresholds pass their own
-// predicate.
-const dirtyShaderOnZeroOrOne = (oldValue, newValue) => {
-    return oldValue === 0 || oldValue === 1 || newValue === 0 || newValue === 1;
-};
-
-const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
-
 function _defineFloat(name, defaultValue, getUniformFunc, dirtyShaderFunc = dirtyShaderOnZeroOrOne) {
     defineProp({
         name: name,
@@ -1465,14 +2021,36 @@ function _defineMaterialProps() {
     registerProp('emissive', () => new Color(0, 0, 0), true);
     registerProp('emissiveIntensity', () => 1);
 
-    _defineColor('ambient', new Color(1, 1, 1));
-    _defineColor('specular', new Color(0, 0, 0));
-    _defineColor('sheen', new Color(1, 1, 1));
-    _defineColor('attenuation', new Color(1, 1, 1));
-    _defineFloat('specularityFactor', 1);
-    _defineFloat('sheenGloss', 0.0);
-    _defineFloat('gloss', 0.25);
-    _defineFloat('aoIntensity', 1);
+    registerProp('ambient', () => new Color(1, 1, 1), true);
+    registerProp('specular', () => new Color(0, 0, 0), true);
+    registerProp('sheen', () => new Color(1, 1, 1), true);
+    registerProp('attenuation', () => new Color(1, 1, 1), true);
+    registerProp('specularityFactor', () => 1);
+    registerProp('sheenGloss', () => 0.0);
+    registerProp('gloss', () => 0.25);
+    registerProp('aoIntensity', () => 1);
+    registerProp('heightMapBase', () => 0.5);
+    registerProp('parallaxSamples', () => 16);
+    registerProp('parallaxShadowSamples', () => 0);
+    registerProp('opacity', () => 1);
+    registerProp('alphaFade', () => 1);
+    registerProp('bumpiness', () => 1);
+    registerProp('normalDetailMapBumpiness', () => 1);
+    registerProp('reflectivity', () => 1);
+    registerProp('occludeSpecularIntensity', () => 1);
+    registerProp('refraction', () => 0);
+    registerProp('refractionIndex', () => DEFAULT_REFRACTION_INDEX);
+    registerProp('dispersion', () => 0);
+    registerProp('thickness', () => 0);
+    registerProp('metalness', () => 1);
+    registerProp('anisotropyIntensity', () => 0);
+    registerProp('clearCoat', () => 0);
+    registerProp('clearCoatGloss', () => 1);
+    registerProp('clearCoatBumpiness', () => 1);
+    registerProp('iridescence', () => 0);
+    registerProp('iridescenceRefractionIndex', () => 1.0 / 1.5);
+    registerProp('iridescenceThicknessMin', () => 0);
+    registerProp('iridescenceThicknessMax', () => 0);
 
     // the total height range of the height map in uv units, so the uv offset generated by the
     // parallax mapping is at most half of this value in each direction
@@ -1480,32 +2058,6 @@ function _defineMaterialProps() {
         return material.heightMapFactor * 0.1;
     });
 
-    // The base only feeds a uniform, so unlike the generic number property it never invalidates
-    // the shader - the generic rule would rebuild for nothing when a slider lands on 0 or 1. Its
-    // uniform is set from updateUniforms, since it is only needed while a height map is assigned.
-    defineProp({
-        name: 'heightMapBase',
-        defaultValue: 0.5,
-        dirtyShaderFunc: () => false
-    });
-
-    _defineFloat('parallaxSamples', 16);
-
-    // The self shadow tap count is declared by hand rather than through _defineFloat, because the
-    // generic number property invalidates the shader whenever a value crosses 0 or 1, and only
-    // crossing zero matters here - that is what takes the march out of the shader. Left to the
-    // generic rule, dragging the count from 1 to 2 would rebuild for nothing. Its uniform is set
-    // from updateUniforms rather than through defineUniform, since it only applies in occlusion mode.
-    definePropInternal('parallaxShadowSamples', () => 0, function (value) {
-        if (this._parallaxShadowSamples !== value) {
-            if ((this._parallaxShadowSamples === 0) !== (value === 0)) {
-                this._dirtyShader = true;
-            }
-            this._parallaxShadowSamples = value;
-        }
-    });
-    _defineFloat('opacity', 1);
-    _defineFloat('alphaFade', 1);
 
     // alphaDither is the alpha used by the dither path, independent of opacity (the blend alpha).
     // Defaults to null: the getter then falls back to opacity, matching the historical behavior
@@ -1521,36 +2073,9 @@ function _defineMaterialProps() {
     });
 
     _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
-    _defineFloat('bumpiness', 1);
-    _defineFloat('normalDetailMapBumpiness', 1);
-    _defineFloat('reflectivity', 1);
-    _defineFloat('occludeSpecularIntensity', 1);
-    // the shader options treat a refraction close to 1 as a constant (see StandardMaterialOptionsBuilder)
-    _defineFloat('refraction', 0, undefined, (oldValue, newValue) => {
-        return dirtyShaderOnZeroOrOne(oldValue, newValue) || equalish(oldValue, 1) !== equalish(newValue, 1);
-    });
-    // approx. (air ior / glass ior), clamped to avoid division by zero in shader. The shader uses a
-    // constant for the default value and a uniform otherwise, so moving across it needs a new shader.
-    _defineFloat('refractionIndex', DEFAULT_REFRACTION_INDEX, (material, device, scene) => {
-        return Math.max(0.001, material.refractionIndex);
-    }, (oldValue, newValue) => {
-        return equalish(oldValue, DEFAULT_REFRACTION_INDEX) !== equalish(newValue, DEFAULT_REFRACTION_INDEX);
-    });
-    _defineFloat('dispersion', 0);
-    _defineFloat('thickness', 0);
     _defineFloat('attenuationDistance', 0);
-    _defineFloat('metalness', 1);
-    _defineFloat('anisotropyIntensity', 0);
     _defineFloat('anisotropyRotation', 0);
-    _defineFloat('clearCoat', 0);
-    _defineFloat('clearCoatGloss', 1);
-    _defineFloat('clearCoatBumpiness', 1);
     _defineFloat('aoUvSet', 0, null); // legacy
-
-    _defineFloat('iridescence', 0);
-    _defineFloat('iridescenceRefractionIndex', 1.0 / 1.5);
-    _defineFloat('iridescenceThicknessMin', 0);
-    _defineFloat('iridescenceThicknessMax', 0);
 
     _defineObject('ambientSH');
 

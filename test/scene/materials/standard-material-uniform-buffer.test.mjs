@@ -63,12 +63,19 @@ describe('StandardMaterial uniform buffer', function () {
 
     describe('descriptors', function () {
 
-        it('describe diffuse and emissive as vec3 uniforms and emissiveIntensity as a float', function () {
-            const material = new StandardMaterial();
-            const descriptors = material.propertyDescriptors;
-            expect(descriptors.map(descriptor => descriptor.name)).to.deep.equal(['diffuse', 'emissive', 'emissiveIntensity']);
-            expect(descriptors.map(descriptor => descriptor.uniformName)).to.deep.equal(['material_diffuse', 'material_emissive', 'material_emissiveIntensity']);
-            expect(descriptors.map(descriptor => descriptor.type)).to.deep.equal([UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC3, UNIFORMTYPE_FLOAT]);
+        it('describe the colors as vec3 uniforms and the numbers as floats, named after the property', function () {
+            const descriptors = new StandardMaterial().propertyDescriptors;
+            expect(descriptors).to.have.lengthOf(33);
+            const byName = new Map(descriptors.map(descriptor => [descriptor.name, descriptor]));
+            for (const name of ['diffuse', 'emissive', 'ambient', 'specular', 'sheen', 'attenuation']) {
+                expect(byName.get(name).type, name).to.equal(UNIFORMTYPE_VEC3);
+            }
+            for (const name of ['emissiveIntensity', 'gloss', 'metalness', 'opacity', 'refractionIndex', 'parallaxShadowSamples']) {
+                expect(byName.get(name).type, name).to.equal(UNIFORMTYPE_FLOAT);
+            }
+            for (const descriptor of descriptors) {
+                expect(descriptor.uniformName).to.equal(`material_${descriptor.name}`);
+            }
         });
 
         it('are static and shared between materials', function () {
@@ -84,7 +91,7 @@ describe('StandardMaterial uniform buffer', function () {
             material.update();
             expect(material.uniformBufferBindGroup).to.equal(null);
             expect(material._uniformBuffer).to.equal(null);
-            expect(material._modifiedProperties.size).to.equal(3);
+            expect(material._modifiedProperties.size).to.equal(33);
         });
 
         it('creates the uniform buffer and bind group on the first preparation, holding the defaults', function () {
@@ -104,7 +111,12 @@ describe('StandardMaterial uniform buffer', function () {
             expect(material.parameters.material_diffuse).to.equal(undefined);
             expect(material.parameters.material_emissive).to.equal(undefined);
             expect(material.parameters.material_emissiveIntensity).to.equal(undefined);
-            expect(material.parameters.material_ambient).to.exist;
+            expect(material.parameters.material_ambient).to.equal(undefined);
+            expect(material.parameters.material_gloss).to.equal(undefined);
+            expect(material.parameters.material_opacity).to.equal(undefined);
+
+            // derived uniforms are still parameters
+            expect(material.parameters.material_alphaDitherScale).to.exist;
         });
 
         it('shares the uniform buffer format between materials', function () {
@@ -190,6 +202,47 @@ describe('StandardMaterial uniform buffer', function () {
             material.emissiveIntensity = 2.5;
             material.update();
             expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('stores every typed property, colors as linear values and numbers as they are', function () {
+            const material = prepare(new StandardMaterial());
+            const descriptors = material.propertyDescriptors;
+            descriptors.forEach((descriptor, index) => {
+                if (descriptor.type === UNIFORMTYPE_VEC3) {
+                    material[descriptor.name] = new Color(0.5, 0.25, 0.75);
+                } else {
+                    material[descriptor.name] = 0.125 + index;
+                }
+            });
+            material.update();
+            descriptors.forEach((descriptor, index) => {
+                if (descriptor.type === UNIFORMTYPE_VEC3) {
+                    expectStored(material, descriptor.uniformName, linear(0.5, 0.25, 0.75));
+                } else {
+                    expectStored(material, descriptor.uniformName, [0.125 + index]);
+                }
+            });
+        });
+
+        it('keeps the shader-dirty predicates of the numbers', function () {
+            const material = new StandardMaterial();
+            material.update();
+            const dirtyAfter = (name, value) => {
+                material._dirtyShader = false;
+                material[name] = value;
+                return material._dirtyShader;
+            };
+            expect(dirtyAfter('metalness', 0.5), 'leaving 1').to.equal(true);
+            expect(dirtyAfter('metalness', 0.25), 'staying fractional').to.equal(false);
+            expect(dirtyAfter('gloss', 0), 'reaching 0').to.equal(true);
+            expect(dirtyAfter('heightMapBase', 1), 'height map base never selects shader code').to.equal(false);
+            expect(dirtyAfter('parallaxShadowSamples', 4), 'leaving 0').to.equal(true);
+            expect(dirtyAfter('parallaxShadowSamples', 5), 'staying above 0').to.equal(false);
+            expect(dirtyAfter('refraction', 0.5), 'leaving 0').to.equal(true);
+            expect(dirtyAfter('refraction', 0.7), 'staying fractional').to.equal(false);
+            expect(dirtyAfter('refractionIndex', 0.5), 'leaving the default').to.equal(true);
+            expect(dirtyAfter('refractionIndex', 0.6), 'staying off the default').to.equal(false);
+            expect(dirtyAfter('ambient', new Color(0, 0, 0)), 'colors never do').to.equal(false);
         });
 
         it('does not mark a property modified when the assigned value is equal', function () {
