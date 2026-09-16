@@ -464,6 +464,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     async createDevice() {
 
+        if (this._destroyed) {
+            return null;
+        }
+
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
             powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined,
@@ -472,7 +476,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             xrCompatible: !!this.initOptions.xrCompatible
         };
 
-        this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
+        const gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
+        if (this._destroyed) {
+            return null;
+        }
+        this.gpuAdapter = gpuAdapter;
 
         // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
         // compute, shader miscompiles), so fail device creation here to let createGraphicsDevice
@@ -556,7 +564,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         DebugHelper.setLabel(deviceDescr, 'PlayCanvasWebGPUDevice');
 
-        this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
+        const wgpu = await gpuAdapter.requestDevice(deviceDescr);
+        // Teardown can finish while the request is pending. Do not revive the device or its resources.
+        if (this._destroyed) {
+            wgpu.destroy();
+            return null;
+        }
+        this.wgpu = wgpu;
 
         // HTML-in-Canvas support (copyElementImageToTexture)
         this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
@@ -656,6 +670,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             this.fire('devicelost');
 
             await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
+
+            if (this._destroyed) {
+                return;
+            }
 
             super.restoreContext(); // 'super' works correctly here
             this.fire('devicerestored');
