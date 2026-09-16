@@ -772,6 +772,11 @@ class AppBase extends EventHandler {
     /**
      * Load all assets in the asset registry that are marked as 'preload'.
      *
+     * Container-backed render assets wait for their referenced containers to be registered and
+     * loaded. If a preloaded render asset's `data.containerAsset` refers to a container that is
+     * never registered, this method never calls its callback or fires `preload:end`. Debug builds
+     * warn when a render asset starts waiting for an unregistered container.
+     *
      * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
     preload(callback) {

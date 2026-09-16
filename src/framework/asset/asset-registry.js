@@ -401,6 +401,11 @@ class AssetRegistry extends EventHandler {
      * Load the asset's file from a remote source. Listen for `load` events on the asset to find
      * out when it is loaded.
      *
+     * Container-backed render assets wait for the container referenced by `data.containerAsset`
+     * to be registered and loaded before firing `load`. The container can be registered later,
+     * but if it is never registered, the render asset remains loading indefinitely. If that
+     * render asset is marked for preload, it also prevents {@link AppBase#preload} from completing.
+     *
      * @param {Asset} asset - The asset to load.
      * @param {object} [options] - Options for asset loading.
      * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
@@ -509,7 +514,7 @@ class AssetRegistry extends EventHandler {
             }
         };
 
-        if (file || asset.type === 'cubemap') {
+        if (file || asset.type === 'cubemap' || (asset.type === 'render' && asset.data.containerAsset)) {
             // start loading the resource
             this.fire('load:start', asset);
             this.fire(`load:${asset.id}:start`, asset);
