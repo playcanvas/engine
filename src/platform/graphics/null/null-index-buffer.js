@@ -4,7 +4,7 @@
  * @ignore
  */
 class NullIndexBuffer {
-    unlock(indexBuffer) {
+    unlock(indexBuffer, byteOffset, byteLength) {
     }
 }
 

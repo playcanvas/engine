@@ -739,6 +739,8 @@ class Asset extends EventHandler {
 
     /**
      * Destroys the associated resource and marks asset as unloaded.
+     * The `unload` event also fires while the asset is loading, allowing resource handlers to
+     * cancel pending work.
      *
      * @example
      * const asset = app.assets.find("My Asset");
@@ -746,7 +748,7 @@ class Asset extends EventHandler {
      * // asset.resource is null
      */
     unload() {
-        if (!this.loaded && this._resources.length === 0) {
+        if (!this.loaded && !this.loading && this._resources.length === 0) {
             return;
         }
 

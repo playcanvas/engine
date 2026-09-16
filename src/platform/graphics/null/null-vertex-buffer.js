@@ -7,7 +7,7 @@ class NullVertexBuffer {
     destroy(device) {
     }
 
-    unlock(vertexBuffer) {
+    unlock(vertexBuffer, byteOffset, byteLength) {
     }
 }
 

@@ -52,12 +52,17 @@ const recordMaterialChange = (material) => {
  */
 const getUnappliedMaterialProperties = (material) => {
     const names = [];
-    material._modifiedProperties?.forEach(property => names.push(property.name));
+    material._modifiedProperties?.forEach((property) => {
+        if (!names.includes(property.name)) {
+            names.push(property.name);
+        }
+    });
     material._mutableProperties?.forEach((snapshot, property) => {
         if (!names.includes(property.name) && !snapshot.equals(material[property.backingName])) {
             names.push(property.name);
         }
     });
+    material._collectUnappliedChanges?.(names);
     return names;
 };
 
