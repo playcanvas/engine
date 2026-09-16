@@ -271,7 +271,12 @@ export function fixTypes(root = '.') {
         if (footer) {
             // append only the footer lines the file does not already contain - tsc emits the import
             // itself when the source references the type (e.g. an explicit accessor)
-            const missing = footer.split('\n').filter(line => line.trim() && !contents.includes(line.trim()));
+            // tsc emits a type-only import for a type it only sees in JSDoc, so compare without the
+            // import keyword: "{ BoundingBox } from '...'" is present either way
+            const missing = footer.split('\n').filter((line) => {
+                const trimmed = line.trim();
+                return trimmed && !contents.includes(trimmed.replace(/^import (type )?/, ''));
+            });
             if (missing.length > 0) {
                 contents += `\n${missing.join('\n')}\n`;
             }
