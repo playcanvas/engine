@@ -71,6 +71,26 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     _deferredDestroys = [];
 
     /**
+     * @type {GPUAdapter|null}
+     * @private
+     */
+    gpuAdapter = null;
+
+    /**
+     * @type {GPUDevice|null}
+     * @private
+     */
+    wgpu = null;
+
+    /**
+     * Configuration of the canvas textures returned by getCurrentTexture.
+     *
+     * @type {GPUCanvasConfiguration|null}
+     * @private
+     */
+    canvasConfig = null;
+
+    /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
@@ -281,20 +301,47 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     destroy() {
 
-        this.clearRenderer.destroy();
+        this.clearRenderer?.destroy();
         this.clearRenderer = null;
 
-        this.mipmapRenderer.destroy();
+        this.mipmapRenderer?.destroy();
         this.mipmapRenderer = null;
 
-        this.resolver.destroy();
+        this.resolver?.destroy();
         this.resolver = null;
+
+        this.emptyBindGroup?.format.destroy();
+        this.emptyBindGroup?.destroy();
+        this.emptyBindGroup = null;
+
+        this.backBuffer?.destroy();
+        this.backBuffer = null;
 
         this._clearXrState();
 
         this.externalBackbuffer = null;
 
         super.destroy();
+
+        // Destroy listeners can enqueue more resources, and no further submit will drain them.
+        this.destroyDeferredResources();
+
+        // Recorded commands and cached pipelines cannot outlive their native device.
+        this.commandEncoder = null;
+        this.commandBuffers.length = 0;
+        this.passEncoder = null;
+        this.pipeline = null;
+        this.insideRenderPass = false;
+        this.bindGroupFormats.length = 0;
+        this.renderPipeline.cache.clear();
+        this.computePipeline.cache.clear();
+
+        this.gpuContext?.unconfigure();
+        this.wgpu?.destroy();
+        this.wgpu = null;
+        this.gpuAdapter = null;
+        this.gpuContext = null;
+        this.canvasConfig = null;
     }
 
     /**
@@ -425,10 +472,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             xrCompatible: !!this.initOptions.xrCompatible
         };
 
-        /**
-         * @type {GPUAdapter}
-         * @private
-         */
         this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
         // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
@@ -513,10 +556,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         DebugHelper.setLabel(deviceDescr, 'PlayCanvasWebGPUDevice');
 
-        /**
-         * @type {GPUDevice}
-         * @private
-         */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
         // HTML-in-Canvas support (copyElementImageToTexture)
@@ -574,12 +613,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        /**
-         * Configuration of the main colorframebuffer we obtain using getCurrentTexture
-         *
-         * @type {GPUCanvasConfiguration}
-         * @private
-         */
         this.canvasConfig = {
             device: this.wgpu,
             colorSpace: 'srgb',
@@ -616,7 +649,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     async handleDeviceLost(info) {
         // reason is 'destroyed' if we intentionally destroy the device
-        if (info.reason !== 'destroyed') {
+        if (info.reason !== 'destroyed' && !this._destroyed) {
             Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
 
             super.loseContext(); // 'super' works correctly here
@@ -1355,6 +1388,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // destroy deferred resources after submit to ensure they're no longer referenced
+        this.destroyDeferredResources();
+    }
+
+    /** @private */
+    destroyDeferredResources() {
         const deferredDestroys = this._deferredDestroys;
         if (deferredDestroys.length > 0) {
             for (let i = 0; i < deferredDestroys.length; i++) {
@@ -1367,13 +1405,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Defer destruction of a GPU resource until after the current command buffers are submitted.
      * This ensures the resource is not destroyed while still referenced by pending GPU commands.
+     * Resources released after device destruction are destroyed immediately.
      *
      * @param {GPUTexture|GPUBuffer|GPUQuerySet} gpuResource - The GPU resource to destroy.
      * @private
      */
     deferDestroy(gpuResource) {
         if (gpuResource) {
-            this._deferredDestroys.push(gpuResource);
+            if (this._destroyed) {
+                gpuResource.destroy();
+            } else {
+                this._deferredDestroys.push(gpuResource);
+            }
         }
     }
 
