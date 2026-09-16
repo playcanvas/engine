@@ -139,6 +139,13 @@ class StandardMaterialMapTransforms {
     }
 
     /**
+     * Forgets the cached descriptors, when the typed properties they start from changed.
+     */
+    invalidateDescriptors() {
+        this._descriptors = null;
+    }
+
+    /**
      * Returns the descriptor of a transform uniform stored in the material uniform buffer, or null
      * when the name is not a transform uniform or its map is not assigned.
      *

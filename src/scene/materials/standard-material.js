@@ -37,9 +37,6 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 // properties that get created on a standard material
 const _props = {};
 
-// special uniform functions on a standard material
-const _uniforms = {};
-
 // temporary set of params
 let _params = new Set();
 
@@ -115,6 +112,29 @@ const _properties = {
 };
 const _propertyList = Object.values(_properties);
 const _propertiesByUniform = new Map(_propertyList.map(property => [property.uniformName, property]));
+
+// the minimum and maximum of the world space box of the cube map projection. Both descriptors are
+// named after the box property and read it as their value, so the material keeps one snapshot of the
+// box per descriptor and rewrites both uniforms when the box moves. They join the layout only while
+// the box projection is in use, the projection mode selecting the shader code.
+const convertBoxMin = (box, storage, offset) => {
+    const min = box.getMin();
+    storage[offset] = min.x;
+    storage[offset + 1] = min.y;
+    storage[offset + 2] = min.z;
+};
+const convertBoxMax = (box, storage, offset) => {
+    const max = box.getMax();
+    storage[offset] = max.x;
+    storage[offset + 1] = max.y;
+    storage[offset + 2] = max.z;
+};
+const _envBoxProperties = [
+    new MaterialProperty('cubeMapProjectionBox', 'envBoxMin', UNIFORMTYPE_VEC3, convertBoxMin),
+    new MaterialProperty('cubeMapProjectionBox', 'envBoxMax', UNIFORMTYPE_VEC3, convertBoxMax)
+];
+const _envBoxPropertiesByUniform = new Map(_envBoxProperties.map(property => [property.uniformName, property]));
+const _propertyListEnvBox = [..._propertyList, ..._envBoxProperties];
 
 const isBlack = (color) => {
     return color.r === 0 && color.g === 0 && color.b === 0;
@@ -493,9 +513,6 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
  * Defaults to {@link CUBEPROJ_NONE}.
- * @property {BoundingBox} cubeMapProjectionBox The world space axis-aligned bounding box
- * defining the box-projection used for the cubeMap property. Only used when cubeMapProjection is
- * set to {@link CUBEPROJ_BOX}.
  * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps
  * are textures that contain pre-rendered lighting. Can be HDR.
  * @property {number} lightMapUv Lightmap UV channel. Valid values are 0 to 7.
@@ -606,6 +623,14 @@ class StandardMaterial extends Material {
     _mapTransforms = new StandardMaterialMapTransforms();
 
     /**
+     * True while the uniforms of the cube map projection box are part of the layout.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _envBoxPresent = false;
+
+    /**
      * A custom function that will be called after all shader generator properties are collected
      * and before shader code is generated. This function will receive an object with shader
      * generator settings (based on current material and scene properties), that you can change and
@@ -675,22 +700,23 @@ class StandardMaterial extends Material {
             this._markPropertyModified(property);
         }
 
-        this._uniformCache = { };
-
-        // the transforms of the previously assigned maps leave the layout
+        // the transforms of the previously assigned maps and the projection box leave the layout
         this._mapTransforms.reset();
+        this._envBoxPresent = false;
         this._markLayoutDirty();
     }
 
     /** @ignore */
     get propertyDescriptors() {
-        // the typed properties, and the transforms of the assigned maps
-        return this._mapTransforms.getDescriptors(_propertyList);
+        // the typed properties, the projection box while in use, and the transforms of the assigned maps
+        return this._mapTransforms.getDescriptors(this._envBoxPresent ? _propertyListEnvBox : _propertyList);
     }
 
     /** @ignore */
     getUniformBufferProperty(name) {
-        return _propertiesByUniform.get(name) ?? this._mapTransforms.getUniformProperty(name);
+        return _propertiesByUniform.get(name) ??
+            (this._envBoxPresent ? _envBoxPropertiesByUniform.get(name) : null) ??
+            this._mapTransforms.getUniformProperty(name);
     }
 
     /**
@@ -702,6 +728,33 @@ class StandardMaterial extends Material {
      */
     _collectUnappliedChanges(names) {
         this._mapTransforms.collectUnapplied(this, names);
+        if (this._envBoxInUse() !== this._envBoxPresent) {
+            names.push('cubeMapProjection');
+        }
+    }
+
+    /**
+     * @returns {boolean} True when the box projection is in use: the mode is selected and a box is
+     * assigned.
+     * @private
+     */
+    _envBoxInUse() {
+        return this._cubeMapProjection === CUBEPROJ_BOX && !!this._cubeMapProjectionBox;
+    }
+
+    /**
+     * Keeps the uniforms of the projection box in the layout while the box projection is in use:
+     * the projection mode selects the shader code, and the box supplies its uniforms.
+     *
+     * @private
+     */
+    _updateEnvBoxLayout() {
+        const present = this._envBoxInUse();
+        if (this._envBoxPresent !== present) {
+            this._envBoxPresent = present;
+            this._mapTransforms.invalidateDescriptors();
+            this._markLayoutDirty();
+        }
     }
 
     /**
@@ -1586,6 +1639,39 @@ class StandardMaterial extends Material {
     }
 
     /**
+     * Sets the world space axis-aligned bounding box defining the box-projection used for the
+     * cubeMap property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}. The
+     * material keeps a reference to the box: a change of its center or half extents is applied by
+     * {@link StandardMaterial#update}.
+     *
+     * @type {BoundingBox|null}
+     */
+    set cubeMapProjectionBox(value) {
+        if (this._cubeMapProjectionBox !== value) {
+            this._cubeMapProjectionBox = value;
+            for (const property of _envBoxProperties) {
+                this._markPropertyModified(property);
+
+                // the snapshot of the previous box makes way for one of the new box, compared by
+                // update() as the box is moved through the reference the caller keeps
+                this._mutableProperties?.delete(property);
+                if (value) {
+                    this._markPropertyMutable(property, value);
+                }
+            }
+        }
+    }
+
+    /**
+     * Gets the world space axis-aligned bounding box of the box-projection.
+     *
+     * @type {BoundingBox|null}
+     */
+    get cubeMapProjectionBox() {
+        return this._cubeMapProjectionBox;
+    }
+
+    /**
      * Copy a `StandardMaterial`.
      *
      * @param {StandardMaterial} source - The material to copy from.
@@ -1614,6 +1700,7 @@ class StandardMaterial extends Material {
      * @override
      */
     update() {
+        this._updateEnvBoxLayout();
         if (this._mapTransforms.update(this)) {
             this._dirtyShader = true;
         }
@@ -1687,39 +1774,18 @@ class StandardMaterial extends Material {
         }
     }
 
-    // allocate a uniform if it doesn't already exist in the uniform cache
-    _allocUniform(name, allocFunc) {
-        let uniform = this._uniformCache[name];
-        if (!uniform) {
-            uniform = allocFunc();
-            this._uniformCache[name] = uniform;
-        }
-        return uniform;
-    }
-
-    getUniform(name, device, scene) {
-        return _uniforms[name](this, device, scene);
-    }
-
     updateUniforms(device, scene) {
         // Compatibility fallback for materials rendered without calling update().
+        this._updateEnvBoxLayout();
         if (this._mapTransforms.update(this)) {
             this._dirtyShader = true;
         }
-
-        const getUniform = (name) => {
-            return this.getUniform(name, device, scene);
-        };
 
         Debug.call(() => {
             if (this.emissiveMap && this._emissive.r === 0 && this._emissive.g === 0 && this._emissive.b === 0) {
                 Debug.warnOnce(`Emissive map is set but emissive color is black, making the map invisible. Set emissive color to white to make the map visible. Rendering [${DebugGraphics.toString()}]`, this);
             }
         });
-
-        if (this.cubeMapProjection === CUBEPROJ_BOX) {
-            this._setParameter(getUniform('cubeMapProjectionBox'));
-        }
 
         for (const p of _matTex2D.keys()) {
             this._updateMap(p);
@@ -1889,11 +1955,6 @@ class StandardMaterial extends Material {
     }
 }
 
-// define a uniform get function
-const defineUniform = (name, getUniformFunc) => {
-    _uniforms[name] = getUniformFunc;
-};
-
 // registers the default value and copy behaviour of a property, used by reset and copy
 const registerProp = (name, constructorFunc, copyFromBacking = false) => {
     _props[name] = {
@@ -2038,14 +2099,12 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     }
 }
 
-function _defineFloat(name, defaultValue, getUniformFunc, dirtyShaderFunc = dirtyShaderOnZeroOrOne) {
+function _defineFloat(name, defaultValue, dirtyShaderFunc = dirtyShaderOnZeroOrOne) {
     defineProp({
         name: name,
         defaultValue: defaultValue,
         dirtyShaderFunc: dirtyShaderFunc
     });
-
-    defineUniform(name, getUniformFunc);
 }
 
 // Adding or removing an object selects different shader code (e.g. the reflection or ambient
@@ -2057,14 +2116,12 @@ const dirtyShaderOnEnvTexture = (oldValue, newValue) => {
     return !!oldValue !== !!newValue || (!!oldValue && !!newValue && oldValue.encoding !== newValue.encoding);
 };
 
-function _defineObject(name, getUniformFunc, dirtyShaderFunc = dirtyShaderOnPresence) {
+function _defineObject(name, dirtyShaderFunc = dirtyShaderOnPresence) {
     defineProp({
         name: name,
         defaultValue: null,
         dirtyShaderFunc: dirtyShaderFunc
     });
-
-    defineUniform(name, getUniformFunc);
 }
 
 function _defineFlag(name, defaultValue) {
@@ -2115,38 +2172,13 @@ function _defineMaterialProps() {
     registerProp('attenuationDistance', () => 0);
     registerProp('heightMapFactor', () => 1);
     registerProp('alphaDither', () => null);
+    registerProp('cubeMapProjectionBox', () => null);
 
     _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
-    _defineFloat('aoUvSet', 0, null); // legacy
+    _defineFloat('aoUvSet', 0); // legacy
 
     _defineObject('ambientSH');
 
-    // the box only feeds uniforms, the projection mode flag selects the shader code
-    _defineObject('cubeMapProjectionBox', (material, device, scene) => {
-        const uniform = material._allocUniform('cubeMapProjectionBox', () => {
-            return [{
-                name: 'envBoxMin',
-                value: new Float32Array(3)
-            }, {
-                name: 'envBoxMax',
-                value: new Float32Array(3)
-            }];
-        });
-
-        const bboxMin = material.cubeMapProjectionBox.getMin();
-        const minUniform = uniform[0].value;
-        minUniform[0] = bboxMin.x;
-        minUniform[1] = bboxMin.y;
-        minUniform[2] = bboxMin.z;
-
-        const bboxMax = material.cubeMapProjectionBox.getMax();
-        const maxUniform = uniform[1].value;
-        maxUniform[0] = bboxMax.x;
-        maxUniform[1] = bboxMax.y;
-        maxUniform[2] = bboxMax.z;
-
-        return uniform;
-    }, () => false);
 
     _defineFlag('specularityFactorTint', false);
     _defineFlag('useMetalness', false);
@@ -2207,9 +2239,9 @@ function _defineMaterialProps() {
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
     _defineFlag('aoDetailMode', DETAILMODE_MUL);
 
-    _defineObject('cubeMap', undefined, dirtyShaderOnEnvTexture);
-    _defineObject('sphereMap', undefined, dirtyShaderOnEnvTexture);
-    _defineObject('envAtlas', undefined, dirtyShaderOnEnvTexture);
+    _defineObject('cubeMap', dirtyShaderOnEnvTexture);
+    _defineObject('sphereMap', dirtyShaderOnEnvTexture);
+    _defineObject('envAtlas', dirtyShaderOnEnvTexture);
 
     // prefiltered cubemap getter
     const getterFunc = function () {

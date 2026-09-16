@@ -52,7 +52,6 @@ const STANDARD_MAT_PROPS = [
     ['clearCoatVertexColorChannel', 'string'],
     ['cubeMap', 'Texture|null'],
     ['cubeMapProjection', 'number'],
-    ['cubeMapProjectionBox', 'BoundingBox'],
     ['diffuseDetailMap', 'Texture|null'],
     ['diffuseDetailMapChannel', 'string'],
     ['diffuseDetailMapOffset', 'Vec2'],

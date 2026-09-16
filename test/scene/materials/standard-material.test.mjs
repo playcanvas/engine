@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
@@ -352,6 +353,11 @@ describe('StandardMaterial', function () {
 
                 if (name === 'alphaDither') {
                     return 0.375;
+                }
+
+                // the projection box is snapshotted by the setter, so it has to be a real box
+                if (name === 'cubeMapProjectionBox') {
+                    return new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
                 }
 
                 switch (typeof value) {

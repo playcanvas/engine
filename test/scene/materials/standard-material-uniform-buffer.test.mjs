@@ -5,9 +5,12 @@ import { TRACEID_MATERIAL_UPDATE } from '../../../src/core/constants.js';
 import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
+import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { Tracing } from '../../../src/core/tracing.js';
 import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { CUBEPROJ_BOX, CUBEPROJ_NONE } from '../../../src/scene/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -543,6 +546,113 @@ describe('StandardMaterial uniform buffer', function () {
                     if (message.includes('diffuseMapTiling')) Debug._loggedMessages.delete(message);
                 }
             }
+        });
+
+    });
+
+    describe('cube map projection box', function () {
+
+        const boxOf = (cx, cy, cz, hx, hy, hz) => new BoundingBox(new Vec3(cx, cy, cz), new Vec3(hx, hy, hz));
+
+        const useBox = (material, box) => {
+            material.cubeMapProjection = CUBEPROJ_BOX;
+            material.cubeMapProjectionBox = box;
+            material.update();
+            return prepare(material);
+        };
+
+        it('adds the box uniforms to the layout only while the box projection is in use', function () {
+            const material = prepare(new StandardMaterial());
+            expect(material._uniformBuffer.format.get('envBoxMin')).to.equal(undefined);
+
+            // a box without the projection mode, and the mode without a box, add nothing
+            material.cubeMapProjectionBox = boxOf(0, 0, 0, 1, 1, 1);
+            material.update();
+            prepare(material);
+            expect(material._uniformBuffer.format.get('envBoxMin')).to.equal(undefined);
+            material.cubeMapProjectionBox = null;
+            material.cubeMapProjection = CUBEPROJ_BOX;
+            material.update();
+            prepare(material);
+            expect(material._uniformBuffer.format.get('envBoxMin')).to.equal(undefined);
+            expect(material.getUniformBufferProperty('envBoxMin')).to.equal(null);
+
+            const layoutVersion = material.layoutVersion;
+            useBox(material, boxOf(1, 2, 3, 4, 5, 6));
+            expect(material.layoutVersion).to.equal(layoutVersion + 1);
+            expect(material.propertyDescriptors).to.have.lengthOf(39);
+            expectStored(material, 'envBoxMin', [-3, -3, -3]);
+            expectStored(material, 'envBoxMax', [5, 7, 9]);
+            expect(material.getUniformBufferProperty('envBoxMin')).to.exist;
+            expect(material.parameters.envBoxMin).to.equal(undefined);
+
+            // leaving the mode removes them again
+            material.cubeMapProjection = CUBEPROJ_NONE;
+            material.update();
+            prepare(material);
+            expect(material.propertyDescriptors).to.have.lengthOf(37);
+            expect(material._uniformBuffer.format.get('envBoxMin')).to.equal(undefined);
+        });
+
+        it('applies a box moved through the reference the caller keeps, on update()', function () {
+            const box = boxOf(0, 0, 0, 1, 1, 1);
+            const material = useBox(new StandardMaterial(), box);
+            expectStored(material, 'envBoxMin', [-1, -1, -1]);
+
+            box.center.set(10, 0, 0);
+            box.halfExtents.set(2, 2, 2);
+            const version = material._uniformDataVersion;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(version + 1);
+            expectStored(material, 'envBoxMin', [8, -2, -2]);
+            expectStored(material, 'envBoxMax', [12, 2, 2]);
+
+            // an unchanged box writes nothing
+            material.update();
+            expect(material._uniformDataVersion).to.equal(version + 1);
+
+            // a new box replaces the snapshot of the previous one
+            material.cubeMapProjectionBox = boxOf(0, 5, 0, 1, 1, 1);
+            material.update();
+            expectStored(material, 'envBoxMax', [1, 6, 1]);
+            box.center.set(0, 0, 0);
+            const settled = material._uniformDataVersion;
+            material.update();
+            expect(material._uniformDataVersion).to.equal(settled);
+        });
+
+        it('keeps the shader variants when the box moves, and reports a move without update()', function () {
+            const box = boxOf(0, 0, 0, 1, 1, 1);
+            const material = useBox(new StandardMaterial(), box);
+            const variant = {};
+            material.variants.set(1, variant);
+            box.center.set(1, 1, 1);
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            const warn = sinon.stub(console, 'warn');
+            try {
+                box.center.set(2, 2, 2);
+                prepare(material);
+                expect(warn.callCount).to.equal(1);
+                expect(warn.firstCall.args[0]).to.contain('cubeMapProjectionBox');
+            } finally {
+                warn.restore();
+                for (const message of Debug._loggedMessages) {
+                    if (message.includes('cubeMapProjectionBox')) Debug._loggedMessages.delete(message);
+                }
+            }
+        });
+
+        it('lets a mesh instance override the box uniforms while the projection is in use', function () {
+            const material = useBox(new StandardMaterial(), boxOf(0, 0, 0, 1, 1, 1));
+            const meshInstance = new MeshInstance(new Mesh(app.graphicsDevice), material);
+            meshInstance.setParameter('envBoxMax', [3, 3, 3]);
+            expect(meshInstance.getParameter('envBoxMax').override).to.equal(true);
+            const copy = meshInstance._materialUniformBuffer ?? (meshInstance.getMaterialBindGroup(app.graphicsDevice), meshInstance._materialUniformBuffer);
+            const offset = copy.format.get('envBoxMax').offset;
+            expect(Array.from(copy.storageFloat32.subarray(offset, offset + 3))).to.deep.equal([3, 3, 3]);
+            meshInstance.destroy();
         });
 
     });
