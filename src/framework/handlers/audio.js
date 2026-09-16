@@ -10,7 +10,7 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `audio` asset type. Decodes any audio format the browser supports, such
  * as MP3, OGG and WAV, into a {@link Sound} through the application's {@link SoundManager}.
  *
- * @category Sound
+ * @category Asset
  */
 class AudioHandler extends ResourceHandler {
     /**

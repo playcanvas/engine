@@ -40,7 +40,7 @@ function upgradeDataSchema(data) {
  * and the texture pages that accompany it. Bitmap fonts and multi-channel signed distance field
  * fonts are both supported.
  *
- * @category User Interface
+ * @category Asset
  */
 class FontHandler extends ResourceHandler {
     /**

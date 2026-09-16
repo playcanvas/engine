@@ -6,7 +6,7 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `scenesettings` asset type. Loads a PlayCanvas scene JSON file and
  * returns only its settings block, leaving the entity hierarchy untouched.
  *
- * @category Graphics
+ * @category Asset
  */
 class SceneSettingsHandler extends ResourceHandler {
     constructor(app) {

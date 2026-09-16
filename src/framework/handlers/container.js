@@ -201,7 +201,7 @@ class ContainerResource {
  * });
  * ```
  *
- * @category Graphics
+ * @category Asset
  */
 class ContainerHandler extends ResourceHandler {
     /**

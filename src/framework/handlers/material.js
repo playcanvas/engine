@@ -44,7 +44,7 @@ const PLACEHOLDER_MAP = {
  * {@link StandardMaterial} and binds the texture assets it references. A custom parser may
  * produce another kind of {@link Material}.
  *
- * @category Graphics
+ * @category Asset
  */
 class MaterialHandler extends ResourceHandler {
     /**

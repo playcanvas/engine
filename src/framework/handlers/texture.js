@@ -117,7 +117,7 @@ const _completePartialMipmapChain = function (texture) {
  * any image format the browser decodes, such as PNG, JPEG, WebP and AVIF, and from DDS, KTX,
  * KTX2, Basis and HDR files.
  *
- * @category Graphics
+ * @category Asset
  */
 class TextureHandler extends ResourceHandler {
     /**

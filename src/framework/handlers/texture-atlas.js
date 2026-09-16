@@ -36,7 +36,7 @@ const regexFrame = /^data\.frames\.(\d+)$/;
  * into a {@link TextureAtlas}. The frames come from the asset data, or from a JSON file with a
  * texture of the same name beside it.
  *
- * @category Graphics
+ * @category Asset
  */
 class TextureAtlasHandler extends ResourceHandler {
     /**

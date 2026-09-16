@@ -10,7 +10,7 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `animation` asset type. Loads an {@link AnimTrack} from a glTF or GLB
  * file, or a legacy {@link Animation} from a PlayCanvas JSON animation file.
  *
- * @category Animation
+ * @category Asset
  */
 class AnimationHandler extends ResourceHandler {
     /**

@@ -13,7 +13,7 @@ import { ResourceHandler } from './handler.js';
  * `playcanvas/scripts/esm/parsers/obj-model.mjs` is registered with
  * {@link ResourceHandler#addParser}.
  *
- * @category Graphics
+ * @category Asset
  */
 class ModelHandler extends ResourceHandler {
     /**

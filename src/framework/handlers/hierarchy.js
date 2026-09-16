@@ -11,7 +11,7 @@ import { ResourceHandler } from './handler.js';
  * instantiates its entity hierarchy, returning the root {@link Entity} without making it the
  * active scene.
  *
- * @category Graphics
+ * @category Asset
  */
 class HierarchyHandler extends ResourceHandler {
     /**

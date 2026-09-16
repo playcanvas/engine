@@ -15,7 +15,7 @@ import { ResourceHandler } from './handler.js';
  * face texture assets, from a prefiltered environment file, or both, and stores the results in
  * {@link Asset#resources}.
  *
- * @category Graphics
+ * @category Asset
  */
 class CubemapHandler extends ResourceHandler {
     /**

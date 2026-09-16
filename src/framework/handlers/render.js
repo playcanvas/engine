@@ -14,7 +14,7 @@ import { ResourceHandler } from './handler.js';
  * the meshes of one glTF mesh from the container asset named in its data and exposes them as a
  * {@link Render}.
  *
- * @category Graphics
+ * @category Asset
  */
 class RenderHandler extends ResourceHandler {
     /**
