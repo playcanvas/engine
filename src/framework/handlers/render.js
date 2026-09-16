@@ -127,7 +127,7 @@ class RenderHandler extends ResourceHandler {
         if (containerAsset) {
             onAdd(containerAsset);
         } else {
-            Debug.warnOnce(`Render asset '${asset.name}' (${asset.id}) is waiting for missing container asset ${containerId}.`);
+            Debug.warnOnce(`Render asset '${asset.name}' (${asset.id}) is waiting for container asset ${containerId}, which is not registered yet.`);
             events.push(registry.once(`add:${containerId}`, onAdd));
         }
     }

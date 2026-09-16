@@ -122,7 +122,7 @@ describe('RenderHandler', function () {
         expect(ready.called).to.equal(false);
         expect(warn.calledOnce).to.equal(true);
         expect(warn.firstCall.args[0]).to.include(`'${asset.name}' (${asset.id})`);
-        expect(warn.firstCall.args[0]).to.include(`missing container asset ${container.id}`);
+        expect(warn.firstCall.args[0]).to.include(`container asset ${container.id}, which is not registered yet`);
 
         registry.add(container);
         expect(ready.called).to.equal(false);
