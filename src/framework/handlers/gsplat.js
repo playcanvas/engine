@@ -15,7 +15,7 @@ import { ResourceHandler } from './handler.js';
  * in `playcanvas/scripts/esm/parsers/spz-parser.mjs` is registered with
  * {@link ResourceHandler#addParser}.
  *
- * @category Asset
+ * @ignore
  */
 class GSplatHandler extends ResourceHandler {
     /**

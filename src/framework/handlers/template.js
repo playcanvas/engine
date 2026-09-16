@@ -6,7 +6,7 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `template` asset type. Loads template JSON into a {@link Template} that
  * can be instantiated into the scene with {@link Template#instantiate}.
  *
- * @category Asset
+ * @ignore
  */
 class TemplateHandler extends ResourceHandler {
     /**

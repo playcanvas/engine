@@ -9,7 +9,7 @@
  * from a loaded {@link Bundle} instead of fetching them individually. It watches the
  * {@link AssetRegistry} for bundle assets and is available at {@link AssetRegistry#bundles}.
  *
- * @category Asset
+ * @ignore
  */
 class BundleRegistry {
     /**

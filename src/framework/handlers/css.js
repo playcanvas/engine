@@ -5,7 +5,7 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `css` asset type. Loads a stylesheet file as a string. It does not
  * apply the stylesheet to the page.
  *
- * @category Asset
+ * @ignore
  */
 class CssHandler extends ResourceHandler {
     /**

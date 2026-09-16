@@ -5,7 +5,7 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `binary` asset type. Loads a file as an `ArrayBuffer` without
  * interpreting its contents.
  *
- * @category Asset
+ * @ignore
  */
 class BinaryHandler extends ResourceHandler {
     constructor(app) {

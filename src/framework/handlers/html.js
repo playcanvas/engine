@@ -4,7 +4,7 @@ import { ResourceHandler } from './handler.js';
 /**
  * Resource handler for the `html` asset type. Loads an HTML file as a string.
  *
- * @category Asset
+ * @ignore
  */
 class HtmlHandler extends ResourceHandler {
     /**

@@ -5,7 +5,7 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for the `shader` asset type. Loads shader source code as a string. It does not
  * compile the shader.
  *
- * @category Asset
+ * @ignore
  */
 class ShaderHandler extends ResourceHandler {
     /**

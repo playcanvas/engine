@@ -7,7 +7,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * {@link ResourceLoader} reads it from the bundle through the {@link BundleRegistry} instead of
  * fetching it from the network.
  *
- * @category Asset
+ * @ignore
  */
 class Bundle extends EventHandler {
     /**
