@@ -3,6 +3,8 @@ import sinon from 'sinon';
 
 import { Debug } from '../../src/core/debug.js';
 import { Color } from '../../src/core/math/color.js';
+import { GraphNode } from '../../src/scene/graph-node.js';
+import { getMutatedOverrides, recordAppliedOverrides } from '../../src/scene/materials/material-debug.js';
 import { ShaderMaterial } from '../../src/scene/materials/shader-material.js';
 import { StandardMaterial } from '../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../src/scene/mesh-instance.js';
@@ -282,6 +284,91 @@ describe('MeshInstance material uniform buffer overrides', function () {
             material.setParameters(device, meshInstance._scopeParameters);
             expect(device.scope.resolve('uTime').value).to.equal(1);
             expect(device.scope.resolve('material_diffuse').value).to.equal(null);
+        });
+
+    });
+
+    describe('overrides changed in place', function () {
+
+        let warn;
+
+        beforeEach(function () {
+            warn = sinon.stub(console, 'warn');
+        });
+
+        afterEach(function () {
+            warn.restore();
+            for (const message of Debug._loggedMessages) {
+                if (message.includes('in place')) Debug._loggedMessages.delete(message);
+            }
+        });
+
+        it('warns once when an applied array override changes in place, and applies it on the next setParameter', function () {
+            const meshInstance = new MeshInstance(mesh, material, new GraphNode('Player'));
+            const data = new Float32Array([1, 0, 0]);
+            meshInstance.setParameter('material_diffuse', data);
+            meshInstance.getMaterialBindGroup(device);
+            expect(warn.called).to.equal(false);
+
+            // the copy keeps the applied value; the warning names the parameter and the node
+            data[1] = 1;
+            meshInstance.getMaterialBindGroup(device);
+            expect(warn.callCount).to.equal(1);
+            expect(warn.firstCall.args[0]).to.contain('\'material_diffuse\'').and.to.contain('\'Player\'');
+            expectClose(storedDiffuse(meshInstance._materialUniformBuffer), [1, 0, 0]);
+
+            // nothing is checked again until the next setParameter
+            data[2] = 1;
+            meshInstance.getMaterialBindGroup(device);
+            expect(warn.callCount).to.equal(1);
+
+            // setParameter with the same array applies its current values, without a warning
+            meshInstance.setParameter('material_diffuse', data);
+            meshInstance.getMaterialBindGroup(device);
+            expectClose(storedDiffuse(meshInstance._materialUniformBuffer), [1, 1, 1]);
+            expect(warn.callCount).to.equal(1);
+        });
+
+        it('does not warn when the array is changed in place and set again before the next draw', function () {
+            const meshInstance = new MeshInstance(mesh, material);
+            const data = new Float32Array([1, 0, 0]);
+            meshInstance.setParameter('material_diffuse', data);
+            meshInstance.getMaterialBindGroup(device);
+
+            // the per-frame animation pattern: mutate, then setParameter with the same array
+            for (let i = 0; i < 3; i++) {
+                data[1] = (i + 1) * 0.25;
+                meshInstance.setParameter('material_diffuse', data);
+                meshInstance.getMaterialBindGroup(device);
+                expectClose(storedDiffuse(meshInstance._materialUniformBuffer), [1, (i + 1) * 0.25, 0]);
+            }
+            expect(warn.called).to.equal(false);
+        });
+
+        it('does not warn for an unchanged plain array, including values outside float32 precision', function () {
+            const meshInstance = new MeshInstance(mesh, material);
+            meshInstance.setParameter('material_diffuse', [0.1, 0.2, 0.3]);
+            meshInstance.getMaterialBindGroup(device);
+            meshInstance.getMaterialBindGroup(device);
+            expect(warn.called).to.equal(false);
+        });
+
+        it('does not warn for a scope parameter changed in place', function () {
+            const meshInstance = new MeshInstance(mesh, material);
+            const data = [1, 1, 1];
+            meshInstance.setParameter('uColor', data);
+            meshInstance.setParameter('material_diffuse', [1, 0, 0]);
+            meshInstance.getMaterialBindGroup(device);
+            data[0] = 0;
+            meshInstance.getMaterialBindGroup(device);
+            expect(warn.called).to.equal(false);
+        });
+
+        it('records no snapshot for a number', function () {
+            const override = { name: 'uValue', data: 2, uniformFormat: { numComponents: 1, count: 0 } };
+            recordAppliedOverrides([override]);
+            expect(override.debugSnapshot).to.equal(null);
+            expect(getMutatedOverrides([override])).to.deep.equal([]);
         });
 
     });

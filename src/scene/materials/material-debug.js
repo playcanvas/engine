@@ -4,10 +4,12 @@ import { Tracing } from '../../core/tracing.js';
 
 /**
  * @import { Material } from './material.js'
+ * @import { MeshInstance, MeshInstanceParameter } from '../mesh-instance.js'
  */
 
-// Debug-only helpers for Material. They are called from Debug.call blocks only, so release builds
-// strip the calls and drop these functions with them.
+// Debug-only helpers for Material and for the mesh instance overrides of its uniform buffer. They
+// are called from Debug.call blocks only, so release builds strip the calls and drop these
+// functions with them.
 
 /**
  * Initializes the debug state of a material, recording where it was created when the
@@ -99,4 +101,88 @@ const warnUnappliedMaterialProperties = (material, names) => {
     }
 };
 
-export { initMaterialDebug, recordMaterialChange, getUnappliedMaterialProperties, warnUnappliedMaterialProperties };
+/**
+ * Initializes the debug state of a mesh instance.
+ *
+ * @param {MeshInstance} meshInstance - The mesh instance.
+ * @ignore
+ */
+const initMeshInstanceDebug = (meshInstance) => {
+    // the override version at which the warning about an override changed in place fired, so that
+    // nothing is checked again until the next setParameter
+    meshInstance._debugWarnedOverridesVersion = -1;
+};
+
+/**
+ * Records the array values of the overrides just applied to a mesh instance's copy of the material
+ * uniform buffer, to detect changes made in place afterwards. Numbers cannot change in place and
+ * are not recorded.
+ *
+ * @param {MeshInstanceParameter[]} overrides - The applied overrides.
+ * @ignore
+ */
+const recordAppliedOverrides = (overrides) => {
+    for (let i = 0; i < overrides.length; i++) {
+        const override = overrides[i];
+        const data = override.data;
+        if (typeof data === 'number') {
+            override.debugSnapshot = null;
+        } else {
+            // only the components the uniform reads, kept as numbers to compare exactly
+            const format = override.uniformFormat;
+            const length = Math.min(data.length, format.numComponents * Math.max(1, format.count));
+            const snapshot = new Array(length);
+            for (let j = 0; j < length; j++) {
+                snapshot[j] = data[j];
+            }
+            override.debugSnapshot = snapshot;
+        }
+    }
+};
+
+/**
+ * Returns the names of the overrides whose array values changed in place since they were applied.
+ *
+ * @param {MeshInstanceParameter[]} overrides - The overrides.
+ * @returns {string[]} The names of the changed overrides.
+ * @ignore
+ */
+const getMutatedOverrides = (overrides) => {
+    const names = [];
+    for (let i = 0; i < overrides.length; i++) {
+        const override = overrides[i];
+        const snapshot = override.debugSnapshot;
+        if (snapshot) {
+            const data = override.data;
+            for (let j = 0; j < snapshot.length; j++) {
+                if (snapshot[j] !== data[j]) {
+                    names.push(override.name);
+                    break;
+                }
+            }
+        }
+    }
+    return names;
+};
+
+/**
+ * Warns about overrides changed in place without a subsequent {@link MeshInstance#setParameter},
+ * identifying the mesh instance by its node and material.
+ *
+ * @param {MeshInstance} meshInstance - The mesh instance.
+ * @param {string[]} names - The names of the changed overrides.
+ * @ignore
+ */
+const warnMutatedOverrides = (meshInstance, names) => {
+    const node = meshInstance.node;
+    const where = node ? ` on node '${node.path || node.name}'` : '';
+    const material = meshInstance.material;
+    const list = names.map(name => `'${name}'`).join(', ');
+    const plural = names.length === 1 ? '' : 's';
+    Debug.warnOnce(`MeshInstance${where} (material '${material.name}', id ${material.id}) changed the array value of parameter${plural} ${list} in place after it was applied to the material uniform buffer; the change is not applied until setParameter() is called again with the value.`, meshInstance);
+};
+
+export {
+    initMaterialDebug, recordMaterialChange, getUnappliedMaterialProperties, warnUnappliedMaterialProperties,
+    initMeshInstanceDebug, recordAppliedOverrides, getMutatedOverrides, warnMutatedOverrides
+};

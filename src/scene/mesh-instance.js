@@ -16,6 +16,7 @@ import {
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
+import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { hash32Fnv1a } from '../core/hash.js';
@@ -41,6 +42,8 @@ import { PickerId } from './picker-id.js';
  * the parameter is applied through the mesh instance's copy of it rather than through the scope.
  * @property {UniformFormat|null} uniformFormat - The format of the uniform in the material uniform
  * buffer, resolved on first use for overrides.
+ * @property {number[]|null} [debugSnapshot] - Debug builds only: the array value of an override as
+ * it was last applied to the copy of the material uniform buffer, to detect changes made in place.
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
  * @import { SkinInstance } from './skin-instance.js'
@@ -624,6 +627,7 @@ class MeshInstance {
      */
     constructor(mesh, material, node = null) {
         Debug.assert(!(mesh instanceof GraphNode), 'Incorrect parameters for MeshInstance\'s constructor. Use new MeshInstance(mesh, material, node)');
+        Debug.call(() => initMeshInstanceDebug(this));
 
         this.node = node;           // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
@@ -1425,6 +1429,8 @@ class MeshInstance {
     /**
      * Sets a shader parameter on a mesh instance. Note that this parameter will take precedence
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
+     * Array values are read when the parameter is set; after changing an array in place, call this
+     * method again with it to apply the change.
      *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
@@ -1599,6 +1605,20 @@ class MeshInstance {
 
         Debug.assert(uniformBuffer.device === device, 'A mesh instance can only be rendered by the graphics device that created its material uniform buffer copy.', this);
 
+        Debug.call(() => {
+            // an override array changed in place is not applied until the next setParameter. When no
+            // setParameter moved the override version since the last synchronization, warn once about
+            // such a change, and check nothing until a setParameter moves the version
+            if (this._syncedOverridesVersion === this._materialOverridesVersion &&
+                this._debugWarnedOverridesVersion !== this._materialOverridesVersion) {
+                const names = getMutatedOverrides(overrides);
+                if (names.length > 0) {
+                    this._debugWarnedOverridesVersion = this._materialOverridesVersion;
+                    warnMutatedOverrides(this, names);
+                }
+            }
+        });
+
         if (this._syncedMaterialDataVersion !== material.uniformDataVersion || this._syncedOverridesVersion !== this._materialOverridesVersion) {
             // the material values, with the overrides applied on top
             uniformBuffer.storageFloat32.set(materialUniformBuffer.storageFloat32);
@@ -1608,6 +1628,7 @@ class MeshInstance {
                 Debug.assert(override.uniformFormat, `Uniform '${override.name}' is not part of the material uniform buffer.`, this);
                 uniformBuffer.setUniform(override.uniformFormat, override.data);
             }
+            Debug.call(() => recordAppliedOverrides(overrides));
             uniformBuffer.upload();
             this._syncedMaterialDataVersion = material.uniformDataVersion;
             this._syncedOverridesVersion = this._materialOverridesVersion;
