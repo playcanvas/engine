@@ -4,11 +4,12 @@ import { Debug } from '../debug.js';
  * A 3-dimensional vector. Vec3 is commonly used to represent 3D positions, directions, Euler angles
  * or scales.
  *
- * Operations follow one convention throughout the math classes: a method modifies the vector it is
- * called on and returns it, so calls can be chained and nothing is allocated. Two-operand forms
- * such as {@link add2}, {@link sub2} and {@link cross} write the result of `lhs op rhs` into
- * `this`, and it is safe for `this` to also be one of the operands. Use {@link clone} for an
- * independent copy and {@link copy} to overwrite one vector with another.
+ * Operations follow one convention throughout the math classes: a method that modifies the vector
+ * it is called on returns it, so calls can be chained and nothing is allocated, while queries such
+ * as {@link distance} and {@link dot} return a number. Two-operand forms such as {@link add2},
+ * {@link sub2} and {@link cross} write the result of `lhs op rhs` into `this`, and it is safe for
+ * `this` to also be one of the operands. Use {@link clone} for an independent copy and {@link copy}
+ * to overwrite one vector with another.
  *
  * The static constants such as {@link ZERO}, {@link UP} and {@link FORWARD} are frozen shared
  * instances: read them freely, but writing to one throws. Vectors returned by engine getters such
@@ -21,7 +22,7 @@ import { Debug } from '../debug.js';
  * const direction = new Vec3(0, 0, -1);
  * position.addScaled(direction, 5);   // position is now [1, 2, -2]
  * @example
- * // Chain operations; every method returns the vector it was called on
+ * // Chain mutating operations; each returns the vector it was called on
  * const toTarget = new Vec3().sub2(target, origin).normalize();
  * const distance = target.distance(origin);
  * @example

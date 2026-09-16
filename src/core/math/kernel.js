@@ -1,6 +1,6 @@
 /**
- * Sampling kernels: precomputed sets of 2D offsets used to take several samples around a point, as
- * blur, soft shadow and ambient occlusion effects do.
+ * Sampling kernels: sets of 2D offsets, generated on demand, used to take several samples around a
+ * point, as blur, soft shadow and ambient occlusion effects do.
  *
  * {@link concentric} produces a center point followed by points arranged in evenly spaced rings out
  * to a radius of one, returned as a flat `[x, y, x, y, ...]` array ready to upload as a shader

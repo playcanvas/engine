@@ -23,8 +23,9 @@ const tmpVecE = new Vec3();
  * instance's world bounds from its mesh's local bounds.
  *
  * Tests such as {@link intersects}, {@link containsPoint} and {@link intersectsRay} return a
- * boolean and allocate nothing; methods that produce a vector take an optional result argument to
- * write into. The constructor copies the vectors it is given.
+ * boolean and allocate nothing. {@link closestPoint} writes into an optional result vector, while
+ * {@link getMin} and {@link getMax} return the box's own cached vectors, which should be treated as
+ * read-only. The constructor copies the vectors it is given.
  *
  * @example
  * // Enclose every mesh instance of a render component in one box

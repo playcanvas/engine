@@ -15,9 +15,10 @@ const tmpMat4 = new Mat4();
  * by a world transform and half extents. Unlike an axis-aligned bounding box, an OBB can be
  * oriented arbitrarily.
  *
- * Give the constructor the box's half extents, then set {@link worldTransform} to a {@link Mat4}
- * holding its position and rotation; the setter copies the matrix, and scale is assumed to be one.
- * Assigning an entity's world transform gives a box that rotates with it. The tests
+ * The constructor takes a {@link Mat4} holding the box's position and rotation, then its half
+ * extents. Scale is assumed to be one, so size the box with the half extents rather than the
+ * matrix. {@link worldTransform} can be reassigned at any time and the setter copies the matrix, so
+ * assigning an entity's world transform each frame gives a box that follows it. The tests
  * {@link containsPoint}, {@link intersectsRay} and {@link intersectsBoundingSphere} return a
  * boolean and allocate nothing.
  *
