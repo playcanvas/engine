@@ -558,6 +558,15 @@ class Material {
     _layoutVersion = 0;
 
     /**
+     * True when the set of uniforms of the material uniform buffer changed since the buffer was
+     * created, so the layout is fetched again on the next preparation.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _layoutDirty = false;
+
+    /**
      * The version of the set of typed properties of the material, see
      * {@link Material#getUniformBufferProperty}.
      *
@@ -566,6 +575,18 @@ class Material {
      */
     get layoutVersion() {
         return this._layoutVersion;
+    }
+
+    /**
+     * Marks the set of uniforms of the material uniform buffer as changed: the next preparation
+     * fetches the layout again and moves the values to a buffer of the new layout, and mesh
+     * instances split their parameters again.
+     *
+     * @protected
+     */
+    _markLayoutDirty() {
+        this._layoutDirty = true;
+        this._layoutVersion++;
     }
 
     /**
@@ -1060,7 +1081,12 @@ class Material {
             const storage = uniformBuffer.storageFloat32;
             const format = uniformBuffer.format;
             for (const property of modified) {
-                property.convert(this[property.backingName], storage, format.get(property.uniformName).offset, this);
+                // a uniform not in the buffer yet is written when the next preparation moves the values
+                // to the buffer of the changed layout, which writes every property
+                const uniform = format.get(property.uniformName);
+                if (uniform) {
+                    property.convert(this[property.backingName], storage, uniform.offset, this);
+                }
             }
             modified.clear();
             this._uniformDataVersion++;
@@ -1081,19 +1107,26 @@ class Material {
         }
 
         let uniformBuffer = this._uniformBuffer;
-        if (!uniformBuffer) {
+        if (!uniformBuffer || this._layoutDirty) {
+            this._layoutDirty = false;
             const layout = getMaterialLayout(device, properties);
-            uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
-            this._uniformBuffer = uniformBuffer;
-            this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
+            if (uniformBuffer?.format !== layout.uniformBufferFormat) {
 
-            // every property is written into the new storage
-            this._modifiedProperties ??= new Set();
-            for (const property of properties) {
-                this._modifiedProperties.add(property);
+                // the values move to a buffer of the new layout
+                this._uniformBufferBindGroup?.destroy();
+                uniformBuffer?.destroy();
+                uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
+                this._uniformBuffer = uniformBuffer;
+                this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
+
+                // every property is written into the new storage
+                this._modifiedProperties ??= new Set();
+                for (const property of properties) {
+                    this._modifiedProperties.add(property);
+                }
+                this._updateProperties();
+                this._uniformUploadedVersion = -1;
             }
-            this._updateProperties();
-            this._uniformUploadedVersion = -1;
         }
 
         Debug.assert(uniformBuffer.device === device, 'A material can only be rendered by the graphics device that created its uniform buffer.', this);
