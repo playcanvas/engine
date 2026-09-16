@@ -175,18 +175,34 @@ describe('Buffer uploads', function () {
                     expect(Array.from(gpuData())).to.deep.equal(Array(16).fill(5));
                 });
 
-                it('asserts invalid ranges without adding production validation', function () {
+                it('asserts invalid ranges and skips GPU allocation even with assertions disabled', function () {
                     const assertion = sinon.stub(Debug, 'assert');
-                    sinon.stub(buffer.impl, 'unlock');
-                    const invalid = [[2, 4], [0, 2], [-4, 4], [0, -4], [0.5, 4], [0, 4.5], [12, 8], [NaN, 4], [0, Infinity]];
+                    const invalid = [[2, 4], [0, 2], [4, 6], [-4, 4], [0, -4], [0.5, 4], [0, 4.5], [12, 8], [20, 0], [NaN, 4], [0, Infinity]];
                     invalid.forEach(([offset, length]) => {
                         assertion.resetHistory();
                         buffer.unlock(offset, length);
                         expect(assertion.getCalls().some(call => !call.args[0]), `${offset}, ${length}`).to.equal(true);
                     });
+                    expect(allocation().callCount).to.equal(0);
+                    expect(upload().callCount).to.equal(0);
                     assertion.resetHistory();
                     buffer.unlock(4, 8);
+                    expect(allocation().callCount).to.equal(1);
                     expect(assertion.getCalls().every(call => call.args[0])).to.equal(true);
+                });
+
+                it('leaves all GPU bytes unchanged after an invalid partial upload with assertions disabled', function () {
+                    const data = BufferUtils.createStorageView(buffer, Uint8Array);
+                    data.fill(0xaa);
+                    buffer.unlock();
+                    data.fill(0x11, 4, 10);
+                    upload().resetHistory();
+                    sinon.stub(Debug, 'assert');
+                    buffer.unlock(4, 6);
+
+                    expect(upload().callCount).to.equal(0);
+                    expect(allocation().callCount).to.equal(1);
+                    expect(Array.from(gpuData())).to.deep.equal(Array(16).fill(0xaa));
                 });
 
                 if (kind === 'index') {

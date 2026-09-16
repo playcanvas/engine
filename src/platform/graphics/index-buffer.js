@@ -167,7 +167,8 @@ class IndexBuffer {
      *
      * Partial uploads do not resize the buffer or change its CPU storage. The caller must upload
      * every modified range before expecting those changes on the GPU. Context restoration uploads
-     * the entire CPU storage.
+     * the entire CPU storage. Invalid ranges are ignored in all builds and report an assertion
+     * in debug builds.
      *
      * @param {number} [byteOffset] - Offset in bytes from the start of the buffer's storage.
      * Defaults to 0. Must be a non-negative integer and a multiple of 4 on all graphics backends.
@@ -184,13 +185,12 @@ class IndexBuffer {
             byteOffset ??= 0;
             byteLength ??= this.numBytes - byteOffset;
 
-            Debug.assert(Number.isInteger(byteOffset) && byteOffset >= 0 && byteOffset % 4 === 0,
-                'Buffer upload byteOffset must be a non-negative integer and a multiple of 4');
-            Debug.assert(Number.isInteger(byteLength) && byteLength >= 0 && byteLength % 4 === 0,
-                'Buffer upload byteLength must be a non-negative integer and a multiple of 4');
-            Debug.assert(byteOffset + byteLength <= this.numBytes, 'Buffer upload range exceeds buffer size');
+            const valid = Number.isInteger(byteOffset) && byteOffset >= 0 && byteOffset % 4 === 0 &&
+                Number.isInteger(byteLength) && byteLength >= 0 && byteLength % 4 === 0 &&
+                byteOffset + byteLength <= this.numBytes;
+            Debug.assert(valid, 'Buffer upload range must contain non-negative integers aligned to 4 bytes and fit within the buffer');
 
-            if (byteLength === 0) {
+            if (!valid || byteLength === 0) {
                 return;
             }
         }

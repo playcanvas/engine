@@ -101,15 +101,13 @@ class WebgpuBuffer {
         const srcBuffer = storage.buffer ?? storage;
         Debug.assert(byteOffset + byteLength <= this.buffer.size, 'Buffer data does not fit the allocated GPU buffer', this);
 
-        if ((byteLength & 3) === 0) {
-            // the size written must be a multiple of 4, which the data already is (uniform buffers
-            // always, vertex and index buffers mostly) - write it directly from its storage
-            wgpu.queue.writeBuffer(this.buffer, byteOffset, srcBuffer, srcOffset, byteLength);
-        } else {
-            // odd-sized data is padded through a temporary copy
+        if ((byteLength & 3) !== 0 && byteOffset === 0 && byteLength === storage.byteLength) {
+            // Only full uploads can pad with zeros without overwriting live neighboring data.
             const data = new Uint8Array((byteLength + 3) & ~3);
             data.set(new Uint8Array(srcBuffer, srcOffset, byteLength));
             wgpu.queue.writeBuffer(this.buffer, byteOffset, data, 0, data.length);
+        } else {
+            wgpu.queue.writeBuffer(this.buffer, byteOffset, srcBuffer, srcOffset, byteLength);
         }
     }
 
