@@ -56,6 +56,13 @@ export default /* wgsl */`
     // shadow evaluation function
     fn getShadow{i}(lightDirW_in: vec3f) -> f32 {
 
+        #if LIGHT{i}TYPE == DIRECTIONAL
+            // Beyond the shadow distance, skip cascade selection and shadow-map sampling.
+            if (1.0 / pcPosition.w > uniform.light{i}_shadowCascadeDistances.w) {
+                return 1.0;
+            }
+        #endif
+
         var lightDirArg = lightDirW_in;
 
         #if LIGHT{i}TYPE == OMNI
@@ -82,12 +89,6 @@ export default /* wgsl */`
                 var shadowCoord: vec3f = getShadowSampleCoord{i}(shadowMatrix, uniform.light{i}_shadowParams, vPositionW, uniform.light{i}_position, &lightDirArg, dLightDirNormW, dVertexNormalW);
             #endif
 
-        #endif
-
-
-        // Fade directional shadow at the far distance
-        #if LIGHT{i}TYPE == DIRECTIONAL
-            shadowCoord = fadeShadow(shadowCoord, uniform.light{i}_shadowCascadeDistances);
         #endif
 
         // ----- sample the shadow -----
