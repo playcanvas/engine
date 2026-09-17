@@ -192,6 +192,19 @@ class ShaderInstance {
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
  *
+ * A mesh instance is created from a {@link Mesh}, a {@link Material} and the {@link GraphNode}
+ * whose world transform places it, and it is drawn only once it belongs to a {@link Layer}.
+ * Components such as {@link RenderComponent} create mesh instances from their assets and add them
+ * to the layers in their `layers` list. A mesh instance you construct yourself is placed either
+ * by assigning it to {@link RenderComponent#meshInstances} or by adding it to a layer directly
+ * with {@link Layer#addMeshInstances}.
+ *
+ * Per-instance rendering state lives here rather than on the shared mesh or material:
+ * {@link visible}, {@link castShadow} and `receiveShadow`, {@link cull} for frustum culling,
+ * {@link drawOrder} for manual sorting, and {@link setParameter} for shader uniforms that override
+ * the material's. {@link aabb} is the world-space bounds derived from the mesh bounds and the
+ * node's transform, and can be assigned to override it.
+ *
  * ### Instancing
  *
  * Hardware instancing lets the GPU draw many copies of the same geometry with a single draw call.
@@ -1084,10 +1097,9 @@ class MeshInstance {
     }
 
     /**
-     * Sets the mask controlling which {@link LightComponent}s light this mesh instance, which
-     * {@link CameraComponent} sees it and in which {@link Layer} it is rendered. The value is a
-     * combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and
-     * `MASK_BAKE`. Defaults to `MASK_AFFECT_DYNAMIC`.
+     * Sets the light mask of this mesh instance: which {@link LightComponent}s light it. The value
+     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`.
+     * Defaults to `MASK_AFFECT_DYNAMIC`.
      *
      * @type {number}
      */
@@ -1097,8 +1109,7 @@ class MeshInstance {
     }
 
     /**
-     * Gets the mask controlling which {@link LightComponent}s light this mesh instance, which
-     * {@link CameraComponent} sees it and in which {@link Layer} it is rendered.
+     * Gets the light mask of this mesh instance: which {@link LightComponent}s light it.
      *
      * @type {number}
      */

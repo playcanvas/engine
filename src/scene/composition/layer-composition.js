@@ -16,6 +16,25 @@ import { RenderAction } from './render-action.js';
  * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
  * rendering order.
  *
+ * Each layer is rendered as two parts, its opaque mesh instances and its transparent ones, and
+ * {@link layerList} holds the sequence of parts in the order they are drawn. {@link push} and
+ * {@link insert} add both parts of a layer together, while {@link pushOpaque},
+ * {@link pushTransparent}, {@link insertOpaque} and {@link insertTransparent} place one part at a
+ * time, which is how the default composition draws every layer's opaque objects before the world's
+ * transparent ones. Look layers up with {@link getLayerById} and {@link getLayerByName}, find
+ * where a part sits with {@link getOpaqueIndex} and {@link getTransparentIndex}, and take a layer
+ * out with {@link remove}. The composition fires `add` and `remove` as layers come and go.
+ *
+ * The composition the application creates ends with the UI layer, so a pushed layer renders after
+ * the UI and outside the range a camera's post-processing applies to. To render inside that range,
+ * insert at an index taken from {@link getOpaqueIndex} or {@link getTransparentIndex}.
+ *
+ * @example
+ * // Draw decals right after the world's opaque objects and before its transparent ones
+ * const layers = app.scene.layers;
+ * const world = layers.getLayerById(LAYERID_WORLD);
+ * const decals = new Layer({ name: 'Decals' });
+ * layers.insertOpaque(decals, layers.getOpaqueIndex(world) + 1);
  * @category Graphics
  */
 class LayerComposition extends EventHandler {

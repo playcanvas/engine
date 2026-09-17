@@ -66,6 +66,27 @@ class CulledInstances {
  * lights and cameras, their render settings and also defines custom callbacks before, after or
  * during rendering. Layers are organized inside {@link LayerComposition} in a desired order.
  *
+ * A mesh instance is drawn through the layers it belongs to, and a camera draws only the layers
+ * listed in {@link CameraComponent#layers}. Components place their mesh instances by layer id, for
+ * example through {@link RenderComponent#layers}, and lights through {@link LightComponent#layers};
+ * mesh instances you create yourself go in with {@link addMeshInstances} and out with
+ * {@link removeMeshInstances}.
+ *
+ * The application creates five layers, reachable by id from {@link Scene#layers}:
+ * {@link LAYERID_WORLD} for the scene itself, {@link LAYERID_DEPTH}, {@link LAYERID_SKYBOX},
+ * {@link LAYERID_IMMEDIATE} for debug drawing and {@link LAYERID_UI}. Within a layer, opaque and
+ * transparent mesh instances are drawn as two separate parts, ordered by {@link opaqueSortMode}
+ * and {@link transparentSortMode}, and the composition decides where each part falls in the frame.
+ * Set {@link enabled} to false to skip a layer entirely, and use {@link onEnable} and
+ * {@link onDisable} to react to that.
+ *
+ * @example
+ * // Draw a set of mesh instances in a layer of their own, right after the world's opaque objects
+ * const layers = app.scene.layers;
+ * const layer = new Layer({ name: 'Overlay' });
+ * const world = layers.getLayerById(LAYERID_WORLD);
+ * layers.insert(layer, layers.getOpaqueIndex(world) + 1);
+ * layer.addMeshInstances(meshInstances);
  * @category Graphics
  */
 class Layer {
