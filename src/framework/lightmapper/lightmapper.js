@@ -986,9 +986,12 @@ class Lightmapper {
 
                 // patch material - the receiver samples the lightmap of its mesh instance for
                 // the whole bake, which starts out black and then accumulates the passes, so the
-                // lightmap path is forced on even when its material has no lightmap of its own
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], this.blackTex);
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], this.blackTex);
+                // lightmap path is forced on even when its material has no lightmap of its own.
+                // Only the slots this bake writes are bound, so a color only bake leaves no black
+                // directional lightmap behind.
+                for (let pass = 0; pass < passCount; pass++) {
+                    m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], this.blackTex);
+                }
                 m._shaderDefs |= SHADERDEF_LM;
             }
         }
