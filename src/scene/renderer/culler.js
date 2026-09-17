@@ -47,6 +47,16 @@ class Culler {
     _cullCameras = [];
 
     /**
+     * Directional (light, camera) pairs requested by shadow passes this frame. References the
+     * existing render data to avoid allocating requests. Kept through splat culling and one-shot
+     * consumption, then reset before the next frame graph is built.
+     *
+     * @type {Array<{ light: Light, camera: Camera, shadowCullRequested: boolean }>}
+     * @private
+     */
+    _directionalShadowCullRequests = [];
+
+    /**
      * A list of unique directional shadow casting lights for each enabled camera. This is generated
      * each frame during light culling.
      *
@@ -190,19 +200,18 @@ class Culler {
             }
         }
 
-        // cull shadow casters / fit cascades for the directional lights collected (earlier, in
-        // updateLightVisibility) into cameraDirShadowLights (mesh-dependent)
-        this.cameraDirShadowLights.forEach((lightList, camera) => {
-            for (let i = 0; i < lightList.length; i++) {
-                renderer._shadowRendererDirectional.cull(lightList[i], comp, camera);
-            }
-        });
+        // Only scheduled directional shadow passes need caster culling and cascade fitting.
+        const requests = this._directionalShadowCullRequests;
+        for (let i = 0; i < requests.length; i++) {
+            const { light, camera } = requests[i];
+            renderer._shadowRendererDirectional.cull(light, comp, camera);
+        }
     }
 
     /**
      * After the frame graph is built and shadow casters are culled, account for shadow-map updates
      * and consume one-shot ({@link SHADOWUPDATE_THISFRAME}) requests for lights whose shadow
-     * actually rendered this frame, reverting them to {@link SHADOWUPDATE_NONE}. A light that did
+     * update is scheduled this frame, reverting them to {@link SHADOWUPDATE_NONE}. A light that did
      * not render this frame (for example an off-screen local light) keeps its request, so the
      * shadow updates the next frame the light is rendered. Must run after both the frame graph build
      * and shadow-caster culling, so that `needsShadowRendering` (a pure predicate) reports the same
@@ -227,19 +236,31 @@ class Culler {
             }
         }
 
-        // directional lights: a separate shadow is rendered for each camera that uses the light, as
-        // the shadow frustum is fit to that camera
-        this.cameraDirShadowLights.forEach((lightList) => {
-            for (let i = 0; i < lightList.length; i++) {
-                const light = lightList[i];
-                if (shadowRenderer.needsShadowRendering(light)) {
-                    renderer._shadowMapUpdates += light.numShadowFaces;
-                    if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-                        light.shadowUpdateMode = SHADOWUPDATE_NONE;
-                    }
-                }
+        // A camera with no scheduled shadow pass must not consume a pending one-shot update.
+        // Count all requested cameras even after the first has consumed the light-wide mode.
+        const requests = this._directionalShadowCullRequests;
+        for (let i = 0; i < requests.length; i++) {
+            const { light } = requests[i];
+            renderer._shadowMapUpdates += light.numShadowFaces;
+            if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                light.shadowUpdateMode = SHADOWUPDATE_NONE;
             }
-        });
+        }
+    }
+
+    /**
+     * Requests directional shadow culling for a scheduled shadow pass. Multiple passes using
+     * the same light and camera share one cull; their render passes remain independently scheduled.
+     *
+     * @param {Light} light - The shadow-casting light.
+     * @param {Camera} camera - The camera the shadow is fitted to.
+     */
+    requestDirectionalShadowCull(light, camera) {
+        const renderData = light.getRenderData(camera, 0);
+        if (!renderData.shadowCullRequested) {
+            renderData.shadowCullRequested = true;
+            this._directionalShadowCullRequests.push(renderData);
+        }
     }
 
     /**
@@ -281,7 +302,7 @@ class Culler {
                                 lightList = lightList ?? [];
                                 lightList.push(light);
 
-                                renderer._shadowRendererDirectional.prepareShadowMap(light);
+                                renderer._shadowRendererDirectional.prepareShadowMap(light, camera);
                             }
                         }
                     }
@@ -308,6 +329,13 @@ class Culler {
 
         const { renderer } = this;
         const { scene } = renderer;
+
+        // Discard requests even if the previous frame was interrupted before culling completed.
+        const requests = this._directionalShadowCullRequests;
+        for (let i = 0; i < requests.length; i++) {
+            requests[i].shadowCullRequested = false;
+        }
+        requests.length = 0;
 
         // reset per-frame light visibility: directional lights start visible, local lights start
         // hidden (and are marked visible below by cullLights if they intersect a camera frustum)
@@ -461,7 +489,7 @@ class Culler {
         // (this also fires the per-camera precull / postcull events)
         this.executeMeshInstanceCull();
 
-        // cull shadow casters for all lights
+        // cull local shadow casters and requested directional shadows
         this.cullShadowmaps(comp);
 
         // event after the engine has finished culling all cameras

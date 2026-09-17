@@ -12,6 +12,7 @@ describe('GSplatShadowRenderer#cull', function () {
         // Exercise scheduling without requiring a WebGPU device or allocating compute resources.
         renderer = Object.create(GSplatShadowRenderer.prototype);
         renderer.entries = new Map();
+        renderer.cameraNode = { camera: { camera: {} } };
         worldState = { sortedBefore: true, totalActiveSplats: 128, totalIntervals: 2, boundsGroups: [] };
         renderer.world = {
             currentVersion: 1,
@@ -28,7 +29,9 @@ describe('GSplatShadowRenderer#cull', function () {
     });
 
     const addLight = (renderer, mode, override) => {
+        const renderData = { shadowCullRequested: true };
         const light = {
+            getRenderData: () => renderData,
             enabled: true,
             castShadows: true,
             visibleThisFrame: true,
@@ -119,6 +122,19 @@ describe('GSplatShadowRenderer#cull', function () {
         addLight(renderer, SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME);
         renderer.cull({});
         expectNoPreparation(renderer);
+    });
+
+    it('skips compute when the camera has no scheduled directional shadow pass', function () {
+        const entry = addLight(renderer, SHADOWUPDATE_THISFRAME);
+        const renderData = entry.light.getRenderData();
+        renderData.shadowCullRequested = false;
+        renderer.cull({});
+        expectNoPreparation(renderer);
+        expect(entry.light.shadowUpdateMode).to.equal(SHADOWUPDATE_THISFRAME);
+
+        renderData.shadowCullRequested = true;
+        renderer.cull({});
+        expect(renderer._cullEntry.calledOnce).to.equal(true);
     });
 
     it('hides casters while the splat data is not ready without dispatching work', function () {

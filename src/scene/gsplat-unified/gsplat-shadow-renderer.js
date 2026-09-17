@@ -450,10 +450,15 @@ class GSplatShadowRenderer {
         const totalActiveSplats = worldState.totalActiveSplats;
         const textureSize = this.world.workBuffer.textureSize;
         let prepared = false;
+        const camera = this.cameraNode.camera?.camera;
 
         this.entries.forEach((entry) => {
             const { light } = entry;
             if (!needsShadowRendering(light) || light.shadowUpdateOverrides?.[0] === SHADOWUPDATE_NONE) {
+                return;
+            }
+
+            if (!camera || !light.getRenderData(camera, 0).shadowCullRequested) {
                 return;
             }
 

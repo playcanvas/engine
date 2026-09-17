@@ -99,6 +99,9 @@ class LightRenderData {
         // - directional: 0 for simple shadows, cascade index for cascaded shadow map
         this.face = face;
 
+        // Retained until the next frame so mesh and splat shadow culling share the same requests.
+        this.shadowCullRequested = false;
+
         // visible shadow casters
         this.visibleCasters = [];
     }
