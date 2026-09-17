@@ -11,12 +11,21 @@
         "**/node_modules/**"
     ],
     "excludeNotDocumented": true,
-    "highlightLanguages": [
-        "bash", "console", "css", "html", "javascript", "json", "jsonc", "json5", "yaml", "tsx",
-        "typescript", "wgsl"
-    ],
-    "treatWarningsAsErrors": true,
     "favicon": "utils/typedoc/favicon.ico",
+    "highlightLanguages": [
+        "bash",
+        "console",
+        "css",
+        "html",
+        "javascript",
+        "json",
+        "jsonc",
+        "json5",
+        "yaml",
+        "tsx",
+        "typescript",
+        "wgsl"
+    ],
     "hostedBaseUrl": "https://api.playcanvas.com/engine/",
     "includeVersion": true,
     "name": "Engine API Reference",
@@ -28,9 +37,6 @@
         "GitHub": "https://github.com/playcanvas/engine"
     },
     "placeInternalsInOwningModule": true,
-    "sidebarLinks": {
-        "Home": "/"
-    },
     "plugin": [
         "./utils/typedoc/typedoc-plugin.mjs",
         "typedoc-plugin-mdn-links",
@@ -39,5 +45,9 @@
     "readme": "none",
     "searchGroupBoosts": {
         "Classes": 2
-    }
+    },
+    "sidebarLinks": {
+        "Home": "/"
+    },
+    "treatWarningsAsErrors": true
 }
