@@ -6,7 +6,7 @@ import { getBuiltInTexture } from './built-in-textures.js';
 import { TextureView } from './texture-view.js';
 
 /**
- * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js'
  * @import { DynamicBuffer } from './dynamic-buffer.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { StorageBuffer } from './storage-buffer.js'
@@ -252,36 +252,40 @@ class BindGroup {
     }
 
     /**
-     * Applies any changes made to the bind group's properties. Note that the content of used
+     * Applies any changes made to the bind group's properties, taking the value of each texture,
+     * storage texture and storage buffer slot from the scope. Note that the content of used
      * uniform buffers needs to be updated before calling this method.
      */
     update() {
+        this._assignFromScope();
+        this._finalize();
+    }
+
+    /**
+     * Applies any changes made to the bind group's properties, for a bind group whose owner assigns
+     * its slots instead of them being taken from the scope. The owner is expected to have assigned
+     * every slot of the format; the resources they hold are re-checked here, as they can change
+     * without the owner re-assigning them. Note that the content of used uniform buffers needs to
+     * be updated before calling this method.
+     */
+    commit() {
+        this._revalidate();
+        this._finalize();
+    }
+
+    /**
+     * Assigns every slot of the format the value the scope currently holds for it.
+     *
+     * @private
+     */
+    _assignFromScope() {
 
         const { textureFormats, storageTextureFormats, storageBufferFormats } = this.format;
 
         for (let i = 0; i < textureFormats.length; i++) {
             const textureFormat = textureFormats[i];
-            let value = textureFormat.scopeId.value;
-
-            // custom error handling for known global textures
-            if (!value) {
-                if (textureFormat.name === 'uSceneDepthMap') {
-                    Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                    value = getBuiltInTexture(this.device, 'white');
-                }
-                if (textureFormat.name === 'uSceneColorMap') {
-                    Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                    value = getBuiltInTexture(this.device, 'pink');
-                }
-
-                // missing generic texture
-                if (!value) {
-                    Debug.errorOnce(`Texture ${textureFormat.name} is required for rendering but was not set. Rendering [${DebugGraphics.toString()}]`);
-                    value = getBuiltInTexture(this.device, 'pink');
-                }
-            }
-
-            this.setTextureAt(i, value);
+            const value = textureFormat.scopeId.value;
+            this.setTextureAt(i, value ?? this._substituteTexture(textureFormat));
         }
 
         for (let i = 0; i < storageTextureFormats.length; i++) {
@@ -297,6 +301,73 @@ class BindGroup {
             Debug.assert(value, `Value was not set when assigning storage buffer slot [${storageBufferFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
             this.setStorageBufferAt(i, value);
         }
+    }
+
+    /**
+     * The texture to bind for a slot with no value, which is an error - a substitute keeps the
+     * rendering going instead of failing on an unset binding, and reports the mistake.
+     *
+     * @param {BindTextureFormat} textureFormat - The format of the slot.
+     * @returns {Texture} The texture to bind.
+     * @private
+     */
+    _substituteTexture(textureFormat) {
+
+        Debug.call(() => {
+            const name = textureFormat.name;
+            if (name === 'uSceneDepthMap') {
+                Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
+            } else if (name === 'uSceneColorMap') {
+                Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
+            } else {
+                Debug.errorOnce(`Texture ${name} is required for rendering but was not set. Rendering [${DebugGraphics.toString()}]`);
+            }
+        });
+
+        return getBuiltInTexture(this.device, textureFormat.substituteTexture);
+    }
+
+    /**
+     * Re-checks the resources the slots already hold. A texture's properties can change, and its
+     * GPU resource can be recreated (by a resize, for example), without the slot being assigned
+     * again - which the assignment path detects as it goes, and this path has to look for.
+     *
+     * @private
+     */
+    _revalidate() {
+
+        const { textures, storageTextures } = this;
+
+        for (let i = 0; i < textures.length; i++) {
+            const value = textures[i];
+            if (value) {
+                const texture = value instanceof TextureView ? value.texture : value;
+                if (this.renderVersionUpdated < texture.renderVersionDirty || this._textureImpls[i] !== texture.impl) {
+                    this._textureImpls[i] = texture.impl;
+                    this.dirty = true;
+                }
+            }
+        }
+
+        for (let i = 0; i < storageTextures.length; i++) {
+            const value = storageTextures[i];
+            if (value) {
+                const texture = value instanceof TextureView ? value.texture : value;
+                if (this.renderVersionUpdated < texture.renderVersionDirty || this._storageTextureImpls[i] !== texture.impl) {
+                    this._storageTextureImpls[i] = texture.impl;
+                    this.dirty = true;
+                }
+            }
+        }
+    }
+
+    /**
+     * Refreshes the offsets of the uniform buffers, and rebuilds the GPU bind group if anything
+     * about the bind group has changed.
+     *
+     * @private
+     */
+    _finalize() {
 
         // update uniform buffer offsets
         this.uniformBufferOffsets.length = this.uniformBuffers.length;
