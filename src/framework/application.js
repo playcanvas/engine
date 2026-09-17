@@ -102,6 +102,8 @@ import { XrManager } from './xr/xr-manager.js';
  * {@link AppBase#gamepads} and {@link AppBase#elementInput} stay `null` unless the matching device
  * is passed to this constructor, so a game that reads input must construct with, for example,
  * `{ keyboard: new Keyboard(window), mouse: new Mouse(canvas), touch: new TouchDevice(canvas) }`.
+ *
+ * @category Framework
  */
 class Application extends AppBase {
     /**

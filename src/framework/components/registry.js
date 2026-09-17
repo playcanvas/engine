@@ -86,6 +86,8 @@ import { EventHandler } from '../../core/event-handler.js';
  * // Set the volume to 50%
  * app.systems.sound.volume = 0.5;
  * ```
+ *
+ * @category Framework
  */
 class ComponentSystemRegistry extends EventHandler {
     /**

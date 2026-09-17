@@ -28,6 +28,8 @@ import { EventHandle } from './event-handle.js';
  * // fire event
  * obj.fire('hello', 'world');
  * ```
+ *
+ * @category Framework
  */
 class EventHandler {
     /**

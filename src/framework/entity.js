@@ -148,6 +148,7 @@ const releaseTempArray = (a) => {
  * const child = new Entity('child');
  * parent.addChild(child);
  * parent.setLocalPosition(5, 0, 0); // moves both parent and child
+ * @category Framework
  */
 class Entity extends GraphNode {
     /**

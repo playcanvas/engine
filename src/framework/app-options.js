@@ -17,6 +17,8 @@
 /**
  * AppOptions holds configuration settings utilized in the creation of an {@link AppBase} instance.
  * It allows functionality to be included or excluded from the AppBase instance.
+ *
+ * @category Framework
  */
 class AppOptions {
     /**

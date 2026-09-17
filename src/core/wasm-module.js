@@ -144,6 +144,7 @@ class Impl {
  * await new Promise((resolve) => {
  *     WasmModule.getInstance('Ammo', () => resolve());
  * });
+ * @category Framework
  */
 class WasmModule {
     /**
