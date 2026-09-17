@@ -28,6 +28,8 @@ class ComputeParameter {
  *
  * Call {@link Compute#destroy} when no longer needed. The graphics device retains compute
  * instances for device recovery until they are explicitly destroyed.
+ *
+ * @category Graphics
  */
 class Compute {
     /**

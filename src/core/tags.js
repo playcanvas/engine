@@ -8,6 +8,8 @@ import { EventHandler } from './event-handler.js';
  * Tags are automatically available on {@link Asset}s and {@link Entity}s (see {@link Asset#tags}
  * and {@link GraphNode#tags}). You can search for specific assets via {@link AssetRegistry#findByTag}
  * and specific entities via {@link GraphNode#findByTag}.
+ *
+ * @category Framework
  */
 class Tags extends EventHandler {
     /**

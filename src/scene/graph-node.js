@@ -109,6 +109,8 @@ function findNode(node, test) {
  * hierarchy and transformations through the Entity interface rather than using GraphNode directly.
  * However, GraphNode provides the underlying powerful set of features for hierarchical
  * transformations that Entity leverages.
+ *
+ * @category Framework
  */
 class GraphNode extends EventHandler {
     /**

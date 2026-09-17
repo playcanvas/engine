@@ -8,6 +8,8 @@
 /**
  * Interface to a texture parser. Implementations of this interface handle the loading and opening
  * of texture assets.
+ *
+ * @category Graphics
  */
 class TextureParser {
     /**

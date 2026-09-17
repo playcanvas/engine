@@ -22,6 +22,8 @@ import { math } from '../../core/math/math.js';
 
 /**
  * Used to send and receive HTTP requests.
+ *
+ * @category Framework
  */
 class Http {
     static ContentType = {

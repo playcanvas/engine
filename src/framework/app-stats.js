@@ -42,6 +42,7 @@
  * });
  *
  * @see AppBase#stats
+ * @category Framework
  */
 class AppStats {
     /**

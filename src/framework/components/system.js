@@ -15,6 +15,8 @@ import { Vec4 } from '../../core/math/vec4.js';
 /**
  * Component Systems contain the logic and functionality to update all Components of a particular
  * type.
+ *
+ * @category Framework
  */
 class ComponentSystem extends EventHandler {
     /**
