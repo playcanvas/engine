@@ -4,8 +4,12 @@ import { math } from '../../../core/math/math.js';
 import { AnimBlendTree } from './anim-blend-tree.js';
 
 /**
- * An AnimBlendTree that calculates its weights using a 2D directional algorithm based on the thesis
- * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
+ * An AnimBlendTree that calculates its weights using the 2D directional algorithm from chapter 6 of
+ * [Rune Skovbo Johansen's thesis](https://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf).
+ *
+ * The children's points are treated as directions from the origin, so the weights follow the
+ * angle and magnitude of the current parameter point. Use it when the two parameters form a
+ * direction, such as a movement vector driving an eight-way locomotion set.
  *
  * @category Animation
  */

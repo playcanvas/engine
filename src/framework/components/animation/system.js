@@ -12,9 +12,11 @@ import { AnimationComponent } from './component.js';
 const _properties = ['activate', 'enabled', 'loop', 'speed', 'assets'];
 
 /**
- * The AnimationComponentSystem manages creating and deleting AnimationComponents.
+ * Manages the {@link AnimationComponent}s of an application, the legacy animation system. Reach
+ * it through `app.systems.animation`; components are created with {@link Entity#addComponent},
+ * never by calling the system directly. New work should use {@link AnimComponent}.
  *
- * @category Animation
+ * @category Animation (Legacy)
  */
 class AnimationComponentSystem extends ComponentSystem {
     /**

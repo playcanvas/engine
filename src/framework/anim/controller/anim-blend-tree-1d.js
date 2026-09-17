@@ -7,8 +7,12 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  */
 
 /**
- * An AnimBlendTree that calculates its weights using a 1D algorithm based on the thesis
- * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6.
+ * An AnimBlendTree that calculates its weights using the 1D algorithm from chapter 6 of
+ * [Rune Skovbo Johansen's thesis](https://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf).
+ *
+ * The children sit at points along a single parameter, and the two whose points bracket the
+ * current value share the weight between them. This is the tree for one-dimensional blends such
+ * as idle, walk and run driven by a speed parameter.
  *
  * @category Animation
  */
