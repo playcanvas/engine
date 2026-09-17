@@ -371,7 +371,6 @@ class Asset extends EventHandler {
      * - "model" - see {@link Model}
      * - "render" - the meshes of one glTF mesh, loaded through a container asset
      * - "scene" - see {@link Scene}
-     * - "scenesettings" - the settings of a scene
      * - "script" - see {@link Script}
      * - "shader" - a `string`
      * - "sprite" - see {@link Sprite}
