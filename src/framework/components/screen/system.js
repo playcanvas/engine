@@ -23,7 +23,8 @@ import { ScreenComponent } from './component.js';
  */
 
 /**
- * Manages creation of {@link ScreenComponent}s.
+ * Manages the {@link ScreenComponent}s of an application. Reach it through `app.systems.screen`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category User Interface
  */

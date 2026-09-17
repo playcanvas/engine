@@ -7,7 +7,9 @@ import { AudioListenerComponent } from './component.js';
  */
 
 /**
- * Component System for adding and removing {@link AudioListenerComponent} objects to Entities.
+ * Manages the {@link AudioListenerComponent}s of an application. Reach it through
+ * `app.systems.audiolistener`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category Sound
  */

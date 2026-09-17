@@ -24,7 +24,9 @@ import { AnimComponent } from './component.js';
  */
 
 /**
- * The AnimComponentSystem manages creating and deleting AnimComponents.
+ * Manages the {@link AnimComponent}s of an application and advances their state graphs each
+ * frame. Reach it through `app.systems.anim`; components are created with
+ * {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Animation
  */

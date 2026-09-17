@@ -6,7 +6,9 @@ import { LayoutChildComponent } from './component.js';
  */
 
 /**
- * Manages creation of {@link LayoutChildComponent}s.
+ * Manages the {@link LayoutChildComponent}s of an application. Reach it through
+ * `app.systems.layoutchild`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category User Interface
  */
