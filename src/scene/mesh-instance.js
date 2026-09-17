@@ -1084,7 +1084,9 @@ class MeshInstance {
 
     /**
      * Sets the mask controlling which {@link LightComponent}s light this mesh instance, which
-     * {@link CameraComponent} sees it and in which {@link Layer} it is rendered. Defaults to 1.
+     * {@link CameraComponent} sees it and in which {@link Layer} it is rendered. The value is a
+     * combination of {@link MASK_AFFECT_DYNAMIC}, {@link MASK_AFFECT_LIGHTMAPPED} and
+     * {@link MASK_BAKE}. Defaults to {@link MASK_AFFECT_DYNAMIC}.
      *
      * @type {number}
      */

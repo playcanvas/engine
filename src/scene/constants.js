@@ -792,9 +792,31 @@ export const SHADOWUPDATE_THISFRAME = 1;
  */
 export const SHADOWUPDATE_REALTIME = 2;
 
-// flags used on the mask property of the Light, and also on mask property of the MeshInstance
+/**
+ * Light mask bit: on a light, it lights mesh instances that are lit at runtime rather than from a
+ * lightmap; on a mesh instance, it is lit at runtime by such lights. This is the default mask
+ * value of both {@link LightComponent#mask} and {@link MeshInstance#mask}.
+ *
+ * @category Graphics
+ */
 export const MASK_AFFECT_DYNAMIC = 1;
+
+/**
+ * Light mask bit: on a light, it lights mesh instances that are lightmapped; on a mesh instance,
+ * it receives its lighting from a lightmap and is lit at runtime only by lights carrying this bit.
+ * See {@link LightComponent#mask} and {@link MeshInstance#mask}.
+ *
+ * @category Graphics
+ */
 export const MASK_AFFECT_LIGHTMAPPED = 2;
+
+/**
+ * Light mask bit: on a light, it is baked into lightmaps by the {@link Lightmapper}; on a mesh
+ * instance, it is a lightmap target that such lights bake into. See {@link LightComponent#mask}
+ * and {@link MeshInstance#mask}.
+ *
+ * @category Graphics
+ */
 export const MASK_BAKE = 4;
 
 /**
