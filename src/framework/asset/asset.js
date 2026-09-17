@@ -372,7 +372,6 @@ class Asset extends EventHandler {
      * - "script" - see {@link Script}
      * - "shader" - a `string`
      * - "sprite" - see {@link Sprite}
-     * - "template" - see {@link Template}
      * - "text" - a `string`
      * - "texture" - see {@link Texture}
      * - "textureatlas" - see {@link TextureAtlas}
