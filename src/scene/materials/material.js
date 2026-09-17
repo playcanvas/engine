@@ -1173,9 +1173,10 @@ class Material {
             this._uniformUploadedVersion = this._uniformDataVersion;
         }
 
-        // the bind group is (re)built when dirty: on creation, which needs the uploaded buffer, and
-        // after a lost context
-        this._uniformBufferBindGroup.update();
+        // the material assigns the resources of its bind group itself, so the scope takes no part
+        // in it. The group is (re)built when dirty: on creation, which needs the uploaded buffer,
+        // and after a lost context
+        this._uniformBufferBindGroup.commit();
     }
 
     /**

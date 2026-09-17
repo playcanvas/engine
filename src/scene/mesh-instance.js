@@ -1646,8 +1646,9 @@ class MeshInstance {
             this._syncedOverridesVersion = this._materialOverridesVersion;
         }
 
-        // (re)built when dirty: on creation, which needs the uploaded buffer, and after a lost context
-        this._materialBindGroup.update();
+        // (re)built when dirty: on creation, which needs the uploaded buffer, and after a lost
+        // context. Its resources are assigned here, not taken from the scope
+        this._materialBindGroup.commit();
         return this._materialBindGroup;
     }
 

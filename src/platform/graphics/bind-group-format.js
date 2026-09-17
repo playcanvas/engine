@@ -143,6 +143,15 @@ class BindTextureFormat extends BindBaseFormat {
     multisampled;
 
     /**
+     * The name of the built-in texture to substitute when a bind group has no value for this slot,
+     * which is an error. Resolved from the name here, so the render path does not have to.
+     *
+     * @type {string}
+     * @ignore
+     */
+    substituteTexture;
+
+    /**
      * Create a new instance.
      *
      * @param {string} name - The name of the texture.
@@ -204,6 +213,10 @@ class BindTextureFormat extends BindBaseFormat {
         this.samplerName = multisampled ? null : (samplerName ?? `${name}_sampler`);
         this.sampleType = (multisampled && sampleType === SAMPLETYPE_FLOAT) ?
             SAMPLETYPE_UNFILTERABLE_FLOAT : sampleType;
+
+        // a missing scene depth reads as the far plane, where a missing color is better off
+        // obvious; anything else is a plain mistake, so make it obvious as well
+        this.substituteTexture = name === 'uSceneDepthMap' ? 'white' : 'pink';
 
         if (multisampled) {
             Debug.assert(textureDimension === TEXTUREDIMENSION_2D, `Multisampled texture binding '${name}' requires TEXTUREDIMENSION_2D.`);
