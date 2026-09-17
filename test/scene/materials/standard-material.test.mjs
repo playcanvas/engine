@@ -384,7 +384,7 @@ describe('StandardMaterial', function () {
 
                 const sourceValue = src[name];
                 const copiedValue = dst[name];
-                if (sourceValue instanceof Color || sourceValue instanceof Vec2) {
+                if (sourceValue instanceof Color || sourceValue instanceof Vec2 || sourceValue instanceof BoundingBox) {
                     expect(copiedValue, name).to.not.equal(sourceValue);
                     expect(copiedValue.equals(sourceValue), name).to.equal(true);
                 } else if (Array.isArray(sourceValue)) {

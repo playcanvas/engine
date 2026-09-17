@@ -595,45 +595,55 @@ describe('StandardMaterial uniform buffer', function () {
             expectStored(material, 'envBoxMax', [0, 0, 0]);
         });
 
-        it('applies a box moved through the reference the caller keeps, on update()', function () {
+        it('copies the box, and applies a change made through the getter on update()', function () {
             const box = boxOf(0, 0, 0, 1, 1, 1);
             const material = useBox(new StandardMaterial(), box);
+            expect(material.cubeMapProjectionBox).to.not.equal(box);
+            expect(material.cubeMapProjectionBox.equals(box)).to.equal(true);
             expectStored(material, 'envBoxMin', [-1, -1, -1]);
 
+            // the box of the caller is not the box of the material
             box.center.set(10, 0, 0);
-            box.halfExtents.set(2, 2, 2);
+            material.update();
+            expectStored(material, 'envBoxMin', [-1, -1, -1]);
+
+            // a change of the box exposed by the getter is applied
+            material.cubeMapProjectionBox.center.set(10, 0, 0);
+            material.cubeMapProjectionBox.halfExtents.set(2, 2, 2);
             const version = material._uniformDataVersion;
             material.update();
             expect(material._uniformDataVersion).to.equal(version + 1);
             expectStored(material, 'envBoxMin', [8, -2, -2]);
             expectStored(material, 'envBoxMax', [12, 2, 2]);
 
-            // an unchanged box writes nothing
+            // an unchanged box, or an equal box assigned, writes nothing
+            material.update();
+            material.cubeMapProjectionBox = boxOf(10, 0, 0, 2, 2, 2);
             material.update();
             expect(material._uniformDataVersion).to.equal(version + 1);
 
-            // a new box replaces the snapshot of the previous one
+            // a different box is copied in, null removes it
             material.cubeMapProjectionBox = boxOf(0, 5, 0, 1, 1, 1);
             material.update();
             expectStored(material, 'envBoxMax', [1, 6, 1]);
-            box.center.set(0, 0, 0);
-            const settled = material._uniformDataVersion;
+            material.cubeMapProjectionBox = null;
             material.update();
-            expect(material._uniformDataVersion).to.equal(settled);
+            expect(material.cubeMapProjectionBox).to.equal(null);
+            expectStored(material, 'envBoxMin', [0, 0, 0]);
+            material.update();
         });
 
-        it('keeps the shader variants when the box moves, and reports a move without update()', function () {
-            const box = boxOf(0, 0, 0, 1, 1, 1);
-            const material = useBox(new StandardMaterial(), box);
+        it('keeps the shader variants when the box changes, and reports a change without update()', function () {
+            const material = useBox(new StandardMaterial(), boxOf(0, 0, 0, 1, 1, 1));
             const variant = {};
             material.variants.set(1, variant);
-            box.center.set(1, 1, 1);
+            material.cubeMapProjectionBox.center.set(1, 1, 1);
             material.update();
             expect(material.variants.get(1)).to.equal(variant);
 
             const warn = sinon.stub(console, 'warn');
             try {
-                box.center.set(2, 2, 2);
+                material.cubeMapProjectionBox.center.set(2, 2, 2);
                 prepare(material);
                 expect(warn.callCount).to.equal(1);
                 expect(warn.firstCall.args[0]).to.contain('cubeMapProjectionBox');

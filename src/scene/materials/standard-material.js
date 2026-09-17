@@ -126,8 +126,8 @@ const _properties = {
     alphaDither: new MaterialProperty('alphaDither', 'material_alphaDitherScale', UNIFORMTYPE_FLOAT, convertAlphaDitherScale),
 
     // the minimum and maximum of the world space box of the cube map projection, two uniforms of
-    // one property: both descriptors are named after the box and read it as their value, so the
-    // material keeps one snapshot of the box per descriptor and rewrites both when the box moves
+    // one property: both descriptors are named after the box and read it as their value, so a
+    // change of the box exposed by the getter rewrites both
     envBoxMin: new MaterialProperty('cubeMapProjectionBox', 'envBoxMin', UNIFORMTYPE_VEC3, convertBoxMin),
     envBoxMax: new MaterialProperty('cubeMapProjectionBox', 'envBoxMax', UNIFORMTYPE_VEC3, convertBoxMax)
 };
@@ -1601,35 +1601,52 @@ class StandardMaterial extends Material {
 
     /**
      * Sets the world space axis-aligned bounding box defining the box-projection used for the
-     * cubeMap property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}. The
-     * material keeps a reference to the box: a change of its center or half extents is applied by
-     * {@link StandardMaterial#update}.
+     * cubeMap property, or null for no box. Only used when cubeMapProjection is set to
+     * {@link CUBEPROJ_BOX}. The box is copied into the material.
      *
      * @type {BoundingBox|null}
      */
     set cubeMapProjectionBox(value) {
-        if (this._cubeMapProjectionBox !== value) {
-            this._cubeMapProjectionBox = value;
-            for (const property of _envBoxProperties) {
-                this._markPropertyModified(property);
-
-                // the snapshot of the previous box makes way for one of the new box, compared by
-                // update() as the box is moved through the reference the caller keeps
-                this._mutableProperties?.delete(property);
-                if (value) {
-                    this._markPropertyMutable(property, value);
+        const box = this._cubeMapProjectionBox;
+        if (value) {
+            if (box) {
+                if (box.equals(value)) {
+                    return;
                 }
+                box.copy(value);
+            } else {
+                this._cubeMapProjectionBox = value.clone();
+            }
+        } else {
+            if (!box) {
+                return;
+            }
+            this._cubeMapProjectionBox = null;
+        }
+        for (const property of _envBoxProperties) {
+            this._markPropertyModified(property);
+
+            // a snapshot of the removed box has nothing to compare to
+            if (!value) {
+                this._mutableProperties?.delete(property);
             }
         }
     }
 
     /**
-     * Gets the world space axis-aligned bounding box of the box-projection.
+     * Gets the world space axis-aligned bounding box of the box-projection, or null. A change of
+     * its center or half extents is applied by {@link StandardMaterial#update}.
      *
      * @type {BoundingBox|null}
      */
     get cubeMapProjectionBox() {
-        return this._cubeMapProjectionBox;
+        const box = this._cubeMapProjectionBox;
+        if (box) {
+            for (const property of _envBoxProperties) {
+                this._markPropertyMutable(property, box);
+            }
+        }
+        return box;
     }
 
     /**
@@ -2149,7 +2166,7 @@ function _defineMaterialProps() {
     registerProp('attenuationDistance', () => 0);
     registerProp('heightMapFactor', () => 1);
     registerProp('alphaDither', () => null);
-    registerProp('cubeMapProjectionBox', () => null);
+    registerProp('cubeMapProjectionBox', () => null, true);
 
     registerProp('alphaTest', () => 0);
 
