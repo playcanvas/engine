@@ -76,17 +76,27 @@ class ShadowRendererDirectional {
         this.device = renderer.device;
     }
 
-    // Minimal prerequisite for directional shadow-pass creation: ensure the shadow map exists
-    // and the light is marked visible. This is caster- and camera-independent, so it can run
-    // early in the frame (before mesh culling), unlike cull() which sets up the per-cascade
-    // shadow cameras and culls casters.
-    prepareShadowMap(light) {
+    /**
+     * Ensure the shadow map exists and the light is marked visible. When a camera is supplied,
+     * bind its shadow buffer even for cached shadows: forward lighting needs the sampler without
+     * a shadow pass or cull (#3588).
+     *
+     * @param {Light} light - The shadow-casting light.
+     * @param {Camera|null} [camera] - The camera that will sample the shadow map, if any.
+     */
+    prepareShadowMap(light, camera = null) {
 
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
 
         if (!light._shadowMap) {
             light._shadowMap = ShadowMap.create(this.device, light);
+        }
+
+        if (camera) {
+            for (let cascade = 0; cascade < light.numCascades; cascade++) {
+                this.shadowRenderer.prepareFace(light, camera, cascade);
+            }
         }
     }
 
@@ -115,12 +125,6 @@ class ShadowRendererDirectional {
 
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
-
-            // assign render target
-            // Note: this is done during rendering for all shadow maps, but do it here for the case shadow rendering for the directional light
-            // is disabled - we need shadow map to be assigned for rendering to work even in this case. This needs further refactoring - as when
-            // shadow rendering is set to SHADOWUPDATE_NONE, we should not even execute shadow map culling
-            shadowCam.renderTarget = light._shadowMap.renderTargets[0];
 
             // viewport
             lightRenderData.shadowViewport.copy(light.cascades[cascade]);

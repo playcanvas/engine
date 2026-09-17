@@ -64,7 +64,9 @@ const channelMap = {
 let id = 0;
 
 /**
- * Class storing shadow rendering related private information
+ * Class storing shadow rendering related private information.
+ *
+ * @ignore
  */
 class LightRenderData {
     constructor(camera, face, light) {
@@ -98,6 +100,9 @@ class LightRenderData {
         // - omni: cubemap face, 0..5
         // - directional: 0 for simple shadows, cascade index for cascaded shadow map
         this.face = face;
+
+        // Retained until the next frame so mesh and splat shadow culling share the same requests.
+        this.shadowCullRequested = false;
 
         // visible shadow casters
         this.visibleCasters = [];
@@ -1236,4 +1241,4 @@ class Light {
     }
 }
 
-export { Light, lightTypes };
+export { Light, LightRenderData, lightTypes };

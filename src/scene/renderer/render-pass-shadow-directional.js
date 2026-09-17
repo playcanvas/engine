@@ -18,6 +18,13 @@ class RenderPassShadowDirectional extends RenderPass {
         this.allCascadesRendering = allCascadesRendering;
     }
 
+    frameUpdate() {
+        super.frameUpdate();
+        if (this.enabled && this.executeEnabled) {
+            this.shadowRenderer.renderer.culler.requestDirectionalShadowCull(this.light, this.camera);
+        }
+    }
+
     execute() {
 
         const { light, camera, shadowRenderer, allCascadesRendering } = this;
