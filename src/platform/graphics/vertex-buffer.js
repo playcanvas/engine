@@ -37,7 +37,7 @@ class VertexBuffer {
      * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*).
      * Defaults to BUFFER_STATIC.
      * @param {ArrayBuffer|ArrayBufferView} [options.data] - Initial data. Can be an
-     * {@link ArrayBuffer} or a typed array (for example a {@link Float32Array}). The data is
+     * `ArrayBuffer` or a typed array (for example a `Float32Array`). The data is
      * stored by reference and is not copied, so a typed array that is a view into a larger buffer
      * is kept as-is. If left unspecified, the vertex buffer will be initialized to zeros.
      * @param {boolean} [options.storage] - Defines if the vertex buffer can be used as a storage

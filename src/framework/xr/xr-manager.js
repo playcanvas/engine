@@ -173,7 +173,7 @@ class XrManager extends EventHandler {
 
     /**
      * Backend-specific XR binding for GPU camera/depth paths when available (for example WebGL
-     * {@link XRWebGLBinding} or WebGPU `XRGPUBinding` when exposed by the user agent).
+     * `XRWebGLBinding` or WebGPU `XRGPUBinding` when exposed by the user agent).
      *
      * @type {Object|null}
      */

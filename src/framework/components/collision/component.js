@@ -516,7 +516,7 @@ class CollisionComponent extends Component {
      * only be used with a static body. When true, the mesh can be used with a static, dynamic or
      * kinematic body. The hull is built from the mesh vertices at the world scale of the entity.
      * Only applies to meshes from {@link CollisionComponent#renderAsset} or
-     * {@link CollisionComponent#render}. Defaults to `false`.
+     * `render`. Defaults to `false`.
      *
      * @type {boolean}
      */

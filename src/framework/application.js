@@ -131,7 +131,7 @@ class Application extends AppBase {
      * - scrollview ({@link ScrollViewComponentSystem})
      * - sound ({@link SoundComponentSystem})
      * - sprite ({@link SpriteComponentSystem})
-     * - zone ({@link ZoneComponentSystem})
+     * - zone (`ZoneComponentSystem`)
      *
      * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.

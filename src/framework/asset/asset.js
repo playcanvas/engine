@@ -78,7 +78,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * null for each level the asset does not provide.
  * @property {null} folder - Folders hold no resource.
  * @property {Font | CanvasFont} font - A font: a {@link Font} loaded from a font file, or a
- * {@link CanvasFont} rendered at runtime.
+ * `CanvasFont` rendered at runtime.
  * @property {GSplatResourceBase | GSplatOctreeResource} gsplat - A Gaussian splat resource, or the
  * octree resource of a level-of-detail splat scene.
  * @property {Entity} hierarchy - The root entity of an instantiated scene hierarchy.
@@ -131,23 +131,23 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  */
 
 /**
- * An Asset is the engine's record of a single resource: a texture, a material, a glTF container,
- * a sound, a script and so on. Assets live in the application's {@link AssetRegistry} at
+ * An Asset is the engine's record of a single resource: a texture, a material, a glTF container, a
+ * sound, a script and so on. Assets live in the application's {@link AssetRegistry} at
  * {@link AppBase#assets}, which loads them on demand.
  *
  * An asset has five parts:
  *
  * - `type` selects the {@link ResourceHandler} that loads it and the type of `resource`.
  * - `file` names the file that holds the data, when there is one.
- * - `data` carries JSON that either is the resource, as for materials, or describes how to
- * process the file, as for texture and model mappings.
+ * - `data` carries JSON that either is the resource, as for materials, or describes how to process
+ * the file, as for texture and model mappings.
  * - `options` carries handler-specific load options.
  * - `resource` holds the loaded object, such as a {@link Texture}. `resources` holds every object
  * the handler produced when there is more than one, such as a cube map and its prefiltered levels.
  *
- * Loading is driven by the registry: call {@link AssetRegistry#load}, or set {@link Asset#preload}
- * so the asset loads when added. Wait for the result with {@link Asset#ready} or listen for the
- * `load` and `error` events. {@link Asset#unload} releases the resource.
+ * Loading is driven by the registry: call {@link AssetRegistry#load}, or set {@link preload} so the
+ * asset loads when added. Wait for the result with {@link ready} or listen for the `load` and
+ * `error` events. {@link unload} releases the resource.
  *
  * The `type` string also types the resource: `new Asset('brick', 'texture', file)` creates an
  * `Asset<'texture'>` whose `resource` is a {@link Texture} once loaded, and
@@ -363,7 +363,7 @@ class Asset extends EventHandler {
      * - "css" - a `string`
      * - "cubemap" - see {@link Texture}; null when only prefiltered levels are provided
      * - "folder" - no resource
-     * - "font" - see {@link Font} and {@link CanvasFont}
+     * - "font" - see {@link Font} and `CanvasFont`
      * - "gsplat" - a Gaussian splat resource
      * - "hierarchy" - see {@link Entity}
      * - "html" - a `string`

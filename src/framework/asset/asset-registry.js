@@ -44,16 +44,15 @@ import { Asset } from './asset.js';
  * The AssetRegistry holds every {@link Asset} an application knows about and drives their loading
  * through the {@link ResourceLoader}. Each application has one at {@link AppBase#assets}.
  *
- * Look assets up by id with {@link AssetRegistry#get}, by name and type with
- * {@link AssetRegistry#find} and {@link AssetRegistry#findAll}, by URL with
- * {@link AssetRegistry#getByUrl}, or by tag with {@link AssetRegistry#findByTag}. Register an
- * asset with {@link AssetRegistry#add}, or create and load one in a single call with
- * {@link AssetRegistry#loadFromUrl}, which reuses any asset already registered for that URL.
+ * Look assets up by id with {@link get}, by name and type with {@link find} and {@link findAll}, by
+ * URL with {@link getByUrl}, or by tag with {@link findByTag}. Register an asset with {@link add},
+ * or create and load one in a single call with {@link loadFromUrl}, which reuses any asset already
+ * registered for that URL.
  *
- * Adding an asset does not fetch it unless {@link Asset#preload} is true. Call
- * {@link AssetRegistry#load} to fetch it, then wait with {@link Asset#ready} or listen for the
- * registry's `load`, `error`, `add` and `remove` events. Each also fires per asset as `load:[id]`
- * and, except for `error`, per URL as `load:url:[url]`.
+ * Adding an asset does not fetch it unless {@link Asset#preload} is true. Call {@link load} to
+ * fetch it, then wait with {@link Asset#ready} or listen for the registry's `load`, `error`, `add`
+ * and `remove` events. Each also fires per asset as `load:[id]` and, except for `error`, per URL as
+ * `load:url:[url]`.
  *
  * @example
  * const asset = app.assets.find('brick', 'texture');
@@ -230,7 +229,7 @@ class AssetRegistry extends EventHandler {
     prefix = null;
 
     /**
-     * The {@link BundleRegistry} that tracks which assets are packed into bundle assets and serves
+     * The bundle registry that tracks which assets are packed into bundle assets and serves
      * their files from loaded bundles. Assigned when the application creates its bundle registry;
      * null until then.
      *

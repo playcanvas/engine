@@ -201,7 +201,7 @@ class XrViews extends EventHandler {
     /**
      * The depth sensing pixel format. Can be:
      *
-     * - {@link PIXELFORMAT_LA8}
+     * - `PIXELFORMAT_LA8`
      * - {@link PIXELFORMAT_R32F}
      *
      * @type {PIXELFORMAT_LA8|PIXELFORMAT_R32F|null}

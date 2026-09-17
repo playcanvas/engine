@@ -246,7 +246,7 @@ class CameraComponent extends Component {
 
     /**
      * @type {FramePass[]|null}
-     * @deprecated Use {@link framePasses} instead.
+     * @deprecated Use `framePasses` instead.
      * @ignore
      */
     set renderPasses(passes) {
@@ -256,7 +256,7 @@ class CameraComponent extends Component {
 
     /**
      * @type {FramePass[]}
-     * @deprecated Use {@link framePasses} instead.
+     * @deprecated Use `framePasses` instead.
      * @ignore
      */
     get renderPasses() {
@@ -1114,7 +1114,7 @@ class CameraComponent extends Component {
     /**
      * Request the scene to generate a texture containing the scene color map. Note that this call
      * is accumulative, and for each enable request, a disable request need to be called. Note that
-     * this setting is ignored when {@link framePasses} is used.
+     * this setting is ignored when `framePasses` is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -1133,7 +1133,7 @@ class CameraComponent extends Component {
     /**
      * Request the scene to generate a texture containing the scene depth map. Note that this call
      * is accumulative, and for each enable request, a disable request need to be called. Note that
-     * this setting is ignored when {@link framePasses} is used.
+     * this setting is ignored when `framePasses` is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */

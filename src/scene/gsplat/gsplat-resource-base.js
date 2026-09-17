@@ -50,7 +50,7 @@ class GSplatResourceBase {
     }
 
     /**
-     * True when a centers buffer has been allocated ({@link GSplatResourceBase#centers} is non-null).
+     * True when a centers buffer has been allocated (`centers` is non-null).
      * Reads internal storage only so checks do not trigger lazy allocation in {@link GSplatContainer}.
      *
      * @type {boolean}
@@ -135,7 +135,7 @@ class GSplatResourceBase {
      * @param {object} gsplatData - Data source with getCenters(), calcAabb(), numSplats, etc.
      * @param {object} [options] - Construction options.
      * @param {boolean} [options.prepareCenters] - When omitted or true, calls gsplatData.getCenters()
-     * and stores the result. When false, {@link GSplatResourceBase#centers} stays null until set or
+     * and stores the result. When false, `centers` stays null until set or
      * materialized by a subclass (e.g. lazy allocation in GSplatContainer).
      */
     constructor(device, gsplatData, options = {}) {

@@ -151,7 +151,7 @@ class XrView extends RenderView {
      * AR system. This texture can be used (not limited to) for reconstructing real world
      * geometry, virtual object placement, occlusion of virtual object by the real world geometry,
      * and more.
-     * The format of this texture is any of {@link PIXELFORMAT_LA8}, {@link PIXELFORMAT_DEPTH}, or
+     * The format of this texture is any of `PIXELFORMAT_LA8`, {@link PIXELFORMAT_DEPTH}, or
      * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthPixelFormat}. It is UV transformed
      * based on the underlying AR system which can be normalized using {@link depthUvMatrix}.
      * Equals to null if camera depth is not supported.

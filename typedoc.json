@@ -11,6 +11,11 @@
         "**/node_modules/**"
     ],
     "excludeNotDocumented": true,
+    "highlightLanguages": [
+        "bash", "console", "css", "html", "javascript", "json", "jsonc", "json5", "yaml", "tsx",
+        "typescript", "wgsl"
+    ],
+    "treatWarningsAsErrors": true,
     "favicon": "utils/typedoc/favicon.ico",
     "hostedBaseUrl": "https://api.playcanvas.com/engine/",
     "includeVersion": true,

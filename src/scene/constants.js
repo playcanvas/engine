@@ -1350,7 +1350,7 @@ export const GSPLAT_DEBUG_NODE_AABBS = 5;
 /**
  * Automatically selects the best radix sort backend for the current WebGPU device:
  * OneSweep on supported hardware (NVIDIA), the portable backend elsewhere. See
- * {@link ComputeRadixSort}.
+ * `ComputeRadixSort`.
  *
  * @type {number}
  * @category Graphics
@@ -1360,7 +1360,7 @@ export const RADIX_SORT_AUTO = 0;
 /**
  * Portable radix sort backend. Runs on every WebGPU device (no subgroup
  * intrinsics required) and is chosen by {@link RADIX_SORT_AUTO} when no
- * faster hardware-specific backend is available. See {@link ComputeRadixSort}.
+ * faster hardware-specific backend is available. See `ComputeRadixSort`.
  *
  * @type {number}
  * @category Graphics
@@ -1370,7 +1370,7 @@ export const RADIX_SORT_PORTABLE = 1;
 /**
  * Single-sweep 8-bit radix sort (OneSweep). Requires subgroup support, 32-lane
  * subgroups, and forward-thread-progress guarantees — currently enabled only on
- * NVIDIA. See {@link ComputeRadixSort}.
+ * NVIDIA. See `ComputeRadixSort`.
  *
  * @type {number}
  * @category Graphics

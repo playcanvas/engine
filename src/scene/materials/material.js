@@ -249,7 +249,7 @@ class Material {
      * {@link Material#frontFace} and {@link StandardMaterial#twoSidedLighting} all behave the same
      * as they do for smooth shading.
      *
-     * {@link StandardMaterial} and {@link LitMaterial} implement this automatically. For a
+     * {@link StandardMaterial} and `LitMaterial` implement this automatically. For a
      * {@link ShaderMaterial}, this adds a `FLAT_SHADING` define to the shader, which the supplied
      * shader code needs to handle. The `flatNormalPS` chunk provides the `getFlatNormal` function
      * used by the engine internally, and can be used for this:
@@ -744,7 +744,7 @@ class Material {
      *
      * The default depends on where the shader comes from, so this rarely needs setting:
      *
-     * - {@link StandardMaterial} and {@link LitMaterial} generate them from the engine's own shader,
+     * - {@link StandardMaterial} and `LitMaterial` generate them from the engine's own shader,
      * so they default to true when opaque and false when transparent - blending the values of
      * ordinary transparent geometry into them is not meaningful.
      * - {@link ShaderMaterial} defaults to false, as its shader is supplied by the user. Set this to
