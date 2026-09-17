@@ -555,7 +555,9 @@ class LightComponent extends Component {
     /**
      * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
      * used for blending between adjacent cascades. The value should be between 0 and 1. Defaults
-     * to 0, which disables blending between cascades.
+     * to 0, which disables blending between cascades and fading at the shadow distance. Also fades
+     * shadows to fully lit over this fraction of the shadow distance, including when using a single
+     * cascade. For example, a value of 0.1 fades shadows over the last 10% of the shadow distance.
      *
      * @type {number}
      */
