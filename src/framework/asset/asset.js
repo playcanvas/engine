@@ -350,7 +350,7 @@ class Asset extends EventHandler {
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
      * @param {K} type - The type of asset (an {@link AssetType}), which selects the resource
-     * handler and the type of {@link Asset#resource}. Valid strings are:
+     * handler and the type of {@link Asset#resource}. The types a developer commonly creates are:
      *
      * - "animation" - see {@link Animation} and {@link AnimTrack}
      * - "animclip" - see {@link AnimTrack}
@@ -373,8 +373,9 @@ class Asset extends EventHandler {
      * - "texture" - see {@link Texture}
      * - "textureatlas" - see {@link TextureAtlas}
      *
-     * Any other string is accepted for an application-defined handler; see {@link AssetMap} for
-     * typing its resource.
+     * Types that the engine creates itself while loading, such as `render` or `scene`, are omitted
+     * here; every built-in type is listed in {@link AssetMap}. Any other string is accepted for an
+     * application-defined handler; see {@link AssetMap} for typing its resource.
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.
