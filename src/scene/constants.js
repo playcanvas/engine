@@ -1420,3 +1420,15 @@ export const SCENETEXTURE_DEPTH = 'depth';
 export const sceneTextureUniformNames = {
     [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
 };
+
+/**
+ * The uniforms a mesh instance publishes its own lightmaps under, the color lightmap first and the
+ * directional one second, matching the order of the lightmapper's bake passes. The color one is
+ * deliberately not `texture_lightMap`, the uniform of a lightmap assigned to a material, so that a
+ * mesh instance keeping a lightmap of its own leaves the material's lightmap alone. A mesh instance
+ * lightmap takes priority when both are present.
+ *
+ * @type {string[]}
+ * @ignore
+ */
+export const instanceLightmapUniformNames = ['instance_lightMap', 'texture_dirLightMap'];

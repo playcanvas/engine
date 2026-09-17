@@ -227,8 +227,8 @@ export default /* wgsl */`
         #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
             var<private> dLightmap: vec3f;
             #ifdef STD_LIGHT_TEXTURE_ALLOCATE
-                var texture_lightMap : texture_2d<f32>;
-                var texture_lightMapSampler : sampler;
+                var {STD_LIGHT_TEXTURE_NAME} : texture_2d<f32>;
+                var {STD_LIGHT_TEXTURE_NAME}Sampler : sampler;
             #endif
         #endif
     #endif

@@ -12,7 +12,8 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SHADOW_CASCADE_ALL
+    SHADOW_CASCADE_ALL,
+    instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
@@ -1170,8 +1171,8 @@ class MeshInstance {
         }
     }
 
-    // shader uniform names for lightmaps
-    static lightmapParamNames = ['texture_lightMap', 'texture_dirLightMap'];
+    // shader uniform names for the lightmaps of a mesh instance
+    static lightmapParamNames = instanceLightmapUniformNames;
 
     /**
      * Sets the render style for an array of mesh instances.

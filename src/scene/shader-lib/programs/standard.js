@@ -4,6 +4,7 @@ import {
     PARALLAX_OFFSET,
     SHADER_FORWARD,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED,
+    instanceLightmapUniformNames,
     parallaxNames
 } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
@@ -151,9 +152,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
      * @param {Map<string, string>} chunks - The set of shader chunks to choose from.
      * @param {object} mapping - The mapping between chunk and sampler
      * @param {string|null} encoding - The texture's encoding
+     * @param {string|null} samplerName - The name of the texture sampler to use, instead of the
+     * name derived from the map. Used when the texture is not owned by the material, and so must
+     * not share a sampler with the material's own maps.
      * @private
      */
-    _addMapDefines(fDefines, propName, chunkName, options, chunks, mapping, encoding = null) {
+    _addMapDefines(fDefines, propName, chunkName, options, chunks, mapping, encoding = null, samplerName = null) {
         const mapPropName = `${propName}Map`;
         const propNameCaps = propName.toUpperCase();
         const uVPropName = `${mapPropName}Uv`;
@@ -204,17 +208,27 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             // texture sampler define
             const textureId = `{STD_${propNameCaps}_TEXTURE_NAME}`;
             if (chunkCode.includes(textureId)) {
-                let samplerName = `texture_${mapPropName}`;
-                const alias = mapping[textureIdentifier];
-                if (alias) {
-                    samplerName = alias;
-                } else {
-                    mapping[textureIdentifier] = samplerName;
 
-                    // texture is not aliased to existing texture, create a new one
+                let name = samplerName;
+                if (name) {
+
+                    // a sampler supplied by the caller is not one of the material's maps, so it
+                    // takes no part in the sharing of samplers between maps
                     fDefines.set(`STD_${propNameCaps}_TEXTURE_ALLOCATE`, '');
+
+                } else {
+                    name = `texture_${mapPropName}`;
+                    const alias = mapping[textureIdentifier];
+                    if (alias) {
+                        name = alias;
+                    } else {
+                        mapping[textureIdentifier] = name;
+
+                        // texture is not aliased to existing texture, create a new one
+                        fDefines.set(`STD_${propNameCaps}_TEXTURE_ALLOCATE`, '');
+                    }
                 }
-                fDefines.set(textureId, samplerName);
+                fDefines.set(textureId, name);
             }
 
             if (encoding) {
@@ -449,9 +463,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 this._addMapDefines(fDefines, 'anisotropy', 'anisotropyPS', options, litShader.chunks, textureMapping);
             }
 
-            // lightmap
+            // lightmap - the mesh instance supplies it in its own sampler, as the material may
+            // have a lightmap of its own assigned to the material sampler
             if (options.lightMap || options.lightVertexColor) {
-                this._addMapDefines(fDefines, 'light', 'lightmapPS', options, litShader.chunks, textureMapping, options.lightMapEncoding);
+                const samplerName = options.useInstanceLightMap ? instanceLightmapUniformNames[0] : null;
+                this._addMapDefines(fDefines, 'light', 'lightmapPS', options, litShader.chunks, textureMapping, options.lightMapEncoding, samplerName);
             }
 
         } else {

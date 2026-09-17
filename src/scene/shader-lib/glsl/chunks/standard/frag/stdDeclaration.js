@@ -203,7 +203,7 @@ export default /* glsl */`
         #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
             vec3 dLightmap;
             #ifdef STD_LIGHT_TEXTURE_ALLOCATE
-                uniform sampler2D texture_lightMap;
+                uniform sampler2D {STD_LIGHT_TEXTURE_NAME};
             #endif
         #endif
     #endif
