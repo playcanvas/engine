@@ -52,9 +52,12 @@ const KEY_COUNT = Object.keys(KEY_CODES).length;
 const array = Array(KEY_COUNT).fill(0);
 
 /**
- * Keyboard and mouse input source class
+ * Keyboard and mouse input source class. Attached to an element, it accumulates `key` deltas for
+ * the keys listed in {@link keyCode}, `button` deltas for the mouse buttons, `mouse` deltas for
+ * pointer movement and `wheel` deltas for the scroll wheel. Pass `pointerLock: true` to use
+ * pointer lock for mouse movement.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  *
  * @typedef {object} KeyboardMouseSourceDeltas

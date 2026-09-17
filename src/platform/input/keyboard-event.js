@@ -9,7 +9,7 @@
  * - {@link Keyboard.EVENT_KEYDOWN}
  * - {@link Keyboard.EVENT_KEYUP}
  *
- * @category Input
+ * @category Input Devices
  */
 class KeyboardEvent {
     /**

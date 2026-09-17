@@ -31,7 +31,7 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * {@link InputController}s such as {@link OrbitController}, {@link FlyController} and
  * {@link FocusController}.
  *
- * @category Input
+ * @category Input Devices
  */
 class Mouse extends EventHandler {
     /**
