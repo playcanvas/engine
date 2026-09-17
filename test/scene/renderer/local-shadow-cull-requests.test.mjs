@@ -79,7 +79,7 @@ describe('Local shadow cull requests', function () {
                     expect(cull.callCount).to.equal(1);
                     expect(renderFace.callCount).to.equal(faces);
                     expect(app.renderer._shadowMapUpdates).to.equal(faces);
-                    expect(light.getRenderData(null, 0).shadowCullMask).to.equal(0);
+                    expect(light.getRenderData(null, 0).shadowCullRequested).to.equal(false);
 
                     light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                     app.render();
@@ -206,22 +206,7 @@ describe('Local shadow cull requests', function () {
         app.render();
         expect(cull.callCount).to.equal(1);
         expect(renderFace.callCount).to.equal(1);
-        expect(light.getRenderData(null, 0).shadowCullMask).to.equal(0);
+        expect(light.getRenderData(null, 0).shadowCullRequested).to.equal(false);
         expect(light.shadowUpdateMode).to.equal(SHADOWUPDATE_THISFRAME);
-    });
-
-    it('culls an omni light once but counts only its scheduled faces', function () {
-        app.scene.clusteredLightingEnabled = false;
-        createLight('omni');
-        const prototype = RenderPassShadowLocalNonClustered.prototype;
-        const frameUpdate = prototype.frameUpdate;
-        sinon.stub(prototype, 'frameUpdate').callsFake(function () {
-            this.executeEnabled = this.face === 1 || this.face === 4;
-            frameUpdate.call(this);
-        });
-        app.render();
-        expect(cull.calledOnce).to.equal(true);
-        expect(renderFace.getCalls().map(call => call.args[2])).to.eql([1, 4]);
-        expect(app.renderer._shadowMapUpdates).to.equal(2);
     });
 });

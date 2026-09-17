@@ -25,7 +25,7 @@ class RenderPassShadowLocalNonClustered extends RenderPass {
     frameUpdate() {
         super.frameUpdate();
         if (this.enabled && this.executeEnabled) {
-            this.shadowRenderer.renderer.culler.requestLocalShadowCull(this.light, 1 << this.face);
+            this.shadowRenderer.renderer.culler.requestLocalShadowCull(this.light);
         }
     }
 

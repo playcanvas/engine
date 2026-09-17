@@ -57,8 +57,8 @@ class Culler {
     _directionalShadowCullRequests = [];
 
     /**
-     * Local lights requested by shadow passes this frame. Face 0's render data holds the face
-     * mask, so separate cube-map passes share one cull without allocating request objects.
+     * Local lights requested by shadow passes this frame. Reuses face 0's render data so
+     * separate cube-map passes share one cull without allocating request objects.
      *
      * @type {LightRenderData[]}
      * @private
@@ -225,10 +225,8 @@ class Culler {
         // passes can request an update; visibility and atlas allocation alone are insufficient.
         const localRequests = this._localShadowCullRequests;
         for (let i = 0; i < localRequests.length; i++) {
-            const { light, shadowCullMask } = localRequests[i];
-            for (let mask = shadowCullMask; mask; mask &= mask - 1) {
-                renderer._shadowMapUpdates++;
-            }
+            const { light } = localRequests[i];
+            renderer._shadowMapUpdates += light.numShadowFaces;
             if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
                 light.shadowUpdateMode = SHADOWUPDATE_NONE;
             }
@@ -262,18 +260,17 @@ class Culler {
     }
 
     /**
-     * Requests local shadow culling for scheduled faces. Multiple face passes share one cull,
-     * while the face mask is retained for update accounting until the next frame.
+     * Requests local shadow culling for a scheduled shadow pass. Multiple face passes using
+     * the same light share one cull.
      *
      * @param {Light} light - The shadow-casting local light.
-     * @param {number} faceMask - Bit mask of faces the pass will render.
      */
-    requestLocalShadowCull(light, faceMask) {
+    requestLocalShadowCull(light) {
         const renderData = light.getRenderData(null, 0);
-        if (!renderData.shadowCullMask) {
+        if (!renderData.shadowCullRequested) {
+            renderData.shadowCullRequested = true;
             this._localShadowCullRequests.push(renderData);
         }
-        renderData.shadowCullMask |= faceMask;
     }
 
     /**
@@ -352,7 +349,7 @@ class Culler {
 
         const localRequests = this._localShadowCullRequests;
         for (let i = 0; i < localRequests.length; i++) {
-            localRequests[i].shadowCullMask = 0;
+            localRequests[i].shadowCullRequested = false;
         }
         localRequests.length = 0;
 
