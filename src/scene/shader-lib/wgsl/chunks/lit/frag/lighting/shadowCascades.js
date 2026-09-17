@@ -42,15 +42,4 @@ fn ditherShadowCascadeIndex(cascadeIndex_in: i32, shadowCascadeDistances: vec4f,
     return cascadeIndex;
 }
 
-fn fadeShadow(shadowCoord_in: vec3f, shadowCascadeDistances: vec4f) -> vec3f {
-    // if the pixel is past the shadow distance, remove shadow
-    // this enforces straight line instead of corner of shadow which moves when camera rotates
-    var shadowCoord: vec3f = shadowCoord_in;
-    let depth: f32 = 1.0 / pcPosition.w;
-    if (depth > shadowCascadeDistances.w) {
-        shadowCoord.z = -9999999.0;
-    }
-
-    return shadowCoord;
-}
 `;

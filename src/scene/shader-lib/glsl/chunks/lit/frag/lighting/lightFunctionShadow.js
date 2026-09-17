@@ -56,6 +56,13 @@ export default /* glsl */`
     // shadow evaluation function
     float getShadow{i}(vec3 lightDirW) {
 
+        #if LIGHT{i}TYPE == DIRECTIONAL
+            // Beyond the shadow distance, skip cascade selection and shadow-map sampling.
+            if (1.0 / gl_FragCoord.w > light{i}_shadowCascadeDistances.w) {
+                return 1.0;
+            }
+        #endif
+
         // directional shadow cascades
         #if LIGHT{i}TYPE == OMNI
 
@@ -81,11 +88,6 @@ export default /* glsl */`
                 vec3 shadowCoord = getShadowSampleCoord{i}(shadowMatrix, light{i}_shadowParams, vPositionW, light{i}_position, lightDirW, dLightDirNormW, dVertexNormalW);
             #endif
 
-        #endif
-
-        // Fade directional shadow at the far distance
-        #if LIGHT{i}TYPE == DIRECTIONAL
-            shadowCoord = fadeShadow(shadowCoord, light{i}_shadowCascadeDistances);
         #endif
 
         // ----- sample the shadow -----
