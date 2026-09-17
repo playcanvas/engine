@@ -9,7 +9,7 @@
  * @param {globalThis.Touch} touch - The browser Touch object.
  * @returns {{x: number, y: number}} The coordinates of the touch relative to the touch.target
  * DOM element.
- * @category Input
+ * @category Input Devices
  */
 function getTouchTargetCoords(touch) {
     let totalOffsetX = 0;
@@ -35,7 +35,7 @@ function getTouchTargetCoords(touch) {
 /**
  * A instance of a single point touch on a {@link TouchDevice}.
  *
- * @category Input
+ * @category Input Devices
  */
 class Touch {
     /**
@@ -98,7 +98,7 @@ class Touch {
  * - {@link TouchDevice.EVENT_TOUCHMOVE}
  * - {@link TouchDevice.EVENT_TOUCHCANCEL}
  *
- * @category Input
+ * @category Input Devices
  */
 class TouchEvent {
     /**

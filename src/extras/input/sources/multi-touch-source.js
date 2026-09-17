@@ -5,9 +5,12 @@ import { isTouchPointer, movementState } from '../utils.js';
 const tmpVa = new Vec2();
 
 /**
- * Multi-touch input source class
+ * Multi-touch input source class. Attached to an element, it accumulates `touch` deltas for the
+ * movement of the touch points, `count` deltas for changes in the number of touches, and `pinch`
+ * deltas for the change in distance between two touches, which is what an orbiting camera needs
+ * on a touch screen.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  *
  * @typedef {object} MultiTouchSourceDeltas
