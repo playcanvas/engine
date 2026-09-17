@@ -7,6 +7,10 @@ import { AnimBlendTree } from './anim-blend-tree.js';
  * An AnimBlendTree that calculates its weights using a 2D Cartesian algorithm based on the thesis
  * http://runevision.com/thesis/rune_skovbo_johansen_thesis.pdf Chapter 6 Section 3.
  *
+ * The children sit at points on a plane defined by two parameters, and weights are computed from
+ * where the current parameter point lies among them, treating the two axes as independent. Use it
+ * when the parameters are unrelated quantities, such as forward speed against turn rate.
+ *
  * @category Animation
  */
 class AnimBlendTreeCartesian2D extends AnimBlendTree {

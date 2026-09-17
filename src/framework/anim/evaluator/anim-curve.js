@@ -1,6 +1,9 @@
 /**
  * Animation curve links an input data set to an output data set and defines the interpolation
- * method to use.
+ * method to use. The {@link paths} name the targets the curve drives, {@link input} and
+ * {@link output} index into the owning {@link AnimTrack}'s keyframe time and value data, and
+ * {@link interpolation} is one of {@link INTERPOLATION_STEP}, {@link INTERPOLATION_LINEAR} or
+ * {@link INTERPOLATION_CUBIC}.
  *
  * @category Animation
  */
