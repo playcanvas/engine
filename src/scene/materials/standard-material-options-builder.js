@@ -153,6 +153,11 @@ class StandardMaterialOptionsBuilder {
             const uname = `${mname}Uv`;
             const iname = `${mname}Identifier`;
 
+            // a lightmap supplied by the mesh instance takes priority over the material's own, so
+            // the material's lightmap and its uv set, channel and transform are all skipped. Its
+            // vertex color lightmap still applies, as that is a separate source.
+            const skipMap = p === 'light' && options.useInstanceLightMap;
+
             // Avoid overriding previous lightMap properties
             if (p !== 'light') {
                 options[mname] = false;
@@ -176,7 +181,7 @@ class StandardMaterialOptionsBuilder {
                 }
             }
             // a map is only sampled when the mesh provides the uv set it is assigned to
-            if (stdMat[mname] && vertexFormat?.hasUv(stdMat[uname])) {
+            if (!skipMap && stdMat[mname] && vertexFormat?.hasUv(stdMat[uname])) {
 
                 // create an intermediate map between the textures and their slots
                 // to ensure the unique texture mapping isn't dependent on the texture id
@@ -358,6 +363,8 @@ class StandardMaterialOptionsBuilder {
         options.lightMapChannel = '';
         options.lightMapUv = 0;
         options.lightMapTransform = 0;
+        options.lightMapIdentifier = undefined;
+        options.useInstanceLightMap = false;
         options.litOptions.lightMapWithoutAmbient = false;
         options.dirLightMap = false;
 
@@ -365,20 +372,22 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
+
+                // the mesh instance supplies the lightmap, in its own texture slot, and takes
+                // priority over a lightmap assigned to the material
                 options.lightMapEncoding = scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? 'rgbm' : 'linear';
                 options.lightMap = true;
                 options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;
                 options.lightMapTransform = 0;
-                options.litOptions.lightMapWithoutAmbient = !stdMat.lightMap;
+                options.useInstanceLightMap = true;
                 if ((objDefs & SHADERDEF_DIRLM) !== 0) {
                     options.dirLightMap = true;
                 }
 
-                // if lightmaps contain baked ambient light, disable real-time ambient light
-                if ((objDefs & SHADERDEF_LMAMBIENT) !== 0) {
-                    options.litOptions.lightMapWithoutAmbient = false;
-                }
+                // a baked lightmap only contains the ambient light when it was baked with it, so
+                // otherwise the ambient light is still applied at runtime
+                options.litOptions.lightMapWithoutAmbient = (objDefs & SHADERDEF_LMAMBIENT) === 0;
             }
         }
 

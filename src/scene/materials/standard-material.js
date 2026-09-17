@@ -513,7 +513,9 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
  * Defaults to {@link CUBEPROJ_NONE}.
  * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps
- * are textures that contain pre-rendered lighting. Can be HDR.
+ * are textures that contain pre-rendered lighting. Can be HDR. When a mesh instance rendered with
+ * this material has a lightmap of its own, baked by the {@link Lightmapper}, that lightmap is used
+ * instead of this one.
  * @property {number} lightMapUv Lightmap UV channel. Valid values are 0 to 7.
  * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b",
  * "a", "rgb" or any swizzled combination.
