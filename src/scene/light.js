@@ -64,7 +64,9 @@ const channelMap = {
 let id = 0;
 
 /**
- * Class storing shadow rendering related private information
+ * Class storing shadow rendering related private information.
+ *
+ * @ignore
  */
 class LightRenderData {
     constructor(camera, face, light) {
@@ -1239,4 +1241,4 @@ class Light {
     }
 }
 
-export { Light, lightTypes };
+export { Light, LightRenderData, lightTypes };

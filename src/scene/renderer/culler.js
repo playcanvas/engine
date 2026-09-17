@@ -11,7 +11,7 @@ import {
  * @import { CulledInstances } from '../layer.js'
  * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
- * @import { Light } from '../light.js'
+ * @import { Light, LightRenderData } from '../light.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { Renderer } from './renderer.js'
  */
@@ -51,7 +51,7 @@ class Culler {
      * existing render data to avoid allocating requests. Kept through splat culling and one-shot
      * consumption, then reset before the next frame graph is built.
      *
-     * @type {Array<{ light: Light, camera: Camera, shadowCullRequested: boolean }>}
+     * @type {LightRenderData[]}
      * @private
      */
     _directionalShadowCullRequests = [];
