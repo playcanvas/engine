@@ -462,7 +462,9 @@ function scaleChanged(scale, builtScale) {
 }
 
 /**
- * Manages creation of {@link CollisionComponent}s.
+ * Manages the {@link CollisionComponent}s of an application. Reach it through
+ * `app.systems.collision`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category Physics
  */

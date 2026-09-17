@@ -26,7 +26,8 @@ import { _properties, LightComponent } from './component.js';
  */
 
 /**
- * A Light Component is used to dynamically light the scene.
+ * Manages the {@link LightComponent}s of an application. Reach it through `app.systems.light`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Graphics
  */
