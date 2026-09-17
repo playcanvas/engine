@@ -82,7 +82,7 @@ let id = 0;
  *
  * Choose {@link StandardMaterial} for a physically based surface described by properties and
  * textures, and {@link ShaderMaterial} to supply your own vertex and fragment shaders. Both share
- * the state defined here: blending through {@link blendType}, depth behaviour through
+ * the state defined here: blending through {@link blendType}, depth behavior through
  * {@link depthTest}, {@link depthWrite} and {@link depthFunc}, face culling through {@link cull},
  * alpha testing through {@link alphaTest}, shader uniforms through {@link setParameter}, and
  * preprocessor defines through {@link setDefine}. {@link getShaderChunks} exposes the GLSL and WGSL

@@ -13,7 +13,7 @@ import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } fro
  * produces a distinct compiled shader. Developers rarely need to touch it: the material properties
  * such as `useFog`, `useLighting` and `useSkybox` on {@link StandardMaterial} cover the usual
  * cases, and the values here mirror them together with the scene state. It is exposed for the
- * rare case of customising shader generation through {@link StandardMaterial#onUpdateShader}.
+ * rare case of customizing shader generation through {@link StandardMaterial#onUpdateShader}.
  *
  * @category Graphics
  */
