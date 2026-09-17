@@ -22,6 +22,13 @@ class RenderPassShadowLocalNonClustered extends RenderPass {
         shadowRenderer.setupRenderPass(this, this.shadowCamera, true);
     }
 
+    frameUpdate() {
+        super.frameUpdate();
+        if (this.enabled && this.executeEnabled) {
+            this.shadowRenderer.renderer.culler.requestLocalShadowCull(this.light);
+        }
+    }
+
     execute() {
         this.shadowRenderer.renderFace(this.light, null, this.face, false);
     }
