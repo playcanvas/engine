@@ -1353,7 +1353,7 @@ export const GSPLAT_DEBUG_NODE_AABBS = 5;
  * `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_AUTO = 0;
 
@@ -1363,7 +1363,7 @@ export const RADIX_SORT_AUTO = 0;
  * faster hardware-specific backend is available. See `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_PORTABLE = 1;
 
@@ -1373,7 +1373,7 @@ export const RADIX_SORT_PORTABLE = 1;
  * NVIDIA. See `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_ONESWEEP = 2;
 
