@@ -75,7 +75,8 @@ class WebglDynamicBuffers extends DynamicBuffers {
         // a whole buffer per allocation - the offset is always zero
         allocation.gpuBuffer = buffer;
         allocation.offset = 0;
-        allocation.storage = buffer.storage;
+        allocation.storageBuffer = buffer;
+        allocation.storageOffset = 0;
     }
 
     /**
