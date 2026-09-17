@@ -150,6 +150,17 @@ class BindGroup {
     setStorageBuffer(name, storageBuffer) {
         const index = this.format.storageBufferFormatsMap.get(name);
         Debug.assert(index !== undefined, `Setting a storage buffer [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
+        this.setStorageBufferAt(index, storageBuffer);
+    }
+
+    /**
+     * Assign a storage buffer to a slot, given its index in the format's storage buffers.
+     *
+     * @param {number} index - The index of the storage buffer slot.
+     * @param {StorageBuffer} storageBuffer - The storage buffer to assign to the slot.
+     * @private
+     */
+    setStorageBufferAt(index, storageBuffer) {
         if (this.storageBuffers[index] !== storageBuffer) {
             this.storageBuffers[index] = storageBuffer;
             this.dirty = true;
@@ -165,6 +176,18 @@ class BindGroup {
     setTexture(name, value) {
         const index = this.format.textureFormatsMap.get(name);
         Debug.assert(index !== undefined, `Setting a texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
+        this.setTextureAt(index, value);
+    }
+
+    /**
+     * Assign a texture to a slot, given its index in the format's textures. This is the form the
+     * update uses, as it walks the slots in order and so knows the index without looking it up.
+     *
+     * @param {number} index - The index of the texture slot.
+     * @param {Texture|TextureView} value - Texture or TextureView to assign to the slot.
+     * @private
+     */
+    setTextureAt(index, value) {
 
         // Get the actual texture for version checking
         const texture = value instanceof TextureView ? value.texture : value;
@@ -191,6 +214,17 @@ class BindGroup {
     setStorageTexture(name, value) {
         const index = this.format.storageTextureFormatsMap.get(name);
         Debug.assert(index !== undefined, `Setting a storage texture [${name}] on a bind group with id: ${this.id} which does not contain it, while rendering [${DebugGraphics.toString()}]`, this);
+        this.setStorageTextureAt(index, value);
+    }
+
+    /**
+     * Assign a storage texture to a slot, given its index in the format's storage textures.
+     *
+     * @param {number} index - The index of the storage texture slot.
+     * @param {Texture|TextureView} value - Texture or TextureView to assign to the slot.
+     * @private
+     */
+    setStorageTextureAt(index, value) {
 
         // Get the actual texture for version checking
         const texture = value instanceof TextureView ? value.texture : value;
@@ -223,7 +257,6 @@ class BindGroup {
      */
     update() {
 
-        // TODO: implement faster version of this, which does not call SetTexture, which does a map lookup
         const { textureFormats, storageTextureFormats, storageBufferFormats } = this.format;
 
         for (let i = 0; i < textureFormats.length; i++) {
@@ -248,21 +281,21 @@ class BindGroup {
                 }
             }
 
-            this.setTexture(textureFormat.name, value);
+            this.setTextureAt(i, value);
         }
 
         for (let i = 0; i < storageTextureFormats.length; i++) {
             const storageTextureFormat = storageTextureFormats[i];
             const value = storageTextureFormat.scopeId.value;
             Debug.assert(value, `Value was not set when assigning storage texture slot [${storageTextureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
-            this.setStorageTexture(storageTextureFormat.name, value);
+            this.setStorageTextureAt(i, value);
         }
 
         for (let i = 0; i < storageBufferFormats.length; i++) {
             const storageBufferFormat = storageBufferFormats[i];
             const value = storageBufferFormat.scopeId.value;
             Debug.assert(value, `Value was not set when assigning storage buffer slot [${storageBufferFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
-            this.setStorageBuffer(storageBufferFormat.name, value);
+            this.setStorageBufferAt(i, value);
         }
 
         // update uniform buffer offsets
