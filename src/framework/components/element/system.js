@@ -35,7 +35,8 @@ import { ElementComponent } from './component.js';
  */
 
 /**
- * Manages creation of {@link ElementComponent}s.
+ * Manages the {@link ElementComponent}s of an application. Reach it through `app.systems.element`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category User Interface
  */

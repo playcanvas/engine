@@ -28,6 +28,20 @@ function capTime(time, duration) {
 /**
  * A SoundInstance plays a {@link Sound}.
  *
+ * One instance is one playback. It wraps an `AudioBufferSourceNode`, available as {@link source}
+ * once playing, with a gain for {@link volume}, and carries {@link pitch}, {@link loop},
+ * {@link startTime} and {@link duration} to select the region of the sound it plays. {@link play},
+ * {@link pause}, {@link resume} and {@link stop} drive it and fire the events of the same names,
+ * with `end` fired when playback finishes on its own; {@link isPlaying}, {@link isPaused} and
+ * {@link isStopped} report the state, and {@link currentTime} can be read or set to seek.
+ * Instances are normally created by {@link SoundSlot#play} on a {@link SoundComponent}, which
+ * returns the instance so a script can adjust or stop that one playback. {@link setExternalNodes}
+ * inserts Web Audio nodes such as filters between the source and the destination.
+ *
+ * @example
+ * const instance = entity.sound.play('engine');
+ * instance.pitch = 1.5;
+ * instance.once('end', () => console.log('finished'));
  * @category Sound
  */
 class SoundInstance extends EventHandler {

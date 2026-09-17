@@ -34,7 +34,8 @@ const _properties = [
 ];
 
 /**
- * Manages creation of {@link SoundComponent}s.
+ * Manages the {@link SoundComponent}s of an application. Reach it through `app.systems.sound`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Sound
  */

@@ -37,7 +37,8 @@ const _properties = [
 ];
 
 /**
- * Manages creation of {@link ButtonComponent}s.
+ * Manages the {@link ButtonComponent}s of an application. Reach it through `app.systems.button`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category User Interface
  */

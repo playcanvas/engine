@@ -41,7 +41,9 @@ const _properties = [
 ];
 
 /**
- * Manages creation of {@link ScrollViewComponent}s.
+ * Manages the {@link ScrollViewComponent}s of an application. Reach it through
+ * `app.systems.scrollview`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category User Interface
  */
