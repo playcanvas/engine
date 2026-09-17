@@ -361,7 +361,6 @@ class Asset extends EventHandler {
      * - "container" - see {@link ContainerResource}
      * - "css" - a `string`
      * - "cubemap" - see {@link Texture}; null when only prefiltered levels are provided
-     * - "folder" - no resource
      * - "font" - see {@link Font}
      * - "gsplat" - a Gaussian splat resource
      * - "html" - a `string`
