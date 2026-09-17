@@ -797,7 +797,7 @@ export const SHADOWUPDATE_REALTIME = 2;
  * lightmap; on a mesh instance, it is lit at runtime by such lights. This is the default mask
  * value of both {@link LightComponent#mask} and {@link MeshInstance#mask}.
  *
- * @category Graphics
+ * @ignore
  */
 export const MASK_AFFECT_DYNAMIC = 1;
 
@@ -806,7 +806,7 @@ export const MASK_AFFECT_DYNAMIC = 1;
  * it receives its lighting from a lightmap and is lit at runtime only by lights carrying this bit.
  * See {@link LightComponent#mask} and {@link MeshInstance#mask}.
  *
- * @category Graphics
+ * @ignore
  */
 export const MASK_AFFECT_LIGHTMAPPED = 2;
 
@@ -815,7 +815,7 @@ export const MASK_AFFECT_LIGHTMAPPED = 2;
  * instance, it is a lightmap target that such lights bake into. See {@link LightComponent#mask}
  * and {@link MeshInstance#mask}.
  *
- * @category Graphics
+ * @ignore
  */
 export const MASK_BAKE = 4;
 
