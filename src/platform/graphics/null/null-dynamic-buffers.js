@@ -19,6 +19,13 @@ class NullDynamicBuffers extends DynamicBuffers {
     buffer;
 
     /**
+     * Byte size of the storage the buffer currently has.
+     *
+     * @type {number}
+     */
+    storageSize = 0;
+
+    /**
      * @param {GraphicsDevice} device - The graphics device.
      */
     constructor(device) {
@@ -31,9 +38,18 @@ class NullDynamicBuffers extends DynamicBuffers {
      * @param {number} size - The size of the allocation.
      */
     alloc(allocation, size) {
+
+        // nothing reads the data back, so the storage of the single buffer serves every
+        // allocation, grown to the largest one asked for
+        if (this.storageSize < size) {
+            this.storageSize = size;
+            this.buffer.setStorage(new ArrayBuffer(size));
+        }
+
         allocation.gpuBuffer = this.buffer;
         allocation.offset = 0;
-        allocation.storage = new Int32Array(size / 4);
+        allocation.storageBuffer = this.buffer;
+        allocation.storageOffset = 0;
     }
 }
 
