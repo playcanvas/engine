@@ -28,6 +28,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 
 /**
  * @import { Camera } from '../camera.js'
+ * @import { Culler } from './culler.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { LightTextureAtlas } from '../lighting/light-texture-atlas.js'
  * @import { Light } from '../light.js'
@@ -48,6 +49,20 @@ const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
 const blurScissorRect = new Vec4(1, 1, 0, 0);
 const viewportMatrix = new Mat4();
+
+/**
+ * Tests whether a light needs its shadow rendered this frame without consuming one-shot updates.
+ * Shadow-pass scheduling and splat caster culling share this predicate. One-shot requests are
+ * consumed by {@link Culler#consumeOneShotShadows} after both have read the update mode.
+ * Per-face overrides and atlas allocation are checked separately by callers.
+ *
+ * @param {Light} light - The light to test.
+ * @returns {boolean} Whether the light needs a shadow update.
+ * @ignore
+ */
+function needsShadowRendering(light) {
+    return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+}
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -615,12 +630,8 @@ class ShadowRenderer {
         }
     }
 
-    // Pure predicate - whether the light needs its shadow rendered this frame. Has no side effects:
-    // the SHADOWUPDATE_THISFRAME -> SHADOWUPDATE_NONE consume and the shadow-map-update stat are
-    // applied once per frame in Renderer#consumeOneShotShadows, after the frame graph is built and
-    // shadow casters are culled (so build and cull can both read shadowUpdateMode before it changes).
     needsShadowRendering(light) {
-        return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+        return needsShadowRendering(light);
     }
 
     getLightRenderData(light, camera, face) {
@@ -809,4 +820,4 @@ class ShadowRenderer {
     }
 }
 
-export { ShadowRenderer };
+export { ShadowRenderer, needsShadowRendering };
