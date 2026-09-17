@@ -11,6 +11,7 @@ import { DynamicBufferAllocation } from './dynamic-buffers.js';
 
 /**
  * @import { DynamicBindGroup } from './bind-group.js'
+ * @import { DynamicBuffer } from './dynamic-buffer.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { UniformBufferFormat } from './uniform-buffer-format.js'
  * @import { UniformFormat } from './uniform-buffer-format.js'
@@ -226,6 +227,15 @@ class UniformBuffer {
     storageUint32;
 
     /**
+     * Where this uniform buffer's data starts in the storage views, in 4 byte elements. Zero for a
+     * persistent buffer, which owns its storage, and the offset of the allocation for a
+     * non-persistent one, which borrows the storage of a dynamic buffer.
+     *
+     * @type {number}
+     */
+    storageOffset = 0;
+
+    /**
      * Create a new UniformBuffer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this uniform
@@ -279,7 +289,8 @@ class UniformBuffer {
     }
 
     /**
-     * Assign a storage to this uniform buffer.
+     * Assign the storage a persistent uniform buffer owns. This runs once per buffer, unlike
+     * {@link UniformBuffer#assignDynamicStorage}.
      *
      * @param {Int32Array} storage - The storage to assign to this uniform buffer.
      */
@@ -287,6 +298,22 @@ class UniformBuffer {
         this.storageInt32 = storage;
         this.storageUint32 = new Uint32Array(storage.buffer, storage.byteOffset, storage.byteLength / 4);
         this.storageFloat32 = new Float32Array(storage.buffer, storage.byteOffset, storage.byteLength / 4);
+        this.storageOffset = 0;
+    }
+
+    /**
+     * Borrow the storage views of the dynamic buffer this uniform buffer was allocated from, and
+     * remember where in them its own data starts. The views span the whole dynamic buffer, so this
+     * creates none of its own - it runs for every draw that updates a non-persistent buffer.
+     *
+     * @param {DynamicBuffer} dynamicBuffer - The buffer the allocation came from.
+     * @param {number} storageOffset - Where the allocation starts in the views, in 4 byte elements.
+     */
+    assignDynamicStorage(dynamicBuffer, storageOffset) {
+        this.storageInt32 = dynamicBuffer.storageInt32;
+        this.storageUint32 = dynamicBuffer.storageUint32;
+        this.storageFloat32 = dynamicBuffer.storageFloat32;
+        this.storageOffset = storageOffset;
     }
 
     /**
@@ -314,7 +341,7 @@ class UniformBuffer {
      */
     setUniform(uniformFormat, value) {
         Debug.assert(uniformFormat);
-        const offset = uniformFormat.offset;
+        const offset = uniformFormat.offset + this.storageOffset;
 
         if (value !== null && value !== undefined) {
 
@@ -322,6 +349,12 @@ class UniformBuffer {
             if (updateFunction) {
                 updateFunction(this, value, offset, uniformFormat.count);
             } else {
+
+                // the storage spans more than this uniform buffer, so a value longer than the
+                // uniform would overwrite what follows it instead of being rejected
+                Debug.assert(value.length <= uniformFormat.byteSize / 4,
+                    `Value assigned to uniform [${uniformFormat.name}] is longer than the uniform while rendering ${DebugGraphics.toString()}`);
+
                 this.storageFloat32.set(value, offset);
             }
         } else {
@@ -351,7 +384,7 @@ class UniformBuffer {
             // allocate memory from dynamic buffer for this frame
             const allocation = this.allocation;
             this.device.dynamicBuffers.alloc(allocation, this.format.byteSize);
-            this.assignStorage(allocation.storage);
+            this.assignDynamicStorage(allocation.storageBuffer, allocation.storageOffset);
 
             // get info about bind group we can use for this non-persistent UB for this frame
             if (dynamicBindGroup) {
@@ -370,8 +403,13 @@ class UniformBuffer {
             // upload the data to the dynamic buffer - a no-op on backends that copy it separately
             // (WebGPU), but WebGL uploads eagerly here
             this.allocation.gpuBuffer.upload();
-            this.storageFloat32 = null;
+
+            // the storage belongs to the dynamic buffer, and writing to it outside of an update
+            // would write to whatever it hands out next
             this.storageInt32 = null;
+            this.storageUint32 = null;
+            this.storageFloat32 = null;
+            this.storageOffset = 0;
         }
     }
 

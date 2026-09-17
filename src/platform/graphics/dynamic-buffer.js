@@ -24,6 +24,30 @@ class DynamicBuffer {
      */
     bindGroupCache = new Map();
 
+    /**
+     * Int32 access over the CPU accessible memory of the whole buffer, or null when the buffer has
+     * none. The views span the whole buffer and an allocation is addressed by an offset into them,
+     * so handing out an allocation creates no views of its own - which matters, as that happens for
+     * every draw.
+     *
+     * @type {Int32Array|null}
+     */
+    storageInt32 = null;
+
+    /**
+     * Uint32 access over the whole buffer. See {@link DynamicBuffer#storageInt32}.
+     *
+     * @type {Uint32Array|null}
+     */
+    storageUint32 = null;
+
+    /**
+     * Float32 access over the whole buffer. See {@link DynamicBuffer#storageInt32}.
+     *
+     * @type {Float32Array|null}
+     */
+    storageFloat32 = null;
+
     constructor(device) {
         this.device = device;
 
@@ -31,6 +55,18 @@ class DynamicBuffer {
         this.bindGroupFormat = new BindGroupFormat(this.device, [
             new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
         ]);
+    }
+
+    /**
+     * Create the storage views over the CPU accessible memory of the whole buffer.
+     *
+     * @param {ArrayBuffer|null} arrayBuffer - The memory of the whole buffer, or null to release
+     * the views when the memory is no longer accessible.
+     */
+    setStorage(arrayBuffer) {
+        this.storageInt32 = arrayBuffer ? new Int32Array(arrayBuffer) : null;
+        this.storageUint32 = arrayBuffer ? new Uint32Array(arrayBuffer) : null;
+        this.storageFloat32 = arrayBuffer ? new Float32Array(arrayBuffer) : null;
     }
 
     /**

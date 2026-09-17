@@ -41,11 +41,18 @@ class UsedBuffer {
  */
 class DynamicBufferAllocation {
     /**
-     * The storage access to the allocated data in the staging buffer.
+     * The buffer the allocation is inside, whose storage views give CPU access to the data.
      *
-     * @type {Int32Array}
+     * @type {DynamicBuffer}
      */
-    storage;
+    storageBuffer;
+
+    /**
+     * Where the allocation starts in the storage views of the buffer, in 4 byte elements.
+     *
+     * @type {number}
+     */
+    storageOffset;
 
     /**
      * The gpu buffer this allocation will be copied to.
@@ -195,7 +202,8 @@ class DynamicBuffers {
 
         allocation.gpuBuffer = activeBuffer.gpuBuffer;
         allocation.offset = alignedStart;
-        allocation.storage = activeBuffer.stagingBuffer.alloc(alignedStart, size);
+        allocation.storageBuffer = activeBuffer.stagingBuffer;
+        allocation.storageOffset = alignedStart / 4;
 
         // take the allocation from the buffer
         activeBuffer.size = alignedStart + size;
