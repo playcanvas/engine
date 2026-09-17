@@ -287,6 +287,9 @@ class Renderer {
         this._renderPassUpdateClustered?.destroy();
         this._renderPassUpdateClustered = null;
 
+        this.worldClustersAllocator.destroy();
+        this.worldClustersAllocator = null;
+
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
 
