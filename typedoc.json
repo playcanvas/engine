@@ -49,5 +49,6 @@
     "sidebarLinks": {
         "Home": "/"
     },
+    "sourceLinkTemplate": "https://github.com/playcanvas/engine/blob/{gitRevision}/{path}#L{line}",
     "treatWarningsAsErrors": true
 }
