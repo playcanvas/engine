@@ -75,8 +75,9 @@ await new Promise((resolve) => {
 
 app.start();
 
-// a dim sky ambient, which the material-only group picks up in real time and the baked groups get
-// baked into their lightmap
+// a dim sky ambient. A lightmap is taken to carry the ambient light already, so none of these
+// groups adds it at runtime: the baked groups get it baked in below, and the material-only group is
+// lit by its assigned lightmap alone.
 app.scene.ambientLight = new Color(0.16, 0.18, 0.24);
 
 // lightmap baking settings for the runtime bake, with enough resolution and filtering for the soft
