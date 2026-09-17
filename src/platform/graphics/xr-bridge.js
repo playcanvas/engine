@@ -197,7 +197,7 @@ class XrBridge {
 
     /**
      * Backend graphics binding for camera/depth when available (for example WebGL
-     * {@link XRWebGLBinding} or WebGPU `XRGPUBinding` when exposed by the user agent).
+     * `XRWebGLBinding` or WebGPU `XRGPUBinding` when exposed by the user agent).
      *
      * @returns {Object|null} The binding object, or null.
      */

@@ -174,7 +174,7 @@ class Layer {
      * Custom function that is called after the layer has been disabled. This happens when:
      *
      * - {@link enabled} was changed from true to false
-     * - {@link decrementCounter} was called and set the counter to zero.
+     * - `decrementCounter` was called and set the counter to zero.
      *
      * @type {Function}
      */

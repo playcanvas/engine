@@ -522,7 +522,7 @@ class CameraFrame {
 
     /**
      * Creates a frame pass for the camera frame. Override this method to utilize a custom frame
-     * pass, typically one that extends {@link FramePassCameraFrame}.
+     * pass, typically one that extends `FramePassCameraFrame`.
      *
      * @returns {FramePassCameraFrame} - The frame pass.
      */
