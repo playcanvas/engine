@@ -1,7 +1,7 @@
 /**
  * An asset resource which represents an anim state graph. It can be loaded into an anim component using the {@link AnimComponent#loadStateGraph} method.
  *
- * The graph is data, not behaviour. It lists its `layers`, each with its states, the
+ * The graph is data, not behavior. It lists its `layers`, each with its states, the
  * transitions between them and their conditions, and the `parameters` those conditions read.
  * Loading it into a component builds the runtime {@link AnimState}, {@link AnimTransition} and
  * {@link AnimBlendTree} objects, and {@link AnimComponent#assignAnimation} then attaches an
