@@ -77,8 +77,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * levels. {@link Asset#resources} holds the cube map followed by its six prefiltered levels, with
  * null for each level the asset does not provide.
  * @property {null} folder - Folders hold no resource.
- * @property {Font | CanvasFont} font - A font: a {@link Font} loaded from a font file, or a
- * `CanvasFont` rendered at runtime.
+ * @property {Font | CanvasFont} font - A {@link Font} loaded from a font file.
  * @property {GSplatResourceBase | GSplatOctreeResource} gsplat - A Gaussian splat resource, or the
  * octree resource of a level-of-detail splat scene.
  * @property {Entity} hierarchy - The root entity of an instantiated scene hierarchy.
@@ -363,7 +362,7 @@ class Asset extends EventHandler {
      * - "css" - a `string`
      * - "cubemap" - see {@link Texture}; null when only prefiltered levels are provided
      * - "folder" - no resource
-     * - "font" - see {@link Font} and `CanvasFont`
+     * - "font" - see {@link Font}
      * - "gsplat" - a Gaussian splat resource
      * - "html" - a `string`
      * - "json" - the parsed JSON
