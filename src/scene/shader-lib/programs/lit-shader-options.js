@@ -10,18 +10,11 @@ import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } fro
  *
  * You do not create one. The engine fills a LitShaderOptions from the material and scene state
  * each time a {@link StandardMaterial} needs a shader variant, and every distinct set of values
- * produces a distinct compiled shader. The place to reach it is
- * {@link StandardMaterial#onUpdateShader}, whose callback receives a
- * {@link StandardMaterialOptions} with the lit options in its `litOptions` field. Changing values
- * there, for example switching fog off for one material, yields a variant built from the changed
- * options.
+ * produces a distinct compiled shader. Developers rarely need to touch it: the material properties
+ * such as `useFog`, `useLighting` and `useSkybox` on {@link StandardMaterial} cover the usual
+ * cases, and the values here mirror them together with the scene state. It is exposed for the
+ * rare case of customising shader generation through {@link StandardMaterial#onUpdateShader}.
  *
- * @example
- * // Render this material without fog regardless of the scene setting
- * material.onUpdateShader = (options) => {
- *     options.litOptions.fog = FOG_NONE;
- *     return options;
- * };
  * @category Graphics
  */
 class LitShaderOptions {

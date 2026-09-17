@@ -184,9 +184,8 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * `iridescence` and `refraction`. Lighting can be turned off entirely with `useLighting`.
  *
  * To go beyond the properties, replace individual shader chunks with
- * {@link Material#getShaderChunks}, or adjust the generated shader's options per variant with
- * {@link onUpdateShader}. When the surface is not a lit material at all, use {@link ShaderMaterial}
- * instead.
+ * {@link Material#getShaderChunks}. When the surface is not a lit material at all, use
+ * {@link ShaderMaterial} instead.
  *
  * @example
  * const material = new StandardMaterial();
