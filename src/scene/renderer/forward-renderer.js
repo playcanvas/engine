@@ -666,8 +666,9 @@ class ForwardRenderer extends Renderer {
                 const asyncCompile = false;
                 device.setShader(shaderInstance.shader, asyncCompile);
 
-                // Uniforms I: material
+                // Uniforms I: material - on the scope, and through the material bind group
                 material.setParameters(device);
+                this.setupMaterialBindGroup(material);
 
                 if (lightMaskChanged) {
                     const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightMask, camera);
@@ -694,9 +695,11 @@ class ForwardRenderer extends Renderer {
             const stencilBack = drawCall.stencilBack ?? material.stencilBack;
             device.setStencilState(stencilFront, stencilBack);
 
-            // Uniforms II: meshInstance overrides - on the scope, and through the material bind group
-            // (the material's, or the mesh instance's copy of the material uniform buffer)
-            this.setupMaterialBindGroup(material, drawCall);
+            // Uniforms II: meshInstance overrides - on the scope, and for a mesh instance that
+            // overrides uniforms of the material uniform buffer, through its copy of it
+            if (this.needsMaterialOverrideBindGroup(drawCall, material)) {
+                this.setupMaterialOverrideBindGroup(drawCall);
+            }
             drawCall.setParameters(device);
 
             // mesh ID - used by the picker
@@ -753,9 +756,16 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            // Unset meshInstance scope overrides back to material values if next draw call will use the same material
-            if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1] && drawCall._scopeParameters.length > 0) {
-                material.setParameters(device, drawCall._scopeParameters);
+            // Unset meshInstance overrides back to material values if next draw call will use the
+            // same material: the scope parameters, and the material bind group when this draw bound
+            // the mesh instance's copy of the material uniform buffer
+            if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
+                if (drawCall._materialOverrides.length > 0) {
+                    this.setupMaterialBindGroup(material);
+                }
+                if (drawCall._scopeParameters.length > 0) {
+                    material.setParameters(device, drawCall._scopeParameters);
+                }
             }
 
             DebugGraphics.popGpuMarker(device);
