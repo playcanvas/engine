@@ -365,7 +365,6 @@ class Asset extends EventHandler {
      * - "folder" - no resource
      * - "font" - see {@link Font} and `CanvasFont`
      * - "gsplat" - a Gaussian splat resource
-     * - "hierarchy" - see {@link Entity}
      * - "html" - a `string`
      * - "json" - the parsed JSON
      * - "material" - see {@link Material}
