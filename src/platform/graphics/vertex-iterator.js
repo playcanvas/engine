@@ -84,6 +84,8 @@ class VertexIteratorAccessor {
      * Create a new VertexIteratorAccessor instance.
      *
      * @param {ArrayBuffer} buffer - The vertex buffer containing the attribute to be accessed.
+     * Note that this must be an {@link ArrayBuffer} - see the limitation described in the
+     * constructor body.
      * @param {object} vertexElement - The vertex attribute to be accessed.
      * @param {string} vertexElement.name - The meaning of the vertex element. This is used to link
      * the vertex data to a shader input. Can be:
@@ -134,11 +136,26 @@ class VertexIteratorAccessor {
         this.numComponents = vertexElement.numComponents;
 
         // create the typed array based on the element data type
+        // TODO: this only handles an ArrayBuffer. VertexBuffer storage can also be a typed array
+        // (see VertexBuffer#lock), in which case the typed array copy constructor is selected here
+        // instead, which ignores the offset and the length and copies the elements rather than
+        // viewing them. Writes through the accessor are then silently lost, and reads only happen
+        // to be correct when the storage type matches the element type and the offset is zero.
+        // BufferUtils#createStorageView handles both cases and should be used here, which requires
+        // the buffer rather than its storage to be passed in. Not an issue for the buffers the
+        // engine iterates today, all of which are allocated without initial data and so are
+        // ArrayBuffer backed - the assert below guards that.
         if (vertexFormat.interleaved) {
             this.array = new typedArrayTypes[vertexElement.dataType](buffer, vertexElement.offset);
         } else {
             this.array = new typedArrayTypes[vertexElement.dataType](buffer, vertexElement.offset, vertexFormat.vertexCount * vertexElement.numComponents);
         }
+
+        // the typed array must be a view onto the supplied memory at the element's offset. Testing
+        // the result rather than the input catches every way this can go wrong, including a typed
+        // array being supplied instead of an ArrayBuffer, which drops the offset and the aliasing.
+        Debug.assert(this.array.buffer === buffer && this.array.byteOffset === vertexElement.offset,
+            `Vertex element ${vertexElement.name} at offset ${vertexElement.offset} was given a copy of the vertex data rather than a view onto it, so writes to it are lost. The memory must be an ArrayBuffer, but a ${buffer?.constructor?.name} was supplied.`);
 
         // BYTES_PER_ELEMENT is on the instance and constructor for Chrome, Safari and Firefox, but just the constructor for Opera
         this.stride = vertexElement.stride / this.array.constructor.BYTES_PER_ELEMENT;
@@ -363,7 +380,8 @@ class VertexIterator {
      * only part of the data gets copied out (typed arrays ignore read/write out of range).
      *
      * @param {string} semantic - The semantic of the vertex element to read.
-     * @param {number[]|ArrayBufferView} data - The array to receive the data.
+     * @param {number[]|Int8Array|Uint8Array|Uint8ClampedArray|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} data
+     * The array to receive the data.
      * @returns {number} The number of vertices read.
      * @ignore
      */
@@ -374,6 +392,10 @@ class VertexIterator {
             count = this.vertexBuffer.numVertices;
             let i;
             const numComponents = element.numComponents;
+            const copyCount = count * numComponents;
+
+            Debug.assert(!ArrayBuffer.isView(data) || data.length >= copyCount,
+                `Destination array is too small to receive all ${semantic} data.`);
 
             if (this.vertexBuffer.getFormat().interleaved) {
 
@@ -390,12 +412,12 @@ class VertexIterator {
                 }
             } else {
                 if (ArrayBuffer.isView(data)) {
-                    // destination data is typed array
-                    data.set(element.array);
+                    // destination data is typed array, copy as much of the data as it can hold
+                    // note: element.array is exactly copyCount long, so it only needs a subarray when it does not fit
+                    data.set(data.length >= copyCount ? element.array : element.array.subarray(0, data.length));
                 } else {
                     // destination data is array
                     data.length = 0;
-                    const copyCount = count * numComponents;
                     for (i = 0; i < copyCount; i++) {
                         data[i] = element.array[i];
                     }

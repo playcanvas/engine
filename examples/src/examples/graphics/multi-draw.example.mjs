@@ -49,7 +49,7 @@ const assets = {
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
     height: new Asset('height', 'texture', { url: './assets/textures/terrain/Canyon-Height.jpg' }),
-    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/terrain/Canyon-Diffuse.jpg' })
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/terrain/Canyon-Diffuse.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {

@@ -19,6 +19,14 @@ class VertexBuffer {
     usage = BUFFER_STATIC;
 
     /**
+     * Lazily evaluated cache of {@link VertexBuffer#vaoKeyPart}.
+     *
+     * @type {string|null}
+     * @private
+     */
+    _vaoKeyPart = null;
+
+    /**
      * Create a new VertexBuffer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
@@ -28,7 +36,10 @@ class VertexBuffer {
      * @param {object} [options] - Object for passing optional arguments.
      * @param {number} [options.usage] - The usage type of the vertex buffer (see BUFFER_*).
      * Defaults to BUFFER_STATIC.
-     * @param {ArrayBuffer} [options.data] - Initial data.
+     * @param {ArrayBuffer|ArrayBufferView} [options.data] - Initial data. Can be an
+     * {@link ArrayBuffer} or a typed array (for example a {@link Float32Array}). The data is
+     * stored by reference and is not copied, so a typed array that is a view into a larger buffer
+     * is kept as-is. If left unspecified, the vertex buffer will be initialized to zeros.
      * @param {boolean} [options.storage] - Defines if the vertex buffer can be used as a storage
      * buffer by a compute shader. Defaults to false. Only supported on WebGPU.
      */
@@ -60,6 +71,23 @@ class VertexBuffer {
         }
 
         this.device.buffers.add(this);
+    }
+
+    /**
+     * This buffer's contribution to the key of the device's vertex array object cache. It identifies
+     * both the buffer and its format, and is delimited so that the parts of several buffers can be
+     * concatenated without ambiguity.
+     *
+     * Evaluated lazily, as it is only needed by buffers taking part in a draw which uses more than
+     * one vertex buffer, and most buffers never do. The format of a vertex buffer never changes, so
+     * the value is safe to cache.
+     *
+     * @type {string}
+     * @ignore
+     */
+    get vaoKeyPart() {
+        this._vaoKeyPart ??= `${this.id}_${this.format.renderingHash}_`;
+        return this._vaoKeyPart;
     }
 
     /**
@@ -134,7 +162,10 @@ class VertexBuffer {
     /**
      * Returns a mapped memory block representing the content of the vertex buffer.
      *
-     * @returns {ArrayBuffer} An array containing the byte data stored in the vertex buffer.
+     * @returns {ArrayBuffer|ArrayBufferView} The memory that stores the buffer's vertices. This
+     * matches whatever was supplied as the initial data: an {@link ArrayBuffer} when none was
+     * provided, otherwise the {@link ArrayBuffer} or typed array that was passed in. Use
+     * {@link ArrayBuffer.isView} to distinguish the two before accessing it.
      */
     lock() {
         return this.storage;
@@ -151,9 +182,10 @@ class VertexBuffer {
     }
 
     /**
-     * Copies data into vertex buffer's memory.
+     * Sets the data of the vertex buffer and uploads it to the GPU.
      *
-     * @param {ArrayBuffer} [data] - Source data to copy.
+     * @param {ArrayBuffer|ArrayBufferView} [data] - Source data. Can be an {@link ArrayBuffer} or
+     * a typed array. Stored by reference, not copied.
      * @returns {boolean} True if function finished successfully, false otherwise.
      */
     setData(data) {

@@ -35,7 +35,7 @@ const assets = {
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
-    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    diffuse: new Asset('diffuse', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     other: new Asset('other', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
 };
 
@@ -133,7 +133,7 @@ material.metalness = 0.0; // low metalness, otherwise it's reflective
 material.gloss = 1.0;
 material.glossMap = assets.other.resource;
 material.glossMapChannel = 'g';
-material.useMetalness = true; // refractive materials are currently supported only with metalness
+material.useMetalness = true; // metalness workflow by default, can be toggled off in the UI
 material.refraction = 0.8;
 material.refractionIndex = 1.0 / 1.33; // water
 material.blendType = BLEND_NORMAL;
@@ -168,7 +168,8 @@ for (let i = 0; i < count; i++) {
 
 // Initial values for the UI
 data.set('data', {
-    dynamic: false
+    dynamic: false,
+    metalness: true
 });
 
 // Update things each frame
@@ -189,5 +190,15 @@ app.on('update', (dt) => {
 
         // When dynamic is enabled, the camera needs to render the scene's color map
         camera.camera.requestSceneColorMap(dynamic);
+    }
+
+    // Handle metalness workflow toggle - refraction works in both workflows. Without
+    // metalness, the fresnel is driven by the material's specular color (black by default)
+    const metalness = data.get('data.metalness');
+    if (material.useMetalness !== metalness) {
+        material.useMetalness = metalness;
+        material.update();
+        material2.useMetalness = metalness;
+        material2.update();
     }
 });

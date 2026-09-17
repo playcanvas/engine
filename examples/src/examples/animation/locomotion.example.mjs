@@ -51,9 +51,14 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    playcanvasGreyTexture: new Asset('playcanvasGreyTexture', 'texture', {
-        url: './assets/textures/playcanvas-grey.png'
-    }),
+    playcanvasGreyTexture: new Asset(
+        'playcanvasGreyTexture',
+        'texture',
+        {
+            url: './assets/textures/playcanvas-grey.png'
+        },
+        { srgb: true }
+    ),
     model: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
     idleAnim: new Asset('idleAnim', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
     walkAnim: new Asset('walkAnim', 'container', { url: './assets/animations/bitmoji/walk.glb' }),

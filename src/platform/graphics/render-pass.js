@@ -10,6 +10,42 @@ import { FramePass } from './frame-pass.js';
  * @import { Texture } from './texture.js'
  */
 
+/**
+ * Reports the clear values of integer format color attachments which are not representable in
+ * their format. The components of the clear color of an integer format attachment are the raw
+ * integer values, and so a non-integer value would be silently truncated by WebGL, and generates a
+ * validation error on WebGPU.
+ *
+ * @param {RenderPass} renderPass - The render pass to validate.
+ * @ignore
+ */
+const validateClearValues = (renderPass) => {
+    Debug.call(() => {
+
+        const renderTarget = renderPass.renderTarget;
+        const count = renderPass.colorArrayOps.length;
+        for (let i = 0; i < count; i++) {
+
+            const colorOps = renderPass.colorArrayOps[i];
+            if (!colorOps?.clear) {
+                continue;
+            }
+
+            const formatInfo = pixelFormatInfo.get(renderTarget?.getColorBuffer(i)?.format);
+            if (formatInfo?.isInt !== true && formatInfo?.isUint !== true) {
+                continue;
+            }
+
+            const { r, g, b, a } = colorOps.clearValue;
+            const integers = Number.isInteger(r) && Number.isInteger(g) && Number.isInteger(b) && Number.isInteger(a);
+            const unsigned = formatInfo.isUint !== true || (r >= 0 && g >= 0 && b >= 0 && a >= 0);
+            if (!integers || !unsigned) {
+                Debug.errorOnce(`Render pass '${renderPass.name}' clears the integer format color attachment ${i} (${formatInfo.name}) of render target '${renderTarget?.name}' to [${r}, ${g}, ${b}, ${a}], but the components must be ${formatInfo.isUint ? 'non-negative ' : ''}integers.`, renderPass);
+            }
+        }
+    });
+};
+
 class ColorAttachmentOps {
     /**
      * A color used to clear the color attachment when the clear is enabled, specified in sRGB space.
@@ -222,6 +258,13 @@ class RenderPass extends FramePass {
         // assume the user wants to use its content, and so store it by default
         if (rt?.depthBuffer) {
             this.depthStencilOps.storeDepth = true;
+
+            // a depth resolve buffer is the output of the shader-based depth resolve, which runs
+            // after the pass - resolve by default (the multisampled depth is stored either way, as
+            // the resolve reads it after the pass has finished)
+            if (rt.depthResolveBuffer) {
+                this.depthStencilOps.resolveDepth = true;
+            }
         }
 
         // color
@@ -231,15 +274,24 @@ class RenderPass extends FramePass {
             const colorOps = new ColorAttachmentOps();
             this.colorArrayOps[i] = colorOps;
 
+            const colorBuffer = rt?._colorBuffers?.[i];
+
             // if rendering to single-sampled buffer, this buffer needs to be stored
             if (this.samples === 1) {
                 colorOps.store = true;
                 colorOps.resolve = false;
+            } else if (colorBuffer?.samples > 1) {
+                // explicit multisampled attachment: with a resolve buffer, the hardware resolve is
+                // the pass output and the samples are discarded (matching the implicit multisampled
+                // path); without one, the samples are the output and must be stored to be read in a
+                // shader using textureLoad
+                const resolve = !!rt.getResolveBuffer(i);
+                colorOps.resolve = resolve;
+                colorOps.store = !resolve;
             }
 
             // if render target needs mipmaps
-            const colorBuffer = this.renderTarget?._colorBuffers?.[i];
-            if (this.renderTarget?.mipmaps && colorBuffer?.mipmaps) {
+            if (rt?.mipmaps && colorBuffer?.mipmaps) {
                 const intFormat = isIntegerPixelFormat(colorBuffer._format);
                 colorOps.genMipmaps = !intFormat;  // no automatic mipmap generation for integer formats
             }
@@ -264,19 +316,27 @@ class RenderPass extends FramePass {
      *
      * @param {Color|undefined} color - The color to clear to, or undefined to preserve the existing
      * content.
+     * @param {number} [index] - The index of the color attachment to modify. When not specified,
+     * all color attachments are modified.
      */
-    setClearColor(color) {
+    setClearColor(color, index) {
 
-        // in case of MRT, we clear all color buffers.
         // TODO: expose per color buffer clear parameters on the camera, and copy them here.
         const count = this.colorArrayOps.length;
-        for (let i = 0; i < count; i++) {
+        Debug.assert(index === undefined || (index >= 0 && index < count),
+            `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);
+
+        const start = index ?? 0;
+        const end = index === undefined ? count : index + 1;
+        for (let i = start; i < end; i++) {
             const colorOps = this.colorArrayOps[i];
-            if (color) {
-                colorOps.clearValue.copy(color);
-                colorOps.clearValueLinear.linear(color);
+            if (colorOps) {
+                if (color) {
+                    colorOps.clearValue.copy(color);
+                    colorOps.clearValueLinear.linear(color);
+                }
+                colorOps.clear = !!color;
             }
-            colorOps.clear = !!color;
         }
     }
 
@@ -406,4 +466,4 @@ class RenderPass extends FramePass {
     // #endif
 }
 
-export { RenderPass };
+export { RenderPass, validateClearValues };

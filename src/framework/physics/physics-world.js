@@ -147,19 +147,28 @@ import { PhysicsJoint } from './physics-joint.js';
 /**
  * The base class for physics backends. A PhysicsWorld owns the lifecycle of a physics engine's
  * simulation world: stepping, gravity, body and shape factories, joints, raycasts and contact
- * reporting. Backends subclass it (AmmoPhysicsWorld) and override every method.
+ * reporting. Backends subclass it and override every method.
  *
  * The base implementation is a functional no-op: bodies and joints are created but inert,
- * raycasts miss and stepping does nothing. NullPhysicsWorld uses this to let component
- * lifecycle run in tests without a physics engine loaded.
+ * raycasts miss and stepping does nothing. {@link NullPhysicsWorld} uses this to let physics
+ * component lifecycle run without a physics engine loaded.
  *
- * @ignore
+ * Supply a backend to an application with {@link AppOptions#physicsWorld}.
+ *
+ * Applications drive physics through the physics components - the methods of this class form
+ * the internal contract between the engine and a backend and are not called directly.
+ *
+ * @category Physics
+ * @alpha
  */
 class PhysicsWorld {
     /**
-     * The listener driven during {@link PhysicsWorld#step}. Set once at construction.
+     * The listener driven during {@link PhysicsWorld#step} and
+     * {@link PhysicsWorld#flushContacts}. Assigned by the {@link RigidBodyComponentSystem}
+     * when the world is installed into an application.
      *
      * @type {PhysicsContactListener|null}
+     * @ignore
      */
     contactListener = null;
 
@@ -172,17 +181,9 @@ class PhysicsWorld {
     nativeWorld = null;
 
     /**
-     * Create a new PhysicsWorld instance.
-     *
-     * @param {object} [options] - The world options.
-     * @param {PhysicsContactListener} [options.contactListener] - The contact listener.
-     */
-    constructor(options = {}) {
-        this.contactListener = options.contactListener ?? null;
-    }
-
-    /**
      * Destroys the world and all native resources it owns. The world is unusable afterwards.
+     *
+     * @ignore
      */
     destroy() {
     }
@@ -192,6 +193,7 @@ class PhysicsWorld {
      * called every frame - backends deduplicate.
      *
      * @param {Vec3} gravity - The world space gravity.
+     * @ignore
      */
     setGravity(gravity) {
     }
@@ -203,6 +205,7 @@ class PhysicsWorld {
      * @param {number} dt - The elapsed time in seconds.
      * @param {number} maxSubSteps - The maximum number of fixed substeps to take.
      * @param {number} fixedTimeStep - The duration of a fixed substep in seconds.
+     * @ignore
      */
     step(dt, maxSubSteps, fixedTimeStep) {
     }
@@ -211,6 +214,8 @@ class PhysicsWorld {
      * Runs a deferred contact pass on backends that could not report contacts from inside
      * {@link PhysicsWorld#step}. Called by the system after dynamic transform sync. No-op on
      * backends that report during step.
+     *
+     * @ignore
      */
     flushContacts() {
     }
@@ -220,6 +225,7 @@ class PhysicsWorld {
      *
      * @param {PhysicsBodyDesc} desc - The body descriptor.
      * @returns {PhysicsBody} The new body.
+     * @ignore
      */
     createBody(desc) {
         const body = new PhysicsBody();
@@ -231,6 +237,7 @@ class PhysicsWorld {
      * Destroys a body. It must not currently be in the simulation.
      *
      * @param {PhysicsBody} body - The body to destroy.
+     * @ignore
      */
     destroyBody(body) {
     }
@@ -242,6 +249,7 @@ class PhysicsWorld {
      * @param {PhysicsBody} body - The body to add.
      * @param {number} [group] - The collision group bits. Used together with mask.
      * @param {number} [mask] - The collision mask bits.
+     * @ignore
      */
     addBody(body, group, mask) {
     }
@@ -250,6 +258,7 @@ class PhysicsWorld {
      * Removes a body from the simulation. The body becomes inert until re-added.
      *
      * @param {PhysicsBody} body - The body to remove.
+     * @ignore
      */
     removeBody(body) {
     }
@@ -260,6 +269,7 @@ class PhysicsWorld {
      *
      * @param {PhysicsShapeDesc} desc - The shape descriptor.
      * @returns {object} The opaque shape handle.
+     * @ignore
      */
     createShape(desc) {
         return {};
@@ -269,6 +279,7 @@ class PhysicsWorld {
      * Destroys a shape handle created by {@link PhysicsWorld#createShape}.
      *
      * @param {object} shape - The shape handle.
+     * @ignore
      */
     destroyShape(shape) {
     }
@@ -280,6 +291,7 @@ class PhysicsWorld {
      * @param {object} child - The child shape handle.
      * @param {Vec3} position - The child position in the compound's local space.
      * @param {Quat} rotation - The child rotation in the compound's local space.
+     * @ignore
      */
     addCompoundChild(compound, child, position, rotation) {
     }
@@ -292,6 +304,7 @@ class PhysicsWorld {
      * @param {object} child - The child shape handle.
      * @param {Vec3} position - The child position in the compound's local space.
      * @param {Quat} rotation - The child rotation in the compound's local space.
+     * @ignore
      */
     updateCompoundChild(compound, child, position, rotation) {
     }
@@ -301,6 +314,7 @@ class PhysicsWorld {
      *
      * @param {object} compound - The compound shape handle.
      * @param {object} child - The child shape handle.
+     * @ignore
      */
     removeCompoundChild(compound, child) {
     }
@@ -310,6 +324,7 @@ class PhysicsWorld {
      *
      * @param {object} compound - The compound shape handle.
      * @returns {number} The child count.
+     * @ignore
      */
     getCompoundChildCount(compound) {
         return 0;
@@ -321,6 +336,7 @@ class PhysicsWorld {
      *
      * @param {PhysicsJointDesc} desc - The joint descriptor.
      * @returns {PhysicsJoint} The new joint.
+     * @ignore
      */
     createJoint(desc) {
         return new PhysicsJoint();
@@ -330,6 +346,7 @@ class PhysicsWorld {
      * Removes a joint from the simulation and destroys it.
      *
      * @param {PhysicsJoint} joint - The joint to destroy.
+     * @ignore
      */
     destroyJoint(joint) {
     }
@@ -343,6 +360,7 @@ class PhysicsWorld {
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
      * @returns {RaycastResult|null} The hit, or null if there was none.
+     * @ignore
      */
     raycastFirst(start, end, options) {
         return null;
@@ -361,6 +379,7 @@ class PhysicsWorld {
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes the entity to evaluate as argument.
      * @returns {RaycastResult[]} The hits (0 length if there were none).
+     * @ignore
      */
     raycastAll(start, end, options) {
         return [];

@@ -25,6 +25,7 @@ import {
     TextureHandler,
     Vec3,
     WasmModule,
+    WireRenderer,
     createGraphicsDevice,
     math
 } from 'playcanvas';
@@ -101,6 +102,13 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// Renderer for the offset collision shape. The segment count, layer and color are settings on
+// the renderer, so they are applied once here rather than passed on every call.
+const wire = new WireRenderer(app);
+wire.color = Color.GREEN;
+wire.segments = 16;
+wire.layer = app.scene.layers.getLayerByName('World');
 
 // Setup skydome
 app.scene.exposure = 2;
@@ -282,12 +290,5 @@ app.on('update', (dt) => {
     });
 
     // Render the offset collision
-    app.scene.immediate.drawWireSphere(
-        modelEntity.collision.getShapePosition(),
-        0.3,
-        Color.GREEN,
-        16,
-        true,
-        app.scene.layers.getLayerByName('World')
-    );
+    wire.sphere(modelEntity.collision.getShapePosition(), 0.3);
 });

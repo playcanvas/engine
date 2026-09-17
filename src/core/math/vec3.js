@@ -473,6 +473,12 @@ class Vec3 {
         return this;
     }
 
+    /**
+     * @deprecated Use Vec3#mulScalar instead.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec3} Self for chaining.
+     * @ignore
+     */
     scale(scalar) {
         Debug.deprecated('Vec3#scale is deprecated. Use Vec3#mulScalar instead.');
         return this.mulScalar(scalar);

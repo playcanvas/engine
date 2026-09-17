@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { PRIMITIVE_TRISTRIP, SEMANTIC_COLOR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 
 import { BLEND_NORMAL } from '../constants.js';
@@ -6,6 +7,7 @@ import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { ImmediateBatches } from './immediate-batches.js';
+import { LineWriter } from './line-writer.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
 import { ChunkUtils } from '../shader-lib/chunk-utils.js';
@@ -33,6 +35,9 @@ class Immediate {
 
         // set of all layers updated during this frame
         this.updatedLayers = new Set();
+
+        // single cursor handed out by allocateLines, so allocating costs no garbage
+        this.lineWriter = new LineWriter();
 
         // line materials
         this._materialDepth = null;
@@ -93,6 +98,35 @@ class Immediate {
         // get batch for the material
         const material = depthTest ? this.materialDepth : this.materialNoDepth;
         return batches.getBatch(material, layer);
+    }
+
+    /**
+     * Allocates space for exactly `vertexCount` line vertices and returns a cursor positioned at
+     * the start of it, letting a caller generate lines straight into the batch instead of building
+     * an array to be copied in.
+     *
+     * The space is accounted for immediately, so the caller must fill all of it. The cursor is a
+     * single reused instance and is only valid until the next allocation - use it inside the
+     * function that writes the data, and do not keep hold of it. For the same reason an allocation
+     * must not straddle rendering, as the batch may be submitted while it is still being written.
+     *
+     * @param {number} vertexCount - The number of vertices to allocate. Two vertices per segment.
+     * @param {import('../../core/math/color.js').Color} color - The color used by
+     * {@link LineWriter#segment}.
+     * @param {boolean} depthTest - Whether the lines are depth tested.
+     * @param {import('../layer.js').Layer} layer - The layer to render the lines into.
+     * @returns {LineWriter} The cursor to write the vertices with.
+     * @ignore
+     */
+    allocateLines(vertexCount, color, depthTest, layer) {
+        const writer = this.lineWriter;
+        Debug.assert(writer.filled,
+            'Immediate#allocateLines was called while a previous allocation was still unfilled. A cursor must be filled by the function that allocated it.');
+
+        const batch = this.getBatch(layer, depthTest);
+        const first = batch.allocate(vertexCount);
+        writer.reset(batch._positions, batch._colors, first, vertexCount, color);
+        return writer;
     }
 
     getShaderDesc(id, fragmentGLSL, fragmentWGSL) {

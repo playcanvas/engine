@@ -30,6 +30,9 @@ export default defineConfig({
     appType: 'custom',
     clearScreen: false,
     publicDir: false,
+    optimizeDeps: {
+        include: ['@babel/standalone']
+    },
     server: {
         hmr: AUTO_RELOAD ? undefined : false,
         host: HOST,

@@ -615,7 +615,6 @@ class WideLineRenderer {
             }
         });
         this.material.cull = CULLFACE_NONE;
-        this.material.alphaToCoverage = true;
         this.material.depthTest = this._depthTest;
         this.material.depthWrite = this._depthWrite;
         this.material.update();

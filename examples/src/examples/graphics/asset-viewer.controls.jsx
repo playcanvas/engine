@@ -1,4 +1,4 @@
-import { Button, Panel } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, Button, LabelGroup, Panel } from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -14,6 +14,13 @@ export function Controls({ observer }) {
         <Panel headerText='Asset'>
             <Button text='Previous' onClick={() => observer.emit('previous')} />
             <Button text='Next' onClick={() => observer.emit('next')} />
+            <LabelGroup text='Flat shading'>
+                <BooleanInput
+                    type='toggle'
+                    binding={new BindingTwoWay()}
+                    link={{ observer, path: 'flatShading' }}
+                />
+            </LabelGroup>
         </Panel>
     );
 }

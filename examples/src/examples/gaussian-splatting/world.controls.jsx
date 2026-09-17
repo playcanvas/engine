@@ -71,24 +71,6 @@ export function Controls({ observer }) {
                         step={0.1}
                     />
                 </LabelGroup>
-                <LabelGroup text='LOD Base Dist'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodBaseDistance' }}
-                        min={1}
-                        max={50}
-                        precision={1}
-                    />
-                </LabelGroup>
-                <LabelGroup text='LOD Multiplier'>
-                    <SliderInput
-                        binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodMultiplier' }}
-                        min={1.2}
-                        max={10}
-                        precision={1}
-                    />
-                </LabelGroup>
             </Panel>
             <Panel headerText='Stats'>
                 <LabelGroup text='GSplat Count'>

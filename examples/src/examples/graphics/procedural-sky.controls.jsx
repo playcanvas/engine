@@ -39,6 +39,15 @@ export function Controls({ observer }) {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Sky'>
+                <LabelGroup text='Rotation'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.sky.rotation' }}
+                        min={0}
+                        max={360}
+                        precision={0}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Turbidity'>
                     <SliderInput
                         binding={new BindingTwoWay()}

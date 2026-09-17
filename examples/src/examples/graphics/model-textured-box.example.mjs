@@ -21,7 +21,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    clouds: new Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' })
+    clouds: new Asset('clouds', 'texture', { url: './assets/textures/clouds.jpg' }, { srgb: true })
 };
 
 const gfxOptions = {
@@ -76,7 +76,7 @@ const light = new Entity();
 light.addComponent('light', {
     type: 'omni',
     color: new Color(1, 0, 0),
-    radius: 10
+    range: 10
 });
 light.addComponent('render', {
     type: 'sphere'

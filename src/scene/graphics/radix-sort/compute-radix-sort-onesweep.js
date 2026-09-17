@@ -521,9 +521,15 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
             if (!isLastPass) {
                 currentKeys = nextKeys;
                 nextKeys = (currentKeys === this._keys0) ? this._keys1 : this._keys0;
-                const t = currentValues;
+                // Values mirror the keys ping-pong: after pass 0 the caller's
+                // initialValues buffer is dropped from the rotation (it is read-only
+                // per the API contract), so ping-pong continues between the two
+                // internal value buffers. A plain swap would keep initialValues in
+                // the rotation, leaving an even-pass-count result in it while
+                // sortedIndices (parity over _values0/_values1) returns the wrong,
+                // never-written buffer.
                 currentValues = nextValues;
-                nextValues = t;
+                nextValues = (currentValues === this._values0) ? this._values1 : this._values0;
             }
         }
 
@@ -643,9 +649,15 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
             if (!isLastPass) {
                 currentKeys = nextKeys;
                 nextKeys = (currentKeys === this._keys0) ? this._keys1 : this._keys0;
-                const t = currentValues;
+                // Values mirror the keys ping-pong: after pass 0 the caller's
+                // initialValues buffer is dropped from the rotation (it is read-only
+                // per the API contract), so ping-pong continues between the two
+                // internal value buffers. A plain swap would keep initialValues in
+                // the rotation, leaving an even-pass-count result in it while
+                // sortedIndices (parity over _values0/_values1) returns the wrong,
+                // never-written buffer.
                 currentValues = nextValues;
-                nextValues = t;
+                nextValues = (currentValues === this._values0) ? this._values1 : this._values0;
             }
         }
 

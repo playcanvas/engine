@@ -30,7 +30,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' })
+    heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' }, { srgb: true })
 };
 
 const gfxOptions = {

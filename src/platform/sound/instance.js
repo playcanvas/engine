@@ -10,6 +10,10 @@ const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
 const STATE_STOPPED = 2;
 
+// A scheduled stop cannot be cancelled through the Web Audio API, only replaced by a later one, so
+// an unwanted stop is pushed this many seconds into the future instead.
+const STOP_NEVER_DELAY = 1e6;
+
 /**
  * Return time % duration but always return a number instead of NaN when duration is 0.
  *
@@ -212,8 +216,41 @@ class SoundInstance extends EventHandler {
          */
         this._currentTime = 0;
 
-        /** @private */
+        /**
+         * The playback position relative to startTime when _startedAt was recorded.
+         *
+         * @private
+         */
         this._currentOffset = 0;
+
+        /**
+         * The offset into the buffer, in seconds, that the source was playing at when the position
+         * tracking used by the loop region was last brought up to date.
+         *
+         * @private
+         */
+        this._sourceOffset = 0;
+
+        /**
+         * The context time that _sourceOffset was recorded at.
+         *
+         * @private
+         */
+        this._sourceOffsetAt = 0;
+
+        /**
+         * Whether the source has been looping since _sourceOffset was recorded.
+         *
+         * @private
+         */
+        this._sourceLooping = false;
+
+        /**
+         * Whether a stop at the end of the loop region is currently scheduled on the source.
+         *
+         * @private
+         */
+        this._regionStopPending = false;
 
         /**
          * The input node is the one that is connected to the source.
@@ -269,13 +306,17 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Sets the current time of the sound that is playing. If the value provided is bigger than the
-     * duration of the instance it will wrap from the beginning.
+     * Sets the current time of the sound that is playing, relative to {@link startTime}. If the
+     * value provided is bigger than the duration of the instance it will wrap from the beginning.
      *
      * @type {number}
      */
     set currentTime(value) {
+        value = Number(value) || 0;
         if (value < 0) return;
+
+        const duration = this.duration;
+        const currentTime = duration ? capTime(value, duration) : value;
 
         if (this._state === STATE_PLAYING) {
             const suspend = this._suspendInstanceEvents;
@@ -285,19 +326,19 @@ class SoundInstance extends EventHandler {
             this.stop();
 
             // set _startOffset and play
-            this._startOffset = value;
+            this._startOffset = currentTime;
             this.play();
             this._suspendInstanceEvents = suspend;
         } else {
             // set _startOffset which will be used when the instance will start playing
-            this._startOffset = value;
+            this._startOffset = currentTime;
             // set _currentTime
-            this._currentTime = value;
+            this._currentTime = currentTime;
         }
     }
 
     /**
-     * Gets the current time of the sound that is playing.
+     * Gets the current time of the sound that is playing, relative to {@link startTime}.
      *
      * @type {number}
      */
@@ -342,7 +383,8 @@ class SoundInstance extends EventHandler {
     }
 
     /**
-     * Gets the duration of the sound that the instance will play starting from startTime.
+     * Gets the duration of the sound that the instance will play starting from {@link startTime}.
+     * The returned value is clamped to the time available after the normalized start time.
      *
      * @type {number}
      */
@@ -351,7 +393,9 @@ class SoundInstance extends EventHandler {
             return 0;
         }
         if (this._duration) {
-            return capTime(this._duration, this._sound.duration);
+            const soundDuration = this._sound.duration;
+            const startTime = capTime(this._startTime, soundDuration);
+            return Math.min(this._duration, soundDuration - startTime);
         }
         return this._sound.duration;
     }
@@ -398,9 +442,18 @@ class SoundInstance extends EventHandler {
      * @type {boolean}
      */
     set loop(value) {
-        this._loop = !!value;
+        const loop = !!value;
+        const wasLooping = this._loop;
+        this._loop = loop;
+
         if (this.source) {
-            this.source.loop = this._loop;
+            this.source.loop = loop;
+
+            // the duration is not passed to the source for looping instances, so the end of the
+            // loop region has to be scheduled (and unscheduled) manually as looping is toggled
+            if (wasLooping !== loop && this._duration && this._state === STATE_PLAYING) {
+                this._updateRegionStop();
+            }
         }
     }
 
@@ -425,11 +478,21 @@ class SoundInstance extends EventHandler {
         if (this._manager.context) {
             this._currentOffset = this.currentTime;
             this._startedAt = this._manager.context.currentTime;
+
+            // bring the tracked source position up to date while _pitch is still the old rate
+            if (this.source) {
+                this._syncSourcePosition();
+            }
         }
 
         this._pitch = Math.max(Number(pitch) || 0, 0.01);
         if (this.source) {
             this.source.playbackRate.value = this._pitch;
+
+            // a pending stop was scheduled in context time using the old rate
+            if (this._regionStopPending) {
+                this._updateRegionStop();
+            }
         }
     }
 
@@ -672,23 +735,19 @@ class SoundInstance extends EventHandler {
             this._createSource();
         }
 
-        // calculate start offset
-        let offset = capTime(this._startOffset, this.duration);
-        offset = capTime(this._startTime + offset, this._sound.duration);
+        // calculate the current offset relative to startTime and its matching buffer offset
+        const currentOffset = capTime(this._startOffset, this.duration);
+        const offset = capTime(this._startTime + currentOffset, this._sound.duration);
         // reset start offset now that we started the sound
         this._startOffset = null;
 
-        // start source with specified offset and duration
-        if (this._duration) {
-            this.source.start(0, offset, this._duration);
-        } else {
-            this.source.start(0, offset);
-        }
+        // start source with specified offset
+        this._startSource(offset, currentOffset);
 
         // reset times
         this._startedAt = this._manager.context.currentTime;
         this._currentTime = 0;
-        this._currentOffset = offset;
+        this._currentOffset = currentOffset;
 
         // Initialize volume and loop - note moved to be after start() because of Chrome bug
         this.volume = this._volume;
@@ -704,6 +763,87 @@ class SoundInstance extends EventHandler {
         if (!this._suspendInstanceEvents) {
             this._onPlay();
         }
+    }
+
+    /**
+     * Starts the source at the specified offset into the buffer.
+     *
+     * The duration is only passed to the source for non-looping instances. For a looping instance,
+     * the region to play is defined by loopStart/loopEnd - passing a duration as well would stop
+     * playback at the end of the first iteration instead of looping.
+     *
+     * @param {number} offset - The offset into the buffer, in seconds, to start playing from.
+     * @param {number} currentOffset - The offset relative to startTime, in seconds.
+     * @private
+     */
+    _startSource(offset, currentOffset) {
+        if (this._duration && !this._loop) {
+            this.source.start(0, offset, this.duration - currentOffset);
+        } else {
+            this.source.start(0, offset);
+        }
+
+        this._sourceOffset = offset;
+        this._sourceOffsetAt = this._manager.context.currentTime;
+        this._sourceLooping = this._loop;
+        this._regionStopPending = false;
+    }
+
+    /**
+     * Brings the tracked source position up to date and returns the offset into the buffer, in
+     * seconds, that the source is currently playing at. Tracked separately from _currentTime
+     * because that is capped to the duration of the instance rather than the buffer.
+     *
+     * @returns {number} The offset into the buffer, in seconds.
+     * @private
+     */
+    _syncSourcePosition() {
+        const source = this.source;
+        const context = this._manager.context;
+
+        let position = this._sourceOffset + (context.currentTime - this._sourceOffsetAt) * this._pitch;
+
+        // a source that has been looping has wrapped around the loop region
+        const region = source.loopEnd - source.loopStart;
+        if (this._sourceLooping && region > 0 && position > source.loopEnd) {
+            position = source.loopStart + ((position - source.loopStart) % region);
+        }
+
+        this._sourceOffset = position;
+        this._sourceOffsetAt = context.currentTime;
+        this._sourceLooping = source.loop;
+
+        return position;
+    }
+
+    /**
+     * Schedules, reschedules or unschedules the stop that ends the loop region. A looping source is
+     * started without a duration, so when looping is disabled the end of the current iteration has
+     * to be scheduled manually - and that deadline is in context time, so it has to be revisited
+     * whenever looping or the pitch changes.
+     *
+     * @private
+     */
+    _updateRegionStop() {
+        const source = this.source;
+        const context = this._manager.context;
+        const position = this._syncSourcePosition();
+
+        if (this._loop) {
+            if (this._regionStopPending) {
+                source.stop(context.currentTime + STOP_NEVER_DELAY);
+                this._regionStopPending = false;
+            }
+            return;
+        }
+
+        const region = source.loopEnd - source.loopStart;
+        if (region <= 0) {
+            return;
+        }
+
+        source.stop(context.currentTime + Math.max(0, source.loopEnd - position) / this._pitch);
+        this._regionStopPending = true;
     }
 
     /**
@@ -756,8 +896,8 @@ class SoundInstance extends EventHandler {
             return false;
         }
 
-        // start at point where sound was paused
-        let offset = this.currentTime;
+        // start at the point relative to startTime where the sound was paused
+        let currentOffset = this.currentTime;
 
         // set state back to playing
         this._state = STATE_PLAYING;
@@ -774,22 +914,19 @@ class SoundInstance extends EventHandler {
         // if the user set the 'currentTime' property while the sound
         // was paused then use that as the offset instead
         if (this._startOffset !== null) {
-            offset = capTime(this._startOffset, this.duration);
-            offset = capTime(this._startTime + offset, this._sound.duration);
+            currentOffset = capTime(this._startOffset, this.duration);
 
             // reset offset
             this._startOffset = null;
         }
 
+        const offset = capTime(this._startTime + currentOffset, this._sound.duration);
+
         // start source
-        if (this._duration) {
-            this.source.start(0, offset, this._duration);
-        } else {
-            this.source.start(0, offset);
-        }
+        this._startSource(offset, currentOffset);
 
         this._startedAt = this._manager.context.currentTime;
-        this._currentOffset = offset;
+        this._currentOffset = currentOffset;
 
         // Initialize parameters
         this.volume = this._volume;
@@ -986,7 +1123,9 @@ class SoundInstance extends EventHandler {
             // set loopStart and loopEnd so that the source starts and ends at the correct user-set times
             this.source.loopStart = capTime(this._startTime, this.source.buffer.duration);
             if (this._duration) {
-                this.source.loopEnd = Math.max(this.source.loopStart, capTime(this._startTime + this._duration, this.source.buffer.duration));
+                // clamp instead of wrapping - a wrapped loopEnd can collapse onto loopStart, which
+                // the Web Audio API interprets as 'loop the whole buffer'
+                this.source.loopEnd = Math.min(this.source.loopStart + this._duration, this.source.buffer.duration);
             }
         }
 

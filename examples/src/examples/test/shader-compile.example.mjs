@@ -38,7 +38,7 @@ window.focus();
 Tracing.set(TRACEID_SHADER_COMPILE, true);
 
 const assets = {
-    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
     luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' }),

@@ -1,5 +1,7 @@
 // @config
 //
+// `WASDQE` Move · Hold `Shift` Move fast · `LMB` / `RMB` Orbit / fly · Hold `Shift` / `MMB` Pan · `Wheel` / `Pinch` Zoom · `F` Focus
+//
 // @credit
 // title: Mirror's Edge Apartment - Interior Scene
 // author: Aurélien Martel
@@ -39,8 +41,11 @@ import {
     TextureHandler,
     TouchDevice,
     Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { PerspectiveCorrection } from 'playcanvas/scripts/esm/camera/perspective-correction.mjs';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -48,7 +53,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     apartment: new Asset('apartment', 'container', { url: './assets/models/apartment.glb' }),
     love: new Asset('love', 'container', { url: './assets/models/love.glb' }),
     colors: new Asset('colors', 'texture', { url: './assets/textures/colors.webp' }, { srgb: true }),
@@ -154,25 +158,21 @@ cameraEntity.addComponent('camera', {
     fov: 80
 });
 
-const focusPoint = new Entity();
-focusPoint.setLocalPosition(-80, 80, -20);
-
-// Add orbit camera script with a mouse and a touch support
+// Add multi camera controls - orbits by default, `RMB` / `WASD` to fly
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: focusPoint,
-        distanceMax: 500,
-        frameOnStart: false
-    }
-});
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
-
 cameraEntity.setLocalPosition(-50, 100, 220);
-cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
+const cc = /** @type {CameraControls} */ (cameraEntity.script.create(CameraControls));
+Object.assign(cc, {
+    focusPoint: new Vec3(-80, 80, -20),
+    sceneSize: 500,
+    moveSpeed: 60,
+    moveFastSpeed: 180,
+    zoomRange: new Vec2(10, 500)
+});
+
+// Perspective correction (shift lens): keeps vertical lines parallel when looking up or down
+const correction = /** @type {PerspectiveCorrection} */ (cameraEntity.script.create(PerspectiveCorrection));
 
 // Create a 2D screen
 const screen = new Entity();
@@ -234,11 +234,16 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         cameraFrame.colorLUT.intensity = value;
         cameraFrame.update();
     }
+
+    if (path === 'data.verticalCorrection') {
+        correction.verticalCorrection = value;
+    }
 });
 
 // Set initial values
 data.set('data', {
     hdr: true,
     sceneTonemapping: TONEMAP_ACES,
-    colorLutIntensity: 1.0
+    colorLutIntensity: 1.0,
+    verticalCorrection: 0
 });

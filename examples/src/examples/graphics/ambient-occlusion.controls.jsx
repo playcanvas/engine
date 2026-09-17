@@ -99,7 +99,8 @@ export function Controls({ observer }) {
                         options={[
                             { v: 1.0, t: '100%' },
                             { v: 0.75, t: '75%' },
-                            { v: 0.5, t: '50%' }
+                            { v: 0.5, t: '50%' },
+                            { v: 0.25, t: '25%' }
                         ]}
                     />
                 </LabelGroup>

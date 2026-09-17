@@ -1,9 +1,11 @@
 import { expect } from 'chai';
 
+import { Vec2 } from '../../src/core/math/vec2.js';
+import { Vec3 } from '../../src/core/math/vec3.js';
 import { Vec4 } from '../../src/core/math/vec4.js';
 import { Entity } from '../../src/framework/entity.js';
 import { Camera } from '../../src/scene/camera.js';
-import { ASPECT_AUTO, ASPECT_MANUAL } from '../../src/scene/constants.js';
+import { ASPECT_AUTO, ASPECT_MANUAL, PROJECTION_ORTHOGRAPHIC } from '../../src/scene/constants.js';
 import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
@@ -134,6 +136,98 @@ describe('Camera', function () {
             // rebuild the matrix
             const after = camera.projectionMatrix;
             expect(after.equals(before)).to.equal(false);
+        });
+    });
+
+    describe('#projectionOffset', function () {
+
+        it('defaults to (0, 0) and copies the assigned value', function () {
+            const camera = new Camera(app.graphicsDevice);
+            expect(camera.projectionOffset.equals(new Vec2())).to.equal(true);
+
+            const value = new Vec2(0.25, -0.5);
+            camera.projectionOffset = value;
+            value.set(9, 9);
+            expect(camera.projectionOffset.equals(new Vec2(0.25, -0.5))).to.equal(true);
+        });
+
+        it('applies off-center terms to the perspective projection matrix', function () {
+            const camera = new Camera(app.graphicsDevice);
+            const before = camera.projectionMatrix.clone();
+
+            camera.projectionOffset = new Vec2(0.25, -0.5);
+            const after = camera.projectionMatrix;
+            expect(after.data[8]).to.equal(0.25);
+            expect(after.data[9]).to.equal(-0.5);
+
+            // no other element is affected
+            for (let i = 0; i < 16; i++) {
+                if (i !== 8 && i !== 9) {
+                    expect(after.data[i]).to.equal(before.data[i]);
+                }
+            }
+        });
+
+        it('translates the orthographic projection window', function () {
+            const camera = new Camera(app.graphicsDevice);
+            camera.projection = PROJECTION_ORTHOGRAPHIC;
+            const before = camera.projectionMatrix.clone();
+
+            camera.projectionOffset = new Vec2(0.25, -0.5);
+            const after = camera.projectionMatrix;
+            expect(after.data[12]).to.equal(-0.25);
+            expect(after.data[13]).to.equal(0.5);
+
+            // no other element is affected
+            for (let i = 0; i < 16; i++) {
+                if (i !== 12 && i !== 13) {
+                    expect(after.data[i]).to.equal(before.data[i]);
+                }
+            }
+        });
+
+        it('keeps worldToScreen and screenToWorld consistent', function () {
+            app.graphicsDevice.setResolution(800, 400);
+
+            const camera = new Camera(app.graphicsDevice);
+            camera.node = new Entity();
+            camera.projectionOffset = new Vec2(0.3, -0.2);
+
+            const world = new Vec3(0.5, -0.7, -5);
+            const screen = camera.worldToScreen(world, 800, 400, new Vec3());
+
+            // screenToWorld takes the distance from the camera along the ray
+            const roundtrip = camera.screenToWorld(screen.x, screen.y, world.length(), 800, 400, new Vec3());
+            expect(roundtrip.x).to.be.closeTo(world.x, 1e-6);
+            expect(roundtrip.y).to.be.closeTo(world.y, 1e-6);
+            expect(roundtrip.z).to.be.closeTo(world.z, 1e-6);
+        });
+
+        it('offsets the frustum corners', function () {
+            const camera = new Camera(app.graphicsDevice);
+            camera.aspectRatioMode = ASPECT_MANUAL;
+            camera.aspectRatio = 1;
+            camera.fov = 90;
+            camera.nearClip = 1;
+            camera.farClip = 10;
+            camera.projectionOffset = new Vec2(0, 0.5);
+
+            // near plane: half-height = tan(45) = 1, window center offset by 0.5
+            const corners = camera.getFrustumCorners();
+            expect(corners[0].y).to.be.closeTo(-0.5, 1e-6);
+            expect(corners[1].y).to.be.closeTo(1.5, 1e-6);
+
+            // far plane: half-height = 10, window center offset by 5
+            expect(corners[4].y).to.be.closeTo(-5, 1e-6);
+            expect(corners[5].y).to.be.closeTo(15, 1e-6);
+        });
+
+        it('is transferred by clone()', function () {
+            const camera = new Camera(app.graphicsDevice);
+            camera.projectionOffset = new Vec2(0.1, 0.2);
+
+            const clone = camera.clone();
+            expect(clone.projectionOffset.equals(new Vec2(0.1, 0.2))).to.equal(true);
         });
     });
 

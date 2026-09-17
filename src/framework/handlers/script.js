@@ -153,7 +153,7 @@ class ScriptHandler extends ResourceHandler {
                     }
 
                     // Register the script name
-                    registerScript(scriptClass, scriptName);
+                    registerScript(scriptClass, scriptName, this._app);
 
                     // Store any schema associated with the script
                     if (scriptSchema) this._app.scripts.addSchema(scriptName, scriptSchema[scriptName]);

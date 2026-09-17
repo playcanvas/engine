@@ -1,7 +1,8 @@
 // Serialises a TypeDoc JSON model (`typedoc --json`) into a stable, sorted, full-signature text
 // view of the public API. Because it consumes TypeDoc's model, it inherits the docs' public-API
 // rules (excludeNotDocumented, @ignore, @private, the custom typedoc plugin) — so internal/ignored
-// symbols are absent. Usage: `node utils/api-surface.mjs <typedoc.json>` → surface on stdout.
+// symbols are absent. `@protected` members are dropped here as well, see member().
+// Usage: `node utils/api-surface.mjs <typedoc.json>` → surface on stdout.
 
 import { readFileSync } from 'node:fs';
 
@@ -55,6 +56,16 @@ function typeParams(r) {
 // one member of a class/interface → one or more lines (overloads, get+set)
 function member(r) {
     const f = flags(r);
+
+    // Skip protected members. TypeDoc's excludePrivate defaults to true, so `@private` members never
+    // reach the model at all, but excludeProtected defaults to false, so `@protected` ones do. The
+    // generated docs then hide them behind a visibility filter which is off by default, so without
+    // this they would be the only internals reported as public API. Filtering here rather than
+    // through excludeProtected keeps them in the docs for anyone extending these classes.
+    if (f.isProtected) {
+        return [];
+    }
+
     const pre = (f.isStatic ? 'static ' : '') + (f.isReadonly ? 'readonly ' : '');
     if (r.kind === CONSTRUCTOR) return r.signatures.map(s => `constructor(${params(s)})`);
     if (r.kind === METHOD) return r.signatures.map(s => `${pre}${r.name}${typeParams(s)}(${params(s)}): ${typeStr(s.type)}`);

@@ -90,7 +90,7 @@ class Compute {
      * Create a compute instance. Note that this is supported on WebGPU only and is a no-op on
      * other platforms.
      *
-     * @param {GraphicsDevice} graphicsDevice -
+     * @param {GraphicsDevice} graphicsDevice
      * The graphics device.
      * @param {Shader} shader - The compute shader.
      * @param {string} [name] - The name of the compute instance, used for debugging only.
@@ -109,7 +109,7 @@ class Compute {
      * Sets a shader parameter on a compute instance.
      *
      * @param {string} name - The name of the parameter to set.
-     * @param {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|TextureView} value -
+     * @param {number|number[]|Float32Array|Texture|StorageBuffer|VertexBuffer|IndexBuffer|TextureView} value
      * The value for the specified parameter.
      */
     setParameter(name, value) {

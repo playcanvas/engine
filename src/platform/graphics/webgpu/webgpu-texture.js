@@ -126,7 +126,9 @@ class WebgpuTexture {
             },
             format: this.format,
             mipLevelCount: numLevels,
-            sampleCount: 1,
+            // multisampled textures are constrained at the Texture level: 2d, single mip, no
+            // storage; RENDER_ATTACHMENT is required and TEXTURE_BINDING / COPY_* are allowed
+            sampleCount: texture.samples,
             dimension: texture.volume ? '3d' : '2d',
 
             // TODO: use only required usage flags

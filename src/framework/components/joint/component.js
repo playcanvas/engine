@@ -63,15 +63,23 @@ function setVec3(target, value) {
  *
  * A joint's primary axis is the joint entity's local X axis: a hinge rotates about X, a slider
  * translates along X and a ball joint twists about X. To aim a joint, rotate the joint entity. A
- * common pattern is to parent the joint entity to {@link entityA} at the pivot point. For 6dof
- * joints, each degree of freedom measures the offset of {@link entityB} (or of the world anchor
- * when {@link entityB} is null) relative to {@link entityA}, along the joint's axes.
+ * common pattern is to parent the joint entity to {@link entityA} at the pivot point.
  *
  * The joint frames are captured when the underlying constraint is created - typically when the
  * component is enabled and both bodies are present in the physics simulation. Moving the joint
  * entity afterwards has no effect on an existing constraint. Call {@link refreshFrames} to
  * re-capture the frames from the current world transforms. Entity scale is ignored, matching the
  * behavior of rigid bodies.
+ *
+ * At creation the two joint frames coincide, so every degree of freedom reads zero: limits and
+ * equilibrium values are measured from the initial relative pose of the two bodies, not from the
+ * joint entity's transform or any absolute separation. Linear degrees of freedom are positive
+ * when {@link entityB} (or the world anchor when {@link entityB} is null) moves along the
+ * joint's positive axes relative to {@link entityA}. Angular degrees of freedom measure the
+ * opposite body: they are positive when {@link entityA} rotates counter-clockwise about the
+ * joint's axes relative to {@link entityB} or the world anchor, viewed from each axis's positive
+ * end (right-handed). In the door hinge example below, the limits of `[0, 110]` let the door
+ * swing counter-clockwise, viewed from above, up to 110 degrees from its starting pose.
  *
  * Many properties apply only to specific joint types; each one documents the types it affects,
  * and properties without such a note (for example {@link entityA}, {@link enableCollision} and
@@ -458,12 +466,15 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the lower and upper limit of the joint's primary degree of freedom. For hinge joints,
-     * these are angles of rotation about the joint's X axis, in degrees; for slider joints,
-     * distances along the joint's X axis, in meters. Only used by hinge and slider joints, when
-     * {@link enableLimits} is true. (Ball joints limit motion with {@link swingLimitY},
-     * {@link swingLimitZ} and {@link twistLimit}; 6dof joints use {@link linearLimitsX} and
-     * {@link angularLimitsX} etc.) Defaults to `[-45, 45]`.
+     * Sets the lower and upper limit of the joint's primary degree of freedom, measured from the
+     * relative pose of the bodies at constraint creation, where the value is zero. For hinge
+     * joints, these are angles of rotation about the joint's X axis, in degrees, positive when
+     * {@link entityA} rotates counter-clockwise (right-handed) about the axis relative to
+     * {@link entityB}. For slider joints, they are distances along the joint's X axis, in
+     * meters, positive when {@link entityB} moves toward positive X relative to {@link entityA}.
+     * Only used by hinge and slider joints, when {@link enableLimits} is true. (Ball joints
+     * limit motion with {@link swingLimitY}, {@link swingLimitZ} and {@link twistLimit}; 6dof
+     * joints use {@link linearLimitsX} and {@link angularLimitsX} etc.) Defaults to `[-45, 45]`.
      *
      * @type {Vec2}
      */
@@ -484,10 +495,11 @@ class JointComponent extends Component {
 
     /**
      * Sets the target speed the motor drives towards. For hinge joints, this is an angular speed
-     * in degrees per second; for slider joints, a linear speed in meters per second. The motor is
-     * active only while {@link maxMotorForce} is greater than 0; with a target speed of 0 and a
-     * positive force the motor acts as a brake, holding the joint at rest. Only used by hinge and
-     * slider joints. Defaults to 0.
+     * in degrees per second; for slider joints, a linear speed in meters per second. Positive
+     * speeds drive the joint's degree of freedom toward positive values, as described by
+     * {@link limits}. The motor is active only while {@link maxMotorForce} is greater than 0;
+     * with a target speed of 0 and a positive force the motor acts as a brake, holding the joint
+     * at rest. Only used by hinge and slider joints. Defaults to 0.
      *
      * @type {number}
      */
@@ -670,9 +682,10 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the lower and upper limit of translation along the joint's X axis, in meters. Only
-     * used by 6dof joints when {@link linearMotionX} is {@link MOTION_LIMITED}. Defaults to
-     * `[0, 0]`.
+     * Sets the lower and upper limit of translation along the joint's X axis, in meters,
+     * measured from the initial pose at constraint creation: positive translation moves
+     * {@link entityB} toward positive X relative to {@link entityA}. Only used by 6dof joints
+     * when {@link linearMotionX} is {@link MOTION_LIMITED}. Defaults to `[0, 0]`.
      *
      * @type {Vec2}
      */
@@ -692,9 +705,10 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the lower and upper limit of translation along the joint's Y axis, in meters. Only
-     * used by 6dof joints when {@link linearMotionY} is {@link MOTION_LIMITED}. Defaults to
-     * `[0, 0]`.
+     * Sets the lower and upper limit of translation along the joint's Y axis, in meters,
+     * measured from the initial pose at constraint creation: positive translation moves
+     * {@link entityB} toward positive Y relative to {@link entityA}. Only used by 6dof joints
+     * when {@link linearMotionY} is {@link MOTION_LIMITED}. Defaults to `[0, 0]`.
      *
      * @type {Vec2}
      */
@@ -714,9 +728,10 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the lower and upper limit of translation along the joint's Z axis, in meters. Only
-     * used by 6dof joints when {@link linearMotionZ} is {@link MOTION_LIMITED}. Defaults to
-     * `[0, 0]`.
+     * Sets the lower and upper limit of translation along the joint's Z axis, in meters,
+     * measured from the initial pose at constraint creation: positive translation moves
+     * {@link entityB} toward positive Z relative to {@link entityA}. Only used by 6dof joints
+     * when {@link linearMotionZ} is {@link MOTION_LIMITED}. Defaults to `[0, 0]`.
      *
      * @type {Vec2}
      */
@@ -780,7 +795,9 @@ class JointComponent extends Component {
 
     /**
      * Sets the rest positions of the springs acting on translation along the joint's X, Y and Z
-     * axes, in meters. Only used by 6dof joints. Defaults to `[0, 0, 0]`.
+     * axes, in meters, measured from the initial pose at constraint creation in the same
+     * convention as {@link linearLimitsX}, {@link linearLimitsY} and {@link linearLimitsZ}. Only
+     * used by 6dof joints. Defaults to `[0, 0, 0]`.
      *
      * @type {Vec3}
      */
@@ -870,7 +887,9 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the lower and upper limit of rotation about the joint's X axis, in degrees. For
+     * Sets the lower and upper limit of rotation about the joint's X axis, in degrees, measured
+     * from the initial pose at constraint creation: positive rotation turns {@link entityA}
+     * counter-clockwise (right-handed) about the axis relative to {@link entityB}. For
      * stability, keep the limits within -180 and 180 degrees. Only used by 6dof joints when
      * {@link angularMotionX} is {@link MOTION_LIMITED}. Defaults to `[0, 0]`.
      *
@@ -892,7 +911,9 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the lower and upper limit of rotation about the joint's Y axis, in degrees. For
+     * Sets the lower and upper limit of rotation about the joint's Y axis, in degrees, measured
+     * from the initial pose at constraint creation: positive rotation turns {@link entityA}
+     * counter-clockwise (right-handed) about the axis relative to {@link entityB}. For
      * stability, keep the limits within -90 and 90 degrees. Only used by 6dof joints when
      * {@link angularMotionY} is {@link MOTION_LIMITED}. Defaults to `[0, 0]`.
      *
@@ -914,7 +935,9 @@ class JointComponent extends Component {
     }
 
     /**
-     * Sets the lower and upper limit of rotation about the joint's Z axis, in degrees. For
+     * Sets the lower and upper limit of rotation about the joint's Z axis, in degrees, measured
+     * from the initial pose at constraint creation: positive rotation turns {@link entityA}
+     * counter-clockwise (right-handed) about the axis relative to {@link entityB}. For
      * stability, keep the limits within -180 and 180 degrees. Only used by 6dof joints when
      * {@link angularMotionZ} is {@link MOTION_LIMITED}. Defaults to `[0, 0]`.
      *
@@ -980,7 +1003,9 @@ class JointComponent extends Component {
 
     /**
      * Sets the rest angles of the springs acting on rotation about the joint's X, Y and Z axes,
-     * in degrees. Only used by 6dof joints. Defaults to `[0, 0, 0]`.
+     * in degrees, measured from the initial pose at constraint creation in the same convention
+     * as {@link angularLimitsX}, {@link angularLimitsY} and {@link angularLimitsZ}. Only used by
+     * 6dof joints. Defaults to `[0, 0, 0]`.
      *
      * @type {Vec3}
      */
@@ -1205,6 +1230,8 @@ class JointComponent extends Component {
                 rigidbodyB.on('beforeremove', this._onBodyLost, this)
             );
         }
+
+        this._activateBodies();
     }
 
     /** @private */
@@ -1223,6 +1250,8 @@ class JointComponent extends Component {
 
             this.system.app.systems.rigidbody.physicsWorld.destroyJoint(joint);
             this._joint = null;
+
+            this._activateBodies();
         }
     }
 
@@ -1293,7 +1322,10 @@ class JointComponent extends Component {
 
     /**
      * Wakes the constrained bodies so that a change to the constraint takes immediate effect on
-     * a sleeping simulation island.
+     * a sleeping simulation island. Called both when the joint's parameters change and when the
+     * constraint itself is created or destroyed, so a joint added between two settled bodies is
+     * enforced right away, and one removed from them releases them instead of leaving them
+     * holding the constrained pose.
      *
      * @private
      */

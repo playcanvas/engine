@@ -232,20 +232,8 @@ const applySettings = () => {
 };
 
 // Apply UI changes
-data.on('*:set', (/** @type {string} */ path, value) => {
+data.on('*:set', () => {
     applySettings();
-
-    // If scale has changed, adjust min angle based on scale to avoid depth related artifacts
-    const pathArray = path.split('.');
-    if (pathArray[2] === 'scale') {
-        if (value < 0.6) {
-            data.set('data.ssao.minAngle', 40);
-        } else if (value < 0.8) {
-            data.set('data.ssao.minAngle', 20);
-        } else {
-            data.set('data.ssao.minAngle', 10);
-        }
-    }
 });
 
 // Initial settings

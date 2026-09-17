@@ -29,10 +29,11 @@ import {
     TextureHandler,
     TouchDevice,
     Vec3,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 
-import { deviceType } from 'examples/context';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -84,6 +85,13 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+data.set('settings', {
+    showLightShapes: false
+});
+
+// Renderer used to visualize the shape and extent of each light
+const wire = new WireRenderer(app);
 
 /** @type {Array<Entity>} */
 const pointLightList = [];
@@ -216,6 +224,10 @@ dirLight.addComponent('light', {
     shadowBias: 0.2,
     normalOffsetBias: 0.05
 });
+
+// Positioned clear of the cylinder and the orbiting lights, so the arrow visualizing its
+// direction stays readable when light shapes are displayed
+dirLight.setLocalPosition(-70, 70, 70);
 app.root.addChild(dirLight);
 
 // Create an entity with a camera component
@@ -269,5 +281,15 @@ app.on('update', (/** @type {number} */ dt) => {
     // Rotate directional light
     if (dirLight) {
         dirLight.setLocalEulerAngles(25, -30 * time, 0);
+    }
+
+    // Visualize the shape and extent of every light, each drawn in the light's own color
+    if (data.get('settings.showLightShapes')) {
+        pointLightList.forEach((light) => wire.light(light.light));
+        spotLightList.forEach((light) => wire.light(light.light));
+        if (dirLight) {
+            // a directional light has no extent, so the arrow length is supplied explicitly
+            wire.light(dirLight.light, 50);
+        }
     }
 });

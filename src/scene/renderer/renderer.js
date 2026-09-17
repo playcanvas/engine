@@ -363,15 +363,15 @@ class Renderer {
                 jitterX = jitter * (offset.x * 2 - 1) / targetWidth;
                 jitterY = jitter * (offset.y * 2 - 1) / targetHeight;
 
-                // apply offset to projection matrix
+                // apply jitter to projection matrix, on top of any off-center projection offset
                 projMat = _tempProjMat4.copy(projMat);
-                projMat.data[8] = jitterX;
-                projMat.data[9] = jitterY;
+                projMat.data[8] += jitterX;
+                projMat.data[9] += jitterY;
 
-                // apply offset to skybox projection matrix
+                // apply jitter to skybox projection matrix
                 projMatSkybox = _tempProjMat5.copy(projMatSkybox);
-                projMatSkybox.data[8] = jitterX;
-                projMatSkybox.data[9] = jitterY;
+                projMatSkybox.data[8] += jitterX;
+                projMatSkybox.data[9] += jitterY;
 
                 // blue noise vec4 - only use when jitter is enabled
                 if (this.blueNoiseJitterVersion !== this.device.renderVersion) {
@@ -415,13 +415,15 @@ class Renderer {
             // store matrices needed by TAA
             camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion);
 
-            this.flipYId.setValue(flipY ? -1 : 1);
-
             // View Position (world space)
             this.dispatchViewPos(camera._node.getPosition());
 
             camera.frustum.setFromMat4(viewProjMat);
         }
+
+        // set for all passes including XR, to keep the uniform fresh per render pass - it is
+        // consumed by shaders of any pass (e.g. screen-space UI, gsplat rasterization)
+        this.flipYId.setValue(flipY ? -1 : 1);
 
         // Sign for the derivative-based TBN (see TBN.js). It compensates for the Y flip applied to
         // the projection matrix when rendering with flipY. On WebGPU there is an additional inherent

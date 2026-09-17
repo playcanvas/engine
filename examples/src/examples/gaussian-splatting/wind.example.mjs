@@ -35,6 +35,7 @@ import {
     TouchDevice,
     TranslateGizmo,
     Vec3,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
@@ -83,7 +84,7 @@ app.on('destroy', () => {
 
 const assets = {
     skatepark: new Asset('gsplat', 'gsplat', {
-        url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json'
+        url: 'https://code.playcanvas.com/examples_data/example_skatepark_03/lod-meta.json'
     }),
     envAtlas: new Asset(
         'env-atlas',
@@ -98,6 +99,9 @@ await new Promise((resolve) => {
 });
 
 app.start();
+
+// Renderer for the tree edit handles, colored per handle as they are drawn
+const wire = new WireRenderer(app);
 
 app.scene.envAtlas = assets.envAtlas.resource;
 app.scene.skyboxMip = 1;
@@ -146,8 +150,6 @@ skatepark.addComponent('gsplat', {
     asset: assets.skatepark
 });
 skatepark.setLocalEulerAngles(-90, 0, 0);
-skatepark.gsplat.lodBaseDistance = 15;
-skatepark.gsplat.lodMultiplier = 4;
 app.root.addChild(skatepark);
 
 // the reusable wind script
@@ -410,12 +412,8 @@ app.on('update', (dt) => {
     }
 
     treeItems.forEach((entity, i) => {
-        app.drawWireSphere(
-            entity.getPosition(),
-            entity.getLocalScale().x,
-            i === selectedIndex ? Color.YELLOW : Color.GRAY,
-            20
-        );
+        wire.color = i === selectedIndex ? Color.YELLOW : Color.GRAY;
+        wire.sphere(entity.getPosition(), entity.getLocalScale().x);
     });
 
     if (dragging) {

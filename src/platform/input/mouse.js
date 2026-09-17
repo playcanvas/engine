@@ -1,4 +1,3 @@
-import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 
 import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
@@ -19,6 +18,11 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  * to a DOM element before it can detect mouse events.
  *
  * Your application's Mouse instance is managed and accessible via {@link AppBase#mouse}.
+ *
+ * For pointer-lock-aware, frame-accumulated input deltas rather than raw events, see
+ * {@link KeyboardMouseSource}, {@link GamepadSource} and {@link MultiTouchSource}, which feed
+ * {@link InputController}s such as {@link OrbitController}, {@link FlyController} and
+ * {@link FocusController}.
  *
  * @category Input
  */
@@ -156,8 +160,7 @@ class Mouse extends EventHandler {
         this._attached = true;
 
         /** @type {AddEventListenerOptions} */
-        const passiveOptions = { passive: false };
-        const options = platform.passiveEvents ? passiveOptions : false;
+        const options = { passive: false };
         window.addEventListener('mouseup', this._upHandler, options);
         window.addEventListener('mousedown', this._downHandler, options);
         window.addEventListener('mousemove', this._moveHandler, options);
@@ -173,8 +176,7 @@ class Mouse extends EventHandler {
         this._target = null;
 
         /** @type {AddEventListenerOptions} */
-        const passiveOptions = { passive: false };
-        const options = platform.passiveEvents ? passiveOptions : false;
+        const options = { passive: false };
         window.removeEventListener('mouseup', this._upHandler, options);
         window.removeEventListener('mousedown', this._downHandler, options);
         window.removeEventListener('mousemove', this._moveHandler, options);

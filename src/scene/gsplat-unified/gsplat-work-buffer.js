@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R32U, PIXELFORMAT_RGBA16U,
-    BUFFERUSAGE_COPY_DST, SEMANTIC_POSITION, getGlslShaderType
+    BUFFERUSAGE_COPY_DST, RENDERTARGET_ORIGIN_BOTTOM, SEMANTIC_POSITION, getGlslShaderType
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
@@ -235,11 +235,13 @@ class GSplatWorkBuffer {
 
         // Collect all textures in order for MRT
         const colorBuffers = this.streams.getTexturesInOrder();
+        // viewport rects used to fill the work buffer must address identical texel rows on all
+        // graphics APIs, matching the WebGL layout
         this.renderTarget = new RenderTarget({
             name: `GsplatWorkBuffer-MRT-${this.id}`,
             colorBuffers: colorBuffers,
             depth: false,
-            flipY: true
+            origin: RENDERTARGET_ORIGIN_BOTTOM
         });
 
         // Color-only render target uses just the first texture (dataColor)
@@ -248,7 +250,7 @@ class GSplatWorkBuffer {
             name: `GsplatWorkBuffer-Color-${this.id}`,
             colorBuffer: colorTexture,
             depth: false,
-            flipY: true
+            origin: RENDERTARGET_ORIGIN_BOTTOM
         });
 
         // Reinitialize render passes

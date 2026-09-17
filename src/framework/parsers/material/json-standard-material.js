@@ -154,7 +154,6 @@ class JsonStandardMaterialParser {
             ['glossMapVertexColor', 'glossVertexColor'],
             ['lightMapVertexColor', 'lightVertexColor'],
 
-            ['specularMapTint', 'specularTint'],
             ['metalnessMapTint', 'metalnessTint'],
 
             ['clearCoatGlossiness', 'clearCoatGloss']

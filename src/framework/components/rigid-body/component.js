@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Quat } from '../../../core/math/quat.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Component } from '../component.js';
@@ -57,6 +58,11 @@ const _vecB = new Vec3();
  * entity.rigidbody.mass = 10;
  * console.log(entity.rigidbody.mass);
  * ```
+ *
+ * For player movement, `playcanvas/scripts/esm/first-person-controller.mjs` and
+ * `playcanvas/scripts/esm/third-person-controller.mjs` ship complete rigidbody character
+ * controllers with capsule collision, damped ground and air movement, sprinting, jumping and
+ * camera control. Attach one instead of driving the body by hand.
  *
  * Relevant Engine API examples:
  *
@@ -311,7 +317,9 @@ class RigidBodyComponent extends Component {
 
     /**
      * Sets the collision group this body belongs to. Combine the group and the mask to prevent bodies
-     * colliding with each other. Defaults to 1.
+     * colliding with each other. The default depends on the body {@link RigidBodyComponent#type}:
+     * 1 for dynamic bodies, 2 for static bodies and 4 for kinematic bodies. Setting the type
+     * resets the group to the default for the new type, so set the group after the type.
      *
      * @type {number}
      */
@@ -414,7 +422,11 @@ class RigidBodyComponent extends Component {
 
     /**
      * Sets the collision mask sets which groups this body collides with. It is a bit field of 16
-     * bits, the first 8 bits are reserved for engine use. Defaults to 65535.
+     * bits, the first 8 bits are reserved for engine use. The default depends on the body
+     * {@link RigidBodyComponent#type}: 65533 for static bodies, which collides with everything
+     * except other static bodies, and 65535 for dynamic and kinematic bodies, which collides with
+     * everything. Setting the type resets the mask to the default for the new type, so set the
+     * mask after the type.
      *
      * @type {number}
      */
@@ -532,7 +544,9 @@ class RigidBodyComponent extends Component {
      * - {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be
      * moved by setting the position and rotation of component's {@link Entity}).
      *
-     * Defaults to {@link BODYTYPE_STATIC}.
+     * Defaults to {@link BODYTYPE_STATIC}. Changing the type also resets
+     * {@link RigidBodyComponent#group} and {@link RigidBodyComponent#mask} to the defaults for
+     * the new type.
      *
      * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
@@ -1119,6 +1133,41 @@ class RigidBodyComponent extends Component {
     /** @ignore */
     onDisable() {
         this.disableSimulation();
+    }
+
+    /**
+     * Sets the rigid body type.
+     *
+     * @type {string}
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponent#type} instead.
+     */
+    set bodyType(type) {
+        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
+        this.type = type;
+    }
+
+    /**
+     * Gets the rigid body type.
+     *
+     * @type {string}
+     * @ignore
+     * @deprecated Use {@link RigidBodyComponent#type} instead.
+     */
+    get bodyType() {
+        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
+        return this.type;
+    }
+
+    /**
+     * Writes the entity transform into the rigid body.
+     *
+     * @ignore
+     * @deprecated Not public API.
+     */
+    syncBodyToEntity() {
+        Debug.deprecated('RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
+        this._updateDynamic();
     }
 }
 

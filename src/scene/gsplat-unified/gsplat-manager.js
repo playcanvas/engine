@@ -32,6 +32,7 @@ import { Color } from '../../core/math/color.js';
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const translation = new Vec3();
+const splatAxis = new Vec3();
 const invModelMat = new Mat4();
 
 // Color instances used by debug wireframe rendering (GSPLAT_DEBUG_AABBS)
@@ -754,8 +755,7 @@ class GSplatManager {
         // Renderer per-frame update (material syncing, deferred setup). Must run after
         // fireFrameReadyEvent(): listeners may change material state (e.g. antiAlias), and
         // syncing here applies it this same frame before frameEnd() clears the dirty flag.
-        const fogParams = this.scene.gsplat.useFog ? (this.cameraNode.camera.fogParams ?? this.scene.fog) : null;
-        this.renderer.frameUpdate(this.scene.gsplat, this.scene.exposure, fogParams);
+        this.renderer.frameUpdate(this.scene.gsplat);
 
         // return the number of active splats for stats
         const sortedState = this.world.getState(this.world.currentVersion);
@@ -816,17 +816,25 @@ class GSplatManager {
         cameraMat.getTranslation(cameraPosition);
         cameraMat.getZ(cameraDirection).normalize();
 
+        const radialSort = this.scene.gsplat.radialSorting;
+
         const sorterRequest = [];
         lastState.splats.forEach((splat) => {
             const modelMat = splat.node.getWorldTransform();
             invModelMat.copy(modelMat).invert();
 
-            // uniform scale
-            const uniformScale = modelMat.getScale().x;
+            // the radial path multiplies local-space distances by this to get world units; the
+            // linear path has the scale folded into the per-axis weights below, so it needs none
+            const scale = radialSort ? modelMat.getX(splatAxis).length() : 1;
 
-            // camera direction in splat's rotated space
-            // transform by the full inverse matrix and then normalize, which cancels the (1/s) scaling factor
-            const transformedDirection = invModelMat.transformVector(cameraDirection).normalize();
+            // camera direction in splat's rotated space, used by the linear path: each local axis
+            // is weighted by the model matrix's own basis vector, which is exact for any affine
+            // transform (normalizing the inverse-transformed direction only cancels a uniform scale)
+            const transformedDirection = new Vec3(
+                modelMat.getX(splatAxis).dot(cameraDirection),
+                modelMat.getY(splatAxis).dot(cameraDirection),
+                modelMat.getZ(splatAxis).dot(cameraDirection)
+            );
 
             // camera position in splat's local space (for circular sorting)
             const transformedPosition = invModelMat.transformPoint(cameraPosition);
@@ -844,14 +852,13 @@ class GSplatManager {
                 transformedDirection,
                 transformedPosition,
                 offset,
-                scale: uniformScale,
-                modelMat: modelMat.data.slice(),
+                scale,
                 aabbMin: [aabbMin.x, aabbMin.y, aabbMin.z],
                 aabbMax: [aabbMax.x, aabbMax.y, aabbMax.z]
             });
         });
 
-        this.cpuSorter.setSortParams(sorterRequest, this.scene.gsplat.radialSorting);
+        this.cpuSorter.setSortParams(sorterRequest, radialSort);
     }
 }
 

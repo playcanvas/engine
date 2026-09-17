@@ -13,7 +13,7 @@ export const SCRIPT_SWAP = 'swap';
  */
 export const reservedScriptNames = new Set([
     'system', 'entity', 'create', 'destroy', 'swap', 'move', 'data',
-    'scripts', '_scripts', '_scriptsIndex', '_scriptsData',
+    'scripts', '_scripts', '_scriptsIndex', '_scriptsData', '_declarationOrder',
     'enabled', '_oldState', 'onEnable', 'onDisable', 'onPostStateChange',
     '_onSetEnabled', '_checkState', '_onBeforeRemove',
     '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',

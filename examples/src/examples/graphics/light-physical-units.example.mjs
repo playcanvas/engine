@@ -55,7 +55,7 @@ const assets = {
     ),
     lights: new Asset('lights', 'container', { url: './assets/models/Lights.glb' }),
     sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
-    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
+    color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }, { srgb: true }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' }),
     luts: new Asset('luts', 'json', { url: './assets/json/area-light-luts.json' })

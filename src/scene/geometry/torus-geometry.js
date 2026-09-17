@@ -1,5 +1,4 @@
 import { math } from '../../core/math/math.js';
-import { calculateTangents } from './geometry-utils.js';
 import { Geometry } from './geometry.js';
 
 /**
@@ -112,7 +111,7 @@ class TorusGeometry extends Geometry {
         this.indices = indices;
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(positions, normals, uvs, indices);
+            this.calculateTangents();
         }
     }
 }

@@ -7,6 +7,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * @import { ButtonComponentSystem } from './button/system.js'
  * @import { CameraComponentSystem } from './camera/system.js'
  * @import { CollisionComponentSystem } from './collision/system.js'
+ * @import { ComponentSystem } from './system.js'
  * @import { ElementComponentSystem } from './element/system.js'
  * @import { GSplatComponentSystem } from './gsplat/system.js'
  * @import { JointComponentSystem } from './joint/system.js'
@@ -232,14 +233,17 @@ class ComponentSystemRegistry extends EventHandler {
     constructor() {
         super();
 
-        // An array of ComponentSystem objects
+        /**
+         * @type {ComponentSystem[]}
+         * @ignore
+         */
         this.list = [];
     }
 
     /**
      * Add a component system to the registry.
      *
-     * @param {object} system - The {@link ComponentSystem} instance.
+     * @param {ComponentSystem} system - The ComponentSystem instance.
      * @ignore
      */
     add(system) {
@@ -257,7 +261,7 @@ class ComponentSystemRegistry extends EventHandler {
     /**
      * Remove a component system from the registry.
      *
-     * @param {object} system - The {@link ComponentSystem} instance.
+     * @param {ComponentSystem} system - The ComponentSystem instance.
      * @ignore
      */
     remove(system) {
@@ -266,15 +270,20 @@ class ComponentSystemRegistry extends EventHandler {
             throw new Error(`No ComponentSystem named '${id}' registered`);
         }
 
-        delete this[id];
-
         // Update the component system array
         const index = this.list.indexOf(this[id]);
         if (index !== -1) {
             this.list.splice(index, 1);
         }
+
+        delete this[id];
     }
 
+    /**
+     * Destroys all registered component systems.
+     *
+     * @ignore
+     */
     destroy() {
         this.off();
 

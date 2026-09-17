@@ -81,7 +81,7 @@ app.on('destroy', () => {
 
 // Skatepark configuration
 const config = {
-    url: 'https://code.playcanvas.com/examples_data/example_skatepark_02/lod-meta.json',
+    url: 'https://code.playcanvas.com/examples_data/example_skatepark_03/lod-meta.json',
     lodUpdateDistance: 1,
     lodUnderfillLimit: 10,
     cameraPosition: [32, 2, 2],
@@ -94,15 +94,13 @@ const config = {
 };
 
 // LOD preset definitions
-/** @type {Record<string, { range: number[], lodBaseDistance: number }>} */
+/** @type {Record<string, { range: number[] }>} */
 const LOD_PRESETS = {
     desktop: {
-        range: [0, 2],
-        lodBaseDistance: 15
+        range: [0, 2]
     },
     mobile: {
-        range: [1, 5],
-        lodBaseDistance: 15
+        range: [1, 5]
     }
 };
 
@@ -181,21 +179,6 @@ const [rotX, rotY, rotZ] = /** @type {[number, number, number]} */ (config.euler
 skatepark.setLocalEulerAngles(rotX, rotY, rotZ);
 skatepark.setLocalScale(1, 1, 1);
 app.root.addChild(skatepark);
-
-// Apply LOD distances to skatepark
-const gs = /** @type {any} */ (skatepark.gsplat);
-gs.lodBaseDistance = presetData.lodBaseDistance;
-gs.lodMultiplier = 4;
-
-data.set('lodBaseDistance', presetData.lodBaseDistance);
-data.set('lodMultiplier', 4);
-
-data.on('lodBaseDistance:set', () => {
-    gs.lodBaseDistance = data.get('lodBaseDistance');
-});
-data.on('lodMultiplier:set', () => {
-    gs.lodMultiplier = data.get('lodMultiplier');
-});
 
 // World center coordinates
 const worldCenter = { x: 18, y: -1.3, z: 13.5 };

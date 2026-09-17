@@ -1,5 +1,4 @@
 import { Vec2 } from '../../core/math/vec2.js';
-import { calculateTangents } from './geometry-utils.js';
 import { Geometry } from './geometry.js';
 
 /**
@@ -108,7 +107,7 @@ class PlaneGeometry extends Geometry {
         this.indices = indices;
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(positions, normals, uvs, indices);
+            this.calculateTangents();
         }
     }
 }

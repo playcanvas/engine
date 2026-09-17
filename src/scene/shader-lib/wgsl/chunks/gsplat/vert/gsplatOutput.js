@@ -9,12 +9,16 @@ export default /* wgsl */`
     #define GSPLAT_FOG
 #endif
 
+#if TONEMAP != NONE && !defined(GSPLAT_NO_TONEMAP)
+    #define GSPLAT_TONEMAP
+#endif
+
 // prepare the output color for the given gamma-space color
 fn prepareOutputFromGamma(gammaColor: vec3f, depth: f32) -> vec3f {
     var color = gammaColor;
 
     // decode to linear when we need linear-space processing
-    #if TONEMAP != NONE || GAMMA == NONE || defined(GSPLAT_FOG)
+    #if defined(GSPLAT_TONEMAP) || GAMMA == NONE || defined(GSPLAT_FOG)
         color = decodeGamma3(color);
     #endif
 
@@ -24,12 +28,12 @@ fn prepareOutputFromGamma(gammaColor: vec3f, depth: f32) -> vec3f {
     #endif
 
     // apply tonemapping
-    #if TONEMAP != NONE
+    #ifdef GSPLAT_TONEMAP
         color = toneMap(color);
     #endif
 
     // encode to gamma when needed
-    #if TONEMAP != NONE || (GAMMA != NONE && defined(GSPLAT_FOG))
+    #if defined(GSPLAT_TONEMAP) || (GAMMA != NONE && defined(GSPLAT_FOG))
         color = gammaCorrectOutput(color);
     #endif
 

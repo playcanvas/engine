@@ -111,10 +111,10 @@ class StorageBuffer {
      *
      * @param {number} bufferOffset - The offset in bytes to start writing to the storage buffer.
      * @param {ArrayBufferView|ArrayBuffer} data - The data to write to the storage buffer.
-     * @param {number} dataOffset - Offset in data to begin writing from. Given in elements if data
-     * is a TypedArray and bytes otherwise.
-     * @param {number} size - Size of content to write from data to buffer. Given in elements if
-     * data is a TypedArray and bytes otherwise.
+     * @param {number} [dataOffset] - Offset in data to begin writing from. Given in elements if
+     * data is a TypedArray and bytes otherwise. Defaults to 0.
+     * @param {number} [size] - Size of content to write from data to buffer. Given in elements if
+     * data is a TypedArray and bytes otherwise. Defaults to the remaining size of the data.
      */
     write(bufferOffset = 0, data, dataOffset = 0, size) {
         this.impl.write(this.device, bufferOffset, data, dataOffset, size);

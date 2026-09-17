@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../../src/core/math/color.js';
+import { Vec2 } from '../../../../src/core/math/vec2.js';
 import { Vec4 } from '../../../../src/core/math/vec4.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import {
@@ -47,6 +48,14 @@ describe('CameraComponent', function () {
             expect(e.camera.orthoHeight).to.equal(10);
             expect(e.camera.priority).to.equal(0);
             expect(e.camera.projection).to.equal(PROJECTION_PERSPECTIVE);
+            expect(e.camera.projectionOffset.equals(new Vec2(0, 0))).to.equal(true);
+        });
+
+        it('accepts an array-literal projectionOffset', function () {
+            const e = new Entity();
+            e.addComponent('camera', { projectionOffset: [0.1, 0.2] });
+
+            expect(e.camera.projectionOffset.equals(new Vec2(0.1, 0.2))).to.equal(true);
         });
 
     });
@@ -85,6 +94,7 @@ describe('CameraComponent', function () {
                 orthoHeight: 7,
                 priority: 3,
                 projection: PROJECTION_ORTHOGRAPHIC,
+                projectionOffset: new Vec2(0.1, -0.2),
                 rect: new Vec4(0.1, 0.1, 0.5, 0.5),
                 scissorRect: new Vec4(0.2, 0.2, 0.6, 0.6),
                 aperture: 8,
@@ -120,6 +130,7 @@ describe('CameraComponent', function () {
             expect(c.orthoHeight).to.equal(7);
             expect(c.priority).to.equal(3);
             expect(c.projection).to.equal(PROJECTION_ORTHOGRAPHIC);
+            expect(c.projectionOffset.equals(new Vec2(0.1, -0.2))).to.equal(true);
             expect(c.rect.equals(new Vec4(0.1, 0.1, 0.5, 0.5))).to.equal(true);
             expect(c.scissorRect.equals(new Vec4(0.2, 0.2, 0.6, 0.6))).to.equal(true);
             expect(c.aperture).to.equal(8);

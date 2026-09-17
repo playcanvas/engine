@@ -279,7 +279,6 @@ for (let z = 0; z < GRID_SIZE; z++) {
         entity.setLocalEulerAngles(180, 0, 0);
         app.root.addChild(entity);
         const gs = /** @type {any} */ (entity.gsplat);
-        gs.lodBaseDistance = 1.2;
         gs.setParameter('uComponentId', componentIndex);
         gs.setWorkBufferModifier(workBufferModifier);
         componentIndex++;

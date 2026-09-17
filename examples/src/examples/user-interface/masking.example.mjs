@@ -35,7 +35,7 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    colors: new Asset('colors', 'texture', { url: './assets/textures/colors.webp' }),
+    colors: new Asset('colors', 'texture', { url: './assets/textures/colors.webp' }, { srgb: true }),
     heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
     font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
 };

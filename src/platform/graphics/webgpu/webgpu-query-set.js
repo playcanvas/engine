@@ -83,7 +83,13 @@ class WebgpuQuerySet {
         const stagingBuffer = this.activeStagingBuffer;
         this.activeStagingBuffer = null;
 
-        return stagingBuffer.mapAsync(GPUMapMode.READ).then(() => {
+        return this.device.mapBufferAsync(stagingBuffer, GPUMapMode.READ).then((mapped) => {
+
+            // the mapping fails when the device is lost - the buffer cannot be used, no results
+            if (!mapped) {
+                stagingBuffer.destroy();
+                return null;
+            }
 
             // timestamps in nanoseconds. Note that this array is valid only till we unmap the staging buffer.
             const srcTimings = new BigInt64Array(stagingBuffer.getMappedRange());

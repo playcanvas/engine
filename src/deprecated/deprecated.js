@@ -1,7 +1,11 @@
+// This module must stay free of module-scope side effects: everything here is a plain alias or a
+// deprecated helper function, so bundlers can drop it entirely when unused (package.json declares
+// "sideEffects": false). Prototype-patch shims live at the bottom of the module that defines the
+// class they patch, so they only ship when that class does.
+
 import { Debug } from '../core/debug.js';
 
 import { Vec4 } from '../core/math/vec4.js';
-import { math } from '../core/math/math.js';
 
 import {
     BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
@@ -20,31 +24,16 @@ import { ConeGeometry } from '../scene/geometry/cone-geometry.js';
 import { PlaneGeometry } from '../scene/geometry/plane-geometry.js';
 import { SphereGeometry } from '../scene/geometry/sphere-geometry.js';
 import { TorusGeometry } from '../scene/geometry/torus-geometry.js';
-import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
-import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
-import { StandardMaterial } from '../scene/materials/standard-material.js';
-import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
 import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
+import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
-import { AssetRegistry } from '../framework/asset/asset-registry.js';
-
-import { XrInputSource } from '../framework/xr/xr-input-source.js';
-
-import { ElementInput } from '../framework/input/element-input.js';
-import { MouseEvent } from '../platform/input/mouse-event.js';
-
-import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
-import { ModelComponent } from '../framework/components/model/component.js';
 import {
     BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
     BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
     BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
 } from '../framework/components/rigid-body/constants.js';
-import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
-import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
-import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 // GRAPHICS
 
@@ -167,165 +156,6 @@ export const shaderChunks = new Proxy({}, {
     }
 });
 
-ForwardRenderer.prototype.renderComposition = function (comp) {
-    Debug.deprecated('ForwardRenderer#renderComposition is deprecated. Use AppBase.renderComposition instead.');
-    getApplication().renderComposition(comp);
-};
-
-Object.defineProperty(Material.prototype, 'shader', {
-    set: function (value) {
-        Debug.removed('Material#shader was removed. Use ShaderMaterial instead.');
-    },
-    get: function () {
-        Debug.removed('Material#shader was removed. Use ShaderMaterial instead.');
-        return null;
-    }
-});
-
-// Note: this is used by the Editor
-Object.defineProperty(Material.prototype, 'blend', {
-    set: function (value) {
-        Debug.deprecated('Material#blend is deprecated, use Material.blendState.');
-        this.blendState.blend = value;
-    },
-    get: function () {
-        return this.blendState.blend;
-    }
-});
-
-// shininess (range 0..100) - maps to internal gloss value (range 0..1)
-Object.defineProperty(StandardMaterial.prototype, 'shininess', {
-    get: function () {
-        return this.gloss * 100;
-    },
-    set: function (value) {
-        this.gloss = value * 0.01;
-    }
-});
-
-// useGammaTonemap was renamed to useTonemap. For now do not log a deprecated warning to make existing
-// code work without warnings.
-Object.defineProperty(StandardMaterial.prototype, 'useGammaTonemap', {
-    get: function () {
-        return this.useTonemap;
-    },
-    set: function (value) {
-        this.useTonemap = value;
-    }
-});
-
-Object.defineProperty(StandardMaterial.prototype, 'anisotropy', {
-    get: function () {
-        Debug.deprecated('StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.');
-        const sign = Math.sign(Math.cos(this.anisotropyRotation * math.DEG_TO_RAD * 2));
-        return this.anisotropyIntensity * sign;
-    },
-    set: function (value) {
-        Debug.deprecated('StandardMaterial#anisotropy is deprecated. Use StandardMaterial#anisotropyIntensity and StandardMaterial#anisotropyRotation instead.');
-        this.anisotropyIntensity = Math.abs(value);
-        if (value >= 0) {
-            this.anisotropyRotation = 0;
-        } else {
-            this.anisotropyRotation = 90;
-        }
-    }
-});
-
-function _defineAlias(newName, oldName) {
-    Object.defineProperty(StandardMaterial.prototype, oldName, {
-        get: function () {
-            Debug.deprecated(`StandardMaterial#${oldName} is deprecated. Use StandardMaterial#${newName} instead.`);
-            return this[newName];
-        },
-        set: function (value) {
-            Debug.deprecated(`StandardMaterial#${oldName} is deprecated. Use StandardMaterial#${newName} instead.`);
-            this[newName] = value;
-        }
-    });
-}
-
-function _removeTint(name) {
-    Object.defineProperty(StandardMaterial.prototype, name, {
-        get: function () {
-            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
-            return true;
-        },
-        set: function (value) {
-            Debug.removed(`StandardMaterial#${name} was removed, and the behaviour is as if ${name} was always true`);
-        }
-    });
-}
-
-_removeTint('sheenTint');
-_removeTint('diffuseTint');
-_removeTint('emissiveTint');
-_removeTint('ambientTint');
-
-_defineAlias('specularTint', 'specularMapTint');
-_defineAlias('aoVertexColor', 'aoMapVertexColor');
-_defineAlias('diffuseVertexColor', 'diffuseMapVertexColor');
-_defineAlias('specularVertexColor', 'specularMapVertexColor');
-_defineAlias('emissiveVertexColor', 'emissiveMapVertexColor');
-_defineAlias('metalnessVertexColor', 'metalnessMapVertexColor');
-_defineAlias('glossVertexColor', 'glossMapVertexColor');
-_defineAlias('opacityVertexColor', 'opacityMapVertexColor');
-_defineAlias('lightVertexColor', 'lightMapVertexColor');
-
-_defineAlias('sheenGloss', 'sheenGlossiness');
-_defineAlias('clearCoatGloss', 'clearCoatGlossiness');
-
-function _defineOption(name, newName) {
-    if (name !== 'pass') {
-        Object.defineProperty(StandardMaterialOptions.prototype, name, {
-            get: function () {
-                Debug.deprecated(`Getting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`);
-                return this.litOptions[newName || name];
-            },
-            set: function (value) {
-                Debug.deprecated(`Setting StandardMaterialOptions#${name} is deprecated. Use StandardMaterialOptions#litOptions.${newName || name} instead.`);
-                this.litOptions[newName || name] = value;
-            }
-        });
-    }
-}
-_defineOption('refraction', 'useRefraction');
-
-const tempOptions = new LitShaderOptions();
-const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
-for (const litOption in litOptionProperties) {
-    _defineOption(litOptionProperties[litOption]);
-}
-
-// ASSET
-
-AssetRegistry.prototype.getAssetById = function (id) {
-    Debug.deprecated('AssetRegistry#getAssetById is deprecated. Use AssetRegistry#get instead.');
-    return this.get(id);
-};
-
-// XR
-
-Object.defineProperty(XrInputSource.prototype, 'ray', {
-    get: function () {
-        Debug.deprecated('XrInputSource#ray is deprecated. Use XrInputSource#getOrigin and XrInputSource#getDirection instead.');
-        return this._rayLocal;
-    }
-});
-
-Object.defineProperty(XrInputSource.prototype, 'position', {
-    get: function () {
-        Debug.deprecated('XrInputSource#position is deprecated. Use XrInputSource#getLocalPosition instead.');
-        return this._localPosition;
-    }
-});
-
-Object.defineProperty(XrInputSource.prototype, 'rotation', {
-    get: function () {
-        Debug.deprecated('XrInputSource#rotation is deprecated. Use XrInputSource#getLocalRotation instead.');
-        return this._localRotation;
-    }
-});
-
 // INPUT
 
 export const EVENT_KEYDOWN = 'keydown';
@@ -348,18 +178,6 @@ export const EVENT_SELECT = 'select';
 export const EVENT_SELECTSTART = 'selectstart';
 export const EVENT_SELECTEND = 'selectend';
 
-Object.defineProperty(ElementInput.prototype, 'wheel', {
-    get: function () {
-        return this.wheelDelta * -2;
-    }
-});
-
-Object.defineProperty(MouseEvent.prototype, 'wheel', {
-    get: function () {
-        return this.wheelDelta * -2;
-    }
-});
-
 // FRAMEWORK
 
 export const RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
@@ -373,112 +191,3 @@ export const RIGIDBODY_ISLAND_SLEEPING = BODYSTATE_ISLAND_SLEEPING;
 export const RIGIDBODY_WANTS_DEACTIVATION = BODYSTATE_WANTS_DEACTIVATION;
 export const RIGIDBODY_DISABLE_DEACTIVATION = BODYSTATE_DISABLE_DEACTIVATION;
 export const RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
-
-AppBase.prototype.isFullscreen = function () {
-    Debug.deprecated('AppBase#isFullscreen is deprecated. Use the Fullscreen API directly.');
-
-    return !!document.fullscreenElement;
-};
-
-AppBase.prototype.enableFullscreen = function (element, success, error) {
-    Debug.deprecated('AppBase#enableFullscreen is deprecated. Use the Fullscreen API directly.');
-
-    element = element || this.graphicsDevice.canvas;
-
-    // success callback
-    const s = function () {
-        success();
-        document.removeEventListener('fullscreenchange', s);
-    };
-
-    // error callback
-    const e = function () {
-        error();
-        document.removeEventListener('fullscreenerror', e);
-    };
-
-    if (success) {
-        document.addEventListener('fullscreenchange', s, false);
-    }
-
-    if (error) {
-        document.addEventListener('fullscreenerror', e, false);
-    }
-
-    if (element.requestFullscreen) {
-        element.requestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-    } else {
-        error();
-    }
-};
-
-AppBase.prototype.disableFullscreen = function (success) {
-    Debug.deprecated('AppBase#disableFullscreen is deprecated. Use the Fullscreen API directly.');
-
-    // success callback
-    const s = function () {
-        success();
-        document.removeEventListener('fullscreenchange', s);
-    };
-
-    if (success) {
-        document.addEventListener('fullscreenchange', s, false);
-    }
-
-    document.exitFullscreen();
-};
-
-AppBase.prototype.getSceneUrl = function (name) {
-    Debug.deprecated('AppBase#getSceneUrl is deprecated. Use AppBase#scenes and SceneRegistry#find instead.');
-    const entry = this.scenes.find(name);
-    if (entry) {
-        return entry.url;
-    }
-    return null;
-};
-
-AppBase.prototype.loadScene = function (url, callback) {
-    Debug.deprecated('AppBase#loadScene is deprecated. Use AppBase#scenes and SceneRegistry#loadScene instead.');
-    this.scenes.loadScene(url, callback);
-};
-
-AppBase.prototype.loadSceneHierarchy = function (url, callback) {
-    Debug.deprecated('AppBase#loadSceneHierarchy is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneHierarchy instead.');
-    this.scenes.loadSceneHierarchy(url, callback);
-};
-
-AppBase.prototype.loadSceneSettings = function (url, callback) {
-    Debug.deprecated('AppBase#loadSceneSettings is deprecated. Use AppBase#scenes and SceneRegistry#loadSceneSettings instead.');
-    this.scenes.loadSceneSettings(url, callback);
-};
-
-ModelComponent.prototype.setVisible = function (visible) {
-    Debug.deprecated('ModelComponent#setVisible is deprecated. Use ModelComponent#enabled instead.');
-    this.enabled = visible;
-};
-
-Object.defineProperty(RigidBodyComponent.prototype, 'bodyType', {
-    get: function () {
-        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
-        return this.type;
-    },
-    set: function (type) {
-        Debug.deprecated('RigidBodyComponent#bodyType is deprecated. Use RigidBodyComponent#type instead.');
-        this.type = type;
-    }
-});
-
-RigidBodyComponent.prototype.syncBodyToEntity = function () {
-    Debug.deprecated('RigidBodyComponent#syncBodyToEntity is not public API and should not be used.');
-    this._updateDynamic();
-};
-
-RigidBodyComponentSystem.prototype.setGravity = function () {
-    Debug.deprecated('RigidBodyComponentSystem#setGravity is deprecated. Use RigidBodyComponentSystem#gravity instead.');
-
-    if (arguments.length === 1) {
-        this.gravity.copy(arguments[0]);
-    } else {
-        this.gravity.set(arguments[0], arguments[1], arguments[2]);
-    }
-};

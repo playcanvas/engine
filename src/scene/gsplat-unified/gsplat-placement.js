@@ -62,49 +62,6 @@ class GSplatPlacement {
     lodIndex = 0;
 
     /**
-     * Base distance for the first LOD transition (LOD 0 to LOD 1).
-     *
-     * @private
-     */
-    _lodBaseDistance = 5;
-
-    /**
-     * Geometric multiplier between successive LOD distance thresholds.
-     * Distance for LOD level i is: lodBaseDistance * lodMultiplier^i.
-     *
-     * @private
-     */
-    _lodMultiplier = 3;
-
-    /**
-     * @type {number}
-     */
-    set lodBaseDistance(value) {
-        if (this._lodBaseDistance !== value) {
-            this._lodBaseDistance = value;
-            this.lodDirty = true;
-        }
-    }
-
-    get lodBaseDistance() {
-        return this._lodBaseDistance;
-    }
-
-    /**
-     * @type {number}
-     */
-    set lodMultiplier(value) {
-        if (this._lodMultiplier !== value) {
-            this._lodMultiplier = value;
-            this.lodDirty = true;
-        }
-    }
-
-    get lodMultiplier() {
-        return this._lodMultiplier;
-    }
-
-    /**
      * Minimum allowed LOD index (inclusive). Clamped to the asset's valid range at use.
      *
      * @private
@@ -117,6 +74,33 @@ class GSplatPlacement {
      * @private
      */
     _lodRangeMax = 99;
+
+    /**
+     * @type {number}
+     */
+    /**
+     * How fast quality falls off away from the camera for this placement's nodes, applied as an
+     * exponent on projected coverage in the budget ranking. 1 is neutral, 0 spreads the budget with
+     * no view preference, 2 concentrates it near the camera. In distance LOD mode this sets the
+     * band spacing.
+     *
+     * @private
+     */
+    _lodFalloff = 1;
+
+    /**
+     * @type {number}
+     */
+    set lodFalloff(value) {
+        if (this._lodFalloff !== value) {
+            this._lodFalloff = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodFalloff() {
+        return this._lodFalloff;
+    }
 
     /**
      * @type {number}
@@ -312,16 +296,6 @@ class GSplatPlacement {
         const aabb = this._aabb ?? this.resource?.aabb;
         Debug.assert(aabb, 'GSplatPlacement.aabb is null - resource.aabb must be set');
         return /** @type {BoundingBox} */ (aabb);
-    }
-
-    /**
-     * Computes the LOD distance threshold for a given level using the geometric progression.
-     *
-     * @param {number} level - The LOD level index.
-     * @returns {number} The distance threshold for the given LOD level.
-     */
-    getLodDistance(level) {
-        return this.lodBaseDistance * Math.pow(this.lodMultiplier, level);
     }
 
     /**

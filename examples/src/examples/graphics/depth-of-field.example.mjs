@@ -168,7 +168,6 @@ app.root.addChild(cameraEntity);
 
 const cameraFrame = new CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_ACES;
-cameraFrame.rendering.samples = 4;
 cameraFrame.bloom.intensity = 0.03;
 cameraFrame.bloom.blurLevel = 7;
 cameraFrame.vignette.inner = 0.5;
@@ -183,7 +182,8 @@ const applySettings = () => {
     const taa = data.get('data.taa.enabled');
     cameraFrame.taa.enabled = taa;
     cameraFrame.taa.jitter = data.get('data.taa.jitter');
-    cameraFrame.rendering.sharpness = taa ? 1 : 0;
+    cameraFrame.rendering.samples = taa ? 1 : 4; // disable MSAA when TAA is enabled
+    cameraFrame.rendering.sharpness = taa ? 1 : 0; // sharpen the image when TAA is enabled
 
     // DOF
     cameraFrame.dof.enabled = data.get('data.dof.enabled');

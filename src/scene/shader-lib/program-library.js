@@ -183,6 +183,7 @@ class ProgramLibrary {
                 fshader: generatedShaderDef.fshader,
                 processingOptions: processingOptions,
                 shaderLanguage: generatedShaderDef.shaderLanguage,
+                useDualSourceBlending: generatedShaderDef.useDualSourceBlending,
                 meshUniformBufferFormat: generatedShaderDef.meshUniformBufferFormat,
                 meshBindGroupFormat: generatedShaderDef.meshBindGroupFormat
             };

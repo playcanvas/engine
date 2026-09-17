@@ -1,6 +1,10 @@
 export default /* glsl */`
 uniform highp sampler2D uSceneDepthMap;
 
+#if defined(SCENE_DEPTHMAP_LINEAR) && defined(SCENE_DEPTHMAP_PACKED)
+    #include "floatAsUintPS"
+#endif
+
 #ifndef SCREENSIZE
     #define SCREENSIZE
     uniform vec4 uScreenSize;
@@ -38,21 +42,20 @@ float delinearizeDepth(float linearDepth) {
 // Retrieves rendered linear camera depth by UV
 float getLinearScreenDepth(vec2 uv) {
     #ifdef SCENE_DEPTHMAP_LINEAR
-        #ifdef CAPS_TEXTURE_FLOAT_RENDERABLE
-            return texture2D(uSceneDepthMap, uv).r;
+        #ifdef SCENE_DEPTHMAP_PACKED
+
+            // the depth is a float bit-packed into an RGBA8 texel, so it has to be read without
+            // any filtering to keep the individual bytes intact
+            ivec2 texel = ivec2(uv * vec2(textureSize(uSceneDepthMap, 0)));
+            return uint2float(texelFetch(uSceneDepthMap, texel, 0));
+        #elif defined(SCENE_DEPTHMAP_RECIPROCAL)
+
+            // a coverage weighted average of the reciprocals of the depths, inverted back into a
+            // depth. Zero is a pixel nothing was rendered to, which reads as the far clip.
+            float recip = texture2D(uSceneDepthMap, uv).r;
+            return recip > 0.0 ? 1.0 / recip : camera_params.y;
         #else
-
-            ivec2 textureSize = textureSize(uSceneDepthMap, 0);
-            ivec2 texel = ivec2(uv * vec2(textureSize));
-            vec4 data = texelFetch(uSceneDepthMap, texel, 0);
-
-            uint intBits = 
-                (uint(data.r * 255.0) << 24u) |
-                (uint(data.g * 255.0) << 16u) |
-                (uint(data.b * 255.0) << 8u) |
-                uint(data.a * 255.0);
-
-            return uintBitsToFloat(intBits);
+            return texture2D(uSceneDepthMap, uv).r;
         #endif
     #else
         return linearizeDepth(texture2D(uSceneDepthMap, uv).r);

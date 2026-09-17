@@ -30,10 +30,10 @@ class RenderPassCoC extends RenderPassShaderQuad {
         if (nearBlur) defines.set('NEAR_BLUR', '');
 
         // add defines needed for correct use of screenDepthPS chunk
-        ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
+        const depthKey = ShaderUtils.addScreenDepthChunkDefines(cameraComponent.shaderParams, defines);
 
         this.shader = ShaderUtils.createShader(device, {
-            uniqueName: `CocShader-${nearBlur}`,
+            uniqueName: `CocShader-${nearBlur}${depthKey}`,
             attributes: { aPosition: SEMANTIC_POSITION },
             vertexChunk: 'quadVS',
             fragmentChunk: 'cocPS',

@@ -69,6 +69,77 @@ describe('TextElement', function () {
         expect(element.lines).to.deep.equal(expectedLineContents);
     }
 
+    // x position of the left edge of every glyph quad, in the order the glyphs were laid out
+    function quadLefts() {
+        const meshInfo = element._text._meshInfo[0];
+        const lefts = [];
+        for (let quad = 0; quad < meshInfo.quad; quad++) {
+            lefts.push(meshInfo.positions[quad * 4 * 3]);
+        }
+        return lefts;
+    }
+
+    // range of glyph quads produced by each line - every symbol on a line produces one quad
+    function lineQuadRanges() {
+        const ranges = [];
+        let start = 0;
+        for (const line of element.lines) {
+            const chars = Array.from(line);
+            ranges.push({ start: start, end: start + chars.length - 1, chars: chars });
+            start += chars.length;
+        }
+        return ranges;
+    }
+
+    // leftmost and rightmost glyph edge of each line
+    function lineInkExtents() {
+        const meshInfo = element._text._meshInfo[0];
+        const extents = [];
+        let quad = 0;
+        for (const line of element.lines) {
+            let left = Infinity;
+            let right = -Infinity;
+            for (const char of Array.from(line)) {
+                if (!/\s/.test(char)) {
+                    const base = quad * 4 * 3;
+                    left = Math.min(left, meshInfo.positions[base], meshInfo.positions[base + 3]);
+                    right = Math.max(right, meshInfo.positions[base], meshInfo.positions[base + 3]);
+                }
+                quad++;
+            }
+            extents.push({ left: left, right: right });
+        }
+        return extents;
+    }
+
+    // A justified line reaches both of the edges that the two extremes of alignment push it to,
+    // at the same time. Which extreme hugs which edge depends on the text direction, so compare
+    // against whichever of the two reaches furthest in each direction.
+    function assertJustifiedLinesAreFlushWithBothEdges() {
+        element.justify = false;
+
+        element.alignment = new Vec2(0, 0.5);
+        const alignedToZero = lineInkExtents();
+
+        element.alignment = new Vec2(1, 0.5);
+        const alignedToOne = lineInkExtents();
+
+        element.justify = true;
+        const justified = lineInkExtents();
+        const lineGaps = element._text._lineGaps;
+
+        let stretchedLines = 0;
+        justified.forEach((extent, i) => {
+            if (lineGaps[i] > 0) {
+                expect(extent.left).to.be.closeTo(Math.min(alignedToZero[i].left, alignedToOne[i].left), 0.001);
+                expect(extent.right).to.be.closeTo(Math.max(alignedToZero[i].right, alignedToOne[i].right), 0.001);
+                stretchedLines++;
+            }
+        });
+
+        expect(stretchedLines).to.be.above(0);
+    }
+
     function assertLineColors(expectedLineColors) {
         expect(element._text.symbolColors.length).to.equal(expectedLineColors.length);
         expect(element._text.symbolColors).to.deep.equal(expectedLineColors);
@@ -118,7 +189,7 @@ describe('TextElement', function () {
             });
             return {
                 mapping: mapping,
-                isrtl: true
+                rtl: true
             };
         });
     }
@@ -166,6 +237,194 @@ describe('TextElement', function () {
         expect(element.lines.length).to.equal(1);
         element.wrapLines = true;
         expect(element.lines.length).to.equal(3);
+    });
+
+    it('does not justify text by default', function () {
+        element.fontAsset = fontAsset;
+
+        expect(element.justify).to.equal(false);
+
+        element.text = 'abcde fghij klmno pqrst uvwxyz';
+        const before = quadLefts();
+        element.justify = true;
+        expect(quadLefts()).to.not.deep.equal(before);
+    });
+
+    it('does not justify text when wrapLines is false', function () {
+        element.fontAsset = fontAsset;
+
+        element.wrapLines = false;
+        element.text = 'abcde fghij klmno pqrst uvwxyz';
+        const before = quadLefts();
+
+        element.justify = true;
+        expect(quadLefts()).to.deep.equal(before);
+    });
+
+    it('does not change where lines break when justifying', function () {
+        element.fontAsset = fontAsset;
+
+        element.text = 'abcde fghij klmno pqrst uvwxyz';
+        const before = element.lines.slice();
+
+        element.justify = true;
+        expect(element.lines).to.deep.equal(before);
+    });
+
+    it('justifies a wrapped line flush with both edges of the element', function () {
+        element.fontAsset = fontAsset;
+        element.alignment = new Vec2(0, 0.5);
+
+        element.text = 'abcde fghij klmno pqrst uvwxyz';
+        assertLineContents([
+            'abcde fghij ',
+            'klmno pqrst ',
+            'uvwxyz'
+        ]);
+
+        const before = quadLefts();
+        const slack = element.calculatedWidth - element._text._lineWidths[0];
+        expect(slack).to.be.above(0);
+
+        element.justify = true;
+        const after = quadLefts();
+
+        // the first line has a single gap, so 'abcde' and the space after it stay where they are
+        // and 'fghij' takes up all of the space the line had left over
+        for (let quad = 0; quad <= 5; quad++) {
+            expect(after[quad]).to.be.closeTo(before[quad], 0.001);
+        }
+        for (let quad = 6; quad <= 11; quad++) {
+            expect(after[quad]).to.be.closeTo(before[quad] + slack, 0.001);
+        }
+    });
+
+    it('does not justify the last line of the text', function () {
+        element.fontAsset = fontAsset;
+        element.alignment = new Vec2(0, 0.5);
+
+        element.text = 'abcde fghij klmno pqrst uvwxyz';
+        const ranges = lineQuadRanges();
+        const lastLine = ranges[ranges.length - 1];
+
+        const before = quadLefts();
+        element.justify = true;
+        const after = quadLefts();
+
+        for (let quad = lastLine.start; quad <= lastLine.end; quad++) {
+            expect(after[quad]).to.be.closeTo(before[quad], 0.001);
+        }
+    });
+
+    it('does not justify a line ended by an explicit line break', function () {
+        element.fontAsset = fontAsset;
+        element.alignment = new Vec2(0, 0.5);
+
+        // short enough that neither line wraps, so both lines are unjustifiable - the first
+        // because it ends in a line break and the second because it is the last line
+        element.text = 'ab cd\nef gh';
+        assertLineContents(['ab cd', 'ef gh']);
+
+        const before = quadLefts();
+        element.justify = true;
+        expect(quadLefts()).to.deep.equal(before);
+    });
+
+    it('does not justify a line that has no gaps to widen', function () {
+        element.fontAsset = fontAsset;
+        element.alignment = new Vec2(0, 0.5);
+
+        // a single word broken across lines has no whitespace to stretch
+        element.text = 'abcdefghijklmnopqrstuvwxyz';
+        expect(element.lines.length).to.be.above(1);
+
+        const before = quadLefts();
+        element.justify = true;
+        expect(quadLefts()).to.deep.equal(before);
+    });
+
+    it('widens every gap on a justified line by the same amount', function () {
+        element.fontAsset = fontAsset;
+        element.alignment = new Vec2(0, 0.5);
+        element.width = 300;
+
+        element.text = 'aa bb cc dd ee ff gg hh ii jj kk ll';
+
+        const ranges = lineQuadRanges();
+        const before = quadLefts();
+
+        element.justify = true;
+        const after = quadLefts();
+
+        // gap counts are only tracked while justifying, so they have to be read afterwards
+        const lineGaps = element._text._lineGaps.slice();
+
+        // pick a stretched line with more than one gap in it
+        const lineIndex = lineGaps.findIndex((gaps, i) => gaps > 1 && i < ranges.length - 1);
+        expect(lineIndex).to.be.at.least(0);
+
+        const range = ranges[lineIndex];
+        const slack = element.calculatedWidth - element._text._lineWidths[lineIndex];
+        expect(slack).to.be.above(0);
+
+        // how far the first glyph of each word on the line moved
+        const shifts = [];
+        for (let quad = range.start; quad <= range.end; quad++) {
+            const char = range.chars[quad - range.start];
+            const prevChar = range.chars[quad - range.start - 1];
+            if (!/\s/.test(char) && (quad === range.start || /\s/.test(prevChar))) {
+                shifts.push(after[quad] - before[quad]);
+            }
+        }
+
+        expect(shifts.length).to.equal(lineGaps[lineIndex] + 1);
+
+        // the first word does not move, the last one takes up all of the slack, and the words in
+        // between are spaced evenly, so each word moves one step further than the one before it
+        const step = slack / lineGaps[lineIndex];
+        shifts.forEach((shift, i) => {
+            expect(shift).to.be.closeTo(i * step, 0.001);
+        });
+    });
+
+    it('justifies wrapped lines flush with both edges of the element', function () {
+        element.fontAsset = fontAsset;
+
+        element.text = 'abcde fghij klmno pqrst uvwxyz';
+        assertJustifiedLinesAreFlushWithBothEdges();
+    });
+
+    it('rtl - justifies wrapped lines flush with both edges of the element', function () {
+        registerRtlHandler();
+
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = 'abcde fghij klmno pqrst uvwxyz';
+
+        // guard against the reorder handler silently failing to turn rtl on, which would leave
+        // this exercising the ltr path and let the rtl behaviour regress unnoticed
+        expect(element._text._rtl).to.equal(true);
+
+        assertJustifiedLinesAreFlushWithBothEdges();
+    });
+
+    it('initializes justify from component data', function () {
+        const other = new Entity();
+        const otherElement = app.systems.element.addComponent(other, {
+            type: 'text',
+            justify: true
+        });
+
+        expect(otherElement.justify).to.equal(true);
+    });
+
+    it('cloning text element clones the justify setting', function () {
+        element.fontAsset = fontAsset;
+        element.justify = true;
+
+        const clone = entity.clone();
+        expect(clone.element.justify).to.equal(true);
     });
 
     it('breaks onto multiple lines if individual lines are too long', function () {
@@ -365,6 +624,19 @@ describe('TextElement', function () {
             'a',
             'bcdef ghijkl'
         ]);
+    });
+
+    it('rtl - reorder handler turns on rtl layout', function () {
+        registerRtlHandler();
+
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+
+        element.text = 'abcde fghij';
+
+        // without this the rtl tests below all run through the ltr path, and the rtl specific
+        // layout code they are meant to cover is never reached
+        expect(element._text._rtl).to.equal(true);
     });
 
     it('rtl - breaks onto multiple lines if individual lines are too long', function () {

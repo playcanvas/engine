@@ -1,5 +1,4 @@
 import { ConeBaseGeometry } from './cone-base-geometry.js';
-import { calculateTangents } from './geometry-utils.js';
 
 /**
  * A procedural cone-shaped geometry.
@@ -68,7 +67,7 @@ class ConeGeometry extends ConeBaseGeometry {
         super(baseRadius, peakRadius, height, heightSegments, capSegments, false);
 
         if (opts.calculateTangents) {
-            this.tangents = calculateTangents(this.positions, this.normals, this.uvs, this.indices);
+            this.calculateTangents();
         }
     }
 }

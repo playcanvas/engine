@@ -18,7 +18,7 @@ void evaluateBackend() {
         #endif
     #endif
 
-    #ifdef LIT_SPECULAR_OR_REFLECTION
+    #if defined(LIT_SPECULAR_OR_REFLECTION) || defined(LIT_REFRACTION)
         #ifdef LIT_METALNESS
             float f0 = 1.0 / litArgs_ior;
             f0 = (f0 - 1.0) / (f0 + 1.0);
@@ -167,23 +167,25 @@ void evaluateBackend() {
 
         #endif
 
-        #ifdef LIT_REFRACTION
-            addRefraction(
-                litArgs_worldNormal, 
-                dViewDirW, 
-                litArgs_thickness, 
-                litArgs_gloss, 
-                litArgs_specularity, 
-                litArgs_albedo, 
-                litArgs_transmission,
-                litArgs_ior,
-                litArgs_dispersion
-                #if defined(LIT_IRIDESCENCE)
-                    , iridescenceFresnel, 
-                    litArgs_iridescence_intensity
-                #endif
-            );
-        #endif
+    #endif
+
+    // refraction is not gated on lighting / reflections, so that it also works without them
+    #ifdef LIT_REFRACTION
+        addRefraction(
+            litArgs_worldNormal,
+            dViewDirW,
+            litArgs_thickness,
+            litArgs_gloss,
+            litArgs_specularity,
+            litArgs_albedo,
+            litArgs_transmission,
+            litArgs_ior,
+            litArgs_dispersion
+            #if defined(LIT_IRIDESCENCE)
+                , iridescenceFresnel,
+                litArgs_iridescence_intensity
+            #endif
+        );
     #endif
 
     // apply ambient occlusion

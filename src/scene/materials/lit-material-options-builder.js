@@ -6,20 +6,27 @@ import {
     SHADERDEF_MORPH_TEXTURE_BASED_INT,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP,
-    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT
+    AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
+    SHADER_PREPASS, SCENETEXTURE_DEPTH
 } from '../constants.js';
 
 class LitMaterialOptionsBuilder {
     static update(litOptions, material, scene, renderParams, objDefs, pass, sortedLights) {
-        LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
+        LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass, renderParams);
         LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
         LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene, renderParams);
         LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, scene, objDefs, sortedLights);
     }
 
-    static updateSharedOptions(litOptions, material, scene, objDefs, pass) {
+    static updateSharedOptions(litOptions, material, scene, objDefs, pass, renderParams) {
         litOptions.shaderChunks = material.shaderChunks;
         litOptions.pass = pass;
+
+        // linear depth is rendered by the prepass, and by the forward pass when the camera renders
+        // the scene depth into a scene texture
+        litOptions.linearDepth = pass === SHADER_PREPASS ||
+            !!renderParams?.sceneTextures.includes(SCENETEXTURE_DEPTH);
+
         litOptions.alphaTest = material.alphaTest > 0;
         litOptions.blendType = material.blendType;
 

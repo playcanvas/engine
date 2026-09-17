@@ -20,4 +20,13 @@ float bayer8(vec2 p) {
     vec2 p4 = floor(0.25 * mod(p, 8.0));
     return 4.0 * (4.0 * bayer2(p1) + bayer2(p2)) + bayer2(p4);
 }
+
+// 16x16 matrix, p - pixel coordinate
+float bayer16(vec2 p) {
+    vec2 p1 = mod(p, 2.0);
+    vec2 p2 = floor(0.5 * mod(p, 4.0));
+    vec2 p4 = floor(0.25 * mod(p, 8.0));
+    vec2 p8 = floor(0.125 * mod(p, 16.0));
+    return 4.0 * (4.0 * (4.0 * bayer2(p1) + bayer2(p2)) + bayer2(p4)) + bayer2(p8);
+}
 `;

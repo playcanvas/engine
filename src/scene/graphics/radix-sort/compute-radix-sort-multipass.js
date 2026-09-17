@@ -519,13 +519,18 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
             }
             device.computeDispatch([reorderCompute], `RadixSort4bit-Reorder${suffix}`);
 
-            // Swap buffers for next pass (skip on last pass - not needed)
+            // Swap buffers for next pass (skip on last pass - not needed).
+            // Values mirror the keys ping-pong: after pass 0 the caller's
+            // initialValues buffer is dropped from the rotation (it is read-only
+            // per the API contract), so ping-pong continues between the two
+            // internal value buffers. A plain swap would keep initialValues in the
+            // rotation, leaving an even-pass-count result in it while sortedIndices
+            // (parity over _values0/_values1) returns the wrong, never-written buffer.
             if (!isLastPass) {
                 currentKeys = nextKeys;
                 nextKeys = (currentKeys === this._keys0) ? this._keys1 : this._keys0;
-                const tempValues = currentValues;
                 currentValues = nextValues;
-                nextValues = tempValues;
+                nextValues = (currentValues === this._values0) ? this._values1 : this._values0;
             }
         }
 

@@ -215,7 +215,10 @@ class ExampleLoader {
 
         if (!this._started) {
             // just notify to clean UI, but not during hot-reload
-            fire('exampleLoading', { showDeviceSelector: !this._config.NO_DEVICE_SELECTOR });
+            fire('exampleLoading', {
+                showDeviceSelector: !this._config.NO_DEVICE_SELECTOR,
+                showMiniStats: !this._config.NO_MINISTATS
+            });
         }
 
         clearImports();
@@ -224,6 +227,10 @@ class ExampleLoader {
             // import local file
             const module = await importModule('example.mjs');
             this._app = module.app ?? window.pc?.AppBase.getApplication('application-canvas');
+
+            // an example creating its own MiniStats (to pass custom options) hands it over here,
+            // so that the UI toggle drives that instance
+            MiniStats.adopt(module.miniStats);
 
             // additional destroy handler for non-app resources
             if (typeof module.destroy === 'function') {

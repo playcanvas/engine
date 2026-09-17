@@ -203,7 +203,7 @@ class GSplatShadowRenderer {
      * resolve each light's shadow camera via `light.getRenderData(sceneCamera, 0)`.
      * @param {Layer} layer - The layer to register shadow casters on (and read directional lights from).
      * @param {GSplatWorld} world - The shared world (work buffer, cull bounds, world states).
-     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch] -
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch|null} [scratch]
      * Manager-owned shared scratch; forwarded to the pass-1 compaction so its candidate index list is
      * shared with the forward hybrid renderer (they use it at disjoint points in the frame).
      */
@@ -669,14 +669,10 @@ class GSplatShadowRenderer {
      * @private
      */
     _fillFrustumPlanes(frustum) {
-        const p = this._frustumPlanes;
-        for (let i = 0; i < 6; i++) {
-            const plane = frustum.planes[i];
-            p[i * 4 + 0] = plane.normal.x;
-            p[i * 4 + 1] = plane.normal.y;
-            p[i * 4 + 2] = plane.normal.z;
-            p[i * 4 + 3] = plane.distance;
-        }
+        // the frustum stores its planes in the packed vec4(normal.xyz, distance) form the shader
+        // wants, so this is a straight copy. Kept as a copy rather than sharing the frustum's array,
+        // so this buffer stays owned by the light currently being culled.
+        this._frustumPlanes.set(frustum.planeData);
     }
 
     /**

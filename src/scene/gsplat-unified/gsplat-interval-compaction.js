@@ -131,7 +131,7 @@ class GSplatIntervalCompaction {
 
     /**
      * @param {GraphicsDevice} device - The graphics device (must support compute).
-     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch} scratch -
+     * @param {import('./gsplat-hybrid-renderer-scratch.js').GSplatHybridRendererScratch} scratch
      * Manager-owned shared scratch the compacted index list is borrowed from (shared across the
      * forward + shadow GPU-sort passes within a manager).
      */

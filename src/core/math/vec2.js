@@ -438,6 +438,12 @@ class Vec2 {
         return this;
     }
 
+    /**
+     * @deprecated Use Vec2#mulScalar instead.
+     * @param {number} scalar - The number to multiply by.
+     * @returns {Vec2} Self for chaining.
+     * @ignore
+     */
     scale(scalar) {
         Debug.deprecated('Vec2#scale is deprecated. Use Vec2#mulScalar instead.');
         return this.mulScalar(scalar);
