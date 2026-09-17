@@ -357,7 +357,6 @@ class Asset extends EventHandler {
      * - "animstategraph" - see {@link AnimStateGraph}
      * - "audio" - see {@link Sound}
      * - "binary" - an `ArrayBuffer`
-     * - "bundle" - a bundle of files backing other assets
      * - "container" - see {@link ContainerResource}
      * - "css" - a `string`
      * - "cubemap" - see {@link Texture}; null when only prefiltered levels are provided
@@ -367,8 +366,6 @@ class Asset extends EventHandler {
      * - "json" - the parsed JSON
      * - "material" - see {@link Material}
      * - "model" - see {@link Model}
-     * - "render" - the meshes of one glTF mesh, loaded through a container asset
-     * - "scene" - see {@link Scene}
      * - "script" - see {@link Script}
      * - "shader" - a `string`
      * - "sprite" - see {@link Sprite}
