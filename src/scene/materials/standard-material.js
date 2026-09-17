@@ -175,6 +175,28 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * `material.update()` runs. The debug build reports unapplied changes to the properties stored in
  * the material uniform buffer, such as `diffuse`.
  *
+ * Properties come in families that share a naming pattern. A family such as `diffuse` has a
+ * constant (`diffuse`), a texture (`diffuseMap`) with its `diffuseMapUv`, `diffuseMapTiling`,
+ * `diffuseMapOffset`, `diffuseMapRotation` and `diffuseMapChannel`, and a vertex color switch
+ * (`diffuseVertexColor`). The main families are `diffuse`; `specular`, or `metalness` when
+ * `useMetalness` is set; `gloss`; `normalMap` with `bumpiness`; `emissive`; `opacity` together
+ * with {@link Material#blendType}; `ao`; `lightMap`; and the advanced layers `clearCoat`, `sheen`,
+ * `iridescence` and `refraction`. Lighting can be turned off entirely with `useLighting`.
+ *
+ * To go beyond the properties, replace individual shader chunks with
+ * {@link Material#getShaderChunks}, or adjust the generated shader's options per variant with
+ * {@link onUpdateShader}. When the surface is not a lit material at all, use {@link ShaderMaterial}
+ * instead.
+ *
+ * @example
+ * const material = new StandardMaterial();
+ * material.diffuse.set(0.8, 0.2, 0.2);
+ * material.diffuseMap = brickAsset.resource;
+ * material.useMetalness = true;
+ * material.metalness = 0.1;
+ * material.gloss = 0.6;
+ * material.update();
+ * entity.render.material = material;
  * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
  * null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel. Valid values are 0 to 7.

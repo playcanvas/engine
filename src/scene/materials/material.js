@@ -80,6 +80,24 @@ let id = 0;
  * as {@link ShaderMaterial} and {@link StandardMaterial} can be used to define materials
  * for rendering.
  *
+ * Choose {@link StandardMaterial} for a physically based surface described by properties and
+ * textures, and {@link ShaderMaterial} to supply your own vertex and fragment shaders. Both share
+ * the state defined here: blending through {@link blendType}, depth behaviour through
+ * {@link depthTest}, {@link depthWrite} and {@link depthFunc}, face culling through {@link cull},
+ * alpha testing through {@link alphaTest}, shader uniforms through {@link setParameter}, and
+ * preprocessor defines through {@link setDefine}. {@link getShaderChunks} exposes the GLSL and WGSL
+ * chunks the material's shader is built from, so one chunk can be replaced without writing a whole
+ * shader.
+ *
+ * After changing properties, call {@link update} so the change reaches the GPU. It clears the
+ * material's compiled shader variants, which are rebuilt on demand. A material can be shared by
+ * any number of mesh instances, and {@link clone} makes an independent copy.
+ *
+ * @example
+ * // Make a material additive and double-sided, then apply the change
+ * material.blendType = BLEND_ADDITIVE;
+ * material.cull = CULLFACE_NONE;
+ * material.update();
  * @category Graphics
  */
 class Material {

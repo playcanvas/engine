@@ -8,6 +8,20 @@ import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } fro
  * The lit shader options determines how the lit-shader gets generated. It specifies a set of
  * parameters which triggers different fragment and vertex shader generation in the backend.
  *
+ * You do not create one. The engine fills a LitShaderOptions from the material and scene state
+ * each time a {@link StandardMaterial} needs a shader variant, and every distinct set of values
+ * produces a distinct compiled shader. The place to reach it is
+ * {@link StandardMaterial#onUpdateShader}, whose callback receives a
+ * {@link StandardMaterialOptions} with the lit options in its `litOptions` field. Changing values
+ * there, for example switching fog off for one material, yields a variant built from the changed
+ * options.
+ *
+ * @example
+ * // Render this material without fog regardless of the scene setting
+ * material.onUpdateShader = (options) => {
+ *     options.litOptions.fog = FOG_NONE;
+ *     return options;
+ * };
  * @category Graphics
  */
 class LitShaderOptions {
