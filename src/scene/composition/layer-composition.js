@@ -20,10 +20,11 @@ import { RenderAction } from './render-action.js';
  * {@link layerList} holds the sequence of parts in the order they are drawn. {@link push} and
  * {@link insert} add both parts of a layer together, while {@link pushOpaque},
  * {@link pushTransparent}, {@link insertOpaque} and {@link insertTransparent} place one part at a
- * time, which is how the default composition draws every layer's opaque objects before the world's
- * transparent ones. Look layers up with {@link getLayerById} and {@link getLayerByName}, find
- * where a part sits with {@link getOpaqueIndex} and {@link getTransparentIndex}, and take a layer
- * out with {@link remove}. The composition fires `add` and `remove` as layers come and go.
+ * time, which is how the default composition places the depth and skybox layers between the world's
+ * opaque and transparent parts. Look layers up with {@link getLayerById} and
+ * {@link getLayerByName}, find where a part sits with {@link getOpaqueIndex} and
+ * {@link getTransparentIndex}, and take a layer out with {@link remove}. The composition fires
+ * `add` and `remove` as layers come and go.
  *
  * The composition the application creates ends with the UI layer, so a pushed layer renders after
  * the UI and outside the range a camera's post-processing applies to. To render inside that range,
