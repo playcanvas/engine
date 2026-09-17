@@ -19,6 +19,7 @@ import {
 import { BLEND_PREMULTIPLIED, LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
+import { needsShadowRendering } from '../renderer/shadow-renderer.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { computeGsplatShadowCullSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-shadow-cull.js';
 import { computeGsplatShadowIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-shadow-indirect-args.js';
@@ -452,7 +453,7 @@ class GSplatShadowRenderer {
 
         this.entries.forEach((entry) => {
             const { light } = entry;
-            if (light.shadowUpdateMode === SHADOWUPDATE_NONE || light.shadowUpdateOverrides?.[0] === SHADOWUPDATE_NONE) {
+            if (!needsShadowRendering(light) || light.shadowUpdateOverrides?.[0] === SHADOWUPDATE_NONE) {
                 return;
             }
 

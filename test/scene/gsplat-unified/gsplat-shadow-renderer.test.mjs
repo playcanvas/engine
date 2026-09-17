@@ -28,7 +28,13 @@ describe('GSplatShadowRenderer#cull', function () {
     });
 
     const addLight = (renderer, mode, override) => {
-        const light = { shadowUpdateMode: mode, shadowUpdateOverrides: override === undefined ? null : [override] };
+        const light = {
+            enabled: true,
+            castShadows: true,
+            visibleThisFrame: true,
+            shadowUpdateMode: mode,
+            shadowUpdateOverrides: override === undefined ? null : [override]
+        };
         const entry = { light, meshInstance: { visible: true } };
         renderer.entries.set(light, entry);
         return entry;
@@ -53,6 +59,21 @@ describe('GSplatShadowRenderer#cull', function () {
     it('does no shadow preparation when there are no lights', function () {
         renderer.cull({});
         expectNoPreparation(renderer);
+    });
+
+    ['enabled', 'castShadows', 'visibleThisFrame'].forEach((property) => {
+        it(`skips a pending shadow update while ${property} is false`, function () {
+            const entry = addLight(renderer, SHADOWUPDATE_THISFRAME);
+            entry.light[property] = false;
+            renderer.cull({});
+            expectNoPreparation(renderer);
+            expect(entry.light.shadowUpdateMode).to.equal(SHADOWUPDATE_THISFRAME);
+
+            entry.light[property] = true;
+            renderer.cull({});
+            expect(renderer._cullEntry.calledOnce).to.equal(true);
+            expect(renderer._cullEntry.firstCall.args[0]).to.equal(entry);
+        });
     });
 
     it('prepares once and dispatches only updating lights in a mixed set', function () {
