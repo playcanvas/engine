@@ -104,6 +104,9 @@ class LightRenderData {
         // Retained until the next frame so mesh and splat shadow culling share the same requests.
         this.shadowCullRequested = false;
 
+        // Local shadow faces requested this frame, stored on face 0 to share one caster cull.
+        this.shadowCullMask = 0;
+
         // visible shadow casters
         this.visibleCasters = [];
     }

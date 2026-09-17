@@ -57,6 +57,15 @@ class Culler {
     _directionalShadowCullRequests = [];
 
     /**
+     * Local lights requested by shadow passes this frame. Face 0's render data holds the face
+     * mask, so separate cube-map passes share one cull without allocating request objects.
+     *
+     * @type {LightRenderData[]}
+     * @private
+     */
+    _localShadowCullRequests = [];
+
+    /**
      * A list of unique directional shadow casting lights for each enabled camera. This is generated
      * each frame during light culling.
      *
@@ -177,9 +186,9 @@ class Culler {
     }
 
     /**
-     * Shadow map culling for directional and visible local lights visible meshInstances are
-     * collected into light._renderData, and are marked as visible for directional lights also
-     * shadow camera matrix is set up.
+     * Cull shadow casters for the local and directional updates requested by scheduled shadow
+     * passes. Visible mesh instances are collected into the light's render data, and directional
+     * shadow cameras are fitted to their cascades.
      *
      * @param {LayerComposition} comp - The layer composition.
      */
@@ -187,17 +196,10 @@ class Culler {
 
         const { renderer } = this;
 
-        // shadow casters culling for local (point and spot) lights. The shadow-update-mode forcing
-        // (atlas slot reassigned / shadow map not yet allocated) was applied earlier, in
-        // updateLightVisibility, so the update mode is already final here.
-        const localLights = renderer.localLights;
-        for (let i = 0; i < localLights.length; i++) {
-            const light = localLights[i];
-            if (light._type !== LIGHTTYPE_DIRECTIONAL) {
-                if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    renderer._shadowRendererLocal.cull(light, comp);
-                }
-            }
+        // Local passes share one cull per light, including the combined six-face omni cull.
+        const localRequests = this._localShadowCullRequests;
+        for (let i = 0; i < localRequests.length; i++) {
+            renderer._shadowRendererLocal.cull(localRequests[i].light, comp);
         }
 
         // Only scheduled directional shadow passes need caster culling and cascade fitting.
@@ -211,28 +213,24 @@ class Culler {
     /**
      * After the frame graph is built and shadow casters are culled, account for shadow-map updates
      * and consume one-shot ({@link SHADOWUPDATE_THISFRAME}) requests for lights whose shadow
-     * update is scheduled this frame, reverting them to {@link SHADOWUPDATE_NONE}. A light that did
-     * not render this frame (for example an off-screen local light) keeps its request, so the
-     * shadow updates the next frame the light is rendered. Must run after both the frame graph build
-     * and shadow-caster culling, so that `needsShadowRendering` (a pure predicate) reports the same
-     * result to both before the update mode is changed here.
+     * update is scheduled this frame, reverting them to {@link SHADOWUPDATE_NONE}. A light without
+     * a scheduled update keeps its request until its shadow can be rendered. Runs after the frame
+     * graph build and all mesh and splat shadow culling, so every consumer sees the pending update
+     * mode before it is consumed.
      */
     consumeOneShotShadows() {
 
         const { renderer } = this;
-        const clustered = renderer.scene.clusteredLightingEnabled;
-        const shadowRenderer = renderer.shadowRenderer;
-
-        // local lights: the shadow renders if shadow rendering is needed and, in clustered lighting,
-        // an atlas slot has been allocated for it
-        const localLights = renderer.localLights;
-        for (let i = 0; i < localLights.length; i++) {
-            const light = localLights[i];
-            if (shadowRenderer.needsShadowRendering(light) && (!clustered || light.atlasViewportAllocated)) {
-                renderer._shadowMapUpdates += light.numShadowFaces;
-                if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
-                    light.shadowUpdateMode = SHADOWUPDATE_NONE;
-                }
+        // An atlas slot can belong to a cookie even when shadows are disabled. Only shadow
+        // passes can request an update; visibility and atlas allocation alone are insufficient.
+        const localRequests = this._localShadowCullRequests;
+        for (let i = 0; i < localRequests.length; i++) {
+            const { light, shadowCullMask } = localRequests[i];
+            for (let mask = shadowCullMask; mask; mask &= mask - 1) {
+                renderer._shadowMapUpdates++;
+            }
+            if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
+                light.shadowUpdateMode = SHADOWUPDATE_NONE;
             }
         }
 
@@ -261,6 +259,21 @@ class Culler {
             renderData.shadowCullRequested = true;
             this._directionalShadowCullRequests.push(renderData);
         }
+    }
+
+    /**
+     * Requests local shadow culling for scheduled faces. Multiple face passes share one cull,
+     * while the face mask is retained for update accounting until the next frame.
+     *
+     * @param {Light} light - The shadow-casting local light.
+     * @param {number} faceMask - Bit mask of faces the pass will render.
+     */
+    requestLocalShadowCull(light, faceMask) {
+        const renderData = light.getRenderData(null, 0);
+        if (!renderData.shadowCullMask) {
+            this._localShadowCullRequests.push(renderData);
+        }
+        renderData.shadowCullMask |= faceMask;
     }
 
     /**
@@ -336,6 +349,12 @@ class Culler {
             requests[i].shadowCullRequested = false;
         }
         requests.length = 0;
+
+        const localRequests = this._localShadowCullRequests;
+        for (let i = 0; i < localRequests.length; i++) {
+            localRequests[i].shadowCullMask = 0;
+        }
+        localRequests.length = 0;
 
         // reset per-frame light visibility: directional lights start visible, local lights start
         // hidden (and are marked visible below by cullLights if they intersect a camera frustum)
@@ -489,7 +508,7 @@ class Culler {
         // (this also fires the per-camera precull / postcull events)
         this.executeMeshInstanceCull();
 
-        // cull local shadow casters and requested directional shadows
+        // cull shadow casters for the updates requested by the frame graph
         this.cullShadowmaps(comp);
 
         // event after the engine has finished culling all cameras
