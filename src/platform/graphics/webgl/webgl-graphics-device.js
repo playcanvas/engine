@@ -51,7 +51,6 @@ import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 import { TextureUtils } from '../texture-utils.js';
-import { getBuiltInTexture } from '../built-in-textures.js';
 
 /**
  * @import { BindGroup } from '../bind-group.js'
@@ -2137,17 +2136,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         if (samplerName === 'uSceneDepthMap') {
                             Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                            samplerValue = getBuiltInTexture(this, 'white');
+                            samplerValue = this.builtInTextures.white;
                         }
                         if (samplerName === 'uSceneColorMap') {
                             Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                            samplerValue = getBuiltInTexture(this, 'pink');
+                            samplerValue = this.builtInTextures.pink;
                         }
 
                         // missing generic texture
                         if (!samplerValue) {
                             Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`, shader);
-                            samplerValue = getBuiltInTexture(this, 'pink');
+                            samplerValue = this.builtInTextures.pink;
                         }
                     }
 

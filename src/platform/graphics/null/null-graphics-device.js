@@ -36,6 +36,8 @@ class NullGraphicsDevice extends GraphicsDevice {
 
         // no-op dynamic buffers so the (unconditional) view uniform buffer path runs harmlessly
         this.dynamicBuffers = new NullDynamicBuffers(this);
+
+        this.postInit();
     }
 
     destroy() {

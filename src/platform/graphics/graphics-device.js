@@ -20,6 +20,7 @@ import {
     FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
+import { BuiltInTextures } from './built-in-textures.js';
 import { DepthState } from './depth-state.js';
 import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
@@ -603,6 +604,14 @@ class GraphicsDevice extends EventHandler {
     quadIndexBuffer;
 
     /**
+     * The textures the engine binds in place of a texture it was not given.
+     *
+     * @type {BuiltInTextures}
+     * @ignore
+     */
+    builtInTextures;
+
+    /**
      * An object representing current blend state
      *
      * @ignore
@@ -786,6 +795,10 @@ class GraphicsDevice extends EventHandler {
         // create quad index buffer for indexed triangle list (two triangles forming a quad)
         const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
         this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
+
+        // create the substitute textures the rendering falls back on, which cannot be created
+        // while rendering (see BuiltInTextures)
+        this.builtInTextures = new BuiltInTextures(this);
     }
 
     /**
@@ -860,6 +873,9 @@ class GraphicsDevice extends EventHandler {
 
         this.quadIndexBuffer?.destroy();
         this.quadIndexBuffer = null;
+
+        this.builtInTextures?.destroy();
+        this.builtInTextures = null;
 
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
