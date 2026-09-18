@@ -69,7 +69,8 @@ var<storage, read> numSplatsStorage: array<u32>;
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
-#ifdef GSPLAT_STOCHASTIC
+// Must match the fragment side exactly (see gsplatPS) - the dither id is the only consumer.
+#if defined(GSPLAT_STOCHASTIC) && !defined(DITHER_NONE)
     varying @interpolate(flat, either) stochasticId: u32;
 #elif !defined(DITHER_NONE)
     varying @interpolate(flat, either) id: f32;
@@ -105,9 +106,13 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
+    // The cache index follows the data layout: a stochastic view ran no sort, so the cache is
+    // consumed in compacted order and sortedIndices carries stable splat IDs instead.
     #ifdef GSPLAT_STOCHASTIC
         let cacheIdx = order;
-        output.stochasticId = sortedIndices[order];
+        #ifndef DITHER_NONE
+            output.stochasticId = sortedIndices[order];
+        #endif
     #else
         let cacheIdx = sortedIndices[order];
     #endif
