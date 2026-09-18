@@ -1,7 +1,7 @@
 import { BINDGROUP_VIEW } from './constants.js';
 
 /**
- * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { UniformBufferFormat } from './uniform-buffer-format.js'
  * @import { VertexFormat } from './vertex-format.js'
@@ -71,15 +71,27 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the texture uniform exists, false otherwise.
      */
     hasTexture(name) {
+        return !!this.getTexture(name);
+    }
+
+    /**
+     * Get the format of the texture, if one of the supplied bind groups contains it.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {BindTextureFormat|null} - The format of the texture, or null if no supplied bind
+     * group contains it.
+     */
+    getTexture(name) {
 
         for (let i = 0; i < this.bindGroupFormats.length; i++) {
             const groupFormat = this.bindGroupFormats[i];
-            if (groupFormat?.getTexture(name)) {
-                return true;
+            const textureFormat = groupFormat?.getTexture(name);
+            if (textureFormat) {
+                return textureFormat;
             }
         }
 
-        return false;
+        return null;
     }
 
     getVertexElement(semantic) {
