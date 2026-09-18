@@ -324,11 +324,11 @@ class ForwardRenderer extends Renderer {
                     // Each matrix column stores one cascade's camera parameters.
                     const cascadeParams = directional._shadowCascadeParams ??= new Float32Array(16);
                     for (let c = 0; c < 4; c++) {
-                        const renderData = c < directional.numCascades ? directional.getRenderData(camera, c) : lightRenderData;
+                        const own = c < directional.numCascades ? directional.getRenderData(camera, c) : null;
+                        const renderData = own?.projectionCompensation > 0 ? own : lightRenderData;
                         const shadowCamera = renderData.shadowCamera;
                         const offset = c * 4;
-                        const radius = renderData.projectionCompensation;
-                        cascadeParams[offset] = radius > 0 ? radius : lightRenderData.projectionCompensation;
+                        cascadeParams[offset] = renderData.projectionCompensation;
                         cascadeParams[offset + 1] = shadowCamera._farClip;
                         cascadeParams[offset + 2] = shadowCamera._nearClip;
                         cascadeParams[offset + 3] = 1;

@@ -100,6 +100,20 @@ describe('PCSS cached cascades', function () {
         ])));
     });
 
+    it('uses one camera for all fallback parameters of an unfitted cascade', function () {
+        light.releaseRenderData();
+        update([0]);
+        expect(renderData(0).projectionCompensation).to.be.greaterThan(0);
+        expect(renderData(1).projectionCompensation).to.equal(0);
+        expect(renderData(1).shadowCamera.farClip).not.to.equal(renderData(0).shadowCamera.farClip);
+
+        app.renderer.dispatchDirectLights([light], light.mask, camera.camera);
+        const params = Array.from(light._shadowCascadeParams);
+        for (let cascade = 1; cascade < 4; cascade++) {
+            expect(params.slice(cascade * 4, cascade * 4 + 4)).to.eql(params.slice(0, 4));
+        }
+    });
+
     it('removes the retained bounds when an updated cascade loses its casters', function () {
         const originalFar = renderData(0).shadowCamera.farClip;
         casters[3].render.castShadows = false;
