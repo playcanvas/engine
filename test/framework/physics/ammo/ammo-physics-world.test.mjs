@@ -680,6 +680,157 @@ describe('AmmoPhysicsWorld', function () {
         });
     });
 
+    describe('internal tick callback', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/9279. Emscripten's
+        // addFunction never frees a table slot and identity-caches the function it is given, so
+        // the backend registers one dispatcher per Ammo instance and routes by the world pointer
+        // Bullet passes, instead of one closure per world that kept the world, and through it the
+        // whole application, reachable for the life of the page.
+
+        /**
+         * Drops a box onto a ground plane in the given application and records the names of the
+         * entities the box reports contacts with.
+         *
+         * @param {import('../../../../src/framework/app-base.js').AppBase} application - The application.
+         * @param {string} name - A prefix for the entity names.
+         * @returns {string[]} The recorded contact names, filled as the application updates.
+         */
+        function dropBox(application, name) {
+            const ground = new Entity(`${name}-ground`, application);
+            ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(5, 0.5, 5) });
+            ground.addComponent('rigidbody', { type: 'static' });
+            application.root.addChild(ground);
+
+            const box = new Entity(`${name}-box`, application);
+            box.setPosition(0, 1, 0);
+            box.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.2, 0.2, 0.2) });
+            box.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            application.root.addChild(box);
+
+            const contacts = [];
+            box.collision.on('contact', (result) => {
+                contacts.push(result.other.name);
+            });
+            return contacts;
+        }
+
+        function settle(application, frames = 60) {
+            for (let i = 0; i < frames; i++) {
+                application.update(1 / 60);
+            }
+        }
+
+        it('registers a single table entry however many worlds are created', function () {
+            // the shared dispatcher exists from the first world on
+            installWorld();
+
+            const before = Ammo.addFunction(() => {}, 'vif');
+            const worlds = [new AmmoPhysicsWorld(), new AmmoPhysicsWorld(), new AmmoPhysicsWorld()];
+            const after = Ammo.addFunction(() => {}, 'vif');
+            worlds.forEach(w => w.destroy());
+
+            // two probe functions land in consecutive slots only if nothing was added in between
+            expect(after - before).to.equal(1);
+        });
+
+        it('routes contacts to the world they occur in while several worlds are alive', function () {
+            installWorld();
+            const other = createApp();
+            other.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            try {
+                const first = dropBox(app, 'first');
+                const second = dropBox(other, 'second');
+                settle(app);
+                settle(other);
+
+                expect(first).to.not.be.empty;
+                expect(second).to.not.be.empty;
+                expect(first.every(name => name === 'first-ground')).to.be.true;
+                expect(second.every(name => name === 'second-ground')).to.be.true;
+            } finally {
+                other.destroy();
+            }
+        });
+
+        it('keeps routing after a sibling world is destroyed and another is created', function () {
+            installWorld();
+            const sibling = createApp();
+            sibling.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            sibling.destroy();
+
+            const replacement = createApp();
+            replacement.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            try {
+                const survivor = dropBox(app, 'survivor');
+                const fresh = dropBox(replacement, 'fresh');
+                settle(app);
+                settle(replacement);
+
+                expect(survivor).to.not.be.empty;
+                expect(fresh).to.not.be.empty;
+                expect(survivor.every(name => name === 'survivor-ground')).to.be.true;
+                expect(fresh.every(name => name === 'fresh-ground')).to.be.true;
+            } finally {
+                replacement.destroy();
+            }
+        });
+
+        const tick = () => new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+
+        /**
+         * Runs the garbage collector until the referent is gone or the attempts run out. A deref
+         * keeps its target alive for the rest of the current job, so gc and deref must run in
+         * different jobs.
+         *
+         * @param {WeakRef<object>} ref - The reference to watch.
+         * @param {number} [attempts] - How many collections to try.
+         * @returns {Promise<boolean>} True once the referent has been collected.
+         */
+        async function collected(ref, attempts = 10) {
+            if (attempts === 0) {
+                return false;
+            }
+            global.gc();
+            await tick();
+            const alive = ref.deref() !== undefined;
+            await tick();
+            return alive ? collected(ref, attempts - 1) : true;
+        }
+
+        /**
+         * Builds, simulates and destroys an application and returns a weak reference to it.
+         *
+         * @param {boolean} withWorld - Whether to install an Ammo world.
+         * @returns {WeakRef<object>} The reference.
+         */
+        function destroyedApplication(withWorld) {
+            let candidate = createApp();
+            if (withWorld) {
+                candidate.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            }
+            dropBox(candidate, 'collected');
+            settle(candidate, 30);
+            const ref = new WeakRef(candidate);
+            candidate.destroy();
+            candidate = null;
+            return ref;
+        }
+
+        it('lets a destroyed application be garbage collected', async function () {
+            if (typeof global.gc !== 'function') {
+                this.skip();
+            }
+            this.timeout(20000);
+
+            // the harness itself has to let an application go before the Ammo case means anything
+            expect(await collected(destroyedApplication(false)), 'without a physics world').to.be.true;
+            expect(await collected(destroyedApplication(true)), 'with an Ammo world').to.be.true;
+        });
+    });
+
     describe('legacy Ammo build', function () {
         let scaledShape;
 
