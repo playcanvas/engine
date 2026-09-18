@@ -17,12 +17,8 @@ import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js
  * @import { ShadowRenderer } from './shadow-renderer.js'
  */
 
-// Per-cascade scratch state used to make the directional shadow camera tightening cascade-stable.
-// Pass 1 of `cull()` collects each cascade's visible-caster AABB into _cascadeAabbs and its
-// frustum-slice bounding-sphere radius into _cascadeRadii (with a validity flag). For PCSS shadow
-// types pass 2 then tightens every cascade against the *union* of all valid cascade AABBs, so the
-// `depthRange` plumbed to the shader (cascade 0's farClip-nearClip) doesn't twitch as casters
-// move between cascade-frustum bins.
+// Per-cascade scratch state for shadow camera fitting. PCSS retains each cascade's caster
+// bounds in its render data so the union includes cached cascades as well as updating ones.
 const _unionSceneAabb = new BoundingBox();
 const _cascadeAabbs = [new BoundingBox(), new BoundingBox(), new BoundingBox(), new BoundingBox()];
 const _cascadeAabbValid = [false, false, false, false];
@@ -101,16 +97,13 @@ class ShadowRendererDirectional {
     }
 
     // cull directional shadow map. prepareShadowMap(light) must have been called first.
-    cull(light, comp, camera, casters = null) {
+    cull(light, comp, camera, casters = null, cascadeMask = this.getCascadeMask(light)) {
 
         Debug.assert(light._shadowMap, 'ShadowRendererDirectional.cull requires prepareShadowMap() to have been called for the light first.');
 
         // generate splits for the cascades
         const nearDist = camera._nearClip;
         this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance));
-
-        const shadowUpdateOverrides = light.shadowUpdateOverrides;
-        let numActiveCascades = 0;
 
         // PASS 1: per-cascade culling + per-cascade visible-caster AABB building. Defers the depth-range
         // tightening (which moves the shadow camera and sets farClip) until pass 2 so that PCSS
@@ -119,8 +112,8 @@ class ShadowRendererDirectional {
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
 
             // if manually controlling cascade rendering and the cascade does not render this frame
-            if (shadowUpdateOverrides?.[cascade] === SHADOWUPDATE_NONE) {
-                break;
+            if (!(cascadeMask & (1 << cascade))) {
+                continue;
             }
 
             const lightRenderData = light.getRenderData(camera, cascade);
@@ -216,33 +209,40 @@ class ShadowRendererDirectional {
 
             _cascadeAabbValid[cascade] = numVisibleCasters > 0;
             _cascadeRadii[cascade] = radius;
-            numActiveCascades++;
+
+            if (light._isPcss) {
+                lightRenderData.shadowCasterAabbValid = numVisibleCasters > 0;
+                if (lightRenderData.shadowCasterAabbValid) {
+                    lightRenderData.shadowCasterAabb ??= new BoundingBox();
+                    lightRenderData.shadowCasterAabb.copy(cascadeAabb);
+                }
+            }
         }
 
-        // For PCSS, build a stable union AABB across all valid cascades. The shader reads
-        // cascade-0's near/far as `depthRange`, so if cascade 0 swings 10x as a single mesh
-        // straddles its cull boundary, the whole scene's PCSS softness jumps. Tightening every
-        // cascade against the union eliminates the binning-driven jumps. Non-PCSS shadow types
-        // skip this — they don't use depthRange in the shader and benefit from per-cascade
-        // tightening for depth precision.
+        // PCSS depth fitting must not depend on which cascades happen to update this frame.
+        // Include the last culled bounds of cached cascades without culling their casters again.
+        // Non-PCSS shadows retain per-cascade tightening for depth precision.
         let useUnion = false;
         if (light._isPcss) {
-            for (let cascade = 0; cascade < numActiveCascades; cascade++) {
-                if (!_cascadeAabbValid[cascade]) continue;
+            for (let cascade = 0; cascade < light.numCascades; cascade++) {
+                const renderData = light.getRenderData(camera, cascade);
+                if (!renderData.shadowCasterAabbValid) continue;
                 if (!useUnion) {
-                    _unionSceneAabb.copy(_cascadeAabbs[cascade]);
+                    _unionSceneAabb.copy(renderData.shadowCasterAabb);
                     useUnion = true;
                 } else {
-                    _unionSceneAabb.add(_cascadeAabbs[cascade]);
+                    _unionSceneAabb.add(renderData.shadowCasterAabb);
                 }
             }
         }
 
         // PASS 2: depth-range tightening per cascade. PCSS uses the cross-cascade union AABB
-        // (cascade-stable; tightens every cascade including ones with no own casters, so that
-        // cascade 0's near/far — which the shader reads via cameraParams — is always sensible).
+        // to tighten requested cascades, including ones with no own casters. Cached cascades keep
+        // the camera fitting that matches their existing shadow-map contents.
         // Non-PCSS uses the per-cascade AABB and skips cascades with no casters (nothing to render).
-        for (let cascade = 0; cascade < numActiveCascades; cascade++) {
+        for (let cascade = 0; cascade < light.numCascades; cascade++) {
+            if (!(cascadeMask & (1 << cascade))) continue;
+
             let aabbSource;
             if (useUnion) {
                 aabbSource = _unionSceneAabb;
@@ -285,6 +285,24 @@ class ShadowRendererDirectional {
     }
 
     /**
+     * @param {Light} light - The directional light.
+     * @returns {number} Bit mask of cascades needing initialization or enabled by the overrides.
+     */
+    getCascadeMask(light) {
+        if (light._shadowCascadesInvalidated) {
+            return (1 << light.numCascades) - 1;
+        }
+
+        let mask = 0;
+        for (let cascade = 0; cascade < light.numCascades; cascade++) {
+            if (light.shadowUpdateOverrides?.[cascade] !== SHADOWUPDATE_NONE) {
+                mask |= 1 << cascade;
+            }
+        }
+        return mask;
+    }
+
+    /**
      * Create a render pass for directional light shadow rendering for a specified camera.
      *
      * @param {Light} light - The directional light.
@@ -299,26 +317,24 @@ class ShadowRendererDirectional {
         let renderPass = null;
         if (this.shadowRenderer.needsShadowRendering(light)) {
 
-            // shadow cascades have more faces rendered within a singe render pass
+            const cascadeMask = this.getCascadeMask(light);
+            if (!cascadeMask) {
+                return null;
+            }
+
+            // shadow cascades have more faces rendered within a single render pass
             const faceCount = light.numShadowFaces;
-            const shadowUpdateOverrides = light.shadowUpdateOverrides;
 
             // prepare render targets / cameras for rendering
-            let allCascadesRendering = true;
             let shadowCamera;
             for (let face = 0; face < faceCount; face++) {
-
-                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE) {
-                    allCascadesRendering = false;
-                }
-
                 shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
             }
 
-            renderPass = new RenderPassShadowDirectional(this.device, this.shadowRenderer, light, camera, allCascadesRendering);
+            renderPass = new RenderPassShadowDirectional(this.device, this.shadowRenderer, light, camera, cascadeMask);
 
             // setup render pass using any of the cameras, they all have the same pass related properties
-            this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
+            this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, renderPass.allCascadesRendering);
         }
 
         return renderPass;

@@ -140,7 +140,7 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeDistancesId = [];
         this.shadowCascadeCountId = [];
         this.shadowCascadeBlendId = [];
-        this.shadowCascadeRadiiId = [];
+        this.shadowCascadeParamsId = [];
 
         this.screenSizeId = scope.resolve('screen_size');
         this.screenSizeLegacyId = scope.resolve('uScreenSize');
@@ -226,7 +226,7 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances`);
         this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
         this.shadowCascadeBlendId[i] = scope.resolve(`${light}_shadowCascadeBlend`);
-        this.shadowCascadeRadiiId[i] = scope.resolve(`${light}_shadowCascadeRadii`);
+        this.shadowCascadeParamsId[i] = scope.resolve(`${light}_shadowCascadeParams`);
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -319,22 +319,21 @@ class ForwardRenderer extends Renderer {
                     cameraParams[3] = 1;
                     this.lightCameraParamsId[cnt].setValue(cameraParams);
 
-                    // Per-cascade ortho radii. Only cameraParams.x (the ortho radius) varies per
-                    // cascade — the depth range is cascade-stable thanks to the union AABB. The
-                    // shader overrides cameraParams.x with the radius of the cascade a fragment
-                    // samples from, so far cascades don't inherit cascade 0's much smaller radius
-                    // (which would over-soften them). Packed into a single vec4 (max 4 cascades).
-                    // Stored per-light (setValue keeps the reference, read at draw time) so
-                    // multiple directional PCSS lights don't alias one shared buffer. Allocated
-                    // lazily here so only directional PCSS lights ever create it.
-                    const radii = directional._shadowCascadeRadii ??= new Float32Array(4);
+                    // Cached cascades must use the radius and depth range that rendered their
+                    // shadow map, even while another cascade is being fitted to moving casters.
+                    // Each matrix column stores one cascade's camera parameters.
+                    const cascadeParams = directional._shadowCascadeParams ??= new Float32Array(16);
                     for (let c = 0; c < 4; c++) {
-                        const r = c < directional.numCascades ? directional.getRenderData(camera, c).projectionCompensation : 0;
-                        // fall back to cascade 0's radius for unused / not-yet-culled cascades to
-                        // avoid a zero ortho radius (which would divide-by-zero in the shader)
-                        radii[c] = r > 0 ? r : lightRenderData.projectionCompensation;
+                        const renderData = c < directional.numCascades ? directional.getRenderData(camera, c) : lightRenderData;
+                        const shadowCamera = renderData.shadowCamera;
+                        const offset = c * 4;
+                        const radius = renderData.projectionCompensation;
+                        cascadeParams[offset] = radius > 0 ? radius : lightRenderData.projectionCompensation;
+                        cascadeParams[offset + 1] = shadowCamera._farClip;
+                        cascadeParams[offset + 2] = shadowCamera._nearClip;
+                        cascadeParams[offset + 3] = 1;
                     }
-                    this.shadowCascadeRadiiId[cnt].setValue(radii);
+                    this.shadowCascadeParamsId[cnt].setValue(cascadeParams);
                 }
 
                 const params = directional._shadowRenderParams;

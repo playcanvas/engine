@@ -108,10 +108,10 @@ export default /* glsl */`
                     vec2 shadowSearchArea = vec2(length(light{i}_halfWidth), length(light{i}_halfHeight)) * light{i}_shadowSearchArea;
                     return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, light{i}_cameraParams, shadowSearchArea, lightDirW);
                 #else
-                    // override the ortho radius with the radius of the cascade this fragment samples
+                    // Use the camera fitting stored with the cascade this fragment samples.
                     vec4 pcssCameraParams = light{i}_cameraParams;
                     #ifdef LIGHT{i}_SHADOW_CASCADES
-                        pcssCameraParams.x = light{i}_shadowCascadeRadii[cascadeIndex];
+                        pcssCameraParams = light{i}_shadowCascadeParams[cascadeIndex];
                     #endif
                     return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, pcssCameraParams, light{i}_softShadowParams, lightDirW);
                 #endif

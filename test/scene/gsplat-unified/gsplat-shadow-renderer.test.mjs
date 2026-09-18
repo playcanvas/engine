@@ -29,7 +29,10 @@ describe('GSplatShadowRenderer#cull', function () {
     });
 
     const addLight = (renderer, mode, override) => {
-        const renderData = { shadowCullRequested: true };
+        const renderData = {
+            shadowCullRequested: true,
+            shadowCascadeMask: override === SHADOWUPDATE_NONE ? 0 : 1
+        };
         const light = {
             getRenderData: () => renderData,
             enabled: true,
@@ -113,9 +116,19 @@ describe('GSplatShadowRenderer#cull', function () {
         renderer.cull({});
         expectNoPreparation(renderer);
         entry.light.shadowUpdateOverrides[0] = SHADOWUPDATE_THISFRAME;
+        entry.light.getRenderData().shadowCascadeMask = 1;
         renderer.cull({});
         expect(renderer._cullEntry.calledOnce).to.equal(true);
         expect(entry.light.shadowUpdateOverrides[0]).to.equal(SHADOWUPDATE_THISFRAME);
+    });
+
+    it('dispatches a scheduled map refresh even when the cascade override is NONE', function () {
+        const entry = addLight(renderer, SHADOWUPDATE_THISFRAME, SHADOWUPDATE_NONE);
+        entry.light.getRenderData().shadowCascadeMask = 1;
+        renderer.cull({});
+        expect(renderer._cullEntry.calledOnce).to.equal(true);
+        expect(entry.light.shadowUpdateOverrides[0]).to.equal(SHADOWUPDATE_NONE);
+        expect(entry.light.shadowUpdateMode).to.equal(SHADOWUPDATE_THISFRAME);
     });
 
     it('does not let a cascade override bypass a disabled light-wide update mode', function () {
