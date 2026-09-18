@@ -1,7 +1,8 @@
 export default /* glsl */`
 
 #ifndef DITHER_NONE
-    #include "bayerPS"
+    // note: opacityDitherPS pulls in bayerPS itself for the Bayer modes - including it here as
+    // well would redeclare its functions, as the preprocessor does not deduplicate includes
     #include "opacityDitherPS"
     flat varying float id;
 #endif
@@ -94,12 +95,16 @@ void main(void) {
             discard;
         }
 
-        #ifndef DITHER_NONE
-            opacityDither(alpha, id * 0.013);
-        #endif
-
         vec4 fragColor = vec4(gaussianColor.xyz, alpha);
         modifySplatColor(gaussianUV, fragColor);
+
+        // Dither the alpha the modifier produced, not the raw gaussian alpha, so a user
+        // gsplatModifyPS chunk still controls coverage. This also keeps the dither's discards
+        // after the chunk, which may use derivatives. Matches the WGSL chunk.
+        #ifndef DITHER_NONE
+            opacityDither(fragColor.a, id * 0.013);
+        #endif
+
         gl_FragColor = vec4(fragColor.xyz * fragColor.a, fragColor.a);
 
         // The same premultiplied blending which composites the color accumulates the scene depth, so

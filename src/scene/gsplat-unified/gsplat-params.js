@@ -7,6 +7,7 @@ import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import { GSplatVaryings } from './gsplat-varyings.js';
 import {
+    DITHER_BLUENOISE,
     GSPLATDATA_COMPACT,
     GSPLAT_RENDERER_AUTO, GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_COMPUTE, GSPLAT_RENDERER_RASTER_GPU_SORT,
@@ -136,6 +137,35 @@ class GSplatParams {
      * while linear sorting is better at minimizing artifacts when the camera translates (moves).
      */
     radialSorting = false;
+
+    /**
+     * Enables stochastic alpha rendering on the WebGPU GPU-sort renderer. Splats are drawn
+     * without sorting, using dithered coverage, opaque blending and depth writes. Ignored by
+     * the CPU-sort renderer. Picking continues to use sorted rendering. Defaults to false.
+     * Applications can customize the sampling through the material's opacityDitherPS chunk.
+     *
+     * @type {boolean}
+     */
+    stochastic = false;
+
+    /**
+     * The noise pattern the coverage of a {@link GSplatParams#stochastic} splat is dithered
+     * against, ignored when `stochastic` is false. Can be:
+     *
+     * - {@link DITHER_BAYER2}: Coverage is dithered using a Bayer 2 matrix.
+     * - {@link DITHER_BAYER4}: Coverage is dithered using a Bayer 4 matrix.
+     * - {@link DITHER_BAYER8}: Coverage is dithered using a Bayer 8 matrix.
+     * - {@link DITHER_BAYER16}: Coverage is dithered using a Bayer 16 matrix.
+     * - {@link DITHER_BLUENOISE}: Coverage is dithered using a blue noise.
+     * - {@link DITHER_IGNNOISE}: Coverage is dithered using an interleaved gradient noise.
+     *
+     * Defaults to {@link DITHER_BLUENOISE}, which looks best under temporal anti-aliasing.
+     * {@link DITHER_NONE} is not a coverage pattern, so it is not accepted here - turn
+     * `stochastic` off instead.
+     *
+     * @type {string}
+     */
+    dither = DITHER_BLUENOISE;
 
     /**
      * @type {number}

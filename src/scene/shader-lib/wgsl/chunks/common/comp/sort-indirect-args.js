@@ -18,7 +18,7 @@ export default /* wgsl */`
 //   slotInfo  - sorter metadata, obtained verbatim from
 //               ComputeRadixSort#prepareIndirect() and passed in as a
 //               vec4<u32>:
-//                 .x = slotCount (1..3)
+//                 .x = slotCount (0..3; zero skips all sort writes)
 //                 .y/.z/.w = per-slot elements-per-workgroup (granularity);
 //                            unused trailing entries are 0.
 fn writeSortIndirectArgs(

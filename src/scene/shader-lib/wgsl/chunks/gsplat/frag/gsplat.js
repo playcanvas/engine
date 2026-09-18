@@ -1,9 +1,14 @@
 export default /* wgsl */`
 
 #ifndef DITHER_NONE
-    #include "bayerPS"
+    // note: opacityDitherPS pulls in bayerPS itself for the Bayer modes - including it here as
+    // well would redeclare its functions, as the preprocessor does not deduplicate includes
     #include "opacityDitherPS"
-    varying @interpolate(flat, either) id: f32;
+    #ifdef GSPLAT_STOCHASTIC
+        varying @interpolate(flat, either) stochasticId: u32;
+    #else
+        varying @interpolate(flat, either) id: f32;
+    #endif
 #endif
 
 #if defined(SHADOW_PASS) || defined(PICK_PASS) || defined(PREPASS_PASS)
@@ -95,6 +100,17 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #elif PREPASS_PASS
 
+        // Dithered splats write depth, so they are collected by the depth prepass. It has to apply
+        // the same coverage test as the forward pass, otherwise it claims the full splat footprint
+        // and the forward fragments of the splats behind it fail the depth test.
+        #ifndef DITHER_NONE
+            #ifdef GSPLAT_STOCHASTIC
+                opacityDither(f32(alpha), f32(stochasticId) * 0.013);
+            #else
+                opacityDither(f32(alpha), id * 0.013);
+            #endif
+        #endif
+
         output.color = float2vec4(vLinearDepth);
 
     #else
@@ -103,12 +119,24 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             discard;
         }
 
-        #ifndef DITHER_NONE
-            opacityDither(f32(alpha), id * 0.013);
-        #endif
-
         var fragColor: vec4f = vec4f(vec3f(gaussianColor.xyz), f32(alpha));
         modifySplatColor(vec2f(gaussianUV), &fragColor);
+
+        // Dither the alpha the modifier produced, not the raw gaussian alpha, so a user
+        // gsplatModifyPS chunk still controls coverage - in stochastic mode the surviving
+        // fragments are opaque, so an alpha it writes would otherwise have no effect at all.
+        // This also keeps the dither's discards after the chunk, which may use derivatives.
+        #ifndef DITHER_NONE
+            #ifdef GSPLAT_STOCHASTIC
+                opacityDither(fragColor.a, f32(stochasticId) * 0.013);
+            #else
+                opacityDither(fragColor.a, id * 0.013);
+            #endif
+        #endif
+
+        #ifdef GSPLAT_STOCHASTIC
+            fragColor.a = 1.0;
+        #endif
         output.color = vec4f(fragColor.xyz * fragColor.a, fragColor.a);
 
         // The same premultiplied blending which composites the color accumulates the scene depth, so

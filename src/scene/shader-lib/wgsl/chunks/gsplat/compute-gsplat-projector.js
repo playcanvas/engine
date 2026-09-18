@@ -42,7 +42,7 @@ struct ProjectorUniforms {
     splatTextureSize: u32,
     numBins: u32,
     isOrtho: u32,
-    pad0: u32,
+    stochastic: u32,
     viewProj: mat4x4f,
     viewMatrix: mat4x4f,
     cameraPosition: vec3f,
@@ -196,20 +196,25 @@ fn main(
             ndc1 = proj.ndc1;
         #endif
 
-        // Sort key — shared depth-bin weighting (same as CPU worker).
-        #ifdef RADIAL_SORT
-            let delta = center - uniforms.cameraPosition;
-            let radialDist = length(delta);
-            let dist = (1.0 / uniforms.invRange) - radialDist - uniforms.minDist;
-        #else
-            let toSplat = center - uniforms.cameraPosition;
-            let dist = dot(toSplat, uniforms.cameraDirection) - uniforms.minDist;
-        #endif
-        let d = dist * uniforms.invRange * f32(uniforms.numBins);
-        let binFloat = clamp(d, 0.0, f32(uniforms.numBins) - 0.001);
-        let bin = u32(binFloat);
-        let binFrac = binFloat - f32(bin);
-        sortKey = u32(binWeights[bin].base + binWeights[bin].divider * binFrac);
+        // Preserve the splat identity across projection compaction and camera movement.
+        if (uniforms.stochastic != 0u) {
+            sortKey = projected.splatId;
+        } else {
+            // Sort key — shared depth-bin weighting (same as CPU worker).
+            #ifdef RADIAL_SORT
+                let delta = center - uniforms.cameraPosition;
+                let radialDist = length(delta);
+                let dist = (1.0 / uniforms.invRange) - radialDist - uniforms.minDist;
+            #else
+                let toSplat = center - uniforms.cameraPosition;
+                let dist = dot(toSplat, uniforms.cameraDirection) - uniforms.minDist;
+            #endif
+            let d = dist * uniforms.invRange * f32(uniforms.numBins);
+            let binFloat = clamp(d, 0.0, f32(uniforms.numBins) - 0.001);
+            let bin = u32(binFloat);
+            let binFrac = binFloat - f32(bin);
+            sortKey = u32(binWeights[bin].base + binWeights[bin].divider * binFrac);
+        }
 
         // assemble (rgb, a) and run the render-stage color modifier on the modified center,
         // matching the quad renderer's gsplatVS (modifySplatColor after AA compensation).
