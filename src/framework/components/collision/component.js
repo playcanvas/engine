@@ -3,6 +3,12 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
+// collision descendants of a compound root found unwired during a sync walk, adopted after it
+const _strays = [];
+
+// whether the sync walk in progress wrote to the compound shape
+let _compoundChanged = false;
+
 /**
  * @import { CollisionComponentSystem } from './system.js'
  * @import { Entity } from '../../entity.js'
@@ -177,6 +183,16 @@ class CollisionComponent extends Component {
 
     /** @private */
     _compoundParent = null;
+
+    /**
+     * For a compound child, the pose last written into the parent compound and the entity's
+     * world-dirty counter at the time, so the per-step sync can skip a child whose transform has
+     * not been invalidated since. Created when the child first joins a compound.
+     *
+     * @type {{ position: Vec3, rotation: Quat, aabbVer: number }|null}
+     * @private
+     */
+    _compoundPose = null;
 
     /** @private */
     _hasOffset = false;
@@ -660,47 +676,57 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * An {@link Entity#forEach} callback that refreshes the compound child transform of each
-     * descendant wired to the same compound root. Invoked with `this` set to the compound
+     * An {@link Entity#forEach} callback that syncs the compound child transform of each
+     * descendant wired to this compound root, and collects collision descendants that are not
+     * wired to any compound so the root can adopt them. Invoked with `this` set to the compound
      * root's entity.
      *
      * @param {Entity} entity - The visited descendant entity.
      * @private
      */
     _updateEachDescendantTransform(entity) {
-        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent) {
+        const root = this.collision;
+        const component = entity.collision;
+        if (!component || component === root) {
             return;
         }
 
-        this.collision.system.updateCompoundChildTransform(entity, false);
+        if (component._compoundParent === root) {
+            if (root.system.updateCompoundChildTransform(entity, false)) {
+                _compoundChanged = true;
+            }
+        } else if (!component._compoundParent && !entity.rigidbody && component._shape) {
+            // arrived without passing through the insert hook, for example deep inside a subtree
+            // that was parented as a whole
+            _strays.push(component);
+        }
     }
 
-    /** @private */
+    /**
+     * Applies the transform changes of this compound root's children to the compound shape.
+     * Called by the rigid body system before each step. A child is written only when its world
+     * transform has been invalidated since the last write and its pose relative to the root has
+     * actually changed, so a compound at rest costs a walk of its descendants and nothing more.
+     * Collision descendants not yet wired to a compound are adopted here.
+     *
+     * @private
+     */
     _updateCompound() {
         const entity = this.entity;
-        if (entity._dirtyWorld) {
-            let dirty = entity._dirtyLocal;
-            let parent = entity;
-            while (parent && !dirty) {
-                if (parent.collision && parent.collision === this._compoundParent) {
-                    break;
-                }
 
-                if (parent._dirtyLocal) {
-                    dirty = true;
-                }
+        _compoundChanged = false;
+        entity.forEach(this._updateEachDescendantTransform, entity);
 
-                parent = parent.parent;
+        if (_strays.length > 0) {
+            for (let i = 0; i < _strays.length; i++) {
+                this.system.recreatePhysicalShapes(_strays[i]);
             }
+            _strays.length = 0;
+            _compoundChanged = true;
+        }
 
-            if (dirty) {
-                entity.forEach(this._updateEachDescendantTransform, entity);
-
-                const bodyComponent = this._compoundParent.entity.rigidbody;
-                if (bodyComponent) {
-                    bodyComponent.activate();
-                }
-            }
+        if (_compoundChanged && entity.rigidbody) {
+            entity.rigidbody.activate();
         }
     }
 

@@ -580,14 +580,47 @@ class CollisionComponentSystem extends ComponentSystem {
         }
     }
 
+    /**
+     * Writes a compound child's pose relative to its compound root into the compound shape,
+     * adding the child when it is absent. Disabled children are skipped. Unless forced, the
+     * write is also skipped when the child's world transform has not been invalidated since the
+     * last write, or when the recomputed pose matches the one last written, so an ancestor move
+     * that leaves the relative pose alone costs no call into the backend.
+     *
+     * @param {Entity} entity - The compound child's entity.
+     * @param {boolean} forceUpdate - Write regardless, for a child known to be absent from the
+     * compound.
+     * @returns {boolean} True if the compound shape was written.
+     * @ignore
+     */
     updateCompoundChildTransform(entity, forceUpdate) {
-        const parentComponent = entity.collision._compoundParent;
-        if (parentComponent === entity.collision) return;
+        const component = entity.collision;
+        const parentComponent = component._compoundParent;
+        if (parentComponent === component) return false;
 
-        if (entity.enabled && entity.collision.enabled && (entity._dirtyLocal || forceUpdate)) {
-            this._getNodeTransform(entity, parentComponent.entity, p3, quat2);
-            this.physicsWorld.updateCompoundChild(parentComponent.shape, entity.collision.shape, p3, quat2);
+        if (!entity.enabled || !component.enabled) return false;
+
+        // the world-dirty counter only advances while the world transform is clean, so a still
+        // dirty transform is checked as well
+        let pose = component._compoundPose;
+        if (!forceUpdate && pose && !entity._dirtyWorld && pose.aabbVer === entity._aabbVer) {
+            return false;
         }
+
+        this._getNodeTransform(entity, parentComponent.entity, p3, quat2);
+
+        if (!pose) {
+            pose = component._compoundPose = { position: new Vec3(), rotation: new Quat(), aabbVer: 0 };
+        } else if (!forceUpdate && pose.position.equals(p3) && pose.rotation.equals(quat2)) {
+            pose.aabbVer = entity._aabbVer;
+            return false;
+        }
+
+        pose.position.copy(p3);
+        pose.rotation.copy(quat2);
+        pose.aabbVer = entity._aabbVer;
+        this.physicsWorld.updateCompoundChild(parentComponent.shape, component.shape, p3, quat2);
+        return true;
     }
 
     _removeCompoundChild(collision, shape) {

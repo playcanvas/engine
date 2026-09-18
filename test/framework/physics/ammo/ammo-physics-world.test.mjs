@@ -470,6 +470,140 @@ describe('AmmoPhysicsWorld', function () {
         });
     });
 
+    describe('compound children', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/3695 and
+        // https://github.com/playcanvas/engine/issues/4623. A compound child's shape used to be
+        // re-synced only when the compound root's own transform was dirty at physics time, so a
+        // child moved on its own, by a script after being parented or by an animation, kept the
+        // pose it joined with until the root was toggled.
+
+        function createGround() {
+            const ground = new Entity('ground');
+            ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(8, 0.5, 8) });
+            ground.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(ground);
+            return ground;
+        }
+
+        function createCompound(bodyType = 'dynamic') {
+            const compound = new Entity('compound');
+            compound.setPosition(0, 3.5, 0);
+            compound.addComponent('collision', { type: 'compound' });
+            compound.addComponent('rigidbody', { type: bodyType, mass: 1 });
+            app.root.addChild(compound);
+
+            const first = new Entity('first');
+            first.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            compound.addChild(first);
+            return compound;
+        }
+
+        /**
+         * Runs frames the way the application does: the update, then the hierarchy sync the
+         * renderer performs, which clears the dirty flags the old sync relied on.
+         *
+         * @param {number} count - The number of frames.
+         */
+        function frames(count) {
+            for (let i = 0; i < count; i++) {
+                app.update(1 / 60);
+                app.root.syncHierarchy();
+            }
+        }
+
+        /**
+         * Casts a ray straight down at x and returns the name of the entity it hits.
+         *
+         * @param {number} x - The world X position of the ray.
+         * @returns {string|null} The hit entity name, or null on a miss.
+         */
+        function hitNameAt(x) {
+            const result = app.systems.rigidbody.raycastFirst(new Vec3(x, 10, 0), new Vec3(x, -10, 0));
+            return result ? result.entity.name : null;
+        }
+
+        it('moves a child shape repositioned after being parented, once the compound is at rest', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound();
+            frames(240);
+            expect(compound.rigidbody._body.isActive(), 'compound asleep').to.be.false;
+
+            // the order the report used: component, parent, then position
+            const child = new Entity('child');
+            child.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            compound.addChild(child);
+            child.setLocalPosition(2, 0, 0);
+            frames(1);
+
+            expect(world.getCompoundChildCount(compound.collision.shape)).to.equal(2);
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('moves an existing child shape when the child is repositioned while the compound rests', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound();
+            frames(240);
+
+            compound.findByName('first').setLocalPosition(2, 0, 0);
+            frames(1);
+
+            expect(hitNameAt(2)).to.equal('compound');
+            expect(hitNameAt(0)).to.equal('ground');
+        });
+
+        it('follows a child moved every frame', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+            const first = compound.findByName('first');
+
+            for (let x = 1; x <= 3; x++) {
+                first.setLocalPosition(x, 0, 0);
+                frames(1);
+                expect(hitNameAt(x)).to.equal('compound');
+            }
+        });
+
+        it('writes nothing to the compound while only the root moves', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound();
+            const update = spy(world, 'updateCompoundChild');
+
+            // falling: the root moves every frame, the child does not
+            frames(30);
+
+            expect(compound.getPosition().y).to.be.below(3.4);
+            expect(update.called).to.be.false;
+        });
+
+        it('adopts a collision descendant parented deep inside a subtree', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+
+            const sub = new Entity('sub');
+            sub.setLocalPosition(2, 0, 0);
+            const grandchild = new Entity('grandchild');
+            grandchild.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            sub.addChild(grandchild);
+            compound.addChild(sub);
+
+            // the insert hook only sees the inserted node, which has no collision component
+            expect(grandchild.trigger, 'stray trigger before the step').to.exist;
+
+            frames(1);
+
+            expect(grandchild.trigger).to.be.undefined;
+            expect(grandchild.collision._compoundParent).to.equal(compound.collision);
+            expect(world.getCompoundChildCount(compound.collision.shape)).to.equal(2);
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+    });
+
     describe('legacy Ammo build', function () {
         let scaledShape;
 
