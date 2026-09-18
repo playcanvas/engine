@@ -34,7 +34,7 @@ class RenderPassShadowLocalNonClustered extends RenderPass {
     }
 
     after() {
-        if (this.applyVsm) {
+        if (this.executeEnabled && this.applyVsm) {
             this.shadowRenderer.renderVsm(this.light, this.shadowCamera);
         }
     }

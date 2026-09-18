@@ -4,6 +4,7 @@ import sinon from 'sinon';
 import { Entity } from '../../../src/framework/entity.js';
 import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME, SHADOW_VSM_16F, SHADOW_VSM_32F } from '../../../src/scene/constants.js';
 import { QuadRender } from '../../../src/scene/graphics/quad-render.js';
+import { RenderPassShadowLocalNonClustered } from '../../../src/scene/renderer/render-pass-shadow-local-non-clustered.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -36,6 +37,28 @@ describe('VSM cascade blur', function () {
     });
 
     [SHADOW_VSM_16F, SHADOW_VSM_32F].forEach((type) => {
+        it(`skips non-clustered spot blur when execution is disabled for VSM type ${type}`, function () {
+            app.scene.clusteredLightingEnabled = false;
+            app.root.findByName('Light').light.type = 'spot';
+            light.shadowType = type;
+            expect(light.shadowType).to.equal(type);
+            app.render();
+            blurWrites.length = 0;
+
+            const renderer = app.renderer.shadowRenderer;
+            const renderFace = sinon.spy(renderer, 'renderFace');
+            const pass = new RenderPassShadowLocalNonClustered(app.graphicsDevice, renderer, light, 0, true);
+            pass.executeEnabled = false;
+            pass.render();
+            expect(renderFace.called).to.equal(false);
+            expect(blurWrites).to.eql([]);
+
+            pass.executeEnabled = true;
+            pass.render();
+            expect(renderFace.calledOnce).to.equal(true);
+            expect(blurWrites).to.eql([[1, 1, 126, 126], [1, 1, 126, 126]]);
+        });
+
         [
             { cascades: 2, active: [1], writes: [[1, 64, 63, 63]] },
             { cascades: 3, active: [2], writes: [[64, 1, 63, 63]] },
