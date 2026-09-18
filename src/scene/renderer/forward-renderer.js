@@ -757,9 +757,11 @@ class ForwardRenderer extends Renderer {
 
             // Unset meshInstance overrides back to material values if next draw call will use the
             // same material: the scope parameters, and the material bind group when this draw bound
-            // the mesh instance's copy of the material uniform buffer
+            // the mesh instance's copy of it. The same question as the one which bound the copy -
+            // a mesh instance whose parameters only needed splitting against a changed layout has
+            // no copy to restore from, as it overrides nothing
             if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
-                if (drawCall._materialOverrides.length > 0) {
+                if (this.hasMaterialOverrides(drawCall)) {
                     this.setupMaterialBindGroup(material);
                 }
                 if (drawCall._scopeParameters.length > 0) {

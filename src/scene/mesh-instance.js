@@ -43,6 +43,9 @@ import { PickerId } from './picker-id.js';
  * the parameter is applied through the mesh instance's copy of it rather than through the scope.
  * @property {UniformFormat|null} uniformFormat - The format of the uniform in the material uniform
  * buffer, resolved on first use for overrides.
+ * @property {number} textureSlot - The index of the texture slot of the material bind group the
+ * parameter overrides, or -1 when it does not override a texture of the material.
+ * @ignore
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
  * @import { SkinInstance } from './skin-instance.js'
@@ -437,6 +440,14 @@ class MeshInstance {
      * @private
      */
     _materialOverrides = [];
+
+    /**
+     * The parameters overriding textures of the material bind group.
+     *
+     * @type {MeshInstanceParameter[]}
+     * @private
+     */
+    _materialTextureOverrides = [];
 
     /**
      * The layout version of the material the parameters were last split against, see
@@ -1420,6 +1431,7 @@ class MeshInstance {
         this.parameters.clear();
         this._scopeParameters.length = 0;
         this._materialOverrides.length = 0;
+        this._materialTextureOverrides.length = 0;
         this._materialOverridesVersion++;
     }
 
@@ -1469,7 +1481,8 @@ class MeshInstance {
                 data: data,
                 scopeId: null,
                 override: false,
-                uniformFormat: null
+                uniformFormat: null,
+                textureSlot: -1
             };
             this.parameters.set(name, parameter);
             this._addParameter(parameter);
@@ -1514,7 +1527,8 @@ class MeshInstance {
         const parameter = this.parameters.get(name);
         if (parameter) {
             this.parameters.delete(name);
-            const list = parameter.override ? this._materialOverrides : this._scopeParameters;
+            const list = parameter.override ? this._materialOverrides :
+                (parameter.textureSlot >= 0 ? this._materialTextureOverrides : this._scopeParameters);
             list.splice(list.indexOf(parameter), 1);
             if (parameter.override) {
                 this._materialOverridesVersion++;
@@ -1549,11 +1563,21 @@ class MeshInstance {
      * @private
      */
     _addParameter(parameter) {
-        parameter.override = !!this._material?.getUniformBufferProperty(parameter.name);
+        const material = this._material;
+        parameter.override = !!material?.getUniformBufferProperty(parameter.name);
         parameter.uniformFormat = null;
+
+        // a name which is not a uniform of the material buffer can still be one of its textures
+        parameter.textureSlot = parameter.override ? -1 : (material?.getTextureSlot(parameter.name) ?? -1);
+
         if (parameter.override) {
             this._materialOverrides.push(parameter);
             this._materialOverridesVersion++;
+        } else if (parameter.textureSlot >= 0) {
+
+            // the copy of the bind group assigns the overriding textures on every draw, so there
+            // is no version for them to move
+            this._materialTextureOverrides.push(parameter);
         } else {
             this._scopeParameters.push(parameter);
         }
@@ -1568,6 +1592,7 @@ class MeshInstance {
     _rebuildParameterLists() {
         this._scopeParameters.length = 0;
         this._materialOverrides.length = 0;
+        this._materialTextureOverrides.length = 0;
         for (const parameter of this.parameters.values()) {
             this._addParameter(parameter);
         }
@@ -1577,9 +1602,10 @@ class MeshInstance {
 
     /**
      * Returns the bind group to use at the material bind group index for this mesh instance: a
-     * per-instance copy of the material uniform buffer with the overriding parameters applied, or
-     * null when no parameter overrides a uniform of that buffer, in which case the material's own
-     * bind group is used. The copy is synchronized when the material data or the overrides changed.
+     * per-instance copy of the material's bind group with the overriding parameters applied, or
+     * null when no parameter overrides anything in it, in which case the material's own bind group
+     * is used. The copy of the uniform buffer is synchronized when the material data or the
+     * overrides changed; the textures are assigned every time, as they are only references.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @returns {BindGroup|null} The bind group of the overriding copy, or null.
@@ -1594,19 +1620,22 @@ class MeshInstance {
         }
 
         const overrides = this._materialOverrides;
+        const textureOverrides = this._materialTextureOverrides;
         const materialUniformBuffer = material.uniformBuffer;
-        if (overrides.length === 0 || !materialUniformBuffer) {
+        if ((overrides.length === 0 && textureOverrides.length === 0) || !materialUniformBuffer) {
             return null;
         }
 
-        // the copy follows the layout of the material buffer
+        // the copy follows the layout of the material - both the format of its buffer and the
+        // format of its bind group, which can differ in its textures alone
         const format = materialUniformBuffer.format;
+        const bindGroupFormat = material.uniformBufferBindGroup.format;
         let uniformBuffer = this._materialUniformBuffer;
-        if (!uniformBuffer || uniformBuffer.format !== format) {
+        if (!uniformBuffer || uniformBuffer.format !== format || this._materialBindGroup.format !== bindGroupFormat) {
             this._destroyMaterialUniformBuffer();
             uniformBuffer = new UniformBuffer(device, format, true);
             this._materialUniformBuffer = uniformBuffer;
-            this._materialBindGroup = new BindGroup(device, material.uniformBufferBindGroup.format, uniformBuffer);
+            this._materialBindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
             this._syncedMaterialDataVersion = -1;
 
             // the uniform formats of the overrides belong to the previous layout
@@ -1646,10 +1675,27 @@ class MeshInstance {
             this._syncedOverridesVersion = this._materialOverridesVersion;
         }
 
+        // the textures of the material, with the overriding ones on top. Assigning a texture is
+        // comparing a reference, so there is nothing to gain from tracking a version for it, and
+        // the bind group is only rebuilt when one of them actually changed
+        const bindGroup = this._materialBindGroup;
+        const materialTextures = material.uniformBufferBindGroup.textures;
+        for (let i = 0; i < materialTextures.length; i++) {
+            const texture = materialTextures[i];
+            if (texture) {
+                bindGroup.setTextureAt(i, texture);
+            }
+        }
+
+        for (let i = 0; i < textureOverrides.length; i++) {
+            const override = textureOverrides[i];
+            bindGroup.setTextureAt(override.textureSlot, override.data);
+        }
+
         // (re)built when dirty: on creation, which needs the uploaded buffer, and after a lost
         // context. Its resources are assigned here, not taken from the scope
-        this._materialBindGroup.commit();
-        return this._materialBindGroup;
+        bindGroup.commit();
+        return bindGroup;
     }
 
     /**
