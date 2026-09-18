@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import { Entity } from '../../../src/framework/entity.js';
-import { LAYERID_WORLD } from '../../../src/scene/constants.js';
+import { LAYERID_WORLD, RENDERSTYLE_WIREFRAME } from '../../../src/scene/constants.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -129,6 +129,27 @@ describe('BatchManager', function () {
 
         expect(app.batcher._batchList.length).to.equal(0);
 
+    });
+
+    it('generate: copies the render style to the batch and prepares its mesh', function () {
+        for (const name of ['e1', 'e2']) {
+            const entity = new Entity(name);
+            entity.addComponent('render', {
+                type: 'box',
+                batchGroupId: this.bg.id
+            });
+            entity.render.meshInstances[0].renderStyle = RENDERSTYLE_WIREFRAME;
+            app.root.addChild(entity);
+        }
+
+        app.batcher.generate();
+
+        const batchInstance = app.batcher._batchList[0].meshInstance;
+        expect(batchInstance.renderStyle).to.equal(RENDERSTYLE_WIREFRAME);
+
+        // assigning the render style also generates the wireframe indices of the batched mesh
+        expect(batchInstance.mesh.primitive[RENDERSTYLE_WIREFRAME]).to.exist;
+        expect(batchInstance.mesh.indexBuffer[RENDERSTYLE_WIREFRAME]).to.exist;
     });
 
     it('generate: copies the parameters to the batch, split between the scope and the material buffer', function () {
