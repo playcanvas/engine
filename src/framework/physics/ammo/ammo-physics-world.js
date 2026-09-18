@@ -96,8 +96,12 @@ function getTickDispatcher(ammo) {
         const worlds = new Map();
         const pointer = ammo.addFunction((worldPointer) => {
             const world = worlds.get(worldPointer);
-            Debug.assert(world, `AmmoPhysicsWorld: internal tick callback for an unknown world ${worldPointer}.`);
-            world?._walkContacts();
+            if (world) {
+                world._walkContacts();
+            } else {
+                // only the miss builds a message: this runs every substep in debug builds
+                Debug.assert(false, `AmmoPhysicsWorld: internal tick callback for an unknown world ${worldPointer}.`);
+            }
         }, 'vif');
         dispatcher = { pointer, worlds };
         tickDispatchers.set(ammo, dispatcher);
