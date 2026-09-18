@@ -1,7 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
@@ -13,28 +9,9 @@ import { BoxGeometry } from '../../../../src/scene/geometry/box-geometry.js';
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { Mesh } from '../../../../src/scene/mesh.js';
 import { Model } from '../../../../src/scene/model.js';
+import { hasAmmo, loadAmmo } from '../../../ammo.mjs';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
-
-// The Ammo.js build shipped with the examples doubles as the build these tests run against. It
-// lives outside the test tree, so the suite is skipped when it is absent.
-const AMMO_PATH = resolve('examples/assets/wasm/ammo/ammo.js');
-
-/**
- * Loads the asm.js Ammo build headlessly and resolves with the initialized module.
- *
- * @returns {Promise<object>} The Ammo module.
- */
-function loadAmmo() {
-    // the build is a UMD script that cannot be imported from an ES module package, so it is
-    // evaluated as a CommonJS module body with the globals its Node code path expects
-    const source = readFileSync(AMMO_PATH, 'utf8');
-    const module = { exports: {} };
-    // eslint-disable-next-line no-new-func
-    const evaluate = new Function('module', 'exports', 'require', '__dirname', '__filename', source);
-    evaluate(module, module.exports, createRequire(import.meta.url), dirname(AMMO_PATH), AMMO_PATH);
-    return module.exports();
-}
 
 describe('AmmoPhysicsWorld', function () {
     let app;
@@ -44,7 +21,7 @@ describe('AmmoPhysicsWorld', function () {
     before(async function () {
         this.timeout(20000);
 
-        if (!existsSync(AMMO_PATH)) {
+        if (!hasAmmo()) {
             this.skip();
         }
 
