@@ -18,7 +18,12 @@ import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { Layer } from "../../scene/layer.js"
+ * @import { MeshInstance } from '../../scene/mesh-instance.js'
  */
+
+// Whether a render or model component currently has its mesh instances in the scene's layers.
+// Entity#enabled already accounts for the whole ancestor chain.
+const isRendered = component => component.enabled && component.entity.enabled;
 
 // Fragment shader which works on a source image containing objects rendered using a constant color.
 // The shader removes the original object color and outputs outline color only.
@@ -193,20 +198,33 @@ class OutlineRenderer {
         this.quadRenderer = null;
     }
 
-    getMeshInstances(entity, recursive) {
+    /**
+     * Collect the mesh instances of an entity's render and model components.
+     *
+     * @param {Entity} entity - The entity to collect from.
+     * @param {boolean} recursive - Whether to include the entity's descendants.
+     * @param {boolean} [includeDisabled] - Whether to include components that are not rendered.
+     * Defaults to false, which is what an entity being added wants: a disabled component's mesh
+     * instances are removed from the scene's layers, but the outline layer keeps its own list, so
+     * including them would outline objects that are not drawn. Removal passes true, so an entity
+     * disabled after it was added can still be removed.
+     * @returns {MeshInstance[]} The mesh instances.
+     * @ignore
+     */
+    getMeshInstances(entity, recursive, includeDisabled = false) {
         const meshInstances = [];
 
         if (entity) {
             const renders = recursive ? entity.findComponents('render') : (entity.render ? [entity.render] : []);
             renders.forEach((render) => {
-                if (render.meshInstances) {
+                if (render.meshInstances && (includeDisabled || isRendered(render))) {
                     meshInstances.push(...render.meshInstances);
                 }
             });
 
             const models = recursive ? entity.findComponents('model') : (entity.model ? [entity.model] : []);
             models.forEach((model) => {
-                if (model.meshInstances) {
+                if (model.meshInstances && (includeDisabled || isRendered(model))) {
                     meshInstances.push(...model.meshInstances);
                 }
             });
@@ -216,7 +234,9 @@ class OutlineRenderer {
     }
 
     /**
-     * Add an entity to the outline renderer.
+     * Add an entity to the outline renderer. Render and model components that are not currently
+     * rendered, because they or their entity are disabled, are skipped - this is evaluated when
+     * the entity is added.
      *
      * @param {Entity} entity - The entity to add. All MeshInstance of the entity and its
      * descendants will be added.
@@ -277,7 +297,9 @@ class OutlineRenderer {
      * Defaults to true.
      */
     removeEntity(entity, recursive = true) {
-        const meshInstances = this.getMeshInstances(entity, recursive);
+        // include disabled components, so an entity disabled after it was added still has its
+        // outline material state cleaned up
+        const meshInstances = this.getMeshInstances(entity, recursive, true);
         this.renderingLayer.removeMeshInstances(meshInstances);
 
         meshInstances.forEach((meshInstance) => {
