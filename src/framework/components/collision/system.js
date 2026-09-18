@@ -200,6 +200,55 @@ function beforeRemove(system, entity, component) {
     }
 }
 
+/**
+ * Returns true if the local transforms of the nodes between a compound child and its root, and
+ * the nodes themselves, match those captured at the child's last write into the compound. Reads
+ * the stored local vectors directly, so it costs a few comparisons per level and nothing else.
+ *
+ * @param {{ nodes: { node: GraphNode, position: Vec3, rotation: Quat, scale: Vec3 }[] }} sync - The child's capture.
+ * @param {Entity} entity - The compound child's entity.
+ * @param {Entity} root - The compound root's entity.
+ * @returns {boolean} True if nothing on the path has changed.
+ */
+function compoundPathUnchanged(sync, entity, root) {
+    const nodes = sync.nodes;
+    let i = 0;
+    for (let node = entity; node && node !== root; node = node.parent, i++) {
+        const entry = nodes[i];
+        if (!entry || entry.node !== node ||
+            !entry.position.equals(node.getLocalPosition()) ||
+            !entry.rotation.equals(node.getLocalRotation()) ||
+            !entry.scale.equals(node.getLocalScale())) {
+            return false;
+        }
+    }
+    return i === nodes.length;
+}
+
+/**
+ * Captures the nodes between a compound child and its root with their current local transforms,
+ * reusing the entries of a previous capture so a child that moves every frame allocates nothing.
+ *
+ * @param {{ nodes: { node: GraphNode, position: Vec3, rotation: Quat, scale: Vec3 }[] }} sync - The child's capture.
+ * @param {Entity} entity - The compound child's entity.
+ * @param {Entity} root - The compound root's entity.
+ */
+function captureCompoundPath(sync, entity, root) {
+    const nodes = sync.nodes;
+    let i = 0;
+    for (let node = entity; node && node !== root; node = node.parent, i++) {
+        let entry = nodes[i];
+        if (!entry) {
+            entry = nodes[i] = { node: null, position: new Vec3(), rotation: new Quat(), scale: new Vec3() };
+        }
+        entry.node = node;
+        entry.position.copy(node.getLocalPosition());
+        entry.rotation.copy(node.getLocalRotation());
+        entry.scale.copy(node.getLocalScale());
+    }
+    nodes.length = i;
+}
+
 // Re-creates rigid bodies / triggers
 function recreateShapes(system, component) {
     const entity = component.entity;
@@ -580,14 +629,64 @@ class CollisionComponentSystem extends ComponentSystem {
         }
     }
 
+    /**
+     * Writes a compound child's pose relative to its compound root into the compound shape,
+     * adding the child when it is absent. Disabled children are skipped. Unless forced, the
+     * write is also skipped when no local transform between the child and the root has changed
+     * since the last write, which is decided from stored local vectors without any matrix math,
+     * so the root moving as a whole costs nothing beyond the comparison.
+     *
+     * @param {Entity} entity - The compound child's entity.
+     * @param {boolean} forceUpdate - Write regardless, for a child known to be absent from the
+     * compound.
+     * @returns {boolean} True if the compound shape was written.
+     * @ignore
+     */
     updateCompoundChildTransform(entity, forceUpdate) {
-        const parentComponent = entity.collision._compoundParent;
-        if (parentComponent === entity.collision) return;
+        const component = entity.collision;
+        const parentComponent = component._compoundParent;
+        if (parentComponent === component) return false;
 
-        if (entity.enabled && entity.collision.enabled && (entity._dirtyLocal || forceUpdate)) {
-            this._getNodeTransform(entity, parentComponent.entity, p3, quat2);
-            this.physicsWorld.updateCompoundChild(parentComponent.shape, entity.collision.shape, p3, quat2);
+        if (!entity.enabled || !component.enabled) return false;
+
+        const root = parentComponent.entity;
+        let sync = component._compoundSync;
+        if (!forceUpdate && sync && compoundPathUnchanged(sync, entity, root)) {
+            return false;
         }
+
+        if (!sync) {
+            sync = component._compoundSync = { nodes: [], position: new Vec3(), rotation: new Quat() };
+        }
+        captureCompoundPath(sync, entity, root);
+
+        this._getNodeTransform(entity, root, p3, quat2);
+        if (!forceUpdate && sync.position.equals(p3) && sync.rotation.equals(quat2)) {
+            return false;
+        }
+
+        sync.position.copy(p3);
+        sync.rotation.copy(quat2);
+        this.physicsWorld.updateCompoundChild(parentComponent.shape, component.shape, p3, quat2);
+        return true;
+    }
+
+    /**
+     * Returns true if a compound child is wired to a compound that is still one of its ancestors
+     * and nothing between them has changed since its shape was last written, so the shape is
+     * already where the hierarchy says it should be.
+     *
+     * @param {CollisionComponent} component - The compound child.
+     * @returns {boolean} True if the child's shape is in place.
+     * @ignore
+     */
+    isCompoundChildInPlace(component) {
+        const parentComponent = component._compoundParent;
+        const sync = component._compoundSync;
+        if (!parentComponent || parentComponent === component || !sync) {
+            return false;
+        }
+        return compoundPathUnchanged(sync, component.entity, parentComponent.entity);
     }
 
     _removeCompoundChild(collision, shape) {

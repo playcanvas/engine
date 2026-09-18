@@ -356,7 +356,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         break;
                 }
 
-                if (entity.collision.type === 'compound') {
+                // a static body's shape only changes when it is rebuilt, so its compound children
+                // are not tracked per step
+                if (entity.collision.type === 'compound' && component._type !== BODYTYPE_STATIC) {
                     this._compounds.push(entity.collision);
                 }
 
