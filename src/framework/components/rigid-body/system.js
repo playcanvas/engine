@@ -556,7 +556,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Allocates a pooled contact point that is the given one seen from the other body's
-     * perspective.
+     * perspective: the points swap sides and the normal flips, so that it points away from body
+     * A's surface just as the forward normal points away from body B's.
      *
      * @param {ContactPoint} forward - The contact point from body A's perspective.
      * @returns {ContactPoint} The reversed contact point.
@@ -568,7 +569,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.localPointOther.copy(forward.localPoint);
         contact.point.copy(forward.pointOther);
         contact.pointOther.copy(forward.point);
-        contact.normal.copy(forward.normal);
+        contact.normal.copy(forward.normal).mulScalar(-1);
         contact.impulse = forward.impulse;
         return contact;
     }

@@ -128,7 +128,10 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {boolean} triggerB - True if the second body has no contact response.
  * @property {number} contactCount - The number of contact points (always >= 1).
  * @property {(index: number, out: ContactPoint) => void} readContact - Fills out with contact
- * point index from A's perspective, allocation free.
+ * point index from A's perspective, allocation free: point and localPoint lie on A, pointOther
+ * and localPointOther on B, and normal is the normal of B's surface at the contact, pointing away
+ * from B toward A. The system derives B's view of the contact by swapping the points and negating
+ * the normal.
  * @ignore
  */
 
