@@ -208,8 +208,7 @@ class Picker {
 
         Debug.assert(typeof x !== 'object', 'Picker.getSelection:param \'rect\' is deprecated, use \'x, y, width, height\' instead.');
 
-        y = this.renderTarget.height - (y + height);
-        const rect = this.sanitizeRect(x, y, width, height);
+        const rect = this._sanitizeFlippedRect(x, y, width, height, this.renderTarget.height);
 
         // read pixels from the render target
         device.setRenderTarget(this.renderTarget);
@@ -271,10 +270,10 @@ class Picker {
      * @private
      */
     _readTexture(texture, x, y, width, height, renderTarget) {
-        if (this.device?.isWebGL2) {
-            y = renderTarget.height - (y + height);
-        }
-        const rect = this.sanitizeRect(x, y, width, height);
+        // WebGL2 reads back with a bottom-left origin, WebGPU with a top-left one
+        const rect = this.device?.isWebGL2 ?
+            this._sanitizeFlippedRect(x, y, width, height, renderTarget.height) :
+            this.sanitizeRect(x, y, width, height);
 
         // @ts-ignore
         return texture.read(rect.x, rect.y, rect.z, rect.w, {
@@ -374,6 +373,31 @@ class Picker {
         // reinterpret bits as float
         _int32View[0] = intBits;
         return _floatView[0];
+    }
+
+    /**
+     * Sanitize a rectangle specified in the public top-left coordinate system and convert it to
+     * the bottom-left origin used when reading pixels back.
+     *
+     * The rectangle is floored and clipped while still in top-left space, and only then flipped,
+     * which matters twice. Flipping first would floor `bufferHeight - y - height`, landing one row
+     * off the requested pixel for any fractional y - common when the pick buffer is smaller than
+     * the canvas and coordinates are scaled into it. And clipping a rectangle that overhangs the
+     * bottom edge in flipped space absorbs the overflow at the wrong end, shifting the rectangle
+     * up instead of dropping the rows that fall outside the buffer.
+     *
+     * @param {number} x - The left edge of the rectangle.
+     * @param {number} y - The top edge of the rectangle.
+     * @param {number} width - The width of the rectangle.
+     * @param {number} height - The height of the rectangle.
+     * @param {number} bufferHeight - The height of the buffer being read.
+     * @returns {Vec4} The sanitized rectangle, with y in a bottom-left coordinate system.
+     * @private
+     */
+    _sanitizeFlippedRect(x, y, width, height, bufferHeight) {
+        const rect = this.sanitizeRect(x, y, width, height);
+        rect.y = bufferHeight - (rect.y + rect.w);   // rect.w is the height
+        return rect;
     }
 
     // sanitize the rectangle to make sure it's inside the texture and does not use fractions
