@@ -47,6 +47,7 @@ describe('SogParser', function () {
         app?.destroy();
         app = null;
 
+        http.withCredentials = false;
         jsdomTeardown();
         restore();
     });
@@ -90,6 +91,26 @@ describe('SogParser', function () {
             ]);
             done();
         }, sog);
+    });
+
+    // the bundle is streamed with fetch rather than through the http layer, so the parser has to
+    // apply the credentials flag itself. The request is failed as soon as its arguments are recorded.
+    [false, true].forEach((withCredentials) => {
+        it(`SogBundleParser streams the bundle with credentials ${withCredentials ? 'enabled' : 'disabled'}`, async function () {
+            const sog = new Asset('sog', 'gsplat', { url: 'assets/splats/test.sog' });
+            app.assets.add(sog);
+            http.withCredentials = withCredentials;
+
+            const fetched = stub(global, 'fetch').rejects(new Error('recorded'));
+            const parser = new SogBundleParser(app);
+
+            await new Promise((resolve) => {
+                parser.load({ load: sog.file.url, original: sog.file.url }, resolve, sog);
+            });
+
+            expect(fetched.firstCall.args[0]).to.equal('assets/splats/test.sog');
+            expect(fetched.firstCall.args[1].credentials).to.equal(withCredentials ? 'include' : 'same-origin');
+        });
     });
 
     [SogParser, SogBundleParser].forEach((Parser) => {
