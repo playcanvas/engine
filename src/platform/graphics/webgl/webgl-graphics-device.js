@@ -2068,9 +2068,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const gl = this.gl;
 
+        // the number of active sub-draws is tracked by the owner, the implementation only holds
+        // the per-sub-draw arrays
+        const count = drawCommands.count;
+
         if (primitive.indexed) {
             const format = indexBuffer.impl.glFormat;
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+            const { glCounts, glOffsetsBytes, glInstanceCounts } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {
@@ -2082,7 +2086,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
         } else {
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+            const { glCounts, glOffsetsBytes, glInstanceCounts } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {

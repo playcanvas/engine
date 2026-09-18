@@ -69,7 +69,10 @@ var<storage, read> numSplatsStorage: array<u32>;
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
-#ifndef DITHER_NONE
+// Must match the fragment side exactly (see gsplatPS) - the dither id is the only consumer.
+#if defined(GSPLAT_STOCHASTIC) && !defined(DITHER_NONE)
+    varying @interpolate(flat, either) stochasticId: u32;
+#elif !defined(DITHER_NONE)
     varying @interpolate(flat, either) id: f32;
 #endif
 
@@ -103,7 +106,16 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
-    let cacheIdx = sortedIndices[order];
+    // The cache index follows the data layout: a stochastic view ran no sort, so the cache is
+    // consumed in compacted order and sortedIndices carries stable splat IDs instead.
+    #ifdef GSPLAT_STOCHASTIC
+        let cacheIdx = order;
+        #ifndef DITHER_NONE
+            output.stochasticId = sortedIndices[order];
+        #endif
+    #else
+        let cacheIdx = sortedIndices[order];
+    #endif
     let base = cacheIdx * {CACHE_STRIDE}u;
 
     #ifdef GSPLAT_XR
@@ -207,7 +219,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         );
     #endif
 
-    #ifndef DITHER_NONE
+    #if !defined(DITHER_NONE) && !defined(GSPLAT_STOCHASTIC)
         // Best-effort id from the cache index — used only for blue-noise dither.
         output.id = f32(cacheIdx);
     #endif

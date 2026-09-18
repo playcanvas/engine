@@ -371,6 +371,8 @@ class GSplatManager {
     _writeGsplatParams(p) {
         const gsplat = this.gsplat;
         p.radialSorting = gsplat.radialSorting;
+        p.stochastic = gsplat.stochastic;
+        p.dither = gsplat.dither;
         p.alphaClip = gsplat.alphaClip;
         p.alphaClipForward = gsplat.alphaClipForward;
         p.minPixelSize = gsplat.minPixelSize;
@@ -408,6 +410,8 @@ class GSplatManager {
     _fillPickParams(camera, width, height) {
         const p = this._pickParams;
         this._writeGsplatParams(p);
+        // Picking needs sorted indices even when the work buffer has no per-splat IDs.
+        p.stochastic = false;
         p.cameraNode = camera.node;
         p.width = width;
         p.height = height;

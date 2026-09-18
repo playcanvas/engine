@@ -3,8 +3,8 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Debug } from '../../core/debug.js';
 import { SEMANTIC_POSITION, CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import {
-    BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD,
-    SHADOWCAMERA_NAME
+    BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, DITHER_BLUENOISE, DITHER_NONE,
+    GSPLAT_FORWARD, SHADOWCAMERA_NAME, ditherNames
 } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
@@ -29,6 +29,25 @@ const _shaderProjMat = new Mat4();
 const _camPos = new Vec3();
 const _camDir = new Vec3();
 const _tmpV = new Vec3();
+
+// Zero sort slots keep the shared indirect-argument writers draw/project-only.
+const noSortIndirectInfo = new Uint32Array(4);
+
+/**
+ * Resolves a scene dither mode to the STD_OPACITY_DITHER value `opacityDitherPS` selects its
+ * noise source on. DITHER_NONE names no noise source, so stochastic coverage cannot use it.
+ *
+ * @param {string} mode - A `DITHER_*` constant.
+ * @returns {string} The define value.
+ */
+const resolveDitherName = (mode) => {
+    const name = ditherNames[mode];
+    if (!name || mode === DITHER_NONE) {
+        Debug.warnOnce(`GSplatParams#dither: '${mode}' is not a stochastic dither mode, falling back to DITHER_BLUENOISE.`);
+        return ditherNames[DITHER_BLUENOISE];
+    }
+    return name;
+};
 
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
@@ -82,6 +101,21 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
     /** @type {number} */
     originalBlendType = BLEND_ADDITIVE;
+
+    /**
+     * Whether the forward material draws unsorted stochastic alpha. Followed from the scene
+     * params in `prepareRenderView`.
+     *
+     * @type {boolean}
+     */
+    stochastic = false;
+
+    /**
+     * The noise pattern stochastic coverage is dithered against (a `DITHER_*` constant).
+     *
+     * @type {string}
+     */
+    dither = DITHER_BLUENOISE;
 
     /** @type {Set<string>} */
     _internalDefines = new Set();
@@ -193,10 +227,13 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_XR');
+        this._internalDefines.add('GSPLAT_STOCHASTIC');
+        this._internalDefines.add('DITHER_NONE');
+        this._internalDefines.add('STD_OPACITY_DITHER');
 
         // GPU sort pipeline resources (gpuSorter, projector, intervalCompaction) are created lazily
-        // on the first forward sort (see _ensureGpuPipeline). A hybrid renderer that only exists to
-        // satisfy a shadow-casting manager (no forward pass) never allocates them.
+        // on first use (see _ensureGpuPipeline); only sorted views need the sorter. A renderer
+        // that only satisfies a shadow-casting manager (no forward pass) never allocates them.
         this.meshInstance = this.createMeshInstance();
     }
 
@@ -259,10 +296,22 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._material.setDefine('GSPLAT_INDIRECT_DRAW', true);
         this._updateIdDefines(this._material);
 
-        const dither = false;
-        this._material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');
+        const dither = this.stochastic;
+        this._material.setDefine('GSPLAT_STOCHASTIC', dither);
+        this._material.setDefine('DITHER_NONE', dither ? undefined : '');
+        // opacityDitherPS selects its noise source from STD_OPACITY_DITHER; nothing sets it for a
+        // ShaderMaterial (only the standard/lit program generators do), so it must be set here or
+        // the chunk declares no noise variable at all and the fragment shader fails to compile.
+        this._material.setDefine('STD_OPACITY_DITHER', dither ? resolveDitherName(this.dither) : undefined);
         this._material.cull = CULLFACE_NONE;
-        this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+        // Overdraw mode owns the blend state while enabled (it swaps in BLEND_ADDITIVE and restores
+        // originalBlendType on exit), so hand it the new base rather than clobbering its override.
+        const blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+        if (this._material.getDefine('GSPLAT_OVERDRAW')) {
+            this.originalBlendType = blendType;
+        } else {
+            this._material.blendType = blendType;
+        }
         this._material.depthWrite = !!dither;
         this._material.update();
     }
@@ -297,14 +346,15 @@ class GSplatHybridRenderer extends GSplatRenderer {
     }
 
     /**
-     * Lazily creates the GPU sort pipeline resources on first forward use. Kept out of the
+     * Lazily creates projection resources, and the sorter only when a view needs sorting. Kept out of the
      * constructor so a hybrid renderer that never renders a forward pass (e.g. one owned by a
      * shadow-only manager) allocates none of them.
      *
+     * @param {boolean} needsSort - Whether this view requires sorting.
      * @private
      */
-    _ensureGpuPipeline() {
-        if (!this.gpuSorter) this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
+    _ensureGpuPipeline(needsSort) {
+        if (needsSort && !this.gpuSorter) this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
         if (!this.projector) this.projector = new GSplatProjector(this.device);
         if (!this.intervalCompaction) this.intervalCompaction = new GSplatIntervalCompaction(this.device, this._scratch);
     }
@@ -321,6 +371,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @returns {boolean} True if a GPU dispatch ran (false when there are no active splats).
      */
     prepareRenderView(world, worldState, params) {
+        if (this.stochastic !== !!params.stochastic || this.dither !== params.dither) {
+            this.stochastic = !!params.stochastic;
+            this.dither = params.dither;
+            this.configureMaterial();
+        }
+
         const cameraNode = params.cameraNode;
         const cam = cameraNode.camera;
         const sceneCam = cam.camera;
@@ -409,7 +465,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return null;
 
-        this._ensureGpuPipeline();
+        const stochastic = !!params.stochastic && !pickMode;
+        this._ensureGpuPipeline(!stochastic);
         const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
         const projector = /** @type {GSplatProjector} */ (this.projector);
 
@@ -427,18 +484,20 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const totalActiveSplats = worldState.totalActiveSplats;
         this.intervalCompaction.dispatchCompact(world.workBuffer.frustumCuller, numIntervals, totalActiveSplats, fisheyeProj.enabled);
 
-        this.allocateAndWriteIntervalIndirectArgs(numIntervals);
+        const sortIndirectInfo = stochastic ? noSortIndirectInfo : gpuSorter.prepareIndirect();
+        this.allocateAndWriteIntervalIndirectArgs(numIntervals, sortIndirectInfo);
 
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
         const compactedSplatIds = ic.compactedSplatIds;
 
-        const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
-        const radixBits = gpuSorter.radixBits;
-        const roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
-
-        const { minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting);
-
-        const sortIndirectInfo = gpuSorter.prepareIndirect();
+        let roundedNumBits = 0;
+        let minDist = 0;
+        let maxDist = 1;
+        if (!stochastic) {
+            const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
+            roundedNumBits = Math.ceil(numBits / gpuSorter.radixBits) * gpuSorter.radixBits;
+            ({ minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting));
+        }
 
         projector.dispatch({
             workBuffer: world.workBuffer,
@@ -447,6 +506,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             sortElementCountBuffer: /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             totalCapacity: elementCount,
             radialSort: params.radialSorting,
+            stochastic,
             numBits: roundedNumBits,
             minDist,
             maxDist,
@@ -487,6 +547,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
             this.device.submit();
         }
 
+        // In stochastic mode the cache is consumed directly in compacted order. The key
+        // buffer carries stable work-buffer splat IDs for the coverage hash instead.
+        if (stochastic) return projector.sortKeys;
+
         return gpuSorter.sortIndirect(
             /** @type {StorageBuffer} */ (projector.sortKeys),
             elementCount,
@@ -504,11 +568,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * indirect args.
      *
      * @param {number} numIntervals - Total interval count (index into prefix sum for visible count).
+     * @param {Uint32Array} sortInfo - Sort dispatch metadata, or zero slots for stochastic views.
      * @private
      */
-    allocateAndWriteIntervalIndirectArgs(numIntervals) {
-        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
-        const sortInfo = gpuSorter.prepareIndirect();
+    allocateAndWriteIntervalIndirectArgs(numIntervals, sortInfo) {
         const sortSlotCount = sortInfo[0];
 
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);

@@ -181,6 +181,9 @@ class GSplatInstance {
         material.setParameter('alphaClipForward', 1.0 / 255.0);
         material.setParameter('minPixelSize', 2.0);
         material.setDefine(`DITHER_${options.dither ? 'BLUENOISE' : 'NONE'}`, '');
+        // opacityDitherPS picks its noise source off STD_OPACITY_DITHER, and nothing sets it for a
+        // ShaderMaterial, so without it the chunk declares no noise and the shader fails to compile
+        material.setDefine('STD_OPACITY_DITHER', options.dither ? 'BLUENOISE' : undefined);
         material.cull = CULLFACE_NONE;
         material.blendType = options.dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
         material.depthWrite = !!options.dither;
