@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
+import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { NullPhysicsWorld } from '../../../../src/framework/physics/null/null-physics-world.js';
 import { createApp } from '../../../app.mjs';
@@ -144,17 +145,95 @@ describe('RigidBodyComponentSystem', function () {
 
         it('advances the world through step() while paused, without scaling the delta', function () {
             const system = app.systems.rigidbody;
-            const setGravity = spy(world, 'setGravity');
             const step = spy(world, 'step');
             const flushContacts = spy(world, 'flushContacts');
 
             system.timeScale = 0;
             system.step(0.01);
 
-            expect(setGravity.calledOnce).to.be.true;
             expect(step.calledOnce).to.be.true;
             expect(step.firstCall.args).to.deep.equal([0.01, system.maxSubSteps, system.fixedTimeStep]);
             expect(flushContacts.calledOnce).to.be.true;
+        });
+    });
+
+    describe('gravity', function () {
+
+        afterEach(function () {
+            restore();
+        });
+
+        it('applies the current gravity to the backend when it is installed', function () {
+            const world = new NullPhysicsWorld();
+            const setGravity = spy(world, 'setGravity');
+
+            app.systems.rigidbody.gravity.set(0, -3.7, 0);
+            app.systems.rigidbody.setPhysicsWorld(world);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(new Vec3(0, -3.7, 0))).to.be.true;
+        });
+
+        it('leaves the backend alone on steps where gravity is unchanged', function () {
+            const world = new NullPhysicsWorld();
+            app.systems.rigidbody.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+
+            app.update(1 / 60);
+            app.update(1 / 60);
+
+            expect(setGravity.called).to.be.false;
+        });
+
+        it('applies a gravity vector modified in place at the start of the next step', function () {
+            const world = new NullPhysicsWorld();
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+            const step = spy(world, 'step');
+
+            system.gravity.set(0, -1, 0);
+            app.update(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(new Vec3(0, -1, 0))).to.be.true;
+            expect(setGravity.calledBefore(step)).to.be.true;
+
+            // unchanged since it was applied, so the following step does not repeat the call
+            app.update(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+        });
+
+        it('applies a gravity vector replaced by assignment', function () {
+            const world = new NullPhysicsWorld();
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+
+            system.gravity = new Vec3(1, 2, 3);
+            app.update(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(new Vec3(1, 2, 3))).to.be.true;
+        });
+
+        it('applies gravity changed while paused on the next manual step', function () {
+            const world = new NullPhysicsWorld();
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+
+            system.timeScale = 0;
+            system.gravity.set(0, 0, 0);
+            app.update(1 / 60);
+
+            expect(setGravity.called).to.be.false;
+
+            system.step(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(Vec3.ZERO)).to.be.true;
         });
     });
 

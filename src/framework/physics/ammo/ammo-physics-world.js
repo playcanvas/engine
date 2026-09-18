@@ -94,9 +94,6 @@ class AmmoContactPair {
  * @alpha
  */
 class AmmoPhysicsWorld extends PhysicsWorld {
-    /** @private */
-    _gravityFloat32 = new Float32Array(3);
-
     /**
      * Built triangle data cached per geometry source id, shared by all mesh shapes created
      * from the same geometry. Each entry holds the btTriangleMesh, which lives until the world
@@ -403,21 +400,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
      * @ignore
      */
     setGravity(gravity) {
-        // downcast gravity to float32 so we can accurately compare with existing gravity set
-        // in the world
-        this._gravityFloat32[0] = gravity.x;
-        this._gravityFloat32[1] = gravity.y;
-        this._gravityFloat32[2] = gravity.z;
-
-        // compare against the world's own value so writes through the native escape hatch are
-        // still detected
-        const current = this.nativeWorld.getGravity();
-        if (current.x() !== this._gravityFloat32[0] ||
-            current.y() !== this._gravityFloat32[1] ||
-            current.z() !== this._gravityFloat32[2]) {
-            current.setValue(gravity.x, gravity.y, gravity.z);
-            this.nativeWorld.setGravity(current);
-        }
+        this._btVec1.setValue(gravity.x, gravity.y, gravity.z);
+        this.nativeWorld.setGravity(this._btVec1);
     }
 
     step(dt, maxSubSteps, fixedTimeStep) {
