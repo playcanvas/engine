@@ -43,6 +43,9 @@ import { PickerId } from './picker-id.js';
  * the parameter is applied through the mesh instance's copy of it rather than through the scope.
  * @property {UniformFormat|null} uniformFormat - The format of the uniform in the material uniform
  * buffer, resolved on first use for overrides.
+ * @property {number} textureSlot - The index of the texture slot of the material bind group the
+ * parameter overrides, or -1 when it does not override a texture of the material.
+ * @ignore
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
  * @import { SkinInstance } from './skin-instance.js'
@@ -445,17 +448,6 @@ class MeshInstance {
      * @private
      */
     _materialTextureOverrides = [];
-
-    /**
-     * The texture slot of the material bind group each of
-     * {@link MeshInstance#_materialTextureOverrides} overrides, by the same index. The slot depends
-     * on the layout of the material, so it is classification state of the mesh instance and not of
-     * the parameter.
-     *
-     * @type {number[]}
-     * @private
-     */
-    _materialTextureSlots = [];
 
     /**
      * The layout version of the material the parameters were last split against, see
@@ -1440,7 +1432,6 @@ class MeshInstance {
         this._scopeParameters.length = 0;
         this._materialOverrides.length = 0;
         this._materialTextureOverrides.length = 0;
-        this._materialTextureSlots.length = 0;
         this._materialOverridesVersion++;
     }
 
@@ -1490,7 +1481,8 @@ class MeshInstance {
                 data: data,
                 scopeId: null,
                 override: false,
-                uniformFormat: null
+                uniformFormat: null,
+                textureSlot: -1
             };
             this.parameters.set(name, parameter);
             this._addParameter(parameter);
@@ -1535,21 +1527,11 @@ class MeshInstance {
         const parameter = this.parameters.get(name);
         if (parameter) {
             this.parameters.delete(name);
+            const list = parameter.override ? this._materialOverrides :
+                (parameter.textureSlot >= 0 ? this._materialTextureOverrides : this._scopeParameters);
+            list.splice(list.indexOf(parameter), 1);
             if (parameter.override) {
-                const list = this._materialOverrides;
-                list.splice(list.indexOf(parameter), 1);
                 this._materialOverridesVersion++;
-            } else {
-
-                // a texture override takes its slot with it
-                const textureIndex = this._materialTextureOverrides.indexOf(parameter);
-                if (textureIndex >= 0) {
-                    this._materialTextureOverrides.splice(textureIndex, 1);
-                    this._materialTextureSlots.splice(textureIndex, 1);
-                } else {
-                    const list = this._scopeParameters;
-                    list.splice(list.indexOf(parameter), 1);
-                }
             }
         }
     }
@@ -1585,20 +1567,17 @@ class MeshInstance {
         parameter.override = !!material?.getUniformBufferProperty(parameter.name);
         parameter.uniformFormat = null;
 
+        // a name which is not a uniform of the material buffer can still be one of its textures
+        parameter.textureSlot = parameter.override ? -1 : (material?.getTextureSlot(parameter.name) ?? -1);
+
         if (parameter.override) {
             this._materialOverrides.push(parameter);
             this._materialOverridesVersion++;
-            return;
-        }
-
-        // a name which is not a uniform of the material buffer can still be one of its textures
-        const textureSlot = material?.getTextureSlot(parameter.name) ?? -1;
-        if (textureSlot >= 0) {
+        } else if (parameter.textureSlot >= 0) {
 
             // the copy of the bind group assigns the overriding textures on every draw, so there
             // is no version for them to move
             this._materialTextureOverrides.push(parameter);
-            this._materialTextureSlots.push(textureSlot);
         } else {
             this._scopeParameters.push(parameter);
         }
@@ -1614,7 +1593,6 @@ class MeshInstance {
         this._scopeParameters.length = 0;
         this._materialOverrides.length = 0;
         this._materialTextureOverrides.length = 0;
-        this._materialTextureSlots.length = 0;
         for (const parameter of this.parameters.values()) {
             this._addParameter(parameter);
         }
@@ -1709,9 +1687,9 @@ class MeshInstance {
             }
         }
 
-        const textureSlots = this._materialTextureSlots;
         for (let i = 0; i < textureOverrides.length; i++) {
-            bindGroup.setTextureAt(textureSlots[i], textureOverrides[i].data);
+            const override = textureOverrides[i];
+            bindGroup.setTextureAt(override.textureSlot, override.data);
         }
 
         // (re)built when dirty: on creation, which needs the uploaded buffer, and after a lost

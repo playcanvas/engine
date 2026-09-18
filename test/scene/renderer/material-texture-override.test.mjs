@@ -82,7 +82,7 @@ describe('mesh instance texture overrides', function () {
         app.render();
 
         expect(meshInstance._materialTextureOverrides).to.have.lengthOf(1);
-        expect(meshInstance._materialTextureSlots).to.eql([0]);
+        expect(meshInstance.getParameter('texture_overridden').textureSlot).to.equal(0);
         expect(meshInstance._scopeParameters).to.have.lengthOf(0);
         expect(meshInstance._materialBindGroup.textures[0].name).to.equal('override');
 
@@ -115,7 +115,7 @@ describe('mesh instance texture overrides', function () {
         expect(bound[bound.length - 1]).to.equal(material.uniformBufferBindGroup);
     });
 
-    it('takes the slot with the parameter when it is deleted', function () {
+    it('removes a deleted parameter from the list of texture overrides', function () {
         const material = materialWithTextureSlot();
         const meshInstance = addBox(material, 0);
         meshInstance.setParameter('texture_overridden', texture('override'));
@@ -125,6 +125,6 @@ describe('mesh instance texture overrides', function () {
         meshInstance.deleteParameter('texture_overridden');
 
         expect(meshInstance._materialTextureOverrides).to.have.lengthOf(0);
-        expect(meshInstance._materialTextureSlots).to.have.lengthOf(0);
+        expect(meshInstance.getParameter('texture_overridden')).to.equal(undefined);
     });
 });
