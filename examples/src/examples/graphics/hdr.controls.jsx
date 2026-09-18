@@ -96,8 +96,8 @@ export function Controls({ observer }) {
                         link={{ observer, path: 'data.bloom.threshold' }}
                         min={0}
                         max={100}
-                        precision={1}
-                        step={0.5}
+                        precision={2}
+                        step={0.01}
                     />
                 </LabelGroup>
             </Panel>

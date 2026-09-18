@@ -256,8 +256,8 @@ class Bloom {
      * @attribute
      * @visibleif {enabled}
      * @range [0, 100]
-     * @precision 1
-     * @step 0.5
+     * @precision 2
+     * @step 0.01
      */
     threshold = 0;
 }
