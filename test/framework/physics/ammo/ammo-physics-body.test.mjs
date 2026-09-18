@@ -19,6 +19,13 @@ describe('AmmoPhysicsBody', function () {
         }
 
         globalThis.Ammo = await loadAmmo();
+
+        // the transform sync under test needs the interpolation accessors from kripken/ammo.js#446;
+        // the engine feature-detects them, so an older build is a skip here, not a failure
+        if (typeof Ammo.btRigidBody.prototype.setInterpolationWorldTransform !== 'function') {
+            delete globalThis.Ammo;
+            this.skip();
+        }
     });
 
     after(function () {
