@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_BINDGROUP_ALLOC } from '../../core/constants.js';
 import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
-import { getBuiltInTexture } from './built-in-textures.js';
 import { TextureView } from './texture-view.js';
 
 /**
@@ -324,7 +323,7 @@ class BindGroup {
             }
         });
 
-        return getBuiltInTexture(this.device, textureFormat.substituteTexture);
+        return this.device.builtInTextures[textureFormat.substituteTexture];
     }
 
     /**
