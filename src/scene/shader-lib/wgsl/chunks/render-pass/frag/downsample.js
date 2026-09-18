@@ -9,6 +9,11 @@ varying uv0: vec2f;
     var premultiplyTextureSampler: sampler;
 #endif
 
+#ifdef PREFILTER
+    // x: threshold, y: knee
+    uniform prefilterThresholdKnee: vec2f;
+#endif
+
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
@@ -51,6 +56,19 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #ifdef REMOVE_INVALID
         value = max(value, half3(0.0));
+    #endif
+
+    #ifdef PREFILTER
+        // Soft-knee high pass: scale the result down by how far its brightest channel sits below
+        // the threshold, with a quadratic knee of half the threshold smoothing the transition.
+        // This runs on the filtered result rather than on each tap, so an isolated bright pixel,
+        // which the filter has already averaged down, needs a proportionally lower threshold.
+        let luminance: half = max(value.r, max(value.g, value.b));
+        let threshold: half = half(uniform.prefilterThresholdKnee.x);
+        let knee: half = half(uniform.prefilterThresholdKnee.y);
+        var soft: half = clamp(luminance - threshold + knee, half(0.0), half(2.0) * knee);
+        soft = soft * soft / (half(4.0) * knee + half(1e-4));
+        value *= clamp(max(soft, luminance - threshold) / max(luminance, half(1e-4)), half(0.0), half(1.0));
     #endif
 
     output.color = vec4f(vec3f(value), 1.0);
