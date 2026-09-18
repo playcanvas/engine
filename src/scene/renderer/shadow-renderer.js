@@ -718,7 +718,7 @@ class ShadowRenderer {
         // #endif
     }
 
-    renderVsm(light, camera) {
+    renderVsm(light, camera, cascadeMask = (1 << light.numShadowFaces) - 1) {
 
         // VSM blur if light supports vsm (directional and spot in general)
         if (light._isVsm && light._vsmBlurSize > 1) {
@@ -726,7 +726,7 @@ class ShadowRenderer {
             // in clustered mode, only directional light can be vms
             const isClustered = this.renderer.scene.clusteredLightingEnabled;
             if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                this.applyVsmBlur(light, camera);
+                this.applyVsmBlur(light, camera, cascadeMask);
             }
         }
     }
@@ -756,7 +756,7 @@ class ShadowRenderer {
         return blurShader;
     }
 
-    applyVsmBlur(light, camera) {
+    applyVsmBlur(light, camera, cascadeMask) {
 
         const device = this.device;
 
@@ -779,10 +779,10 @@ class ShadowRenderer {
         const filterSize = light._vsmBlurSize;
         const blurShader = this.getVsmBlurShader(blurMode, filterSize);
 
-        blurScissorRect.z = light._shadowResolution - 2;
-        blurScissorRect.w = blurScissorRect.z;
+        const resolution = light._shadowResolution;
+        blurScissorRect.set(1, 1, resolution - 2, resolution - 2);
 
-        // Blur horizontal
+        // Blur horizontal into scratch storage, including the samples needed at cascade edges.
         this.sourceId.setValue(origShadowMap.colorBuffer);
         pixelOffset[0] = 1 / light._shadowResolution;
         pixelOffset[1] = 0;
@@ -795,7 +795,23 @@ class ShadowRenderer {
         pixelOffset[1] = pixelOffset[0];
         pixelOffset[0] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
-        drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+        if (light._type === LIGHTTYPE_DIRECTIONAL && cascadeMask !== (1 << light.numCascades) - 1) {
+            // Cached cascades already contain filtered moments. Blurring them again would
+            // progressively soften their shadows until their next scheduled update.
+            for (let cascade = 0; cascade < light.numCascades; cascade++) {
+                if (!(cascadeMask & (1 << cascade))) continue;
+
+                const viewport = light.cascades[cascade];
+                const x = Math.max(1, viewport.x * resolution);
+                const y = Math.max(1, viewport.y * resolution);
+                const right = Math.min(resolution - 1, (viewport.x + viewport.z) * resolution);
+                const top = Math.min(resolution - 1, (viewport.y + viewport.w) * resolution);
+                blurScissorRect.set(x, y, right - x, top - y);
+                drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+            }
+        } else {
+            drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+        }
 
         // return the temporary shadow map back to the cache
         this.renderer.shadowMapCache.add(light, tempShadowMap);

@@ -136,6 +136,30 @@ describe('AmmoPhysicsWorld', function () {
         app.systems.rigidbody.step(1 / 60);
     }
 
+    describe('gravity', function () {
+
+        it('applies the system gravity to the native world when installed', function () {
+            app.systems.rigidbody.gravity.set(0, -3.7, 0);
+            installWorld();
+
+            const gravity = world.nativeWorld.getGravity();
+            expect(gravity.x()).to.equal(0);
+            expect(gravity.y()).to.be.closeTo(-3.7, 1e-6);
+            expect(gravity.z()).to.equal(0);
+        });
+
+        it('applies a gravity change to the native world on the next step', function () {
+            installWorld();
+            app.systems.rigidbody.gravity.set(1, 0, 0);
+
+            expect(world.nativeWorld.getGravity().x()).to.equal(0);
+
+            step();
+
+            expect(world.nativeWorld.getGravity().x()).to.equal(1);
+        });
+    });
+
     describe('mesh shape scaling', function () {
 
         beforeEach(function () {
