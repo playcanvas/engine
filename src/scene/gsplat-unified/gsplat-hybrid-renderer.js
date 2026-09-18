@@ -196,6 +196,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_STOCHASTIC');
         this._internalDefines.add('DITHER_NONE');
         this._internalDefines.add('DITHER_BLUENOISE');
+        this._internalDefines.add('STD_OPACITY_DITHER');
 
         // GPU sort pipeline resources (gpuSorter, projector, intervalCompaction) are created lazily
         // on the first forward sort (see _ensureGpuPipeline). A hybrid renderer that only exists to
@@ -268,8 +269,19 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._material.setDefine('GSPLAT_STOCHASTIC', dither);
         this._material.setDefine('DITHER_NONE', dither ? undefined : '');
         this._material.setDefine('DITHER_BLUENOISE', dither ? '' : undefined);
+        // opacityDitherPS selects its noise source from STD_OPACITY_DITHER; nothing sets it for a
+        // ShaderMaterial (only the standard/lit program generators do), so it must be set here or
+        // the chunk declares no noise variable at all and the fragment shader fails to compile.
+        this._material.setDefine('STD_OPACITY_DITHER', dither ? 'BLUENOISE' : undefined);
         this._material.cull = CULLFACE_NONE;
-        this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+        // Overdraw mode owns the blend state while enabled (it swaps in BLEND_ADDITIVE and restores
+        // originalBlendType on exit), so hand it the new base rather than clobbering its override.
+        const blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
+        if (this._material.getDefine('GSPLAT_OVERDRAW')) {
+            this.originalBlendType = blendType;
+        } else {
+            this._material.blendType = blendType;
+        }
         this._material.depthWrite = !!dither;
         this._material.update();
     }

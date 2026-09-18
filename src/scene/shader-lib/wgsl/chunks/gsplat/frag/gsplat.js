@@ -99,6 +99,17 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
     #elif PREPASS_PASS
 
+        // Dithered splats write depth, so they are collected by the depth prepass. It has to apply
+        // the same coverage test as the forward pass, otherwise it claims the full splat footprint
+        // and the forward fragments of the splats behind it fail the depth test.
+        #ifndef DITHER_NONE
+            #ifdef GSPLAT_STOCHASTIC
+                opacityDither(f32(alpha), f32(stochasticId) * 0.013);
+            #else
+                opacityDither(f32(alpha), id * 0.013);
+            #endif
+        #endif
+
         output.color = float2vec4(vLinearDepth);
 
     #else
