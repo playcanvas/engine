@@ -586,6 +586,20 @@ class Material {
     }
 
     /**
+     * The index of the texture slot of the material's bind group a name refers to, or -1 when the
+     * name is not one of them. A mesh instance parameter of such a name overrides that texture of
+     * the material for its own draws, applied through the copy of the bind group the mesh instance
+     * keeps rather than through the scope.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {number} The index of the texture slot, or -1.
+     * @ignore
+     */
+    getTextureSlot(name) {
+        return this._uniformBufferBindGroup?.format.textureFormatsMap.get(name) ?? -1;
+    }
+
+    /**
      * Incremented when the set of typed properties of the material changes, so that mesh instances
      * re-classify their parameters. Constant for materials with a fixed set of properties.
      *
@@ -1152,9 +1166,20 @@ class Material {
                 // the values move to a buffer of the new layout
                 this._uniformBufferBindGroup?.destroy();
                 uniformBuffer?.destroy();
+                // mesh instances classify their parameters against the resources of the bind
+                // group, which is created on the first render of the material - after they were
+                // given it - so the layout they classified against only becomes known here. A
+                // later change of the layout moves the version on its own, before the group is
+                // replaced, so only this first one needs it
+                const firstBindGroup = !this._uniformBufferBindGroup;
+
                 uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
                 this._uniformBuffer = uniformBuffer;
                 this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
+
+                if (firstBindGroup) {
+                    this._layoutVersion++;
+                }
 
                 // every property is written into the new storage
                 this._modifiedProperties ??= new Set();

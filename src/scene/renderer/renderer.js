@@ -833,17 +833,29 @@ class Renderer {
     }
 
     /**
-     * True when a draw of this mesh instance needs its own copy of the material uniform buffer: it
-     * overrides some of the uniforms, or the set of typed properties of the material changed and
-     * its parameters need splitting against the new layout again. Kept to field reads, as this runs
-     * for every draw.
+     * True when this mesh instance overrides something in the material's bind group, and so a draw
+     * of it binds its own copy of that group. Kept to field reads, as this runs for every draw.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @returns {boolean} True when the mesh instance overrides a uniform or a texture.
+     */
+    hasMaterialOverrides(meshInstance) {
+        return meshInstance._materialOverrides.length > 0 ||
+            meshInstance._materialTextureOverrides.length > 0;
+    }
+
+    /**
+     * True when a draw of this mesh instance needs its own copy of the material's bind group: it
+     * overrides something in it, or the set of typed properties of the material changed and its
+     * parameters need splitting against the new layout again. Kept to field reads, as this runs for
+     * every draw.
      *
      * @param {MeshInstance} meshInstance - The mesh instance being drawn.
      * @param {Material} material - Its material.
      * @returns {boolean} True when the copy is needed.
      */
     needsMaterialOverrideBindGroup(meshInstance, material) {
-        return meshInstance._materialOverrides.length > 0 ||
+        return this.hasMaterialOverrides(meshInstance) ||
             meshInstance._materialLayoutVersion !== material._layoutVersion;
     }
 

@@ -180,11 +180,12 @@ class BindGroup {
 
     /**
      * Assign a texture to a slot, given its index in the format's textures. This is the form the
-     * update uses, as it walks the slots in order and so knows the index without looking it up.
+     * update uses, as it walks the slots in order and so knows the index without looking it up,
+     * and the form an owner of the bind group uses when it tracks the slots of its own resources.
      *
      * @param {number} index - The index of the texture slot.
      * @param {Texture|TextureView} value - Texture or TextureView to assign to the slot.
-     * @private
+     * @ignore
      */
     setTextureAt(index, value) {
 
