@@ -3,8 +3,8 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Debug } from '../../core/debug.js';
 import { SEMANTIC_POSITION, CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import {
-    BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, GSPLAT_FORWARD,
-    SHADOWCAMERA_NAME
+    BLEND_NONE, BLEND_PREMULTIPLIED, BLEND_ADDITIVE, DITHER_BLUENOISE, DITHER_NONE,
+    GSPLAT_FORWARD, SHADOWCAMERA_NAME, ditherNames
 } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
@@ -32,6 +32,22 @@ const _tmpV = new Vec3();
 
 // Zero sort slots keep the shared indirect-argument writers draw/project-only.
 const noSortIndirectInfo = new Uint32Array(4);
+
+/**
+ * Resolves a scene dither mode to the STD_OPACITY_DITHER value `opacityDitherPS` selects its
+ * noise source on. DITHER_NONE names no noise source, so stochastic coverage cannot use it.
+ *
+ * @param {string} mode - A `DITHER_*` constant.
+ * @returns {string} The define value.
+ */
+const resolveDitherName = (mode) => {
+    const name = ditherNames[mode];
+    if (!name || mode === DITHER_NONE) {
+        Debug.warnOnce(`GSplatParams#dither: '${mode}' is not a stochastic dither mode, falling back to DITHER_BLUENOISE.`);
+        return ditherNames[DITHER_BLUENOISE];
+    }
+    return name;
+};
 
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
@@ -85,6 +101,21 @@ class GSplatHybridRenderer extends GSplatRenderer {
 
     /** @type {number} */
     originalBlendType = BLEND_ADDITIVE;
+
+    /**
+     * Whether the forward material draws unsorted stochastic alpha. Followed from the scene
+     * params in `prepareRenderView`.
+     *
+     * @type {boolean}
+     */
+    stochastic = false;
+
+    /**
+     * The noise pattern stochastic coverage is dithered against (a `DITHER_*` constant).
+     *
+     * @type {string}
+     */
+    dither = DITHER_BLUENOISE;
 
     /** @type {Set<string>} */
     _internalDefines = new Set();
@@ -198,7 +229,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_XR');
         this._internalDefines.add('GSPLAT_STOCHASTIC');
         this._internalDefines.add('DITHER_NONE');
-        this._internalDefines.add('DITHER_BLUENOISE');
         this._internalDefines.add('STD_OPACITY_DITHER');
 
         // GPU sort pipeline resources (gpuSorter, projector, intervalCompaction) are created lazily
@@ -245,8 +275,6 @@ class GSplatHybridRenderer extends GSplatRenderer {
         super.destroy();
     }
 
-    stochastic = false;
-
     get material() {
         return this._material;
     }
@@ -271,11 +299,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const dither = this.stochastic;
         this._material.setDefine('GSPLAT_STOCHASTIC', dither);
         this._material.setDefine('DITHER_NONE', dither ? undefined : '');
-        this._material.setDefine('DITHER_BLUENOISE', dither ? '' : undefined);
         // opacityDitherPS selects its noise source from STD_OPACITY_DITHER; nothing sets it for a
         // ShaderMaterial (only the standard/lit program generators do), so it must be set here or
         // the chunk declares no noise variable at all and the fragment shader fails to compile.
-        this._material.setDefine('STD_OPACITY_DITHER', dither ? 'BLUENOISE' : undefined);
+        this._material.setDefine('STD_OPACITY_DITHER', dither ? resolveDitherName(this.dither) : undefined);
         this._material.cull = CULLFACE_NONE;
         // Overdraw mode owns the blend state while enabled (it swaps in BLEND_ADDITIVE and restores
         // originalBlendType on exit), so hand it the new base rather than clobbering its override.
@@ -344,8 +371,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @returns {boolean} True if a GPU dispatch ran (false when there are no active splats).
      */
     prepareRenderView(world, worldState, params) {
-        if (this.stochastic !== !!params.stochastic) {
+        if (this.stochastic !== !!params.stochastic || this.dither !== params.dither) {
             this.stochastic = !!params.stochastic;
+            this.dither = params.dither;
             this.configureMaterial();
         }
 

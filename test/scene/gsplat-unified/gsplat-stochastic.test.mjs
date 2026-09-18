@@ -1,7 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../../../src/scene/constants.js';
+import {
+    BLEND_NONE, BLEND_PREMULTIPLIED,
+    DITHER_BAYER8, DITHER_BLUENOISE, DITHER_IGNNOISE, DITHER_NONE
+} from '../../../src/scene/constants.js';
 import { GSplatHybridRenderer } from '../../../src/scene/gsplat-unified/gsplat-hybrid-renderer.js';
 import { GSplatManager } from '../../../src/scene/gsplat-unified/gsplat-manager.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
@@ -131,14 +134,69 @@ describe('GSplat stochastic rendering', function () {
         const renderer = Object.create(GSplatHybridRenderer.prototype);
         renderer._material = new ShaderMaterial();
         renderer._updateIdDefines = () => {};
+        renderer.dither = DITHER_BLUENOISE;
         for (const stochastic of [false, true, false]) {
             renderer.stochastic = stochastic;
             renderer.configureMaterial();
             expect(renderer.material.depthWrite).to.equal(stochastic);
             expect(renderer.material.blendType).to.equal(stochastic ? BLEND_NONE : BLEND_PREMULTIPLIED);
             expect(renderer.material.defines.has('DITHER_NONE')).to.equal(!stochastic);
-            expect(renderer.material.defines.has('DITHER_BLUENOISE')).to.equal(stochastic);
+            expect(renderer.material.defines.get('STD_OPACITY_DITHER')).to.equal(stochastic ? 'BLUENOISE' : undefined);
         }
+        renderer._material.destroy();
+    });
+
+    // opacityDitherPS only declares a noise source for a mode it recognises, so an unusable mode
+    // has to resolve to a real one rather than reaching the shader and failing to compile.
+    it('selects the dither noise source from the scene dither mode', function () {
+        const renderer = Object.create(GSplatHybridRenderer.prototype);
+        renderer._material = new ShaderMaterial();
+        renderer._updateIdDefines = () => {};
+        renderer.stochastic = true;
+        const originalWarn = console.warn;
+        const warnings = [];
+        console.warn = (...args) => warnings.push(args.join(' '));
+        try {
+            for (const [mode, expected, warns] of [
+                [DITHER_BAYER8, 'BAYER8', false],
+                [DITHER_IGNNOISE, 'IGNNOISE', false],
+                [DITHER_BLUENOISE, 'BLUENOISE', false],
+                [DITHER_NONE, 'BLUENOISE', true],
+                ['nonsense', 'BLUENOISE', true]
+            ]) {
+                warnings.length = 0;
+                renderer.dither = mode;
+                renderer.configureMaterial();
+                expect(renderer.material.defines.get('STD_OPACITY_DITHER')).to.equal(expected);
+                expect(warnings.length > 0).to.equal(warns);
+            }
+        } finally {
+            console.warn = originalWarn;
+        }
+        renderer._material.destroy();
+    });
+
+    it('follows a mid-session dither mode change', function () {
+        const renderer = Object.create(GSplatHybridRenderer.prototype);
+        Object.assign(renderer, {
+            _material: new ShaderMaterial(),
+            _updateIdDefines: () => {},
+            stochastic: true,
+            dither: DITHER_BLUENOISE,
+            configureMaterial: sinon.spy(GSplatHybridRenderer.prototype.configureMaterial),
+            setStereo: () => {},
+            sortAndProjectForCamera: sinon.stub().returns(null),
+            device: { width: 960, height: 540 }
+        });
+        const cameraNode = { camera: { camera: { xrActive: false }, renderTarget: null, rect: { z: 1, w: 1 } } };
+        const view = dither => renderer.prepareRenderView({}, {}, { cameraNode, stochastic: true, dither });
+        view(DITHER_BLUENOISE);
+        expect(renderer.configureMaterial.called).to.equal(false);
+        view(DITHER_BAYER8);
+        expect(renderer.configureMaterial.calledOnce).to.equal(true);
+        expect(renderer.material.defines.get('STD_OPACITY_DITHER')).to.equal('BAYER8');
+        view(DITHER_BAYER8);
+        expect(renderer.configureMaterial.calledOnce).to.equal(true);
         renderer._material.destroy();
     });
 });
