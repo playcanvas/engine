@@ -22,6 +22,7 @@ import { FisheyeProjection } from '../graphics/fisheye-projection.js';
  * @typedef {object} GSplatRenderViewParams
  * @ignore
  * @property {GraphNode} cameraNode - The camera node for this view.
+ * @property {boolean} stochastic - Whether the forward view uses unsorted stochastic alpha.
  * @property {boolean} radialSorting - Whether radial (vs linear) depth sorting is used.
  * @property {number} alphaClip - Alpha threshold for shadow/pick/prepass rendering.
  * @property {number} alphaClipForward - Alpha floor for the forward pass.

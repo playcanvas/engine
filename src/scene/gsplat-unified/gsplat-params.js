@@ -138,6 +138,16 @@ class GSplatParams {
     radialSorting = false;
 
     /**
+     * Enables stochastic alpha rendering on the WebGPU GPU-sort renderer. Splats are drawn
+     * without sorting, using blue-noise coverage, opaque blending and depth writes. Ignored by
+     * the CPU-sort renderer. Picking continues to use sorted rendering. Defaults to false.
+     * Applications can customize the sampling through the material's opacityDitherPS chunk.
+     *
+     * @type {boolean}
+     */
+    stochastic = false;
+
+    /**
      * @type {number}
      * @private
      */

@@ -371,6 +371,7 @@ class GSplatManager {
     _writeGsplatParams(p) {
         const gsplat = this.gsplat;
         p.radialSorting = gsplat.radialSorting;
+        p.stochastic = gsplat.stochastic;
         p.alphaClip = gsplat.alphaClip;
         p.alphaClipForward = gsplat.alphaClipForward;
         p.minPixelSize = gsplat.minPixelSize;

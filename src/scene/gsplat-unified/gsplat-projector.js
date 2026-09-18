@@ -280,7 +280,7 @@ class GSplatProjector {
             new UniformFormat('splatTextureSize', UNIFORMTYPE_UINT),
             new UniformFormat('numBins', UNIFORMTYPE_UINT),
             new UniformFormat('isOrtho', UNIFORMTYPE_UINT),
-            new UniformFormat('pad0', UNIFORMTYPE_UINT),
+            new UniformFormat('stochastic', UNIFORMTYPE_UINT),
             new UniformFormat('viewProj', UNIFORMTYPE_MAT4),
             new UniformFormat('viewMatrix', UNIFORMTYPE_MAT4),
             new UniformFormat('cameraPosition', UNIFORMTYPE_VEC3),
@@ -630,6 +630,7 @@ class GSplatProjector {
      * foveated culling has no effect.
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
+     * @param {boolean} [params.stochastic] - Write stable splat IDs instead of sort keys.
      * @param {boolean} [params.pickMode] - Whether to write picking IDs into the cache.
      * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj]
      * Fisheye projection state. When `fisheyeProj.enabled` is true the projector picks the
@@ -649,6 +650,7 @@ class GSplatProjector {
             foveationStrength = 0, foveationCenter = 0.3,
             viewportWidth, viewportHeight,
             pickMode = false,
+            stochastic = false,
             fisheyeProj,
             antiAlias = false,
             isStereo = false,
@@ -778,7 +780,7 @@ class GSplatProjector {
         compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);
         compute.setParameter('minDist', minDist);
         compute.setParameter('invRange', invRange);
-        compute.setParameter('pad0', 0);
+        compute.setParameter('stochastic', stochastic && !pickMode ? 1 : 0);
 
         if (fisheyeMode) {
             compute.setParameter('fisheye_k', fisheyeProj.k);

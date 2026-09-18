@@ -69,7 +69,9 @@ var<storage, read> numSplatsStorage: array<u32>;
 varying gaussianUV: half2;
 varying @interpolate(flat, either) gaussianColor: half4;
 
-#ifndef DITHER_NONE
+#ifdef GSPLAT_STOCHASTIC
+    varying @interpolate(flat, either) stochasticId: u32;
+#elif !defined(DITHER_NONE)
     varying @interpolate(flat, either) id: f32;
 #endif
 
@@ -103,7 +105,12 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         return output;
     }
 
-    let cacheIdx = sortedIndices[order];
+    #ifdef GSPLAT_STOCHASTIC
+        let cacheIdx = order;
+        output.stochasticId = sortedIndices[order];
+    #else
+        let cacheIdx = sortedIndices[order];
+    #endif
     let base = cacheIdx * {CACHE_STRIDE}u;
 
     #ifdef GSPLAT_XR
@@ -207,7 +214,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         );
     #endif
 
-    #ifndef DITHER_NONE
+    #if !defined(DITHER_NONE) && !defined(GSPLAT_STOCHASTIC)
         // Best-effort id from the cache index — used only for blue-noise dither.
         output.id = f32(cacheIdx);
     #endif

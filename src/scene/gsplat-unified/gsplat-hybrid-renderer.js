@@ -193,6 +193,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('GSPLAT_NO_FOG');
         this._internalDefines.add('GSPLAT_NO_TONEMAP');
         this._internalDefines.add('GSPLAT_XR');
+        this._internalDefines.add('GSPLAT_STOCHASTIC');
+        this._internalDefines.add('DITHER_NONE');
+        this._internalDefines.add('DITHER_BLUENOISE');
 
         // GPU sort pipeline resources (gpuSorter, projector, intervalCompaction) are created lazily
         // on the first forward sort (see _ensureGpuPipeline). A hybrid renderer that only exists to
@@ -238,6 +241,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
         super.destroy();
     }
 
+    stochastic = false;
+
     get material() {
         return this._material;
     }
@@ -259,8 +264,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._material.setDefine('GSPLAT_INDIRECT_DRAW', true);
         this._updateIdDefines(this._material);
 
-        const dither = false;
-        this._material.setDefine(`DITHER_${dither ? 'BLUENOISE' : 'NONE'}`, '');
+        const dither = this.stochastic;
+        this._material.setDefine('GSPLAT_STOCHASTIC', dither);
+        this._material.setDefine('DITHER_NONE', dither ? undefined : '');
+        this._material.setDefine('DITHER_BLUENOISE', dither ? '' : undefined);
         this._material.cull = CULLFACE_NONE;
         this._material.blendType = dither ? BLEND_NONE : BLEND_PREMULTIPLIED;
         this._material.depthWrite = !!dither;
@@ -321,6 +328,11 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @returns {boolean} True if a GPU dispatch ran (false when there are no active splats).
      */
     prepareRenderView(world, worldState, params) {
+        if (this.stochastic !== !!params.stochastic) {
+            this.stochastic = !!params.stochastic;
+            this.configureMaterial();
+        }
+
         const cameraNode = params.cameraNode;
         const cam = cameraNode.camera;
         const sceneCam = cam.camera;
@@ -436,7 +448,12 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const radixBits = gpuSorter.radixBits;
         const roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
 
-        const { minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting);
+        const stochastic = !!params.stochastic && !pickMode;
+        let minDist = 0;
+        let maxDist = 1;
+        if (!stochastic) {
+            ({ minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting));
+        }
 
         const sortIndirectInfo = gpuSorter.prepareIndirect();
 
@@ -447,6 +464,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             sortElementCountBuffer: /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             totalCapacity: elementCount,
             radialSort: params.radialSorting,
+            stochastic,
             numBits: roundedNumBits,
             minDist,
             maxDist,
@@ -486,6 +504,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
         if (pickMode) {
             this.device.submit();
         }
+
+        // In stochastic mode the cache is consumed directly in compacted order. The key
+        // buffer carries stable work-buffer splat IDs for the coverage hash instead.
+        if (stochastic) return projector.sortKeys;
 
         return gpuSorter.sortIndirect(
             /** @type {StorageBuffer} */ (projector.sortKeys),
