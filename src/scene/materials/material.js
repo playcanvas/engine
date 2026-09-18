@@ -27,6 +27,8 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { MaterialTextureDescriptor } from './standard-material-textures.js'
+ * @import { MaterialUniformBufferLayout } from './material-uniform-buffer-layout.js'
  * @import { ScopeId } from '../../platform/graphics/scope-id.js'
  * @import { MaterialProperty } from './material-property.js'
  * @import { Light } from '../light.js';
@@ -536,6 +538,15 @@ class Material {
     _uniformBufferBindGroup = null;
 
     /**
+     * The layout the uniform buffer and the bind group were built from, null until the first
+     * render of the material.
+     *
+     * @type {MaterialUniformBufferLayout|null}
+     * @private
+     */
+    _layout = null;
+
+    /**
      * Incremented each time typed property data is written to the uniform buffer storage.
      *
      * @type {number}
@@ -583,6 +594,30 @@ class Material {
      */
     getUniformBufferProperty(name) {
         return null;
+    }
+
+    /**
+     * The textures of the material, one per slot of its bind group. Empty for a material which
+     * keeps its textures on the scope instead.
+     *
+     * @type {MaterialTextureDescriptor[]}
+     * @ignore
+     */
+    get textureDescriptors() {
+        return [];
+    }
+
+    /**
+     * The textures the material holds in its own bind group on this device. Only a device using
+     * bind groups has one to hold them; without it they stay on the scope, which is also where a
+     * mesh instance overriding one of them has to apply it.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {MaterialTextureDescriptor[]} The textures.
+     * @ignore
+     */
+    getTextureDescriptors(device) {
+        return device.usesMeshBindGroups ? this.textureDescriptors : [];
     }
 
     /**
@@ -1160,8 +1195,10 @@ class Material {
         let uniformBuffer = this._uniformBuffer;
         if (!uniformBuffer || this._layoutDirty) {
             this._layoutDirty = false;
-            const layout = getMaterialLayout(device, properties);
-            if (uniformBuffer?.format !== layout.uniformBufferFormat) {
+            const layout = getMaterialLayout(device, properties, this.getTextureDescriptors(device));
+            this._layout = layout;
+            if (uniformBuffer?.format !== layout.uniformBufferFormat ||
+                this._uniformBufferBindGroup?.format !== layout.bindGroupFormat) {
 
                 // the values move to a buffer of the new layout
                 this._uniformBufferBindGroup?.destroy();
@@ -1196,6 +1233,14 @@ class Material {
         if (this._uniformUploadedVersion !== this._uniformDataVersion) {
             uniformBuffer.upload();
             this._uniformUploadedVersion = this._uniformDataVersion;
+        }
+
+        // the textures of the bind group, in the order of its slots. Assigning a texture compares
+        // a reference, so this is cheaper than tracking a version for it, and the group is only
+        // rebuilt when one of them changed
+        const textures = this._layout.textures;
+        for (let i = 0; i < textures.length; i++) {
+            this._uniformBufferBindGroup.setTextureAt(i, this[textures[i].mapName] ?? device.builtInTextures.white);
         }
 
         // the material assigns the resources of its bind group itself, so the scope takes no part

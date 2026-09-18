@@ -1,5 +1,5 @@
 import { Debug } from '../../core/debug.js';
-import { BindGroupFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
+import { BindGroupFormat, BindTextureFormat, BindUniformBufferFormat } from '../../platform/graphics/bind-group-format.js';
 import {
     SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, UNIFORM_BUFFER_DEFAULT_SLOT_NAME
 } from '../../platform/graphics/constants.js';
@@ -9,12 +9,13 @@ import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/unif
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { MaterialProperty } from './material-property.js'
+ * @import { MaterialTextureDescriptor } from './standard-material-textures.js'
  */
 
 /**
- * The uniform buffer layout shared by all materials with the same typed properties: the format of
- * the uniform buffer and the format of the bind group holding that single buffer. Layouts are
- * created per device and cached by their key.
+ * The layout shared by all materials with the same typed properties and textures: the format of
+ * the uniform buffer, and the format of the bind group holding that buffer and those textures.
+ * Layouts are created per device and cached by their key.
  *
  * @ignore
  */
@@ -23,8 +24,9 @@ class MaterialUniformBufferLayout {
      * @param {GraphicsDevice} device - The graphics device.
      * @param {string} key - The layout key.
      * @param {MaterialProperty[]} properties - The properties, in layout order.
+     * @param {MaterialTextureDescriptor[]} textures - The textures, in layout order.
      */
-    constructor(device, key, properties) {
+    constructor(device, key, properties, textures) {
         /**
          * The key of the layout, see {@link getMaterialLayoutKey}.
          *
@@ -42,12 +44,23 @@ class MaterialUniformBufferLayout {
         }), { pack: true });
 
         /**
-         * The format of the bind group containing the material uniform buffer.
+         * The textures of the bind group, in the order of its texture slots.
+         *
+         * @type {MaterialTextureDescriptor[]}
+         */
+        this.textures = textures;
+
+        /**
+         * The format of the bind group containing the material uniform buffer and its textures.
          *
          * @type {BindGroupFormat}
          */
         this.bindGroupFormat = new BindGroupFormat(device, [
-            new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
+            new BindUniformBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
+            ...textures.map((texture) => {
+                return new BindTextureFormat(texture.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT,
+                    undefined, undefined, true, texture.samplerName);
+            })
         ]);
     }
 
@@ -82,15 +95,17 @@ const sortProperties = (properties) => {
 };
 
 /**
- * Returns the key identifying the uniform buffer layout of a set of typed properties. The key
- * does not depend on the order of the properties.
+ * Returns the key identifying the layout of a set of typed properties and textures. The key does
+ * not depend on the order of the properties, and does depend on the order of the textures, which
+ * is the order of their slots.
  *
  * @param {MaterialProperty[]} properties - The properties.
+ * @param {MaterialTextureDescriptor[]} [textures] - The textures.
  * @returns {string} The layout key.
  * @ignore
  */
-const getMaterialLayoutKey = (properties) => {
-    return sortProperties(properties).map(property => property.key).join(',');
+const getMaterialLayoutKey = (properties, textures = []) => {
+    return `${sortProperties(properties).map(property => property.key).join(',')}|${textures.map(texture => texture.name).join(',')}`;
 };
 
 /**
@@ -100,18 +115,19 @@ const getMaterialLayoutKey = (properties) => {
  *
  * @param {GraphicsDevice} device - The graphics device.
  * @param {MaterialProperty[]} properties - The properties.
+ * @param {MaterialTextureDescriptor[]} [textures] - The textures.
  * @returns {MaterialUniformBufferLayout} The layout.
  * @ignore
  */
-const getMaterialLayout = (device, properties) => {
+const getMaterialLayout = (device, properties, textures = []) => {
     const layouts = _layoutCache.get(device, () => new MaterialLayoutCache());
     const sorted = sortProperties(properties);
-    const key = sorted.map(property => property.key).join(',');
+    const key = getMaterialLayoutKey(sorted, textures);
     let layout = layouts.get(key);
     if (!layout) {
         Debug.assert(new Set(sorted.map(property => property.uniformName)).size === sorted.length,
             'Material properties must use unique uniform names.', sorted);
-        layout = new MaterialUniformBufferLayout(device, key, sorted);
+        layout = new MaterialUniformBufferLayout(device, key, sorted, textures);
         layouts.set(key, layout);
     }
     return layout;
