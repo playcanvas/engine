@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
+import { LAYERID_UI, LAYERID_DEPTH, SHADER_FORWARD } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
 import { Component } from '../component.js';
@@ -209,7 +209,9 @@ class CameraComponent extends Component {
         }) : null;
         this._camera.shaderPassInfo = shaderPassInfo;
 
-        return shaderPassInfo.index;
+        // without a name the camera renders the forward pass, which is also the index the
+        // renderer falls back to for a camera with no shader pass info
+        return shaderPassInfo?.index ?? SHADER_FORWARD;
     }
 
     /**
