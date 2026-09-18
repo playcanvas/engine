@@ -16,6 +16,7 @@ import {
     CameraFrame,
     Color,
     ContainerHandler,
+    DITHER_BLUENOISE,
     Entity,
     EnvLighting,
     FILLMODE_FILL_WINDOW,
@@ -218,6 +219,15 @@ data.on('radialSorting:set', () => {
     app.scene.gsplat.radialSorting = !!data.get('radialSorting');
 });
 
+// Stochastic alpha: the GPU-sort renderer drops the sort entirely and dithers coverage instead.
+// Ignored by the CPU-sort renderer.
+data.on('stochastic:set', () => {
+    app.scene.gsplat.stochastic = !!data.get('stochastic');
+});
+data.on('dither:set', () => {
+    app.scene.gsplat.dither = data.get('dither');
+});
+
 app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
 app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
@@ -255,6 +265,8 @@ data.set('minPixelSize', 2);
 data.set('alphaClipForward', 1 / 255);
 data.set('minContribution', 3);
 data.set('radialSorting', true);
+data.set('stochastic', false);
+data.set('dither', DITHER_BLUENOISE);
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('culling', device.isWebGPU);
 data.set('compact', true);

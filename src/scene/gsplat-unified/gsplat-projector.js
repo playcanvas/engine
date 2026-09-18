@@ -280,7 +280,7 @@ class GSplatProjector {
             new UniformFormat('splatTextureSize', UNIFORMTYPE_UINT),
             new UniformFormat('numBins', UNIFORMTYPE_UINT),
             new UniformFormat('isOrtho', UNIFORMTYPE_UINT),
-            new UniformFormat('pad0', UNIFORMTYPE_UINT),
+            new UniformFormat('stochastic', UNIFORMTYPE_UINT),
             new UniformFormat('viewProj', UNIFORMTYPE_MAT4),
             new UniformFormat('viewMatrix', UNIFORMTYPE_MAT4),
             new UniformFormat('cameraPosition', UNIFORMTYPE_VEC3),
@@ -630,6 +630,9 @@ class GSplatProjector {
      * foveated culling has no effect.
      * @param {number} params.viewportWidth - Render viewport width in pixels.
      * @param {number} params.viewportHeight - Render viewport height in pixels.
+     * @param {boolean} [params.stochastic] - Write stable splat IDs instead of sort keys. The
+     * caller owns the invariant that this is never combined with `pickMode`, which always needs
+     * sorted depth semantics.
      * @param {boolean} [params.pickMode] - Whether to write picking IDs into the cache.
      * @param {import('../graphics/fisheye-projection.js').FisheyeProjection} [params.fisheyeProj]
      * Fisheye projection state. When `fisheyeProj.enabled` is true the projector picks the
@@ -649,6 +652,7 @@ class GSplatProjector {
             foveationStrength = 0, foveationCenter = 0.3,
             viewportWidth, viewportHeight,
             pickMode = false,
+            stochastic = false,
             fisheyeProj,
             antiAlias = false,
             isStereo = false,
@@ -656,10 +660,16 @@ class GSplatProjector {
             userCacheWords = 0
         } = params;
 
+        Debug.assert(!(stochastic && pickMode), 'GSplatProjector#dispatch: stochastic and pickMode are mutually exclusive.');
+
         const fisheyeMode = !!fisheyeProj?.enabled;
 
         // Stereo is XR perspective-only; never combined with pick (mono) or fisheye.
         const stereoMode = !!isStereo && !pickMode && !fisheyeMode;
+
+        // A stochastic view generates no sort key, so the sort direction cannot affect it. Fold it
+        // away rather than compiling a second, behaviourally identical RADIAL_SORT variant.
+        const radialMode = radialSort && !stochastic;
 
         // AA only matters for the forward color path; skip it for picking to avoid
         // doubling the projector variant count.
@@ -676,7 +686,7 @@ class GSplatProjector {
         // workgroups run their atomicAdds.
         this.renderCounter.clear();
 
-        const compute = this._getProjectorCompute(workBuffer, radialSort, pickMode, fisheyeMode, aaMode, stereoMode);
+        const compute = this._getProjectorCompute(workBuffer, radialMode, pickMode, fisheyeMode, aaMode, stereoMode);
 
         // Forward the user render-stage material parameters (uniforms/textures referenced by the
         // modify chunk, reflected into the projector's auto-generated bind group, matched by name).
@@ -700,10 +710,12 @@ class GSplatProjector {
         const invRange = range > 0 ? 1.0 / range : 1.0;
 
         // Bin weights — same pattern as CPU-side sort key preparation.
-        const bucketCount = (1 << numBits);
-        const cameraBin = GSplatSortBinWeights.computeCameraBin(radialSort, minDist, range);
-        const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
-        this.binWeightsBuffer.write(0, binWeights);
+        if (!stochastic) {
+            const bucketCount = (1 << numBits);
+            const cameraBin = GSplatSortBinWeights.computeCameraBin(radialMode, minDist, range);
+            const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
+            this.binWeightsBuffer.write(0, binWeights);
+        }
 
         compute.setParameter('compactedSplatIds', compactedSplatIds);
         compute.setParameter('sortElementCount', sortElementCountBuffer);
@@ -778,7 +790,7 @@ class GSplatProjector {
         compute.setParameter('numBins', GSplatSortBinWeights.NUM_BINS);
         compute.setParameter('minDist', minDist);
         compute.setParameter('invRange', invRange);
-        compute.setParameter('pad0', 0);
+        compute.setParameter('stochastic', stochastic ? 1 : 0);
 
         if (fisheyeMode) {
             compute.setParameter('fisheye_k', fisheyeProj.k);

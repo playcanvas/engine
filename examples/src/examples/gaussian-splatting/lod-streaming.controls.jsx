@@ -197,6 +197,30 @@ export function Controls({ observer }) {
                         value={observer.get('radialSorting') ?? true}
                     />
                 </LabelGroup>
+                <LabelGroup text='Stochastic'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'stochastic' }}
+                        value={observer.get('stochastic') || false}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Dither'>
+                    <SelectInput
+                        type='string'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'dither' }}
+                        value={observer.get('dither') || 'bluenoise'}
+                        options={[
+                            { v: 'bluenoise', t: 'Blue Noise' },
+                            { v: 'bayer2', t: 'Bayer 2' },
+                            { v: 'bayer4', t: 'Bayer 4' },
+                            { v: 'bayer8', t: 'Bayer 8' },
+                            { v: 'bayer16', t: 'Bayer 16' },
+                            { v: 'ignnoise', t: 'Gradient Noise' }
+                        ]}
+                    />
+                </LabelGroup>
                 <LabelGroup text='Compact'>
                     <BooleanInput
                         type='toggle'
