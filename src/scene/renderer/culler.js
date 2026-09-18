@@ -205,8 +205,8 @@ class Culler {
         // Only scheduled directional shadow passes need caster culling and cascade fitting.
         const requests = this._directionalShadowCullRequests;
         for (let i = 0; i < requests.length; i++) {
-            const { light, camera } = requests[i];
-            renderer._shadowRendererDirectional.cull(light, comp, camera);
+            const { light, camera, shadowCascadeMask } = requests[i];
+            renderer._shadowRendererDirectional.cull(light, comp, camera, null, shadowCascadeMask);
         }
     }
 
@@ -236,8 +236,10 @@ class Culler {
         // Count all requested cameras even after the first has consumed the light-wide mode.
         const requests = this._directionalShadowCullRequests;
         for (let i = 0; i < requests.length; i++) {
-            const { light } = requests[i];
-            renderer._shadowMapUpdates += light.numShadowFaces;
+            const { light, shadowCascadeMask } = requests[i];
+            for (let mask = shadowCascadeMask; mask; mask &= mask - 1) {
+                renderer._shadowMapUpdates++;
+            }
             if (light.shadowUpdateMode === SHADOWUPDATE_THISFRAME) {
                 light.shadowUpdateMode = SHADOWUPDATE_NONE;
             }
@@ -250,13 +252,15 @@ class Culler {
      *
      * @param {Light} light - The shadow-casting light.
      * @param {Camera} camera - The camera the shadow is fitted to.
+     * @param {number} cascadeMask - Bit mask of cascades the pass will render.
      */
-    requestDirectionalShadowCull(light, camera) {
+    requestDirectionalShadowCull(light, camera, cascadeMask) {
         const renderData = light.getRenderData(camera, 0);
         if (!renderData.shadowCullRequested) {
             renderData.shadowCullRequested = true;
             this._directionalShadowCullRequests.push(renderData);
         }
+        renderData.shadowCascadeMask |= cascadeMask;
     }
 
     /**
@@ -344,6 +348,7 @@ class Culler {
         const requests = this._directionalShadowCullRequests;
         for (let i = 0; i < requests.length; i++) {
             requests[i].shadowCullRequested = false;
+            requests[i].shadowCascadeMask = 0;
         }
         requests.length = 0;
 

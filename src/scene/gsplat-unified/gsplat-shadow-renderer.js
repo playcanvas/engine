@@ -16,7 +16,7 @@ import {
     UNIFORMTYPE_UINT,
     UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
-import { BLEND_PREMULTIPLIED, LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE } from '../constants.js';
+import { BLEND_PREMULTIPLIED, LIGHTTYPE_DIRECTIONAL } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { needsShadowRendering } from '../renderer/shadow-renderer.js';
@@ -454,11 +454,14 @@ class GSplatShadowRenderer {
 
         this.entries.forEach((entry) => {
             const { light } = entry;
-            if (!needsShadowRendering(light) || light.shadowUpdateOverrides?.[0] === SHADOWUPDATE_NONE) {
+            if (!needsShadowRendering(light) || !camera) {
                 return;
             }
 
-            if (!camera || !light.getRenderData(camera, 0).shadowCullRequested) {
+            // The scheduled mask includes mandatory refreshes after shadow-map recreation,
+            // even when the application's per-cascade override still requests a cached shadow.
+            const renderData = light.getRenderData(camera, 0);
+            if (!renderData.shadowCullRequested || !(renderData.shadowCascadeMask & 1)) {
                 return;
             }
 
