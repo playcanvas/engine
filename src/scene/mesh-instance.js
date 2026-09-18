@@ -1315,20 +1315,13 @@ class MeshInstance {
         if (slot === -1) {
             this._deleteDrawCommandsKey(key);
         } else {
-
-            // lazy map allocation
-            this.drawCommands ??= new Map();
-
-            // allocate or get per-camera command
-            const device = this.mesh.device;
-            const cmd = this.drawCommands.get(key) ?? new DrawCommands(device);
+            const cmd = this._allocDrawCommands(key, false);
             cmd.slotIndex = slot;
             cmd.update(count);
 
             // the slot is recycled at the end of the frame, so the commands only apply to this
             // frame - they need to be assigned again for the next one
-            cmd.validUntilVersion = device.drawCommandsVersion;
-            this.drawCommands.set(key, cmd);
+            cmd.validUntilVersion = this.mesh.device.drawCommandsVersion;
         }
     }
 
@@ -1353,22 +1346,46 @@ class MeshInstance {
         if (maxCount === 0) {
             this._deleteDrawCommandsKey(key);
         } else {
-
-            // lazy map allocation
-            this.drawCommands ??= new Map();
-
-            // allocate or get per-camera command
-            cmd = this.drawCommands.get(key);
-            if (!cmd) {
-                // determine index size from current mesh index buffer
-                const indexBuffer = this.mesh.indexBuffer?.[0];
-                const indexFormat = indexBuffer?.format;
-                const indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
-                cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
-                this.drawCommands.set(key, cmd);
-            }
+            cmd = this._allocDrawCommands(key, true);
             cmd.allocate(maxCount);
         }
+        return cmd;
+    }
+
+    /**
+     * Returns the cached draw commands for a key, allocating them when missing. A cached set of
+     * the other kind is released first - indirect and multi-draw commands draw from different
+     * backing storage, so they cannot share an instance.
+     *
+     * @param {number|null} key - The {@link Camera#id} the commands are bound to, or null for the
+     * set shared by all cameras.
+     * @param {boolean} multiDraw - True for multi-draw commands, false for indirect ones.
+     * @returns {DrawCommands} The draw commands to populate.
+     * @private
+     */
+    _allocDrawCommands(key, multiDraw) {
+
+        // lazy map allocation
+        const cmds = this.drawCommands ??= new Map();
+
+        let cmd = cmds.get(key);
+        if (cmd && cmd.multiDraw !== multiDraw) {
+            cmd.destroy();
+            cmd = undefined;
+        }
+
+        if (!cmd) {
+            // multi-draw on WebGL needs the index size of the current mesh index buffer
+            let indexSizeBytes = 0;
+            if (multiDraw) {
+                const indexFormat = this.mesh.indexBuffer?.[0]?.format;
+                indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
+            }
+            cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
+            cmd.multiDraw = multiDraw;
+            cmds.set(key, cmd);
+        }
+
         return cmd;
     }
 

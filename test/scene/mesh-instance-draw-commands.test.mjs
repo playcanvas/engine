@@ -54,6 +54,35 @@ describe('MeshInstance draw commands', function () {
         expect(meshInstance.getDrawCommands(null)).to.equal(commands);
     });
 
+    it('replaces a cached set when a key switches from indirect to multi-draw', function () {
+        meshInstance.setIndirect(null, 3);
+        const indirect = meshInstance.getDrawCommands(null);
+        device.frameEnd();
+
+        const commands = meshInstance.setMultiDraw(null, 2);
+        expect(commands).to.not.equal(indirect);
+        expect(commands.multiDraw).to.be.true;
+        expect(meshInstance.getDrawCommands(null)).to.equal(commands);
+
+        // and they stay valid from there on, like any other multi-draw commands
+        device.frameEnd();
+        expect(meshInstance.getDrawCommands(null)).to.equal(commands);
+    });
+
+    it('replaces a cached set when a key switches from multi-draw to indirect', function () {
+        const multi = meshInstance.setMultiDraw(null, 2);
+        device.frameEnd();
+
+        meshInstance.setIndirect(null, 3);
+        const commands = meshInstance.getDrawCommands(null);
+
+        // reusing the multi-draw set would point the indirect draw at its storage buffer rather
+        // than at the device indirect draw buffer
+        expect(commands).to.not.equal(multi);
+        expect(commands.multiDraw).to.be.false;
+        expect(commands.slotIndex).to.equal(3);
+    });
+
     it('keys commands by camera id rather than by the camera itself', function () {
         const camera = new Camera(device);
         meshInstance.setIndirect({ camera }, 5);
