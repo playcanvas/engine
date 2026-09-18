@@ -653,8 +653,9 @@ class Material {
     }
 
     /**
-     * Incremented when the set of typed properties of the material changes, so that mesh instances
-     * re-classify their parameters. Constant for materials with a fixed set of properties.
+     * Incremented when the layout of the material is replaced - the set of its typed properties or
+     * of its textures changed - so that mesh instances re-classify their parameters against it.
+     * Constant for a material whose layout never changes.
      *
      * @type {number}
      * @private
@@ -671,8 +672,9 @@ class Material {
     _layoutDirty = false;
 
     /**
-     * The version of the set of typed properties of the material, see
-     * {@link Material#getUniformBufferProperty}.
+     * The version of the layout of the material: its typed properties, see
+     * {@link Material#getUniformBufferProperty}, and its textures, see
+     * {@link Material#getTextureSlot}.
      *
      * @type {number}
      * @ignore
@@ -682,15 +684,13 @@ class Material {
     }
 
     /**
-     * Marks the set of uniforms of the material uniform buffer as changed: the next preparation
-     * fetches the layout again and moves the values to a buffer of the new layout, and mesh
-     * instances split their parameters again.
+     * Marks the layout of the material as changed: the next preparation fetches it again, and
+     * replaces the uniform buffer and the bind group when it differs.
      *
      * @protected
      */
     _markLayoutDirty() {
         this._layoutDirty = true;
-        this._layoutVersion++;
     }
 
     /**
@@ -1214,7 +1214,7 @@ class Material {
         // claim a sampler, and so the texture slots of its bind group, may have changed
         if (this._resolvedTextureVersion !== this._textureAssignmentVersion) {
             this._resolvedTextureVersion = this._textureAssignmentVersion;
-            this._markLayoutDirty();
+            this._layoutDirty = true;
         }
 
         let uniformBuffer = this._uniformBuffer;
@@ -1234,20 +1234,15 @@ class Material {
                 // the values move to a buffer of the new layout
                 this._uniformBufferBindGroup?.destroy();
                 uniformBuffer?.destroy();
-                // mesh instances classify their parameters against the resources of the bind
-                // group, which is created on the first render of the material - after they were
-                // given it - so the layout they classified against only becomes known here. A
-                // later change of the layout moves the version on its own, before the group is
-                // replaced, so only this first one needs it
-                const firstBindGroup = !this._uniformBufferBindGroup;
 
                 uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
                 this._uniformBuffer = uniformBuffer;
                 this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
 
-                if (firstBindGroup) {
-                    this._layoutVersion++;
-                }
+                // mesh instances classify their parameters against the properties and the
+                // resources of this layout, including on the first render of the material, which
+                // is after they were given it
+                this._layoutVersion++;
 
                 // every property is written into the new storage
                 this._modifiedProperties ??= new Set();
