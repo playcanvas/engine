@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 
+import { Mat4 } from '../../../src/core/math/mat4.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Picker } from '../../../src/framework/graphics/picker.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../../../src/scene/constants.js';
 
 describe('Picker readback coordinates', function () {
 
@@ -67,6 +70,57 @@ describe('Picker readback coordinates', function () {
 
         picker.getSelection(12.5, 10.25, 1, 1);
         expect(rect).to.deep.equal({ x: 12, y: 89, width: 1, height: 1 });
+    });
+});
+
+describe('Picker world point reconstruction', function () {
+
+    const WIDTH = 200;
+    const HEIGHT = 100;
+
+    // an orthographic camera spanning x [-100, 100] and y [-50, 50], so an NDC coordinate maps to
+    // world space by a simple scale and the expected position can be written by hand
+    const createPicker = () => {
+        const picker = Object.create(Picker.prototype);
+        picker.width = WIDTH;
+        picker.height = HEIGHT;
+        picker.renderPass = {
+            camera: {
+                camera: {
+                    projectionMatrix: new Mat4().setOrtho(-100, 100, -50, 50, 0, 10),
+                    viewMatrix: new Mat4()
+                },
+                nearClip: 0,
+                farClip: 10,
+                projection: PROJECTION_ORTHOGRAPHIC
+            }
+        };
+        picker.getPointDepthAsync = () => Promise.resolve(0.5);
+        return picker;
+    };
+
+    it('reconstructs the position at the center of the picked pixel', async function () {
+        const picker = createPicker();
+
+        // pixel (12, 10) has its center at (12.5, 10.5), which is NDC (-0.875, 0.79)
+        const expected = new Vec3(-87.5, 39.5, -5);
+
+        // every coordinate inside that pixel, including the integer one on its edge, reports the
+        // position of the center
+        const points = await Promise.all(
+            [[12, 10], [12.5, 10.5], [12.9, 10.1]].map(([x, y]) => picker.getWorldPointAsync(x, y))
+        );
+        points.forEach((point) => {
+            expect(point.distance(expected)).to.be.closeTo(0, 1e-5);
+        });
+    });
+
+    it('reconstructs the position of the pixel a coordinate outside the buffer reads', async function () {
+        const picker = createPicker();
+
+        // the depth read is clamped to the buffer, so the position is that of the edge pixel
+        const point = await picker.getWorldPointAsync(-5, HEIGHT + 5);
+        expect(point.distance(new Vec3(-99.5, -49.5, -5))).to.be.closeTo(0, 1e-5);
     });
 });
 

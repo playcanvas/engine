@@ -284,6 +284,8 @@ class Picker {
 
     /**
      * Return the world position of the mesh instance picked at the specified screen coordinates.
+     * The position is reconstructed at the center of the pixel containing the coordinates, which
+     * is where its depth was rasterized.
      *
      * @param {number} x - The x coordinate of the pixel to pick.
      * @param {number} y - The y coordinate of the pixel to pick.
@@ -322,10 +324,16 @@ class Picker {
         // convert linear normalized depth [0,1] to NDC depth [0,1] for unprojection
         const ndcDepth = isOrtho ? linearDepth : (far * linearDepth / (linearDepth * (far - near) + near));
 
-        // unproject to world space using the captured matrix
+        // unproject to world space using the captured matrix. The depth came from the pixel
+        // containing (x, y) and was rasterized at that pixel's center, so the point lies on the
+        // ray through the center - not through the requested coordinate, which for an integer
+        // input sits on the pixel's edge. Clamping matches the read, which is clamped to the
+        // buffer by sanitizeRect.
+        const pixelX = math.clamp(Math.floor(x), 0, this.width - 1) + 0.5;
+        const pixelY = math.clamp(Math.floor(y), 0, this.height - 1) + 0.5;
         const deviceCoord = new Vec4(
-            (x / this.width) * 2 - 1,
-            (1 - y / this.height) * 2 - 1,
+            (pixelX / this.width) * 2 - 1,
+            (1 - pixelY / this.height) * 2 - 1,
             ndcDepth * 2 - 1,
             1.0
         );
