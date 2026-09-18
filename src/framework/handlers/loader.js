@@ -403,8 +403,9 @@ class ResourceLoader {
      *
      * Set this before assets start loading (i.e. before {@link AppBase#preload} or
      * {@link AssetRegistry#load}). Note this is a process-global setting (it applies to the shared
-     * HTTP layer), so with multiple applications the last value set wins. It applies to all
-     * XHR-based requests, which covers the large majority of asset loads.
+     * HTTP layer), so with multiple applications the last value set wins. It covers every asset
+     * load, including the asset bundle and gaussian splat loaders that fetch their data directly
+     * rather than through the HTTP layer.
      *
      * @type {boolean}
      * @example

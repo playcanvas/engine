@@ -1,3 +1,4 @@
+import { getFetchCredentials } from '../../platform/net/http.js';
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { GSplatCompressedData } from '../../scene/gsplat/gsplat-compressed-data.js';
 import { GSplatCompressedResource } from '../../scene/gsplat/gsplat-compressed-resource.js';
@@ -592,7 +593,7 @@ class PlyParser {
 
         try {
             // either use the fetch request passed in by the application or initiate it ourselves
-            const response = await (asset.file?.contents ?? fetch(url.load));
+            const response = await (asset.file?.contents ?? fetch(url.load, { credentials: getFetchCredentials() }));
             if (!response || !response.body) {
                 callback('Error loading resource', null);
             } else {

@@ -1,5 +1,6 @@
 import { Bundle } from '../bundle/bundle.js';
 import { Debug } from '../../core/debug.js';
+import { getFetchCredentials } from '../../platform/net/http.js';
 import { Untar } from './untar.js';
 import { ResourceHandler } from './handler.js';
 
@@ -50,7 +51,8 @@ class BundleHandler extends ResourceHandler {
         }
 
         this._fetchRetries(url.load, {
-            mode: 'cors'
+            mode: 'cors',
+            credentials: getFetchCredentials()
         }, this.maxRetries).then((res) => {
             const bundle = new Bundle();
             callback(null, bundle);
