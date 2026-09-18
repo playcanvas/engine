@@ -547,6 +547,24 @@ class Material {
     _layout = null;
 
     /**
+     * Incremented when a texture of the material is assigned. A material whose textures decide the
+     * slots of its bind group moves this, as assigning one can change those slots without changing
+     * any of its typed properties.
+     *
+     * @type {number}
+     * @ignore
+     */
+    _textureAssignmentVersion = 0;
+
+    /**
+     * The texture assignment version the layout was last resolved for.
+     *
+     * @type {number}
+     * @private
+     */
+    _resolvedTextureVersion = -1;
+
+    /**
      * Incremented each time typed property data is written to the uniform buffer storage.
      *
      * @type {number}
@@ -1192,11 +1210,24 @@ class Material {
             return;
         }
 
+        // a texture was assigned since the layout was resolved, so which of the material's maps
+        // claim a sampler, and so the texture slots of its bind group, may have changed
+        if (this._resolvedTextureVersion !== this._textureAssignmentVersion) {
+            this._resolvedTextureVersion = this._textureAssignmentVersion;
+            this._markLayoutDirty();
+        }
+
         let uniformBuffer = this._uniformBuffer;
         if (!uniformBuffer || this._layoutDirty) {
             this._layoutDirty = false;
             const layout = getMaterialLayout(device, properties, this.getTextureDescriptors(device));
             this._layout = layout;
+
+            // a different set of texture slots is a different shader, and a shader built against
+            // the previous set would be drawn with a bind group which no longer matches it
+            const slotsChanged = !!this._uniformBufferBindGroup &&
+                this._uniformBufferBindGroup.format !== layout.bindGroupFormat;
+
             if (uniformBuffer?.format !== layout.uniformBufferFormat ||
                 this._uniformBufferBindGroup?.format !== layout.bindGroupFormat) {
 
@@ -1225,6 +1256,12 @@ class Material {
                 }
                 this._updateProperties();
                 this._uniformUploadedVersion = -1;
+
+                // the shaders built against the previous set of texture slots cannot be drawn with
+                // this bind group, and a change of the slots alone does not dirty them
+                if (slotsChanged) {
+                    this.clearVariants();
+                }
             }
         }
 

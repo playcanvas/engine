@@ -2076,6 +2076,14 @@ const markMapTransformsDirty = function () {
     this._mapTransforms.markDirty();
 };
 
+const markMapTextureAssigned = function () {
+    this._mapTransforms.markDirty();
+
+    // which of its maps claim a sampler, and so the texture slots of its bind group, can change
+    // when a map is pointed at another texture without anything else about the material changing
+    this._textureAssignmentVersion++;
+};
+
 const markMapTransformsMutable = function () {
     this._mapTransforms.markMutable();
 };
@@ -2091,7 +2099,7 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
             return !!oldValue !== !!newValue ||
                 oldValue && (oldValue.type !== newValue.type || oldValue.format !== newValue.format);
         },
-        onSet: markMapTransformsDirty
+        onSet: markMapTextureAssigned
     });
 
     defineProp({
