@@ -1,7 +1,7 @@
 import { Debug } from '../core/debug.js';
 import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
-  // magnopus patched - SHADER_NORMAL_PICK
+    // magnopus patched - SHADER_NORMAL_PICK
     SHADER_FORWARD, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS, SHADER_DEPTH_PICK, SHADER_NORMAL_PICK,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, lightTypeNames, shadowTypeInfo
 } from './constants.js';

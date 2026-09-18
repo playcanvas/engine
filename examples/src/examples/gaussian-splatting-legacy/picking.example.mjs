@@ -241,45 +241,7 @@ const handlePointer = (x, y) => {
             });
         }
     });
-
-    // function handling mouse click / touch
-    const handlePointer = (x, y) => {
-
-        // Lets use quarter of the resolution to improve performance - this will miss very small objects, but it's ok in our case
-        const pickerScale = 0.25;
-        picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
-
-        // render the ID texture — scissor to a single pixel around the click so only that
-        // fragment is rasterized into the pick buffer
-        const worldLayer = app.scene.layers.getLayerByName('World');
-        const px = x * pickerScale;
-        const py = y * pickerScale;
-        picker.prepare(camera.camera, app.scene, [worldLayer], {
-            x: px, y: py, width: 1, height: 1
-        });
-
-        // get the world position at the clicked point
-        picker.getWorldPointAsync(px, py).then((worldPoint) => {
-            if (worldPoint) {
-                // get the meshInstance of the picked object
-                picker.getSelectionAsync(px, py, 1, 1).then((meshInstances) => {
-
-                    if (meshInstances.length > 0) {
-                        const meshInstance = meshInstances[0];
-                        // find entity with matching mesh instance
-                        const entity = entities.find(e => e.entity.gsplat.instance.meshInstance === meshInstance);
-                        if (entity) {
-                            // trigger the visual effect only if not already animating
-                            if (entity.fade === 0) {
-                                entity.fade = 1;
-                            }
-
-                            // create a new marker sphere at the picked point with random color
-                            const markerMaterial = new pc.StandardMaterial();
-                            markerMaterial.emissive = new pc.Color(Math.random(), Math.random(), Math.random());
-                            markerMaterial.emissiveIntensity = 300;
-                            markerMaterial.useLighting = false;
-                            markerMaterial.update();
+};
 
 app.mouse.on(EVENT_MOUSEDOWN, (event) => {
     handlePointer(event.x, event.y);

@@ -366,7 +366,7 @@ class OutlineRenderer {
             depth: depth,
             origin: RENDERTARGET_ORIGIN_BOTTOM,
             // magnopus patched - antialias
-            samples: 4,
+            samples: 4
         });
     }
 

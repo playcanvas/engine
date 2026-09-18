@@ -101,7 +101,7 @@ class ZoneComponent extends Component {
      * created this component.
      * @param {import('../../entity.js').Entity} entity - The entity this component is attached to.
      */
-    constructor(system, entity) { // eslint-disable-line no-useless-constructor
+    constructor(system, entity) {
         super(system, entity);
 
         this.on('set_enabled', this._onSetEnabled, this);

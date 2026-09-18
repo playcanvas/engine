@@ -79,7 +79,7 @@ class RenderPassForward extends RenderPass {
      */
     exposure;
 
-    /*
+    /**
      * The names of the scene textures this pass renders alongside the scene color, in the order of
      * the color attachments they are rendered to. If not set, setting from the camera is used. Only
      * the passes rendering to a render target the scene textures are attached to set this, so that
