@@ -30,6 +30,9 @@ const _camPos = new Vec3();
 const _camDir = new Vec3();
 const _tmpV = new Vec3();
 
+// Zero sort slots keep the shared indirect-argument writers draw/project-only.
+const noSortIndirectInfo = new Uint32Array(4);
+
 /**
  * @import { StorageBuffer } from '../../platform/graphics/storage-buffer.js'
  * @import { GraphNode } from '../graph-node.js'
@@ -199,8 +202,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
         this._internalDefines.add('STD_OPACITY_DITHER');
 
         // GPU sort pipeline resources (gpuSorter, projector, intervalCompaction) are created lazily
-        // on the first forward sort (see _ensureGpuPipeline). A hybrid renderer that only exists to
-        // satisfy a shadow-casting manager (no forward pass) never allocates them.
+        // on first use (see _ensureGpuPipeline); only sorted views need the sorter. A renderer
+        // that only satisfies a shadow-casting manager (no forward pass) never allocates them.
         this.meshInstance = this.createMeshInstance();
     }
 
@@ -316,14 +319,15 @@ class GSplatHybridRenderer extends GSplatRenderer {
     }
 
     /**
-     * Lazily creates the GPU sort pipeline resources on first forward use. Kept out of the
+     * Lazily creates projection resources, and the sorter only when a view needs sorting. Kept out of the
      * constructor so a hybrid renderer that never renders a forward pass (e.g. one owned by a
      * shadow-only manager) allocates none of them.
      *
+     * @param {boolean} needsSort - Whether this view requires sorting.
      * @private
      */
-    _ensureGpuPipeline() {
-        if (!this.gpuSorter) this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
+    _ensureGpuPipeline(needsSort) {
+        if (needsSort && !this.gpuSorter) this.gpuSorter = new ComputeRadixSort(this.device, { indirect: true });
         if (!this.projector) this.projector = new GSplatProjector(this.device);
         if (!this.intervalCompaction) this.intervalCompaction = new GSplatIntervalCompaction(this.device, this._scratch);
     }
@@ -433,7 +437,8 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return null;
 
-        this._ensureGpuPipeline();
+        const stochastic = !!params.stochastic && !pickMode;
+        this._ensureGpuPipeline(!stochastic);
         const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
         const projector = /** @type {GSplatProjector} */ (this.projector);
 
@@ -451,23 +456,20 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const totalActiveSplats = worldState.totalActiveSplats;
         this.intervalCompaction.dispatchCompact(world.workBuffer.frustumCuller, numIntervals, totalActiveSplats, fisheyeProj.enabled);
 
-        this.allocateAndWriteIntervalIndirectArgs(numIntervals);
+        const sortIndirectInfo = stochastic ? noSortIndirectInfo : gpuSorter.prepareIndirect();
+        this.allocateAndWriteIntervalIndirectArgs(numIntervals, sortIndirectInfo);
 
         const ic = /** @type {GSplatIntervalCompaction} */ (this.intervalCompaction);
         const compactedSplatIds = ic.compactedSplatIds;
 
-        const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
-        const radixBits = gpuSorter.radixBits;
-        const roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
-
-        const stochastic = !!params.stochastic && !pickMode;
+        let roundedNumBits = 0;
         let minDist = 0;
         let maxDist = 1;
         if (!stochastic) {
+            const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
+            roundedNumBits = Math.ceil(numBits / gpuSorter.radixBits) * gpuSorter.radixBits;
             ({ minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting));
         }
-
-        const sortIndirectInfo = gpuSorter.prepareIndirect();
 
         projector.dispatch({
             workBuffer: world.workBuffer,
@@ -538,11 +540,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * indirect args.
      *
      * @param {number} numIntervals - Total interval count (index into prefix sum for visible count).
+     * @param {Uint32Array} sortInfo - Sort dispatch metadata, or zero slots for stochastic views.
      * @private
      */
-    allocateAndWriteIntervalIndirectArgs(numIntervals) {
-        const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
-        const sortInfo = gpuSorter.prepareIndirect();
+    allocateAndWriteIntervalIndirectArgs(numIntervals, sortInfo) {
         const sortSlotCount = sortInfo[0];
 
         this.indirectDrawSlot = this.device.getIndirectDrawSlot(1);

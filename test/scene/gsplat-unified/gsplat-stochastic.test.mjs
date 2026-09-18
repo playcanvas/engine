@@ -3,6 +3,7 @@ import sinon from 'sinon';
 
 import { BLEND_NONE, BLEND_PREMULTIPLIED } from '../../../src/scene/constants.js';
 import { GSplatHybridRenderer } from '../../../src/scene/gsplat-unified/gsplat-hybrid-renderer.js';
+import { GSplatManager } from '../../../src/scene/gsplat-unified/gsplat-manager.js';
 import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
 
 // Exercise the real view pipeline without a GPU. Projection and indirect argument generation
@@ -11,8 +12,7 @@ describe('GSplat stochastic rendering', function () {
     const pipeline = () => {
         const renderer = Object.create(GSplatHybridRenderer.prototype);
         Object.assign(renderer, {
-            _ensureGpuPipeline() {},
-            allocateAndWriteIntervalIndirectArgs() {},
+            _ensureGpuPipeline: sinon.spy(),
             computeDistanceRange: sinon.stub().returns({ minDist: 0, maxDist: 10 }),
             fisheyeProj: { enabled: false },
             gpuSorter: {
@@ -28,11 +28,16 @@ describe('GSplat stochastic rendering', function () {
             intervalCompaction: {
                 uploadIntervals() {},
                 dispatchCompact() {},
+                writeIndirectArgs: sinon.spy(),
                 compactedSplatIds: {},
                 sortElementCountBuffer: {},
                 numSplatsBuffer: {}
             },
-            device: { submit: sinon.spy() },
+            device: {
+                submit: sinon.spy(),
+                getIndirectDrawSlot: sinon.stub().returns(0),
+                getIndirectDispatchSlot: sinon.stub().returns(0)
+            },
             indirectDrawSlot: 0,
             indirectDispatchSlot: 0
         });
@@ -50,9 +55,42 @@ describe('GSplat stochastic rendering', function () {
         const renderer = pipeline();
         expect(render(renderer, true)).to.equal(renderer.projector.sortKeys);
         expect(renderer.gpuSorter.sortIndirect.called).to.equal(false);
+        expect(renderer.gpuSorter.prepareIndirect.called).to.equal(false);
+        expect(renderer._ensureGpuPipeline.calledWith(false)).to.equal(true);
+        expect(renderer.device.getIndirectDispatchSlot.calledWith(1)).to.equal(true);
+        expect(Array.from(renderer.projector.writeIndirectArgs.firstCall.args[4])).to.deep.equal([0, 0, 0, 0]);
         expect(renderer.computeDistanceRange.called).to.equal(false);
         expect(renderer.projector.dispatch.firstCall.args[0].stochastic).to.equal(true);
         expect(renderer.projector.writeIndirectArgs.calledOnce).to.equal(true);
+    });
+
+    it('renders with no sorter allocated', function () {
+        const renderer = pipeline();
+        renderer.gpuSorter = null;
+        renderer._ensureGpuPipeline = GSplatHybridRenderer.prototype._ensureGpuPipeline;
+        expect(render(renderer, true)).to.equal(renderer.projector.sortKeys);
+        expect(renderer.gpuSorter).to.equal(null);
+        expect(renderer.device.getIndirectDispatchSlot.calledWith(1)).to.equal(true);
+    });
+
+    it('creates the sorter only when needed and retains it across mode changes', function () {
+        const renderer = pipeline();
+        renderer.gpuSorter = null;
+        renderer._ensureGpuPipeline = GSplatHybridRenderer.prototype._ensureGpuPipeline;
+        Object.assign(renderer.device, {
+            supportsCompute: true,
+            scope: { resolve: () => ({}) },
+            createBindGroupFormatImpl: () => ({ destroy() {} })
+        });
+        renderer._ensureGpuPipeline(false);
+        expect(renderer.gpuSorter).to.equal(null);
+        renderer._ensureGpuPipeline(true);
+        const sorter = renderer.gpuSorter;
+        expect(sorter).to.not.equal(null);
+        renderer._ensureGpuPipeline(false);
+        renderer._ensureGpuPipeline(true);
+        expect(renderer.gpuSorter).to.equal(sorter);
+        sorter.destroy();
     });
 
     it('sorts normal rendering and picking even when stochastic is requested', function () {
@@ -60,9 +98,33 @@ describe('GSplat stochastic rendering', function () {
             const renderer = pipeline();
             expect(render(renderer, stochastic, pickMode)).to.deep.equal({ sorted: true });
             expect(renderer.gpuSorter.sortIndirect.calledOnce).to.equal(true);
+            expect(renderer._ensureGpuPipeline.calledWith(true)).to.equal(true);
+            expect(renderer.device.getIndirectDispatchSlot.calledWith(2)).to.equal(true);
             expect(renderer.projector.dispatch.firstCall.args[0].stochastic).to.equal(false);
             expect(renderer.device.submit.called).to.equal(pickMode);
         }
+    });
+
+    it('sorts picking even without a per-splat ID stream', function () {
+        const renderer = pipeline();
+        renderer.prepareForPicking = sinon.stub().returns({ picked: true });
+        const manager = Object.create(GSplatManager.prototype);
+        manager._pickParams = {};
+        manager._writeGsplatParams = p => Object.assign(p, {
+            stochastic: true,
+            alphaClip: 0.3,
+            alphaClipForward: 1 / 255,
+            minPixelSize: 0,
+            varyings: { words: 0 }
+        });
+        const params = manager._fillPickParams({ node: {} }, 960, 540);
+        renderer.preparePickingView(
+            { hasBounds: false, workBuffer: { frustumCuller: {}, format: { getStream: () => null } } },
+            { totalActiveSplats: 1000, totalIntervals: 1 },
+            params
+        );
+        expect(renderer.gpuSorter.sortIndirect.calledOnce).to.equal(true);
+        expect(renderer.projector.dispatch.firstCall.args[0].stochastic).to.equal(false);
     });
 
     it('switches depth writes, blend state and shader defines together', function () {

@@ -702,10 +702,12 @@ class GSplatProjector {
         const invRange = range > 0 ? 1.0 / range : 1.0;
 
         // Bin weights — same pattern as CPU-side sort key preparation.
-        const bucketCount = (1 << numBits);
-        const cameraBin = GSplatSortBinWeights.computeCameraBin(radialSort, minDist, range);
-        const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
-        this.binWeightsBuffer.write(0, binWeights);
+        if (!stochastic || pickMode) {
+            const bucketCount = (1 << numBits);
+            const cameraBin = GSplatSortBinWeights.computeCameraBin(radialSort, minDist, range);
+            const binWeights = this.binWeightsUtil.compute(cameraBin, bucketCount);
+            this.binWeightsBuffer.write(0, binWeights);
+        }
 
         compute.setParameter('compactedSplatIds', compactedSplatIds);
         compute.setParameter('sortElementCount', sortElementCountBuffer);
