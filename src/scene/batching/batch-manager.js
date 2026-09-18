@@ -892,8 +892,11 @@ class BatchManager {
             meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
             meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
             meshInstance.flipFacesFactor = getScaleSign(batch.origMeshInstances[0]);
-            meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
             meshInstance.shadowCascadeMask = batch.origMeshInstances[0].shadowCascadeMask;
+
+            // assigning this prepares the batched mesh for the render style, generating its
+            // wireframe indices or points primitive as needed
+            meshInstance.renderStyle = batch.origMeshInstances[0].renderStyle;
 
             batch.meshInstance = meshInstance;
             batch.updateBoundingBox();
