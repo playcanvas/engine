@@ -122,6 +122,13 @@ fn evaluateLight{i}(
             var shadow: f32 = getShadow{i}(lightDirW);
         #endif
 
+        #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
+            // Fade to fully lit at the shadow distance without sampling another cascade.
+            let shadowDistance: f32 = uniform.light{i}_shadowCascadeDistances.w;
+            let shadowFade: f32 = smoothstep(uniform.light{i}_shadowCascadeBlend * shadowDistance, shadowDistance, 1.0 / pcPosition.w);
+            shadow = mix(shadow, 1.0, shadowFade);
+        #endif
+
         // Apply shadow intensity to the shadow value
         shadow = mix(1.0, shadow, uniform.light{i}_shadowIntensity);
 

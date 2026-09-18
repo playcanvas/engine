@@ -56,6 +56,13 @@ export default /* glsl */`
     // shadow evaluation function
     float getShadow{i}(vec3 lightDirW) {
 
+        #if LIGHT{i}TYPE == DIRECTIONAL
+            // Beyond the shadow distance, skip cascade selection and shadow-map sampling.
+            if (1.0 / gl_FragCoord.w > light{i}_shadowCascadeDistances.w) {
+                return 1.0;
+            }
+        #endif
+
         // directional shadow cascades
         #if LIGHT{i}TYPE == OMNI
 
@@ -83,11 +90,6 @@ export default /* glsl */`
 
         #endif
 
-        // Fade directional shadow at the far distance
-        #if LIGHT{i}TYPE == DIRECTIONAL
-            shadowCoord = fadeShadow(shadowCoord, light{i}_shadowCascadeDistances);
-        #endif
-
         // ----- sample the shadow -----
 
         #if LIGHT{i}TYPE == DIRECTIONAL // ----- directional light -----
@@ -106,10 +108,10 @@ export default /* glsl */`
                     vec2 shadowSearchArea = vec2(length(light{i}_halfWidth), length(light{i}_halfHeight)) * light{i}_shadowSearchArea;
                     return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, light{i}_cameraParams, shadowSearchArea, lightDirW);
                 #else
-                    // override the ortho radius with the radius of the cascade this fragment samples
+                    // Use the camera fitting stored with the cascade this fragment samples.
                     vec4 pcssCameraParams = light{i}_cameraParams;
                     #ifdef LIGHT{i}_SHADOW_CASCADES
-                        pcssCameraParams.x = light{i}_shadowCascadeRadii[cascadeIndex];
+                        pcssCameraParams = light{i}_shadowCascadeParams[cascadeIndex];
                     #endif
                     return getShadowPCSS(SHADOWMAP_PASS(light{i}_shadowMap), shadowCoord, light{i}_shadowParams, pcssCameraParams, light{i}_softShadowParams, lightDirW);
                 #endif

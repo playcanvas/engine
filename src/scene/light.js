@@ -21,6 +21,7 @@ import { DepthState } from '../platform/graphics/depth-state.js';
 import { FloatPacking } from '../core/math/float-packing.js';
 
 /**
+ * @import { BoundingBox } from '../core/shape/bounding-box.js'
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { EventHandle } from '../core/event-handle.js';
  */
@@ -64,7 +65,9 @@ const channelMap = {
 let id = 0;
 
 /**
- * Class storing shadow rendering related private information
+ * Class storing shadow rendering related private information.
+ *
+ * @ignore
  */
 class LightRenderData {
     constructor(camera, face, light) {
@@ -98,6 +101,18 @@ class LightRenderData {
         // - omni: cubemap face, 0..5
         // - directional: 0 for simple shadows, cascade index for cascaded shadow map
         this.face = face;
+
+        // Face 0 stores the cull request: per camera for directional lights, or with a null camera
+        // for local lights. Retained until the next frame so mesh and splat culling share requests.
+        this.shadowCullRequested = false;
+
+        // On directional face 0, the cascades requested by this camera's scheduled shadow passes.
+        this.shadowCascadeMask = 0;
+
+        // Retain PCSS caster bounds so cached cascades remain part of the depth-fitting union.
+        /** @type {BoundingBox|null} */
+        this.shadowCasterAabb = null;
+        this.shadowCasterAabbValid = false;
 
         // visible shadow casters
         this.visibleCasters = [];
@@ -254,12 +269,16 @@ class Light {
 
         // Shadow mapping resources
         this._shadowMap = null;
+
+        // Keep a recreated directional map's refresh pending even when the application replaces
+        // shadowUpdateOverrides each frame. Cleared only after all cascades have rendered.
+        this._shadowCascadesInvalidated = false;
         this._shadowRenderParams = [];
         this._shadowCameraParams = [];
 
-        // per-cascade ortho radii for directional PCSS, packed into a vec4 (max 4 cascades).
-        // lazily allocated by the renderer only for directional lights that use PCSS.
-        this._shadowCascadeRadii = null;
+        // Per-cascade camera parameters for directional PCSS, packed into four vec4s.
+        // Lazily allocated by the renderer only for directional lights that use PCSS.
+        this._shadowCascadeParams = null;
 
         // Shadow mapping properties
         this.shadowDistance = 40;
@@ -833,6 +852,9 @@ class Light {
         this.releaseRenderData();
 
         if (this._shadowMap) {
+            if (this._type === LIGHTTYPE_DIRECTIONAL) {
+                this._shadowCascadesInvalidated = true;
+            }
             if (!this._shadowMap.cached) {
                 this._shadowMap.destroy();
             }
@@ -1236,4 +1258,4 @@ class Light {
     }
 }
 
-export { Light, lightTypes };
+export { Light, LightRenderData, lightTypes };

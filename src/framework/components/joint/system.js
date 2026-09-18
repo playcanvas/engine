@@ -21,7 +21,8 @@ const _properties = [
 ];
 
 /**
- * Manages creation of {@link JointComponent}s.
+ * Manages the {@link JointComponent}s of an application. Reach it through `app.systems.joint`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Physics
  * @alpha

@@ -10,6 +10,10 @@ import { Vec2 } from '../../../core/math/vec2.js';
  * contain multiple AnimNodes, in which case they are stored in a BlendTree hierarchy, which will
  * control the weight (contribution to the states final animation) of its child AnimNodes.
  *
+ * `animTrack` is the clip the node plays, `speed` multiplies its playback rate, and
+ * `weight` is set by the parent blend tree, or is one for a node that is the state's only
+ * animation.
+ *
  * @category Animation
  */
 class AnimNode {

@@ -555,7 +555,9 @@ class LightComponent extends Component {
     /**
      * Sets the blend factor for cascaded shadow maps, defining the fraction of each cascade level
      * used for blending between adjacent cascades. The value should be between 0 and 1. Defaults
-     * to 0, which disables blending between cascades.
+     * to 0, which disables blending between cascades and fading at the shadow distance. Also fades
+     * shadows to fully lit over this fraction of the shadow distance, including when using a single
+     * cascade. For example, a value of 0.1 fades shadows over the last 10% of the shadow distance.
      *
      * @type {number}
      */
@@ -1054,12 +1056,12 @@ class LightComponent extends Component {
 
     /**
      * Sets the bitmask that determines which {@link MeshInstance}s are lit by this light. The
-     * value is composed from {@link MASK_AFFECT_DYNAMIC}, {@link MASK_AFFECT_LIGHTMAPPED} and
-     * {@link MASK_BAKE}. The {@link affectDynamic}, {@link affectLightmapped} and {@link bake}
+     * value is composed from `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and
+     * `MASK_BAKE`. The {@link affectDynamic}, {@link affectLightmapped} and {@link bake}
      * helpers write to the same underlying mask but maintain their own state and are not
      * recomputed from `mask`, so writing `mask` directly will not update those helpers (and a
      * subsequent write to a helper may overwrite bits set via `mask`). Defaults to
-     * {@link MASK_AFFECT_DYNAMIC}.
+     * `MASK_AFFECT_DYNAMIC`.
      *
      * @type {number}
      */
@@ -1078,7 +1080,7 @@ class LightComponent extends Component {
 
     /**
      * Sets whether the light will affect non-lightmapped objects. Toggles the
-     * {@link MASK_AFFECT_DYNAMIC} bit on {@link mask}. Defaults to true.
+     * `MASK_AFFECT_DYNAMIC` bit on {@link mask}. Defaults to true.
      *
      * @type {boolean}
      */
@@ -1104,7 +1106,7 @@ class LightComponent extends Component {
 
     /**
      * Sets whether the light will affect lightmapped objects. Toggles the
-     * {@link MASK_AFFECT_LIGHTMAPPED} bit on {@link mask}. Mutually exclusive with {@link bake} on
+     * `MASK_AFFECT_LIGHTMAPPED` bit on {@link mask}. Mutually exclusive with {@link bake} on
      * the mask: enabling one clears the other's mask bit. Defaults to false.
      *
      * @type {boolean}
@@ -1131,7 +1133,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets whether the light will be rendered into lightmaps. Toggles the {@link MASK_BAKE} bit
+     * Sets whether the light will be rendered into lightmaps. Toggles the `MASK_BAKE` bit
      * on {@link mask}. Mutually exclusive with {@link affectLightmapped} on the mask: enabling one
      * clears the other's mask bit. Defaults to false.
      *

@@ -28,6 +28,7 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
 
 /**
  * @import { Camera } from '../camera.js'
+ * @import { Culler } from './culler.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { LightTextureAtlas } from '../lighting/light-texture-atlas.js'
  * @import { Light } from '../light.js'
@@ -48,6 +49,20 @@ const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
 const blurScissorRect = new Vec4(1, 1, 0, 0);
 const viewportMatrix = new Mat4();
+
+/**
+ * Tests whether a light needs its shadow rendered this frame without consuming one-shot updates.
+ * Shadow-pass scheduling and splat caster culling share this predicate. One-shot requests are
+ * consumed by {@link Culler#consumeOneShotShadows} after both have read the update mode.
+ * Per-face overrides and atlas allocation are checked separately by callers.
+ *
+ * @param {Light} light - The light to test.
+ * @returns {boolean} Whether the light needs a shadow update.
+ * @ignore
+ */
+function needsShadowRendering(light) {
+    return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+}
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -569,9 +584,12 @@ class ShadowRenderer {
 
             // Uniforms I (shadow): material
             material.setParameters(device);
+            renderer.setupMaterialBindGroup(material);
 
             // Uniforms II (shadow): meshInstance overrides
-            renderer.setupMaterialBindGroup(material, meshInstance);
+            if (renderer.needsMaterialOverrideBindGroup(meshInstance, material)) {
+                renderer.setupMaterialOverrideBindGroup(meshInstance);
+            }
             meshInstance.setParameters(device);
 
             const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);
@@ -612,12 +630,8 @@ class ShadowRenderer {
         }
     }
 
-    // Pure predicate - whether the light needs its shadow rendered this frame. Has no side effects:
-    // the SHADOWUPDATE_THISFRAME -> SHADOWUPDATE_NONE consume and the shadow-map-update stat are
-    // applied once per frame in Renderer#consumeOneShotShadows, after the frame graph is built and
-    // shadow casters are culled (so build and cull can both read shadowUpdateMode before it changes).
     needsShadowRendering(light) {
-        return light.enabled && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE && light.visibleThisFrame;
+        return needsShadowRendering(light);
     }
 
     getLightRenderData(light, camera, face) {
@@ -704,7 +718,7 @@ class ShadowRenderer {
         // #endif
     }
 
-    renderVsm(light, camera) {
+    renderVsm(light, camera, cascadeMask = (1 << light.numShadowFaces) - 1) {
 
         // VSM blur if light supports vsm (directional and spot in general)
         if (light._isVsm && light._vsmBlurSize > 1) {
@@ -712,7 +726,7 @@ class ShadowRenderer {
             // in clustered mode, only directional light can be vms
             const isClustered = this.renderer.scene.clusteredLightingEnabled;
             if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                this.applyVsmBlur(light, camera);
+                this.applyVsmBlur(light, camera, cascadeMask);
             }
         }
     }
@@ -742,7 +756,7 @@ class ShadowRenderer {
         return blurShader;
     }
 
-    applyVsmBlur(light, camera) {
+    applyVsmBlur(light, camera, cascadeMask) {
 
         const device = this.device;
 
@@ -765,10 +779,10 @@ class ShadowRenderer {
         const filterSize = light._vsmBlurSize;
         const blurShader = this.getVsmBlurShader(blurMode, filterSize);
 
-        blurScissorRect.z = light._shadowResolution - 2;
-        blurScissorRect.w = blurScissorRect.z;
+        const resolution = light._shadowResolution;
+        blurScissorRect.set(1, 1, resolution - 2, resolution - 2);
 
-        // Blur horizontal
+        // Blur horizontal into scratch storage, including the samples needed at cascade edges.
         this.sourceId.setValue(origShadowMap.colorBuffer);
         pixelOffset[0] = 1 / light._shadowResolution;
         pixelOffset[1] = 0;
@@ -781,7 +795,23 @@ class ShadowRenderer {
         pixelOffset[1] = pixelOffset[0];
         pixelOffset[0] = 0;
         this.pixelOffsetId.setValue(pixelOffset);
-        drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+        if (light._type === LIGHTTYPE_DIRECTIONAL && cascadeMask !== (1 << light.numCascades) - 1) {
+            // Cached cascades already contain filtered moments. Blurring them again would
+            // progressively soften their shadows until their next scheduled update.
+            for (let cascade = 0; cascade < light.numCascades; cascade++) {
+                if (!(cascadeMask & (1 << cascade))) continue;
+
+                const viewport = light.cascades[cascade];
+                const x = Math.max(1, viewport.x * resolution);
+                const y = Math.max(1, viewport.y * resolution);
+                const right = Math.min(resolution - 1, (viewport.x + viewport.z) * resolution);
+                const top = Math.min(resolution - 1, (viewport.y + viewport.w) * resolution);
+                blurScissorRect.set(x, y, right - x, top - y);
+                drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+            }
+        } else {
+            drawQuadWithShader(device, origShadowMap, blurShader, null, blurScissorRect, 'VSMShadowBlur');
+        }
 
         // return the temporary shadow map back to the cache
         this.renderer.shadowMapCache.add(light, tempShadowMap);
@@ -806,4 +836,4 @@ class ShadowRenderer {
     }
 }
 
-export { ShadowRenderer };
+export { ShadowRenderer, needsShadowRendering };

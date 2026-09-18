@@ -796,17 +796,16 @@ class Renderer {
     _boundMaterialBindGroup = null;
 
     /**
-     * Binds the bind group for the material bind group index of a draw: the mesh instance's copy of
-     * the material uniform buffer when it overrides some of its uniforms, otherwise the material's
-     * own bind group, or the empty bind group for a material without one so the pipeline layout has
-     * no gap. Rebinds only when the group differs from the one bound by the previous draw.
+     * Binds the bind group of a material at the material bind group index, or the empty bind group
+     * for a material without one so the pipeline layout has no gap. Called at a material switch,
+     * and again after a draw that bound a mesh instance's copy of the material uniform buffer.
+     * Rebinds only when the group differs from the one bound by the previous draw.
      *
      * @param {Material} material - The material.
-     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
      */
-    setupMaterialBindGroup(material, meshInstance) {
+    setupMaterialBindGroup(material) {
         const device = this.device;
-        let bindGroup = meshInstance.getMaterialBindGroup(device) ?? material.uniformBufferBindGroup;
+        let bindGroup = material.uniformBufferBindGroup;
         if (!bindGroup && device.usesMeshBindGroups) {
             bindGroup = device.emptyBindGroup;
         }
@@ -814,6 +813,50 @@ class Renderer {
             device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
             this._boundMaterialBindGroup = bindGroup;
         }
+    }
+
+    /**
+     * Binds a mesh instance's copy of the material uniform buffer, with the uniforms it overrides
+     * applied, at the material bind group index. Only called for a mesh instance that overrides
+     * some of them, or whose parameters need splitting against a changed material layout, see
+     * {@link Renderer#needsMaterialOverrideBindGroup}.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     */
+    setupMaterialOverrideBindGroup(meshInstance) {
+        const device = this.device;
+        const bindGroup = meshInstance.getMaterialBindGroup(device);
+        if (bindGroup && bindGroup !== this._boundMaterialBindGroup) {
+            device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
+            this._boundMaterialBindGroup = bindGroup;
+        }
+    }
+
+    /**
+     * True when this mesh instance overrides something in the material's bind group, and so a draw
+     * of it binds its own copy of that group. Kept to field reads, as this runs for every draw.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @returns {boolean} True when the mesh instance overrides a uniform or a texture.
+     */
+    hasMaterialOverrides(meshInstance) {
+        return meshInstance._materialOverrides.length > 0 ||
+            meshInstance._materialTextureOverrides.length > 0;
+    }
+
+    /**
+     * True when a draw of this mesh instance needs its own copy of the material's bind group: it
+     * overrides something in it, or the set of typed properties of the material changed and its
+     * parameters need splitting against the new layout again. Kept to field reads, as this runs for
+     * every draw.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @param {Material} material - Its material.
+     * @returns {boolean} True when the copy is needed.
+     */
+    needsMaterialOverrideBindGroup(meshInstance, material) {
+        return this.hasMaterialOverrides(meshInstance) ||
+            meshInstance._materialLayoutVersion !== material._layoutVersion;
     }
 
     setupMeshUniformBuffers(shaderInstance) {

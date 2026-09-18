@@ -27,7 +27,9 @@ import { LayoutGroupComponent } from './component.js';
 const MAX_ITERATIONS = 100;
 
 /**
- * Manages creation of {@link LayoutGroupComponent}s.
+ * Manages the {@link LayoutGroupComponent}s of an application. Reach it through
+ * `app.systems.layoutgroup`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category User Interface
  */

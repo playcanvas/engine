@@ -77,8 +77,7 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  * levels. {@link Asset#resources} holds the cube map followed by its six prefiltered levels, with
  * null for each level the asset does not provide.
  * @property {null} folder - Folders hold no resource.
- * @property {Font | CanvasFont} font - A font: a {@link Font} loaded from a font file, or a
- * {@link CanvasFont} rendered at runtime.
+ * @property {Font | CanvasFont} font - A {@link Font} loaded from a font file.
  * @property {GSplatResourceBase | GSplatOctreeResource} gsplat - A Gaussian splat resource, or the
  * octree resource of a level-of-detail splat scene.
  * @property {Entity} hierarchy - The root entity of an instantiated scene hierarchy.
@@ -131,23 +130,23 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  */
 
 /**
- * An Asset is the engine's record of a single resource: a texture, a material, a glTF container,
- * a sound, a script and so on. Assets live in the application's {@link AssetRegistry} at
+ * An Asset is the engine's record of a single resource: a texture, a material, a glTF container, a
+ * sound, a script and so on. Assets live in the application's {@link AssetRegistry} at
  * {@link AppBase#assets}, which loads them on demand.
  *
  * An asset has five parts:
  *
  * - `type` selects the {@link ResourceHandler} that loads it and the type of `resource`.
  * - `file` names the file that holds the data, when there is one.
- * - `data` carries JSON that either is the resource, as for materials, or describes how to
- * process the file, as for texture and model mappings.
+ * - `data` carries JSON that either is the resource, as for materials, or describes how to process
+ * the file, as for texture and model mappings.
  * - `options` carries handler-specific load options.
  * - `resource` holds the loaded object, such as a {@link Texture}. `resources` holds every object
  * the handler produced when there is more than one, such as a cube map and its prefiltered levels.
  *
- * Loading is driven by the registry: call {@link AssetRegistry#load}, or set {@link Asset#preload}
- * so the asset loads when added. Wait for the result with {@link Asset#ready} or listen for the
- * `load` and `error` events. {@link Asset#unload} releases the resource.
+ * Loading is driven by the registry: call {@link AssetRegistry#load}, or set {@link preload} so the
+ * asset loads when added. Wait for the result with {@link ready} or listen for the `load` and
+ * `error` events. {@link unload} releases the resource.
  *
  * The `type` string also types the resource: `new Asset('brick', 'texture', file)` creates an
  * `Asset<'texture'>` whose `resource` is a {@link Texture} once loaded, and
@@ -351,38 +350,32 @@ class Asset extends EventHandler {
      * @param {string} name - A non-unique but human-readable name which can be later used to
      * retrieve the asset.
      * @param {K} type - The type of asset (an {@link AssetType}), which selects the resource
-     * handler and the type of {@link Asset#resource}. Valid strings are:
+     * handler and the type of {@link Asset#resource}. The types a developer commonly creates are:
      *
      * - "animation" - see {@link Animation} and {@link AnimTrack}
      * - "animclip" - see {@link AnimTrack}
      * - "animstategraph" - see {@link AnimStateGraph}
      * - "audio" - see {@link Sound}
      * - "binary" - an `ArrayBuffer`
-     * - "bundle" - a bundle of files backing other assets
      * - "container" - see {@link ContainerResource}
      * - "css" - a `string`
      * - "cubemap" - see {@link Texture}; null when only prefiltered levels are provided
-     * - "folder" - no resource
-     * - "font" - see {@link Font} and {@link CanvasFont}
+     * - "font" - see {@link Font}
      * - "gsplat" - a Gaussian splat resource
-     * - "hierarchy" - see {@link Entity}
      * - "html" - a `string`
      * - "json" - the parsed JSON
      * - "material" - see {@link Material}
      * - "model" - see {@link Model}
-     * - "render" - the meshes of one glTF mesh, loaded through a container asset
-     * - "scene" - see {@link Scene}
-     * - "scenesettings" - the settings of a scene
      * - "script" - see {@link Script}
      * - "shader" - a `string`
      * - "sprite" - see {@link Sprite}
-     * - "template" - see {@link Template}
      * - "text" - a `string`
      * - "texture" - see {@link Texture}
      * - "textureatlas" - see {@link TextureAtlas}
      *
-     * Any other string is accepted for an application-defined handler; see {@link AssetMap} for
-     * typing its resource.
+     * Types that the engine creates itself while loading, such as `render` or `scene`, are omitted
+     * here; every built-in type is listed in {@link AssetMap}. Any other string is accepted for an
+     * application-defined handler; see {@link AssetMap} for typing its resource.
      * @param {object} [file] - Details about the file the asset is made from. At the least must
      * contain the 'url' field. For assets that don't contain file data use null.
      * @param {string} [file.url] - The URL of the resource file that contains the asset data.

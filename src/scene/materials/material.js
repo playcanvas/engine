@@ -80,6 +80,25 @@ let id = 0;
  * as {@link ShaderMaterial} and {@link StandardMaterial} can be used to define materials
  * for rendering.
  *
+ * Choose {@link StandardMaterial} for a physically based surface described by properties and
+ * textures, and {@link ShaderMaterial} to supply your own vertex and fragment shaders. Both share
+ * the state defined here: blending through {@link blendType}, depth behavior through
+ * {@link depthTest}, {@link depthWrite} and {@link depthFunc}, face culling through {@link cull},
+ * alpha testing through {@link alphaTest}, shader uniforms through {@link setParameter}, and
+ * preprocessor defines through {@link setDefine}. {@link getShaderChunks} exposes the GLSL and WGSL
+ * chunks the material's shader is built from, so one chunk can be replaced without writing a whole
+ * shader.
+ *
+ * After changing properties, call {@link update} so the change reaches the GPU. Most changes only
+ * refresh uniforms; a change that alters how the shader is generated also clears the material's
+ * compiled shader variants, which are rebuilt on demand. A material can be shared by any number of
+ * mesh instances, and {@link clone} makes an independent copy.
+ *
+ * @example
+ * // Make a material additive and double-sided, then apply the change
+ * material.blendType = BLEND_ADDITIVE;
+ * material.cull = CULLFACE_NONE;
+ * material.update();
  * @category Graphics
  */
 class Material {
@@ -138,12 +157,10 @@ class Material {
     parameters = {};
 
     /**
-     * The alpha test reference value to control which fragments are written to the currently
-     * active render target based on alpha value. All fragments with an alpha value of less than
-     * the alphaTest reference value will be discarded. alphaTest defaults to 0 (all fragments
-     * pass).
+     * @type {number}
+     * @private
      */
-    alphaTest = 0;
+    _alphaTest = 0;
 
     /**
      * Enables or disables alpha to coverage. When enabled, and if hardware anti-aliasing is on,
@@ -251,7 +268,7 @@ class Material {
      * {@link Material#frontFace} and {@link StandardMaterial#twoSidedLighting} all behave the same
      * as they do for smooth shading.
      *
-     * {@link StandardMaterial} and {@link LitMaterial} implement this automatically. For a
+     * {@link StandardMaterial} and `LitMaterial` implement this automatically. For a
      * {@link ShaderMaterial}, this adds a `FLAT_SHADING` define to the shader, which the supplied
      * shader code needs to handle. The `flatNormalPS` chunk provides the `getFlatNormal` function
      * used by the engine internally, and can be used for this:
@@ -402,6 +419,26 @@ class Material {
     }
 
     /**
+     * Sets the alpha test reference value to control which fragments are written to the currently
+     * active render target based on alpha value. All fragments with an alpha value of less than
+     * the alphaTest reference value will be discarded. Defaults to 0 (all fragments pass).
+     *
+     * @type {number}
+     */
+    set alphaTest(value) {
+        this._alphaTest = value;
+    }
+
+    /**
+     * Gets the alpha test reference value.
+     *
+     * @type {number}
+     */
+    get alphaTest() {
+        return this._alphaTest;
+    }
+
+    /**
      * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
      * Typically a small negative value (-0.1) is used to render the mesh slightly closer to the
      * camera.
@@ -546,6 +583,20 @@ class Material {
      */
     getUniformBufferProperty(name) {
         return null;
+    }
+
+    /**
+     * The index of the texture slot of the material's bind group a name refers to, or -1 when the
+     * name is not one of them. A mesh instance parameter of such a name overrides that texture of
+     * the material for its own draws, applied through the copy of the bind group the mesh instance
+     * keeps rather than through the scope.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {number} The index of the texture slot, or -1.
+     * @ignore
+     */
+    getTextureSlot(name) {
+        return this._uniformBufferBindGroup?.format.textureFormatsMap.get(name) ?? -1;
     }
 
     /**
@@ -726,7 +777,7 @@ class Material {
      *
      * The default depends on where the shader comes from, so this rarely needs setting:
      *
-     * - {@link StandardMaterial} and {@link LitMaterial} generate them from the engine's own shader,
+     * - {@link StandardMaterial} and `LitMaterial` generate them from the engine's own shader,
      * so they default to true when opaque and false when transparent - blending the values of
      * ordinary transparent geometry into them is not meaningful.
      * - {@link ShaderMaterial} defaults to false, as its shader is supplied by the user. Set this to
@@ -1115,9 +1166,20 @@ class Material {
                 // the values move to a buffer of the new layout
                 this._uniformBufferBindGroup?.destroy();
                 uniformBuffer?.destroy();
+                // mesh instances classify their parameters against the resources of the bind
+                // group, which is created on the first render of the material - after they were
+                // given it - so the layout they classified against only becomes known here. A
+                // later change of the layout moves the version on its own, before the group is
+                // replaced, so only this first one needs it
+                const firstBindGroup = !this._uniformBufferBindGroup;
+
                 uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
                 this._uniformBuffer = uniformBuffer;
                 this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
+
+                if (firstBindGroup) {
+                    this._layoutVersion++;
+                }
 
                 // every property is written into the new storage
                 this._modifiedProperties ??= new Set();
@@ -1136,9 +1198,10 @@ class Material {
             this._uniformUploadedVersion = this._uniformDataVersion;
         }
 
-        // the bind group is (re)built when dirty: on creation, which needs the uploaded buffer, and
-        // after a lost context
-        this._uniformBufferBindGroup.update();
+        // the material assigns the resources of its bind group itself, so the scope takes no part
+        // in it. The group is (re)built when dirty: on creation, which needs the uploaded buffer,
+        // and after a lost context
+        this._uniformBufferBindGroup.commit();
     }
 
     /**

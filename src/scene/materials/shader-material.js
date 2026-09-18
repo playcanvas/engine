@@ -30,6 +30,16 @@ import { Material } from './material.js';
 /**
  * A ShaderMaterial is a type of material that utilizes a specified shader for rendering purposes.
  *
+ * Use it when a surface cannot be expressed with {@link StandardMaterial} properties or shader
+ * chunk overrides. The shader is described by a {@link ShaderDesc}: a `uniqueName`, vertex and
+ * fragment source in GLSL for WebGL, in WGSL for WebGPU, or both, and an `attributes` map from
+ * shader inputs to `SEMANTIC_*` values so the engine can bind vertex data. Provide both languages
+ * when the application must run on both backends. The engine supplies the standard uniforms a
+ * shader declares by name, such as `matrix_viewProjection`; your own uniforms are set with
+ * {@link Material#setParameter}. Render state such as {@link Material#blendType},
+ * {@link Material#cull} and {@link Material#depthWrite} comes from {@link Material}. Lighting, fog
+ * and shadows are not generated for you; the shader draws exactly what it is written to draw.
+ *
  * A simple example which creates a material with custom vertex and fragment shaders specified in
  * GLSL format:
  *

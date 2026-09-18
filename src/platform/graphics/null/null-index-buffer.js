@@ -6,6 +6,9 @@
 class NullIndexBuffer {
     unlock(indexBuffer, byteOffset, byteLength) {
     }
+
+    loseContext() {
+    }
 }
 
 export { NullIndexBuffer };

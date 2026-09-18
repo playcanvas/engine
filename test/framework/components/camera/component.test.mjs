@@ -11,6 +11,7 @@ import {
     LAYERID_UI,
     PROJECTION_ORTHOGRAPHIC,
     PROJECTION_PERSPECTIVE,
+    SHADER_FORWARD,
     TONEMAP_ACES
 } from '../../../../src/scene/constants.js';
 import { FogParams } from '../../../../src/scene/fog-params.js';
@@ -153,6 +154,29 @@ describe('CameraComponent', function () {
             const clone = e.clone();
 
             expect(clone.camera.enabled).to.equal(false);
+        });
+
+    });
+
+    describe('#setShaderPass', function () {
+
+        it('returns the index of a named pass and reports its name', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+
+            const index = e.camera.setShaderPass('custom_rendering');
+
+            expect(index).to.be.a('number');
+            expect(e.camera.getShaderPass()).to.equal('custom_rendering');
+        });
+
+        it('returns to the forward pass when called without a name', function () {
+            const e = new Entity();
+            e.addComponent('camera');
+            e.camera.setShaderPass('custom_rendering');
+
+            expect(e.camera.setShaderPass()).to.equal(SHADER_FORWARD);
+            expect(e.camera.getShaderPass()).to.equal(undefined);
         });
 
     });

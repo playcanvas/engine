@@ -126,8 +126,8 @@ const _properties = {
     alphaDither: new MaterialProperty('alphaDither', 'material_alphaDitherScale', UNIFORMTYPE_FLOAT, convertAlphaDitherScale),
 
     // the minimum and maximum of the world space box of the cube map projection, two uniforms of
-    // one property: both descriptors are named after the box and read it as their value, so the
-    // material keeps one snapshot of the box per descriptor and rewrites both when the box moves
+    // one property: both descriptors are named after the box and read it as their value, so a
+    // change of the box exposed by the getter rewrites both
     envBoxMin: new MaterialProperty('cubeMapProjectionBox', 'envBoxMin', UNIFORMTYPE_VEC3, convertBoxMin),
     envBoxMax: new MaterialProperty('cubeMapProjectionBox', 'envBoxMax', UNIFORMTYPE_VEC3, convertBoxMax)
 };
@@ -175,6 +175,27 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * `material.update()` runs. The debug build reports unapplied changes to the properties stored in
  * the material uniform buffer, such as `diffuse`.
  *
+ * Properties come in families that share a naming pattern. A family such as `diffuse` has a
+ * constant (`diffuse`), a texture (`diffuseMap`) with its `diffuseMapUv`, `diffuseMapTiling`,
+ * `diffuseMapOffset`, `diffuseMapRotation` and `diffuseMapChannel`, and a vertex color switch
+ * (`diffuseVertexColor`). The main families are `diffuse`; `specular`, or `metalness` when
+ * `useMetalness` is set; `gloss`; `normalMap` with `bumpiness`; `emissive`; `opacity` together
+ * with {@link Material#blendType}; `ao`; `lightMap`; and the advanced layers `clearCoat`, `sheen`,
+ * `iridescence` and `refraction`. Lighting can be turned off entirely with `useLighting`.
+ *
+ * To go beyond the properties, replace individual shader chunks with
+ * {@link Material#getShaderChunks}. When the surface is not a lit material at all, use
+ * {@link ShaderMaterial} instead.
+ *
+ * @example
+ * const material = new StandardMaterial();
+ * material.diffuse.set(0.8, 0.2, 0.2);
+ * material.diffuseMap = brickAsset.resource;
+ * material.useMetalness = true;
+ * material.metalness = 0.1;
+ * material.gloss = 0.6;
+ * material.update();
+ * entity.render.material = material;
  * @property {Texture|null} diffuseMap The main (primary) diffuse map of the material (default is
  * null).
  * @property {number} diffuseMapUv Main (primary) diffuse map UV channel. Valid values are 0 to 7.
@@ -513,7 +534,9 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
  * Defaults to {@link CUBEPROJ_NONE}.
  * @property {Texture|null} lightMap A custom lightmap of the material (default is null). Lightmaps
- * are textures that contain pre-rendered lighting. Can be HDR.
+ * are textures that contain pre-rendered lighting. Can be HDR. When a mesh instance rendered with
+ * this material has a lightmap of its own, baked by the {@link Lightmapper}, that lightmap is used
+ * instead of this one.
  * @property {number} lightMapUv Lightmap UV channel. Valid values are 0 to 7.
  * @property {string} lightMapChannel Color channels of the lightmap to use. Can be "r", "g", "b",
  * "a", "rgb" or any swizzled combination.
@@ -1601,35 +1624,78 @@ class StandardMaterial extends Material {
 
     /**
      * Sets the world space axis-aligned bounding box defining the box-projection used for the
-     * cubeMap property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}. The
-     * material keeps a reference to the box: a change of its center or half extents is applied by
-     * {@link StandardMaterial#update}.
+     * cubeMap property, or null for no box. Only used when cubeMapProjection is set to
+     * {@link CUBEPROJ_BOX}. The box is copied into the material.
      *
      * @type {BoundingBox|null}
      */
     set cubeMapProjectionBox(value) {
-        if (this._cubeMapProjectionBox !== value) {
-            this._cubeMapProjectionBox = value;
-            for (const property of _envBoxProperties) {
-                this._markPropertyModified(property);
-
-                // the snapshot of the previous box makes way for one of the new box, compared by
-                // update() as the box is moved through the reference the caller keeps
-                this._mutableProperties?.delete(property);
-                if (value) {
-                    this._markPropertyMutable(property, value);
+        const box = this._cubeMapProjectionBox;
+        if (value) {
+            if (box) {
+                if (box.equals(value)) {
+                    return;
                 }
+                box.copy(value);
+            } else {
+                this._cubeMapProjectionBox = value.clone();
+            }
+        } else {
+            if (!box) {
+                return;
+            }
+            this._cubeMapProjectionBox = null;
+        }
+        for (const property of _envBoxProperties) {
+            this._markPropertyModified(property);
+
+            // a snapshot of the removed box has nothing to compare to
+            if (!value) {
+                this._mutableProperties?.delete(property);
             }
         }
     }
 
     /**
-     * Gets the world space axis-aligned bounding box of the box-projection.
+     * Gets the world space axis-aligned bounding box of the box-projection, or null. A change of
+     * its center or half extents is applied by {@link StandardMaterial#update}.
      *
      * @type {BoundingBox|null}
      */
     get cubeMapProjectionBox() {
-        return this._cubeMapProjectionBox;
+        const box = this._cubeMapProjectionBox;
+        if (box) {
+            for (const property of _envBoxProperties) {
+                this._markPropertyMutable(property, box);
+            }
+        }
+        return box;
+    }
+
+    /**
+     * Sets the alpha test reference value to control which fragments are written to the currently
+     * active render target based on alpha value. All fragments with an alpha value of less than
+     * the alphaTest reference value will be discarded. Defaults to 0 (all fragments pass).
+     *
+     * @type {number}
+     */
+    set alphaTest(value) {
+        const oldValue = this._alphaTest;
+        if (oldValue !== value) {
+            // the alpha test is compiled into the shader when the value is above 0, and an opacity
+            // map is dropped from the shader when the value is exactly 0 and nothing else reads it
+            this._dirtyShader = this._dirtyShader || (oldValue > 0) !== (value > 0) || (oldValue === 0) !== (value === 0);
+            this._alphaTest = value;
+        }
+    }
+
+    /**
+     * Gets the alpha test reference value.
+     *
+     * @type {number}
+     */
+    get alphaTest() {
+        return this._alphaTest;
     }
 
     /**
@@ -2058,14 +2124,6 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
     }
 }
 
-function _defineFloat(name, defaultValue, dirtyShaderFunc = dirtyShaderOnZeroOrOne) {
-    defineProp({
-        name: name,
-        defaultValue: defaultValue,
-        dirtyShaderFunc: dirtyShaderFunc
-    });
-}
-
 // Adding or removing an object selects different shader code (e.g. the reflection or ambient
 // source), while replacing one object with another only changes uniform data.
 const dirtyShaderOnPresence = (oldValue, newValue) => !!oldValue !== !!newValue;
@@ -2131,10 +2189,9 @@ function _defineMaterialProps() {
     registerProp('attenuationDistance', () => 0);
     registerProp('heightMapFactor', () => 1);
     registerProp('alphaDither', () => null);
-    registerProp('cubeMapProjectionBox', () => null);
+    registerProp('cubeMapProjectionBox', () => null, true);
 
-    _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
-    _defineFloat('aoUvSet', 0); // legacy
+    registerProp('alphaTest', () => 0);
 
     _defineObject('ambientSH');
 
@@ -2287,6 +2344,7 @@ _defineDeprecatedAlias('metalnessVertexColor', 'metalnessMapVertexColor');
 _defineDeprecatedAlias('glossVertexColor', 'glossMapVertexColor');
 _defineDeprecatedAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineDeprecatedAlias('lightVertexColor', 'lightMapVertexColor');
+_defineDeprecatedAlias('aoMapUv', 'aoUvSet');
 
 _defineDeprecatedAlias('sheenGloss', 'sheenGlossiness');
 _defineDeprecatedAlias('clearCoatGloss', 'clearCoatGlossiness');

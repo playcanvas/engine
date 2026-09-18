@@ -126,11 +126,23 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * The world space vector representing global gravity in the physics simulation. Defaults to
      * [0, -9.81, 0] which is an approximation of the gravitational force on Earth.
      *
+     * The value is applied to the physics backend at the start of the next step, whether the
+     * vector is modified in place or replaced with a new one.
+     *
      * @example
      * // Set the gravity in the physics world to simulate a planet with low gravity
      * app.systems.rigidbody.gravity = new Vec3(0, -3.7, 0);
      */
     gravity = new Vec3(0, -9.81, 0);
+
+    /**
+     * The gravity most recently applied to the physics backend. Compared against gravity each
+     * step so the backend is only updated when the value changes.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _appliedGravity = new Vec3();
 
     /**
      * @type {PhysicsWorld|null}
@@ -199,7 +211,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Installs a physics backend and registers this system as its contact listener. Called by
+     * Installs a physics backend, applies the current gravity to it and registers this system as
+     * its contact listener. Called by
      * {@link AppBase#init} when {@link AppOptions#physicsWorld} is supplied, and internally by
      * Ammo auto-detection. A backend can be installed at most once.
      *
@@ -210,6 +223,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
         Debug.assert(!this._world, 'RigidBodyComponentSystem#setPhysicsWorld: a physics world is already installed.');
         this._world = world;
         world.contactListener = this;
+
+        // give the backend the current gravity before any bodies are added; step() re-applies it
+        // whenever the value changes
+        this._appliedGravity.copy(this.gravity);
+        world.setGravity(this.gravity);
 
         this.contactPointPool = new ObjectPool(ContactPoint, 1);
         this.contactResultPool = new ObjectPool(ContactResult, 1);
@@ -538,7 +556,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
     /**
      * Allocates a pooled contact point that is the given one seen from the other body's
-     * perspective.
+     * perspective: the points swap sides and the normal flips, so that it points away from body
+     * A's surface just as the forward normal points away from body B's.
      *
      * @param {ContactPoint} forward - The contact point from body A's perspective.
      * @returns {ContactPoint} The reversed contact point.
@@ -550,7 +569,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         contact.localPointOther.copy(forward.localPoint);
         contact.point.copy(forward.pointOther);
         contact.pointOther.copy(forward.point);
-        contact.normal.copy(forward.normal);
+        contact.normal.copy(forward.normal).mulScalar(-1);
         contact.impulse = forward.impulse;
         return contact;
     }
@@ -839,8 +858,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this._stats.physicsStart = now();
 
-        // Check to see whether we need to update gravity on the physics world
-        world.setGravity(this.gravity);
+        // apply gravity to the backend only when it has changed since it was last applied, so
+        // in-place edits of the vector are picked up without a backend call every step
+        const gravity = this.gravity;
+        if (!this._appliedGravity.equals(gravity)) {
+            this._appliedGravity.copy(gravity);
+            world.setGravity(gravity);
+        }
 
         // rebuild the mesh collision shapes whose entity world scale changed since they were
         // built, before the trigger and body loops below capture their list lengths

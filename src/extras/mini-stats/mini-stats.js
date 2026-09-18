@@ -114,6 +114,8 @@ const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) -
  * refresh at textRefreshRate while visible, including their sum in the collapsed heading; they
  * have no average or peak. In graph views, resource histories use the latest sampled counts
  * and scale to accommodate the highest count seen.
+ *
+ * @category Debug
  */
 class MiniStats {
     /**

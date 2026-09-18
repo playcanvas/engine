@@ -72,6 +72,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * events each frame, and expose properties to the PlayCanvas Editor.
  *
  * @hideconstructor
+ * @category Framework
  */
 class Component extends EventHandler {
     /**

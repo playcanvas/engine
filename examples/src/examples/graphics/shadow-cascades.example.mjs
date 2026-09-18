@@ -83,7 +83,7 @@ data.set('settings', {
         numCascades: 4, // number of cascades
         shadowResolution: 2048, // shadow map resolution storing 4 cascades
         cascadeDistribution: 0.5, // distribution of cascade distances to prefer sharpness closer to the camera
-        cascadeBlend: 0.1, // blend between cascades
+        cascadeBlend: 0.1, // blend between cascades and fade out distant shadows
         shadowType: SHADOW_PCF3_32F, // shadow filter type
         vsmBlurSize: 11, // shader filter blur size for VSM shadows
         penumbraSize: 0.02, // PCSS world-space light area size
@@ -154,7 +154,7 @@ const tree = terrain.findOne('name', 'Arbol 2.002');
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.9, 0.9, 0.9),
-    farClip: 1000,
+    farClip: 3000, // keep geometry visible beyond the light's shadow distance
     toneMapping: TONEMAP_ACES
 });
 

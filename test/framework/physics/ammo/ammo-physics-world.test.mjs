@@ -1,7 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
@@ -13,28 +9,9 @@ import { BoxGeometry } from '../../../../src/scene/geometry/box-geometry.js';
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { Mesh } from '../../../../src/scene/mesh.js';
 import { Model } from '../../../../src/scene/model.js';
+import { hasAmmo, loadAmmo } from '../../../ammo.mjs';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
-
-// The Ammo.js build shipped with the examples doubles as the build these tests run against. It
-// lives outside the test tree, so the suite is skipped when it is absent.
-const AMMO_PATH = resolve('examples/assets/wasm/ammo/ammo.js');
-
-/**
- * Loads the asm.js Ammo build headlessly and resolves with the initialized module.
- *
- * @returns {Promise<object>} The Ammo module.
- */
-function loadAmmo() {
-    // the build is a UMD script that cannot be imported from an ES module package, so it is
-    // evaluated as a CommonJS module body with the globals its Node code path expects
-    const source = readFileSync(AMMO_PATH, 'utf8');
-    const module = { exports: {} };
-    // eslint-disable-next-line no-new-func
-    const evaluate = new Function('module', 'exports', 'require', '__dirname', '__filename', source);
-    evaluate(module, module.exports, createRequire(import.meta.url), dirname(AMMO_PATH), AMMO_PATH);
-    return module.exports();
-}
 
 describe('AmmoPhysicsWorld', function () {
     let app;
@@ -44,7 +21,7 @@ describe('AmmoPhysicsWorld', function () {
     before(async function () {
         this.timeout(20000);
 
-        if (!existsSync(AMMO_PATH)) {
+        if (!hasAmmo()) {
             this.skip();
         }
 
@@ -135,6 +112,30 @@ describe('AmmoPhysicsWorld', function () {
     function step() {
         app.systems.rigidbody.step(1 / 60);
     }
+
+    describe('gravity', function () {
+
+        it('applies the system gravity to the native world when installed', function () {
+            app.systems.rigidbody.gravity.set(0, -3.7, 0);
+            installWorld();
+
+            const gravity = world.nativeWorld.getGravity();
+            expect(gravity.x()).to.equal(0);
+            expect(gravity.y()).to.be.closeTo(-3.7, 1e-6);
+            expect(gravity.z()).to.equal(0);
+        });
+
+        it('applies a gravity change to the native world on the next step', function () {
+            installWorld();
+            app.systems.rigidbody.gravity.set(1, 0, 0);
+
+            expect(world.nativeWorld.getGravity().x()).to.equal(0);
+
+            step();
+
+            expect(world.nativeWorld.getGravity().x()).to.equal(1);
+        });
+    });
 
     describe('mesh shape scaling', function () {
 
@@ -357,6 +358,116 @@ describe('AmmoPhysicsWorld', function () {
             expect(destroy.calledWith(entry.triMesh)).to.equal(true);
         });
 
+    });
+
+    describe('contact normals', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/4547. Bullet reports one
+        // normal per contact, on body B pointing toward body A, and which body is A follows the
+        // order the bodies were added to the world. Each entity must nevertheless receive the
+        // normal of the other entity's surface, so the sign cannot depend on that order.
+
+        function createFloor() {
+            const floor = new Entity('floor');
+            floor.setPosition(0, -0.5, 0);
+            floor.addComponent('collision', { type: 'box', halfExtents: new Vec3(5, 0.5, 5) });
+            floor.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(floor);
+            return floor;
+        }
+
+        function createBox() {
+            const box = new Entity('box');
+            box.setPosition(0, 1, 0);
+            box.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
+            box.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            app.root.addChild(box);
+            return box;
+        }
+
+        /**
+         * Lets the box drop onto the floor and returns the first contact normal each side reports.
+         *
+         * @param {Entity} box - The falling box.
+         * @param {Entity} floor - The floor.
+         * @returns {{ box: Vec3, floor: Vec3 }} The normals.
+         */
+        function firstContactNormals(box, floor) {
+            const normals = {};
+            box.collision.once('contact', (result) => {
+                normals.box = result.contacts[0].normal.clone();
+            });
+            floor.collision.once('contact', (result) => {
+                normals.floor = result.contacts[0].normal.clone();
+            });
+            for (let i = 0; i < 60 && !(normals.box && normals.floor); i++) {
+                app.update(1 / 60);
+            }
+            expect(normals.box, 'box contact').to.exist;
+            expect(normals.floor, 'floor contact').to.exist;
+            return normals;
+        }
+
+        /**
+         * Asserts that each side sees the normal of the other surface: the box rests on the
+         * floor's top face, the floor is touched by the box's bottom face.
+         *
+         * @param {{ box: Vec3, floor: Vec3 }} normals - The normals returned by firstContactNormals.
+         */
+        function expectOtherSurfaceNormals(normals) {
+            expect(normals.box.y).to.be.closeTo(1, 1e-3);
+            expect(normals.floor.y).to.be.closeTo(-1, 1e-3);
+        }
+
+        it('gives each entity the normal of the other surface when the floor is added first', function () {
+            installWorld();
+            const floor = createFloor();
+            const box = createBox();
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+        });
+
+        it('gives each entity the normal of the other surface when the box is added first', function () {
+            installWorld();
+            const box = createBox();
+            const floor = createFloor();
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+        });
+
+        it('keeps the sign after the other body is disabled and re-enabled', function () {
+            installWorld();
+            const floor = createFloor();
+            const box = createBox();
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+
+            // re-adding the floor to the world changes which body Bullet reports first
+            floor.enabled = false;
+            box.rigidbody.linearVelocity = Vec3.ZERO;
+            box.rigidbody.teleport(0, 1, 0);
+            floor.enabled = true;
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+        });
+
+        it('reports the normal on entity B for the global contact event', function () {
+            installWorld();
+            createFloor();
+            createBox();
+
+            let result = null;
+            app.systems.rigidbody.once('contact', (r) => {
+                result = { b: r.b.name, normalY: r.normal.y };
+            });
+            for (let i = 0; i < 60; i++) {
+                app.update(1 / 60);
+            }
+
+            expect(result).to.not.be.null;
+            // the normal on B points away from B's surface: up off the floor, down off the box
+            expect(result.normalY).to.be.closeTo(result.b === 'floor' ? 1 : -1, 1e-3);
+        });
     });
 
     describe('legacy Ammo build', function () {

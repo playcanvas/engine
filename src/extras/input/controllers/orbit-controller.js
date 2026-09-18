@@ -13,9 +13,12 @@ const angles = new Vec3();
 const rotation = new Quat();
 
 /**
- * The orbit controller.
+ * The orbit controller. The pose orbits a focus point at a distance: `rotate` deltas turn the
+ * view around the focus within {@link yawRange} and {@link pitchRange}, the first two `move`
+ * components pan the focus point, and the third scales the distance within {@link zoomRange}.
+ * Motion is smoothed with {@link rotateDamping}, {@link moveDamping} and {@link zoomDamping}.
  *
- * @category Input Controller
+ * @category Input
  * @alpha
  */
 class OrbitController extends InputController {

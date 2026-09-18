@@ -114,6 +114,8 @@ let app = null;
  * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
  * `componentSystems` and `resourceHandlers` before adding components or calling
  * {@link AppBase#start}. Create the `graphicsDevice` with {@link createGraphicsDevice}.
+ *
+ * @category Framework
  */
 class AppBase extends EventHandler {
     /**

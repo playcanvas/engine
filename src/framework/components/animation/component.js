@@ -38,7 +38,7 @@ import { Component } from '../component.js';
  * ```
  *
  * @hideconstructor
- * @category Animation
+ * @category Animation (Legacy)
  */
 class AnimationComponent extends Component {
     /**

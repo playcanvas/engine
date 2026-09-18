@@ -252,8 +252,6 @@ class Lightmapper {
             }
 
             if (!this.bakeHDR) material.setDefine('LIGHTMAP_RGBM', '');
-
-            material.lightMap = this.blackTex;
         } else {
             material.setDefine('LIT_LIGHTMAP_BAKING_DIR', '');
             material.setDefine('STD_LIGHTMAP_DIR', '');
@@ -849,7 +847,7 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRendererDirectional.prepareShadowMap(light);
+                this.renderer._shadowRendererDirectional.prepareShadowMap(light, this.camera);
                 this.renderer._shadowRendererDirectional.cull(light, comp, this.camera, casters);
 
                 const shadowPass = this.renderer._shadowRendererDirectional.getLightRenderPass(light, this.camera);
@@ -986,9 +984,15 @@ class Lightmapper {
                 m.setLightmapped(false);
                 m.mask = MASK_BAKE; // only affected by LM lights
 
-                // patch material
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], this.blackTex);
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], this.blackTex);
+                // patch material - the receiver samples the lightmap of its mesh instance for
+                // the whole bake, which starts out black and then accumulates the passes, so the
+                // lightmap path is forced on even when its material has no lightmap of its own.
+                // Only the slots this bake writes are bound, so a color only bake leaves no black
+                // directional lightmap behind.
+                for (let pass = 0; pass < passCount; pass++) {
+                    m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], this.blackTex);
+                }
+                m._shaderDefs |= SHADERDEF_LM;
             }
         }
 
@@ -1131,7 +1135,6 @@ class Lightmapper {
                         for (j = 0; j < rcv.length; j++) {
                             m = rcv[j];
                             m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
-                            m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                         }
 
                         DebugGraphics.popGpuMarker(device);

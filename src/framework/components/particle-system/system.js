@@ -95,7 +95,9 @@ const _propertyTypes = {
 };
 
 /**
- * Allows an Entity to render a particle system.
+ * Manages the {@link ParticleSystemComponent}s of an application. Reach it through
+ * `app.systems.particlesystem`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category Graphics
  */

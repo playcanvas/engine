@@ -34,6 +34,17 @@ class RenderPassShadowLocalClustered extends RenderPass {
         }
     }
 
+    frameUpdate() {
+        super.frameUpdate();
+        if (this.enabled && this.executeEnabled) {
+            const lights = this.shadowRendererLocal.shadowLights;
+            const culler = this.shadowRenderer.renderer.culler;
+            for (let i = 0; i < lights.length; i++) {
+                culler.requestLocalShadowCull(lights[i]);
+            }
+        }
+    }
+
     execute() {
 
         const shadowLights = this.shadowRendererLocal.shadowLights;

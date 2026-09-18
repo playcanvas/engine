@@ -15,6 +15,22 @@ const tmpMat4 = new Mat4();
  * by a world transform and half extents. Unlike an axis-aligned bounding box, an OBB can be
  * oriented arbitrarily.
  *
+ * The constructor takes a {@link Mat4} holding the box's position and rotation, then its half
+ * extents. Scale is assumed to be one, so size the box with the half extents rather than the
+ * matrix. {@link worldTransform} can be reassigned at any time and the setter copies the matrix, so
+ * assigning an entity's world transform each frame gives a box that follows it. The tests
+ * {@link containsPoint}, {@link intersectsRay} and {@link intersectsBoundingSphere} return a
+ * boolean and allocate nothing.
+ *
+ * @example
+ * // A 2 x 1 x 4 box that follows an entity
+ * const box = new OrientedBox(entity.getWorldTransform(), new Vec3(1, 0.5, 2));
+ *
+ * // later, after the entity has moved
+ * box.worldTransform = entity.getWorldTransform();
+ * if (box.containsPoint(player.getPosition())) {
+ *     // the player is inside the box
+ * }
  * @category Math
  */
 class OrientedBox {

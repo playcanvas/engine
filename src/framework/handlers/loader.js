@@ -20,20 +20,18 @@ import { http } from '../../platform/net/http.js';
 
 /**
  * The ResourceLoader turns a URL and an asset type into a loaded resource. It owns one
- * {@link ResourceHandler} per type, dispatches each request to the matching handler, and caches
- * the result by URL and type so the same request is fetched once. Each application has one at
+ * {@link ResourceHandler} per type, dispatches each request to the matching handler, and caches the
+ * result by URL and type so the same request is fetched once. Each application has one at
  * {@link AppBase#loader}.
  *
  * Most code never calls the loader directly: the {@link AssetRegistry} does so on its behalf when
  * an {@link Asset} loads. Use the loader to add support for a new asset type with
- * {@link ResourceLoader#addHandler}, to reach an existing handler with
- * {@link ResourceLoader#getHandler}, or to tune requests with
- * {@link ResourceLoader#maxConcurrentRequests}, {@link ResourceLoader#withCredentials} and
- * {@link ResourceLoader#enableRetry}.
+ * {@link addHandler}, to reach an existing handler with {@link getHandler}, or to tune requests
+ * with {@link maxConcurrentRequests}, {@link withCredentials} and {@link enableRetry}.
  *
- * Parsers for formats the engine does not load by default ship in the package and are registered
- * on an existing handler rather than added as one: `playcanvas/scripts/esm/parsers/obj-model.mjs`
- * adds `.obj` model loading and `playcanvas/scripts/esm/parsers/spz-parser.mjs` adds `.spz`
+ * Parsers for formats the engine does not load by default ship in the package and are registered on
+ * an existing handler rather than added as one: `playcanvas/scripts/esm/parsers/obj-model.mjs` adds
+ * `.obj` model loading and `playcanvas/scripts/esm/parsers/spz-parser.mjs` adds `.spz`
  * Gaussian-splat loading.
  *
  * @example

@@ -9,6 +9,9 @@ class NullVertexBuffer {
 
     unlock(vertexBuffer, byteOffset, byteLength) {
     }
+
+    loseContext() {
+    }
 }
 
 export { NullVertexBuffer };

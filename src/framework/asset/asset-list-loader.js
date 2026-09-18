@@ -8,9 +8,9 @@ import { Asset } from './asset.js';
 /**
  * An AssetListLoader loads a group of assets together and reports once when every one of them has
  * loaded or failed. Pass it {@link Asset} instances or asset ids. Assets not yet in the
- * {@link AssetRegistry} are added, and ids that the registry does not know yet are waited for
- * until a matching asset is registered. Call {@link AssetListLoader#load} to start loading and
- * {@link AssetListLoader#ready} to be told when the list is complete without starting anything.
+ * {@link AssetRegistry} are added, and ids that the registry does not know yet are waited for until
+ * a matching asset is registered. Call {@link load} to start loading and {@link ready} to be told
+ * when the list is complete without starting anything.
  *
  * @example
  * const assets = [

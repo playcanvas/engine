@@ -28,9 +28,29 @@ import { getDefaultMaterial } from './materials/default-material.js';
  * A scene is a graphical representation of an environment. It manages the scene hierarchy, all
  * graphical objects, lights, and scene-wide properties.
  *
- * Fog is scene-wide: {@link Scene#fog} is a read-only {@link FogParams} whose `type`, `color`,
- * `start` and `end` you set, and {@link CameraComponent#fog} can override it for a single camera.
+ * Each application has one at {@link AppBase#scene}. The scene owns the rendering setup that is
+ * not tied to a single entity: the {@link layers} composition that decides render order; the
+ * lighting environment through {@link ambientLight}, {@link skybox}, {@link envAtlas} and the
+ * {@link sky} and {@link lighting} parameter objects; {@link exposure}, or {@link physicalUnits}
+ * in its place, for overall brightness; the lightmapping settings; and the fog described below.
  *
+ * The scene fires `prerender` and `postrender` for each camera that renders it, and `precull`
+ * and `postcull` around visibility culling. Per-frame work that needs to know the camera belongs
+ * in those handlers.
+ *
+ * Fog is scene-wide: {@link fog} is a read-only {@link FogParams} whose `type`, `color`, `start`
+ * and `end` you set, and {@link CameraComponent#fog} can override it for a single camera.
+ *
+ * @example
+ * // Light the scene from a prefiltered environment and brighten it slightly
+ * app.scene.envAtlas = envAtlasAsset.resource;
+ * app.scene.skybox = skyboxAsset.resource;
+ * app.scene.exposure = 1.2;
+ * @example
+ * // Run code for each camera just before it renders the scene
+ * app.scene.on('prerender', (camera) => {
+ *     // camera is the CameraComponent about to render
+ * });
  * @category Graphics
  */
 class Scene extends EventHandler {
