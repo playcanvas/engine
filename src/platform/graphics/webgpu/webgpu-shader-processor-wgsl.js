@@ -819,6 +819,54 @@ class WebgpuShaderProcessorWGSL {
     }
 
     /**
+     * Reports a supplied texture which does not match the declaration it replaces. The shader is
+     * not rewritten to match the supplied bind group, so what that group declares has to be what
+     * the shader already refers to - the same names, and the same types.
+     *
+     * @param {BindTextureFormat} suppliedTexture - The texture of the supplied bind group.
+     * @param {ResourceLine} resource - The texture declaration of the shader.
+     * @param {ResourceLine|null} sampler - The sampler declaration following it, if any.
+     * @param {Shader} shader - The shader definition.
+     */
+    static validateSuppliedTexture(suppliedTexture, resource, sampler, shader) {
+
+        const mismatches = [];
+
+        // compare the types the two would declare, which covers the dimension, the sample type
+        // and the multisampled state in the form the shader has to agree with
+        const suppliedType = getTextureDeclarationType(suppliedTexture.textureDimension, suppliedTexture.sampleType, suppliedTexture.multisampled);
+        const declaredType = getTextureDeclarationType(resource.textureDimension, resource.sampleType, resource.multisampled);
+
+        if (suppliedType !== declaredType) {
+            mismatches.push(`the type '${suppliedType}' instead of '${declaredType}'`);
+        } else if (suppliedTexture.sampleType !== resource.sampleType) {
+
+            // the same declaration, but a binding the shader cannot sample in the same way
+            mismatches.push(suppliedTexture.sampleType === SAMPLETYPE_UNFILTERABLE_FLOAT ?
+                'an unfilterable texture' : 'a filterable texture');
+        }
+
+        if (suppliedTexture.hasSampler !== !!sampler) {
+            mismatches.push(suppliedTexture.hasSampler ? 'a sampler the shader does not declare' : 'no sampler, while the shader declares one');
+        } else if (sampler) {
+
+            if (suppliedTexture.samplerName !== sampler.name) {
+                mismatches.push(`the sampler named '${suppliedTexture.samplerName}' instead of '${sampler.name}'`);
+            }
+
+            // the declaration of the sampler follows the sample type of the texture
+            const samplerType = suppliedTexture.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
+            if (samplerType !== sampler.samplerType) {
+                mismatches.push(`a '${samplerType}' instead of a '${sampler.samplerType}'`);
+            }
+        }
+
+        if (mismatches.length > 0) {
+            Debug.error(`Texture '${resource.name}' is supplied by a bind group declaring ${mismatches.join(', ')}. The supplied declaration replaces the one of the shader [${resource.originalLine}], so the two have to match.`, shader);
+        }
+    }
+
+    /**
      * Returns the resources which go into the mesh bind group, which are those not already
      * contained in one of the bind groups supplied to the processing - the view and the material.
      * Those declare their own, in the same way {@link WebgpuShaderProcessorWGSL.processUniforms}
@@ -840,13 +888,14 @@ class WebgpuShaderProcessorWGSL {
 
             if (suppliedTexture) {
 
-                // the sampler of a texture follows it, and the supplied bind group declares that as
-                // well, under the name it was created with - which has to be the name the shader
-                // uses, as the shader is not rewritten to match
-                const sampler = resources[i + 1];
-                if (sampler?.isSampler) {
-                    Debug.assert(suppliedTexture.hasSampler && suppliedTexture.samplerName === sampler.name,
-                        `Texture '${resource.name}' is supplied by a bind group declaring its sampler as '${suppliedTexture.hasSampler ? suppliedTexture.samplerName : 'none'}', but the shader declares '${sampler.name}' on line [${sampler.originalLine}]`, shader);
+                // the sampler of a texture follows it, and the supplied bind group declares both
+                const sampler = resources[i + 1]?.isSampler ? resources[i + 1] : null;
+
+                Debug.call(() => {
+                    WebgpuShaderProcessorWGSL.validateSuppliedTexture(suppliedTexture, resource, sampler, shader);
+                });
+
+                if (sampler) {
                     i++;
                 }
 
