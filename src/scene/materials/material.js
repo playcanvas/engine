@@ -1166,14 +1166,20 @@ class Material {
                 // the values move to a buffer of the new layout
                 this._uniformBufferBindGroup?.destroy();
                 uniformBuffer?.destroy();
+                // mesh instances classify their parameters against the resources of the bind
+                // group, which is created on the first render of the material - after they were
+                // given it - so the layout they classified against only becomes known here. A
+                // later change of the layout moves the version on its own, before the group is
+                // replaced, so only this first one needs it
+                const firstBindGroup = !this._uniformBufferBindGroup;
+
                 uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
                 this._uniformBuffer = uniformBuffer;
                 this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
 
-                // mesh instances classify their parameters against the resources of this bind
-                // group, and it is created on the first render of the material - after they were
-                // given it - so the layout they classified against has only now become known
-                this._layoutVersion++;
+                if (firstBindGroup) {
+                    this._layoutVersion++;
+                }
 
                 // every property is written into the new storage
                 this._modifiedProperties ??= new Set();
