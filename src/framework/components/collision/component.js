@@ -3,10 +3,7 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
-// collision descendants of a compound root found unwired during a sync walk, adopted after it
-const _strays = [];
-
-// whether the sync walk in progress wrote to the compound shape
+// whether the compound sync walk in progress wrote to the compound shape
 let _compoundChanged = false;
 
 /**
@@ -185,14 +182,15 @@ class CollisionComponent extends Component {
     _compoundParent = null;
 
     /**
-     * For a compound child, the pose last written into the parent compound and the entity's
-     * world-dirty counter at the time, so the per-step sync can skip a child whose transform has
-     * not been invalidated since. Created when the child first joins a compound.
+     * For a compound child, the local transforms of the nodes between the entity and its
+     * compound root as of the last write into the compound, and the pose that was written. The
+     * per-step sync compares against these to skip a child whose relative pose cannot have
+     * changed. Created when the child first joins a compound.
      *
-     * @type {{ position: Vec3, rotation: Quat, aabbVer: number }|null}
+     * @type {{ nodes: { node: GraphNode, position: Vec3, rotation: Quat, scale: Vec3 }[], position: Vec3, rotation: Quat }|null}
      * @private
      */
-    _compoundPose = null;
+    _compoundSync = null;
 
     /** @private */
     _hasOffset = false;
@@ -652,34 +650,54 @@ class CollisionComponent extends Component {
      * @private
      */
     _onInsert(parent) {
-        const world = this.system.physicsWorld;
-        if (!world) {
+        if (!this.system.physicsWorld) {
             return;
         }
 
         if (this._compoundParent) {
-            this.system.recreatePhysicalShapes(this);
-        } else if (!this.entity.rigidbody) {
-            let ancestor = this.entity.parent;
-            while (ancestor) {
-                if (ancestor.collision && ancestor.collision.type === 'compound') {
-                    if (world.getCompoundChildCount(ancestor.collision.shape) === 0) {
-                        this.system.recreatePhysicalShapes(ancestor.collision);
-                    } else {
-                        this.system.recreatePhysicalShapes(this);
-                    }
-                    break;
-                }
-                ancestor = ancestor.parent;
+            // a child adopted by onEnable during this same insertion is already in place
+            if (!this.system.isCompoundChildInPlace(this)) {
+                this.system.recreatePhysicalShapes(this);
             }
+        } else {
+            this._joinCompoundAncestor();
         }
     }
 
     /**
+     * Wires this component into the nearest compound ancestor, if there is one and the entity
+     * is not a body of its own. Rebuilds the compound when it has no children yet, otherwise
+     * rebuilds this shape so it joins at the current pose.
+     *
+     * @returns {boolean} True if the component joined a compound.
+     * @private
+     */
+    _joinCompoundAncestor() {
+        const world = this.system.physicsWorld;
+        if (!world || this.entity.rigidbody) {
+            return false;
+        }
+
+        let ancestor = this.entity.parent;
+        while (ancestor) {
+            if (ancestor.collision && ancestor.collision.type === 'compound') {
+                if (world.getCompoundChildCount(ancestor.collision.shape) === 0) {
+                    this.system.recreatePhysicalShapes(ancestor.collision);
+                } else {
+                    this.system.recreatePhysicalShapes(this);
+                }
+                return true;
+            }
+            ancestor = ancestor.parent;
+        }
+
+        return false;
+    }
+
+    /**
      * An {@link Entity#forEach} callback that syncs the compound child transform of each
-     * descendant wired to this compound root, and collects collision descendants that are not
-     * wired to any compound so the root can adopt them. Invoked with `this` set to the compound
-     * root's entity.
+     * descendant wired to this compound root. Invoked with `this` set to the compound root's
+     * entity.
      *
      * @param {Entity} entity - The visited descendant entity.
      * @private
@@ -687,27 +705,19 @@ class CollisionComponent extends Component {
     _updateEachDescendantTransform(entity) {
         const root = this.collision;
         const component = entity.collision;
-        if (!component || component === root) {
-            return;
-        }
-
-        if (component._compoundParent === root) {
+        if (component && component !== root && component._compoundParent === root) {
             if (root.system.updateCompoundChildTransform(entity, false)) {
                 _compoundChanged = true;
             }
-        } else if (!component._compoundParent && !entity.rigidbody && component._shape) {
-            // arrived without passing through the insert hook, for example deep inside a subtree
-            // that was parented as a whole
-            _strays.push(component);
         }
     }
 
     /**
      * Applies the transform changes of this compound root's children to the compound shape.
-     * Called by the rigid body system before each step. A child is written only when its world
-     * transform has been invalidated since the last write and its pose relative to the root has
-     * actually changed, so a compound at rest costs a walk of its descendants and nothing more.
-     * Collision descendants not yet wired to a compound are adopted here.
+     * Called by the rigid body system before each step for the roots of dynamic and kinematic
+     * compounds. A child is written only when a local transform between it and the root has
+     * changed since the last write, so a compound at rest or moving as a whole costs a walk of
+     * its descendants and a few comparisons per child, nothing more.
      *
      * @private
      */
@@ -716,14 +726,6 @@ class CollisionComponent extends Component {
 
         _compoundChanged = false;
         entity.forEach(this._updateEachDescendantTransform, entity);
-
-        if (_strays.length > 0) {
-            for (let i = 0; i < _strays.length; i++) {
-                this.system.recreatePhysicalShapes(_strays[i]);
-            }
-            _strays.length = 0;
-            _compoundChanged = true;
-        }
 
         if (_compoundChanged && entity.rigidbody) {
             entity.rigidbody.activate();
@@ -791,7 +793,10 @@ class CollisionComponent extends Component {
                     this._compoundParent.entity.rigidbody.activate();
                 }
             }
-        } else if (this.entity.trigger) {
+        } else if (this.entity.trigger && !this._joinCompoundAncestor()) {
+            // becoming active inside a compound wires the shape into it instead: the insert hook
+            // only fires on the inserted node, so a collision component deeper in a subtree that
+            // was parented as a whole arrives here as a stray trigger
             this.entity.trigger.enable();
         }
     }

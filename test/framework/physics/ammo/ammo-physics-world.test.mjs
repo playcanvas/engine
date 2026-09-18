@@ -567,6 +567,28 @@ describe('AmmoPhysicsWorld', function () {
             }
         });
 
+        it('follows a child whose intermediate parent moves', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+
+            const sub = new Entity('sub');
+            sub.setLocalPosition(1, 0, 0);
+            compound.addChild(sub);
+            const grandchild = new Entity('grandchild');
+            sub.addChild(grandchild);
+            grandchild.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            frames(1);
+            expect(hitNameAt(1)).to.equal('compound');
+
+            // the moved node has no collision component of its own
+            sub.setLocalPosition(3, 0, 0);
+            frames(1);
+
+            expect(hitNameAt(3)).to.equal('compound');
+            expect(hitNameAt(1)).to.equal('ground');
+        });
+
         it('writes nothing to the compound while only the root moves', function () {
             installWorld();
             createGround();
@@ -585,6 +607,33 @@ describe('AmmoPhysicsWorld', function () {
             createGround();
             const compound = createCompound('kinematic');
 
+            // built detached, so the grandchild starts out as a trigger
+            const sub = new Entity('sub');
+            sub.setLocalPosition(2, 0, 0);
+            const grandchild = new Entity('grandchild');
+            grandchild.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            sub.addChild(grandchild);
+            expect(grandchild.trigger).to.exist;
+
+            // the insert hook only sees the inserted node, which has no collision component; the
+            // grandchild becoming active in the hierarchy wires it instead
+            compound.addChild(sub);
+
+            expect(grandchild.trigger).to.be.undefined;
+            expect(grandchild.collision._compoundParent).to.equal(compound.collision);
+            expect(world.getCompoundChildCount(compound.collision.shape)).to.equal(2);
+
+            frames(1);
+
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('adopts a collision descendant of a compound that is enabled later', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+            compound.enabled = false;
+
             const sub = new Entity('sub');
             sub.setLocalPosition(2, 0, 0);
             const grandchild = new Entity('grandchild');
@@ -592,15 +641,42 @@ describe('AmmoPhysicsWorld', function () {
             sub.addChild(grandchild);
             compound.addChild(sub);
 
-            // the insert hook only sees the inserted node, which has no collision component
-            expect(grandchild.trigger, 'stray trigger before the step').to.exist;
-
+            compound.enabled = true;
             frames(1);
 
-            expect(grandchild.trigger).to.be.undefined;
             expect(grandchild.collision._compoundParent).to.equal(compound.collision);
-            expect(world.getCompoundChildCount(compound.collision.shape)).to.equal(2);
             expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('does not rebuild a directly inserted child twice', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+            const rebuild = spy(app.systems.collision, 'recreatePhysicalShapes');
+
+            const child = new Entity('child');
+            child.setLocalPosition(2, 0, 0);
+            child.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            rebuild.resetHistory();
+            compound.addChild(child);
+
+            // once from onEnable when it becomes active under the compound; the insert hook
+            // then finds it in place
+            expect(rebuild.callCount).to.equal(1);
+            frames(1);
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('tracks the children of dynamic and kinematic compounds only', function () {
+            installWorld();
+            const tracked = app.systems.rigidbody._compounds;
+            const dynamic = createCompound('dynamic');
+            const kinematic = createCompound('kinematic');
+            const fixed = createCompound('static');
+
+            expect(tracked).to.include(dynamic.collision);
+            expect(tracked).to.include(kinematic.collision);
+            expect(tracked).to.not.include(fixed.collision);
         });
     });
 
