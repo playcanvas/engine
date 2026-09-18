@@ -72,6 +72,34 @@ describe('RigidBodyComponentSystem', function () {
     });
 
 
+    describe('contact points', function () {
+
+        it('reverses a contact by swapping sides and flipping the normal', function () {
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(new NullPhysicsWorld());
+
+            const forward = system.contactPointPool.allocate();
+            forward.localPoint.set(1, 2, 3);
+            forward.localPointOther.set(4, 5, 6);
+            forward.point.set(7, 8, 9);
+            forward.pointOther.set(10, 11, 12);
+            forward.normal.set(0, 1, 0);
+            forward.impulse = 0.5;
+
+            const reverse = system._createReverseContactPoint(forward);
+
+            expect(reverse.localPoint.equals(new Vec3(4, 5, 6))).to.be.true;
+            expect(reverse.localPointOther.equals(new Vec3(1, 2, 3))).to.be.true;
+            expect(reverse.point.equals(new Vec3(10, 11, 12))).to.be.true;
+            expect(reverse.pointOther.equals(new Vec3(7, 8, 9))).to.be.true;
+            expect(reverse.normal.equals(new Vec3(0, -1, 0))).to.be.true;
+            expect(reverse.impulse).to.equal(0.5);
+
+            // the forward contact is left untouched
+            expect(forward.normal.equals(new Vec3(0, 1, 0))).to.be.true;
+        });
+    });
+
     describe('stepping', function () {
         let world;
 
