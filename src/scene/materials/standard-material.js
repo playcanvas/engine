@@ -23,6 +23,7 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { MaterialProperty, convertColorToLinear, convertFloat } from './material-property.js';
 import { getMaterialLayout } from './material-uniform-buffer-layout.js';
+import { getTextureDescriptors, getTextureIdentifiers } from './standard-material-textures.js';
 import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
@@ -723,6 +724,21 @@ class StandardMaterial extends Material {
     get propertyDescriptors() {
         // the typed properties, and the transforms of the assigned maps
         return this._mapTransforms.getDescriptors(_propertyList);
+    }
+
+    /** @ignore */
+    get textureDescriptors() {
+        return getTextureDescriptors(this);
+    }
+
+    /**
+     * The map property which claims the sampler of each assigned map, so that the shader samples
+     * the slots of the material's bind group under the names that group declares them with.
+     *
+     * @ignore
+     */
+    get textureIdentifiers() {
+        return getTextureIdentifiers(this);
     }
 
     /** @ignore */
@@ -1875,8 +1891,11 @@ class StandardMaterial extends Material {
 
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
 
-        // the shader is processed against the layout of the material uniform buffer
-        processingOptions.uniformFormats[BINDGROUP_MATERIAL] = getMaterialLayout(device, this.propertyDescriptors).uniformBufferFormat;
+        // the shader is processed against the layout of the material: the format of its uniform
+        // buffer, and the format of its bind group, which declares its textures
+        const layout = getMaterialLayout(device, this.propertyDescriptors, this.getTextureDescriptors(device));
+        processingOptions.uniformFormats[BINDGROUP_MATERIAL] = layout.uniformBufferFormat;
+        processingOptions.bindGroupFormats[BINDGROUP_MATERIAL] = layout.bindGroupFormat;
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);
@@ -2057,6 +2076,14 @@ const markMapTransformsDirty = function () {
     this._mapTransforms.markDirty();
 };
 
+const markMapTextureAssigned = function () {
+    this._mapTransforms.markDirty();
+
+    // which of its maps claim a sampler, and so the texture slots of its bind group, can change
+    // when a map is pointed at another texture without anything else about the material changing
+    this._textureAssignmentVersion++;
+};
+
 const markMapTransformsMutable = function () {
     this._mapTransforms.markMutable();
 };
@@ -2072,7 +2099,7 @@ function _defineTex2D(name, channel = 'rgb', vertexColor = true, uv = 0) {
             return !!oldValue !== !!newValue ||
                 oldValue && (oldValue.type !== newValue.type || oldValue.format !== newValue.format);
         },
-        onSet: markMapTransformsDirty
+        onSet: markMapTextureAssigned
     });
 
     defineProp({

@@ -832,4 +832,90 @@ describe('StandardMaterial uniform buffer', function () {
 
     });
 
+    describe('textures', function () {
+
+        // the material only holds its textures where there are bind groups to hold them
+        const withBindGroups = () => {
+            app.graphicsDevice.usesMeshBindGroups = true;
+        };
+
+        const texture = name => new Texture(app.graphicsDevice, { name: name, width: 4, height: 4 });
+
+        const slots = material => material.uniformBufferBindGroup.format.textureFormats.map(format => format.name);
+
+        it('holds one slot per texture, so maps sharing one texture share its slot', function () {
+            withBindGroups();
+            const shared = texture('shared');
+            const material = new StandardMaterial();
+            material.diffuseMap = shared;
+            material.metalnessMap = shared;
+            material.update();
+            prepare(material);
+
+            expect(slots(material)).to.eql(['texture_diffuseMap']);
+        });
+
+        it('follows a map moving from a shared texture to one of its own, and back', function () {
+            withBindGroups();
+            const shared = texture('shared');
+            const own = texture('own');
+            const material = new StandardMaterial();
+            material.diffuseMap = shared;
+            material.metalnessMap = shared;
+            material.update();
+            prepare(material);
+            expect(slots(material)).to.eql(['texture_diffuseMap']);
+            const sharedBindGroup = material.uniformBufferBindGroup;
+
+            // the maps no longer share a texture, so the second one needs a slot of its own - and
+            // the shaders built against the previous slots can no longer be used with this group
+            material.metalnessMap = own;
+            material.update();
+            const cleared = sinon.spy(material, 'clearVariants');
+            prepare(material);
+            expect(slots(material)).to.eql(['texture_diffuseMap', 'texture_metalnessMap']);
+            expect(material.uniformBufferBindGroup).to.not.equal(sharedBindGroup);
+            expect(cleared.called).to.equal(true);
+            cleared.restore();
+
+            // and back to sharing
+            material.metalnessMap = shared;
+            material.update();
+            prepare(material);
+            expect(slots(material)).to.eql(['texture_diffuseMap']);
+        });
+
+        it('keeps the slots of a material whose maps are pointed at other textures without sharing changing', function () {
+            withBindGroups();
+            const material = new StandardMaterial();
+            material.diffuseMap = texture('first');
+            material.metalnessMap = texture('second');
+            material.update();
+            prepare(material);
+            const before = material.uniformBufferBindGroup;
+            expect(slots(material)).to.eql(['texture_diffuseMap', 'texture_metalnessMap']);
+
+            material.metalnessMap = texture('third');
+            material.update();
+            const cleared = sinon.spy(material, 'clearVariants');
+            prepare(material);
+
+            expect(slots(material)).to.eql(['texture_diffuseMap', 'texture_metalnessMap']);
+            expect(material.uniformBufferBindGroup).to.equal(before);
+            expect(cleared.called).to.equal(false);
+            cleared.restore();
+        });
+
+        it('leaves the textures on the scope when the device has no bind groups', function () {
+            const material = new StandardMaterial();
+            material.diffuseMap = texture('diffuse');
+            material.update();
+            prepare(material);
+
+            expect(app.graphicsDevice.usesMeshBindGroups).to.equal(false);
+            expect(slots(material)).to.eql([]);
+        });
+
+    });
+
 });

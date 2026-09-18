@@ -115,9 +115,11 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.vertexColors = false;
 
-        const uniqueTextureMap = {};
+        // the map which claims the sampler of each assigned map, which is what the bind group of
+        // the material declares its texture slots with
+        const textureIdentifiers = stdMat.textureIdentifiers;
         for (const p of _matTex2D.keys()) {
-            this._updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, uniqueTextureMap);
+            this._updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, textureIdentifiers);
         }
 
         // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
@@ -141,7 +143,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
-    _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, uniqueTextureMap) {
+    _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, textureIdentifiers) {
         const isOpacity = p === 'opacity';
 
         if (!minimalOptions || isOpacity) {
@@ -183,18 +185,10 @@ class StandardMaterialOptionsBuilder {
             // a map is only sampled when the mesh provides the uv set it is assigned to
             if (!skipMap && stdMat[mname] && vertexFormat?.hasUv(stdMat[uname])) {
 
-                // create an intermediate map between the textures and their slots
-                // to ensure the unique texture mapping isn't dependent on the texture id
-                // as that will change when textures are changed, even if the sharing is the same
-                const mapId = stdMat[mname].id;
-                let identifier = uniqueTextureMap[mapId];
-                if (identifier === undefined) {
-                    uniqueTextureMap[mapId] = p;
-                    identifier = p;
-                }
-
+                // maps pointing at one texture share the sampler of whichever of them claimed it,
+                // which is the slot the bind group of the material holds that texture in
                 options[mname] = !!stdMat[mname];
-                options[iname] = identifier;
+                options[iname] = textureIdentifiers.get(p) ?? p;
                 options[tname] = stdMat._getMapTransformId(p);
                 options[cname] = stdMat[cname];
                 options[uname] = stdMat[uname];
