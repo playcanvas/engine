@@ -32,8 +32,8 @@ class BundleHandler extends ResourceHandler {
 
     /**
      * Fetch the bundle, retrying {@link ResourceHandler#maxRetries} times on a network error. Only
-     * a rejected fetch is retried: an HTTP error status resolves, so it is not a transient failure
-     * this can recover from.
+     * a rejected fetch is retried: an HTTP error status resolves instead, and is failed by the
+     * caller rather than retried.
      *
      * @param {string} url - The URL to fetch.
      * @param {object} options - The fetch options.
@@ -74,6 +74,13 @@ class BundleHandler extends ResourceHandler {
             mode: 'cors',
             credentials: getFetchCredentials()
         }).then((res) => {
+            // fetch resolves an HTTP error status rather than rejecting it. Without this the
+            // error response is handed over as a successful bundle and Untar is left to read it,
+            // so the load reports success first and only then fails on the response body.
+            if (!res.ok) {
+                throw new Error(`Error loading bundle: ${res.status} ${res.statusText}`);
+            }
+
             const bundle = new Bundle();
             callback(null, bundle);
 

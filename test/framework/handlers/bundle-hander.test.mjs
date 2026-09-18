@@ -299,16 +299,27 @@ describe('BundleHandler', function () {
             expect(await attemptsFor(5)).to.equal(6);
         });
 
-        it('does not retry an http error status, which resolves rather than rejecting', async function () {
+        it('fails an http error status once, rather than retrying or unpacking it', async function () {
             const handler = app.loader.getHandler('bundle');
             handler.maxRetries = 5;
-            const fetched = stub(global, 'fetch').resolves({ ok: false, status: 404, body: null });
+            const fetched = stub(global, 'fetch')
+            .resolves(new Response('not found', { status: 404, statusText: 'Not Found' }));
 
+            const results = [];
             await new Promise((resolve) => {
-                handler.load({ load: 'test.tar', original: 'test.tar' }, resolve);
+                handler.load({ load: 'test.tar', original: 'test.tar' }, (err, resource) => {
+                    results.push({ err, resource });
+                    resolve();
+                });
             });
 
+            // an error status resolves, so it is not the transient failure a retry recovers from
             expect(fetched.callCount).to.equal(1);
+
+            // and it fails the load, rather than handing over a bundle and failing afterwards
+            expect(results.length).to.equal(1);
+            expect(results[0].resource).to.equal(undefined);
+            expect(String(results[0].err)).to.contain('404 Not Found');
         });
 
     });
