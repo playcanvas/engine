@@ -392,15 +392,12 @@ class MeshInstance {
     instancingData = null;
 
     /**
-     * @type {DrawCommands|null}
-     * @ignore
-     */
-    indirectData = null;
-
-    /**
-     * Map of camera to their corresponding indirect draw data. Lazily allocated.
+     * Map of {@link Camera#id} to the draw commands bound to that camera, with the null key
+     * holding the commands shared by all cameras. Lazily allocated. Keyed by id rather than by
+     * camera so a long-lived mesh instance cannot retain a camera, and with it the camera's node
+     * hierarchy and render target.
      *
-     * @type {Map<Camera|null, DrawCommands>|null}
+     * @type {Map<number|null, DrawCommands>|null}
      * @ignore
      */
     drawCommands = null;
@@ -1312,7 +1309,7 @@ class MeshInstance {
      * @param {number} [count] - Optional number of consecutive slots to use. Defaults to 1.
      */
     setIndirect(camera, slot, count = 1) {
-        const key = camera?.camera ?? null;
+        const key = camera?.camera.id ?? null;
 
         // disable when slot is -1
         if (slot === -1) {
@@ -1323,14 +1320,15 @@ class MeshInstance {
             this.drawCommands ??= new Map();
 
             // allocate or get per-camera command
-            const cmd = this.drawCommands.get(key) ?? new DrawCommands(this.mesh.device);
+            const device = this.mesh.device;
+            const cmd = this.drawCommands.get(key) ?? new DrawCommands(device);
             cmd.slotIndex = slot;
             cmd.update(count);
-            this.drawCommands.set(key, cmd);
 
-            // remove all data from this map at the end of the frame, slot needs to be assigned each frame
-            const device = this.mesh.device;
-            device.mapsToClear.add(this.drawCommands);
+            // the slot is recycled at the end of the frame, so the commands only apply to this
+            // frame - they need to be assigned again for the next one
+            cmd.validUntilVersion = device.drawCommandsVersion;
+            this.drawCommands.set(key, cmd);
         }
     }
 
@@ -1348,7 +1346,7 @@ class MeshInstance {
      * @returns {DrawCommands|undefined} The commands container to populate with sub-draw commands.
      */
     setMultiDraw(camera, maxCount = 1) {
-        const key = camera?.camera ?? null;
+        const key = camera?.camera.id ?? null;
         let cmd;
 
         // disable when maxCount is 0
@@ -1397,7 +1395,13 @@ class MeshInstance {
     getDrawCommands(camera) {
         const cmds = this.drawCommands;
         if (!cmds) return undefined;
-        return cmds.get(camera) ?? cmds.get(null);
+
+        // commands are cached for reuse, so expired ones are still in the map
+        const version = this.mesh.device.drawCommandsVersion;
+        const cmd = cmds.get(camera?.id);
+        if (cmd && version <= cmd.validUntilVersion) return cmd;
+        const shared = cmds.get(null);
+        return (shared && version <= shared.validUntilVersion) ? shared : undefined;
     }
 
     /**

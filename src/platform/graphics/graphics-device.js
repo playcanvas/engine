@@ -698,12 +698,12 @@ class GraphicsDevice extends EventHandler {
     capsDefines = new Map();
 
     /**
-     * A set of maps to clear at the end of the frame.
+     * A version number incremented at the end of every frame. Frame-scoped draw commands are
+     * stamped with it, see {@link DrawCommands#validUntilVersion}.
      *
-     * @type {Set<Map>}
      * @ignore
      */
-    mapsToClear = new Set();
+    drawCommandsVersion = 0;
 
     static EVENT_RESIZE = 'resizecanvas';
 
@@ -1806,9 +1806,8 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
-        // clear all maps scheduled for end of frame clearing
-        this.mapsToClear.forEach(map => map.clear());
-        this.mapsToClear.clear();
+        // expire frame-scoped draw commands - the indirect draw slots they reference are recycled
+        this.drawCommandsVersion++;
     }
 
     /**

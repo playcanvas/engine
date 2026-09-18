@@ -72,6 +72,16 @@ class DrawCommands {
      */
     slotIndex = 0;
 
+    /**
+     * The last {@link GraphicsDevice#drawCommandsVersion} at which these commands are still valid.
+     * Indirect commands are frame-scoped, as their slots are recycled each frame, so
+     * {@link MeshInstance#setIndirect} stamps this with the current version. Multi-draw commands
+     * persist across frames and keep the default.
+     *
+     * @ignore
+     */
+    validUntilVersion = Number.MAX_SAFE_INTEGER;
+
     // #if _PROFILER
     /** @private */
     _primitiveCount = 0;
