@@ -1,9 +1,12 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { Bundle } from '../../../src/framework/bundle/bundle.js';
 import { ContainerResource } from '../../../src/framework/handlers/container.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { http } from '../../../src/platform/net/http.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -64,7 +67,9 @@ describe('BundleHandler', function () {
     afterEach(function () {
         app?.destroy();
         app = null;
+        http.withCredentials = false;
         jsdomTeardown();
+        restore();
     });
 
     it('should load bundle asset and its assets', function (done) {
@@ -253,6 +258,22 @@ describe('BundleHandler', function () {
 
         assets[0].ready(() => {
             done();
+        });
+    });
+
+    // the bundle is fetched directly rather than through the http layer, so the handler has to
+    // apply the credentials flag itself. The request is failed as soon as its arguments are recorded.
+    [false, true].forEach((withCredentials) => {
+        it(`fetches the bundle with credentials ${withCredentials ? 'enabled' : 'disabled'}`, function (done) {
+            http.withCredentials = withCredentials;
+            const fetched = stub(global, 'fetch').rejects(new Error('recorded'));
+            stub(Debug, 'error');
+
+            app.loader.getHandler('bundle').load({ load: 'test.tar', original: 'test.tar' }, () => {
+                expect(fetched.firstCall.args[0]).to.equal('test.tar');
+                expect(fetched.firstCall.args[1].credentials).to.equal(withCredentials ? 'include' : 'same-origin');
+                done();
+            });
         });
     });
 
