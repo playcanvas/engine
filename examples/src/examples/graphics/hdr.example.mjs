@@ -238,6 +238,17 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.verticalCorrection') {
         correction.verticalCorrection = value;
     }
+
+    if (path.startsWith('data.bloom.')) {
+        cameraFrame.bloom.intensity = data.get('data.bloom.intensity');
+        cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
+
+        // brightness below which the scene does not contribute to bloom, in the scene-referred
+        // units the scene is rendered in. 0 blooms the whole scene, the physically based
+        // behaviour; raise it to leave the lit interior alone and glow only the neon sign
+        cameraFrame.bloom.threshold = data.get('data.bloom.threshold');
+        cameraFrame.update();
+    }
 });
 
 // Set initial values
@@ -245,5 +256,10 @@ data.set('data', {
     hdr: true,
     sceneTonemapping: TONEMAP_ACES,
     colorLutIntensity: 1.0,
-    verticalCorrection: 0
+    verticalCorrection: 0,
+    bloom: {
+        intensity: 0.03,
+        blurLevel: 7,
+        threshold: 0
+    }
 });

@@ -25,11 +25,36 @@ class FramePassBloom extends FramePass {
 
     blurLevel = 16;
 
+    /**
+     * Brightness below which the scene does not contribute to bloom, in the scene-referred
+     * (pre-exposure) units bloom is generated and composited in. Zero, the default, applies no
+     * high pass and keeps the whole scene blooming.
+     *
+     * @type {number}
+     */
+    threshold = 0;
+
     bloomRenderTarget;
 
     textureFormat;
 
     renderTargets = [];
+
+    /**
+     * The downsample pass the high pass is compiled into, or null when the threshold is zero.
+     *
+     * @type {RenderPassDownsample|null}
+     * @private
+     */
+    prefilterPass = null;
+
+    /**
+     * Whether the existing passes were created with the high pass enabled.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _prefilterEnabled = false;
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
@@ -65,6 +90,7 @@ class FramePassBloom extends FramePass {
             this.beforePasses[i].destroy();
         }
         this.beforePasses.length = 0;
+        this.prefilterPass = null;
     }
 
     createRenderTarget(index) {
@@ -101,11 +127,19 @@ class FramePassBloom extends FramePass {
 
         const device = this.device;
 
+        // the high pass is applied on the first downsample, the earliest pass that only bloom
+        // consumes - the source texture is shared with depth of field
+        const prefilter = this.threshold > 0;
+        this._prefilterEnabled = prefilter;
+
         // progressive downscale
         let passSourceTexture = this._sourceTexture;
         for (let i = 0; i < numPasses; i++) {
 
-            const pass = new RenderPassDownsample(device, passSourceTexture);
+            const pass = new RenderPassDownsample(device, passSourceTexture, { prefilter: prefilter && i === 0 });
+            if (pass.prefilter) {
+                this.prefilterPass = pass;
+            }
             const rt = this.renderTargets[i];
             pass.init(rt, {
                 resizeSource: passSourceTexture,
@@ -146,12 +180,19 @@ class FramePassBloom extends FramePass {
         const maxNumPasses = this.calcMipLevels(this._sourceTexture.width, this._sourceTexture.height, 1);
         const numPasses = math.clamp(maxNumPasses, 1, this.blurLevel);
 
-        if (this.renderTargets.length !== numPasses) {
+        // the high pass is a shader variant of the first downsample, so switching the threshold
+        // on or off needs the passes rebuilt
+        if (this.renderTargets.length !== numPasses || this._prefilterEnabled !== (this.threshold > 0)) {
 
             this.destroyRenderPasses();
             this.destroyRenderTargets(1);
             this.createRenderTargets(numPasses);
             this.createRenderPasses(numPasses);
+        }
+
+        if (this.prefilterPass) {
+            this.prefilterPass.prefilterThreshold = this.threshold;
+            this.prefilterPass.prefilterKnee = this.threshold * 0.5;
         }
     }
 }
