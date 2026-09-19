@@ -323,8 +323,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     /**
      * Called once the component is gone from its entity. A collision component left behind
      * supplied the body's shape; without a body it is a trigger volume, or a child of an
-     * enclosing compound, so it is rebuilt into that role. Nothing is rebuilt while the entity
-     * itself is being destroyed, since the collision component is about to go as well.
+     * enclosing compound, so it is rebuilt into that role. The pairs the body was touching are
+     * forgotten first: they belong to the old role, and a trigger built over an overlap that is
+     * still in progress has to report it as new. Nothing is rebuilt while the entity itself is
+     * being destroyed, since the collision component is about to go as well.
      *
      * @param {Entity} entity - The entity the component was removed from.
      * @private
@@ -336,6 +338,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         const collision = entity.collision;
         if (collision) {
+            this.clearEntityCollisions(entity);
             collision.system.recreatePhysicalShapes(collision);
         }
     }

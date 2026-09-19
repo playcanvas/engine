@@ -278,10 +278,15 @@ describe('RigidBodyComponentSystem', function () {
             app.systems.rigidbody.setPhysicsWorld(world);
         });
 
-        function createBody(name, parent = app.root) {
+        function createBody(name, parent = app.root, rigidbodyFirst = false) {
             const entity = new Entity(name);
+            if (rigidbodyFirst) {
+                entity.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            }
             entity.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
-            entity.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            if (!rigidbodyFirst) {
+                entity.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            }
             parent.addChild(entity);
             return entity;
         }
@@ -315,14 +320,28 @@ describe('RigidBodyComponentSystem', function () {
             expect(part.trigger).to.be.undefined;
         });
 
-        it('does not build a trigger for an entity that is being destroyed', function () {
-            const entity = createBody('doomed');
+        it('forgets the pairs the body was touching', function () {
+            const entity = createBody('body');
+            const other = createBody('other');
+            app.systems.rigidbody.collisions[entity.guid] = { entity: entity, others: [other] };
+
+            entity.removeComponent('rigidbody');
+
+            expect(app.systems.rigidbody.collisions[entity.guid]).to.be.undefined;
+        });
+
+        it('does not rebuild anything for an entity that is being destroyed', function () {
+            // components are removed in the order they were added, so the collision component
+            // is still attached when the rigid body's removal is processed
+            const entity = createBody('doomed', app.root, true);
+            const rebuild = spy(app.systems.collision, 'recreatePhysicalShapes');
             const triggers = app.systems.rigidbody._triggers.length;
 
             entity.destroy();
 
-            expect(entity.trigger).to.be.undefined;
+            expect(rebuild.called).to.be.false;
             expect(app.systems.rigidbody._triggers.length).to.equal(triggers);
+            restore();
         });
 
         it('does nothing when no backend is installed', function () {

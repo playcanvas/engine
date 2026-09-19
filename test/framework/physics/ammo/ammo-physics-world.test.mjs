@@ -833,10 +833,16 @@ describe('AmmoPhysicsWorld', function () {
 
     describe('rigid body removal', function () {
 
-        // End-to-end check for https://github.com/playcanvas/engine/issues/2195: a collision
+        // End-to-end checks for https://github.com/playcanvas/engine/issues/2195: a collision
         // component whose rigid body is removed acts as a trigger from then on.
 
-        it('fires trigger events once the rigid body is removed', function () {
+        /**
+         * Drops a ball onto a solid block sitting on a floor and lets it settle. Returns the
+         * block, the ball and the names the block reports through triggerenter.
+         *
+         * @returns {{ zone: Entity, ball: Entity, entered: string[] }} The scene.
+         */
+        function settleBallOnBlock() {
             installWorld();
 
             const floor = new Entity('floor');
@@ -845,7 +851,6 @@ describe('AmmoPhysicsWorld', function () {
             floor.addComponent('rigidbody', { type: 'static' });
             app.root.addChild(floor);
 
-            // a solid block the ball lands on...
             const zone = new Entity('zone');
             zone.setPosition(0, 0.5, 0);
             zone.addComponent('collision', { type: 'box', halfExtents: new Vec3(1, 0.5, 1) });
@@ -856,8 +861,12 @@ describe('AmmoPhysicsWorld', function () {
             ball.setPosition(0, 3, 0);
             ball.addComponent('collision', { type: 'sphere', radius: 0.25 });
             ball.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            ball.collision.on('contact', () => {});
             app.root.addChild(ball);
 
+            // the block listens for contacts as a body and for triggers afterwards, so the pair the
+            // ball rests in is recorded on the block's side the way a game switching roles would
+            zone.collision.on('collisionstart', () => {});
             const entered = [];
             zone.collision.on('triggerenter', (other) => {
                 entered.push(other.name);
@@ -867,13 +876,32 @@ describe('AmmoPhysicsWorld', function () {
             expect(entered).to.deep.equal([]);
             expect(ball.getPosition().y).to.be.above(1.2);
 
-            // ...becomes a volume the ball falls through and is reported by
+            return { zone, ball, entered };
+        }
+
+        it('fires trigger events once the rigid body is removed', function () {
+            const { zone, ball, entered } = settleBallOnBlock();
+
+            // the block becomes a volume the ball falls through and is reported by
             zone.removeComponent('rigidbody');
             ball.rigidbody.linearVelocity = Vec3.ZERO;
             ball.rigidbody.teleport(0, 3, 0);
 
             for (let i = 0; i < 120; i++) app.update(1 / 60);
             expect(entered).to.deep.equal(['ball']);
+            expect(ball.getPosition().y).to.be.below(0.5);
+        });
+
+        it('reports an overlap that was already in progress when the body became a trigger', function () {
+            const { zone, ball, entered } = settleBallOnBlock();
+
+            // the ball stays where it rests, so the very first trigger step sees it overlapping
+            zone.removeComponent('rigidbody');
+
+            for (let i = 0; i < 5; i++) app.update(1 / 60);
+            expect(entered).to.deep.equal(['ball']);
+
+            for (let i = 0; i < 120; i++) app.update(1 / 60);
             expect(ball.getPosition().y).to.be.below(0.5);
         });
     });
