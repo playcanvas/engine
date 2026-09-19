@@ -235,6 +235,13 @@ class GraphicsDevice extends EventHandler {
     supportsMultiDraw = true;
 
     /**
+     * True if the device supports indirect draw calls, where the draw parameters are sourced from
+     * a GPU buffer instead of being supplied by the CPU. This is only supported on WebGPU. Also
+     * see {@link MeshInstance#setIndirect}.
+     */
+    supportsIndirectDraw = true;
+
+    /**
      * True if the device supports compute shaders.
      *
      * @readonly
@@ -1420,6 +1427,9 @@ class GraphicsDevice extends EventHandler {
      * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
      *
      * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * Only available on WebGPU, see {@link GraphicsDevice#supportsIndirectDraw}. Returns 0 on
+     * other platforms.
      *
      * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
      * @returns {number} - The first reserved slot index used for indirect rendering.

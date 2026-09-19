@@ -111,6 +111,24 @@ describe('MeshInstance draw commands', function () {
         expect(meshInstance.getDrawCommands(null)).to.be.undefined;
     });
 
+    it('ignores indirect rendering on a device that does not support it', function () {
+        // as WebGL does - draw commands it cannot execute would take it down its multi-draw path
+        device.supportsIndirectDraw = false;
+        meshInstance.setIndirect(null, 3);
+
+        expect(meshInstance.drawCommands).to.be.null;
+        expect(meshInstance.getDrawCommands(null)).to.be.undefined;
+    });
+
+    it('still releases cached commands when turning indirect off on an unsupported device', function () {
+        meshInstance.setIndirect(null, 3);
+        expect(meshInstance.getDrawCommands(null)).to.exist;
+
+        device.supportsIndirectDraw = false;
+        meshInstance.setIndirect(null, -1);
+        expect(meshInstance.drawCommands).to.be.null;
+    });
+
     it('assigns each camera a unique id', function () {
         expect(new Camera(device).id).to.not.equal(new Camera(device).id);
     });
