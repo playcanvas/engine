@@ -831,6 +831,53 @@ describe('AmmoPhysicsWorld', function () {
         });
     });
 
+    describe('rigid body removal', function () {
+
+        // End-to-end check for https://github.com/playcanvas/engine/issues/2195: a collision
+        // component whose rigid body is removed acts as a trigger from then on.
+
+        it('fires trigger events once the rigid body is removed', function () {
+            installWorld();
+
+            const floor = new Entity('floor');
+            floor.setPosition(0, -0.5, 0);
+            floor.addComponent('collision', { type: 'box', halfExtents: new Vec3(5, 0.5, 5) });
+            floor.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(floor);
+
+            // a solid block the ball lands on...
+            const zone = new Entity('zone');
+            zone.setPosition(0, 0.5, 0);
+            zone.addComponent('collision', { type: 'box', halfExtents: new Vec3(1, 0.5, 1) });
+            zone.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(zone);
+
+            const ball = new Entity('ball');
+            ball.setPosition(0, 3, 0);
+            ball.addComponent('collision', { type: 'sphere', radius: 0.25 });
+            ball.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            app.root.addChild(ball);
+
+            const entered = [];
+            zone.collision.on('triggerenter', (other) => {
+                entered.push(other.name);
+            });
+
+            for (let i = 0; i < 90; i++) app.update(1 / 60);
+            expect(entered).to.deep.equal([]);
+            expect(ball.getPosition().y).to.be.above(1.2);
+
+            // ...becomes a volume the ball falls through and is reported by
+            zone.removeComponent('rigidbody');
+            ball.rigidbody.linearVelocity = Vec3.ZERO;
+            ball.rigidbody.teleport(0, 3, 0);
+
+            for (let i = 0; i < 120; i++) app.update(1 / 60);
+            expect(entered).to.deep.equal(['ball']);
+            expect(ball.getPosition().y).to.be.below(0.5);
+        });
+    });
+
     describe('legacy Ammo build', function () {
         let scaledShape;
 

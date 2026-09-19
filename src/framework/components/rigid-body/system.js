@@ -196,6 +196,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.frameCollisions = {};
 
         this.on('beforeremove', this.onBeforeRemove, this);
+        this.on('remove', this.onRemove, this);
     }
 
     /**
@@ -316,6 +317,26 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (component._body) {
             this._world.destroyBody(component._body);
             component.body = null;
+        }
+    }
+
+    /**
+     * Called once the component is gone from its entity. A collision component left behind
+     * supplied the body's shape; without a body it is a trigger volume, or a child of an
+     * enclosing compound, so it is rebuilt into that role. Nothing is rebuilt while the entity
+     * itself is being destroyed, since the collision component is about to go as well.
+     *
+     * @param {Entity} entity - The entity the component was removed from.
+     * @private
+     */
+    onRemove(entity) {
+        if (entity._destroying || !this._world) {
+            return;
+        }
+
+        const collision = entity.collision;
+        if (collision) {
+            collision.system.recreatePhysicalShapes(collision);
         }
     }
 
