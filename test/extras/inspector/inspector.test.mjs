@@ -6,14 +6,23 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { captureFrameGraph } from '../../../src/extras/inspector/frame-graph-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
+import { buildNodeModel } from '../../../src/extras/inspector/node-model.js';
+import { PropertyView } from '../../../src/extras/inspector/property-view.js';
 import { formatChannels, previewAttachments, previewSupport } from '../../../src/extras/inspector/render-target-view.js';
+import { buildTextureModel, collectTextures, formatBytes, textureRows } from '../../../src/extras/inspector/texture-view.js';
+import { Entity } from '../../../src/framework/entity.js';
 import {
-    FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_111110F, PIXELFORMAT_BGRA8, PIXELFORMAT_DEPTH, PIXELFORMAT_DXT1,
+    FILTER_LINEAR, FILTER_NEAREST, FUNC_LESS, PIXELFORMAT_111110F, PIXELFORMAT_BGRA8, PIXELFORMAT_DEPTH, PIXELFORMAT_DXT1,
     PIXELFORMAT_R32U, PIXELFORMAT_R8, PIXELFORMAT_RG16F, PIXELFORMAT_RGB10A2, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8
 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
+import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { MeshInstance } from '../../../src/scene/mesh-instance.js';
+import { Mesh } from '../../../src/scene/mesh.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
@@ -29,6 +38,8 @@ function createApp() {
     app.stats = { frame: {} };
     app.timeScale = 1;
     app.root = new GraphNode('root');
+    // entities register themselves by guid
+    app._entityIndex = {};
     return app;
 }
 
@@ -328,6 +339,75 @@ describe('Inspector', function () {
         expect(Object.keys(stored)).to.deep.equal([]);
     });
 
+    it('adds collapsed sections for mesh instances and their shared material, with texture links', function () {
+        const device = app.graphicsDevice;
+        const texture = new Texture(device, { name: 'albedo', width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
+        const material = new StandardMaterial();
+        material.name = 'painted';
+        material.diffuseMap = texture;
+        const mesh = new Mesh(device);
+        const entity = new Entity('robot', app);
+        entity.c.render = /** @type {any} */ ({
+            enabled: true,
+            meshInstances: [new MeshInstance(mesh, material, entity), new MeshInstance(mesh, material, entity)]
+        });
+
+        const sections = buildNodeModel(entity);
+        const keys = sections.map(section => section.key);
+        expect(keys).to.include.members(['c:render', 'mi:render:0', 'mi:render:1', 'mat:render:0']);
+        // a material shared by both instances is listed once
+        expect(keys.filter(key => key.startsWith('mat:'))).to.have.lengthOf(1);
+
+        const instance = sections.find(section => section.key === 'mi:render:0');
+        expect(instance.collapsed).to.be.true;
+        expect(instance.title).to.equal('render › mesh instance 0');
+        expect(instance.rows.slice(0, 4).map(row => row.label)).to.deep.equal(['node', 'mesh', 'material', 'visible']);
+        expect(instance.rows.map(row => row.label)).to.include('castShadow');
+
+        const painted = sections.find(section => section.key === 'mat:render:0');
+        expect(painted.collapsed).to.be.true;
+        expect(painted.title).to.equal('render › StandardMaterial "painted"');
+        expect(painted.rows[0].label).to.equal('used by');
+        expect(painted.rows[0].value.text).to.equal('["mesh instance 0", "mesh instance 1"]');
+        const labels = painted.rows.map(row => row.label);
+        expect(labels).to.include.members(['diffuse', 'diffuseMap', 'blendType']);
+        // getters that only warn about their removal or deprecation are left out
+        expect(labels).to.not.include.members(['chunks', 'shader', 'dirty', 'anisotropy', 'diffuseTint', 'sheenGlossiness']);
+        expect(painted.rows.find(row => row.label === 'diffuseMap').value.target).to.equal(texture);
+
+        texture.destroy();
+    });
+
+    it('lists the device textures largest first and selects a linked texture on the textures tab', function () {
+        const inspector = /** @type {any} */ (new Inspector(app));
+        const device = app.graphicsDevice;
+        const small = new Texture(device, { name: 'small', width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false });
+        const large = new Texture(device, { name: 'large', width: 64, height: 64, format: PIXELFORMAT_RGBA8, mipmaps: false });
+        // the WebGL and WebGPU devices register their textures; the null device does not
+        device.textures.add(small).add(large);
+
+        // a texture value in any property panel links to the textures tab
+        inspector._selectAny(small);
+        expect(inspector._tab).to.equal('textures');
+        expect(inspector._textureList.selected).to.equal(small);
+        expect(inspector._properties.subject).to.equal(small);
+        const names = [...panel(inspector).querySelectorAll('.pci-lrow .pci-cell-name')].map(cell => cell.textContent);
+        expect(names.indexOf('large')).to.be.below(names.indexOf('small'));
+
+        // the preview is drawn from the update, and explained when it cannot be
+        app.fire('update', 0.016);
+        expect(inspector._textureNote.textContent).to.match(/no camera renders to the screen/);
+        inspector._texturePreviewToggle.checked = false;
+        app.fire('update', 0.016);
+        expect(inspector._textureNote.style.display).to.equal('none');
+
+        const sections = [...panel(inspector).querySelectorAll('.pci-section-title')].map(title => title.textContent);
+        expect(sections).to.include.members(['Texture', 'Properties']);
+        small.destroy();
+        large.destroy();
+        inspector.destroy();
+    });
+
     it('explains a missing physics system on the physics tab', function () {
         const inspector = new Inspector(app);
         const tabs = [...panel(inspector).querySelectorAll('.pci-tab')];
@@ -335,6 +415,31 @@ describe('Inspector', function () {
         const note = /** @type {any} */ (inspector)._panels.physics.querySelector('.pci-note');
         expect(note.textContent).to.match(/No rigid body component system/);
         inspector.destroy();
+    });
+});
+
+describe('Inspector property view', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    it('starts sections collapsed when the model says so', function () {
+        const container = document.createElement('div');
+        const view = new PropertyView(container, () => {});
+        const target = {};
+        const model = () => [
+            { key: 'open', title: 'Open', rows: [{ key: 'a', label: 'a', value: { text: 'x', target } }] },
+            { key: 'closed', title: 'Closed', rows: [{ key: 'b', label: 'b', value: { text: 'y' } }], collapsed: true }
+        ];
+        view.setSubject({}, model);
+        const sections = [...container.querySelectorAll('.pci-section')];
+        expect(sections[0].classList.contains('pci-collapsed')).to.be.false;
+        expect(sections[1].classList.contains('pci-collapsed')).to.be.true;
+        expect(container.querySelector('.pci-prop .pci-value').classList.contains('pci-link')).to.be.true;
+
+        // the title still toggles a section that started collapsed
+        sections[1].querySelector('.pci-section-title').click();
+        expect(sections[1].classList.contains('pci-collapsed')).to.be.false;
+        expect(sections[1].querySelector('.pci-value').textContent).to.equal('y');
     });
 });
 
@@ -402,6 +507,67 @@ describe('Inspector render target preview', function () {
         expect(formatChannels(PIXELFORMAT_111110F)).to.equal('');
         expect(formatChannels(PIXELFORMAT_DXT1)).to.equal('');
         expect(formatChannels(-1)).to.equal('');
+    });
+});
+
+describe('Inspector texture view', function () {
+    let device;
+
+    beforeEach(function () {
+        jsdomSetup();
+        device = new NullGraphicsDevice(document.createElement('canvas'));
+    });
+
+    afterEach(function () {
+        device.destroy();
+        jsdomTeardown();
+    });
+
+    it('lists textures by GPU size, tags render target attachments and links them from the model', function () {
+        const small = new Texture(device, { name: 'small', width: 4, height: 4, format: PIXELFORMAT_RGBA8, mipmaps: false });
+        const large = new Texture(device, { name: 'large', width: 64, height: 64, format: PIXELFORMAT_RGBA8, mipmaps: false });
+        const depth = new Texture(device, { name: 'shadow', width: 32, height: 32, format: PIXELFORMAT_DEPTH, mipmaps: false });
+        const rt = new RenderTarget({ name: 'shadow map', depthBuffer: depth });
+        device.textures.add(small).add(large).add(depth);
+        device.targets.add(rt);
+
+        expect(collectTextures(device)).to.deep.equal([large, depth, small]);
+
+        const rows = textureRows(device);
+        expect(rows.map(row => row.name)).to.deep.equal(['large', 'shadow', 'small']);
+        expect(rows[0].cells.map(cell => cell.text)).to.deep.equal(['large', '64×64 RGBA8', '16.0 KB']);
+        expect(rows[1].cells.map(cell => cell.text)).to.deep.equal(['shadow', 'target', '32×32 DEPTH', '4.0 KB']);
+        expect(rows[0].key).to.not.equal(rows[2].key);
+        expect(textureRows(device)[0].key).to.equal(rows[0].key);
+
+        const [general, sampling, props] = buildTextureModel(depth, { device });
+        expect(general.rows.map(row => row.label)).to.include.members(['name', 'size', 'format', 'gpu size', 'mipmaps', 'attached to']);
+        const attached = general.rows.find(row => row.label === 'attached to');
+        expect(attached.value.text).to.equal('1 render target');
+        expect(attached.value.items[0].target).to.equal(rt);
+
+        // sampler state reads as constant names
+        const byLabel = label => sampling.rows.find(row => row.label === label).value.text;
+        expect(byLabel('min filter')).to.equal('FILTER_LINEAR_MIPMAP_LINEAR');
+        expect(byLabel('mag filter')).to.equal('FILTER_LINEAR');
+        expect(byLabel('address u')).to.equal('ADDRESS_REPEAT');
+        expect(sampling.rows.map(row => row.label)).to.not.include('compare func');
+        depth.compareOnRead = true;
+        depth.compareFunc = FUNC_LESS;
+        expect(buildTextureModel(depth, { device })[1].rows.find(row => row.label === 'compare func').value.text).to.equal('FUNC_LESS');
+
+        const labels = props.rows.map(row => row.label);
+        expect(labels).to.include.members(['flipY', 'premultiplyAlpha']);
+        expect(labels).to.not.include.members(['minFilter', 'addressU', 'rgbm', 'swizzleGGGR', 'width']);
+
+        rt.destroy();
+    });
+
+    it('formats byte counts in the largest fitting unit', function () {
+        expect(formatBytes(512)).to.equal('512 B');
+        expect(formatBytes(1536)).to.equal('1.5 KB');
+        expect(formatBytes(3 * 1024 * 1024)).to.equal('3.00 MB');
+        expect(formatBytes(2.5 * 1024 * 1024 * 1024)).to.equal('2.50 GB');
     });
 });
 

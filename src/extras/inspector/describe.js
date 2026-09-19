@@ -30,8 +30,8 @@ import { Sprite } from '../../scene/sprite.js';
  * @property {string} text - The display text.
  * @property {string} [cls] - A class suffix selecting the color: 'num', 'bool', 'str', 'null',
  * 'obj', 'ref' or 'err'.
- * @property {GraphNode} [target] - A node the value refers to. Rendered as a link that selects
- * the node in the hierarchy.
+ * @property {GraphNode|Texture} [target] - An object the value refers to. Rendered as a link
+ * that selects it: a node in the hierarchy, a texture on the textures tab.
  * @property {string} [swatch] - A CSS color, rendered as a chip in front of the text.
  * @property {Described[]} [items] - Expanded entries of a collection, each carrying a `label`.
  * @property {string} [label] - The label of an expanded collection entry.
@@ -176,7 +176,8 @@ function describeValue(value, depth = 0) {
         const shape = value.cubemap ? ' cubemap' : (value.volume ? ` ×${value.depth}` : (value.array ? ` [${value.arrayLength}]` : ''));
         return {
             text: `Texture "${value.name}" ${value.width}×${value.height}${shape} ${pixelFormatInfo.get(value.format)?.name ?? value.format}${value.mipmaps ? ' mips' : ''}`,
-            cls: 'obj'
+            cls: 'obj',
+            target: value
         };
     }
     if (value instanceof RenderTarget) {

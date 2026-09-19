@@ -207,6 +207,14 @@ function previewAttachments(rt, device) {
 }
 
 /**
+ * @param {number} format - A PIXELFORMAT_* constant.
+ * @returns {boolean} Whether it is one of the depth formats, which preview as raw grayscale.
+ */
+function isDepthFormat(format) {
+    return format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16 || format === PIXELFORMAT_DEPTHSTENCIL;
+}
+
+/**
  * Mirrors the checks TextureRenderer applies before drawing, so the panel can say why a texture
  * cannot be shown instead of letting the renderer warn once and draw nothing.
  *
@@ -224,7 +232,7 @@ function previewSupport(texture, device) {
     const format = texture.format;
     if (isIntegerPixelFormat(format)) return { ok: false, reason: 'integer formats cannot be previewed' };
 
-    const depth = format === PIXELFORMAT_DEPTH || format === PIXELFORMAT_DEPTH16 || format === PIXELFORMAT_DEPTHSTENCIL;
+    const depth = isDepthFormat(format);
     if (depth && device.isWebGL2 && texture.compareOnRead) {
         return { ok: false, reason: 'comparison depth textures cannot be previewed on WebGL2' };
     }
@@ -260,4 +268,4 @@ function formatChannels(format) {
     return [...'rgba'].filter(letter => letters.includes(letter)).join('');
 }
 
-export { buildRenderTargetModel, formatChannels, previewAttachments, previewSupport, renderTargetRows };
+export { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows };

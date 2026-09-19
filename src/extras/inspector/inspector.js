@@ -2,6 +2,7 @@ import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 import { LAYERID_UI } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { TextureRenderer } from '../renderers/texture-renderer.js';
@@ -15,8 +16,9 @@ import { buildNodeModel } from './node-model.js';
 import { AmmoDebugDraw, DEBUG_DRAW } from './physics-debug.js';
 import { bodyRows, drawCollisionShape, drawJoint, jointRows, physicsStats } from './physics-view.js';
 import { PropertyView } from './property-view.js';
-import { buildRenderTargetModel, formatChannels, previewAttachments, previewSupport, renderTargetRows } from './render-target-view.js';
+import { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows } from './render-target-view.js';
 import { styles } from './styles.js';
+import { buildTextureModel, collectTextures, formatBytes, textureRows } from './texture-view.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
 /** @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js' */
@@ -128,6 +130,9 @@ function isTextTarget(e) {
  *   GPU timings. Render target cells link to the next tab.
  * - Render targets: every render target on the device including the backbuffer, with its
  *   attachments and the passes that rendered into it this frame, linking back to the frame graph.
+ *   The selected target's attachment can be previewed live in a corner of the viewport.
+ * - Textures: every texture on the device, largest GPU footprint first, with the same live preview.
+ *   Texture values elsewhere, such as the maps of a material, link here.
  * - Physics: the rigid bodies and joints of the scene, with the physics world drawn over the scene
  *   through the engine's debug drawer when Ammo is loaded.
  *
@@ -307,7 +312,7 @@ class Inspector {
     _nextPropertyRefresh = 0;
 
     /**
-     * @type {'hierarchy'|'passes'|'targets'|'physics'}
+     * @type {'hierarchy'|'passes'|'targets'|'textures'|'physics'}
      * @private
      */
     _tab = 'hierarchy';
@@ -392,6 +397,39 @@ class Inspector {
      * @private
      */
     _previewKeys = '';
+
+    /**
+     * @type {ListView}
+     * @private
+     */
+    _textureList;
+
+    /**
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _texturePreviewToggle;
+
+    /**
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _textureChannels;
+
+    /**
+     * @type {HTMLElement}
+     * @private
+     */
+    _textureNote;
+
+    /**
+     * Model builder for the property view when a texture is selected.
+     *
+     * @param {Texture} texture - The texture.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _textureModel = texture => buildTextureModel(texture, this._context());
 
     /**
      * @type {HTMLInputElement}
@@ -788,7 +826,11 @@ class Inspector {
             }
         }
 
-        if (this._tab === 'targets') this._drawTargetPreview();
+        if (this._tab === 'targets') {
+            this._drawTargetPreview();
+        } else if (this._tab === 'textures') {
+            this._drawTexturePreview();
+        }
     }
 
     /**
@@ -858,7 +900,8 @@ class Inspector {
 
         const tabs = el('div', 'pci-tabs');
         this._tabButtons = {};
-        for (const [id, label] of [['hierarchy', 'Hierarchy'], ['passes', 'Frame graph'], ['targets', 'Render targets'], ['physics', 'Physics']]) {
+        const tabList = [['hierarchy', 'Hierarchy'], ['passes', 'Frame graph'], ['targets', 'Render targets'], ['textures', 'Textures'], ['physics', 'Physics']];
+        for (const [id, label] of tabList) {
             const tab = el('button', 'pci-tab', label);
             tab.addEventListener('click', () => this._setTab(/** @type {any} */ (id)));
             tabs.appendChild(tab);
@@ -895,7 +938,21 @@ class Inspector {
         const targetList = el('div', 'pci-list');
         targetPanel.append(targetBar, this._previewNote, targetList);
 
-        for (const input of [this._previewToggle, this._previewAttachment, this._previewChannels]) {
+        // textures: the same live preview for the selected texture
+        const texturePanel = el('div', 'pci-listpanel');
+        const textureBar = el('div', 'pci-subbar');
+        this._texturePreviewToggle = this._makeToggle(textureBar, 'Preview',
+            'Draw the selected texture in the corner of the viewport, sampled on the GPU every frame');
+        this._texturePreviewToggle.checked = true;
+        this._textureChannels = this._makeSelect(textureBar, 'Channels', [
+            ['rgb', 'color'], ['rrr', 'red'], ['ggg', 'green'], ['bbb', 'blue'], ['aaa', 'alpha']
+        ]);
+        this._textureNote = el('div', 'pci-note pci-note-info');
+        this._textureNote.style.display = 'none';
+        const textureList = el('div', 'pci-list');
+        texturePanel.append(textureBar, this._textureNote, textureList);
+
+        for (const input of [this._previewToggle, this._previewAttachment, this._previewChannels, this._texturePreviewToggle, this._textureChannels]) {
             input.addEventListener('change', () => this._saveSettings());
         }
 
@@ -944,8 +1001,8 @@ class Inspector {
         }
         this._rangeInput.addEventListener('input', () => this._applyPhysicsSettings());
 
-        this._panels = { hierarchy: tree, passes: passPanel, targets: targetPanel, physics: physicsPanel };
-        this._hierarchyEl.append(tabs, filter, tree, passPanel, targetPanel, physicsPanel);
+        this._panels = { hierarchy: tree, passes: passPanel, targets: targetPanel, textures: texturePanel, physics: physicsPanel };
+        this._hierarchyEl.append(tabs, filter, tree, passPanel, targetPanel, texturePanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1019,6 +1076,10 @@ class Inspector {
         }, target => this._selectAny(target));
         this._targetList = new ListView(targetList, (rt, key) => {
             if (this._tab === 'targets') this._properties.setSubject(rt, this._targetModel, key);
+            this._updateStatus();
+        }, target => this._selectAny(target));
+        this._textureList = new ListView(textureList, (texture, key) => {
+            if (this._tab === 'textures') this._properties.setSubject(texture, this._textureModel, key);
             this._updateStatus();
         }, target => this._selectAny(target));
         this._bodyList = new ListView(bodyList, (entity) => {
@@ -1096,6 +1157,10 @@ class Inspector {
             if (typeof stored.targetPreview.enabled === 'boolean') this._previewToggle.checked = stored.targetPreview.enabled;
             if (typeof stored.targetPreview.channels === 'string') this._previewChannels.value = stored.targetPreview.channels;
         }
+        if (stored.texturePreview && typeof stored.texturePreview === 'object') {
+            if (typeof stored.texturePreview.enabled === 'boolean') this._texturePreviewToggle.checked = stored.texturePreview.enabled;
+            if (typeof stored.texturePreview.channels === 'string') this._textureChannels.value = stored.texturePreview.channels;
+        }
         if (stored.tab in this._panels) this._setTab(stored.tab);
     }
 
@@ -1121,7 +1186,8 @@ class Inspector {
                 tab: this._tab,
                 width: this._width,
                 gpuTimings: this._gpuToggle.checked,
-                targetPreview: { enabled: this._previewToggle.checked, channels: this._previewChannels.value }
+                targetPreview: { enabled: this._previewToggle.checked, channels: this._previewChannels.value },
+                texturePreview: { enabled: this._texturePreviewToggle.checked, channels: this._textureChannels.value }
             }));
         } catch (e) {
             // storage unavailable or full: settings simply do not persist
@@ -1273,53 +1339,91 @@ class Inspector {
             }
             const attachment = attachments.find(a => a.key === this._previewAttachment.value) ?? attachments[0];
 
-            // the last camera drawing the UI layer to the screen: cameras rendering into a texture would put
-            // the quad in their target, and possibly sample it at the same time
-            const uiLayer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? null;
-            const cameras = uiLayer ? this._app.systems.camera?.cameras ?? [] : [];
-            const uiCamera = cameras.filter(camera => !camera.renderTarget && camera.layers.includes(LAYERID_UI)).at(-1) ?? null;
-
             if (!attachment) {
                 note = rt === device.backBuffer ? 'The backbuffer is the screen itself, there is nothing to preview.' : 'This target has no texture to preview.';
-            } else if (!uiCamera) {
-                note = 'The preview is drawn on the UI layer, which no camera renders to the screen in this scene.';
             } else {
-                const support = previewSupport(attachment.texture, device);
-                if (!support.ok) {
-                    note = `Cannot preview the ${attachment.label} attachment: ${support.reason}.`;
-                } else {
-                    const texture = attachment.texture;
-                    // 30% of the viewport height, keeping the texture's aspect, in the corner the panel leaves free
-                    const margin = 0.02;
-                    const height = 0.3;
-                    const width = texture.height > 0 && device.width > 0 ?
-                        height * (texture.width / texture.height) * (device.height / device.width) : height;
-                    const right = this._dock === 'left' || !!this._popup;
-                    const x = right ? 1 - width - margin : margin;
-                    const y = 1 - height - margin;
-
-                    // a channel the format does not store samples as a constant, so show the color instead and say why
-                    const selected = this._previewChannels.value;
-                    const selectedLabel = this._previewChannels.selectedOptions[0]?.textContent ?? selected;
-                    const stored = attachment.key === 'depth' ? '' : formatChannels(texture.format);
-                    const missing = selected !== 'rgb' && stored !== '' && !stored.includes(selected[0]);
-
-                    this._textures.layer = uiLayer;
-                    this._textures.camera = uiCamera;
-                    this._textures.channels = missing ? 'rgb' : selected;
-                    this._textures.draw(texture, x, y, width, height);
-
-                    // depth previews are raw grayscale, the channel selection does not apply to them
-                    const channels = attachment.key === 'depth' ? '' : ` (${missing ? 'color' : selectedLabel})`;
-                    note = `Previewing the ${attachment.label} attachment${channels} at the bottom ${right ? 'right' : 'left'} of the viewport.`;
-                    if (missing) note += ` ${formatName(texture.format)} has no ${selectedLabel} channel.`;
-                }
+                note = this._drawPreviewQuad(attachment.texture, `the ${attachment.label} attachment`, attachment.key === 'depth', this._previewChannels);
             }
         }
 
-        if (this._previewNote.textContent !== note) this._previewNote.textContent = note;
-        const display = note ? '' : 'none';
-        if (this._previewNote.style.display !== display) this._previewNote.style.display = display;
+        Inspector._setNote(this._previewNote, note);
+    }
+
+    /**
+     * Draws the texture selected on the textures tab, when its preview is enabled. Runs every frame
+     * while the tab is active.
+     *
+     * @private
+     */
+    _drawTexturePreview() {
+        const texture = this._textureList.selected;
+        let note = '';
+        if (texture && this._texturePreviewToggle.checked) {
+            note = this._drawPreviewQuad(texture, `Texture "${texture.name}"`, isDepthFormat(texture.format), this._textureChannels);
+        }
+        Inspector._setNote(this._textureNote, note);
+    }
+
+    /**
+     * Draws a texture at 30% of the viewport height, keeping its aspect, in the corner the panel
+     * leaves free. The quad goes on the UI layer, drawn by the last camera rendering that layer
+     * to the screen: cameras rendering into a texture would put the quad in their target, and
+     * the UI layer renders after a camera frame's post-processing, so previewing the scene's own
+     * color target never samples a texture being rendered to.
+     *
+     * @param {Texture} texture - The texture.
+     * @param {string} label - What is being previewed, for the note.
+     * @param {boolean} depth - Whether it is a raw depth texture, which the channel selection
+     * does not apply to.
+     * @param {HTMLSelectElement} channelsSelect - The channel selection to apply.
+     * @returns {string} What is shown where, or why nothing is.
+     * @private
+     */
+    _drawPreviewQuad(texture, label, depth, channelsSelect) {
+        const device = this._app.graphicsDevice;
+        const uiLayer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? null;
+        const cameras = uiLayer ? this._app.systems.camera?.cameras ?? [] : [];
+        const uiCamera = cameras.filter(camera => !camera.renderTarget && camera.layers.includes(LAYERID_UI)).at(-1) ?? null;
+        if (!uiCamera) return 'The preview is drawn on the UI layer, which no camera renders to the screen in this scene.';
+
+        const support = previewSupport(texture, device);
+        if (!support.ok) return `Cannot preview ${label}: ${support.reason}.`;
+
+        const margin = 0.02;
+        const height = 0.3;
+        const width = texture.height > 0 && device.width > 0 ?
+            height * (texture.width / texture.height) * (device.height / device.width) : height;
+        const right = this._dock === 'left' || !!this._popup;
+        const x = right ? 1 - width - margin : margin;
+        const y = 1 - height - margin;
+
+        // a channel the format does not store samples as a constant, so show the color instead and say why
+        const selected = channelsSelect.value;
+        const selectedLabel = channelsSelect.selectedOptions[0]?.textContent ?? selected;
+        const stored = depth ? '' : formatChannels(texture.format);
+        const missing = selected !== 'rgb' && stored !== '' && !stored.includes(selected[0]);
+
+        this._textures.layer = uiLayer;
+        this._textures.camera = uiCamera;
+        this._textures.channels = missing ? 'rgb' : selected;
+        this._textures.draw(texture, x, y, width, height);
+
+        // depth previews are raw grayscale, the channel selection does not apply to them
+        const channels = depth ? '' : ` (${missing ? 'color' : selectedLabel})`;
+        let note = `Previewing ${label}${channels} at the bottom ${right ? 'right' : 'left'} of the viewport.`;
+        if (missing) note += ` ${formatName(texture.format)} has no ${selectedLabel} channel.`;
+        return note;
+    }
+
+    /**
+     * @param {HTMLElement} element - A note element.
+     * @param {string} text - The text, empty to hide the note.
+     * @private
+     */
+    static _setNote(element, text) {
+        if (element.textContent !== text) element.textContent = text;
+        const display = text ? '' : 'none';
+        if (element.style.display !== display) element.style.display = display;
     }
 
     /**
@@ -1342,7 +1446,7 @@ class Inspector {
     /**
      * Switches the list tab and points the property view at that tab's selection.
      *
-     * @param {'hierarchy'|'passes'|'targets'|'physics'} tab - The tab.
+     * @param {'hierarchy'|'passes'|'targets'|'textures'|'physics'} tab - The tab.
      * @private
      */
     _setTab(tab) {
@@ -1387,6 +1491,12 @@ class Inspector {
             if (entity !== this._properties.subject) {
                 this._properties.setSubject(entity, buildNodeModel);
             }
+        } else if (this._tab === 'textures') {
+            this._textureList.setRows(textureRows(device));
+            const texture = this._textureList.selected;
+            if (texture !== this._properties.subject) {
+                this._properties.setSubject(texture, this._textureModel, this._textureList.selectedKey);
+            }
         } else {
             if ((capture && !this._frozen) || !this._frame) {
                 this._frame = captureFrameGraph(this._app);
@@ -1417,6 +1527,7 @@ class Inspector {
         this._hierarchy.filter = value;
         this._passList.filter = value;
         this._targetList.filter = value;
+        this._textureList.filter = value;
         this._bodyList.filter = value;
         this._refreshLists(false);
     }
@@ -1438,6 +1549,9 @@ class Inspector {
         } else if (target instanceof FramePass) {
             this._setTab('passes');
             this._passList.selectItem(target);
+        } else if (target instanceof Texture) {
+            this._setTab('textures');
+            this._textureList.selectItem(target);
         }
     }
 
@@ -1570,6 +1684,13 @@ class Inspector {
                 counts = `${this._targetList.rowCount} render targets · ${this._frame?.usage.size ?? 0} used this frame`;
                 const rt = this._targetList.selected;
                 selected = rt ? (rt === device.backBuffer ? 'Backbuffer' : rt.name) : '';
+                break;
+            }
+            case 'textures': {
+                const textures = collectTextures(device);
+                const bytes = textures.reduce((sum, texture) => sum + texture.gpuSize, 0);
+                counts = `${textures.length} textures · ${formatBytes(bytes)}`;
+                selected = this._textureList.selected?.name ?? '';
                 break;
             }
             case 'physics': {

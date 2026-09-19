@@ -2,6 +2,8 @@ import { Component } from '../../framework/components/component.js';
 import { Entity } from '../../framework/entity.js';
 import { ScriptType } from '../../framework/script/script-type.js';
 import { Script } from '../../framework/script/script.js';
+import { Material } from '../../scene/materials/material.js';
+import { MeshInstance } from '../../scene/mesh-instance.js';
 
 import { describeValue } from './describe.js';
 import { makeSection, push, read, reflectRows } from './model.js';
@@ -18,6 +20,14 @@ const SKIP_COMPONENT = [
 
 // script properties that are plumbing rather than state
 const SKIP_SCRIPT = ['enabled', 'app', 'entity'];
+
+// mesh instance properties shown up front, or that are plumbing
+const SKIP_MESH_INSTANCE = ['node', 'mesh', 'material', 'visible', 'key'];
+
+// material getters that only exist to warn about their removal or deprecation
+const SKIP_MATERIAL = [
+    'ambientTint', 'anisotropy', 'aoMapVertexColor', 'blend', 'chunks', 'clearCoatGlossiness', 'diffuseMapVertexColor', 'diffuseTint', 'dirty', 'emissiveMapVertexColor', 'emissiveTint', 'glossMapVertexColor', 'lightMapVertexColor', 'metalnessMapVertexColor', 'opacityMapVertexColor', 'shader', 'sheenGlossiness', 'sheenTint', 'specularMapVertexColor', 'specularTint'
+];
 
 /**
  * @param {GraphNode} node - The node.
@@ -70,6 +80,51 @@ function componentSection(name, component) {
 }
 
 /**
+ * One collapsed section per mesh instance of a component, followed by one per distinct material
+ * they use. Textures on a material are links that preview them in the viewport.
+ *
+ * @param {string} name - The component name.
+ * @param {Component} component - A component with a `meshInstances` array, such as render or model.
+ * @returns {PropertySection[]} The sections, none when the component has no mesh instances.
+ */
+function meshInstanceSections(name, component) {
+    const sections = [];
+    const instances = /** @type {any} */ (component).meshInstances;
+    if (!Array.isArray(instances) || instances.length === 0) return sections;
+
+    /** @type {Map<Material, string[]>} */
+    const materials = new Map();
+
+    instances.forEach((instance, index) => {
+        if (!(instance instanceof MeshInstance)) return;
+        const section = makeSection(`mi:${name}:${index}`, `${name} › mesh instance ${index}`, true);
+        push(section, 'node', read(instance, 'node'));
+        push(section, 'mesh', read(instance, 'mesh'));
+        push(section, 'material', read(instance, 'material'));
+        push(section, 'visible', read(instance, 'visible'));
+        reflectRows(section, instance, [], SKIP_MESH_INSTANCE);
+        sections.push(section);
+
+        const material = instance.material;
+        if (material instanceof Material) {
+            const users = materials.get(material) ?? [];
+            users.push(`mesh instance ${index}`);
+            materials.set(material, users);
+        }
+    });
+
+    let index = 0;
+    for (const [material, users] of materials) {
+        const section = makeSection(`mat:${name}:${index++}`, `${name} › ${material.constructor.name} "${material.name}"`, true);
+        push(section, 'used by', describeValue(users));
+        reflectRows(section, material, [], SKIP_MATERIAL);
+        sections.push(section);
+    }
+
+    return sections;
+}
+
+/**
  * @param {import('../../framework/components/script/component.js').ScriptComponent} scriptComponent - The script component.
  * @returns {PropertySection[]} One section per script instance.
  */
@@ -100,8 +155,9 @@ function scriptSections(scriptComponent) {
 }
 
 /**
- * Everything the property view shows for a node: identity, transform, one section per component
- * and one per script instance.
+ * Everything the property view shows for a node: identity, transform, one section per component,
+ * collapsed sections for a component's mesh instances and their materials, and one section per
+ * script instance.
  *
  * @param {GraphNode} node - The node.
  * @returns {PropertySection[]} The sections.
@@ -113,6 +169,7 @@ function buildNodeModel(node) {
         for (const name of Object.keys(node.c)) {
             const component = node.c[name];
             sections.push(componentSection(name, component));
+            sections.push(...meshInstanceSections(name, component));
             if (name === 'script') {
                 sections.push(...scriptSections(/** @type {any} */ (component)));
             }

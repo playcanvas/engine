@@ -257,6 +257,7 @@ class PropertyView {
             rows: new Map()
         };
         elements.el.append(elements.titleEl, elements.rowsEl);
+        if (section.collapsed) this._collapsed.add(section.key);
         elements.titleEl.addEventListener('click', () => {
             if (this._collapsed.has(section.key)) this._collapsed.delete(section.key);
             else this._collapsed.add(section.key);

@@ -22,15 +22,17 @@ import { collectProperties, describeValue } from './describe.js';
  * @property {string} key - A key unique within the view, stable across refreshes.
  * @property {string} title - The title.
  * @property {PropertyRow[]} rows - The rows.
+ * @property {boolean} [collapsed] - Whether the section starts out collapsed.
  */
 
 /**
  * @param {string} key - The section key.
  * @param {string} title - The section title.
+ * @param {boolean} [collapsed] - Whether the section starts out collapsed.
  * @returns {PropertySection} An empty section.
  */
-function makeSection(key, title) {
-    return { key, title, rows: [] };
+function makeSection(key, title, collapsed = false) {
+    return { key, title, rows: [], collapsed };
 }
 
 /**
