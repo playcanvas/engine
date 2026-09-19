@@ -22,6 +22,7 @@ import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 describe('Application', function () {
 
     let app;
+    const assetPath = 'http://localhost:3000/test/assets/';
 
     beforeEach(function () {
         jsdomSetup();
@@ -136,6 +137,45 @@ describe('Application', function () {
             expect(asset.registry).to.be.null;
 
             app = null;
+        });
+
+    });
+
+    describe('#preload', function () {
+
+        it('should preload assets with preload set to true', function (done) {
+            const assets = [
+                new Asset('model', 'container', { url: `${assetPath}test.glb` }),
+                new Asset('styling', 'css', { url: `${assetPath}test.css` })
+            ];
+            assets.forEach((asset) => {
+                asset.preload = true;
+                app.assets.add(asset);
+            });
+
+            app.preload(function () {
+                assets.forEach((asset) => {
+                    expect(asset.loaded).to.be.true;
+                });
+                done();
+            });
+        });
+
+        it('should not preload assets with preload set to false', function (done) {
+            const assets = [
+                new Asset('model', 'container', { url: `${assetPath}test.glb` }),
+                new Asset('styling', 'css', { url: `${assetPath}test.css` })
+            ];
+            assets.forEach((asset) => {
+                app.assets.add(asset);
+            });
+
+            app.preload(function () {
+                assets.forEach((asset) => {
+                    expect(asset.loaded).to.be.false;
+                });
+                done();
+            });
         });
 
     });
