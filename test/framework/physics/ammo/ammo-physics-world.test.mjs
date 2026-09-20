@@ -925,12 +925,14 @@ describe('AmmoPhysicsWorld', function () {
             expect(liveNames(live)).to.deep.equal([]);
         });
 
-        it('destroys a triangle mesh with its component and the shared BVH at the end of the step', function () {
+        it('destroys a triangle mesh with its component and the BVH after the step', function () {
             const live = trackShapes();
 
             const mesh = createCubeMesh();
             const e = createMeshEntity(mesh);
-            expect(liveNames(live)).to.deep.equal(['btBvhTriangleMeshShape', 'btCompoundShape', 'btScaledBvhTriangleMeshShape']);
+            expect(liveNames(live)).to.deep.equal([
+                'btBvhTriangleMeshShape', 'btCompoundShape', 'btScaledBvhTriangleMeshShape'
+            ]);
 
             // the shared BVH outlives the wrapper until the step, so a collider rebuilt within a
             // frame can wrap it again
@@ -947,11 +949,17 @@ describe('AmmoPhysicsWorld', function () {
             const mesh = createCubeMesh();
             const a = createMeshEntity(mesh, { x: 0 });
             createMeshEntity(mesh, { x: 10 });
-            expect(liveNames(live)).to.deep.equal(['btBvhTriangleMeshShape', 'btCompoundShape', 'btCompoundShape', 'btScaledBvhTriangleMeshShape', 'btScaledBvhTriangleMeshShape']);
+            expect(liveNames(live)).to.deep.equal([
+                'btBvhTriangleMeshShape',
+                'btCompoundShape', 'btCompoundShape',
+                'btScaledBvhTriangleMeshShape', 'btScaledBvhTriangleMeshShape'
+            ]);
 
             a.destroy();
             step();
-            expect(liveNames(live)).to.deep.equal(['btBvhTriangleMeshShape', 'btCompoundShape', 'btScaledBvhTriangleMeshShape']);
+            expect(liveNames(live)).to.deep.equal([
+                'btBvhTriangleMeshShape', 'btCompoundShape', 'btScaledBvhTriangleMeshShape'
+            ]);
         });
 
         it('destroys a convex hull with its component', function () {
