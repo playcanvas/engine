@@ -153,6 +153,7 @@ const styles = /* css */ `
     .pci-tabs {
         flex: 0 0 auto;
         display: flex;
+        flex-wrap: wrap;
         gap: 2px;
         padding: 4px 8px 0;
         background: #24272d;
@@ -168,6 +169,7 @@ const styles = /* css */ `
         border-radius: 4px 4px 0 0;
         padding: 3px 10px;
         margin-bottom: -1px;
+        white-space: nowrap;
         cursor: pointer;
     }
 
@@ -349,6 +351,8 @@ const styles = /* css */ `
 
     .pci-cell-name {
         flex-shrink: 0;
+        /* long generated names (shaders) truncate rather than push the other cells out of view */
+        max-width: 60%;
     }
 
     .pci-cell-info {
@@ -589,6 +593,70 @@ const styles = /* css */ `
 
     .pci-link:hover {
         color: #9ad7ff;
+    }
+
+    .pci-code-row .pci-value {
+        cursor: pointer;
+    }
+
+    .pci-code-row .pci-value:hover {
+        color: #ffffff;
+    }
+
+    .pci-copy {
+        flex: 0 0 auto;
+        font: inherit;
+        font-size: 10px;
+        line-height: 14px;
+        padding: 0 6px;
+        color: #a3a8b1;
+        background: #2f333b;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+
+    .pci-copy:hover {
+        color: #ffffff;
+        background: #3a4a6b;
+    }
+
+    .pci-code {
+        margin: 2px 8px 6px 8px;
+        padding: 6px 0;
+        max-height: 360px;
+        overflow: auto;
+        background: #16181d;
+        border: 1px solid #2c2f36;
+        border-radius: 3px;
+        font-family: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+        font-size: 10.5px;
+        line-height: 15px;
+        color: #d4d4d4;
+        tab-size: 4;
+        counter-reset: line;
+        user-select: text;
+        -webkit-user-select: text;
+    }
+
+    .pci-code-line {
+        display: block;
+        white-space: pre;
+        padding-right: 8px;
+        counter-increment: line;
+    }
+
+    .pci-code-line::before {
+        content: counter(line);
+        display: inline-block;
+        width: 3.5em;
+        margin-right: 10px;
+        padding-right: 6px;
+        text-align: right;
+        color: #5c626c;
+        border-right: 1px solid #2c2f36;
+        user-select: none;
+        -webkit-user-select: none;
     }
 
     .pci-swatch {

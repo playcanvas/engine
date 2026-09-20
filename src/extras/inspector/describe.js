@@ -14,6 +14,7 @@ import { Asset } from '../../framework/asset/asset.js';
 import { Entity } from '../../framework/entity.js';
 import { pixelFormatInfo } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Shader } from '../../platform/graphics/shader.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Layer } from '../../scene/layer.js';
@@ -30,9 +31,11 @@ import { Sprite } from '../../scene/sprite.js';
  * @property {string} text - The display text.
  * @property {string} [cls] - A class suffix selecting the color: 'num', 'bool', 'str', 'null',
  * 'obj', 'ref' or 'err'.
- * @property {GraphNode|Texture} [target] - An object the value refers to. Rendered as a link
- * that selects it: a node in the hierarchy, a texture on the textures tab.
+ * @property {GraphNode|Texture|Shader} [target] - An object the value refers to. Rendered as a
+ * link that selects it: a node in the hierarchy, a texture or shader on its tab.
  * @property {string} [swatch] - A CSS color, rendered as a chip in front of the text.
+ * @property {string} [code] - A block of text, such as shader source, shown under the row when it
+ * is expanded. The text is its summary, and the row gets a copy button.
  * @property {Described[]} [items] - Expanded entries of a collection, each carrying a `label`.
  * @property {string} [label] - The label of an expanded collection entry.
  */
@@ -184,6 +187,9 @@ function describeValue(value, depth = 0) {
         return { text: `RenderTarget "${value.name}" ${value.width}×${value.height}`, cls: 'obj' };
     }
     if (value instanceof Material) return { text: `${typeName(value)} "${value.name}"`, cls: 'obj' };
+    if (value instanceof Shader) {
+        return { text: `Shader #${value.id} "${value.name}"${value.failed ? ' (failed)' : value.ready ? '' : ' (compiling)'}`, cls: 'obj', target: value };
+    }
     if (value instanceof Mesh) {
         const prim = value.primitive?.[0];
         return {

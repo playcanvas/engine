@@ -9,16 +9,21 @@ import { Inspector } from '../../../src/extras/inspector/inspector.js';
 import { buildNodeModel } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
 import { formatChannels, previewAttachments, previewSupport } from '../../../src/extras/inspector/render-target-view.js';
+import { buildShaderModel, formatBindGroup, formatUniformBuffer, shaderRows } from '../../../src/extras/inspector/shader-view.js';
 import { buildTextureModel, collectTextures, formatBytes, textureRows } from '../../../src/extras/inspector/texture-view.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat, BindUniformBufferFormat } from '../../../src/platform/graphics/bind-group-format.js';
 import {
-    FILTER_LINEAR, FILTER_NEAREST, FUNC_LESS, PIXELFORMAT_111110F, PIXELFORMAT_BGRA8, PIXELFORMAT_DEPTH, PIXELFORMAT_DXT1,
+    FILTER_LINEAR, FILTER_NEAREST, FUNC_LESS, PIXELFORMAT_111110F, SAMPLETYPE_DEPTH, SEMANTIC_POSITION, SHADERLANGUAGE_WGSL,
+    SHADERSTAGE_COMPUTE, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, TEXTUREDIMENSION_2D, UNIFORMTYPE_FLOAT, UNIFORMTYPE_MAT4, UNIFORMTYPE_VEC3, PIXELFORMAT_BGRA8, PIXELFORMAT_DEPTH, PIXELFORMAT_DXT1,
     PIXELFORMAT_R32U, PIXELFORMAT_R8, PIXELFORMAT_RG16F, PIXELFORMAT_RGB10A2, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8,
     PIXELFORMAT_SRGB8
 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
+import { Shader } from '../../../src/platform/graphics/shader.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { UniformBufferFormat, UniformFormat } from '../../../src/platform/graphics/uniform-buffer-format.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -375,7 +380,37 @@ describe('Inspector', function () {
         expect(labels).to.not.include.members(['chunks', 'shader', 'dirty', 'anisotropy', 'diffuseTint', 'sheenGlossiness']);
         expect(painted.rows.find(row => row.label === 'diffuseMap').value.target).to.equal(texture);
 
+        // compiled variants link to the shaders tab
+        const shader = new Shader(device, { name: 'painted-forward', vshader: 'void main() {}', fshader: 'void main() {}' });
+        material.variants.set(1, shader);
+        const variants = buildNodeModel(entity).find(section => section.key === 'mat:render:0').rows.find(row => row.label === 'variants');
+        expect(variants.value.text).to.equal('Array(1) of Shader');
+        expect(variants.value.items[0].target).to.equal(shader);
+        expect(variants.value.items[0].text).to.match(/^Shader #\d+ "painted-forward"/);
+
+        shader.destroy();
         texture.destroy();
+    });
+
+    it('lists the device shaders and selects a linked shader on the shaders tab', function () {
+        const inspector = /** @type {any} */ (new Inspector(app));
+        const device = app.graphicsDevice;
+        const glsl = new Shader(device, { name: 'lit', vshader: 'void main() {}', fshader: 'void main() {}', attributes: { vertex_position: SEMANTIC_POSITION } });
+        const wgsl = new Shader(device, { name: 'blit', vshader: 'fn main() {}', fshader: 'fn main() {}', shaderLanguage: SHADERLANGUAGE_WGSL });
+        expect(device.shaders).to.include.members([glsl, wgsl]);
+
+        inspector._selectAny(wgsl);
+        expect(inspector._tab).to.equal('shaders');
+        expect(inspector._shaderList.selected).to.equal(wgsl);
+        expect(inspector._properties.subject).to.equal(wgsl);
+        const rows = [...panel(inspector).querySelectorAll('.pci-lrow')].map(row => row.textContent);
+        expect(rows.some(text => text.startsWith('lit') && text.includes('GLSL'))).to.be.true;
+        expect(rows.some(text => text.startsWith('blit') && text.includes('WGSL'))).to.be.true;
+
+        glsl.destroy();
+        wgsl.destroy();
+        expect(device.shaders).to.not.include.members([glsl, wgsl]);
+        inspector.destroy();
     });
 
     it('lists the device textures largest first and selects a linked texture on the textures tab', function () {
@@ -440,6 +475,33 @@ describe('Inspector property view', function () {
         sections[1].querySelector('.pci-section-title').click();
         expect(sections[1].classList.contains('pci-collapsed')).to.be.false;
         expect(sections[1].querySelector('.pci-value').textContent).to.equal('y');
+    });
+
+    it('expands a code row into a numbered block with a copy button', function () {
+        const container = document.createElement('div');
+        const view = new PropertyView(container, () => {});
+        let code = 'void main() {\n}';
+        const model = () => [{ key: 's', title: 'Sources', rows: [{ key: 'v', label: 'vertex', value: { text: '2 lines', cls: 'num', code } }] }];
+        view.setSubject({}, model);
+        const row = container.querySelector('.pci-prop');
+        expect(row.classList.contains('pci-code-row')).to.be.true;
+        expect(row.querySelector('.pci-value').textContent).to.equal('▸ 2 lines');
+        expect(row.querySelector('.pci-copy')).to.exist;
+        expect(container.querySelector('.pci-code')).to.equal(null);
+
+        row.querySelector('.pci-value').click();
+        const block = container.querySelector('.pci-code');
+        expect(row.querySelector('.pci-value').textContent).to.equal('▾ 2 lines');
+        expect(block.previousSibling).to.equal(row);
+        expect([...block.querySelectorAll('.pci-code-line')].map(line => line.textContent)).to.deep.equal(['void main() {', '}']);
+
+        // a refresh with changed code rewrites the block in place, and the state survives it
+        code = 'a\nb\nc';
+        view.refresh();
+        expect(container.querySelectorAll('.pci-code-line')).to.have.lengthOf(3);
+        row.querySelector('.pci-value').click();
+        expect(container.querySelector('.pci-code')).to.equal(null);
+        expect(row.querySelector('.pci-copy')).to.exist;
     });
 });
 
@@ -563,11 +625,94 @@ describe('Inspector texture view', function () {
         rt.destroy();
     });
 
+    it('lays out uniform buffer and bind group formats as aligned text', function () {
+        const uniforms = new UniformBufferFormat(device, [
+            new UniformFormat('matrix_model', UNIFORMTYPE_MAT4),
+            new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+            new UniformFormat('light_radius', UNIFORMTYPE_FLOAT, 2)
+        ]);
+        const layout = formatUniformBuffer(uniforms);
+        expect(layout.split('\n')[0]).to.equal(`uniform buffer, ${uniforms.byteSize} bytes, 3 uniforms`);
+        expect(layout).to.match(/^0 +64 +mat4 +matrix_model$/m);
+        expect(layout).to.match(/^64 +12 +vec3 +view_position$/m);
+        expect(layout).to.match(/float\[2\] +light_radius\[0\]$/m);
+
+        const bindings = new BindGroupFormat(device, [
+            new BindUniformBufferFormat('ub_mesh', SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT),
+            new BindTextureFormat('texture_diffuseMap', SHADERSTAGE_FRAGMENT),
+            new BindTextureFormat('shadowMap', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH, false),
+            new BindStorageBufferFormat('particles', SHADERSTAGE_COMPUTE, true)
+        ]);
+        const text = formatBindGroup(bindings);
+        expect(text.split('\n')[0]).to.equal('bind group, 4 bindings');
+        expect(text).to.match(/uniform buffer +ub_mesh +vertex, fragment$/m);
+        expect(text).to.match(/texture +texture_diffuseMap +2d float \+ sampler texture_diffuseMap_sampler +fragment$/m);
+        expect(text).to.match(/texture +shadowMap +2d depth +fragment$/m);
+        expect(text).to.match(/storage buffer +particles +read-only +compute$/m);
+        bindings.destroy();
+    });
+
     it('formats byte counts in the largest fitting unit', function () {
         expect(formatBytes(512)).to.equal('512 B');
         expect(formatBytes(1536)).to.equal('1.5 KB');
         expect(formatBytes(3 * 1024 * 1024)).to.equal('3.00 MB');
         expect(formatBytes(2.5 * 1024 * 1024 * 1024)).to.equal('2.50 GB');
+    });
+});
+
+describe('Inspector shader view', function () {
+    let device;
+
+    beforeEach(function () {
+        jsdomSetup();
+        device = new NullGraphicsDevice(document.createElement('canvas'));
+    });
+
+    afterEach(function () {
+        device.destroy();
+        jsdomTeardown();
+    });
+
+    it('rows carry the language, compute and failure tags and the model reads the definition', function () {
+        const lit = new Shader(device, { name: 'lit', vshader: 'a\nb\nc', fshader: 'd', attributes: { vertex_position: SEMANTIC_POSITION } });
+        const compute = new Shader(device, { name: 'sort', cshader: 'fn main() {}', shaderLanguage: SHADERLANGUAGE_WGSL });
+        // a definition without source never reaches the device, so it is not listed
+        const broken = new Shader(device, { name: 'broken', vshader: '', fshader: '' });
+        lit.ready = true;
+        compute.failed = true;
+
+        const rows = shaderRows(device);
+        expect(rows.map(row => row.name)).to.deep.equal(['lit', 'sort']);
+        expect(rows[0].cells.map(cell => cell.text)).to.deep.equal(['lit', 'GLSL', `#${lit.id}`]);
+        expect(rows[0].dim).to.be.false;
+        expect(rows[1].cells.map(cell => cell.text)).to.deep.equal(['sort', 'WGSL', 'compute', 'failed', `#${compute.id}`]);
+        expect(rows[1].dim).to.be.true;
+
+        const [general, sources, groups, attributes] = buildShaderModel(lit);
+        const byLabel = (section, label) => section.rows.find(row => row.label === label).value.text;
+        expect(byLabel(general, 'language')).to.equal('GLSL');
+        expect(byLabel(general, 'state')).to.equal('ready');
+        expect(byLabel(attributes, 'declared')).to.match(/vertex_position/);
+        expect(byLabel(buildShaderModel(broken)[0], 'state')).to.equal('failed');
+
+        // every kept version of a stage is an expandable code block, listed under the stage
+        expect(sources.rows.map(row => row.label)).to.deep.equal(['vertex', 'original', 'preprocessed', 'fragment', 'original', 'preprocessed']);
+        const vertex = sources.rows[0];
+        expect(vertex.value.text).to.equal('2 versions');
+        expect(vertex.value.items[0].code).to.equal('a\nb\nc');
+        expect(vertex.value.items[0].text).to.equal('3 lines');
+        // the null device does not rewrite sources, so nothing beyond the preprocessed text is kept
+        expect(vertex.value.items[1].label).to.equal('preprocessed');
+        expect(vertex.value.items[1].code).to.be.a('string');
+        expect(sources.rows[1].indent).to.be.true;
+        expect(buildShaderModel(compute)[1].rows[0].label).to.equal('compute');
+
+        // shaders not processed against bind groups say so
+        expect(groups.rows[0].value.text).to.match(/not processed/);
+
+        expect(broken.failed).to.be.true;
+        lit.destroy();
+        compute.destroy();
     });
 });
 

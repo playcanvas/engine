@@ -10,6 +10,9 @@
  * @property {string} text - The value text last rendered.
  * @property {string} cls - The value class last rendered.
  * @property {*} target - The object the value links to, if any.
+ * @property {HTMLElement|null} codeEl - The code block under the row, once expanded.
+ * @property {HTMLElement|null} copyEl - The copy button of a code row.
+ * @property {string} code - The code last rendered.
  */
 
 /**
@@ -84,6 +87,14 @@ class PropertyView {
      * @private
      */
     _collapsed = new Set();
+
+    /**
+     * Keys of the code rows whose block is expanded, as section key and row key.
+     *
+     * @type {Set<string>}
+     * @private
+     */
+    _expanded = new Set();
 
     /**
      * @type {HTMLElement|null}
@@ -202,11 +213,16 @@ class PropertyView {
             }
             elements.el.classList.toggle('pci-indent', !!row.indent);
 
-            const { text, cls = 'obj', target = null, swatch } = row.value;
-            if (elements.text !== text) {
-                elements.text = text;
-                elements.valueEl.lastChild.textContent = text;
+            const { text, cls = 'obj', target = null, swatch, code } = row.value;
+            const hasCode = typeof code === 'string';
+            const expanded = hasCode && this._expanded.has(`${section.key}\0${row.key}`);
+            const shown = hasCode ? `${expanded ? '▾' : '▸'} ${text}` : text;
+            if (elements.text !== shown) {
+                elements.text = shown;
+                elements.valueEl.lastChild.textContent = shown;
             }
+            elements.el.classList.toggle('pci-code-row', hasCode);
+            this._renderCode(section, elements, hasCode ? code : null, expanded);
             if (elements.cls !== cls) {
                 elements.valueEl.classList.remove(`pci-v-${elements.cls}`);
                 elements.valueEl.classList.add(`pci-v-${cls}`);
@@ -234,12 +250,78 @@ class PropertyView {
             } else {
                 cursor = cursor.nextSibling;
             }
+            // the code block follows its row
+            if (elements.codeEl) {
+                if (elements.codeEl !== cursor) {
+                    section.rowsEl.insertBefore(elements.codeEl, cursor);
+                } else {
+                    cursor = cursor.nextSibling;
+                }
+            }
         }
 
         for (const [key, elements] of section.rows) {
             if (!seen.has(key)) {
                 elements.el.remove();
+                elements.codeEl?.remove();
                 section.rows.delete(key);
+            }
+        }
+    }
+
+    /**
+     * Keeps the copy button and the expanded code block of a row in step with its value.
+     *
+     * @param {SectionElements} section - The section the row belongs to.
+     * @param {RowElements} elements - The row.
+     * @param {string|null} code - The code, or null for a row without any.
+     * @param {boolean} expanded - Whether the block is shown.
+     * @private
+     */
+    _renderCode(section, elements, code, expanded) {
+        if (code === null) {
+            elements.copyEl?.remove();
+            elements.copyEl = null;
+            elements.codeEl?.remove();
+            elements.codeEl = null;
+            elements.code = '';
+            return;
+        }
+
+        if (!elements.copyEl) {
+            elements.copyEl = el('button', 'pci-copy');
+            elements.copyEl.textContent = 'Copy';
+            elements.copyEl.title = 'Copy to the clipboard';
+            elements.copyEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navigator.clipboard?.writeText(elements.code);
+                elements.copyEl.textContent = 'Copied';
+                setTimeout(() => {
+                    if (elements.copyEl) elements.copyEl.textContent = 'Copy';
+                }, 1200);
+            });
+            elements.el.appendChild(elements.copyEl);
+        }
+
+        if (!expanded) {
+            elements.codeEl?.remove();
+            elements.codeEl = null;
+            elements.code = code;
+            return;
+        }
+
+        if (!elements.codeEl) {
+            elements.codeEl = el('pre', 'pci-code');
+            elements.code = '';
+            section.rowsEl.insertBefore(elements.codeEl, elements.el.nextSibling);
+        }
+        if (elements.code !== code || !elements.codeEl.firstChild) {
+            elements.code = code;
+            elements.codeEl.textContent = '';
+            for (const line of code.split('\n')) {
+                const lineEl = el('span', 'pci-code-line');
+                lineEl.textContent = line;
+                elements.codeEl.appendChild(lineEl);
             }
         }
     }
@@ -281,12 +363,22 @@ class PropertyView {
             swatchEl: null,
             text: '',
             cls: 'obj',
-            target: null
+            target: null,
+            codeEl: null,
+            copyEl: null,
+            code: ''
         };
         elements.valueEl.appendChild(document.createTextNode(''));
         elements.el.append(elements.labelEl, elements.valueEl);
         elements.valueEl.addEventListener('click', () => {
-            if (elements.target) this.onSelect?.(elements.target);
+            if (elements.target) {
+                this.onSelect?.(elements.target);
+            } else if (elements.el.classList.contains('pci-code-row')) {
+                const key = `${section.key}\0${row.key}`;
+                if (this._expanded.has(key)) this._expanded.delete(key);
+                else this._expanded.add(key);
+                this.refresh();
+            }
         });
         section.rows.set(row.key, elements);
         return elements;

@@ -24,9 +24,13 @@ const SKIP_SCRIPT = ['enabled', 'app', 'entity'];
 // mesh instance properties shown up front, or that are plumbing
 const SKIP_MESH_INSTANCE = ['node', 'mesh', 'material', 'visible', 'key'];
 
-// material getters that only exist to warn about their removal or deprecation
+// material getters that only exist to warn about their removal or deprecation, and the variant cache shown up front
 const SKIP_MATERIAL = [
-    'ambientTint', 'anisotropy', 'aoMapVertexColor', 'blend', 'chunks', 'clearCoatGlossiness', 'diffuseMapVertexColor', 'diffuseTint', 'dirty', 'emissiveMapVertexColor', 'emissiveTint', 'glossMapVertexColor', 'lightMapVertexColor', 'metalnessMapVertexColor', 'opacityMapVertexColor', 'shader', 'sheenGlossiness', 'sheenTint', 'specularMapVertexColor', 'specularTint'
+    'variants',
+    'ambientTint', 'anisotropy', 'aoMapVertexColor', 'aoUvSet', 'blend', 'chunks', 'clearCoatGlossiness',
+    'diffuseMapVertexColor', 'diffuseTint', 'dirty', 'emissiveMapVertexColor', 'emissiveTint',
+    'glossMapVertexColor', 'lightMapVertexColor', 'metalnessMapVertexColor', 'opacityMapVertexColor', 'shader',
+    'sheenGlossiness', 'sheenTint', 'specularMapVertexColor', 'specularTint'
 ];
 
 /**
@@ -117,6 +121,8 @@ function meshInstanceSections(name, component) {
     for (const [material, users] of materials) {
         const section = makeSection(`mat:${name}:${index++}`, `${name} › ${material.constructor.name} "${material.name}"`, true);
         push(section, 'used by', describeValue(users));
+        // the compiled variants, one per shader pass and define set, linking to the shaders tab
+        push(section, 'variants', describeValue([...material.variants.values()]));
         reflectRows(section, material, [], SKIP_MATERIAL);
         sections.push(section);
     }
