@@ -40,16 +40,30 @@ describe('GamePads', function () {
     /** @type {(object|null)[]} */
     let devices;
 
+    /** @type {boolean} */
+    let hadNavigator;
+
     beforeEach(function () {
         jsdomSetup();
         devices = [];
-        navigator.getGamepads = () => devices;
+
+        // Older Node runtimes have no global navigator, so borrow JSDOM's before installing
+        // the fake Gamepad API on it.
+        hadNavigator = 'navigator' in globalThis;
+        if (!hadNavigator) {
+            globalThis.navigator = window.navigator;
+        }
+        globalThis.navigator.getGamepads = () => devices;
+
         gamepads = new GamePads();
     });
 
     afterEach(function () {
         gamepads.destroy();
-        delete navigator.getGamepads;
+        delete globalThis.navigator.getGamepads;
+        if (!hadNavigator) {
+            delete globalThis.navigator;
+        }
         jsdomTeardown();
     });
 
