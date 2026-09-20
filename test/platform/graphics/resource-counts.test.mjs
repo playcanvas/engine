@@ -68,6 +68,7 @@ describe('Tracked resource counts', function () {
             buffers: new Set(),
             textures: new Set(),
             targets: new Set(),
+            shaders: [{}],
             _bindGroups: new Set([{}]),
             _bindGroupFormats: new Set([{}, {}]),
             _computes: new Set(),
@@ -83,6 +84,7 @@ describe('Tracked resource counts', function () {
         expect(counts.get('bindGroupFormats')).to.equal(2);
         expect(counts.get('computes')).to.equal(0);
         expect(counts.get('drawCommands')).to.equal(1);
+        expect(counts.get('shaders')).to.equal(1);
         device.renderPipeline.cache.clear();
         device.computePipeline.cache = new Map();
         device._bindGroups.clear();
