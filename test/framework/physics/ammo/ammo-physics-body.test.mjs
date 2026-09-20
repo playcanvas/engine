@@ -124,4 +124,156 @@ describe('AmmoPhysicsBody', function () {
             expect(frames.filter(f => f < 20)).to.deep.equal([]);
         });
     });
+
+    describe('gravity scale', function () {
+
+        /**
+         * Creates an enabled dynamic box at the given height.
+         *
+         * @param {number} y - The world Y position.
+         * @param {object} [data] - Extra rigid body component data.
+         * @returns {Entity} The entity.
+         */
+        function createBox(y, data = {}) {
+            const box = createDisabledBox(y);
+            Object.assign(box.rigidbody, data);
+            box.enabled = true;
+            return box;
+        }
+
+        /**
+         * Runs the application for a number of frames at 60 Hz.
+         *
+         * @param {number} frames - The number of frames to run.
+         */
+        function run(frames) {
+            for (let i = 0; i < frames; i++) {
+                app.update(1 / 60);
+            }
+        }
+
+        it('does not fall with a gravity scale of 0', function () {
+            const box = createBox(5, { gravityScale: 0 });
+
+            run(30);
+
+            expect(box.getPosition().y).to.be.closeTo(5, 1e-6);
+            expect(box.rigidbody.linearVelocity.y).to.equal(0);
+        });
+
+        it('scales the acceleration of the body', function () {
+            const unscaled = createBox(5);
+            const doubled = createBox(15, { gravityScale: 2 });
+            const rising = createBox(25, { gravityScale: -0.5 });
+
+            run(30);
+
+            const vy = unscaled.rigidbody.linearVelocity.y;
+            expect(vy).to.be.below(-1);
+            expect(doubled.rigidbody.linearVelocity.y).to.be.closeTo(2 * vy, 1e-4);
+            expect(rising.rigidbody.linearVelocity.y).to.be.closeTo(-0.5 * vy, 1e-4);
+        });
+
+        it('applies a scale set while the body is disabled', function () {
+            const box = createDisabledBox(5);
+            box.rigidbody.gravityScale = 0;
+            run(5);
+
+            box.enabled = true;
+            run(30);
+
+            expect(box.getPosition().y).to.be.closeTo(5, 1e-6);
+        });
+
+        it('keeps the scale across disable/enable cycles', function () {
+            const box = createBox(5, { gravityScale: 0 });
+            run(10);
+
+            box.enabled = false;
+            run(5);
+            box.enabled = true;
+            run(30);
+
+            expect(box.getPosition().y).to.be.closeTo(5, 1e-6);
+        });
+
+        it('keeps the scale when the body is rebuilt on a type change', function () {
+            const box = createBox(5, { gravityScale: 0 });
+            run(10);
+
+            box.rigidbody.type = 'kinematic';
+            run(5);
+            box.rigidbody.type = 'dynamic';
+            run(30);
+
+            expect(box.getPosition().y).to.be.closeTo(5, 1e-6);
+        });
+
+        it('keeps the scale when the mass changes', function () {
+            const box = createBox(5, { gravityScale: 0 });
+            run(10);
+
+            box.rigidbody.mass = 5;
+            run(30);
+
+            expect(box.getPosition().y).to.be.closeTo(5, 1e-6);
+        });
+
+        it('follows a world gravity change', function () {
+            const unscaled = createBox(5);
+            const doubled = createBox(15, { gravityScale: 2 });
+            const floating = createBox(25, { gravityScale: 0 });
+            run(10);
+
+            app.systems.rigidbody.gravity = new Vec3(0, -1, 0);
+            unscaled.rigidbody.linearVelocity = Vec3.ZERO;
+            doubled.rigidbody.linearVelocity = Vec3.ZERO;
+            run(30);
+
+            const vy = unscaled.rigidbody.linearVelocity.y;
+            expect(vy).to.be.below(-0.1).and.above(-1);
+            expect(doubled.rigidbody.linearVelocity.y).to.be.closeTo(2 * vy, 1e-4);
+            expect(floating.getPosition().y).to.be.closeTo(25, 1e-6);
+        });
+
+        it('returns to the world gravity when the scale is reset to 1', function () {
+            const unscaled = createBox(5);
+            const box = createBox(15, { gravityScale: 0 });
+            run(10);
+
+            box.rigidbody.gravityScale = 1;
+            unscaled.rigidbody.linearVelocity = Vec3.ZERO;
+            run(30);
+
+            expect(box.rigidbody.linearVelocity.y).to.be.closeTo(unscaled.rigidbody.linearVelocity.y, 1e-4);
+        });
+
+        it('works without the rigid body flag bindings of newer ammo builds', function () {
+            // without BT_DISABLE_WORLD_GRAVITY, Bullet hands the body the world gravity when it
+            // is added to the world and when the world gravity changes; the system re-applies the
+            // scale at both points
+            const proto = Ammo.btRigidBody.prototype;
+            const { setFlags, getFlags } = proto;
+            expect(setFlags).to.be.a('function');
+            delete proto.setFlags;
+            delete proto.getFlags;
+
+            try {
+                const box = createBox(5, { gravityScale: 0 });
+                run(10);
+
+                box.enabled = false;
+                box.enabled = true;
+                run(10);
+
+                app.systems.rigidbody.gravity = new Vec3(0, -1, 0);
+                run(30);
+
+                expect(box.getPosition().y).to.be.closeTo(5, 1e-6);
+            } finally {
+                proto.setFlags = setFlags;
+                proto.getFlags = getFlags;
+            }
+        });
+    });
 });

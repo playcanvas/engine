@@ -5,6 +5,10 @@ import { PhysicsBody } from '../physics-body.js';
  * @import { AmmoPhysicsWorld } from './ammo-physics-world.js'
  */
 
+// btRigidBodyFlags::BT_DISABLE_WORLD_GRAVITY - stops btDiscreteDynamicsWorld overwriting the
+// body's gravity when the body is added to the world or the world gravity changes
+const BT_DISABLE_WORLD_GRAVITY = 1;
+
 /**
  * An Ammo.js rigid body. Converts engine math types to Bullet types using the owning world's
  * cached temporaries - no method allocates.
@@ -74,6 +78,23 @@ class AmmoPhysicsBody extends PhysicsBody {
         const vec = this._world._btVec1;
         vec.setValue(factor.x, factor.y, factor.z);
         this.nativeBody.setAngularFactor(vec);
+    }
+
+    setGravityScale(scale) {
+        const body = this.nativeBody;
+
+        // Older ammo.js builds do not bind the rigid body flags. Without the flag Bullet resets the
+        // body to world gravity when it is added to the world and when the world gravity changes;
+        // the system re-applies the scale at both points, so the flag only avoids that churn.
+        if (body.setFlags) {
+            const flags = body.getFlags();
+            body.setFlags(scale === 1 ? flags & ~BT_DISABLE_WORLD_GRAVITY : flags | BT_DISABLE_WORLD_GRAVITY);
+        }
+
+        const gravity = this._world.nativeWorld.getGravity();
+        const vec = this._world._btVec1;
+        vec.setValue(gravity.x() * scale, gravity.y() * scale, gravity.z() * scale);
+        body.setGravity(vec);
     }
 
     setLinearVelocity(velocity) {
