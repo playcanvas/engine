@@ -44,6 +44,7 @@ const _properties = [
     'angularFactor',
     'friction',
     'rollingFriction',
+    'gravityScale',
     'restitution',
     'type',
     'group',
@@ -369,6 +370,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
                 switch (component._type) {
                     case BODYTYPE_DYNAMIC:
+                        // adding a body to the world hands it the world gravity, so a scaled
+                        // body takes its own value afterwards
+                        if (component._gravityScale !== 1) {
+                            body.setGravityScale(component._gravityScale);
+                        }
                         this._dynamic.push(component);
                         component.syncEntityToBody();
                         break;
@@ -890,6 +896,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (!this._appliedGravity.equals(gravity)) {
             this._appliedGravity.copy(gravity);
             world.setGravity(gravity);
+
+            // bodies with a gravity scale hold their own copy of the world gravity
+            const dynamic = this._dynamic;
+            for (i = 0, len = dynamic.length; i < len; i++) {
+                const component = dynamic[i];
+                if (component._gravityScale !== 1) {
+                    component._body.setGravityScale(component._gravityScale);
+                }
+            }
         }
 
         // rebuild the mesh collision shapes whose entity world scale changed since they were

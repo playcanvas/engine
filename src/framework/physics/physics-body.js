@@ -68,6 +68,15 @@ class PhysicsBody {
     }
 
     /**
+     * Scales the world gravity applied to this body. A scale of 1 follows the world gravity, 0
+     * ignores it. Backends re-apply the scale whenever the world gravity changes.
+     *
+     * @param {number} scale - The gravity scale.
+     */
+    setGravityScale(scale) {
+    }
+
+    /**
      * @param {Vec3} velocity - The world space linear velocity.
      */
     setLinearVelocity(velocity) {
