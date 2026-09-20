@@ -332,9 +332,10 @@ class RigidBodyComponent extends Component {
      * @example
      * // A body that orbits a planet at the origin under its own gravity
      * entity.rigidbody.gravityScale = 0;
+     * const force = new pc.Vec3();
      * app.on('update', () => {
-     *     const toPlanet = entity.getPosition().mulScalar(-1).normalize();
-     *     entity.rigidbody.applyForce(toPlanet.mulScalar(entity.rigidbody.mass * 9.81));
+     *     force.copy(entity.getPosition()).normalize().mulScalar(-entity.rigidbody.mass * 9.81);
+     *     entity.rigidbody.applyForce(force);
      * });
      */
     set gravityScale(scale) {

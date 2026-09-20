@@ -275,5 +275,20 @@ describe('AmmoPhysicsBody', function () {
                 proto.getFlags = getFlags;
             }
         });
+
+        it('treats a build that binds only one of the flag methods as having neither', function () {
+            const proto = Ammo.btRigidBody.prototype;
+            const { getFlags } = proto;
+            delete proto.getFlags;
+
+            try {
+                const box = createBox(5, { gravityScale: 0 });
+                run(30);
+
+                expect(box.getPosition().y).to.be.closeTo(5, 1e-6);
+            } finally {
+                proto.getFlags = getFlags;
+            }
+        });
     });
 });

@@ -86,15 +86,16 @@ class AmmoPhysicsBody extends PhysicsBody {
         // Older ammo.js builds do not bind the rigid body flags. Without the flag Bullet resets the
         // body to world gravity when it is added to the world and when the world gravity changes;
         // the system re-applies the scale at both points, so the flag only avoids that churn.
-        if (body.setFlags) {
+        if (body.setFlags && body.getFlags) {
             const flags = body.getFlags();
             body.setFlags(scale === 1 ? flags & ~BT_DISABLE_WORLD_GRAVITY : flags | BT_DISABLE_WORLD_GRAVITY);
         }
 
+        // the world returns its gravity by value into a scratch vector, so it can be scaled in
+        // place; the body's own gravity is not a usable source because it is already scaled
         const gravity = this._world.nativeWorld.getGravity();
-        const vec = this._world._btVec1;
-        vec.setValue(gravity.x() * scale, gravity.y() * scale, gravity.z() * scale);
-        body.setGravity(vec);
+        gravity.op_mul(scale);
+        body.setGravity(gravity);
     }
 
     setLinearVelocity(velocity) {
