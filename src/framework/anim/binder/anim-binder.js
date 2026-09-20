@@ -1,4 +1,5 @@
 /**
+ * @import { AnimCurvePath } from '../evaluator/anim-curve.js'
  * @import { AnimTarget } from '../evaluator/anim-target.js'
  */
 
@@ -58,7 +59,7 @@ class AnimBinder {
      * or string path.
      * @returns {string} The locator encoded as a string.
      * @example
-     * // returns 'spotLight/light/color.r'
+     * // returns 'spotLight/light/color/r'
      * encode(['spotLight'], 'light', ['color', 'r']);
      */
     static encode(entityPath, component, propertyPath) {
@@ -73,7 +74,7 @@ class AnimBinder {
      * Resolve the provided target path and return an instance of {@link AnimTarget} which will
      * handle setting the value, or return null if no such target exists.
      *
-     * @param {string} path - The animation curve path to resolve.
+     * @param {AnimCurvePath} path - The animation curve path to resolve.
      * @returns {AnimTarget|null} - Returns the target
      * instance on success and null otherwise.
      */
@@ -84,7 +85,7 @@ class AnimBinder {
     /**
      * Called when the {@link AnimEvaluator} no longer has a curve driving the given key.
      *
-     * @param {string} path - The animation curve path which is no longer driven.
+     * @param {AnimCurvePath} path - The animation curve path which is no longer driven.
      */
     unresolve(path) {
 

@@ -365,7 +365,7 @@ class BindGroupFormat {
             } else if (format instanceof BindStorageBufferFormat) {
                 this.storageBufferFormats.push(format);
             } else {
-                Debug.assert('Invalid bind format', format);
+                Debug.assert(false, 'Invalid bind format', format);
             }
         });
 
