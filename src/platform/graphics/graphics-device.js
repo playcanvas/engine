@@ -858,6 +858,7 @@ class GraphicsDevice extends EventHandler {
         counts.set('storageBuffers', storageBuffers);
         counts.set('textures', this.textures.size);
         counts.set('renderTargets', this.targets.size);
+        counts.set('shaders', this.shaders.length);
     }
 
     /**
