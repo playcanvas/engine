@@ -22,6 +22,8 @@ import { math } from '../../core/math/math.js';
 
 /**
  * Used to send and receive HTTP requests.
+ *
+ * @category Framework
  */
 class Http {
     static ContentType = {
@@ -75,7 +77,8 @@ class Http {
      * `options.withCredentials`. Defaults to false.
      *
      * This is a process-global default on the shared {@link http} instance and applies to all
-     * XHR-based requests (most asset loads). Prefer setting it via
+     * XHR-based requests (most asset loads). Loaders that stream with `fetch` instead read it
+     * through {@link getFetchCredentials}. Prefer setting it via
      * {@link ResourceLoader#withCredentials}.
      *
      * @type {boolean}
@@ -721,4 +724,15 @@ class Http {
 
 const http = new Http();
 
-export { http, Http };
+/**
+ * The `fetch` credentials mode matching {@link Http#withCredentials}. A loader that streams asset
+ * data with `fetch` instead of going through {@link Http#request} has to apply the flag itself,
+ * since it only reaches `XMLHttpRequest`. `same-origin` is `fetch`'s own default, so passing this
+ * when the flag is off changes nothing.
+ *
+ * @returns {RequestCredentials} The credentials mode to pass to `fetch`.
+ * @ignore
+ */
+const getFetchCredentials = () => (http.withCredentials ? 'include' : 'same-origin');
+
+export { http, Http, getFetchCredentials };

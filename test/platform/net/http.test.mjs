@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import nise from 'nise';
 import { restore, spy } from 'sinon';
 
-import { http, Http } from '../../../src/platform/net/http.js';
+import { getFetchCredentials, http, Http } from '../../../src/platform/net/http.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Http', function () {
@@ -258,6 +258,22 @@ describe('Http', function () {
             created.forEach(respond);
             expect(http._activeRequests).to.equal(0);
             expect(http._sendQueue.length).to.equal(0);
+        });
+
+    });
+
+    describe('#withCredentials', function () {
+
+        afterEach(function () {
+            http.withCredentials = false;
+        });
+
+        it('maps to the fetch credentials mode of the loaders that bypass XHR', function () {
+            // 'same-origin' is fetch's own default, so the flag being off changes nothing
+            expect(getFetchCredentials()).to.equal('same-origin');
+
+            http.withCredentials = true;
+            expect(getFetchCredentials()).to.equal('include');
         });
 
     });

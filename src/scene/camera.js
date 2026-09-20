@@ -37,6 +37,8 @@ const _frustumViewMat = new Mat4();
 const _frustumViewProjMat = new Mat4();
 const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3()];
 
+let id = 0;
+
 /**
  * A camera.
  *
@@ -153,6 +155,14 @@ class Camera {
 
     /** @type {number} */
     jitter = 0;
+
+    /**
+     * A unique id of the camera, used where the camera needs to be referenced without retaining
+     * it, for example as a key in {@link MeshInstance} draw command maps.
+     *
+     * @type {number}
+     */
+    id = id++;
 
     /**
      * The graphics device used by this camera. Required so the camera can compute its aspect

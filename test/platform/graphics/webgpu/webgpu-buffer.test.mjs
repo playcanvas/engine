@@ -59,6 +59,28 @@ describe('WebgpuBuffer', function () {
             expect(size).to.equal(32);
         });
 
+        it('does not expand unaligned partial ranges if an internal caller bypasses public validation', function () {
+            const storage = new Uint8Array(16);
+            const buffer = createBuffer(16);
+            buffer.unlock(device, storage, 4, 6);
+
+            const [, bufferOffset, data, dataOffset, size] = writeBuffer.firstCall.args;
+            expect(bufferOffset).to.equal(4);
+            expect(data).to.equal(storage.buffer);
+            expect(dataOffset).to.equal(4);
+            expect(size).to.equal(6);
+        });
+
+        it('does not pad an unaligned prefix that starts at zero', function () {
+            const storage = new Uint8Array(16);
+            const buffer = createBuffer(16);
+            buffer.unlock(device, storage, 0, 6);
+
+            const [, , data, , size] = writeBuffer.firstCall.args;
+            expect(data).to.equal(storage.buffer);
+            expect(size).to.equal(6);
+        });
+
         it('pads odd-sized data through a copy', function () {
             const storage = new Uint8Array([1, 2, 3, 4, 5, 6]);
             const buffer = createBuffer(8);

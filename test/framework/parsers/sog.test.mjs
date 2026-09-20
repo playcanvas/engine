@@ -47,6 +47,7 @@ describe('SogParser', function () {
         app?.destroy();
         app = null;
 
+        http.withCredentials = false;
         jsdomTeardown();
         restore();
     });
@@ -92,22 +93,45 @@ describe('SogParser', function () {
         }, sog);
     });
 
+    // the bundle is streamed with fetch rather than through the http layer, so the parser has to
+    // apply the credentials flag itself. The request is failed as soon as its arguments are recorded.
+    [false, true].forEach((withCredentials) => {
+        it(`SogBundleParser streams the bundle with credentials ${withCredentials ? 'enabled' : 'disabled'}`, async function () {
+            const sog = new Asset('sog', 'gsplat', { url: 'assets/splats/test.sog' });
+            app.assets.add(sog);
+            http.withCredentials = withCredentials;
+
+            const fetched = stub(global, 'fetch').rejects(new Error('recorded'));
+            const parser = new SogBundleParser(app);
+
+            await new Promise((resolve) => {
+                parser.load({ load: sog.file.url, original: sog.file.url }, resolve, sog);
+            });
+
+            expect(fetched.firstCall.args[0]).to.equal('assets/splats/test.sog');
+            expect(fetched.firstCall.args[1].credentials).to.equal(withCredentials ? 'include' : 'same-origin');
+        });
+    });
+
     [SogParser, SogBundleParser].forEach((Parser) => {
-        it(`${Parser.name} cancels a recovery wait when the asset unloads`, async function () {
-            const parser = new Parser(app);
-            parser.handler = app.loader.getHandler('gsplat');
+        it(`${Parser.name} cancels a recovery wait when unloaded during its first load`, async function () {
             const archive = zipSync({ 'meta.json': strToU8(JSON.stringify(META)) }, { level: 0 });
             const sog = new Asset('sog', 'gsplat', {
-                url: META_URL,
+                url: Parser === SogBundleParser ? 'assets/splats/test.sog' : META_URL,
                 contents: archive.buffer
             });
             app.assets.add(sog);
 
             stub(http, 'get').callsFake((url, options, callback) => callback(null, META));
+            const load = app.assets.load;
             stub(app.assets, 'load').callsFake((asset) => {
-                asset.resource = new Texture(app.graphicsDevice, { width: 1, height: 1 });
-                asset.loaded = true;
-                asset.fire('load', asset);
+                if (asset.type === 'texture') {
+                    asset.resource = new Texture(app.graphicsDevice, { width: 1, height: 1 });
+                    asset.loaded = true;
+                    asset.fire('load', asset);
+                } else {
+                    load.call(app.assets, asset);
+                }
             });
             stub(GSplatSogData.prototype, 'prepareCodebook');
 
@@ -125,16 +149,22 @@ describe('SogParser', function () {
             const device = app.graphicsDevice;
             device.loseContext();
             const listenersBefore = device._callbacks.get('devicerestored')?.length ?? 0;
-            const loaded = new Promise((resolve) => {
-                parser.load({ load: META_URL, original: META_URL }, (err, resource) => {
-                    resolve({ err, resource });
-                }, sog);
+            const loaded = new Promise((resolve, reject) => {
+                sog.once('load', resolve);
+                sog.once('error', reject);
             });
+            app.assets.load(sog);
 
             await preparing;
-            // The streaming loader fires unload explicitly for assets still being loaded.
-            sog.fire('unload', sog);
-            expect(await loaded).to.deep.equal({ err: null, resource: null });
+            expect(sog.loading).to.equal(true);
+            expect(sog.loaded).to.equal(false);
+            expect(sog.resources).to.be.empty;
+            sog.unload();
+            await loaded;
+            expect(sog.resource).to.equal(null);
+            expect(sog.loading).to.equal(false);
+            expect(app.assets.list()).to.deep.equal([sog]);
+            expect(app.loader.getFromCache(sog.getFileUrl(), sog.type)).to.equal(undefined);
             expect(device.contextLost).to.be.true;
             expect(device._callbacks.get('devicerestored')?.length ?? 0).to.equal(listenersBefore);
         });

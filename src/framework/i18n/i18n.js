@@ -12,6 +12,8 @@ import { I18nParser } from './i18n-parser.js';
  * Handles localization. Responsible for loading localization assets and returning translations for
  * a certain key. Can also handle plural forms. To override its default behavior define a different
  * implementation for {@link getText} and {@link getPluralText}.
+ *
+ * @category Framework
  */
 class I18n extends EventHandler {
     /**

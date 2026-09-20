@@ -245,7 +245,7 @@ class RenderTarget {
      *
      * Defaults to {@link DEPTHRESOLVE_MIN}. Ignored on WebGL2, where the sample selection of the
      * depth resolve is defined by the implementation. Can also be changed at any time using the
-     * {@link depthResolveMode} property.
+     * {@link RenderTarget#depthResolveMode} property.
      * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a
      * rendering surface. This can be a multisampled texture (a texture created with `samples` > 1,
      * WebGPU only), in which case the render target renders directly into its samples, the sample

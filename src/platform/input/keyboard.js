@@ -74,7 +74,7 @@ const _keyCodeToKeyIdentifier = {
  * {@link InputController}s such as {@link OrbitController}, {@link FlyController} and
  * {@link FocusController}.
  *
- * @category Input
+ * @category Input Devices
  */
 class Keyboard extends EventHandler {
     /**

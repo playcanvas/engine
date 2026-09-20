@@ -160,14 +160,43 @@ class IndexBuffer {
     }
 
     /**
-     * Signals that the block of memory returned by a call to the lock function is ready to be
-     * given to the graphics hardware. Only unlocked index buffers can be set on the currently
-     * active device.
+     * Uploads the client side copy of the index buffer to the GPU. When called without arguments,
+     * uploads the entire buffer. An explicit range uploads only those bytes at the same GPU offset.
+     * The first upload always initializes the entire GPU buffer, regardless of the requested range.
+     * A zero byte length does nothing, including before the first upload.
+     *
+     * Partial uploads do not resize the buffer or change its CPU storage. The caller must upload
+     * every modified range before expecting those changes on the GPU. Context restoration uploads
+     * the entire CPU storage. Invalid ranges are ignored in all builds and report an assertion
+     * in debug builds.
+     *
+     * @param {number} [byteOffset] - Offset in bytes from the start of the buffer's storage.
+     * Defaults to 0. Must be a non-negative integer and a multiple of 4 on all graphics backends.
+     * @param {number} [byteLength] - Number of bytes to upload. Defaults to the remaining bytes
+     * after byteOffset. The length must be a non-negative integer and the range must fit within
+     * the buffer. Partial ranges require a length that is a multiple of 4. Full-buffer uploads
+     * support any byte length, whether the range is explicit or the arguments are omitted.
+     * @example
+     * // After modifying bytes 16 through 31 of the CPU storage:
+     * indexBuffer.unlock(16, 16);
      */
-    unlock() {
+    unlock(byteOffset, byteLength) {
+        if (byteOffset !== undefined || byteLength !== undefined) {
+            byteOffset ??= 0;
+            byteLength ??= this.numBytes - byteOffset;
 
-        // Upload the new index data
-        this.impl.unlock(this);
+            const fullRange = byteOffset === 0 && byteLength === this.numBytes;
+            const valid = Number.isInteger(byteOffset) && byteOffset >= 0 && byteOffset % 4 === 0 &&
+                Number.isInteger(byteLength) && byteLength >= 0 && (fullRange || byteLength % 4 === 0) &&
+                byteOffset + byteLength <= this.numBytes;
+            Debug.assert(valid, 'Buffer upload range must contain non-negative integers and fit within the buffer; partial ranges must be aligned to 4 bytes');
+
+            if (!valid || byteLength === 0) {
+                return;
+            }
+        }
+
+        this.impl.unlock(this, byteOffset, byteLength);
     }
 
     /**

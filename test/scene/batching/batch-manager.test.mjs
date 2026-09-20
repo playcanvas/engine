@@ -1,7 +1,8 @@
 import { expect } from 'chai';
 
 import { Entity } from '../../../src/framework/entity.js';
-import { LAYERID_WORLD } from '../../../src/scene/constants.js';
+import { LAYERID_WORLD, RENDERSTYLE_WIREFRAME } from '../../../src/scene/constants.js';
+import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -128,5 +129,68 @@ describe('BatchManager', function () {
 
         expect(app.batcher._batchList.length).to.equal(0);
 
+    });
+
+    it('generate: copies the render style to the batch and prepares its mesh', function () {
+        for (const name of ['e1', 'e2']) {
+            const entity = new Entity(name);
+            entity.addComponent('render', {
+                type: 'box',
+                batchGroupId: this.bg.id
+            });
+            entity.render.meshInstances[0].renderStyle = RENDERSTYLE_WIREFRAME;
+            app.root.addChild(entity);
+        }
+
+        app.batcher.generate();
+
+        const batchInstance = app.batcher._batchList[0].meshInstance;
+        expect(batchInstance.renderStyle).to.equal(RENDERSTYLE_WIREFRAME);
+
+        // assigning the render style also generates the wireframe indices of the batched mesh
+        expect(batchInstance.mesh.primitive[RENDERSTYLE_WIREFRAME]).to.exist;
+        expect(batchInstance.mesh.indexBuffer[RENDERSTYLE_WIREFRAME]).to.exist;
+    });
+
+    it('generate: copies the parameters to the batch, split between the scope and the material buffer', function () {
+        const device = app.graphicsDevice;
+        const material = new StandardMaterial();
+        material.update();
+        material.prepareForRender(device, app.scene);
+
+        // both boxes carry a scope parameter and an override of a uniform stored in the material buffer
+        const diffuse = [1, 0, 0];
+        for (const name of ['e1', 'e2']) {
+            const entity = new Entity(name);
+            entity.addComponent('render', {
+                type: 'box',
+                material: material,
+                batchGroupId: this.bg.id
+            });
+            entity.render.meshInstances[0].setParameter('uTest', 3);
+            entity.render.meshInstances[0].setParameter('material_diffuse', diffuse);
+            app.root.addChild(entity);
+        }
+
+        app.batcher.generate();
+
+        expect(app.batcher._batchList.length).to.equal(1);
+        const batchInstance = app.batcher._batchList[0].meshInstance;
+        expect(batchInstance.parameters.size).to.equal(2);
+        expect(batchInstance.getParameter('uTest').data).to.equal(3);
+        expect(batchInstance._scopeParameters.map(parameter => parameter.name)).to.deep.equal(['uTest']);
+        expect(batchInstance._materialOverrides.map(parameter => parameter.name)).to.deep.equal(['material_diffuse']);
+
+        // the scope parameter reaches the scope
+        batchInstance.setParameters(device);
+        expect(device.scope.resolve('uTest').value).to.equal(3);
+
+        // the override reaches a copy of the material buffer
+        const bindGroup = batchInstance.getMaterialBindGroup(device);
+        expect(bindGroup).to.exist;
+        expect(bindGroup).to.not.equal(material.uniformBufferBindGroup);
+        const copy = batchInstance._materialUniformBuffer;
+        const offset = copy.format.get('material_diffuse').offset;
+        expect(Array.from(copy.storageFloat32.subarray(offset, offset + 3))).to.deep.equal(diffuse);
     });
 });

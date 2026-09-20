@@ -417,6 +417,56 @@ class ResourceLine {
  * Pure static class implementing processing of WGSL shaders. It allocates fixed locations for
  * attributes, and handles conversion of uniforms to uniform buffers.
  */
+/**
+ * Reports a supplied texture which does not match the declaration it replaces. The shader is not
+ * rewritten to match the supplied bind group, so what that group declares has to be what the
+ * shader already refers to - the same names, and the same types.
+ *
+ * Called from a Debug.call block only, so release builds strip the call and drop this with it.
+ *
+ * @param {BindTextureFormat} suppliedTexture - The texture of the supplied bind group.
+ * @param {ResourceLine} resource - The texture declaration of the shader.
+ * @param {ResourceLine|null} sampler - The sampler declaration following it, if any.
+ * @param {Shader} shader - The shader definition.
+ */
+const validateSuppliedTexture = (suppliedTexture, resource, sampler, shader) => {
+
+    const mismatches = [];
+
+    // compare the types the two would declare, which covers the dimension, the sample type
+    // and the multisampled state in the form the shader has to agree with
+    const suppliedType = getTextureDeclarationType(suppliedTexture.textureDimension, suppliedTexture.sampleType, suppliedTexture.multisampled);
+    const declaredType = getTextureDeclarationType(resource.textureDimension, resource.sampleType, resource.multisampled);
+
+    if (suppliedType !== declaredType) {
+        mismatches.push(`the type '${suppliedType}' instead of '${declaredType}'`);
+    } else if (suppliedTexture.sampleType !== resource.sampleType) {
+
+        // the same declaration, but a binding the shader cannot sample in the same way
+        mismatches.push(suppliedTexture.sampleType === SAMPLETYPE_UNFILTERABLE_FLOAT ?
+            'an unfilterable texture' : 'a filterable texture');
+    }
+
+    if (suppliedTexture.hasSampler !== !!sampler) {
+        mismatches.push(suppliedTexture.hasSampler ? 'a sampler the shader does not declare' : 'no sampler, while the shader declares one');
+    } else if (sampler) {
+
+        if (suppliedTexture.samplerName !== sampler.name) {
+            mismatches.push(`the sampler named '${suppliedTexture.samplerName}' instead of '${sampler.name}'`);
+        }
+
+        // the declaration of the sampler follows the sample type of the texture
+        const samplerType = suppliedTexture.sampleType === SAMPLETYPE_DEPTH ? 'sampler_comparison' : 'sampler';
+        if (samplerType !== sampler.samplerType) {
+            mismatches.push(`a '${samplerType}' instead of a '${sampler.samplerType}'`);
+        }
+    }
+
+    if (mismatches.length > 0) {
+        Debug.error(`Texture '${resource.name}' is supplied by a bind group declaring ${mismatches.join(', ')}. The supplied declaration replaces the one of the shader [${resource.originalLine}], so the two have to match.`, shader);
+    }
+};
+
 class WebgpuShaderProcessorWGSL {
     /**
      * Process the shader.
@@ -540,7 +590,7 @@ class WebgpuShaderProcessorWGSL {
             meshUniforms.push(new UniformFormat(uniform.name, uniformType, uniform.arraySize));
         });
         // do not synthesize a dummy uniform when empty - reflection must stay strictly additive
-        const computeUniformBufferFormat = meshUniforms.length > 0 ? new UniformBufferFormat(device, meshUniforms) : null;
+        const computeUniformBufferFormat = meshUniforms.length > 0 ? new UniformBufferFormat(device, meshUniforms, { pack: true }) : null;
 
         // parse resource lines (no vertex/fragment merge for compute)
         const parsedResources = WebgpuShaderProcessorWGSL.mergeResources(extracted.resources, [], shader);
@@ -673,11 +723,8 @@ class WebgpuShaderProcessorWGSL {
                 meshUniforms.push(uniformFormat);
             } else {
 
-                // TODO: when we add material ub, this name will need to be updated
-                uniform.ubName = 'ub_view';
-
-                // Validate types here if needed
-                Debug.assert(true, `Uniform ${uniform.name} already processed, skipping additional validation.`);
+                // the uniform is provided by one of the supplied uniform buffers (view, material)
+                uniform.ubName = `ub_${bindGroupNames[processingOptions.getUniformBindGroup(uniform.name)]}`;
             }
         });
 
@@ -687,7 +734,7 @@ class WebgpuShaderProcessorWGSL {
             meshUniforms.push(new UniformFormat(UNUSED_UNIFORM_NAME, UNIFORMTYPE_FLOAT));
         }
 
-        const meshUniformBufferFormat = new UniformBufferFormat(device, meshUniforms);
+        const meshUniformBufferFormat = new UniformBufferFormat(device, meshUniforms, { pack: true });
 
         // generate code for uniform buffers, starts on the slot 0
         let code = '';
@@ -821,10 +868,55 @@ class WebgpuShaderProcessorWGSL {
         return formats;
     }
 
+    /**
+     * Returns the resources which go into the mesh bind group, which are those not already
+     * contained in one of the bind groups supplied to the processing - the view and the material.
+     * Those declare their own, in the same way {@link WebgpuShaderProcessorWGSL.processUniforms}
+     * leaves a uniform out of the mesh uniform buffer when a supplied buffer has it.
+     *
+     * @param {ResourceLine[]} resources - The resources the shader declares.
+     * @param {ShaderProcessorOptions} processingOptions - The processing options, which carry the
+     * supplied bind groups.
+     * @param {Shader} shader - The shader definition.
+     * @returns {ResourceLine[]} The resources for the mesh bind group.
+     */
+    static filterSuppliedResources(resources, processingOptions, shader) {
+
+        const meshResources = [];
+
+        for (let i = 0; i < resources.length; i++) {
+            const resource = resources[i];
+            const suppliedTexture = resource.isTexture ? processingOptions.getTexture(resource.name) : null;
+
+            if (suppliedTexture) {
+
+                // the sampler of a texture follows it, and the supplied bind group declares both
+                const sampler = resources[i + 1]?.isSampler ? resources[i + 1] : null;
+
+                Debug.call(() => {
+                    validateSuppliedTexture(suppliedTexture, resource, sampler, shader);
+                });
+
+                if (sampler) {
+                    i++;
+                }
+
+            } else {
+                meshResources.push(resource);
+            }
+        }
+
+        return meshResources;
+    }
+
     static processResources(device, resources, processingOptions, shader, visibility = SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, bindGroupIndex = BINDGROUP_MESH) {
 
+        // resources one of the supplied bind groups already contains are declared from that group
+        // below, and so are not part of the mesh bind group
+        const meshResources = WebgpuShaderProcessorWGSL.filterSuppliedResources(resources, processingOptions, shader);
+
         // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
-        const textureFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(resources, visibility, shader);
+        const textureFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(meshResources, visibility, shader);
 
         const meshBindGroupFormat = new BindGroupFormat(device, textureFormats);
 

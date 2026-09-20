@@ -248,6 +248,18 @@ class Bloom {
      * @step 0
      */
     blurLevel = 16;
+
+    /**
+     * Brightness below which the scene does not contribute to bloom, in scene-referred
+     * (pre-exposure) units. 0 blooms the whole scene.
+     *
+     * @attribute
+     * @visibleif {enabled}
+     * @range [0, 100]
+     * @precision 2
+     * @step 0.01
+     */
+    threshold = 0;
 }
 
 /**
@@ -824,6 +836,7 @@ class CameraFrame extends Script {
         dstBloom.intensity = bloom.enabled ? bloom.intensity : 0;
         if (bloom.enabled) {
             dstBloom.blurLevel = bloom.blurLevel;
+            dstBloom.threshold = bloom.threshold;
         }
 
         // grading

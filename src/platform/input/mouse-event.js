@@ -22,7 +22,7 @@ function isMousePointerLocked() {
  * - {@link Mouse.EVENT_MOUSEMOVE}
  * - {@link Mouse.EVENT_MOUSEWHEEL}
  *
- * @category Input
+ * @category Input Devices
  */
 class MouseEvent {
     /**

@@ -12,7 +12,7 @@ import { TouchEvent } from './touch-event.js';
  *
  * Your application's TouchDevice instance is managed and accessible via {@link AppBase#touch}.
  *
- * @category Input
+ * @category Input Devices
  */
 class TouchDevice extends EventHandler {
     /**

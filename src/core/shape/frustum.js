@@ -48,6 +48,18 @@ function intersectPlanes(p1, p2, p3, out) {
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
  * directly, but instead query {@link CameraComponent#frustum}.
  *
+ * A frustum is six {@link Plane}s, read and written with {@link getPlane} and {@link setPlane},
+ * and normally derived from a camera's combined view-projection matrix with {@link setFromMat4}.
+ * {@link containsPoint} and {@link containsAabb} return a boolean. {@link containsSphere} returns 0
+ * for a sphere outside, 1 for one that intersects and 2 for one fully inside, so callers can skip
+ * finer tests for objects that are entirely visible. None of the tests allocate.
+ *
+ * @example
+ * // Skip work for objects the camera cannot see
+ * const frustum = entity.camera.frustum;
+ * if (frustum.containsAabb(meshInstance.aabb)) {
+ *     // visible: update it
+ * }
  * @category Math
  */
 class Frustum {

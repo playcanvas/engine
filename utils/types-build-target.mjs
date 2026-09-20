@@ -17,7 +17,8 @@ const TYPES_FOOTER = 'export as namespace pc;\nexport as namespace pcx;';
 const REQUIRED_TYPES = [
     TYPES_ENTRY,
     'build/playcanvas/src/scene/materials/standard-material.d.ts',
-    'build/playcanvas/src/framework/script/script-type.d.ts'
+    'build/playcanvas/src/framework/script/script-type.d.ts',
+    'build/playcanvas/src/framework/asset/asset.d.ts'
 ];
 
 const exists = (file) => {

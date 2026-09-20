@@ -12,16 +12,50 @@ import { ResourceHandler } from './handler.js';
 /**
  * Container for a list of animations, textures, materials, renders, gsplats and a model.
  *
- * @property {Asset[]} renders An array of the Render assets.
- * @property {Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
- * @property {Asset[]} textures An array of the {@link Texture} assets.
- * @property {Asset[]} animations An array of the {@link Animation} assets.
- * @property {Asset[]} gsplats An array of the gsplat assets, created for meshes using the
- * KHR_gaussian_splatting glTF extension.
  * @interface
  * @category Graphics
  */
 class ContainerResource {
+    // The fields are initialized only so that they are declared, and therefore emitted into the
+    // type declarations, without tripping strictPropertyInitialization. The engine never
+    // instantiates this interface stub: GlbContainerResource implements it without extending it.
+
+    /**
+     * An array of the render assets. Each holds the meshes of one glTF mesh.
+     *
+     * @type {Asset<'render'>[]}
+     */
+    renders = [];
+
+    /**
+     * An array of the {@link Material} and/or {@link StandardMaterial} assets.
+     *
+     * @type {Asset<'material'>[]}
+     */
+    materials = [];
+
+    /**
+     * An array of the {@link Texture} assets.
+     *
+     * @type {Asset<'texture'>[]}
+     */
+    textures = [];
+
+    /**
+     * An array of the animation assets. Each resource is an {@link AnimTrack}.
+     *
+     * @type {Asset<'animation'>[]}
+     */
+    animations = [];
+
+    /**
+     * An array of the gsplat assets, created for meshes using the KHR_gaussian_splatting glTF
+     * extension.
+     *
+     * @type {Asset<'gsplat'>[]}
+     */
+    gsplats = [];
+
     /**
      * Instantiates an entity with a model component.
      *
@@ -126,8 +160,8 @@ class ContainerResource {
 }
 
 /**
- * Loads files that contain multiple resources. For example glTF files can contain textures, models
- * and animations.
+ * Resource handler for the `container` asset type. Loads glTF and GLB files, whose meshes,
+ * materials, textures, animations and Gaussian splats become one {@link ContainerResource}.
  *
  * For glTF files, the asset options object can be used to pass load time callbacks for handling
  * the various resources at different stages of loading. The table below lists the resource types
@@ -167,7 +201,7 @@ class ContainerResource {
  * });
  * ```
  *
- * @category Graphics
+ * @category Asset
  */
 class ContainerHandler extends ResourceHandler {
     /**

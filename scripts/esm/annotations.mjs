@@ -905,11 +905,11 @@ export class AnnotationManager extends Script {
                 this._updateAnnotationPositions(annotation, resources, screenPos);
                 this._updateAnnotationRotationAndScale(annotation, -vec.z);
 
-                // Update material opacity
+                // Update material opacity, applied by update() as the value lives in the material uniform buffer
                 resources.materials[0].opacity = this._opacity;
                 resources.materials[1].opacity = this._behindOpacity * this._opacity;
-                resources.materials[0].setParameter('material_opacity', this._opacity);
-                resources.materials[1].setParameter('material_opacity', this._behindOpacity * this._opacity);
+                resources.materials[0].update();
+                resources.materials[1].update();
             }
         };
         this.app.on('prerender', prerenderHandler);

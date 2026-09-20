@@ -114,8 +114,8 @@ class ImageRenderable {
             this.model.meshInstances.push(this.unmaskMeshInstance);
 
             // copy parameters
-            for (const name in this.meshInstance.parameters) {
-                this.unmaskMeshInstance.setParameter(name, this.meshInstance.parameters[name].data);
+            for (const [name, parameter] of this.meshInstance.parameters) {
+                this.unmaskMeshInstance.setParameter(name, parameter.data);
             }
         } else {
             // remove unmask mesh instance from model

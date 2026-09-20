@@ -4,9 +4,11 @@ import { isTouchPointer, movementState } from '../utils.js';
 import { VirtualJoystick } from './virtual-joystick.js';
 
 /**
- * Single gesture input source.
+ * Single gesture input source. One virtual control for a touch screen, either an on-screen
+ * {@link joystick} or a drag anywhere on the element depending on {@link layout}, producing an
+ * `input` delta as `[x, y]` and a `doubleTap` delta.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  *
  * @typedef {object} SingleGestureSourceDeltas

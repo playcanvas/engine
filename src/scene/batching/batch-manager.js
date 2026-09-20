@@ -43,13 +43,11 @@ function paramsIdentical(a, b) {
 }
 
 function equalParamSets(params1, params2) {
-    for (const param in params1) { // compare A -> B
-        if (params1.hasOwnProperty(param) && !paramsIdentical(params1[param], params2[param])) {
-            return false;
-        }
+    if (params1.size !== params2.size) {
+        return false;
     }
-    for (const param in params2) { // compare B -> A
-        if (params2.hasOwnProperty(param) && !paramsIdentical(params2[param], params1[param])) {
+    for (const [name, param] of params1) {
+        if (!paramsIdentical(param, params2.get(name))) {
             return false;
         }
     }
@@ -860,18 +858,26 @@ class BatchManager {
             }
 
             // Create meshInstance
-            const meshInstance = new MeshInstance(mesh, material, this.rootNode);
-            meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
-            meshInstance.parameters = batch.origMeshInstances[0].parameters;
-            meshInstance.layer = batch.origMeshInstances[0].layer;
-            meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
-            meshInstance.batching = true;
+            const batchedMeshInstance = new MeshInstance(mesh, material, this.rootNode);
+            const sourceMeshInstance = batch.origMeshInstances[0];
+
+            batchedMeshInstance.castShadow = sourceMeshInstance.castShadow;
+            batchedMeshInstance.shadowCascadeMask = sourceMeshInstance.shadowCascadeMask;
+
+            // copy the parameters through setParameter, which splits them between the scope and the
+            // material uniform buffer for the material of the batch
+            for (const [name, parameter] of sourceMeshInstance.parameters) {
+                batchedMeshInstance.setParameter(name, parameter.data);
+            }
+            batchedMeshInstance.layer = sourceMeshInstance.layer;
+            batchedMeshInstance._shaderDefs = sourceMeshInstance._shaderDefs;
+            batchedMeshInstance.batching = true;
 
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
-            meshInstance.cull = batch.origMeshInstances[0].cull;
+            batchedMeshInstance.cull = sourceMeshInstance.cull;
             const batchGroup = this._batchGroups[batchGroupId];
             if (batchGroup && batchGroup._ui) {
-                meshInstance.cull = false;
+                batchedMeshInstance.cull = false;
             }
 
             if (dynamic) {
@@ -880,20 +886,22 @@ class BatchManager {
                 for (let i = 0; i < batch.origMeshInstances.length; i++) {
                     nodes.push(batch.origMeshInstances[i].node);
                 }
-                meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
+                batchedMeshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);
             }
 
             // disable aabb update, gets updated manually by batcher
-            meshInstance._updateAabb = false;
+            batchedMeshInstance._updateAabb = false;
 
-            meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
-            meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
-            meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
-            meshInstance.flipFacesFactor = getScaleSign(batch.origMeshInstances[0]);
-            meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
-            meshInstance.shadowCascadeMask = batch.origMeshInstances[0].shadowCascadeMask;
+            batchedMeshInstance.drawOrder = sourceMeshInstance.drawOrder;
+            batchedMeshInstance.stencilFront = sourceMeshInstance.stencilFront;
+            batchedMeshInstance.stencilBack = sourceMeshInstance.stencilBack;
+            batchedMeshInstance.flipFacesFactor = getScaleSign(sourceMeshInstance);
 
-            batch.meshInstance = meshInstance;
+            // assigning this prepares the batched mesh for the render style, generating its
+            // wireframe indices or points primitive as needed
+            batchedMeshInstance.renderStyle = sourceMeshInstance.renderStyle;
+
+            batch.meshInstance = batchedMeshInstance;
             batch.updateBoundingBox();
         }
 

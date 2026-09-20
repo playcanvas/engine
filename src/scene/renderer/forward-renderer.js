@@ -76,6 +76,9 @@ function vogelSpherePrecalculationSamples(numSamples) {
  * @ignore
  */
 class ForwardRenderer extends Renderer {
+    /** @type {WorldClustersDebug|null} */
+    _worldClustersDebug = null;
+
     /**
      * Create a new ForwardRenderer instance.
      *
@@ -137,7 +140,7 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeDistancesId = [];
         this.shadowCascadeCountId = [];
         this.shadowCascadeBlendId = [];
-        this.shadowCascadeRadiiId = [];
+        this.shadowCascadeParamsId = [];
 
         this.screenSizeId = scope.resolve('screen_size');
         this.screenSizeLegacyId = scope.resolve('uScreenSize');
@@ -151,6 +154,8 @@ class ForwardRenderer extends Renderer {
     }
 
     destroy() {
+        this._worldClustersDebug?.destroy();
+        this._worldClustersDebug = null;
         super.destroy();
     }
 
@@ -221,7 +226,7 @@ class ForwardRenderer extends Renderer {
         this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances`);
         this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
         this.shadowCascadeBlendId[i] = scope.resolve(`${light}_shadowCascadeBlend`);
-        this.shadowCascadeRadiiId[i] = scope.resolve(`${light}_shadowCascadeRadii`);
+        this.shadowCascadeParamsId[i] = scope.resolve(`${light}_shadowCascadeParams`);
     }
 
     setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
@@ -314,22 +319,21 @@ class ForwardRenderer extends Renderer {
                     cameraParams[3] = 1;
                     this.lightCameraParamsId[cnt].setValue(cameraParams);
 
-                    // Per-cascade ortho radii. Only cameraParams.x (the ortho radius) varies per
-                    // cascade — the depth range is cascade-stable thanks to the union AABB. The
-                    // shader overrides cameraParams.x with the radius of the cascade a fragment
-                    // samples from, so far cascades don't inherit cascade 0's much smaller radius
-                    // (which would over-soften them). Packed into a single vec4 (max 4 cascades).
-                    // Stored per-light (setValue keeps the reference, read at draw time) so
-                    // multiple directional PCSS lights don't alias one shared buffer. Allocated
-                    // lazily here so only directional PCSS lights ever create it.
-                    const radii = directional._shadowCascadeRadii ??= new Float32Array(4);
+                    // Cached cascades must use the radius and depth range that rendered their
+                    // shadow map, even while another cascade is being fitted to moving casters.
+                    // Each matrix column stores one cascade's camera parameters.
+                    const cascadeParams = directional._shadowCascadeParams ??= new Float32Array(16);
                     for (let c = 0; c < 4; c++) {
-                        const r = c < directional.numCascades ? directional.getRenderData(camera, c).projectionCompensation : 0;
-                        // fall back to cascade 0's radius for unused / not-yet-culled cascades to
-                        // avoid a zero ortho radius (which would divide-by-zero in the shader)
-                        radii[c] = r > 0 ? r : lightRenderData.projectionCompensation;
+                        const own = c < directional.numCascades ? directional.getRenderData(camera, c) : null;
+                        const renderData = own?.projectionCompensation > 0 ? own : lightRenderData;
+                        const shadowCamera = renderData.shadowCamera;
+                        const offset = c * 4;
+                        cascadeParams[offset] = renderData.projectionCompensation;
+                        cascadeParams[offset + 1] = shadowCamera._farClip;
+                        cascadeParams[offset + 2] = shadowCamera._nearClip;
+                        cascadeParams[offset + 3] = 1;
                     }
-                    this.shadowCascadeRadiiId[cnt].setValue(radii);
+                    this.shadowCascadeParamsId[cnt].setValue(cascadeParams);
                 }
 
                 const params = directional._shadowRenderParams;
@@ -661,8 +665,9 @@ class ForwardRenderer extends Renderer {
                 const asyncCompile = false;
                 device.setShader(shaderInstance.shader, asyncCompile);
 
-                // Uniforms I: material
+                // Uniforms I: material - on the scope, and through the material bind group
                 material.setParameters(device);
+                this.setupMaterialBindGroup(material);
 
                 if (lightMaskChanged) {
                     const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightMask, camera);
@@ -689,7 +694,11 @@ class ForwardRenderer extends Renderer {
             const stencilBack = drawCall.stencilBack ?? material.stencilBack;
             device.setStencilState(stencilFront, stencilBack);
 
-            // Uniforms II: meshInstance overrides
+            // Uniforms II: meshInstance overrides - on the scope, and for a mesh instance that
+            // overrides uniforms of the material uniform buffer, through its copy of it
+            if (this.needsMaterialOverrideBindGroup(drawCall, material)) {
+                this.setupMaterialOverrideBindGroup(drawCall);
+            }
             drawCall.setParameters(device);
 
             // mesh ID - used by the picker
@@ -746,9 +755,18 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            // Unset meshInstance overrides back to material values if next draw call will use the same material
+            // Unset meshInstance overrides back to material values if next draw call will use the
+            // same material: the scope parameters, and the material bind group when this draw bound
+            // the mesh instance's copy of it. The same question as the one which bound the copy -
+            // a mesh instance whose parameters only needed splitting against a changed layout has
+            // no copy to restore from, as it overrides nothing
             if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
-                material.setParameters(device, drawCall.parameters);
+                if (this.hasMaterialOverrides(drawCall)) {
+                    this.setupMaterialBindGroup(material);
+                }
+                if (drawCall._scopeParameters.length > 0) {
+                    material.setParameters(device, drawCall._scopeParameters);
+                }
             }
 
             DebugGraphics.popGpuMarker(device);
@@ -822,8 +840,10 @@ class ForwardRenderer extends Renderer {
             const culledInstances = layer.getCulledInstances(camera);
             visible = transparent ? culledInstances.transparent : culledInstances.opaque;
 
-            // add debug mesh instances to visible list
+            // add debug lines to visible list
             scene.immediate.onPreRenderLayer(layer, visible, transparent);
+
+            this._worldClustersDebug?.onPreRenderLayer(layer, visible);
 
             // set up layer uniforms
             if (layer.requiresLightCube) {
@@ -849,7 +869,8 @@ class ForwardRenderer extends Renderer {
             if (layer) {
                 if (!this.clustersDebugRendered && scene.lighting.debugLayer === layer.id) {
                     this.clustersDebugRendered = true;
-                    WorldClustersDebug.render(lightClusters, this.scene);
+                    this._worldClustersDebug ??= new WorldClustersDebug();
+                    this._worldClustersDebug.render(lightClusters, scene);
                 }
             }
         }
@@ -1115,6 +1136,7 @@ class ForwardRenderer extends Renderer {
      */
     update(comp) {
 
+        this._worldClustersDebug?.frameUpdate();
         this.frameUpdate();
         this.shadowRenderer.frameUpdate();
 

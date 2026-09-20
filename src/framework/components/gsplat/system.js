@@ -56,7 +56,8 @@ const _properties = [
 ];
 
 /**
- * Allows an Entity to render a gsplat.
+ * Manages the {@link GSplatComponent}s of an application. Reach it through `app.systems.gsplat`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Graphics
  */

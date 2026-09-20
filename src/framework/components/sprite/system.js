@@ -33,7 +33,8 @@ import { SpriteComponent } from './component.js';
  */
 
 /**
- * Manages creation of {@link SpriteComponent}s.
+ * Manages the {@link SpriteComponent}s of an application. Reach it through `app.systems.sprite`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Graphics
  */

@@ -1,4 +1,5 @@
 import { Asset } from '../../framework/asset/asset.js';
+import { getFetchCredentials } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogData } from '../../scene/gsplat/gsplat-sog-data.js';
 import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
@@ -99,7 +100,7 @@ const inflate = async (compressed) => {
 };
 
 const downloadArrayBuffer = async (url, asset) => {
-    const response = await (asset.file?.contents ?? fetch(url.load));
+    const response = await (asset.file?.contents ?? fetch(url.load, { credentials: getFetchCredentials() }));
     if (!response) {
         throw new Error('Error loading resource');
     }

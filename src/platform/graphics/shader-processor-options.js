@@ -1,7 +1,7 @@
 import { BINDGROUP_VIEW } from './constants.js';
 
 /**
- * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { UniformBufferFormat } from './uniform-buffer-format.js'
  * @import { VertexFormat } from './vertex-format.js'
@@ -45,15 +45,23 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the uniform exists, false otherwise.
      */
     hasUniform(name) {
+        return this.getUniformBindGroup(name) >= 0;
+    }
 
+    /**
+     * Get the index of the bind group whose uniform buffer contains the uniform.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {number} - The bind group index, or -1 if no uniform buffer contains the uniform.
+     */
+    getUniformBindGroup(name) {
         for (let i = 0; i < this.uniformFormats.length; i++) {
             const uniformFormat = this.uniformFormats[i];
             if (uniformFormat?.get(name)) {
-                return true;
+                return i;
             }
         }
-
-        return false;
+        return -1;
     }
 
     /**
@@ -63,15 +71,27 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the texture uniform exists, false otherwise.
      */
     hasTexture(name) {
+        return !!this.getTexture(name);
+    }
+
+    /**
+     * Get the format of the texture, if one of the supplied bind groups contains it.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {BindTextureFormat|null} - The format of the texture, or null if no supplied bind
+     * group contains it.
+     */
+    getTexture(name) {
 
         for (let i = 0; i < this.bindGroupFormats.length; i++) {
             const groupFormat = this.bindGroupFormats[i];
-            if (groupFormat?.getTexture(name)) {
-                return true;
+            const textureFormat = groupFormat?.getTexture(name);
+            if (textureFormat) {
+                return textureFormat;
             }
         }
 
-        return false;
+        return null;
     }
 
     getVertexElement(semantic) {

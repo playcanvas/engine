@@ -12,7 +12,7 @@ import {
 import { VAT_TEXTURE_LIMIT, VAT_VERSION, vatTextureSize, writeContainer } from './vat-data.mjs';
 
 /**
- * @import { AppBase, ContainerResource } from 'playcanvas'
+ * @import { AnimTrack, AppBase, ContainerResource, Mesh } from 'playcanvas'
  */
 
 /**
@@ -108,14 +108,14 @@ export async function convertToVat(app, container, options = {}) {
     const device = app.graphicsDevice;
 
     // the whole character has to be a single mesh, as it is rendered with a single instanced draw
-    const meshes = container.renders.map(render => render.resource.meshes).flat();
+    const meshes = container.renders.map(render => render.resource?.meshes ?? []).flat();
     if (meshes.length !== 1) {
         throw new Error(`The glb contains ${meshes.length} meshes, but exactly one is required.`);
     }
 
-    const vertexCount = meshes[0].vertexBuffer.numVertices;
+    const vertexCount = /** @type {Mesh} */ (meshes[0]).vertexBuffer.numVertices;
 
-    const tracks = container.animations.map(animation => animation.resource);
+    const tracks = /** @type {AnimTrack[]} */ (container.animations.map(animation => animation.resource));
     if (tracks.length === 0) {
         throw new Error('The glb does not contain any animations.');
     }

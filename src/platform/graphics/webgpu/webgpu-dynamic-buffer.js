@@ -40,6 +40,7 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
         this.bindGroupCache.clear();
         this.bindGroupFormat.destroy();
         this.mappedRange = null;
+        this.setStorage(null);
 
         device._vram.ub -= this.buffer.size;
 
@@ -51,12 +52,10 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
      * Called when the staging buffer is mapped for writing.
      */
     onAvailable() {
-        // map the whole buffer
+        // map the whole buffer - each mapping returns new memory, so the storage views are created
+        // for it here, once per mapping instead of once per allocation
         this.mappedRange = this.buffer.getMappedRange();
-    }
-
-    alloc(offset, size) {
-        return new Int32Array(this.mappedRange, offset, size / 4);
+        this.setStorage(this.mappedRange);
     }
 }
 

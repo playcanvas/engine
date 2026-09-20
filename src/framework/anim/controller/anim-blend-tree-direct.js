@@ -1,7 +1,9 @@
 import { AnimBlendTree } from './anim-blend-tree.js';
 
 /**
- * An AnimBlendTree that calculates normalized weight values based on the total weight.
+ * An AnimBlendTree that calculates normalized weight values based on the total weight. Each
+ * child's weight is read from its own parameter and the weights are then normalized to sum to
+ * one, so the mix is driven explicitly rather than by a position in parameter space.
  *
  * @category Animation
  */

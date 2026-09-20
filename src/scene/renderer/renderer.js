@@ -287,6 +287,9 @@ class Renderer {
         this._renderPassUpdateClustered?.destroy();
         this._renderPassUpdateClustered = null;
 
+        this.worldClustersAllocator.destroy();
+        this.worldClustersAllocator = null;
+
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
     }
@@ -704,7 +707,7 @@ class Renderer {
                 ]);
             }
 
-            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
+            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms, { pack: true });
         }
     }
 
@@ -756,10 +759,12 @@ class Renderer {
         const { device } = this;
         const ub = this.getViewUniformBuffer(viewUniformFormat);
 
-        // the material bind group is reserved for the material uniform buffer, which no material
-        // owns yet - bind it empty so the pipeline layout has no gap at its index
+        // start the pass with the empty bind group at the material index, so the pipeline layout has
+        // no gap for draws whose material has no uniform buffer; materials bind their own per draw
+        this._boundMaterialBindGroup = null;
         if (device.usesMeshBindGroups) {
             device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
+            this._boundMaterialBindGroup = device.emptyBindGroup;
         }
 
         if (viewList) {
@@ -780,6 +785,78 @@ class Renderer {
             ub.update(this._dynamicViewBindGroup);
             device.setBindGroup(BINDGROUP_VIEW, this._dynamicViewBindGroup.bindGroup, this._dynamicViewBindGroup.offsets);
         }
+    }
+
+    /**
+     * The bind group bound at the material bind group index by the current pass, or null.
+     *
+     * @type {BindGroup|null}
+     * @private
+     */
+    _boundMaterialBindGroup = null;
+
+    /**
+     * Binds the bind group of a material at the material bind group index, or the empty bind group
+     * for a material without one so the pipeline layout has no gap. Called at a material switch,
+     * and again after a draw that bound a mesh instance's copy of the material uniform buffer.
+     * Rebinds only when the group differs from the one bound by the previous draw.
+     *
+     * @param {Material} material - The material.
+     */
+    setupMaterialBindGroup(material) {
+        const device = this.device;
+        let bindGroup = material.uniformBufferBindGroup;
+        if (!bindGroup && device.usesMeshBindGroups) {
+            bindGroup = device.emptyBindGroup;
+        }
+        if (bindGroup && bindGroup !== this._boundMaterialBindGroup) {
+            device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
+            this._boundMaterialBindGroup = bindGroup;
+        }
+    }
+
+    /**
+     * Binds a mesh instance's copy of the material uniform buffer, with the uniforms it overrides
+     * applied, at the material bind group index. Only called for a mesh instance that overrides
+     * some of them, or whose parameters need splitting against a changed material layout, see
+     * {@link Renderer#needsMaterialOverrideBindGroup}.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     */
+    setupMaterialOverrideBindGroup(meshInstance) {
+        const device = this.device;
+        const bindGroup = meshInstance.getMaterialBindGroup(device);
+        if (bindGroup && bindGroup !== this._boundMaterialBindGroup) {
+            device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
+            this._boundMaterialBindGroup = bindGroup;
+        }
+    }
+
+    /**
+     * True when this mesh instance overrides something in the material's bind group, and so a draw
+     * of it binds its own copy of that group. Kept to field reads, as this runs for every draw.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @returns {boolean} True when the mesh instance overrides a uniform or a texture.
+     */
+    hasMaterialOverrides(meshInstance) {
+        return meshInstance._materialOverrides.length > 0 ||
+            meshInstance._materialTextureOverrides.length > 0;
+    }
+
+    /**
+     * True when a draw of this mesh instance needs its own copy of the material's bind group: it
+     * overrides something in it, or the set of typed properties of the material changed and its
+     * parameters need splitting against the new layout again. Kept to field reads, as this runs for
+     * every draw.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @param {Material} material - Its material.
+     * @returns {boolean} True when the copy is needed.
+     */
+    needsMaterialOverrideBindGroup(meshInstance, material) {
+        return this.hasMaterialOverrides(meshInstance) ||
+            meshInstance._materialLayoutVersion !== material._layoutVersion;
     }
 
     setupMeshUniformBuffers(shaderInstance) {

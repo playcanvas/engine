@@ -86,29 +86,38 @@ function findNode(node, test) {
  */
 
 /**
- * The GraphNode class represents a node within a hierarchical scene graph. Each GraphNode can
- * reference an array of {@link children}. This creates a tree-like structure that is fundamental
- * for organizing and managing the spatial relationships between objects in a 3D scene. This class
- * provides a comprehensive API for manipulating the position, rotation, and scale of nodes both
- * locally (relative to the {@link parent}) and in world space (relative to the {@link Scene}
- * origin).
+ * A GraphNode is a node in the scene graph: a named object with a position, rotation and scale,
+ * and a list of {@link children} whose transforms are expressed relative to it. Nodes form a tree,
+ * and the world transform of any node is its local transform combined with the world transform of
+ * its {@link parent}; the {@link root} has no parent, so its world transform is its local one. The
+ * engine brings every world transform up to date each frame before rendering, so a change to a
+ * parent reaches all of its descendants.
  *
- * During the application's (see {@link AppBase}) main update loop, the engine automatically
- * synchronizes the entire GraphNode hierarchy each frame. This process ensures that the world
- * transformation matrices for all nodes are up-to-date. A node's world transformation matrix is
- * calculated by combining its local transformation matrix (derived from its local position,
- * rotation, and scale) with the world transformation matrix of its parent node. For the scene
- * graph's {@link root} node (which has no parent), its world matrix is simply its local matrix.
- * This hierarchical update mechanism ensures that changes made to a parent node's transform
- * correctly propagate down to all its children and descendants, accurately reflecting their final
- * position, orientation, and scale in the world. This synchronized world transform is essential
- * for systems like rendering and physics.
+ * GraphNode is the base class of {@link Entity}, which adds components, so in practice these
+ * methods are called on entities. The conventions are the same on both:
  *
- * GraphNode is the superclass of {@link Entity}, which is the primary class for creating objects
- * in a PlayCanvas application. For this reason, developers typically interact with the scene
- * hierarchy and transformations through the Entity interface rather than using GraphNode directly.
- * However, GraphNode provides the underlying powerful set of features for hierarchical
- * transformations that Entity leverages.
+ * - Local methods such as {@link setLocalPosition} and {@link getLocalRotation} work relative to
+ * the parent. Their world counterparts, {@link setPosition}, {@link getRotation} and the rest,
+ * account for the whole chain of ancestors.
+ * - Setters accept separate components or a vector or quaternion, and copy the value.
+ * - Getters return the node's internal storage as read-only; clone the result if you need to
+ * keep or modify it.
+ * - Euler angles are in degrees, and {@link forward} is the node's negative Z axis.
+ *
+ * Build the hierarchy with {@link addChild}, {@link insertChild}, {@link removeChild} and
+ * {@link reparent}, and search it with {@link findByName}, {@link findByPath}, {@link findByTag}
+ * and {@link find}. Setting {@link enabled} to false disables the node and its whole subtree.
+ *
+ * @example
+ * // Move a node one unit in its own facing direction, then turn it to face a target
+ * node.translateLocal(0, 0, -1);
+ * node.lookAt(target.getPosition());
+ * @example
+ * // Getters return read-only internal storage: clone before modifying
+ * const start = node.getPosition().clone();
+ * start.y += 1;
+ * node.setPosition(start);
+ * @category Framework
  */
 class GraphNode extends EventHandler {
     /**

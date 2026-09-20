@@ -114,6 +114,8 @@ const compareGraphs = (a, b) => groupOrder(a) - groupOrder(b) || graphOrder(a) -
  * refresh at textRefreshRate while visible, including their sum in the collapsed heading; they
  * have no average or peak. In graph views, resource histories use the latest sampled counts
  * and scale to accommodate the highest count seen.
+ *
+ * @category Debug
  */
 class MiniStats {
     /**
@@ -230,6 +232,9 @@ class MiniStats {
         this.device.on('resizecanvas', this.updateDiv, this);
         this.device.on('losecontext', this.loseContext, this);
         app.on('frameupdate', this.update, this);
+        app.on('prerender', this.render2d.frameUpdate, this.render2d);
+        app.scene.on('prerender:layer', this.render2d.onPreRenderLayer, this.render2d);
+        app.scene.on('postrender:layer', this.render2d.onPostRenderLayer, this.render2d);
         app.on('postrender', this.postRender, this);
         app.on('destroy', this.destroy, this);
         this.activeSizeIndex = options.startSizeIndex;
@@ -247,9 +252,11 @@ class MiniStats {
         this.device.off('resizecanvas', this.updateDiv, this);
         this.device.off('losecontext', this.loseContext, this);
         this.app.off('frameupdate', this.update, this);
+        this.app.off('prerender', this.render2d.frameUpdate, this.render2d);
+        this.app.scene.off('prerender:layer', this.render2d.onPreRenderLayer, this.render2d);
+        this.app.scene.off('postrender:layer', this.render2d.onPostRenderLayer, this.render2d);
         this.app.off('postrender', this.postRender, this);
         this.app.off('destroy', this.destroy, this);
-        this.removeQueuedMesh();
         for (let i = 0; i < this.graphs.length; i++) this.graphs[i].destroy();
         this.gpuPassGraphs.clear();
         this.cpuGraphs.clear();
@@ -374,7 +381,7 @@ class MiniStats {
                 this.graphs[i].timer.enabled = value;
             }
             this.div.style.display = value ? 'block' : 'none';
-            if (!value) this.removeQueuedMesh();
+            if (!value) this.render2d.setLayer(null);
         }
     }
 
@@ -550,18 +557,6 @@ class MiniStats {
             }
         }
         this.activeSizeIndex = (this.activeSizeIndex + 1) % this.sizes.length;
-    }
-
-    /** @private */
-    removeQueuedMesh() {
-        // postrender submits the overlay for the next frame. Remove that pending reference
-        // before freeing the mesh, including when its UI layer was not rendered this frame.
-        const queued = this.app.scene.immediate?.layerMeshInstances.get(this.drawLayer);
-        if (queued) {
-            for (let i = queued.length - 1; i >= 0; i--) {
-                if (queued[i] === this.render2d.meshInstance) queued.splice(i, 1);
-            }
-        }
     }
 
     /**
@@ -768,7 +763,7 @@ class MiniStats {
         } else if (this._showGraphs) {
             for (let i = 0; i < this.graphs.length; i++) this.render2d.graphCursor(this.graphs[i]);
         }
-        this.render2d.render(this.app, this.drawLayer, this.texture, this.wordAtlas.texture, this.clr);
+        this.render2d.render(this.drawLayer, this.texture, this.wordAtlas.texture, this.clr);
     }
 
     /** @private */

@@ -12,10 +12,12 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SHADOW_CASCADE_ALL
+    SHADOW_CASCADE_ALL,
+    instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
+import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { hash32Fnv1a } from '../core/hash.js';
@@ -31,6 +33,19 @@ import { PickerId } from './picker-id.js';
  * @import { MorphInstance } from './morph-instance.js'
  * @import { CameraShaderParams } from './camera-shader-params.js'
  * @import { Scene } from './scene.js'
+ * @import { UniformFormat } from '../platform/graphics/uniform-buffer-format.js'
+ * @typedef {object} MeshInstanceParameter - A parameter of a mesh instance, overriding the value of
+ * the material for that instance.
+ * @property {string} name - The name of the uniform.
+ * @property {*} data - The value.
+ * @property {ScopeId|null} scopeId - The scope id, resolved on first use for scope parameters.
+ * @property {boolean} override - True when the uniform is stored in the material uniform buffer, so
+ * the parameter is applied through the mesh instance's copy of it rather than through the scope.
+ * @property {UniformFormat|null} uniformFormat - The format of the uniform in the material uniform
+ * buffer, resolved on first use for overrides.
+ * @property {number} textureSlot - The index of the texture slot of the material bind group the
+ * parameter overrides, or -1 when it does not override a texture of the material.
+ * @ignore
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
  * @import { SkinInstance } from './skin-instance.js'
@@ -179,6 +194,19 @@ class ShaderInstance {
 /**
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
+ *
+ * A mesh instance is created from a {@link Mesh}, a {@link Material} and the {@link GraphNode}
+ * whose world transform places it, and it is drawn only once it belongs to a {@link Layer}.
+ * Components such as {@link RenderComponent} create mesh instances from their assets and add them
+ * to the layers in their `layers` list. A mesh instance you construct yourself is placed either
+ * by assigning it to {@link RenderComponent#meshInstances} or by adding it to a layer directly
+ * with {@link Layer#addMeshInstances}.
+ *
+ * Per-instance rendering state lives here rather than on the shared mesh or material:
+ * {@link visible}, {@link castShadow} and `receiveShadow`, {@link cull} for frustum culling,
+ * {@link drawOrder} for manual sorting, and {@link setParameter} for shader uniforms that override
+ * the material's. {@link aabb} is the world-space bounds derived from the mesh bounds and the
+ * node's transform, and can be assigned to override it.
  *
  * ### Instancing
  *
@@ -364,15 +392,12 @@ class MeshInstance {
     instancingData = null;
 
     /**
-     * @type {DrawCommands|null}
-     * @ignore
-     */
-    indirectData = null;
-
-    /**
-     * Map of camera to their corresponding indirect draw data. Lazily allocated.
+     * Map of {@link Camera#id} to the draw commands bound to that camera, with the null key
+     * holding the commands shared by all cameras. Lazily allocated. Keyed by id rather than by
+     * camera so a long-lived mesh instance cannot retain a camera, and with it the camera's node
+     * hierarchy and render target.
      *
-     * @type {Map<Camera|null, DrawCommands>|null}
+     * @type {Map<number|null, DrawCommands>|null}
      * @ignore
      */
     drawCommands = null;
@@ -387,10 +412,89 @@ class MeshInstance {
     meshMetaData = null;
 
     /**
-     * @type {Record<string, {scopeId: ScopeId|null, data: any}>}
+     * The parameters overriding the material values for this mesh instance, by name. A parameter
+     * naming the uniform of a typed material property is applied through a per-instance copy of the
+     * material uniform buffer (an override), any other parameter is set on the scope before the
+     * draw. The two groups are also kept in dense lists for the render loop.
+     *
+     * @type {Map<string, MeshInstanceParameter>}
      * @ignore
      */
-    parameters = {};
+    parameters = new Map();
+
+    /**
+     * The parameters set on the scope before the draw.
+     *
+     * @type {MeshInstanceParameter[]}
+     * @private
+     */
+    _scopeParameters = [];
+
+    /**
+     * The parameters overriding uniforms of the material uniform buffer.
+     *
+     * @type {MeshInstanceParameter[]}
+     * @private
+     */
+    _materialOverrides = [];
+
+    /**
+     * The parameters overriding textures of the material bind group.
+     *
+     * @type {MeshInstanceParameter[]}
+     * @private
+     */
+    _materialTextureOverrides = [];
+
+    /**
+     * The layout version of the material the parameters were last split against, see
+     * {@link Material#layoutVersion}.
+     *
+     * @type {number}
+     * @private
+     */
+    _materialLayoutVersion = -1;
+
+    /**
+     * Incremented when an override of the material uniform buffer is added, removed or changed.
+     *
+     * @type {number}
+     * @private
+     */
+    _materialOverridesVersion = 0;
+
+    /**
+     * The per-instance copy of the material uniform buffer with the overrides applied, created on
+     * first use, or null.
+     *
+     * @type {UniformBuffer|null}
+     * @private
+     */
+    _materialUniformBuffer = null;
+
+    /**
+     * The bind group holding {@link MeshInstance#_materialUniformBuffer}.
+     *
+     * @type {BindGroup|null}
+     * @private
+     */
+    _materialBindGroup = null;
+
+    /**
+     * The material uniform data version the copy was last synchronized with.
+     *
+     * @type {number}
+     * @private
+     */
+    _syncedMaterialDataVersion = -1;
+
+    /**
+     * The overrides version the copy was last synchronized with.
+     *
+     * @type {number}
+     * @private
+     */
+    _syncedOverridesVersion = -1;
 
     /**
      * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
@@ -543,6 +647,7 @@ class MeshInstance {
      */
     constructor(mesh, material, node = null) {
         Debug.assert(!(mesh instanceof GraphNode), 'Incorrect parameters for MeshInstance\'s constructor. Use new MeshInstance(mesh, material, node)');
+        Debug.call(() => initMeshInstanceDebug(this));
 
         this.node = node;           // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
@@ -852,6 +957,9 @@ class MeshInstance {
 
         this._material = material;
 
+        // which parameters override the material uniform buffer depends on the material
+        this._rebuildParameterLists();
+
         if (material) {
 
             // Record that the material is referenced by this mesh instance
@@ -997,8 +1105,9 @@ class MeshInstance {
     }
 
     /**
-     * Sets the mask controlling which {@link LightComponent}s light this mesh instance, which
-     * {@link CameraComponent} sees it and in which {@link Layer} it is rendered. Defaults to 1.
+     * Sets the light mask of this mesh instance: which {@link LightComponent}s light it. The value
+     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`.
+     * Defaults to `MASK_AFFECT_DYNAMIC`.
      *
      * @type {number}
      */
@@ -1008,8 +1117,7 @@ class MeshInstance {
     }
 
     /**
-     * Gets the mask controlling which {@link LightComponent}s light this mesh instance, which
-     * {@link CameraComponent} sees it and in which {@link Layer} it is rendered.
+     * Gets the light mask of this mesh instance: which {@link LightComponent}s light it.
      *
      * @type {number}
      */
@@ -1063,6 +1171,8 @@ class MeshInstance {
 
         this.clearShaders();
 
+        this._destroyMaterialUniformBuffer();
+
         // make sure material clears references to this meshInstance
         this.material = null;
 
@@ -1080,8 +1190,8 @@ class MeshInstance {
         }
     }
 
-    // shader uniform names for lightmaps
-    static lightmapParamNames = ['texture_lightMap', 'texture_dirLightMap'];
+    // shader uniform names for the lightmaps of a mesh instance
+    static lightmapParamNames = instanceLightmapUniformNames;
 
     /**
      * Sets the render style for an array of mesh instances.
@@ -1199,25 +1309,19 @@ class MeshInstance {
      * @param {number} [count] - Optional number of consecutive slots to use. Defaults to 1.
      */
     setIndirect(camera, slot, count = 1) {
-        const key = camera?.camera ?? null;
+        const key = camera?.camera.id ?? null;
 
         // disable when slot is -1
         if (slot === -1) {
             this._deleteDrawCommandsKey(key);
         } else {
-
-            // lazy map allocation
-            this.drawCommands ??= new Map();
-
-            // allocate or get per-camera command
-            const cmd = this.drawCommands.get(key) ?? new DrawCommands(this.mesh.device);
+            const cmd = this._allocDrawCommands(key, false);
             cmd.slotIndex = slot;
             cmd.update(count);
-            this.drawCommands.set(key, cmd);
 
-            // remove all data from this map at the end of the frame, slot needs to be assigned each frame
-            const device = this.mesh.device;
-            device.mapsToClear.add(this.drawCommands);
+            // the slot is recycled at the end of the frame, so the commands only apply to this
+            // frame - they need to be assigned again for the next one
+            cmd.validUntilVersion = this.mesh.device.drawCommandsVersion;
         }
     }
 
@@ -1235,29 +1339,53 @@ class MeshInstance {
      * @returns {DrawCommands|undefined} The commands container to populate with sub-draw commands.
      */
     setMultiDraw(camera, maxCount = 1) {
-        const key = camera?.camera ?? null;
+        const key = camera?.camera.id ?? null;
         let cmd;
 
         // disable when maxCount is 0
         if (maxCount === 0) {
             this._deleteDrawCommandsKey(key);
         } else {
-
-            // lazy map allocation
-            this.drawCommands ??= new Map();
-
-            // allocate or get per-camera command
-            cmd = this.drawCommands.get(key);
-            if (!cmd) {
-                // determine index size from current mesh index buffer
-                const indexBuffer = this.mesh.indexBuffer?.[0];
-                const indexFormat = indexBuffer?.format;
-                const indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
-                cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
-                this.drawCommands.set(key, cmd);
-            }
+            cmd = this._allocDrawCommands(key, true);
             cmd.allocate(maxCount);
         }
+        return cmd;
+    }
+
+    /**
+     * Returns the cached draw commands for a key, allocating them when missing. A cached set of
+     * the other kind is released first - indirect and multi-draw commands draw from different
+     * backing storage, so they cannot share an instance.
+     *
+     * @param {number|null} key - The {@link Camera#id} the commands are bound to, or null for the
+     * set shared by all cameras.
+     * @param {boolean} multiDraw - True for multi-draw commands, false for indirect ones.
+     * @returns {DrawCommands} The draw commands to populate.
+     * @private
+     */
+    _allocDrawCommands(key, multiDraw) {
+
+        // lazy map allocation
+        const cmds = this.drawCommands ??= new Map();
+
+        let cmd = cmds.get(key);
+        if (cmd && cmd.multiDraw !== multiDraw) {
+            cmd.destroy();
+            cmd = undefined;
+        }
+
+        if (!cmd) {
+            // multi-draw on WebGL needs the index size of the current mesh index buffer
+            let indexSizeBytes = 0;
+            if (multiDraw) {
+                const indexFormat = this.mesh.indexBuffer?.[0]?.format;
+                indexSizeBytes = (indexFormat !== undefined) ? indexFormatByteSize[indexFormat] : 0;
+            }
+            cmd = new DrawCommands(this.mesh.device, indexSizeBytes);
+            cmd.multiDraw = multiDraw;
+            cmds.set(key, cmd);
+        }
+
         return cmd;
     }
 
@@ -1284,7 +1412,13 @@ class MeshInstance {
     getDrawCommands(camera) {
         const cmds = this.drawCommands;
         if (!cmds) return undefined;
-        return cmds.get(camera) ?? cmds.get(null);
+
+        // commands are cached for reuse, so expired ones are still in the map
+        const version = this.mesh.device.drawCommandsVersion;
+        const cmd = cmds.get(camera?.id);
+        if (cmd && version <= cmd.validUntilVersion) return cmd;
+        const shared = cmds.get(null);
+        return (shared && version <= shared.validUntilVersion) ? shared : undefined;
     }
 
     /**
@@ -1315,7 +1449,11 @@ class MeshInstance {
 
     // Parameter management
     clearParameters() {
-        this.parameters = {};
+        this.parameters.clear();
+        this._scopeParameters.length = 0;
+        this._materialOverrides.length = 0;
+        this._materialTextureOverrides.length = 0;
+        this._materialOverridesVersion++;
     }
 
     getParameters() {
@@ -1330,12 +1468,14 @@ class MeshInstance {
      * name is set on this mesh instance.
      */
     getParameter(name) {
-        return this.parameters[name];
+        return this.parameters.get(name);
     }
 
     /**
      * Sets a shader parameter on a mesh instance. Note that this parameter will take precedence
      * over parameter of the same name if set on Material this mesh instance uses for rendering.
+     * To change an array value, call this method again with it; the contents of an array are not
+     * guaranteed to be re-read on later draws.
      *
      * @param {string} name - The name of the parameter to set.
      * @param {number|number[]|Texture|Float32Array} data - The value for the specified parameter.
@@ -1348,14 +1488,25 @@ class MeshInstance {
             }
         });
 
-        const param = this.parameters[name];
+        const param = this.parameters.get(name);
         if (param) {
             param.data = data;
+
+            // a new value for an override of the material uniform buffer
+            if (param.override) {
+                this._materialOverridesVersion++;
+            }
         } else {
-            this.parameters[name] = {
+            const parameter = {
+                name: name,
+                data: data,
                 scopeId: null,
-                data: data
+                override: false,
+                uniformFormat: null,
+                textureSlot: -1
             };
+            this.parameters.set(name, parameter);
+            this._addParameter(parameter);
         }
     }
 
@@ -1394,27 +1545,190 @@ class MeshInstance {
      * @param {string} name - The name of the parameter to delete.
      */
     deleteParameter(name) {
-        if (this.parameters[name]) {
-            delete this.parameters[name];
+        const parameter = this.parameters.get(name);
+        if (parameter) {
+            this.parameters.delete(name);
+            const list = parameter.override ? this._materialOverrides :
+                (parameter.textureSlot >= 0 ? this._materialTextureOverrides : this._scopeParameters);
+            list.splice(list.indexOf(parameter), 1);
+            if (parameter.override) {
+                this._materialOverridesVersion++;
+            }
         }
     }
 
     /**
      * Used to apply parameters from this mesh instance into scope of uniforms, called internally
-     * by forward-renderer.
+     * by forward-renderer. Parameters overriding uniforms of the material uniform buffer are not
+     * part of this, they are applied by {@link MeshInstance#getMaterialBindGroup}.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @ignore
      */
     setParameters(device) {
-        const parameters = this.parameters;
-        for (const paramName in parameters) {
-            const parameter = parameters[paramName];
+        const parameters = this._scopeParameters;
+        for (let i = 0; i < parameters.length; i++) {
+            const parameter = parameters[i];
             if (!parameter.scopeId) {
-                parameter.scopeId = device.scope.resolve(paramName);
+                parameter.scopeId = device.scope.resolve(parameter.name);
             }
             parameter.scopeId.setValue(parameter.data);
         }
+    }
+
+    /**
+     * Adds a parameter to the scope list, or to the overrides of the material uniform buffer when
+     * its name is the uniform of a typed property of the material.
+     *
+     * @param {MeshInstanceParameter} parameter - The parameter.
+     * @private
+     */
+    _addParameter(parameter) {
+        const material = this._material;
+        parameter.override = !!material?.getUniformBufferProperty(parameter.name);
+        parameter.uniformFormat = null;
+
+        // a name which is not a uniform of the material buffer can still be one of its textures
+        parameter.textureSlot = parameter.override ? -1 : (material?.getTextureSlot(parameter.name) ?? -1);
+
+        if (parameter.override) {
+            this._materialOverrides.push(parameter);
+            this._materialOverridesVersion++;
+        } else if (parameter.textureSlot >= 0) {
+
+            // the copy of the bind group assigns the overriding textures on every draw, so there
+            // is no version for them to move
+            this._materialTextureOverrides.push(parameter);
+        } else {
+            this._scopeParameters.push(parameter);
+        }
+    }
+
+    /**
+     * Splits the parameters between the scope and the material uniform buffer again, after the
+     * material or its set of typed properties changed.
+     *
+     * @private
+     */
+    _rebuildParameterLists() {
+        this._scopeParameters.length = 0;
+        this._materialOverrides.length = 0;
+        this._materialTextureOverrides.length = 0;
+        for (const parameter of this.parameters.values()) {
+            this._addParameter(parameter);
+        }
+        this._materialLayoutVersion = this._material?.layoutVersion ?? -1;
+        this._materialOverridesVersion++;
+    }
+
+    /**
+     * Returns the bind group to use at the material bind group index for this mesh instance: a
+     * per-instance copy of the material's bind group with the overriding parameters applied, or
+     * null when no parameter overrides anything in it, in which case the material's own bind group
+     * is used. The copy of the uniform buffer is synchronized when the material data or the
+     * overrides changed; the textures are assigned every time, as they are only references.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {BindGroup|null} The bind group of the overriding copy, or null.
+     * @ignore
+     */
+    getMaterialBindGroup(device) {
+        const material = this._material;
+
+        // the set of typed properties of the material changed - split the parameters again
+        if (this._materialLayoutVersion !== material.layoutVersion) {
+            this._rebuildParameterLists();
+        }
+
+        const overrides = this._materialOverrides;
+        const textureOverrides = this._materialTextureOverrides;
+        const materialUniformBuffer = material.uniformBuffer;
+        if ((overrides.length === 0 && textureOverrides.length === 0) || !materialUniformBuffer) {
+            return null;
+        }
+
+        // the copy follows the layout of the material - both the format of its buffer and the
+        // format of its bind group, which can differ in its textures alone
+        const format = materialUniformBuffer.format;
+        const bindGroupFormat = material.uniformBufferBindGroup.format;
+        let uniformBuffer = this._materialUniformBuffer;
+        if (!uniformBuffer || uniformBuffer.format !== format || this._materialBindGroup.format !== bindGroupFormat) {
+            this._destroyMaterialUniformBuffer();
+            uniformBuffer = new UniformBuffer(device, format, true);
+            this._materialUniformBuffer = uniformBuffer;
+            this._materialBindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
+            this._syncedMaterialDataVersion = -1;
+
+            // the uniform formats of the overrides belong to the previous layout
+            for (let i = 0; i < overrides.length; i++) {
+                overrides[i].uniformFormat = null;
+            }
+        }
+
+        Debug.assert(uniformBuffer.device === device, 'A mesh instance can only be rendered by the graphics device that created its material uniform buffer copy.', this);
+
+        Debug.call(() => {
+            // an override array changed in place is not applied until the next setParameter. When no
+            // setParameter moved the override version since the last synchronization, warn about such
+            // a change, and check nothing until a setParameter moves the version
+            if (this._syncedOverridesVersion === this._materialOverridesVersion &&
+                this._debugWarnedOverridesVersion !== this._materialOverridesVersion) {
+                const names = getMutatedOverrides(this, overrides);
+                if (names.length > 0) {
+                    this._debugWarnedOverridesVersion = this._materialOverridesVersion;
+                    warnMutatedOverrides(this, names);
+                }
+            }
+        });
+
+        if (this._syncedMaterialDataVersion !== material.uniformDataVersion || this._syncedOverridesVersion !== this._materialOverridesVersion) {
+            // the material values, with the overrides applied on top
+            uniformBuffer.storageFloat32.set(materialUniformBuffer.storageFloat32);
+            for (let i = 0; i < overrides.length; i++) {
+                const override = overrides[i];
+                override.uniformFormat ??= format.get(override.name);
+                Debug.assert(override.uniformFormat, `Uniform '${override.name}' is not part of the material uniform buffer.`, this);
+                uniformBuffer.setUniform(override.uniformFormat, override.data);
+            }
+            Debug.call(() => recordAppliedOverrides(this, overrides));
+            uniformBuffer.upload();
+            this._syncedMaterialDataVersion = material.uniformDataVersion;
+            this._syncedOverridesVersion = this._materialOverridesVersion;
+        }
+
+        // the textures of the material, with the overriding ones on top. Assigning a texture is
+        // comparing a reference, so there is nothing to gain from tracking a version for it, and
+        // the bind group is only rebuilt when one of them actually changed
+        const bindGroup = this._materialBindGroup;
+        const materialTextures = material.uniformBufferBindGroup.textures;
+        for (let i = 0; i < materialTextures.length; i++) {
+            const texture = materialTextures[i];
+            if (texture) {
+                bindGroup.setTextureAt(i, texture);
+            }
+        }
+
+        for (let i = 0; i < textureOverrides.length; i++) {
+            const override = textureOverrides[i];
+            bindGroup.setTextureAt(override.textureSlot, override.data);
+        }
+
+        // (re)built when dirty: on creation, which needs the uploaded buffer, and after a lost
+        // context. Its resources are assigned here, not taken from the scope
+        bindGroup.commit();
+        return bindGroup;
+    }
+
+    /**
+     * Releases the per-instance copy of the material uniform buffer.
+     *
+     * @private
+     */
+    _destroyMaterialUniformBuffer() {
+        this._materialBindGroup?.destroy();
+        this._materialBindGroup = null;
+        this._materialUniformBuffer?.destroy();
+        this._materialUniformBuffer = null;
     }
 
     /**

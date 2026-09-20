@@ -70,6 +70,46 @@ class AmmoContactPair {
 }
 
 /**
+ * The internal tick callback registered with each Ammo module instance, and the worlds it routes
+ * to by the native world pointer Bullet passes as the callback's first argument.
+ *
+ * Emscripten's addFunction hands out a function table slot that is never released (removeFunction
+ * is not exported by the shipped builds) and it identity-caches the function it is given. A
+ * closure per world would therefore keep the world, its contact listener and through that the
+ * whole application reachable for the life of the page. One dispatcher per module captures
+ * nothing but this registry, so an entry lives exactly as long as its world and the table grows
+ * by a single slot however many worlds come and go.
+ *
+ * @type {WeakMap<object, { pointer: number, worlds: Map<number, AmmoPhysicsWorld> }>}
+ */
+const tickDispatchers = new WeakMap();
+
+/**
+ * Returns the tick dispatcher for an Ammo module instance, registering it on first use.
+ *
+ * @param {object} ammo - The Ammo module.
+ * @returns {{ pointer: number, worlds: Map<number, AmmoPhysicsWorld> }} The dispatcher.
+ */
+function getTickDispatcher(ammo) {
+    let dispatcher = tickDispatchers.get(ammo);
+    if (!dispatcher) {
+        const worlds = new Map();
+        const pointer = ammo.addFunction((worldPointer) => {
+            const world = worlds.get(worldPointer);
+            if (world) {
+                world._walkContacts();
+            } else {
+                // only the miss builds a message: this runs every substep in debug builds
+                Debug.assert(false, `AmmoPhysicsWorld: internal tick callback for an unknown world ${worldPointer}.`);
+            }
+        }, 'vif');
+        dispatcher = { pointer, worlds };
+        tickDispatchers.set(ammo, dispatcher);
+    }
+    return dispatcher;
+}
+
+/**
  * The Ammo.js (Bullet) physics backend. The `Ammo` global must be available when the world is
  * constructed - load the library first, then supply the backend to the application:
  *
@@ -94,9 +134,6 @@ class AmmoContactPair {
  * @alpha
  */
 class AmmoPhysicsWorld extends PhysicsWorld {
-    /** @private */
-    _gravityFloat32 = new Float32Array(3);
-
     /**
      * Built triangle data cached per geometry source id, shared by all mesh shapes created
      * from the same geometry. Each entry holds the btTriangleMesh, which lives until the world
@@ -179,6 +216,18 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     _useTickCallback = false;
 
     /**
+     * The tick dispatcher this world is registered with, and the native world pointer it is
+     * registered under. Null when the build has no internal tick callback.
+     *
+     * @type {{ pointer: number, worlds: Map<number, AmmoPhysicsWorld> }|null}
+     * @private
+     */
+    _tickDispatcher = null;
+
+    /** @private */
+    _nativeWorldPointer = 0;
+
+    /**
      * The reused contact pair driven through the contact listener.
      *
      * @private
@@ -224,8 +273,12 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         // otherwise defer to flushContacts()
         this._useTickCallback = !!this.nativeWorld.setInternalTickCallback;
         if (this._useTickCallback) {
-            const checkForCollisionsPointer = Ammo.addFunction(() => this._walkContacts(), 'vif');
-            this.nativeWorld.setInternalTickCallback(checkForCollisionsPointer);
+            // one callback per module, routed by world pointer - see tickDispatchers
+            const dispatcher = getTickDispatcher(Ammo);
+            this._nativeWorldPointer = Ammo.getPointer(this.nativeWorld);
+            dispatcher.worlds.set(this._nativeWorldPointer, this);
+            this._tickDispatcher = dispatcher;
+            this.nativeWorld.setInternalTickCallback(dispatcher.pointer);
         } else {
             Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
         }
@@ -265,6 +318,13 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this._btTransform = null;
         this._btRayStart = null;
         this._btRayEnd = null;
+
+        // unregister before the native world is freed: the next world may be allocated at the
+        // same address
+        if (this._tickDispatcher) {
+            this._tickDispatcher.worlds.delete(this._nativeWorldPointer);
+            this._tickDispatcher = null;
+        }
 
         Ammo.destroy(this.nativeWorld);
         Ammo.destroy(this.solver);
@@ -403,21 +463,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
      * @ignore
      */
     setGravity(gravity) {
-        // downcast gravity to float32 so we can accurately compare with existing gravity set
-        // in the world
-        this._gravityFloat32[0] = gravity.x;
-        this._gravityFloat32[1] = gravity.y;
-        this._gravityFloat32[2] = gravity.z;
-
-        // compare against the world's own value so writes through the native escape hatch are
-        // still detected
-        const current = this.nativeWorld.getGravity();
-        if (current.x() !== this._gravityFloat32[0] ||
-            current.y() !== this._gravityFloat32[1] ||
-            current.z() !== this._gravityFloat32[2]) {
-            current.setValue(gravity.x, gravity.y, gravity.z);
-            this.nativeWorld.setGravity(current);
-        }
+        this._btVec1.setValue(gravity.x, gravity.y, gravity.z);
+        this.nativeWorld.setGravity(this._btVec1);
     }
 
     step(dt, maxSubSteps, fixedTimeStep) {

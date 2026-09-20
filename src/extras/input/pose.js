@@ -7,7 +7,10 @@ const tmpV1 = new Vec3();
 const rotation = new Quat();
 
 /**
- * Represents a pose in 3D space, including position and rotation.
+ * Represents a pose in 3D space, including position and rotation. It is what an
+ * {@link InputController} produces: a {@link position}, Euler {@link angles} in degrees and, for
+ * controllers that orbit, the {@link distance} to the focus point. Optional ranges such as
+ * {@link pitchRange} and {@link yRange} clamp the result of {@link rotate} and {@link move}.
  *
  * @category Input
  * @alpha

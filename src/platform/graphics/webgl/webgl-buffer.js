@@ -8,7 +8,11 @@ import { BUFFER_DYNAMIC, BUFFER_GPUDYNAMIC, BUFFER_STATIC, BUFFER_STREAM } from 
 class WebglBuffer {
     bufferId = null;
 
+    /** @type {Uint8Array|null} */
+    uploadView = null;
+
     destroy(device) {
+        this.uploadView = null;
         if (this.bufferId) {
             device.gl.deleteBuffer(this.bufferId);
             this.bufferId = null;
@@ -23,8 +27,13 @@ class WebglBuffer {
         this.bufferId = null;
     }
 
-    unlock(device, usage, target, storage) {
+    unlock(device, usage, target, storage, byteOffset = 0, byteLength = storage.byteLength - byteOffset) {
         const gl = device.gl;
+
+        // Do not retain old CPU storage after setData replaces its backing buffer.
+        if (this.uploadView && this.uploadView.buffer !== (storage.buffer ?? storage)) {
+            this.uploadView = null;
+        }
 
         if (!this.bufferId) {
             let glUsage;
@@ -48,7 +57,19 @@ class WebglBuffer {
             gl.bufferData(target, storage, glUsage);
         } else {
             gl.bindBuffer(target, this.bufferId);
-            gl.bufferSubData(target, 0, storage);
+            if (byteOffset === 0 && byteLength === storage.byteLength) {
+                gl.bufferSubData(target, 0, storage);
+            } else {
+                // Byte units work uniformly for ArrayBuffers and all typed array storage types.
+                // Cache the view to avoid allocating one on each partial upload.
+                const buffer = storage.buffer ?? storage;
+                const offset = storage.byteOffset ?? 0;
+                let view = this.uploadView;
+                if (!view || view.buffer !== buffer || view.byteOffset !== offset || view.byteLength !== storage.byteLength) {
+                    view = this.uploadView = new Uint8Array(buffer, offset, storage.byteLength);
+                }
+                gl.bufferSubData(target, byteOffset, view, byteOffset, byteLength);
+            }
         }
     }
 }

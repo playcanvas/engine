@@ -11,8 +11,8 @@ varying vec3 vViewDir;
     varying vec3 vClipXYW;
 #endif
 
-#ifdef PREPASS_PASS
-    // when skydome renders depth during prepass, generate linear depth
+#if defined(PREPASS_PASS) || (defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH))
+    // Depth-based effects can use either the prepass or the scene pass depth output.
     varying float vLinearDepth;
 #endif
 
@@ -31,7 +31,7 @@ void main(void) {
         vWorldPos = worldPos.xyz;
         gl_Position = matrix_projectionSkybox * (view * worldPos);
 
-        #ifdef PREPASS_PASS
+        #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
             // linear depth from the worldPosition, see getLinearDepth
             vLinearDepth = -(matrix_view * vec4(vWorldPos, 1.0)).z;
         #endif

@@ -35,7 +35,8 @@ const METHOD_POST_UPDATE = '_onPostUpdate';
 let executionOrderCounter = 0;
 
 /**
- * Allows scripts to be attached to an Entity and executed.
+ * Manages the {@link ScriptComponent}s of an application. Reach it through `app.systems.script`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Script
  */

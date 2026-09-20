@@ -222,7 +222,11 @@ function createPlayer(id, startingAngle, speed, radius) {
     name.button.on('click', () => {
         const color = new Color(Math.random(), Math.random(), Math.random());
         name.element.color = color;
-        entity.render.material.setParameter('material_diffuse', [color.r, color.g, color.b]);
+
+        // Recolor this player only by overriding the diffuse color of the shared material on its
+        // mesh instance. The uniform stores linear values, so convert the color from sRGB.
+        const linear = new Color().linear(color);
+        entity.render.meshInstances[0].setParameter('material_diffuse', [linear.r, linear.g, linear.b]);
     });
     playerInfo.addChild(name);
 

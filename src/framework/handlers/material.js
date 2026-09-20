@@ -4,7 +4,6 @@ import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { AssetReference } from '../asset/asset-reference.js';
 import { JsonStandardMaterialParser } from '../parsers/material/json-standard-material.js';
 import { ResourceHandler } from './handler.js';
-import { getBuiltInTexture } from '../../platform/graphics/built-in-textures.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
@@ -40,9 +39,11 @@ const PLACEHOLDER_MAP = {
 };
 
 /**
- * Resource handler used for loading {@link Material} resources.
+ * Resource handler for the `material` asset type. Loads material JSON into a
+ * {@link StandardMaterial} and binds the texture assets it references. A custom parser may
+ * produce another kind of {@link Material}.
  *
- * @category Graphics
+ * @category Asset
  */
 class MaterialHandler extends ResourceHandler {
     /**
@@ -103,7 +104,7 @@ class MaterialHandler extends ResourceHandler {
     _getPlaceholderTexture(parameterName) {
         const placeholder = PLACEHOLDER_MAP[parameterName];
         Debug.assert(placeholder, `No placeholder texture found for parameter: ${parameterName}`);
-        return getBuiltInTexture(this._device, placeholder);
+        return this._device.builtInTextures[placeholder];
     }
 
     // assign a placeholder texture while waiting for one to load

@@ -20,6 +20,7 @@ import {
     FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
+import { BuiltInTextures } from './built-in-textures.js';
 import { DepthState } from './depth-state.js';
 import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
@@ -603,6 +604,14 @@ class GraphicsDevice extends EventHandler {
     quadIndexBuffer;
 
     /**
+     * The textures the engine binds in place of a texture it was not given.
+     *
+     * @type {BuiltInTextures}
+     * @ignore
+     */
+    builtInTextures;
+
+    /**
      * An object representing current blend state
      *
      * @ignore
@@ -689,12 +698,12 @@ class GraphicsDevice extends EventHandler {
     capsDefines = new Map();
 
     /**
-     * A set of maps to clear at the end of the frame.
+     * A version number incremented at the end of every frame. Frame-scoped draw commands are
+     * stamped with it, see {@link DrawCommands#validUntilVersion}.
      *
-     * @type {Set<Map>}
      * @ignore
      */
-    mapsToClear = new Set();
+    drawCommandsVersion = 0;
 
     static EVENT_RESIZE = 'resizecanvas';
 
@@ -786,6 +795,10 @@ class GraphicsDevice extends EventHandler {
         // create quad index buffer for indexed triangle list (two triangles forming a quad)
         const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
         this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
+
+        // create the substitute textures the rendering falls back on, which cannot be created
+        // while rendering (see BuiltInTextures)
+        this.builtInTextures = new BuiltInTextures(this);
     }
 
     /**
@@ -860,6 +873,9 @@ class GraphicsDevice extends EventHandler {
 
         this.quadIndexBuffer?.destroy();
         this.quadIndexBuffer = null;
+
+        this.builtInTextures?.destroy();
+        this.builtInTextures = null;
 
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
@@ -1790,9 +1806,8 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
-        // clear all maps scheduled for end of frame clearing
-        this.mapsToClear.forEach(map => map.clear());
-        this.mapsToClear.clear();
+        // expire frame-scoped draw commands - the indirect draw slots they reference are recycled
+        this.drawCommandsVersion++;
     }
 
     /**

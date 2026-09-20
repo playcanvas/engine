@@ -16,6 +16,11 @@ const USER_INPUT_EVENTS = [
  * The SoundManager is used to load and play audio. It also applies system-wide settings like
  * global volume, suspend and resume.
  *
+ * There is one per application at `app.soundManager`. It owns the Web Audio `context` that
+ * every {@link SoundInstance} plays through and the listener from which positional sounds are
+ * heard, applies the master {@link volume} on top of each instance's own, and `suspend` and
+ * `resume` silence and restart all audio at once, for example when the page loses focus.
+ *
  * @category Sound
  */
 class SoundManager extends EventHandler {

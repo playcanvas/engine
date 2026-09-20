@@ -51,7 +51,6 @@ import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 import { TextureUtils } from '../texture-utils.js';
-import { getBuiltInTexture } from '../built-in-textures.js';
 
 /**
  * @import { BindGroup } from '../bind-group.js'
@@ -2069,9 +2068,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const gl = this.gl;
 
+        // the number of active sub-draws is tracked by the owner, the implementation only holds
+        // the per-sub-draw arrays
+        const count = drawCommands.count;
+
         if (primitive.indexed) {
             const format = indexBuffer.impl.glFormat;
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+            const { glCounts, glOffsetsBytes, glInstanceCounts } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {
@@ -2083,7 +2086,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
         } else {
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+            const { glCounts, glOffsetsBytes, glInstanceCounts } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {
@@ -2137,17 +2140,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         if (samplerName === 'uSceneDepthMap') {
                             Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                            samplerValue = getBuiltInTexture(this, 'white');
+                            samplerValue = this.builtInTextures.white;
                         }
                         if (samplerName === 'uSceneColorMap') {
                             Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                            samplerValue = getBuiltInTexture(this, 'pink');
+                            samplerValue = this.builtInTextures.pink;
                         }
 
                         // missing generic texture
                         if (!samplerValue) {
                             Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`, shader);
-                            samplerValue = getBuiltInTexture(this, 'pink');
+                            samplerValue = this.builtInTextures.pink;
                         }
                     }
 

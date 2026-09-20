@@ -130,6 +130,13 @@ class Render2d {
         this.material.update();
         this.meshInstance = new MeshInstance(this.mesh, this.material, new GraphNode('MiniStatsMesh'));
         this.meshInstance.cull = false;
+        this.meshInstance.castShadow = false;
+        this.meshInstance.shaderPassMask = 0;
+        // The overlay must sort after UI elements when the layer uses manual sorting.
+        this.meshInstance.drawOrder = Infinity;
+        this.meshInstances = [this.meshInstance];
+        this.layer = null;
+        this.rendered = false;
         this.clr = new Float32Array(4);
         this.material.setParameter('clr', this.clr);
         this.targetWidth = 1;
@@ -166,6 +173,7 @@ class Render2d {
     }
 
     destroy() {
+        this.setLayer(null);
         this.meshInstance.destroy();
         this.material.destroy();
     }
@@ -246,7 +254,34 @@ class Render2d {
         this.prim.count = 0;
     }
 
-    render(app, layer, graphTexture, wordsTexture, clr) {
+    setLayer(layer) {
+        if (this.layer !== layer) {
+            this.meshInstance.shaderPassMask = 0;
+            this.layer?.removeMeshInstances(this.meshInstances);
+            this.layer = layer;
+            layer?.addMeshInstances(this.meshInstances);
+        }
+    }
+
+    frameUpdate() {
+        this.rendered = false;
+        this.meshInstance.shaderPassMask = 0;
+    }
+
+    onPreRenderLayer(camera, layer, transparent) {
+        if (!this.rendered && layer === this.layer && transparent === this.meshInstance.transparent) {
+            // Cameras already have their culled lists. The pass mask suppresses later draws
+            // without removing the overlay from its layer or changing those lists.
+            this.meshInstance.shaderPassMask = 0xFFFFFFFF;
+            this.rendered = true;
+        }
+    }
+
+    onPostRenderLayer() {
+        this.meshInstance.shaderPassMask = 0;
+    }
+
+    render(layer, graphTexture, wordsTexture, clr) {
         if (this.dirty) {
             this.buffer.setData(this.data.buffer);
             this.dirty = false;
@@ -254,7 +289,7 @@ class Render2d {
         this.clr.set(clr);
         this.material.setParameter('graphTex', graphTexture);
         this.material.setParameter('wordsTex', wordsTexture);
-        app.drawMeshInstance(this.meshInstance, layer);
+        this.setLayer(layer);
     }
 }
 

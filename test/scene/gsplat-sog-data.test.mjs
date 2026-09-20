@@ -121,7 +121,6 @@ describe('GSplatSogData GPU preparation', function () {
 
     it('destroys the temporary centers texture when its readback fails', async function () {
         generate.restore();
-        device.postInit();
         device.isNull = false;
         data.means_l = new Texture(device, { width: 1, height: 1 });
         data.means_u = data.means_l;

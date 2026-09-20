@@ -792,9 +792,31 @@ export const SHADOWUPDATE_THISFRAME = 1;
  */
 export const SHADOWUPDATE_REALTIME = 2;
 
-// flags used on the mask property of the Light, and also on mask property of the MeshInstance
+/**
+ * Light mask bit: on a light, it lights mesh instances that are lit at runtime rather than from a
+ * lightmap; on a mesh instance, it is lit at runtime by such lights. This is the default mask
+ * value of both {@link LightComponent#mask} and {@link MeshInstance#mask}.
+ *
+ * @ignore
+ */
 export const MASK_AFFECT_DYNAMIC = 1;
+
+/**
+ * Light mask bit: on a light, it lights mesh instances that are lightmapped; on a mesh instance,
+ * it receives its lighting from a lightmap and is lit at runtime only by lights carrying this bit.
+ * See {@link LightComponent#mask} and {@link MeshInstance#mask}.
+ *
+ * @ignore
+ */
 export const MASK_AFFECT_LIGHTMAPPED = 2;
+
+/**
+ * Light mask bit: on a light, it is baked into lightmaps by the {@link Lightmapper}; on a mesh
+ * instance, it is a lightmap target that such lights bake into. See {@link LightComponent#mask}
+ * and {@link MeshInstance#mask}.
+ *
+ * @ignore
+ */
 export const MASK_BAKE = 4;
 
 /**
@@ -1350,30 +1372,30 @@ export const GSPLAT_DEBUG_NODE_AABBS = 5;
 /**
  * Automatically selects the best radix sort backend for the current WebGPU device:
  * OneSweep on supported hardware (NVIDIA), the portable backend elsewhere. See
- * {@link ComputeRadixSort}.
+ * `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_AUTO = 0;
 
 /**
  * Portable radix sort backend. Runs on every WebGPU device (no subgroup
  * intrinsics required) and is chosen by {@link RADIX_SORT_AUTO} when no
- * faster hardware-specific backend is available. See {@link ComputeRadixSort}.
+ * faster hardware-specific backend is available. See `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_PORTABLE = 1;
 
 /**
  * Single-sweep 8-bit radix sort (OneSweep). Requires subgroup support, 32-lane
  * subgroups, and forward-thread-progress guarantees — currently enabled only on
- * NVIDIA. See {@link ComputeRadixSort}.
+ * NVIDIA. See `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_ONESWEEP = 2;
 
@@ -1398,3 +1420,15 @@ export const SCENETEXTURE_DEPTH = 'depth';
 export const sceneTextureUniformNames = {
     [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
 };
+
+/**
+ * The uniforms a mesh instance publishes its own lightmaps under, the color lightmap first and the
+ * directional one second, matching the order of the lightmapper's bake passes. The color one is
+ * deliberately not `texture_lightMap`, the uniform of a lightmap assigned to a material, so that a
+ * mesh instance keeping a lightmap of its own leaves the material's lightmap alone. A mesh instance
+ * lightmap takes priority when both are present.
+ *
+ * @type {string[]}
+ * @ignore
+ */
+export const instanceLightmapUniformNames = ['instance_lightMap', 'texture_dirLightMap'];

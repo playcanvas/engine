@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
@@ -354,6 +355,11 @@ describe('StandardMaterial', function () {
                     return 0.375;
                 }
 
+                // the projection box is snapshotted by the setter, so it has to be a real box
+                if (name === 'cubeMapProjectionBox') {
+                    return new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
+                }
+
                 switch (typeof value) {
                     case 'boolean':
                         return !value;
@@ -378,7 +384,7 @@ describe('StandardMaterial', function () {
 
                 const sourceValue = src[name];
                 const copiedValue = dst[name];
-                if (sourceValue instanceof Color || sourceValue instanceof Vec2) {
+                if (sourceValue instanceof Color || sourceValue instanceof Vec2 || sourceValue instanceof BoundingBox) {
                     expect(copiedValue, name).to.not.equal(sourceValue);
                     expect(copiedValue.equals(sourceValue), name).to.equal(true);
                 } else if (Array.isArray(sourceValue)) {
@@ -422,6 +428,50 @@ describe('StandardMaterial', function () {
             return variant;
         };
 
+        it('invalidates shaders when alphaTest moves across 0, through the accessor of the subclass', function () {
+            const material = new StandardMaterial();
+            material.update();
+            let variant = addVariant(material);
+
+            // the base class stores the value in a backing field, no own property shadows the accessor
+            expect(Object.getOwnPropertyDescriptor(material, 'alphaTest')).to.equal(undefined);
+            material.alphaTest = 0.5;
+            expect(material.alphaTest).to.equal(0.5);
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            variant = addVariant(material);
+            material.alphaTest = 0.7;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.alphaTest = 0;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            // a negative value disables the test like 0 does, but keeps an opacity map in the shader
+            variant = addVariant(material);
+            material.alphaTest = -0.25;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            variant = addVariant(material);
+            material.alphaTest = -0.5;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.alphaTest = 0.5;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+        });
+
+        it('forwards the deprecated aoUvSet to aoMapUv', function () {
+            const material = new StandardMaterial();
+            material.aoUvSet = 1;
+            expect(material.aoMapUv).to.equal(1);
+            expect(material.aoUvSet).to.equal(1);
+        });
+
         it('does not invalidate shaders when color properties are read', function () {
             const material = new StandardMaterial();
             material.update();
@@ -459,13 +509,13 @@ describe('StandardMaterial', function () {
             material.update();
             const variant = addVariant(material);
 
-            material.diffuse.set(0.5, 0.25, 0.75);
-            material.updateUniforms();
+            // all colors live in the material uniform buffer, none is published as a parameter
+            material.ambient.set(0.5, 0.25, 0.75);
+            material.attenuation = new Color(0.1, 0.2, 0.3);
+            material.update();
 
-            const uniform = material.getParameter('material_diffuse').data;
-            expect(uniform[0]).to.be.closeTo(Math.pow(0.5, 2.2), 1e-6);
-            expect(uniform[1]).to.be.closeTo(Math.pow(0.25, 2.2), 1e-6);
-            expect(uniform[2]).to.be.closeTo(Math.pow(0.75, 2.2), 1e-6);
+            expect(material.parameters.material_ambient).to.equal(undefined);
+            expect(material.parameters.material_attenuation).to.equal(undefined);
             expect(material.variants.get(1)).to.equal(variant);
         });
 
@@ -774,6 +824,17 @@ describe('StandardMaterial', function () {
             material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights);
             return options.litOptions;
         };
+
+        it('keeps aoMapUv as the uv set of the ambient occlusion map', function () {
+            const material = new StandardMaterial();
+            material.aoMap = { name: 'ao', encoding: 'linear' };
+            material.aoMapUv = 1;
+            material.update();
+            const options = new StandardMaterialOptions();
+            const vertexFormat = { hasUv: () => true, hasColor: false };
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights, vertexFormat);
+            expect(options.aoMapUv).to.equal(1);
+        });
 
         it('publishes only the material environment textures', function () {
             const material = new StandardMaterial();

@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
+import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { NullPhysicsWorld } from '../../../../src/framework/physics/null/null-physics-world.js';
 import { createApp } from '../../../app.mjs';
@@ -70,6 +71,34 @@ describe('RigidBodyComponentSystem', function () {
 
     });
 
+
+    describe('contact points', function () {
+
+        it('reverses a contact by swapping sides and flipping the normal', function () {
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(new NullPhysicsWorld());
+
+            const forward = system.contactPointPool.allocate();
+            forward.localPoint.set(1, 2, 3);
+            forward.localPointOther.set(4, 5, 6);
+            forward.point.set(7, 8, 9);
+            forward.pointOther.set(10, 11, 12);
+            forward.normal.set(0, 1, 0);
+            forward.impulse = 0.5;
+
+            const reverse = system._createReverseContactPoint(forward);
+
+            expect(reverse.localPoint.equals(new Vec3(4, 5, 6))).to.be.true;
+            expect(reverse.localPointOther.equals(new Vec3(1, 2, 3))).to.be.true;
+            expect(reverse.point.equals(new Vec3(10, 11, 12))).to.be.true;
+            expect(reverse.pointOther.equals(new Vec3(7, 8, 9))).to.be.true;
+            expect(reverse.normal.equals(new Vec3(0, -1, 0))).to.be.true;
+            expect(reverse.impulse).to.equal(0.5);
+
+            // the forward contact is left untouched
+            expect(forward.normal.equals(new Vec3(0, 1, 0))).to.be.true;
+        });
+    });
 
     describe('stepping', function () {
         let world;
@@ -144,17 +173,191 @@ describe('RigidBodyComponentSystem', function () {
 
         it('advances the world through step() while paused, without scaling the delta', function () {
             const system = app.systems.rigidbody;
-            const setGravity = spy(world, 'setGravity');
             const step = spy(world, 'step');
             const flushContacts = spy(world, 'flushContacts');
 
             system.timeScale = 0;
             system.step(0.01);
 
-            expect(setGravity.calledOnce).to.be.true;
             expect(step.calledOnce).to.be.true;
             expect(step.firstCall.args).to.deep.equal([0.01, system.maxSubSteps, system.fixedTimeStep]);
             expect(flushContacts.calledOnce).to.be.true;
+        });
+    });
+
+    describe('gravity', function () {
+
+        afterEach(function () {
+            restore();
+        });
+
+        it('applies the current gravity to the backend when it is installed', function () {
+            const world = new NullPhysicsWorld();
+            const setGravity = spy(world, 'setGravity');
+
+            app.systems.rigidbody.gravity.set(0, -3.7, 0);
+            app.systems.rigidbody.setPhysicsWorld(world);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(new Vec3(0, -3.7, 0))).to.be.true;
+        });
+
+        it('leaves the backend alone on steps where gravity is unchanged', function () {
+            const world = new NullPhysicsWorld();
+            app.systems.rigidbody.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+
+            app.update(1 / 60);
+            app.update(1 / 60);
+
+            expect(setGravity.called).to.be.false;
+        });
+
+        it('applies a gravity vector modified in place at the start of the next step', function () {
+            const world = new NullPhysicsWorld();
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+            const step = spy(world, 'step');
+
+            system.gravity.set(0, -1, 0);
+            app.update(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(new Vec3(0, -1, 0))).to.be.true;
+            expect(setGravity.calledBefore(step)).to.be.true;
+
+            // unchanged since it was applied, so the following step does not repeat the call
+            app.update(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+        });
+
+        it('applies a gravity vector replaced by assignment', function () {
+            const world = new NullPhysicsWorld();
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+
+            system.gravity = new Vec3(1, 2, 3);
+            app.update(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(new Vec3(1, 2, 3))).to.be.true;
+        });
+
+        it('applies gravity changed while paused on the next manual step', function () {
+            const world = new NullPhysicsWorld();
+            const system = app.systems.rigidbody;
+            system.setPhysicsWorld(world);
+            const setGravity = spy(world, 'setGravity');
+
+            system.timeScale = 0;
+            system.gravity.set(0, 0, 0);
+            app.update(1 / 60);
+
+            expect(setGravity.called).to.be.false;
+
+            system.step(1 / 60);
+
+            expect(setGravity.calledOnce).to.be.true;
+            expect(setGravity.firstCall.args[0].equals(Vec3.ZERO)).to.be.true;
+        });
+    });
+
+    describe('rigid body removal', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/2195. Removing the
+        // rigid body left the collision component with a shape and no body, so it neither
+        // reported contacts nor acted as a trigger until the entity was toggled.
+
+        let world;
+
+        beforeEach(function () {
+            world = new NullPhysicsWorld();
+            app.systems.rigidbody.setPhysicsWorld(world);
+        });
+
+        function createBody(name, parent = app.root, rigidbodyFirst = false) {
+            const entity = new Entity(name);
+            if (rigidbodyFirst) {
+                entity.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            }
+            entity.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
+            if (!rigidbodyFirst) {
+                entity.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            }
+            parent.addChild(entity);
+            return entity;
+        }
+
+        it('turns the collision component into a trigger', function () {
+            const entity = createBody('body');
+            expect(entity.trigger).to.be.undefined;
+
+            entity.removeComponent('rigidbody');
+
+            expect(entity.rigidbody).to.be.undefined;
+            expect(entity.trigger).to.exist;
+            expect(entity.collision.shape).to.exist;
+            expect(app.systems.rigidbody._triggers).to.include(entity.trigger);
+        });
+
+        it('joins an enclosing compound instead when there is one', function () {
+            const root = new Entity('root');
+            root.addComponent('collision', { type: 'compound' });
+            root.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            app.root.addChild(root);
+
+            // a body of its own inside the compound's hierarchy is not a compound child...
+            const part = createBody('part', root);
+            expect(part.collision._compoundParent).to.be.null;
+
+            // ...until it stops being a body
+            part.removeComponent('rigidbody');
+
+            expect(part.collision._compoundParent).to.equal(root.collision);
+            expect(part.trigger).to.be.undefined;
+        });
+
+        it('forgets the pairs the body was touching', function () {
+            const entity = createBody('body');
+            const other = createBody('other');
+            app.systems.rigidbody.collisions[entity.guid] = { entity: entity, others: [other] };
+
+            entity.removeComponent('rigidbody');
+
+            expect(app.systems.rigidbody.collisions[entity.guid]).to.be.undefined;
+        });
+
+        it('does not rebuild anything for an entity that is being destroyed', function () {
+            // components are removed in the order they were added, so the collision component
+            // is still attached when the rigid body's removal is processed
+            const entity = createBody('doomed', app.root, true);
+            const rebuild = spy(app.systems.collision, 'recreatePhysicalShapes');
+            const triggers = app.systems.rigidbody._triggers.length;
+
+            entity.destroy();
+
+            expect(rebuild.called).to.be.false;
+            expect(app.systems.rigidbody._triggers.length).to.equal(triggers);
+            restore();
+        });
+
+        it('does nothing when no backend is installed', function () {
+            // a second application without a world
+            const bare = createApp();
+            try {
+                const entity = new Entity('bare', bare);
+                entity.addComponent('collision', { type: 'box' });
+                entity.addComponent('rigidbody', { type: 'dynamic' });
+                bare.root.addChild(entity);
+
+                expect(() => entity.removeComponent('rigidbody')).to.not.throw();
+                expect(entity.trigger).to.be.undefined;
+            } finally {
+                bare.destroy();
+            }
         });
     });
 

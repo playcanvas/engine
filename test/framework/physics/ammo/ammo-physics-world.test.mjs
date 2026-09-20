@@ -1,7 +1,3 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
-
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
@@ -13,28 +9,9 @@ import { BoxGeometry } from '../../../../src/scene/geometry/box-geometry.js';
 import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { Mesh } from '../../../../src/scene/mesh.js';
 import { Model } from '../../../../src/scene/model.js';
+import { hasAmmo, loadAmmo } from '../../../ammo.mjs';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
-
-// The Ammo.js build shipped with the examples doubles as the build these tests run against. It
-// lives outside the test tree, so the suite is skipped when it is absent.
-const AMMO_PATH = resolve('examples/assets/wasm/ammo/ammo.js');
-
-/**
- * Loads the asm.js Ammo build headlessly and resolves with the initialized module.
- *
- * @returns {Promise<object>} The Ammo module.
- */
-function loadAmmo() {
-    // the build is a UMD script that cannot be imported from an ES module package, so it is
-    // evaluated as a CommonJS module body with the globals its Node code path expects
-    const source = readFileSync(AMMO_PATH, 'utf8');
-    const module = { exports: {} };
-    // eslint-disable-next-line no-new-func
-    const evaluate = new Function('module', 'exports', 'require', '__dirname', '__filename', source);
-    evaluate(module, module.exports, createRequire(import.meta.url), dirname(AMMO_PATH), AMMO_PATH);
-    return module.exports();
-}
 
 describe('AmmoPhysicsWorld', function () {
     let app;
@@ -44,7 +21,7 @@ describe('AmmoPhysicsWorld', function () {
     before(async function () {
         this.timeout(20000);
 
-        if (!existsSync(AMMO_PATH)) {
+        if (!hasAmmo()) {
             this.skip();
         }
 
@@ -135,6 +112,30 @@ describe('AmmoPhysicsWorld', function () {
     function step() {
         app.systems.rigidbody.step(1 / 60);
     }
+
+    describe('gravity', function () {
+
+        it('applies the system gravity to the native world when installed', function () {
+            app.systems.rigidbody.gravity.set(0, -3.7, 0);
+            installWorld();
+
+            const gravity = world.nativeWorld.getGravity();
+            expect(gravity.x()).to.equal(0);
+            expect(gravity.y()).to.be.closeTo(-3.7, 1e-6);
+            expect(gravity.z()).to.equal(0);
+        });
+
+        it('applies a gravity change to the native world on the next step', function () {
+            installWorld();
+            app.systems.rigidbody.gravity.set(1, 0, 0);
+
+            expect(world.nativeWorld.getGravity().x()).to.equal(0);
+
+            step();
+
+            expect(world.nativeWorld.getGravity().x()).to.equal(1);
+        });
+    });
 
     describe('mesh shape scaling', function () {
 
@@ -357,6 +358,552 @@ describe('AmmoPhysicsWorld', function () {
             expect(destroy.calledWith(entry.triMesh)).to.equal(true);
         });
 
+    });
+
+    describe('contact normals', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/4547. Bullet reports one
+        // normal per contact, on body B pointing toward body A, and which body is A follows the
+        // order the bodies were added to the world. Each entity must nevertheless receive the
+        // normal of the other entity's surface, so the sign cannot depend on that order.
+
+        function createFloor() {
+            const floor = new Entity('floor');
+            floor.setPosition(0, -0.5, 0);
+            floor.addComponent('collision', { type: 'box', halfExtents: new Vec3(5, 0.5, 5) });
+            floor.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(floor);
+            return floor;
+        }
+
+        function createBox() {
+            const box = new Entity('box');
+            box.setPosition(0, 1, 0);
+            box.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
+            box.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            app.root.addChild(box);
+            return box;
+        }
+
+        /**
+         * Lets the box drop onto the floor and returns the first contact normal each side reports.
+         *
+         * @param {Entity} box - The falling box.
+         * @param {Entity} floor - The floor.
+         * @returns {{ box: Vec3, floor: Vec3 }} The normals.
+         */
+        function firstContactNormals(box, floor) {
+            const normals = {};
+            box.collision.once('contact', (result) => {
+                normals.box = result.contacts[0].normal.clone();
+            });
+            floor.collision.once('contact', (result) => {
+                normals.floor = result.contacts[0].normal.clone();
+            });
+            for (let i = 0; i < 60 && !(normals.box && normals.floor); i++) {
+                app.update(1 / 60);
+            }
+            expect(normals.box, 'box contact').to.exist;
+            expect(normals.floor, 'floor contact').to.exist;
+            return normals;
+        }
+
+        /**
+         * Asserts that each side sees the normal of the other surface: the box rests on the
+         * floor's top face, the floor is touched by the box's bottom face.
+         *
+         * @param {{ box: Vec3, floor: Vec3 }} normals - The normals returned by firstContactNormals.
+         */
+        function expectOtherSurfaceNormals(normals) {
+            expect(normals.box.y).to.be.closeTo(1, 1e-3);
+            expect(normals.floor.y).to.be.closeTo(-1, 1e-3);
+        }
+
+        it('gives each entity the normal of the other surface when the floor is added first', function () {
+            installWorld();
+            const floor = createFloor();
+            const box = createBox();
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+        });
+
+        it('gives each entity the normal of the other surface when the box is added first', function () {
+            installWorld();
+            const box = createBox();
+            const floor = createFloor();
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+        });
+
+        it('keeps the sign after the other body is disabled and re-enabled', function () {
+            installWorld();
+            const floor = createFloor();
+            const box = createBox();
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+
+            // re-adding the floor to the world changes which body Bullet reports first
+            floor.enabled = false;
+            box.rigidbody.linearVelocity = Vec3.ZERO;
+            box.rigidbody.teleport(0, 1, 0);
+            floor.enabled = true;
+
+            expectOtherSurfaceNormals(firstContactNormals(box, floor));
+        });
+
+        it('reports the normal on entity B for the global contact event', function () {
+            installWorld();
+            createFloor();
+            createBox();
+
+            let result = null;
+            app.systems.rigidbody.once('contact', (r) => {
+                result = { b: r.b.name, normalY: r.normal.y };
+            });
+            for (let i = 0; i < 60; i++) {
+                app.update(1 / 60);
+            }
+
+            expect(result).to.not.be.null;
+            // the normal on B points away from B's surface: up off the floor, down off the box
+            expect(result.normalY).to.be.closeTo(result.b === 'floor' ? 1 : -1, 1e-3);
+        });
+    });
+
+    describe('compound children', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/3695 and
+        // https://github.com/playcanvas/engine/issues/4623. A compound child's shape used to be
+        // re-synced only when the compound root's own transform was dirty at physics time, so a
+        // child moved on its own, by a script after being parented or by an animation, kept the
+        // pose it joined with until the root was toggled.
+
+        function createGround() {
+            const ground = new Entity('ground');
+            ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(8, 0.5, 8) });
+            ground.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(ground);
+            return ground;
+        }
+
+        function createCompound(bodyType = 'dynamic') {
+            const compound = new Entity('compound');
+            compound.setPosition(0, 3.5, 0);
+            compound.addComponent('collision', { type: 'compound' });
+            compound.addComponent('rigidbody', { type: bodyType, mass: 1 });
+            app.root.addChild(compound);
+
+            const first = new Entity('first');
+            first.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            compound.addChild(first);
+            return compound;
+        }
+
+        /**
+         * Runs frames the way the application does: the update, then the hierarchy sync the
+         * renderer performs, which clears the dirty flags the old sync relied on.
+         *
+         * @param {number} count - The number of frames.
+         */
+        function frames(count) {
+            for (let i = 0; i < count; i++) {
+                app.update(1 / 60);
+                app.root.syncHierarchy();
+            }
+        }
+
+        /**
+         * Casts a ray straight down at x and returns the name of the entity it hits.
+         *
+         * @param {number} x - The world X position of the ray.
+         * @returns {string|null} The hit entity name, or null on a miss.
+         */
+        function hitNameAt(x) {
+            const result = app.systems.rigidbody.raycastFirst(new Vec3(x, 10, 0), new Vec3(x, -10, 0));
+            return result ? result.entity.name : null;
+        }
+
+        it('moves a child shape repositioned after being parented, once the compound is at rest', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound();
+            frames(240);
+            expect(compound.rigidbody._body.isActive(), 'compound asleep').to.be.false;
+
+            // the order the report used: component, parent, then position
+            const child = new Entity('child');
+            child.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            compound.addChild(child);
+            child.setLocalPosition(2, 0, 0);
+            frames(1);
+
+            expect(world.getCompoundChildCount(compound.collision.shape)).to.equal(2);
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('moves an existing child shape when the child is repositioned while the compound rests', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound();
+            frames(240);
+
+            compound.findByName('first').setLocalPosition(2, 0, 0);
+            frames(1);
+
+            expect(hitNameAt(2)).to.equal('compound');
+            expect(hitNameAt(0)).to.equal('ground');
+        });
+
+        it('follows a child moved every frame', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+            const first = compound.findByName('first');
+
+            for (let x = 1; x <= 3; x++) {
+                first.setLocalPosition(x, 0, 0);
+                frames(1);
+                expect(hitNameAt(x)).to.equal('compound');
+            }
+        });
+
+        it('follows a child whose intermediate parent moves', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+
+            const sub = new Entity('sub');
+            sub.setLocalPosition(1, 0, 0);
+            compound.addChild(sub);
+            const grandchild = new Entity('grandchild');
+            sub.addChild(grandchild);
+            grandchild.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            frames(1);
+            expect(hitNameAt(1)).to.equal('compound');
+
+            // the moved node has no collision component of its own
+            sub.setLocalPosition(3, 0, 0);
+            frames(1);
+
+            expect(hitNameAt(3)).to.equal('compound');
+            expect(hitNameAt(1)).to.equal('ground');
+        });
+
+        it('writes nothing to the compound while only the root moves', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound();
+            const update = spy(world, 'updateCompoundChild');
+
+            // falling: the root moves every frame, the child does not
+            frames(30);
+
+            expect(compound.getPosition().y).to.be.below(3.4);
+            expect(update.called).to.be.false;
+        });
+
+        it('adopts a collision descendant parented deep inside a subtree', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+
+            // built detached, so the grandchild starts out as a trigger
+            const sub = new Entity('sub');
+            sub.setLocalPosition(2, 0, 0);
+            const grandchild = new Entity('grandchild');
+            grandchild.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            sub.addChild(grandchild);
+            expect(grandchild.trigger).to.exist;
+
+            // the insert hook only sees the inserted node, which has no collision component; the
+            // grandchild becoming active in the hierarchy wires it instead
+            compound.addChild(sub);
+
+            expect(grandchild.trigger).to.be.undefined;
+            expect(grandchild.collision._compoundParent).to.equal(compound.collision);
+            expect(world.getCompoundChildCount(compound.collision.shape)).to.equal(2);
+
+            frames(1);
+
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('adopts a collision descendant of a compound that is enabled later', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+            compound.enabled = false;
+
+            const sub = new Entity('sub');
+            sub.setLocalPosition(2, 0, 0);
+            const grandchild = new Entity('grandchild');
+            grandchild.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            sub.addChild(grandchild);
+            compound.addChild(sub);
+
+            compound.enabled = true;
+            frames(1);
+
+            expect(grandchild.collision._compoundParent).to.equal(compound.collision);
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('does not rebuild a directly inserted child twice', function () {
+            installWorld();
+            createGround();
+            const compound = createCompound('kinematic');
+            const rebuild = spy(app.systems.collision, 'recreatePhysicalShapes');
+
+            const child = new Entity('child');
+            child.setLocalPosition(2, 0, 0);
+            child.addComponent('collision', { type: 'sphere', radius: 0.5 });
+            rebuild.resetHistory();
+            compound.addChild(child);
+
+            // once from onEnable when it becomes active under the compound; the insert hook
+            // then finds it in place
+            expect(rebuild.callCount).to.equal(1);
+            frames(1);
+            expect(hitNameAt(2)).to.equal('compound');
+        });
+
+        it('tracks the children of dynamic and kinematic compounds only', function () {
+            installWorld();
+            const tracked = app.systems.rigidbody._compounds;
+            const dynamic = createCompound('dynamic');
+            const kinematic = createCompound('kinematic');
+            const fixed = createCompound('static');
+
+            expect(tracked).to.include(dynamic.collision);
+            expect(tracked).to.include(kinematic.collision);
+            expect(tracked).to.not.include(fixed.collision);
+        });
+    });
+
+    describe('internal tick callback', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/9279. Emscripten's
+        // addFunction never frees a table slot and identity-caches the function it is given, so
+        // the backend registers one dispatcher per Ammo instance and routes by the world pointer
+        // Bullet passes, instead of one closure per world that kept the world, and through it the
+        // whole application, reachable for the life of the page.
+
+        /**
+         * Drops a box onto a ground plane in the given application and records the names of the
+         * entities the box reports contacts with.
+         *
+         * @param {import('../../../../src/framework/app-base.js').AppBase} application - The application.
+         * @param {string} name - A prefix for the entity names.
+         * @returns {string[]} The recorded contact names, filled as the application updates.
+         */
+        function dropBox(application, name) {
+            const ground = new Entity(`${name}-ground`, application);
+            ground.addComponent('collision', { type: 'box', halfExtents: new Vec3(5, 0.5, 5) });
+            ground.addComponent('rigidbody', { type: 'static' });
+            application.root.addChild(ground);
+
+            const box = new Entity(`${name}-box`, application);
+            box.setPosition(0, 1, 0);
+            box.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.2, 0.2, 0.2) });
+            box.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            application.root.addChild(box);
+
+            const contacts = [];
+            box.collision.on('contact', (result) => {
+                contacts.push(result.other.name);
+            });
+            return contacts;
+        }
+
+        function settle(application, frames = 60) {
+            for (let i = 0; i < frames; i++) {
+                application.update(1 / 60);
+            }
+        }
+
+        it('registers a single table entry however many worlds are created', function () {
+            // the shared dispatcher exists from the first world on
+            installWorld();
+
+            const before = Ammo.addFunction(() => {}, 'vif');
+            const worlds = [new AmmoPhysicsWorld(), new AmmoPhysicsWorld(), new AmmoPhysicsWorld()];
+            const after = Ammo.addFunction(() => {}, 'vif');
+            worlds.forEach(w => w.destroy());
+
+            // two probe functions land in consecutive slots only if nothing was added in between
+            expect(after - before).to.equal(1);
+        });
+
+        it('routes contacts to the world they occur in while several worlds are alive', function () {
+            installWorld();
+            const other = createApp();
+            other.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            try {
+                const first = dropBox(app, 'first');
+                const second = dropBox(other, 'second');
+                settle(app);
+                settle(other);
+
+                expect(first).to.not.be.empty;
+                expect(second).to.not.be.empty;
+                expect(first.every(name => name === 'first-ground')).to.be.true;
+                expect(second.every(name => name === 'second-ground')).to.be.true;
+            } finally {
+                other.destroy();
+            }
+        });
+
+        it('keeps routing after a sibling world is destroyed and another is created', function () {
+            installWorld();
+            const sibling = createApp();
+            sibling.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            sibling.destroy();
+
+            const replacement = createApp();
+            replacement.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            try {
+                const survivor = dropBox(app, 'survivor');
+                const fresh = dropBox(replacement, 'fresh');
+                settle(app);
+                settle(replacement);
+
+                expect(survivor).to.not.be.empty;
+                expect(fresh).to.not.be.empty;
+                expect(survivor.every(name => name === 'survivor-ground')).to.be.true;
+                expect(fresh.every(name => name === 'fresh-ground')).to.be.true;
+            } finally {
+                replacement.destroy();
+            }
+        });
+
+        const tick = () => new Promise((resolve) => {
+            setTimeout(resolve, 0);
+        });
+
+        /**
+         * Runs the garbage collector until the referent is gone or the attempts run out. A deref
+         * keeps its target alive for the rest of the current job, so gc and deref must run in
+         * different jobs.
+         *
+         * @param {WeakRef<object>} ref - The reference to watch.
+         * @param {number} [attempts] - How many collections to try.
+         * @returns {Promise<boolean>} True once the referent has been collected.
+         */
+        async function collected(ref, attempts = 10) {
+            if (attempts === 0) {
+                return false;
+            }
+            global.gc();
+            await tick();
+            const alive = ref.deref() !== undefined;
+            await tick();
+            return alive ? collected(ref, attempts - 1) : true;
+        }
+
+        /**
+         * Builds, simulates and destroys an application and returns a weak reference to it.
+         *
+         * @param {boolean} withWorld - Whether to install an Ammo world.
+         * @returns {WeakRef<object>} The reference.
+         */
+        function destroyedApplication(withWorld) {
+            let candidate = createApp();
+            if (withWorld) {
+                candidate.systems.rigidbody.setPhysicsWorld(new AmmoPhysicsWorld());
+            }
+            dropBox(candidate, 'collected');
+            settle(candidate, 30);
+            const ref = new WeakRef(candidate);
+            candidate.destroy();
+            candidate = null;
+            return ref;
+        }
+
+        it('lets a destroyed application be garbage collected', async function () {
+            if (typeof global.gc !== 'function') {
+                this.skip();
+            }
+            this.timeout(20000);
+
+            // the harness itself has to let an application go before the Ammo case means anything
+            expect(await collected(destroyedApplication(false)), 'without a physics world').to.be.true;
+            expect(await collected(destroyedApplication(true)), 'with an Ammo world').to.be.true;
+        });
+    });
+
+    describe('rigid body removal', function () {
+
+        // End-to-end checks for https://github.com/playcanvas/engine/issues/2195: a collision
+        // component whose rigid body is removed acts as a trigger from then on.
+
+        /**
+         * Drops a ball onto a solid block sitting on a floor and lets it settle. Returns the
+         * block, the ball and the names the block reports through triggerenter.
+         *
+         * @returns {{ zone: Entity, ball: Entity, entered: string[] }} The scene.
+         */
+        function settleBallOnBlock() {
+            installWorld();
+
+            const floor = new Entity('floor');
+            floor.setPosition(0, -0.5, 0);
+            floor.addComponent('collision', { type: 'box', halfExtents: new Vec3(5, 0.5, 5) });
+            floor.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(floor);
+
+            const zone = new Entity('zone');
+            zone.setPosition(0, 0.5, 0);
+            zone.addComponent('collision', { type: 'box', halfExtents: new Vec3(1, 0.5, 1) });
+            zone.addComponent('rigidbody', { type: 'static' });
+            app.root.addChild(zone);
+
+            const ball = new Entity('ball');
+            ball.setPosition(0, 3, 0);
+            ball.addComponent('collision', { type: 'sphere', radius: 0.25 });
+            ball.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            ball.collision.on('contact', () => {});
+            app.root.addChild(ball);
+
+            // the block listens for contacts as a body and for triggers afterwards, so the pair the
+            // ball rests in is recorded on the block's side the way a game switching roles would
+            zone.collision.on('collisionstart', () => {});
+            const entered = [];
+            zone.collision.on('triggerenter', (other) => {
+                entered.push(other.name);
+            });
+
+            for (let i = 0; i < 90; i++) app.update(1 / 60);
+            expect(entered).to.deep.equal([]);
+            expect(ball.getPosition().y).to.be.above(1.2);
+
+            return { zone, ball, entered };
+        }
+
+        it('fires trigger events once the rigid body is removed', function () {
+            const { zone, ball, entered } = settleBallOnBlock();
+
+            // the block becomes a volume the ball falls through and is reported by
+            zone.removeComponent('rigidbody');
+            ball.rigidbody.linearVelocity = Vec3.ZERO;
+            ball.rigidbody.teleport(0, 3, 0);
+
+            for (let i = 0; i < 120; i++) app.update(1 / 60);
+            expect(entered).to.deep.equal(['ball']);
+            expect(ball.getPosition().y).to.be.below(0.5);
+        });
+
+        it('reports an overlap that was already in progress when the body became a trigger', function () {
+            const { zone, ball, entered } = settleBallOnBlock();
+
+            // the ball stays where it rests, so the very first trigger step sees it overlapping
+            zone.removeComponent('rigidbody');
+
+            for (let i = 0; i < 5; i++) app.update(1 / 60);
+            expect(entered).to.deep.equal(['ball']);
+
+            for (let i = 0; i < 120; i++) app.update(1 / 60);
+            expect(ball.getPosition().y).to.be.below(0.5);
+        });
     });
 
     describe('legacy Ammo build', function () {

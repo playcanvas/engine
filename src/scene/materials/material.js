@@ -11,6 +11,12 @@ import {
 } from '../../platform/graphics/constants.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
+import { BindGroup } from '../../platform/graphics/bind-group.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { getMaterialLayout } from './material-uniform-buffer-layout.js';
+import {
+    getUnappliedMaterialProperties, initMaterialDebug, recordMaterialChange, warnUnappliedMaterialProperties
+} from './material-debug.js';
 import {
     BLEND_ADDITIVE, BLEND_NORMAL, BLEND_NONE, BLEND_PREMULTIPLIED,
     BLEND_MULTIPLICATIVE, BLEND_ADDITIVEALPHA, BLEND_MULTIPLICATIVE2X, BLEND_SCREEN,
@@ -21,6 +27,10 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { MaterialTextureDescriptor } from './standard-material-textures.js'
+ * @import { MaterialUniformBufferLayout } from './material-uniform-buffer-layout.js'
+ * @import { ScopeId } from '../../platform/graphics/scope-id.js'
+ * @import { MaterialProperty } from './material-property.js'
  * @import { Light } from '../light.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { CameraShaderParams } from '../camera-shader-params.js'
@@ -72,6 +82,25 @@ let id = 0;
  * as {@link ShaderMaterial} and {@link StandardMaterial} can be used to define materials
  * for rendering.
  *
+ * Choose {@link StandardMaterial} for a physically based surface described by properties and
+ * textures, and {@link ShaderMaterial} to supply your own vertex and fragment shaders. Both share
+ * the state defined here: blending through {@link blendType}, depth behavior through
+ * {@link depthTest}, {@link depthWrite} and {@link depthFunc}, face culling through {@link cull},
+ * alpha testing through {@link alphaTest}, shader uniforms through {@link setParameter}, and
+ * preprocessor defines through {@link setDefine}. {@link getShaderChunks} exposes the GLSL and WGSL
+ * chunks the material's shader is built from, so one chunk can be replaced without writing a whole
+ * shader.
+ *
+ * After changing properties, call {@link update} so the change reaches the GPU. Most changes only
+ * refresh uniforms; a change that alters how the shader is generated also clears the material's
+ * compiled shader variants, which are rebuilt on demand. A material can be shared by any number of
+ * mesh instances, and {@link clone} makes an independent copy.
+ *
+ * @example
+ * // Make a material additive and double-sided, then apply the change
+ * material.blendType = BLEND_ADDITIVE;
+ * material.cull = CULLFACE_NONE;
+ * material.update();
  * @category Graphics
  */
 class Material {
@@ -130,12 +159,10 @@ class Material {
     parameters = {};
 
     /**
-     * The alpha test reference value to control which fragments are written to the currently
-     * active render target based on alpha value. All fragments with an alpha value of less than
-     * the alphaTest reference value will be discarded. alphaTest defaults to 0 (all fragments
-     * pass).
+     * @type {number}
+     * @private
      */
-    alphaTest = 0;
+    _alphaTest = 0;
 
     /**
      * Enables or disables alpha to coverage. When enabled, and if hardware anti-aliasing is on,
@@ -226,6 +253,9 @@ class Material {
         if (new.target === Material) {
             Debug.error('Material class cannot be instantiated, use ShaderMaterial instead');
         }
+
+        // debug state (creation site, last change site, warning flag) exists in debug builds only
+        Debug.call(() => initMaterialDebug(this));
     }
 
     /**
@@ -240,7 +270,7 @@ class Material {
      * {@link Material#frontFace} and {@link StandardMaterial#twoSidedLighting} all behave the same
      * as they do for smooth shading.
      *
-     * {@link StandardMaterial} and {@link LitMaterial} implement this automatically. For a
+     * {@link StandardMaterial} and `LitMaterial` implement this automatically. For a
      * {@link ShaderMaterial}, this adds a `FLAT_SHADING` define to the shader, which the supplied
      * shader code needs to handle. The `flatNormalPS` chunk provides the `getFlatNormal` function
      * used by the engine internally, and can be used for this:
@@ -391,6 +421,26 @@ class Material {
     }
 
     /**
+     * Sets the alpha test reference value to control which fragments are written to the currently
+     * active render target based on alpha value. All fragments with an alpha value of less than
+     * the alphaTest reference value will be discarded. Defaults to 0 (all fragments pass).
+     *
+     * @type {number}
+     */
+    set alphaTest(value) {
+        this._alphaTest = value;
+    }
+
+    /**
+     * Gets the alpha test reference value.
+     *
+     * @type {number}
+     */
+    get alphaTest() {
+        return this._alphaTest;
+    }
+
+    /**
      * Sets the offset for the output depth buffer value. Useful for decals to prevent z-fighting.
      * Typically a small negative value (-0.1) is used to render the mesh slightly closer to the
      * camera.
@@ -452,6 +502,85 @@ class Material {
     _preparedVersion = -1;
 
     /**
+     * Typed properties whose public value changed and has not been written to the uniform buffer
+     * yet. Allocated on first use.
+     *
+     * @type {Set<MaterialProperty>|null}
+     * @private
+     */
+    _modifiedProperties = null;
+
+    /**
+     * Snapshots of the aggregate typed property values handed out by a getter, by property.
+     * Compared on update to detect in-place mutation of the returned object. Allocated on first
+     * use.
+     *
+     * @type {Map<MaterialProperty, object>|null}
+     * @private
+     */
+    _mutableProperties = null;
+
+    /**
+     * The uniform buffer storing the typed properties, created on the first preparation for
+     * rendering. Null for materials without typed properties.
+     *
+     * @type {UniformBuffer|null}
+     * @private
+     */
+    _uniformBuffer = null;
+
+    /**
+     * The bind group holding the material uniform buffer.
+     *
+     * @type {BindGroup|null}
+     * @private
+     */
+    _uniformBufferBindGroup = null;
+
+    /**
+     * The layout the uniform buffer and the bind group were built from, null until the first
+     * render of the material.
+     *
+     * @type {MaterialUniformBufferLayout|null}
+     * @private
+     */
+    _layout = null;
+
+    /**
+     * Incremented when a texture of the material is assigned. A material whose textures decide the
+     * slots of its bind group moves this, as assigning one can change those slots without changing
+     * any of its typed properties.
+     *
+     * @type {number}
+     * @ignore
+     */
+    _textureAssignmentVersion = 0;
+
+    /**
+     * The texture assignment version the layout was last resolved for.
+     *
+     * @type {number}
+     * @private
+     */
+    _resolvedTextureVersion = -1;
+
+    /**
+     * Incremented each time typed property data is written to the uniform buffer storage.
+     *
+     * @type {number}
+     * @private
+     */
+    _uniformDataVersion = 0;
+
+    /**
+     * The uniform data version most recently uploaded to the GPU.
+     *
+     * @type {number}
+     * @private
+     */
+    _uniformUploadedVersion = -1;
+
+    /**
      * The version incremented each time {@link Material#update} is called.
      *
      * @type {number}
@@ -459,6 +588,142 @@ class Material {
      */
     get updateVersion() {
         return this._updateVersion;
+    }
+
+    /**
+     * The typed properties of the material, stored in its uniform buffer, or null for a material
+     * without typed properties.
+     *
+     * @type {MaterialProperty[]|null}
+     * @ignore
+     */
+    get propertyDescriptors() {
+        return null;
+    }
+
+    /**
+     * Returns the typed property whose uniform, stored in the material uniform buffer, has the given
+     * name, or null when no typed property uses it. A mesh instance parameter of that name
+     * overrides the uniform through a copy of the buffer rather than through the scope.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {MaterialProperty|null} The property, or null.
+     * @ignore
+     */
+    getUniformBufferProperty(name) {
+        return null;
+    }
+
+    /**
+     * The textures of the material, one per slot of its bind group. Empty for a material which
+     * keeps its textures on the scope instead.
+     *
+     * @type {MaterialTextureDescriptor[]}
+     * @ignore
+     */
+    get textureDescriptors() {
+        return [];
+    }
+
+    /**
+     * The textures the material holds in its own bind group on this device. Only a device using
+     * bind groups has one to hold them; without it they stay on the scope, which is also where a
+     * mesh instance overriding one of them has to apply it.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @returns {MaterialTextureDescriptor[]} The textures.
+     * @ignore
+     */
+    getTextureDescriptors(device) {
+        return device.usesMeshBindGroups ? this.textureDescriptors : [];
+    }
+
+    /**
+     * The index of the texture slot of the material's bind group a name refers to, or -1 when the
+     * name is not one of them. A mesh instance parameter of such a name overrides that texture of
+     * the material for its own draws, applied through the copy of the bind group the mesh instance
+     * keeps rather than through the scope.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {number} The index of the texture slot, or -1.
+     * @ignore
+     */
+    getTextureSlot(name) {
+        return this._uniformBufferBindGroup?.format.textureFormatsMap.get(name) ?? -1;
+    }
+
+    /**
+     * Incremented when the layout of the material is replaced - the set of its typed properties or
+     * of its textures changed - so that mesh instances re-classify their parameters against it.
+     * Constant for a material whose layout never changes.
+     *
+     * @type {number}
+     * @private
+     */
+    _layoutVersion = 0;
+
+    /**
+     * True when the set of uniforms of the material uniform buffer changed since the buffer was
+     * created, so the layout is fetched again on the next preparation.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _layoutDirty = false;
+
+    /**
+     * The version of the layout of the material: its typed properties, see
+     * {@link Material#getUniformBufferProperty}, and its textures, see
+     * {@link Material#getTextureSlot}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get layoutVersion() {
+        return this._layoutVersion;
+    }
+
+    /**
+     * Marks the layout of the material as changed: the next preparation fetches it again, and
+     * replaces the uniform buffer and the bind group when it differs.
+     *
+     * @protected
+     */
+    _markLayoutDirty() {
+        this._layoutDirty = true;
+    }
+
+    /**
+     * The bind group holding the material uniform buffer, or null until the material has been
+     * prepared for rendering, or when it has no typed properties.
+     *
+     * @type {BindGroup|null}
+     * @ignore
+     */
+    get uniformBufferBindGroup() {
+        return this._uniformBufferBindGroup;
+    }
+
+    /**
+     * The uniform buffer storing the typed properties, or null until the material has been
+     * prepared for rendering, or when it has no typed properties.
+     *
+     * @type {UniformBuffer|null}
+     * @ignore
+     */
+    get uniformBuffer() {
+        return this._uniformBuffer;
+    }
+
+    /**
+     * Incremented each time typed property data is written to the uniform buffer storage, so that
+     * copies of the buffer (mesh instance overrides) can detect a change.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get uniformDataVersion() {
+        return this._uniformDataVersion;
     }
 
     /** @ignore */
@@ -565,7 +830,7 @@ class Material {
      *
      * The default depends on where the shader comes from, so this rarely needs setting:
      *
-     * - {@link StandardMaterial} and {@link LitMaterial} generate them from the engine's own shader,
+     * - {@link StandardMaterial} and `LitMaterial` generate them from the engine's own shader,
      * so they default to true when opaque and false when transparent - blending the values of
      * ordinary transparent geometry into them is not meaningful.
      * - {@link ShaderMaterial} defaults to false, as its shader is supplied by the user. Set this to
@@ -864,7 +1129,162 @@ class Material {
     }
 
     /**
+     * Records that the public value of a typed property changed. The value is written to the
+     * uniform buffer by the next {@link Material#update}.
+     *
+     * @param {MaterialProperty} property - The property.
+     * @protected
+     */
+    _markPropertyModified(property) {
+        this._modifiedProperties ??= new Set();
+        this._modifiedProperties.add(property);
+        Debug.call(() => recordMaterialChange(this));
+    }
+
+    /**
+     * Records that the aggregate value of a typed property was handed out by its getter, so that
+     * an in-place mutation of the returned object can be detected by the next
+     * {@link Material#update}. Only the first exposure allocates a snapshot.
+     *
+     * @param {MaterialProperty} property - The property.
+     * @param {object} value - The value returned by the getter, with clone, equals and copy.
+     * @protected
+     */
+    _markPropertyMutable(property, value) {
+        this._mutableProperties ??= new Map();
+        if (!this._mutableProperties.has(property)) {
+            this._mutableProperties.set(property, value.clone());
+        }
+        Debug.call(() => recordMaterialChange(this));
+    }
+
+    /**
+     * Processes the typed property changes: in-place mutations of exposed values are detected and
+     * treated as modifications, and modified values are converted into the uniform buffer storage.
+     * Until the uniform buffer exists, the modified properties stay pending and are written when it
+     * is created. Runs from {@link Material#update} - the renderer does not process changes, so a
+     * change made without a subsequent update is not applied (and reported in the debug build).
+     *
+     * @private
+     */
+    _updateProperties() {
+        const mutable = this._mutableProperties;
+        if (mutable) {
+            for (const [property, snapshot] of mutable) {
+                const value = this[property.backingName];
+                if (!snapshot.equals(value)) {
+                    snapshot.copy(value);
+                    this._markPropertyModified(property);
+                }
+            }
+        }
+
+        const modified = this._modifiedProperties;
+        const uniformBuffer = this._uniformBuffer;
+        if (modified?.size && uniformBuffer) {
+            const storage = uniformBuffer.storageFloat32;
+            const format = uniformBuffer.format;
+            for (const property of modified) {
+                // a uniform not in the buffer yet is written when the next preparation moves the values
+                // to the buffer of the changed layout, which writes every property
+                const uniform = format.get(property.uniformName);
+                if (uniform) {
+                    property.convert(this[property.backingName], storage, uniform.offset, this);
+                }
+            }
+            modified.clear();
+            this._uniformDataVersion++;
+        }
+    }
+
+    /**
+     * Creates the material uniform buffer and its bind group on first use, and uploads the
+     * uniform buffer when its data changed.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @private
+     */
+    _prepareUniformBuffer(device) {
+        const properties = this.propertyDescriptors;
+        if (!properties) {
+            return;
+        }
+
+        // a texture was assigned since the layout was resolved, so which of the material's maps
+        // claim a sampler, and so the texture slots of its bind group, may have changed
+        if (this._resolvedTextureVersion !== this._textureAssignmentVersion) {
+            this._resolvedTextureVersion = this._textureAssignmentVersion;
+            this._layoutDirty = true;
+        }
+
+        let uniformBuffer = this._uniformBuffer;
+        if (!uniformBuffer || this._layoutDirty) {
+            this._layoutDirty = false;
+            const layout = getMaterialLayout(device, properties, this.getTextureDescriptors(device));
+            this._layout = layout;
+
+            // a different set of texture slots is a different shader, and a shader built against
+            // the previous set would be drawn with a bind group which no longer matches it
+            const slotsChanged = !!this._uniformBufferBindGroup &&
+                this._uniformBufferBindGroup.format !== layout.bindGroupFormat;
+
+            if (uniformBuffer?.format !== layout.uniformBufferFormat ||
+                this._uniformBufferBindGroup?.format !== layout.bindGroupFormat) {
+
+                // the values move to a buffer of the new layout
+                this._uniformBufferBindGroup?.destroy();
+                uniformBuffer?.destroy();
+
+                uniformBuffer = new UniformBuffer(device, layout.uniformBufferFormat, true);
+                this._uniformBuffer = uniformBuffer;
+                this._uniformBufferBindGroup = new BindGroup(device, layout.bindGroupFormat, uniformBuffer);
+
+                // mesh instances classify their parameters against the properties and the
+                // resources of this layout, including on the first render of the material, which
+                // is after they were given it
+                this._layoutVersion++;
+
+                // every property is written into the new storage
+                this._modifiedProperties ??= new Set();
+                for (const property of properties) {
+                    this._modifiedProperties.add(property);
+                }
+                this._updateProperties();
+                this._uniformUploadedVersion = -1;
+
+                // the shaders built against the previous set of texture slots cannot be drawn with
+                // this bind group, and a change of the slots alone does not dirty them
+                if (slotsChanged) {
+                    this.clearVariants();
+                }
+            }
+        }
+
+        Debug.assert(uniformBuffer.device === device, 'A material can only be rendered by the graphics device that created its uniform buffer.', this);
+
+        if (this._uniformUploadedVersion !== this._uniformDataVersion) {
+            uniformBuffer.upload();
+            this._uniformUploadedVersion = this._uniformDataVersion;
+        }
+
+        // the textures of the bind group, in the order of its slots. Assigning a texture compares
+        // a reference, so this is cheaper than tracking a version for it, and the group is only
+        // rebuilt when one of them changed
+        const textures = this._layout.textures;
+        for (let i = 0; i < textures.length; i++) {
+            this._uniformBufferBindGroup.setTextureAt(i, this[textures[i].mapName] ?? device.builtInTextures.white);
+        }
+
+        // the material assigns the resources of its bind group itself, so the scope takes no part
+        // in it. The group is (re)built when dirty: on creation, which needs the uploaded buffer,
+        // and after a lost context
+        this._uniformBufferBindGroup.commit();
+    }
+
+    /**
      * Prepares the material for rendering when it has been updated since the previous preparation.
+     * Typed property changes are applied by {@link Material#update} only; the debug build reports
+     * changes that were made without a subsequent update, as they are not applied.
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Scene} scene - The scene.
@@ -876,6 +1296,19 @@ class Material {
             this.updateUniforms(device, scene);
             this._preparedVersion = version;
         }
+
+        this._prepareUniformBuffer(device);
+
+        Debug.call(() => {
+            // detect once per update cycle: after the warning, nothing is checked until the next update
+            if (!this._debugWarnedUnapplied) {
+                const names = getUnappliedMaterialProperties(this);
+                if (names.length > 0) {
+                    this._debugWarnedUnapplied = true;
+                    warnUnappliedMaterialProperties(this, names);
+                }
+            }
+        });
     }
 
     /**
@@ -922,7 +1355,12 @@ class Material {
         }
 
         this._clearVariantsIfDirty();
+        this._updateProperties();
         this._updateVersion++;
+
+        Debug.call(() => {
+            this._debugWarnedUnapplied = false;
+        });
     }
 
     // Parameter management
@@ -993,6 +1431,12 @@ class Material {
             data = uniformObject.value;
         }
 
+        Debug.call(() => {
+            if (this.getUniformBufferProperty(name)) {
+                Debug.warnOnce(`Material#setParameter: '${name}' is the uniform of a typed material property, stored in the material uniform buffer, and is ignored as a parameter. Set the material property instead.`, this);
+            }
+        });
+
         this._setParameterSimple(name, data);
     }
 
@@ -1007,20 +1451,43 @@ class Material {
         }
     }
 
-    // used to apply parameters from this material into scope of uniforms, called internally by forward-renderer
-    // optional list of parameter names to be set can be specified, otherwise all parameters are set
-    setParameters(device, names) {
+    /**
+     * Applies the parameters of this material to the scope. Called internally by the renderer at
+     * a material switch, and again after a draw whose mesh instance overrode some of them on the
+     * scope, to restore the material values for the next draw.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {{name: string}[]} [restore] - When specified, only the parameters with the names of
+     * these entries are applied (the scope parameters of a mesh instance), otherwise all are.
+     * @ignore
+     */
+    setParameters(device, restore) {
         const parameters = this.parameters;
-        if (names === undefined) names = parameters;
-        for (const paramName in names) {
-            const parameter = parameters[paramName];
-            if (parameter) {
-                if (!parameter.scopeId) {
-                    parameter.scopeId = device.scope.resolve(paramName);
+        if (restore) {
+            for (let i = 0; i < restore.length; i++) {
+                const parameter = parameters[restore[i].name];
+                if (parameter) {
+                    this._setScopeParameter(device, parameter, restore[i].name);
                 }
-                parameter.scopeId.setValue(parameter.data);
+            }
+        } else {
+            for (const paramName in parameters) {
+                this._setScopeParameter(device, parameters[paramName], paramName);
             }
         }
+    }
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {{scopeId: ScopeId|null, data: any}} parameter - The parameter.
+     * @param {string} name - The name of the parameter.
+     * @private
+     */
+    _setScopeParameter(device, parameter, name) {
+        if (!parameter.scopeId) {
+            parameter.scopeId = device.scope.resolve(name);
+        }
+        parameter.scopeId.setValue(parameter.data);
     }
 
     /**
@@ -1091,6 +1558,11 @@ class Material {
      */
     destroy() {
         this.variants.clear();
+
+        this._uniformBufferBindGroup?.destroy();
+        this._uniformBufferBindGroup = null;
+        this._uniformBuffer?.destroy();
+        this._uniformBuffer = null;
 
         for (const meshInstance of this.meshInstances) {
             meshInstance.clearShaders();

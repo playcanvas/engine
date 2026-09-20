@@ -40,14 +40,4 @@ int ditherShadowCascadeIndex(int cascadeIndex, vec4 shadowCascadeDistances, int 
     return cascadeIndex;
 }
 
-vec3 fadeShadow(vec3 shadowCoord, vec4 shadowCascadeDistances) {                  
-    // if the pixel is past the shadow distance, remove shadow
-    // this enforces straight line instead of corner of shadow which moves when camera rotates  
-    float depth = 1.0 / gl_FragCoord.w;
-    if (depth > shadowCascadeDistances.w) {
-        shadowCoord.z = -9999999.0;
-    }
-
-    return shadowCoord;
-}
 `;

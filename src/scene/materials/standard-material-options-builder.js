@@ -115,9 +115,11 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.vertexColors = false;
 
-        const uniqueTextureMap = {};
+        // the map which claims the sampler of each assigned map, which is what the bind group of
+        // the material declares its texture slots with
+        const textureIdentifiers = stdMat.textureIdentifiers;
         for (const p of _matTex2D.keys()) {
-            this._updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, uniqueTextureMap);
+            this._updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, textureIdentifiers);
         }
 
         // true if ssao is applied directly in the lit shaders. Also ensure the AO part is generated in the front end
@@ -141,7 +143,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
-    _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, uniqueTextureMap) {
+    _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, textureIdentifiers) {
         const isOpacity = p === 'opacity';
 
         if (!minimalOptions || isOpacity) {
@@ -152,6 +154,11 @@ class StandardMaterialOptionsBuilder {
             const tname = `${mname}Transform`;
             const uname = `${mname}Uv`;
             const iname = `${mname}Identifier`;
+
+            // a lightmap supplied by the mesh instance takes priority over the material's own, so
+            // the material's lightmap and its uv set, channel and transform are all skipped. Its
+            // vertex color lightmap still applies, as that is a separate source.
+            const skipMap = p === 'light' && options.useInstanceLightMap;
 
             // Avoid overriding previous lightMap properties
             if (p !== 'light') {
@@ -176,20 +183,12 @@ class StandardMaterialOptionsBuilder {
                 }
             }
             // a map is only sampled when the mesh provides the uv set it is assigned to
-            if (stdMat[mname] && vertexFormat?.hasUv(stdMat[uname])) {
+            if (!skipMap && stdMat[mname] && vertexFormat?.hasUv(stdMat[uname])) {
 
-                // create an intermediate map between the textures and their slots
-                // to ensure the unique texture mapping isn't dependent on the texture id
-                // as that will change when textures are changed, even if the sharing is the same
-                const mapId = stdMat[mname].id;
-                let identifier = uniqueTextureMap[mapId];
-                if (identifier === undefined) {
-                    uniqueTextureMap[mapId] = p;
-                    identifier = p;
-                }
-
+                // maps pointing at one texture share the sampler of whichever of them claimed it,
+                // which is the slot the bind group of the material holds that texture in
                 options[mname] = !!stdMat[mname];
-                options[iname] = identifier;
+                options[iname] = textureIdentifiers.get(p) ?? p;
                 options[tname] = stdMat._getMapTransformId(p);
                 options[cname] = stdMat[cname];
                 options[uname] = stdMat[uname];
@@ -234,7 +233,6 @@ class StandardMaterialOptionsBuilder {
         options.thicknessTint = (stdMat.useDynamicRefraction && stdMat.thickness !== 1.0);
         options.specularEncoding = stdMat.specularMap?.encoding;
         options.sheenEncoding = stdMat.sheenMap?.encoding;
-        options.aoMapUv = stdMat.aoUvSet; // backwards compatibility
         options.aoDetail = !!stdMat.aoDetailMap;
         options.diffuseDetail = !!stdMat.diffuseDetailMap;
         options.normalDetail = !!stdMat.normalMap;
@@ -359,6 +357,8 @@ class StandardMaterialOptionsBuilder {
         options.lightMapChannel = '';
         options.lightMapUv = 0;
         options.lightMapTransform = 0;
+        options.lightMapIdentifier = undefined;
+        options.useInstanceLightMap = false;
         options.litOptions.lightMapWithoutAmbient = false;
         options.dirLightMap = false;
 
@@ -366,20 +366,22 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.noShadow = (objDefs & SHADERDEF_NOSHADOW) !== 0;
 
             if ((objDefs & SHADERDEF_LM) !== 0) {
+
+                // the mesh instance supplies the lightmap, in its own texture slot, and takes
+                // priority over a lightmap assigned to the material
                 options.lightMapEncoding = scene.lightmapPixelFormat === PIXELFORMAT_RGBA8 ? 'rgbm' : 'linear';
                 options.lightMap = true;
                 options.lightMapChannel = 'rgb';
                 options.lightMapUv = 1;
                 options.lightMapTransform = 0;
-                options.litOptions.lightMapWithoutAmbient = !stdMat.lightMap;
+                options.useInstanceLightMap = true;
                 if ((objDefs & SHADERDEF_DIRLM) !== 0) {
                     options.dirLightMap = true;
                 }
 
-                // if lightmaps contain baked ambient light, disable real-time ambient light
-                if ((objDefs & SHADERDEF_LMAMBIENT) !== 0) {
-                    options.litOptions.lightMapWithoutAmbient = false;
-                }
+                // a baked lightmap only contains the ambient light when it was baked with it, so
+                // otherwise the ambient light is still applied at runtime
+                options.litOptions.lightMapWithoutAmbient = (objDefs & SHADERDEF_LMAMBIENT) === 0;
             }
         }
 

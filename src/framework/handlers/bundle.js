@@ -1,11 +1,17 @@
 import { Bundle } from '../bundle/bundle.js';
 import { Debug } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
+import { getFetchCredentials, Http } from '../../platform/net/http.js';
 import { Untar } from './untar.js';
 import { ResourceHandler } from './handler.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
  */
+
+// Longest wait between attempts, matching the default {@link Http#request} uses for its own
+// retries.
+const maxRetryDelay = 5000;
 
 /**
  * Loads Bundle Assets.
@@ -24,14 +30,29 @@ class BundleHandler extends ResourceHandler {
         this._assets = app.assets;
     }
 
-    _fetchRetries(url, options, retries = 0) {
+    /**
+     * Fetch the bundle, retrying {@link ResourceHandler#maxRetries} times on a network error. Only
+     * a rejected fetch is retried: an HTTP error status resolves instead, and is failed by the
+     * caller rather than retried.
+     *
+     * @param {string} url - The URL to fetch.
+     * @param {object} options - The fetch options.
+     * @returns {Promise<Response>} The response.
+     * @private
+     */
+    _fetchRetries(url, options) {
         return new Promise((resolve, reject) => {
+            let retries = 0;
             const tryFetch = () => {
                 fetch(url, options).then(resolve).catch((err) => {
-                    retries++;
                     if (retries < this.maxRetries) {
-                        Debug.error(`Bundle failed to load retrying (attempt ${retries}`);
-                        tryFetch();
+                        retries++;
+
+                        // back off exponentially, as Http#request does, so a retry gives whatever
+                        // failed a chance to recover rather than hammering it
+                        const delay = math.clamp(Math.pow(2, retries) * Http.retryDelay, 0, maxRetryDelay);
+                        Debug.log(`Bundle failed to load, retrying in ${delay}ms (attempt ${retries} of ${this.maxRetries})`);
+                        setTimeout(tryFetch, delay);
                     } else {
                         reject(err);
                     }
@@ -50,8 +71,16 @@ class BundleHandler extends ResourceHandler {
         }
 
         this._fetchRetries(url.load, {
-            mode: 'cors'
-        }, this.maxRetries).then((res) => {
+            mode: 'cors',
+            credentials: getFetchCredentials()
+        }).then((res) => {
+            // fetch resolves an HTTP error status rather than rejecting it. Without this the
+            // error response is handed over as a successful bundle and Untar is left to read it,
+            // so the load reports success first and only then fails on the response body.
+            if (!res.ok) {
+                throw new Error(`Error loading bundle: ${res.status} ${res.statusText}`);
+            }
+
             const bundle = new Bundle();
             callback(null, bundle);
 

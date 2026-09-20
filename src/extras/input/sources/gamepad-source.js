@@ -17,9 +17,11 @@ const BUTTON_CODES = /** @type {const} */ ({
 const BUTTON_COUNT = Object.keys(BUTTON_CODES).length;
 
 /**
- * Game pad input source class
+ * Game pad input source class. Each {@link read} polls the connected gamepads and yields
+ * `buttons` deltas for the buttons listed in {@link buttonCode}, and `leftStick` and
+ * `rightStick` deltas as `[x, y]`.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  *
  * @typedef {object} GamepadSourceDeltas
