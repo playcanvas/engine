@@ -69,7 +69,7 @@ let id = 0;
  * @property {CameraShaderParams} cameraShaderParams - The camera shader parameters.
  * @property {number} pass - The shader pass.
  * @property {Light[][]} sortedLights - The sorted lights.
- * @property {UniformBufferFormat|undefined} viewUniformFormat - The view uniform format.
+ * @property {UniformBufferFormat|null} [viewUniformFormat] - The view uniform format.
  * @property {VertexFormat} vertexFormat - The vertex format.
  * @ignore
  */

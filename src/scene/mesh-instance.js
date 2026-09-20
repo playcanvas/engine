@@ -722,7 +722,7 @@ class MeshInstance {
     /**
      * Sets the graphics mesh being instanced.
      *
-     * @type {Mesh}
+     * @type {Mesh|null}
      */
     set mesh(mesh) {
 
@@ -744,7 +744,7 @@ class MeshInstance {
     /**
      * Gets the graphics mesh being instanced.
      *
-     * @type {Mesh}
+     * @type {Mesh|null}
      */
     get mesh() {
         return this._mesh;
@@ -942,7 +942,7 @@ class MeshInstance {
     /**
      * Sets the material used by this mesh instance.
      *
-     * @type {Material}
+     * @type {Material|null}
      */
     set material(material) {
 
@@ -975,7 +975,7 @@ class MeshInstance {
     /**
      * Gets the material used by this mesh instance.
      *
-     * @type {Material}
+     * @type {Material|null}
      */
     get material() {
         return this._material;
