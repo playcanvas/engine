@@ -28,6 +28,15 @@ describe('Markup', function () {
         expect(result.tags[0].hasOwnProperty.value).to.equal('x');
     });
 
+    it('merges nested tags that both shadow an Object.prototype method', function () {
+        const text = '[hasOwnProperty="a"]h[hasOwnProperty="b"]i[/hasOwnProperty][/hasOwnProperty]';
+        const result = evaluate(text);
+
+        expect(result.symbols).to.deep.equal(['h', 'i']);
+        expect(result.tags[0].hasOwnProperty.value).to.equal('a');
+        expect(result.tags[1].hasOwnProperty.value).to.equal('b');
+    });
+
     it('does not pollute Object.prototype through a __proto__ tag', function () {
         const result = evaluate('[__proto__="x"]hi[/__proto__]');
 
