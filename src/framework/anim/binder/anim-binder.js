@@ -4,7 +4,7 @@
  */
 
 /**
- * This interface is used by {@link AnimEvaluator} to resolve unique animation target path strings
+ * This interface is used by {@link AnimEvaluator} to resolve unique animation target paths
  * into instances of {@link AnimTarget}.
  *
  * @ignore

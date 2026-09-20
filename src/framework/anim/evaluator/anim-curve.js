@@ -8,7 +8,7 @@
  * @property {string} component - The name of the component that owns the property, or `graph`
  * for a transform on the entity itself.
  * @property {string[]} propertyPath - The property name segments, for example
- * `['localPosition']` or `['weight', 'Smile']`.
+ * `['localPosition']` or `['weight.Smile']`.
  * @category Animation
  */
 

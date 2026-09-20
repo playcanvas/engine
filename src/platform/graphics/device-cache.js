@@ -19,6 +19,8 @@ class DeviceCache {
      *
      * @param {GraphicsDevice} device - The graphics device.
      * @param {() => any} [onCreate] - A function that creates the resource for the device.
+     * Called on a cache miss, so it is only optional when a resource for the device has
+     * already been cached.
      * @returns {any} The resource for the device.
      */
     get(device, onCreate) {
