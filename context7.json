@@ -36,6 +36,6 @@
         "Load Gaussian splats as a 'gsplat' asset and render them with addComponent('gsplat', { asset }).",
         "Release resources you create: entity.destroy(), asset.unload(), material.destroy(), texture.destroy(), and app.destroy() when tearing the application down.",
         "For React use @playcanvas/react and for declarative HTML use @playcanvas/web-components. Both wrap the same engine objects, so engine API docs still apply.",
-        "Runnable references: https://playcanvas.github.io hosts every example in this repo, sources live under examples/src/examples. The user manual is at https://developer.playcanvas.com/user-manual/."
+        "Runnable references: https://playcanvas.com/examples hosts every example in this repo; sources live under examples/src/examples. The user manual is at https://developer.playcanvas.com/user-manual/."
     ]
 }
