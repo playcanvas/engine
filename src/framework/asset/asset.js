@@ -224,12 +224,13 @@ class Asset extends EventHandler {
 
     /**
      * Fired as the asset's file downloads, with the number of bytes received so far and the total
-     * expected. Only asset types whose file is fetched as binary data report progress: `audio`,
-     * `binary`, `container`, `gsplat`, `model` and `texture`. Textures loaded through an image
-     * element have no download progress, so they fire once at 0 and once at the full size.
+     * expected. Only asset types whose file is fetched as binary data report progress:
+     * `animation` (GLB only), `audio`, `binary`, `container`, `gsplat`, `model` and `texture`.
+     * Textures loaded through an image element have no download progress, so they fire once at 0
+     * and once at a fixed placeholder total, whether or not the file was downloaded.
      *
      * Please note:
-     * - the event does not fire when `asset.file.contents` is supplied, as nothing is downloaded
+     * - downloads are skipped when `asset.file.contents` is supplied, so no progress is reported
      * - totalBytes may not be reliable as it is based on the content-length header of the response
      *
      * @event
