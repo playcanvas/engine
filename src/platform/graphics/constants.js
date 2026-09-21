@@ -2277,10 +2277,9 @@ export const DEVICETYPE_WEBGL2 = 'webgl2';
 
 /**
  * A WebGL 2 device type with only the extensions available on 99%+ of devices exposed, and
- * capabilities clamped to the values 99%+ of devices report (see
- * {@link https://web3dsurvey.com/webgl2}). Useful for testing engine behavior on the most
- * constrained WebGL 2 devices (e.g. no multi-draw, no float texture filtering, no compressed
- * textures, 4k textures).
+ * capabilities clamped to the values 99%+ of devices report. Useful for testing engine behavior
+ * on the most constrained WebGL 2 devices (e.g. no multi-draw, no float texture filtering, no
+ * compressed textures, 4k textures).
  *
  * @category Graphics
  */

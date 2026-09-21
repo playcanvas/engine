@@ -112,9 +112,8 @@ function createGraphicsDevice(canvas, options = {}) {
         }
 
         if (deviceType === DEVICETYPE_WEBGL2 || deviceType === DEVICETYPE_WEBGL2_BARE) {
-            const featureLevel = deviceType === DEVICETYPE_WEBGL2_BARE ? 'bare' : undefined;
             deviceCreateFuncs.push(() => {
-                return new WebglGraphicsDevice(canvas, { ...options, featureLevel });
+                return new WebglGraphicsDevice(canvas, { ...options, deviceType });
             });
         }
 

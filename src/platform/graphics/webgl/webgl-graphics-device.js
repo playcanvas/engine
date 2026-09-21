@@ -23,7 +23,7 @@ import {
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
-    DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL2_BARE,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
@@ -945,7 +945,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     get bare() {
-        return this.initOptions.featureLevel === 'bare';
+        return this.initOptions.deviceType === DEVICETYPE_WEBGL2_BARE;
     }
 
     /**
