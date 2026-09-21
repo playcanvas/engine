@@ -961,7 +961,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // a bare device only exposes the extensions available on almost all devices
         if (this.bare) {
             this.supportedExtensions = this.supportedExtensions.filter(name => bareExtensions.has(name));
-            Debug.log(`WEBGL2 features [bare]: ${this.supportedExtensions.join(', ') || 'none'}`);
         }
 
         this.textureRG11B10Renderable = true;
