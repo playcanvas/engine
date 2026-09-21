@@ -684,7 +684,8 @@ class ScriptComponent extends Component {
      * @overload
      * @param {string} name - The name of the script.
      * @returns {Script|null} If a script with the name is attached, the instance is returned.
-     * Otherwise null is returned.
+     * Otherwise null is returned, including while a script declared by name is still awaiting its
+     * class to be added to the {@link ScriptRegistry}.
      * @example
      * const controller = entity.script.get('playerController');
      */
@@ -694,8 +695,8 @@ class ScriptComponent extends Component {
      */
     get(nameOrType) {
         if (typeof nameOrType === 'string') {
-            const data = this._scriptsIndex[nameOrType];
-            return data ? data.instance : null;
+            // an entry that is still awaiting its script class has no instance yet
+            return this._scriptsIndex[nameOrType]?.instance || null;
         }
 
         if (!nameOrType) return null;

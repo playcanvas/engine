@@ -563,8 +563,8 @@ class Entity extends GraphNode {
      * @returns {Script|undefined} The first matching script instance, or undefined.
      */
     findScript(nameOrType) {
-        const entity = this.findOne(node => node.c?.script?.has(nameOrType));
-        return entity?.c.script.get(nameOrType);
+        const entity = this.findOne(node => !!node.c?.script?.get(nameOrType));
+        return entity ? entity.c.script.get(nameOrType) : undefined;
     }
 
     /**
@@ -597,7 +597,7 @@ class Entity extends GraphNode {
      * @returns {Script[]} All matching script instances.
      */
     findScripts(nameOrType) {
-        const entities = this.find(node => node.c?.script?.has(nameOrType));
+        const entities = this.find(node => !!node.c?.script?.get(nameOrType));
         return entities.map(entity => entity.c.script.get(nameOrType));
     }
 
