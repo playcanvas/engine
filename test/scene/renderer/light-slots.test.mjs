@@ -6,6 +6,7 @@ import {
     SHADOW_PCF3_32F
 } from '../../../src/scene/constants.js';
 import { LitMaterialOptionsBuilder } from '../../../src/scene/materials/lit-material-options-builder.js';
+import { LitOptionsUtils } from '../../../src/scene/shader-lib/programs/lit-options-utils.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -76,6 +77,51 @@ describe('light slots', function () {
             expect(collected[0]).to.equal(directional[0]);
             expect(collected[1]).to.equal(undefined);   // the omni this mask does not select
             expect(collected[2]).to.equal(omni[1]);
+        });
+    });
+
+    describe('generateLightsKey', function () {
+
+        const light = key => ({ key: key, _type: LIGHTTYPE_DIRECTIONAL });
+        const keyOf = lights => LitOptionsUtils.generateLightsKey({
+            lights: lights,
+            clusteredLightingEnabled: true
+        });
+
+        it('keys the same lights differently when they sit in different slots', function () {
+            // The shader emits light<N>_ names per slot, so the slot a light occupies is part of
+            // the shader and has to be part of the key that caches it. These two layouts select
+            // the same lights - one layer just has an intervening light that this mask does not -
+            // and a key that missed the difference would serve one layout the other's shader.
+            const dense = [light(123), light(456)];
+
+            const sparse = [];
+            sparse[0] = light(123);
+            sparse[2] = light(456);
+
+            expect(keyOf(dense)).to.not.equal(keyOf(sparse));
+        });
+
+        it('keys a light by the slot it sits in', function () {
+            const first = [];
+            first[0] = light(123);
+
+            const second = [];
+            second[1] = light(123);
+
+            expect(keyOf(first)).to.not.equal(keyOf(second));
+        });
+
+        it('keys the same slots identically', function () {
+            const lights = [];
+            lights[0] = light(123);
+            lights[2] = light(456);
+
+            const same = [];
+            same[0] = light(123);
+            same[2] = light(456);
+
+            expect(keyOf(lights)).to.equal(keyOf(same));
         });
     });
 
