@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { Entity } from '../../../src/framework/entity.js';
 import {
     LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
-    SHADOW_PCF3_32F
+    SHADER_FORWARD, SHADOW_PCF3_32F
 } from '../../../src/scene/constants.js';
 import { LitMaterialOptionsBuilder } from '../../../src/scene/materials/lit-material-options-builder.js';
 import { LitOptionsUtils } from '../../../src/scene/shader-lib/programs/lit-options-utils.js';
@@ -277,6 +277,26 @@ describe('light slots', function () {
             expect([...written.keys()].sort()).to.eql([0, 1]);
             expect(written.get(0)).to.equal(affectAll._colorLinear);
             expect(written.get(1)).to.equal(dynamicOnly._colorLinear);
+        });
+
+        it('dispatches no light for a pass with nothing to draw', function () {
+            // An enabled layer step with an empty visible list is the common case, not an edge one:
+            // a layer's opaque and transparent sublayers are both enabled and neither is filtered
+            // out when empty. Dispatching the lights of a pass that draws nothing would repeat
+            // every light's transform and shadow lookups for no shader that reads them.
+            const scope = app.graphicsDevice.scope;
+            for (let i = 0; i < 4; i++) {
+                scope.resolve(`light${i}_color`).setValue(null);
+            }
+
+            app.renderer.renderForwardInternal(
+                camera.camera, { drawCalls: [], isNewMaterial: [], shaderInstances: [] },
+                app.scene.layers.getLayerByName('World').splitLights, SHADER_FORWARD, undefined, false
+            );
+
+            for (let i = 0; i < 4; i++) {
+                expect(scope.resolve(`light${i}_color`).value, `slot ${i}`).to.equal(null);
+            }
         });
 
         it('never dispatches the lightmap-only light', function () {

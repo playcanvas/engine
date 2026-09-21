@@ -619,6 +619,14 @@ class ForwardRenderer extends Renderer {
     }
 
     renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
+        // Nothing to draw: leave before the per-pass setup, in particular before dispatching the
+        // lights. An empty layer step is common - a layer's opaque and transparent sublayers are
+        // both enabled and neither is filtered out when empty.
+        const preparedCallsCount = preparedCalls.drawCalls.length;
+        if (preparedCallsCount === 0) {
+            return;
+        }
+
         const device = this.device;
         const scene = this.scene;
         const flipFactor = flipFaces ? -1 : 1;
@@ -655,7 +663,6 @@ class ForwardRenderer extends Renderer {
         const viewListEnd = (viewList && activeView >= 0) ? activeView + 1 : (viewList ? viewList.length : 0);
 
         // Render the scene
-        const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
             /** @type {MeshInstance} */
