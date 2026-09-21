@@ -2,6 +2,7 @@ import { Debug } from '../core/debug.js';
 import { hash32Fnv1a } from '../core/hash.js';
 import {
     LIGHTTYPE_DIRECTIONAL,
+    MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_RUNTIME,
     SORTMODE_BACK2FRONT, SORTMODE_CUSTOM, SORTMODE_FRONT2BACK, SORTMODE_MATERIALMESH, SORTMODE_NONE
 } from './constants.js';
 import { Material } from './materials/material.js';
@@ -21,6 +22,21 @@ let layerCounter = 0;
 
 const lightKeys = [];
 const _tempMaterials = new Set();
+
+/**
+ * Ranks a light by how broadly it applies, ordering the lights that reach every mesh instance
+ * ahead of those restricted to one kind of geometry. See {@link Layer#splitLights}.
+ *
+ * @param {Light} light - The light.
+ * @returns {number} The rank, lowest first.
+ */
+function lightSlotRank(light) {
+    const mask = light.mask & MASK_AFFECT_RUNTIME;
+    if (mask === MASK_AFFECT_RUNTIME) return 0;     // carries both bits, so reaches every mesh instance
+    if (mask & MASK_AFFECT_DYNAMIC) return 1;       // dynamic geometry is usually most of the draws
+    if (mask & MASK_AFFECT_LIGHTMAPPED) return 2;
+    return 3;                                       // contributes only to lightmaps, takes no slot
+}
 
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -893,10 +909,15 @@ class Layer {
                 }
             }
 
-            // sort the lights by their key, as the order of lights is used to generate shader generation key,
-            // and this avoids new shaders being generated when lights are reordered
+            // Order the lights by how broadly they apply, and only then by their key. A light's
+            // position in this list is its light slot, and a mesh instance's shader is built for
+            // the slots its mask selects, so putting the lights that apply to everything first
+            // makes those slots a gap-free run for both masks whenever one mask's lights are a
+            // subset of the other's - which is the normal case. Sorting on the key alone would
+            // scatter them and leave holes. Sorting by the key second keeps the order a pure
+            // function of the set of lights, so reordering lights generates no new shaders.
             for (let i = 0; i < splitLights.length; i++) {
-                splitLights[i].sort((a, b) => a.key - b.key);
+                splitLights[i].sort((a, b) => (lightSlotRank(a) - lightSlotRank(b)) || (a.key - b.key));
             }
         }
 

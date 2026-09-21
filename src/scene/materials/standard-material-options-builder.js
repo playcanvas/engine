@@ -393,11 +393,13 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
 
             if (sortedLights) {
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
+                // slots are assigned in the same order the renderer dispatches them, see
+                // ForwardRenderer#dispatchDirectLights
+                let slotCount = LitMaterialOptionsBuilder.collectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask, 0);
 
                 if (!scene.clusteredLightingEnabled) {
-                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
-                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
+                    slotCount = LitMaterialOptionsBuilder.collectLights(sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, slotCount);
+                    LitMaterialOptionsBuilder.collectLights(sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, slotCount);
                 }
             }
             options.litOptions.lights = lightsFiltered;

@@ -9,6 +9,7 @@ import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
     LAYERID_DEPTH,
+    MASK_AFFECT_RUNTIME,
     PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
@@ -249,14 +250,24 @@ class ForwardRenderer extends Renderer {
     }
 
     dispatchDirectLights(dirs, mask, camera) {
-        let cnt = 0;
+        let slotCount = 0;
 
         const scope = this.device.scope;
 
         for (let i = 0; i < dirs.length; i++) {
-            if (!(dirs[i].mask & mask)) continue;
 
             const directional = dirs[i];
+
+            // Light slots are absolute: every light applied at runtime reserves its slot for the
+            // whole pass, whether or not this mask selects it, so that light<N>_ denotes the same
+            // light no matter which mask is being drawn. A light that only contributes to a
+            // lightmap reaches nothing at runtime and takes no slot. The shader side assigns slots
+            // the same way, see LitMaterialOptionsBuilder#collectLights.
+            if (!(directional.mask & MASK_AFFECT_RUNTIME)) continue;
+            const cnt = slotCount++;
+
+            if (!(directional.mask & mask)) continue;
+
             const wtm = directional._node.getWorldTransform();
 
             if (!this.lightColorId[cnt]) {
@@ -344,9 +355,8 @@ class ForwardRenderer extends Renderer {
                 params[3] = 0;
                 this.lightShadowParamsId[cnt].setValue(params);
             }
-            cnt++;
         }
-        return cnt;
+        return slotCount;
     }
 
     setLTCPositionalLight(wtm, cnt) {
@@ -504,25 +514,28 @@ class ForwardRenderer extends Renderer {
 
     dispatchLocalLights(sortedLights, mask, usedDirLights) {
 
-        let cnt = usedDirLights;
+        // local light slots continue after the slots the directional lights reserved
+        let slotCount = usedDirLights;
         const scope = this.device.scope;
 
         const omnis = sortedLights[LIGHTTYPE_OMNI];
         const numOmnis = omnis.length;
         for (let i = 0; i < numOmnis; i++) {
             const omni = omnis[i];
+            if (!(omni.mask & MASK_AFFECT_RUNTIME)) continue;
+            const slot = slotCount++;
             if (!(omni.mask & mask)) continue;
-            this.dispatchOmniLight(scope, omni, cnt);
-            cnt++;
+            this.dispatchOmniLight(scope, omni, slot);
         }
 
         const spts = sortedLights[LIGHTTYPE_SPOT];
         const numSpts = spts.length;
         for (let i = 0; i < numSpts; i++) {
             const spot = spts[i];
+            if (!(spot.mask & MASK_AFFECT_RUNTIME)) continue;
+            const slot = slotCount++;
             if (!(spot.mask & mask)) continue;
-            this.dispatchSpotLight(scope, spot, cnt);
-            cnt++;
+            this.dispatchSpotLight(scope, spot, slot);
         }
     }
 
