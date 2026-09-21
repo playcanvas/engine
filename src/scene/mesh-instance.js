@@ -1299,7 +1299,9 @@ class MeshInstance {
     /**
      * Sets the {@link MeshInstance} to be rendered using indirect rendering, where the GPU,
      * typically using a Compute shader, stores draw call parameters in a buffer.
-     * Note that this is only supported on WebGPU, and ignored on other platforms.
+     * Note that this is only supported on WebGPU (see
+     * {@link GraphicsDevice#supportsIndirectDraw}), and ignored on other platforms, where the
+     * mesh instance renders as a normal draw call.
      *
      * @param {CameraComponent|null} camera - Camera component to set indirect data for, or
      * null if the indirect slot should be used for all cameras.
@@ -1314,7 +1316,7 @@ class MeshInstance {
         // disable when slot is -1
         if (slot === -1) {
             this._deleteDrawCommandsKey(key);
-        } else {
+        } else if (this.mesh.device.supportsIndirectDraw) {
             const cmd = this._allocDrawCommands(key, false);
             cmd.slotIndex = slot;
             cmd.update(count);
@@ -1322,6 +1324,10 @@ class MeshInstance {
             // the slot is recycled at the end of the frame, so the commands only apply to this
             // frame - they need to be assigned again for the next one
             cmd.validUntilVersion = this.mesh.device.drawCommandsVersion;
+        } else {
+            // ignored as documented - the backend cannot source draw parameters from a buffer, and
+            // draw commands it has no way to execute would take it down its multi-draw path
+            Debug.warnOnce('MeshInstance#setIndirect: indirect rendering is only supported on WebGPU, ignoring the call.');
         }
     }
 
