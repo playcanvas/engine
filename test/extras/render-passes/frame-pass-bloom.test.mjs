@@ -4,7 +4,6 @@ import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-blo
 import { PIXELFORMAT_RGBA16F, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
-import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { ProgramLibrary } from '../../../src/scene/shader-lib/program-library.js';
@@ -26,7 +25,7 @@ describe('FramePassBloom', function () {
         // device up for
         ShaderChunks.get(device, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
         ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
-        setProgramLibrary(device, new ProgramLibrary(device, new StandardMaterial()));
+        setProgramLibrary(device, new ProgramLibrary(device));
 
         const sourceTexture = new Texture(device, {
             name: 'BloomSource',
