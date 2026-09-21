@@ -31,8 +31,8 @@ class FramePassUpdateClustered extends FramePass {
 
     update(shadowsEnabled, cookiesEnabled, lights, localLights) {
 
-        // recycle the previous frame's clusters; the render passes re-request them during frame
-        // graph build, and their light data is uploaded in execute()
+        // discard the previous frame's cluster requests before the render passes re-request them
+        // during frame graph build; the requests are resolved and uploaded in execute()
         this.renderer.worldClustersAllocator.reset();
 
         this.cookiesRenderPass.enabled = cookiesEnabled;

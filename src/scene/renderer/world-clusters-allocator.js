@@ -7,8 +7,6 @@ import { WorldClusters } from '../lighting/world-clusters.js';
  * @import { LightingParams } from '../lighting/lighting-params.js'
  */
 
-const tempClusterArray = [];
-
 /**
  * A class managing instances of world clusters used by the renderer for layers with
  * unique sets of clustered lights.
@@ -39,6 +37,23 @@ class WorldClustersAllocator {
     _clusters = new Map();
 
     /**
+     * Clusters allocated in a previous frame, available for reuse this frame. Owned by this
+     * allocator (destroyed in {@link WorldClustersAllocator#destroy}) and only transiently non-empty
+     * within a single {@link WorldClustersAllocator#upload} call.
+     *
+     * @type {WorldClusters[]}
+     */
+    _recycled = [];
+
+    /**
+     * Layer render steps that requested a cluster this frame, resolved together in
+     * {@link WorldClustersAllocator#upload} (after culling).
+     *
+     * @type {LayerRenderStep[]}
+     */
+    _requestedSteps = [];
+
+    /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
@@ -55,12 +70,17 @@ class WorldClustersAllocator {
             this._empty = null;
         }
 
-        // all other clusters
+        // all other clusters, including any left in the recycle pool
         this._allocated.forEach((cluster) => {
             cluster.destroy();
         });
         this._allocated.length = 0;
+        this._recycled.forEach((cluster) => {
+            cluster.destroy();
+        });
+        this._recycled.length = 0;
         this._clusters.clear();
+        this._requestedSteps.length = 0;
     }
 
     get count() {
@@ -96,64 +116,82 @@ class WorldClustersAllocator {
     }
 
     /**
-     * Recycle the previous frame's clusters and clear the per-frame assignment map. Call once at the
-     * start of the frame, before any {@link WorldClustersAllocator#request}.
+     * Discards the previous frame's cluster requests. Called once at the start of the frame (before
+     * any {@link WorldClustersAllocator#request}), so a frame that builds but never uploads - e.g.
+     * one interrupted before rendering - does not carry stale steps into the next.
      */
     reset() {
-        // clusters allocated last frame become available for reuse this frame
-        tempClusterArray.push(...this._allocated);
-        this._allocated.length = 0;
-        this._clusters.clear();
+        this._requestedSteps.length = 0;
     }
 
     /**
-     * Assign a light cluster to a layer render step that will be rendered this frame. Steps whose
-     * layer shares the same set of clustered lights share a single cluster. Called during frame
-     * graph build (from a render pass's frameUpdate); the light data is uploaded later, once, by
-     * {@link WorldClustersAllocator#upload}. A step whose layer has no clustered lights is left
-     * without a cluster and falls back to {@link WorldClustersAllocator#empty} at render time.
+     * Records that a layer render step will be rendered this frame and may need a light cluster.
+     * Called during frame graph build (from a render pass's frameUpdate); eligibility, cluster
+     * de-duplication and assignment are all resolved later in {@link WorldClustersAllocator#upload},
+     * so they observe the final layer state after any culling callbacks.
      *
-     * @param {LayerRenderStep} step - The layer render step to assign a cluster to.
+     * @param {LayerRenderStep} step - The layer render step that may need a cluster.
      */
     request(step) {
-        step.lightClusters = null;
-
-        // if the layer has lights used by clusters, and meshes
-        const layer = step.layer;
-        if (layer.hasClusteredLights && layer.meshInstances.length) {
-
-            // use existing clusters if the lights on the layer are the same
-            const hash = layer.getLightIdHash();
-            const existingStep = this._clusters.get(hash);
-            let clusters = existingStep?.lightClusters;
-
-            // no match, needs new clusters
-            if (!clusters) {
-
-                // reuse a cluster allocated in a previous frame, or create a new one
-                clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
-                DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
-
-                this._allocated.push(clusters);
-                this._clusters.set(hash, step);
-            }
-
-            step.lightClusters = clusters;
-        }
+        this._requestedSteps.push(step);
     }
 
     /**
-     * Destroy any clusters not reused this frame, then upload the light data of every unique cluster
-     * requested this frame. Call once after all {@link WorldClustersAllocator#request} calls and
-     * before the passes that use the clusters execute.
+     * Resolves and uploads the clusters for the steps requested this frame. For each step whose
+     * layer has clustered lights and meshes it assigns a cluster (steps whose layer shares the same
+     * clustered-light set share one; others are left without a cluster and fall back to
+     * {@link WorldClustersAllocator#empty} at render time), recycling the previous frame's clusters
+     * and destroying any not reused, then uploads each unique cluster's light data.
+     *
+     * Runs from the clustered update pass - after cullComposition and its precull / postcull /
+     * cull:end callbacks, and before the passes that use the clusters execute - so a callback that
+     * adds or removes a layer's meshes or lights is reflected here. The whole assignment (including
+     * the recycle pool) happens within this one synchronous call, so no partially-recycled cluster
+     * is ever visible to {@link WorldClustersAllocator#destroy}.
      *
      * @param {LightingParams} lighting - The clustered lighting parameters.
      */
     upload(lighting) {
 
-        // delete leftovers not reused this frame
-        tempClusterArray.forEach(item => item.destroy());
-        tempClusterArray.length = 0;
+        // clusters allocated last frame become available for reuse this frame
+        const recycled = this._recycled;
+        recycled.push(...this._allocated);
+        this._allocated.length = 0;
+        this._clusters.clear();
+
+        // assign a cluster to each requested step, deduplicated by the layer's clustered-light set
+        const steps = this._requestedSteps;
+        for (let i = 0; i < steps.length; i++) {
+            const step = steps[i];
+            step.lightClusters = null;
+
+            // if the layer has lights used by clusters, and meshes
+            const layer = step.layer;
+            if (layer.hasClusteredLights && layer.meshInstances.length) {
+
+                // use existing clusters if the lights on the layer are the same
+                const hash = layer.getLightIdHash();
+                const existingStep = this._clusters.get(hash);
+                let clusters = existingStep?.lightClusters;
+
+                // no match, needs new clusters
+                if (!clusters) {
+
+                    // reuse a cluster allocated in a previous frame, or create a new one
+                    clusters = recycled.pop() ?? new WorldClusters(this.device);
+                    DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
+
+                    this._allocated.push(clusters);
+                    this._clusters.set(hash, step);
+                }
+
+                step.lightClusters = clusters;
+            }
+        }
+
+        // delete clusters not reused this frame
+        recycled.forEach(item => item.destroy());
+        recycled.length = 0;
 
         // update all unique clusters
         this._clusters.forEach((step) => {
