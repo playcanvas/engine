@@ -144,19 +144,18 @@ describe('light slots', function () {
          * Dispatches the lights for one mask and reports which light slots the renderer wrote a
          * color into, by clearing the slots first and seeing which come back set.
          *
-         * @param {number} mask - The mask of the mesh instance being drawn.
          * @param {object[]} [lights] - The lights to dispatch, the layer's directional lights by
          * default.
          * @returns {Map<number, Float32Array>} The color written, keyed by light slot.
          */
-        const dispatchedSlots = (mask, lights = dirLights()) => {
+        const dispatchedSlots = (lights = dirLights()) => {
             const scope = app.graphicsDevice.scope;
             const slots = 6;
             for (let i = 0; i < slots; i++) {
                 scope.resolve(`light${i}_color`).setValue(null);
             }
 
-            app.renderer.dispatchDirectLights(lights, mask, camera.camera);
+            app.renderer.dispatchDirectLights(lights, camera.camera);
 
             const written = new Map();
             for (let i = 0; i < slots; i++) {
@@ -224,43 +223,42 @@ describe('light slots', function () {
             expect(dirLights().map(light => light.mask)).to.eql(before);
         });
 
-        it('dispatches each light into the slot the shader was built for', function () {
-            // what the shader side numbered the lights as, for each of the two runtime masks
-            const shaderSlots = (mask) => {
-                const collected = [];
-                LitMaterialOptionsBuilder.collectLights(dirLights(), collected, mask, 0);
-                return collected;
-            };
+        it('dispatches every light once, whatever the masks being drawn select', function () {
+            // The light uniforms are constant for the pass, so the renderer writes every slot and
+            // does not care which mask is drawn. Each mask's shader then reads its own subset.
+            const written = dispatchedSlots();
+
+            expect([...written.keys()].sort()).to.eql([0, 1, 2]);
+            expect(written.get(0)).to.equal(affectAll._colorLinear);
+            expect(written.get(1)).to.equal(dynamicOnly._colorLinear);
+            expect(written.get(2)).to.equal(lightmappedOnly._colorLinear);
+        });
+
+        it('writes the slot every mask\'s shader reads, holding the light it expects', function () {
+            const written = dispatchedSlots();
 
             for (const mask of [MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED]) {
-                const expected = shaderSlots(mask);
-                const written = dispatchedSlots(mask);
+                // what the shader side numbered this mask's lights as
+                const expected = [];
+                LitMaterialOptionsBuilder.collectLights(dirLights(), expected, mask, 0);
 
-                // the renderer wrote exactly the slots the shader declares, and each holds the
-                // light the shader expects there
-                expect([...written.keys()].sort()).to.eql(
-                    expected.reduce((slots, light, slot) => (light ? [...slots, slot] : slots), [])
-                );
-                written.forEach((value, slot) => {
-                    expect(value).to.equal(expected[slot]._colorLinear);
+                expected.forEach((light, slot) => {
+                    expect(written.get(slot), `slot ${slot} of mask ${mask}`).to.equal(light._colorLinear);
                 });
             }
         });
 
         it('gives the same slot to a light under either mask', function () {
-            const dynamic = dispatchedSlots(MASK_AFFECT_DYNAMIC);
-            const lightmapped = dispatchedSlots(MASK_AFFECT_LIGHTMAPPED);
-
-            // the light reaching both kinds of geometry is slot 0 either way, which is the point of
+            // the light reaching both kinds of geometry is slot 0 for both, which is the point of
             // an absolute slot - before it, each mask packed its own lights from zero
-            expect(dynamic.get(0)).to.equal(affectAll._colorLinear);
-            expect(lightmapped.get(0)).to.equal(affectAll._colorLinear);
+            const slotOf = (mask) => {
+                const collected = [];
+                LitMaterialOptionsBuilder.collectLights(dirLights(), collected, mask, 0);
+                return collected.indexOf(affectAll);
+            };
 
-            expect(dynamic.get(1)).to.equal(dynamicOnly._colorLinear);
-            expect(lightmapped.has(1)).to.equal(false);
-
-            expect(lightmapped.get(2)).to.equal(lightmappedOnly._colorLinear);
-            expect(dynamic.has(2)).to.equal(false);
+            expect(slotOf(MASK_AFFECT_DYNAMIC)).to.equal(0);
+            expect(slotOf(MASK_AFFECT_LIGHTMAPPED)).to.equal(0);
         });
 
         it('skips a lightmap-only light without consuming its slot', function () {
@@ -275,19 +273,17 @@ describe('light slots', function () {
             expect(collected[1]).to.equal(dynamicOnly);
             expect(collected.length).to.equal(2);
 
-            const written = dispatchedSlots(MASK_AFFECT_DYNAMIC, lights);
+            const written = dispatchedSlots(lights);
             expect([...written.keys()].sort()).to.eql([0, 1]);
             expect(written.get(0)).to.equal(affectAll._colorLinear);
             expect(written.get(1)).to.equal(dynamicOnly._colorLinear);
         });
 
-        it('leaves no slot for the lightmap-only light under either mask', function () {
-            const bakeColor = bakeOnly._colorLinear;
-            for (const mask of [MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED]) {
-                const written = dispatchedSlots(mask);
-                expect([...written.values()]).to.not.include(bakeColor);
-                expect(written.has(3)).to.equal(false);
-            }
+        it('never dispatches the lightmap-only light', function () {
+            const written = dispatchedSlots();
+
+            expect([...written.values()]).to.not.include(bakeOnly._colorLinear);
+            expect(written.has(3)).to.equal(false);
         });
     });
 });
