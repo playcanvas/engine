@@ -223,16 +223,19 @@ class Asset extends EventHandler {
     static EVENT_CHANGE = 'change';
 
     /**
-     * Fired when the asset's stream download progresses.
+     * Fired as the asset's file downloads, with the number of bytes received so far and the total
+     * expected. Only asset types whose file is fetched as binary data report progress: `audio`,
+     * `binary`, `container`, `gsplat`, `model` and `texture`. Textures loaded through an image
+     * element have no download progress, so they fire once at 0 and once at the full size.
      *
      * Please note:
-     * - only gsplat assets current emit this event
+     * - the event does not fire when `asset.file.contents` is supplied, as nothing is downloaded
      * - totalBytes may not be reliable as it is based on the content-length header of the response
      *
      * @event
      * @example
      * asset.on('progress', (receivedBytes, totalBytes) => {
-     *    console.log(`Asset ${asset.name} progress ${readBytes / totalBytes}`);
+     *    console.log(`Asset ${asset.name} progress ${receivedBytes / totalBytes}`);
      * });
      */
     static EVENT_PROGRESS = 'progress';
