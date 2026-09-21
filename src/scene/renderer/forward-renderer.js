@@ -978,7 +978,7 @@ class ForwardRenderer extends Renderer {
 
             // clustered lighting passes
             const { shadowsEnabled, cookiesEnabled } = scene.lighting;
-            this._renderPassUpdateClustered.update(frameGraph, shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
+            this._renderPassUpdateClustered.update(shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
             frameGraph.addRenderPass(this._renderPassUpdateClustered);
 
         } else {

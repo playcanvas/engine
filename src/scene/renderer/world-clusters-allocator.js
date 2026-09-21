@@ -1,10 +1,10 @@
 import { DebugHelper } from '../../core/debug.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
-import { FramePassMultiView } from './frame-pass-multi-view.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LayerRenderStep } from './layer-render-step.js'
+ * @import { LightingParams } from '../lighting/lighting-params.js'
  */
 
 const tempClusterArray = [];
@@ -69,6 +69,18 @@ class WorldClustersAllocator {
 
     // returns an empty light cluster object to be used when no lights are used
     get empty() {
+        return this._empty ?? this.createEmpty();
+    }
+
+    /**
+     * Creates the shared empty (no-lights) cluster if it does not exist yet, and returns it. This
+     * uploads the cluster's texture, so it must run outside a render pass - the clustered update
+     * pass calls it at construction. Reading {@link WorldClustersAllocator#empty} also creates it
+     * lazily, as a fallback.
+     *
+     * @returns {WorldClusters} The empty cluster.
+     */
+    createEmpty() {
         if (!this._empty) {
 
             // create cluster structure with no lights
@@ -84,92 +96,68 @@ class WorldClustersAllocator {
     }
 
     /**
-     * Assign clusters for one frame pass that owns {@link RenderPassForward#layerRenderSteps}.
-     * No-op when the pass has no layer render steps.
-     *
-     * @param {import('../../platform/graphics/frame-pass.js').FramePass} renderPass - Render pass
-     * (not a {@link FramePassMultiView} wrapper; those are unwrapped in {@link WorldClustersAllocator#assign}).
-     * @private
+     * Recycle the previous frame's clusters and clear the per-frame assignment map. Call once at the
+     * start of the frame, before any {@link WorldClustersAllocator#request}.
      */
-    _assignClustersForPass(renderPass) {
-        const layerRenderSteps = renderPass.layerRenderSteps;
-        if (!layerRenderSteps) {
-            return;
-        }
-
-        const count = layerRenderSteps.length;
-        for (let i = 0; i < count; i++) {
-            const step = layerRenderSteps[i];
-            step.lightClusters = null;
-
-            // if the layer has lights used by clusters, and meshes
-            const layer = step.layer;
-            if (layer.hasClusteredLights && layer.meshInstances.length) {
-
-                // use existing clusters if the lights on the layer are the same
-                const hash = layer.getLightIdHash();
-                const existingStep = this._clusters.get(hash);
-                let clusters = existingStep?.lightClusters;
-
-                // no match, needs new clusters
-                if (!clusters) {
-
-                    // use already allocated cluster from last frame, or create a new one
-                    clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
-                    DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
-
-                    this._allocated.push(clusters);
-                    this._clusters.set(hash, step);
-                }
-
-                step.lightClusters = clusters;
-            }
-
-            // no clustered lights, use the cluster with no lights
-            if (!step.lightClusters) {
-                step.lightClusters = this.empty;
-            }
-        }
-    }
-
-    // assign light clusters to layer render steps that need it
-    assign(renderPasses) {
-
-        // reuse previously allocated clusters
+    reset() {
+        // clusters allocated last frame become available for reuse this frame
         tempClusterArray.push(...this._allocated);
         this._allocated.length = 0;
         this._clusters.clear();
-
-        // FramePassMultiView children are not on the frame graph list (merge safety); still assign
-        // clusters to their layer render steps before those passes run.
-        const passCount = renderPasses.length;
-        for (let p = 0; p < passCount; p++) {
-            const pass = renderPasses[p];
-            if (pass instanceof FramePassMultiView) {
-                const children = pass.children;
-                for (let c = 0; c < children.length; c++) {
-                    this._assignClustersForPass(children[c]);
-                }
-            } else {
-                this._assignClustersForPass(pass);
-            }
-        }
-
-        // delete leftovers
-        tempClusterArray.forEach(item => item.destroy());
-        tempClusterArray.length = 0;
     }
 
-    update(renderPasses, lighting) {
+    /**
+     * Assign a light cluster to a layer render step that will be rendered this frame. Steps whose
+     * layer shares the same set of clustered lights share a single cluster. Called during frame
+     * graph build (from a render pass's frameUpdate); the light data is uploaded later, once, by
+     * {@link WorldClustersAllocator#upload}. A step whose layer has no clustered lights is left
+     * without a cluster and falls back to {@link WorldClustersAllocator#empty} at render time.
+     *
+     * @param {LayerRenderStep} step - The layer render step to assign a cluster to.
+     */
+    request(step) {
+        step.lightClusters = null;
 
-        // assign clusters to layer render steps
-        this.assign(renderPasses);
+        // if the layer has lights used by clusters, and meshes
+        const layer = step.layer;
+        if (layer.hasClusteredLights && layer.meshInstances.length) {
+
+            // use existing clusters if the lights on the layer are the same
+            const hash = layer.getLightIdHash();
+            const existingStep = this._clusters.get(hash);
+            let clusters = existingStep?.lightClusters;
+
+            // no match, needs new clusters
+            if (!clusters) {
+
+                // reuse a cluster allocated in a previous frame, or create a new one
+                clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
+                DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
+
+                this._allocated.push(clusters);
+                this._clusters.set(hash, step);
+            }
+
+            step.lightClusters = clusters;
+        }
+    }
+
+    /**
+     * Destroy any clusters not reused this frame, then upload the light data of every unique cluster
+     * requested this frame. Call once after all {@link WorldClustersAllocator#request} calls and
+     * before the passes that use the clusters execute.
+     *
+     * @param {LightingParams} lighting - The clustered lighting parameters.
+     */
+    upload(lighting) {
+
+        // delete leftovers not reused this frame
+        tempClusterArray.forEach(item => item.destroy());
+        tempClusterArray.length = 0;
 
         // update all unique clusters
         this._clusters.forEach((step) => {
-            const layer = step.layer;
-            const cluster = step.lightClusters;
-            cluster.update(layer.clusteredLightsSet, lighting);
+            step.lightClusters.update(step.layer.clusteredLightsSet, lighting);
         });
     }
 }
