@@ -25,8 +25,8 @@ import { getApplication } from './globals.js';
  * @import { RenderComponent } from './components/render/component.js'
  * @import { RigidBodyComponent } from './components/rigid-body/component.js'
  * @import { ScreenComponent } from './components/screen/component.js'
+ * @import { Script } from './script/script.js'
  * @import { ScriptComponent } from './components/script/component.js'
- * @import { ScriptType } from './script/script-type.js'
  * @import { ScrollbarComponent } from './components/scrollbar/component.js'
  * @import { ScrollViewComponent } from './components/scroll-view/component.js'
  * @import { SoundComponent } from './components/sound/component.js'
@@ -534,32 +534,70 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Search the entity and all of its descendants for the first script instance of specified type.
+     * Search the entity and all of its descendants for the first script instance of the specified
+     * class. The result is typed as an instance of that class, so no cast is needed.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType|undefined} A script instance of specified type, if the entity or any of
-     * its descendants has one. Returns undefined otherwise.
+     * @template {Script} T
+     * @overload
+     * @param {new (...args: any[]) => T} type - The script class to search for.
+     * @returns {T|undefined} A script instance of the specified class, if the entity or any of its
+     * descendants has one. Returns undefined otherwise.
+     * @example
+     * // Get the first PlayerController instance in the hierarchy tree that starts with this entity
+     * const controller = entity.findScript(PlayerController); // PlayerController | undefined
+     */
+    /**
+     * Search the entity and all of its descendants for the first script instance with the
+     * specified name.
+     *
+     * @overload
+     * @param {string} name - The name of the script to search for.
+     * @returns {Script|undefined} A script instance with the specified name, if the entity or any
+     * of its descendants has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
      * const controller = entity.findScript("playerController");
      */
+    /**
+     * @param {string|typeof Script} nameOrType - The name or class of the script.
+     * @returns {Script|undefined} The first matching script instance, or undefined.
+     */
     findScript(nameOrType) {
-        const entity = this.findOne(node => node.c?.script?.has(nameOrType));
-        return entity?.c.script.get(nameOrType);
+        const entity = this.findOne(node => !!node.c?.script?.get(nameOrType));
+        return entity ? entity.c.script.get(nameOrType) : undefined;
     }
 
     /**
-     * Search the entity and all of its descendants for all script instances of specified type.
+     * Search the entity and all of its descendants for all script instances of the specified
+     * class. The result is typed as an array of that class, so no cast is needed.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType[]} All script instances of specified type in the entity or any of its
-     * descendants. Returns empty array if none found.
+     * @template {Script} T
+     * @overload
+     * @param {new (...args: any[]) => T} type - The script class to search for.
+     * @returns {T[]} All script instances of the specified class in the entity or any of its
+     * descendants. Returns an empty array if none are found.
+     * @example
+     * // Get all PlayerController instances in the hierarchy tree that starts with this entity
+     * const controllers = entity.findScripts(PlayerController); // PlayerController[]
+     */
+    /**
+     * Search the entity and all of its descendants for all script instances with the specified
+     * name.
+     *
+     * @overload
+     * @param {string} name - The name of the script to search for.
+     * @returns {Script[]} All script instances with the specified name in the entity or any of its
+     * descendants. Returns an empty array if none are found.
      * @example
      * // Get all "playerController" instances in the hierarchy tree that starts with this entity
      * const controllers = entity.findScripts("playerController");
      */
+    /**
+     * @param {string|typeof Script} nameOrType - The name or class of the script.
+     * @returns {Script[]} All matching script instances.
+     */
     findScripts(nameOrType) {
-        const entities = this.find(node => node.c?.script?.has(nameOrType));
+        const entities = this.find(node => !!node.c?.script?.get(nameOrType));
         return entities.map(entity => entity.c.script.get(nameOrType));
     }
 
