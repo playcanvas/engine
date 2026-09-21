@@ -17,7 +17,8 @@ const booleanFlags = new Set([
     'NO_MINISTATS',
     'WEBGPU_DISABLED',
     'WEBGPU_BARE_DISABLED',
-    'WEBGL_DISABLED'
+    'WEBGL_DISABLED',
+    'WEBGL_BARE_DISABLED'
 ]);
 const engineTypes = new Set(['development', 'performance', 'debug']);
 const preferredDeviceTypes = new Set(['webgpu', 'webgl2']);

@@ -30,7 +30,7 @@ const PC_MODULE_SHIM = 'declare module \'playcanvas\' {\n    export = pc;\n}\n';
 // etc. resolve to their default string export. without these the imports stay unresolved.
 const EXAMPLE_MODULE_SHIM = [
     'declare module \'examples/context\' {',
-    '    export const deviceType: \'webgpu\' | \'webgpu:bare\' | \'webgl2\' | \'null\';',
+    '    export const deviceType: \'webgpu\' | \'webgpu:bare\' | \'webgl2\' | \'webgl2:bare\' | \'null\';',
     '    export const data: any;',
     '    export const win: Window;',
     '}',
