@@ -169,7 +169,6 @@ camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(10, 4, 10), Vec3.ZERO);
 const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 cameraFrame.rendering.samples = 1;
-cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.update();
 
