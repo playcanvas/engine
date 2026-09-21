@@ -1017,9 +1017,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // we handle anti-aliasing internally by allocating multi-sampled backbuffer
         this.samples = antialiasSupported && this.backBufferAntialias ? this.maxSamples : 1;
 
-        // WebGL has no way to source draw parameters from a GPU buffer
-        this.supportsIndirectDraw = false;
-
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = !platform.android;
 

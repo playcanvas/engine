@@ -13,6 +13,11 @@ describe('MeshInstance draw commands', function () {
 
     beforeEach(function () {
         device = new NullGraphicsDevice({ width: 1, height: 1 });
+
+        // only WebGPU opts into indirect draw, and these tests cover the draw command
+        // bookkeeping rather than the platform support for it
+        device.supportsIndirectDraw = true;
+
         meshInstance = new MeshInstance(new Mesh(device), new ShaderMaterial());
     });
 

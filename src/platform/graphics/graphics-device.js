@@ -236,10 +236,13 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the device supports indirect draw calls, where the draw parameters are sourced from
-     * a GPU buffer instead of being supplied by the CPU. This is only supported on WebGPU. Also
-     * see {@link MeshInstance#setIndirect}.
+     * a GPU buffer instead of being supplied by the CPU (WebGPU only). Also see
+     * {@link MeshInstance#setIndirect}.
+     *
+     * @type {boolean}
+     * @readonly
      */
-    supportsIndirectDraw = true;
+    supportsIndirectDraw = false;
 
     /**
      * True if the device supports compute shaders.
