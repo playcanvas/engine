@@ -326,16 +326,26 @@ class ParticleCPUUpdater {
                     particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = -1;
                 }
             } else {
+                // respawn particle by moving it's life back to zero.
+                // OR below zero, if there are still unspawned particles to be emitted before this one.
+                // such thing happens when you have an enormous amount of particles with short lifetime.
+                // (mirrors respawnLife in particleUpdaterStartPS)
+                const period = Math.max(particleLifetime, emitter.numParticles * particleRate);
+                const wait = period - particleLifetime;
+                const slotLife = -glMod(id * period / emitter.numParticles - emitter.simTimeTotal, period);
+
                 if (life >= particleLifetime) {
-                    // respawn particle by moving it's life back to zero.
-                    // OR below zero, if there are still unspawned particles to be emitted before this one.
-                    // such thing happens when you have an enormous amount of particles with short lifetime.
-                    life -= Math.max(particleLifetime, emitter.numParticles * particleRate);
+                    // re-spreading the births only means anything with at least one birth interval
+                    // of slack; at capacity there is none and the particles are alive continuously
+                    // whatever their phase, so keep the wait exactly as it was
+                    life = wait * emitter.numParticles < period ? life - period : slotLife;
 
                     // dead particles in a single-shot system continue their paths, but marked as invisible.
                     // it is necessary for keeping correct separation between particles, based on emission rate.
                     // dying again in a looped system they will become visible on next respawn.
                     particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = emitter.loop ? 1 : -1;
+                } else if (life < -wait) {
+                    life = Math.max(life, slotLife);
                 }
                 if (life < 0 && emitter.loop) {
                     particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = 1;

@@ -35,6 +35,7 @@ class ParticleGPUUpdater {
         this.constantDelta = gd.scope.resolve('delta');
         this.constantRate = gd.scope.resolve('rate');
         this.constantRateDiv = gd.scope.resolve('rateDiv');
+        this.constantSimTime = gd.scope.resolve('simTime');
         this.constantLifetime = gd.scope.resolve('lifetime');
         this.constantGraphSampleSize = gd.scope.resolve('graphSampleSize');
         this.constantGraphNumSamples = gd.scope.resolve('graphNumSamples');
@@ -110,6 +111,7 @@ class ParticleGPUUpdater {
         this.constantDelta.setValue(delta);
         this.constantRate.setValue(emitter.rate);
         this.constantRateDiv.setValue(emitter.rate2 - emitter.rate);
+        this.constantSimTime.setValue(emitter.simTimeTotal);
         this.constantStartAngle.setValue(emitter.startAngle * math.DEG_TO_RAD);
         this.constantStartAngle2.setValue(emitter.startAngle2 * math.DEG_TO_RAD);
 

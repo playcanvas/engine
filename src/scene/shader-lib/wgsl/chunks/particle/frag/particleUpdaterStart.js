@@ -31,6 +31,31 @@ fn tex1Dlod_lerp(tex: texture_2d<f32>, textureSize: vec2u, tc: vec2f) -> TexLerp
     return TexLerpUnpackResult(mix(a.xyz, b.xyz, c), w_out);
 }
 
+// The life a particle carries on with - negative while it waits its turn to be born. A particle at
+// the end of its life waits for its own slot in the emission cycle, so that a rate which has just
+// changed re-spreads the particles over the new period instead of keeping the spacing of the old
+// one, and a particle queued for longer than the new period allows is released at its slot, so that
+// raising the rate takes effect right away rather than after the whole of the old period.
+fn respawnLife(particleId: f32, particleRate: f32, life: f32) -> f32 {
+    let period = max(uniform.lifetime, uniform.numParticles * particleRate);
+    let wait = period - uniform.lifetime;
+
+    // floored modulo - the WGSL remainder operator takes the sign of the dividend
+    let slot = particleId * period / uniform.numParticles - uniform.simTime;
+    let slotLife = -(slot - period * floor(slot / period));
+
+    // re-spreading the births only means anything with at least one birth interval of slack; at
+    // capacity there is none and the particles are alive continuously whatever their phase, so
+    // keep the wait exactly as it was
+    if (life >= uniform.lifetime) {
+        return select(slotLife, life - period, wait * uniform.numParticles < period);
+    }
+    if (life < -wait) {
+        return max(life, slotLife);
+    }
+    return life;
+}
+
 const HASHSCALE4: vec4f = vec4f(1031.0, 0.1030, 0.0973, 0.1099);
 fn hash41(p: f32) -> vec4f {
     var p4 = fract(vec4f(p) * HASHSCALE4);

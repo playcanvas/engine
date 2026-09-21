@@ -176,12 +176,6 @@ function packTexture2Floats(qA, qB) {
     return colors;
 }
 
-// Estimated seconds for a non-looping emitter to spawn every particle and for the last one to
-// reach the end of its life.
-function calcSpawnDuration(emitter) {
-    return Math.max(emitter.rate, emitter.rate2) * emitter.numParticles + emitter.lifetime;
-}
-
 function subGraph(A, B) {
     const r = new Float32Array(A.length);
     for (let i = 0; i < A.length; i++) {
@@ -1014,7 +1008,18 @@ class ParticleEmitter {
         }
     }
 
-    resetTime(duration = calcSpawnDuration(this)) {
+    /**
+     * Estimated seconds for a non-looping emitter to spawn every particle and for the last one to
+     * reach the end of its life.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get spawnDuration() {
+        return Math.max(this.rate, this.rate2) * this.numParticles + this.lifetime;
+    }
+
+    resetTime(duration = this.spawnDuration) {
         // measured against the emitter's own simulation clock (simTimeTotal) so that pausing,
         // time scaling and frame drops keep the finished state in sync with the particles
         this.endTime = this.simTimeTotal + duration;

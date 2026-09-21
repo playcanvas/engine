@@ -18,7 +18,7 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 
-import { deviceType } from 'examples/context';
+import { data, deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -131,11 +131,16 @@ const entity = new Entity('Sparks');
 app.root.addChild(entity);
 entity.setLocalPosition(0, 0, 0);
 
+const RATE = 0.01;
+
 // When texture is loaded add particlesystem component to entity
 entity.addComponent('particlesystem', {
-    numParticles: 200,
+    // the budget the Rate sliders draw from: an emitter is at capacity once numParticles * rate
+    // reaches the lifetime, so the bottom of the Rate range puts all of these on screen at once
+    numParticles: 600,
     lifetime: 2,
-    rate: 0.01,
+    rate: RATE,
+    rate2: RATE,
     scaleGraph: scaleCurve,
     rotationSpeedGraph: angleCurve,
     colorGraph: colorCurve,
@@ -143,4 +148,15 @@ entity.addComponent('particlesystem', {
     velocityGraph: worldVelocityCurve,
     localVelocityGraph: localVelocityCurve,
     localVelocityGraph2: localVelocityCurve2
+});
+
+// The emission rate is a simulation uniform, so it can be changed while the system is running -
+// live particles keep their age, and the spacing re-spreads over the new rate as they respawn
+data.set('settings', {
+    rate: RATE,
+    rate2: RATE
+});
+
+data.on('*:set', (/** @type {string} */ path, value) => {
+    entity.particlesystem[path.split('.')[1]] = value;
 });

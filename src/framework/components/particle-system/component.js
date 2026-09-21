@@ -498,7 +498,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set rate(arg) {
-        this._setComplexProperty('rate', arg);
+        this._setRateProperty('rate', arg);
     }
 
     /**
@@ -516,7 +516,7 @@ class ParticleSystemComponent extends Component {
      * @type {number}
      */
     set rate2(arg) {
-        this._setComplexProperty('rate2', arg);
+        this._setRateProperty('rate2', arg);
     }
 
     /**
@@ -1871,6 +1871,28 @@ class ParticleSystemComponent extends Component {
             this.emitter.resetMaterial();
             this.rebuild();
             this.reset();
+        }
+    }
+
+    /**
+     * Sets an emission rate property. The rate is read by the simulation as a uniform every frame,
+     * so no buffers, textures or shaders depend on it and the running simulation is left alone -
+     * live particles keep their age, and the new spacing is picked up as they respawn.
+     *
+     * @param {string} name - The name of the property to set.
+     * @param {number} arg - The new value of the property.
+     * @private
+     */
+    _setRateProperty(name, arg) {
+        this[`_${name}`] = arg;
+        const emitter = this.emitter;
+        if (emitter) {
+            // a non-looping emitter finishes after a duration that scales with the rate, so shift
+            // its finish time by the difference instead of restarting the countdown
+            const prevDuration = emitter.spawnDuration;
+            emitter[name] = arg;
+            emitter.endTime += emitter.spawnDuration - prevDuration;
+            emitter.resetMaterial();
         }
     }
 

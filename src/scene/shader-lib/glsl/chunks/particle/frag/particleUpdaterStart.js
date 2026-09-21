@@ -22,6 +22,27 @@ vec3 tex1Dlod_lerp(TEXTURE_ACCEPT_HIGHP(tex), vec2 tc, out vec3 w) {
     return mix(a.xyz, b.xyz, c);
 }
 
+// The life a particle carries on with - negative while it waits its turn to be born. A particle at
+// the end of its life waits for its own slot in the emission cycle, so that a rate which has just
+// changed re-spreads the particles over the new period instead of keeping the spacing of the old
+// one, and a particle queued for longer than the new period allows is released at its slot, so that
+// raising the rate takes effect right away rather than after the whole of the old period.
+float respawnLife(float particleId, float particleRate, float life) {
+    float period = max(lifetime, numParticles * particleRate);
+    float wait = period - lifetime;
+
+    float slotLife = -mod(particleId * period / numParticles - simTime, period);
+
+    // re-spreading the births only means anything with at least one birth interval of slack; at
+    // capacity there is none and the particles are alive continuously whatever their phase, so
+    // keep the wait exactly as it was
+    if (life >= lifetime) {
+        return wait * numParticles < period ? life - period : slotLife;
+    }
+    if (life < -wait) return max(life, slotLife);
+    return life;
+}
+
 #define HASHSCALE4 vec4(1031, .1030, .0973, .1099)
 vec4 hash41(float p) {
     vec4 p4 = fract(vec4(p) * HASHSCALE4);
