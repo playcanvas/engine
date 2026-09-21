@@ -1,7 +1,7 @@
 import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 
 const STATE_PARAM = 's';
-const DEVICE_TYPES = new Set(['webgpu', 'webgpu:bare', 'webgl2', 'null']);
+const DEVICE_TYPES = new Set(['webgpu', 'webgpu:bare', 'webgl2', 'webgl2:bare', 'null']);
 const STATE_KEY_SHORT = /** @type {const} */ ({ device: 'd', ui: 'u', controls: 'c' });
 const STATE_KEY_LONG = /** @type {Record<string, string>} */ ({ d: 'device', u: 'ui', c: 'controls' });
 

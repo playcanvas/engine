@@ -1,4 +1,4 @@
-import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE, DEVICETYPE_NULL } from './constants.js';
+import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL2_BARE, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE, DEVICETYPE_NULL } from './constants.js';
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
 import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
 import { NullGraphicsDevice } from './null/null-graphics-device.js';
@@ -16,8 +16,9 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * order in which the devices are attempted to get created. Defaults to an empty array. If the
  * specified array does not contain {@link DEVICETYPE_WEBGL2}, it is internally added to its end.
  * Typically, you'd only specify {@link DEVICETYPE_WEBGPU}, or leave it empty. Use
- * {@link DEVICETYPE_WEBGPU_BARE} to create a WebGPU device without optional features and with
- * default spec limits, useful for testing on constrained devices.
+ * {@link DEVICETYPE_WEBGPU_BARE} or {@link DEVICETYPE_WEBGL2_BARE} to create a device without
+ * optional features and with the limits of the least capable devices, useful for testing on
+ * constrained devices.
  * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
  * anti-aliasing if possible. Defaults to true.
  * @param {boolean} [options.alpha] - Boolean that indicates whether the canvas composites with
@@ -110,9 +111,10 @@ function createGraphicsDevice(canvas, options = {}) {
             });
         }
 
-        if (deviceType === DEVICETYPE_WEBGL2) {
+        if (deviceType === DEVICETYPE_WEBGL2 || deviceType === DEVICETYPE_WEBGL2_BARE) {
+            const featureLevel = deviceType === DEVICETYPE_WEBGL2_BARE ? 'bare' : undefined;
             deviceCreateFuncs.push(() => {
-                return new WebglGraphicsDevice(canvas, options);
+                return new WebglGraphicsDevice(canvas, { ...options, featureLevel });
             });
         }
 
