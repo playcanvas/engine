@@ -32,7 +32,13 @@ describe('Renderer destruction', function () {
             clusteredLightsSet: new Set()
         };
         const steps = [{ layer }, { layer }];
-        allocator.update([{ layerRenderSteps: steps }], scene.lighting);
+
+        // mirror a frame: recycle, request a cluster per step (deduped by light hash), then upload
+        allocator.reset();
+        allocator.request(steps[0]);
+        allocator.request(steps[1]);
+        allocator.upload(scene.lighting);
+
         expect(steps[0].lightClusters).to.equal(steps[1].lightClusters);
         expect(allocator.count).to.equal(1);
 
