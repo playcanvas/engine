@@ -1,5 +1,7 @@
 {
     "$schema": "https://context7.com/schema/context7.json",
+    "url": "https://context7.com/playcanvas/engine",
+    "public_key": "pk_ZBCAOpqvyscrOelnvmhm6",
     "projectTitle": "PlayCanvas Engine",
     "description": "Open-source WebGL2 and WebGPU 3D engine for browser games, apps, product viewers and Gaussian splat scenes. npm package: playcanvas.",
     "folders": [],
