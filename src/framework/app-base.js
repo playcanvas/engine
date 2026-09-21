@@ -679,7 +679,7 @@ class AppBase extends EventHandler {
 
     /** @private */
     _initProgramLibrary() {
-        const library = new ProgramLibrary(this.graphicsDevice, new StandardMaterial());
+        const library = new ProgramLibrary(this.graphicsDevice);
         setProgramLibrary(this.graphicsDevice, library);
     }
 
