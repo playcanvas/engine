@@ -236,14 +236,21 @@ class RenderPassForward extends RenderPass {
         this.updateCameraBeforePasses();
         this.updateClears();
 
-        // request mesh-instance culling for the (camera, layer) pairs this pass will render, so
-        // their culled lists are ready by the time the pass executes. Gated by the same isEnabled
-        // check execute() uses, so a disabled sub-layer (e.g. one left in a persistent CameraFrame
-        // pass) is neither culled nor rendered. The same (camera, layer) appearing as both an
-        // opaque and a transparent step is de-duplicated by the request.
-        const { renderer, layerComposition, layerRenderSteps } = this;
+        // Per step, request the frame setup its layer needs so it is ready when the pass executes:
+        // under clustered lighting, a light cluster for the layer (shared between steps with the same
+        // light set); and mesh-instance culling for the (camera, layer) pairs this pass renders,
+        // gated by the same isEnabled check execute() uses so a disabled sub-layer (e.g. one left in
+        // a persistent CameraFrame pass) is neither culled nor rendered. The same (camera, layer) as
+        // both an opaque and a transparent step is de-duplicated by each request.
+        const { renderer, scene, layerComposition, layerRenderSteps } = this;
+        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
         for (let i = 0; i < layerRenderSteps.length; i++) {
             const step = layerRenderSteps[i];
+
+            if (clusteredLightingEnabled) {
+                renderer.worldClustersAllocator.request(step);
+            }
+
             if (layerComposition.isEnabled(step.layer, step.transparent)) {
                 renderer.culler.requestMeshInstanceCull(step.cameraComponent.camera, step.layer);
             }
