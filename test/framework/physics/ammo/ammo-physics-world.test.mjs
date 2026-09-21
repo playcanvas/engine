@@ -831,6 +831,182 @@ describe('AmmoPhysicsWorld', function () {
         });
     });
 
+    describe('shape lifetime', function () {
+
+        // Every native shape a collision component creates must be destroyed with it. Shapes are
+        // tracked by pointer because Ammo hands out a fresh wrapper object per lookup.
+
+        beforeEach(function () {
+            installWorld();
+        });
+
+        /**
+         * Wraps every Ammo shape constructor and Ammo.destroy to track the live native shapes.
+         *
+         * @returns {Map<number, string>} Live shape pointers mapped to their class names.
+         */
+        function trackShapes() {
+            const live = new Map();
+
+            Object.keys(Ammo)
+            .filter(name => /Shape/.test(name) && typeof Ammo[name] === 'function')
+            .forEach((name) => {
+                const Original = Ammo[name];
+                stub(Ammo, name).callsFake((...args) => {
+                    const shape = new Original(...args);
+                    live.set(Ammo.getPointer(shape), name);
+                    return shape;
+                });
+            });
+
+            const destroy = Ammo.destroy;
+            stub(Ammo, 'destroy').callsFake((obj) => {
+                live.delete(Ammo.getPointer(obj));
+                destroy(obj);
+            });
+
+            return live;
+        }
+
+        /**
+         * @param {Map<number, string>} live - The live shapes.
+         * @returns {string[]} The sorted class names of the live shapes.
+         */
+        function liveNames(live) {
+            return [...live.values()].sort();
+        }
+
+        const primitives = {
+            box: { type: 'box' },
+            sphere: { type: 'sphere' },
+            'capsule (x)': { type: 'capsule', axis: 0 },
+            'capsule (y)': { type: 'capsule', axis: 1 },
+            'capsule (z)': { type: 'capsule', axis: 2 },
+            'cylinder (x)': { type: 'cylinder', axis: 0 },
+            'cylinder (y)': { type: 'cylinder', axis: 1 },
+            'cylinder (z)': { type: 'cylinder', axis: 2 },
+            'cone (x)': { type: 'cone', axis: 0 },
+            'cone (y)': { type: 'cone', axis: 1 },
+            'cone (z)': { type: 'cone', axis: 2 },
+            compound: { type: 'compound' }
+        };
+
+        Object.keys(primitives).forEach((name) => {
+            it(`destroys a ${name} shape with its component`, function () {
+                const live = trackShapes();
+
+                const e = new Entity();
+                app.root.addChild(e);
+                e.addComponent('collision', primitives[name]);
+                expect(live.size).to.equal(1);
+
+                e.removeComponent('collision');
+                expect(liveNames(live)).to.deep.equal([]);
+            });
+        });
+
+        it('destroys the previous shape when a primitive is rebuilt', function () {
+            const live = trackShapes();
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('collision', { type: 'box' });
+            e.addComponent('rigidbody', { type: 'static' });
+
+            // the old shape is destroyed before the new one is created, so the two may share an
+            // address; a leak shows up as a second live shape
+            e.collision.halfExtents = new Vec3(1, 2, 3);
+            expect(liveNames(live)).to.deep.equal(['btBoxShape']);
+
+            e.collision.type = 'sphere';
+            expect(liveNames(live)).to.deep.equal(['btSphereShape']);
+
+            e.destroy();
+            expect(liveNames(live)).to.deep.equal([]);
+        });
+
+        it('destroys a triangle mesh with its component and the BVH after the step', function () {
+            const live = trackShapes();
+
+            const mesh = createCubeMesh();
+            const e = createMeshEntity(mesh);
+            expect(liveNames(live)).to.deep.equal([
+                'btBvhTriangleMeshShape', 'btCompoundShape', 'btScaledBvhTriangleMeshShape'
+            ]);
+
+            // the shared BVH outlives the wrapper until the step, so a collider rebuilt within a
+            // frame can wrap it again
+            e.removeComponent('collision');
+            expect(liveNames(live)).to.deep.equal(['btBvhTriangleMeshShape']);
+
+            step();
+            expect(liveNames(live)).to.deep.equal([]);
+        });
+
+        it('keeps the shared BVH while another collider still wraps it', function () {
+            const live = trackShapes();
+
+            const mesh = createCubeMesh();
+            const a = createMeshEntity(mesh, { x: 0 });
+            createMeshEntity(mesh, { x: 10 });
+            expect(liveNames(live)).to.deep.equal([
+                'btBvhTriangleMeshShape',
+                'btCompoundShape', 'btCompoundShape',
+                'btScaledBvhTriangleMeshShape', 'btScaledBvhTriangleMeshShape'
+            ]);
+
+            a.destroy();
+            step();
+            expect(liveNames(live)).to.deep.equal([
+                'btBvhTriangleMeshShape', 'btCompoundShape', 'btScaledBvhTriangleMeshShape'
+            ]);
+        });
+
+        it('destroys a convex hull with its component', function () {
+            const live = trackShapes();
+
+            const mesh = createCubeMesh();
+            const e = createMeshEntity(mesh, { convexHull: true });
+            expect(liveNames(live)).to.deep.equal(['btCompoundShape', 'btConvexHullShape']);
+
+            e.removeComponent('collision');
+            expect(liveNames(live)).to.deep.equal([]);
+        });
+
+        it('destroys a compound and the shapes of its children with the entity', function () {
+            const live = trackShapes();
+
+            const root = new Entity();
+            app.root.addChild(root);
+            root.addComponent('rigidbody', { type: 'static' });
+            root.addComponent('collision', { type: 'compound' });
+
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('collision', { type: 'box' });
+            expect(liveNames(live)).to.deep.equal(['btBoxShape', 'btCompoundShape']);
+
+            root.destroy();
+            expect(liveNames(live)).to.deep.equal([]);
+        });
+
+        it('destroys every shape with the world', function () {
+            const live = trackShapes();
+
+            const mesh = createCubeMesh();
+            createMeshEntity(mesh);
+            createMeshEntity(mesh, { x: 10, convexHull: true });
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('collision', { type: 'capsule' });
+            expect(live.size).to.equal(6);
+
+            app.destroy();
+            app = null;
+            expect(liveNames(live)).to.deep.equal([]);
+        });
+    });
+
     describe('rigid body removal', function () {
 
         // End-to-end checks for https://github.com/playcanvas/engine/issues/2195: a collision

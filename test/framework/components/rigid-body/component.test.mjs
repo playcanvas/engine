@@ -114,6 +114,7 @@ describe('RigidBodyComponent', function () {
             rb.angularVelocity = new Vec3(4, 5, 6);
             rb.group = 4;
             rb.mask = 255;
+            rb.gravityScale = 0.5;
 
             expect(rb.mass).to.equal(10);
             expect(rb.friction).to.equal(0.25);
@@ -128,7 +129,18 @@ describe('RigidBodyComponent', function () {
             expect(rb.angularVelocity.equals(new Vec3(4, 5, 6))).to.equal(true);
             expect(rb.group).to.equal(4);
             expect(rb.mask).to.equal(255);
+            expect(rb.gravityScale).to.equal(0.5);
             expect(rb.isActive()).to.equal(false);
+        });
+
+        it('defaults the gravity scale to 1 and takes it from the component data', function () {
+            expect(addPhysicsEntity().rigidbody.gravityScale).to.equal(1);
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('collision');
+            e.addComponent('rigidbody', { type: 'dynamic', gravityScale: 0 });
+            expect(e.rigidbody.gravityScale).to.equal(0);
         });
 
         it('applies forces and impulses without throwing', function () {
@@ -155,10 +167,13 @@ describe('RigidBodyComponent', function () {
             const e = addPhysicsEntity();
             e.rigidbody.mass = 7;
 
+            e.rigidbody.gravityScale = 2;
+
             const clone = e.clone();
             app.root.addChild(clone);
 
             expect(clone.rigidbody.mass).to.equal(7);
+            expect(clone.rigidbody.gravityScale).to.equal(2);
             expect(clone.rigidbody._body).to.exist;
             expect(clone.rigidbody._body).to.not.equal(e.rigidbody._body);
         });

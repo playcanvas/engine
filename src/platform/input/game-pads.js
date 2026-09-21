@@ -6,18 +6,18 @@ import { platform } from '../../core/platform.js';
 const dummyArray = Object.freeze([]);
 
 /**
- * Get Gamepads from API.
+ * Get Gamepads from API. The API is looked up on every call so that an implementation that
+ * appears (or is replaced, e.g. under test) after this module has loaded is still used.
  *
- * @type {Function}
- * @returns {Gamepad[]} Retrieved gamepads from the device.
+ * @returns {(Gamepad|null)[]} Retrieved gamepads from the device.
  */
-let getGamepads = function () {
-    return dummyArray;
+const getGamepads = () => {
+    if (typeof navigator === 'undefined') {
+        return dummyArray;
+    }
+    const api = navigator.getGamepads || navigator.webkitGetGamepads;
+    return api ? api.call(navigator) : dummyArray;
 };
-
-if (typeof navigator !== 'undefined') {
-    getGamepads = (navigator.getGamepads || navigator.webkitGetGamepads || getGamepads).bind(navigator);
-}
 
 const MAPS_INDEXES = {
     buttons: {
@@ -314,7 +314,8 @@ class GamePadButton {
             this.touched = current.touched ?? current.value > 0;
         }
 
-        if (previous) {
+        // A numeric previous value of 0 is a valid resting state, so only skip when omitted.
+        if (previous !== undefined) {
             if (typeof previous === 'number') {
                 this.wasPressed = previous !== 1 && this.pressed;
                 this.wasReleased = previous === 1 && !this.pressed;
@@ -532,13 +533,21 @@ class GamePad {
         const previousAxes = this._previousAxes;
         const axes = this._axes;
 
-        // Store previous values for axes for dual buttons.
-        previousAxes.length = 0;
-        previousAxes.push(...axes);
+        // Store previous values for axes for dual buttons. Copy by index rather than spread so
+        // that no iterator or temporary array is created every frame.
+        const numAxes = axes.length;
+        for (let i = 0; i < numAxes; i++) {
+            previousAxes[i] = axes[i];
+        }
+        previousAxes.length = numAxes;
 
         // Update axes
-        axes.length = 0;
-        axes.push(...gamepad.axes);
+        const newAxes = gamepad.axes;
+        const numNewAxes = newAxes.length;
+        for (let i = 0; i < numNewAxes; i++) {
+            axes[i] = newAxes[i];
+        }
+        axes.length = numNewAxes;
 
         // Update buttons
         const buttons = this._buttons;
@@ -911,7 +920,7 @@ class GamePads extends EventHandler {
      * @ignore
      */
     update() {
-        this.poll();
+        this._poll(null);
     }
 
     /**
@@ -926,27 +935,36 @@ class GamePads extends EventHandler {
      * const pads = gamepads.poll();
      */
     poll(pads = []) {
-        if (pads.length > 0) {
-            pads.length = 0;
-        }
+        pads.length = 0;
+        this._poll(pads);
+        return pads;
+    }
 
+    /**
+     * Read the latest state of every connected device into its {@link GamePad}, creating a
+     * GamePad for any device seen for the first time.
+     *
+     * @param {GamePad[]|null} pads - An optional array that receives the polled gamepads.
+     * @private
+     */
+    _poll(pads) {
         const padDevices = getGamepads();
 
         for (let i = 0, len = padDevices.length; i < len; i++) {
-            if (padDevices[i]) {
-                const pad = this.findByIndex(padDevices[i].index);
+            const device = padDevices[i];
+            if (device) {
+                let pad = this.findByIndex(device.index);
 
                 if (pad) {
-                    pads.push(pad.update(padDevices[i]));
+                    pad.update(device);
                 } else {
-                    const nPad = new GamePad(padDevices[i], this.getMap(padDevices[i]));
-                    this.current.push(nPad);
-                    pads.push(nPad);
+                    pad = new GamePad(device, this.getMap(device));
+                    this.current.push(pad);
                 }
+
+                pads?.push(pad);
             }
         }
-
-        return pads;
     }
 
     /**
@@ -1064,7 +1082,14 @@ class GamePads extends EventHandler {
      * @returns {GamePad|null} The {@link GamePad} with the matching device index or null if no gamepad is found or the gamepad is not connected.
      */
     findByIndex(index) {
-        return this.current.find(gp => gp && gp.index === index) || null;
+        const current = this.current;
+        for (let i = 0, l = current.length; i < l; i++) {
+            const pad = current[i];
+            if (pad && pad.index === index) {
+                return pad;
+            }
+        }
+        return null;
     }
 }
 

@@ -59,9 +59,6 @@ class WebglShader {
 
         // kick off linking, as this is non-blocking too
         this.link(shader.device, shader);
-
-        // add it to a device list of all shaders
-        shader.device.shaders.push(shader);
     }
 
     /**

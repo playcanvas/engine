@@ -221,6 +221,9 @@ class Shader {
 
         this.impl = graphicsDevice.createShaderImpl(this);
 
+        // add it to the device list of all shaders
+        graphicsDevice.shaders.push(this);
+
         Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: ${this.label}, stack: ${DebugGraphics.toString()}`, {
             instance: this
         });
