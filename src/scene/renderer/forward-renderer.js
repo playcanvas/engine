@@ -42,13 +42,11 @@ const _drawCallList = {
     drawCalls: [],
     shaderInstances: [],
     isNewMaterial: [],
-    lightMaskChanged: [],
 
     clear: function () {
         this.drawCalls.length = 0;
         this.shaderInstances.length = 0;
         this.isNewMaterial.length = 0;
-        this.lightMaskChanged.length = 0;
     }
 };
 
@@ -249,7 +247,7 @@ class ForwardRenderer extends Renderer {
         this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
     }
 
-    dispatchDirectLights(dirs, mask, camera) {
+    dispatchDirectLights(dirs, camera) {
         let slotCount = 0;
 
         const scope = this.device.scope;
@@ -258,15 +256,13 @@ class ForwardRenderer extends Renderer {
 
             const directional = dirs[i];
 
-            // Light slots are absolute: every light applied at runtime reserves its slot for the
-            // whole pass, whether or not this mask selects it, so that light<N>_ denotes the same
-            // light no matter which mask is being drawn. A light that only contributes to a
-            // lightmap reaches nothing at runtime and takes no slot. The shader side assigns slots
-            // the same way, see LitMaterialOptionsBuilder#collectLights.
+            // A light slot is absolute, so a light's uniforms are the same for every mesh instance
+            // in the pass and every light is dispatched, whatever the masks being drawn select.
+            // A light that only contributes to a lightmap reaches nothing at runtime and takes no
+            // slot. The shader side assigns slots the same way, see
+            // LitMaterialOptionsBuilder#collectLights.
             if (!(directional.mask & MASK_AFFECT_RUNTIME)) continue;
             const cnt = slotCount++;
-
-            if (!(directional.mask & mask)) continue;
 
             const wtm = directional._node.getWorldTransform();
 
@@ -512,7 +508,7 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    dispatchLocalLights(sortedLights, mask, usedDirLights) {
+    dispatchLocalLights(sortedLights, usedDirLights) {
 
         // local light slots continue after the slots the directional lights reserved
         let slotCount = usedDirLights;
@@ -523,9 +519,7 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numOmnis; i++) {
             const omni = omnis[i];
             if (!(omni.mask & MASK_AFFECT_RUNTIME)) continue;
-            const slot = slotCount++;
-            if (!(omni.mask & mask)) continue;
-            this.dispatchOmniLight(scope, omni, slot);
+            this.dispatchOmniLight(scope, omni, slotCount++);
         }
 
         const spts = sortedLights[LIGHTTYPE_SPOT];
@@ -533,9 +527,7 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numSpts; i++) {
             const spot = spts[i];
             if (!(spot.mask & MASK_AFFECT_RUNTIME)) continue;
-            const slot = slotCount++;
-            if (!(spot.mask & mask)) continue;
-            this.dispatchSpotLight(scope, spot, slot);
+            this.dispatchSpotLight(scope, spot, slotCount++);
         }
     }
 
@@ -550,11 +542,10 @@ class ForwardRenderer extends Renderer {
         shaderParams.fog = fogParams.type;
         shaderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;    // output gamma correction is determined by the render target
 
-        const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
+        const addCall = (drawCall, shaderInstance, isNewMaterial) => {
             _drawCallList.drawCalls.push(drawCall);
             _drawCallList.shaderInstances.push(shaderInstance);
             _drawCallList.isNewMaterial.push(isNewMaterial);
-            _drawCallList.lightMaskChanged.push(lightMaskChanged);
         };
 
         // start with empty arrays
@@ -564,7 +555,7 @@ class ForwardRenderer extends Renderer {
         const scene = this.scene;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
         const lightHash = layer?.getLightHash(clusteredLightingEnabled) ?? 0;
-        let prevMaterial = null, prevObjDefs, prevLightMask;
+        let prevMaterial = null, prevObjDefs;
 
         const drawCallsCount = drawCalls.length;
         for (let i = 0; i < drawCallsCount; i++) {
@@ -605,7 +596,6 @@ class ForwardRenderer extends Renderer {
             const material = drawCall.material;
 
             const objDefs = drawCall._shaderDefs;
-            const lightMask = drawCall.mask;
 
             if (material && material === prevMaterial && objDefs !== prevObjDefs) {
                 prevMaterial = null; // force change shader if the object uses a different variant of the same material
@@ -619,17 +609,24 @@ class ForwardRenderer extends Renderer {
 
             const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, sortedLights);
 
-            addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
+            addCall(drawCall, shaderInstance, material !== prevMaterial);
 
             prevMaterial = material;
             prevObjDefs = objDefs;
-            prevLightMask = lightMask;
         }
 
         return _drawCallList;
     }
 
     renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
+        // Nothing to draw: leave before the per-pass setup, in particular before dispatching the
+        // lights. An empty layer step is common - a layer's opaque and transparent sublayers are
+        // both enabled and neither is filtered out when empty.
+        const preparedCallsCount = preparedCalls.drawCalls.length;
+        if (preparedCallsCount === 0) {
+            return;
+        }
+
         const device = this.device;
         const scene = this.scene;
         const flipFactor = flipFaces ? -1 : 1;
@@ -647,6 +644,14 @@ class ForwardRenderer extends Renderer {
         Debug.assert(attachmentCount <= 1 || device.supportsIndependentBlending,
             'Rendering the scene textures requires GraphicsDevice#supportsIndependentBlending, as the attachments of the materials which do not generate them cannot be masked off without it.');
 
+        // Uniforms I: the lights of the pass. A light slot denotes the same light for every mesh
+        // instance drawn, so the light uniforms are constant for the pass and are dispatched once,
+        // rather than per mesh instance whose light mask differs from the one before it.
+        const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], camera);
+        if (!clusteredLightingEnabled) {
+            this.dispatchLocalLights(sortedLights, usedDirLights);
+        }
+
         // multiview xr rendering
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
 
@@ -658,7 +663,6 @@ class ForwardRenderer extends Renderer {
         const viewListEnd = (viewList && activeView >= 0) ? activeView + 1 : (viewList ? viewList.length : 0);
 
         // Render the scene
-        const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
             /** @type {MeshInstance} */
@@ -666,10 +670,8 @@ class ForwardRenderer extends Renderer {
 
             // We have a mesh instance
             const newMaterial = preparedCalls.isNewMaterial[i];
-            const lightMaskChanged = preparedCalls.lightMaskChanged[i];
             const shaderInstance = preparedCalls.shaderInstances[i];
             const material = drawCall.material;
-            const lightMask = drawCall.mask;
 
             if (shaderInstance.shader.failed) continue;
 
@@ -678,17 +680,9 @@ class ForwardRenderer extends Renderer {
                 const asyncCompile = false;
                 device.setShader(shaderInstance.shader, asyncCompile);
 
-                // Uniforms I: material - on the scope, and through the material bind group
+                // Uniforms II: material - on the scope, and through the material bind group
                 material.setParameters(device);
                 this.setupMaterialBindGroup(material);
-
-                if (lightMaskChanged) {
-                    const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightMask, camera);
-
-                    if (!clusteredLightingEnabled) {
-                        this.dispatchLocalLights(sortedLights, lightMask, usedDirLights);
-                    }
-                }
 
                 this.alphaTestId.setValue(material.alphaTest);
 
