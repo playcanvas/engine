@@ -13,6 +13,9 @@
  * @property {HTMLElement|null} codeEl - The code block under the row, once expanded.
  * @property {HTMLElement|null} copyEl - The copy button of a code row.
  * @property {string} code - The code last rendered.
+ * @property {number} depth - How far the row is indented.
+ * @property {boolean} group - Whether the row is drawn with a divider above it.
+ * @property {boolean} groupEnd - Whether the row is drawn with a divider below it.
  */
 
 /**
@@ -38,8 +41,11 @@ function el(tag, className) {
 /**
  * A read-only property panel for any subject a model builder can describe: a node, a render pass,
  * a render target. Sections and rows are keyed and reconciled in place, so refreshing at a high
- * rate only touches the text that actually changed and never resets the scroll position or the
- * collapsed sections.
+ * rate only touches the text that actually changed and never resets the scroll position, the
+ * collapsed sections or the rows opened in place.
+ *
+ * A value carrying `expand` opens under its own row, to any depth, and one carrying `code` opens
+ * as a numbered block of text. Both are built on every refresh, so they follow the live object.
  *
  * @ignore
  */
@@ -89,12 +95,20 @@ class PropertyView {
     _collapsed = new Set();
 
     /**
-     * Keys of the code rows whose block is expanded, as section key and row key.
+     * Keys of the rows opened in place, as section key and row key.
      *
      * @type {Set<string>}
      * @private
      */
     _expanded = new Set();
+
+    /**
+     * How deep a chain of expanded rows may go, in case a model ever builds a cycle.
+     *
+     * @type {number}
+     * @private
+     */
+    _maxDepth = 8;
 
     /**
      * @type {HTMLElement|null}
@@ -204,24 +218,40 @@ class PropertyView {
         const seen = new Set();
         let cursor = section.rowsEl.firstChild;
 
-        for (const row of rows) {
+        for (const row of this._flatten(section.key, rows, 0, '')) {
             const elements = section.rows.get(row.key) ?? this._createRow(section, row);
             seen.add(row.key);
 
             if (elements.labelEl.textContent !== row.label) {
                 elements.labelEl.textContent = row.label;
             }
-            elements.el.classList.toggle('pci-indent', !!row.indent);
+            const depth = row.depth ?? 0;
+            if (elements.depth !== depth) {
+                elements.depth = depth;
+                elements.el.classList.toggle('pci-indent', depth > 0);
+                elements.el.style.paddingLeft = depth ? `${8 + depth * 14}px` : '';
+            }
+            const group = !!row.group;
+            if (elements.group !== group) {
+                elements.group = group;
+                elements.el.classList.toggle('pci-group', group);
+            }
+            const groupEnd = !!row.groupEnd;
+            if (elements.groupEnd !== groupEnd) {
+                elements.groupEnd = groupEnd;
+                elements.el.classList.toggle('pci-group-end', groupEnd);
+            }
 
             const { text, cls = 'obj', target = null, swatch, code } = row.value;
             const hasCode = typeof code === 'string';
-            const expanded = hasCode && this._expanded.has(`${section.key}\0${row.key}`);
-            const shown = hasCode ? `${expanded ? '▾' : '▸'} ${text}` : text;
+            const expandable = hasCode || !!row.value.expand;
+            const expanded = expandable && this._expanded.has(`${section.key}\0${row.key}`);
+            const shown = expandable ? `${expanded ? '▾' : '▸'} ${text}` : text;
             if (elements.text !== shown) {
                 elements.text = shown;
                 elements.valueEl.lastChild.textContent = shown;
             }
-            elements.el.classList.toggle('pci-code-row', hasCode);
+            elements.el.classList.toggle('pci-expandable', expandable);
             this._renderCode(section, elements, hasCode ? code : null, expanded);
             if (elements.cls !== cls) {
                 elements.valueEl.classList.remove(`pci-v-${elements.cls}`);
@@ -267,6 +297,45 @@ class PropertyView {
                 section.rows.delete(key);
             }
         }
+    }
+
+    /**
+     * The rows to show for a list of model rows: each row, followed by the rows of whatever it
+     * expands into while it is open. Keys are prefixed by their parent so that a label repeated at
+     * two depths, such as the material of two mesh instances, stays distinct.
+     *
+     * @param {string} sectionKey - The key of the section being rendered.
+     * @param {PropertyRow[]} rows - The rows to flatten.
+     * @param {number} depth - The depth the rows sit at.
+     * @param {string} prefix - The key of the row they expand from.
+     * @returns {PropertyRow[]} The flattened rows.
+     * @private
+     */
+    _flatten(sectionKey, rows, depth, prefix) {
+        const out = [];
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const key = prefix ? `${prefix}/${row.key}` : row.key;
+            const rowDepth = depth + (row.depth ?? 0);
+            out.push({ ...row, key, depth: rowDepth });
+
+            const expanded = row.value.expand && this._expanded.has(`${sectionKey}\0${key}`);
+            if (expanded && rowDepth < this._maxDepth) {
+                let children;
+                try {
+                    children = row.value.expand();
+                } catch (e) {
+                    children = [{ key: 'error', label: '', value: { text: `<${e?.message ?? e}>`, cls: 'err' } }];
+                }
+                out.push(...this._flatten(sectionKey, children, rowDepth + 1, key));
+            }
+
+            // close the collection under its last entry, which is the last row that entry opened
+            if (row.group && !rows[i + 1]?.group) {
+                out[out.length - 1].groupEnd = true;
+            }
+        }
+        return out;
     }
 
     /**
@@ -366,14 +435,17 @@ class PropertyView {
             target: null,
             codeEl: null,
             copyEl: null,
-            code: ''
+            code: '',
+            depth: -1,
+            group: false,
+            groupEnd: false
         };
         elements.valueEl.appendChild(document.createTextNode(''));
         elements.el.append(elements.labelEl, elements.valueEl);
         elements.valueEl.addEventListener('click', () => {
             if (elements.target) {
                 this.onSelect?.(elements.target);
-            } else if (elements.el.classList.contains('pci-code-row')) {
+            } else if (elements.el.classList.contains('pci-expandable')) {
                 const key = `${section.key}\0${row.key}`;
                 if (this._expanded.has(key)) this._expanded.delete(key);
                 else this._expanded.add(key);

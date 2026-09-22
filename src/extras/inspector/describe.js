@@ -36,6 +36,9 @@ import { Sprite } from '../../scene/sprite.js';
  * @property {string} [swatch] - A CSS color, rendered as a chip in front of the text.
  * @property {string} [code] - A block of text, such as shader source, shown under the row when it
  * is expanded. The text is its summary, and the row gets a copy button.
+ * @property {() => import('./model.js').PropertyRow[]} [expand] - Builds the rows shown under this
+ * one while it is expanded, letting a value be opened in place. Called on every refresh, so it
+ * reads the live object rather than a snapshot.
  * @property {Described[]} [items] - Expanded entries of a collection, each carrying a `label`.
  * @property {string} [label] - The label of an expanded collection entry.
  */

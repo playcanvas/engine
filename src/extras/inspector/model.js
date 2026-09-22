@@ -13,7 +13,9 @@ import { collectProperties, describeValue } from './describe.js';
  * @property {string} key - A key unique within the section, stable across refreshes.
  * @property {string} label - The label.
  * @property {Described} value - The value.
- * @property {boolean} [indent] - Whether the row is an expanded entry of the row above.
+ * @property {number} [depth] - How far the row is indented below the row above it.
+ * @property {boolean} [group] - Whether the row starts an entry of the collection above it, drawn
+ * with a divider so the entries of an expanded array read apart.
  */
 
 /**
@@ -51,18 +53,43 @@ function read(obj, name) {
 }
 
 /**
- * Appends a row, followed by one indented row per expanded collection entry.
+ * Appends a row to a list, followed by one indented row per expanded collection entry.
+ *
+ * @param {PropertyRow[]} rows - The rows to append to.
+ * @param {string} label - The label.
+ * @param {Described} value - The value.
+ */
+function pushRow(rows, label, value) {
+    rows.push({ key: label, label, value });
+    if (value.items) {
+        value.items.forEach((item, i) => {
+            rows.push({ key: `${label}[${i}]`, label: item.label ?? '', value: item, depth: 1, group: true });
+        });
+    }
+}
+
+/**
+ * Appends a row to a section, followed by one indented row per expanded collection entry.
  *
  * @param {PropertySection} section - The section.
  * @param {string} label - The label.
  * @param {Described} value - The value.
  */
 function push(section, label, value) {
-    section.rows.push({ key: label, label, value });
-    if (value.items) {
-        value.items.forEach((item, i) => {
-            section.rows.push({ key: `${label}[${i}]`, label: item.label ?? '', value: item, indent: true });
-        });
+    pushRow(section.rows, label, value);
+}
+
+/**
+ * Appends one row per public property of an object, see {@link collectProperties}.
+ *
+ * @param {PropertyRow[]} rows - The rows to append to.
+ * @param {object} obj - The object to reflect on.
+ * @param {object[]} stopPrototypes - Prototypes at which to stop walking the chain.
+ * @param {string[]} [skip] - Property names to leave out.
+ */
+function reflectInto(rows, obj, stopPrototypes, skip) {
+    for (const prop of collectProperties(obj, stopPrototypes, skip)) {
+        pushRow(rows, prop, read(obj, prop));
     }
 }
 
@@ -75,9 +102,7 @@ function push(section, label, value) {
  * @param {string[]} [skip] - Property names to leave out.
  */
 function reflectRows(section, obj, stopPrototypes, skip) {
-    for (const prop of collectProperties(obj, stopPrototypes, skip)) {
-        push(section, prop, read(obj, prop));
-    }
+    reflectInto(section.rows, obj, stopPrototypes, skip);
 }
 
 /**
@@ -139,4 +164,7 @@ function renderTargetSummary(rt, device) {
         `${rt.samples > 1 ? ` ×${rt.samples}` : ''}${rt.mipLevel > 0 ? ` mip ${rt.mipLevel}` : ''}`;
 }
 
-export { attachmentsText, formatBytes, formatName, makeSection, passDisplayName, push, read, reflectRows, renderTargetSummary };
+export {
+    attachmentsText, formatBytes, formatName, makeSection, passDisplayName, push, pushRow, read, reflectInto,
+    reflectRows, renderTargetSummary
+};

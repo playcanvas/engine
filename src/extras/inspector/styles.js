@@ -552,9 +552,20 @@ const styles = /* css */ `
         background: #20232a;
     }
 
-    .pci-prop.pci-indent {
-        padding-left: 22px;
+    /* an entry of an expanded collection, and everything it opens, reads as one block */
+    .pci-prop.pci-group {
+        border-top: 1px solid #343842;
+        margin-top: 2px;
+        padding-top: 2px;
     }
+
+    /* the last row a collection's final entry opened, closing the block */
+    .pci-prop.pci-group-end {
+        border-bottom: 1px solid #343842;
+        margin-bottom: 2px;
+        padding-bottom: 2px;
+    }
+
 
     .pci-label {
         flex: 0 0 38%;
@@ -595,11 +606,11 @@ const styles = /* css */ `
         color: #9ad7ff;
     }
 
-    .pci-code-row .pci-value {
+    .pci-expandable .pci-value {
         cursor: pointer;
     }
 
-    .pci-code-row .pci-value:hover {
+    .pci-expandable .pci-value:hover {
         color: #ffffff;
     }
 

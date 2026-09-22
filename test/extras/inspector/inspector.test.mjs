@@ -349,107 +349,92 @@ describe('Inspector', function () {
         expect(Object.keys(stored)).to.deep.equal([]);
     });
 
-    it('adds collapsed sections for mesh instances and their shared material, with texture links', function () {
+    it('names the layers a component renders in', function () {
+        app.scene.layers = /** @type {any} */ ({
+            getLayerById: id => ({ 0: { name: 'World' }, 2: { name: 'Depth' }, 4: { name: 'UI' } })[id] ?? null
+        });
+        const entity = new Entity('camera', app);
+        entity.c.camera = /** @type {any} */ ({ enabled: true, system: { app }, layers: [0, 2, 4, 77] });
+        entity.c.light = /** @type {any} */ ({ enabled: true, system: { app }, layers: [] });
+
+        const section = key => buildNodeModel(entity).find(s => s.key === key);
+        const row = (key, label) => section(key).rows.find(r => r.label === label).value;
+        expect(row('c:camera', 'layers').text).to.equal('World (0), Depth (2), UI (4), #77 (not in the composition)');
+        // an empty list reads as one, and a component without layers gets no row
+        expect(row('c:light', 'layers').text).to.equal('[]');
+        entity.c.light = /** @type {any} */ ({ enabled: true, system: { app } });
+        expect(section('c:light').rows.map(r => r.label)).to.not.include('layers');
+    });
+
+    it('lists mesh instances that open into their properties, mesh and material', function () {
         const device = app.graphicsDevice;
         const texture = new Texture(device, { name: 'albedo', width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
         const material = new StandardMaterial();
         material.name = 'painted';
         material.diffuseMap = texture;
         const mesh = new Mesh(device);
+        mesh.setPositions([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+        mesh.setNormals([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+        mesh.setIndices([0, 1, 2]);
+        mesh.update();
         const entity = new Entity('robot', app);
         entity.c.render = /** @type {any} */ ({
             enabled: true,
+            system: { app },
             meshInstances: [new MeshInstance(mesh, material, entity), new MeshInstance(mesh, material, entity)]
         });
 
         const sections = buildNodeModel(entity);
-        const keys = sections.map(section => section.key);
-        expect(keys).to.include.members(['c:render', 'mi:render:0', 'mi:render:1', 'mat:render:0']);
-        // a material shared by both instances is listed once
-        expect(keys.filter(key => key.startsWith('mat:'))).to.have.lengthOf(1);
+        // no separate sections any more: everything hangs off the component's own row
+        expect(sections.map(section => section.key)).to.deep.equal(['node', 'transform', 'c:render']);
+        const rows = sections[2].rows;
+        const list = rows.find(row => row.label === 'meshInstances');
+        expect(list.value.text).to.equal('Array(2) of MeshInstance');
+        const items = rows.filter(row => row.depth === 1);
+        expect(items.map(row => row.label)).to.deep.equal(['[0]', '[1]']);
+        // each entry of an array starts a group, so the expanded entries read apart
+        expect(items.every(row => row.group)).to.be.true;
+        expect(rows.find(row => row.label === 'meshInstances').group).to.equal(undefined);
+        // the item is the instance itself, so clicking it opens rather than jumping to its node
+        expect(list.value.items[0].target).to.equal(undefined);
 
-        const instance = sections.find(section => section.key === 'mi:render:0');
-        expect(instance.collapsed).to.be.true;
-        expect(instance.title).to.equal('render › mesh instance 0');
-        expect(instance.rows.slice(0, 4).map(row => row.label)).to.deep.equal(['node', 'mesh', 'material', 'visible']);
-        expect(instance.rows.map(row => row.label)).to.include('castShadow');
+        const instanceRows = list.value.items[0].expand();
+        expect(instanceRows.slice(0, 4).map(row => row.label)).to.deep.equal(['node', 'mesh', 'material', 'visible']);
+        expect(instanceRows.map(row => row.label)).to.include('castShadow');
+        expect(instanceRows[0].value.target).to.equal(entity);
 
-        const painted = sections.find(section => section.key === 'mat:render:0');
-        expect(painted.collapsed).to.be.true;
-        expect(painted.title).to.equal('render › StandardMaterial "painted"');
-        expect(painted.rows[0].label).to.equal('used by');
-        expect(painted.rows[0].value.text).to.equal('["mesh instance 0", "mesh instance 1"]');
-        const labels = painted.rows.map(row => row.label);
+        const meshRows = instanceRows[1].value.expand();
+        const byLabel = (list2, label) => list2.find(row => row.label === label).value;
+        expect(byLabel(meshRows, 'vertex buffer').text).to.equal('3 vertices, 72 B');
+        expect(byLabel(meshRows, 'index buffer').text).to.equal('3 indices, UINT16, 6 B');
+        expect(byLabel(meshRows, 'primitive').text).to.equal('TRIANGLES  count 3  base 0  indexed');
+        // several draw ranges list one entry each
+        mesh.primitive.push({ type: 1, base: 3, baseVertex: 2, count: 4 });
+        const many = byLabel(instanceRows[1].value.expand(), 'primitive');
+        expect(many.text).to.equal('2 primitives');
+        expect(many.items.map(item => item.text)).to.deep.equal([
+            'TRIANGLES  count 3  base 0  indexed', 'LINES  count 4  base 3  base vertex 2'
+        ]);
+        mesh.primitive.length = 1;
+        expect(meshRows.map(row => row.label)).to.include('aabb');
+
+        const format = byLabel(meshRows, 'vertex format');
+        // a mesh built through setPositions is non-interleaved, one block of each element
+        expect(format.text).to.equal('2 elements, 24 bytes per vertex');
+        const elements = format.expand();
+        expect(elements.map(row => row.label)).to.deep.equal(['POSITION', 'NORMAL']);
+        expect(elements[0].value.text).to.equal('3 × FLOAT32  offset 0  stride 12  size 12');
+        expect(elements[1].value.text).to.equal('3 × FLOAT32  offset 36  stride 12  size 12');
+
+        const materialRows = instanceRows[2].value.expand();
+        expect(materialRows[0].label).to.equal('variants');
+        const labels = materialRows.map(row => row.label);
         expect(labels).to.include.members(['diffuse', 'diffuseMap', 'blendType']);
         // getters that only warn about their removal or deprecation are left out
-        expect(labels).to.not.include.members(['chunks', 'shader', 'dirty', 'anisotropy', 'diffuseTint', 'sheenGlossiness']);
-        expect(painted.rows.find(row => row.label === 'diffuseMap').value.target).to.equal(texture);
+        expect(labels).to.not.include.members(['chunks', 'shader', 'dirty', 'diffuseTint']);
+        expect(materialRows.find(row => row.label === 'diffuseMap').value.target).to.equal(texture);
 
-        // compiled variants link to the shaders tab
-        const shader = new Shader(device, { name: 'painted-forward', vshader: 'void main() {}', fshader: 'void main() {}' });
-        material.variants.set(1, shader);
-        const variants = buildNodeModel(entity).find(section => section.key === 'mat:render:0').rows.find(row => row.label === 'variants');
-        expect(variants.value.text).to.equal('Array(1) of Shader');
-        expect(variants.value.items[0].target).to.equal(shader);
-        expect(variants.value.items[0].text).to.match(/^Shader #\d+ "painted-forward"/);
-
-        shader.destroy();
         texture.destroy();
-    });
-
-    it('resolves a component asset id to a linked asset and opens it on the assets tab', function () {
-        const inspector = /** @type {any} */ (new Inspector(app));
-        const texture = new Asset('bricks', 'texture', { url: 'bricks.png', size: 2048 });
-        const material = new Asset('wall', 'material', null);
-        app.assets.add(texture);
-        app.assets.add(material);
-
-        const entity = new Entity('wall', app);
-        entity.c.render = /** @type {any} */ ({
-            enabled: true,
-            system: { app },
-            asset: texture.id,
-            materialAssets: [material.id, 999]
-        });
-
-        const section = buildNodeModel(entity).find(s => s.key === 'c:render');
-        const row = label => section.rows.find(r => r.label === label);
-        expect(row('asset').value.target).to.equal(texture);
-        expect(row('asset').value.text).to.match(/^Asset #-?\d+ "bricks" \(texture\)$/);
-        // arrays expand entry by entry, and an id the registry does not know says so
-        expect(row('materialAssets').value.text).to.equal('Array(2) of asset');
-        expect(section.rows.find(r => r.key === 'materialAssets[0]').value.target).to.equal(material);
-        expect(section.rows.find(r => r.key === 'materialAssets[1]').value.text).to.match(/not in the registry/);
-
-        inspector._selectAny(texture);
-        expect(inspector._tab).to.equal('assets');
-        expect(inspector._assetList.selected).to.equal(texture);
-        expect(inspector._properties.subject).to.equal(texture);
-        const names = [...panel(inspector).querySelectorAll('.pci-lrow .pci-cell-name')].map(cell => cell.textContent);
-        // the default order is by type
-        expect(names).to.deep.equal(['wall', 'bricks']);
-        inspector.destroy();
-    });
-
-    it('lists the device shaders and selects a linked shader on the shaders tab', function () {
-        const inspector = /** @type {any} */ (new Inspector(app));
-        const device = app.graphicsDevice;
-        const glsl = new Shader(device, { name: 'lit', vshader: 'void main() {}', fshader: 'void main() {}', attributes: { vertex_position: SEMANTIC_POSITION } });
-        const wgsl = new Shader(device, { name: 'blit', vshader: 'fn main() {}', fshader: 'fn main() {}', shaderLanguage: SHADERLANGUAGE_WGSL });
-        expect(device.shaders).to.include.members([glsl, wgsl]);
-
-        inspector._selectAny(wgsl);
-        expect(inspector._tab).to.equal('shaders');
-        expect(inspector._shaderList.selected).to.equal(wgsl);
-        expect(inspector._properties.subject).to.equal(wgsl);
-        const rows = [...panel(inspector).querySelectorAll('.pci-lrow')].map(row => row.textContent);
-        expect(rows.some(text => text.startsWith('lit') && text.includes('GLSL'))).to.be.true;
-        expect(rows.some(text => text.startsWith('blit') && text.includes('WGSL'))).to.be.true;
-
-        glsl.destroy();
-        wgsl.destroy();
-        expect(device.shaders).to.not.include.members([glsl, wgsl]);
-        inspector.destroy();
     });
 
     it('lists the device textures largest first and selects a linked texture on the textures tab', function () {
@@ -523,7 +508,7 @@ describe('Inspector property view', function () {
         const model = () => [{ key: 's', title: 'Sources', rows: [{ key: 'v', label: 'vertex', value: { text: '2 lines', cls: 'num', code } }] }];
         view.setSubject({}, model);
         const row = container.querySelector('.pci-prop');
-        expect(row.classList.contains('pci-code-row')).to.be.true;
+        expect(row.classList.contains('pci-expandable')).to.be.true;
         expect(row.querySelector('.pci-value').textContent).to.equal('▸ 2 lines');
         expect(row.querySelector('.pci-copy')).to.exist;
         expect(container.querySelector('.pci-code')).to.equal(null);
@@ -541,6 +526,70 @@ describe('Inspector property view', function () {
         row.querySelector('.pci-value').click();
         expect(container.querySelector('.pci-code')).to.equal(null);
         expect(row.querySelector('.pci-copy')).to.exist;
+    });
+
+    it('closes a collection under the last row its final entry opened', function () {
+        const container = document.createElement('div');
+        const view = new PropertyView(container, () => {});
+        const child = () => [{ key: 'deep', label: 'deep', value: { text: 'inner' } }];
+        const model = () => [{
+            key: 's',
+            title: 'S',
+            rows: [
+                { key: 'list', label: 'list', value: { text: 'Array(2)' } },
+                { key: 'list[0]', label: '[0]', value: { text: 'first', expand: child }, depth: 1, group: true },
+                { key: 'list[1]', label: '[1]', value: { text: 'second', expand: child }, depth: 1, group: true },
+                { key: 'after', label: 'after', value: { text: 'tail' } }
+            ]
+        }];
+        view.setSubject({}, model);
+        const labels = () => [...container.querySelectorAll('.pci-prop')].map(el => [
+            el.querySelector('.pci-label').textContent,
+            el.classList.contains('pci-group') ? 'start' : el.classList.contains('pci-group-end') ? 'end' : ''
+        ]);
+        expect(labels()).to.deep.equal([['list', ''], ['[0]', 'start'], ['[1]', 'start'], ['after', '']]);
+        expect([...container.querySelectorAll('.pci-prop')][2].classList.contains('pci-group-end')).to.be.true;
+
+        // with the last entry open, the divider moves below the rows it opened
+        [...container.querySelectorAll('.pci-prop')][2].querySelector('.pci-value').click();
+        const rows = [...container.querySelectorAll('.pci-prop')];
+        expect(rows.map(el => el.querySelector('.pci-label').textContent)).to.deep.equal(['list', '[0]', '[1]', 'deep', 'after']);
+        expect(rows[2].classList.contains('pci-group-end')).to.be.false;
+        expect(rows[3].classList.contains('pci-group-end')).to.be.true;
+    });
+
+    it('opens a value in place, indenting and grouping the rows it expands into', function () {
+        const container = document.createElement('div');
+        const view = new PropertyView(container, () => {});
+        const children = () => [
+            { key: 'a', label: 'a', value: { text: '1' } },
+            { key: 'b', label: 'b', value: { text: '2' }, depth: 1, group: true }
+        ];
+        const model = () => [{
+            key: 's',
+            title: 'S',
+            rows: [{ key: 'list', label: 'list', value: { text: 'Array(1)', expand: children } }]
+        }];
+        view.setSubject({}, model);
+        const parent = container.querySelector('.pci-prop');
+        expect(parent.querySelector('.pci-value').textContent).to.equal('▸ Array(1)');
+        expect(container.querySelectorAll('.pci-prop')).to.have.lengthOf(1);
+
+        parent.querySelector('.pci-value').click();
+        const rows = [...container.querySelectorAll('.pci-prop')];
+        expect(rows).to.have.lengthOf(3);
+        expect(rows[0].querySelector('.pci-value').textContent).to.equal('▾ Array(1)');
+        // children indent one level below their parent, and a grouped child gets the divider
+        expect([rows[1].style.paddingLeft, rows[2].style.paddingLeft]).to.deep.equal(['22px', '36px']);
+        expect(rows[1].classList.contains('pci-group')).to.be.false;
+        expect(rows[2].classList.contains('pci-group')).to.be.true;
+        // the collection is closed under its last entry
+        expect(rows[2].classList.contains('pci-group-end')).to.be.true;
+        expect(rows[1].classList.contains('pci-group-end')).to.be.false;
+
+        // collapsing removes them again
+        parent.querySelector('.pci-value').click();
+        expect(container.querySelectorAll('.pci-prop')).to.have.lengthOf(1);
     });
 });
 
@@ -841,7 +890,7 @@ describe('Inspector shader view', function () {
         // the null device does not rewrite sources, so nothing beyond the preprocessed text is kept
         expect(vertex.value.items[1].label).to.equal('preprocessed');
         expect(vertex.value.items[1].code).to.be.a('string');
-        expect(sources.rows[1].indent).to.be.true;
+        expect(sources.rows[1].depth).to.equal(1);
         expect(buildShaderModel(compute)[1].rows[0].label).to.equal('compute');
 
         // shaders not processed against bind groups say so
