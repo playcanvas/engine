@@ -27,6 +27,42 @@
  * @property {Map<string, RowElements>} rows - The rows by key.
  */
 
+// where the first indent guide sits, and how far apart the levels are, in CSS pixels
+const INDENT_BASE = 8;
+const INDENT_STEP = 14;
+
+// one muted tone per level, cycling, so a deeply opened row can be read back to its parent
+const INDENT_COLORS = ['#3f4a5f', '#4a4459', '#3f5450', '#55503f'];
+
+/** @type {{ image: string, position: string }[]} */
+const indentGuideCache = [];
+
+/**
+ * The background that draws one vertical guide per indent level of a row, in the manner of a code
+ * editor. Rows are flat siblings, so the guides are painted per row rather than drawn around a
+ * container. Built once per depth, of which there are only a handful.
+ *
+ * @param {number} depth - How far the row is indented.
+ * @returns {{ image: string, position: string }|null} The layers and where they sit, or null when
+ * the row is not indented.
+ */
+function indentGuides(depth) {
+    if (depth <= 0) return null;
+    let guides = indentGuideCache[depth];
+    if (!guides) {
+        const layers = [];
+        const positions = [];
+        for (let i = 0; i < depth; i++) {
+            const color = INDENT_COLORS[i % INDENT_COLORS.length];
+            layers.push(`linear-gradient(${color}, ${color})`);
+            positions.push(`${INDENT_BASE + i * INDENT_STEP}px 0`);
+        }
+        guides = { image: layers.join(', '), position: positions.join(', ') };
+        indentGuideCache[depth] = guides;
+    }
+    return guides;
+}
+
 /**
  * @param {string} tag - The element tag.
  * @param {string} className - The class name.
@@ -228,8 +264,13 @@ class PropertyView {
             const depth = row.depth ?? 0;
             if (elements.depth !== depth) {
                 elements.depth = depth;
+                const guides = indentGuides(depth);
                 elements.el.classList.toggle('pci-indent', depth > 0);
-                elements.el.style.paddingLeft = depth ? `${8 + depth * 14}px` : '';
+                elements.el.style.paddingLeft = depth ? `${INDENT_BASE + depth * INDENT_STEP}px` : '';
+                elements.el.style.backgroundImage = guides?.image ?? '';
+                elements.el.style.backgroundPosition = guides?.position ?? '';
+                elements.el.style.backgroundSize = guides ? '1px 100%' : '';
+                elements.el.style.backgroundRepeat = guides ? 'no-repeat' : '';
             }
             const group = !!row.group;
             if (elements.group !== group) {
@@ -384,6 +425,9 @@ class PropertyView {
             elements.code = '';
             section.rowsEl.insertBefore(elements.codeEl, elements.el.nextSibling);
         }
+        // indent the block with its row, so it reads as part of the same level
+        const indent = `${INDENT_BASE + elements.depth * INDENT_STEP}px`;
+        if (elements.codeEl.style.marginLeft !== indent) elements.codeEl.style.marginLeft = indent;
         if (elements.code !== code || !elements.codeEl.firstChild) {
             elements.code = code;
             elements.codeEl.textContent = '';

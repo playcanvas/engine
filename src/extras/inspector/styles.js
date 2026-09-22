@@ -549,7 +549,7 @@ const styles = /* css */ `
     }
 
     .pci-prop:hover {
-        background: #20232a;
+        background-color: #20232a;
     }
 
     /* an entry of an expanded collection, and everything it opens, reads as one block */
@@ -634,6 +634,7 @@ const styles = /* css */ `
 
     .pci-code {
         margin: 2px 8px 6px 8px;
+        /* the left margin is set per row, to line the block up with the row that opened it */
         padding: 6px 0;
         max-height: 360px;
         overflow: auto;

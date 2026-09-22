@@ -581,6 +581,14 @@ describe('Inspector property view', function () {
         expect(rows[0].querySelector('.pci-value').textContent).to.equal('▾ Array(1)');
         // children indent one level below their parent, and a grouped child gets the divider
         expect([rows[1].style.paddingLeft, rows[2].style.paddingLeft]).to.deep.equal(['22px', '36px']);
+        // one guide per level, cycling through the palette, at each level's own offset
+        expect(rows[0].style.backgroundImage).to.equal('');
+        expect(rows[1].style.backgroundImage.match(/linear-gradient/g)).to.have.lengthOf(1);
+        expect(rows[1].style.backgroundPosition).to.equal('8px 0px');
+        expect(rows[2].style.backgroundImage.match(/linear-gradient/g)).to.have.lengthOf(2);
+        expect(rows[2].style.backgroundPosition).to.equal('8px 0px, 22px 0px');
+        expect(rows[2].style.backgroundSize).to.equal('1px 100%');
+        expect(rows[1].style.backgroundImage).to.not.equal(rows[2].style.backgroundImage.split(', ')[1]);
         expect(rows[1].classList.contains('pci-group')).to.be.false;
         expect(rows[2].classList.contains('pci-group')).to.be.true;
         // the collection is closed under its last entry
