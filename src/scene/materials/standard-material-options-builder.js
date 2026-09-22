@@ -4,7 +4,6 @@ import {
 
 import {
     BLEND_NONE,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC,
     SHADER_PREPASS,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW,
@@ -51,18 +50,18 @@ class StandardMaterialOptionsBuilder {
     }
 
     // Minimal options for Depth and Shadow passes
-    updateMinRef(options, scene, stdMat, objDefs, pass, sortedLights, vertexFormat) {
+    updateMinRef(options, scene, stdMat, objDefs, pass, lightList, vertexFormat) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat, pass);
         this._updateUVOptions(options, stdMat, objDefs, vertexFormat, true);
     }
 
-    updateRef(options, scene, cameraShaderParams, stdMat, objDefs, pass, sortedLights, vertexFormat) {
+    updateRef(options, scene, cameraShaderParams, stdMat, objDefs, pass, lightList, vertexFormat) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass, cameraShaderParams);
         this._updateEnvOptions(options, stdMat, scene, cameraShaderParams);
         this._updateMaterialOptions(options, stdMat, scene);
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
-        this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
+        this._updateLightOptions(options, scene, stdMat, objDefs, lightList);
         this._updateUVOptions(options, stdMat, objDefs, vertexFormat, false, cameraShaderParams);
     }
 
@@ -352,7 +351,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useSceneEnv = usingSceneEnv;
     }
 
-    _updateLightOptions(options, scene, stdMat, objDefs, sortedLights) {
+    _updateLightOptions(options, scene, stdMat, objDefs, lightList) {
         options.lightMap = false;
         options.lightMapChannel = '';
         options.lightMapUv = 0;
@@ -386,23 +385,12 @@ class StandardMaterialOptionsBuilder {
         }
 
         if (stdMat.useLighting) {
-            const lightsFiltered = [];
             const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
 
-            if (sortedLights) {
-                // slots are assigned in the same order the renderer dispatches them, see
-                // ForwardRenderer#dispatchDirectLights
-                let slotCount = LitMaterialOptionsBuilder.collectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask, 0);
-
-                if (!scene.clusteredLightingEnabled) {
-                    slotCount = LitMaterialOptionsBuilder.collectLights(sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, slotCount);
-                    LitMaterialOptionsBuilder.collectLights(sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, slotCount);
-                }
-            }
-            options.litOptions.lights = lightsFiltered;
+            options.litOptions.lights = LitMaterialOptionsBuilder.selectLights(lightList, mask);
         } else {
             options.litOptions.lights = [];
         }

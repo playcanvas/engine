@@ -2,6 +2,7 @@ import { expect } from 'chai';
 
 import { Entity } from '../../../src/framework/entity.js';
 import { SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME, SHADOW_PCSS_32F } from '../../../src/scene/constants.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -10,6 +11,13 @@ describe('PCSS cached cascades', function () {
     let camera;
     let light;
     let casters;
+
+    // dispatch the light's uniforms the way a forward pass does, from a list holding just it
+    const lightList = new LightList();
+    const dispatch = () => {
+        lightList.update([light], true);
+        app.renderer.dispatchLights(lightList, camera.camera);
+    };
 
     const renderData = cascade => light.getRenderData(camera.camera, cascade);
     const fitting = () => Array.from({ length: 4 }, (_, cascade) => {
@@ -82,12 +90,12 @@ describe('PCSS cached cascades', function () {
     });
 
     it('binds the depth range stored with each cached cascade when other casters move', function () {
-        app.renderer.dispatchDirectLights([light], camera.camera);
+        dispatch();
         const originalParams = Array.from(light._shadowCascadeParams);
         const originalFitting = fitting();
         casters[0].setPosition(0, 100, 0);
         update([0]);
-        app.renderer.dispatchDirectLights([light], camera.camera);
+        dispatch();
 
         expect(fitting()[0].far).not.to.equal(originalFitting[0].far);
         expect(fitting().slice(1)).to.eql(originalFitting.slice(1));
@@ -107,7 +115,7 @@ describe('PCSS cached cascades', function () {
         expect(renderData(1).projectionCompensation).to.equal(0);
         expect(renderData(1).shadowCamera.farClip).not.to.equal(renderData(0).shadowCamera.farClip);
 
-        app.renderer.dispatchDirectLights([light], camera.camera);
+        dispatch();
         const params = Array.from(light._shadowCascadeParams);
         for (let cascade = 1; cascade < 4; cascade++) {
             expect(params.slice(cascade * 4, cascade * 4 + 4)).to.eql(params.slice(0, 4));

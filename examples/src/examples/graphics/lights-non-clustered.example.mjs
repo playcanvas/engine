@@ -1,3 +1,13 @@
+// @config
+// @flag WEBGPU_DISABLED
+
+// The lights example with clustered lighting disabled, so every light - omni and spot included -
+// is applied through the forward lighting path, with its own uniforms and shadow map, rather than
+// through the light clusters. WebGPU supports clustered lighting only, so this runs on WebGL 2.
+// Each light type is capped at 2: every light costs a shadow map and the local ones a cookie too,
+// and a lit shader samples all of them at once, so the cap keeps a textured material within the 16
+// fragment texture units WebGL 2 guarantees.
+
 import {
     AppBase,
     AppOptions,
@@ -107,8 +117,8 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Enable cookies which are disabled by default for clustered lighting
-app.scene.lighting.cookiesEnabled = true;
+// apply every light through the forward lighting path instead of the light clusters
+app.scene.clusteredLightingEnabled = false;
 
 // Ambient lighting
 app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
@@ -322,11 +332,18 @@ function createLight(type, index) {
     return light;
 }
 
+// The most lights of one type. Every light here casts a shadow and every local one has a cookie,
+// and a forward lit shader samples them all: at 2 per type that is 6 shadow maps + 4 cookies = 10
+// textures, which with a material's own maps and the environment atlas fits the 16 fragment
+// texture units WebGL 2 guarantees. At 3 per type it is 15, and a textured material fails to link.
+const MAX_LIGHTS = 2;
+
 /**
  * @param {'spot'|'omni'|'directional'} type - The light type.
  */
 function addLight(type) {
     const list = lights[type];
+    if (list.length >= MAX_LIGHTS) return;
     list.push(createLight(type, list.length));
     data.set(`lights.${type}.count`, list.length);
 }

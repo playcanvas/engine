@@ -32,6 +32,7 @@ import { ShaderChunks } from '../shader-lib/shader-chunks.js';
  * @import { ScopeId } from '../../platform/graphics/scope-id.js'
  * @import { MaterialProperty } from './material-property.js'
  * @import { Light } from '../light.js';
+ * @import { LightList } from '../lighting/light-list.js';
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { CameraShaderParams } from '../camera-shader-params.js'
  * @import { Scene } from '../scene.js'
@@ -68,7 +69,7 @@ let id = 0;
  * @property {number} objDefs - The object definitions.
  * @property {CameraShaderParams} cameraShaderParams - The camera shader parameters.
  * @property {number} pass - The shader pass.
- * @property {Light[][]} sortedLights - The sorted lights.
+ * @property {LightList} lightList - The lights of the pass.
  * @property {UniformBufferFormat|null} [viewUniformFormat] - The view uniform format.
  * @property {VertexFormat} vertexFormat - The vertex format.
  * @ignore
