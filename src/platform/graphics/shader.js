@@ -250,7 +250,9 @@ class Shader {
     destroy() {
         Debug.trace(TRACEID_SHADER_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
         this.device.onDestroyShader(this);
-        this.impl.destroy(this);
+
+        // a shader that failed to preprocess has no implementation
+        this.impl?.destroy(this);
     }
 
     /**

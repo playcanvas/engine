@@ -84,6 +84,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     wgpu = null;
 
     /**
+     * True when this graphics device owns {@link WebgpuGraphicsDevice#wgpu} and so destroys it and
+     * recovers from its loss. Cleared by {@link WebgpuGraphicsDevice#initFromGpuDevice} when a host
+     * supplies the device and keeps both jobs.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _ownsGpuDevice = true;
+
+    /**
+     * Listener for uncaptured errors registered on {@link WebgpuGraphicsDevice#wgpu}, removed on
+     * destroy.
+     *
+     * @type {((event: GPUUncapturedErrorEvent) => void)|null}
+     * @private
+     */
+    _uncapturedErrorHandler = null;
+
+    /**
      * Configuration of the canvas textures returned by getCurrentTexture.
      *
      * @type {GPUCanvasConfiguration|null}
@@ -371,7 +390,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this._drawCommands.clear();
 
         this.gpuContext?.unconfigure();
-        this.wgpu?.destroy();
+
+        if (this._uncapturedErrorHandler) {
+            this.wgpu?.removeEventListener?.('uncapturederror', this._uncapturedErrorHandler);
+            this._uncapturedErrorHandler = null;
+        }
+
+        // a device supplied by the host is the host's to destroy
+        if (this._ownsGpuDevice) {
+            this.wgpu?.destroy();
+        }
         this.wgpu = null;
         this.gpuAdapter = null;
         this.gpuContext = null;
@@ -467,7 +495,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsIndirectDraw = true;
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
-        this.supportsImageBitmap = true;
+        // ImageBitmap decoding is used for texture loading when the host provides it (browsers and
+        // workers do, headless hosts such as Node do not)
+        this.supportsImageBitmap = typeof createImageBitmap === 'function';
 
         // WebGPU specifies the blend state per color target, and so this is always supported
         this.supportsIndependentBlending = true;
@@ -542,70 +572,30 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (this._destroyed) {
             return null;
         }
-        this.gpuAdapter = gpuAdapter;
 
         // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
         // compute, shader miscompiles), so fail device creation here to let createGraphicsDevice
         // fall back to WebGL2. Remove when fixed: https://github.com/playcanvas/engine/issues/8874
-        if (this.gpuAdapter?.info?.vendor === 'img-tec') {
+        if (gpuAdapter?.info?.vendor === 'img-tec') {
             Debug.warn('WebGPU is disabled on Imagination PowerVR GPUs due to driver issues, falling back to WebGL2. See https://github.com/playcanvas/engine/issues/8874');
             return null;
         }
 
-        const featureLevel = this.initOptions.featureLevel;
-        const bare = featureLevel === 'bare';
+        const bare = this.initOptions.featureLevel === 'bare';
 
-        // request optional features (returns false for bare mode to simulate the most constrained device)
-        const requiredFeatures = [];
-        const requireFeature = bare ? () => false : (feature) => {
-            const supported = this.gpuAdapter.features.has(feature);
-            if (supported) {
-                requiredFeatures.push(feature);
-            }
-            return supported;
-        };
-        this.textureFloatFilterable = requireFeature('float32-filterable');
-        this.textureFloatBlendable = requireFeature('float32-blendable');
-        this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
-        this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
-        this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
-        this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
-        this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
-        this.supportsTimestampQuery = requireFeature('timestamp-query');
-        this.supportsDepthClip = requireFeature('depth-clip-control');
-        this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
-        this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
-        this.supportsShaderF16 = requireFeature('shader-f16');
-        this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
-        this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
-        this.supportsClipDistances = requireFeature('clip-distances');
-        this.supportsDualSourceBlending = requireFeature('dual-source-blending');
-        this.supportsTextureFormatsTier1 = requireFeature('texture-formats-tier1');
-        this.supportsTextureFormatsTier2 = requireFeature('texture-formats-tier2');
-        this.supportsTextureFormatsTier1 ||= this.supportsTextureFormatsTier2;
-        this.supportsPrimitiveIndex = requireFeature('primitive-index');
-        this.supportsSubgroups = requireFeature('subgroups');
-        this.supportsSubgroupSizeControl = requireFeature('subgroup-size-control');
-        this.maxSubgroupSize = this.gpuAdapter?.info?.subgroupMaxSize ?? 0;
-        this.minSubgroupSize = this.gpuAdapter?.info?.subgroupMinSize ?? 0;
-        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
-            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
-        Debug.log(
-            `WEBGPU${this.gpuAdapter?.info ?
-                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
-                ''
-            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
-        );
+        // request the optional features the adapter supports (none in bare mode, to simulate the
+        // most constrained device). The capabilities are set again from the created device.
+        const requiredFeatures = bare ? [] : this._applyFeatures(gpuAdapter.features);
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
         if (!bare) {
-            const adapterLimits = this.gpuAdapter?.limits;
+            const adapterLimits = gpuAdapter?.limits;
             if (adapterLimits) {
                 for (const limitName in adapterLimits) {
-                    // subgroup sizes are exposed via GPUAdapterInfo (read above), not as requestable
-                    // limits - some implementations (e.g. Windows Chrome) still surface them here and
-                    // reject them in requiredLimits, so skip them
+                    // subgroup sizes are exposed via GPUAdapterInfo, not as requestable limits - some
+                    // implementations (e.g. Windows Chrome) still surface them here and reject them in
+                    // requiredLimits, so skip them
                     if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
                         continue;
                     }
@@ -632,7 +622,88 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             wgpu.destroy();
             return null;
         }
+
+        return this.initFromGpuDevice(gpuAdapter, wgpu, true);
+    }
+
+    /**
+     * Sets the capability flags from a set of WebGPU features and returns the names of the optional
+     * features the engine uses that the set contains. Called with the adapter's features to build
+     * the device request, and with the created device's features to derive the final capabilities.
+     *
+     * @param {GPUSupportedFeatures} features - The features to derive the capabilities from.
+     * @returns {string[]} The optional features the engine uses that are present in the set.
+     * @private
+     */
+    _applyFeatures(features) {
+        const supported = [];
+        const has = (feature) => {
+            const present = features.has(feature);
+            if (present) {
+                supported.push(feature);
+            }
+            return present;
+        };
+        this.textureFloatFilterable = has('float32-filterable');
+        this.textureFloatBlendable = has('float32-blendable');
+        this.extCompressedTextureS3TC = has('texture-compression-bc');
+        this.extCompressedTextureS3TCSliced3D = has('texture-compression-bc-sliced-3d');
+        this.extCompressedTextureETC = has('texture-compression-etc2');
+        this.extCompressedTextureASTC = has('texture-compression-astc');
+        this.extCompressedTextureASTCSliced3D = has('texture-compression-astc-sliced-3d');
+        this.supportsTimestampQuery = has('timestamp-query');
+        this.supportsDepthClip = has('depth-clip-control');
+        this.supportsDepth32Stencil = has('depth32float-stencil8');
+        this.supportsIndirectFirstInstance = has('indirect-first-instance');
+        this.supportsShaderF16 = has('shader-f16');
+        this.supportsStorageRGBA8 = has('bgra8unorm-storage');
+        this.textureRG11B10Renderable = has('rg11b10ufloat-renderable');
+        this.supportsClipDistances = has('clip-distances');
+        this.supportsDualSourceBlending = has('dual-source-blending');
+        this.supportsTextureFormatsTier1 = has('texture-formats-tier1');
+        this.supportsTextureFormatsTier2 = has('texture-formats-tier2');
+        this.supportsTextureFormatsTier1 ||= this.supportsTextureFormatsTier2;
+        this.supportsPrimitiveIndex = has('primitive-index');
+        this.supportsSubgroups = has('subgroups');
+        this.supportsSubgroupSizeControl = has('subgroup-size-control');
+        return supported;
+    }
+
+    /**
+     * Initializes this graphics device on an already created WebGPU device: derives the
+     * capabilities from the features the device was created with, configures the canvas and
+     * allocates the internal resources. Called by {@link WebgpuGraphicsDevice#createDevice}, and
+     * usable by a host that acquires the adapter and device itself, such as a headless test
+     * harness, in place of {@link WebgpuGraphicsDevice#initWebGpu}.
+     *
+     * @param {GPUAdapter|null} gpuAdapter - The adapter the device was created from, used for its
+     * info (vendor, architecture, subgroup sizes).
+     * @param {GPUDevice} wgpu - The WebGPU device.
+     * @param {boolean} [ownsGpuDevice] - True when this graphics device owns the WebGPU device: it
+     * then destroys it on {@link WebgpuGraphicsDevice#destroy} and recovers from its loss. A host
+     * that supplies the device keeps both responsibilities. Defaults to false.
+     * @returns {this} The initialized graphics device.
+     * @private
+     */
+    initFromGpuDevice(gpuAdapter, wgpu, ownsGpuDevice = false) {
+
+        this.gpuAdapter = gpuAdapter;
         this.wgpu = wgpu;
+        this._ownsGpuDevice = ownsGpuDevice;
+
+        // capabilities derived from the features the device was created with
+        const enabledFeatures = this._applyFeatures(wgpu.features);
+        this.maxSubgroupSize = gpuAdapter?.info?.subgroupMaxSize ?? 0;
+        this.minSubgroupSize = gpuAdapter?.info?.subgroupMinSize ?? 0;
+
+        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
+            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
+        Debug.log(
+            `WEBGPU${gpuAdapter?.info ?
+                ` (${gpuAdapter.info.vendor || '?'} / ${gpuAdapter.info.architecture || gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${this.initOptions.featureLevel === 'bare' ? 'bare' : 'full'}]: ${enabledFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
+        );
 
         // HTML-in-Canvas support (copyElementImageToTexture)
         this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
@@ -640,14 +711,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
         this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
 
-        // handle lost device
-        this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+        // handle lost device (a host that supplied the device handles its loss)
+        if (ownsGpuDevice) {
+            this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+        }
 
         // surface any uncaptured WebGPU errors
-        this.wgpu.addEventListener?.('uncapturederror', (ev) => {
+        this._uncapturedErrorHandler = (ev) => {
             const e = /** @type {any} */ (ev).error;
             Debug.error(`WebGPU uncaptured ${e?.constructor?.name ?? 'Error'}: ${e?.message ?? e}`);
-        });
+        };
+        this.wgpu.addEventListener?.('uncapturederror', this._uncapturedErrorHandler);
 
         this.initDeviceCaps();
 
