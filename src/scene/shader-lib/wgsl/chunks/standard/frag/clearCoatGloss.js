@@ -5,7 +5,7 @@ fn getClearCoatGlossiness() {
     ccGlossiness = uniform.material_clearCoatGloss;
 
     #ifdef STD_CLEARCOATGLOSS_TEXTURE
-    ccGlossiness = ccGlossiness * textureSampleBias({STD_CLEARCOATGLOSS_TEXTURE_NAME}, {STD_CLEARCOATGLOSS_TEXTURE_NAME}Sampler, {STD_CLEARCOATGLOSS_TEXTURE_UV}, uniform.textureBias).{STD_CLEARCOATGLOSS_TEXTURE_CHANNEL};
+    ccGlossiness = ccGlossiness * textureSampleBias({STD_CLEARCOATGLOSS_TEXTURE_NAME}, {STD_CLEARCOATGLOSS_TEXTURE_NAME}Sampler, {STD_CLEARCOATGLOSS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_CLEARCOATGLOSS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_CLEARCOATGLOSS_VERTEX
