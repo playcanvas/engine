@@ -528,6 +528,51 @@ describe('Inspector property view', function () {
         expect(row.querySelector('.pci-copy')).to.exist;
     });
 
+    it('returns a subject to where it was last read', function () {
+        const container = document.createElement('div');
+        // jsdom performs no layout, so stand in for the scroller
+        let top = 0;
+        Object.defineProperty(container, 'scrollTop', {
+            get: () => top,
+            set: (value) => {
+                top = value;
+            }
+        });
+        const view = new PropertyView(container, () => {});
+        const model = () => [{ key: 's', title: 'S', rows: [{ key: 'a', label: 'a', value: { text: 'x' } }] }];
+        const entity = { name: 'entity' };
+        const texture = { name: 'texture' };
+
+        view.setSubject(entity, model);
+        container.scrollTop = 420;
+
+        // following a link to another subject starts at the top
+        view.setSubject(texture, model);
+        expect(container.scrollTop).to.equal(0);
+        container.scrollTop = 90;
+
+        // coming back to either lands where it was left
+        view.setSubject(entity, model);
+        expect(container.scrollTop).to.equal(420);
+        view.setSubject(texture, model);
+        expect(container.scrollTop).to.equal(90);
+
+        // a subject identified by a key, such as a render pass recreated every frame
+        view.setSubject({ pass: 1 }, model, 'pass:1');
+        container.scrollTop = 30;
+        view.setSubject(entity, model);
+        view.setSubject({ pass: 1 }, model, 'pass:1');
+        expect(container.scrollTop).to.equal(30);
+
+        // nothing selected reads from the top, and a refresh of the same subject leaves it alone
+        view.setSubject(null);
+        expect(container.scrollTop).to.equal(0);
+        view.setSubject(entity, model);
+        container.scrollTop = 200;
+        view.setSubject(entity, model);
+        expect(container.scrollTop).to.equal(200);
+    });
+
     it('closes a collection under the last row its final entry opened', function () {
         const container = document.createElement('div');
         const view = new PropertyView(container, () => {});

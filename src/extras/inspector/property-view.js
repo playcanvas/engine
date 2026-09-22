@@ -147,6 +147,25 @@ class PropertyView {
     _maxDepth = 8;
 
     /**
+     * How far each subject was scrolled when it was last shown, so following a link to another tab
+     * and coming back lands where it left off. Object keys are held weakly, so remembering where a
+     * texture or an entity was read does not keep it alive.
+     *
+     * @type {WeakMap<object, number>}
+     * @private
+     */
+    _scrollByObject = new WeakMap();
+
+    /**
+     * The same, for subjects identified by a key rather than by the object itself, such as the
+     * render passes of a frame, which are recreated every frame.
+     *
+     * @type {Map<*, number>}
+     * @private
+     */
+    _scrollByKey = new Map();
+
+    /**
      * @type {HTMLElement|null}
      * @private
      */
@@ -180,7 +199,9 @@ class PropertyView {
      * @param {*} [key] - Identifies the subject across refreshes. Defaults to the subject itself.
      */
     setSubject(subject, buildModel, key = subject) {
-        if (key !== this._key || !subject) {
+        const changed = key !== this._key || !subject;
+        if (changed) {
+            this._saveScroll(this._key);
             this._key = subject ? key : null;
             this.container.textContent = '';
             this._sections.clear();
@@ -189,6 +210,31 @@ class PropertyView {
         this._subject = subject;
         this._buildModel = buildModel ?? null;
         this.refresh();
+
+        // the rows are rebuilt by now, so the remembered position has something to scroll to
+        if (changed) this.container.scrollTop = subject ? this._loadScroll(key) : 0;
+    }
+
+    /**
+     * @param {*} key - The subject key to remember the current position of, if any.
+     * @private
+     */
+    _saveScroll(key) {
+        const top = this.container.scrollTop;
+        if (key === null || key === undefined) return;
+        if (typeof key === 'object') this._scrollByObject.set(key, top);
+        else this._scrollByKey.set(key, top);
+    }
+
+    /**
+     * @param {*} key - The subject key.
+     * @returns {number} How far it was scrolled when last shown, or the top.
+     * @private
+     */
+    _loadScroll(key) {
+        const top = typeof key === 'object' && key !== null ?
+            this._scrollByObject.get(key) : this._scrollByKey.get(key);
+        return top ?? 0;
     }
 
     /**
