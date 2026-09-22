@@ -304,6 +304,7 @@ class ShaderProcessorGLSL {
         uniformLinesNonSamplers.forEach((uniform) => {
             // uniforms not already in supplied uniform buffers go to the mesh buffer
             if (!processingOptions.hasUniform(uniform.name)) {
+                processingOptions.debugCheckMeshUniform(uniform.name);
                 const uniformType = uniformTypeToName.indexOf(uniform.type);
                 Debug.assert(uniformType >= 0, `Uniform type ${uniform.type} is not recognized on line [${uniform.line}]`);
                 const uniformFormat = new UniformFormat(uniform.name, uniformType, uniform.arraySize);
