@@ -327,10 +327,10 @@ describe('LightList', function () {
                 scope.resolve(`light${i}_color`).setValue(null);
             }
 
-            app.renderer.renderForwardInternal(
-                camera.camera, { drawCalls: [], isNewMaterial: [], shaderInstances: [] },
-                world().getLightList(true), SHADER_FORWARD, undefined, false
-            );
+            app.renderer.renderForwardLayer(camera.camera, null, null, false, SHADER_FORWARD, {
+                meshInstances: [],
+                lightList: world().getLightList(true)
+            });
 
             for (let i = 0; i < 4; i++) {
                 expect(scope.resolve(`light${i}_color`).value, `slot ${i}`).to.equal(null);

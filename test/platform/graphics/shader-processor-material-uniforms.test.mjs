@@ -5,6 +5,7 @@ import { ShaderProcessorGLSL } from '../../../src/platform/graphics/shader-proce
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { WebglShaderProcessorGLSL } from '../../../src/platform/graphics/webgl/webgl-shader-processor-glsl.js';
 import { WebgpuShaderProcessorWGSL } from '../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { getMaterialLayout } from '../../../src/scene/materials/material-uniform-buffer-layout.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
@@ -38,8 +39,7 @@ describe('Material uniform buffer shader processing', function () {
     beforeEach(function () {
         jsdomSetup();
         app = createApp();
-        app.renderer.initViewUniformFormat(false);
-        processingOptions = new ShaderProcessorOptions(app.renderer.viewUniformFormat);
+        processingOptions = new ShaderProcessorOptions(app.renderer.getViewUniformFormat(false, new LightList()));
         const layout = getMaterialLayout(app.graphicsDevice, new StandardMaterial().propertyDescriptors);
         processingOptions.uniformFormats[BINDGROUP_MATERIAL] = layout.uniformBufferFormat;
     });

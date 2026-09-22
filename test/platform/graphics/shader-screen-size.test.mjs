@@ -7,6 +7,7 @@ import { ShaderProcessorGLSL } from '../../../src/platform/graphics/shader-proce
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { WebglShaderProcessorGLSL } from '../../../src/platform/graphics/webgl/webgl-shader-processor-glsl.js';
 import { WebgpuShaderProcessorWGSL } from '../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -34,13 +35,14 @@ const wgslSource = (legacy, vertex) => `
 
 describe('Screen size shader uniform compatibility', function () {
     let app;
+    let viewUniformFormat;
     let warn;
     let previouslyLogged;
 
     beforeEach(function () {
         jsdomSetup();
         app = createApp();
-        app.renderer.initViewUniformFormat(false);
+        viewUniformFormat = app.renderer.getViewUniformFormat(false, new LightList());
         previouslyLogged = Debug._loggedMessages.delete(warning);
         warn = sinon.stub(console, 'warn');
     });
@@ -62,8 +64,8 @@ describe('Screen size shader uniform compatibility', function () {
             expect(device.scope.resolve('uScreenSize').value).to.equal(current);
             expect(Array.from(current)).to.deep.equal(Array.from(new Float32Array([width, height, 1 / width, 1 / height])));
         }
-        expect(app.renderer.viewUniformFormat.get('screen_size')).to.exist;
-        expect(app.renderer.viewUniformFormat.get('uScreenSize')).not.to.exist;
+        expect(viewUniformFormat.get('screen_size')).to.exist;
+        expect(viewUniformFormat.get('uScreenSize')).not.to.exist;
         expect(warn.called).to.equal(false);
     });
 
@@ -78,7 +80,7 @@ describe('Screen size shader uniform compatibility', function () {
                     attributes: { vertex_position: SEMANTIC_POSITION },
                     vshader: wgsl ? wgslSource(legacy, true) : glslSource(legacy),
                     fshader: wgsl ? wgslSource(legacy, false) : glslSource(legacy).replace('gl_Position', 'gl_FragColor'),
-                    processingOptions: new ShaderProcessorOptions(app.renderer.viewUniformFormat)
+                    processingOptions: new ShaderProcessorOptions(viewUniformFormat)
                 };
                 const shader = { failed: false, name: 'screen-size-test' };
                 const result = processor.run(app.graphicsDevice, definition, shader);

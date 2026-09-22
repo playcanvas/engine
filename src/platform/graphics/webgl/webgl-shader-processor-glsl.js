@@ -74,6 +74,7 @@ class WebglShaderProcessorGLSL extends ShaderProcessorGLSL {
         // re-emit all uniforms not provided by a block (numeric and samplers) as individual uniforms
         uniforms.forEach((uniform) => {
             if (!processingOptions.hasUniform(uniform.name)) {
+                if (!uniform.isSampler) processingOptions.debugCheckMeshUniform(uniform.name);
                 code += `uniform ${uniform.line};\n`;
             }
         });
