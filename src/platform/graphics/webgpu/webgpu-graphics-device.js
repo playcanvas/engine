@@ -84,6 +84,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     wgpu = null;
 
     /**
+     * True when this graphics device owns {@link WebgpuGraphicsDevice#wgpu} and so destroys it and
+     * recovers from its loss. Cleared by {@link WebgpuGraphicsDevice#initFromGpuDevice} when a host
+     * supplies the device and keeps both jobs.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _ownsGpuDevice = true;
+
+    /**
+     * Listener for uncaptured errors registered on {@link WebgpuGraphicsDevice#wgpu}, removed on
+     * destroy.
+     *
+     * @type {((event: GPUUncapturedErrorEvent) => void)|null}
+     * @private
+     */
+    _uncapturedErrorHandler = null;
+
+    /**
      * Configuration of the canvas textures returned by getCurrentTexture.
      *
      * @type {GPUCanvasConfiguration|null}
@@ -371,7 +390,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this._drawCommands.clear();
 
         this.gpuContext?.unconfigure();
-        this.wgpu?.destroy();
+
+        if (this._uncapturedErrorHandler) {
+            this.wgpu?.removeEventListener?.('uncapturederror', this._uncapturedErrorHandler);
+            this._uncapturedErrorHandler = null;
+        }
+
+        // a device supplied by the host is the host's to destroy
+        if (this._ownsGpuDevice) {
+            this.wgpu?.destroy();
+        }
         this.wgpu = null;
         this.gpuAdapter = null;
         this.gpuContext = null;
@@ -595,7 +623,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             return null;
         }
 
-        return this.initFromGpuDevice(gpuAdapter, wgpu);
+        return this.initFromGpuDevice(gpuAdapter, wgpu, true);
     }
 
     /**
@@ -651,13 +679,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @param {GPUAdapter|null} gpuAdapter - The adapter the device was created from, used for its
      * info (vendor, architecture, subgroup sizes).
      * @param {GPUDevice} wgpu - The WebGPU device.
+     * @param {boolean} [ownsGpuDevice] - True when this graphics device owns the WebGPU device: it
+     * then destroys it on {@link WebgpuGraphicsDevice#destroy} and recovers from its loss. A host
+     * that supplies the device keeps both responsibilities. Defaults to false.
      * @returns {this} The initialized graphics device.
      * @private
      */
-    initFromGpuDevice(gpuAdapter, wgpu) {
+    initFromGpuDevice(gpuAdapter, wgpu, ownsGpuDevice = false) {
 
         this.gpuAdapter = gpuAdapter;
         this.wgpu = wgpu;
+        this._ownsGpuDevice = ownsGpuDevice;
 
         // capabilities derived from the features the device was created with
         const enabledFeatures = this._applyFeatures(wgpu.features);
@@ -679,14 +711,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
         this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
 
-        // handle lost device
-        this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+        // handle lost device (a host that supplied the device handles its loss)
+        if (ownsGpuDevice) {
+            this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+        }
 
         // surface any uncaptured WebGPU errors
-        this.wgpu.addEventListener?.('uncapturederror', (ev) => {
+        this._uncapturedErrorHandler = (ev) => {
             const e = /** @type {any} */ (ev).error;
             Debug.error(`WebGPU uncaptured ${e?.constructor?.name ?? 'Error'}: ${e?.message ?? e}`);
-        });
+        };
+        this.wgpu.addEventListener?.('uncapturederror', this._uncapturedErrorHandler);
 
         this.initDeviceCaps();
 
