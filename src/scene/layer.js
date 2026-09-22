@@ -872,6 +872,7 @@ class Layer {
      * @param {boolean} [clustered] - Whether clustered lighting is enabled. Defaults to the value
      * the list was last built for.
      * @returns {LightList} The lights of the layer.
+     * @ignore
      */
     getLightList(clustered = this._lightList.clustered) {
         const lightList = this._lightList;
