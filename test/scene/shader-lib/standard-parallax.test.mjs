@@ -87,7 +87,6 @@ describe('StandardMaterial parallax mapping', function () {
             scene: app.scene,
             objDefs: objDefs,
             pass: pass,
-            sortedLights: [[], [], []],
             cameraShaderParams: new CameraShaderParams(),
 
             // the maps are only sampled when the mesh provides the uv set they use

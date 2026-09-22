@@ -304,7 +304,7 @@ class Culler {
                 for (let l = 0; l < cameraLayers.length; l++) {
                     const cameraLayer = comp.getLayerById(cameraLayers[l]);
                     if (cameraLayer) {
-                        const layerDirLights = cameraLayer.splitLights[LIGHTTYPE_DIRECTIONAL];
+                        const layerDirLights = cameraLayer.getLightList().directional;
 
                         for (let j = 0; j < layerDirLights.length; j++) {
                             const light = layerDirLights[j];

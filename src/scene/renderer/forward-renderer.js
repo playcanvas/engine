@@ -9,9 +9,9 @@ import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
     LAYERID_DEPTH,
-    MASK_AFFECT_RUNTIME,
     PROJECTION_ORTHOGRAPHIC
 } from '../constants.js';
+import { LightList } from '../lighting/light-list.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
@@ -28,14 +28,16 @@ import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-sta
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { RenderAction } from '../composition/render-action.js'
  * @import { Layer } from '../layer.js'
+ * @import { Light } from '../light.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
+ * @import { ScopeSpace } from '../../platform/graphics/scope-space.js'
  * @import { Scene } from '../scene.js'
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js'
  * @import { WorldClusters } from '../lighting/world-clusters.js'
  */
 
-const _noLights = [[], [], []];
+const _noLights = new LightList();
 const tmpColor = new Color();
 
 const _drawCallList = {
@@ -247,112 +249,102 @@ class ForwardRenderer extends Renderer {
         this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
     }
 
-    dispatchDirectLights(dirs, camera) {
-        let slotCount = 0;
+    /**
+     * Sets the uniforms of a directional light at its light slot.
+     *
+     * @param {ScopeSpace} scope - The scope.
+     * @param {Light} directional - The light.
+     * @param {number} cnt - Its light slot.
+     * @param {Camera} camera - The camera, for the shadow data rendered for it.
+     */
+    dispatchDirectionalLight(scope, directional, cnt, camera) {
+        const wtm = directional._node.getWorldTransform();
 
-        const scope = this.device.scope;
+        if (!this.lightColorId[cnt]) {
+            this._resolveLight(scope, cnt);
+        }
 
-        for (let i = 0; i < dirs.length; i++) {
+        this.lightColorId[cnt].setValue(directional._colorLinear);
 
-            const directional = dirs[i];
+        // Directional lights shine down the negative Y axis
+        wtm.getY(directional._direction).mulScalar(-1);
+        directional._direction.normalize();
+        this.lightDir[cnt][0] = directional._direction.x;
+        this.lightDir[cnt][1] = directional._direction.y;
+        this.lightDir[cnt][2] = directional._direction.z;
+        this.lightDirId[cnt].setValue(this.lightDir[cnt]);
 
-            // A light slot is absolute, so a light's uniforms are the same for every mesh instance
-            // in the pass and every light is dispatched, whatever the masks being drawn select.
-            // A light that only contributes to a lightmap reaches nothing at runtime and takes no
-            // slot. The shader side assigns slots the same way, see
-            // LitMaterialOptionsBuilder#collectLights.
-            if (!(directional.mask & MASK_AFFECT_RUNTIME)) continue;
-            const cnt = slotCount++;
+        if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
+            // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
+            this.setLTCDirectionalLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
+        }
 
-            const wtm = directional._node.getWorldTransform();
+        if (directional.castShadows) {
 
-            if (!this.lightColorId[cnt]) {
-                this._resolveLight(scope, cnt);
-            }
+            // ortho projection does not support cascades
+            Debug.call(() => {
+                if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.numCascades !== 1) {
+                    Debug.errorOnce(`Camera [${camera.node.name}] with orthographic projection cannot use cascaded shadows, expect incorrect rendering.`);
+                }
+            });
 
-            this.lightColorId[cnt].setValue(directional._colorLinear);
+            const lightRenderData = directional.getRenderData(camera, 0);
+            const biases = directional._getUniformBiasValues(lightRenderData);
 
-            // Directional lights shine down the negative Y axis
-            wtm.getY(directional._direction).mulScalar(-1);
-            directional._direction.normalize();
-            this.lightDir[cnt][0] = directional._direction.x;
-            this.lightDir[cnt][1] = directional._direction.y;
-            this.lightDir[cnt][2] = directional._direction.z;
-            this.lightDirId[cnt].setValue(this.lightDir[cnt]);
+            this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
+            this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
 
-            if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
-                // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
-                this.setLTCDirectionalLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
-            }
+            this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
+            this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
+            this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
+            this.shadowCascadeBlendId[cnt].setValue(1 - directional.cascadeBlend);
+            this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
-            if (directional.castShadows) {
+            // PCSS-only uniforms — skipped for the common PCF / VSM paths, which don't
+            // declare or read them in the shader.
+            if (directional._isPcss) {
 
-                // ortho projection does not support cascades
-                Debug.call(() => {
-                    if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.numCascades !== 1) {
-                        Debug.errorOnce(`Camera [${camera.node.name}] with orthographic projection cannot use cascaded shadows, expect incorrect rendering.`);
-                    }
-                });
+                this.lightSoftShadowParamsId[cnt].setValue(directional._softShadowParams);
 
-                const lightRenderData = directional.getRenderData(camera, 0);
-                const biases = directional._getUniformBiasValues(lightRenderData);
-
-                this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
-                this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-
-                this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
-                this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
-                this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
-                this.shadowCascadeBlendId[cnt].setValue(1 - directional.cascadeBlend);
-                this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
-
-                // PCSS-only uniforms — skipped for the common PCF / VSM paths, which don't
-                // declare or read them in the shader.
-                if (directional._isPcss) {
-
-                    this.lightSoftShadowParamsId[cnt].setValue(directional._softShadowParams);
-
-                    const shadowRT = lightRenderData.shadowCamera.renderTarget;
-                    if (shadowRT) {
-                        this.lightShadowSearchAreaId[cnt].setValue(directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width * lightRenderData.projectionCompensation);
-                    }
-
-                    const cameraParams = directional._shadowCameraParams;
-                    cameraParams.length = 4;
-                    // ortho radius (world half-extent of the directional shadow camera) — consumed by world-space PCSS
-                    cameraParams[0] = lightRenderData.projectionCompensation;
-                    cameraParams[1] = lightRenderData.shadowCamera._farClip;
-                    cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-                    cameraParams[3] = 1;
-                    this.lightCameraParamsId[cnt].setValue(cameraParams);
-
-                    // Cached cascades must use the radius and depth range that rendered their
-                    // shadow map, even while another cascade is being fitted to moving casters.
-                    // Each matrix column stores one cascade's camera parameters.
-                    const cascadeParams = directional._shadowCascadeParams ??= new Float32Array(16);
-                    for (let c = 0; c < 4; c++) {
-                        const own = c < directional.numCascades ? directional.getRenderData(camera, c) : null;
-                        const renderData = own?.projectionCompensation > 0 ? own : lightRenderData;
-                        const shadowCamera = renderData.shadowCamera;
-                        const offset = c * 4;
-                        cascadeParams[offset] = renderData.projectionCompensation;
-                        cascadeParams[offset + 1] = shadowCamera._farClip;
-                        cascadeParams[offset + 2] = shadowCamera._nearClip;
-                        cascadeParams[offset + 3] = 1;
-                    }
-                    this.shadowCascadeParamsId[cnt].setValue(cascadeParams);
+                const shadowRT = lightRenderData.shadowCamera.renderTarget;
+                if (shadowRT) {
+                    this.lightShadowSearchAreaId[cnt].setValue(directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width * lightRenderData.projectionCompensation);
                 }
 
-                const params = directional._shadowRenderParams;
-                params.length = 4;
-                params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
-                params[1] = biases.normalBias;
-                params[2] = biases.bias;
-                params[3] = 0;
-                this.lightShadowParamsId[cnt].setValue(params);
+                const cameraParams = directional._shadowCameraParams;
+                cameraParams.length = 4;
+                // ortho radius (world half-extent of the directional shadow camera) — consumed by world-space PCSS
+                cameraParams[0] = lightRenderData.projectionCompensation;
+                cameraParams[1] = lightRenderData.shadowCamera._farClip;
+                cameraParams[2] = lightRenderData.shadowCamera._nearClip;
+                cameraParams[3] = 1;
+                this.lightCameraParamsId[cnt].setValue(cameraParams);
+
+                // Cached cascades must use the radius and depth range that rendered their
+                // shadow map, even while another cascade is being fitted to moving casters.
+                // Each matrix column stores one cascade's camera parameters.
+                const cascadeParams = directional._shadowCascadeParams ??= new Float32Array(16);
+                for (let c = 0; c < 4; c++) {
+                    const own = c < directional.numCascades ? directional.getRenderData(camera, c) : null;
+                    const renderData = own?.projectionCompensation > 0 ? own : lightRenderData;
+                    const shadowCamera = renderData.shadowCamera;
+                    const offset = c * 4;
+                    cascadeParams[offset] = renderData.projectionCompensation;
+                    cascadeParams[offset + 1] = shadowCamera._farClip;
+                    cascadeParams[offset + 2] = shadowCamera._nearClip;
+                    cascadeParams[offset + 3] = 1;
+                }
+                this.shadowCascadeParamsId[cnt].setValue(cascadeParams);
             }
+
+            const params = directional._shadowRenderParams;
+            params.length = 4;
+            params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
+            params[1] = biases.normalBias;
+            params[2] = biases.bias;
+            params[3] = 0;
+            this.lightShadowParamsId[cnt].setValue(params);
         }
-        return slotCount;
     }
 
     setLTCPositionalLight(wtm, cnt) {
@@ -508,31 +500,36 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    dispatchLocalLights(sortedLights, usedDirLights) {
-
-        // local light slots continue after the slots the directional lights reserved
-        let slotCount = usedDirLights;
+    /**
+     * Sets the uniforms of the lights of a pass, each at its light slot. The slot order is the
+     * same for every mesh instance in the pass whatever its light mask selects, so this runs once
+     * per pass and each shader reads its own slots. The shader generator reads the same list, so
+     * the two cannot disagree about which light a slot holds.
+     *
+     * @param {LightList} lightList - The lights of the pass.
+     * @param {Camera} camera - The camera, for the shadow data rendered for it.
+     */
+    dispatchLights(lightList, camera) {
         const scope = this.device.scope;
-
-        const omnis = sortedLights[LIGHTTYPE_OMNI];
-        const numOmnis = omnis.length;
-        for (let i = 0; i < numOmnis; i++) {
-            const omni = omnis[i];
-            if (!(omni.mask & MASK_AFFECT_RUNTIME)) continue;
-            this.dispatchOmniLight(scope, omni, slotCount++);
-        }
-
-        const spts = sortedLights[LIGHTTYPE_SPOT];
-        const numSpts = spts.length;
-        for (let i = 0; i < numSpts; i++) {
-            const spot = spts[i];
-            if (!(spot.mask & MASK_AFFECT_RUNTIME)) continue;
-            this.dispatchSpotLight(scope, spot, slotCount++);
+        const slots = lightList.slots;
+        for (let i = 0; i < slots.length; i++) {
+            const light = slots[i];
+            switch (light._type) {
+                case LIGHTTYPE_DIRECTIONAL:
+                    this.dispatchDirectionalLight(scope, light, i, camera);
+                    break;
+                case LIGHTTYPE_OMNI:
+                    this.dispatchOmniLight(scope, light, i);
+                    break;
+                case LIGHTTYPE_SPOT:
+                    this.dispatchSpotLight(scope, light, i);
+                    break;
+            }
         }
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass, viewUniformFormat) {
+    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, lightList, layer, pass, viewUniformFormat) {
 
         // fog params from the scene, or overridden by the camera
         const fogParams = camera.fogParams ?? this.scene.fog;
@@ -553,8 +550,6 @@ class ForwardRenderer extends Renderer {
 
         const device = this.device;
         const scene = this.scene;
-        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
-        const lightHash = layer?.getLightHash(clusteredLightingEnabled) ?? 0;
         let prevMaterial = null, prevObjDefs;
 
         const drawCallsCount = drawCalls.length;
@@ -607,7 +602,7 @@ class ForwardRenderer extends Renderer {
                 material.prepareForRender(device, scene);
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, sortedLights);
+            const shaderInstance = drawCall.getShaderInstance(pass, lightList, scene, shaderParams, viewUniformFormat);
 
             addCall(drawCall, shaderInstance, material !== prevMaterial);
 
@@ -618,7 +613,7 @@ class ForwardRenderer extends Renderer {
         return _drawCallList;
     }
 
-    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
+    renderForwardInternal(camera, preparedCalls, lightList, pass, drawCallback, flipFaces) {
         // Nothing to draw: leave before the per-pass setup, in particular before dispatching the
         // lights. An empty layer step is common - a layer's opaque and transparent sublayers are
         // both enabled and neither is filtered out when empty.
@@ -628,9 +623,7 @@ class ForwardRenderer extends Renderer {
         }
 
         const device = this.device;
-        const scene = this.scene;
         const flipFactor = flipFaces ? -1 : 1;
-        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         // when this pass renders the scene textures, the additional attachments of the materials whose
         // shader does not generate them need masking off
@@ -644,13 +637,9 @@ class ForwardRenderer extends Renderer {
         Debug.assert(attachmentCount <= 1 || device.supportsIndependentBlending,
             'Rendering the scene textures requires GraphicsDevice#supportsIndependentBlending, as the attachments of the materials which do not generate them cannot be masked off without it.');
 
-        // Uniforms I: the lights of the pass. A light slot denotes the same light for every mesh
-        // instance drawn, so the light uniforms are constant for the pass and are dispatched once,
-        // rather than per mesh instance whose light mask differs from the one before it.
-        const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], camera);
-        if (!clusteredLightingEnabled) {
-            this.dispatchLocalLights(sortedLights, usedDirLights);
-        }
+        // Uniforms I: the lights of the pass, dispatched once - the slot order is the same for every
+        // mesh instance drawn, whatever its light mask selects
+        this.dispatchLights(lightList, camera);
 
         // multiview xr rendering
         const viewList = camera.xrActive && camera.xrViews.length ? camera.xrViews : null;
@@ -780,17 +769,17 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewUniformFormat) {
+    renderForward(camera, renderTarget, allDrawCalls, lightList, pass, drawCallback, layer, flipFaces, viewUniformFormat) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass, viewUniformFormat);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, lightList, layer, pass, viewUniformFormat);
 
         // render mesh instances
-        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
+        this.renderForwardInternal(camera, preparedCalls, lightList, pass, drawCallback, flipFaces);
 
         _drawCallList.clear();
 
@@ -817,7 +806,8 @@ class ForwardRenderer extends Renderer {
      * clustered lighting.
      * @param {MeshInstance[]} [options.meshInstances] - The mesh instances to be rendered. Use
      * when layer is not provided.
-     * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
+     * @param {LightList} [options.lightList] - The lights to render with. Use when layer is not
+     * provided; none by default.
      * @param {Function} [options.drawCallback] - Function called before each mesh instance is
      * rendered, with the mesh instance as the argument.
      * @param {UniformBufferFormat} [options.viewUniformFormat] - A custom view uniform buffer
@@ -832,7 +822,7 @@ class ForwardRenderer extends Renderer {
 
         this.setupViewport(camera, renderTarget);
 
-        let visible, splitLights;
+        let visible, lightList;
         if (layer) {
             // #if _PROFILER
             const sortTime = now();
@@ -858,11 +848,11 @@ class ForwardRenderer extends Renderer {
                 this.constantLightCube.setValue(this.lightCube.colors);
             }
 
-            splitLights = layer.splitLights;
+            lightList = layer.getLightList(clusteredLightingEnabled);
 
         } else {
             visible = options.meshInstances;
-            splitLights = options.splitLights ?? _noLights;
+            lightList = options.lightList ?? _noLights;
         }
 
         Debug.assert(visible, 'Either layer or options.meshInstances must be provided');
@@ -915,7 +905,7 @@ class ForwardRenderer extends Renderer {
         this.renderForward(camera,
             renderTarget,
             visible,
-            splitLights,
+            lightList,
             shaderPass,
             options.drawCallback ?? null,
             layer,

@@ -19,12 +19,13 @@ import { Texture } from '../../platform/graphics/texture.js';
 import {
     BAKE_COLORDIR,
     GAMMA_NONE, TONEMAP_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../../scene/constants.js';
+import { LightList } from '../../scene/lighting/light-list.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
@@ -822,14 +823,9 @@ class Lightmapper {
         return lightAffectsNode;
     }
 
-    // set up light array for a single light
-    setupLightArray(lightArray, light) {
-
-        lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-        lightArray[LIGHTTYPE_OMNI].length = 0;
-        lightArray[LIGHTTYPE_SPOT].length = 0;
-
-        lightArray[light.type][0] = light;
+    // set up the light list for the single light being baked
+    setupLightList(lightList, light, clustered) {
+        lightList.update([light], clustered);
         light.visibleThisFrame = true;
     }
 
@@ -1001,7 +997,7 @@ class Lightmapper {
             bakeLights[j].light.enabled = false;
         }
 
-        const lightArray = [[], [], []];
+        const lightList = new LightList();
         let pass, node;
         let shadersUpdatedOn1stPass = false;
 
@@ -1044,7 +1040,7 @@ class Lightmapper {
                         continue;
                     }
 
-                    this.setupLightArray(lightArray, bakeLight.light);
+                    this.setupLightList(lightList, bakeLight.light, clusteredLightingEnabled);
                     const clusterLights = isDirectional ? [] : [bakeLight.light];
 
                     if (clusteredLightingEnabled) {
@@ -1113,7 +1109,7 @@ class Lightmapper {
 
                         const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
                             clusteredLightingEnabled ? this.worldClusters : null,
-                            rcv, lightArray);
+                            rcv, lightList);
                         renderPass.init(tempRT);
                         renderPass.colorOps.clear = true;
                         renderPass.colorOps.clearValue.copy(this.camera.clearColor);

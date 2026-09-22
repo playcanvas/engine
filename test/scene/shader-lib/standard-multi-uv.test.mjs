@@ -71,7 +71,6 @@ describe('StandardMaterial uv sets', function () {
             scene: app.scene,
             objDefs: objDefs,
             pass: SHADER_FORWARD,
-            sortedLights: [[], [], []],
             cameraShaderParams: new CameraShaderParams(),
             vertexFormat: createFormat(uvSets)
         });

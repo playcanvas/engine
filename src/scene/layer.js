@@ -2,9 +2,9 @@ import { Debug } from '../core/debug.js';
 import { hash32Fnv1a } from '../core/hash.js';
 import {
     LIGHTTYPE_DIRECTIONAL,
-    MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_RUNTIME,
     SORTMODE_BACK2FRONT, SORTMODE_CUSTOM, SORTMODE_FRONT2BACK, SORTMODE_MATERIALMESH, SORTMODE_NONE
 } from './constants.js';
+import { LightList } from './lighting/light-list.js';
 import { Material } from './materials/material.js';
 
 /**
@@ -22,21 +22,6 @@ let layerCounter = 0;
 
 const lightKeys = [];
 const _tempMaterials = new Set();
-
-/**
- * Ranks a light by how broadly it applies, ordering the lights that reach every mesh instance
- * ahead of those restricted to one kind of geometry. See {@link Layer#splitLights}.
- *
- * @param {Light} light - The light.
- * @returns {number} The rank, lowest first.
- */
-function lightSlotRank(light) {
-    const mask = light.mask & MASK_AFFECT_RUNTIME;
-    if (mask === MASK_AFFECT_RUNTIME) return 0;     // carries both bits, so reaches every mesh instance
-    if (mask & MASK_AFFECT_DYNAMIC) return 1;       // dynamic geometry is usually most of the draws
-    if (mask & MASK_AFFECT_LIGHTMAPPED) return 2;
-    return 3;                                       // contributes only to lightmaps, takes no slot
-}
 
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
@@ -293,28 +278,16 @@ class Layer {
     _clusteredLightsSet = new Set();
 
     /**
-     * Lights separated by light type. Lights in the individual arrays are sorted by the key,
-     * to match their order in _lightIdHash, so that their order matches the order expected by the
-     * generated shader code.
+     * The lights of the layer in the forms the renderer consumes, see {@link LightList}. Rebuilt
+     * lazily by {@link Layer#getLightList} when lights were added or removed, or their key changed.
      *
-     * @type {Light[][]}
+     * @type {LightList}
      * @private
      */
-    _splitLights = [[], [], []];
-
-    /**
-     * True if _splitLights needs to be updated, which means if lights were added or removed from
-     * the layer, or their key changed.
-     *
-     * @private
-     */
-    _splitLightsDirty = true;
+    _lightList = new LightList();
 
     /** @private */
-    _lightHash = 0;
-
-    /** @private */
-    _lightHashDirty = false;
+    _lightListDirty = true;
 
     /** @private */
     _lightIdHash = 0;
@@ -827,9 +800,8 @@ class Layer {
     }
 
     markLightsDirty() {
-        this._lightHashDirty = true;
         this._lightIdHashDirty = true;
-        this._splitLightsDirty = true;
+        this._lightListDirty = true;
     }
 
     hasLight(light) {
@@ -891,37 +863,24 @@ class Layer {
         this.markLightsDirty();
     }
 
-    get splitLights() {
-
-        if (this._splitLightsDirty) {
-            this._splitLightsDirty = false;
-
-            const splitLights = this._splitLights;
-            for (let i = 0; i < splitLights.length; i++) {
-                splitLights[i].length = 0;
-            }
-
-            const lights = this._lights;
-            for (let i = 0; i < lights.length; i++) {
-                const light = lights[i];
-                if (light.enabled) {
-                    splitLights[light._type].push(light);
-                }
-            }
-
-            // Order the lights by how broadly they apply, and only then by their key. A light's
-            // position in this list is its light slot, and a mesh instance's shader is built for
-            // the slots its mask selects, so putting the lights that apply to everything first
-            // makes those slots a gap-free run for both masks whenever one mask's lights are a
-            // subset of the other's - which is the normal case. Sorting on the key alone would
-            // scatter them and leave holes. Sorting by the key second keeps the order a pure
-            // function of the set of lights, so reordering lights generates no new shaders.
-            for (let i = 0; i < splitLights.length; i++) {
-                splitLights[i].sort((a, b) => (lightSlotRank(a) - lightSlotRank(b)) || (a.key - b.key));
-            }
+    /**
+     * Returns the lights of the layer in the forms the renderer consumes, rebuilding them if the
+     * lights changed since, or if clustered lighting was toggled - the local lights take a light
+     * slot only when it is disabled. Callers reading only the directional lights, which do not
+     * depend on it, may leave the flag out.
+     *
+     * @param {boolean} [clustered] - Whether clustered lighting is enabled. Defaults to the value
+     * the list was last built for.
+     * @returns {LightList} The lights of the layer.
+     * @ignore
+     */
+    getLightList(clustered = this._lightList.clustered) {
+        const lightList = this._lightList;
+        if (this._lightListDirty || lightList.clustered !== clustered) {
+            this._lightListDirty = false;
+            lightList.update(this._lights, clustered);
         }
-
-        return this._splitLights;
+        return lightList;
     }
 
     evaluateLightHash(localLights, directionalLights, useIds) {
@@ -951,19 +910,6 @@ class Layer {
         return hash;
     }
 
-
-    getLightHash(isClustered) {
-        if (this._lightHashDirty) {
-            this._lightHashDirty = false;
-
-            // Generate hash to check if layers have the same set of lights independent of their order.
-            // Always use directional lights. Additionally use local lights if clustered lighting is disabled.
-            // (only directional lights affect the shader generation for clustered lighting)
-            this._lightHash = this.evaluateLightHash(!isClustered, true, false);
-        }
-
-        return this._lightHash;
-    }
 
     // This is only used in clustered lighting mode
     getLightIdHash() {

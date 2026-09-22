@@ -95,7 +95,7 @@ class LitMaterial extends Material {
         options.shaderChunkWGSL = this.shaderChunkWGSL;
         options.defines = ShaderUtils.getCoreDefines(this, params);
 
-        LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.sortedLights);
+        LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.lightList);
         const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
         const library = getProgramLibrary(params.device);
         library.register('lit', lit);

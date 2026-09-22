@@ -14,7 +14,6 @@ import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
  */
 
 const tempMeshInstances = [];
-const lights = [[], [], []];
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
@@ -192,7 +191,6 @@ class RenderPassPicker extends RenderPass {
                 const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
                 renderer.renderForwardLayer(camera.camera, renderTarget, null, undefined, shaderPass, {
                     meshInstances: tempMeshInstances,
-                    splitLights: lights,
                     lightClusters: this.emptyWorldClusters,
                     viewUniformFormat: this.getViewUniformFormat(),
                     drawCallback: () => device.setBlendState(this.blendState)

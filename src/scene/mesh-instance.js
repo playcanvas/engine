@@ -32,6 +32,7 @@ import { PickerId } from './picker-id.js';
  * @import { Mesh } from './mesh.js'
  * @import { MorphInstance } from './morph-instance.js'
  * @import { CameraShaderParams } from './camera-shader-params.js'
+ * @import { LightList } from './lighting/light-list.js'
  * @import { Scene } from './scene.js'
  * @import { UniformFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @typedef {object} MeshInstanceParameter - A parameter of a mesh instance, overriding the value of
@@ -859,25 +860,24 @@ class MeshInstance {
     }
 
     /**
-     * Returns the shader instance for the specified shader pass and light hash that is compatible
+     * Returns the shader instance for the specified shader pass and lights that is compatible
      * with this mesh instance.
      *
      * @param {number} shaderPass - The shader pass index.
-     * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
+     * @param {LightList} lightList - The lights of the pass.
      * @param {Scene} scene - The scene.
      * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
      * @param {UniformBufferFormat} [viewUniformFormat] - The format of the view uniform buffer.
-     * @param {any} [sortedLights] - Array of arrays of lights.
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightList, scene, cameraShaderParams, viewUniformFormat) {
 
         const shaderDefs = this._shaderDefs;
 
         // unique hash for the required shader
         lookupHashes[0] = shaderPass;
-        lookupHashes[1] = lightHash;
+        lookupHashes[1] = lightList.hash;
         lookupHashes[2] = shaderDefs;
         lookupHashes[3] = cameraShaderParams.hash;
 
@@ -910,7 +910,7 @@ class MeshInstance {
                     objDefs: shaderDefs,
                     cameraShaderParams: cameraShaderParams,
                     pass: shaderPass,
-                    sortedLights: sortedLights,
+                    lightList: lightList,
                     viewUniformFormat: viewUniformFormat,
                     vertexFormat: this.mesh.vertexBuffer?.format
                 });
