@@ -161,7 +161,7 @@ fn getParallax() {
 
     #else
 
-        var height: f32 = textureSampleBias({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, {STD_HEIGHT_TEXTURE_UV}, uniform.textureBias).{STD_HEIGHT_TEXTURE_CHANNEL};
+        var height: f32 = textureSampleBias({STD_HEIGHT_TEXTURE_NAME}, {STD_HEIGHT_TEXTURE_NAME}Sampler, {STD_HEIGHT_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_HEIGHT_TEXTURE_CHANNEL};
 
         // remap the height to be relative to the base level of the height map, so the surface
         // pivots around the original geometry instead of floating in front of it

@@ -11,7 +11,7 @@ fn getIridescence() {
     #endif
 
     #ifdef STD_IRIDESCENCE_TEXTURE
-    iridescence = iridescence * textureSampleBias({STD_IRIDESCENCE_TEXTURE_NAME}, {STD_IRIDESCENCE_TEXTURE_NAME}Sampler, {STD_IRIDESCENCE_TEXTURE_UV}, uniform.textureBias).{STD_IRIDESCENCE_TEXTURE_CHANNEL};
+    iridescence = iridescence * textureSampleBias({STD_IRIDESCENCE_TEXTURE_NAME}, {STD_IRIDESCENCE_TEXTURE_NAME}Sampler, {STD_IRIDESCENCE_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_IRIDESCENCE_TEXTURE_CHANNEL};
     #endif
 
     dIridescence = iridescence; 

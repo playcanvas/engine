@@ -701,8 +701,6 @@ class Renderer {
         let format = formats.get(lightList.key);
         if (!format) {
 
-            // note: 'textureBias' is deliberately not part of this, as the tiled nine-slice mode
-            // declares a global constant of that name in the shader, which would collide with it
             const uniforms = [
                 new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
@@ -717,7 +715,8 @@ class Renderer {
                 new UniformFormat('screen_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('view_index', UNIFORMTYPE_UINT),
-                new UniformFormat('light_globalAmbient', UNIFORMTYPE_VEC3)
+                new UniformFormat('light_globalAmbient', UNIFORMTYPE_VEC3),
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {

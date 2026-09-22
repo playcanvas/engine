@@ -12,7 +12,7 @@ fn getSpecularity() {
     #endif
 
     #ifdef STD_SPECULAR_TEXTURE
-    specularColor = specularColor * {STD_SPECULAR_TEXTURE_DECODE}(textureSampleBias({STD_SPECULAR_TEXTURE_NAME}, {STD_SPECULAR_TEXTURE_NAME}Sampler, {STD_SPECULAR_TEXTURE_UV}, uniform.textureBias)).{STD_SPECULAR_TEXTURE_CHANNEL};
+    specularColor = specularColor * {STD_SPECULAR_TEXTURE_DECODE}(textureSampleBias({STD_SPECULAR_TEXTURE_NAME}, {STD_SPECULAR_TEXTURE_NAME}Sampler, {STD_SPECULAR_TEXTURE_UV}, {STD_TEXTURE_BIAS})).{STD_SPECULAR_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_SPECULAR_VERTEX

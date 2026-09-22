@@ -11,7 +11,7 @@ fn getThickness() {
     #endif
 
     #ifdef STD_THICKNESS_TEXTURE
-    dThickness = dThickness * textureSampleBias({STD_THICKNESS_TEXTURE_NAME}, {STD_THICKNESS_TEXTURE_NAME}Sampler, {STD_THICKNESS_TEXTURE_UV}, uniform.textureBias).{STD_THICKNESS_TEXTURE_CHANNEL};
+    dThickness = dThickness * textureSampleBias({STD_THICKNESS_TEXTURE_NAME}, {STD_THICKNESS_TEXTURE_NAME}Sampler, {STD_THICKNESS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_THICKNESS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_THICKNESS_VERTEX
