@@ -26,7 +26,8 @@ uniform seed: f32;
 uniform startAngle: f32;
 uniform startAngle2: f32;
 uniform initialVelocity: f32;
-uniform simTime: f32;
+uniform emissionTime: f32;
+uniform rateChanged: f32;
 
 uniform graphSampleSize: f32;
 uniform graphNumSamples: f32;

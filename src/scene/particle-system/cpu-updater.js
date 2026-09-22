@@ -330,22 +330,37 @@ class ParticleCPUUpdater {
                 // OR below zero, if there are still unspawned particles to be emitted before this one.
                 // such thing happens when you have an enormous amount of particles with short lifetime.
                 // (mirrors respawnLife in particleUpdaterStartPS)
-                const period = Math.max(particleLifetime, emitter.numParticles * particleRate);
-                const wait = period - particleLifetime;
-                const slotLife = -glMod(id * period / emitter.numParticles - emitter.simTimeTotal, period);
+                const numParticles = emitter.numParticles;
+                const emissionTime = emitter._emissionTime;
 
                 if (life >= particleLifetime) {
-                    // re-spreading the births only means anything with at least one birth interval
-                    // of slack; at capacity there is none and the particles are alive continuously
-                    // whatever their phase, so keep the wait exactly as it was
-                    life = wait * emitter.numParticles < period ? life - period : slotLife;
+                    const period = Math.max(particleLifetime, numParticles * particleRate);
+
+                    // at the end of its life a particle waits for its own slot in the emission
+                    // cycle, so that a rate which has just changed re-spreads the particles over
+                    // the new period. Not with a randomized rate, where every particle has a period
+                    // of its own and an even grid would undo the randomization; and not at
+                    // capacity, where there is no slack to spread over and the particles are alive
+                    // continuously whatever their phase
+                    const respreads = emitter.rate2 === emitter.rate &&
+                        (period - particleLifetime) * numParticles >= period;
+
+                    life = respreads ?
+                        -glMod(id * period / numParticles - emissionTime, period) :
+                        life - period;
 
                     // dead particles in a single-shot system continue their paths, but marked as invisible.
                     // it is necessary for keeping correct separation between particles, based on emission rate.
                     // dying again in a looped system they will become visible on next respawn.
                     particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = emitter.loop ? 1 : -1;
-                } else if (life < -wait) {
-                    life = Math.max(life, slotLife);
+                } else if (emitter._rateChanged) {
+                    // release a particle queued for longer than the new rate allows, so that
+                    // raising the rate takes effect at once. The emitter-wide period is the longest
+                    // any particle can wait, so one still legitimately waiting is never released
+                    const maxPeriod = emitter.emissionPeriod;
+                    if (life < particleLifetime - maxPeriod) {
+                        life = Math.max(life, -glMod(id * maxPeriod / numParticles - emissionTime, maxPeriod));
+                    }
                 }
                 if (life < 0 && emitter.loop) {
                     particleTex[id * particleTexChannels + 3 + emitter.numParticlesPot * 2 * particleTexChannels] = 1;

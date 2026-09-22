@@ -379,6 +379,20 @@ class ParticleEmitter {
         this.simTime = 0;
         this.simTimeTotal = 0;
 
+        // Phase of the emission cycle, advanced every step and wrapped by the emission period so
+        // that it stays small: the simulation shader receives it as a 32 bit float, and an
+        // unbounded clock would lose the resolution the particle slots are spaced by. Wrapping
+        // leaves the phase it represents unchanged, the period being what it is modulo.
+        this._emissionTime = 0;
+
+        // Set when the emission rate changes, so that the next step re-places the particles
+        // already queued to be born; cleared once that step has run.
+        this._rateChanged = false;
+
+        // Simulation time the spawn schedule of a non-looping emitter started at, or null when the
+        // finish time is a fixed drain deadline from stop() that a rate change must not reschedule.
+        this._spawnStartTime = 0;
+
         this.beenReset = false;
 
         this._layer = null;
@@ -1019,10 +1033,46 @@ class ParticleEmitter {
         return Math.max(this.rate, this.rate2) * this.numParticles + this.lifetime;
     }
 
-    resetTime(duration = this.spawnDuration) {
+    /**
+     * The longest interval at which a particle of this emitter is reborn - the emission period of
+     * its slowest rate. Also what the emission phase clock is wrapped by.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get emissionPeriod() {
+        return Math.max(this.lifetime, this.numParticles * Math.max(this.rate, this.rate2));
+    }
+
+    /**
+     * Schedules when a non-looping emitter finishes. Called with no duration for the normal spawn
+     * schedule, which scales with the emission rate, and with an explicit duration to drain the
+     * emitter after stop() - a deadline that must not be rescheduled when the rate later changes.
+     *
+     * @param {number} [duration] - Seconds until the emitter finishes. Defaults to the time the
+     * spawn schedule needs.
+     */
+    resetTime(duration) {
+        const spawnScheduled = duration === undefined;
+
         // measured against the emitter's own simulation clock (simTimeTotal) so that pausing,
         // time scaling and frame drops keep the finished state in sync with the particles
-        this.endTime = this.simTimeTotal + duration;
+        this._spawnStartTime = spawnScheduled ? this.simTimeTotal : null;
+        this.endTime = this.simTimeTotal + (spawnScheduled ? this.spawnDuration : duration);
+    }
+
+    /**
+     * Re-derives the finish time of a non-looping emitter after its rate changed. The deadline is
+     * measured from where the schedule started rather than shifted, so that repeated changes cannot
+     * make it drift, and is never brought in front of the particles already alive - the last of
+     * which dies one lifetime from now. An emitter draining after stop(), or one that has already
+     * finished, keeps the deadline it has.
+     *
+     * @ignore
+     */
+    rescheduleSpawn() {
+        if (this._spawnStartTime === null || this.simTimeTotal > this.endTime) return;
+        this.endTime = Math.max(this._spawnStartTime + this.spawnDuration, this.simTimeTotal + this.lifetime);
     }
 
     finishFrame() {
@@ -1037,6 +1087,7 @@ class ParticleEmitter {
         // #endif
 
         this.simTimeTotal += delta;
+        this._emissionTime = (this._emissionTime + delta) % this.emissionPeriod;
 
         this.calculateWorldBounds();
 
@@ -1098,6 +1149,9 @@ class ParticleEmitter {
             this._cpuUpdater.update(data, this.vbToSort, this.particleTex, spawnMatrix, extentsInnerRatioUniform, emitterPos, delta, isOnStop);
             // this.vertexBuffer.unlock();
         }
+
+        // the queued particles have been re-placed by the step above, one step is all it takes
+        this._rateChanged = false;
 
         if (!this.loop) {
             if (this.simTimeTotal > this.endTime) {

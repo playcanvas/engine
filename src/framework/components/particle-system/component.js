@@ -1887,11 +1887,14 @@ class ParticleSystemComponent extends Component {
         this[`_${name}`] = arg;
         const emitter = this.emitter;
         if (emitter) {
-            // a non-looping emitter finishes after a duration that scales with the rate, so shift
-            // its finish time by the difference instead of restarting the countdown
-            const prevDuration = emitter.spawnDuration;
             emitter[name] = arg;
-            emitter.endTime += emitter.spawnDuration - prevDuration;
+
+            // a non-looping emitter finishes after a duration that scales with the rate
+            emitter.rescheduleSpawn();
+
+            // let the next simulation step re-place the particles already queued to be born
+            emitter._rateChanged = true;
+
             emitter.resetMaterial();
         }
     }

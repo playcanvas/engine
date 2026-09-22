@@ -22,24 +22,36 @@ vec3 tex1Dlod_lerp(TEXTURE_ACCEPT_HIGHP(tex), vec2 tc, out vec3 w) {
     return mix(a.xyz, b.xyz, c);
 }
 
-// The life a particle carries on with - negative while it waits its turn to be born. A particle at
-// the end of its life waits for its own slot in the emission cycle, so that a rate which has just
-// changed re-spreads the particles over the new period instead of keeping the spacing of the old
-// one, and a particle queued for longer than the new period allows is released at its slot, so that
-// raising the rate takes effect right away rather than after the whole of the old period.
+// The life a particle carries on with - negative while it waits its turn to be born.
+//
+// At the end of its life a particle waits for its own slot in the emission cycle, so that a rate
+// which has just changed re-spreads the particles over the new period rather than keeping the
+// spacing of the old one. That applies only when rate2 matches rate: with a randomized rate every
+// particle has a period of its own, so the phases decorrelate by themselves, and forcing an even
+// grid would undo the randomization that was asked for.
+//
+// On the step a rate change lands, a particle already queued for longer than the new rate allows
+// is released at its slot, so that raising the rate takes effect at once instead of after the whole
+// of the old period. The emitter-wide period is used there, being the longest any particle can
+// wait, so a particle that is legitimately still waiting is never released early.
 float respawnLife(float particleId, float particleRate, float life) {
-    float period = max(lifetime, numParticles * particleRate);
-    float wait = period - lifetime;
-
-    float slotLife = -mod(particleId * period / numParticles - simTime, period);
-
-    // re-spreading the births only means anything with at least one birth interval of slack; at
-    // capacity there is none and the particles are alive continuously whatever their phase, so
-    // keep the wait exactly as it was
     if (life >= lifetime) {
-        return wait * numParticles < period ? life - period : slotLife;
+        float period = max(lifetime, numParticles * particleRate);
+
+        // an emitter at capacity has no slack to spread over, and its particles are alive
+        // continuously whatever their phase, so keep the wait exactly as it was
+        if (rateDiv != 0.0 || (period - lifetime) * numParticles < period) return life - period;
+
+        return -mod(particleId * period / numParticles - emissionTime, period);
     }
-    if (life < -wait) return max(life, slotLife);
+
+    if (rateChanged > 0.0) {
+        float maxPeriod = max(lifetime, numParticles * (rate + max(rateDiv, 0.0)));
+        if (life < lifetime - maxPeriod) {
+            return max(life, -mod(particleId * maxPeriod / numParticles - emissionTime, maxPeriod));
+        }
+    }
+
     return life;
 }
 

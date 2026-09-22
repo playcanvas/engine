@@ -31,28 +31,45 @@ fn tex1Dlod_lerp(tex: texture_2d<f32>, textureSize: vec2u, tc: vec2f) -> TexLerp
     return TexLerpUnpackResult(mix(a.xyz, b.xyz, c), w_out);
 }
 
-// The life a particle carries on with - negative while it waits its turn to be born. A particle at
-// the end of its life waits for its own slot in the emission cycle, so that a rate which has just
-// changed re-spreads the particles over the new period instead of keeping the spacing of the old
-// one, and a particle queued for longer than the new period allows is released at its slot, so that
-// raising the rate takes effect right away rather than after the whole of the old period.
+// the WGSL remainder operator takes the sign of the dividend, GLSL mod() is floored
+fn flooredMod(x: f32, y: f32) -> f32 {
+    return x - y * floor(x / y);
+}
+
+// The life a particle carries on with - negative while it waits its turn to be born.
+//
+// At the end of its life a particle waits for its own slot in the emission cycle, so that a rate
+// which has just changed re-spreads the particles over the new period rather than keeping the
+// spacing of the old one. That applies only when rate2 matches rate: with a randomized rate every
+// particle has a period of its own, so the phases decorrelate by themselves, and forcing an even
+// grid would undo the randomization that was asked for.
+//
+// On the step a rate change lands, a particle already queued for longer than the new rate allows
+// is released at its slot, so that raising the rate takes effect at once instead of after the whole
+// of the old period. The emitter-wide period is used there, being the longest any particle can
+// wait, so a particle that is legitimately still waiting is never released early.
 fn respawnLife(particleId: f32, particleRate: f32, life: f32) -> f32 {
-    let period = max(uniform.lifetime, uniform.numParticles * particleRate);
-    let wait = period - uniform.lifetime;
-
-    // floored modulo - the WGSL remainder operator takes the sign of the dividend
-    let slot = particleId * period / uniform.numParticles - uniform.simTime;
-    let slotLife = -(slot - period * floor(slot / period));
-
-    // re-spreading the births only means anything with at least one birth interval of slack; at
-    // capacity there is none and the particles are alive continuously whatever their phase, so
-    // keep the wait exactly as it was
     if (life >= uniform.lifetime) {
-        return select(slotLife, life - period, wait * uniform.numParticles < period);
+        let period = max(uniform.lifetime, uniform.numParticles * particleRate);
+
+        // an emitter at capacity has no slack to spread over, and its particles are alive
+        // continuously whatever their phase, so keep the wait exactly as it was
+        if (uniform.rateDiv != 0.0 || (period - uniform.lifetime) * uniform.numParticles < period) {
+            return life - period;
+        }
+
+        let slot = particleId * period / uniform.numParticles - uniform.emissionTime;
+        return -flooredMod(slot, period);
     }
-    if (life < -wait) {
-        return max(life, slotLife);
+
+    if (uniform.rateChanged > 0.0) {
+        let maxPeriod = max(uniform.lifetime, uniform.numParticles * (uniform.rate + max(uniform.rateDiv, 0.0)));
+        if (life < uniform.lifetime - maxPeriod) {
+            let slot = particleId * maxPeriod / uniform.numParticles - uniform.emissionTime;
+            return max(life, -flooredMod(slot, maxPeriod));
+        }
     }
+
     return life;
 }
 

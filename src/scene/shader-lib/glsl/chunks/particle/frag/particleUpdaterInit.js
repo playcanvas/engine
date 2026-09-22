@@ -30,7 +30,8 @@ uniform float seed;
 uniform float startAngle;
 uniform float startAngle2;
 uniform float initialVelocity;
-uniform float simTime;
+uniform float emissionTime;
+uniform float rateChanged;
 
 uniform float graphSampleSize;
 uniform float graphNumSamples;
