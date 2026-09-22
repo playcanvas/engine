@@ -1,4 +1,5 @@
 import { Color } from '../../core/math/color.js';
+import { Asset } from '../../framework/asset/asset.js';
 import { Entity } from '../../framework/entity.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -9,10 +10,11 @@ import { GraphNode } from '../../scene/graph-node.js';
 import { TextureRenderer } from '../renderers/texture-renderer.js';
 import { WireRenderer } from '../renderers/wire-renderer.js';
 
+import { ASSET_SORTS, assetRows, buildAssetModel, collectAssets } from './asset-view.js';
 import { buildPassModel, captureFrameGraph, passRows } from './frame-graph-view.js';
 import { HierarchyView } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
-import { formatName, passDisplayName } from './model.js';
+import { formatBytes, formatName, passDisplayName } from './model.js';
 import { buildNodeModel } from './node-model.js';
 import { AmmoDebugDraw, DEBUG_DRAW } from './physics-debug.js';
 import { bodyRows, drawCollisionShape, drawJoint, jointRows, physicsStats } from './physics-view.js';
@@ -20,7 +22,7 @@ import { PropertyView } from './property-view.js';
 import { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows } from './render-target-view.js';
 import { buildShaderModel, collectShaders, shaderRows, stateName } from './shader-view.js';
 import { styles } from './styles.js';
-import { buildTextureModel, collectTextures, formatBytes, textureRows } from './texture-view.js';
+import { buildTextureModel, collectTextures, textureRows } from './texture-view.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
 /** @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js' */
@@ -137,6 +139,8 @@ function isTextTarget(e) {
  *   Texture values elsewhere, such as the maps of a material, link here.
  * - Shaders: every shader on the device with its language, state and vertex attributes. The
  *   compiled variants listed on a material link here.
+ * - Assets: every asset in the registry with its file, load state and the components using it.
+ *   Asset references on a component link here, and a texture names the asset it came from.
  * - Physics: the rigid bodies and joints of the scene, with the physics world drawn over the scene
  *   through the engine's debug drawer when Ammo is loaded.
  *
@@ -316,7 +320,7 @@ class Inspector {
     _nextPropertyRefresh = 0;
 
     /**
-     * @type {'hierarchy'|'passes'|'targets'|'textures'|'shaders'|'physics'}
+     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'shaders'|'physics'}
      * @private
      */
     _tab = 'hierarchy';
@@ -413,6 +417,27 @@ class Inspector {
      * @private
      */
     _shaderList;
+
+    /**
+     * @type {ListView}
+     * @private
+     */
+    _assetList;
+
+    /**
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _assetSort;
+
+    /**
+     * Model builder for the property view when an asset is selected.
+     *
+     * @param {Asset} asset - The asset.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _assetModel = asset => buildAssetModel(asset, this._context());
 
     /**
      * @type {HTMLInputElement}
@@ -911,8 +936,9 @@ class Inspector {
         const tabs = el('div', 'pci-tabs');
         this._tabButtons = {};
         const tabList = [
-            ['hierarchy', 'Hierarchy'], ['passes', 'Frame graph'], ['targets', 'Render targets'],
-            ['textures', 'Textures'], ['shaders', 'Shaders'], ['physics', 'Physics']
+            ['hierarchy', 'Hierarchy'], ['assets', 'Assets'], ['passes', 'Frame graph'],
+            ['targets', 'Render targets'], ['textures', 'Textures'], ['shaders', 'Shaders'],
+            ['physics', 'Physics']
         ];
         for (const [id, label] of tabList) {
             const tab = el('button', 'pci-tab', label);
@@ -965,12 +991,19 @@ class Inspector {
         const textureList = el('div', 'pci-list');
         texturePanel.append(textureBar, this._textureNote, textureList);
 
+        // assets: the registry, in a chosen order
+        const assetPanel = el('div', 'pci-listpanel');
+        const assetBar = el('div', 'pci-subbar');
+        this._assetSort = this._makeSelect(assetBar, 'Sort by', ASSET_SORTS);
+        const assetList = el('div', 'pci-list');
+        assetPanel.append(assetBar, assetList);
+
         // shaders: a plain list
         const shaderPanel = el('div', 'pci-listpanel');
         const shaderList = el('div', 'pci-list');
         shaderPanel.append(shaderList);
 
-        for (const input of [this._previewToggle, this._previewAttachment, this._previewChannels, this._texturePreviewToggle, this._textureChannels]) {
+        for (const input of [this._previewToggle, this._previewAttachment, this._previewChannels, this._texturePreviewToggle, this._textureChannels, this._assetSort]) {
             input.addEventListener('change', () => this._saveSettings());
         }
 
@@ -1019,8 +1052,16 @@ class Inspector {
         }
         this._rangeInput.addEventListener('input', () => this._applyPhysicsSettings());
 
-        this._panels = { hierarchy: tree, passes: passPanel, targets: targetPanel, textures: texturePanel, shaders: shaderPanel, physics: physicsPanel };
-        this._hierarchyEl.append(tabs, filter, tree, passPanel, targetPanel, texturePanel, shaderPanel, physicsPanel);
+        this._panels = {
+            hierarchy: tree,
+            assets: assetPanel,
+            passes: passPanel,
+            targets: targetPanel,
+            textures: texturePanel,
+            shaders: shaderPanel,
+            physics: physicsPanel
+        };
+        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, shaderPanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1104,6 +1145,10 @@ class Inspector {
             if (this._tab === 'shaders') this._properties.setSubject(shader, buildShaderModel, key);
             this._updateStatus();
         }, target => this._selectAny(target));
+        this._assetList = new ListView(assetList, (asset, key) => {
+            if (this._tab === 'assets') this._properties.setSubject(asset, this._assetModel, key);
+            this._updateStatus();
+        }, target => this._selectAny(target));
         this._bodyList = new ListView(bodyList, (entity) => {
             if (this._tab === 'physics') this._properties.setSubject(entity, buildNodeModel);
             this._updateStatus();
@@ -1179,6 +1224,7 @@ class Inspector {
             if (typeof stored.targetPreview.enabled === 'boolean') this._previewToggle.checked = stored.targetPreview.enabled;
             if (typeof stored.targetPreview.channels === 'string') this._previewChannels.value = stored.targetPreview.channels;
         }
+        if (typeof stored.assetSort === 'string') this._assetSort.value = stored.assetSort;
         if (stored.texturePreview && typeof stored.texturePreview === 'object') {
             if (typeof stored.texturePreview.enabled === 'boolean') this._texturePreviewToggle.checked = stored.texturePreview.enabled;
             if (typeof stored.texturePreview.channels === 'string') this._textureChannels.value = stored.texturePreview.channels;
@@ -1209,7 +1255,8 @@ class Inspector {
                 width: this._width,
                 gpuTimings: this._gpuToggle.checked,
                 targetPreview: { enabled: this._previewToggle.checked, channels: this._previewChannels.value },
-                texturePreview: { enabled: this._texturePreviewToggle.checked, channels: this._textureChannels.value }
+                texturePreview: { enabled: this._texturePreviewToggle.checked, channels: this._textureChannels.value },
+                assetSort: this._assetSort.value
             }));
         } catch (e) {
             // storage unavailable or full: settings simply do not persist
@@ -1468,7 +1515,7 @@ class Inspector {
     /**
      * Switches the list tab and points the property view at that tab's selection.
      *
-     * @param {'hierarchy'|'passes'|'targets'|'textures'|'shaders'|'physics'} tab - The tab.
+     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'shaders'|'physics'} tab - The tab.
      * @private
      */
     _setTab(tab) {
@@ -1519,6 +1566,12 @@ class Inspector {
             if (texture !== this._properties.subject) {
                 this._properties.setSubject(texture, this._textureModel, this._textureList.selectedKey);
             }
+        } else if (this._tab === 'assets') {
+            this._assetList.setRows(assetRows(this._app.assets, this._assetSort.value));
+            const asset = this._assetList.selected;
+            if (asset !== this._properties.subject) {
+                this._properties.setSubject(asset, this._assetModel, this._assetList.selectedKey);
+            }
         } else if (this._tab === 'shaders') {
             this._shaderList.setRows(shaderRows(device));
             const shader = this._shaderList.selected;
@@ -1557,6 +1610,7 @@ class Inspector {
         this._targetList.filter = value;
         this._textureList.filter = value;
         this._shaderList.filter = value;
+        this._assetList.filter = value;
         this._bodyList.filter = value;
         this._refreshLists(false);
     }
@@ -1584,6 +1638,9 @@ class Inspector {
         } else if (target instanceof Shader) {
             this._setTab('shaders');
             this._shaderList.selectItem(target);
+        } else if (target instanceof Asset) {
+            this._setTab('assets');
+            this._assetList.selectItem(target);
         }
     }
 
@@ -1593,7 +1650,7 @@ class Inspector {
      * @private
      */
     _context() {
-        return { device: this._app.graphicsDevice, frame: this._frame };
+        return { app: this._app, device: this._app.graphicsDevice, frame: this._frame };
     }
 
     /**
@@ -1723,6 +1780,14 @@ class Inspector {
                 const bytes = textures.reduce((sum, texture) => sum + texture.gpuSize, 0);
                 counts = `${textures.length} textures · ${formatBytes(bytes)}`;
                 selected = this._textureList.selected?.name ?? '';
+                break;
+            }
+            case 'assets': {
+                const assets = collectAssets(this._app.assets);
+                const loaded = assets.filter(asset => asset.loaded).length;
+                const bytes = assets.reduce((sum, asset) => sum + (asset.file?.size ?? 0), 0);
+                counts = `${assets.length} assets · ${loaded} loaded${bytes ? ` · ${formatBytes(bytes)}` : ''}`;
+                selected = this._assetList.selected?.name ?? '';
                 break;
             }
             case 'shaders': {

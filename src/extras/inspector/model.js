@@ -81,6 +81,17 @@ function reflectRows(section, obj, stopPrototypes, skip) {
 }
 
 /**
+ * @param {number} bytes - A byte count.
+ * @returns {string} The count in the largest unit that keeps it above one, with two decimals.
+ */
+function formatBytes(bytes) {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+/**
  * @param {number|undefined} format - A PIXELFORMAT_* constant.
  * @returns {string} Its name, or the number when unknown.
  */
@@ -128,4 +139,4 @@ function renderTargetSummary(rt, device) {
         `${rt.samples > 1 ? ` ×${rt.samples}` : ''}${rt.mipLevel > 0 ? ` mip ${rt.mipLevel}` : ''}`;
 }
 
-export { attachmentsText, formatName, makeSection, passDisplayName, push, read, reflectRows, renderTargetSummary };
+export { attachmentsText, formatBytes, formatName, makeSection, passDisplayName, push, read, reflectRows, renderTargetSummary };

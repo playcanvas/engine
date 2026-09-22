@@ -5,6 +5,7 @@ import { Script } from '../../framework/script/script.js';
 import { Material } from '../../scene/materials/material.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 
+import { pushAssetRows } from './asset-view.js';
 import { describeValue } from './describe.js';
 import { makeSection, push, read, reflectRows } from './model.js';
 
@@ -79,7 +80,9 @@ function transformSection(node) {
 function componentSection(name, component) {
     const section = makeSection(`c:${name}`, name);
     push(section, 'enabled', read(component, 'enabled'));
-    reflectRows(section, component, [Component.prototype], SKIP_COMPONENT);
+    // asset references first, with their ids resolved to the assets they name
+    const assetProperties = pushAssetRows(section, component);
+    reflectRows(section, component, [Component.prototype], [...SKIP_COMPONENT, ...assetProperties]);
     return section;
 }
 

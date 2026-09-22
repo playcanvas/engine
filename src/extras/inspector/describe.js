@@ -31,8 +31,8 @@ import { Sprite } from '../../scene/sprite.js';
  * @property {string} text - The display text.
  * @property {string} [cls] - A class suffix selecting the color: 'num', 'bool', 'str', 'null',
  * 'obj', 'ref' or 'err'.
- * @property {GraphNode|Texture|Shader} [target] - An object the value refers to. Rendered as a
- * link that selects it: a node in the hierarchy, a texture or shader on its tab.
+ * @property {GraphNode|Texture|Shader|Asset} [target] - An object the value refers to. Rendered
+ * as a link that selects it: a node in the hierarchy, a texture, shader or asset on its tab.
  * @property {string} [swatch] - A CSS color, rendered as a chip in front of the text.
  * @property {string} [code] - A block of text, such as shader source, shown under the row when it
  * is expanded. The text is its summary, and the row gets a copy button.
@@ -173,7 +173,11 @@ function describeValue(value, depth = 0) {
 
     // resources
     if (value instanceof Asset) {
-        return { text: `Asset #${value.id} "${value.name}" (${value.type}${value.loaded ? ', loaded' : ''})`, cls: 'obj' };
+        return {
+            text: `Asset #${value.id} "${value.name}" (${value.type}${value.loaded ? ', loaded' : ''})`,
+            cls: 'obj',
+            target: value
+        };
     }
     if (value instanceof Texture) {
         const shape = value.cubemap ? ' cubemap' : (value.volume ? ` ×${value.depth}` : (value.array ? ` [${value.arrayLength}]` : ''));

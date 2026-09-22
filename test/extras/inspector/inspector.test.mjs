@@ -3,14 +3,18 @@ import { expect } from 'chai';
 import { EventHandler } from '../../../src/core/event-handler.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
+import { assetRows, assetUsers, buildAssetModel, collectAssets, describeAssetValue, resourceAssets } from '../../../src/extras/inspector/asset-view.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { captureFrameGraph } from '../../../src/extras/inspector/frame-graph-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
+import { formatBytes } from '../../../src/extras/inspector/model.js';
 import { buildNodeModel } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
 import { formatChannels, previewAttachments, previewSupport } from '../../../src/extras/inspector/render-target-view.js';
 import { buildShaderModel, formatBindGroup, formatUniformBuffer, shaderRows } from '../../../src/extras/inspector/shader-view.js';
-import { buildTextureModel, collectTextures, formatBytes, textureRows } from '../../../src/extras/inspector/texture-view.js';
+import { buildTextureModel, collectTextures, textureRows } from '../../../src/extras/inspector/texture-view.js';
+import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
+import { Asset } from '../../../src/framework/asset/asset.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat, BindUniformBufferFormat } from '../../../src/platform/graphics/bind-group-format.js';
 import {
@@ -43,6 +47,7 @@ function createApp() {
     app.stats = { frame: {} };
     app.timeScale = 1;
     app.root = new GraphNode('root');
+    app.assets = new AssetRegistry(null);
     // entities register themselves by guid
     app._entityIndex = {};
     return app;
@@ -392,6 +397,40 @@ describe('Inspector', function () {
         texture.destroy();
     });
 
+    it('resolves a component asset id to a linked asset and opens it on the assets tab', function () {
+        const inspector = /** @type {any} */ (new Inspector(app));
+        const texture = new Asset('bricks', 'texture', { url: 'bricks.png', size: 2048 });
+        const material = new Asset('wall', 'material', null);
+        app.assets.add(texture);
+        app.assets.add(material);
+
+        const entity = new Entity('wall', app);
+        entity.c.render = /** @type {any} */ ({
+            enabled: true,
+            system: { app },
+            asset: texture.id,
+            materialAssets: [material.id, 999]
+        });
+
+        const section = buildNodeModel(entity).find(s => s.key === 'c:render');
+        const row = label => section.rows.find(r => r.label === label);
+        expect(row('asset').value.target).to.equal(texture);
+        expect(row('asset').value.text).to.match(/^Asset #-?\d+ "bricks" \(texture\)$/);
+        // arrays expand entry by entry, and an id the registry does not know says so
+        expect(row('materialAssets').value.text).to.equal('Array(2) of asset');
+        expect(section.rows.find(r => r.key === 'materialAssets[0]').value.target).to.equal(material);
+        expect(section.rows.find(r => r.key === 'materialAssets[1]').value.text).to.match(/not in the registry/);
+
+        inspector._selectAny(texture);
+        expect(inspector._tab).to.equal('assets');
+        expect(inspector._assetList.selected).to.equal(texture);
+        expect(inspector._properties.subject).to.equal(texture);
+        const names = [...panel(inspector).querySelectorAll('.pci-lrow .pci-cell-name')].map(cell => cell.textContent);
+        // the default order is by type
+        expect(names).to.deep.equal(['wall', 'bricks']);
+        inspector.destroy();
+    });
+
     it('lists the device shaders and selects a linked shader on the shaders tab', function () {
         const inspector = /** @type {any} */ (new Inspector(app));
         const device = app.graphicsDevice;
@@ -569,6 +608,104 @@ describe('Inspector render target preview', function () {
         expect(formatChannels(PIXELFORMAT_111110F)).to.equal('');
         expect(formatChannels(PIXELFORMAT_DXT1)).to.equal('');
         expect(formatChannels(-1)).to.equal('');
+    });
+});
+
+describe('Inspector asset view', function () {
+    let registry;
+    let big;
+    let small;
+    let unloaded;
+
+    beforeEach(function () {
+        jsdomSetup();
+        registry = new AssetRegistry(null);
+        big = new Asset('sky', 'cubemap', { url: 'sky.dds', size: 4096, hash: 'abc' });
+        small = new Asset('bricks', 'texture', { url: 'bricks.png', size: 1024 });
+        unloaded = new Asset('clip', 'audio', { url: 'clip.mp3' });
+        for (const asset of [small, big, unloaded]) registry.add(asset);
+        big.loaded = true;
+        small.loaded = true;
+    });
+
+    afterEach(jsdomTeardown);
+
+    it('sorts the registry and tags each row with its type and load state', function () {
+        expect(collectAssets(registry).map(a => a.type)).to.deep.equal(['audio', 'cubemap', 'texture']);
+        expect(collectAssets(registry, 'size').map(a => a.name)).to.deep.equal(['sky', 'bricks', 'clip']);
+        expect(collectAssets(registry, 'name').map(a => a.name)).to.deep.equal(['bricks', 'clip', 'sky']);
+        expect(collectAssets(registry, 'type').map(a => a.type)).to.deep.equal(['audio', 'cubemap', 'texture']);
+        expect(collectAssets(registry, 'id').map(a => a.id)).to.deep.equal([small, big, unloaded].map(a => a.id).sort((x, y) => x - y));
+        expect(collectAssets(null)).to.deep.equal([]);
+
+        // an asset built in memory has nothing to download, unlike one whose descriptor omits the size
+        const inMemory = new Asset('atlas frame', 'sprite', null);
+        registry.add(inMemory);
+        expect(assetRows(registry, 'name')[0].cells.map(c => c.text)).to.include('no file');
+        registry.remove(inMemory);
+
+        const rows = assetRows(registry, 'size');
+        expect(rows[0].cells.map(c => c.text)).to.deep.equal(['sky', 'cubemap', '4.0 KB', `#${big.id}`]);
+        expect(rows[0].dim).to.be.false;
+        // a file without a size in its descriptor is not the same as no file at all
+        expect(rows[2].cells.map(c => c.text)).to.deep.equal(['clip', 'audio', 'not loaded', 'size unknown', `#${unloaded.id}`]);
+        expect(rows[2].dim).to.be.true;
+        expect(rows[0].title).to.match(/sky\ncubemap, loaded, 4.0 KB\nsky.dds/);
+    });
+
+    it('describes asset references, resolving ids and arrays through the registry', function () {
+        expect(describeAssetValue(small.id, registry).target).to.equal(small);
+        expect(describeAssetValue(small, registry).target).to.equal(small);
+        expect(describeAssetValue(4242, registry).text).to.match(/not in the registry/);
+        expect(describeAssetValue(null, registry).text).to.equal('null');
+        const array = describeAssetValue([big.id, small], registry);
+        expect(array.text).to.equal('Array(2) of asset');
+        expect(array.items.map(item => item.target)).to.deep.equal([big, small]);
+        expect(describeAssetValue([], registry).text).to.equal('[]');
+    });
+
+    it('finds the components using an asset by walking the scene', function () {
+        const app = /** @type {any} */ ({ root: null });
+        const child = { name: 'child', c: { sprite: { spriteAsset: small.id } }, children: [] };
+        const other = { name: 'other', c: { render: { asset: 77, materialAssets: [big.id] } }, children: [] };
+        app.root = { name: 'root', c: {}, children: [child, other] };
+
+        const users = assetUsers(app, small);
+        expect(users).to.have.lengthOf(1);
+        expect(users[0].entity).to.equal(child);
+        expect(users[0].name).to.equal('sprite');
+        expect(users[0].property).to.equal('spriteAsset');
+        // an array reference counts, and an unused asset has no users
+        expect(assetUsers(app, big).map(u => u.property)).to.deep.equal(['materialAssets']);
+        expect(assetUsers(app, unloaded)).to.deep.equal([]);
+    });
+
+    it('shows where an asset came from, its resources and its users', function () {
+        const app = /** @type {any} */ ({ root: { name: 'root', c: { sprite: { spriteAsset: big.id } }, children: [] } });
+        const [general, resources, users, props] = buildAssetModel(big, { app });
+        const byLabel = (section, label) => section.rows.find(r => r.label === label).value;
+
+        expect(byLabel(general, 'type').text).to.equal('cubemap');
+        expect(byLabel(general, 'state').text).to.equal('loaded');
+        expect(byLabel(general, 'url').text).to.equal('"sky.dds"');
+        expect(byLabel(general, 'file size').text).to.equal('4.0 KB');
+        expect(byLabel(general, 'hash').text).to.equal('"abc"');
+        expect(byLabel(users, 'components').text).to.equal('1 component');
+        expect(byLabel(users, 'components').items[0].label).to.equal('sprite.spriteAsset');
+        expect(props.rows.map(r => r.label)).to.not.include.members(['id', 'name', 'type', 'file', 'registry']);
+
+        // an asset that never loaded says so instead of showing an empty resource
+        expect(byLabel(buildAssetModel(unloaded, { app })[1], 'resource').text).to.match(/not loaded/);
+        expect(byLabel(resources, 'resource').text).to.equal('undefined');
+    });
+
+    it('maps loaded resources back to the asset they came from', function () {
+        const resource = { name: 'sky texture' };
+        big._resources = [resource];
+        const map = resourceAssets(registry);
+        expect(map.get(resource)).to.equal(big);
+        expect(map.size).to.equal(1);
+        expect(resourceAssets(null).size).to.equal(0);
     });
 });
 

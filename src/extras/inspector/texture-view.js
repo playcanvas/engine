@@ -5,9 +5,11 @@ import {
     FUNC_ALWAYS, FUNC_EQUAL, FUNC_GREATER, FUNC_GREATEREQUAL, FUNC_LESS, FUNC_LESSEQUAL, FUNC_NEVER, FUNC_NOTEQUAL
 } from '../../platform/graphics/constants.js';
 
+import { resourceAssets } from './asset-view.js';
 import { describeValue } from './describe.js';
-import { formatName, makeSection, push, read, reflectRows } from './model.js';
+import { formatBytes, formatName, makeSection, push, read, reflectRows } from './model.js';
 
+/** @import { AppBase } from '../../framework/app-base.js' */
 /** @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js' */
 /** @import { RenderTarget } from '../../platform/graphics/render-target.js' */
 /** @import { Texture } from '../../platform/graphics/texture.js' */
@@ -60,17 +62,6 @@ function keyOf(texture) {
         ids.set(texture, id);
     }
     return `tex${id}`;
-}
-
-/**
- * @param {number} bytes - A byte count.
- * @returns {string} The count in the largest unit that keeps it above one, with two decimals.
- */
-function formatBytes(bytes) {
-    if (bytes < 1024) return `${bytes} B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
 }
 
 /**
@@ -142,7 +133,8 @@ function textureRows(device) {
  * to (linked), and every other public property.
  *
  * @param {Texture} texture - The texture.
- * @param {{ device: GraphicsDevice }} ctx - The device.
+ * @param {{ device: GraphicsDevice, app?: AppBase }} ctx - The device, and the app to find the
+ * asset the texture was loaded from.
  * @returns {PropertySection[]} The sections.
  */
 function buildTextureModel(texture, ctx) {
@@ -158,6 +150,9 @@ function buildTextureModel(texture, ctx) {
     if (texture.cubemap) push(general, 'cubemap', describeValue(true));
     if (texture.volume) push(general, 'volume depth', read(texture, 'depth'));
     if (texture.array) push(general, 'array length', read(texture, 'arrayLength'));
+
+    const asset = resourceAssets(ctx.app?.assets ?? null).get(texture) ?? null;
+    if (asset) push(general, 'from asset', describeValue(asset));
 
     const owners = attachmentTargets(ctx.device).get(texture) ?? [];
     push(general, 'attached to', {
@@ -185,4 +180,4 @@ function buildTextureModel(texture, ctx) {
     return sections;
 }
 
-export { buildTextureModel, collectTextures, formatBytes, textureRows };
+export { buildTextureModel, collectTextures, textureRows };
