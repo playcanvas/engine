@@ -50,37 +50,6 @@ const _indirectEntryByteSize = 5 * 4;
 // size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
 const _indirectDispatchEntryByteSize = 3 * 4;
 
-/**
- * Optional WebGPU features the engine can make use of. Those the adapter supports are requested
- * when the device is created, and the matching device capabilities are derived from the features
- * the created device has.
- *
- * @type {GPUFeatureName[]}
- */
-const _optionalFeatures = [
-    'float32-filterable',
-    'float32-blendable',
-    'texture-compression-bc',
-    'texture-compression-bc-sliced-3d',
-    'texture-compression-etc2',
-    'texture-compression-astc',
-    'texture-compression-astc-sliced-3d',
-    'timestamp-query',
-    'depth-clip-control',
-    'depth32float-stencil8',
-    'indirect-first-instance',
-    'shader-f16',
-    'bgra8unorm-storage',
-    'rg11b10ufloat-renderable',
-    'clip-distances',
-    'dual-source-blending',
-    'texture-formats-tier1',
-    'texture-formats-tier2',
-    'primitive-index',
-    'subgroups',
-    'subgroup-size-control'
-];
-
 // WebGPU color formats a swapchain or WebXR projection layer can present, mapped to the matching
 // engine PIXELFORMAT_* constant. Used to align device.backBufferFormat with the color format the
 // WebXR runtime actually renders into while immersive (see WebgpuGraphicsDevice#setXrBackBufferFormat).
@@ -587,8 +556,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const bare = this.initOptions.featureLevel === 'bare';
 
         // request the optional features the adapter supports (none in bare mode, to simulate the
-        // most constrained device)
-        const requiredFeatures = bare ? [] : _optionalFeatures.filter(feature => gpuAdapter.features.has(feature));
+        // most constrained device). The capabilities are set again from the created device.
+        const requiredFeatures = bare ? [] : this._applyFeatures(gpuAdapter.features);
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
@@ -630,25 +599,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Initializes this graphics device on an already created WebGPU device: derives the
-     * capabilities from the features the device was created with, configures the canvas and
-     * allocates the internal resources. Called by {@link WebgpuGraphicsDevice#createDevice}, and
-     * usable by a host that acquires the adapter and device itself, such as a headless test
-     * harness, in place of {@link WebgpuGraphicsDevice#initWebGpu}.
+     * Sets the capability flags from a set of WebGPU features and returns the names of the optional
+     * features the engine uses that the set contains. Called with the adapter's features to build
+     * the device request, and with the created device's features to derive the final capabilities.
      *
-     * @param {GPUAdapter|null} gpuAdapter - The adapter the device was created from, used for its
-     * info (vendor, architecture, subgroup sizes).
-     * @param {GPUDevice} wgpu - The WebGPU device.
-     * @returns {this} The initialized graphics device.
+     * @param {GPUSupportedFeatures} features - The features to derive the capabilities from.
+     * @returns {string[]} The optional features the engine uses that are present in the set.
      * @private
      */
-    initFromGpuDevice(gpuAdapter, wgpu) {
-
-        this.gpuAdapter = gpuAdapter;
-        this.wgpu = wgpu;
-
-        // capabilities derived from the features the device was created with
-        const has = feature => wgpu.features.has(feature);
+    _applyFeatures(features) {
+        const supported = [];
+        const has = (feature) => {
+            const present = features.has(feature);
+            if (present) {
+                supported.push(feature);
+            }
+            return present;
+        };
         this.textureFloatFilterable = has('float32-filterable');
         this.textureFloatBlendable = has('float32-blendable');
         this.extCompressedTextureS3TC = has('texture-compression-bc');
@@ -671,6 +638,29 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsPrimitiveIndex = has('primitive-index');
         this.supportsSubgroups = has('subgroups');
         this.supportsSubgroupSizeControl = has('subgroup-size-control');
+        return supported;
+    }
+
+    /**
+     * Initializes this graphics device on an already created WebGPU device: derives the
+     * capabilities from the features the device was created with, configures the canvas and
+     * allocates the internal resources. Called by {@link WebgpuGraphicsDevice#createDevice}, and
+     * usable by a host that acquires the adapter and device itself, such as a headless test
+     * harness, in place of {@link WebgpuGraphicsDevice#initWebGpu}.
+     *
+     * @param {GPUAdapter|null} gpuAdapter - The adapter the device was created from, used for its
+     * info (vendor, architecture, subgroup sizes).
+     * @param {GPUDevice} wgpu - The WebGPU device.
+     * @returns {this} The initialized graphics device.
+     * @private
+     */
+    initFromGpuDevice(gpuAdapter, wgpu) {
+
+        this.gpuAdapter = gpuAdapter;
+        this.wgpu = wgpu;
+
+        // capabilities derived from the features the device was created with
+        const enabledFeatures = this._applyFeatures(wgpu.features);
         this.maxSubgroupSize = gpuAdapter?.info?.subgroupMaxSize ?? 0;
         this.minSubgroupSize = gpuAdapter?.info?.subgroupMinSize ?? 0;
 
@@ -680,7 +670,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             `WEBGPU${gpuAdapter?.info ?
                 ` (${gpuAdapter.info.vendor || '?'} / ${gpuAdapter.info.architecture || gpuAdapter.info.device || '?'})` :
                 ''
-            } features [${this.initOptions.featureLevel === 'bare' ? 'bare' : 'full'}]: ${_optionalFeatures.filter(has).join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
+            } features [${this.initOptions.featureLevel === 'bare' ? 'bare' : 'full'}]: ${enabledFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
         );
 
         // HTML-in-Canvas support (copyElementImageToTexture)
