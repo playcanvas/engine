@@ -204,6 +204,15 @@ class CollisionComponent extends Component {
     _builtWorldScale = null;
 
     /**
+     * The signs of the local scales of the entity and its ancestors when a mesh shape was last
+     * built, one entry per node - see getScaleSigns in the collision system.
+     *
+     * @type {number[]|null}
+     * @private
+     */
+    _builtScaleSigns = null;
+
+    /**
      * Create a new CollisionComponent.
      *
      * @param {CollisionComponentSystem} system - The ComponentSystem that created this Component.

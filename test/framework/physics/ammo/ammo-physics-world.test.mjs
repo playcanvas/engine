@@ -407,37 +407,59 @@ describe('AmmoPhysicsWorld', function () {
         }
 
         /**
+         * Casts a ray straight down through a point.
+         *
+         * @param {Vec3} point - The point the ray passes through.
+         * @returns {RaycastResult|null} The first hit, or null on a miss.
+         */
+        function hitAt(point) {
+            const from = new Vec3(point.x, 10, point.z);
+            const to = new Vec3(point.x, -10, point.z);
+            return app.systems.rigidbody.raycastFirst(from, to);
+        }
+
+        /**
          * Casts a ray straight down through a point and returns the hit height, or null on a miss.
          *
          * @param {Vec3} point - The point the ray passes through.
          * @returns {number|null} The hit height.
          */
         function topAt(point) {
-            const from = new Vec3(point.x, 10, point.z);
-            const to = new Vec3(point.x, -10, point.z);
-            const result = app.systems.rigidbody.raycastFirst(from, to);
-            return result ? result.point.y : null;
+            return hitAt(point)?.point.y ?? null;
         }
 
         /**
-         * Expects the collider of an entity to be the unit cube centered where the render
-         * transform of the entity places local point (1.5, 1.5, 1.5).
+         * Expects the collider of an entity to be the box its render transform makes of the unit
+         * cube centered on local point (1.5, 1.5, 1.5), for transforms that keep the top of that
+         * box flat.
          *
          * @param {GraphNode} node - The node whose world transform renders the cube.
          * @param {number} [tolerance] - The allowed height error.
          */
         function expectCubeWhereRendered(node, tolerance = 1e-3) {
-            const center = node.getWorldTransform().transformPoint(new Vec3(1.5, 1.5, 1.5));
-            expect(topAt(center)).to.be.closeTo(center.y + 0.5, tolerance);
+            const transform = node.getWorldTransform();
+            const center = transform.transformPoint(new Vec3(1.5, 1.5, 1.5));
+            const top = Math.max(
+                transform.transformPoint(new Vec3(1, 1, 1)).y,
+                transform.transformPoint(new Vec3(1, 2, 1)).y
+            );
+
+            // the top is hit from above, with a normal facing the ray whatever the winding
+            const hit = hitAt(center);
+            expect(hit?.point.y).to.be.closeTo(top, tolerance);
+            expect(hit.normal.y).to.be.closeTo(1, 1e-3);
 
             // and not at the unmirrored position, where a vertical ray can tell them apart
-            const unmirrored = node.getPosition().clone().add(new Vec3(1.5, 1.5, 1.5));
+            const size = transform.getScale().mulScalar(1.5);
+            const unmirrored = node.getPosition().clone().add(size);
             if (Math.hypot(unmirrored.x - center.x, unmirrored.z - center.z) > 1) {
                 expect(topAt(unmirrored)).to.equal(null);
             }
         }
 
-        [[-1, 1, 1], [1, -1, 1], [1, 1, -1], [-1, -1, -1]].forEach((scale) => {
+        [
+            [-1, 1, 1], [1, -1, 1], [1, 1, -1], [-1, -1, -1], [-2, 1, 0.5], [2, -0.5, -1.5]
+        ].forEach((scale) => {
             it(`mirrors a triangle mesh collider with a scale of (${scale})`, function () {
                 const e = createScaledMeshEntity(createOffsetCubeMesh(), scale);
                 expectCubeWhereRendered(e);
@@ -493,6 +515,49 @@ describe('AmmoPhysicsWorld', function () {
             step();
 
             expectCubeWhereRendered(e);
+        });
+
+        // a static body does not follow rotation changes, and these turn the world rotation of
+        // the entity by 180 degrees without changing its signed scale
+        [
+            ['the mirrored axis changes', [-1, 1, 1], [1, -1, 1]],
+            ['an even mirror is applied', [1, 1, 1], [-1, -1, 1]]
+        ].forEach(([name, from, to]) => {
+            it(`rebuilds a collider when ${name}`, function () {
+                const e = createScaledMeshEntity(createOffsetCubeMesh(), from);
+                expectCubeWhereRendered(e);
+
+                e.setLocalScale(to[0], to[1], to[2]);
+                step();
+
+                expectCubeWhereRendered(e);
+            });
+        });
+
+        it('rebuilds a collider when the mirrored axis of an ancestor changes', function () {
+            const parent = new Entity();
+            parent.setLocalScale(1, 1, -1);
+            app.root.addChild(parent);
+
+            const e = createScaledMeshEntity(createOffsetCubeMesh(), [1, 1, 1], { parent });
+            expectCubeWhereRendered(e);
+
+            parent.setLocalScale(1, -1, 1);
+            step();
+
+            expectCubeWhereRendered(e);
+        });
+
+        it('keeps an unmirrored collider when it moves under a deeper parent', function () {
+            const e = createScaledMeshEntity(createOffsetCubeMesh(), [1, 1, 1]);
+            const shape = e.collision.shape;
+
+            const parent = new Entity();
+            app.root.addChild(parent);
+            e.reparent(parent);
+            step();
+
+            expect(e.collision.shape).to.equal(shape);
         });
 
         it('mirrors the children of a mirrored compound', function () {

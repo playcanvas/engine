@@ -67,6 +67,59 @@ function getSignedScale(matrix, scale) {
     return scale;
 }
 
+/**
+ * Returns which components of a local scale are negative, as bits: 1 for X, 2 for Y, 4 for Z.
+ *
+ * @param {Vec3} scale - The local scale.
+ * @returns {number} The sign bits.
+ */
+function scaleSignBits(scale) {
+    return (scale.x < 0 ? 1 : 0) | (scale.y < 0 ? 2 : 0) | (scale.z < 0 ? 4 : 0);
+}
+
+/**
+ * Captures the signs of the local scales of a node and each of its ancestors. Flipping which
+ * axes are negative can turn the world rotation of a node by 180 degrees while leaving its
+ * signed scale alone - (-1, 1, 1) and (1, -1, 1) both read as (-1, 1, 1) - so a shape watches
+ * these too; a body that ignores rotation changes (a static one) would otherwise keep the old
+ * orientation.
+ *
+ * @param {GraphNode} node - The node.
+ * @returns {number[]} The sign bits of each node, starting with the node itself.
+ */
+function getScaleSigns(node) {
+    const signs = [];
+    for (let n = node; n; n = n.parent) {
+        signs.push(scaleSignBits(n.getLocalScale()));
+    }
+    return signs;
+}
+
+/**
+ * Returns whether the signs of the local scales of a node and its ancestors differ from a
+ * capture made by getScaleSigns. Nodes missing from either chain count as unmirrored, so moving
+ * a node under a parent of another depth is only a change when something on the way is
+ * mirrored. Allocation-free, as it runs every step.
+ *
+ * @param {GraphNode} node - The node.
+ * @param {number[]} signs - The capture.
+ * @returns {boolean} True if any sign changed.
+ */
+function scaleSignsChanged(node, signs) {
+    let i = 0;
+    for (let n = node; n; n = n.parent, i++) {
+        if ((i < signs.length ? signs[i] : 0) !== scaleSignBits(n.getLocalScale())) {
+            return true;
+        }
+    }
+    for (; i < signs.length; i++) {
+        if (signs[i] !== 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Note that `shape` is deliberately absent from this list - it is runtime
 // state created and owned by the type implementation, not component data
 const _properties = [
@@ -202,6 +255,7 @@ function destroyShape(system, component) {
         component._shape = null;
     }
     component._builtWorldScale = null;
+    component._builtScaleSigns = null;
 }
 
 function beforeRemove(system, entity, component) {
@@ -437,6 +491,7 @@ function createMeshShape(system, entity, component) {
         // record the scale the shape is built with and watch the entity for changes to it, so a
         // runtime rescale rebuilds the shape (see _updateMeshScales)
         component._builtWorldScale = scale;
+        component._builtScaleSigns = getScaleSigns(entity);
         if (world.supportsMeshScaling) {
             system._watchMeshScale(component);
         }
@@ -762,8 +817,10 @@ class CollisionComponentSystem extends ComponentSystem {
                 continue;
             }
 
-            const scale = getSignedScale(component.entity.getWorldTransform(), worldScale);
-            if (scaleChanged(scale, component._builtWorldScale)) {
+            const entity = component.entity;
+            const scale = getSignedScale(entity.getWorldTransform(), worldScale);
+            if (scaleChanged(scale, component._builtWorldScale) ||
+                scaleSignsChanged(entity, component._builtScaleSigns)) {
                 doRecreateMeshShape(this, component);
             }
         }
