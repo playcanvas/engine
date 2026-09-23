@@ -5,7 +5,7 @@ void getClearCoat() {
     ccSpecularity = material_clearCoat;
 
     #ifdef STD_CLEARCOAT_TEXTURE
-    ccSpecularity *= texture2DBias({STD_CLEARCOAT_TEXTURE_NAME}, {STD_CLEARCOAT_TEXTURE_UV}, textureBias).{STD_CLEARCOAT_TEXTURE_CHANNEL};
+    ccSpecularity *= texture2DBias({STD_CLEARCOAT_TEXTURE_NAME}, {STD_CLEARCOAT_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_CLEARCOAT_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_CLEARCOAT_VERTEX

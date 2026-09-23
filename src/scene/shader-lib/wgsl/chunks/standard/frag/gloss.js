@@ -11,7 +11,7 @@ fn getGlossiness() {
     #endif
 
     #ifdef STD_GLOSS_TEXTURE
-    dGlossiness = dGlossiness * textureSampleBias({STD_GLOSS_TEXTURE_NAME}, {STD_GLOSS_TEXTURE_NAME}Sampler, {STD_GLOSS_TEXTURE_UV}, uniform.textureBias).{STD_GLOSS_TEXTURE_CHANNEL};
+    dGlossiness = dGlossiness * textureSampleBias({STD_GLOSS_TEXTURE_NAME}, {STD_GLOSS_TEXTURE_NAME}Sampler, {STD_GLOSS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_GLOSS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_GLOSS_VERTEX

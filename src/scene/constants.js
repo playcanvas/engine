@@ -820,6 +820,15 @@ export const MASK_AFFECT_LIGHTMAPPED = 2;
 export const MASK_BAKE = 4;
 
 /**
+ * The light mask bits under which a light is applied at runtime. A light carrying none of them
+ * contributes only to lightmaps, reaches no mesh instance while rendering, and so takes no light
+ * slot in a shader. See {@link MASK_AFFECT_DYNAMIC} and {@link MASK_AFFECT_LIGHTMAPPED}.
+ *
+ * @ignore
+ */
+export const MASK_AFFECT_RUNTIME = MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED;
+
+/**
  * Render shaded materials using forward rendering.
  *
  * @category Graphics

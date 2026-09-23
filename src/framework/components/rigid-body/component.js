@@ -156,6 +156,9 @@ class RigidBodyComponent extends Component {
     _friction = 0.5;
 
     /** @private */
+    _gravityScale = 1;
+
+    /** @private */
     _group = BODYGROUP_STATIC;
 
     /** @private */
@@ -313,6 +316,45 @@ class RigidBodyComponent extends Component {
      */
     get friction() {
         return this._friction;
+    }
+
+    /**
+     * Sets the scale applied to the world gravity ({@link RigidBodyComponentSystem#gravity}) for
+     * this body. Only valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1, so
+     * the body falls under the world gravity. Set to 0 to make the body ignore gravity, or to a
+     * negative value to make it rise. To give a body its own gravity direction, set this to 0 and
+     * apply the force yourself each frame with {@link applyForce}.
+     *
+     * @type {number}
+     * @example
+     * // A balloon that drifts slowly upwards
+     * entity.rigidbody.gravityScale = -0.2;
+     * @example
+     * // A body that orbits a planet at the origin under its own gravity
+     * entity.rigidbody.gravityScale = 0;
+     * const force = new pc.Vec3();
+     * app.on('update', () => {
+     *     force.copy(entity.getPosition()).normalize().mulScalar(-entity.rigidbody.mass * 9.81);
+     *     entity.rigidbody.applyForce(force);
+     * });
+     */
+    set gravityScale(scale) {
+        if (this._gravityScale !== scale) {
+            this._gravityScale = scale;
+
+            if (this._body && this._type === BODYTYPE_DYNAMIC) {
+                this._body.setGravityScale(scale);
+            }
+        }
+    }
+
+    /**
+     * Gets the scale applied to the world gravity for this body.
+     *
+     * @type {number}
+     */
+    get gravityScale() {
+        return this._gravityScale;
     }
 
     /**

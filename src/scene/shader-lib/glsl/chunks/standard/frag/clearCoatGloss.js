@@ -5,7 +5,7 @@ void getClearCoatGlossiness() {
     ccGlossiness = material_clearCoatGloss;
 
     #ifdef STD_CLEARCOATGLOSS_TEXTURE
-    ccGlossiness *= texture2DBias({STD_CLEARCOATGLOSS_TEXTURE_NAME}, {STD_CLEARCOATGLOSS_TEXTURE_UV}, textureBias).{STD_CLEARCOATGLOSS_TEXTURE_CHANNEL};
+    ccGlossiness *= texture2DBias({STD_CLEARCOATGLOSS_TEXTURE_NAME}, {STD_CLEARCOATGLOSS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_CLEARCOATGLOSS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_CLEARCOATGLOSS_VERTEX

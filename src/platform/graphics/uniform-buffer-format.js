@@ -304,7 +304,12 @@ class UniformBufferFormat {
 
             uniform.scopeId = this.scope.resolve(uniform.name);
 
+            // an array is found by its scope name `name[0]` and by its declared name, which is
+            // what the shader processors look up
             this.map.set(uniform.name, uniform);
+            if (uniform.count) {
+                this.map.set(uniform.shortName, uniform);
+            }
         }
 
         // round up buffer size

@@ -221,6 +221,9 @@ class Shader {
 
         this.impl = graphicsDevice.createShaderImpl(this);
 
+        // add it to the device list of all shaders
+        graphicsDevice.shaders.push(this);
+
         Debug.trace(TRACEID_SHADER_ALLOC, `Alloc: ${this.label}, stack: ${DebugGraphics.toString()}`, {
             instance: this
         });
@@ -247,7 +250,9 @@ class Shader {
     destroy() {
         Debug.trace(TRACEID_SHADER_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
         this.device.onDestroyShader(this);
-        this.impl.destroy(this);
+
+        // a shader that failed to preprocess has no implementation
+        this.impl?.destroy(this);
     }
 
     /**

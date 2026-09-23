@@ -24,7 +24,13 @@ let id = 0;
 class DynamicBindGroup {
     bindGroup;
 
-    offsets = [];
+    /**
+     * The dynamic offset of the uniform buffer. A typed array, which the WebGPU device passes to
+     * setBindGroup without a per-call conversion.
+     *
+     * @type {Uint32Array}
+     */
+    offsets = new Uint32Array(1);
 }
 
 /**
@@ -48,12 +54,14 @@ class BindGroup {
     uniformBuffers;
 
     /**
-     * An array of offsets for each uniform buffer in the bind group. This is the offset in the
-     * buffer where the uniform buffer data starts.
+     * The offset of each uniform buffer of the format in the buffer where its data starts. A typed
+     * array of one entry per uniform buffer slot, which the WebGPU device passes to setBindGroup
+     * without a per-call conversion, and which holds exactly the number of dynamic offsets the bind
+     * group layout requires.
      *
-     * @type {number[]}
+     * @type {Uint32Array}
      */
-    uniformBufferOffsets = [];
+    uniformBufferOffsets;
 
     /**
      * For each uniform buffer slot, the dynamic GPU buffer a non-persistent uniform buffer was
@@ -97,6 +105,7 @@ class BindGroup {
         this.device = graphicsDevice;
         this.format = format;
         this.dirty = true;
+        this.uniformBufferOffsets = new Uint32Array(format.uniformBufferFormats.length);
         this.impl = graphicsDevice.createBindGroupImpl(this);
 
         /** @type {(Texture|TextureView)[]} */
@@ -370,7 +379,6 @@ class BindGroup {
     _finalize() {
 
         // update uniform buffer offsets
-        this.uniformBufferOffsets.length = this.uniformBuffers.length;
         for (let i = 0; i < this.uniformBuffers.length; i++) {
             const uniformBuffer = this.uniformBuffers[i];
 

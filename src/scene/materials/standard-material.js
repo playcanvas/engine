@@ -1858,7 +1858,7 @@ class StandardMaterial extends Material {
     /** @ignore */
     getShaderVariant(params) {
 
-        const { device, scene, pass, objDefs, sortedLights, cameraShaderParams, vertexFormat } = params;
+        const { device, scene, pass, objDefs, lightList, cameraShaderParams, vertexFormat } = params;
 
         // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
@@ -1867,9 +1867,9 @@ class StandardMaterial extends Material {
         options.defines = ShaderUtils.getCoreDefines(this, params);
 
         if (minimalOptions) {
-            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights, vertexFormat);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, lightList, vertexFormat);
         } else {
-            this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, sortedLights, vertexFormat);
+            this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, lightList, vertexFormat);
         }
 
         const useDualSourceBlending = shaderPassInfo.isForward && this.blendState.usesDualSourceBlending;

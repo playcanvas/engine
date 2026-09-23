@@ -5,7 +5,7 @@ fn getSheenGlossiness() {
     var sheenGlossiness = uniform.material_sheenGloss;
 
     #ifdef STD_SHEENGLOSS_TEXTURE
-    sheenGlossiness = sheenGlossiness * textureSampleBias({STD_SHEENGLOSS_TEXTURE_NAME}, {STD_SHEENGLOSS_TEXTURE_NAME}Sampler, {STD_SHEENGLOSS_TEXTURE_UV}, uniform.textureBias).{STD_SHEENGLOSS_TEXTURE_CHANNEL};
+    sheenGlossiness = sheenGlossiness * textureSampleBias({STD_SHEENGLOSS_TEXTURE_NAME}, {STD_SHEENGLOSS_TEXTURE_NAME}Sampler, {STD_SHEENGLOSS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_SHEENGLOSS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_SHEENGLOSS_VERTEX

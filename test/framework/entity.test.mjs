@@ -758,9 +758,38 @@ describe('Entity', function () {
             expect(script).to.be.undefined;
         });
 
+        it('returns undefined for a script that is still awaiting its script type', function () {
+            const root = new Entity();
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('script');
+            // 'notRegisteredYet' has no registered class, so the component records it as awaiting
+            child.script.create('notRegisteredYet');
+            const script = root.findScript('notRegisteredYet');
+            expect(script).to.be.undefined;
+        });
+
     });
 
     describe('#findScripts', function () {
+
+        it('does not include scripts that are still awaiting their script type', function () {
+            const MyScript = createScript('myScript');
+            const root = new Entity();
+            const child = new Entity();
+            const grandchild = new Entity();
+            root.addChild(child);
+            child.addChild(grandchild);
+            child.addComponent('script');
+            child.script.create('notRegisteredYet');
+            child.script.create('myScript');
+            grandchild.addComponent('script');
+            grandchild.script.create('notRegisteredYet');
+            expect(root.findScripts('notRegisteredYet')).to.deep.equal([]);
+            const scripts = root.findScripts('myScript');
+            expect(scripts.length).to.equal(1);
+            expect(scripts[0]).to.be.an.instanceof(MyScript);
+        });
 
         it('finds scripts on single entity', function () {
             const MyScript = createScript('myScript');

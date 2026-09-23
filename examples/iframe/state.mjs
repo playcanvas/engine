@@ -1,7 +1,7 @@
 import { Observer } from './playcanvas-observer.mjs';
 import { getQueryParams } from './runtime.mjs';
 
-const DEVICE_TYPES = ['webgpu', 'webgpu:bare', 'webgl2', 'null'];
+const DEVICE_TYPES = ['webgpu', 'webgpu:bare', 'webgl2', 'webgl2:bare', 'null'];
 const params = getQueryParams(window.location.href);
 const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
 
@@ -16,7 +16,8 @@ function refreshContext() {
 }
 
 /**
- * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGPU_BARE_DISABLED: boolean; PREFERRED_DEVICE?: string }} config - The configuration object.
+ * @param {{ WEBGPU_DISABLED: boolean; WEBGL_DISABLED: boolean; WEBGPU_BARE_DISABLED: boolean;
+ * WEBGL_BARE_DISABLED: boolean; PREFERRED_DEVICE?: string }} config - The configuration object.
  */
 function updateDeviceType(config) {
     // Resolution order: stored user preference > example PREFERRED_DEVICE > 'webgl2'. We have
@@ -54,6 +55,10 @@ function updateDeviceType(config) {
     if (config.WEBGPU_BARE_DISABLED && deviceType === 'webgpu:bare') {
         console.warn('WebGPU Bare is disabled for this example. Using WebGPU instead.');
         deviceType = 'webgpu';
+    }
+    if (config.WEBGL_BARE_DISABLED && deviceType === 'webgl2:bare') {
+        console.warn('WebGL 2 Bare is disabled for this example. Using WebGL 2 instead.');
+        deviceType = 'webgl2';
     }
 }
 

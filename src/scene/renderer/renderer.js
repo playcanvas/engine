@@ -24,6 +24,7 @@ import {
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
+import { LightSlotUniforms } from '../lighting/light-slot-uniforms.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
@@ -43,6 +44,7 @@ import { Camera } from '../camera.js';
  * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Light } from '../light.js'
+ * @import { LightList } from '../lighting/light-list.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
@@ -139,6 +141,21 @@ class Renderer {
     localLights = [];
 
     /**
+     * Formats of the view uniform buffer, by clustered lighting mode and then by the light layout
+     * of the pass they serve. See {@link Renderer#getViewUniformFormat}.
+     *
+     * @type {Map<string, UniformBufferFormat>[]}
+     */
+    _viewUniformFormats = [new Map(), new Map()];
+
+    /**
+     * The uniforms of each light slot, by slot index. See {@link Renderer#getLightSlotUniforms}.
+     *
+     * @type {LightSlotUniforms[]}
+     */
+    _lightSlotUniforms = [];
+
+    /**
      * Shared non-persistent view uniform buffers, keyed by their uniform format. Reused every frame,
      * with the bind group and dynamic offset sourced from the dynamic buffer system.
      *
@@ -166,11 +183,11 @@ class Renderer {
 
     /**
      * Reused single-element array passed as the dynamic offsets to per-view setBindGroup, to avoid
-     * per-draw allocation.
+     * per-draw allocation. A typed array, as the device passes it to WebGPU without conversion.
      *
-     * @type {number[]}
+     * @type {Uint32Array}
      */
-    _viewOffsetScratch = [0];
+    _viewOffsetScratch = new Uint32Array(1);
 
     blueNoise = new BlueNoise(123);
 
@@ -211,9 +228,6 @@ class Renderer {
             this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
                 this._shadowRendererLocal, this.lightTextureAtlas);
         }
-
-        // format of the view uniform buffer
-        this.viewUniformFormat = null;
 
         // timing
         this._skinTime = 0;
@@ -668,14 +682,25 @@ class Renderer {
         this.viewPosId.setValue(vp);
     }
 
-    initViewUniformFormat(isClustered) {
+    /**
+     * Returns the format of the view uniform buffer of a pass: the view uniforms, the clustered
+     * lighting parameters when enabled, and the uniforms of the lights of the pass. A light's
+     * uniforms are the same for every mesh instance drawn, so they travel with the view, uploaded
+     * once per pass, instead of in the per-draw mesh uniform buffer. The formats are cached by the
+     * light layout, which the light list key identifies - as does the shader variant, so a shader is
+     * only ever processed against the format of the passes it draws in.
+     *
+     * @param {boolean} isClustered - Whether clustered lighting is enabled.
+     * @param {LightList} lightList - The lights of the pass.
+     * @returns {UniformBufferFormat} The format.
+     */
+    getViewUniformFormat(isClustered, lightList) {
 
-        // view uniforms always go through a uniform buffer (on all backends)
-        if (!this.viewUniformFormat) {
+        // the list key is built when the lights change, so this allocates nothing per pass
+        const formats = this._viewUniformFormats[isClustered ? 1 : 0];
+        let format = formats.get(lightList.key);
+        if (!format) {
 
-            // format of the view uniform buffer
-            // note: 'textureBias' is deliberately not part of this, as the tiled nine-slice mode
-            // declares a global constant of that name in the shader, which would collide with it
             const uniforms = [
                 new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
@@ -689,7 +714,9 @@ class Renderer {
                 new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('screen_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-                new UniformFormat('view_index', UNIFORMTYPE_UINT)
+                new UniformFormat('view_index', UNIFORMTYPE_UINT),
+                new UniformFormat('light_globalAmbient', UNIFORMTYPE_VEC3),
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
@@ -707,8 +734,31 @@ class Renderer {
                 ]);
             }
 
-            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms, { pack: true });
+            // the lights of the pass, each at its light slot
+            const slots = lightList.slots;
+            for (let i = 0; i < slots.length; i++) {
+                this.getLightSlotUniforms(i).appendFormats(uniforms, slots[i]);
+            }
+
+            format = new UniformBufferFormat(this.device, uniforms, { pack: true });
+            formats.set(lightList.key, format);
         }
+
+        return format;
+    }
+
+    /**
+     * Returns the uniforms of a light slot - `light<slot>_*` - creating them on first use. A slot
+     * is a position in the light list of a pass rather than a light, so the instances are few and
+     * live as long as the renderer: the view uniform format declares from them whatever the light
+     * holding the slot needs, and the light dispatch writes its values through them.
+     *
+     * @param {number} slot - The light slot.
+     * @returns {LightSlotUniforms} The uniforms of the slot.
+     */
+    getLightSlotUniforms(slot) {
+        const slots = this._lightSlotUniforms;
+        return slots[slot] ?? (slots[slot] = new LightSlotUniforms(this.device, slot));
     }
 
     /**
@@ -716,7 +766,7 @@ class Renderer {
      */
     setupViewUniforms(view, index) {
 
-        // any view uniforms need to be part of the view uniform buffer, see initViewUniformFormat
+        // any view uniforms need to be part of the view uniform buffer, see getViewUniformFormat
         this.projId.setValue(view.projMat.data);
         this.projSkyboxId.setValue(view.projMat.data);
         this.viewId.setValue(view.viewOffMat.data);
@@ -1084,8 +1134,6 @@ class Renderer {
     frameUpdate() {
 
         this.clustersDebugRendered = false;
-
-        this.initViewUniformFormat(this.scene.clusteredLightingEnabled);
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();

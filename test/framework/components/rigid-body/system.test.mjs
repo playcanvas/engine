@@ -265,6 +265,102 @@ describe('RigidBodyComponentSystem', function () {
         });
     });
 
+    describe('rigid body removal', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/2195. Removing the
+        // rigid body left the collision component with a shape and no body, so it neither
+        // reported contacts nor acted as a trigger until the entity was toggled.
+
+        let world;
+
+        beforeEach(function () {
+            world = new NullPhysicsWorld();
+            app.systems.rigidbody.setPhysicsWorld(world);
+        });
+
+        function createBody(name, parent = app.root, rigidbodyFirst = false) {
+            const entity = new Entity(name);
+            if (rigidbodyFirst) {
+                entity.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            }
+            entity.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
+            if (!rigidbodyFirst) {
+                entity.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            }
+            parent.addChild(entity);
+            return entity;
+        }
+
+        it('turns the collision component into a trigger', function () {
+            const entity = createBody('body');
+            expect(entity.trigger).to.be.undefined;
+
+            entity.removeComponent('rigidbody');
+
+            expect(entity.rigidbody).to.be.undefined;
+            expect(entity.trigger).to.exist;
+            expect(entity.collision.shape).to.exist;
+            expect(app.systems.rigidbody._triggers).to.include(entity.trigger);
+        });
+
+        it('joins an enclosing compound instead when there is one', function () {
+            const root = new Entity('root');
+            root.addComponent('collision', { type: 'compound' });
+            root.addComponent('rigidbody', { type: 'dynamic', mass: 1 });
+            app.root.addChild(root);
+
+            // a body of its own inside the compound's hierarchy is not a compound child...
+            const part = createBody('part', root);
+            expect(part.collision._compoundParent).to.be.null;
+
+            // ...until it stops being a body
+            part.removeComponent('rigidbody');
+
+            expect(part.collision._compoundParent).to.equal(root.collision);
+            expect(part.trigger).to.be.undefined;
+        });
+
+        it('forgets the pairs the body was touching', function () {
+            const entity = createBody('body');
+            const other = createBody('other');
+            app.systems.rigidbody.collisions[entity.guid] = { entity: entity, others: [other] };
+
+            entity.removeComponent('rigidbody');
+
+            expect(app.systems.rigidbody.collisions[entity.guid]).to.be.undefined;
+        });
+
+        it('does not rebuild anything for an entity that is being destroyed', function () {
+            // components are removed in the order they were added, so the collision component
+            // is still attached when the rigid body's removal is processed
+            const entity = createBody('doomed', app.root, true);
+            const rebuild = spy(app.systems.collision, 'recreatePhysicalShapes');
+            const triggers = app.systems.rigidbody._triggers.length;
+
+            entity.destroy();
+
+            expect(rebuild.called).to.be.false;
+            expect(app.systems.rigidbody._triggers.length).to.equal(triggers);
+            restore();
+        });
+
+        it('does nothing when no backend is installed', function () {
+            // a second application without a world
+            const bare = createApp();
+            try {
+                const entity = new Entity('bare', bare);
+                entity.addComponent('collision', { type: 'box' });
+                entity.addComponent('rigidbody', { type: 'dynamic' });
+                bare.root.addChild(entity);
+
+                expect(() => entity.removeComponent('rigidbody')).to.not.throw();
+                expect(entity.trigger).to.be.undefined;
+            } finally {
+                bare.destroy();
+            }
+        });
+    });
+
     it('ignores step() when no physics backend is installed', function () {
         expect(app.systems.rigidbody.physicsWorld).to.be.null;
         expect(() => app.systems.rigidbody.step(1 / 60)).to.not.throw();

@@ -1354,6 +1354,15 @@ describe('ScriptComponent', function () {
         app.assets.load(asset);
     });
 
+    it('get() returns null for a script that is awaiting its script type', function () {
+        const e = new Entity();
+        e.addComponent('script');
+        e.script.create('notRegisteredYet');
+
+        expect(e.script._scriptsIndex.notRegisteredYet.awaiting).to.equal(true);
+        expect(e.script.get('notRegisteredYet')).to.be.null;
+    });
+
     it('cloning an entity preserves scripts that are awaiting their script type', function () {
         const e = new Entity();
         e.addComponent('script', {

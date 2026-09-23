@@ -9,6 +9,7 @@ import {
     AMBIENTSRC_CONSTANT, AMBIENTSRC_ENVALATLAS, CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK,
     REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_NONE, SHADER_FORWARD, SPECOCC_AO
 } from '../../../src/scene/constants.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
@@ -817,7 +818,7 @@ describe('StandardMaterial', function () {
             _skyboxRotationShaderInclude: false
         };
         const cameraShaderParams = new CameraShaderParams();
-        const noLights = [[], [], []];
+        const noLights = new LightList();
 
         const resolve = (material) => {
             const options = new StandardMaterialOptions();
