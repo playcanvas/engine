@@ -73,6 +73,27 @@ class ForwardRenderer extends Renderer {
     _worldClustersDebug = null;
 
     /**
+     * Limits how much of one render pass is drawn, for stepping through its draw calls with a
+     * debugging tool. Matched by the camera and render target the pass renders with; for each layer
+     * of the pass, an entry per sub-layer (opaque, transparent) gives either how many of its sorted
+     * instances to draw, or `{ instance, index }` to draw up to and including that instance, found
+     * by identity and falling back to the index when it was culled. Layers without an entry draw in
+     * full. Only honored by the debug engine; other builds ignore it.
+     *
+     * @type {{ camera: Camera, renderTarget: RenderTarget|null, layers: Map<Layer, Array<number|{ instance: MeshInstance, index: number }|undefined>> }|null}
+     * @ignore
+     */
+    debugDrawLimit = null;
+
+    /**
+     * Whether this build honors {@link debugDrawLimit}, which only the debug engine does.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    debugDrawLimitSupported = false;
+
+    /**
      * Create a new ForwardRenderer instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used by the renderer.
@@ -82,6 +103,10 @@ class ForwardRenderer extends Renderer {
         super(graphicsDevice, scene);
 
         const device = this.device;
+
+        Debug.call(() => {
+            this.debugDrawLimitSupported = true;
+        });
 
         this._forwardDrawCalls = 0;
         this._materialSwitches = 0;
@@ -216,12 +241,6 @@ class ForwardRenderer extends Renderer {
                     continue;
                 }
                 ForwardRenderer._skipRenderCounter++;
-            }
-            if (layer) {
-                if (layer._skipRenderCounter >= layer.skipRenderAfter) {
-                    continue;
-                }
-                layer._skipRenderCounter++;
             }
             // #endif
 
@@ -481,6 +500,24 @@ class ForwardRenderer extends Renderer {
             scene.immediate.onPreRenderLayer(layer, visible, transparent);
 
             this._worldClustersDebug?.onPreRenderLayer(layer, visible);
+
+            // cut the list short when a debugging tool steps through this pass, after the debug
+            // lines were added so the indices match what the tool saw. A copy, as the layer's own
+            // list is left as culled for the tool to read
+            Debug.call(() => {
+                const limit = this.debugDrawLimit;
+                if (limit && limit.camera === camera && limit.renderTarget === renderTarget) {
+                    const entry = limit.layers.get(layer)?.[transparent ? 1 : 0];
+                    if (entry !== undefined) {
+                        let count = entry;
+                        if (typeof entry === 'object') {
+                            const found = visible.indexOf(entry.instance);
+                            count = (found >= 0 ? found : entry.index) + 1;
+                        }
+                        visible = visible.slice(0, Math.max(0, count));
+                    }
+                }
+            });
 
             // set up layer uniforms
             if (layer.requiresLightCube) {

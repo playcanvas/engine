@@ -364,10 +364,6 @@ class Layer {
     // --- Profiler ---
 
     // #if _PROFILER
-    skipRenderAfter = Number.MAX_VALUE;
-
-    _skipRenderCounter = 0;
-
     _renderTime = 0;
 
     _forwardDrawCalls = 0;
