@@ -22,7 +22,7 @@
         "README-zh.md"
     ],
     "rules": [
-        "Target PlayCanvas Engine 2.x. Check the installed version in package.json and prefer the current API at https://api.playcanvas.com/engine/ over 1.x patterns.",
+        "Target PlayCanvas Engine 2.x. Check the installed version in package.json and prefer the current API, indexed at https://api.playcanvas.com/engine/llms.txt, over 1.x patterns.",
         "Import the engine as an ES module: `npm install playcanvas` with a bundler, or an import map pointing 'playcanvas' at https://cdn.jsdelivr.net/npm/playcanvas/+esm with no build step.",
         "Build scenes from Entity objects with addComponent('render' | 'camera' | 'light' | 'script' | ...). Prefer the render component over the legacy model component.",
         "For primitives use addComponent('render', { type: 'box' | 'sphere' | 'capsule' | 'cylinder' | 'cone' | 'plane' }). For GLB models load a 'container' asset and call asset.resource.instantiateRenderEntity().",
@@ -38,6 +38,6 @@
         "Load Gaussian splats as a 'gsplat' asset and render them with addComponent('gsplat', { asset }).",
         "Release resources you create: entity.destroy(), asset.unload(), material.destroy(), texture.destroy(), and app.destroy() when tearing the application down.",
         "For React use @playcanvas/react and for declarative HTML use @playcanvas/web-components. Both wrap the same engine objects, so engine API docs still apply.",
-        "Runnable references: https://playcanvas.com/examples hosts every example in this repo; sources live under examples/src/examples. The user manual is at https://developer.playcanvas.com/user-manual/."
+        "Runnable references: https://playcanvas.com/examples hosts every example in this repo; sources live under examples/src/examples. The User Manual's engine guides are indexed at https://developer.playcanvas.com/user-manual/engine/llms.txt."
     ]
 }
