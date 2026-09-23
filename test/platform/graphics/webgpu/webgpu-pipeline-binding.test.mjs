@@ -5,7 +5,8 @@ import { Debug } from '../../../../src/core/debug.js';
 import { Color } from '../../../../src/core/math/color.js';
 import { BlendState } from '../../../../src/platform/graphics/blend-state.js';
 import {
-    CULLFACE_BACK, CULLFACE_NONE, FRONTFACE_CCW, FRONTFACE_CW, PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP
+    CULLFACE_BACK, CULLFACE_NONE, FRONTFACE_CCW, FRONTFACE_CW, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP
 } from '../../../../src/platform/graphics/constants.js';
 import { DepthState } from '../../../../src/platform/graphics/depth-state.js';
 import { StencilParameters } from '../../../../src/platform/graphics/stencil-parameters.js';
@@ -123,10 +124,28 @@ describe('WebGPU render pipeline binding', function () {
         device.setVertexBuffer({ format: { renderingHash: 2 } });
         device.draw(primitive);
         expect(lookups(), 'vertex layout').to.equal(4);
+    });
 
-        const indexBuffer = { format: 1, impl: { buffer: {}, format: 'uint16' } };
-        device.draw(primitive, indexBuffer);
-        expect(lookups(), 'index format').to.equal(5);
+    it('looks the pipeline up again when the index format of a strip changes, only', function () {
+        const indexBuffer16 = { format: INDEXFORMAT_UINT16, impl: { buffer: {}, format: 'uint16' } };
+        const indexBuffer32 = { format: INDEXFORMAT_UINT32, impl: { buffer: {}, format: 'uint32' } };
+
+        // a triangle list does not depend on the index format, so meshes of 16 and 32 bit indices
+        // share its pipeline
+        device.draw(primitive);
+        device.draw(primitive, indexBuffer16);
+        device.draw(primitive, indexBuffer32);
+        device.draw(primitive, indexBuffer16);
+        expect(lookups(), 'triangle list').to.equal(1);
+
+        // a strip does, as its strip index format
+        const strip = { type: PRIMITIVE_TRISTRIP, count: 3, base: 0 };
+        device.draw(strip, indexBuffer16);
+        expect(lookups(), 'strip').to.equal(2);
+        device.draw(strip, indexBuffer16);
+        expect(lookups(), 'same strip index format').to.equal(2);
+        device.draw(strip, indexBuffer32);
+        expect(lookups(), 'strip index format').to.equal(3);
     });
 
     it('keeps the pipeline when a state is set to the value it already has', function () {

@@ -248,7 +248,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /** @private */
     _pipelineVertexHash1 = -1;
 
-    /** @private */
+    /**
+     * The index format of a strip topology, which is the only one the pipeline depends on, or -1.
+     *
+     * @private
+     */
     _pipelineIndexFormat = -1;
 
     /**
@@ -1277,7 +1281,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 const primitiveType = primitive.type;
                 const vertexHash0 = vb0 ? vb0.format.renderingHash : 0;
                 const vertexHash1 = vb1 ? vb1.format.renderingHash : 0;
-                const indexFormat = indexBuffer ? indexBuffer.format : 0;
+                const indexFormat = WebgpuRenderPipeline.stripIndexFormat(primitiveType, indexBuffer?.format) ?? -1;
                 if (this._pipelineDirty || !pipeline ||
                     this._pipelinePrimitiveType !== primitiveType ||
                     this._pipelineVertexHash0 !== vertexHash0 ||
