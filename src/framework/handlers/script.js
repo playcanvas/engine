@@ -119,9 +119,16 @@ class ScriptHandler extends ResourceHandler {
 
     _loadModule(url, callback) {
 
-        // if we're in the browser, we need to use the full URL
-        const isBrowserWithOrigin = platform.browser && window.location.origin !== 'null';
-        const baseUrl = isBrowserWithOrigin ? window.location.origin + window.location.pathname : import.meta.url;
+        // resolve a relative URL as the page would in a browser, and against the working directory
+        // in Node.js, rather than against the location of the engine module
+        let baseUrl = import.meta.url;
+        if (platform.browser && window.location.origin !== 'null') {
+            baseUrl = window.location.origin + window.location.pathname;
+        } else if (platform.environment === 'node') {
+            const cwdUrl = new URL('file:///');
+            cwdUrl.pathname = `${process.cwd()}/`;
+            baseUrl = cwdUrl.href;
+        }
         const importUrl = new URL(url, baseUrl);
 
         // @ts-ignore
