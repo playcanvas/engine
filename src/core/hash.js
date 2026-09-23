@@ -21,7 +21,7 @@ function hashCode(str) {
  * Calculates simple 32bit hash value of an array of 32bit integer numbers. Designed for
  * performance, but provides good distribution with small number of collisions. Based on
  * FNV-1a non-cryptographic hash function.
- *.
+ *
  * @param {number[]|Uint32Array} array - Array of 32bit integer numbers to hash.
  * @returns {number} 32bit unsigned integer hash value.
  */
@@ -31,7 +31,10 @@ function hash32Fnv1a(array) {
 
     for (let i = 0; i < array.length; i++) {
         hash ^= array[i];
-        hash *= prime;
+
+        // a 32bit integer multiply, as the hash function specifies - a floating point one exceeds
+        // the 53bit mantissa and so is not the 32bit product, and is slower
+        hash = Math.imul(hash, prime);
     }
     return hash >>> 0; // Ensure non-negative integer
 }
