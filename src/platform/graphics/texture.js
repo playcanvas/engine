@@ -76,7 +76,7 @@ class Texture {
      * @param {number} width - The width of the texture in pixels.
      * @param {number} height - The height of the texture in pixels.
      * @param {number} format - The pixel format of the texture.
-     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
+     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
      * - Optional initial mip level data.
      * @returns {Texture} The created texture.
      * @ignore
@@ -259,7 +259,7 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
+     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
      * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
