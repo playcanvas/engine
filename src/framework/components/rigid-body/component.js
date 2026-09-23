@@ -16,6 +16,7 @@ import {
 // Shared math variables to avoid excessive allocation
 const _quat1 = new Quat();
 const _quat2 = new Quat();
+const _quat3 = new Quat();
 const _vec3 = new Vec3();
 const _position = new Vec3();
 const _rotation = new Quat();
@@ -1054,6 +1055,8 @@ class RigidBodyComponent extends Component {
 
             body.getTransform(_position, _rotation);
 
+            let entityRot = _rotation;
+
             const component = entity.collision;
             if (component && component._hasOffset) {
                 const lo = component.linearOffset;
@@ -1063,14 +1066,57 @@ class RigidBodyComponent extends Component {
                 // un-translate the linear offset in local space
                 // Order of operations matter here
                 const invertedAo = _quat2.copy(ao).invert();
-                const entityRot = _quat1.copy(_rotation).mul(invertedAo);
+                entityRot = _quat1.copy(_rotation).mul(invertedAo);
 
                 entityRot.transformVector(lo, _vec3);
-                entity.setPositionAndRotation(_position.sub(_vec3), entityRot);
+                _position.sub(_vec3);
+            }
+
+            const scale = entity.getLocalScale();
+            if (scale.x < 0 || scale.y < 0 || scale.z < 0 || entity.worldScaleSign < 0) {
+                this._setMirroredTransform(_position, entityRot);
             } else {
-                entity.setPositionAndRotation(_position, _rotation);
+                entity.setPositionAndRotation(_position, entityRot);
             }
         }
+    }
+
+    /**
+     * Writes a body pose to an entity with a negative local scale or a mirrored world transform.
+     * The rotation read from such an entity's world transform is not its rotation: a mirrored
+     * basis has its X axis negated to make it a rotation, and a pair of negative scale factors
+     * reads as a 180 degree turn. The body was created with that rotation, so writing the body
+     * rotation back as the world rotation would bake the correction into the local rotation.
+     * Instead, the rotation the body turned through since the entity was last synced is applied
+     * to the local rotation.
+     *
+     * @param {Vec3} position - The world space position of the entity.
+     * @param {Quat} rotation - The world space rotation of the body, without angular offset.
+     * @private
+     */
+    _setMirroredTransform(position, rotation) {
+        const entity = this.entity;
+        const parent = entity.parent;
+
+        // world space rotation from the entity's current rotation to the body's
+        const delta = _quat2.copy(entity.getRotation()).invert();
+        delta.mul2(rotation, delta);
+
+        if (parent) {
+            // express it in the parent's space
+            const parentRot = parent.getRotation();
+            delta.mul2(_quat3.copy(parentRot).invert(), delta).mul(parentRot);
+
+            // a mirrored parent's rotation is read with its X axis negated, so the parent's space
+            // is the mirror image of that rotation's and the delta is reflected through YZ
+            if (parent.worldScaleSign < 0) {
+                delta.y = -delta.y;
+                delta.z = -delta.z;
+            }
+        }
+
+        entity.setPosition(position);
+        entity.setLocalRotation(delta.mul(entity.getLocalRotation()).normalize());
     }
 
     /**
