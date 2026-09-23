@@ -716,7 +716,8 @@ class Renderer {
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('view_index', UNIFORMTYPE_UINT),
                 new UniformFormat('light_globalAmbient', UNIFORMTYPE_VEC3),
-                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
+                new UniformFormat('projectionFlipY', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
