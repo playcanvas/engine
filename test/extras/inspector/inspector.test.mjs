@@ -7,6 +7,7 @@ import { assetRows, assetUsers, buildAssetModel, collectAssets, describeAssetVal
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { captureFrameGraph } from '../../../src/extras/inspector/frame-graph-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
+import { bufferOwners, bufferRows, buildBufferModel, collectBuffers, memorySummary } from '../../../src/extras/inspector/memory-view.js';
 import { formatBytes } from '../../../src/extras/inspector/model.js';
 import { buildNodeModel } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
@@ -26,8 +27,10 @@ import {
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Shader } from '../../../src/platform/graphics/shader.js';
+import { StorageBuffer } from '../../../src/platform/graphics/storage-buffer.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { UniformBufferFormat, UniformFormat } from '../../../src/platform/graphics/uniform-buffer-format.js';
+import { UniformBuffer } from '../../../src/platform/graphics/uniform-buffer.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -349,6 +352,86 @@ describe('Inspector', function () {
         expect(Object.keys(stored)).to.deep.equal([]);
     });
 
+    it('resolves a component asset id to a linked asset and opens it on the assets tab', function () {
+        const inspector = /** @type {any} */ (new Inspector(app));
+        const texture = new Asset('bricks', 'texture', { url: 'bricks.png', size: 2048 });
+        const material = new Asset('wall', 'material', null);
+        app.assets.add(texture);
+        app.assets.add(material);
+
+        const entity = new Entity('wall', app);
+        entity.c.render = /** @type {any} */ ({
+            enabled: true,
+            system: { app },
+            asset: texture.id,
+            materialAssets: [material.id, 999]
+        });
+
+        const section = buildNodeModel(entity).find(s => s.key === 'c:render');
+        const row = label => section.rows.find(r => r.label === label);
+        expect(row('asset').value.target).to.equal(texture);
+        expect(row('asset').value.text).to.match(/^Asset #-?\d+ "bricks" \(texture\)$/);
+        // arrays expand entry by entry, and an id the registry does not know says so
+        expect(row('materialAssets').value.text).to.equal('Array(2) of asset');
+        expect(section.rows.find(r => r.key === 'materialAssets[0]').value.target).to.equal(material);
+        expect(section.rows.find(r => r.key === 'materialAssets[1]').value.text).to.match(/not in the registry/);
+
+        inspector._selectAny(texture);
+        expect(inspector._tab).to.equal('assets');
+        expect(inspector._assetList.selected).to.equal(texture);
+        expect(inspector._properties.subject).to.equal(texture);
+        const names = [...panel(inspector).querySelectorAll('.pci-lrow .pci-cell-name')].map(cell => cell.textContent);
+        // the default order is by type
+        expect(names).to.deep.equal(['wall', 'bricks']);
+        inspector.destroy();
+    });
+
+    it('opens a linked buffer on the memory tab, showing every kind when a filter would hide it', function () {
+        const inspector = /** @type {any} */ (new Inspector(app));
+        const mesh = new Mesh(app.graphicsDevice);
+        mesh.setPositions([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+        mesh.setIndices([0, 1, 2]);
+        mesh.update();
+
+        inspector._bufferKind.value = 'index';
+        inspector._selectAny(mesh.vertexBuffer);
+        expect(inspector._tab).to.equal('memory');
+        expect(inspector._bufferKind.value).to.equal('all');
+        expect(inspector._bufferList.selected).to.equal(mesh.vertexBuffer);
+        expect(inspector._properties.subject).to.equal(mesh.vertexBuffer);
+        expect(inspector._memoryNote.textContent).to.match(/^VRAM: textures/);
+
+        // with the kind filter matching, it is left alone
+        inspector._bufferKind.value = 'index';
+        inspector._selectAny(mesh.indexBuffer[0]);
+        expect(inspector._bufferKind.value).to.equal('index');
+        expect(inspector._bufferList.selected).to.equal(mesh.indexBuffer[0]);
+
+        mesh.destroy();
+        inspector.destroy();
+    });
+
+    it('lists the device shaders and selects a linked shader on the shaders tab', function () {
+        const inspector = /** @type {any} */ (new Inspector(app));
+        const device = app.graphicsDevice;
+        const glsl = new Shader(device, { name: 'lit', vshader: 'void main() {}', fshader: 'void main() {}', attributes: { vertex_position: SEMANTIC_POSITION } });
+        const wgsl = new Shader(device, { name: 'blit', vshader: 'fn main() {}', fshader: 'fn main() {}', shaderLanguage: SHADERLANGUAGE_WGSL });
+        expect(device.shaders).to.include.members([glsl, wgsl]);
+
+        inspector._selectAny(wgsl);
+        expect(inspector._tab).to.equal('shaders');
+        expect(inspector._shaderList.selected).to.equal(wgsl);
+        expect(inspector._properties.subject).to.equal(wgsl);
+        const rows = [...panel(inspector).querySelectorAll('.pci-lrow')].map(row => row.textContent);
+        expect(rows.some(text => text.startsWith('lit') && text.includes('GLSL'))).to.be.true;
+        expect(rows.some(text => text.startsWith('blit') && text.includes('WGSL'))).to.be.true;
+
+        glsl.destroy();
+        wgsl.destroy();
+        expect(device.shaders).to.not.include.members([glsl, wgsl]);
+        inspector.destroy();
+    });
+
     it('names the layers a component renders in', function () {
         app.scene.layers = /** @type {any} */ ({
             getLayerById: id => ({ 0: { name: 'World' }, 2: { name: 'Depth' }, 4: { name: 'UI' } })[id] ?? null
@@ -406,6 +489,9 @@ describe('Inspector', function () {
         const meshRows = instanceRows[1].value.expand();
         const byLabel = (list2, label) => list2.find(row => row.label === label).value;
         expect(byLabel(meshRows, 'vertex buffer').text).to.equal('3 vertices, 72 B');
+        // the buffers link to the memory tab
+        expect(byLabel(meshRows, 'vertex buffer').target).to.equal(mesh.vertexBuffer);
+        expect(byLabel(meshRows, 'index buffer').target).to.equal(mesh.indexBuffer[0]);
         expect(byLabel(meshRows, 'index buffer').text).to.equal('3 indices, UINT16, 6 B');
         expect(byLabel(meshRows, 'primitive').text).to.equal('TRIANGLES  count 3  base 0  indexed');
         // several draw ranges list one entry each
@@ -808,6 +894,148 @@ describe('Inspector asset view', function () {
         expect(map.get(resource)).to.equal(big);
         expect(map.size).to.equal(1);
         expect(resourceAssets(null).size).to.equal(0);
+    });
+});
+
+describe('Inspector memory view', function () {
+    let device;
+    let mesh;
+    let loose;
+    let uniforms;
+    let storage;
+
+    beforeEach(function () {
+        jsdomSetup();
+        device = new NullGraphicsDevice(document.createElement('canvas'));
+        const build = (count) => {
+            const m = new Mesh(device);
+            const positions = [];
+            for (let i = 0; i < count; i++) positions.push(i, 0, 0);
+            m.setPositions(positions);
+            m.setIndices([...Array(count).keys()]);
+            m.update();
+            return m;
+        };
+        mesh = build(30);
+        loose = build(3);
+        uniforms = new UniformBuffer(device, new UniformBufferFormat(device, [new UniformFormat('tint', UNIFORMTYPE_VEC3)]), true);
+        // the null device cannot back a storage buffer, so stand in for one
+        storage = Object.assign(Object.create(StorageBuffer.prototype), { byteSize: 4096, id: 7 });
+        device.buffers.add(storage);
+    });
+
+    afterEach(function () {
+        mesh.destroy();
+        loose.destroy();
+        uniforms.destroy();
+        device.buffers.delete(storage);
+        device.destroy();
+        jsdomTeardown();
+    });
+
+    /**
+     * @returns {any} An app with the first mesh drawn by one instance in two layers, and the
+     * second mesh only reachable through a render asset.
+     */
+    function sceneApp() {
+        const node = new GraphNode('wall');
+        const material = new StandardMaterial();
+        material.name = 'brick';
+        /** @type {any} */ (material)._uniformBuffer = uniforms;
+        const instance = new MeshInstance(mesh, material, node);
+        const assets = new AssetRegistry(null);
+        const asset = new Asset('robot', 'render', null);
+        asset.loaded = true;
+        /** @type {any} */ (asset)._resources = [{ meshes: [loose] }];
+        assets.add(asset);
+        // debug lines live in the immediate renderer's batches, never in a layer's own list
+        const lines = new Mesh(device);
+        lines.setPositions([0, 0, 0, 1, 1, 1]);
+        lines.update();
+        const immediate = { batchesMap: new Map([[{ name: 'Immediate' }, { map: new Map([['material', { mesh: lines }]]) }]]) };
+        return {
+            graphicsDevice: device,
+            assets,
+            node,
+            asset,
+            lines,
+            scene: { immediate, layers: { layerList: [{ meshInstances: [instance] }, { meshInstances: [instance] }] } }
+        };
+    }
+
+    it('lists the device buffers largest first, narrowed by kind', function () {
+        const all = collectBuffers(device);
+        expect(all).to.include.members([mesh.vertexBuffer, mesh.indexBuffer[0], uniforms, storage]);
+        expect(all[0]).to.equal(storage);
+        expect(collectBuffers(device, 'uniform')).to.deep.equal([uniforms]);
+        expect(collectBuffers(device, 'index')).to.include.members([mesh.indexBuffer[0], loose.indexBuffer[0]]);
+    });
+
+    it('finds owners from the layers, the assets and the device, counting each instance once', function () {
+        const app = sceneApp();
+        const owners = bufferOwners(app);
+        const of = buffer => owners.get(buffer) ?? [];
+
+        expect(of(mesh.vertexBuffer)).to.deep.equal([{ role: 'vertices', label: 'wall', target: app.node }]);
+        expect(of(mesh.indexBuffer[0])[0].role).to.equal('indices');
+        expect(of(uniforms)[0].role).to.equal('uniforms of material "brick"');
+        expect(of(loose.vertexBuffer)).to.deep.equal([{ role: 'vertices', label: 'Asset "robot"', target: app.asset }]);
+        expect(owners.has(storage)).to.be.false;
+        // the quad the device shares with every full screen pass, and the debug line batches
+        expect(of(device.quadIndexBuffer)[0].role).to.equal('full screen quad indices');
+        expect(of(app.lines.vertexBuffer)).to.deep.equal([{ role: 'debug lines', label: 'Lines on "Immediate"', target: null }]);
+        app.lines.destroy();
+        expect(of(device.quadVertexBuffer)[0].label).to.equal('Graphics device');
+
+        const rows = bufferRows(device, owners, 'all');
+        const row = buffer => rows.find(r => r.item === buffer);
+        expect(row(mesh.vertexBuffer).cells.map(c => c.text).slice(0, 3)).to.deep.equal(['wall', 'vertex', '30 vertices, 1 elements · vertices']);
+        expect(row(mesh.vertexBuffer).dim).to.be.false;
+        // nothing reachable holds the storage buffer, so it keeps a generated name and is dimmed
+        expect(row(storage).name).to.match(/^StorageBuffer #\d+$/);
+        expect(row(storage).dim).to.be.true;
+    });
+
+    it('names owners with their parent and tells the index buffers of a mesh apart', function () {
+        const app = sceneApp();
+        const root = new GraphNode('root');
+        const group = new GraphNode('Walls6');
+        root.addChild(group);
+        group.addChild(app.node);
+        // a mesh keeps one index buffer per render style, the wireframe one built on demand
+        mesh.generateWireframe();
+        const owners = bufferOwners(app);
+        expect(owners.get(mesh.vertexBuffer)[0].label).to.equal('Walls6 › wall');
+        expect(owners.get(mesh.indexBuffer[1])[0].role).to.equal('wireframe indices');
+    });
+
+    it('shows a buffer with its layout and the links to what uses it', function () {
+        const app = sceneApp();
+        const byLabel = (section, label) => section.rows.find(r => r.label === label).value;
+
+        const [vertex, vertexUsers] = buildBufferModel(mesh.vertexBuffer, { app });
+        expect(byLabel(vertex, 'vertices').text).to.equal('30');
+        expect(byLabel(vertex, 'vertex format').expand().map(r => r.label)).to.deep.equal(['POSITION']);
+        expect(byLabel(vertex, 'usage').text).to.equal('BUFFER_STATIC');
+        expect(byLabel(vertexUsers, 'owners').items[0].target).to.equal(app.node);
+
+        const [uniform] = buildBufferModel(uniforms, { app });
+        expect(byLabel(uniform, 'layout').code).to.match(/vec3 +tint/);
+
+        const [, storageUsers] = buildBufferModel(storage, { app });
+        expect(byLabel(storageUsers, 'owners').text).to.match(/^not found/);
+    });
+
+    it('sums video memory by kind of resource', function () {
+        const summary = memorySummary(device);
+        expect(summary.split('\n')[0]).to.match(/^VRAM: textures .* · vertex .* · index .* · uniform .* · storage /);
+        expect(summary).to.match(/shaders \d+/);
+
+        // a pool of fixed blocks reads as count and size, one of whole buffers as a count
+        const withPool = pool => memorySummary(/** @type {any} */ (Object.assign(Object.create(device), { dynamicBuffers: pool })));
+        expect(withPool({ bufferCount: 2, bufferSize: 102400 })).to.match(/per-draw uniform pool: 2 × 100.0 KB/);
+        expect(withPool({ bufferCount: 38, bufferSize: 0 })).to.match(/per-draw uniform pool: 38 buffers/);
+        expect(withPool({ bufferCount: 0, bufferSize: 0 })).to.not.match(/uniform pool/);
     });
 });
 

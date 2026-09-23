@@ -13,9 +13,13 @@ import { Tags } from '../../core/tags.js';
 import { Asset } from '../../framework/asset/asset.js';
 import { Entity } from '../../framework/entity.js';
 import { pixelFormatInfo } from '../../platform/graphics/constants.js';
+import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Shader } from '../../platform/graphics/shader.js';
+import { StorageBuffer } from '../../platform/graphics/storage-buffer.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 import { GraphNode } from '../../scene/graph-node.js';
 import { Layer } from '../../scene/layer.js';
 import { Material } from '../../scene/materials/material.js';
@@ -31,8 +35,8 @@ import { Sprite } from '../../scene/sprite.js';
  * @property {string} text - The display text.
  * @property {string} [cls] - A class suffix selecting the color: 'num', 'bool', 'str', 'null',
  * 'obj', 'ref' or 'err'.
- * @property {GraphNode|Texture|Shader|Asset} [target] - An object the value refers to. Rendered
- * as a link that selects it: a node in the hierarchy, a texture, shader or asset on its tab.
+ * @property {*} [target] - An object the value refers to. Rendered as a link that selects it: a
+ * node in the hierarchy, a texture, shader, asset or buffer on its tab.
  * @property {string} [swatch] - A CSS color, rendered as a chip in front of the text.
  * @property {string} [code] - A block of text, such as shader source, shown under the row when it
  * is expanded. The text is its summary, and the row gets a copy button.
@@ -190,6 +194,10 @@ function describeValue(value, depth = 0) {
             target: value
         };
     }
+    if (value instanceof VertexBuffer) return { text: `VertexBuffer ${value.numVertices} vertices`, cls: 'obj', target: value };
+    if (value instanceof IndexBuffer) return { text: `IndexBuffer ${value.numIndices} indices`, cls: 'obj', target: value };
+    if (value instanceof UniformBuffer) return { text: `UniformBuffer ${value.format?.byteSize ?? 0} B`, cls: 'obj', target: value };
+    if (value instanceof StorageBuffer) return { text: `StorageBuffer ${value.byteSize} B`, cls: 'obj', target: value };
     if (value instanceof RenderTarget) {
         return { text: `RenderTarget "${value.name}" ${value.width}×${value.height}`, cls: 'obj' };
     }

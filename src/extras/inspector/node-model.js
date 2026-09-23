@@ -217,7 +217,8 @@ function meshRows(mesh) {
     if (vertexBuffer) {
         pushRow(rows, 'vertex buffer', {
             text: `${vertexBuffer.numVertices} vertices, ${formatBytes(vertexBuffer.numBytes)}`,
-            cls: 'num'
+            cls: 'num',
+            target: vertexBuffer
         });
         pushRow(rows, 'vertex format', vertexFormatValue(vertexBuffer.format));
     } else {
@@ -225,7 +226,8 @@ function meshRows(mesh) {
     }
     pushRow(rows, 'index buffer', indexBuffer ? {
         text: `${indexBuffer.numIndices} indices, ${INDEX_FORMAT_NAMES[indexBuffer.format] ?? indexBuffer.format}, ${formatBytes(indexBuffer.numBytes)}`,
-        cls: 'num'
+        cls: 'num',
+        target: indexBuffer
     } : describeValue(null));
     pushRow(rows, 'primitive', primitiveValue(mesh.primitive));
 
@@ -240,6 +242,9 @@ function meshRows(mesh) {
 function materialRows(material) {
     const rows = [];
     pushRow(rows, 'variants', describeValue([...material.variants.values()]));
+    // the buffer holding the material's uniforms, once it has rendered on a device that uses one
+    const uniformBuffer = /** @type {any} */ (material)._uniformBuffer;
+    if (uniformBuffer) pushRow(rows, 'uniform buffer', describeValue(uniformBuffer));
     reflectInto(rows, material, [], SKIP_MATERIAL);
     return rows;
 }
@@ -258,6 +263,9 @@ function meshInstanceRows(instance) {
     pushRow(rows, 'material', material instanceof Material ?
         { ...describeValue(material), expand: () => materialRows(material) } : describeValue(material));
     pushRow(rows, 'visible', read(instance, 'visible'));
+    // an instance overriding material values keeps its own copy of the material's uniforms
+    const uniformBuffer = /** @type {any} */ (instance)._materialUniformBuffer;
+    if (uniformBuffer) pushRow(rows, 'material uniform buffer', describeValue(uniformBuffer));
     reflectInto(rows, instance, [], SKIP_MESH_INSTANCE);
     return rows;
 }
@@ -340,4 +348,4 @@ function buildNodeModel(node) {
     return sections;
 }
 
-export { buildNodeModel };
+export { buildNodeModel, vertexFormatValue };

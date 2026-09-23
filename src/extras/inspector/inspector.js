@@ -12,6 +12,7 @@ import { WireRenderer } from '../renderers/wire-renderer.js';
 
 import { ASSET_SORTS, assetRows, buildAssetModel, collectAssets } from './asset-view.js';
 import { buildPassModel, captureFrameGraph, passRows } from './frame-graph-view.js';
+import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
 import { HierarchyView } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
 import { formatBytes, formatName, passDisplayName } from './model.js';
@@ -137,6 +138,8 @@ function isTextTarget(e) {
  *   The selected target's attachment can be previewed live in a corner of the viewport.
  * - Textures: every texture on the device, largest GPU footprint first, with the same live preview.
  *   Texture values elsewhere, such as the maps of a material, link here.
+ * - Memory: video memory by kind of resource, and every buffer on the device, largest first, named
+ *   after the mesh, material or asset it was found to belong to. Buffer values elsewhere link here.
  * - Shaders: every shader on the device with its language, state and vertex attributes. The
  *   compiled variants listed on a material link here.
  * - Assets: every asset in the registry with its file, load state and the components using it.
@@ -320,7 +323,7 @@ class Inspector {
     _nextPropertyRefresh = 0;
 
     /**
-     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'shaders'|'physics'}
+     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'memory'|'shaders'|'physics'}
      * @private
      */
     _tab = 'hierarchy';
@@ -423,6 +426,33 @@ class Inspector {
      * @private
      */
     _assetList;
+
+    /**
+     * @type {ListView}
+     * @private
+     */
+    _bufferList;
+
+    /**
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _bufferKind;
+
+    /**
+     * @type {HTMLElement}
+     * @private
+     */
+    _memoryNote;
+
+    /**
+     * Model builder for the property view when a buffer is selected.
+     *
+     * @param {*} buffer - The buffer.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _bufferModel = buffer => buildBufferModel(buffer, this._context());
 
     /**
      * @type {HTMLSelectElement}
@@ -937,8 +967,8 @@ class Inspector {
         this._tabButtons = {};
         const tabList = [
             ['hierarchy', 'Hierarchy'], ['assets', 'Assets'], ['passes', 'Frame graph'],
-            ['targets', 'Render targets'], ['textures', 'Textures'], ['shaders', 'Shaders'],
-            ['physics', 'Physics']
+            ['targets', 'Render targets'], ['textures', 'Textures'], ['memory', 'Memory'],
+            ['shaders', 'Shaders'], ['physics', 'Physics']
         ];
         for (const [id, label] of tabList) {
             const tab = el('button', 'pci-tab', label);
@@ -998,12 +1028,21 @@ class Inspector {
         const assetList = el('div', 'pci-list');
         assetPanel.append(assetBar, assetList);
 
+        // memory: the totals over the buffers, which can be narrowed to one kind
+        const memoryPanel = el('div', 'pci-listpanel');
+        const memoryBar = el('div', 'pci-subbar');
+        this._bufferKind = this._makeSelect(memoryBar, 'Show', BUFFER_KINDS);
+        this._memoryNote = el('div', 'pci-note pci-note-info');
+        this._memoryNote.style.whiteSpace = 'pre-line';
+        const bufferList = el('div', 'pci-list');
+        memoryPanel.append(memoryBar, this._memoryNote, bufferList);
+
         // shaders: a plain list
         const shaderPanel = el('div', 'pci-listpanel');
         const shaderList = el('div', 'pci-list');
         shaderPanel.append(shaderList);
 
-        for (const input of [this._previewToggle, this._previewAttachment, this._previewChannels, this._texturePreviewToggle, this._textureChannels, this._assetSort]) {
+        for (const input of [this._previewToggle, this._previewAttachment, this._previewChannels, this._texturePreviewToggle, this._textureChannels, this._assetSort, this._bufferKind]) {
             input.addEventListener('change', () => this._saveSettings());
         }
 
@@ -1058,10 +1097,11 @@ class Inspector {
             passes: passPanel,
             targets: targetPanel,
             textures: texturePanel,
+            memory: memoryPanel,
             shaders: shaderPanel,
             physics: physicsPanel
         };
-        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, shaderPanel, physicsPanel);
+        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, memoryPanel, shaderPanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1145,6 +1185,10 @@ class Inspector {
             if (this._tab === 'shaders') this._properties.setSubject(shader, buildShaderModel, key);
             this._updateStatus();
         }, target => this._selectAny(target));
+        this._bufferList = new ListView(bufferList, (buffer, key) => {
+            if (this._tab === 'memory') this._properties.setSubject(buffer, this._bufferModel, key);
+            this._updateStatus();
+        }, target => this._selectAny(target));
         this._assetList = new ListView(assetList, (asset, key) => {
             if (this._tab === 'assets') this._properties.setSubject(asset, this._assetModel, key);
             this._updateStatus();
@@ -1225,6 +1269,7 @@ class Inspector {
             if (typeof stored.targetPreview.channels === 'string') this._previewChannels.value = stored.targetPreview.channels;
         }
         if (typeof stored.assetSort === 'string') this._assetSort.value = stored.assetSort;
+        if (typeof stored.bufferKind === 'string') this._bufferKind.value = stored.bufferKind;
         if (stored.texturePreview && typeof stored.texturePreview === 'object') {
             if (typeof stored.texturePreview.enabled === 'boolean') this._texturePreviewToggle.checked = stored.texturePreview.enabled;
             if (typeof stored.texturePreview.channels === 'string') this._textureChannels.value = stored.texturePreview.channels;
@@ -1256,7 +1301,8 @@ class Inspector {
                 gpuTimings: this._gpuToggle.checked,
                 targetPreview: { enabled: this._previewToggle.checked, channels: this._previewChannels.value },
                 texturePreview: { enabled: this._texturePreviewToggle.checked, channels: this._textureChannels.value },
-                assetSort: this._assetSort.value
+                assetSort: this._assetSort.value,
+                bufferKind: this._bufferKind.value
             }));
         } catch (e) {
             // storage unavailable or full: settings simply do not persist
@@ -1515,7 +1561,7 @@ class Inspector {
     /**
      * Switches the list tab and points the property view at that tab's selection.
      *
-     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'shaders'|'physics'} tab - The tab.
+     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'memory'|'shaders'|'physics'} tab - The tab.
      * @private
      */
     _setTab(tab) {
@@ -1566,6 +1612,13 @@ class Inspector {
             if (texture !== this._properties.subject) {
                 this._properties.setSubject(texture, this._textureModel, this._textureList.selectedKey);
             }
+        } else if (this._tab === 'memory') {
+            Inspector._setNote(this._memoryNote, memorySummary(device));
+            this._bufferList.setRows(bufferRows(device, bufferOwners(this._app), this._bufferKind.value));
+            const buffer = this._bufferList.selected;
+            if (buffer !== this._properties.subject) {
+                this._properties.setSubject(buffer, this._bufferModel, this._bufferList.selectedKey);
+            }
         } else if (this._tab === 'assets') {
             this._assetList.setRows(assetRows(this._app.assets, this._assetSort.value));
             const asset = this._assetList.selected;
@@ -1611,6 +1664,7 @@ class Inspector {
         this._textureList.filter = value;
         this._shaderList.filter = value;
         this._assetList.filter = value;
+        this._bufferList.filter = value;
         this._bodyList.filter = value;
         this._refreshLists(false);
     }
@@ -1641,6 +1695,11 @@ class Inspector {
         } else if (target instanceof Asset) {
             this._setTab('assets');
             this._assetList.selectItem(target);
+        } else if (bufferKind(target)) {
+            // a filter hiding the buffer's kind would leave nothing to select
+            if (this._bufferKind.value !== 'all' && this._bufferKind.value !== bufferKind(target)) this._bufferKind.value = 'all';
+            this._setTab('memory');
+            this._bufferList.selectItem(target);
         }
     }
 
@@ -1780,6 +1839,14 @@ class Inspector {
                 const bytes = textures.reduce((sum, texture) => sum + texture.gpuSize, 0);
                 counts = `${textures.length} textures · ${formatBytes(bytes)}`;
                 selected = this._textureList.selected?.name ?? '';
+                break;
+            }
+            case 'memory': {
+                const buffers = collectBuffers(device, this._bufferKind.value);
+                const bytes = buffers.reduce((sum, buffer) => sum + bufferBytes(buffer), 0);
+                counts = `${buffers.length} buffers · ${formatBytes(bytes)}`;
+                const buffer = this._bufferList.selected;
+                selected = buffer ? `${buffer.constructor.name} #${idOf(buffer)}` : '';
                 break;
             }
             case 'assets': {
