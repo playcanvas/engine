@@ -206,6 +206,91 @@ describe('Http', function () {
 
         });
 
+        describe('status 0', function () {
+            let originalXHR;
+
+            // A minimal XMLHttpRequest that completes with status 0 and the given response URL. nise
+            // can't be used here as it fires an error event for every status 0 response, whereas a
+            // browser completes a successful load from a non-http scheme with a load event
+            const respondWithStatus0 = (responseURL, body) => {
+                global.XMLHttpRequest = class {
+                    readyState = 0;
+
+                    status = 0;
+
+                    responseType = '';
+
+                    open() {
+                        this.readyState = 1;
+                    }
+
+                    setRequestHeader() {
+                    }
+
+                    getResponseHeader() {
+                        return null;
+                    }
+
+                    send() {
+                        setTimeout(() => {
+                            this.readyState = 4;
+                            this.responseURL = responseURL;
+                            this.responseText = body;
+                            this.response = this.responseType === 'json' && body ? JSON.parse(body) : body;
+                            this.onreadystatechange();
+                        });
+                    }
+                };
+            };
+
+            beforeEach(function () {
+                originalXHR = global.XMLHttpRequest;
+            });
+
+            afterEach(function () {
+                global.XMLHttpRequest = originalXHR;
+            });
+
+            for (const responseURL of [
+                'file:///app/test.json',
+                'file://localhost/app/test.json',
+                'ionic://localhost/test.json',
+                'capacitor://localhost/test.json',
+                'app://bundle/test.json'
+            ]) {
+                it(`treats a response from ${responseURL} as success`, function (done) {
+                    respondWithStatus0(responseURL, JSON.stringify({ a: 1 }));
+                    http.get('/test.json', (err, data) => {
+                        expect(err).to.equal(null);
+                        expect(data).to.deep.equal({ a: 1 });
+                        done();
+                    });
+                });
+            }
+
+            for (const responseURL of ['http://example.com/test.json', 'https://example.com/test.json', '']) {
+                it(`treats a response from ${responseURL || 'an empty URL'} as a network error`, function (done) {
+                    respondWithStatus0(responseURL, '');
+                    http.get('/test.json', (err, data) => {
+                        expect(err).to.equal('Network error');
+                        expect(data).to.equal(null);
+                        done();
+                    });
+                });
+            }
+
+            it('retries a status 0 response from an https URL', function (done) {
+                spy(http, 'request');
+                respondWithStatus0('https://example.com/test.json', '');
+                http.get('/test.json', { retry: true, maxRetries: 2 }, (err, data) => {
+                    expect(err).to.equal('Network error');
+                    expect(http.request.callCount).to.equal(3);
+                    done();
+                });
+            });
+
+        });
+
     });
 
     describe('#maxConcurrentRequests', function () {
