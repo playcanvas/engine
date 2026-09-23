@@ -175,14 +175,18 @@ describe('Http', function () {
                 });
             });
 
-            it('treats 204 No Content as success with a null response', function (done) {
-                respondWith(204, { 'Content-Type': 'application/json' }, '');
-                http.get('/someurl.json', (err, data) => {
-                    expect(err).to.equal(null);
-                    expect(data).to.equal(null);
-                    done();
+            for (const [status, name] of [[204, 'No Content'], [205, 'Reset Content']]) {
+                it(`treats ${status} ${name} as success with a null response`, function (done) {
+                    // The URL has no .json extension, so the JSON content type makes Http parse the
+                    // body text itself (a .json URL is read through the XHR's own json response type)
+                    respondWith(status, { 'Content-Type': 'application/json' }, '');
+                    http.get('/someurl', (err, data) => {
+                        expect(err).to.equal(null);
+                        expect(data).to.equal(null);
+                        done();
+                    });
                 });
-            });
+            }
 
             it('does not retry a 204 No Content response', function (done) {
                 spy(http, 'request');
