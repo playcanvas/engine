@@ -223,6 +223,35 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     pipeline = null;
 
     /**
+     * True when a render state the render pipeline depends on has changed since the pipeline was
+     * last looked up, see {@link WebgpuGraphicsDevice#draw}. The setters raise it only when a
+     * value actually changes, so a run of draws with the same state reuses the pipeline without
+     * building and hashing its key.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _pipelineDirty = true;
+
+    /**
+     * The per-draw inputs of the render pipeline, as of its last lookup - these are arguments of
+     * the draw rather than device state, so they are compared on each draw. Vertex formats are
+     * compared by their rendering hash, as meshes of the same layout have distinct formats.
+     *
+     * @private
+     */
+    _pipelinePrimitiveType = -1;
+
+    /** @private */
+    _pipelineVertexHash0 = -1;
+
+    /** @private */
+    _pipelineVertexHash1 = -1;
+
+    /** @private */
+    _pipelineIndexFormat = -1;
+
+    /**
      * An array of bind group formats, based on currently assigned bind groups
      *
      * @type {WebgpuBindGroupFormat[]}
@@ -1164,8 +1193,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, dynamicOffsets, 0, count);
             }
 
-            // store the active formats, used by the pipeline creation
-            this.bindGroupFormats[index] = bindGroup.format.impl;
+            // store the active formats, used by the pipeline creation. A format takes part in the
+            // pipeline by its key, so a different format of the same layout keeps the pipeline
+            const formatImpl = bindGroup.format.impl;
+            if (this.bindGroupFormats[index]?.key !== formatImpl.key) {
+                this._pipelineDirty = true;
+            }
+            this.bindGroupFormats[index] = formatImpl;
         }
     }
 
@@ -1237,16 +1271,43 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                 Debug.call(() => this.validateAttributes(this.shader, [vb0, vb1]));
 
-                // render pipeline
-                pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
-                    this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
-                Debug.assert(pipeline);
+                // render pipeline - looked up only when one of its inputs changed since the last
+                // lookup: the device state (tracked by the setters), or the arguments of the draw.
+                // The pipeline is reset at the start of each pass.
+                const primitiveType = primitive.type;
+                const vertexHash0 = vb0 ? vb0.format.renderingHash : 0;
+                const vertexHash1 = vb1 ? vb1.format.renderingHash : 0;
+                const indexFormat = indexBuffer ? indexBuffer.format : 0;
+                if (this._pipelineDirty || !pipeline ||
+                    this._pipelinePrimitiveType !== primitiveType ||
+                    this._pipelineVertexHash0 !== vertexHash0 ||
+                    this._pipelineVertexHash1 !== vertexHash1 ||
+                    this._pipelineIndexFormat !== indexFormat) {
 
-                if (this.pipeline !== pipeline) {
-                    this.pipeline = pipeline;
-                    passEncoder.setPipeline(pipeline);
+                    this._pipelineDirty = false;
+                    this._pipelinePrimitiveType = primitiveType;
+                    this._pipelineVertexHash0 = vertexHash0;
+                    this._pipelineVertexHash1 = vertexHash1;
+                    this._pipelineIndexFormat = indexFormat;
+
+                    pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
+                    Debug.assert(pipeline);
+
+                    if (this.pipeline !== pipeline) {
+                        this.pipeline = pipeline;
+                        passEncoder.setPipeline(pipeline);
+                    }
                 }
+
+                Debug.call(() => {
+                    // the pipeline reused without a lookup is the one a lookup would return
+                    const expected = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
+                    Debug.assert(expected === pipeline, 'A render state change was not tracked, the draw reused a stale render pipeline.', this);
+                });
             }
 
             if (indexBuffer) {
@@ -1312,6 +1373,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         if (shader !== this.shader) {
             this.shader = shader;
+            this._pipelineDirty = true;
 
             // #if _PROFILER
             // TODO: we should probably track other stats instead, like pipeline switches
@@ -1324,18 +1386,29 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
             'Dual-source blending is not supported by this graphics device.');
 
+        if (this.blendState.key !== blendState.key) {
+            this._pipelineDirty = true;
+        }
         this.blendState.copy(blendState);
     }
 
     setDepthState(depthState) {
+        if (this.depthState.key !== depthState.key) {
+            this._pipelineDirty = true;
+        }
         this.depthState.copy(depthState);
     }
 
     setStencilState(stencilFront, stencilBack) {
         if (stencilFront || stencilBack) {
+            const front = stencilFront ?? StencilParameters.DEFAULT;
+            const back = stencilBack ?? StencilParameters.DEFAULT;
+            if (!this.stencilEnabled || this.stencilFront.key !== front.key || this.stencilBack.key !== back.key) {
+                this._pipelineDirty = true;
+            }
             this.stencilEnabled = true;
-            this.stencilFront.copy(stencilFront ?? StencilParameters.DEFAULT);
-            this.stencilBack.copy(stencilBack ?? StencilParameters.DEFAULT);
+            this.stencilFront.copy(front);
+            this.stencilBack.copy(back);
 
             // ref value - based on stencil front
             const ref = this.stencilFront.ref;
@@ -1344,6 +1417,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 this.passEncoder.setStencilReference(ref);
             }
         } else {
+            if (this.stencilEnabled) {
+                this._pipelineDirty = true;
+            }
             this.stencilEnabled = false;
         }
     }
@@ -1357,15 +1433,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setCullMode(cullMode) {
-        this.cullMode = cullMode;
+        if (this.cullMode !== cullMode) {
+            this.cullMode = cullMode;
+            this._pipelineDirty = true;
+        }
     }
 
     setFrontFace(frontFace) {
-        this.frontFace = frontFace;
+        if (this.frontFace !== frontFace) {
+            this.frontFace = frontFace;
+            this._pipelineDirty = true;
+        }
     }
 
     setAlphaToCoverage(state) {
-        this.alphaToCoverage = state;
+        if (this.alphaToCoverage !== state) {
+            this.alphaToCoverage = state;
+            this._pipelineDirty = true;
+        }
     }
 
     initializeContextCaches() {

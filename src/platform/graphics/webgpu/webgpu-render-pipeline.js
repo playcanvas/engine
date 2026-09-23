@@ -1,6 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { hash32Fnv1a } from '../../../core/hash.js';
-import { array } from '../../../core/array-utils.js';
 import { TRACEID_RENDERPIPELINE_ALLOC } from '../../../core/constants.js';
 import { WebgpuVertexBufferLayout } from './webgpu-vertex-buffer-layout.js';
 import { WebgpuDebug } from './webgpu-debug.js';
@@ -232,7 +231,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         if (cacheEntries) {
             for (let i = 0; i < cacheEntries.length; i++) {
                 const entry = cacheEntries[i];
-                if (array.equals(entry.hashes, lookupHashes)) {
+                if (WebgpuPipeline.keysEqual(entry.hashes, lookupHashes)) {
                     return entry.pipeline;
                 }
             }
