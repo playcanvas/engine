@@ -47,12 +47,18 @@ const angularVelocity = new Vec3();
 // mesh shape is only rebuilt when the entity world scale moves by more than this relative amount
 const SCALE_CHANGE_TOLERANCE = 1e-5;
 
-// Reads the scale of a matrix, keeping any mirroring. Mat4#getScale returns axis lengths, so a
-// matrix mirrored by an odd number of negative scale factors comes back unmirrored. The rotation
-// a shape is placed with comes from Quat#setFromMat4, which turns a mirrored basis into a
-// rotation by negating its X axis, so the mirroring is carried here as a negative X scale
-// whichever axis was mirrored - a shape scaled by it in that rotation's frame covers the volume
-// the mesh renders in
+/**
+ * Reads the scale of a matrix, keeping any mirroring. Mat4#getScale returns axis lengths, so a
+ * matrix mirrored by an odd number of negative scale factors comes back unmirrored. The rotation
+ * a shape is placed with comes from Quat#setFromMat4, which turns a mirrored basis into a
+ * rotation by negating its X axis, so the mirroring is carried here as a negative X scale
+ * whichever axis was mirrored - a shape scaled by it in that rotation's frame covers the volume
+ * the mesh renders in.
+ *
+ * @param {Mat4} matrix - The matrix to read.
+ * @param {Vec3} scale - The vector to write the scale to.
+ * @returns {Vec3} The scale vector.
+ */
 function getSignedScale(matrix, scale) {
     matrix.getScale(scale);
     if (matrix.scaleSign < 0) {
