@@ -393,21 +393,33 @@ describe('AmmoPhysicsBody', function () {
         // such an entity is not its rotation. Writing the body rotation back as the world rotation
         // baked that correction into the local rotation, turning the entity on its first step.
 
+        beforeEach(function () {
+            // keep the body in place, so the first step checks the position as well as the basis
+            app.systems.rigidbody.gravity = Vec3.ZERO;
+        });
+
         /**
          * Creates a dynamic box at a height of 3 with the given local scale.
          *
          * @param {number[]} scale - The local scale.
-         * @param {Entity} [parent] - The parent entity. Defaults to the application root.
-         * @param {number[]} [angles] - The local Euler angles.
+         * @param {object} [options] - Options.
+         * @param {Entity} [options.parent] - The parent entity. Defaults to the application root.
+         * @param {number[]} [options.angles] - The local Euler angles.
+         * @param {boolean} [options.offset] - Whether the collision has a linear and angular
+         * offset.
          * @returns {Entity} The entity.
          */
-        function createScaledBox(scale, parent = app.root, angles = [0, 0, 0]) {
+        function createScaledBox(scale, { parent = app.root, angles = [0, 0, 0], offset } = {}) {
             const box = new Entity('box');
             box.setLocalPosition(0, 3, 0);
             box.setLocalScale(...scale);
             box.setLocalEulerAngles(...angles);
             parent.addChild(box);
-            box.addComponent('collision', { type: 'box' });
+            box.addComponent('collision', offset ? {
+                type: 'box',
+                linearOffset: new Vec3(0.3, -0.2, 0.5),
+                angularOffset: new Quat().setFromEulerAngles(15, 25, 35)
+            } : { type: 'box' });
             box.addComponent('rigidbody', { type: 'dynamic' });
             return box;
         }
@@ -428,15 +440,28 @@ describe('AmmoPhysicsBody', function () {
         }
 
         /**
-         * Returns the world space rotation of an entity's body.
+         * Returns the world space pose of an entity's body.
          *
          * @param {Entity} entity - The entity.
-         * @returns {Quat} The body rotation.
+         * @returns {{ position: Vec3, rotation: Quat }} The body pose.
          */
-        function getBodyRotation(entity) {
+        function getBodyPose(entity) {
+            const position = new Vec3();
             const rotation = new Quat();
-            entity.rigidbody._body.getTransform(new Vec3(), rotation);
-            return rotation;
+            entity.rigidbody._body.getTransform(position, rotation);
+            return { position, rotation };
+        }
+
+        /**
+         * Checks that an entity's collision shape is posed where its body is.
+         *
+         * @param {Entity} entity - The entity.
+         */
+        function expectShapeAtBody(entity) {
+            const { position, rotation } = getBodyPose(entity);
+            const shapeRotation = entity.collision.getShapeRotation().clone();
+            expect(entity.collision.getShapePosition().distance(position)).to.be.below(1e-5);
+            expect(Math.abs(shapeRotation.dot(rotation))).to.be.closeTo(1, 1e-6);
         }
 
         /**
@@ -452,12 +477,21 @@ describe('AmmoPhysicsBody', function () {
             return parent;
         }
 
+        const angles = [20, 30, 40];
+
         const cases = [
             ['a scale of (1, -1, 1)', () => createScaledBox([1, -1, 1])],
             ['a scale of (1, 1, -1)', () => createScaledBox([1, 1, -1])],
             ['a scale of (-1, -1, 1)', () => createScaledBox([-1, -1, 1])],
             ['a mirrored parent', () => {
-                return createScaledBox([1, 1, 1], createMirroredParent(), [20, 30, 40]);
+                return createScaledBox([1, 1, 1], { parent: createMirroredParent(), angles });
+            }],
+            ['a scale of (1, -1, 1) and a collision offset', () => {
+                return createScaledBox([1, -1, 1], { angles, offset: true });
+            }],
+            ['a mirrored parent and a collision offset', () => {
+                const parent = createMirroredParent();
+                return createScaledBox([1, 1, 1], { parent, angles, offset: true });
             }]
         ];
 
@@ -465,11 +499,14 @@ describe('AmmoPhysicsBody', function () {
             it(`keeps the world basis of a body with ${name} on the first step`, function () {
                 const box = create();
                 const before = box.getWorldTransform().clone();
+                const position = box.getPosition().clone();
 
                 app.update(0);
                 app.update(1 / 60);
 
                 expect(basisDifference(box.getWorldTransform(), before)).to.be.below(1e-5);
+                expect(box.getPosition().distance(position)).to.be.below(1e-5);
+                expectShapeAtBody(box);
             });
 
             it(`turns a body with ${name} with its body under a torque`, function () {
@@ -478,7 +515,7 @@ describe('AmmoPhysicsBody', function () {
 
                 app.update(0);
                 app.update(1 / 60);
-                const start = getBodyRotation(box);
+                const start = getBodyPose(box).rotation;
 
                 for (let i = 0; i < 30; i++) {
                     box.rigidbody.applyTorque(3, 5, -2);
@@ -486,10 +523,11 @@ describe('AmmoPhysicsBody', function () {
                 }
 
                 // the entity's world basis is turned through the body's rotation since the start
-                const turn = getBodyRotation(box).mul(start.invert());
+                const turn = getBodyPose(box).rotation.mul(start.invert());
                 const expected = new Mat4().setTRS(Vec3.ZERO, turn, Vec3.ONE).mul(before);
                 expect(basisDifference(box.getWorldTransform(), expected)).to.be.below(1e-4);
                 expect(basisDifference(box.getWorldTransform(), before)).to.be.above(0.5);
+                expectShapeAtBody(box);
             });
         });
     });
