@@ -47,8 +47,11 @@ void main(void) {
             // screen. The fragment shader recomputes view direction from screen
             // coordinates, so only rasterization coverage matters here.
             vec4 viewPos = view * aPosition;
-            gl_Position = vec4(viewPos.xy, 0.0, -viewPos.z);
-            vClipXYW = vec3(gl_Position.xy, gl_Position.w);
+            vClipXYW = vec3(viewPos.xy, -viewPos.z);
+
+            // apply the per-pass target flip carried by the projection, so the rasterized position
+            // (and winding, which the renderer compensates for) matches the target orientation
+            gl_Position = vec4(viewPos.x, viewPos.y * sign(matrix_projectionSkybox[1][1]), 0.0, -viewPos.z);
         #else
             gl_Position = matrix_projectionSkybox * (view * aPosition);
         #endif

@@ -48,6 +48,9 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
             0.0,                           0.0,                            0.0
         );
 
+        // mirror the footprint along with the center when the target flips Y
+        J[1] *= sign(center.projMat11);
+
     #else
 
         // Standard perspective Jacobian. The focal length in pixels is taken per axis: the two

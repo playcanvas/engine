@@ -41,7 +41,9 @@ bool initCenter(vec3 modelCenter, inout SplatCenter center) {
             float g_theta = fisheye_k * sin_tk / cos_tk;
             float fisheye_s = (r_xy > 1e-4) ? g_theta / r_xy : (neg_z > 0.0 ? 1.0 / neg_z : 0.0);
 
-            vec2 ndc = vec2(fisheye_projMat00 * fisheye_s * v.x, fisheye_projMat11 * fisheye_s * v.y);
+            // the fisheye mapping bypasses matrix_projection, so take the per-pass target flip from it
+            float fisheyeProjMat11 = fisheye_projMat11 * sign(matrix_projection[1][1]);
+            vec2 ndc = vec2(fisheye_projMat00 * fisheye_s * v.x, fisheyeProjMat11 * fisheye_s * v.y);
 
             float near = camera_params.z;
             float far = camera_params.y;
@@ -54,7 +56,7 @@ bool initCenter(vec3 modelCenter, inout SplatCenter center) {
 
             center.proj = vec4(ndc, depthNdc, 1.0);
             center.projMat00 = fisheye_projMat00;
-            center.projMat11 = fisheye_projMat11;
+            center.projMat11 = fisheyeProjMat11;
             center.fisheyeSinTK = sin_tk;
             center.fisheyeCosTK = cos_tk;
             center.fisheyeRxy = r_xy;

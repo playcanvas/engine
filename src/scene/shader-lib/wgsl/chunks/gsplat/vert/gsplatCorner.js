@@ -43,11 +43,14 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         let sv = select(select(0.0, 1.0 / neg_z, neg_z > 0.0), g_theta / center.fisheyeRxy, center.fisheyeRxy > 1e-4);
         let K = select(0.0, (g_prime * neg_z / d2 - sv) / r_sq, center.fisheyeRxy > 1e-4);
 
-        let J = mat3x3f(
+        var J = mat3x3f(
             vec3f(focal * (sv + K * v.x * v.x),  focal * K * v.x * v.y,       focal * g_prime * v.x / d2),
             vec3f(focal * K * v.x * v.y,         focal * (sv + K * v.y * v.y), focal * g_prime * v.y / d2),
             vec3f(0.0, 0.0, 0.0)
         );
+
+        // mirror the footprint along with the center when the target flips Y
+        J[1] = J[1] * sign(center.projMat11);
 
     #else
 
