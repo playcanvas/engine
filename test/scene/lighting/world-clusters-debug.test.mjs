@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import { spy } from 'sinon';
 
 import { Vec3 } from '../../../src/core/math/vec3.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Layer } from '../../../src/scene/layer.js';
 import { WorldClustersDebug } from '../../../src/scene/lighting/world-clusters-debug.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('WorldClustersDebug', function () {
     let device;
@@ -13,7 +13,7 @@ describe('WorldClustersDebug', function () {
     let clusters;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ id: 'clusters-debug-test' });
+        device = createGraphicsDevice({ id: 'clusters-debug-test' });
         debug = new WorldClustersDebug();
         scene = { device, defaultDrawLayer: new Layer(), drawLineArrays: spy() };
         clusters = {

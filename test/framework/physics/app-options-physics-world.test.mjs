@@ -8,7 +8,7 @@ import { CollisionComponentSystem } from '../../../src/framework/components/coll
 import { RigidBodyComponentSystem } from '../../../src/framework/components/rigid-body/system.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { NullPhysicsWorld } from '../../../src/framework/physics/null/null-physics-world.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AppOptions.physicsWorld', function () {
@@ -20,7 +20,7 @@ describe('AppOptions.physicsWorld', function () {
         const canvas = document.createElement('canvas');
         const appBase = new AppBase(canvas);
         const options = new AppOptions();
-        options.graphicsDevice = new NullGraphicsDevice(canvas);
+        options.graphicsDevice = createGraphicsDevice(canvas);
         options.componentSystems = [RigidBodyComponentSystem, CollisionComponentSystem];
         options.resourceHandlers = [];
         options.physicsWorld = physicsWorld;

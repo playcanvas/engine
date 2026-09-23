@@ -10,8 +10,8 @@ import {
     registerGlbResourceExtension,
     unregisterGlbResourceExtension
 } from '../../../src/framework/parsers/glb-resource-extension.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { createApp } from '../../app.mjs';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('ContainerHandler (parser selection)', function () {
@@ -64,7 +64,7 @@ describe('ContainerHandler (parser selection)', function () {
     it('registers the Gaussian splatting extension when AppBase initializes its component system', function () {
         const canvas = document.createElement('canvas');
         const options = new AppOptions();
-        options.graphicsDevice = new NullGraphicsDevice(canvas);
+        options.graphicsDevice = createGraphicsDevice(canvas);
         options.resourceHandlers = [ContainerHandler];
         options.componentSystems = [GSplatComponentSystem];
 
@@ -83,7 +83,7 @@ describe('ContainerHandler (parser selection)', function () {
     it('makes registered glTF resource extensions available to parsers added later', function () {
         const canvas = document.createElement('canvas');
         const options = new AppOptions();
-        options.graphicsDevice = new NullGraphicsDevice(canvas);
+        options.graphicsDevice = createGraphicsDevice(canvas);
         options.resourceHandlers = [ContainerHandler];
         options.componentSystems = [GSplatComponentSystem];
 

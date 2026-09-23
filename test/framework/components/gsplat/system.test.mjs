@@ -4,8 +4,8 @@ import { restore, stub } from 'sinon';
 import { AppBase } from '../../../../src/framework/app-base.js';
 import { AppOptions } from '../../../../src/framework/app-options.js';
 import { GSplatComponentSystem } from '../../../../src/framework/components/gsplat/system.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { GSplatParams } from '../../../../src/scene/gsplat-unified/gsplat-params.js';
+import { createGraphicsDevice } from '../../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('GSplatComponentSystem', function () {
@@ -25,7 +25,7 @@ describe('GSplatComponentSystem', function () {
     const createApp = (componentSystems) => {
         const canvas = document.createElement('canvas');
         const options = new AppOptions();
-        options.graphicsDevice = new NullGraphicsDevice(canvas);
+        options.graphicsDevice = createGraphicsDevice(canvas);
         options.resourceHandlers = [];
         options.componentSystems = componentSystems;
 

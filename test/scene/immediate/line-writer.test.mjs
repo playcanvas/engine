@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { ImmediateBatch } from '../../../src/scene/immediate/immediate-batch.js';
 import { LineWriter } from '../../../src/scene/immediate/line-writer.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 // runs the function with console.error suppressed, and returns the number of debug asserts it fired
 const withAssertCount = (fn) => {
@@ -27,7 +27,7 @@ describe('LineWriter', function () {
     let writer;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ id: 'mock' });
+        device = createGraphicsDevice({ id: 'mock' });
         batch = new ImmediateBatch(device, { transparent: false }, null);
         writer = new LineWriter();
     });

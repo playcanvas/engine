@@ -42,8 +42,12 @@ describe('StandardMaterial parallax mapping', function () {
         jsdomSetup();
         app = createApp();
 
-        // the clustered lighting shader chunks are registered by the renderer, which does not run
-        // in these tests - disable clustered lighting so they are not required
+        // these tests inspect the generated GLSL, and disable clustered lighting because its shader
+        // chunks are registered by the renderer, which does not run here. Neither applies to WebGPU,
+        // which generates WGSL and only supports clustered lighting.
+        if (app.graphicsDevice.isWebGPU) {
+            this.skip();
+        }
         app.scene.clusteredLightingEnabled = false;
     });
 

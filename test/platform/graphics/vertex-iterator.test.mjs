@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 
 import { SEMANTIC_ATTR0, SEMANTIC_POSITION, TYPE_FLOAT32 } from '../../../src/platform/graphics/constants.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { VertexBuffer } from '../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
 import { VertexIterator } from '../../../src/platform/graphics/vertex-iterator.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 // runs the function with console.error suppressed, and returns the number of debug asserts it fired
 const withAssertCount = (fn) => {
@@ -23,11 +23,11 @@ const withAssertCount = (fn) => {
 
 describe('VertexIterator', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 100, height: 100 });
+        device = createGraphicsDevice({ width: 100, height: 100 });
     });
 
     afterEach(function () {

@@ -1,9 +1,9 @@
 import { expect } from 'chai';
 import { spy } from 'sinon';
 
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Renderer } from '../../../src/scene/renderer/renderer.js';
 import { Scene } from '../../../src/scene/scene.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('Renderer destruction', function () {
     let device;
@@ -11,7 +11,7 @@ describe('Renderer destruction', function () {
     let renderer;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 1, height: 1 });
+        device = createGraphicsDevice({ width: 1, height: 1 });
         scene = new Scene(device);
         renderer = new Renderer(device, scene);
     });

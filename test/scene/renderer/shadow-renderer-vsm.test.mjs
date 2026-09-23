@@ -38,6 +38,10 @@ describe('VSM cascade blur', function () {
 
     [SHADOW_VSM_16F, SHADOW_VSM_32F].forEach((type) => {
         it(`skips non-clustered spot blur when execution is disabled for VSM type ${type}`, function () {
+            // WebGPU only supports clustered lighting
+            if (app.graphicsDevice.isWebGPU) {
+                this.skip();
+            }
             app.scene.clusteredLightingEnabled = false;
             app.root.findByName('Light').light.type = 'spot';
             light.shadowType = type;
@@ -107,6 +111,10 @@ describe('VSM cascade blur', function () {
     });
 
     it('keeps the full-map blur for non-clustered spot shadows', function () {
+        // WebGPU only supports clustered lighting
+        if (app.graphicsDevice.isWebGPU) {
+            this.skip();
+        }
         app.scene.clusteredLightingEnabled = false;
         app.root.findByName('Light').light.type = 'spot';
         light.shadowType = SHADOW_VSM_16F;

@@ -3,17 +3,17 @@ import { expect } from 'chai';
 import { INDEXFORMAT_UINT16, SEMANTIC_POSITION, TYPE_FLOAT32, UNIFORMTYPE_VEC4 } from '../../../src/platform/graphics/constants.js';
 import { DynamicBufferAllocation, DynamicBuffers } from '../../../src/platform/graphics/dynamic-buffers.js';
 import { IndexBuffer } from '../../../src/platform/graphics/index-buffer.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { UniformBufferFormat, UniformFormat } from '../../../src/platform/graphics/uniform-buffer-format.js';
 import { UniformBuffer } from '../../../src/platform/graphics/uniform-buffer.js';
 import { VertexBuffer } from '../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
 import { WebglDynamicBuffers } from '../../../src/platform/graphics/webgl/webgl-dynamic-buffers.js';
 import { WebgpuGraphicsDevice } from '../../../src/platform/graphics/webgpu/webgpu-graphics-device.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('Tracked resource counts', function () {
     it('reflects allocation and destruction in the existing registries', function () {
-        const device = new NullGraphicsDevice({ width: 16, height: 16 });
+        const device = createGraphicsDevice({ width: 16, height: 16 });
         const counts = new Map();
         device.getResourceCounts(counts);
         const before = new Map(counts);
@@ -46,7 +46,7 @@ describe('Tracked resource counts', function () {
     });
 
     it('counts WebGL pooled uniform buffers once as they are allocated and returned', function () {
-        const device = new NullGraphicsDevice({ width: 16, height: 16 });
+        const device = createGraphicsDevice({ width: 16, height: 16 });
         const buffers = new WebglDynamicBuffers(device);
         const first = new DynamicBufferAllocation();
         const second = new DynamicBufferAllocation();

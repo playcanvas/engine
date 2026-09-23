@@ -57,6 +57,10 @@ describe('Local shadow cull requests', function () {
                 const faces = type === 'omni' ? 6 : 1;
 
                 beforeEach(function () {
+                    // WebGPU only supports clustered lighting
+                    if (!clustered && app.graphicsDevice.isWebGPU) {
+                        this.skip();
+                    }
                     app.scene.clusteredLightingEnabled = clustered;
                     light = createLight(type);
                 });
