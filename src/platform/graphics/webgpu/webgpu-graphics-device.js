@@ -256,6 +256,37 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     _pipelineIndexFormat = -1;
 
     /**
+     * The GPU buffer bound to each vertex buffer slot in the current render pass, and the offset
+     * it is bound at. WebGPU keeps the vertex and index buffers bound across draws and pipeline
+     * changes for the whole pass, so a draw binds only what differs from the previous one - the
+     * draws of a mesh in a row bind its buffers once. Cleared at the start of each pass.
+     *
+     * @type {GPUBuffer[]}
+     * @private
+     */
+    _boundVertexBuffers = [];
+
+    /**
+     * @type {number[]}
+     * @private
+     */
+    _boundVertexOffsets = [];
+
+    /**
+     * The GPU buffer bound as the index buffer in the current render pass, and its format.
+     *
+     * @type {GPUBuffer|null}
+     * @private
+     */
+    _boundIndexBuffer = null;
+
+    /**
+     * @type {GPUIndexFormat|null}
+     * @private
+     */
+    _boundIndexFormat = null;
+
+    /**
      * An array of bind group formats, based on currently assigned bind groups
      *
      * @type {WebgpuBindGroupFormat[]}
@@ -1216,16 +1247,32 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         if (interleaved) {
             // for interleaved buffers, we use a single vertex buffer, and attributes are specified using the layout
-            this.passEncoder.setVertexBuffer(slot, vbBuffer);
+            this.bindVertexBuffer(slot, vbBuffer, 0);
             return 1;
         }
 
         // non-interleaved - vertex buffer per attribute
         for (let i = 0; i < elementCount; i++) {
-            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
+            this.bindVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
+    }
+
+    /**
+     * Binds a GPU buffer to a vertex buffer slot, unless the slot already holds it at the offset.
+     *
+     * @param {number} slot - The vertex buffer slot.
+     * @param {GPUBuffer} buffer - The GPU buffer.
+     * @param {number} offset - The offset in the buffer, in bytes.
+     * @private
+     */
+    bindVertexBuffer(slot, buffer, offset) {
+        if (this._boundVertexBuffers[slot] !== buffer || this._boundVertexOffsets[slot] !== offset) {
+            this._boundVertexBuffers[slot] = buffer;
+            this._boundVertexOffsets[slot] = offset;
+            this.passEncoder.setVertexBuffer(slot, buffer, offset);
+        }
     }
 
     validateVBLocations(vb0, vb1) {
@@ -1315,7 +1362,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
 
             if (indexBuffer) {
-                passEncoder.setIndexBuffer(indexBuffer.impl.buffer, indexBuffer.impl.format);
+                const { buffer, format } = indexBuffer.impl;
+                if (this._boundIndexBuffer !== buffer || this._boundIndexFormat !== format) {
+                    this._boundIndexBuffer = buffer;
+                    this._boundIndexFormat = format;
+                    passEncoder.setIndexBuffer(buffer, format);
+                }
             }
 
             // draw
@@ -1468,6 +1520,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.pipeline = null;
         this.stencilRef = 0;
         this.blendColor.set(0, 0, 0, 0);
+
+        // a new pass encoder starts with no vertex or index buffer bound
+        this._boundVertexBuffers.length = 0;
+        this._boundVertexOffsets.length = 0;
+        this._boundIndexBuffer = null;
+        this._boundIndexFormat = null;
     }
 
     _uploadDirtyTextures() {

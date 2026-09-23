@@ -66,6 +66,8 @@ describe('WebGPU render pipeline binding', function () {
             frontFace: FRONTFACE_CCW,
             alphaToCoverage: false,
             bindGroupFormats: [],
+            _boundVertexBuffers: [],
+            _boundVertexOffsets: [],
             _pipelineDirty: true,
             _drawCallsPerFrame: 0,
             _primitiveCount: 0
