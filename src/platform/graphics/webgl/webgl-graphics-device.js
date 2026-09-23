@@ -803,7 +803,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * @param {number} index - Index of the bind group slot
      * @param {BindGroup} bindGroup - Bind group to attach
-     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
+     * @param {Uint32Array} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
      * on WebGL: every uniform buffer is bound as a whole buffer from offset zero (see below).
      */
     setBindGroup(index, bindGroup, offsets) {

@@ -183,11 +183,11 @@ class Renderer {
 
     /**
      * Reused single-element array passed as the dynamic offsets to per-view setBindGroup, to avoid
-     * per-draw allocation.
+     * per-draw allocation. A typed array, as the device passes it to WebGPU without conversion.
      *
-     * @type {number[]}
+     * @type {Uint32Array}
      */
-    _viewOffsetScratch = [0];
+    _viewOffsetScratch = new Uint32Array(1);
 
     blueNoise = new BlueNoise(123);
 

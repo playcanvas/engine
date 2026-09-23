@@ -1144,15 +1144,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * @param {number} index - Index of the bind group slot
      * @param {BindGroup} bindGroup - Bind group to attach
-     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group.
+     * @param {Uint32Array} [offsets] - Byte offsets for all uniform buffers in the bind group.
+     * Defaults to the offsets the bind group holds.
      */
     setBindGroup(index, bindGroup, offsets) {
 
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
-            // set it on the device
-            this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, offsets ?? bindGroup.uniformBufferOffsets);
+            // The offsets are passed as a typed array with an explicit range, which WebGPU reads
+            // directly. A JS array - or a typed array without the range, which selects the same
+            // overload - is converted to a sequence on every call, even an empty one, which is a
+            // large part of the cost of a bind. A bind group without dynamic offsets passes none.
+            const dynamicOffsets = offsets ?? bindGroup.uniformBufferOffsets;
+            const count = dynamicOffsets.length;
+            if (count === 0) {
+                this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup);
+            } else {
+                this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, dynamicOffsets, 0, count);
+            }
 
             // store the active formats, used by the pipeline creation
             this.bindGroupFormats[index] = bindGroup.format.impl;
