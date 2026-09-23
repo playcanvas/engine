@@ -1,7 +1,6 @@
 // #if _DEBUG
 import { version, revision } from '../core/core.js';
 // #endif
-import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
@@ -1037,6 +1036,9 @@ class AppBase extends EventHandler {
      * This function is called internally by PlayCanvas applications made in the Editor but you
      * will need to call start yourself if you are using the engine stand-alone.
      *
+     * The main loop is driven by `requestAnimationFrame`. Where that is unavailable, such as in
+     * Node.js, no loop runs, so call {@link update} yourself at the rate you need.
+     *
      * @example
      * app.start();
      */
@@ -1077,7 +1079,10 @@ class AppBase extends EventHandler {
         if (this.xr?.session) {
             this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
         } else {
-            this.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(this.tick) : null;
+            // without requestAnimationFrame, as in Node.js (even with jsdom), there is no main
+            // loop and the application is driven by calling update directly
+            this.frameRequestId = typeof requestAnimationFrame === 'function' ?
+                requestAnimationFrame(this.tick) : null;
         }
     }
 
@@ -1103,9 +1108,12 @@ class AppBase extends EventHandler {
      * Update the application. This function will call the update functions and then the postUpdate
      * functions of all enabled components. It will then update the current state of all connected
      * input devices. This function is called internally in the application's main loop and does
-     * not need to be called explicitly.
+     * not need to be called explicitly, except where there is no main loop, such as in Node.js.
      *
      * @param {number} dt - The time delta in seconds since the last frame.
+     * @example
+     * // run a Node.js server at 20 updates per second
+     * setInterval(() => app.update(1 / 20), 50);
      */
     update(dt) {
         this.frame++;
