@@ -230,13 +230,13 @@ class CollisionComponent extends Component {
      * Primitive volumes are sized by their own properties ({@link CollisionComponent#halfExtents},
      * {@link CollisionComponent#radius} and {@link CollisionComponent#height}) and ignore the
      * scale of the entity. Mesh volumes follow the world scale of the entity, including the scale
-     * of its ancestors, and are rebuilt at the start of the next physics step when that scale
-     * changes. Triangle mesh volumes share one set of collision triangle data per mesh, so
-     * rescaling them is cheap; a {@link CollisionComponent#convexHull} is rebuilt from the mesh
-     * vertices at the new scale. Sharing requires an Ammo.js build that exposes
-     * `btScaledBvhTriangleMeshShape`; with older builds, triangle mesh colliders sharing a mesh
-     * use the scale of the first one built and rescaling an entity at runtime does not affect
-     * its mesh collider.
+     * of its ancestors and any mirroring by negative scale factors, and are rebuilt at the start
+     * of the next physics step when that scale changes. Triangle mesh volumes share one set of
+     * collision triangle data per mesh, so rescaling them is cheap; a
+     * {@link CollisionComponent#convexHull} is rebuilt from the mesh vertices at the new scale.
+     * Sharing requires an Ammo.js build that exposes `btScaledBvhTriangleMeshShape`; with older
+     * builds, triangle mesh colliders sharing a mesh use the scale of the first one built and
+     * rescaling an entity at runtime does not affect its mesh collider.
      *
      * Defaults to "box".
      *

@@ -32,18 +32,34 @@ import { Trigger } from './trigger.js';
  */
 
 const mat4 = new Mat4();
+const sourceMat4 = new Mat4();
 const p1 = new Vec3();
 const p2 = new Vec3();
 const p3 = new Vec3();
 const quat = new Quat();
 const quat2 = new Quat();
 const worldScale = new Vec3();
+const rootScale = new Vec3();
 const linearVelocity = new Vec3();
 const angularVelocity = new Vec3();
 
 // The scale of a rotated entity is extracted from its world matrix with some float noise, so a
 // mesh shape is only rebuilt when the entity world scale moves by more than this relative amount
 const SCALE_CHANGE_TOLERANCE = 1e-5;
+
+// Reads the scale of a matrix, keeping any mirroring. Mat4#getScale returns axis lengths, so a
+// matrix mirrored by an odd number of negative scale factors comes back unmirrored. The rotation
+// a shape is placed with comes from Quat#setFromMat4, which turns a mirrored basis into a
+// rotation by negating its X axis, so the mirroring is carried here as a negative X scale
+// whichever axis was mirrored - a shape scaled by it in that rotation's frame covers the volume
+// the mesh renders in
+function getSignedScale(matrix, scale) {
+    matrix.getScale(scale);
+    if (matrix.scaleSign < 0) {
+        scale.x = -scale.x;
+    }
+    return scale;
+}
 
 // Note that `shape` is deliberately absent from this list - it is runtime
 // state created and owned by the type implementation, not component data
@@ -380,9 +396,12 @@ function createMeshSource(system, mesh, node, entityScale, convexHull, checkDupl
     };
 
     if (node) {
-        system._getNodeTransform(node, null, source.position, source.rotation);
-        source.position.mul(entityScale);
-        source.scale.mul(node.getWorldTransform().getScale());
+        // the node pose in the frame of the entity's shape, which carries the entity scale
+        sourceMat4.setScale(entityScale.x, entityScale.y, entityScale.z);
+        sourceMat4.mul(node.getWorldTransform());
+        sourceMat4.getTranslation(source.position);
+        source.rotation.setFromMat4(sourceMat4);
+        getSignedScale(sourceMat4, source.scale);
     }
 
     return source;
@@ -394,7 +413,7 @@ function createMeshShape(system, entity, component) {
 
     if (component._model || component._render) {
 
-        const scale = entity.getWorldTransform().getScale();
+        const scale = getSignedScale(entity.getWorldTransform(), new Vec3());
         const sources = [];
 
         if (component._render) {
@@ -737,7 +756,7 @@ class CollisionComponentSystem extends ComponentSystem {
                 continue;
             }
 
-            const scale = component.entity.getWorldTransform().getScale(worldScale);
+            const scale = getSignedScale(component.entity.getWorldTransform(), worldScale);
             if (scaleChanged(scale, component._builtWorldScale)) {
                 doRecreateMeshShape(this, component);
             }
@@ -793,7 +812,7 @@ class CollisionComponentSystem extends ComponentSystem {
 
     _calculateNodeRelativeTransform(node, relative) {
         if (node === relative) {
-            const scale = node.getWorldTransform().getScale();
+            const scale = getSignedScale(node.getWorldTransform(), rootScale);
             mat4.setScale(scale.x, scale.y, scale.z);
         } else {
             this._calculateNodeRelativeTransform(node.parent, relative);
