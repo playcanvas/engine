@@ -16,7 +16,8 @@ import { NullBindGroupFormat } from './null-bind-group-format.js';
 import { NullDynamicBuffers } from './null-dynamic-buffers.js';
 
 class NullGraphicsDevice extends GraphicsDevice {
-    constructor(canvas, options = {}) {
+    constructor(canvas = { width: 1, height: 1 }, options = {}) {
+        // nothing is rendered, so headless environments such as Node.js can omit the canvas
         super(canvas, options);
         options = this.initOptions;
 
