@@ -67,6 +67,19 @@ describe('Headless Node.js', function () {
             expect(app.frameRequestId).to.equal(null);
         });
 
+        it('schedules no frame when cancelAnimationFrame is missing', function () {
+            const requested = [];
+            globalThis.requestAnimationFrame = (callback) => {
+                requested.push(callback);
+                return requested.length;
+            };
+
+            createApp();
+            app.start();
+            expect(requested).to.deep.equal([]);
+            expect(() => app.tick()).to.not.throw();
+        });
+
         it('schedules frames through a global requestAnimationFrame', function () {
             const requested = [];
             globalThis.requestAnimationFrame = (callback) => {

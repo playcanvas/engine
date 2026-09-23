@@ -1080,9 +1080,11 @@ class AppBase extends EventHandler {
             this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
         } else {
             // without requestAnimationFrame, as in Node.js (even with jsdom), there is no main
-            // loop and the application is driven by calling update directly
-            this.frameRequestId = typeof requestAnimationFrame === 'function' ?
-                requestAnimationFrame(this.tick) : null;
+            // loop and the application is driven by calling update directly. A pending frame is
+            // cancelled on each tick and on destroy, so both functions are required.
+            const hasFrameLoop = typeof requestAnimationFrame === 'function' &&
+                typeof cancelAnimationFrame === 'function';
+            this.frameRequestId = hasFrameLoop ? requestAnimationFrame(this.tick) : null;
         }
     }
 
