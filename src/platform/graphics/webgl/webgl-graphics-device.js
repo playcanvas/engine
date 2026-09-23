@@ -23,7 +23,7 @@ import {
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
-    DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL2_BARE,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
@@ -101,6 +101,35 @@ const getPixelFormatChannelsForRgbaReadback = (format) => {
 };
 
 const invalidateAttachments = [];
+
+// The extensions a bare device (DEVICETYPE_WEBGL2_BARE) keeps exposed - only those
+// available on 99%+ of devices, as reported by https://web3dsurvey.com/webgl2. Everything else the
+// device queries is hidden, so the engine takes the same code paths it would on a device without
+// it. Note that WEBGL_debug_renderer_info is kept because the renderer string it provides drives
+// device blocklists, which are about device identity rather than the feature level.
+const bareExtensions = new Set([
+    'EXT_color_buffer_float',           // 99.93%
+    'EXT_texture_filter_anisotropic',   // 99.43%
+    'WEBGL_debug_renderer_info'         // 99.99%
+]);
+
+// The capabilities a bare device reports, being the values 99%+ of devices report, as per
+// https://web3dsurvey.com/webgl2. Real limits smaller than these are left alone - bare simulates
+// the least capable devices, it does not lift any restriction.
+const bareCapabilities = {
+    maxTextureSize: 4096,           // 4232 on 97%
+    maxCubeMapSize: 4096,           // 8192 on 97%
+    maxRenderBufferSize: 8192,      // 16383 on 95%
+    maxTextures: 16,                // 24 on 14%
+    maxCombinedTextures: 32,        // 48 on 24%
+    maxVertexTextures: 16,          // 24 on 14%
+    vertexUniformsCount: 256,       // 300 on 96%
+    fragmentUniformsCount: 256,     // 300 on 96%
+    maxColorAttachments: 4,         // 6 on 98%
+    maxVolumeSize: 2048,            // 4096 on 8%
+    maxAnisotropy: 16,              // no device reports more
+    maxSamples: 4                   // 8 on 63%
+};
 
 // How long a pixel buffer copy waits for the start of the next frame before going ahead without it,
 // long enough that a frame arriving at a badly degraded rate still counts as arriving.
@@ -774,7 +803,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * @param {number} index - Index of the bind group slot
      * @param {BindGroup} bindGroup - Bind group to attach
-     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
+     * @param {Uint32Array} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
      * on WebGL: every uniform buffer is bound as a whole buffer from offset zero (see below).
      */
     setBindGroup(index, bindGroup, offsets) {
@@ -899,6 +928,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * True when the device was created as {@link DEVICETYPE_WEBGL2_BARE}, and so reports only the
+     * extensions and capabilities available on almost all devices. A getter rather than a field,
+     * as the extensions are initialized from the constructor of this class.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get bare() {
+        return this.initOptions.deviceType === DEVICETYPE_WEBGL2_BARE;
+    }
+
+    /**
      * Initialize the extensions provided by the WebGL context.
      *
      * @ignore
@@ -907,6 +948,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         this.supportedExtensions = gl.getSupportedExtensions() ?? [];
         this._extDisjointTimerQuery = null;
+
+        // a bare device only exposes the extensions available on almost all devices
+        if (this.bare) {
+            this.supportedExtensions = this.supportedExtensions.filter(name => bareExtensions.has(name));
+        }
 
         this.textureRG11B10Renderable = true;
 
@@ -949,8 +995,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
-        // HTML-in-Canvas support (texElementImage2D)
-        this.supportsHtmlTextures = typeof gl.texElementImage2D === 'function';
+        // HTML-in-Canvas support (texElementImage2D). Not an extension, so it needs hiding
+        // explicitly on a bare device - it is still experimental and behind an origin trial.
+        this.supportsHtmlTextures = !this.bare && typeof gl.texElementImage2D === 'function';
     }
 
     /**
@@ -1004,6 +1051,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // some devices incorrectly report max samples larger than 4
         this.maxSamples = Math.min(this.maxSamples, 4);
+
+        // a bare device reports no more than the least capable devices do
+        if (this.bare) {
+            for (const name in bareCapabilities) {
+                this[name] = Math.min(this[name], bareCapabilities[name]);
+            }
+        }
 
         // we handle anti-aliasing internally by allocating multi-sampled backbuffer
         this.samples = antialiasSupported && this.backBufferAntialias ? this.maxSamples : 1;

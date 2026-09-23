@@ -1,20 +1,20 @@
 import { expect } from 'chai';
 
 import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('RenderTarget', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     beforeEach(function () {
         jsdomSetup();
         const canvas = document.createElement('canvas');
-        device = new NullGraphicsDevice(canvas);
+        device = createGraphicsDevice(canvas);
     });
 
     afterEach(function () {
@@ -34,9 +34,13 @@ describe('RenderTarget', function () {
         colorBuffer.destroy();
     };
 
-    // NullGraphicsDevice is not a WebGPU device, so origin resolves the same way as on WebGL:
-    // 'top' flips, 'bottom' does not
+    // origin resolution on a non-WebGPU device: 'top' flips, 'bottom' does not. isWebGPU is stubbed
+    // so the tests behave the same on whichever device the suite runs on
     describe('#constructor: origin option', function () {
+
+        beforeEach(function () {
+            device.isWebGPU = false;
+        });
 
         it('does not flip when neither origin nor flipY is specified', function () {
             const rt = createRenderTarget();
@@ -129,6 +133,10 @@ describe('RenderTarget', function () {
 
     describe('#flipY', function () {
 
+        beforeEach(function () {
+            device.isWebGPU = false;
+        });
+
         it('deprecated setter still updates the value', function () {
             const rt = createRenderTarget({ origin: RENDERTARGET_ORIGIN_BOTTOM });
             expect(rt.flipY).to.be.false;
@@ -140,6 +148,10 @@ describe('RenderTarget', function () {
 
     // origin resolution on a non-WebGPU device: flipY true is equivalent to origin top
     describe('#origin', function () {
+
+        beforeEach(function () {
+            device.isWebGPU = false;
+        });
 
         it('defaults to native', function () {
             const rt = createRenderTarget();

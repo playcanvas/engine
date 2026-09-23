@@ -434,9 +434,14 @@ class LitShader {
             }
         }
 
-        // generate defines for all non-clustered lights
+        // generate defines for all non-clustered lights. options.lights is indexed by light slot
+        // and is sparse: a slot reserved by a light this mask does not select is a hole, and gets
+        // no defines, so the `#if defined(LIGHT<N>)` in the repeated light chunks compiles that
+        // slot out of both the declarations and the lighting code.
         for (let i = 0; i < options.lights.length; i++) {
             const light = options.lights[i];
+            if (!light) continue;
+
             const lightType = light._type;
 
             // when clustered lighting is enabled, skip non-directional lights

@@ -6,6 +6,8 @@ export const MIN_DESKTOP_HEIGHT = 601;
 
 export const DEVICETYPE_WEBGL2 = 'webgl2';
 
+export const DEVICETYPE_WEBGL2_BARE = 'webgl2:bare';
+
 export const DEVICETYPE_WEBGPU = 'webgpu';
 
 export const DEVICETYPE_WEBGPU_BARE = 'webgpu:bare';

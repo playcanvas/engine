@@ -10,6 +10,7 @@ export default /* wgsl */`
 
     #ifdef SKY_FISHEYE
         varying vClipXYW : vec3f;
+        uniform projectionFlipY : f32;
     #endif
 
     #if defined(PREPASS_PASS) || (defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH))
@@ -52,8 +53,11 @@ export default /* wgsl */`
                 // screen. The fragment shader recomputes view direction from screen
                 // coordinates, so only rasterization coverage matters here.
                 var viewPos : vec4f = view * input.aPosition;
-                output.position = vec4f(viewPos.xy, 0.0, -viewPos.z);
-                output.vClipXYW = vec3f(output.position.xy, output.position.w);
+                output.vClipXYW = vec3f(viewPos.xy, -viewPos.z);
+
+                // apply the per-pass target flip, so the rasterized position (and winding, which the
+                // renderer compensates for) matches the target orientation
+                output.position = vec4f(viewPos.x, viewPos.y * uniform.projectionFlipY, 0.0, -viewPos.z);
             #else
                 output.position = uniform.matrix_projectionSkybox * (view * input.aPosition);
             #endif

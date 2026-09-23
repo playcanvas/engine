@@ -712,6 +712,7 @@ class WebgpuShaderProcessorWGSL {
         uniforms.forEach((uniform) => {
             // uniforms not already in supplied uniform buffers go to the mesh buffer
             if (!processingOptions.hasUniform(uniform.name)) {
+                processingOptions.debugCheckMeshUniform(uniform.name);
 
                 uniform.ubName = 'ub_mesh_ub';
 

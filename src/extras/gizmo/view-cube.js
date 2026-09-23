@@ -67,12 +67,12 @@ class ViewCube extends EventHandler {
 
     /**
      * @type {{
-     *     nx: SVGAElement,
-     *     ny: SVGAElement,
-     *     nz: SVGAElement,
-     *     px: SVGAElement,
-     *     py: SVGAElement,
-     *     pz: SVGAElement,
+     *     nx: SVGGElement,
+     *     ny: SVGGElement,
+     *     nz: SVGGElement,
+     *     px: SVGGElement,
+     *     py: SVGGElement,
+     *     pz: SVGGElement,
      *     xaxis: SVGLineElement,
      *     yaxis: SVGLineElement,
      *     zaxis: SVGLineElement
@@ -306,7 +306,7 @@ class ViewCube extends EventHandler {
 
     /**
      * @private
-     * @param {SVGAElement} group - The group.
+     * @param {SVGGElement} group - The group.
      * @param {number} x - The x.
      * @param {number} y - The y.
      */
@@ -343,10 +343,10 @@ class ViewCube extends EventHandler {
      * @param {string} color - The color.
      * @param {boolean} [fill] - The fill.
      * @param {string} [text] - The text.
-     * @returns {SVGAElement} - The circle.
+     * @returns {SVGGElement} - The circle.
      */
     _circle(color, fill = false, text) {
-        const group = /** @type {SVGAElement} */ (document.createElementNS(this._svg.namespaceURI, 'g'));
+        const group = /** @type {SVGGElement} */ (document.createElementNS(this._svg.namespaceURI, 'g'));
 
         const circle = /** @type {SVGCircleElement} */ (document.createElementNS(this._svg.namespaceURI, 'circle'));
         circle.setAttribute('fill', fill ? color : this._colorNeg.toString(false));

@@ -5,6 +5,7 @@ import {
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('GraphicsDevice', function () {
@@ -12,14 +13,14 @@ describe('GraphicsDevice', function () {
     describe('#constructor', function () {
 
         it('does not throw with a mock canvas lacking getBoundingClientRect', function () {
-            const device = new NullGraphicsDevice({ id: 'mock' });
+            const device = createGraphicsDevice({ id: 'mock' });
             expect(device.clientRect.width).to.equal(0);
             expect(device.clientRect.height).to.equal(0);
             device.destroy();
         });
 
         it('initializes clientRect from mock canvas width and height', function () {
-            const device = new NullGraphicsDevice({ width: 300, height: 150 });
+            const device = createGraphicsDevice({ width: 300, height: 150 });
             expect(device.clientRect.width).to.equal(300);
             expect(device.clientRect.height).to.equal(150);
             device.destroy();
@@ -38,7 +39,7 @@ describe('GraphicsDevice', function () {
             it('initializes clientRect using getBoundingClientRect', function () {
                 const canvas = document.createElement('canvas');
                 canvas.getBoundingClientRect = () => ({ width: 640, height: 480 });
-                const device = new NullGraphicsDevice(canvas);
+                const device = createGraphicsDevice(canvas);
                 expect(device.clientRect.width).to.equal(640);
                 expect(device.clientRect.height).to.equal(480);
                 device.destroy();
@@ -46,10 +47,34 @@ describe('GraphicsDevice', function () {
         });
     });
 
+    describe('#clearVertexBuffer', function () {
+
+        it('empties the vertex buffers of the next draw, keeping the list', function () {
+            const device = createGraphicsDevice({ width: 300, height: 150 });
+            const list = device.vertexBuffers;
+            const a = {};
+            const b = {};
+            const c = {};
+
+            device.setVertexBuffer(a);
+            device.setVertexBuffer(b);
+            expect(device.vertexBuffers).to.deep.equal([a, b]);
+
+            device.clearVertexBuffer();
+            expect(device.vertexBuffers).to.have.lengthOf(0);
+            expect(device.vertexBuffers).to.equal(list);
+
+            device.setVertexBuffer(c);
+            expect(device.vertexBuffers).to.deep.equal([c]);
+            device.destroy();
+        });
+
+    });
+
     describe('#isContextLost', function () {
 
         it('reports a destroyed device as lost without a context loss event', function () {
-            const device = new NullGraphicsDevice({ id: 'mock' });
+            const device = createGraphicsDevice({ id: 'mock' });
             expect(device.isContextLost()).to.be.false;
 
             device.destroy();
@@ -63,8 +88,9 @@ describe('GraphicsDevice', function () {
         let device;
 
         beforeEach(function () {
-            // the null device is renderable in both float precisions, but supports neither the
-            // filtering nor the blending of the 32bit float formats
+            // these tests check the format selection against the null device's capabilities: it is
+            // renderable in both float precisions, but supports neither the filtering nor the
+            // blending of the 32bit float formats
             device = new NullGraphicsDevice({ id: 'mock' });
         });
 

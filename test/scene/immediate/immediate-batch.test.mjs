@@ -2,8 +2,8 @@ import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { ImmediateBatch } from '../../../src/scene/immediate/immediate-batch.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 // these mirror the private constants in immediate-batch.js
 const MIN_VERTEX_CAPACITY = 256;
@@ -30,7 +30,7 @@ describe('ImmediateBatch', function () {
     let batch;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ id: 'mock' });
+        device = createGraphicsDevice({ id: 'mock' });
         batch = new ImmediateBatch(device, { transparent: false }, null);
     });
 

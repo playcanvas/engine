@@ -27,11 +27,11 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         vec3f(covA.z, covB.y, covB.z)
     );
 
-    let focal = uniform.viewport_size.x * center.projMat00;
-
     let v = center.view.xyz;
 
     #ifdef GSPLAT_FISHEYE
+
+        let focal = uniform.viewport_size.x * center.projMat00;
 
         // Generalized fisheye Jacobian for g(θ) = k·tan(θ/k)
         // fisheyeSinTK, fisheyeCosTK, fisheyeRxy are shared from center shader
@@ -43,21 +43,29 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         let sv = select(select(0.0, 1.0 / neg_z, neg_z > 0.0), g_theta / center.fisheyeRxy, center.fisheyeRxy > 1e-4);
         let K = select(0.0, (g_prime * neg_z / d2 - sv) / r_sq, center.fisheyeRxy > 1e-4);
 
-        let J = mat3x3f(
+        var J = mat3x3f(
             vec3f(focal * (sv + K * v.x * v.x),  focal * K * v.x * v.y,       focal * g_prime * v.x / d2),
             vec3f(focal * K * v.x * v.y,         focal * (sv + K * v.y * v.y), focal * g_prime * v.y / d2),
             vec3f(0.0, 0.0, 0.0)
         );
 
+        // mirror the footprint along with the center when the target flips Y
+        J[1] = J[1] * sign(center.projMat11);
+
     #else
 
-        // Standard perspective Jacobian
+        // Standard perspective Jacobian. The focal length in pixels is taken per axis: the two
+        // differ when the viewport's pixel aspect doesn't match the projection's (e.g. a
+        // full-frame projection drawn into half the width of a side-by-side stereo target). The
+        // signs are kept: the footprint is added to the center in clip space, so it must be
+        // mirrored along with it when the projection flips an axis (e.g. a flipY render target).
+        let focal = uniform.viewport_size.xy * vec2f(center.projMat00, center.projMat11);
         let vp = select(center.view.xyz, vec3f(0.0, 0.0, 1.0), uniform.camera_params.w == 1.0);
         let J1 = focal / vp.z;
         let J2 = -J1 / vp.z * vp.xy;
         let J = mat3x3f(
-            vec3f(J1, 0.0, J2.x),
-            vec3f(0.0, J1, J2.y),
+            vec3f(J1.x, 0.0, J2.x),
+            vec3f(0.0, J1.y, J2.y),
             vec3f(0.0, 0.0, 0.0)
         );
 

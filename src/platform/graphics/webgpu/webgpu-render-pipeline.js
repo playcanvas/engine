@@ -1,6 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { hash32Fnv1a } from '../../../core/hash.js';
-import { array } from '../../../core/array-utils.js';
 import { TRACEID_RENDERPIPELINE_ALLOC } from '../../../core/constants.js';
 import { WebgpuVertexBufferLayout } from './webgpu-vertex-buffer-layout.js';
 import { WebgpuDebug } from './webgpu-debug.js';
@@ -163,6 +162,19 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
     }
 
     /**
+     * Returns the index format a render pipeline depends on. Only a strip topology uses it, as
+     * the strip index format of the pipeline - for any other topology it takes no part, so that
+     * meshes of 16 and 32 bit indices share a pipeline.
+     *
+     * @param {number} primitiveType - The primitive type.
+     * @param {number|undefined} ibFormat - The index buffer format.
+     * @returns {number|undefined} The index format for a strip topology, undefined otherwise.
+     */
+    static stripIndexFormat(primitiveType, ibFormat) {
+        return (primitiveType === PRIMITIVE_LINESTRIP || primitiveType === PRIMITIVE_TRISTRIP) ? ibFormat : undefined;
+    }
+
+    /**
      * @param {object} primitive - The primitive.
      * @param {VertexFormat} vertexFormat0 - The first vertex format.
      * @param {VertexFormat} vertexFormat1 - The second vertex format.
@@ -188,9 +200,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         // ibFormat is used only for stripped primitives, clear it otherwise to avoid additional render pipelines
         const primitiveType = primitive.type;
-        if (ibFormat && primitiveType !== PRIMITIVE_LINESTRIP && primitiveType !== PRIMITIVE_TRISTRIP) {
-            ibFormat = undefined;
-        }
+        ibFormat = WebgpuRenderPipeline.stripIndexFormat(primitiveType, ibFormat);
 
         // all bind groups must be set as the WebGPU layout cannot have skipped indices. Not having a bind
         // group would assign incorrect slots to the following bind groups, causing a validation errors.
@@ -232,7 +242,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         if (cacheEntries) {
             for (let i = 0; i < cacheEntries.length; i++) {
                 const entry = cacheEntries[i];
-                if (array.equals(entry.hashes, lookupHashes)) {
+                if (WebgpuPipeline.keysEqual(entry.hashes, lookupHashes)) {
                     return entry.pipeline;
                 }
             }

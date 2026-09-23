@@ -19,6 +19,24 @@ class WebgpuPipeline {
         this.device = device;
     }
 
+    /**
+     * Compares two pipeline cache keys. Used instead of a generic array comparison, whose element
+     * access is shared with plain arrays elsewhere and so is slower on the typed arrays the keys
+     * are - the comparison runs on every pipeline cache hit.
+     *
+     * @param {Uint32Array} a - A key.
+     * @param {Uint32Array} b - Another key, of the same length.
+     * @returns {boolean} True if the keys are equal.
+     */
+    static keysEqual(a, b) {
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // TODO: this could be cached using bindGroupKey
 
     /**

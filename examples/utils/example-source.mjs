@@ -148,6 +148,7 @@ export const stripConfig = (source) => {
  * @property {boolean} [NO_INSPECTOR] - No inspector toggle in the toolbar, for examples that create their own panel.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
  * @property {boolean} [WEBGPU_BARE_DISABLED] - If webgpu bare is disabled.
+ * @property {boolean} [WEBGL_BARE_DISABLED] - If webgl bare is disabled.
  * @property {boolean} [WEBGL_DISABLED] - If webgl is disabled.
  * @property {'webgpu' | 'webgl2'} [PREFERRED_DEVICE] - First-time default graphics device when
  * the user has no stored preference (no localStorage entry, no URL state). Ignored once the user

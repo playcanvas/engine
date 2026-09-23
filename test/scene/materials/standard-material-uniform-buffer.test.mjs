@@ -907,6 +907,9 @@ describe('StandardMaterial uniform buffer', function () {
         });
 
         it('leaves the textures on the scope when the device has no bind groups', function () {
+            if (app.graphicsDevice.usesMeshBindGroups) {
+                this.skip();
+            }
             const material = new StandardMaterial();
             material.diffuseMap = texture('diffuse');
             material.update();

@@ -26,11 +26,11 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
         covA.z, covB.y, covB.z
     );
 
-    float focal = viewport_size.x * center.projMat00;
-
     vec3 v = center.view.xyz;
 
     #ifdef GSPLAT_FISHEYE
+
+        float focal = viewport_size.x * center.projMat00;
 
         // Generalized fisheye Jacobian for g(θ) = k·tan(θ/k)
         // fisheyeSinTK, fisheyeCosTK, fisheyeRxy are shared from center shader
@@ -48,15 +48,23 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
             0.0,                           0.0,                            0.0
         );
 
+        // mirror the footprint along with the center when the target flips Y
+        J[1] *= sign(center.projMat11);
+
     #else
 
-        // Standard perspective Jacobian
+        // Standard perspective Jacobian. The focal length in pixels is taken per axis: the two
+        // differ when the viewport's pixel aspect doesn't match the projection's (e.g. a
+        // full-frame projection drawn into half the width of a side-by-side stereo target). The
+        // signs are kept: the footprint is added to the center in clip space, so it must be
+        // mirrored along with it when the projection flips an axis (e.g. a flipY render target).
+        vec2 focal = viewport_size.xy * vec2(center.projMat00, center.projMat11);
         vec3 vp = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : v;
-        float J1 = focal / vp.z;
+        vec2 J1 = focal / vp.z;
         vec2 J2 = -J1 / vp.z * vp.xy;
         mat3 J = mat3(
-            J1, 0.0, J2.x,
-            0.0, J1, J2.y,
+            J1.x, 0.0, J2.x,
+            0.0, J1.y, J2.y,
             0.0, 0.0, 0.0
         );
 

@@ -1,0 +1,43 @@
+{
+    "$schema": "https://context7.com/schema/context7.json",
+    "url": "https://context7.com/playcanvas/engine",
+    "public_key": "pk_ZBCAOpqvyscrOelnvmhm6",
+    "projectTitle": "PlayCanvas Engine",
+    "description": "Open-source WebGL2 and WebGPU 3D engine for browser games, apps, product viewers and Gaussian splat scenes. npm package: playcanvas.",
+    "folders": [],
+    "excludeFolders": [
+        ".github",
+        "build",
+        "docs",
+        "examples",
+        "scripts",
+        "src",
+        "test",
+        "utils"
+    ],
+    "excludeFiles": [
+        "AGENTS.md",
+        "README-ja.md",
+        "README-kr.md",
+        "README-zh.md"
+    ],
+    "rules": [
+        "Target PlayCanvas Engine 2.x. Check the installed version in package.json and prefer the current API at https://api.playcanvas.com/engine/ over 1.x patterns.",
+        "Import the engine as an ES module: `npm install playcanvas` with a bundler, or an import map pointing 'playcanvas' at https://cdn.jsdelivr.net/npm/playcanvas/+esm with no build step.",
+        "Build scenes from Entity objects with addComponent('render' | 'camera' | 'light' | 'script' | ...). Prefer the render component over the legacy model component.",
+        "For primitives use addComponent('render', { type: 'box' | 'sphere' | 'capsule' | 'cylinder' | 'cone' | 'plane' }). For GLB models load a 'container' asset and call asset.resource.instantiateRenderEntity().",
+        "Load assets through app.assets: create an Asset(name, type, { url }), add it with app.assets.add(), then app.assets.load() or AssetListLoader for batches. Wait for the 'load' event before reading asset.resource.",
+        "Coordinate system is right-handed and Y-up. Entity.forward is the local negative Z axis and cameras look down negative Z. setEulerAngles, rotate and rotateLocal take degrees, not radians.",
+        "Color components are floats from 0 to 1. After changing StandardMaterial properties call material.update().",
+        "Run per-frame logic in app.on('update', dt => ...) or a script's update(dt), where dt is seconds. Do not allocate Vec3, Quat, Mat4 or Color inside per-frame code; reuse module-scope temporaries.",
+        "Write scripts as ESM classes extending Script with a static scriptName and attributes declared as class fields tagged /** @attribute */. Classic pc.createScript() is supported but legacy. Never mix the two styles in one file.",
+        "Create the graphics device with createGraphicsDevice(canvas, { deviceTypes: ['webgpu', 'webgl2'] }) and pass it through AppOptions to AppBase. Code must work on both WebGL2 and WebGPU; do not call WebGL or WebGPU APIs directly.",
+        "For a resizable full-window canvas call app.setCanvasFillMode(FILLMODE_FILL_WINDOW), app.setCanvasResolution(RESOLUTION_AUTO) and app.resizeCanvas() on the window resize event.",
+        "Physics needs ammo.js: call WasmModule.setConfig('Ammo', { glueUrl, wasmUrl, fallbackUrl }) and wait for WasmModule.getInstance('Ammo', callback) before adding rigidbody or collision components.",
+        "Set tone mapping and gamma correction on the camera component (camera.toneMapping, camera.gammaCorrection), not globally on the scene.",
+        "Load Gaussian splats as a 'gsplat' asset and render them with addComponent('gsplat', { asset }).",
+        "Release resources you create: entity.destroy(), asset.unload(), material.destroy(), texture.destroy(), and app.destroy() when tearing the application down.",
+        "For React use @playcanvas/react and for declarative HTML use @playcanvas/web-components. Both wrap the same engine objects, so engine API docs still apply.",
+        "Runnable references: https://playcanvas.com/examples hosts every example in this repo; sources live under examples/src/examples. The user manual is at https://developer.playcanvas.com/user-manual/."
+    ]
+}

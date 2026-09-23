@@ -32,6 +32,7 @@ import { PickerId } from './picker-id.js';
  * @import { Mesh } from './mesh.js'
  * @import { MorphInstance } from './morph-instance.js'
  * @import { CameraShaderParams } from './camera-shader-params.js'
+ * @import { LightList } from './lighting/light-list.js'
  * @import { Scene } from './scene.js'
  * @import { UniformFormat } from '../platform/graphics/uniform-buffer-format.js'
  * @typedef {object} MeshInstanceParameter - A parameter of a mesh instance, overriding the value of
@@ -722,7 +723,7 @@ class MeshInstance {
     /**
      * Sets the graphics mesh being instanced.
      *
-     * @type {Mesh}
+     * @type {Mesh|null}
      */
     set mesh(mesh) {
 
@@ -744,7 +745,7 @@ class MeshInstance {
     /**
      * Gets the graphics mesh being instanced.
      *
-     * @type {Mesh}
+     * @type {Mesh|null}
      */
     get mesh() {
         return this._mesh;
@@ -859,25 +860,24 @@ class MeshInstance {
     }
 
     /**
-     * Returns the shader instance for the specified shader pass and light hash that is compatible
+     * Returns the shader instance for the specified shader pass and lights that is compatible
      * with this mesh instance.
      *
      * @param {number} shaderPass - The shader pass index.
-     * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
+     * @param {LightList} lightList - The lights of the pass.
      * @param {Scene} scene - The scene.
      * @param {CameraShaderParams} cameraShaderParams - The camera shader parameters.
      * @param {UniformBufferFormat} [viewUniformFormat] - The format of the view uniform buffer.
-     * @param {any} [sortedLights] - Array of arrays of lights.
      * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getShaderInstance(shaderPass, lightHash, scene, cameraShaderParams, viewUniformFormat, sortedLights) {
+    getShaderInstance(shaderPass, lightList, scene, cameraShaderParams, viewUniformFormat) {
 
         const shaderDefs = this._shaderDefs;
 
         // unique hash for the required shader
         lookupHashes[0] = shaderPass;
-        lookupHashes[1] = lightHash;
+        lookupHashes[1] = lightList.hash;
         lookupHashes[2] = shaderDefs;
         lookupHashes[3] = cameraShaderParams.hash;
 
@@ -910,7 +910,7 @@ class MeshInstance {
                     objDefs: shaderDefs,
                     cameraShaderParams: cameraShaderParams,
                     pass: shaderPass,
-                    sortedLights: sortedLights,
+                    lightList: lightList,
                     viewUniformFormat: viewUniformFormat,
                     vertexFormat: this.mesh.vertexBuffer?.format
                 });
@@ -942,7 +942,7 @@ class MeshInstance {
     /**
      * Sets the material used by this mesh instance.
      *
-     * @type {Material}
+     * @type {Material|null}
      */
     set material(material) {
 
@@ -975,7 +975,7 @@ class MeshInstance {
     /**
      * Gets the material used by this mesh instance.
      *
-     * @type {Material}
+     * @type {Material|null}
      */
     get material() {
         return this._material;
@@ -1299,7 +1299,9 @@ class MeshInstance {
     /**
      * Sets the {@link MeshInstance} to be rendered using indirect rendering, where the GPU,
      * typically using a Compute shader, stores draw call parameters in a buffer.
-     * Note that this is only supported on WebGPU, and ignored on other platforms.
+     * Note that this is only supported on WebGPU (see
+     * {@link GraphicsDevice#supportsIndirectDraw}), and ignored on other platforms, where the
+     * mesh instance renders as a normal draw call.
      *
      * @param {CameraComponent|null} camera - Camera component to set indirect data for, or
      * null if the indirect slot should be used for all cameras.
@@ -1314,7 +1316,7 @@ class MeshInstance {
         // disable when slot is -1
         if (slot === -1) {
             this._deleteDrawCommandsKey(key);
-        } else {
+        } else if (this.mesh.device.supportsIndirectDraw) {
             const cmd = this._allocDrawCommands(key, false);
             cmd.slotIndex = slot;
             cmd.update(count);
@@ -1322,6 +1324,10 @@ class MeshInstance {
             // the slot is recycled at the end of the frame, so the commands only apply to this
             // frame - they need to be assigned again for the next one
             cmd.validUntilVersion = this.mesh.device.drawCommandsVersion;
+        } else {
+            // ignored as documented - the backend cannot source draw parameters from a buffer, and
+            // draw commands it has no way to execute would take it down its multi-draw path
+            Debug.warnOnce('MeshInstance#setIndirect: indirect rendering is only supported on WebGPU, ignoring the call.');
         }
     }
 

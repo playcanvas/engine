@@ -7,9 +7,9 @@ import { Graph } from '../../../src/extras/mini-stats/graph.js';
 import { MiniStats } from '../../../src/extras/mini-stats/mini-stats.js';
 import { StatsTimer } from '../../../src/extras/mini-stats/stats-timer.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Layer } from '../../../src/scene/layer.js';
 import { createApp } from '../../app.mjs';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('MiniStats', function () {
@@ -22,7 +22,7 @@ describe('MiniStats', function () {
         jsdomSetup();
         canvas = document.createElement('canvas');
         stub(canvas, 'getBoundingClientRect').returns({ left: 0, bottom: 720, width: 1280, height: 720 });
-        device = new NullGraphicsDevice(canvas);
+        device = createGraphicsDevice(canvas);
         app = new EventHandler();
         app.graphicsDevice = device;
         const layer = new Layer({ id: 4 });

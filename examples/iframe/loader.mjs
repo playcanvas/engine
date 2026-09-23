@@ -121,8 +121,7 @@ class ExampleLoader {
             // engine device type matches the expected family, otherwise report the actual
             // engine device type to surface fallbacks.
             const engineType = this._app?.graphicsDevice?.deviceType;
-            const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
-            const reportedType = (isWebGPU(selectedDeviceType) && engineType === 'webgpu') ?
+            const reportedType = selectedDeviceType.split(':')[0] === engineType ?
                 selectedDeviceType :
                 engineType;
             win.activeGraphicsDevice = reportedType;

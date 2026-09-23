@@ -210,14 +210,15 @@ function drawRectangle(x, y, w, h) {
 }
 
 /**
- * Sets material emissive color to specified color.
+ * Sets material emissive color and intensity.
  *
  * @param {StandardMaterial} material - The material to highlight.
  * @param {Color} color - The color to highlight with.
+ * @param {number} [intensity] - The emissive intensity. Defaults to 30.
  */
-function highlightMaterial(material, color) {
+function highlightMaterial(material, color, intensity = 30) {
     material.emissive = color;
-    material.emissiveIntensity = 30;
+    material.emissiveIntensity = intensity;
     material.update();
 }
 
@@ -234,6 +235,7 @@ const marker = createPrimitive('sphere', Vec3.ZERO, new Vec3(0.2, 0.2, 0.2));
 const markerMaterial = new StandardMaterial();
 markerMaterial.emissive = new Color(0, 1, 0);
 markerMaterial.emissiveIntensity = 100;
+markerMaterial.update();
 marker.render.material = markerMaterial;
 marker.render.meshInstances[0].pick = false;
 marker.enabled = false;
@@ -329,9 +331,7 @@ app.on('update', (/** @type {number} */ dt) => {
     Promise.all(promises).then((results) => {
         // Turn off previously highlighted meshes
         for (let h = 0; h < highlights.length; h++) {
-            highlightMaterial(highlights[h], Color.BLACK);
-            // Reset emissive intensity when turning off
-            highlights[h].emissiveIntensity = 0;
+            highlightMaterial(highlights[h], Color.BLACK, 0);
         }
         highlights.length = 0;
 

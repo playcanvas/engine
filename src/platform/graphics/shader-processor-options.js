@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { BINDGROUP_VIEW } from './constants.js';
 
 /**
@@ -92,6 +93,22 @@ class ShaderProcessorOptions {
         }
 
         return null;
+    }
+
+    /**
+     * Debug check of a uniform no supplied format claims, which so falls to the per-draw mesh
+     * uniform buffer. A light uniform belongs in the view uniform buffer whenever a view format is
+     * supplied, so one landing here means the lighting chunks declare something the format does
+     * not carry, and it is uploaded per draw again.
+     *
+     * @param {string} name - The name of the uniform.
+     */
+    debugCheckMeshUniform(name) {
+        Debug.call(() => {
+            if (this.uniformFormats[BINDGROUP_VIEW] && /^light\d+_/.test(name)) {
+                Debug.warnOnce(`Light uniform '${name}' is not part of the view uniform buffer format and is uploaded per draw. Add it to LightSlotUniforms#appendFormats.`);
+            }
+        });
     }
 
     getVertexElement(semantic) {

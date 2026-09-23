@@ -1,4 +1,3 @@
-import { array } from '../../../core/array-utils.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { TRACEID_COMPUTEPIPELINE_ALLOC } from '../../../core/constants.js';
 import { hash32Fnv1a } from '../../../core/hash.js';
@@ -63,7 +62,7 @@ class WebgpuComputePipeline extends WebgpuPipeline {
             // Handle hash collisions by checking actual values
             for (let i = 0; i < cacheEntries.length; i++) {
                 const entry = cacheEntries[i];
-                if (array.equals(entry.hashes, lookupHashes)) {
+                if (WebgpuPipeline.keysEqual(entry.hashes, lookupHashes)) {
                     return entry.pipeline;
                 }
             }

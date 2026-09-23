@@ -99,14 +99,11 @@ describe('mesh instance texture overrides', function () {
         // the parameters are classified and the copy built on the first frame
         app.render();
 
-        const bound = [];
-        sinon.stub(device, 'setBindGroup').callsFake((index, bindGroup) => {
-            if (index === BINDGROUP_MATERIAL) {
-                bound.push(bindGroup);
-            }
-        });
+        const setBindGroup = sinon.spy(device, 'setBindGroup');
 
         app.render();
+
+        const bound = setBindGroup.args.filter(([index]) => index === BINDGROUP_MATERIAL).map(([, bindGroup]) => bindGroup);
 
         // the material's group, the copy for the overriding draw, then the material's group again
         // for the draw which overrides nothing

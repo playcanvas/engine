@@ -16,7 +16,7 @@ import {
     UNIFORMTYPE_UINT,
     UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
-import { BLEND_PREMULTIPLIED, LIGHTTYPE_DIRECTIONAL } from '../constants.js';
+import { BLEND_PREMULTIPLIED } from '../constants.js';
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { needsShadowRendering } from '../renderer/shadow-renderer.js';
@@ -396,7 +396,7 @@ class GSplatShadowRenderer {
      * (warned once); they would need a per-cascade cull.
      */
     syncLights() {
-        const lights = this.layer.splitLights[LIGHTTYPE_DIRECTIONAL];
+        const lights = this.layer.getLightList().directional;
 
         // build the set of lights that should have a draw entry this frame
         const desired = this._desiredLights;

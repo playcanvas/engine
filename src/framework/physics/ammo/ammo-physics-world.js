@@ -398,6 +398,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         } else {
             this.nativeWorld.addRigidBody(nativeBody);
         }
+        body._inWorld = true;
 
         // kinematic bodies must never deactivate, everything else enters the active state
         nativeBody.forceActivationState(body._type === BODYTYPE_KINEMATIC ? BODYSTATE_DISABLE_DEACTIVATION : BODYSTATE_ACTIVE_TAG);
@@ -406,6 +407,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     removeBody(body) {
         const nativeBody = body.nativeBody;
         this.nativeWorld.removeRigidBody(nativeBody);
+        body._inWorld = false;
 
         // set activation state to disable simulation so isActive() does not return true even
         // though the body is no longer in the world
