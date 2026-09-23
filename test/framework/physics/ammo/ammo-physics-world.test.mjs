@@ -1300,6 +1300,144 @@ describe('AmmoPhysicsWorld', function () {
         });
     });
 
+    describe('application teardown', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/6924. Triggers used to
+        // keep Ammo temporaries in module scope: they outlived the application, and an
+        // application restarted on a freshly loaded Ammo module wrote through the old module's
+        // objects, which misplaced its triggers.
+
+        /**
+         * Wraps every Ammo class constructor and Ammo.destroy to track the live native objects.
+         * Proxies rather than stubs, so that Ammo.castObject still finds the class's cache.
+         *
+         * @returns {{ live: Map<number, string>, untrack: Function }} Live object pointers mapped
+         * to their class names, and a function that removes the wrappers.
+         */
+        function trackObjects() {
+            const live = new Map();
+            const originals = {};
+
+            Object.keys(Ammo)
+            .filter(name => /^bt|Callback$/.test(name) && typeof Ammo[name] === 'function')
+            .forEach((name) => {
+                const Original = Ammo[name];
+                originals[name] = Original;
+                Ammo[name] = new Proxy(Original, {
+                    construct(target, args) {
+                        const obj = new target(...args);
+                        live.set(Ammo.getPointer(obj), name);
+                        return obj;
+                    }
+                });
+            });
+
+            const destroy = Ammo.destroy;
+            Ammo.destroy = (obj) => {
+                live.delete(Ammo.getPointer(obj));
+                destroy(obj);
+            };
+
+            const untrack = () => {
+                Object.assign(Ammo, originals);
+                Ammo.destroy = destroy;
+            };
+
+            return { live, untrack };
+        }
+
+        /**
+         * Creates a stand-alone collision component, which the engine simulates as a trigger.
+         *
+         * @param {object} options - The collision component options.
+         * @param {number} x - The world X position.
+         * @returns {Entity} The trigger entity.
+         */
+        function createTrigger(options, x) {
+            const e = new Entity();
+            e.setLocalPosition(x, 0, 0);
+            app.root.addChild(e);
+            e.addComponent('collision', options);
+            return e;
+        }
+
+        /**
+         * Creates a kinematic box, which a trigger reports.
+         *
+         * @param {number} x - The world X position.
+         * @returns {Entity} The box entity.
+         */
+        function createKinematicBox(x) {
+            const e = new Entity();
+            e.setLocalPosition(x, 0, 0);
+            app.root.addChild(e);
+            e.addComponent('collision', { type: 'box' });
+            e.addComponent('rigidbody', { type: 'kinematic' });
+            return e;
+        }
+
+        it('frees every native object, triggers included, with the application', function () {
+            const { live, untrack } = trackObjects();
+            try {
+                installWorld();
+
+                createTrigger({ type: 'box' }, 0);
+                createTrigger({ type: 'mesh', render: { meshes: [createCubeMesh()] } }, 10);
+                const compound = createTrigger({ type: 'compound' }, 20);
+                compound.addChild(createTrigger({ type: 'sphere' }, 20));
+                createKinematicBox(0.5);
+
+                app.update(1 / 60);
+                app.update(1 / 60);
+                expect(live.size).to.be.above(0);
+
+                app.destroy();
+                app = null;
+                expect([...live.values()].sort()).to.deep.equal([]);
+            } finally {
+                untrack();
+            }
+        });
+
+        it('places triggers correctly on a freshly loaded Ammo module', async function () {
+            this.timeout(20000);
+            const fresh = await loadAmmo();
+
+            installWorld();
+            createTrigger({ type: 'box' }, -7);
+            app.update(1 / 60);
+            app.destroy();
+            app = null;
+
+            // the restart an examples browser or editor launch page performs
+            const first = globalThis.Ammo;
+            globalThis.Ammo = fresh;
+            try {
+                app = createApp();
+                installWorld();
+
+                const trigger = createTrigger({ type: 'box' }, 5);
+                createKinematicBox(5.5);
+                let entered = 0;
+                trigger.collision.on('triggerenter', () => {
+                    entered++;
+                });
+
+                app.update(1 / 60);
+                app.update(1 / 60);
+
+                const origin = trigger.trigger.body.nativeBody.getWorldTransform().getOrigin();
+                expect(origin.x()).to.be.closeTo(5, 1e-5);
+                expect(entered).to.equal(1);
+            } finally {
+                // the application belongs to this module, so it goes before the swap back
+                app?.destroy();
+                app = null;
+                globalThis.Ammo = first;
+            }
+        });
+    });
+
     describe('legacy Ammo build', function () {
         let scaledShape;
 
