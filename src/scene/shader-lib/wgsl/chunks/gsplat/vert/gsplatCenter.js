@@ -50,6 +50,7 @@ fn initCenter(modelCenter: vec3f, center: ptr<function, SplatCenter>) -> bool {
 
             center.proj = vec4f(ndc, depthNdc, 1.0);
             center.projMat00 = uniform.fisheye_projMat00;
+            center.projMat11 = uniform.fisheye_projMat11;
             center.fisheyeSinTK = sin_tk;
             center.fisheyeCosTK = cos_tk;
             center.fisheyeRxy = r_xy;
@@ -69,6 +70,7 @@ fn initCenter(modelCenter: vec3f, center: ptr<function, SplatCenter>) -> bool {
 
             center.proj = centerProj;
             center.projMat00 = uniform.matrix_projection[0][0];
+            center.projMat11 = uniform.matrix_projection[1][1];
 
         #endif
 

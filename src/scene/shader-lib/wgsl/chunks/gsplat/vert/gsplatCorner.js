@@ -27,11 +27,11 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
         vec3f(covA.z, covB.y, covB.z)
     );
 
-    let focal = uniform.viewport_size.x * center.projMat00;
-
     let v = center.view.xyz;
 
     #ifdef GSPLAT_FISHEYE
+
+        let focal = uniform.viewport_size.x * center.projMat00;
 
         // Generalized fisheye Jacobian for g(θ) = k·tan(θ/k)
         // fisheyeSinTK, fisheyeCosTK, fisheyeRxy are shared from center shader
@@ -51,13 +51,16 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
 
     #else
 
-        // Standard perspective Jacobian
+        // Standard perspective Jacobian. The focal length in pixels is taken per axis: the two
+        // differ when the viewport's pixel aspect doesn't match the projection's (e.g. a
+        // full-frame projection drawn into half the width of a side-by-side stereo target).
+        let focal = uniform.viewport_size.xy * abs(vec2f(center.projMat00, center.projMat11));
         let vp = select(center.view.xyz, vec3f(0.0, 0.0, 1.0), uniform.camera_params.w == 1.0);
         let J1 = focal / vp.z;
         let J2 = -J1 / vp.z * vp.xy;
         let J = mat3x3f(
-            vec3f(J1, 0.0, J2.x),
-            vec3f(0.0, J1, J2.y),
+            vec3f(J1.x, 0.0, J2.x),
+            vec3f(0.0, J1.y, J2.y),
             vec3f(0.0, 0.0, 0.0)
         );
 
