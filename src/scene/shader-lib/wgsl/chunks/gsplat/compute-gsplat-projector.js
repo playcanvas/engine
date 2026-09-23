@@ -202,19 +202,30 @@ fn main(
             sortKey = projected.splatId;
         } else {
             // Sort key — shared depth-bin weighting (same as CPU worker).
+            // The in-bin fraction is computed from the camera-relative distance so splats near the
+            // camera keep full f32 precision (instead of the ~2^-19 of a [0, numBins) float).
+            let numBinsF = f32(uniforms.numBins);
+            let invBinSize = uniforms.invRange * numBinsF;
             #ifdef RADIAL_SORT
-                let delta = center - uniforms.cameraPosition;
-                let radialDist = length(delta);
-                let dist = (1.0 / uniforms.invRange) - radialDist - uniforms.minDist;
+                let radialDist = length(center - uniforms.cameraPosition);
+                let d = (1.0 / uniforms.invRange - radialDist) * invBinSize;
+                let bin = u32(clamp(d, 0.0, numBinsF - 0.001));
+                // measured from the bin's near (camera) edge, so the foreground keeps relative precision
+                let nearFrac = radialDist * invBinSize - (numBinsF - 1.0 - f32(bin));
             #else
-                let toSplat = center - uniforms.cameraPosition;
-                let dist = dot(toSplat, uniforms.cameraDirection) - uniforms.minDist;
+                let s = dot(center - uniforms.cameraPosition, uniforms.cameraDirection);
+                let d = (s - uniforms.minDist) * invBinSize;
+                let bin = u32(clamp(d, 0.0, numBinsF - 0.001));
+                let binFrac = s * invBinSize - (uniforms.minDist * invBinSize + f32(bin));
             #endif
-            let d = dist * uniforms.invRange * f32(uniforms.numBins);
-            let binFloat = clamp(d, 0.0, f32(uniforms.numBins) - 0.001);
-            let bin = u32(binFloat);
-            let binFrac = binFloat - f32(bin);
-            sortKey = u32(binWeights[bin].base + binWeights[bin].divider * binFrac);
+            let bw = binWeights[bin];
+            let divider = u32(bw.divider);
+            #ifdef RADIAL_SORT
+                let offset = divider - 1u - min(u32(bw.divider * clamp(nearFrac, 0.0, 1.0)), divider - 1u);
+            #else
+                let offset = min(u32(bw.divider * clamp(binFrac, 0.0, 1.0)), divider - 1u);
+            #endif
+            sortKey = u32(bw.base) + offset;
         }
 
         // assemble (rgb, a) and run the render-stage color modifier on the modified center,
