@@ -53,9 +53,9 @@ const _completePartialMipmapChain = function (texture) {
     const requiredMipLevels = TextureUtils.calcMipLevelsCount(texture._width, texture._height);
 
     const isHtmlElement = function (object) {
-        return (object instanceof HTMLCanvasElement) ||
-               (object instanceof HTMLImageElement) ||
-               (object instanceof HTMLVideoElement);
+        return (typeof HTMLCanvasElement !== 'undefined' && object instanceof HTMLCanvasElement) ||
+               (typeof HTMLImageElement !== 'undefined' && object instanceof HTMLImageElement) ||
+               (typeof HTMLVideoElement !== 'undefined' && object instanceof HTMLVideoElement);
     };
 
     if (!(texture._format === PIXELFORMAT_RGBA8 ||

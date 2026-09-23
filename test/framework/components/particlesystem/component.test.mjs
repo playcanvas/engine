@@ -302,11 +302,12 @@ describe('ParticleSystemComponent', function () {
     });
 
     it('isPlaying() returns false when no emitter exists', function () {
+        // a device with particle systems disabled (the null device's default) creates no emitter
+        app.graphicsDevice.disableParticleSystem = true;
         const e = new Entity();
         e.addComponent('particlesystem');
         app.root.addChild(e);
 
-        // NullGraphicsDevice disables particle systems, so no emitter is created
         expect(e.particlesystem.isPlaying()).to.be.false;
     });
 

@@ -4,19 +4,19 @@ import {
     PIXELFORMAT_111110F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, isMultisampleCapablePixelFormat
 } from '../../../src/platform/graphics/constants.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Texture', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     beforeEach(function () {
         jsdomSetup();
         const canvas = document.createElement('canvas');
-        device = new NullGraphicsDevice(canvas);
+        device = createGraphicsDevice(canvas);
     });
 
     afterEach(function () {
@@ -63,6 +63,7 @@ describe('Texture', function () {
         });
 
         it('is ignored with a warning on a non-WebGPU device', function () {
+            device.isWebGPU = false;
             const warn = console.warn;
             const messages = [];
             console.warn = (...args) => {
@@ -123,6 +124,10 @@ describe('Texture', function () {
         });
 
         it('asserts on a multisampled texture with an incapable format', function () {
+            // a real WebGPU device rejects the texture as well, which is what the assert guards
+            if (device.isWebGPU) {
+                this.skip();
+            }
             device.isWebGPU = true;
             device.maxSamples = 4;
             const error = console.error;

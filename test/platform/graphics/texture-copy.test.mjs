@@ -3,19 +3,19 @@ import { expect } from 'chai';
 import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_R8, PIXELFORMAT_DXT1
 } from '../../../src/platform/graphics/constants.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('Texture#copy', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     beforeEach(function () {
         jsdomSetup();
         const canvas = document.createElement('canvas');
-        device = new NullGraphicsDevice(canvas);
+        device = createGraphicsDevice(canvas);
     });
 
     afterEach(function () {

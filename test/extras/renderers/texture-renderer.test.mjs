@@ -23,9 +23,11 @@ describe('TextureRenderer', function () {
         app = createApp();
         // The null backend does not bind render targets. Mirror the GPU backends so layer
         // callbacks observe the target of each real frame-graph pass.
-        sinon.stub(app.graphicsDevice, 'startRenderPass').callsFake((pass) => {
-            app.graphicsDevice.renderTarget = pass.renderTarget ?? app.graphicsDevice.backBuffer;
-        });
+        if (app.graphicsDevice.isNull) {
+            sinon.stub(app.graphicsDevice, 'startRenderPass').callsFake((pass) => {
+                app.graphicsDevice.renderTarget = pass.renderTarget ?? app.graphicsDevice.backBuffer;
+            });
+        }
         renderer = new TextureRenderer(app);
         texture = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
         other = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_R32F });
@@ -69,7 +71,7 @@ describe('TextureRenderer', function () {
     function recordDraws() {
         const draws = [];
         // Exercise app.render(), culling, layer events and shader preparation. Only GPU draw
-        // submission is replaced because this suite uses the null graphics device.
+        // submission is replaced.
         sinon.stub(app.renderer, 'renderForwardInternal').callsFake((camera, prepared) => {
             for (const instance of prepared.drawCalls) {
                 draws.push({ camera: camera.node.camera, target: app.graphicsDevice.renderTarget, instance });

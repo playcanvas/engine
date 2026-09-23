@@ -10,6 +10,9 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
  * @import { Application } from '../../../src/framework/application.js'
  */
 
+// the exposure uniform as declared by the GLSL and the WGSL tonemapping chunks
+const EXPOSURE_UNIFORM = /uniform float exposure|uniform exposure: f32/;
+
 describe('ParticleMaterial', function () {
     /** @type {Application} */
     let app;
@@ -59,7 +62,7 @@ describe('ParticleMaterial', function () {
     it('follows the camera fog and tonemapping by default', function () {
         const source = fragmentSource({});
         expect(source).to.include('fog_color');
-        expect(source).to.include('uniform float exposure');
+        expect(source).to.match(EXPOSURE_UNIFORM);
     });
 
     it('drops fog when useFog is false, even though the camera has it enabled', function () {
@@ -67,12 +70,12 @@ describe('ParticleMaterial', function () {
         // be applied after the two are merged - this is what silently broke the old noFog
         const source = fragmentSource({ useFog: false });
         expect(source).to.not.include('fog_color');
-        expect(source).to.include('uniform float exposure');
+        expect(source).to.match(EXPOSURE_UNIFORM);
     });
 
     it('drops tonemapping when useTonemap is false, even though the camera has it enabled', function () {
         const source = fragmentSource({ useTonemap: false });
-        expect(source).to.not.include('uniform float exposure');
+        expect(source).to.not.match(EXPOSURE_UNIFORM);
         expect(source).to.include('fog_color');
     });
 });

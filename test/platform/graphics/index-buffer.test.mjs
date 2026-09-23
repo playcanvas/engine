@@ -2,15 +2,15 @@ import { expect } from 'chai';
 
 import { INDEXFORMAT_UINT16, INDEXFORMAT_UINT32 } from '../../../src/platform/graphics/constants.js';
 import { IndexBuffer } from '../../../src/platform/graphics/index-buffer.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('IndexBuffer', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 100, height: 100 });
+        device = createGraphicsDevice({ width: 100, height: 100 });
     });
 
     afterEach(function () {

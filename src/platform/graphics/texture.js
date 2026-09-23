@@ -1304,7 +1304,7 @@ class Texture {
                     this._levelsUpdated[mipLevel] = true;
                 }
 
-                if (source instanceof HTMLVideoElement) {
+                if (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement) {
                     width = source.videoWidth;
                     height = source.videoHeight;
                 } else if (this.device._isHTMLElementInterface(source)) {

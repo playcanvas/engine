@@ -527,7 +527,7 @@ class WebgpuTexture {
         device.submit();
 
         // create 2d context so webgpu can upload the texture
-        dummyUse(image instanceof HTMLCanvasElement && image.getContext('2d'));
+        dummyUse(typeof HTMLCanvasElement !== 'undefined' && image instanceof HTMLCanvasElement && image.getContext('2d'));
 
         Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);

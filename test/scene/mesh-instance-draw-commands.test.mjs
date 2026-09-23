@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 import { Camera } from '../../src/scene/camera.js';
 import { ShaderMaterial } from '../../src/scene/materials/shader-material.js';
 import { MeshInstance } from '../../src/scene/mesh-instance.js';
 import { Mesh } from '../../src/scene/mesh.js';
+import { createGraphicsDevice } from '../device.mjs';
 
 describe('MeshInstance draw commands', function () {
 
@@ -12,7 +12,7 @@ describe('MeshInstance draw commands', function () {
     let meshInstance;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 1, height: 1 });
+        device = createGraphicsDevice({ width: 1, height: 1 });
 
         // only WebGPU opts into indirect draw, and these tests cover the draw command
         // bookkeeping rather than the platform support for it

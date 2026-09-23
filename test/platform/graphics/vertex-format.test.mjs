@@ -4,16 +4,16 @@ import {
     SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD5, TYPE_FLOAT32, TYPE_UINT8
 } from '../../../src/platform/graphics/constants.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('VertexFormat', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 100, height: 100 });
+        device = createGraphicsDevice({ width: 100, height: 100 });
     });
 
     afterEach(function () {

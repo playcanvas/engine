@@ -1,11 +1,11 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 import { Layer } from '../../src/scene/layer.js';
 import { StandardMaterial } from '../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../src/scene/mesh-instance.js';
 import { Mesh } from '../../src/scene/mesh.js';
+import { createGraphicsDevice } from '../device.mjs';
 
 describe('Layer mesh membership', function () {
     let device;
@@ -14,7 +14,7 @@ describe('Layer mesh membership', function () {
     let layer;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ id: 'layer-test' });
+        device = createGraphicsDevice({ id: 'layer-test' });
         material = new StandardMaterial();
         const mesh = new Mesh(device);
         instances = Array.from({ length: 8 }, () => {

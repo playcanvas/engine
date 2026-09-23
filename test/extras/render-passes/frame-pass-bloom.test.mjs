@@ -2,24 +2,24 @@ import { expect } from 'chai';
 
 import { FramePassBloom } from '../../../src/extras/render-passes/frame-pass-bloom.js';
 import { PIXELFORMAT_RGBA16F, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { ProgramLibrary } from '../../../src/scene/shader-lib/program-library.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
 import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('FramePassBloom', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     /** @type {FramePassBloom} */
     let pass;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 128, height: 128 });
+        device = createGraphicsDevice({ width: 128, height: 128 });
 
         // the downsample and upsample passes compile shaders, which an app would have set the
         // device up for

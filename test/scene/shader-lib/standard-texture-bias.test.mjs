@@ -84,6 +84,10 @@ describe('Standard material texture bias', function () {
     });
 
     it('samples the standard textures through the uniform, declared once in the view block', function () {
+        // the material generates GLSL only on a WebGL2 device; the WGSL describe covers WebGPU
+        if (app.graphicsDevice.isWebGPU) {
+            this.skip();
+        }
         const { generated, webgl, webgpu } = fragmentShaders(SPRITE_RENDERMODE_SIMPLE);
         expect(generated).not.to.contain('{STD_TEXTURE_BIAS}');
         expect(generated).to.contain(', textureBias)');
@@ -95,6 +99,10 @@ describe('Standard material texture bias', function () {
     });
 
     it('forces the top mip in the tiled nine-slice mode without redeclaring the uniform', function () {
+        // the material generates GLSL only on a WebGL2 device; the WGSL describe covers WebGPU
+        if (app.graphicsDevice.isWebGPU) {
+            this.skip();
+        }
         const { generated, webgl, webgpu } = fragmentShaders(SPRITE_RENDERMODE_TILED);
         expect(generated).not.to.contain('{STD_TEXTURE_BIAS}');
         expect(generated).to.contain(', (-1000.0))');
