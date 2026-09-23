@@ -1117,7 +1117,6 @@ class Renderer {
             const layer = comp.layerList[i];
             layer._shaderVersion = shaderVersion;
             // #if _PROFILER
-            layer._skipRenderCounter = 0;
             layer._forwardDrawCalls = 0;
             layer._shadowDrawCalls = 0;
             layer._renderTime = 0;
