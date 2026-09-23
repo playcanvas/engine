@@ -53,8 +53,10 @@ fn initCornerCov(source: ptr<function, SplatSource>, center: ptr<function, Splat
 
         // Standard perspective Jacobian. The focal length in pixels is taken per axis: the two
         // differ when the viewport's pixel aspect doesn't match the projection's (e.g. a
-        // full-frame projection drawn into half the width of a side-by-side stereo target).
-        let focal = uniform.viewport_size.xy * abs(vec2f(center.projMat00, center.projMat11));
+        // full-frame projection drawn into half the width of a side-by-side stereo target). The
+        // signs are kept: the footprint is added to the center in clip space, so it must be
+        // mirrored along with it when the projection flips an axis (e.g. a flipY render target).
+        let focal = uniform.viewport_size.xy * vec2f(center.projMat00, center.projMat11);
         let vp = select(center.view.xyz, vec3f(0.0, 0.0, 1.0), uniform.camera_params.w == 1.0);
         let J1 = focal / vp.z;
         let J2 = -J1 / vp.z * vp.xy;

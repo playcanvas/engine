@@ -52,8 +52,10 @@ bool initCornerCov(SplatSource source, SplatCenter center, out SplatCorner corne
 
         // Standard perspective Jacobian. The focal length in pixels is taken per axis: the two
         // differ when the viewport's pixel aspect doesn't match the projection's (e.g. a
-        // full-frame projection drawn into half the width of a side-by-side stereo target).
-        vec2 focal = viewport_size.xy * abs(vec2(center.projMat00, center.projMat11));
+        // full-frame projection drawn into half the width of a side-by-side stereo target). The
+        // signs are kept: the footprint is added to the center in clip space, so it must be
+        // mirrored along with it when the projection flips an axis (e.g. a flipY render target).
+        vec2 focal = viewport_size.xy * vec2(center.projMat00, center.projMat11);
         vec3 vp = camera_params.w == 1.0 ? vec3(0.0, 0.0, 1.0) : v;
         vec2 J1 = focal / vp.z;
         vec2 J2 = -J1 / vp.z * vp.xy;
