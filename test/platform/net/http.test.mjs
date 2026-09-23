@@ -146,6 +146,66 @@ describe('Http', function () {
             });
         });
 
+        describe('status codes', function () {
+            let originalXHR;
+
+            // Respond to every request with the given status, headers and body
+            const respondWith = (status, headers, body) => {
+                const fakeXhr = nise.fakeXhr.useFakeXMLHttpRequest();
+                global.XMLHttpRequest = fakeXhr;
+                fakeXhr.onCreate = (xhr) => {
+                    setTimeout(() => xhr.respond(status, headers, body));
+                };
+            };
+
+            beforeEach(function () {
+                originalXHR = global.XMLHttpRequest;
+            });
+
+            afterEach(function () {
+                global.XMLHttpRequest = originalXHR;
+            });
+
+            it('treats 202 Accepted as success', function (done) {
+                respondWith(202, { 'Content-Type': 'application/json' }, JSON.stringify({ queued: true }));
+                http.get('/someurl.json', (err, data) => {
+                    expect(err).to.equal(null);
+                    expect(data).to.deep.equal({ queued: true });
+                    done();
+                });
+            });
+
+            it('treats 204 No Content as success with a null response', function (done) {
+                respondWith(204, { 'Content-Type': 'application/json' }, '');
+                http.get('/someurl.json', (err, data) => {
+                    expect(err).to.equal(null);
+                    expect(data).to.equal(null);
+                    done();
+                });
+            });
+
+            it('does not retry a 204 No Content response', function (done) {
+                spy(http, 'request');
+                respondWith(204, {}, '');
+                http.get('/someurl', { retry: true }, (err, data) => {
+                    expect(err).to.equal(null);
+                    expect(data).to.equal(null);
+                    expect(http.request.callCount).to.equal(1);
+                    done();
+                });
+            });
+
+            it('treats 404 Not Found as an error', function (done) {
+                respondWith(404, {}, '');
+                http.get('/someurl.json', (err, data) => {
+                    expect(err).to.equal(404);
+                    expect(data).to.equal(null);
+                    done();
+                });
+            });
+
+        });
+
     });
 
     describe('#maxConcurrentRequests', function () {

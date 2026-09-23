@@ -556,32 +556,23 @@ class Http {
 
     _onReadyStateChange(method, url, options, xhr) {
         if (xhr.readyState === 4) {
-            switch (xhr.status) {
-                case 0: {
-                    // If status code 0, it is assumed that the browser has cancelled the request
+            const status = xhr.status;
+            if (status === 0) {
+                // If status code 0, it is assumed that the browser has cancelled the request
 
-                    // Add support for running Chrome browsers in 'allow-file-access-from-file'
-                    // This is to allow for specialized programs and libraries such as CefSharp
-                    // which embed Chromium in the native app.
-                    if (xhr.responseURL && xhr.responseURL.startsWith('file:///')) {
-                        // Assume that any file loaded from disk is fine
-                        this._onSuccess(method, url, options, xhr);
-                    } else {
-                        this._onError(method, url, options, xhr);
-                    }
-                    break;
-                }
-                case 200:
-                case 201:
-                case 206:
-                case 304: {
+                // Add support for running Chrome browsers in 'allow-file-access-from-file'
+                // This is to allow for specialized programs and libraries such as CefSharp
+                // which embed Chromium in the native app.
+                if (xhr.responseURL && xhr.responseURL.startsWith('file:///')) {
+                    // Assume that any file loaded from disk is fine
                     this._onSuccess(method, url, options, xhr);
-                    break;
-                }
-                default: {
+                } else {
                     this._onError(method, url, options, xhr);
-                    break;
                 }
+            } else if ((status >= 200 && status < 300) || status === 304) {
+                this._onSuccess(method, url, options, xhr);
+            } else {
+                this._onError(method, url, options, xhr);
             }
         }
     }
@@ -599,7 +590,10 @@ class Http {
         }
         try {
             // Check the content type to see if we want to parse it
-            if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
+            if (xhr.status === 204 || xhr.status === 205) {
+                // No Content and Reset Content responses have no body, so there is nothing to parse
+                response = null;
+            } else if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
                 // It's a binary response
                 response = xhr.response;
             } else if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith('.json')) {
