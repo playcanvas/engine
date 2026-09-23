@@ -1,3 +1,5 @@
+import { setTip } from './tooltip.js';
+
 /**
  * @typedef {object} ListCell
  * @ignore
@@ -196,7 +198,7 @@ class ListView {
                 entry.el.style.paddingLeft = `${indent * 14 + 6}px`;
             }
             const title = row.title ?? '';
-            if (entry.el.title !== title) entry.el.title = title;
+            if ((entry.el.dataset.tip ?? '') !== title) setTip(entry.el, title);
 
             entry.el.classList.toggle('pci-selected', row.key === this.selectedKey);
             entry.el.classList.toggle('pci-dim', !!row.dim);
@@ -254,7 +256,7 @@ class ListView {
                 if (cellEl.textContent !== cell.text) cellEl.textContent = cell.text;
             }
             const title = cell.title ?? '';
-            if (cellEl.title !== title) cellEl.title = title;
+            if ((cellEl.dataset.tip ?? '') !== title) setTip(cellEl, title);
         });
     }
 

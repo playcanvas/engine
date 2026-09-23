@@ -2,7 +2,7 @@ import {
     FILTER_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST,
     PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL,
     PIXELFORMAT_R32F, PIXELFORMAT_RG32F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F,
-    isIntegerPixelFormat, pixelFormatInfo
+    RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, isIntegerPixelFormat, pixelFormatInfo
 } from '../../platform/graphics/constants.js';
 
 import { describeValue } from './describe.js';
@@ -207,6 +207,26 @@ function previewAttachments(rt, device) {
 }
 
 /**
+ * Whether a texture holds its rows bottom-up, as a render target with the bottom origin stores
+ * them, or with the native origin on WebGL2. The texture renderer shows row 0 at the top, so such
+ * a preview needs flipping to appear upright.
+ *
+ * @param {Texture} texture - The texture.
+ * @param {GraphicsDevice} device - The device.
+ * @param {RenderTarget|null} [rt] - The render target it is attached to. Looked up on the device
+ * when not given.
+ * @returns {boolean} Whether it is stored bottom-up.
+ */
+function storedBottomUp(texture, device, rt) {
+    rt ??= [...(device.targets ?? [])].find(target => target.depthBuffer === texture ||
+        target.depthResolveBuffer === texture ||
+        Array.from({ length: target.colorBufferCount ?? 0 }, (_, i) => i)
+        .some(i => target.getColorBuffer(i) === texture || target.getResolveBuffer?.(i) === texture)) ?? null;
+    if (!rt) return false;
+    return rt.origin === RENDERTARGET_ORIGIN_BOTTOM || (rt.origin === RENDERTARGET_ORIGIN_NATIVE && device.isWebGL2);
+}
+
+/**
  * @param {number} format - A PIXELFORMAT_* constant.
  * @returns {boolean} Whether it is one of the depth formats, which preview as raw grayscale.
  */
@@ -268,4 +288,4 @@ function formatChannels(format) {
     return [...'rgba'].filter(letter => letters.includes(letter)).join('');
 }
 
-export { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows };
+export { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows, storedBottomUp };

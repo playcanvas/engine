@@ -1,3 +1,5 @@
+import { setTip } from './tooltip.js';
+
 /** @import { Described } from './describe.js' */
 /** @import { PropertyRow, PropertySection } from './model.js' */
 
@@ -20,6 +22,8 @@
  * @property {HTMLElement|null} actionsEl - The buttons of the row, if any.
  * @property {string} actionsSignature - What the buttons last rendered, to rebuild them only on change.
  * @property {Described['actions']|null} actions - The actions the buttons run, kept current each refresh.
+ * @property {HTMLElement} caretEl - The caret of a row that expands, its own click target.
+ * @property {(() => void)|null} select - What clicking the row chooses, kept current each refresh.
  */
 
 /**
@@ -337,12 +341,16 @@ class PropertyView {
             const hasCode = typeof code === 'string';
             const expandable = hasCode || !!row.value.expand;
             const expanded = expandable && this._expanded.has(`${section.key}\0${row.key}`);
-            const shown = expandable ? `${expanded ? '▾' : '▸'} ${text}` : text;
-            if (elements.text !== shown) {
-                elements.text = shown;
-                elements.valueEl.lastChild.textContent = shown;
+            const caret = expandable ? `${expanded ? '▾' : '▸'} ` : '';
+            if (elements.caretEl.textContent !== caret) elements.caretEl.textContent = caret;
+            if (elements.text !== text) {
+                elements.text = text;
+                elements.valueEl.lastChild.textContent = text;
             }
             elements.el.classList.toggle('pci-expandable', expandable);
+            elements.select = row.value.select ?? null;
+            elements.el.classList.toggle('pci-selectable', !!elements.select);
+            elements.el.classList.toggle('pci-active', !!row.value.active);
             this._renderCode(section, elements, hasCode ? code : null, expanded);
             this._renderActions(elements, row.value.actions ?? null);
             if (elements.cls !== cls) {
@@ -452,7 +460,7 @@ class PropertyView {
         actions.forEach((action, index) => {
             const button = /** @type {HTMLButtonElement} */ (el('button', 'pci-action'));
             button.textContent = action.text;
-            button.title = action.title ?? '';
+            setTip(button, action.title ?? '');
             button.disabled = !!action.disabled;
             button.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -487,7 +495,7 @@ class PropertyView {
         if (!elements.copyEl) {
             elements.copyEl = el('button', 'pci-copy');
             elements.copyEl.textContent = 'Copy';
-            elements.copyEl.title = 'Copy to the clipboard';
+            setTip(elements.copyEl, 'Copy to the clipboard');
             elements.copyEl.addEventListener('click', (e) => {
                 e.stopPropagation();
                 navigator.clipboard?.writeText(elements.code);
@@ -571,18 +579,34 @@ class PropertyView {
             groupEnd: false,
             actionsEl: null,
             actionsSignature: '',
-            actions: null
+            actions: null,
+            caretEl: el('span', 'pci-caret'),
+            select: null
         };
-        elements.valueEl.appendChild(document.createTextNode(''));
+        elements.valueEl.append(elements.caretEl, document.createTextNode(''));
         elements.el.append(elements.labelEl, elements.valueEl);
-        elements.valueEl.addEventListener('click', () => {
-            if (elements.target) {
-                this.onSelect?.(elements.target);
-            } else if (elements.el.classList.contains('pci-expandable')) {
+        // the whole row takes the click, so a choice can be made anywhere on it
+        elements.el.addEventListener('click', (e) => {
+            const expandable = elements.el.classList.contains('pci-expandable');
+            const toggle = () => {
                 const key = `${section.key}\0${row.key}`;
                 if (this._expanded.has(key)) this._expanded.delete(key);
                 else this._expanded.add(key);
                 this.refresh();
+            };
+            // the caret always opens; elsewhere a choice wins over a link, and a link over opening,
+            // which only the value reacts to
+            if (expandable && e.target === elements.caretEl) {
+                toggle();
+            } else if (elements.select) {
+                elements.select();
+                this.refresh();
+            } else if (elements.valueEl.contains(/** @type {Node} */ (e.target))) {
+                if (elements.target) {
+                    this.onSelect?.(elements.target);
+                } else if (expandable) {
+                    toggle();
+                }
             }
         });
         section.rows.set(row.key, elements);

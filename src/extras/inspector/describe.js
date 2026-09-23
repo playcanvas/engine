@@ -42,6 +42,9 @@ import { Sprite } from '../../scene/sprite.js';
  * is expanded. The text is its summary, and the row gets a copy button.
  * @property {{ text: string, title?: string, disabled?: boolean, run: () => void }[]} [actions] -
  * Buttons shown after the value, such as the pages of a long list. The view refreshes after one runs.
+ * @property {() => void} [select] - Makes the row a choice rather than a link or a toggle: clicking
+ * it calls this, and a row that also expands then opens from its caret alone.
+ * @property {boolean} [active] - Whether the row is the current choice, drawn highlighted.
  * @property {() => import('./model.js').PropertyRow[]} [expand] - Builds the rows shown under this
  * one while it is expanded, letting a value be opened in place. Called on every refresh, so it
  * reads the live object rather than a snapshot.

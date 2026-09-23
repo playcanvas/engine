@@ -7,11 +7,12 @@ import { Shader } from '../../platform/graphics/shader.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LAYERID_UI } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 import { TextureRenderer } from '../renderers/texture-renderer.js';
 import { WireRenderer } from '../renderers/wire-renderer.js';
 
 import { ASSET_SORTS, assetRows, buildAssetModel, collectAssets } from './asset-view.js';
-import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from './frame-graph-view.js';
+import { INSTANCES_PER_PAGE, LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from './frame-graph-view.js';
 import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
 import { HierarchyView } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
@@ -20,14 +21,16 @@ import { buildNodeModel } from './node-model.js';
 import { AmmoDebugDraw, DEBUG_DRAW } from './physics-debug.js';
 import { bodyRows, drawCollisionShape, drawJoint, jointRows, physicsStats } from './physics-view.js';
 import { PropertyView } from './property-view.js';
-import { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows } from './render-target-view.js';
+import { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows, storedBottomUp } from './render-target-view.js';
 import { buildShaderModel, collectShaders, shaderRows, stateName } from './shader-view.js';
 import { styles } from './styles.js';
+import { installTooltip, setTip } from './tooltip.js';
 import { buildTextureModel, collectTextures, textureRows } from './texture-view.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
 /** @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js' */
 /** @import { FrameSnapshot, PassModelContext } from './frame-graph-view.js' */
+/** @import { MeshInstance } from '../../scene/mesh-instance.js' */
 /** @import { PropertySection } from './model.js' */
 
 /**
@@ -91,6 +94,20 @@ const PHYSICS_FLAGS = {
 // seconds between refreshes of the active list, and of the selected item's properties
 const LIST_INTERVAL = 0.5;
 const PROPERTY_INTERVAL = 0.1;
+
+// the tooltips of the tabs
+const TAB_TIPS = {
+    hierarchy: 'The entity tree, and the components and properties of the selected entity',
+    assets: 'The assets of the registry, and what uses each',
+    passes: 'The passes that rendered the last frame, with the layers, draws and targets of each',
+    targets: 'The render targets on the device, with a live preview of their textures',
+    textures: 'The textures on the device, largest first, with a live preview',
+    memory: 'The vertex, index, uniform and storage buffers on the device, and what uses each',
+    shaders: 'The compiled shaders, with their sources',
+    physics: 'The rigid bodies and joints of the physics world, and its debug drawing'
+};
+
+const CHANNELS_TIP = 'Which channels of the texture to show. A single channel shows as grayscale';
 
 // events the panel swallows so that they never reach the input handlers of the app underneath
 const SWALLOWED_EVENTS = ['keydown', 'keyup', 'keypress', 'pointerdown', 'mousedown', 'wheel', 'touchstart', 'contextmenu'];
@@ -434,6 +451,40 @@ class Inspector {
     _bufferList;
 
     /**
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _passPreviewToggle;
+
+    /**
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _debugFrameToggle;
+
+    /**
+     * @type {HTMLElement}
+     * @private
+     */
+    _passNote;
+
+    /**
+     * @type {HTMLElement}
+     * @private
+     */
+    _debugEl;
+
+    /**
+     * The debug frame while it is on: the layer step it stops in, by its list key, the draw it stops
+     * at within that step's list, and the instance drawn last, which keeps the choice when the sort
+     * order shifts. Null while it is off.
+     *
+     * @type {{ stepKey: string|null, index: number, instance: MeshInstance|null, wasPaused: boolean }|null}
+     * @private
+     */
+    _debugFrame = null;
+
+    /**
      * The page each forward pass layer step shows, by pass row key and step, kept across refreshes.
      *
      * @type {Map<string, number>}
@@ -686,6 +737,7 @@ class Inspector {
         app.off('update', this._onUpdate, this);
         app.off('destroy', this.destroy, this);
         window.removeEventListener('keydown', this._onKeyDown);
+        this._setDebugFrame(false);
 
         this.paused = false;
         const profiler = app.graphicsDevice?.gpuProfiler;
@@ -708,6 +760,8 @@ class Inspector {
      */
     set visible(value) {
         value = !!value;
+        // a hidden panel leaves nothing on screen saying the frame is cut short
+        if (!value && this._debugFrame) this._setDebugFrame(false);
         const changed = value !== this._visible;
         this._visible = value;
         if (this._host) {
@@ -921,7 +975,12 @@ class Inspector {
             this._drawTargetPreview();
         } else if (this._tab === 'textures') {
             this._drawTexturePreview();
+        } else if (this._tab === 'passes') {
+            this._drawPassPreview();
         }
+
+        // written every frame, as the forward passes it matches are rebuilt every frame
+        if (this._debugFrame) this._applyDebugFrame();
     }
 
     /**
@@ -969,7 +1028,8 @@ class Inspector {
         this._popBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Pop out'));
         const closeBtn = el('button', 'pci-btn', '✕');
         const toggleLabel = Inspector._keyLabel(this._toggleKey);
-        closeBtn.title = `Hide the panel${toggleLabel ? `. Press ${toggleLabel} to show it again` : ''}`;
+        setTip(closeBtn, `Hide the panel${toggleLabel ? `. Press ${toggleLabel} to show it again` : ''}`);
+        setTip(refreshBtn, 'Rebuild the list and the properties now, instead of at the next refresh');
         toolbar.append(title, this._pauseBtn, this._stepBtn, refreshBtn, el('span', 'pci-spacer'), this._popBtn, closeBtn);
 
         this._pauseBtn.addEventListener('click', () => {
@@ -998,6 +1058,7 @@ class Inspector {
         ];
         for (const [id, label] of tabList) {
             const tab = el('button', 'pci-tab', label);
+            setTip(tab, TAB_TIPS[id]);
             tab.addEventListener('click', () => this._setTab(/** @type {any} */ (id)));
             tabs.appendChild(tab);
             this._tabButtons[id] = tab;
@@ -1006,6 +1067,7 @@ class Inspector {
         const filter = el('div', 'pci-filter');
         this._filterInput = /** @type {HTMLInputElement} */ (document.createElement('input'));
         this._filterInput.placeholder = 'Filter by name…';
+        setTip(this._filterInput, 'Show only the items of this tab whose name contains the text');
         this._filterInput.spellcheck = false;
         filter.appendChild(this._filterInput);
 
@@ -1013,10 +1075,23 @@ class Inspector {
 
         const passPanel = el('div', 'pci-listpanel');
         const passBar = el('div', 'pci-subbar');
-        this._gpuToggle = this._makeToggle(passBar, 'GPU timings', 'Enable the GPU profiler and show the time of each pass');
-        this._freezeToggle = this._makeToggle(passBar, 'Freeze', 'Stop refreshing the list, to read one frame at leisure');
+        this._gpuToggle = this._makeToggle(passBar, 'GPU timings',
+            'Enable the GPU profiler and show the time each pass takes on the GPU. Measuring adds a little overhead');
+        this._freezeToggle = this._makeToggle(passBar, 'Freeze',
+            'Keep showing the frame captured now while the app runs on, to read it at leisure. Pause stops the app itself');
+        this._passPreviewToggle = this._makeToggle(passBar, 'Preview',
+            'Draw the selected pass\'s render target over the free part of the viewport');
+        this._passPreviewToggle.checked = true;
+        this._debugFrameToggle = this._makeToggle(passBar, 'Debug frame',
+            'Pause and draw the selected forward pass only up to a chosen draw, stepping with the arrow keys');
+        if (!this._app.renderer?.debugDrawLimitSupported) {
+            this._debugFrameToggle.disabled = true;
+            setTip(this._debugFrameToggle.parentElement, 'Stepping through draws needs the debug engine');
+        }
+        this._passNote = el('div', 'pci-note pci-note-info');
+        this._passNote.style.display = 'none';
         const passList = el('div', 'pci-list');
-        passPanel.append(passBar, passList);
+        passPanel.append(passBar, this._passNote, passList);
 
         // render targets: a live preview of the selected target, drawn over the canvas
         const targetPanel = el('div', 'pci-listpanel');
@@ -1024,10 +1099,11 @@ class Inspector {
         this._previewToggle = this._makeToggle(targetBar, 'Preview',
             'Draw the selected target\'s texture in the corner of the viewport, sampled on the GPU every frame');
         this._previewToggle.checked = true;
-        this._previewAttachment = this._makeSelect(targetBar, 'Attachment', [['color0', 'color']]);
+        this._previewAttachment = this._makeSelect(targetBar, 'Attachment', [['color0', 'color']],
+            'Which texture of the render target to preview');
         this._previewChannels = this._makeSelect(targetBar, 'Channels', [
             ['rgb', 'color'], ['rrr', 'red'], ['ggg', 'green'], ['bbb', 'blue'], ['aaa', 'alpha']
-        ]);
+        ], CHANNELS_TIP);
         this._previewNote = el('div', 'pci-note pci-note-info');
         this._previewNote.style.display = 'none';
         const targetList = el('div', 'pci-list');
@@ -1041,7 +1117,7 @@ class Inspector {
         this._texturePreviewToggle.checked = true;
         this._textureChannels = this._makeSelect(textureBar, 'Channels', [
             ['rgb', 'color'], ['rrr', 'red'], ['ggg', 'green'], ['bbb', 'blue'], ['aaa', 'alpha']
-        ]);
+        ], CHANNELS_TIP);
         this._textureNote = el('div', 'pci-note pci-note-info');
         this._textureNote.style.display = 'none';
         const textureList = el('div', 'pci-list');
@@ -1050,14 +1126,14 @@ class Inspector {
         // assets: the registry, in a chosen order
         const assetPanel = el('div', 'pci-listpanel');
         const assetBar = el('div', 'pci-subbar');
-        this._assetSort = this._makeSelect(assetBar, 'Sort by', ASSET_SORTS);
+        this._assetSort = this._makeSelect(assetBar, 'Sort by', ASSET_SORTS, 'The order of the asset list');
         const assetList = el('div', 'pci-list');
         assetPanel.append(assetBar, assetList);
 
         // memory: the totals over the buffers, which can be narrowed to one kind
         const memoryPanel = el('div', 'pci-listpanel');
         const memoryBar = el('div', 'pci-subbar');
-        this._bufferKind = this._makeSelect(memoryBar, 'Show', BUFFER_KINDS);
+        this._bufferKind = this._makeSelect(memoryBar, 'Show', BUFFER_KINDS, 'List and total only the buffers of this kind');
         this._memoryNote = el('div', 'pci-note pci-note-info');
         this._memoryNote.style.whiteSpace = 'pre-line';
         const bufferList = el('div', 'pci-list');
@@ -1099,7 +1175,7 @@ class Inspector {
         }
         this._depthToggle = this._makeToggle(physicsBar, 'Depth test', 'Hide lines behind geometry');
         const range = el('label', 'pci-check', 'Range');
-        range.title = 'Only draw lines within this distance of the camera, in meters. 0 draws everything';
+        setTip(range, 'Only draw lines within this distance of the camera, in meters. 0 draws everything');
         this._rangeInput = /** @type {HTMLInputElement} */ (document.createElement('input'));
         this._rangeInput.type = 'number';
         this._rangeInput.className = 'pci-number';
@@ -1138,6 +1214,8 @@ class Inspector {
             if (profiler) profiler.enabled = this._gpuToggle.checked;
             this._saveSettings();
         });
+        this._passPreviewToggle.addEventListener('change', () => this._saveSettings());
+        this._debugFrameToggle.addEventListener('change', () => this._setDebugFrame(this._debugFrameToggle.checked));
         this._freezeToggle.addEventListener('change', () => {
             this._frozen = this._freezeToggle.checked;
             this._updateStatus();
@@ -1162,8 +1240,9 @@ class Inspector {
         const status = el('div', 'pci-status');
         this._countsEl = el('span', 'pci-counts');
         this._pausedEl = el('span', 'pci-paused');
+        this._debugEl = el('span', 'pci-paused');
         this._pathEl = el('span', 'pci-path');
-        status.append(this._countsEl, this._pausedEl, this._pathEl);
+        status.append(this._countsEl, this._pausedEl, this._debugEl, this._pathEl);
 
         // width handle on the inner edge
         const edge = el('div', 'pci-edge');
@@ -1173,6 +1252,7 @@ class Inspector {
         });
 
         panel.append(toolbar, body, status, edge);
+        installTooltip(panel);
         shadow.append(style, panel);
 
         // keep the app's input handlers from seeing interaction with the panel
@@ -1197,6 +1277,7 @@ class Inspector {
         this._hierarchy.onToggle = () => this._properties.refresh();
         this._passList = new ListView(passList, (item, key) => {
             if (this._tab === 'passes') this._properties.setSubject(item, this._passListModel(item), key);
+            if (this._debugFrame) this._moveDebugFrameTo(item, key);
             this._updateStatus();
         }, target => this._selectAny(target));
         this._targetList = new ListView(targetList, (rt, key) => {
@@ -1285,6 +1366,7 @@ class Inspector {
             this._pendingHiddenPaths = new Set(stored.hiddenBodies.filter(path => typeof path === 'string'));
         }
         if (typeof stored.width === 'number') this._setWidth(stored.width);
+        if (typeof stored.passPreview === 'boolean') this._passPreviewToggle.checked = stored.passPreview;
         if (typeof stored.gpuTimings === 'boolean') {
             this._gpuToggle.checked = stored.gpuTimings;
             const profiler = this._app.graphicsDevice.gpuProfiler;
@@ -1325,6 +1407,7 @@ class Inspector {
                 tab: this._tab,
                 width: this._width,
                 gpuTimings: this._gpuToggle.checked,
+                passPreview: this._passPreviewToggle.checked,
                 targetPreview: { enabled: this._previewToggle.checked, channels: this._previewChannels.value },
                 texturePreview: { enabled: this._texturePreviewToggle.checked, channels: this._textureChannels.value },
                 assetSort: this._assetSort.value,
@@ -1427,11 +1510,13 @@ class Inspector {
      * @param {HTMLElement} parent - The bar to add the selector to.
      * @param {string} label - The label.
      * @param {[string, string][]} options - Value and label pairs.
+     * @param {string} title - The tooltip.
      * @returns {HTMLSelectElement} The selector.
      * @private
      */
-    _makeSelect(parent, label, options) {
+    _makeSelect(parent, label, options, title) {
         const wrap = el('label', 'pci-check', label);
+        setTip(wrap, title);
         const select = /** @type {HTMLSelectElement} */ (document.createElement('select'));
         select.className = 'pci-select';
         this._fillSelect(select, options);
@@ -1483,7 +1568,7 @@ class Inspector {
             if (!attachment) {
                 note = rt === device.backBuffer ? 'The backbuffer is the screen itself, there is nothing to preview.' : 'This target has no texture to preview.';
             } else {
-                note = this._drawPreviewQuad(attachment.texture, `the ${attachment.label} attachment`, attachment.key === 'depth', this._previewChannels);
+                note = this._drawPreviewQuad(attachment.texture, `the ${attachment.label} attachment`, attachment.key === 'depth', this._previewChannels, 'corner', rt);
             }
         }
 
@@ -1506,21 +1591,26 @@ class Inspector {
     }
 
     /**
-     * Draws a texture at 30% of the viewport height, keeping its aspect, in the corner the panel
-     * leaves free. The quad goes on the UI layer, drawn by the last camera rendering that layer
-     * to the screen: cameras rendering into a texture would put the quad in their target, and
-     * the UI layer renders after a camera frame's post-processing, so previewing the scene's own
-     * color target never samples a texture being rendered to.
+     * Draws a texture keeping its aspect, either at 30% of the viewport height in the corner the
+     * panel leaves free, or as large as fits the part of the viewport the panel leaves free. The
+     * quad goes on the UI layer, drawn by the last camera rendering that layer to the screen:
+     * cameras rendering into a texture would put the quad in their target, and the UI layer
+     * renders after a camera frame's post-processing, so previewing the scene's own color target
+     * never samples a texture being rendered to.
      *
      * @param {Texture} texture - The texture.
      * @param {string} label - What is being previewed, for the note.
      * @param {boolean} depth - Whether it is a raw depth texture, which the channel selection
      * does not apply to.
-     * @param {HTMLSelectElement} channelsSelect - The channel selection to apply.
+     * @param {HTMLSelectElement|null} channelsSelect - The channel selection to apply, or null for
+     * color.
+     * @param {'corner'|'large'} [size] - Where and how large to draw it. Defaults to the corner.
+     * @param {RenderTarget|null} [renderTarget] - The render target the texture is attached to,
+     * which decides whether it is stored upside down. Looked up on the device when not given.
      * @returns {string} What is shown where, or why nothing is.
      * @private
      */
-    _drawPreviewQuad(texture, label, depth, channelsSelect) {
+    _drawPreviewQuad(texture, label, depth, channelsSelect, size = 'corner', renderTarget) {
         const device = this._app.graphicsDevice;
         const uiLayer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? null;
         const cameras = uiLayer ? this._app.systems.camera?.cameras ?? [] : [];
@@ -1530,30 +1620,350 @@ class Inspector {
         const support = previewSupport(texture, device);
         if (!support.ok) return `Cannot preview ${label}: ${support.reason}.`;
 
-        const margin = 0.02;
-        const height = 0.3;
-        const width = texture.height > 0 && device.width > 0 ?
-            height * (texture.width / texture.height) * (device.height / device.width) : height;
         const right = this._dock === 'left' || !!this._popup;
-        const x = right ? 1 - width - margin : margin;
-        const y = 1 - height - margin;
+        let rect;
+        if (size === 'large') {
+            rect = this._freePreviewRect(texture);
+        } else {
+            const margin = 0.02;
+            const height = 0.3;
+            const width = texture.height > 0 && device.width > 0 ?
+                height * (texture.width / texture.height) * (device.height / device.width) : height;
+            rect = { x: right ? 1 - width - margin : margin, y: 1 - height - margin, width, height };
+        }
 
         // a channel the format does not store samples as a constant, so show the color instead and say why
-        const selected = channelsSelect.value;
-        const selectedLabel = channelsSelect.selectedOptions[0]?.textContent ?? selected;
+        const selected = channelsSelect?.value ?? 'rgb';
+        const selectedLabel = channelsSelect?.selectedOptions[0]?.textContent ?? 'color';
         const stored = depth ? '' : formatChannels(texture.format);
         const missing = selected !== 'rgb' && stored !== '' && !stored.includes(selected[0]);
 
         this._textures.layer = uiLayer;
         this._textures.camera = uiCamera;
         this._textures.channels = missing ? 'rgb' : selected;
-        this._textures.draw(texture, x, y, width, height);
+        // a negative height draws the rows from the bottom edge up, turning a bottom-up image upright
+        if (storedBottomUp(texture, device, renderTarget)) {
+            this._textures.draw(texture, rect.x, rect.y + rect.height, rect.width, -rect.height);
+        } else {
+            this._textures.draw(texture, rect.x, rect.y, rect.width, rect.height);
+        }
 
         // depth previews are raw grayscale, the channel selection does not apply to them
         const channels = depth ? '' : ` (${missing ? 'color' : selectedLabel})`;
-        let note = `Previewing ${label}${channels} at the bottom ${right ? 'right' : 'left'} of the viewport.`;
+        const where = size === 'large' ? 'over the free part of the viewport' : `at the bottom ${right ? 'right' : 'left'} of the viewport`;
+        let note = `Previewing ${label}${channels} ${where}.`;
         if (missing) note += ` ${formatName(texture.format)} has no ${selectedLabel} channel.`;
         return note;
+    }
+
+    /**
+     * The largest rectangle of the texture's aspect that fits the part of the viewport the panel
+     * leaves free, in normalized viewport coordinates. The whole viewport is free while the panel
+     * is popped out.
+     *
+     * @param {Texture} texture - The texture to fit.
+     * @returns {{ x: number, y: number, width: number, height: number }} The rectangle.
+     * @private
+     */
+    _freePreviewRect(texture) {
+        const device = this._app.graphicsDevice;
+        const canvasRect = /** @type {any} */ (device).canvas?.getBoundingClientRect?.();
+        let left = 0;
+        let right = 1;
+        if (canvasRect?.width > 0 && !this._popup) {
+            const panelRect = this._panel?.getBoundingClientRect?.();
+            if (panelRect?.width > 0) {
+                if (this._dock === 'left') {
+                    left = Math.min(1, Math.max(0, (panelRect.right - canvasRect.left) / canvasRect.width));
+                } else {
+                    right = Math.max(0, Math.min(1, (panelRect.left - canvasRect.left) / canvasRect.width));
+                }
+            }
+        }
+
+        const margin = 0.02;
+        const freeWidth = Math.max(0.05, right - left - 2 * margin);
+        const freeHeight = 1 - 2 * margin;
+        const textureAspect = texture.height > 0 ? texture.width / texture.height : 1;
+        const viewAspect = device.height > 0 ? device.width / device.height : 1;
+        let height = freeHeight;
+        let width = height * textureAspect / viewAspect;
+        if (width > freeWidth) {
+            width = freeWidth;
+            height = width * viewAspect / textureAspect;
+        }
+        return { x: left + margin + (freeWidth - width) / 2, y: margin + (freeHeight - height) / 2, width, height };
+    }
+
+    /**
+     * Draws the render target of the pass selected on the frame graph tab, large, when its preview
+     * is on. A pass drawing to the screen needs no preview: the view is its output.
+     *
+     * @private
+     */
+    _drawPassPreview() {
+        const item = this._passList.selected;
+        const pass = item instanceof LayerStepSelection ? item.pass : item;
+        const device = this._app.graphicsDevice;
+        let note = '';
+
+        if (pass && this._passPreviewToggle.checked) {
+            const renderTarget = this._frame?.entries.find(entry => entry.pass === pass)?.renderTarget;
+            if (renderTarget === device.backBuffer) {
+                note = 'This pass draws to the screen, which is the view itself.';
+            } else if (renderTarget) {
+                const attachment = previewAttachments(renderTarget, device)[0];
+                note = attachment ?
+                    this._drawPreviewQuad(attachment.texture, `the ${attachment.label} of ${renderTarget.name || 'its target'}`,
+                        attachment.key === 'depth', null, 'large', renderTarget) :
+                    'This pass\'s target has no texture to preview.';
+            }
+        }
+        Inspector._setNote(this._passNote, note);
+    }
+
+    /**
+     * Turns the debug frame on or off. On, it pauses the app, stops the selected forward pass at its
+     * last draw, and takes the arrow keys ahead of the app to step through the draws. Off, the pass
+     * draws in full again and the app returns to its earlier pause state.
+     *
+     * @param {boolean} on - Whether to turn it on.
+     * @private
+     */
+    _setDebugFrame(on) {
+        if (on === !!this._debugFrame) return;
+        const renderer = this._app.renderer;
+        if (on) {
+            if (!renderer?.debugDrawLimitSupported) return;
+            this._debugFrame = { stepKey: null, index: 0, instance: null, wasPaused: this._paused };
+            this.paused = true;
+            this._moveDebugFrameTo(this._passList.selected, this._passList.selectedKey);
+            // ahead of the app's own listeners, which would otherwise move the camera
+            window.addEventListener('keydown', this._onDebugKey, true);
+        } else {
+            const wasPaused = this._debugFrame.wasPaused;
+            this._debugFrame = null;
+            window.removeEventListener('keydown', this._onDebugKey, true);
+            if (renderer) renderer.debugDrawLimit = null;
+            this.paused = wasPaused;
+        }
+        if (this._debugFrameToggle) this._debugFrameToggle.checked = on;
+        this._updateDebugStatus(null);
+        this._properties?.refresh();
+    }
+
+    /**
+     * Moves the debug frame to the last draw of a selected pass or layer step. Selecting anything
+     * else leaves it where it was.
+     *
+     * @param {*} item - What the pass list selected.
+     * @param {string|null} key - The key of its row.
+     * @private
+     */
+    _moveDebugFrameTo(item, key) {
+        const state = this._debugFrame;
+        if (!state || !key) return;
+        const visible = this._frame?.visible;
+        let stepKey = null;
+        let list = null;
+        if (item instanceof LayerStepSelection) {
+            stepKey = key;
+            list = visible?.get(item.step) ?? null;
+        } else if (item instanceof RenderPassForward) {
+            // the last step that drew anything
+            item.layerRenderSteps.forEach((step, i) => {
+                const drawn = visible?.get(step) ?? null;
+                if (drawn?.instances.length) {
+                    stepKey = `${key}/${i}`;
+                    list = drawn;
+                }
+            });
+        }
+        if (!stepKey) return;
+        state.stepKey = stepKey;
+        state.index = Math.max(0, (list?.instances.length ?? 1) - 1);
+        state.instance = list?.instances[state.index] ?? null;
+        this._revealDebugDraw();
+    }
+
+    /**
+     * @param {string} stepKey - The list key of a layer step.
+     * @param {number} index - A draw in its list.
+     * @param {MeshInstance} instance - The instance at that draw.
+     * @private
+     */
+    _chooseDebugDraw(stepKey, index, instance) {
+        const state = this._debugFrame;
+        if (!state) return;
+        state.stepKey = stepKey;
+        state.index = index;
+        state.instance = instance;
+    }
+
+    /**
+     * Finds the layer step the debug frame stops in, in the latest captured frame. Forward passes
+     * are rebuilt every frame, so the step is found again by its list key each time.
+     *
+     * @returns {{ pass: RenderPassForward, step: *, stepIndex: number, passKey: string, list: import('./frame-graph-view.js').VisibleList|null }|null}
+     * The step, or null when it is not in the frame.
+     * @private
+     */
+    _resolveDebugStep() {
+        const stepKey = this._debugFrame?.stepKey;
+        if (!stepKey || !this._frame) return null;
+        const slash = stepKey.lastIndexOf('/');
+        const passKey = stepKey.slice(0, slash);
+        const stepIndex = Number(stepKey.slice(slash + 1));
+        const pass = this._frame.entries.find(entry => entry.key === passKey)?.pass;
+        const step = pass instanceof RenderPassForward ? pass.layerRenderSteps[stepIndex] : undefined;
+        if (!step) return null;
+        return { pass, step, stepIndex, passKey, list: this._frame.visible?.get(step) ?? null };
+    }
+
+    /**
+     * Hands the renderer the limit for this frame: the steps of the pass before the chosen one
+     * draw in full, the chosen one draws up to and including its instance, and the rest draw
+     * nothing, so the pass's target shows exactly what that draw left behind.
+     *
+     * @private
+     */
+    _applyDebugFrame() {
+        const renderer = this._app.renderer;
+        const state = this._debugFrame;
+        const found = this._resolveDebugStep();
+        if (!renderer || !state || !found?.list) {
+            if (renderer) renderer.debugDrawLimit = null;
+            this._updateDebugStatus(null);
+            return;
+        }
+
+        // keep the chosen instance where the latest list put it
+        const instances = found.list.instances;
+        const at = state.instance ? instances.indexOf(state.instance) : -1;
+        if (at >= 0) state.index = at;
+        state.index = Math.min(Math.max(0, state.index), Math.max(0, instances.length - 1));
+        state.instance = instances[state.index] ?? null;
+
+        const camera = found.step.cameraComponent?.camera;
+        const renderTarget = found.step.renderTarget ?? this._app.graphicsDevice.backBuffer;
+        const layers = new Map();
+        found.pass.layerRenderSteps.forEach((step, i) => {
+            if (step.cameraComponent?.camera !== camera || i < found.stepIndex) return;
+            const entry = layers.get(step.layer) ?? [undefined, undefined];
+            entry[step.transparent ? 1 : 0] = i === found.stepIndex ? { instance: state.instance, index: state.index } : 0;
+            layers.set(step.layer, entry);
+        });
+        renderer.debugDrawLimit = { camera, renderTarget, layers };
+
+        // outline the draw on the UI layer, drawn after a camera frame's scene pass so the limit
+        // does not cut it
+        const aabb = state.instance?.aabb;
+        if (aabb) {
+            const wire = this._wire;
+            const previous = wire.layer;
+            wire.layer = this._app.scene?.layers?.getLayerById(LAYERID_UI) ?? previous;
+            wire.color.copy(this._highlightColor);
+            wire.depthTest = false;
+            wire.box(aabb);
+            wire.layer = previous;
+        }
+        this._updateDebugStatus(found);
+    }
+
+    /**
+     * Steps the debug frame one draw on or back, carrying on into the neighboring steps of the same
+     * camera in the pass, and skipping those that drew nothing.
+     *
+     * @param {number} delta - 1 for the next draw, -1 for the previous.
+     * @private
+     */
+    _stepDebugDraw(delta) {
+        const state = this._debugFrame;
+        const found = this._resolveDebugStep();
+        if (!state || !found?.list) return;
+        const steps = found.pass.layerRenderSteps;
+        const camera = found.step.cameraComponent?.camera;
+        const listOf = i => (steps[i].cameraComponent?.camera === camera ? this._frame?.visible?.get(steps[i]) ?? null : null);
+
+        let stepIndex = found.stepIndex;
+        let index = state.index + delta;
+        if (index >= found.list.instances.length) {
+            index = found.list.instances.length - 1;
+            for (let i = stepIndex + 1; i < steps.length; i++) {
+                if (listOf(i)?.instances.length) {
+                    stepIndex = i;
+                    index = 0;
+                    break;
+                }
+            }
+        } else if (index < 0) {
+            index = 0;
+            for (let i = stepIndex - 1; i >= 0; i--) {
+                const list = listOf(i);
+                if (list?.instances.length) {
+                    stepIndex = i;
+                    index = list.instances.length - 1;
+                    break;
+                }
+            }
+        }
+
+        const stepKey = `${found.passKey}/${stepIndex}`;
+        // follow into a new step in the list when a step, rather than the whole pass, is shown
+        if (stepKey !== state.stepKey && this._passList.selected instanceof LayerStepSelection) {
+            this._passList.select(stepKey);
+        }
+        state.stepKey = stepKey;
+        state.index = index;
+        state.instance = listOf(stepIndex)?.instances[index] ?? null;
+        this._revealDebugDraw();
+    }
+
+    /**
+     * Brings the draw the debug frame stops at into view: its page, and its row.
+     *
+     * @private
+     */
+    _revealDebugDraw() {
+        const state = this._debugFrame;
+        if (!state?.stepKey) return;
+        this._instancePages.set(state.stepKey, Math.floor(state.index / INSTANCES_PER_PAGE));
+        this._properties.refresh();
+        this._properties.container.querySelector('.pci-prop.pci-active')?.scrollIntoView?.({ block: 'nearest' });
+    }
+
+    /**
+     * Takes the arrow keys while the debug frame is on, ahead of the app, unless typing in a field.
+     *
+     * @param {KeyboardEvent} e - The event.
+     * @returns {boolean} Whether the key stepped the frame.
+     * @private
+     */
+    _onDebugKey = (e) => {
+        if (!this._debugFrame || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return false;
+        // events from inside the panel's shadow root reach the window retargeted to its host
+        const target = /** @type {any} */ (e.composedPath?.()[0] ?? e.target);
+        if (['INPUT', 'SELECT', 'TEXTAREA'].includes(target?.tagName)) return false;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        this._stepDebugDraw(e.key === 'ArrowDown' ? 1 : -1);
+        return true;
+    };
+
+    /**
+     * @param {{ step: *, list: import('./frame-graph-view.js').VisibleList|null }|null} found - The
+     * step the debug frame stops in, or null.
+     * @private
+     */
+    _updateDebugStatus(found) {
+        const state = this._debugFrame;
+        let text = '';
+        if (state) {
+            text = found?.list ?
+                `DEBUG FRAME · draw ${state.index} of ${found.list.instances.length} · ${found.step.layer.name} ${found.step.transparent ? 'transparent' : 'opaque'}` :
+                'DEBUG FRAME · select a forward pass';
+        }
+        if (this._debugEl && this._debugEl.textContent !== text) this._debugEl.textContent = text;
     }
 
     /**
@@ -1576,7 +1986,7 @@ class Inspector {
      */
     _makeToggle(parent, label, title) {
         const wrap = el('label', 'pci-check', label);
-        wrap.title = title;
+        setTip(wrap, title);
         const input = /** @type {HTMLInputElement} */ (document.createElement('input'));
         input.type = 'checkbox';
         wrap.prepend(input);
@@ -1745,7 +2155,13 @@ class Inspector {
             passKey: this._passList?.selectedKey ?? null,
             pages: this._instancePages,
             filter: this._filterInput?.value.trim().toLowerCase() ?? '',
-            stable: this._frozen || this._paused
+            stable: this._frozen || this._paused,
+            debug: this._debugFrame ? {
+                stepKey: this._debugFrame.stepKey,
+                index: this._debugFrame.index,
+                instance: this._debugFrame.instance,
+                choose: (stepKey, index, instance) => this._chooseDebugDraw(stepKey, index, instance)
+            } : null
         };
     }
 
@@ -1754,6 +2170,7 @@ class Inspector {
      * @private
      */
     _onKeyDown = (e) => {
+        if (this._onDebugKey(e)) return;
         if (e.repeat) return;
 
         // match on either the physical code ('Backquote') or the logical key ('`')
@@ -1807,6 +2224,7 @@ class Inspector {
         this._panel.style.width = popped ? '' : `${this._width}px`;
         this._panel.style.top = popped ? '' : `${this._top}px`;
         this._popBtn.textContent = popped ? 'Dock' : 'Pop out';
+        setTip(this._popBtn, popped ? 'Bring the panel back into the page' : 'Move the panel to a window of its own');
     }
 
     /**
@@ -1837,10 +2255,10 @@ class Inspector {
         if (!this._pauseBtn) return;
         const paused = this._paused;
         this._pauseBtn.textContent = `${paused ? 'Resume' : 'Pause'}${Inspector._keyHint(this._pauseKey)}`;
-        this._pauseBtn.title = paused ? 'Resume the app' : 'Pause the app: rendering continues, time stands still';
+        setTip(this._pauseBtn, paused ? 'Resume the app' : 'Pause the app: rendering continues, time stands still');
         this._pauseBtn.classList.toggle('pci-active', paused);
         this._stepBtn.textContent = `Step${Inspector._keyHint(this._stepKey)}`;
-        this._stepBtn.title = 'Advance one frame while paused';
+        setTip(this._stepBtn, 'Advance one frame while paused');
         this._stepBtn.disabled = !paused;
         this._pausedEl.textContent = paused ? 'PAUSED' : '';
     }
@@ -1924,7 +2342,7 @@ class Inspector {
 
         this._countsEl.textContent = counts;
         this._pathEl.textContent = selected;
-        this._pathEl.title = selected;
+        setTip(this._pathEl, selected);
     }
 
     /**

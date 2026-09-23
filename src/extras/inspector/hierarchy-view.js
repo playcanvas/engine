@@ -1,5 +1,7 @@
 import { Entity } from '../../framework/entity.js';
 
+import { setTip } from './tooltip.js';
+
 /** @import { GraphNode } from '../../scene/graph-node.js' */
 
 /**
@@ -337,7 +339,7 @@ class HierarchyView {
         const toggleEl = /** @type {HTMLInputElement} */ (document.createElement('input'));
         toggleEl.type = 'checkbox';
         toggleEl.className = 'pci-toggle';
-        toggleEl.title = 'Enabled';
+        setTip(toggleEl, 'Enabled');
 
         const entry = {
             el: el('div', 'pci-node'),

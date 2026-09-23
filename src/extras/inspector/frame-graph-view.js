@@ -69,6 +69,20 @@ import { meshInstanceRows } from './node-model.js';
  * @property {Map<string, number>} [pages] - The page shown for each layer step, kept across refreshes.
  * @property {string} [filter] - A lower-cased filter the listed instances must match by node name.
  * @property {boolean} [stable] - Whether the app is paused or the frame frozen, so pages hold still.
+ * @property {DebugFrameContext|null} [debug] - The debug frame, when it is on.
+ */
+
+/**
+ * What the pass and step models need to show a debug frame: the draw it stops at, and how to
+ * choose another.
+ *
+ * @typedef {object} DebugFrameContext
+ * @ignore
+ * @property {string|null} stepKey - The list key of the layer step the frame stops in.
+ * @property {number} index - The draw it stops at, in that step's list.
+ * @property {MeshInstance|null} instance - The instance drawn last.
+ * @property {(stepKey: string, index: number, instance: MeshInstance) => void} choose - Makes an
+ * instance the last one drawn.
  */
 
 /**
@@ -215,6 +229,8 @@ function instancePage(list, key, ctx) {
         const instance = list.instances[index];
         const skipped = list.skipped.has(instance);
         const material = instance.material ? `material "${instance.material.name}"` : 'no material';
+        // in a debug frame an instance is a choice of where the frame stops, and opens from its caret
+        const debug = ctx.debug ?? null;
         rows.push({
             key: `mi${instanceId(instance)}`,
             label: `${index}`,
@@ -223,7 +239,9 @@ function instancePage(list, key, ctx) {
                 text: `${instanceName(instance, list)} · ${material} · ${instance.mesh?.vertexBuffer?.numVertices ?? 0} verts` +
                     `${skipped ? ' · not drawn in this pass' : ''}`,
                 cls: skipped ? 'null' : 'obj',
-                expand: () => meshInstanceRows(instance)
+                expand: () => meshInstanceRows(instance),
+                select: debug ? () => debug.choose(key, index, instance) : undefined,
+                active: !!debug && debug.stepKey === key && debug.instance === instance
             }
         });
     }
@@ -656,6 +674,9 @@ function buildStepModel(selection, ctx) {
     push(general, 'clears', { text: clears || 'nothing', cls: clears ? 'obj' : 'null' });
     if (step.firstCameraUse) push(general, 'first camera use', describeValue(true));
     if (step.lastCameraUse) push(general, 'last camera use', describeValue(true));
+    if (ctx.debug?.stepKey === ctx.passKey && list) {
+        push(general, 'debug frame', { text: `stops after draw ${ctx.debug.index} of ${list.instances.length}`, cls: 'num' });
+    }
     sections.push(general);
 
     const drawn = makeSection('instances', 'Drawn instances');
@@ -669,4 +690,4 @@ function buildStepModel(selection, ctx) {
     return sections;
 }
 
-export { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows };
+export { INSTANCES_PER_PAGE, LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows };

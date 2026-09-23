@@ -12,9 +12,10 @@ import { bufferOwners, bufferRows, buildBufferModel, collectBuffers, memorySumma
 import { formatBytes } from '../../../src/extras/inspector/model.js';
 import { buildNodeModel } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
-import { formatChannels, previewAttachments, previewSupport } from '../../../src/extras/inspector/render-target-view.js';
+import { formatChannels, previewAttachments, previewSupport, storedBottomUp } from '../../../src/extras/inspector/render-target-view.js';
 import { buildShaderModel, formatBindGroup, formatUniformBuffer, shaderRows } from '../../../src/extras/inspector/shader-view.js';
 import { buildTextureModel, collectTextures, textureRows } from '../../../src/extras/inspector/texture-view.js';
+import { installTooltip, setTip } from '../../../src/extras/inspector/tooltip.js';
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { Entity } from '../../../src/framework/entity.js';
@@ -785,6 +786,24 @@ describe('Inspector render target preview', function () {
         expect(previewSupport(float, webgpu).ok).to.be.true;
     });
 
+    it('flips the preview of textures a render target stores bottom-up', function () {
+        const color = texture();
+        const depth = texture({ format: PIXELFORMAT_DEPTH });
+        const target = origin => /** @type {any} */ ({ origin, colorBufferCount: 1, getColorBuffer: () => color, depthBuffer: depth });
+        const on = (device, origin) => ({ ...device, targets: new Set([target(origin)]) });
+
+        // native is bottom-up on WebGL2 only, the explicit origins mean the same on both
+        expect(storedBottomUp(color, on(webgl2, 'native'))).to.be.true;
+        expect(storedBottomUp(depth, on(webgl2, 'native'))).to.be.true;
+        expect(storedBottomUp(color, on(webgpu, 'native'))).to.be.false;
+        expect(storedBottomUp(color, on(webgl2, 'top'))).to.be.false;
+        expect(storedBottomUp(color, on(webgpu, 'bottom'))).to.be.true;
+
+        // a given target wins over the lookup, and a texture no target owns is shown as it is
+        expect(storedBottomUp(color, on(webgl2, 'native'), target('top'))).to.be.false;
+        expect(storedBottomUp(texture(), on(webgl2, 'native'))).to.be.false;
+    });
+
     it('reads the channels a format stores from its name', function () {
         expect(formatChannels(PIXELFORMAT_R8)).to.equal('r');
         expect(formatChannels(PIXELFORMAT_RG16F)).to.equal('rg');
@@ -1333,6 +1352,114 @@ describe('Inspector frame graph capture', function () {
         jsdomTeardown();
     });
 
+    it('steps a debug frame through the draws of a layer step, driving the renderer limit', function () {
+        jsdomSetup();
+        const app = createApp();
+        app.renderer = { debugDrawLimitSupported: true, debugDrawLimit: null };
+        const drawn = [instance('a'), instance('b'), instance('c')];
+        const { forward, step, layer } = forwardScene(drawn);
+        app.frameGraph = { renderPasses: [forward] };
+        const inspector = /** @type {any} */ (new Inspector(app));
+        inspector._setTab('passes');
+        const rows = [...inspector._panels.passes.querySelectorAll('.pci-lrow')];
+        rows[1].click();
+
+        // on: paused, stopped at the last draw of the selected step
+        inspector._debugFrameToggle.checked = true;
+        inspector._debugFrameToggle.dispatchEvent(new window.Event('change'));
+        expect(inspector.paused).to.be.true;
+        app.fire('update', 0);
+        let limit = app.renderer.debugDrawLimit;
+        expect(limit.camera).to.equal(step.cameraComponent.camera);
+        expect(limit.renderTarget).to.equal(app.graphicsDevice.backBuffer);
+        expect(limit.layers.get(layer)).to.deep.equal([{ instance: drawn[2], index: 2 }, undefined]);
+        expect(inspector._debugEl.textContent).to.equal('DEBUG FRAME · draw 2 of 3 · World opaque');
+
+        // the arrow keys step back and on, taken ahead of the app
+        let appSaw = 0;
+        const appListener = () => appSaw++;
+        window.addEventListener('keydown', appListener);
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+        app.fire('update', 0);
+        limit = app.renderer.debugDrawLimit;
+        expect(limit.layers.get(layer)[0]).to.deep.equal({ instance: drawn[0], index: 0 });
+        expect(appSaw).to.equal(0);
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+        app.fire('update', 0);
+        expect(app.renderer.debugDrawLimit.layers.get(layer)[0].instance).to.equal(drawn[1]);
+
+        // a click on a drawn instance chooses it, and the step view names it
+        const choice = [...panel(inspector).querySelectorAll('.pci-prop.pci-selectable')].find(row => row.querySelector('.pci-label').textContent === '2');
+        choice.querySelector('.pci-value').click();
+        app.fire('update', 0);
+        expect(app.renderer.debugDrawLimit.layers.get(layer)[0].instance).to.equal(drawn[2]);
+        expect(choice.classList.contains('pci-active')).to.be.true;
+
+        // off: the pass draws in full again and the earlier pause state returns
+        inspector._debugFrameToggle.checked = false;
+        inspector._debugFrameToggle.dispatchEvent(new window.Event('change'));
+        expect(app.renderer.debugDrawLimit).to.equal(null);
+        expect(inspector.paused).to.be.false;
+        expect(inspector._debugEl.textContent).to.equal('');
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }));
+        expect(appSaw).to.equal(1);
+
+        // hiding the panel ends it too
+        inspector._setDebugFrame(true);
+        inspector.visible = false;
+        expect(inspector._debugFrame).to.equal(null);
+        expect(app.renderer.debugDrawLimit).to.equal(null);
+
+        window.removeEventListener('keydown', appListener);
+        inspector.destroy();
+        jsdomTeardown();
+    });
+
+    it('carries a debug frame across the layer steps of a pass', function () {
+        jsdomSetup();
+        const app = createApp();
+        app.renderer = { debugDrawLimitSupported: true, debugDrawLimit: null };
+        const { forward, step, layer } = forwardScene([instance('a'), instance('b')]);
+        // a second step of the same camera, the transparent sub-layer of the same layer
+        const culled = layer._visibleInstances.get(step.cameraComponent.camera);
+        const glass = instance('glass');
+        culled.transparent = [glass];
+        const transparentStep = { ...step, transparent: true };
+        forward.layerRenderSteps.push(transparentStep);
+        app.frameGraph = { renderPasses: [forward] };
+        const inspector = /** @type {any} */ (new Inspector(app));
+        inspector._setTab('passes');
+        [...inspector._panels.passes.querySelectorAll('.pci-lrow')][1].click();
+        inspector._setDebugFrame(true);
+
+        // on past the last opaque draw into the transparent step, which then draws its first
+        inspector._stepDebugDraw(1);
+        app.fire('update', 0);
+        expect(app.renderer.debugDrawLimit.layers.get(layer)).to.deep.equal([undefined, { instance: glass, index: 0 }]);
+        expect(inspector._passList.selectedKey).to.match(/\/1$/);
+        // and back, where the later transparent step draws nothing
+        inspector._stepDebugDraw(-1);
+        app.fire('update', 0);
+        expect(app.renderer.debugDrawLimit.layers.get(layer)[1]).to.equal(0);
+
+        inspector.destroy();
+        jsdomTeardown();
+    });
+
+    it('offers the debug frame only on the debug engine', function () {
+        jsdomSetup();
+        const app = createApp();
+        app.renderer = { debugDrawLimitSupported: false, debugDrawLimit: null };
+        const inspector = /** @type {any} */ (new Inspector(app));
+        expect(inspector._debugFrameToggle.disabled).to.be.true;
+        inspector._setDebugFrame(true);
+        expect(inspector._debugFrame).to.equal(null);
+        inspector.destroy();
+        jsdomTeardown();
+    });
+
     it('pages the instances a layer step drew and narrows them with the filter', function () {
         const drawn = [];
         for (let i = 0; i < 450; i++) drawn.push(instance(`item-${i}`));
@@ -1415,6 +1542,100 @@ describe('Inspector list view', function () {
         list.filter = 'shad';
         list.render();
         expect(shown()).to.deep.equal(['Shadow']);
+    });
+});
+
+describe('Inspector property view choices', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    it('opens a selectable row from its caret and chooses it from the rest', function () {
+        const container = document.createElement('div');
+        const view = new PropertyView(container, () => {});
+        let chosen = 0;
+        let active = false;
+        const model = () => [{
+            key: 's',
+            title: 'S',
+            rows: [{
+                key: 'draw',
+                label: '0',
+                value: {
+                    text: 'wall',
+                    active,
+                    select: () => {
+                        chosen++;
+                        active = true;
+                    },
+                    expand: () => [{ key: 'child', label: 'mesh', value: { text: 'Mesh' } }]
+                }
+            }]
+        }];
+        view.setSubject({}, model);
+        const row = container.querySelector('.pci-prop');
+        expect(row.classList.contains('pci-selectable')).to.be.true;
+        expect(row.classList.contains('pci-active')).to.be.false;
+
+        // the text chooses, highlighting the row, and does not open it
+        row.querySelector('.pci-value').lastChild.parentElement.click();
+        expect(chosen).to.equal(1);
+        expect(row.classList.contains('pci-active')).to.be.true;
+        expect(container.querySelectorAll('.pci-prop')).to.have.lengthOf(1);
+
+        // the caret opens it, without choosing again
+        row.querySelector('.pci-caret').click();
+        expect(chosen).to.equal(1);
+        expect([...container.querySelectorAll('.pci-prop')].map(el => el.querySelector('.pci-label').textContent)).to.deep.equal(['0', 'mesh']);
+        expect(row.querySelector('.pci-value').textContent).to.equal('▾ wall');
+
+        // anywhere else on the row chooses too
+        row.querySelector('.pci-label').click();
+        expect(chosen).to.equal(2);
+    });
+
+    it('follows a link from the value only', function () {
+        const container = document.createElement('div');
+        const followed = [];
+        const view = new PropertyView(container, target => followed.push(target));
+        const target = {};
+        view.setSubject({}, () => [{ key: 's', title: 'S', rows: [{ key: 'a', label: 'texture', value: { text: 'x', target } }] }]);
+        const row = container.querySelector('.pci-prop');
+
+        row.querySelector('.pci-label').click();
+        expect(followed).to.have.lengthOf(0);
+        row.querySelector('.pci-value').click();
+        expect(followed).to.deep.equal([target]);
+    });
+});
+
+describe('Inspector tooltip', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    it('shows the tip of the hovered element after a rest, and hides it on leaving', async function () {
+        const panel = document.createElement('div');
+        document.body.appendChild(panel);
+        installTooltip(panel);
+        const button = document.createElement('button');
+        const plain = document.createElement('span');
+        panel.append(button, plain);
+        setTip(button, 'Does a thing');
+        expect(button.hasAttribute('title')).to.be.false;
+
+        const tip = /** @type {HTMLElement} */ (panel.querySelector('.pci-tip'));
+        button.dispatchEvent(new window.Event('pointerover', { bubbles: true }));
+        expect(tip.style.display).to.not.equal('block');
+        await new Promise((resolve) => {
+            setTimeout(resolve, 400);
+        });
+        expect(tip.style.display).to.equal('block');
+        expect(tip.textContent).to.equal('Does a thing');
+
+        plain.dispatchEvent(new window.Event('pointerover', { bubbles: true }));
+        expect(tip.style.display).to.equal('none');
+
+        setTip(button, '');
+        expect(button.dataset.tip).to.equal(undefined);
     });
 });
 

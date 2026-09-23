@@ -206,6 +206,22 @@ const styles = /* css */ `
         row-gap: 4px;
     }
 
+    .pci-tip {
+        display: none;
+        position: fixed;
+        z-index: 2;
+        max-width: 320px;
+        padding: 4px 7px;
+        background: #2c3038;
+        color: #e4e7ec;
+        border: 1px solid #454a54;
+        border-radius: 3px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+        white-space: pre-line;
+        overflow-wrap: anywhere;
+        pointer-events: none;
+    }
+
     .pci-check {
         display: inline-flex;
         align-items: center;
@@ -606,8 +622,20 @@ const styles = /* css */ `
         color: #9ad7ff;
     }
 
-    .pci-expandable .pci-value {
+    .pci-expandable .pci-value, .pci-prop.pci-selectable {
         cursor: pointer;
+    }
+
+    .pci-selectable .pci-caret:hover {
+        color: #ffffff;
+    }
+
+    .pci-prop.pci-active {
+        background-color: #3a4a6b;
+    }
+
+    .pci-prop.pci-active .pci-value {
+        color: #ffffff;
     }
 
     .pci-expandable .pci-value:hover {
