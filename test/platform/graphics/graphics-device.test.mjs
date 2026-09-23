@@ -47,6 +47,30 @@ describe('GraphicsDevice', function () {
         });
     });
 
+    describe('#clearVertexBuffer', function () {
+
+        it('empties the vertex buffers of the next draw, keeping the list', function () {
+            const device = createGraphicsDevice({ width: 300, height: 150 });
+            const list = device.vertexBuffers;
+            const a = {};
+            const b = {};
+            const c = {};
+
+            device.setVertexBuffer(a);
+            device.setVertexBuffer(b);
+            expect(device.vertexBuffers).to.deep.equal([a, b]);
+
+            device.clearVertexBuffer();
+            expect(device.vertexBuffers).to.have.lengthOf(0);
+            expect(device.vertexBuffers).to.equal(list);
+
+            device.setVertexBuffer(c);
+            expect(device.vertexBuffers).to.deep.equal([c]);
+            device.destroy();
+        });
+
+    });
+
     describe('#isContextLost', function () {
 
         it('reports a destroyed device as lost without a context loss event', function () {
