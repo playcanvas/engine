@@ -1,3 +1,4 @@
+/** @import { Described } from './describe.js' */
 /** @import { PropertyRow, PropertySection } from './model.js' */
 
 /**
@@ -16,6 +17,9 @@
  * @property {number} depth - How far the row is indented.
  * @property {boolean} group - Whether the row is drawn with a divider above it.
  * @property {boolean} groupEnd - Whether the row is drawn with a divider below it.
+ * @property {HTMLElement|null} actionsEl - The buttons of the row, if any.
+ * @property {string} actionsSignature - What the buttons last rendered, to rebuild them only on change.
+ * @property {Described['actions']|null} actions - The actions the buttons run, kept current each refresh.
  */
 
 /**
@@ -340,6 +344,7 @@ class PropertyView {
             }
             elements.el.classList.toggle('pci-expandable', expandable);
             this._renderCode(section, elements, hasCode ? code : null, expanded);
+            this._renderActions(elements, row.value.actions ?? null);
             if (elements.cls !== cls) {
                 elements.valueEl.classList.remove(`pci-v-${elements.cls}`);
                 elements.valueEl.classList.add(`pci-v-${cls}`);
@@ -423,6 +428,41 @@ class PropertyView {
             }
         }
         return out;
+    }
+
+    /**
+     * Keeps the buttons of a row in step with its value. The buttons are rebuilt only when their text
+     * or state changes, and always run the actions of the latest refresh, whose closures hold the
+     * current state.
+     *
+     * @param {RowElements} elements - The row.
+     * @param {Described['actions']|null} actions - The actions, or null for a row without any.
+     * @private
+     */
+    _renderActions(elements, actions) {
+        elements.actions = actions;
+        const signature = actions ? actions.map(action => `${action.text}:${action.disabled ? 1 : 0}`).join('|') : '';
+        if (elements.actionsSignature === signature) return;
+        elements.actionsSignature = signature;
+        elements.actionsEl?.remove();
+        elements.actionsEl = null;
+        if (!actions?.length) return;
+
+        const wrap = el('span', 'pci-actions');
+        actions.forEach((action, index) => {
+            const button = /** @type {HTMLButtonElement} */ (el('button', 'pci-action'));
+            button.textContent = action.text;
+            button.title = action.title ?? '';
+            button.disabled = !!action.disabled;
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
+                elements.actions?.[index]?.run();
+                this.refresh();
+            });
+            wrap.appendChild(button);
+        });
+        elements.actionsEl = wrap;
+        elements.el.appendChild(wrap);
     }
 
     /**
@@ -528,7 +568,10 @@ class PropertyView {
             code: '',
             depth: -1,
             group: false,
-            groupEnd: false
+            groupEnd: false,
+            actionsEl: null,
+            actionsSignature: '',
+            actions: null
         };
         elements.valueEl.appendChild(document.createTextNode(''));
         elements.el.append(elements.labelEl, elements.valueEl);

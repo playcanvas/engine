@@ -11,7 +11,7 @@ import { TextureRenderer } from '../renderers/texture-renderer.js';
 import { WireRenderer } from '../renderers/wire-renderer.js';
 
 import { ASSET_SORTS, assetRows, buildAssetModel, collectAssets } from './asset-view.js';
-import { buildPassModel, captureFrameGraph, passRows } from './frame-graph-view.js';
+import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from './frame-graph-view.js';
 import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
 import { HierarchyView } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
@@ -27,7 +27,7 @@ import { buildTextureModel, collectTextures, textureRows } from './texture-view.
 
 /** @import { AppBase } from '../../framework/app-base.js' */
 /** @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js' */
-/** @import { FrameSnapshot } from './frame-graph-view.js' */
+/** @import { FrameSnapshot, PassModelContext } from './frame-graph-view.js' */
 /** @import { PropertySection } from './model.js' */
 
 /**
@@ -434,6 +434,14 @@ class Inspector {
     _bufferList;
 
     /**
+     * The page each forward pass layer step shows, by pass row key and step, kept across refreshes.
+     *
+     * @type {Map<string, number>}
+     * @private
+     */
+    _instancePages = new Map();
+
+    /**
      * @type {HTMLSelectElement}
      * @private
      */
@@ -592,6 +600,24 @@ class Inspector {
      * @private
      */
     _passModel = pass => buildPassModel(pass, this._context());
+
+    /**
+     * Model builder for the property view when a layer step of a forward pass is selected.
+     *
+     * @param {LayerStepSelection} selection - The step and its pass.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _stepModel = selection => buildStepModel(selection, this._context());
+
+    /**
+     * @param {*} item - What a row of the pass list selects: a pass, or one of its layer steps.
+     * @returns {(subject: *) => PropertySection[]} The model builder that shows it.
+     * @private
+     */
+    _passListModel(item) {
+        return item instanceof LayerStepSelection ? this._stepModel : this._passModel;
+    }
 
     /**
      * Model builder for the property view when a render target is selected.
@@ -1169,8 +1195,8 @@ class Inspector {
         });
         this._hierarchy.isLocked = node => this._isLocked(node);
         this._hierarchy.onToggle = () => this._properties.refresh();
-        this._passList = new ListView(passList, (pass, key) => {
-            if (this._tab === 'passes') this._properties.setSubject(pass, this._passModel, key);
+        this._passList = new ListView(passList, (item, key) => {
+            if (this._tab === 'passes') this._properties.setSubject(item, this._passListModel(item), key);
             this._updateStatus();
         }, target => this._selectAny(target));
         this._targetList = new ListView(targetList, (rt, key) => {
@@ -1637,9 +1663,9 @@ class Inspector {
             }
             if (this._tab === 'passes') {
                 this._passList.setRows(passRows(this._frame, device));
-                const pass = this._passList.selected;
-                if (pass !== this._properties.subject) {
-                    this._properties.setSubject(pass, this._passModel, this._passList.selectedKey);
+                const item = this._passList.selected;
+                if (item !== this._properties.subject) {
+                    this._properties.setSubject(item, this._passListModel(item), this._passList.selectedKey);
                 }
             } else {
                 this._targetList.setRows(renderTargetRows(device, this._frame));
@@ -1667,6 +1693,8 @@ class Inspector {
         this._bufferList.filter = value;
         this._bodyList.filter = value;
         this._refreshLists(false);
+        // the instances listed under a forward pass narrow with the filter too
+        this._properties.refresh();
     }
 
     /**
@@ -1704,12 +1732,21 @@ class Inspector {
     }
 
     /**
-     * @returns {{ device: GraphicsDevice, frame: FrameSnapshot|null }} What the pass and target
-     * model builders need besides their subject.
+     * @returns {PassModelContext & { app: AppBase }} What the model builders need besides their
+     * subject: the app and device, the captured frame, and the paging state and filter of the
+     * instances listed under a forward pass.
      * @private
      */
     _context() {
-        return { app: this._app, device: this._app.graphicsDevice, frame: this._frame };
+        return {
+            app: this._app,
+            device: this._app.graphicsDevice,
+            frame: this._frame,
+            passKey: this._passList?.selectedKey ?? null,
+            pages: this._instancePages,
+            filter: this._filterInput?.value.trim().toLowerCase() ?? '',
+            stable: this._frozen || this._paused
+        };
     }
 
     /**
@@ -1824,8 +1861,10 @@ class Inspector {
                 const perPass = device.isWebGPU ? '' : ' (per-pass times need WebGPU)';
                 counts = `${this._frame?.entries.length ?? 0} passes` +
                     `${gpu !== undefined ? ` · GPU ${gpu.toFixed(2)} ms${perPass}` : ''}${this._frozen ? ' · frozen' : ''}`;
-                const pass = this._passList.selected;
-                selected = pass ? passDisplayName(pass) : '';
+                const item = this._passList.selected;
+                selected = item instanceof LayerStepSelection ?
+                    `${passDisplayName(item.pass)} › ${item.step.layer.name} ${item.step.transparent ? 'transparent' : 'opaque'}` :
+                    item ? passDisplayName(item) : '';
                 break;
             }
             case 'targets': {

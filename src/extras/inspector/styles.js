@@ -614,7 +614,18 @@ const styles = /* css */ `
         color: #ffffff;
     }
 
-    .pci-copy {
+    .pci-actions {
+        display: inline-flex;
+        gap: 4px;
+        flex: 0 0 auto;
+    }
+
+    .pci-action:disabled {
+        opacity: 0.35;
+        cursor: default;
+    }
+
+    .pci-copy, .pci-action {
         flex: 0 0 auto;
         font: inherit;
         font-size: 10px;
@@ -627,7 +638,7 @@ const styles = /* css */ `
         cursor: pointer;
     }
 
-    .pci-copy:hover {
+    .pci-copy:hover, .pci-action:not(:disabled):hover {
         color: #ffffff;
         background: #3a4a6b;
     }

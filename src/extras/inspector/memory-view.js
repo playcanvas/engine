@@ -341,5 +341,5 @@ function buildBufferModel(buffer, ctx) {
 
 export {
     BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf,
-    memorySummary
+    memorySummary, nodeLabel
 };

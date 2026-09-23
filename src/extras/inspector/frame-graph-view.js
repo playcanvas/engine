@@ -1,15 +1,19 @@
 import { FramePass } from '../../platform/graphics/frame-pass.js';
+import { SHADER_FORWARD } from '../../scene/constants.js';
 import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 
 import { describeValue } from './describe.js';
+import { nodeLabel } from './memory-view.js';
 import { formatName, makeSection, passDisplayName, push, read, reflectRows, renderTargetSummary } from './model.js';
+import { meshInstanceRows } from './node-model.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
 /** @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js' */
 /** @import { RenderTarget } from '../../platform/graphics/render-target.js' */
 /** @import { Described } from './describe.js' */
 /** @import { ListRow } from './list-view.js' */
-/** @import { PropertySection } from './model.js' */
+/** @import { PropertyRow, PropertySection } from './model.js' */
+/** @import { MeshInstance } from '../../scene/mesh-instance.js' */
 
 /**
  * One pass of a captured frame.
@@ -37,7 +41,197 @@ import { formatName, makeSection, passDisplayName, push, read, reflectRows, rend
  * @property {Map<string, number>} nameCounts - How many passes share each profiler name.
  * @property {Map<string, number>|null} timings - GPU time per profiler name, when profiling is on.
  * @property {number|undefined} frameTime - The GPU time of the whole frame, when known.
+ * @property {Map<object, VisibleList|null>} visible - What each layer step of a forward pass drew,
+ * by step, or null when its camera has not culled the layer.
  */
+
+/**
+ * The mesh instances a layer step submitted in one frame, in draw order.
+ *
+ * @typedef {object} VisibleList
+ * @ignore
+ * @property {MeshInstance[]} instances - The instances, after culling, the transparency split and
+ * sorting, including any debug lines the immediate renderer added.
+ * @property {number} drawn - How many were actually drawn, leaving out {@link skipped}.
+ * @property {Set<MeshInstance>} skipped - Instances the forward renderer passes over: masked out of
+ * the step's shader pass, or instanced with no instances and no draw commands.
+ * @property {Set<MeshInstance>} debugLines - Instances that are batches of debug lines.
+ */
+
+/**
+ * The context the pass model needs besides the pass.
+ *
+ * @typedef {object} PassModelContext
+ * @ignore
+ * @property {GraphicsDevice} device - The device.
+ * @property {FrameSnapshot|null} frame - The captured frame.
+ * @property {string|null} [passKey] - The list key of the pass, to keep its pages apart from others.
+ * @property {Map<string, number>} [pages] - The page shown for each layer step, kept across refreshes.
+ * @property {string} [filter] - A lower-cased filter the listed instances must match by node name.
+ * @property {boolean} [stable] - Whether the app is paused or the frame frozen, so pages hold still.
+ */
+
+/**
+ * What a layer step row of the pass list selects: one step of a forward pass, rather than the pass.
+ *
+ * @ignore
+ */
+class LayerStepSelection {
+    /**
+     * @param {RenderPassForward} pass - The forward pass the step belongs to.
+     * @param {*} step - The layer render step.
+     * @param {number} index - The step's index within the pass.
+     */
+    constructor(pass, step, index) {
+        this.pass = pass;
+        this.step = step;
+        this.index = index;
+    }
+}
+
+/** How many mesh instances a page of a layer step shows. */
+const INSTANCES_PER_PAGE = 200;
+
+/** @type {WeakMap<object, number>} */
+const instanceIds = new WeakMap();
+let nextInstanceId = 1;
+
+/**
+ * @param {MeshInstance} instance - A mesh instance.
+ * @returns {number} An id that stays the same for the lifetime of the instance, so an instance
+ * opened in the list stays open when the draw order changes.
+ */
+function instanceId(instance) {
+    let id = instanceIds.get(instance);
+    if (id === undefined) {
+        id = nextInstanceId++;
+        instanceIds.set(instance, id);
+    }
+    return id;
+}
+
+/**
+ * Reads what a layer step drew in the last frame. The culler fills each layer's list per camera and
+ * sub-layer, the forward renderer sorts it in place and adds debug lines to it, and it is only
+ * cleared when the next frame culls again, so between frames it holds exactly what was submitted.
+ * The layer's store is read directly: its accessor creates an empty entry for a camera it has not
+ * seen, which would change the engine's state.
+ *
+ * @param {*} step - A layer render step of a forward pass.
+ * @param {Set<MeshInstance>} debugLines - The mesh instances of the immediate renderer's batches.
+ * @returns {VisibleList|null} What it drew, or null when its camera has not culled the layer.
+ */
+function captureVisible(step, debugLines) {
+    const camera = step.cameraComponent?.camera;
+    const culled = camera ? step.layer?._visibleInstances?.get(camera) : undefined;
+    if (!culled) return null;
+    const list = step.transparent ? culled.transparent : culled.opaque;
+
+    // the checks the forward renderer makes before drawing. A mask that the owner toggles during
+    // the frame, as the texture preview quads do, reads as it was left afterwards
+    const pass = camera.shaderPassInfo?.index ?? SHADER_FORWARD;
+    const skipped = new Set();
+    for (const instance of list) {
+        if ((instance.shaderPassMask & (1 << pass)) === 0) {
+            skipped.add(instance);
+        } else if (instance.instancingData && instance.instancingData.count <= 0 && !instance.getDrawCommands?.(camera)) {
+            skipped.add(instance);
+        }
+    }
+
+    return { instances: list.slice(), drawn: list.length - skipped.size, skipped, debugLines };
+}
+
+/**
+ * @param {MeshInstance} instance - A mesh instance drawn by a layer step.
+ * @param {VisibleList} list - The list it was drawn from.
+ * @returns {string} The name to show and filter it by.
+ */
+function instanceName(instance, list) {
+    return list.debugLines.has(instance) ? 'debug lines' : nodeLabel(instance.node ?? null);
+}
+
+/**
+ * @param {VisibleList|null} list - What a layer step drew.
+ * @param {string} filter - A lower-cased filter.
+ * @returns {boolean} Whether any instance it drew matches the filter by name.
+ */
+function drewMatching(list, filter) {
+    return !!list?.instances.some(instance => instanceName(instance, list).toLowerCase().includes(filter));
+}
+
+/**
+ * @param {VisibleList|null} list - What a layer step drew.
+ * @param {*} layer - The step's layer.
+ * @returns {string} How many meshes it drew, out of how many the layer holds.
+ */
+function drawnText(list, layer) {
+    const total = layer.meshInstances.length;
+    return list ? `${list.drawn} of ${total} meshes` : `${total} meshes, not culled for this camera`;
+}
+
+/**
+ * One page of what a layer step drew, in draw order, each instance opening into its own rows. Long
+ * lists page rather than show everything, since every shown row is re-read on each refresh. The
+ * filter narrows the list by node name before paging.
+ *
+ * @param {VisibleList} list - What the step drew.
+ * @param {string} key - Identifies the step across refreshes, to remember its page.
+ * @param {PassModelContext} ctx - The pages, the filter and whether the frame holds still.
+ * @returns {PropertyRow[]} The rows.
+ */
+function instancePage(list, key, ctx) {
+    const filter = ctx.filter ?? '';
+    const pages = ctx.pages ?? new Map();
+    const matching = [];
+    list.instances.forEach((instance, index) => {
+        if (!filter || instanceName(instance, list).toLowerCase().includes(filter)) matching.push(index);
+    });
+
+    const count = Math.max(1, Math.ceil(matching.length / INSTANCES_PER_PAGE));
+    const page = Math.min(pages.get(key) ?? 0, count - 1);
+    pages.set(key, page);
+    const start = page * INSTANCES_PER_PAGE;
+    const shown = matching.slice(start, start + INSTANCES_PER_PAGE);
+
+    const rows = [];
+    if (matching.length > INSTANCES_PER_PAGE || filter) {
+        rows.push({
+            key: 'pager',
+            label: 'showing',
+            value: {
+                text: `${matching.length ? `${start + 1}–${start + shown.length}` : 'none'} of ${matching.length}` +
+                    `${filter ? ` matching "${filter}"` : ''}${ctx.stable ? '' : ' · live: pause or freeze to page steadily'}`,
+                cls: 'num',
+                actions: [
+                    { text: '‹', title: 'Previous page', disabled: page === 0, run: () => pages.set(key, page - 1) },
+                    { text: '›', title: 'Next page', disabled: page >= count - 1, run: () => pages.set(key, page + 1) }
+                ]
+            }
+        });
+    }
+
+    for (const index of shown) {
+        const instance = list.instances[index];
+        const skipped = list.skipped.has(instance);
+        const material = instance.material ? `material "${instance.material.name}"` : 'no material';
+        rows.push({
+            key: `mi${instanceId(instance)}`,
+            label: `${index}`,
+            group: true,
+            value: {
+                text: `${instanceName(instance, list)} · ${material} · ${instance.mesh?.vertexBuffer?.numVertices ?? 0} verts` +
+                    `${skipped ? ' · not drawn in this pass' : ''}`,
+                cls: skipped ? 'null' : 'obj',
+                expand: () => meshInstanceRows(instance)
+            }
+        });
+    }
+    if (!matching.length && !filter) {
+        rows.push({ key: 'none', label: '', value: { text: 'nothing drawn', cls: 'null' } });
+    }
+    return rows;
+}
 
 // pass properties the model shows explicitly, or that are plumbing
 const SKIP_PASS = [
@@ -168,13 +362,29 @@ function captureFrameGraph(app) {
         entry.children = childCounts.get(entry.pass) ?? 0;
     }
 
+    // what each forward pass layer step drew, copied now so a frozen frame keeps its own lists
+    const debugLines = new Set();
+    for (const batches of app.scene?.immediate?.batchesMap?.values() ?? []) {
+        for (const batch of batches.map?.values() ?? []) {
+            if (batch.meshInstance) debugLines.add(batch.meshInstance);
+        }
+    }
+    const visible = new Map();
+    for (const entry of entries) {
+        if (!(entry.pass instanceof RenderPassForward)) continue;
+        for (const step of entry.pass.layerRenderSteps) {
+            visible.set(step, captureVisible(step, debugLines));
+        }
+    }
+
     const profiler = device.gpuProfiler;
     return {
         entries,
         usage,
         nameCounts,
         timings: profiler?.enabled ? profiler.passTimings : null,
-        frameTime: profiler?.frameTime
+        frameTime: profiler?.frameTime,
+        visible
     };
 }
 
@@ -251,28 +461,33 @@ function passRows(frame, device) {
             });
         }
 
-        rows.push({ key: entry.key, item: pass, name, indent: depth, dim: !pass.executeEnabled, title: passTitle(entry, device), cells });
+        // a forward pass also matches the filter by the names of what it drew, so a name finds the
+        // passes and steps that rendered it
+        const steps = pass instanceof RenderPassForward ? pass.layerRenderSteps : [];
+        const lists = steps.map(step => frame.visible?.get(step) ?? null);
+        const passMatches = steps.length ?
+            filter => name.toLowerCase().includes(filter) || lists.some(list => drewMatching(list, filter)) : undefined;
+        rows.push({ key: entry.key, item: pass, name, matches: passMatches, indent: depth, dim: !pass.executeEnabled, title: passTitle(entry, device), cells });
 
-        if (pass instanceof RenderPassForward) {
-            pass.layerRenderSteps.forEach((step, i) => {
-                const layer = step.layer;
-                const enabled = layer.enabled && (pass.layerComposition?.isEnabled(layer, step.transparent) ?? true);
-                const camera = step.cameraComponent?.entity;
-                const flags = `${step.firstCameraUse ? ' · first' : ''}${step.lastCameraUse ? ' · last' : ''}${enabled ? '' : ' · disabled'}`;
-                rows.push({
-                    key: `${entry.key}/${i}`,
-                    item: pass,
-                    name,
-                    indent: depth + 1,
-                    dim: !enabled,
-                    cells: [
-                        { text: '', cls: 'pci-cell-index' },
-                        { text: camera?.name ?? '-', cls: 'pci-cell-info', target: camera ?? undefined, title: 'Camera' },
-                        { text: `· ${layer.name} · ${step.transparent ? 'transparent' : 'opaque'} · ${layer.meshInstances.length} meshes${flags}`, cls: 'pci-cell-info' }
-                    ]
-                });
+        steps.forEach((step, i) => {
+            const layer = step.layer;
+            const enabled = layer.enabled && (pass.layerComposition?.isEnabled(layer, step.transparent) ?? true);
+            const camera = step.cameraComponent?.entity;
+            const flags = `${step.firstCameraUse ? ' · first' : ''}${step.lastCameraUse ? ' · last' : ''}${enabled ? '' : ' · disabled'}`;
+            rows.push({
+                key: `${entry.key}/${i}`,
+                item: new LayerStepSelection(pass, step, i),
+                name,
+                matches: filter => name.toLowerCase().includes(filter) || drewMatching(lists[i], filter),
+                indent: depth + 1,
+                dim: !enabled,
+                cells: [
+                    { text: '', cls: 'pci-cell-index' },
+                    { text: camera?.name ?? '-', cls: 'pci-cell-info', target: camera ?? undefined, title: 'Camera' },
+                    { text: `· ${layer.name} · ${step.transparent ? 'transparent' : 'opaque'} · ${drawnText(lists[i], layer)}${flags}`, cls: 'pci-cell-info' }
+                ]
             });
-        }
+        });
 
         const lightNode = /** @type {any} */ (pass).light?._node;
         if (lightNode) {
@@ -311,7 +526,8 @@ function passList(passes) {
  * public property the pass class exposes.
  *
  * @param {FramePass} pass - The pass.
- * @param {{ device: GraphicsDevice, frame: FrameSnapshot|null }} ctx - The device and the frame the pass was captured in.
+ * @param {PassModelContext} ctx - The device, the frame the pass was captured in, and the paging
+ * state of its layer steps.
  * @returns {PropertySection[]} The sections.
  */
 function buildPassModel(pass, ctx) {
@@ -384,10 +600,12 @@ function buildPassModel(pass, ctx) {
             const clears = `${step.clearColor ? 'color ' : ''}${step.clearDepth ? 'depth ' : ''}${step.clearStencil ? 'stencil' : ''}`.trim();
             push(section, `[${i}] camera`, describeValue(step.cameraComponent?.entity ?? null));
             push(section, `[${i}] layer`, describeValue(layer));
+            const list = ctx.frame?.visible?.get(step) ?? null;
             push(section, `[${i}] draws`, {
-                text: `${step.transparent ? 'transparent' : 'opaque'}, ${layer.meshInstances.length} meshes` +
+                text: `${step.transparent ? 'transparent' : 'opaque'}, ${drawnText(list, layer)}` +
                     `${enabled ? '' : ', disabled'}${step.firstCameraUse ? ', first camera use' : ''}${step.lastCameraUse ? ', last camera use' : ''}`,
-                cls: 'obj'
+                cls: 'obj',
+                expand: list ? () => instancePage(list, `${ctx.passKey ?? ''}/${i}`, ctx) : undefined
             });
             push(section, `[${i}] clears`, { text: clears || 'nothing', cls: clears ? 'obj' : 'null' });
         });
@@ -401,4 +619,54 @@ function buildPassModel(pass, ctx) {
     return sections;
 }
 
-export { buildPassModel, captureFrameGraph, passRows };
+/**
+ * @param {*} step - A layer render step.
+ * @param {RenderPassForward} pass - The pass it belongs to.
+ * @returns {boolean} Whether the step's layer and sub-layer are enabled.
+ */
+function stepEnabled(step, pass) {
+    return step.layer.enabled && (pass.layerComposition?.isEnabled(step.layer, step.transparent) ?? true);
+}
+
+/**
+ * Everything the property view shows for one layer step of a forward pass: the camera and layer it
+ * renders, what it clears, and the instances it drew in draw order, listed straight away and paged
+ * the same way as under the pass, sharing the page.
+ *
+ * @param {LayerStepSelection} selection - The step and its pass.
+ * @param {PassModelContext} ctx - The frame the step was captured in, and the paging state, where
+ * `passKey` is the key of the step's own row.
+ * @returns {PropertySection[]} The sections.
+ */
+function buildStepModel(selection, ctx) {
+    const { pass, step, index } = selection;
+    const layer = step.layer;
+    const list = ctx.frame?.visible?.get(step) ?? null;
+    const enabled = stepEnabled(step, pass);
+    const clears = `${step.clearColor ? 'color ' : ''}${step.clearDepth ? 'depth ' : ''}${step.clearStencil ? 'stencil' : ''}`.trim();
+    const sections = [];
+
+    const general = makeSection('step', `${passDisplayName(pass)} › ${layer.name} ${step.transparent ? 'transparent' : 'opaque'}`);
+    push(general, 'pass', { text: `${passDisplayName(pass)}, step ${index}`, cls: 'ref', target: pass });
+    push(general, 'camera', describeValue(step.cameraComponent?.entity ?? null));
+    push(general, 'layer', describeValue(layer));
+    push(general, 'sub-layer', { text: step.transparent ? 'transparent' : 'opaque', cls: 'obj' });
+    push(general, 'draws', { text: drawnText(list, layer), cls: list ? 'num' : 'null' });
+    push(general, 'enabled', describeValue(enabled));
+    push(general, 'clears', { text: clears || 'nothing', cls: clears ? 'obj' : 'null' });
+    if (step.firstCameraUse) push(general, 'first camera use', describeValue(true));
+    if (step.lastCameraUse) push(general, 'last camera use', describeValue(true));
+    sections.push(general);
+
+    const drawn = makeSection('instances', 'Drawn instances');
+    if (list) {
+        drawn.rows.push(...instancePage(list, ctx.passKey ?? '', ctx));
+    } else {
+        push(drawn, 'instances', { text: 'the camera has not culled this layer', cls: 'null' });
+    }
+    sections.push(drawn);
+
+    return sections;
+}
+
+export { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows };

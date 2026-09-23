@@ -18,6 +18,8 @@
  * @property {string} key - A key unique within the list, stable across refreshes.
  * @property {*} item - The subject selected when the row is clicked.
  * @property {string} name - The text the filter matches against.
+ * @property {(filter: string) => boolean} [matches] - Decides whether the row matches the lower-cased
+ * filter, for rows that match on more than their name. Called only while a filter is set.
  * @property {ListCell[]} cells - The cells, left to right.
  * @property {number} [indent] - The indentation level.
  * @property {boolean} [dim] - Whether the row is shown dimmed.
@@ -183,7 +185,7 @@ class ListView {
 
             this._syncCells(entry, row.cells);
 
-            const shown = !filter || row.name.toLowerCase().includes(filter);
+            const shown = !filter || (row.matches ? row.matches(filter) : row.name.toLowerCase().includes(filter));
             const display = shown ? '' : 'none';
             if (entry.el.style.display !== display) entry.el.style.display = display;
             if (shown) visible++;

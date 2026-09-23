@@ -348,4 +348,4 @@ function buildNodeModel(node) {
     return sections;
 }
 
-export { buildNodeModel, vertexFormatValue };
+export { buildNodeModel, meshInstanceRows, vertexFormatValue };

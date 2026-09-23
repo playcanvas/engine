@@ -5,8 +5,9 @@ import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { assetRows, assetUsers, buildAssetModel, collectAssets, describeAssetValue, resourceAssets } from '../../../src/extras/inspector/asset-view.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
-import { captureFrameGraph } from '../../../src/extras/inspector/frame-graph-view.js';
+import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from '../../../src/extras/inspector/frame-graph-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
+import { ListView } from '../../../src/extras/inspector/list-view.js';
 import { bufferOwners, bufferRows, buildBufferModel, collectBuffers, memorySummary } from '../../../src/extras/inspector/memory-view.js';
 import { formatBytes } from '../../../src/extras/inspector/model.js';
 import { buildNodeModel } from '../../../src/extras/inspector/node-model.js';
@@ -35,6 +36,7 @@ import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
 import { Mesh } from '../../../src/scene/mesh.js';
+import { RenderPassForward } from '../../../src/scene/renderer/render-pass-forward.js';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
@@ -1191,6 +1193,183 @@ describe('Inspector frame graph capture', function () {
      */
     const pass = (name, props = {}) => ({ name, beforePasses: [], afterPasses: [], executeEnabled: true, ...props });
 
+    /**
+     * @param {string} name - The node name.
+     * @param {object} [props] - Extra fields.
+     * @returns {any} A mesh instance stub, drawn in every shader pass.
+     */
+    const instance = (name, props = {}) => ({
+        node: { name, parent: null },
+        material: { name: 'brick' },
+        mesh: { vertexBuffer: { numVertices: 3 } },
+        shaderPassMask: 0xFFFFFFFF,
+        ...props
+    });
+
+    /**
+     * A forward pass whose one layer step drew the given instances, out of a larger layer.
+     *
+     * @param {any[]} drawn - The instances the camera culled in, in draw order.
+     * @param {any[]} [extra] - Further instances the layer holds but did not draw.
+     * @returns {any} The pieces: the app, the pass, its step and its layer.
+     */
+    const forwardScene = (drawn, extra = []) => {
+        const camera = { shaderPassInfo: null };
+        const layer = {
+            name: 'World',
+            enabled: true,
+            meshInstances: [...drawn, ...extra],
+            _visibleInstances: new WeakMap([[camera, { opaque: drawn, transparent: [] }]])
+        };
+        const step = { layer, transparent: false, cameraComponent: { camera, entity: { name: 'Camera' } } };
+        const forward = Object.assign(Object.create(RenderPassForward.prototype), {
+            name: 'RenderPassForward', beforePasses: [], afterPasses: [], executeEnabled: true, renderTarget: null, layerRenderSteps: [step]
+        });
+        const backBuffer = { name: 'Backbuffer', width: 4, height: 4, samples: 1, mipLevel: 0 };
+        const app = { graphicsDevice: { backBuffer, gpuProfiler: null }, frameGraph: { renderPasses: [forward] }, scene: {} };
+        return { app, forward, step, layer };
+    };
+
+    it('captures what each forward layer step drew, leaving out what the renderer skips', function () {
+        const masked = instance('masked', { shaderPassMask: 0 });
+        const empty = instance('empty', { instancingData: { count: 0 }, getDrawCommands: () => null });
+        const lines = instance('');
+        const drawn = [instance('a'), masked, empty, lines];
+        const { app, step } = forwardScene(drawn, [instance('culled')]);
+        app.scene.immediate = { batchesMap: new Map([[{}, { map: new Map([['m', { meshInstance: lines }]]) }]]) };
+
+        const frame = captureFrameGraph(app);
+        const list = frame.visible.get(step);
+        expect(list.instances).to.deep.equal(drawn);
+        // a copy, so a frozen frame keeps its list when the next cull refills the engine's
+        expect(list.instances).to.not.equal(drawn);
+        expect(list.drawn).to.equal(2);
+        expect([...list.skipped]).to.deep.equal([masked, empty]);
+        expect(list.debugLines.has(lines)).to.be.true;
+
+        // a camera that never culled the layer has nothing to show
+        step.cameraComponent = { camera: {}, entity: { name: 'Other' } };
+        expect(captureFrameGraph(app).visible.get(step)).to.equal(null);
+    });
+
+    it('counts drawn meshes on the list and matches the filter by what was drawn', function () {
+        const { app, forward } = forwardScene([instance('wall'), instance('door')], [instance('roof')]);
+        const frame = captureFrameGraph(app);
+        const rows = passRows(frame, app.graphicsDevice);
+        const [passRow, stepRow] = rows;
+        expect(stepRow.cells.at(-1).text).to.match(/· World · opaque · 2 of 3 meshes/);
+        expect(passRow.item).to.equal(forward);
+
+        // a name finds the pass and the step that drew it, but not one drawn nothing by that name
+        expect(passRow.matches('door')).to.be.true;
+        expect(stepRow.matches('door')).to.be.true;
+        expect(stepRow.matches('roof')).to.be.false;
+        expect(stepRow.matches('forward')).to.be.true;
+    });
+
+    it('selects a single layer step from its row, showing its drawn instances straight away', function () {
+        const drawn = [];
+        for (let i = 0; i < 250; i++) drawn.push(instance(`item-${i}`));
+        const { app, forward, step } = forwardScene(drawn, [instance('culled')]);
+        const frame = captureFrameGraph(app);
+        const [passRow, stepRow] = passRows(frame, app.graphicsDevice);
+
+        // the pass row selects the pass, the step row only its step
+        expect(passRow.item).to.equal(forward);
+        expect(stepRow.item).to.be.an.instanceOf(LayerStepSelection);
+        expect(stepRow.item.pass).to.equal(forward);
+        expect(stepRow.item.step).to.equal(step);
+        expect(stepRow.item.index).to.equal(0);
+
+        const pages = new Map();
+        const stepCtx = { device: app.graphicsDevice, frame, passKey: stepRow.key, pages, filter: '', stable: true };
+        const sections = buildStepModel(stepRow.item, stepCtx);
+        expect(sections.map(section => section.key)).to.deep.equal(['step', 'instances']);
+        expect(sections[0].title).to.equal('Forward › World opaque');
+        const byLabel = label => sections[0].rows.find(row => row.label === label).value;
+        expect(byLabel('pass').target).to.equal(forward);
+        expect(byLabel('draws').text).to.equal('250 of 251 meshes');
+        expect(byLabel('sub-layer').text).to.equal('opaque');
+
+        // the instances are listed, not behind a row to open, and page like they do under the pass
+        const rows = sections[1].rows;
+        expect(rows[0].value.text).to.equal('1–200 of 250');
+        expect(rows).to.have.lengthOf(201);
+        rows[0].value.actions[1].run();
+
+        // the step view and the pass view share the page of the step
+        const passCtx = { ...stepCtx, passKey: passRow.key };
+        const draws = buildPassModel(forward, passCtx).find(section => section.key === 'steps').rows.find(row => row.label === '[0] draws').value;
+        expect(draws.expand()[0].value.text).to.equal('201–250 of 250');
+
+        // a camera that never culled the layer says so in place of the list
+        step.cameraComponent = { camera: {}, entity: { name: 'Other' } };
+        const unculled = captureFrameGraph(app);
+        const [, row] = passRows(unculled, app.graphicsDevice);
+        expect(buildStepModel(row.item, { ...stepCtx, frame: unculled })[1].rows[0].value.text).to.match(/has not culled/);
+    });
+
+    it('shows a step when its row is clicked and the pass when the pass row is', function () {
+        jsdomSetup();
+        const app = createApp();
+        const { forward } = forwardScene([instance('wall')]);
+        app.frameGraph = { renderPasses: [forward] };
+        const inspector = /** @type {any} */ (new Inspector(app));
+        inspector._setTab('passes');
+        const rows = [...inspector._panels.passes.querySelectorAll('.pci-lrow')];
+
+        rows[1].click();
+        expect(inspector._properties.subject).to.be.an.instanceOf(LayerStepSelection);
+        expect(panel(inspector).querySelector('.pci-section-title').textContent).to.equal('Forward › World opaque');
+        expect(inspector._countsEl.parentElement.textContent).to.match(/Forward › World opaque/);
+
+        rows[0].click();
+        expect(inspector._properties.subject).to.equal(forward);
+        // a link to the pass selects the pass row, not the first of its steps
+        inspector._selectAny(forward);
+        expect(inspector._passList.selectedKey).to.equal(inspector._passList._rows[0].key);
+
+        inspector.destroy();
+        jsdomTeardown();
+    });
+
+    it('pages the instances a layer step drew and narrows them with the filter', function () {
+        const drawn = [];
+        for (let i = 0; i < 450; i++) drawn.push(instance(`item-${i}`));
+        const { app, forward } = forwardScene(drawn);
+        const frame = captureFrameGraph(app);
+        const ctx = { device: app.graphicsDevice, frame, passKey: 'p', pages: new Map(), filter: '', stable: false };
+
+        const draws = () => buildPassModel(forward, ctx).find(section => section.key === 'steps').rows.find(row => row.label === '[0] draws').value;
+        expect(draws().text).to.match(/^opaque, 450 of 450 meshes/);
+        let rows = draws().expand();
+        expect(rows[0].value.text).to.equal('1–200 of 450 · live: pause or freeze to page steadily');
+        expect(rows).to.have.lengthOf(201);
+        expect(rows[1].label).to.equal('0');
+        expect(rows[1].value.text).to.equal('item-0 · material "brick" · 3 verts');
+        expect(rows[1].group).to.be.true;
+        expect(rows[0].value.actions[0].disabled).to.be.true;
+
+        // the next page, and the last, which stops the pager
+        rows[0].value.actions[1].run();
+        rows = draws().expand();
+        expect(rows[0].value.text).to.match(/^201–400 of 450/);
+        expect(rows[1].label).to.equal('200');
+        rows[0].value.actions[1].run();
+        rows = draws().expand();
+        expect(rows[0].value.text).to.match(/^401–450 of 450/);
+        expect(rows[0].value.actions[1].disabled).to.be.true;
+
+        // the filter narrows before paging, keeping the draw order indices, and snaps the page back
+        ctx.filter = 'item-44';
+        ctx.stable = true;
+        rows = draws().expand();
+        expect(rows[0].value.text).to.equal('1–11 of 11 matching "item-44"');
+        expect(rows.slice(1).map(row => row.label)).to.deep.equal(['44', '440', '441', '442', '443', '444', '445', '446', '447', '448', '449']);
+        ctx.filter = 'nothing like this';
+        expect(draws().expand()[0].value.text).to.equal('none of 0 matching "nothing like this"');
+    });
+
     it('flattens passes in execution order with wrapper depth and target usage', function () {
         const backBuffer = { name: 'Backbuffer' };
         const shadowMap = { name: 'ShadowMap' };
@@ -1215,6 +1394,65 @@ describe('Inspector frame graph capture', function () {
         expect(frame.usage.get(backBuffer).map(e => e.pass)).to.deep.equal([forward]);
         expect(frame.nameCounts.get('Shadow')).to.equal(1);
         expect(frame.timings).to.be.null;
+    });
+});
+
+describe('Inspector list view', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    it('lets a row decide whether it matches the filter', function () {
+        const container = document.createElement('div');
+        const list = new ListView(container, () => {});
+        list.setRows([
+            { key: 'a', item: 1, name: 'Forward', matches: filter => filter === 'wall', cells: [{ text: 'Forward' }] },
+            { key: 'b', item: 2, name: 'Shadow', cells: [{ text: 'Shadow' }] }
+        ]);
+        const shown = () => [...container.querySelectorAll('.pci-lrow')].filter(row => row.style.display !== 'none').map(row => row.textContent);
+        list.filter = 'wall';
+        list.render();
+        expect(shown()).to.deep.equal(['Forward']);
+        list.filter = 'shad';
+        list.render();
+        expect(shown()).to.deep.equal(['Shadow']);
+    });
+});
+
+describe('Inspector property view actions', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    it('runs a row button and refreshes, rebuilding the buttons only when they change', function () {
+        const container = document.createElement('div');
+        const view = new PropertyView(container, () => {});
+        let page = 0;
+        const model = () => [{
+            key: 's',
+            title: 'S',
+            rows: [{
+                key: 'pager',
+                label: 'showing',
+                value: {
+                    text: `page ${page}`,
+                    actions: [
+                        { text: '‹', disabled: page === 0, run: () => page-- },
+                        { text: '›', disabled: page === 2, run: () => page++ }
+                    ]
+                }
+            }]
+        }];
+        view.setSubject({}, model);
+        const buttons = () => [...container.querySelectorAll('.pci-action')];
+        expect(buttons().map(b => b.disabled)).to.deep.equal([true, false]);
+
+        buttons()[1].click();
+        expect(container.querySelector('.pci-value').textContent).to.equal('page 1');
+        expect(buttons().map(b => b.disabled)).to.deep.equal([false, false]);
+        const kept = buttons()[1];
+        view.refresh();
+        expect(buttons()[1]).to.equal(kept);
+        kept.click();
+        expect(buttons().map(b => b.disabled)).to.deep.equal([false, true]);
     });
 });
 
