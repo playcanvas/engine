@@ -125,6 +125,98 @@ describe('AmmoPhysicsBody', function () {
         });
     });
 
+    describe('raycasts before the first step', function () {
+
+        // Regression tests for https://github.com/playcanvas/engine/issues/4231. Bullet refreshes
+        // broadphase bounds only inside a fixed substep, and the first frame of an application
+        // runs none, so a body placed or teleported before it was missed by raycasts that frame.
+
+        /**
+         * Creates a unit box at the origin, not yet in the scene.
+         *
+         * @param {string} [type] - The rigid body type, or undefined for a trigger volume.
+         * @returns {Entity} The entity.
+         */
+        function createBox(type) {
+            const box = new Entity('box');
+            box.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
+            if (type) {
+                box.addComponent('rigidbody', { type });
+            }
+            return box;
+        }
+
+        /**
+         * Casts a vertical ray through x = 3 and returns the entity it hits first.
+         *
+         * @returns {Entity|null} The entity hit, or null.
+         */
+        function raycastAtX3() {
+            const hit = app.systems.rigidbody.raycastFirst(new Vec3(3, 5, 0), new Vec3(3, -5, 0));
+            return hit?.entity ?? null;
+        }
+
+        ['static', 'kinematic', 'dynamic'].forEach((type) => {
+            it(`finds a ${type} body positioned before it joins the scene`, function () {
+                const box = createBox(type);
+                box.setPosition(3, 0.5, 0);
+                app.root.addChild(box);
+
+                expect(raycastAtX3()).to.equal(box);
+            });
+
+            it(`finds a ${type} body at the pose it is teleported to`, function () {
+                const box = createBox(type);
+                app.root.addChild(box);
+                box.rigidbody.teleport(3, 0.5, 0);
+
+                expect(raycastAtX3()).to.equal(box);
+            });
+        });
+
+        it('finds a trigger volume positioned before it joins the scene', function () {
+            const box = createBox();
+            box.setPosition(3, 0.5, 0);
+            app.root.addChild(box);
+
+            expect(raycastAtX3()).to.equal(box);
+        });
+
+        it('does not refresh the bounds of a body outside the world', function () {
+            const box = createBox('dynamic');
+            app.root.addChild(box);
+            box.enabled = false;
+
+            const nativeWorld = app.systems.rigidbody.physicsWorld.nativeWorld;
+            const updateSingleAabb = nativeWorld.updateSingleAabb;
+            let calls = 0;
+            nativeWorld.updateSingleAabb = function (body) {
+                calls++;
+                return updateSingleAabb.call(this, body);
+            };
+
+            box.rigidbody.teleport(3, 0.5, 0);
+            expect(calls).to.equal(0);
+
+            box.enabled = true;
+            expect(calls).to.equal(1);
+            expect(raycastAtX3()).to.equal(box);
+        });
+
+        it('teleports without the binding on older Ammo builds', function () {
+            const nativeWorld = app.systems.rigidbody.physicsWorld.nativeWorld;
+            nativeWorld.updateSingleAabb = undefined;
+
+            const box = createBox('dynamic');
+            app.root.addChild(box);
+            box.rigidbody.teleport(3, 0.5, 0);
+
+            // found once a fixed substep has run
+            app.update(1 / 60);
+            expect(raycastAtX3()).to.equal(box);
+        });
+    });
+
     describe('gravity scale', function () {
 
         /**

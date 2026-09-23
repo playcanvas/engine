@@ -380,6 +380,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
                         break;
                     case BODYTYPE_KINEMATIC:
                         this._kinematic.push(component);
+                        component.syncEntityToBody();
                         break;
                     case BODYTYPE_STATIC:
                         component.syncEntityToBody();

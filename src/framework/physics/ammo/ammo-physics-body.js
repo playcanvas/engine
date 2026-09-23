@@ -38,6 +38,14 @@ class AmmoPhysicsBody extends PhysicsBody {
     _noContactResponse;
 
     /**
+     * Whether the native body is in the dynamics world, and so has a broadphase proxy.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _inWorld = false;
+
+    /**
      * @param {AmmoPhysicsWorld} world - The owning world.
      * @param {object} nativeBody - The btRigidBody.
      * @param {string} type - The body type: BODYTYPE_STATIC, BODYTYPE_DYNAMIC or
@@ -164,6 +172,13 @@ class AmmoPhysicsBody extends PhysicsBody {
             vec.setValue(0, 0, 0);
             body.setInterpolationLinearVelocity(vec);
             body.setInterpolationAngularVelocity(vec);
+        }
+
+        // Bullet only refreshes broadphase bounds inside a fixed substep, so without this a
+        // raycast before the next one would find the body at its previous pose
+        const nativeWorld = this._world.nativeWorld;
+        if (this._inWorld && nativeWorld.updateSingleAabb) {
+            nativeWorld.updateSingleAabb(body);
         }
 
         body.activate();

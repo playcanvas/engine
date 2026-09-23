@@ -132,7 +132,8 @@ class PhysicsBody {
     /**
      * Teleports the body to a new world space pose and wakes it. Backends also refresh any
      * interpolation state so the pose read back by {@link PhysicsBody#getTransform} is the
-     * teleport target even on frames that run zero fixed substeps.
+     * teleport target even on frames that run zero fixed substeps, and any broadphase bounds so
+     * queries such as raycasts find the body at its new pose before the next step.
      *
      * @param {Vec3} position - The world space position.
      * @param {Quat} rotation - The world space rotation.
