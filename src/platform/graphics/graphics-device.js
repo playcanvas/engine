@@ -1422,7 +1422,12 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     clearVertexBuffer() {
-        this.vertexBuffers.length = 0;
+        // Popped rather than assigning a zero length, which releases the array's backing store,
+        // so that the next setVertexBuffer - on the next draw - would allocate a new one
+        const vertexBuffers = this.vertexBuffers;
+        while (vertexBuffers.length > 0) {
+            vertexBuffers.pop();
+        }
     }
 
     /**
