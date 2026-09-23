@@ -40,7 +40,7 @@ fn computeSplatCov(
     scale: half3,
     viewMatrix: mat4x4f,
     viewProj: mat4x4f,
-    focal: f32,
+    focal: vec2f,           // focal length in pixels, per axis
     viewportWidth: f32,
     viewportHeight: f32,
     nearClip: f32,
@@ -160,11 +160,11 @@ fn computeSplatCov(
 
         // Compute TT columns directly without materializing full J and W matrices.
         // Original code:
-        //   let J = mat3x3f(vec3f(J1, 0.0, J2.x), vec3f(0.0, J1, J2.y), vec3f(0.0, 0.0, 0.0));
+        //   let J = mat3x3f(vec3f(J1.x, 0.0, J2.x), vec3f(0.0, J1.y, J2.y), vec3f(0.0, 0.0, 0.0));
         //   let W = transpose(mat3x3f(viewMatrix[0].xyz, viewMatrix[1].xyz, viewMatrix[2].xyz));
         //   let TT = W * J;
-        let tt0 = J1 * w0 + J2.x * w2;
-        let tt1 = J1 * w1 + J2.y * w2;
+        let tt0 = J1.x * w0 + J2.x * w2;
+        let tt1 = J1.y * w1 + J2.y * w2;
 
     #endif
 

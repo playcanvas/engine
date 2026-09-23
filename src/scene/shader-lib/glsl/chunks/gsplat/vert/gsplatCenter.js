@@ -54,6 +54,7 @@ bool initCenter(vec3 modelCenter, inout SplatCenter center) {
 
             center.proj = vec4(ndc, depthNdc, 1.0);
             center.projMat00 = fisheye_projMat00;
+            center.projMat11 = fisheye_projMat11;
             center.fisheyeSinTK = sin_tk;
             center.fisheyeCosTK = cos_tk;
             center.fisheyeRxy = r_xy;
@@ -77,6 +78,7 @@ bool initCenter(vec3 modelCenter, inout SplatCenter center) {
 
             center.proj = centerProj;
             center.projMat00 = matrix_projection[0][0];
+            center.projMat11 = matrix_projection[1][1];
 
         #endif
 

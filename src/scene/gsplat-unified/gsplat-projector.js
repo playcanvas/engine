@@ -287,6 +287,7 @@ class GSplatProjector {
             new UniformFormat('minPixelSize', UNIFORMTYPE_FLOAT),
             new UniformFormat('cameraDirection', UNIFORMTYPE_VEC3),
             new UniformFormat('focal', UNIFORMTYPE_FLOAT),
+            new UniformFormat('focalY', UNIFORMTYPE_FLOAT),
             new UniformFormat('viewportWidth', UNIFORMTYPE_FLOAT),
             new UniformFormat('viewportHeight', UNIFORMTYPE_FLOAT),
             new UniformFormat('nearClip', UNIFORMTYPE_FLOAT),
@@ -736,7 +737,9 @@ class GSplatProjector {
         const cameraComponent = cameraNode.camera;
         const cam = cameraComponent.camera;
         const webgpu = this.device.isWebGPU;
-        let focal;
+        // focal length in pixels per axis (they differ when the viewport's pixel aspect doesn't
+        // match the projection's)
+        let focal, focalY;
         if (stereoMode) {
             // XR stereo: use the per-eye matrices the forward path uses (raw projViewOffMat — NO
             // applyShaderProjectionTransform). Eye 0 drives the shared covariance/depth/sort; eye 1
@@ -747,8 +750,9 @@ class GSplatProjector {
             _viewProjData.set(views[0].projViewOffMat.data);
             _viewProj1Data.set(views[1].projViewOffMat.data);
             _viewData.set(views[0].viewOffMat.data);
-            // raw eye-0 projection x-scale; both eyes share it in standard stereo.
-            focal = viewportWidth * views[0].projMat.data[0];
+            // raw eye-0 projection scales; both eyes share them in standard stereo.
+            focal = viewportWidth * Math.abs(views[0].projMat.data[0]);
+            focalY = viewportHeight * Math.abs(views[0].projMat.data[5]);
         } else {
             // canonical (unflipped) projection - the cache stores canonical clip positions, and
             // the raster VS applies the per-pass target flip using the projectionFlipY uniform
@@ -756,7 +760,8 @@ class GSplatProjector {
             _viewProjMat.mul2(Camera.applyShaderProjectionTransform(cam.projectionMatrix, _shaderProjMat, false, webgpu), view);
             _viewProjData.set(_viewProjMat.data);
             _viewData.set(view.data);
-            focal = viewportWidth * _shaderProjMat.data[0];
+            focal = viewportWidth * Math.abs(_shaderProjMat.data[0]);
+            focalY = viewportHeight * Math.abs(_shaderProjMat.data[5]);
         }
 
         this.cameraPositionData[0] = cameraPos.x;
@@ -776,6 +781,7 @@ class GSplatProjector {
         }
 
         compute.setParameter('focal', focal);
+        compute.setParameter('focalY', focalY);
         compute.setParameter('viewportWidth', viewportWidth);
         compute.setParameter('viewportHeight', viewportHeight);
         compute.setParameter('nearClip', cam.nearClip);
