@@ -10,6 +10,7 @@ uniform matrix_view: mat4x4f;
         uniform fisheye_inv_k: f32;           // 1.0 / fisheye_k (precomputed on CPU)
         uniform fisheye_projMat00: f32;       // projection scale X (precomputed on CPU)
         uniform fisheye_projMat11: f32;       // projection scale Y (precomputed on CPU)
+        uniform projectionFlipY: f32;         // -1 when the render target flips Y, 1 otherwise
     #endif
 #endif
 
@@ -41,8 +42,9 @@ fn initCenter(modelCenter: vec3f, center: ptr<function, SplatCenter>) -> bool {
             let g_theta: f32 = uniform.fisheye_k * sin_tk / cos_tk;
             let fisheye_s: f32 = select(select(0.0, 1.0 / neg_z, neg_z > 0.0), g_theta / r_xy, r_xy > 1e-4);
 
-            // the fisheye mapping bypasses matrix_projection, so take the per-pass target flip from it
-            let fisheyeProjMat11 = uniform.fisheye_projMat11 * sign(uniform.matrix_projection[1][1]);
+            // the fisheye mapping bypasses matrix_projection, which carries the per-pass target
+            // flip, so apply the flip explicitly
+            let fisheyeProjMat11 = uniform.fisheye_projMat11 * uniform.projectionFlipY;
             let ndc: vec2f = vec2f(uniform.fisheye_projMat00 * fisheye_s * v.x, fisheyeProjMat11 * fisheye_s * v.y);
 
             let near: f32 = uniform.camera_params.z;

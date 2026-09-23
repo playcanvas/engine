@@ -10,6 +10,7 @@ export default /* wgsl */`
 
     #ifdef SKY_FISHEYE
         varying vClipXYW : vec3f;
+        uniform projectionFlipY : f32;
     #endif
 
     #if defined(PREPASS_PASS) || (defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH))
@@ -54,9 +55,9 @@ export default /* wgsl */`
                 var viewPos : vec4f = view * input.aPosition;
                 output.vClipXYW = vec3f(viewPos.xy, -viewPos.z);
 
-                // apply the per-pass target flip carried by the projection, so the rasterized position
-                // (and winding, which the renderer compensates for) matches the target orientation
-                output.position = vec4f(viewPos.x, viewPos.y * sign(uniform.matrix_projectionSkybox[1][1]), 0.0, -viewPos.z);
+                // apply the per-pass target flip, so the rasterized position (and winding, which the
+                // renderer compensates for) matches the target orientation
+                output.position = vec4f(viewPos.x, viewPos.y * uniform.projectionFlipY, 0.0, -viewPos.z);
             #else
                 output.position = uniform.matrix_projectionSkybox * (view * input.aPosition);
             #endif

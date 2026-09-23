@@ -10,6 +10,7 @@ uniform mat4 matrix_view;
         uniform float fisheye_inv_k;        // 1.0 / fisheye_k (precomputed on CPU)
         uniform float fisheye_projMat00;    // projection scale X (precomputed on CPU)
         uniform float fisheye_projMat11;    // projection scale Y (precomputed on CPU)
+        uniform float projectionFlipY;      // -1 when the render target flips Y, 1 otherwise
     #endif
 #endif
 
@@ -41,8 +42,9 @@ bool initCenter(vec3 modelCenter, inout SplatCenter center) {
             float g_theta = fisheye_k * sin_tk / cos_tk;
             float fisheye_s = (r_xy > 1e-4) ? g_theta / r_xy : (neg_z > 0.0 ? 1.0 / neg_z : 0.0);
 
-            // the fisheye mapping bypasses matrix_projection, so take the per-pass target flip from it
-            float fisheyeProjMat11 = fisheye_projMat11 * sign(matrix_projection[1][1]);
+            // the fisheye mapping bypasses matrix_projection, which carries the per-pass target
+            // flip, so apply the flip explicitly
+            float fisheyeProjMat11 = fisheye_projMat11 * projectionFlipY;
             vec2 ndc = vec2(fisheye_projMat00 * fisheye_s * v.x, fisheyeProjMat11 * fisheye_s * v.y);
 
             float near = camera_params.z;

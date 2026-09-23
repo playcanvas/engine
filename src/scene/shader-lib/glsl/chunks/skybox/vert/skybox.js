@@ -9,6 +9,7 @@ varying vec3 vViewDir;
 
 #ifdef SKY_FISHEYE
     varying vec3 vClipXYW;
+    uniform float projectionFlipY;
 #endif
 
 #if defined(PREPASS_PASS) || (defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH))
@@ -49,9 +50,9 @@ void main(void) {
             vec4 viewPos = view * aPosition;
             vClipXYW = vec3(viewPos.xy, -viewPos.z);
 
-            // apply the per-pass target flip carried by the projection, so the rasterized position
-            // (and winding, which the renderer compensates for) matches the target orientation
-            gl_Position = vec4(viewPos.x, viewPos.y * sign(matrix_projectionSkybox[1][1]), 0.0, -viewPos.z);
+            // apply the per-pass target flip, so the rasterized position (and winding, which the
+            // renderer compensates for) matches the target orientation
+            gl_Position = vec4(viewPos.x, viewPos.y * projectionFlipY, 0.0, -viewPos.z);
         #else
             gl_Position = matrix_projectionSkybox * (view * aPosition);
         #endif
