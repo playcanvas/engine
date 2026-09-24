@@ -31,6 +31,9 @@ const GUTTER_GAP = 2;
  * @property {number} [indent] - The indentation level.
  * @property {ListGuides} [guides] - The brackets drawn in a gutter left of the row, which group
  * runs of rows without indenting them.
+ * @property {*} [preview] - What hovering the row reports through {@link ListView#onHover}, such
+ * as the render target of a pass. A link cell inside the row reports its own target instead while
+ * it is hovered.
  * @property {boolean} [dim] - Whether the row is shown dimmed.
  * @property {string} [title] - A tooltip for the whole row.
  */
@@ -342,7 +345,8 @@ class ListView {
         cellEl.addEventListener('pointerenter', () => {
             if (target() !== undefined) this.onHover?.(cellEl, target);
         });
-        cellEl.addEventListener('pointerleave', () => this.onHover?.(null, null));
+        // still inside the row, which may preview something of its own
+        cellEl.addEventListener('pointerleave', () => this._hoverRow(entry));
         cellEl.addEventListener('click', (e) => {
             const current = entry.row.cells[index];
             if (current && current.target !== undefined) {
@@ -382,8 +386,24 @@ class ListView {
         rowEl.addEventListener('click', () => this.select(row.key));
 
         const entry = { el: rowEl, cells: [], row, indent: -1, guides: '' };
+        rowEl.addEventListener('pointerenter', () => this._hoverRow(entry));
+        rowEl.addEventListener('pointerleave', () => this.onHover?.(null, null));
         this._entries.set(row.key, entry);
         return entry;
+    }
+
+    /**
+     * Reports the row the pointer is over, when it previews something, or that nothing is hovered.
+     *
+     * @param {ListEntry} entry - The row entry.
+     * @private
+     */
+    _hoverRow(entry) {
+        if (entry.row.preview !== undefined && entry.row.preview !== null) {
+            this.onHover?.(entry.el, () => entry.row.preview);
+        } else {
+            this.onHover?.(null, null);
+        }
     }
 }
 

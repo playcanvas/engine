@@ -492,8 +492,10 @@ function passRows(frame, device) {
         const lists = steps.map(step => frame.visible?.get(step) ?? null);
         const passMatches = steps.length ?
             filter => name.toLowerCase().includes(filter) || lists.some(list => drewMatching(list, filter)) : undefined;
+        // hovering the pass previews what it rendered into; the screen needs no preview
+        const preview = renderTarget && renderTarget !== device.backBuffer ? renderTarget : undefined;
         passRowOf[index] = rows.length;
-        rows.push({ key: entry.key, item: pass, name, matches: passMatches, dim: !pass.executeEnabled, title: passTitle(entry, device), cells });
+        rows.push({ key: entry.key, item: pass, name, matches: passMatches, preview, dim: !pass.executeEnabled, title: passTitle(entry, device), cells });
 
         steps.forEach((step, i) => {
             const layer = step.layer;
@@ -505,6 +507,7 @@ function passRows(frame, device) {
                 item: new LayerStepSelection(pass, step, i),
                 name,
                 matches: filter => name.toLowerCase().includes(filter) || drewMatching(lists[i], filter),
+                preview,
                 indent: 1,
                 dim: !enabled,
                 cells: [
@@ -521,6 +524,7 @@ function passRows(frame, device) {
                 key: `${entry.key}/light`,
                 item: pass,
                 name,
+                preview,
                 indent: 1,
                 cells: [
                     { text: '', cls: 'pci-cell-index' },

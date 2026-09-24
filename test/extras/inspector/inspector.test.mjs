@@ -1908,6 +1908,60 @@ describe('Inspector link hover', function () {
         expect(hovered).to.deep.equal([target, null]);
     });
 
+    it('reports a row that previews something, and its link cells over it', function () {
+        const container = document.createElement('div');
+        const list = new ListView(container, () => {});
+        const hovered = [];
+        list.onHover = (el, target) => hovered.push(target ? target() : null);
+        const target = { name: 'shadow' };
+        const link = { name: 'camera' };
+        list.setRows([
+            { key: 'a', item: 1, name: 'a', preview: target, cells: [{ text: 'a' }, { text: 'link', target: link }] },
+            { key: 'b', item: 2, name: 'b', cells: [{ text: 'b' }] }
+        ]);
+        const [rowA, rowB] = [...container.querySelectorAll('.pci-lrow')];
+        const linkCell = rowA.querySelectorAll('span')[1];
+
+        enter(rowA);
+        // a link inside the row reports its own target, then the row's again once left
+        enter(linkCell);
+        leave(linkCell);
+        leave(rowA);
+        // a row previewing nothing reports nothing
+        enter(rowB);
+        expect(hovered).to.deep.equal([target, link, target, null, null]);
+    });
+
+    it('previews the render target of a hovered pass, and its first attachment', function () {
+        const app = createApp();
+        const inspector = new Inspector(app);
+        const device = app.graphicsDevice;
+        const color = new Texture(device, { name: 'color', width: 4, height: 4 });
+        const target = new RenderTarget({ name: 'SceneColor', colorBuffer: color, depth: false });
+
+        const shadow = { name: 'RenderPassShadow', beforePasses: [], afterPasses: [], executeEnabled: true, renderTarget: target };
+        const screen = { name: 'RenderPassForward', beforePasses: [], afterPasses: [], executeEnabled: true, renderTarget: null };
+        const frame = captureFrameGraph(/** @type {any} */ ({ graphicsDevice: device, frameGraph: { renderPasses: [shadow, screen] } }));
+        const rows = passRows(frame, device);
+        expect(rows[0].preview).to.equal(target);
+        // the screen is the view itself
+        expect(rows[1].preview).to.equal(undefined);
+
+        const el = document.createElement('span');
+        document.body.appendChild(el);
+        el.getClientRects = () => /** @type {any} */ ([{}]);
+        const hover = /** @type {any} */ (inspector);
+        hover._hoverLink = { el, target: () => target };
+        const preview = hover._hoveredPreview();
+        expect(preview.texture).to.equal(color);
+        expect(preview.renderTarget).to.equal(target);
+        expect(preview.label).to.equal('the color of SceneColor');
+
+        target.destroy();
+        color.destroy();
+        inspector.destroy();
+    });
+
     it('previews the texture of a hovered link only while it is still on screen', function () {
         const app = createApp();
         const inspector = new Inspector(app);
@@ -1920,21 +1974,21 @@ describe('Inspector link hover', function () {
 
         const hover = /** @type {any} */ (inspector);
         hover._hoverLink = { el, target: () => texture };
-        expect(hover._hoveredTexture()).to.equal(texture);
+        expect(hover._hoveredPreview()?.texture ?? null).to.equal(texture);
 
         // something other than a texture is not previewed
         hover._hoverLink = { el, target: () => ({}) };
-        expect(hover._hoveredTexture()).to.equal(null);
+        expect(hover._hoveredPreview()?.texture ?? null).to.equal(null);
 
         // a link hidden with its tab, or removed by a refresh, without a leave event is forgotten
         hover._hoverLink = { el, target: () => texture };
         shown = false;
-        expect(hover._hoveredTexture()).to.equal(null);
+        expect(hover._hoveredPreview()?.texture ?? null).to.equal(null);
         expect(hover._hoverLink).to.equal(null);
         shown = true;
         hover._hoverLink = { el, target: () => texture };
         el.remove();
-        expect(hover._hoveredTexture()).to.equal(null);
+        expect(hover._hoveredPreview()?.texture ?? null).to.equal(null);
 
         texture.destroy();
         inspector.destroy();

@@ -518,8 +518,8 @@ class Inspector {
     _debugFrame = null;
 
     /**
-     * The link the pointer is over, with a function reading its current target, so a texture link
-     * can preview while hovered.
+     * The link or row the pointer is over, with a function reading its current target, so a texture
+     * or render target can preview while hovered.
      *
      * @type {{ el: HTMLElement, target: () => * }|null}
      * @private
@@ -1045,10 +1045,11 @@ class Inspector {
             }
         }
 
-        // a hovered texture link takes the place of the tab's own preview for as long as it is hovered
-        const hovered = this._hoveredTexture();
+        // a hovered texture or render target takes the place of the tab's own preview for as long as
+        // it is hovered
+        const hovered = this._hoveredPreview();
         if (hovered) {
-            this._drawPreviewQuad(hovered, `Texture "${hovered.name}"`, isDepthFormat(hovered.format), this._textureChannels);
+            this._drawPreviewQuad(hovered.texture, hovered.label, hovered.depth, hovered.channels, 'corner', hovered.renderTarget);
         } else if (this._tab === 'targets') {
             this._drawTargetPreview();
         } else if (this._tab === 'textures') {
@@ -1406,7 +1407,7 @@ class Inspector {
         }, target => this._selectAny(target));
         this._bodyList.onToggle = (entity, drawn) => this._setBodyDrawn(entity, drawn);
 
-        // a texture link previews while hovered, without having to follow it
+        // a texture or render target previews while hovered, without having to follow its link
         const onHover = (el, target) => {
             this._hoverLink = el && target ? { el, target } : null;
         };
@@ -1418,13 +1419,17 @@ class Inspector {
     }
 
     /**
-     * @returns {Texture|null} The texture of the link the pointer is over, or null. The link is
-     * checked to still be on screen, as a refresh can remove it and a tab switch hide it without the
-     * pointer leaving it. The `:hover` state cannot tell instead: browsers do not reliably report it
-     * for elements in a shadow root.
+     * What to preview for the link or row the pointer is over: a texture, or the first attachment of
+     * a render target, the way the Render targets tab shows it. The element is checked to still be on
+     * screen, as a refresh can remove it and a tab switch hide it without the pointer leaving it. The
+     * `:hover` state cannot tell instead: browsers do not reliably report it for elements in a shadow
+     * root.
+     *
+     * @returns {{ texture: Texture, label: string, depth: boolean, channels: HTMLSelectElement, renderTarget?: RenderTarget }|null}
+     * The texture to draw and how, or null when nothing previewable is hovered.
      * @private
      */
-    _hoveredTexture() {
+    _hoveredPreview() {
         const link = this._hoverLink;
         if (!link) return null;
         if (!link.el.isConnected || link.el.getClientRects().length === 0) {
@@ -1432,7 +1437,21 @@ class Inspector {
             return null;
         }
         const target = link.target();
-        return target instanceof Texture ? target : null;
+        if (target instanceof Texture) {
+            return { texture: target, label: `Texture "${target.name}"`, depth: isDepthFormat(target.format), channels: this._textureChannels };
+        }
+        if (target instanceof RenderTarget) {
+            const attachment = previewAttachments(target, this._app.graphicsDevice)[0];
+            if (!attachment) return null;
+            return {
+                texture: attachment.texture,
+                label: `the ${attachment.label} of ${target.name || 'its target'}`,
+                depth: attachment.key === 'depth',
+                channels: this._previewChannels,
+                renderTarget: target
+            };
+        }
+        return null;
     }
 
     /**
