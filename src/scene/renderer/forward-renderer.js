@@ -327,6 +327,7 @@ class ForwardRenderer extends Renderer {
 
                 const asyncCompile = false;
                 device.setShader(shaderInstance.shader, asyncCompile);
+                this.setupViewBindGroup(shaderInstance.shader);
 
                 // Uniforms II: material - on the scope, and through the material bind group
                 material.setParameters(device);
@@ -387,8 +388,9 @@ class ForwardRenderer extends Renderer {
 
                     device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
-                    // per-view dynamic bind group + offset captured during setupViewUniformBuffers
-                    // (the per-view scope values were set there too)
+                    // per-view bind group + offset of the shader's view bind group, captured by
+                    // setupViewBindGroup (the per-view scope values were set by
+                    // setupViewUniformBuffers)
                     this._viewOffsetScratch[0] = this._viewBindGroupOffsets[v];
                     device.setBindGroup(BINDGROUP_VIEW, this._viewBindGroups[v], this._viewOffsetScratch);
 

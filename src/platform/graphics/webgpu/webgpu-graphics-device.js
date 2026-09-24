@@ -5,7 +5,7 @@ import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
-    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT
+    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT, BINDGROUP_VIEW
 } from '../constants.js';
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
@@ -39,10 +39,13 @@ import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Shader } from '../shader.js'
  * @import { Texture } from '../texture.js'
  */
 
+// #if _DEBUG
 const _uniqueLocations = new Map();
+// #endif
 
 // size of indirect draw entry in bytes, 5 x 32bit
 const _indirectEntryByteSize = 5 * 4;
@@ -1275,6 +1278,25 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    // #if _DEBUG
+    /**
+     * Validates that the bind group at the view index holds the textures the shader reads from it,
+     * see {@link Shader#viewBindGroupFormat} - the renderer binds it per shader, and so a draw
+     * issued without the renderer setting it up would miss them.
+     *
+     * @param {Shader} shader - The shader of the draw.
+     * @private
+     */
+    validateViewBindGroup(shader) {
+        const viewFormat = shader.viewBindGroupFormat;
+        if (viewFormat) {
+            const bound = this.bindGroupFormats[BINDGROUP_VIEW];
+            Debug.assert(bound?.key === viewFormat.impl.key,
+                `The view bind group of shader [${shader.label}] holds textures [${viewFormat.textureFormats.map(format => format.name).join(', ')}], but a bind group of a different format is bound at the view index. Draws of such shaders need Renderer#setupViewBindGroup after the shader is set.`,
+                { shader, bound: bound?.bindGroupFormat, expected: viewFormat });
+        }
+    }
+
     validateVBLocations(vb0, vb1) {
 
         // in case of multiple VBs, validate all elements use unique locations
@@ -1294,6 +1316,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         validateVB(vb1);
         _uniqueLocations.clear();
     }
+    // #endif
 
     draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true) {
 
@@ -1321,6 +1344,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 }
 
                 Debug.call(() => this.validateAttributes(this.shader, [vb0, vb1]));
+                Debug.call(() => this.validateViewBindGroup(this.shader));
 
                 // render pipeline - looked up only when one of its inputs changed since the last
                 // lookup: the device state (tracked by the setters), or the arguments of the draw.

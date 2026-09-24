@@ -44,6 +44,17 @@ class Shader {
     meshBindGroupFormat;
 
     /**
+     * Format of the view bind group when the shader reads textures the renderer supplies per pass
+     * in it, following the view uniform buffer, or null when the group holds only the view uniform
+     * buffer. The format is shared by all shaders reading the same textures, and is not owned by
+     * the shader.
+     *
+     * @type {BindGroupFormat|null}
+     * @ignore
+     */
+    viewBindGroupFormat = null;
+
+    /**
      * The attributes that this shader code uses. The location is the key, the value is the name.
      * These attributes are queried / extracted from the final shader.
      *

@@ -7,6 +7,7 @@ import { shaderGeneratorShader } from '../shader-lib/programs/shader-generator-s
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { ShaderPass } from '../shader-pass.js';
 import { Material } from './material.js';
+import { getViewTextures } from '../renderer/view-textures.js';
 
 /**
  * @typedef {object} ShaderDesc - Defines the vertex and fragment shader source for
@@ -165,7 +166,7 @@ class ShaderMaterial extends Material {
             shaderChunks: this.shaderChunks // override chunks from the material
         };
 
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat, getViewTextures(params.viewUniformFormat));
 
         const library = getProgramLibrary(params.device);
         library.register('shader-material', shaderGeneratorShader);

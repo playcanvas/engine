@@ -6,7 +6,7 @@ import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
     TEXTUREDIMENSION_1D, TEXTUREDIMENSION_CUBE_ARRAY,
     SAMPLETYPE_INT, SAMPLETYPE_UINT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
-    BINDGROUP_MESH_UB,
+    BINDGROUP_MESH_UB, BINDGROUP_VIEW,
     uniformTypeToNameWGSL,
     uniformTypeToNameMapWGSL,
     bindGroupNames,
@@ -16,6 +16,7 @@ import {
 } from '../constants.js';
 import { UniformFormat, UniformBufferFormat } from '../uniform-buffer-format.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindStorageTextureFormat, BindTextureFormat, BindUniformBufferFormat } from '../bind-group-format.js';
+import { getViewBindGroupFormat } from '../view-bind-group-format.js';
 import { gpuTextureFormats } from './constants.js';
 
 /**
@@ -553,7 +554,8 @@ class WebgpuShaderProcessorWGSL {
             fshader: fshader,
             attributes: attributesMap,
             meshUniformBufferFormat: uniformsData.meshUniformBufferFormat,
-            meshBindGroupFormat: resourcesData.meshBindGroupFormat
+            meshBindGroupFormat: resourcesData.meshBindGroupFormat,
+            viewBindGroupFormat: resourcesData.viewBindGroupFormat
         };
     }
 
@@ -910,11 +912,53 @@ class WebgpuShaderProcessorWGSL {
         return meshResources;
     }
 
+    /**
+     * Splits the textures the renderer supplies per pass, together with their samplers, off the
+     * resources of the mesh bind group, see {@link ShaderProcessorOptions#viewTextures}.
+     *
+     * @param {ResourceLine[]} resources - The resources of the mesh bind group, which are left
+     * with the rest.
+     * @param {Set<string>} viewTextures - The names of the view textures.
+     * @returns {ResourceLine[]} The resources of the view textures.
+     */
+    static splitViewResources(resources, viewTextures) {
+
+        const viewResources = [];
+        let count = 0;
+        for (let i = 0; i < resources.length; i++) {
+            const resource = resources[i];
+            if (resource.isTexture && viewTextures.has(resource.name)) {
+
+                // the sampler of a texture follows it
+                viewResources.push(resource);
+                if (resources[i + 1]?.isSampler) {
+                    viewResources.push(resources[++i]);
+                }
+            } else {
+                resources[count++] = resource;
+            }
+        }
+        resources.length = count;
+
+        return viewResources;
+    }
+
     static processResources(device, resources, processingOptions, shader, visibility = SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, bindGroupIndex = BINDGROUP_MESH) {
 
         // resources one of the supplied bind groups already contains are declared from that group
         // below, and so are not part of the mesh bind group
         const meshResources = WebgpuShaderProcessorWGSL.filterSuppliedResources(resources, processingOptions, shader);
+
+        // the textures the renderer supplies per pass follow the view uniform buffer in its group
+        let viewBindGroupFormat = null;
+        const viewTextures = processingOptions?.viewTextures;
+        if (viewTextures) {
+            const viewResources = WebgpuShaderProcessorWGSL.splitViewResources(meshResources, viewTextures);
+            if (viewResources.length) {
+                const viewTextureFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(viewResources, visibility, shader);
+                viewBindGroupFormat = getViewBindGroupFormat(device, viewTextureFormats);
+            }
+        }
 
         // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
         const textureFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(meshResources, visibility, shader);
@@ -929,12 +973,17 @@ class WebgpuShaderProcessorWGSL {
             }
         });
 
+        if (viewBindGroupFormat) {
+            code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(viewBindGroupFormat, BINDGROUP_VIEW);
+        }
+
         // and also for generated mesh format
         code += WebgpuShaderProcessorWGSL.getTextureShaderDeclaration(meshBindGroupFormat, bindGroupIndex);
 
         return {
             code,
-            meshBindGroupFormat
+            meshBindGroupFormat,
+            viewBindGroupFormat
         };
     }
 

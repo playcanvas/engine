@@ -332,6 +332,15 @@ class BindGroupFormat {
     key;
 
     /**
+     * True when the format holds no resources. A bind group of it binds nothing, so the empty bind
+     * group of the device can be bound in its place.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    empty;
+
+    /**
      * Create a new instance.
      *
      * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex format.
@@ -371,6 +380,7 @@ class BindGroupFormat {
 
         // the slots are assigned above, so the resource keys are complete
         this.key = formats.map(format => format.key).join(',');
+        this.empty = formats.length === 0;
 
         /** @type {GraphicsDevice} */
         this.device = graphicsDevice;

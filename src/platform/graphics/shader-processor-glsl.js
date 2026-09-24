@@ -5,13 +5,14 @@ import {
     SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
     TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16, SAMPLETYPE_INT, SAMPLETYPE_UINT,
-    BINDGROUP_MESH_UB,
+    BINDGROUP_MESH_UB, BINDGROUP_VIEW,
     UNUSED_UNIFORM_NAME,
     UNIFORMTYPE_FLOAT,
     bindGroupNames
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js';
+import { getViewBindGroupFormat } from './view-bind-group-format.js';
 
 /**
  * @import { GraphicsDevice } from './graphics-device.js'
@@ -187,7 +188,8 @@ class ShaderProcessorGLSL {
             fshader: fshader,
             attributes: attributesMap,
             meshUniformBufferFormat: uniformsData.meshUniformBufferFormat,
-            meshBindGroupFormat: uniformsData.meshBindGroupFormat
+            meshBindGroupFormat: uniformsData.meshBindGroupFormat,
+            viewBindGroupFormat: uniformsData.viewBindGroupFormat
         };
     }
 
@@ -326,6 +328,11 @@ class ShaderProcessorGLSL {
 
         // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
         const textureFormats = [];
+
+        // the textures the renderer supplies per pass, which go to the view bind group instead
+        const viewTextureFormats = [];
+        const viewTextures = processingOptions.viewTextures;
+
         uniformLinesSamplers.forEach((uniform) => {
             // unmatched texture uniforms go to mesh block
             if (!processingOptions.hasTexture(uniform.name)) {
@@ -351,13 +358,19 @@ class ShaderProcessorGLSL {
                 const dimension = textureDimensions[uniform.type];
 
                 // TODO: we could optimize visibility to only stages that use any of the data
-                textureFormats.push(new BindTextureFormat(uniform.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, dimension, sampleType));
+                const textureFormat = new BindTextureFormat(uniform.name, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT, dimension, sampleType);
+                if (viewTextures?.has(uniform.name)) {
+                    viewTextureFormats.push(textureFormat);
+                } else {
+                    textureFormats.push(textureFormat);
+                }
             }
 
             // validate types in else
 
         });
         const meshBindGroupFormat = new BindGroupFormat(device, textureFormats);
+        const viewBindGroupFormat = viewTextureFormats.length ? getViewBindGroupFormat(device, viewTextureFormats) : null;
 
         // generate code for uniform buffers
         let code = '';
@@ -366,6 +379,11 @@ class ShaderProcessorGLSL {
                 code += ShaderProcessorGLSL.getUniformShaderDeclaration(format, bindGroupIndex, 0);
             }
         });
+
+        // the view textures follow the view uniform buffer in its bind group
+        if (viewBindGroupFormat) {
+            code += ShaderProcessorGLSL.getTexturesShaderDeclaration(viewBindGroupFormat, BINDGROUP_VIEW);
+        }
 
         // and also for generated mesh format, which is at the slot 0 of the bind group
         if (meshUniformBufferFormat) {
@@ -385,7 +403,8 @@ class ShaderProcessorGLSL {
         return {
             code,
             meshUniformBufferFormat,
-            meshBindGroupFormat
+            meshBindGroupFormat,
+            viewBindGroupFormat
         };
     }
 

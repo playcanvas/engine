@@ -24,6 +24,7 @@ import {
 } from '../constants.js';
 import { getDefaultMaterial } from './default-material.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
+import { isViewTexture } from '../renderer/view-textures.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -1435,6 +1436,9 @@ class Material {
         Debug.call(() => {
             if (this.getUniformBufferProperty(name)) {
                 Debug.warnOnce(`Material#setParameter: '${name}' is the uniform of a typed material property, stored in the material uniform buffer, and is ignored as a parameter. Set the material property instead.`, this);
+            }
+            if (isViewTexture(name)) {
+                Debug.warnOnce(`Material#setParameter: '${name}' is a texture the renderer supplies once per pass, and a value set per material is ignored on WebGPU.`, this);
             }
         });
 
