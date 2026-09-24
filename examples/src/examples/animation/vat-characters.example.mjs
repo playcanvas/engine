@@ -21,6 +21,7 @@ import {
     AppOptions,
     Asset,
     AssetListLoader,
+    BinaryHandler,
     CameraComponentSystem,
     Color,
     ContainerHandler,
@@ -71,7 +72,14 @@ const assets = {
         { url: './assets/cubemaps/table-mountain-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    ground: new Asset('ground', 'texture', { url: './assets/textures/coast_sand_rocks_02_diff_1k.jpg' }, { srgb: true })
+    ground: new Asset(
+        'ground',
+        'texture',
+        { url: './assets/textures/coast_sand_rocks_02_diff_1k.jpg' },
+        { srgb: true }
+    ),
+    // the VAT container, loaded as raw bytes the characters script parses
+    lumberjack: new Asset('lumberjack', 'binary', { url: './assets/vat/lumberjack.vat' })
 };
 
 const gfxOptions = {
@@ -94,7 +102,7 @@ createOptions.componentSystems = [
     ScriptComponentSystem
 ];
 
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, BinaryHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -257,7 +265,7 @@ const applyMode = () => {
  * Creates the script rendering the characters. The script is recreated when the data or the material
  * type changes, as the material is set up when the data is loaded.
  *
- * @param {ArrayBuffer|string} source - The VAT container, or the url to load it from.
+ * @param {ArrayBuffer} source - The VAT container.
  */
 const createCharacters = async (source) => {
     charactersEntity?.destroy();
@@ -282,11 +290,7 @@ const createCharacters = async (source) => {
         })
     );
 
-    if (typeof source === 'string') {
-        vatData = await (await fetch(source)).arrayBuffer();
-    } else {
-        vatData = source;
-    }
+    vatData = source;
     await characters.setData(vatData);
 
     // let the animation drop down know what is available
@@ -423,7 +427,7 @@ data.set('data', {
 });
 
 try {
-    await createCharacters('./assets/vat/lumberjack.vat');
+    await createCharacters(assets.lumberjack.resource);
 } catch (error) {
     console.error(error);
     data.set('data.status', 'Failed to load the character, convert a glb instead');
