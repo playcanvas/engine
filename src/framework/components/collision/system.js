@@ -704,6 +704,13 @@ class CollisionComponentSystem extends ComponentSystem {
         }
     }
 
+    /**
+     * Takes the entity's rigid body out of the simulation and destroys its trigger. Runs once the
+     * component has been removed, and when its shape is torn down to be rebuilt.
+     *
+     * @param {Entity} entity - The entity of the component.
+     * @private
+     */
     onRemove(entity) {
         // gate on the backend body, not the public getter - the getter surfaces the NATIVE
         // body, which backends without native handles keep null

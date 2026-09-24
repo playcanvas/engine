@@ -2,14 +2,15 @@
 // `npm run test:types` against build/playcanvas.d.ts, so they exercise exactly what an
 // application sees.
 import {
-    BODYFLAG_KINEMATIC_OBJECT, BODYSTATE_DISABLE_DEACTIVATION, CollisionComponent, Entity,
-    RigidBodyComponentSystem
+    BODYFLAG_KINEMATIC_OBJECT, BODYSTATE_DISABLE_DEACTIVATION, CollisionComponent,
+    CollisionComponentSystem, Entity, RigidBodyComponentSystem
 } from '../../build/playcanvas.js';
 
 type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
 type Expect<T extends true> = T;
 
 declare const collision: CollisionComponent;
+declare const collisionSystem: CollisionComponentSystem;
 declare const system: RigidBodyComponentSystem;
 
 // ---- the type of a collision volume is one of the shape names
@@ -20,7 +21,7 @@ collision.type = 'teapot';
 // @ts-expect-error not a collision shape
 new Entity().addComponent('collision', { type: 'teapot' });
 
-// ---- the rigid body system keeps its bookkeeping private
+// ---- the physics systems keep their bookkeeping private
 // @ts-expect-error private
 system.addBody(null, 1, 1);
 // @ts-expect-error private
@@ -31,6 +32,8 @@ system.onContactPair(null);
 system.collisions;
 // @ts-expect-error private
 system.contactPointPool;
+// @ts-expect-error private
+collisionSystem.onRemove(new Entity());
 
 // ---- the native escape hatches and Bullet constants stay available for existing Ammo code
 system.dynamicsWorld.setGravity(null);
