@@ -9,9 +9,6 @@ import { getApplication } from '../globals.js';
 /**
  * @import { CameraComponent } from '../components/camera/component.js'
  * @import { ElementComponent } from '../components/element/component.js'
- * @import { MouseEvent } from '../../platform/input/mouse-event.js'
- * @import { TouchEvent } from '../../platform/input/touch-event.js'
- * @import { Touch } from '../../platform/input/touch-event.js'
  * @import { XrInputSource } from '../xr/xr-input-source.js'
  */
 
@@ -128,7 +125,8 @@ class ElementInputEvent {
     /**
      * Create a new ElementInputEvent instance.
      *
-     * @param {MouseEvent|TouchEvent} event - MouseEvent or TouchEvent that was originally raised.
+     * @param {globalThis.MouseEvent|globalThis.TouchEvent|XRInputSourceEvent|null} event - The
+     * browser event that was originally raised, or null if there was none.
      * @param {ElementComponent} element - The ElementComponent that this event was originally
      * raised on.
      * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
@@ -136,9 +134,11 @@ class ElementInputEvent {
      */
     constructor(event, element, camera) {
         /**
-         * MouseEvent or TouchEvent that was originally raised.
+         * The browser event that was originally raised: a MouseEvent, TouchEvent or
+         * XRInputSourceEvent. It is null when no browser event caused this one, as for
+         * `selectmove`.
          *
-         * @type {MouseEvent|TouchEvent}
+         * @type {globalThis.MouseEvent|globalThis.TouchEvent|XRInputSourceEvent|null}
          */
         this.event = event;
 
@@ -181,8 +181,8 @@ class ElementMouseEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementMouseEvent.
      *
-     * @param {MouseEvent} event - The MouseEvent that
-     * was originally raised.
+     * @param {globalThis.MouseEvent|globalThis.WheelEvent} event - The browser MouseEvent or
+     * WheelEvent that was originally raised.
      * @param {ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
      * @param {CameraComponent} camera - The
@@ -266,7 +266,8 @@ class ElementMouseEvent extends ElementInputEvent {
 }
 
 /**
- * Represents a TouchEvent fired on a {@link ElementComponent}.
+ * Represents a TouchEvent fired on a {@link ElementComponent}. It carries the browser's own
+ * TouchEvent and Touch objects.
  *
  * @category User Interface
  */
@@ -274,14 +275,14 @@ class ElementTouchEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementTouchEvent.
      *
-     * @param {TouchEvent} event - The TouchEvent that was originally raised.
+     * @param {globalThis.TouchEvent} event - The browser TouchEvent that was originally raised.
      * @param {ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
      * @param {CameraComponent} camera - The
      * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate of the touch that triggered the event.
      * @param {number} y - The y coordinate of the touch that triggered the event.
-     * @param {Touch} touch - The touch object that triggered the event.
+     * @param {globalThis.Touch} touch - The browser Touch that triggered the event.
      */
     constructor(event, element, camera, x, y, touch) {
         super(event, element, camera);
@@ -290,22 +291,23 @@ class ElementTouchEvent extends ElementInputEvent {
          * The Touch objects representing all current points of contact with the surface,
          * regardless of target or changed status.
          *
-         * @type {Touch[]}
+         * @type {globalThis.TouchList}
          */
         this.touches = event.touches;
         /**
          * The Touch objects representing individual points of contact whose states changed between
          * the previous touch event and this one.
          *
-         * @type {Touch[]}
+         * @type {globalThis.TouchList}
          */
         this.changedTouches = event.changedTouches;
         this.x = x;
         this.y = y;
         /**
-         * The touch object that triggered the event.
+         * The browser Touch that triggered the event. Match a touch across events by its
+         * `identifier`.
          *
-         * @type {Touch}
+         * @type {globalThis.Touch}
          */
         this.touch = touch;
     }
@@ -320,7 +322,8 @@ class ElementSelectEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementSelectEvent.
      *
-     * @param {XRInputSourceEvent} event - The XRInputSourceEvent that was originally raised.
+     * @param {XRInputSourceEvent|null} event - The XRInputSourceEvent that was originally raised,
+     * or null if there was none.
      * @param {ElementComponent} element - The
      * ElementComponent that this event was originally raised on.
      * @param {CameraComponent} camera - The
