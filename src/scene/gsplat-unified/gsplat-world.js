@@ -463,6 +463,17 @@ class GSplatWorld {
             }
         }
 
+        // Standalone placements destroyed before reconcile have a null resource as well, which would
+        // crash the world-state rebuild below. Drop them the same way.
+        const layerPlacements = this._layerPlacements;
+        for (let i = layerPlacements.length - 1; i >= 0; i--) {
+            if (!layerPlacements[i].resource) {
+                layerPlacements.splice(i, 1);
+                this._layerPlacementsDirty = true;
+                this._placementSetChanged = true;
+            }
+        }
+
         // Cadence: a free-running metronome raises a latched request every 10 frames.
         if (--this._framesTillFullUpdate <= 0) {
             this._framesTillFullUpdate = 10;
