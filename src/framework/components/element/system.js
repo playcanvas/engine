@@ -172,6 +172,20 @@ class ElementComponentSystem extends ComponentSystem {
             shouldForceSetAnchor = true;
         }
 
+        // On an axis where the anchor is a point, the entity's position places the element, so
+        // unless margins were given for that axis, derive them from the position, as setting a
+        // new size does. Otherwise they keep their defaults, and binding to a screen below moves
+        // an entity that is already under a screen to wherever the default margins put it.
+        const position = component.entity.getLocalPosition();
+        if (!splitHorAnchors && data.margin === undefined && data.left === undefined && data.right === undefined) {
+            component._margin.x = position.x - component._calculatedWidth * component._pivot.x;
+            component._margin.z = -component._calculatedWidth - component._margin.x;
+        }
+        if (!splitVerAnchors && data.margin === undefined && data.bottom === undefined && data.top === undefined) {
+            component._margin.y = position.y - component._calculatedHeight * component._pivot.y;
+            component._margin.w = -component._calculatedHeight - component._margin.y;
+        }
+
         if (shouldForceSetAnchor) {
             /* eslint-disable no-self-assign */
             // force update

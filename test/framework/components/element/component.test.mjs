@@ -179,6 +179,86 @@ describe('ElementComponent', function () {
         expect(() => newParent.addChild(e)).to.not.throw();
     });
 
+    describe('position', function () {
+
+        let screen;
+
+        beforeEach(function () {
+            screen = new Entity('screen');
+            screen.addComponent('screen', { screenSpace: true });
+            app.root.addChild(screen);
+        });
+
+        it('keeps the position of an entity that is already under a screen', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position of an entity under a screen when the default size is given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1],
+                width: 32,
+                height: 32
+            });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position of an entity that is added to a screen afterwards', function () {
+            const e = new Entity();
+            e.setLocalPosition(10, 20, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 0.5, 0.5, 0.5],
+                pivot: [0.5, 0.5]
+            });
+
+            screen.addChild(e);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(10);
+            expect(position.y).to.equal(20);
+        });
+
+        it('places the element with the margins it is given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0, 0, 0, 0],
+                pivot: [0, 0],
+                margin: [10, 20, -42, -52]
+            });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(10);
+            expect(position.y).to.equal(20);
+            expect(e.element.calculatedWidth).to.equal(32);
+            expect(e.element.calculatedHeight).to.equal(32);
+        });
+
+    });
+
     describe('#type', function () {
 
         it('adds model to layers when type is set to image after entity is in hierarchy', function () {
