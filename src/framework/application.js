@@ -61,6 +61,7 @@ import { XrManager } from './xr/xr-manager.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { PhysicsWorld } from './physics/physics-world.js'
  * @import { TouchDevice } from '../platform/input/touch-device.js'
  */
 
@@ -148,6 +149,9 @@ class Application extends AppBase {
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
      * {@link GraphicsDevice} constructor.
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
+     * @param {PhysicsWorld} [options.physicsWorld] - The physics backend used to simulate rigid
+     * bodies, collisions and joints. When omitted, the Ammo.js backend is created automatically if
+     * the Ammo library is loaded. See {@link AppOptions#physicsWorld}.
      * @example
      * // Engine-only example: create the application manually
      * const app = new Application(canvas, options);
@@ -173,6 +177,8 @@ class Application extends AppBase {
         appOptions.scriptPrefix = options.scriptPrefix;
         appOptions.assetPrefix = options.assetPrefix;
         appOptions.scriptsOrder = options.scriptsOrder;
+
+        appOptions.physicsWorld = options.physicsWorld;
 
         appOptions.soundManager = new SoundManager();
         appOptions.lightmapper = Lightmapper;

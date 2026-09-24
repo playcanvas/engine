@@ -496,16 +496,32 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes one argument: the entity to evaluate.
      *
-     * @returns {RaycastResult|null} The result of the raycasting or null if there was no hit.
+     * @returns {RaycastResult|null} The result of the raycasting, or null if there was no hit or
+     * no physics backend is installed.
      */
     raycastFirst(start, end, options = {}) {
-        // Tags and custom callback can only be performed by looking at all results.
-        if (options.filterTags || options.filterCallback) {
-            options.sort = true;
-            return this.raycastAll(start, end, options)[0] || null;
+        const world = this._world;
+        if (!world) {
+            Debug.warnOnce('RigidBodyComponentSystem#raycastFirst: no physics backend is installed, so the ray cannot hit anything.');
+            return null;
         }
 
-        return this._world.raycastFirst(start, end, options);
+        // Tags and custom callback can only be performed by looking at all results - keep the
+        // closest one, without sorting them or writing a sort flag into the caller's options
+        if (options.filterTags || options.filterCallback) {
+            const results = this.raycastAll(start, end, options);
+
+            let closest = null;
+            for (let i = 0; i < results.length; i++) {
+                const result = results[i];
+                if (!closest || result.hitFraction < closest.hitFraction) {
+                    closest = result;
+                }
+            }
+            return closest;
+        }
+
+        return world.raycastFirst(start, end, options);
     }
 
     /**
@@ -530,7 +546,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
      * Must return true to proceed with result. Takes the entity to evaluate as argument.
      *
-     * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits).
+     * @returns {RaycastResult[]} An array of raycast hit results (0 length if there were no hits
+     * or no physics backend is installed).
      *
      * @example
      * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2
@@ -566,7 +583,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * });
      */
     raycastAll(start, end, options = {}) {
-        const results = this._world.raycastAll(start, end, options);
+        const world = this._world;
+        if (!world) {
+            Debug.warnOnce('RigidBodyComponentSystem#raycastAll: no physics backend is installed, so the ray cannot hit anything.');
+            return [];
+        }
+
+        const results = world.raycastAll(start, end, options);
 
         if (options.sort) {
             results.sort((a, b) => a.hitFraction - b.hitFraction);
