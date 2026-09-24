@@ -16,6 +16,9 @@ import { Vec3 } from '../../../core/math/vec3.js';
  * {@link RigidBodyComponentSystem}. Individual rigid body components receive instances of
  * {@link ContactResult} instead.
  *
+ * Instances are pooled and reused by the physics system, so a result and its vectors are only
+ * valid inside the event handler that receives them. Copy any values that are needed later.
+ *
  * @example
  * app.systems.rigidbody.on('contact', (result) => {
  *     console.log(`Contact between ${result.a.name} and ${result.b.name}`);
@@ -46,14 +49,15 @@ class SingleContactResult {
     impulse;
 
     /**
-     * The point on Entity A where the contact occurred, relative to A.
+     * The point on Entity A where the contact occurred, in the local space of A's rigid body (see
+     * {@link ContactPoint#localPoint}).
      *
      * @type {Vec3}
      */
     localPointA;
 
     /**
-     * The point on Entity B where the contact occurred, relative to B.
+     * The point on Entity B where the contact occurred, in the local space of B's rigid body.
      *
      * @type {Vec3}
      */

@@ -71,7 +71,10 @@ import { PhysicsJoint } from './physics-joint.js';
  * methods. JointComponent structurally satisfies this contract and passes itself.
  *
  * @typedef {object} PhysicsJointSettings
- * @property {boolean} enableLimits - Whether hinge/slider limits are enabled.
+ * @property {number} breakImpulse - The impulse threshold above which the joint breaks, or
+ * Infinity for an unbreakable joint. Applied at creation - later changes go through
+ * {@link PhysicsJoint#setBreakImpulse}.
+ * @property {boolean} enableLimits - Whether hinge, slider and ball joint limits are enabled.
  * @property {Vec2} limits - The hinge (degrees) or slider (meters) limits.
  * @property {number} motorSpeed - The hinge (deg/s) or slider (m/s) motor speed.
  * @property {number} maxMotorForce - The maximum motor force. The motor is engaged while > 0.

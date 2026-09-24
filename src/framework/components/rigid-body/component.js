@@ -243,7 +243,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Sets the rotational speed of the body around each world axis.
+     * Sets the rotational speed of the body around each world axis. Only valid for rigid bodies
+     * of type {@link BODYTYPE_DYNAMIC}.
      *
      * @type {Vec3}
      */
@@ -438,7 +439,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Sets the speed of the body in a given direction.
+     * Sets the speed of the body in a given direction. Only valid for rigid bodies of type
+     * {@link BODYTYPE_DYNAMIC}.
      *
      * @type {Vec3}
      */
@@ -731,7 +733,9 @@ class RigidBodyComponent extends Component {
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset from this point by specifying a world
-     * space vector from the body's origin to the point of application.
+     * space vector from the body's origin to the point of application. The body's origin is the
+     * entity's world position, shifted by the collision component's
+     * {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {number} x - X-component of the force in world space.
@@ -754,7 +758,9 @@ class RigidBodyComponent extends Component {
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset from this point by specifying a world
-     * space vector from the body's origin to the point of application.
+     * space vector from the body's origin to the point of application. The body's origin is the
+     * entity's world position, shifted by the collision component's
+     * {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {Vec3} force - Vector representing the force in world space.
@@ -858,58 +864,72 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply an impulse (instantaneous change of velocity) to the body at a point.
+     * Apply an impulse (instantaneous change of velocity) to the body at a point. By default, the
+     * impulse is applied at the origin of the body. However, the impulse can be applied at an
+     * offset from this point by specifying a world space vector from the body's origin to the
+     * point of application. The body's origin is the entity's world position, shifted by the
+     * collision component's {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {number} x - X-component of the impulse in world space.
      * @param {number} y - Y-component of the impulse in world space.
      * @param {number} z - Z-component of the impulse in world space.
-     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
-     * space of the entity.
+     * @param {number} [px] - X-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the impulse in
+     * world space.
      * @returns {void}
      * @example
-     * // Apply an impulse along the world space positive y-axis at the entity's position.
+     * // Apply an impulse along the world space positive y-axis at the body's origin
      * entity.rigidbody.applyImpulse(0, 10, 0);
      * @example
-     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local space.
+     * // Apply an impulse along the world space positive y-axis at 1 unit along the world space
+     * // positive z-axis from the body's origin
      * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
      */
     /**
-     * Apply an impulse (instantaneous change of velocity) to the body at a point.
+     * Apply an impulse (instantaneous change of velocity) to the body at a point. By default, the
+     * impulse is applied at the origin of the body. However, the impulse can be applied at an
+     * offset from this point by specifying a world space vector from the body's origin to the
+     * point of application. The body's origin is the entity's world position, shifted by the
+     * collision component's {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {Vec3} impulse - Vector representing the impulse in world space.
      * @param {Vec3} [relativePoint] - Optional vector representing the relative point at which to
-     * apply the impulse in the local space of the entity.
+     * apply the impulse in world space.
      * @returns {void}
      * @example
-     * // Apply an impulse along the world space positive y-axis at the entity's position.
+     * // Apply an impulse along the world space positive y-axis at the body's origin
      * const impulse = new Vec3(0, 10, 0);
      * entity.rigidbody.applyImpulse(impulse);
      * @example
-     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local space.
+     * // Apply an impulse along the world space positive y-axis at 1 unit along the world space
+     * // positive z-axis from the body's origin
      * const impulse = new Vec3(0, 10, 0);
      * const relativePoint = new Vec3(0, 0, 1);
+     * entity.rigidbody.applyImpulse(impulse, relativePoint);
+     * @example
+     * // Apply an impulse at an offset given in the entity's local space, by first rotating the
+     * // offset into world space
+     * const impulse = new Vec3(0, 10, 0);
+     * const relativePoint = entity.getRotation().transformVector(new Vec3(0, 0, 1));
      * entity.rigidbody.applyImpulse(impulse, relativePoint);
      */
     /**
      * @param {number|Vec3} x - X-component of the impulse in world space or a vector representing
      * the impulse in world space.
      * @param {number|Vec3} [y] - Y-component of the impulse in world space or a vector representing
-     * the relative point at which to apply the impulse in the local space of the entity.
+     * the relative point at which to apply the impulse in world space.
      * @param {number} [z] - Z-component of the impulse in world space.
-     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
-     * space of the entity.
+     * @param {number} [px] - X-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the impulse in
+     * world space.
      */
     applyImpulse(x, y, z, px, py, pz) {
         const body = this._body;
