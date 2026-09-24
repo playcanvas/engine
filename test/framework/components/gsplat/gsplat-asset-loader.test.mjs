@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { restore, spy } from 'sinon';
+import { restore, spy, stub } from 'sinon';
 
 import { GSplatAssetLoader } from '../../../../src/framework/components/gsplat/gsplat-asset-loader.js';
 
@@ -140,6 +140,88 @@ describe('GSplatAssetLoader', function () {
             loader.load(url);
             resolveWithResource({ ok: true });
             expect(loader.getResource(url)).to.deep.equal({ ok: true });
+        });
+
+    });
+
+    describe('load priority', function () {
+
+        // records the order loads start in, which the plain registry stub does not
+        const trackStarts = () => {
+            const started = [];
+            registry.load = (asset) => {
+                loadCalls++;
+                started.push(asset.file.url);
+            };
+            return started;
+        };
+
+        const resolve = (url) => {
+            const asset = loader._urlToAsset.get(url);
+            asset.loading = false;
+            asset.loaded = true;
+            asset.resource = { ok: true };
+            asset.fire('load', asset);
+        };
+
+        it('starts queued loads highest priority first, equal priorities in request order', function () {
+            const started = trackStarts();
+            loader.maxConcurrentLoads = 1;
+
+            loader.load('busy', 0);
+            loader.load('low', 1);
+            loader.load('high', 5);
+            loader.load('mid-a', 3);
+            loader.load('mid-b', 3);
+
+            for (const url of ['busy', 'high', 'mid-a', 'mid-b']) {
+                resolve(url);
+            }
+            expect(started).to.deep.equal(['busy', 'high', 'mid-a', 'mid-b', 'low']);
+        });
+
+        it('updates the priority of a queued load, and keeps it when re-requested without one', function () {
+            const started = trackStarts();
+            loader.maxConcurrentLoads = 1;
+
+            loader.load('busy', 0);
+            loader.load('a', 1);
+            loader.load('b', 2);
+
+            // a now outranks b, and a poll without a priority must not reset it
+            loader.load('a', 10);
+            loader.load('a');
+
+            resolve('busy');
+            expect(started).to.deep.equal(['busy', 'a']);
+        });
+
+        it('always starts a queued load, even from priorities that do not compare', function () {
+            const started = trackStarts();
+            stub(console, 'error');
+            loader.maxConcurrentLoads = 1;
+
+            loader.load('busy', 0);
+            loader.load('a', NaN);
+            loader.load('b', NaN);
+
+            resolve('busy');
+            resolve('a');
+            expect(started).to.deep.equal(['busy', 'a', 'b']);
+            expect(loader._loadQueue.size).to.equal(0);
+        });
+
+        it('dequeues only loads that have not started', function () {
+            loader.maxConcurrentLoads = 1;
+
+            loader.load('busy', 0);
+            loader.load('waiting', 1);
+
+            expect(loader.dequeue('busy')).to.equal(false);
+            expect(loader.dequeue('waiting')).to.equal(true);
+            expect(loader.dequeue('waiting')).to.equal(false);
+            expect(loader._currentlyLoading.has('busy')).to.equal(true);
+            expect(loader._loadQueue.size).to.equal(0);
         });
 
     });

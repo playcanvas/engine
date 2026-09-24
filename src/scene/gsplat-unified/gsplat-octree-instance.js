@@ -26,6 +26,12 @@ const _tempDebugAabb = new BoundingBox();
 // tan(22.5deg) for the engine's default 45-degree vertical FOV, used as the FOV compensation reference
 const REF_TAN_HALF_FOV = Math.tan(22.5 * math.DEG_TO_RAD);
 
+// Load priority tiers, see GSplatOctreeInstance#applyLodChanges. A tier's priorities lie in
+// [tier, tier + 1), so a higher tier always loads first.
+const LOAD_TIER_PREFETCH = 0;
+const LOAD_TIER_SWITCH = 1;
+const LOAD_TIER_VISIBLE = 2;
+
 // Color instances used by debug wireframe rendering for LOD visualization
 const _lodColors = [
     new Color(1, 0, 0),
@@ -185,12 +191,21 @@ class GSplatOctreeInstance {
     needsLodUpdate = false;
 
     /**
-     * Tracks prefetched file indices that are being loaded without active placements.
-     * When any completes, we trigger LOD re-evaluation to allow promotion.
+     * Tracks prefetched file indices that are being loaded without active placements, rebuilt on
+     * every LOD update. When any completes, we trigger LOD re-evaluation to allow promotion.
      *
      * @type {Set<number>}
      */
     prefetchPending = new Set();
+
+    /**
+     * Files this instance waits for, mapped to their load priority. Rebuilt on every LOD update
+     * and submitted to the octree, which combines the requests of all its instances.
+     *
+     * @type {Map<number, number>}
+     * @private
+     */
+    _fileRequests = new Map();
 
     /**
      * Tracks invisible->visible pending adds per node: nodeIndex -> fileIndex.
@@ -277,29 +292,20 @@ class GSplatOctreeInstance {
         // reference counts, so it is released regardless of skipRefCounting.
         if (this.octree && !this.octree.destroyed) {
             this.octree.releaseLodTable(this.lodTable);
+
+            // Withdraw this instance's file requests. A file another instance still requests, for
+            // another camera for example, keeps loading. Without deferred ref counting nothing
+            // releases an unreferenced download later, so it is unloaded right away.
+            this.octree.removeRequests(this, !skipRefCounting);
         }
         this.lodTable = null;
+        this._fileRequests.clear();
 
         if (!skipRefCounting && this.octree && !this.octree.destroyed) {
             // Decrement ref counts for all files currently in use (loaded files)
             const filesToDecRef = this.getFileDecrements();
             for (const fileIndex of filesToDecRef) {
                 this.octree.decRefCount(fileIndex, 0);
-            }
-
-            // Also unload files that are pending (requested but not loaded yet)
-            for (const fileIndex of this.pending) {
-                // Skip if already in filePlacements (already handled above)
-                if (!this.filePlacements[fileIndex]) {
-                    this.octree.unloadResource(fileIndex);
-                }
-            }
-
-            // Same for prefetch pending
-            for (const fileIndex of this.prefetchPending) {
-                if (!this.filePlacements[fileIndex]) {
-                    this.octree.unloadResource(fileIndex);
-                }
             }
 
             // Clean up environment if present
@@ -432,34 +438,42 @@ class GSplatOctreeInstance {
      * @param {number} nodeIndex - The octree node index.
      * @param {number} desiredLodIndex - Currently selected LOD for display (may be coarser than optimal).
      * @param {number} optimalLodIndex - Target optimal LOD.
+     * @param {number} priority - Load priority for the prefetched file.
      */
-    prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex) {
+    prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex, priority) {
         if (desiredLodIndex === -1 || optimalLodIndex === -1) return;
 
-        const node = this.octree.nodes[nodeIndex];
-
-        // If we're already at optimal but it's not loaded yet, request it
-        if (desiredLodIndex === optimalLodIndex) {
-            const fi = node.lods[optimalLodIndex].fileIndex;
-            if (fi !== -1) {
-                this.octree.ensureFileResource(fi);
-                if (!this.octree.getFileResource(fi)) {
-                    this.prefetchPending.add(fi);
-                }
-            }
-            return;
-        }
-
-        // Step one chain entry finer toward optimal
-        const targetLod = this.lodTable.finerOnChain(nodeIndex, desiredLodIndex);
+        // If we're already at optimal but it's not loaded yet, request it, otherwise step one
+        // chain entry finer toward optimal
+        const targetLod = desiredLodIndex === optimalLodIndex ?
+            optimalLodIndex :
+            this.lodTable.finerOnChain(nodeIndex, desiredLodIndex);
         if (targetLod < 0) return;
-        const fi = node.lods[targetLod].fileIndex;
-        if (fi !== -1) {
-            this.octree.ensureFileResource(fi);
-            if (!this.octree.getFileResource(fi)) {
-                this.prefetchPending.add(fi);
-            }
+
+        const fi = this.octree.nodes[nodeIndex].lods[targetLod].fileIndex;
+        if (fi !== -1 && !this.requestFile(fi, priority)) {
+            this.prefetchPending.add(fi);
         }
+    }
+
+    /**
+     * Requests a file for this LOD update, unless it is already loaded. A file requested more than
+     * once keeps its highest priority.
+     *
+     * @param {number} fileIndex - The file index.
+     * @param {number} priority - Load priority, higher loads first.
+     * @returns {boolean} True if the file is already loaded.
+     */
+    requestFile(fileIndex, priority) {
+        if (this.octree.pollFileResource(fileIndex)) {
+            return true;
+        }
+
+        const current = this._fileRequests.get(fileIndex);
+        if (current === undefined || priority > current) {
+            this._fileRequests.set(fileIndex, priority);
+        }
+        return false;
     }
 
     /**
@@ -522,11 +536,16 @@ class GSplatOctreeInstance {
         // portrait. An orthographic footprint depends on neither FOV nor distance.
         let fovScale = 1;
         if (!ortho) {
+            // a backbuffer with no size in either dimension (e.g. a hidden canvas) reports a 0, NaN
+            // or infinite aspect ratio, which would turn every coverage, and so every LOD choice and
+            // load priority, into NaN
+            const cameraAspect = camera.aspectRatio;
+            const aspectRatio = cameraAspect > 0 && Number.isFinite(cameraAspect) ? cameraAspect : 1;
             let tanHalfVFov = Math.tan(camera.fov * 0.5 * math.DEG_TO_RAD);
             if (camera.horizontalFov) {
-                tanHalfVFov /= camera.aspectRatio;
+                tanHalfVFov /= aspectRatio;
             }
-            const tanHalfHFov = tanHalfVFov * camera.aspectRatio;
+            const tanHalfHFov = tanHalfVFov * aspectRatio;
             fovScale = Math.min(tanHalfVFov, tanHalfHFov) / REF_TAN_HALF_FOV;
         }
         // Node radii are octree-local while orthoHeight is a world-space window, so the placement's
@@ -637,11 +656,25 @@ class GSplatOctreeInstance {
      * This is Pass 2 of the LOD update process. Reads the levels the budget allocator wrote into
      * the nodeInfos array.
      *
+     * Also requests every file this instance still waits for, with a load priority. The priority
+     * is ranked by tier first - a node that shows nothing yet, then a node waiting to switch LOD,
+     * then a prefetch of the next finer level - and within a tier by the node's
+     * {@link NodeInfo#lodCoverage}, so the view fills with coarse data first and then refines
+     * nearest the camera first. A file shared by several nodes takes the highest priority of them.
+     * The requests are submitted to the octree, which combines them with those of its other
+     * instances and issues them in {@link GSplatOctree#flushRequests}.
+     *
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      */
     applyLodChanges(params) {
-        const nodes = this.octree.nodes;
+        const octree = this.octree;
+        const nodes = octree.nodes;
         const { lodUnderfillLimit = 0 } = params;
+
+        // rebuilt below from what the nodes still want, so a file nothing wants any more stops
+        // being requested and tracked
+        this.prefetchPending.clear();
+        this._fileRequests.clear();
 
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const node = nodes[nodeIndex];
@@ -746,9 +779,32 @@ class GSplatOctreeInstance {
                 }
             }
 
+            // Priority within a tier, coverage mapped monotonically into [0, 1). Coverage has no
+            // upper bound in distance LOD mode.
+            const coverage = nodeInfo.lodCoverage;
+            const rank = coverage / (1 + coverage);
+
+            // request the file the node waits for, to become visible or to switch LOD
+            const visibleAddFi = this.pendingVisibleAdds.get(nodeIndex);
+            if (visibleAddFi !== undefined) {
+                this.requestFile(visibleAddFi, LOAD_TIER_VISIBLE + rank);
+            }
+            const pendingSwitch = this.pendingDecrements.get(nodeIndex);
+            if (pendingSwitch) {
+                this.requestFile(pendingSwitch.newFileIndex, LOAD_TIER_SWITCH + rank);
+            }
+
             // Prefetch loading: request only the next-better LOD toward optimal
-            this.prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex);
+            this.prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex, LOAD_TIER_PREFETCH + rank);
         }
+
+        // Every placement still waiting for its file must stay requested, or flushRequests would
+        // withdraw it. The nodes above cover these with their own priorities, this is only a floor.
+        for (const fileIndex of this.pending) {
+            this.requestFile(fileIndex, LOAD_TIER_PREFETCH);
+        }
+
+        octree.submitRequests(this, this._fileRequests);
     }
 
     /**
@@ -779,8 +835,7 @@ class GSplatOctreeInstance {
             // if resource is already loaded, allow it to be used
             if (!this.addFilePlacement(fileIndex)) {
 
-                // resource not loaded yet, kick off load and add to pending
-                this.octree.ensureFileResource(fileIndex);
+                // resource not loaded yet, add to pending - applyLodChanges requests the load
                 this.pending.add(fileIndex);
             }
         }

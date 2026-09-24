@@ -61,4 +61,11 @@ describe('GSplatComponentSystem', function () {
         expect(app.scene.getGsplatParams()).to.equal(null);
         expect(app.renderer.gsplatDirector).to.equal(null);
     });
+
+    it('defaults to a behind-camera LOD penalty that re-evaluates on rotation', function () {
+        createApp([GSplatComponentSystem]);
+
+        expect(app.scene.gsplat.lodBehindPenalty).to.equal(1.5);
+        expect(app.scene.gsplat.lodUpdateAngle).to.equal(90);
+    });
 });
