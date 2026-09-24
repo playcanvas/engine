@@ -23,6 +23,34 @@ import {
  * @import { PhysicsBodyDesc, PhysicsJointDesc, PhysicsShapeDesc } from '../physics-world.js'
  */
 
+// btTriangleRaycastCallback::kF_FilterBackfaces
+const RAYFLAG_FILTER_BACKFACES = 1;
+
+/**
+ * Applies the raycast options shared by all ray queries to a native ray result callback.
+ *
+ * @param {object} rayCallback - The native ray result callback.
+ * @param {object} options - The raycast options.
+ */
+function applyRayOptions(rayCallback, options) {
+    if (typeof options.filterCollisionGroup === 'number') {
+        rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+    }
+
+    if (typeof options.filterCollisionMask === 'number') {
+        rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+    }
+
+    if (options.hitBackFaces === false) {
+        if (typeof rayCallback.set_m_flags === 'function') {
+            rayCallback.set_m_flags(RAYFLAG_FILTER_BACKFACES);
+        } else {
+            Debug.warnOnce('AmmoPhysicsWorld: this Ammo.js build does not expose ray callback ' +
+                'flags, so the hitBackFaces raycast option is ignored. Update Ammo.js.');
+        }
+    }
+}
+
 /**
  * The reused contact pair reported to the contact listener. Reads contact point data straight
  * from the current native manifold - nothing is allocated.
@@ -542,14 +570,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this._btRayStart.setValue(start.x, start.y, start.z);
         this._btRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.ClosestRayResultCallback(this._btRayStart, this._btRayEnd);
-
-        if (typeof options.filterCollisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
-        }
-
-        if (typeof options.filterCollisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
-        }
+        applyRayOptions(rayCallback, options);
 
         this.nativeWorld.rayTest(this._btRayStart, this._btRayEnd, rayCallback);
         if (rayCallback.hasHit()) {
@@ -582,14 +603,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this._btRayStart.setValue(start.x, start.y, start.z);
         this._btRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.AllHitsRayResultCallback(this._btRayStart, this._btRayEnd);
-
-        if (typeof options.filterCollisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
-        }
-
-        if (typeof options.filterCollisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
-        }
+        applyRayOptions(rayCallback, options);
 
         this.nativeWorld.rayTest(this._btRayStart, this._btRayEnd, rayCallback);
         if (rayCallback.hasHit()) {

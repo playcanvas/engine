@@ -487,6 +487,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * @param {object} [options] - The additional options for the raycasting.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {boolean} [options.hitBackFaces] - Whether the ray can hit the back faces of mesh
+     * colliders, which face away from the ray: the far side of a closed mesh, or the first surface
+     * met by a ray starting inside one. A back-face hit reports a normal flipped to face the start
+     * of the ray. Other collision shapes never report back-face hits. Defaults to true.
      * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
      * query but within an array.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
@@ -517,6 +521,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * first. Defaults to false.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {boolean} [options.hitBackFaces] - Whether the ray can hit the back faces of mesh
+     * colliders, which face away from the ray: the far side of a closed mesh, or the first surface
+     * met by a ray starting inside one. A back-face hit reports a normal flipped to face the start
+     * of the ray. Other collision shapes never report back-face hits. Defaults to true.
      * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a {@link Tags#has}
      * query but within an array.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
@@ -538,6 +546,12 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * // where hit entity has a `camera` component
      * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
      *     filterCallback: (entity) => entity && entity.camera
+     * });
+     * @example
+     * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2, skipping the back faces
+     * // of mesh colliders so a ray through a closed mesh hits it only where it enters
+     * const hits = this.app.systems.rigidbody.raycastAll(new Vec3(0, 2, 2), new Vec3(0, -2, -2), {
+     *     hitBackFaces: false
      * });
      * @example
      * // Return all results of a raycast between 0, 2, 2 and 0, -2, -2

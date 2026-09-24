@@ -578,6 +578,110 @@ describe('AmmoPhysicsWorld', function () {
         });
     });
 
+    describe('raycast back faces', function () {
+
+        // https://github.com/playcanvas/engine/issues/2516. The rays run off-center so they miss
+        // the diagonal shared by the two triangles of each cube face.
+
+        const above = new Vec3(0.2, 10, 0.1);
+        const inside = new Vec3(0.2, 0, 0.1);
+        const below = new Vec3(0.2, -10, 0.1);
+
+        beforeEach(function () {
+            installWorld();
+        });
+
+        /**
+         * Casts a ray down through the colliders and returns the hit heights, highest first.
+         *
+         * @param {Vec3} from - The ray start.
+         * @param {object} [options] - The raycast options.
+         * @returns {number[]} The hit heights.
+         */
+        function hitHeights(from, options = {}) {
+            const hits = app.systems.rigidbody.raycastAll(from, below, { ...options, sort: true });
+            return hits.map(hit => hit.point.y);
+        }
+
+        it('hits the back faces of a mesh collider by default', function () {
+            createMeshEntity(createCubeMesh());
+
+            const hits = app.systems.rigidbody.raycastAll(above, below, { sort: true });
+            expect(hits).to.have.lengthOf(2);
+            expect(hits[0].point.y).to.be.closeTo(0.5, 1e-3);
+            expect(hits[1].point.y).to.be.closeTo(-0.5, 1e-3);
+
+            // the bottom face points down, but its normal is flipped to face the start of the ray
+            expect(hits[1].normal.y).to.be.closeTo(1, 1e-3);
+        });
+
+        it('skips the back faces of a mesh collider when hitBackFaces is false', function () {
+            createMeshEntity(createCubeMesh());
+
+            const heights = hitHeights(above, { hitBackFaces: false });
+            expect(heights).to.have.lengthOf(1);
+            expect(heights[0]).to.be.closeTo(0.5, 1e-3);
+        });
+
+        it('skips the back face in front of a ray starting inside a mesh collider', function () {
+            createMeshEntity(createCubeMesh());
+
+            const rigidbody = app.systems.rigidbody;
+            expect(rigidbody.raycastFirst(inside, below).point.y).to.be.closeTo(-0.5, 1e-3);
+            expect(rigidbody.raycastFirst(inside, below, { hitBackFaces: false })).to.equal(null);
+        });
+
+        it('applies hitBackFaces to a filtered first hit', function () {
+            createMeshEntity(createCubeMesh());
+
+            const filterCallback = () => true;
+            const rigidbody = app.systems.rigidbody;
+            expect(rigidbody.raycastFirst(inside, below, { filterCallback })).to.not.equal(null);
+            expect(rigidbody.raycastFirst(inside, below, {
+                filterCallback,
+                hitBackFaces: false
+            })).to.equal(null);
+        });
+
+        it('never hits the back faces of a primitive collider', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('rigidbody', { type: 'static' });
+            e.addComponent('collision', { type: 'box', halfExtents: new Vec3(0.5, 0.5, 0.5) });
+
+            expect(hitHeights(above)).to.have.lengthOf(1);
+            expect(hitHeights(inside)).to.have.lengthOf(0);
+        });
+
+        it('warns and hits back faces on an Ammo build without ray callback flags', function () {
+            const prototypes = [
+                Ammo.ClosestRayResultCallback.prototype,
+                Ammo.AllHitsRayResultCallback.prototype
+            ];
+            const setFlags = prototypes.map(p => p.set_m_flags);
+            prototypes.forEach((p) => {
+                p.set_m_flags = undefined;
+            });
+
+            try {
+                Debug._loggedMessages.clear();
+                const warn = stub(console, 'warn');
+                createMeshEntity(createCubeMesh());
+
+                expect(hitHeights(above, { hitBackFaces: false })).to.have.lengthOf(2);
+                expect(app.systems.rigidbody.raycastFirst(inside, below, {
+                    hitBackFaces: false
+                })).to.not.equal(null);
+                expect(warn.calledOnce).to.equal(true);
+                expect(warn.firstCall.args[0]).to.match(/hitBackFaces/);
+            } finally {
+                prototypes.forEach((p, i) => {
+                    p.set_m_flags = setFlags[i];
+                });
+            }
+        });
+    });
+
     describe('contact normals', function () {
 
         // Regression tests for https://github.com/playcanvas/engine/issues/4547. Bullet reports one

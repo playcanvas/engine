@@ -376,6 +376,8 @@ class PhysicsWorld {
      * @param {object} [options] - The raycast options.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {boolean} [options.hitBackFaces] - Whether the ray can hit the back faces of mesh
+     * colliders. Defaults to true.
      * @returns {RaycastResult|null} The hit, or null if there was none.
      * @ignore
      */
@@ -391,6 +393,8 @@ class PhysicsWorld {
      * @param {object} [options] - The raycast options.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {boolean} [options.hitBackFaces] - Whether the ray can hit the back faces of mesh
+     * colliders. Defaults to true.
      * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a
      * {@link Tags#has} query but within an array. Hits filtered here are never allocated.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.
