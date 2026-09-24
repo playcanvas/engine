@@ -1822,6 +1822,91 @@ describe('Inspector list view', function () {
     });
 });
 
+describe('Inspector link hover', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    const enter = el => el.dispatchEvent(new window.Event('pointerenter'));
+    const leave = el => el.dispatchEvent(new window.Event('pointerleave'));
+
+    it('reports the links of the property view as they are hovered, reading the current target', function () {
+        const container = document.createElement('div');
+        const view = new PropertyView(container, () => {});
+        const hovered = [];
+        view.onHover = (el, target) => hovered.push(target ? target() : null);
+        let target = { first: true };
+        view.setSubject({}, () => [{
+            key: 's', title: 'S', rows: [{ key: 'a', label: 'a', value: { text: 'x', target } }, { key: 'b', label: 'b', value: { text: 'y' } }]
+        }]);
+        const [link, plain] = [...container.querySelectorAll('.pci-value')];
+
+        enter(link);
+        leave(link);
+        // a value that links nowhere reports nothing
+        enter(plain);
+        expect(hovered).to.deep.equal([target, null]);
+
+        // a refresh pointing the same element elsewhere is read when asked
+        const first = target;
+        target = { second: true };
+        view.refresh();
+        let read = null;
+        view.onHover = (el, current) => {
+            read = current;
+        };
+        enter(link);
+        expect(read()).to.equal(target);
+        expect(read()).to.not.equal(first);
+    });
+
+    it('reports the link cells of a list as they are hovered', function () {
+        const container = document.createElement('div');
+        const list = new ListView(container, () => {});
+        const hovered = [];
+        list.onHover = (el, target) => hovered.push(target ? target() : null);
+        const target = {};
+        list.setRows([{ key: 'a', item: 1, name: 'a', cells: [{ text: 'a' }, { text: 'link', target }] }]);
+        const [plain, link] = [...container.querySelectorAll('.pci-lrow span')];
+
+        enter(plain);
+        enter(link);
+        leave(link);
+        expect(hovered).to.deep.equal([target, null]);
+    });
+
+    it('previews the texture of a hovered link only while it is still on screen', function () {
+        const app = createApp();
+        const inspector = new Inspector(app);
+        const texture = new Texture(app.graphicsDevice, { name: 'bricks', width: 4, height: 4 });
+        const el = document.createElement('span');
+        document.body.appendChild(el);
+        // jsdom lays nothing out, so stand in for a link that is shown, then hidden with its tab
+        let shown = true;
+        el.getClientRects = () => /** @type {any} */ (shown ? [{}] : []);
+
+        const hover = /** @type {any} */ (inspector);
+        hover._hoverLink = { el, target: () => texture };
+        expect(hover._hoveredTexture()).to.equal(texture);
+
+        // something other than a texture is not previewed
+        hover._hoverLink = { el, target: () => ({}) };
+        expect(hover._hoveredTexture()).to.equal(null);
+
+        // a link hidden with its tab, or removed by a refresh, without a leave event is forgotten
+        hover._hoverLink = { el, target: () => texture };
+        shown = false;
+        expect(hover._hoveredTexture()).to.equal(null);
+        expect(hover._hoverLink).to.equal(null);
+        shown = true;
+        hover._hoverLink = { el, target: () => texture };
+        el.remove();
+        expect(hover._hoveredTexture()).to.equal(null);
+
+        texture.destroy();
+        inspector.destroy();
+    });
+});
+
 describe('Inspector property view choices', function () {
     beforeEach(jsdomSetup);
     afterEach(jsdomTeardown);

@@ -518,6 +518,15 @@ class Inspector {
     _debugFrame = null;
 
     /**
+     * The link the pointer is over, with a function reading its current target, so a texture link
+     * can preview while hovered.
+     *
+     * @type {{ el: HTMLElement, target: () => * }|null}
+     * @private
+     */
+    _hoverLink = null;
+
+    /**
      * The page each forward pass layer step shows, by pass row key and step, kept across refreshes.
      *
      * @type {Map<string, number>}
@@ -1036,7 +1045,11 @@ class Inspector {
             }
         }
 
-        if (this._tab === 'targets') {
+        // a hovered texture link takes the place of the tab's own preview for as long as it is hovered
+        const hovered = this._hoveredTexture();
+        if (hovered) {
+            this._drawPreviewQuad(hovered, `Texture "${hovered.name}"`, isDepthFormat(hovered.format), this._textureChannels);
+        } else if (this._tab === 'targets') {
             this._drawTargetPreview();
         } else if (this._tab === 'textures') {
             this._drawTexturePreview();
@@ -1392,6 +1405,34 @@ class Inspector {
             this._updateStatus();
         }, target => this._selectAny(target));
         this._bodyList.onToggle = (entity, drawn) => this._setBodyDrawn(entity, drawn);
+
+        // a texture link previews while hovered, without having to follow it
+        const onHover = (el, target) => {
+            this._hoverLink = el && target ? { el, target } : null;
+        };
+        const views = [
+            this._properties, this._passList, this._targetList, this._textureList, this._shaderList, this._meshList,
+            this._materialList, this._bufferList, this._assetList, this._bodyList
+        ];
+        for (const view of views) view.onHover = onHover;
+    }
+
+    /**
+     * @returns {Texture|null} The texture of the link the pointer is over, or null. The link is
+     * checked to still be on screen, as a refresh can remove it and a tab switch hide it without the
+     * pointer leaving it. The `:hover` state cannot tell instead: browsers do not reliably report it
+     * for elements in a shadow root.
+     * @private
+     */
+    _hoveredTexture() {
+        const link = this._hoverLink;
+        if (!link) return null;
+        if (!link.el.isConnected || link.el.getClientRects().length === 0) {
+            this._hoverLink = null;
+            return null;
+        }
+        const target = link.target();
+        return target instanceof Texture ? target : null;
     }
 
     /**

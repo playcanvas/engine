@@ -67,6 +67,15 @@ class ListView {
     onLink;
 
     /**
+     * Called when the pointer enters a link, with the link element and a function reading the
+     * link's current target, and with nulls when it leaves. The target is read through the
+     * function because a refresh can point the same element at a new target while it is hovered.
+     *
+     * @type {((el: HTMLElement|null, target: (() => *)|null) => void)|undefined}
+     */
+    onHover;
+
+    /**
      * Called with a row's item and the new state when one of its checkbox cells changes.
      *
      * @type {((item: *, checked: boolean) => void)|undefined}
@@ -268,6 +277,11 @@ class ListView {
      */
     _createTextCell(entry, index) {
         const cellEl = document.createElement('span');
+        const target = () => entry.row.cells[index]?.target;
+        cellEl.addEventListener('pointerenter', () => {
+            if (target() !== undefined) this.onHover?.(cellEl, target);
+        });
+        cellEl.addEventListener('pointerleave', () => this.onHover?.(null, null));
         cellEl.addEventListener('click', (e) => {
             const current = entry.row.cells[index];
             if (current && current.target !== undefined) {

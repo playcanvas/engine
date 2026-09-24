@@ -109,6 +109,15 @@ class PropertyView {
     onSelect;
 
     /**
+     * Called when the pointer enters a link, with the link element and a function reading the
+     * link's current target, and with nulls when it leaves. The target is read through the
+     * function because a refresh can point the same element at a new target while it is hovered.
+     *
+     * @type {((el: HTMLElement|null, target: (() => *)|null) => void)|undefined}
+     */
+    onHover;
+
+    /**
      * @type {*}
      * @private
      */
@@ -586,6 +595,10 @@ class PropertyView {
         elements.valueEl.append(elements.caretEl, document.createTextNode(''));
         elements.el.append(elements.labelEl, elements.valueEl);
         // the whole row takes the click, so a choice can be made anywhere on it
+        elements.valueEl.addEventListener('pointerenter', () => {
+            if (elements.target) this.onHover?.(elements.valueEl, () => elements.target);
+        });
+        elements.valueEl.addEventListener('pointerleave', () => this.onHover?.(null, null));
         elements.el.addEventListener('click', (e) => {
             const expandable = elements.el.classList.contains('pci-expandable');
             const toggle = () => {
