@@ -300,7 +300,21 @@ class ElementTouchEvent extends ElementInputEvent {
          * @type {Touch[]}
          */
         this.changedTouches = event.changedTouches;
+        /**
+         * The x coordinate of the touch when the event fired, in CSS pixels relative to the
+         * element that {@link ElementInput} is attached to. For `touchend` and `click` events,
+         * this is where the touch was released.
+         *
+         * @type {number}
+         */
         this.x = x;
+        /**
+         * The y coordinate of the touch when the event fired, in CSS pixels relative to the
+         * element that {@link ElementInput} is attached to. For `touchend` and `click` events,
+         * this is where the touch was released.
+         *
+         * @type {number}
+         */
         this.y = y;
         /**
          * The touch object that triggered the event.
@@ -648,18 +662,17 @@ class ElementInput {
 
             const element = touchInfo.element;
             const camera = touchInfo.camera;
-            const x = touchInfo.x;
-            const y = touchInfo.y;
 
             delete this._touchedElements[touch.identifier];
             delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
+            // report where the touch was released, not where it started
+            const { x, y } = getTouchTargetCoords(touch);
+
             // check if touch was released over previously touch
             // element in order to fire click event
-            const coords = getTouchTargetCoords(touch);
-
             for (let c = cameras.length - 1; c >= 0; c--) {
-                const hovered = this._getTargetElementByCoords(cameras[c], coords.x, coords.y);
+                const hovered = this._getTargetElementByCoords(cameras[c], x, y);
                 if (hovered === element) {
 
                     if (!this._clickedEntities[element.entity.guid]) {
