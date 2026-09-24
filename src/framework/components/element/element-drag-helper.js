@@ -194,14 +194,27 @@ class ElementDragHelper extends EventHandler {
     }
 
     _determineInputPosition(event) {
-        const devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
+        // Input events give CSS pixels from the top-left of the canvas, which is what
+        // CameraComponent#screenToWorld takes. A screen-space element is dragged in the pixels of
+        // the canvas's drawing buffer, so scale to those by the ratio the canvas is rendered at.
+        // GraphicsDevice#maxPixelRatio only caps that ratio, and can be well above it.
+        let scaleX = 1;
+        let scaleY = 1;
+        if (this._element.screen && this._element.screen.screen.screenSpace) {
+            const device = this._app.graphicsDevice;
+            const canvas = device.canvas;
+            if (canvas.clientWidth && canvas.clientHeight) {
+                scaleX = device.width / canvas.clientWidth;
+                scaleY = device.height / canvas.clientHeight;
+            }
+        }
 
         if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
-            _inputScreenPosition.x = event.x * devicePixelRatio;
-            _inputScreenPosition.y = event.y * devicePixelRatio;
+            _inputScreenPosition.x = event.x * scaleX;
+            _inputScreenPosition.y = event.y * scaleY;
         } else if (event.changedTouches) {
-            _inputScreenPosition.x = event.changedTouches[0].x * devicePixelRatio;
-            _inputScreenPosition.y = event.changedTouches[0].y * devicePixelRatio;
+            _inputScreenPosition.x = event.changedTouches[0].x * scaleX;
+            _inputScreenPosition.y = event.changedTouches[0].y * scaleY;
         } else {
             console.warn('Could not determine position from input event');
         }
