@@ -23,7 +23,6 @@
 export const computeGsplatProjectorSource = /* wgsl */`
 
 #include "gsplatCommonCS"
-#include "gsplatTileIntersectCS"
 
 @group(0) @binding(0) var<storage, read> compactedSplatIds: array<u32>;
 @group(0) @binding(1) var<storage, read> sortElementCount: array<u32>;

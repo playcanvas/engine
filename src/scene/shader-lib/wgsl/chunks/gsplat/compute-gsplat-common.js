@@ -217,15 +217,6 @@ fn computeSplatCov(
         return result;
     }
 
-    // Opacity-aware radius tightening based on FlashGS
-    // https://github.com/InternLandMark/FlashGS
-    // The fixed factor 8.0 corresponds to power = -4.0 (exp(-4) ≈ 0.018).
-    // For low-opacity splats, pixels become invisible (alpha < alphaClip) at a closer
-    // distance. We solve for the power where opacity * exp(power) = alphaClip,
-    // giving radiusFactor = min(8.0, 2.0 * ln(opacity / alphaClip)). This shrinks
-    // the effective radius for low-opacity splats, reducing tile assignments.
-    let radiusFactor = computeRadiusFactor(half(opacity), alphaClip);
-
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
     let maxRadius = vmin;
     let radiusXUncapped = sqrt(2.0 * a);
