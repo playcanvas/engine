@@ -214,7 +214,8 @@ function describeValue(value, depth = 0) {
         const prim = value.primitive?.[0];
         return {
             text: `Mesh ${value.vertexBuffer?.numVertices ?? 0} verts${prim ? `, ${prim.count} ${prim.indexed ? 'indices' : 'vertices drawn'}` : ''}`,
-            cls: 'obj'
+            cls: 'obj',
+            target: value
         };
     }
     if (value instanceof MeshInstance) {

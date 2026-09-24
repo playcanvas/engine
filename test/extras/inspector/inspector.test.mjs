@@ -9,8 +9,9 @@ import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, 
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
 import { ListView } from '../../../src/extras/inspector/list-view.js';
 import { bufferOwners, bufferRows, buildBufferModel, collectBuffers, memorySummary } from '../../../src/extras/inspector/memory-view.js';
+import { buildMeshModel, meshListRows, meshNote, surveyMeshes } from '../../../src/extras/inspector/mesh-view.js';
 import { formatBytes } from '../../../src/extras/inspector/model.js';
-import { buildNodeModel } from '../../../src/extras/inspector/node-model.js';
+import { buildNodeModel, meshInstanceRows, meshRows as buildMeshRows } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
 import { formatChannels, previewAttachments, previewSupport, storedBottomUp } from '../../../src/extras/inspector/render-target-view.js';
 import { buildShaderModel, formatBindGroup, formatUniformBuffer, shaderRows } from '../../../src/extras/inspector/shader-view.js';
@@ -452,7 +453,7 @@ describe('Inspector', function () {
         expect(section('c:light').rows.map(r => r.label)).to.not.include('layers');
     });
 
-    it('lists mesh instances that open into their properties, mesh and material', function () {
+    it('lists mesh instances that open into their properties and material, linking their mesh', function () {
         const device = app.graphicsDevice;
         const texture = new Texture(device, { name: 'albedo', width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
         const material = new StandardMaterial();
@@ -489,7 +490,10 @@ describe('Inspector', function () {
         expect(instanceRows.map(row => row.label)).to.include('castShadow');
         expect(instanceRows[0].value.target).to.equal(entity);
 
-        const meshRows = instanceRows[1].value.expand();
+        // the mesh links to its tab, which shows its geometry
+        expect(instanceRows[1].value.target).to.equal(mesh);
+        expect(instanceRows[1].value.expand).to.equal(undefined);
+        const meshRows = buildMeshRows(mesh);
         const byLabel = (list2, label) => list2.find(row => row.label === label).value;
         expect(byLabel(meshRows, 'vertex buffer').text).to.equal('3 vertices, 72 B');
         // the buffers link to the memory tab
@@ -499,7 +503,7 @@ describe('Inspector', function () {
         expect(byLabel(meshRows, 'primitive').text).to.equal('TRIANGLES  count 3  base 0  indexed');
         // several draw ranges list one entry each
         mesh.primitive.push({ type: 1, base: 3, baseVertex: 2, count: 4 });
-        const many = byLabel(instanceRows[1].value.expand(), 'primitive');
+        const many = byLabel(buildMeshRows(mesh), 'primitive');
         expect(many.text).to.equal('2 primitives');
         expect(many.items.map(item => item.text)).to.deep.equal([
             'TRIANGLES  count 3  base 0  indexed', 'LINES  count 4  base 3  base vertex 2'
@@ -915,6 +919,139 @@ describe('Inspector asset view', function () {
         expect(map.get(resource)).to.equal(big);
         expect(map.size).to.equal(1);
         expect(resourceAssets(null).size).to.equal(0);
+    });
+});
+
+describe('Inspector mesh view', function () {
+    let device;
+    let meshes;
+
+    beforeEach(function () {
+        jsdomSetup();
+        device = new NullGraphicsDevice(document.createElement('canvas'));
+        meshes = [];
+    });
+
+    afterEach(function () {
+        meshes.forEach(mesh => mesh.destroy());
+        device.destroy();
+        jsdomTeardown();
+    });
+
+    const build = (count) => {
+        const mesh = new Mesh(device);
+        const positions = [];
+        for (let i = 0; i < count; i++) positions.push(i, 0, 0);
+        mesh.setPositions(positions);
+        mesh.setIndices([...Array(count).keys()]);
+        mesh.update();
+        meshes.push(mesh);
+        return mesh;
+    };
+
+    /**
+     * @returns {any} An app whose meshes are reachable in every way the survey looks: a disabled
+     * entity's component, a layer, a render and a model asset and the debug lines, plus one mesh
+     * nothing reachable holds and one whose buffer only serves as instancing data.
+     */
+    function sceneApp() {
+        const shared = build(30);
+        const disabled = build(12);
+        const rendered = build(3);
+        const modelled = build(6);
+        const lines = build(2);
+        const orphan = build(9);
+        const instancing = build(4);
+
+        const root = new GraphNode('root');
+        const wall = new GraphNode('wall');
+        const door = new GraphNode('door');
+        const hidden = new GraphNode('hidden');
+        root.addChild(wall);
+        root.addChild(door);
+        root.addChild(hidden);
+
+        const material = new StandardMaterial();
+        const wallInstance = new MeshInstance(shared, material, wall);
+        const doorInstance = new MeshInstance(shared, material, door);
+        const hiddenInstance = new MeshInstance(disabled, material, hidden);
+        /** @type {any} */ (doorInstance).instancingData = { vertexBuffer: instancing.vertexBuffer };
+        // the components hold their instances whether or not the layers draw them
+        /** @type {any} */ (wall).c = { render: { meshInstances: [wallInstance] } };
+        /** @type {any} */ (hidden).c = { render: { meshInstances: [hiddenInstance] } };
+
+        const assets = new AssetRegistry(null);
+        const renderAsset = new Asset('robot', 'render', null);
+        renderAsset.loaded = true;
+        /** @type {any} */ (renderAsset)._resources = [{ meshes: [rendered] }];
+        assets.add(renderAsset);
+        const modelAsset = new Asset('crate', 'model', null);
+        modelAsset.loaded = true;
+        /** @type {any} */ (modelAsset)._resources = [{ meshInstances: [{ mesh: modelled }] }];
+        assets.add(modelAsset);
+
+        const immediate = { batchesMap: new Map([[{ name: 'Immediate' }, { map: new Map([['material', { mesh: lines }]]) }]]) };
+        return {
+            graphicsDevice: device,
+            root,
+            assets,
+            scene: { immediate, layers: { layerList: [{ name: 'World', meshInstances: [wallInstance, doorInstance] }] } },
+            parts: { shared, disabled, rendered, modelled, lines, orphan, instancing, wall, door, renderAsset, modelAsset, wallInstance }
+        };
+    }
+
+    it('finds meshes through components, layers, assets and debug lines, counting each instance once', function () {
+        const app = sceneApp();
+        const { shared, disabled, rendered, modelled, lines, orphan, instancing, wall, door, renderAsset, modelAsset } = app.parts;
+        const survey = surveyMeshes(app);
+        const users = mesh => (survey.users.get(mesh) ?? []).map(user => [user.role, user.label, user.target]);
+
+        // the wall is found through its component first and not again through the layer
+        expect(users(shared)).to.deep.equal([['render component', 'wall', wall], ['drawn on "World"', 'door', door]]);
+        expect(users(disabled)[0][0]).to.equal('render component');
+        expect(users(rendered)).to.deep.equal([['render asset', 'Asset "robot"', renderAsset]]);
+        expect(users(modelled)).to.deep.equal([['model asset', 'Asset "crate"', modelAsset]]);
+        expect(users(lines)).to.deep.equal([['debug lines', 'Lines on "Immediate"', null]]);
+        expect(survey.users.has(orphan)).to.be.false;
+        expect(survey.users.has(instancing)).to.be.false;
+        expect(survey.instances).to.equal(3);
+
+        // the orphan's buffer is the one vertex buffer no found mesh, instancing data or the
+        // device's quad accounts for
+        expect(survey.unaccounted).to.equal(1);
+        expect(meshNote(survey)).to.match(/^1 of the \d+ vertex buffers on the device belong to no mesh found/);
+        orphan.destroy();
+        expect(meshNote(surveyMeshes(app))).to.equal('');
+    });
+
+    it('lists meshes largest first, dimming those no instance draws, and matches any user', function () {
+        const app = sceneApp();
+        const rows = meshListRows(surveyMeshes(app));
+        expect(rows.map(row => row.name)).to.deep.equal(['wall', 'hidden', 'Asset "crate"', 'Asset "robot"', 'Lines on "Immediate"']);
+        expect(rows[0].cells.map(cell => cell.text).slice(1, 2)).to.deep.equal(['30 verts, 30 indices · 2 instances']);
+        expect(rows[0].dim).to.be.false;
+        expect(rows[3].dim).to.be.true;
+        // a shared mesh is named after its first user but found by any of them
+        expect(rows[0].matches('door')).to.be.true;
+        expect(rows[0].matches('robot')).to.be.false;
+    });
+
+    it('shows a mesh with its geometry and its users, the instances opening in place', function () {
+        const app = sceneApp();
+        const { shared, wall, wallInstance } = app.parts;
+        const [geometry, usage] = buildMeshModel(shared, { app });
+        expect(geometry.title).to.equal(`Mesh #${shared.id}`);
+        expect(geometry.rows.map(row => row.label)).to.include.members(['size', 'vertex buffer', 'vertex format', 'index buffer', 'primitive']);
+
+        const users = usage.rows[0].value;
+        expect(users.text).to.equal('2 mesh instances');
+        expect(users.items[0].text).to.equal('wall');
+        expect(users.items[0].target).to.equal(wall);
+        expect(users.items[0].expand().map(row => row.label)).to.include('material');
+
+        // elsewhere a mesh links here, including under each of its mesh instances
+        expect(describeValue(shared).target).to.equal(shared);
+        expect(meshInstanceRows(wallInstance).find(row => row.label === 'mesh').value.target).to.equal(shared);
     });
 });
 

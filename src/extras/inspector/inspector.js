@@ -7,6 +7,7 @@ import { Shader } from '../../platform/graphics/shader.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LAYERID_UI } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { Mesh } from '../../scene/mesh.js';
 import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 import { TextureRenderer } from '../renderers/texture-renderer.js';
 import { WireRenderer } from '../renderers/wire-renderer.js';
@@ -16,6 +17,7 @@ import { INSTANCES_PER_PAGE, LayerStepSelection, buildPassModel, buildStepModel,
 import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
 import { HierarchyView } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
+import { buildMeshModel, meshBytes, meshListRows, meshNote, surveyMeshes } from './mesh-view.js';
 import { formatBytes, formatName, passDisplayName } from './model.js';
 import { buildNodeModel } from './node-model.js';
 import { AmmoDebugDraw, DEBUG_DRAW } from './physics-debug.js';
@@ -102,6 +104,7 @@ const TAB_TIPS = {
     passes: 'The passes that rendered the last frame, with the layers, draws and targets of each',
     targets: 'The render targets on the device, with a live preview of their textures',
     textures: 'The textures on the device, largest first, with a live preview',
+    meshes: 'The meshes of the app, found through the components, layers and assets using them, largest first',
     memory: 'The vertex, index, uniform and storage buffers on the device, and what uses each',
     shaders: 'The compiled shaders, with their sources',
     physics: 'The rigid bodies and joints of the physics world, and its debug drawing'
@@ -155,6 +158,9 @@ function isTextTarget(e) {
  *   The selected target's attachment can be previewed live in a corner of the viewport.
  * - Textures: every texture on the device, largest GPU footprint first, with the same live preview.
  *   Texture values elsewhere, such as the maps of a material, link here.
+ * - Meshes: every mesh found through the components, layers and assets using it, largest first,
+ *   with its geometry and users. Nothing keeps a list of meshes, so a note counts the vertex buffers
+ *   on the device that belong to no mesh found. Mesh values elsewhere link here.
  * - Memory: video memory by kind of resource, and every buffer on the device, largest first, named
  *   after the mesh, material or asset it was found to belong to. Buffer values elsewhere link here.
  * - Shaders: every shader on the device with its language, state and vertex attributes. The
@@ -340,7 +346,7 @@ class Inspector {
     _nextPropertyRefresh = 0;
 
     /**
-     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'memory'|'shaders'|'physics'}
+     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'memory'|'shaders'|'physics'}
      * @private
      */
     _tab = 'hierarchy';
@@ -451,6 +457,18 @@ class Inspector {
     _bufferList;
 
     /**
+     * @type {ListView}
+     * @private
+     */
+    _meshList;
+
+    /**
+     * @type {HTMLElement}
+     * @private
+     */
+    _meshNote;
+
+    /**
      * @type {HTMLInputElement}
      * @private
      */
@@ -512,6 +530,15 @@ class Inspector {
      * @private
      */
     _bufferModel = buffer => buildBufferModel(buffer, this._context());
+
+    /**
+     * Model builder for the property view when a mesh is selected.
+     *
+     * @param {Mesh} mesh - The mesh.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _meshModel = mesh => buildMeshModel(mesh, this._context());
 
     /**
      * @type {HTMLSelectElement}
@@ -1053,7 +1080,7 @@ class Inspector {
         this._tabButtons = {};
         const tabList = [
             ['hierarchy', 'Hierarchy'], ['assets', 'Assets'], ['passes', 'Frame graph'],
-            ['targets', 'Render targets'], ['textures', 'Textures'], ['memory', 'Memory'],
+            ['targets', 'Render targets'], ['textures', 'Textures'], ['meshes', 'Meshes'], ['memory', 'Memory'],
             ['shaders', 'Shaders'], ['physics', 'Physics']
         ];
         for (const [id, label] of tabList) {
@@ -1130,6 +1157,13 @@ class Inspector {
         const assetList = el('div', 'pci-list');
         assetPanel.append(assetBar, assetList);
 
+        // meshes: a note when some vertex buffers belong to no mesh found, over the list
+        const meshPanel = el('div', 'pci-listpanel');
+        this._meshNote = el('div', 'pci-note pci-note-info');
+        this._meshNote.style.display = 'none';
+        const meshList = el('div', 'pci-list');
+        meshPanel.append(this._meshNote, meshList);
+
         // memory: the totals over the buffers, which can be narrowed to one kind
         const memoryPanel = el('div', 'pci-listpanel');
         const memoryBar = el('div', 'pci-subbar');
@@ -1199,11 +1233,12 @@ class Inspector {
             passes: passPanel,
             targets: targetPanel,
             textures: texturePanel,
+            meshes: meshPanel,
             memory: memoryPanel,
             shaders: shaderPanel,
             physics: physicsPanel
         };
-        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, memoryPanel, shaderPanel, physicsPanel);
+        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, meshPanel, memoryPanel, shaderPanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1290,6 +1325,10 @@ class Inspector {
         }, target => this._selectAny(target));
         this._shaderList = new ListView(shaderList, (shader, key) => {
             if (this._tab === 'shaders') this._properties.setSubject(shader, buildShaderModel, key);
+            this._updateStatus();
+        }, target => this._selectAny(target));
+        this._meshList = new ListView(meshList, (mesh, key) => {
+            if (this._tab === 'meshes') this._properties.setSubject(mesh, this._meshModel, key);
             this._updateStatus();
         }, target => this._selectAny(target));
         this._bufferList = new ListView(bufferList, (buffer, key) => {
@@ -1997,7 +2036,7 @@ class Inspector {
     /**
      * Switches the list tab and points the property view at that tab's selection.
      *
-     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'memory'|'shaders'|'physics'} tab - The tab.
+     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'memory'|'shaders'|'physics'} tab - The tab.
      * @private
      */
     _setTab(tab) {
@@ -2047,6 +2086,14 @@ class Inspector {
             const texture = this._textureList.selected;
             if (texture !== this._properties.subject) {
                 this._properties.setSubject(texture, this._textureModel, this._textureList.selectedKey);
+            }
+        } else if (this._tab === 'meshes') {
+            const survey = surveyMeshes(this._app);
+            Inspector._setNote(this._meshNote, meshNote(survey));
+            this._meshList.setRows(meshListRows(survey));
+            const mesh = this._meshList.selected;
+            if (mesh !== this._properties.subject) {
+                this._properties.setSubject(mesh, this._meshModel, this._meshList.selectedKey);
             }
         } else if (this._tab === 'memory') {
             Inspector._setNote(this._memoryNote, memorySummary(device));
@@ -2101,6 +2148,7 @@ class Inspector {
         this._shaderList.filter = value;
         this._assetList.filter = value;
         this._bufferList.filter = value;
+        this._meshList.filter = value;
         this._bodyList.filter = value;
         this._refreshLists(false);
         // the instances listed under a forward pass narrow with the filter too
@@ -2133,6 +2181,9 @@ class Inspector {
         } else if (target instanceof Asset) {
             this._setTab('assets');
             this._assetList.selectItem(target);
+        } else if (target instanceof Mesh) {
+            this._setTab('meshes');
+            this._meshList.selectItem(target);
         } else if (bufferKind(target)) {
             // a filter hiding the buffer's kind would leave nothing to select
             if (this._bufferKind.value !== 'all' && this._bufferKind.value !== bufferKind(target)) this._bufferKind.value = 'all';
@@ -2296,6 +2347,14 @@ class Inspector {
                 const bytes = textures.reduce((sum, texture) => sum + texture.gpuSize, 0);
                 counts = `${textures.length} textures · ${formatBytes(bytes)}`;
                 selected = this._textureList.selected?.name ?? '';
+                break;
+            }
+            case 'meshes': {
+                const survey = surveyMeshes(this._app);
+                const bytes = [...survey.users.keys()].reduce((sum, mesh) => sum + meshBytes(mesh), 0);
+                counts = `${survey.users.size} meshes · ${formatBytes(bytes)} · ${survey.instances} mesh instances`;
+                const mesh = this._meshList.selected;
+                selected = mesh ? `Mesh #${mesh.id}` : '';
                 break;
             }
             case 'memory': {

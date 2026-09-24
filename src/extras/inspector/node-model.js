@@ -121,7 +121,7 @@ function componentSection(name, component) {
         handled.push('layers');
     }
 
-    // mesh instances open in place, down to the elements of a vertex format
+    // mesh instances open in place, their meshes linking to the Meshes tab
     const instances = /** @type {any} */ (component).meshInstances;
     if (Array.isArray(instances) && instances.length) {
         push(section, 'meshInstances', meshInstancesValue(instances));
@@ -251,7 +251,8 @@ function materialRows(material) {
 
 /**
  * @param {MeshInstance} instance - A mesh instance.
- * @returns {PropertyRow[]} Its rows, with the mesh and the material opening in place.
+ * @returns {PropertyRow[]} Its rows, with the material opening in place and the mesh linking to its
+ * tab.
  */
 function meshInstanceRows(instance) {
     const rows = [];
@@ -259,7 +260,8 @@ function meshInstanceRows(instance) {
     const material = instance.material;
 
     pushRow(rows, 'node', read(instance, 'node'));
-    pushRow(rows, 'mesh', mesh ? { ...describeValue(mesh), expand: () => meshRows(mesh) } : describeValue(mesh));
+    // links to the Meshes tab, which shows the mesh's geometry and everything else using it
+    pushRow(rows, 'mesh', describeValue(mesh));
     pushRow(rows, 'material', material instanceof Material ?
         { ...describeValue(material), expand: () => materialRows(material) } : describeValue(material));
     pushRow(rows, 'visible', read(instance, 'visible'));
@@ -327,7 +329,7 @@ function scriptSections(scriptComponent) {
 /**
  * Everything the property view shows for a node: identity, transform, one section per component
  * and one per script instance. A component's mesh instances open in place, each into its own
- * properties, its mesh and its material.
+ * properties and its material, with its mesh linking to the Meshes tab.
  *
  * @param {GraphNode} node - The node.
  * @returns {PropertySection[]} The sections.
@@ -348,4 +350,4 @@ function buildNodeModel(node) {
     return sections;
 }
 
-export { buildNodeModel, meshInstanceRows, vertexFormatValue };
+export { buildNodeModel, meshInstanceRows, meshRows, vertexFormatValue };
