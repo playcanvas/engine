@@ -180,7 +180,7 @@ class PhysicsBody {
      * Applies an impulse at a point relative to the body's origin.
      *
      * @param {Vec3} impulse - The world space impulse.
-     * @param {Vec3} relativePoint - The local space offset from the body origin.
+     * @param {Vec3} relativePoint - The world space offset from the body origin.
      */
     applyImpulse(impulse, relativePoint) {
     }

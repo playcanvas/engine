@@ -13,8 +13,8 @@ export const BODYTYPE_STATIC = 'static';
 export const BODYTYPE_DYNAMIC = 'dynamic';
 
 /**
- * Rigid body has infinite mass and does not respond to forces but can still be moved by setting
- * their velocity or position.
+ * Rigid body has infinite mass and does not respond to forces. It is moved by setting the
+ * position and rotation of its entity.
  *
  * @category Physics
  */
