@@ -1879,9 +1879,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 return;
             }
 
-            if (!this.renderTarget.flipY) {
-                y = this.renderTarget.height - y - h;
+            const rt = this.renderTarget;
+            const rtWidth = rt.width;
+            const rtHeight = rt.height;
+
+            if (!rt.flipY) {
+                y = rtHeight - y - h;
             }
+
+            // Unlike the viewport, the scissor rectangle must lie within the render target, so
+            // clamp it. This allows a viewport extending past the render target bounds, which
+            // uses the viewport rectangle as its scissor rectangle by default.
+            const x0 = Math.min(Math.max(x, 0), rtWidth);
+            const y0 = Math.min(Math.max(y, 0), rtHeight);
+            w = Math.max(Math.min(x + w, rtWidth) - x0, 0);
+            h = Math.max(Math.min(y + h, rtHeight) - y0, 0);
+            x = x0;
+            y = y0;
 
             this.sx = x;
             this.sy = y;

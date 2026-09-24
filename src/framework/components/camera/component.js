@@ -949,6 +949,10 @@ class CameraComponent extends Component {
      * Sets the rendering rectangle for the camera. This controls where on the screen the camera
      * will render in normalized screen coordinates. Defaults to `[0, 0, 1, 1]`.
      *
+     * The rectangle can extend past the render target bounds, for example `[-0.5, 0, 1.5, 1]`,
+     * with only its overlapping part being rendered. This is supported on WebGL2, and on WebGPU
+     * on platforms that allow viewports extending past the render target bounds.
+     *
      * @type {Vec4}
      */
     set rect(value) {
