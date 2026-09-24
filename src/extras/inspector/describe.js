@@ -206,7 +206,7 @@ function describeValue(value, depth = 0) {
     if (value instanceof RenderTarget) {
         return { text: `RenderTarget "${value.name}" ${value.width}×${value.height}`, cls: 'obj' };
     }
-    if (value instanceof Material) return { text: `${typeName(value)} "${value.name}"`, cls: 'obj' };
+    if (value instanceof Material) return { text: `${typeName(value)} "${value.name}"`, cls: 'obj', target: value };
     if (value instanceof Shader) {
         return { text: `Shader #${value.id} "${value.name}"${value.failed ? ' (failed)' : value.ready ? '' : ' (compiling)'}`, cls: 'obj', target: value };
     }

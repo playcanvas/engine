@@ -1,8 +1,8 @@
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
-import { MeshInstance } from '../../scene/mesh-instance.js';
 import { Mesh } from '../../scene/mesh.js';
 
 import { describeValue } from './describe.js';
+import { collectMeshInstances } from './instance-survey.js';
 import { nodeLabel } from './memory-view.js';
 import { formatBytes, makeSection, push } from './model.js';
 import { meshInstanceRows, meshRows } from './node-model.js';
@@ -10,6 +10,7 @@ import { meshInstanceRows, meshRows } from './node-model.js';
 /** @import { AppBase } from '../../framework/app-base.js' */
 /** @import { Asset } from '../../framework/asset/asset.js' */
 /** @import { GraphNode } from '../../scene/graph-node.js' */
+/** @import { MeshInstance } from '../../scene/mesh-instance.js' */
 /** @import { ListRow } from './list-view.js' */
 /** @import { PropertySection } from './model.js' */
 
@@ -42,10 +43,9 @@ const MAX_USERS = 100;
 
 /**
  * Finds the meshes of the app. Nothing keeps a list of them, so they are found through what uses
- * them: the render and model components of the hierarchy, including those of disabled entities,
- * which the layers drop; every mesh instance in the layer composition, which adds sprites, text,
- * particles, batches and the sky; the immediate renderer's batches of debug lines; and the loaded
- * render and model assets, which hold meshes nothing may be drawing. A mesh only the app's own
+ * them: the mesh instances of the components and layers, see {@link collectMeshInstances}; the
+ * immediate renderer's batches of debug lines; and the loaded render and model assets, which hold
+ * meshes nothing may be drawing. A mesh only the app's own
  * code holds cannot be found, but it still owns a vertex buffer on the device, so the vertex
  * buffers no found mesh owns are counted to tell how complete the list is.
  *
@@ -67,26 +67,11 @@ function surveyMeshes(app) {
         list.push(user);
     };
 
-    // a mesh instance is held by its component and listed by every layer it renders in, so it
-    // counts once, under the first place it is found
-    const seen = new Set();
-    const addInstance = (instance, role) => {
-        if (!(instance instanceof MeshInstance) || seen.has(instance)) return;
-        seen.add(instance);
+    const instances = collectMeshInstances(app);
+    for (const { instance, role } of instances) {
         const node = instance.node ?? null;
         addMesh(instance.mesh, { role, label: nodeLabel(node), target: node, instance });
         known.add(/** @type {any} */ (instance).instancingData?.vertexBuffer);
-    };
-
-    app.root?.forEach((node) => {
-        const components = /** @type {any} */ (node).c;
-        if (!components) return;
-        for (const instance of components.render?.meshInstances ?? []) addInstance(instance, 'render component');
-        for (const instance of components.model?.meshInstances ?? []) addInstance(instance, 'model component');
-    });
-
-    for (const layer of app.scene?.layers?.layerList ?? []) {
-        for (const instance of layer.meshInstances ?? []) addInstance(instance, `drawn on "${layer.name}"`);
     }
 
     // debug lines are pushed straight into the visible list each frame rather than added to a
@@ -124,7 +109,7 @@ function surveyMeshes(app) {
         if (!known.has(buffer)) unaccounted++;
     }
 
-    return { users, instances: seen.size, vertexBuffers, unaccounted };
+    return { users, instances: instances.length, vertexBuffers, unaccounted };
 }
 
 /**

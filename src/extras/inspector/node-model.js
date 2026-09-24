@@ -2,7 +2,7 @@ import { Component } from '../../framework/components/component.js';
 import { Entity } from '../../framework/entity.js';
 import { ScriptType } from '../../framework/script/script-type.js';
 import { Script } from '../../framework/script/script.js';
-import { Material } from '../../scene/materials/material.js';
+import { Texture } from '../../platform/graphics/texture.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 
 import {
@@ -12,10 +12,11 @@ import {
 } from '../../platform/graphics/constants.js';
 
 import { pushAssetRows } from './asset-view.js';
-import { describeValue } from './describe.js';
+import { collectProperties, describeValue } from './describe.js';
 import { formatBytes, makeSection, push, pushRow, read, reflectInto, reflectRows } from './model.js';
 
 /** @import { LayerComposition } from '../../scene/composition/layer-composition.js' */
+/** @import { Material } from '../../scene/materials/material.js' */
 /** @import { Mesh } from '../../scene/mesh.js' */
 /** @import { GraphNode } from '../../scene/graph-node.js' */
 /** @import { Described } from './describe.js' */
@@ -121,7 +122,7 @@ function componentSection(name, component) {
         handled.push('layers');
     }
 
-    // mesh instances open in place, their meshes linking to the Meshes tab
+    // mesh instances open in place, their meshes and materials linking to their tabs
     const instances = /** @type {any} */ (component).meshInstances;
     if (Array.isArray(instances) && instances.length) {
         push(section, 'meshInstances', meshInstancesValue(instances));
@@ -236,6 +237,30 @@ function meshRows(mesh) {
 }
 
 /**
+ * The textures a material samples: those set on its properties, such as the maps of a
+ * StandardMaterial, and those set as parameters, which is how a ShaderMaterial carries them.
+ *
+ * @param {Material} material - A material.
+ * @returns {Set<Texture>} The textures.
+ */
+function materialTextures(material) {
+    const textures = new Set();
+    for (const name of collectProperties(material, [], SKIP_MATERIAL)) {
+        let value;
+        try {
+            value = material[name];
+        } catch {
+            continue;
+        }
+        if (value instanceof Texture) textures.add(value);
+    }
+    for (const parameter of Object.values(material.parameters ?? {})) {
+        if (parameter?.data instanceof Texture) textures.add(parameter.data);
+    }
+    return textures;
+}
+
+/**
  * @param {Material} material - A material.
  * @returns {PropertyRow[]} Its rows, textures and compiled variants linking to their tabs.
  */
@@ -251,8 +276,7 @@ function materialRows(material) {
 
 /**
  * @param {MeshInstance} instance - A mesh instance.
- * @returns {PropertyRow[]} Its rows, with the material opening in place and the mesh linking to its
- * tab.
+ * @returns {PropertyRow[]} Its rows, with the mesh and the material linking to their tabs.
  */
 function meshInstanceRows(instance) {
     const rows = [];
@@ -262,8 +286,8 @@ function meshInstanceRows(instance) {
     pushRow(rows, 'node', read(instance, 'node'));
     // links to the Meshes tab, which shows the mesh's geometry and everything else using it
     pushRow(rows, 'mesh', describeValue(mesh));
-    pushRow(rows, 'material', material instanceof Material ?
-        { ...describeValue(material), expand: () => materialRows(material) } : describeValue(material));
+    // links to the Materials tab, which shows its properties and everything else using it
+    pushRow(rows, 'material', describeValue(material));
     pushRow(rows, 'visible', read(instance, 'visible'));
     // an instance overriding material values keeps its own copy of the material's uniforms
     const uniformBuffer = /** @type {any} */ (instance)._materialUniformBuffer;
@@ -329,7 +353,7 @@ function scriptSections(scriptComponent) {
 /**
  * Everything the property view shows for a node: identity, transform, one section per component
  * and one per script instance. A component's mesh instances open in place, each into its own
- * properties and its material, with its mesh linking to the Meshes tab.
+ * properties, with its mesh and material linking to their tabs.
  *
  * @param {GraphNode} node - The node.
  * @returns {PropertySection[]} The sections.
@@ -350,4 +374,4 @@ function buildNodeModel(node) {
     return sections;
 }
 
-export { buildNodeModel, meshInstanceRows, meshRows, vertexFormatValue };
+export { buildNodeModel, materialRows, materialTextures, meshInstanceRows, meshRows, vertexFormatValue };

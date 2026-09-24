@@ -8,6 +8,7 @@ import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
 
 import { describeValue } from './describe.js';
+import { collectMeshInstances } from './instance-survey.js';
 import { formatBytes, makeSection, push, read, reflectRows } from './model.js';
 import { vertexFormatValue } from './node-model.js';
 import { formatUniformBuffer } from './shader-view.js';
@@ -16,6 +17,7 @@ import { formatUniformBuffer } from './shader-view.js';
 /** @import { Asset } from '../../framework/asset/asset.js' */
 /** @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js' */
 /** @import { GraphNode } from '../../scene/graph-node.js' */
+/** @import { Material } from '../../scene/materials/material.js' */
 /** @import { Described } from './describe.js' */
 /** @import { ListRow } from './list-view.js' */
 /** @import { PropertySection } from './model.js' */
@@ -31,7 +33,8 @@ import { formatUniformBuffer } from './shader-view.js';
  * @typedef {object} BufferOwner
  * @property {string} role - What the buffer holds for it, such as 'vertices'.
  * @property {string} label - The owner's name.
- * @property {GraphNode|Asset|null} target - What to link to, or null when there is nothing to show.
+ * @property {GraphNode|Asset|Material|null} target - What to link to, or null when there is nothing to
+ * show.
  * @ignore
  */
 
@@ -135,8 +138,9 @@ function nodeLabel(node) {
 
 /**
  * Finds what the buffers on the device belong to. No buffer records its owner, so the owners are
- * found from the other end: every mesh instance in the layer composition gives its mesh's
- * geometry and its material's uniforms, the immediate renderer gives the batches of debug lines,
+ * found from the other end: every mesh instance of the components and layers, see
+ * {@link collectMeshInstances}, gives its mesh's geometry and its material's uniforms, the
+ * immediate renderer gives the batches of debug lines,
  * loaded render assets give the geometry of meshes not drawn right now, and the device gives its
  * own quad. Storage buffers and the per-draw uniform pool are
  * held privately by their users and stay unattributed.
@@ -157,25 +161,24 @@ function bufferOwners(app) {
         list.push(owner);
     };
 
-    // a mesh instance is listed by every layer it renders in, so count it once
-    const seen = new Set();
-    for (const layer of app.scene?.layers?.layerList ?? []) {
-        for (const instance of layer.meshInstances ?? []) {
-            if (seen.has(instance)) continue;
-            seen.add(instance);
-            const node = instance.node ?? null;
-            const label = nodeLabel(node);
-            const mesh = instance.mesh;
-            if (mesh) {
-                add(mesh.vertexBuffer, { role: 'vertices', label, target: node });
-                mesh.indexBuffer?.forEach((indexBuffer, style) => {
-                    add(indexBuffer, { role: INDEX_ROLES[style] ?? 'indices', label, target: node });
-                });
-                add(mesh.morph?.vertexBufferIds, { role: 'morph target ids', label, target: node });
-            }
-            add(/** @type {any} */ (instance)._materialUniformBuffer, { role: 'material uniforms of the instance', label, target: node });
-            const material = instance.material;
-            add(/** @type {any} */ (material)?._uniformBuffer, { role: `uniforms of material "${material?.name}"`, label, target: node });
+    // a material shared by many instances owns one buffer, so it is listed once
+    const materials = new Set();
+    for (const { instance } of collectMeshInstances(app)) {
+        const node = instance.node ?? null;
+        const label = nodeLabel(node);
+        const mesh = instance.mesh;
+        if (mesh) {
+            add(mesh.vertexBuffer, { role: 'vertices', label, target: node });
+            mesh.indexBuffer?.forEach((indexBuffer, style) => {
+                add(indexBuffer, { role: INDEX_ROLES[style] ?? 'indices', label, target: node });
+            });
+            add(mesh.morph?.vertexBufferIds, { role: 'morph target ids', label, target: node });
+        }
+        add(/** @type {any} */ (instance)._materialUniformBuffer, { role: 'material uniforms of the instance', label, target: node });
+        const material = instance.material;
+        if (material && !materials.has(material)) {
+            materials.add(material);
+            add(/** @type {any} */ (material)._uniformBuffer, { role: 'material uniforms', label: `Material "${material.name}"`, target: material });
         }
     }
 

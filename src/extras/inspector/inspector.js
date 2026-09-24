@@ -7,6 +7,7 @@ import { Shader } from '../../platform/graphics/shader.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { LAYERID_UI } from '../../scene/constants.js';
 import { GraphNode } from '../../scene/graph-node.js';
+import { Material } from '../../scene/materials/material.js';
 import { Mesh } from '../../scene/mesh.js';
 import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 import { TextureRenderer } from '../renderers/texture-renderer.js';
@@ -17,6 +18,10 @@ import { INSTANCES_PER_PAGE, LayerStepSelection, buildPassModel, buildStepModel,
 import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
 import { HierarchyView } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
+import {
+    buildMaterialModel, materialListRows, materialsUsingShader, materialsUsingTexture, surveyMaterials,
+    usedByMaterialsSection
+} from './material-view.js';
 import { buildMeshModel, meshBytes, meshListRows, meshNote, surveyMeshes } from './mesh-view.js';
 import { formatBytes, formatName, passDisplayName } from './model.js';
 import { buildNodeModel } from './node-model.js';
@@ -105,6 +110,7 @@ const TAB_TIPS = {
     targets: 'The render targets on the device, with a live preview of their textures',
     textures: 'The textures on the device, largest first, with a live preview',
     meshes: 'The meshes of the app, found through the components, layers and assets using them, largest first',
+    materials: 'The materials of the app, found through the mesh instances and assets using them, most used first',
     memory: 'The vertex, index, uniform and storage buffers on the device, and what uses each',
     shaders: 'The compiled shaders, with their sources',
     physics: 'The rigid bodies and joints of the physics world, and its debug drawing'
@@ -161,6 +167,9 @@ function isTextTarget(e) {
  * - Meshes: every mesh found through the components, layers and assets using it, largest first,
  *   with its geometry and users. Nothing keeps a list of meshes, so a note counts the vertex buffers
  *   on the device that belong to no mesh found. Mesh values elsewhere link here.
+ * - Materials: every material found through the mesh instances and assets using it, most used
+ *   first, with its textures, compiled variants and users. Material values elsewhere link here, and
+ *   the Textures and Shaders tabs list the materials using a texture or shader.
  * - Memory: video memory by kind of resource, and every buffer on the device, largest first, named
  *   after the mesh, material or asset it was found to belong to. Buffer values elsewhere link here.
  * - Shaders: every shader on the device with its language, state and vertex attributes. The
@@ -346,7 +355,7 @@ class Inspector {
     _nextPropertyRefresh = 0;
 
     /**
-     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'memory'|'shaders'|'physics'}
+     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'memory'|'shaders'|'physics'}
      * @private
      */
     _tab = 'hierarchy';
@@ -469,6 +478,12 @@ class Inspector {
     _meshNote;
 
     /**
+     * @type {ListView}
+     * @private
+     */
+    _materialList;
+
+    /**
      * @type {HTMLInputElement}
      * @private
      */
@@ -541,6 +556,25 @@ class Inspector {
     _meshModel = mesh => buildMeshModel(mesh, this._context());
 
     /**
+     * Model builder for the property view when a material is selected.
+     *
+     * @param {Material} material - The material.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _materialModel = material => buildMaterialModel(material, this._context());
+
+    /**
+     * Model builder for the property view when a shader is selected, followed by the materials that
+     * compiled it.
+     *
+     * @param {Shader} shader - The shader.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _shaderModel = shader => [...buildShaderModel(shader), usedByMaterialsSection(materialsUsingShader(this._app, shader))];
+
+    /**
      * @type {HTMLSelectElement}
      * @private
      */
@@ -574,13 +608,17 @@ class Inspector {
     _textureNote;
 
     /**
-     * Model builder for the property view when a texture is selected.
+     * Model builder for the property view when a texture is selected, followed by the materials
+     * sampling it.
      *
      * @param {Texture} texture - The texture.
      * @returns {PropertySection[]} The sections.
      * @private
      */
-    _textureModel = texture => buildTextureModel(texture, this._context());
+    _textureModel = texture => [
+        ...buildTextureModel(texture, this._context()),
+        usedByMaterialsSection(materialsUsingTexture(this._app, texture))
+    ];
 
     /**
      * @type {HTMLInputElement}
@@ -1080,7 +1118,7 @@ class Inspector {
         this._tabButtons = {};
         const tabList = [
             ['hierarchy', 'Hierarchy'], ['assets', 'Assets'], ['passes', 'Frame graph'],
-            ['targets', 'Render targets'], ['textures', 'Textures'], ['meshes', 'Meshes'], ['memory', 'Memory'],
+            ['targets', 'Render targets'], ['textures', 'Textures'], ['meshes', 'Meshes'], ['materials', 'Materials'], ['memory', 'Memory'],
             ['shaders', 'Shaders'], ['physics', 'Physics']
         ];
         for (const [id, label] of tabList) {
@@ -1164,6 +1202,11 @@ class Inspector {
         const meshList = el('div', 'pci-list');
         meshPanel.append(this._meshNote, meshList);
 
+        // materials: a plain list
+        const materialPanel = el('div', 'pci-listpanel');
+        const materialList = el('div', 'pci-list');
+        materialPanel.append(materialList);
+
         // memory: the totals over the buffers, which can be narrowed to one kind
         const memoryPanel = el('div', 'pci-listpanel');
         const memoryBar = el('div', 'pci-subbar');
@@ -1234,11 +1277,12 @@ class Inspector {
             targets: targetPanel,
             textures: texturePanel,
             meshes: meshPanel,
+            materials: materialPanel,
             memory: memoryPanel,
             shaders: shaderPanel,
             physics: physicsPanel
         };
-        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, meshPanel, memoryPanel, shaderPanel, physicsPanel);
+        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, meshPanel, materialPanel, memoryPanel, shaderPanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1324,7 +1368,11 @@ class Inspector {
             this._updateStatus();
         }, target => this._selectAny(target));
         this._shaderList = new ListView(shaderList, (shader, key) => {
-            if (this._tab === 'shaders') this._properties.setSubject(shader, buildShaderModel, key);
+            if (this._tab === 'shaders') this._properties.setSubject(shader, this._shaderModel, key);
+            this._updateStatus();
+        }, target => this._selectAny(target));
+        this._materialList = new ListView(materialList, (material, key) => {
+            if (this._tab === 'materials') this._properties.setSubject(material, this._materialModel, key);
             this._updateStatus();
         }, target => this._selectAny(target));
         this._meshList = new ListView(meshList, (mesh, key) => {
@@ -2036,7 +2084,7 @@ class Inspector {
     /**
      * Switches the list tab and points the property view at that tab's selection.
      *
-     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'memory'|'shaders'|'physics'} tab - The tab.
+     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'memory'|'shaders'|'physics'} tab - The tab.
      * @private
      */
     _setTab(tab) {
@@ -2095,6 +2143,12 @@ class Inspector {
             if (mesh !== this._properties.subject) {
                 this._properties.setSubject(mesh, this._meshModel, this._meshList.selectedKey);
             }
+        } else if (this._tab === 'materials') {
+            this._materialList.setRows(materialListRows(surveyMaterials(this._app)));
+            const material = this._materialList.selected;
+            if (material !== this._properties.subject) {
+                this._properties.setSubject(material, this._materialModel, this._materialList.selectedKey);
+            }
         } else if (this._tab === 'memory') {
             Inspector._setNote(this._memoryNote, memorySummary(device));
             this._bufferList.setRows(bufferRows(device, bufferOwners(this._app), this._bufferKind.value));
@@ -2112,7 +2166,7 @@ class Inspector {
             this._shaderList.setRows(shaderRows(device));
             const shader = this._shaderList.selected;
             if (shader !== this._properties.subject) {
-                this._properties.setSubject(shader, buildShaderModel, this._shaderList.selectedKey);
+                this._properties.setSubject(shader, this._shaderModel, this._shaderList.selectedKey);
             }
         } else {
             if ((capture && !this._frozen) || !this._frame) {
@@ -2149,6 +2203,7 @@ class Inspector {
         this._assetList.filter = value;
         this._bufferList.filter = value;
         this._meshList.filter = value;
+        this._materialList.filter = value;
         this._bodyList.filter = value;
         this._refreshLists(false);
         // the instances listed under a forward pass narrow with the filter too
@@ -2181,6 +2236,9 @@ class Inspector {
         } else if (target instanceof Asset) {
             this._setTab('assets');
             this._assetList.selectItem(target);
+        } else if (target instanceof Material) {
+            this._setTab('materials');
+            this._materialList.selectItem(target);
         } else if (target instanceof Mesh) {
             this._setTab('meshes');
             this._meshList.selectItem(target);
@@ -2355,6 +2413,14 @@ class Inspector {
                 counts = `${survey.users.size} meshes · ${formatBytes(bytes)} · ${survey.instances} mesh instances`;
                 const mesh = this._meshList.selected;
                 selected = mesh ? `Mesh #${mesh.id}` : '';
+                break;
+            }
+            case 'materials': {
+                const materials = [...surveyMaterials(this._app).keys()];
+                const used = materials.filter(material => material.meshInstances.size > 0).length;
+                counts = `${materials.length} materials · ${used} in use`;
+                const material = this._materialList.selected;
+                selected = material ? `${material.name || 'Material'} #${material.id}` : '';
                 break;
             }
             case 'memory': {

@@ -8,10 +8,13 @@ import { collectProperties, describeValue, formatNumber } from '../../../src/ext
 import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from '../../../src/extras/inspector/frame-graph-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
 import { ListView } from '../../../src/extras/inspector/list-view.js';
+import {
+    buildMaterialModel, materialListRows, materialsUsingShader, materialsUsingTexture, surveyMaterials, usedByMaterialsSection
+} from '../../../src/extras/inspector/material-view.js';
 import { bufferOwners, bufferRows, buildBufferModel, collectBuffers, memorySummary } from '../../../src/extras/inspector/memory-view.js';
 import { buildMeshModel, meshListRows, meshNote, surveyMeshes } from '../../../src/extras/inspector/mesh-view.js';
 import { formatBytes } from '../../../src/extras/inspector/model.js';
-import { buildNodeModel, meshInstanceRows, meshRows as buildMeshRows } from '../../../src/extras/inspector/node-model.js';
+import { buildNodeModel, materialRows as buildMaterialRows, meshInstanceRows, meshRows as buildMeshRows } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
 import { formatChannels, previewAttachments, previewSupport, storedBottomUp } from '../../../src/extras/inspector/render-target-view.js';
 import { buildShaderModel, formatBindGroup, formatUniformBuffer, shaderRows } from '../../../src/extras/inspector/shader-view.js';
@@ -34,6 +37,7 @@ import { StorageBuffer } from '../../../src/platform/graphics/storage-buffer.js'
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { UniformBufferFormat, UniformFormat } from '../../../src/platform/graphics/uniform-buffer-format.js';
 import { UniformBuffer } from '../../../src/platform/graphics/uniform-buffer.js';
+import { BLEND_NORMAL } from '../../../src/scene/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -453,7 +457,7 @@ describe('Inspector', function () {
         expect(section('c:light').rows.map(r => r.label)).to.not.include('layers');
     });
 
-    it('lists mesh instances that open into their properties and material, linking their mesh', function () {
+    it('lists mesh instances that open into their properties, linking their mesh and material', function () {
         const device = app.graphicsDevice;
         const texture = new Texture(device, { name: 'albedo', width: 4, height: 4, format: PIXELFORMAT_RGBA8 });
         const material = new StandardMaterial();
@@ -519,7 +523,10 @@ describe('Inspector', function () {
         expect(elements[0].value.text).to.equal('3 × FLOAT32  offset 0  stride 12  size 12');
         expect(elements[1].value.text).to.equal('3 × FLOAT32  offset 36  stride 12  size 12');
 
-        const materialRows = instanceRows[2].value.expand();
+        // the material links to its tab too, which shows its properties
+        expect(instanceRows[2].value.target).to.equal(material);
+        expect(instanceRows[2].value.expand).to.equal(undefined);
+        const materialRows = buildMaterialRows(material);
         expect(materialRows[0].label).to.equal('variants');
         const labels = materialRows.map(row => row.label);
         expect(labels).to.include.members(['diffuse', 'diffuseMap', 'blendType']);
@@ -1055,6 +1062,137 @@ describe('Inspector mesh view', function () {
     });
 });
 
+describe('Inspector material view', function () {
+    let device;
+
+    beforeEach(function () {
+        jsdomSetup();
+        device = new NullGraphicsDevice(document.createElement('canvas'));
+    });
+
+    afterEach(function () {
+        device.destroy();
+        jsdomTeardown();
+    });
+
+    /**
+     * @returns {any} An app whose materials are reachable in every way the survey looks: a disabled
+     * entity's component, a layer, the debug lines and a material asset nothing draws with.
+     */
+    function sceneApp() {
+        const mesh = new Mesh(device);
+        const texture = new Texture(device, { name: 'bricks', width: 4, height: 4 });
+        const custom = new Texture(device, { name: 'custom', width: 4, height: 4 });
+
+        const brick = new StandardMaterial();
+        brick.name = 'brick';
+        brick.diffuseMap = texture;
+        const glass = new StandardMaterial();
+        glass.name = 'glass';
+        glass.blendType = BLEND_NORMAL;
+        // a texture set as a parameter, as a ShaderMaterial carries its textures
+        glass.setParameter('texture_custom', custom);
+        const hiddenMaterial = new StandardMaterial();
+        hiddenMaterial.name = 'hidden';
+        const lineMaterial = new StandardMaterial();
+        lineMaterial.name = 'lines';
+        const unused = new StandardMaterial();
+        unused.name = 'unused';
+
+        const root = new GraphNode('root');
+        const wall = new GraphNode('wall');
+        const window2 = new GraphNode('window');
+        const hidden = new GraphNode('hidden');
+        root.addChild(wall);
+        root.addChild(window2);
+        root.addChild(hidden);
+        const wallInstance = new MeshInstance(mesh, brick, wall);
+        const wallInstance2 = new MeshInstance(mesh, brick, wall);
+        const windowInstance = new MeshInstance(mesh, glass, window2);
+        const hiddenInstance = new MeshInstance(mesh, hiddenMaterial, hidden);
+        // an instance only the app's own code holds, which its material still lists
+        const held = new MeshInstance(mesh, brick, new GraphNode('held'));
+        /** @type {any} */ (wall).c = { render: { meshInstances: [wallInstance, wallInstance2] } };
+        /** @type {any} */ (hidden).c = { render: { meshInstances: [hiddenInstance] } };
+
+        const assets = new AssetRegistry(null);
+        const asset = new Asset('unused', 'material', null);
+        asset.loaded = true;
+        /** @type {any} */ (asset)._resources = [unused];
+        assets.add(asset);
+
+        const immediate = { batchesMap: new Map([[{ name: 'Immediate' }, { map: new Map([[lineMaterial, { material: lineMaterial }]]) }]]) };
+        return {
+            graphicsDevice: device,
+            root,
+            assets,
+            scene: { immediate, layers: { layerList: [{ name: 'World', meshInstances: [wallInstance, windowInstance] }] } },
+            parts: { mesh, texture, custom, brick, glass, hiddenMaterial, lineMaterial, unused, wall, held, asset }
+        };
+    }
+
+    it('finds materials through the mesh instances, the debug lines and the material assets', function () {
+        const app = sceneApp();
+        const { brick, glass, hiddenMaterial, lineMaterial, unused, asset } = app.parts;
+        const survey = surveyMaterials(app);
+        expect([...survey.keys()]).to.deep.equal([brick, hiddenMaterial, glass, lineMaterial, unused]);
+        expect(survey.get(lineMaterial).lines).to.deep.equal(['Immediate']);
+        expect(survey.get(unused).assets).to.deep.equal([asset]);
+    });
+
+    it('lists materials the most used first, dimming those no instance uses', function () {
+        const app = sceneApp();
+        const rows = materialListRows(surveyMaterials(app));
+        // the held instance counts: the material lists every instance using it, found or not
+        expect(rows.map(row => row.name)).to.deep.equal(['brick', 'glass', 'hidden', 'lines', 'unused']);
+        expect(rows[0].cells.map(cell => cell.text).slice(0, 3)).to.deep.equal(['brick', 'Standard', '3 instances · 1 texture · 0 variants']);
+        expect(rows[1].cells.map(cell => cell.text).slice(1, 4)).to.deep.equal(['Standard', 'transparent', '1 instance · 1 texture · 0 variants']);
+        expect(rows.map(row => row.dim)).to.deep.equal([false, false, false, true, true]);
+    });
+
+    it('shows a material with its textures and its users, the instances opening in place', function () {
+        const app = sceneApp();
+        const { brick, unused, texture, wall, held, asset } = app.parts;
+        const byLabel = (section, label) => section.rows.find(row => row.label === label).value;
+
+        const [general, usage] = buildMaterialModel(brick, { app });
+        expect(general.title).to.equal('StandardMaterial "brick"');
+        expect(byLabel(general, 'textures').items.map(item => item.target)).to.deep.equal([texture]);
+        expect(general.rows.map(row => row.label)).to.include.members(['variants', 'diffuseMap']);
+
+        const instances = byLabel(usage, 'mesh instances');
+        expect(instances.text).to.equal('3 mesh instances');
+        expect(instances.items.map(item => item.text)).to.deep.equal(['wall', 'wall', 'held']);
+        expect(instances.items[0].target).to.equal(wall);
+        expect(instances.items[2].target).to.equal(held.node);
+        expect(instances.items[0].expand().map(row => row.label)).to.include('mesh');
+
+        const [, unusedUsage] = buildMaterialModel(unused, { app });
+        expect(byLabel(unusedUsage, 'mesh instances').text).to.equal('none');
+        expect(byLabel(unusedUsage, 'assets').items[0].target).to.equal(asset);
+
+        // elsewhere a material links here
+        expect(describeValue(brick).target).to.equal(brick);
+    });
+
+    it('finds the materials sampling a texture or compiling a shader', function () {
+        const app = sceneApp();
+        const { brick, glass, texture, custom } = app.parts;
+        expect(materialsUsingTexture(app, texture)).to.deep.equal([brick]);
+        expect(materialsUsingTexture(app, custom)).to.deep.equal([glass]);
+
+        const shader = {};
+        glass.variants.set('variant', /** @type {any} */ (shader));
+        expect(materialsUsingShader(app, /** @type {any} */ (shader))).to.deep.equal([glass]);
+
+        const section = usedByMaterialsSection([glass]);
+        expect(section.title).to.equal('Used by materials');
+        expect(section.rows[0].value.text).to.equal('1 material');
+        expect(section.rows[1].value.target).to.equal(glass);
+        expect(usedByMaterialsSection([]).rows[0].value.text).to.equal('none found');
+    });
+});
+
 describe('Inspector memory view', function () {
     let device;
     let mesh;
@@ -1117,6 +1255,7 @@ describe('Inspector memory view', function () {
             node,
             asset,
             lines,
+            instance,
             scene: { immediate, layers: { layerList: [{ meshInstances: [instance] }, { meshInstances: [instance] }] } }
         };
     }
@@ -1136,7 +1275,8 @@ describe('Inspector memory view', function () {
 
         expect(of(mesh.vertexBuffer)).to.deep.equal([{ role: 'vertices', label: 'wall', target: app.node }]);
         expect(of(mesh.indexBuffer[0])[0].role).to.equal('indices');
-        expect(of(uniforms)[0].role).to.equal('uniforms of material "brick"');
+        // a material's buffer belongs to the material, listed once however many instances share it
+        expect(of(uniforms)).to.deep.equal([{ role: 'material uniforms', label: 'Material "brick"', target: app.instance.material }]);
         expect(of(loose.vertexBuffer)).to.deep.equal([{ role: 'vertices', label: 'Asset "robot"', target: app.asset }]);
         expect(owners.has(storage)).to.be.false;
         // the quad the device shares with every full screen pass, and the debug line batches
