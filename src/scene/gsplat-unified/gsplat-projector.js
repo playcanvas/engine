@@ -35,7 +35,6 @@ import { computeGsplatProjectorSource } from '../shader-lib/wgsl/chunks/gsplat/c
 import { computeGsplatProjectorWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-projector-write-indirect-args.js';
 import { computeGsplatProjectCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-project-common.js';
 import { computeGsplatCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-common.js';
-import { computeGsplatTileIntersectSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-tile-intersect.js';
 import computeSplatSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatComputeSplat.js';
 import gsplatModifyDefaultSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatModify.js';
 import gsplatHelpersSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatHelpers.js';
@@ -424,7 +423,6 @@ class GSplatProjector {
 
         const cincludes = new Map();
         cincludes.set('gsplatCommonCS', computeGsplatCommonSource);
-        cincludes.set('gsplatTileIntersectCS', computeGsplatTileIntersectSource);
         cincludes.set('gsplatComputeSplatCS', computeSplatSource);
         cincludes.set('gsplatFormatDeclCS', wbFormat.getComputeInputDeclarations(fixedBindings.length));
         cincludes.set('gsplatFormatReadCS', wbFormat.getReadCode());
