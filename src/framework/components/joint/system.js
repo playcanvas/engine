@@ -3,6 +3,7 @@ import { JointComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
  */
 
 const _properties = [
@@ -96,10 +97,19 @@ class JointComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 
+    /**
+     * @param {Entity} entity - The entity the component is being removed from.
+     * @param {JointComponent} component - The component being removed.
+     * @private
+     */
     onBeforeRemove(entity, component) {
         component.onBeforeRemove();
     }
 
+    /**
+     * @param {number} dt - The frame delta time in seconds.
+     * @private
+     */
     onUpdate(dt) {
         // retry joints waiting for their rigid bodies to enter the simulation - this runs before
         // the physics step, so newly-ready joints constrain it
@@ -108,6 +118,10 @@ class JointComponentSystem extends ComponentSystem {
         }
     }
 
+    /**
+     * @param {number} dt - The frame delta time in seconds.
+     * @private
+     */
     onPostUpdate(dt) {
         // detect joints broken by the physics step
         for (const component of this._breakable) {

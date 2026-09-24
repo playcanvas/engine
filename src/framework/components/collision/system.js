@@ -685,6 +685,14 @@ class CollisionComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 
+    /**
+     * Destroys the shape of a component that is being removed and discards the collisions
+     * stored for its entity.
+     *
+     * @param {Entity} entity - The entity the component is being removed from.
+     * @param {CollisionComponent} component - The component being removed.
+     * @private
+     */
     onBeforeRemove(entity, component) {
         beforeRemove(this, entity, component);
         component.onBeforeRemove();
@@ -873,6 +881,15 @@ class CollisionComponentSystem extends ComponentSystem {
         }
     }
 
+    /**
+     * Writes the transform of a node relative to one of its ancestors to the shared scratch
+     * matrix: the signed world scale of the ancestor, followed by the local transforms of the
+     * nodes below it down to the node itself.
+     *
+     * @param {GraphNode} node - The node.
+     * @param {GraphNode} relative - The ancestor.
+     * @private
+     */
     _calculateNodeRelativeTransform(node, relative) {
         if (node === relative) {
             const scale = getSignedScale(node.getWorldTransform(), rootScale);

@@ -56,14 +56,14 @@ describe('AppOptions.physicsWorld', function () {
         });
 
         expect(app.systems.rigidbody.physicsWorld).to.equal(world);
-        expect(world.contactListener).to.equal(app.systems.rigidbody);
+        expect(world.contactListener).to.equal(app.systems.rigidbody._contactListener);
     });
 
-    it('registers the rigid body system as the contact listener', function () {
+    it('registers the contact listener of the rigid body system', function () {
         const world = new NullPhysicsWorld();
         app = createAppBase(world);
 
-        expect(world.contactListener).to.equal(app.systems.rigidbody);
+        expect(world.contactListener).to.equal(app.systems.rigidbody._contactListener);
     });
 
     it('skips Ammo auto-detection when a world is injected', function () {

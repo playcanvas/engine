@@ -100,6 +100,41 @@ describe('RigidBodyComponentSystem', function () {
             // the forward contact is left untouched
             expect(forward.normal.equals(new Vec3(0, 1, 0))).to.be.true;
         });
+
+        it('are reported by the backend through a listener other than the system', function () {
+            const system = app.systems.rigidbody;
+            const world = new NullPhysicsWorld();
+            system.setPhysicsWorld(world);
+
+            const listener = world.contactListener;
+            expect(listener).to.not.equal(system);
+
+            const a = new Entity('a');
+            const b = new Entity('b');
+            app.root.addChild(a);
+            app.root.addChild(b);
+            for (const entity of [a, b]) {
+                entity.addComponent('collision');
+                entity.addComponent('rigidbody', { type: 'dynamic' });
+            }
+
+            const collisionStart = spy();
+            a.rigidbody.on('collisionstart', collisionStart);
+
+            listener.onContactsBegin();
+            listener.onContactPair({
+                entityA: a,
+                entityB: b,
+                triggerA: false,
+                triggerB: false,
+                contactCount: 1,
+                readContact: (index, out) => out.normal.set(0, 1, 0)
+            });
+            listener.onContactsEnd();
+
+            expect(collisionStart.calledOnce).to.be.true;
+            expect(collisionStart.firstCall.args[0].other).to.equal(b);
+        });
     });
 
     describe('stepping', function () {
