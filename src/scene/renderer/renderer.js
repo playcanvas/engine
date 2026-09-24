@@ -634,13 +634,16 @@ class Renderer {
         this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
     }
 
+    /**
+     * Sets the alpha test constants of a material, for the shadow render loop. The cull mode and
+     * the front face are set per mesh instance, see {@link Renderer#setupCullModeAndFrontFace} -
+     * setting them from the material here as well would change them twice per draw whenever the
+     * mesh instance flips the front face, dirtying the render pipeline each time.
+     *
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Material} material - The material.
+     */
     setBaseConstants(device, material) {
-
-        // Cull mode
-        device.setCullMode(material.cull);
-
-        // Front face
-        device.setFrontFace(material.frontFace);
 
         // Alpha test
         if (material.opacityMap) {
