@@ -23,6 +23,7 @@ import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { hash32Fnv1a } from '../core/hash.js';
 import { array } from '../core/array-utils.js';
 import { PickerId } from './picker-id.js';
+import { isViewTexture } from './renderer/view-textures.js';
 
 /**
  * @import { Camera } from './camera.js'
@@ -1491,6 +1492,9 @@ class MeshInstance {
         Debug.call(() => {
             if (arguments[2] !== undefined) {
                 Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
+            }
+            if (this._material?._usesViewTextures && isViewTexture(name)) {
+                Debug.warnOnce(`MeshInstance#setParameter: '${name}' is a texture the renderer supplies once per pass, and a value set per mesh instance is ignored on WebGPU.`, this);
             }
         });
 

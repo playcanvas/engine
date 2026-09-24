@@ -5,6 +5,7 @@ import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { Material } from '../materials/material.js';
 import { particle } from '../shader-lib/programs/particle.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import { getViewTextures } from '../renderer/view-textures.js';
 
 /**
  * @import { ParticleEmitter } from './particle-emitter.js'
@@ -17,6 +18,9 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
  * @ignore
  */
 class ParticleMaterial extends Material {
+    /** @ignore */
+    _usesViewTextures = true;
+
     /**
      * The color of the particles.
      *
@@ -69,7 +73,7 @@ class ParticleMaterial extends Material {
             customFace: this.emitter.orientation !== PARTICLEORIENTATION_SCREEN
         };
 
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat, getViewTextures(params.viewUniformFormat));
 
         const library = getProgramLibrary(device);
         library.register('particle', particle);

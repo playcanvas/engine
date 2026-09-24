@@ -24,6 +24,7 @@ import {
 } from '../constants.js';
 import { getDefaultMaterial } from './default-material.js';
 import { ShaderChunks } from '../shader-lib/shader-chunks.js';
+import { isViewTexture } from '../renderer/view-textures.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -248,6 +249,18 @@ class Material {
     _oldChunks = {};
 
     _dirtyShader = true;
+
+    /**
+     * True for a material whose shaders are built from the engine shader chunks, in which the names
+     * of the textures the renderer supplies per pass are reserved. On WebGPU those shaders read the
+     * textures from the view bind group, see getViewTextures, so a value set per material or per
+     * mesh instance is ignored. Other materials, such as a {@link ShaderMaterial} running a user's
+     * shader, keep all their textures in the mesh bind group.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _usesViewTextures = false;
 
     /** @protected */
     constructor() {
@@ -1435,6 +1448,9 @@ class Material {
         Debug.call(() => {
             if (this.getUniformBufferProperty(name)) {
                 Debug.warnOnce(`Material#setParameter: '${name}' is the uniform of a typed material property, stored in the material uniform buffer, and is ignored as a parameter. Set the material property instead.`, this);
+            }
+            if (this._usesViewTextures && isViewTexture(name)) {
+                Debug.warnOnce(`Material#setParameter: '${name}' is a texture the renderer supplies once per pass, and a value set per material is ignored on WebGPU.`, this);
             }
         });
 

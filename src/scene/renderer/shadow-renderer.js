@@ -602,6 +602,7 @@ class ShadowRenderer {
             meshInstance._sortKeyShadow = shadowShader.id;
 
             device.setShader(shadowShader);
+            renderer.setupViewBindGroup(shadowShader);
 
             // set buffers
             renderer.setVertexBuffers(device, mesh);
