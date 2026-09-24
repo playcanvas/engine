@@ -17,7 +17,8 @@ import { SingleContactResult } from './single-contact-result.js';
  * @import { AppBase } from '../../app-base.js'
  * @import { CollisionComponent } from '../collision/component.js'
  * @import { Entity } from '../../entity.js'
- * @import { PhysicsContactPair, PhysicsWorld } from '../../physics/physics-world.js'
+ * @import { PhysicsBody } from '../../physics/physics-body.js'
+ * @import { PhysicsContactListener, PhysicsContactPair, PhysicsWorld } from '../../physics/physics-world.js'
  * @import { RaycastResult } from './raycast-result.js'
  * @import { Trigger } from '../collision/trigger.js'
  */
@@ -176,6 +177,62 @@ class RigidBodyComponentSystem extends ComponentSystem {
     _compounds = [];
 
     /**
+     * The contact listener installed on the physics backend. It forwards each contact pass to
+     * this system, which keeps the listener methods private.
+     *
+     * @type {PhysicsContactListener}
+     * @private
+     */
+    _contactListener = {
+        onContactsBegin: () => this.onContactsBegin(),
+        onContactPair: pair => this.onContactPair(pair),
+        onContactsEnd: () => this.onContactsEnd()
+    };
+
+    /**
+     * The frame stats that record the duration of each physics step.
+     *
+     * @private
+     */
+    _stats;
+
+    /**
+     * @type {ObjectPool<typeof ContactPoint>|null}
+     * @private
+     */
+    contactPointPool = null;
+
+    /**
+     * @type {ObjectPool<typeof ContactResult>|null}
+     * @private
+     */
+    contactResultPool = null;
+
+    /**
+     * @type {ObjectPool<typeof SingleContactResult>|null}
+     * @private
+     */
+    singleContactResultPool = null;
+
+    /**
+     * The entities touched by each entity with contact or trigger events as of the last contact
+     * pass, keyed by the GUID of the entity.
+     *
+     * @type {Object<string, { entity: Entity, others: Entity[] }>}
+     * @private
+     */
+    collisions = {};
+
+    /**
+     * The entities touched by each entity in the contact pass in progress, keyed like
+     * collisions.
+     *
+     * @type {Object<string, { entity: Entity, others: Entity[] }>}
+     * @private
+     */
+    frameCollisions = {};
+
+    /**
      * Create a new RigidBodyComponentSystem.
      *
      * @param {AppBase} app - The Application.
@@ -188,13 +245,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this._stats = app.stats.frame;
 
         this.ComponentType = RigidBodyComponent;
-
-        this.contactPointPool = null;
-        this.contactResultPool = null;
-        this.singleContactResultPool = null;
-
-        this.collisions = {};
-        this.frameCollisions = {};
 
         this.on('beforeremove', this.onBeforeRemove, this);
         this.on('remove', this.onRemove, this);
@@ -213,8 +263,8 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Installs a physics backend, applies the current gravity to it and registers this system as
-     * its contact listener. Called by
+     * Installs a physics backend, applies the current gravity to it and registers the system's
+     * contact listener with it. Called by
      * {@link AppBase#init} when {@link AppOptions#physicsWorld} is supplied, and internally by
      * Ammo auto-detection. A backend can be installed at most once.
      *
@@ -224,7 +274,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
     setPhysicsWorld(world) {
         Debug.assert(!this._world, 'RigidBodyComponentSystem#setPhysicsWorld: a physics world is already installed.');
         this._world = world;
-        world.contactListener = this;
+        world.contactListener = this._contactListener;
 
         // give the backend the current gravity before any bodies are added; step() re-applies it
         // whenever the value changes
@@ -251,8 +301,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * The native physics world - btDiscreteDynamicsWorld when the Ammo backend is active,
-     * null otherwise.
+     * The physics backend's native world - a btDiscreteDynamicsWorld with the Ammo backend - or
+     * null if no backend is installed or it has no native world. Same as
+     * {@link PhysicsWorld#nativeWorld}. An unsupported escape hatch for native functionality the
+     * engine does not expose: code that uses it only works with that physics backend.
      *
      * @type {*}
      * @ignore
@@ -261,22 +313,47 @@ class RigidBodyComponentSystem extends ComponentSystem {
         return this._world?.nativeWorld ?? null;
     }
 
-    /** @ignore */
+    /**
+     * The Ammo backend's native btDefaultCollisionConfiguration, or null with any other backend
+     * or none. An unsupported escape hatch: code that uses it only works with the Ammo backend.
+     *
+     * @type {*}
+     * @ignore
+     */
     get collisionConfiguration() {
         return this._world?.collisionConfiguration ?? null;
     }
 
-    /** @ignore */
+    /**
+     * The Ammo backend's native btCollisionDispatcher, or null with any other backend or none.
+     * An unsupported escape hatch: code that uses it only works with the Ammo backend.
+     *
+     * @type {*}
+     * @ignore
+     */
     get dispatcher() {
         return this._world?.dispatcher ?? null;
     }
 
-    /** @ignore */
+    /**
+     * The Ammo backend's native btDbvtBroadphase, or null with any other backend or none. An
+     * unsupported escape hatch: code that uses it only works with the Ammo backend.
+     *
+     * @type {*}
+     * @ignore
+     */
     get overlappingPairCache() {
         return this._world?.overlappingPairCache ?? null;
     }
 
-    /** @ignore */
+    /**
+     * The Ammo backend's native btSequentialImpulseConstraintSolver, or null with any other
+     * backend or none. An unsupported escape hatch: code that uses it only works with the Ammo
+     * backend.
+     *
+     * @type {*}
+     * @ignore
+     */
     get solver() {
         return this._world?.solver ?? null;
     }
@@ -310,6 +387,13 @@ class RigidBodyComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 
+    /**
+     * Disables a component that is being removed and destroys its body.
+     *
+     * @param {Entity} entity - The entity the component is being removed from.
+     * @param {RigidBodyComponent} component - The component being removed.
+     * @private
+     */
     onBeforeRemove(entity, component) {
         if (component.enabled) {
             component.enabled = false;
@@ -344,10 +428,24 @@ class RigidBodyComponentSystem extends ComponentSystem {
         }
     }
 
+    /**
+     * Adds a body to the simulation with the given collision group and mask.
+     *
+     * @param {PhysicsBody} body - The body to add.
+     * @param {number} group - The collision group bits.
+     * @param {number} mask - The collision mask bits.
+     * @private
+     */
     addBody(body, group, mask) {
         this._world.addBody(body, group, mask);
     }
 
+    /**
+     * Removes a body from the simulation.
+     *
+     * @param {PhysicsBody} body - The body to remove.
+     * @private
+     */
     removeBody(body) {
         this._world.removeBody(body);
     }
@@ -644,6 +742,15 @@ class RigidBodyComponentSystem extends ComponentSystem {
         return contact;
     }
 
+    /**
+     * Allocates a pooled result for the global contact event from a contact point.
+     *
+     * @param {Entity} a - The first entity involved in the contact.
+     * @param {Entity} b - The second entity involved in the contact.
+     * @param {ContactPoint} contactPoint - The contact point, from the first entity's perspective.
+     * @returns {SingleContactResult} The result.
+     * @private
+     */
     _createSingleContactResult(a, b, contactPoint) {
         const result = this.singleContactResultPool.allocate();
 
@@ -659,6 +766,14 @@ class RigidBodyComponentSystem extends ComponentSystem {
         return result;
     }
 
+    /**
+     * Allocates a pooled result for the contact events of one entity.
+     *
+     * @param {Entity} other - The other entity involved in the contact.
+     * @param {ContactPoint[]} contacts - The contact points, from the entity's perspective.
+     * @returns {ContactResult} The result.
+     * @private
+     */
     _createContactResult(other, contacts) {
         const result = this.contactResultPool.allocate();
         result.other = other;
@@ -749,20 +864,20 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Called by the physics backend when a contact pass begins.
+     * Called through the contact listener when the physics backend begins a contact pass.
      *
-     * @ignore
+     * @private
      */
     onContactsBegin() {
         this.frameCollisions = {};
     }
 
     /**
-     * Called by the physics backend for each contacting pair. Fires the trigger and collision
-     * events.
+     * Called through the contact listener for each contacting pair the physics backend reports.
+     * Fires the trigger and collision events.
      *
      * @param {PhysicsContactPair} pair - The contacting pair. Only valid during the call.
-     * @ignore
+     * @private
      */
     onContactPair(pair) {
         const e0 = pair.entityA;
@@ -879,10 +994,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Called by the physics backend when a contact pass ends. Fires collisionend/triggerleave
-     * events for lost contacts and frees the pooled results.
+     * Called through the contact listener when the physics backend ends a contact pass. Fires
+     * collisionend/triggerleave events for lost contacts and frees the pooled results.
      *
-     * @ignore
+     * @private
      */
     onContactsEnd() {
         // check for collisions that no longer exist and fire events
@@ -986,7 +1101,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * 0. Registered on the application's update event when a physics backend is installed.
      *
      * @param {number} dt - The frame delta time in seconds.
-     * @ignore
+     * @private
      */
     onUpdate(dt) {
         const timeScale = this.timeScale;

@@ -91,8 +91,8 @@ class AppOptions {
      * {@link AppOptions#componentSystems} must include {@link RigidBodyComponentSystem}. A
      * useful simulation also requires {@link CollisionComponentSystem} - rigid bodies and
      * triggers obtain their shapes from collision components - and {@link JointComponentSystem}
-     * if joints are used. The rigid body system registers itself as the world's contact
-     * listener. When omitted, an {@link AmmoPhysicsWorld} is created automatically once
+     * if joints are used. The rigid body system registers its contact listener with the
+     * world. When omitted, an {@link AmmoPhysicsWorld} is created automatically once
      * application libraries have loaded, if the Ammo.js WasmModule is present. The application
      * takes ownership of the world and destroys it with the application.
      *

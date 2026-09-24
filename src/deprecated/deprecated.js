@@ -30,10 +30,12 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 
 import { getApplication } from '../framework/globals.js';
 import {
-    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT, BODYFLAG_STATIC_OBJECT,
-    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION, BODYSTATE_ISLAND_SLEEPING, BODYSTATE_WANTS_DEACTIVATION,
     BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
 } from '../framework/components/rigid-body/constants.js';
+import {
+    ACTIVE_TAG, CF_KINEMATIC_OBJECT, CF_NO_CONTACT_RESPONSE, CF_STATIC_OBJECT, DISABLE_DEACTIVATION,
+    DISABLE_SIMULATION, ISLAND_SLEEPING, WANTS_DEACTIVATION
+} from '../framework/physics/ammo/constants.js';
 
 // GRAPHICS
 
@@ -179,6 +181,17 @@ export const EVENT_SELECTSTART = 'selectstart';
 export const EVENT_SELECTEND = 'selectend';
 
 // FRAMEWORK
+
+// Bullet collision flags and activation states, only meaningful when passed to the native Ammo.js
+// body (RigidBodyComponent#body). The physics components never take them.
+export const BODYFLAG_STATIC_OBJECT = CF_STATIC_OBJECT;
+export const BODYFLAG_KINEMATIC_OBJECT = CF_KINEMATIC_OBJECT;
+export const BODYFLAG_NORESPONSE_OBJECT = CF_NO_CONTACT_RESPONSE;
+export const BODYSTATE_ACTIVE_TAG = ACTIVE_TAG;
+export const BODYSTATE_ISLAND_SLEEPING = ISLAND_SLEEPING;
+export const BODYSTATE_WANTS_DEACTIVATION = WANTS_DEACTIVATION;
+export const BODYSTATE_DISABLE_DEACTIVATION = DISABLE_DEACTIVATION;
+export const BODYSTATE_DISABLE_SIMULATION = DISABLE_SIMULATION;
 
 export const RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
 export const RIGIDBODY_TYPE_DYNAMIC = BODYTYPE_DYNAMIC;

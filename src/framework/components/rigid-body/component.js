@@ -285,8 +285,10 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * The native physics body - btRigidBody when the Ammo backend is active, null otherwise.
-     * The setter takes the backend {@link PhysicsBody} and is internal.
+     * The physics backend's native body - a btRigidBody with the Ammo backend - or null if the
+     * body has not been created or the backend has no native bodies. An unsupported escape hatch
+     * for native functionality the component does not expose: code that uses it only works with
+     * that physics backend. The setter takes the backend {@link PhysicsBody} and is internal.
      *
      * @type {*}
      * @ignore
