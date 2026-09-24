@@ -639,8 +639,8 @@ class GSplatManager {
         if (this._updateResult.sortNeeded) this.sortNeeded = true;
         if (this._updateResult.newVersion) this._feedCpuSorterCenters();
 
-        // tick cooldowns once per frame per unique octree
-        this.world.tickCooldowns();
+        // tick cooldowns once per frame per unique octree, across the worlds of all managers
+        this.world.tickCooldowns(token);
 
         this._streamAdvanced = this._updateResult.newVersion || this._formatResult.bufferRecreated;
         return this._streamAdvanced;

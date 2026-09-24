@@ -54,12 +54,13 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
     _currentlyLoading = new Set();
 
     /**
-     * Queue of URLs waiting to be loaded.
+     * URLs waiting to be loaded, mapped to their load priority. The highest priority starts first,
+     * and as a Map keeps insertion order, equal priorities start in the order they were requested.
      *
-     * @type {string[]}
+     * @type {Map<string, number>}
      * @private
      */
-    _loadQueue = [];
+    _loadQueue = new Map();
 
     /**
      * Map tracking retry attempts per URL, for genuine load errors only.
@@ -117,7 +118,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         }
 
         this._urlToAsset.clear();
-        this._loadQueue.length = 0;
+        this._loadQueue.clear();
         this._currentlyLoading.clear();
         this._retryCount.clear();
         this._failed.clear();
@@ -139,9 +140,13 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
      * the loading process. Use getResource() later to check if the asset has finished loading.
      *
      * @param {string} url - The URL of the gsplat file to load.
+     * @param {number} [priority] - Load priority, higher loads first. Only affects a load that has
+     * to wait for a free slot. When omitted, a queued load keeps its current priority and a new one
+     * gets 0.
      */
-    load(url) {
+    load(url, priority) {
         Debug.assert(url);
+        Debug.assert(!Number.isNaN(priority), `GSplatAssetLoader: NaN load priority for ${url}`);
 
         const asset = this._urlToAsset.get(url);
 
@@ -159,8 +164,11 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
             return;
         }
 
-        // Skip if already queued
-        if (this._loadQueue.includes(url)) {
+        // Already queued, only its priority can change
+        if (this._loadQueue.has(url)) {
+            if (priority !== undefined) {
+                this._loadQueue.set(url, priority);
+            }
             return;
         }
 
@@ -169,8 +177,19 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
             this._startLoading(url);
         } else {
             // Otherwise, add to queue
-            this._loadQueue.push(url);
+            this._loadQueue.set(url, priority ?? 0);
         }
+    }
+
+    /**
+     * Removes a load that is still waiting in the queue. A load that has already started, or has
+     * finished, is not affected.
+     *
+     * @param {string} url - The URL of the gsplat file.
+     * @returns {boolean} True if the load was queued and has been removed.
+     */
+    dequeue(url) {
+        return this._loadQueue.delete(url);
     }
 
     /**
@@ -297,11 +316,21 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
             return;
         }
 
-        while (this._currentlyLoading.size < this.maxConcurrentLoads && this._loadQueue.length > 0) {
-            const url = this._loadQueue.shift();
-            if (url) {
-                this._startLoading(url);
+        while (this._currentlyLoading.size < this.maxConcurrentLoads && this._loadQueue.size > 0) {
+
+            // highest priority first, the first of equal priorities keeps request order. Seeded
+            // from the first entry, so a queued URL is picked whatever the priorities hold.
+            let url = null;
+            let best = 0;
+            for (const [queuedUrl, priority] of this._loadQueue) {
+                if (url === null || priority > best) {
+                    best = priority;
+                    url = queuedUrl;
+                }
             }
+
+            this._loadQueue.delete(url);
+            this._startLoading(url);
         }
     }
 
@@ -316,10 +345,7 @@ class GSplatAssetLoader extends GSplatAssetLoaderBase {
         this._currentlyLoading.delete(url);
 
         // Remove from queue if present
-        const queueIndex = this._loadQueue.indexOf(url);
-        if (queueIndex !== -1) {
-            this._loadQueue.splice(queueIndex, 1);
-        }
+        this._loadQueue.delete(url);
 
         // Clear retry count
         this._retryCount.delete(url);

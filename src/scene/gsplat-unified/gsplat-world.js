@@ -31,7 +31,7 @@ const _closestPt = new Vec3();
 const _meshInstanceAabb = new BoundingBox();
 const _tempPlacementAabb = new BoundingBox();
 const _cameraDeltas = { translationDelta: 0 };
-const tempOctreesTicked = new Set();
+const tempUniqueOctrees = new Set();
 const _queuedSplats = new Set();
 const _updatedSplats = [];
 const _splatsWithSH = [];
@@ -1035,10 +1035,11 @@ class GSplatWorld {
             return true;
         }
 
-        // rotation-based movement check (optional)
+        // rotation-based movement check (optional). Only the behind-camera penalty makes LOD depend
+        // on the view direction, so without it a rotation would change nothing.
         let cameraRotated = false;
         const lodUpdateAngleDeg = this._gsplat.lodUpdateAngle;
-        if (lodUpdateAngleDeg > 0) {
+        if (lodUpdateAngleDeg > 0 && this._gsplat.lodBehindPenalty > 1) {
             if (Number.isFinite(this._lastLodCameraFwd.x)) {
                 const currentCameraFwd = camera.forward;
                 const dot = Math.min(1, Math.max(-1, this._lastLodCameraFwd.dot(currentCameraFwd)));
@@ -1160,6 +1161,18 @@ class GSplatWorld {
         for (const [, inst] of this._octreeInstances) {
             inst.applyLodChanges(this._gsplat);
         }
+
+        // Phase 4: issue the file loads requested in phase 3, once per octree so that every
+        // instance sharing it in this world has contributed its priorities first. Instances in the
+        // worlds of other cameras keep their latest requests, which the octree combines with these.
+        for (const [, inst] of this._octreeInstances) {
+            const octree = inst.octree;
+            if (!tempUniqueOctrees.has(octree)) {
+                tempUniqueOctrees.add(octree);
+                octree.flushRequests();
+            }
+        }
+        tempUniqueOctrees.clear();
     }
 
     /**
@@ -1201,19 +1214,16 @@ class GSplatWorld {
     }
 
     /**
-     * Ticks octree cooldown timers once per frame per unique octree.
+     * Ticks octree cooldown timers once per frame per unique octree. The octrees are shared with
+     * the worlds of other cameras and layers, and each octree ignores a repeated token, so this
+     * does not depend on how many worlds use it.
+     *
+     * @param {number} token - Per-frame token, see GSplatDirector#_streamToken.
      */
-    tickCooldowns() {
-        if (this._octreeInstances.size) {
-            const cooldownTicks = this._gsplat.cooldownTicks;
-            for (const [, inst] of this._octreeInstances) {
-                const octree = inst.octree;
-                if (!tempOctreesTicked.has(octree)) {
-                    tempOctreesTicked.add(octree);
-                    octree.updateCooldownTick(cooldownTicks);
-                }
-            }
-            tempOctreesTicked.clear();
+    tickCooldowns(token) {
+        const cooldownTicks = this._gsplat.cooldownTicks;
+        for (const [, inst] of this._octreeInstances) {
+            inst.octree.updateCooldownTick(cooldownTicks, token);
         }
     }
 

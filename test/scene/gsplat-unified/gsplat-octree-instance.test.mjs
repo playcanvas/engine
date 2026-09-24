@@ -156,6 +156,19 @@ describe('GSplatOctreeInstance#evaluateNodeCoverage', function () {
         expect(scaled.nodeInfos[0].lodCoverage).to.be.closeTo(reference, reference * 1e-6);
     });
 
+    it('keeps coverage finite while the backbuffer has no size', function () {
+        // a zero-sized canvas reports a 0/0 aspect ratio
+        const instance = makeInstance(makeOctree([[0, 0, -10], [0, 0, -1000]]));
+        const camera = makeCamera(PROJECTION_PERSPECTIVE);
+        camera.camera.aspectRatio = NaN;
+
+        instance.evaluateNodeCoverage(camera, { lodBehindPenalty: 1.5 });
+
+        const [near, far] = instance.nodeInfos;
+        expect(Number.isFinite(near.lodCoverage)).to.equal(true);
+        expect(near.lodCoverage).to.be.above(far.lodCoverage);
+    });
+
     it('still penalises nodes behind an orthographic camera', function () {
         // Behind-camera content is invisible under any projection, so it must not win budget just
         // because orthographic coverage carries no distance term.

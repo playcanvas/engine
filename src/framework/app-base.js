@@ -1469,8 +1469,8 @@ class AppBase extends EventHandler {
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @param {boolean} [settings.render.gsplatRadialSorting] - Enables radial sorting of Gaussian splats. Defaults to false.
      * @param {number} [settings.render.gsplatLodUpdateDistance] - Distance threshold in world units to trigger gsplat LOD updates. Defaults to 1.
-     * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 0.
-     * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.
+     * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 90.
+     * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.5.
      * @param {number} [settings.render.gsplatLodUnderfillLimit] - Maximum number of gsplat LOD levels allowed below the optimal level when optimal data is not resident. Defaults to 0.
      * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. LOD levels are chosen globally to stay within it; a non-positive value is not a way to disable this and the default is used instead. Defaults to 1000000.
      * @param {string} [settings.render.gsplatLodMode] - How LOD levels are chosen for streamed GSplats: 'distance' (default) orders detail by camera distance alone in concentric bands and ignores error metadata; 'error' spends the budget by measured approximation error, lifting sparse regions that distance leaves coarse at a higher memory cost.

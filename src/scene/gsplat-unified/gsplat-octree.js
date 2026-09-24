@@ -8,6 +8,10 @@ import { TRACEID_OCTREE_RESOURCES } from '../../core/constants.js';
 // Temporary array reused to avoid allocations during cooldown ticking
 const _toDelete = [];
 
+// Temporaries reused to order file requests by priority
+const _requestOrder = [];
+const _requestPriority = new Map();
+
 
 /**
  * @import { GSplatResource } from '../gsplat/gsplat-resource.js'
@@ -94,6 +98,34 @@ class GSplatOctree {
      * @type {Map<number, number>}
      */
     cooldowns = new Map();
+
+    /**
+     * The latest file requests of each instance of this octree, mapped to their load priority.
+     * An instance replaces its own set on each of its LOD updates and keeps it in between, so the
+     * requests of an instance whose camera is not re-evaluating LOD stay alive.
+     *
+     * @type {Map<object, Map<number, number>>}
+     * @private
+     */
+    _requesters = new Map();
+
+    /**
+     * Files whose request changed since the last {@link GSplatOctree#flushRequests} - those in a
+     * newly submitted set, and those an instance stopped requesting. Each is issued again at its
+     * current highest priority, or withdrawn when no instance requests it any more.
+     *
+     * @type {Set<number>}
+     * @private
+     */
+    _changedRequests = new Set();
+
+    /**
+     * Token of the last {@link GSplatOctree#updateCooldownTick} that advanced the cooldowns.
+     *
+     * @type {number|undefined}
+     * @private
+     */
+    _cooldownToken;
 
     /**
      * Optional environment asset URL.
@@ -257,6 +289,8 @@ class GSplatOctree {
         this._lodTables.clear();
         this.fileResources.clear();
         this.cooldowns.clear();
+        this._requesters.clear();
+        this._changedRequests.clear();
 
         // Destroy and clear references
         this.assetLoader?.destroy();
@@ -484,8 +518,18 @@ class GSplatOctree {
      * Advances cooldowns for zero-ref files and unloads those whose timers expired.
      *
      * @param {number} cooldownTicks - Number of ticks for new cooldowns, synced from GSplatParams.
+     * @param {number} [token] - Per-frame token. Every world using this octree ticks it, one per
+     * camera and layer, so a repeated token is ignored to advance the cooldowns once per frame.
+     * When omitted, every call advances them.
      */
-    updateCooldownTick(cooldownTicks) {
+    updateCooldownTick(cooldownTicks, token) {
+        if (token !== undefined) {
+            if (token === this._cooldownToken) {
+                return;
+            }
+            this._cooldownToken = token;
+        }
+
         this.cooldownTicks = cooldownTicks;
 
         if (this.cooldowns.size > 0) {
@@ -511,28 +555,26 @@ class GSplatOctree {
     }
 
     /**
-     * Ensures a file resource is loaded and available. This function:
-     * - Starts loading if not already started
-     * - Checks if loading completed and stores the resource if available
+     * Checks whether a file has finished loading, and stores its resource if so.
      *
      * @param {number} fileIndex - The index of the file in the `files` array.
+     * @returns {boolean} True if the file is loaded.
      */
-    ensureFileResource(fileIndex) {
+    pollFileResource(fileIndex) {
         Debug.assert(fileIndex >= 0 && fileIndex < this.files.length);
-
-        // If octree was destroyed, assetLoader is null - nothing to load
-        if (!this.assetLoader) {
-            return;
-        }
 
         // resource already loaded
         if (this.fileResources.has(fileIndex)) {
-            return;
+            return true;
+        }
+
+        // If octree was destroyed, assetLoader is null - nothing is loading
+        if (!this.assetLoader) {
+            return false;
         }
 
         // Check if the resource is now available from the asset loader
-        const fullUrl = this.files[fileIndex].url;
-        const res = this.assetLoader?.getResource(fullUrl);
+        const res = this.assetLoader.getResource(this.files[fileIndex].url);
         if (res) {
             this.fileResources.set(fileIndex, res);
 
@@ -548,11 +590,179 @@ class GSplatOctree {
             // trace updated LOD counts after change
             this._traceLodCounts();
 
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Ensures a file resource is loaded and available. This function:
+     * - Starts loading if not already started
+     * - Checks if loading completed and stores the resource if available
+     *
+     * A load it starts or continues keeps whatever priority it was last requested with.
+     *
+     * @param {number} fileIndex - The index of the file in the `files` array.
+     */
+    ensureFileResource(fileIndex) {
+        if (!this.pollFileResource(fileIndex) && this.assetLoader) {
+            // Start/continue loading (asset loader handles duplicates internally)
+            this.assetLoader.load(this.files[fileIndex].url);
+        }
+    }
+
+    /**
+     * Replaces the file requests of one instance of this octree - the files it waits for, mapped to
+     * their load priority. Nothing is loaded until {@link GSplatOctree#flushRequests}, which lets
+     * every instance sharing this octree contribute before the requests are ordered.
+     *
+     * @param {object} requester - The instance the requests belong to.
+     * @param {Map<number, number>} requests - File indices mapped to their load priority, higher
+     * loads first. Copied, so the caller may reuse the map.
+     */
+    submitRequests(requester, requests) {
+        let latest = this._requesters.get(requester);
+        if (!latest) {
+            latest = new Map();
+            this._requesters.set(requester, latest);
+        }
+
+        // both the files the requester dropped and the ones it keeps are reconsidered
+        const changed = this._changedRequests;
+        for (const fileIndex of latest.keys()) {
+            changed.add(fileIndex);
+        }
+
+        latest.clear();
+        for (const [fileIndex, priority] of requests) {
+            latest.set(fileIndex, priority);
+            changed.add(fileIndex);
+        }
+    }
+
+    /**
+     * Removes all file requests of an instance of this octree, when the instance is destroyed. The
+     * files no other instance requests are withdrawn straight away, as there may be no later
+     * {@link GSplatOctree#flushRequests} to do it.
+     *
+     * @param {object} requester - The instance the requests belong to.
+     * @param {boolean} unloadNow - When true, a withdrawn download already in progress is unloaded
+     * right away instead of after a cooldown.
+     */
+    removeRequests(requester, unloadNow) {
+        const latest = this._requesters.get(requester);
+        if (!latest) {
+            return;
+        }
+        this._requesters.delete(requester);
+
+        for (const fileIndex of latest.keys()) {
+            if (!this.fileResources.has(fileIndex)) {
+                if (this._getRequestPriority(fileIndex) === undefined) {
+                    this._changedRequests.delete(fileIndex);
+                    this._withdrawRequest(fileIndex, unloadNow);
+                } else {
+                    // still wanted by another instance, which may have given it a lower priority
+                    this._changedRequests.add(fileIndex);
+                }
+            }
+        }
+    }
+
+    /**
+     * Issues the requests that changed since the last flush to the asset loader, each at the
+     * highest priority any instance gives it and highest first, and withdraws the files no
+     * instance requests any more.
+     *
+     * Every instance re-requests each file it still waits for on every LOD update, so a file no
+     * instance's latest requests contain is no longer wanted. If it is still queued it is simply
+     * dropped, as nothing has been fetched yet. A download already in progress is left to finish -
+     * cancelling it would waste the transfer if the camera swings back - and if nothing references
+     * the file it gets a cooldown, so it is released once the cooldown expires unless it is
+     * requested again.
+     */
+    flushRequests() {
+        const changed = this._changedRequests;
+        if (changed.size === 0) {
             return;
         }
 
-        // Start/continue loading (asset loader handles duplicates internally)
-        this.assetLoader?.load(fullUrl);
+        const loader = this.assetLoader;
+        if (loader) {
+            for (const fileIndex of changed) {
+                if (!this.fileResources.has(fileIndex)) {
+                    const priority = this._getRequestPriority(fileIndex);
+                    if (priority === undefined) {
+                        this._withdrawRequest(fileIndex, false);
+                    } else {
+                        _requestOrder.push(fileIndex);
+                        _requestPriority.set(fileIndex, priority);
+                    }
+                }
+            }
+
+            // Issue highest priority first. A free download slot goes to the first request that
+            // reaches it, the loader only orders the requests it has to queue.
+            _requestOrder.sort((a, b) => _requestPriority.get(b) - _requestPriority.get(a));
+
+            for (let i = 0; i < _requestOrder.length; i++) {
+                const fileIndex = _requestOrder[i];
+
+                // wanted again, so cancel a cooldown a withdrawn request left behind
+                if (this.fileRefCounts[fileIndex] === 0) {
+                    this.cooldowns.delete(fileIndex);
+                }
+
+                loader.load(this.files[fileIndex].url, _requestPriority.get(fileIndex));
+            }
+            _requestOrder.length = 0;
+            _requestPriority.clear();
+        }
+
+        changed.clear();
+    }
+
+    /**
+     * Returns the highest load priority any instance requests a file with.
+     *
+     * @param {number} fileIndex - The index of the file in the `files` array.
+     * @returns {number|undefined} The priority, or undefined when no instance requests the file.
+     * @private
+     */
+    _getRequestPriority(fileIndex) {
+        let best;
+        for (const requests of this._requesters.values()) {
+            const priority = requests.get(fileIndex);
+            if (priority !== undefined && (best === undefined || priority > best)) {
+                best = priority;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Withdraws the load of a file no instance requests any more. A queued load is dropped. One
+     * already in progress is left running, and if nothing references the file it is unloaded -
+     * after a cooldown, or right away when asked to.
+     *
+     * @param {number} fileIndex - The index of the file in the `files` array.
+     * @param {boolean} unloadNow - Unload an unreferenced download right away.
+     * @private
+     */
+    _withdrawRequest(fileIndex, unloadNow) {
+        const loader = this.assetLoader;
+        if (!loader || loader.dequeue(this.files[fileIndex].url)) {
+            return;
+        }
+
+        if (this.fileRefCounts[fileIndex] === 0) {
+            if (unloadNow) {
+                this.unloadResource(fileIndex);
+            } else if (!this.cooldowns.has(fileIndex)) {
+                this.cooldowns.set(fileIndex, this.cooldownTicks);
+            }
+        }
     }
 
     /**
