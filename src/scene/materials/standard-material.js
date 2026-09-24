@@ -624,6 +624,9 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * @category Graphics
  */
 class StandardMaterial extends Material {
+    /** @ignore */
+    _usesViewTextures = true;
+
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;

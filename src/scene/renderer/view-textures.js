@@ -4,9 +4,9 @@
 
 /**
  * The textures the renderer sets once per pass or per frame, whatever the lights of the pass. On
- * WebGPU the shaders processed against a view uniform format read these from the view bind group,
- * which the renderer builds once per pass, instead of each draw binding them in its mesh bind
- * group.
+ * WebGPU the shaders of the materials built from the engine shader chunks read these from the view
+ * bind group, which the renderer builds once per pass, instead of each draw binding them in its
+ * mesh bind group. See Material#_usesViewTextures.
  */
 const viewTextureNames = [
     // clustered lighting
@@ -73,8 +73,8 @@ const getViewTextures = (viewUniformFormat) => {
 
 /**
  * Returns true for a name of a texture the renderer supplies through the view bind group in some
- * pass, which is ignored when set per material or per mesh instance. Used by the debug checks,
- * which do not know the pass.
+ * pass, which is ignored when set on a material using view textures, or on a mesh instance of one.
+ * Used by the debug checks, which do not know the pass.
  *
  * @param {string} name - The name of the texture.
  * @returns {boolean} True when the texture can be a view texture.

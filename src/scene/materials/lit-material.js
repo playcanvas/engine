@@ -21,6 +21,9 @@ const options = new LitMaterialOptions();
  * @ignore
  */
 class LitMaterial extends Material {
+    /** @ignore */
+    _usesViewTextures = true;
+
     usedUvs = [true];
 
     shaderChunkGLSL = null;

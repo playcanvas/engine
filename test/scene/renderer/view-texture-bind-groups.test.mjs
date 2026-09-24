@@ -8,8 +8,8 @@ import { Entity } from '../../../src/framework/entity.js';
 import { BindGroupFormat, BindTextureFormat } from '../../../src/platform/graphics/bind-group-format.js';
 import { BindGroup } from '../../../src/platform/graphics/bind-group.js';
 import {
-    BINDGROUP_MESH, BINDGROUP_VIEW, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX, TEXTUREPROJECTION_EQUIRECT,
-    UNIFORMTYPE_FLOAT
+    BINDGROUP_MESH, BINDGROUP_VIEW, SEMANTIC_POSITION, SHADERSTAGE_FRAGMENT, SHADERSTAGE_VERTEX,
+    TEXTUREPROJECTION_EQUIRECT, UNIFORMTYPE_FLOAT
 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { UniformBufferFormat, UniformFormat } from '../../../src/platform/graphics/uniform-buffer-format.js';
@@ -17,6 +17,7 @@ import { UniformBuffer } from '../../../src/platform/graphics/uniform-buffer.js'
 import { getViewBindGroupFormat } from '../../../src/platform/graphics/view-bind-group-format.js';
 import { BLEND_NORMAL, DITHER_BLUENOISE } from '../../../src/scene/constants.js';
 import { LightList } from '../../../src/scene/lighting/light-list.js';
+import { ShaderMaterial } from '../../../src/scene/materials/shader-material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -218,6 +219,20 @@ describe('Renderer view texture bind groups', function () {
         entity.destroy();
     });
 
+    it('does not warn for a ShaderMaterial, which keeps its textures in the mesh bind group', function () {
+        const warn = sinon.stub(Debug, 'warnOnce');
+        const material = new ShaderMaterial();
+        material.setParameter('uSceneColorMap', texture('user'));
+
+        const entity = new Entity('box');
+        entity.addComponent('render', { type: 'box', material });
+        entity.render.meshInstances[0].setParameter('blueNoiseTex32', texture('noise'));
+
+        const messages = warn.args.map(args => args[0]);
+        expect(messages.some(message => message.includes('uSceneColorMap') || message.includes('blueNoiseTex32'))).to.equal(false);
+        entity.destroy();
+    });
+
     describe('rendering', function () {
 
         // Renders a pass mixing the view textures: clustered lights with shadows, a shadowed
@@ -285,6 +300,33 @@ describe('Renderer view texture bind groups', function () {
             unlit.update();
             const unlitBox = addBox('unlit', unlit, 3);
 
+            // a user's shader reading a texture of a reserved name, set on its material
+            const custom = new ShaderMaterial({
+                uniqueName: 'ViewTextureUserShader',
+                vertexWGSL: `
+                    attribute vertex_position: vec4f;
+                    uniform matrix_model: mat4x4f;
+                    uniform matrix_viewProjection: mat4x4f;
+                    @vertex fn vertexMain(input: VertexInput) -> VertexOutput {
+                        var output: VertexOutput;
+                        output.position = uniform.matrix_viewProjection * uniform.matrix_model * vertex_position;
+                        return output;
+                    }
+                `,
+                fragmentWGSL: `
+                    var uSceneColorMap: texture_2d<f32>;
+                    var uSceneColorMapSampler: sampler;
+                    @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {
+                        var output: FragmentOutput;
+                        output.color = textureSample(uSceneColorMap, uSceneColorMapSampler, vec2f(0.5));
+                        return output;
+                    }
+                `,
+                attributes: { vertex_position: SEMANTIC_POSITION }
+            });
+            custom.setParameter('uSceneColorMap', texture('user'));
+            const customBox = addBox('custom', custom, 5);
+
             app.render();
             app.render();
 
@@ -299,6 +341,12 @@ describe('Renderer view texture bind groups', function () {
             expect(shadersOf(ditheredBox).some(shader => viewTexturesOf(shader).includes('blueNoiseTex32')), 'blue noise').to.equal(true);
             expect(shadersOf(refractionBox).some(shader => viewTexturesOf(shader).includes('uSceneColorMap')), 'scene color').to.equal(true);
             expect(shadersOf(unlitBox).every(shader => shader.viewBindGroupFormat === null), 'unlit').to.equal(true);
+
+            // the user's texture stays in the mesh bind group, and is the one bound
+            const customInstance = Array.from(customBox._shaderCache.values()).find(instance => instance.bindGroup);
+            expect(customInstance.shader.viewBindGroupFormat).to.equal(null);
+            expect(textureNames(customInstance.shader.meshBindGroupFormat)).to.deep.equal(['uSceneColorMap']);
+            expect(customInstance.bindGroup.textures[0].name).to.equal('user');
         });
     });
 });

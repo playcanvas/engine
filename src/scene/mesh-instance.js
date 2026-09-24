@@ -1493,7 +1493,7 @@ class MeshInstance {
             if (arguments[2] !== undefined) {
                 Debug.removed('MeshInstance#setParameter: the "passFlags" argument has been removed and is ignored.');
             }
-            if (isViewTexture(name)) {
+            if (this._material?._usesViewTextures && isViewTexture(name)) {
                 Debug.warnOnce(`MeshInstance#setParameter: '${name}' is a texture the renderer supplies once per pass, and a value set per mesh instance is ignored on WebGPU.`, this);
             }
         });

@@ -18,6 +18,9 @@ import { getViewTextures } from '../renderer/view-textures.js';
  * @ignore
  */
 class ParticleMaterial extends Material {
+    /** @ignore */
+    _usesViewTextures = true;
+
     /**
      * The color of the particles.
      *
