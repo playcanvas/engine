@@ -342,6 +342,22 @@ describe('GSplatOctree streaming order', function () {
             expect(loader.dequeued).to.deep.equal([fine(0)]);
         });
 
+        it('lowers a queued priority at once when the instance that raised it is removed', function () {
+            const octree = makeOctree([-10, -20]);
+            const loader = makeRecordingLoader();
+            octree.assetLoader = loader;
+
+            octree.submitRequests('a', new Map([[0, 2.5]]));
+            octree.submitRequests('b', new Map([[0, 0.5]]));
+            octree.flushRequests();
+
+            // no later flush is needed, the remaining instance may not update again for a while
+            loader.loads.length = 0;
+            octree.removeRequests('a', false);
+            expect(loader.loads).to.deep.equal([[fine(0), 0.5]]);
+            expect(loader.dequeued).to.deep.equal([]);
+        });
+
         it('withdraws the requests of a removed instance that no other instance shares', function () {
             const octree = makeOctree([-10, -20]);
             const loader = makeRecordingLoader();
@@ -409,6 +425,20 @@ describe('GSplatOctree streaming order', function () {
             a.inst.destroy(true);
             expect(queued()).to.deep.equal([]);
             expect(loader._currentlyLoading.size).to.equal(1);
+        });
+
+        it('starts the next load by the priorities of the cameras that remain', function () {
+            const { registry, loader, octree, resolve } = makeStreaming([-10, -20, -30], 1);
+            loader.load('/scene/busy.json', 0);
+
+            // A rates file 0 highest, B rates file 1 above file 0
+            octree.submitRequests('a', new Map([[0, 2.5]]));
+            octree.submitRequests('b', new Map([[0, 0.5], [1, 1.5]]));
+            octree.flushRequests();
+
+            octree.removeRequests('a', false);
+            resolve('/scene/busy.json');
+            expect(registry.started).to.deep.equal(['/scene/busy.json', fine(1)]);
         });
 
         it('keeps a download in progress that another camera wants when one camera is torn down', function () {

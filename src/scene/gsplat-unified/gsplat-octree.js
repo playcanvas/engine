@@ -642,9 +642,10 @@ class GSplatOctree {
     }
 
     /**
-     * Removes all file requests of an instance of this octree, when the instance is destroyed. The
-     * files no other instance requests are withdrawn straight away, as there may be no later
-     * {@link GSplatOctree#flushRequests} to do it.
+     * Removes all file requests of an instance of this octree, when the instance is destroyed. This
+     * takes effect straight away, as there may be no later {@link GSplatOctree#flushRequests} to
+     * apply it: the files no other instance requests are withdrawn, and the rest are re-issued at
+     * the highest priority the remaining instances give them.
      *
      * @param {object} requester - The instance the requests belong to.
      * @param {boolean} unloadNow - When true, a withdrawn download already in progress is unloaded
@@ -659,12 +660,14 @@ class GSplatOctree {
 
         for (const fileIndex of latest.keys()) {
             if (!this.fileResources.has(fileIndex)) {
-                if (this._getRequestPriority(fileIndex) === undefined) {
+                const priority = this._getRequestPriority(fileIndex);
+                if (priority === undefined) {
                     this._changedRequests.delete(fileIndex);
                     this._withdrawRequest(fileIndex, unloadNow);
                 } else {
-                    // still wanted by another instance, which may have given it a lower priority
-                    this._changedRequests.add(fileIndex);
+                    // still wanted by another instance, which may have given it a lower priority.
+                    // This only changes the priority of a queued load.
+                    this.assetLoader?.load(this.files[fileIndex].url, priority);
                 }
             }
         }

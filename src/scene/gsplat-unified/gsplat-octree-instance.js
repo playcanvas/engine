@@ -536,9 +536,11 @@ class GSplatOctreeInstance {
         // portrait. An orthographic footprint depends on neither FOV nor distance.
         let fovScale = 1;
         if (!ortho) {
-            // a zero-sized backbuffer (e.g. a hidden canvas) reports a 0/0 aspect ratio, which would
-            // turn every coverage, and so every LOD choice and load priority, into NaN
-            const aspectRatio = camera.aspectRatio || 1;
+            // a backbuffer with no size in either dimension (e.g. a hidden canvas) reports a 0, NaN
+            // or infinite aspect ratio, which would turn every coverage, and so every LOD choice and
+            // load priority, into NaN
+            const cameraAspect = camera.aspectRatio;
+            const aspectRatio = cameraAspect > 0 && Number.isFinite(cameraAspect) ? cameraAspect : 1;
             let tanHalfVFov = Math.tan(camera.fov * 0.5 * math.DEG_TO_RAD);
             if (camera.horizontalFov) {
                 tanHalfVFov /= aspectRatio;

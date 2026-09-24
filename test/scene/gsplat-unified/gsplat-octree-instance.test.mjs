@@ -157,16 +157,22 @@ describe('GSplatOctreeInstance#evaluateNodeCoverage', function () {
     });
 
     it('keeps coverage finite while the backbuffer has no size', function () {
-        // a zero-sized canvas reports a 0/0 aspect ratio
+        // a canvas with no width or height reports a 0, 0/0 or x/0 aspect ratio, and a horizontal
+        // FOV divides by it
         const instance = makeInstance(makeOctree([[0, 0, -10], [0, 0, -1000]]));
-        const camera = makeCamera(PROJECTION_PERSPECTIVE);
-        camera.camera.aspectRatio = NaN;
+        for (const aspectRatio of [0, NaN, Infinity]) {
+            for (const horizontalFov of [false, true]) {
+                const camera = makeCamera(PROJECTION_PERSPECTIVE);
+                camera.camera.aspectRatio = aspectRatio;
+                camera.camera.horizontalFov = horizontalFov;
 
-        instance.evaluateNodeCoverage(camera, { lodBehindPenalty: 1.5 });
+                instance.evaluateNodeCoverage(camera, { lodBehindPenalty: 1.5 });
 
-        const [near, far] = instance.nodeInfos;
-        expect(Number.isFinite(near.lodCoverage)).to.equal(true);
-        expect(near.lodCoverage).to.be.above(far.lodCoverage);
+                const [near, far] = instance.nodeInfos;
+                expect(Number.isFinite(near.lodCoverage), `aspect ${aspectRatio}, horizontalFov ${horizontalFov}`).to.equal(true);
+                expect(near.lodCoverage).to.be.above(far.lodCoverage);
+            }
+        }
     });
 
     it('still penalises nodes behind an orthographic camera', function () {
