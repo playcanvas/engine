@@ -146,8 +146,8 @@
     "lint:fix": "npm run lint -- --fix",
     "publint": "publint --level error",
     "serve": "serve build -l 51000 --cors",
-    "test": "mocha --node-option expose-gc --ignore \"test/assets/scripts/*.js\" --ignore \"test/bundles/**\" --ignore test/webgpu-device.mjs --recursive --require test/fixtures.mjs --timeout 5000",
-    "test:webgpu": "mocha --node-option expose-gc --ignore \"test/assets/scripts/*.js\" --ignore \"test/bundles/**\" --ignore test/webgpu-device.mjs --ignore test/platform/graphics/shader.test.mjs --recursive --require test/fixtures.mjs --require test/webgpu-device.mjs --timeout 5000 --exit",
+    "test": "mocha --node-option expose-gc --ignore \"test/assets/scripts/*.js\" --ignore \"test/bundles/**\" --ignore test/webgpu-device.mjs --ignore test/webgpu-shims.mjs --recursive --require test/fixtures.mjs --timeout 5000",
+    "test:webgpu": "mocha --node-option expose-gc --ignore \"test/assets/scripts/*.js\" --ignore \"test/bundles/**\" --ignore test/webgpu-device.mjs --ignore test/webgpu-shims.mjs --ignore test/platform/graphics/shader.test.mjs --recursive --require test/fixtures.mjs --require test/webgpu-device.mjs --timeout 5000 --exit",
     "test:build": "mocha --recursive \"test/bundles/**/*.test.mjs\" --timeout 30000",
     "test:coverage": "c8 npm test",
     "test:types": "tsc --pretty false build/playcanvas.d.ts && tsc -p test/type-tests --pretty false"
