@@ -2,8 +2,6 @@ export const computeGsplatCommonSource = /* wgsl */`
 
 #include "halfTypesCS"
 
-const TILE_SIZE: u32 = 16u;
-
 fn quatToMat3(r: half4) -> half3x3 {
     let r2: half4 = r + r;
     let x: half   = r2.x * r.w;
