@@ -23,9 +23,10 @@ import { meshInstanceRows } from './node-model.js';
  * @property {FramePass} pass - The pass.
  * @property {number} index - The position in execution order.
  * @property {string} key - A key stable across frames for passes that are recreated each frame.
- * @property {number} depth - How many wrapper passes enclose this one.
- * @property {FramePass|null} parent - The wrapper pass this one belongs to, if any.
- * @property {number} children - The number of passes this one wraps directly.
+ * @property {number} depth - How many passes own this one, through their before and after passes or
+ * as the children of a multi-view pass.
+ * @property {FramePass|null} parent - The pass owning this one, if any.
+ * @property {number} children - The number of passes this one owns directly.
  * @property {number} views - The XR views the pass is replicated for, or 0 outside multi-view.
  * @property {RenderTarget|null|undefined} renderTarget - The target the pass renders to, with the
  * backbuffer resolved to the device's backbuffer object; undefined for passes that render nothing.
@@ -450,14 +451,17 @@ function passTitle(entry, device) {
 function passRows(frame, device) {
     /** @type {ListRow[]} */
     const rows = [];
+    // for the brackets: the entry each row belongs to, and the row of each entry's pass
+    const rowEntries = [];
+    const passRowOf = [];
 
     for (const entry of frame.entries) {
-        const { pass, index, depth, renderTarget } = entry;
+        const { pass, index, renderTarget } = entry;
         const name = passDisplayName(pass);
         const merged = pass._skipStart;
 
         const cells = [
-            { text: merged ? '++' : String(index), cls: 'pci-cell-index', title: merged ? 'Merged into the previous pass: same render target, nothing cleared' : '' },
+            { text: merged ? `${index}+` : String(index), cls: 'pci-cell-index', title: merged ? 'Merged into the previous pass: same render target, nothing cleared' : '' },
             { text: name, cls: 'pci-cell-name' }
         ];
         if (!pass.executeEnabled) cells.push({ text: 'DISABLED', cls: 'pci-cell-tag' });
@@ -465,7 +469,10 @@ function passRows(frame, device) {
         if (renderTarget) {
             cells.push({ text: renderTargetSummary(renderTarget, device), cls: 'pci-cell-info', target: renderTarget });
         } else if (entry.children) {
-            cells.push({ text: `wraps ${entry.children} pass${entry.children === 1 ? '' : 'es'}`, cls: 'pci-cell-info' });
+            // a pass rendering nothing owns passes only to add them to the frame, and does no work
+            const own = pass.execute === FramePass.prototype.execute ? ' · no work of its own' : '';
+            const verb = Array.isArray(/** @type {any} */ (pass).children) ? 'runs' : 'owns';
+            cells.push({ text: `${verb} ${entry.children} pass${entry.children === 1 ? '' : 'es'}${own}`, cls: 'pci-cell-info' });
         }
 
         const profiler = profilerName(pass);
@@ -485,7 +492,8 @@ function passRows(frame, device) {
         const lists = steps.map(step => frame.visible?.get(step) ?? null);
         const passMatches = steps.length ?
             filter => name.toLowerCase().includes(filter) || lists.some(list => drewMatching(list, filter)) : undefined;
-        rows.push({ key: entry.key, item: pass, name, matches: passMatches, indent: depth, dim: !pass.executeEnabled, title: passTitle(entry, device), cells });
+        passRowOf[index] = rows.length;
+        rows.push({ key: entry.key, item: pass, name, matches: passMatches, dim: !pass.executeEnabled, title: passTitle(entry, device), cells });
 
         steps.forEach((step, i) => {
             const layer = step.layer;
@@ -497,7 +505,7 @@ function passRows(frame, device) {
                 item: new LayerStepSelection(pass, step, i),
                 name,
                 matches: filter => name.toLowerCase().includes(filter) || drewMatching(lists[i], filter),
-                indent: depth + 1,
+                indent: 1,
                 dim: !enabled,
                 cells: [
                     { text: '', cls: 'pci-cell-index' },
@@ -513,7 +521,7 @@ function passRows(frame, device) {
                 key: `${entry.key}/light`,
                 item: pass,
                 name,
-                indent: depth + 1,
+                indent: 1,
                 cells: [
                     { text: '', cls: 'pci-cell-index' },
                     { text: 'light', cls: 'pci-cell-info' },
@@ -523,7 +531,68 @@ function passRows(frame, device) {
         }
     }
 
+    // every row after an entry's pass row, up to the next one, belongs to that entry
+    let current = -1;
+    for (let row = 0; row < rows.length; row++) {
+        if (passRowOf[current + 1] === row) current++;
+        rowEntries.push(current);
+    }
+    const guides = passGuides(frame, rowEntries, passRowOf);
+    if (guides) {
+        rows.forEach((row, i) => {
+            row.guides = guides[i];
+        });
+    }
+
     return rows;
+}
+
+/**
+ * The brackets of the pass list. The passes a pass owns, its before and after passes and the
+ * children of a multi-view pass, are added to the frame right around it, so a pass and everything
+ * it owns always fill a run of consecutive rows. Each owner brackets that run in the lane of its
+ * own depth, and ticks its own row, which sits below its before passes and above its after passes.
+ * The rows themselves are not indented: the frame executes them one after the other.
+ *
+ * @param {FrameSnapshot} frame - The frame.
+ * @param {number[]} rowEntries - The index of the entry each row belongs to, in row order.
+ * @param {number[]} passRowOf - The row of each entry's own pass row.
+ * @returns {import('./list-view.js').ListGuides[]|null} The brackets of each row, or null when no
+ * pass owns another.
+ */
+function passGuides(frame, rowEntries, passRowOf) {
+    const { entries } = frame;
+    const lanes = entries.reduce((count, entry) => (entry.children ? Math.max(count, entry.depth + 1) : count), 0);
+    if (!lanes) return null;
+
+    // the first and last entry each owner spans, over everything it owns, however deep
+    const entryOf = new Map(entries.map(entry => [entry.pass, entry]));
+    const first = new Map();
+    const last = new Map();
+    for (const entry of entries) {
+        for (let owner = entryOf.get(entry.parent); owner; owner = entryOf.get(owner.parent)) {
+            first.set(owner, Math.min(first.get(owner) ?? owner.index, entry.index));
+            last.set(owner, Math.max(last.get(owner) ?? owner.index, entry.index));
+        }
+    }
+
+    // the rows of an entry run from its pass row to the row before the next entry's pass row
+    const lastRowOf = (index) => {
+        let row = passRowOf[index];
+        while (row + 1 < rowEntries.length && rowEntries[row + 1] === index) row++;
+        return row;
+    };
+
+    const guides = rowEntries.map(() => ({ lanes, segments: new Array(lanes).fill(null), tick: -1 }));
+    for (const [owner, start] of first) {
+        const top = passRowOf[Math.min(start, owner.index)];
+        const bottom = lastRowOf(Math.max(last.get(owner), owner.index));
+        for (let row = top; row <= bottom; row++) {
+            guides[row].segments[owner.depth] = row === top ? 'start' : row === bottom ? 'end' : 'mid';
+        }
+        guides[passRowOf[owner.index]].tick = owner.depth;
+    }
+    return guides;
 }
 
 /**
@@ -561,7 +630,10 @@ function buildPassModel(pass, ctx) {
     push(general, 'execute enabled', read(pass, 'executeEnabled'));
     if (pass._skipStart) push(general, 'merged with previous', describeValue(true));
     if (pass._skipEnd) push(general, 'merged with next', describeValue(true));
-    if (entry?.parent) push(general, 'wrapped by', { text: passDisplayName(entry.parent), cls: 'ref', target: entry.parent });
+    if (entry?.parent) {
+        const runs = Array.isArray(/** @type {any} */ (entry.parent).children) && /** @type {any} */ (entry.parent).children.includes(pass);
+        push(general, runs ? 'run by' : 'owned by', { text: passDisplayName(entry.parent), cls: 'ref', target: entry.parent });
+    }
     if (pass.beforePasses.length) push(general, 'before passes', passList(pass.beforePasses));
     if (pass.afterPasses.length) push(general, 'after passes', passList(pass.afterPasses));
     const children = /** @type {any} */ (pass).children;

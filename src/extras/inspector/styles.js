@@ -4,6 +4,22 @@
  *
  * @type {string}
  */
+/**
+ * One muted tone per nesting level, cycling, for the indent guides of the property view, so a
+ * nested row can be read back to its parent.
+ *
+ * @type {string[]}
+ */
+const INDENT_COLORS = ['#3f4a5f', '#4a4459', '#3f5450', '#55503f'];
+
+/**
+ * The same tones brighter, for the brackets of the lists. A bracket is the only thing telling which
+ * rows belong together there, so it has to read without indentation to back it up.
+ *
+ * @type {string[]}
+ */
+const BRACKET_COLORS = ['#6a7fa8', '#8a76a8', '#62968a', '#a39564'];
+
 const styles = /* css */ `
     :host {
         all: initial;
@@ -337,11 +353,11 @@ const styles = /* css */ `
     }
 
     .pci-lrow:hover {
-        background: #262a31;
+        background-color: #262a31;
     }
 
     .pci-lrow.pci-selected {
-        background: #3a4a6b;
+        background-color: #3a4a6b;
         color: #ffffff;
     }
 
@@ -746,4 +762,4 @@ const styles = /* css */ `
     }
 `;
 
-export { styles };
+export { BRACKET_COLORS, INDENT_COLORS, styles };

@@ -1,4 +1,9 @@
+import { BRACKET_COLORS } from './styles.js';
 import { setTip } from './tooltip.js';
+
+// the width of one bracket lane in the gutter left of a row, and the space after the last lane
+const LANE_WIDTH = 10;
+const GUTTER_GAP = 2;
 
 /**
  * @typedef {object} ListCell
@@ -24,8 +29,23 @@ import { setTip } from './tooltip.js';
  * filter, for rows that match on more than their name. Called only while a filter is set.
  * @property {ListCell[]} cells - The cells, left to right.
  * @property {number} [indent] - The indentation level.
+ * @property {ListGuides} [guides] - The brackets drawn in a gutter left of the row, which group
+ * runs of rows without indenting them.
  * @property {boolean} [dim] - Whether the row is shown dimmed.
  * @property {string} [title] - A tooltip for the whole row.
+ */
+
+/**
+ * The brackets a row shows in the gutter on its left. A bracket spans a run of rows in one lane,
+ * each lane a nesting level, and marks the row it belongs to with a tick pointing at the row.
+ *
+ * @typedef {object} ListGuides
+ * @ignore
+ * @property {number} lanes - The lanes the gutter holds. The same on every row of a list, so the
+ * rows stay aligned.
+ * @property {Array<'start'|'mid'|'end'|null>} segments - What each lane shows on this row: the top
+ * end of a bracket, its middle, its bottom end, or nothing.
+ * @property {number} tick - The lane of the bracket this row owns, or -1 when it owns none.
  */
 
 /**
@@ -35,7 +55,40 @@ import { setTip } from './tooltip.js';
  * @property {HTMLElement[]} cells - The cell elements.
  * @property {ListRow} row - The row last rendered.
  * @property {number} indent - The indentation last rendered.
+ * @property {string} guides - The brackets last rendered, as a signature.
  */
+
+/**
+ * The background layers drawing a row's brackets: a one pixel line per lane, the full height of the
+ * row in the middle of a bracket and half of it at either end, so brackets meeting in one lane stay
+ * apart, and a tick from the owned bracket's line across the rest of the gutter.
+ *
+ * @param {ListGuides} guides - The brackets.
+ * @returns {{ image: string, position: string, size: string }|null} The layers, or null for none.
+ */
+function guideStyle(guides) {
+    const images = [];
+    const positions = [];
+    const sizes = [];
+    const layer = (lane, position, size) => {
+        const color = BRACKET_COLORS[lane % BRACKET_COLORS.length];
+        images.push(`linear-gradient(${color}, ${color})`);
+        positions.push(position);
+        sizes.push(size);
+    };
+    guides.segments.forEach((segment, lane) => {
+        if (!segment) return;
+        const x = lane * LANE_WIDTH + LANE_WIDTH / 2;
+        if (segment === 'mid') layer(lane, `${x}px 0`, '1px 100%');
+        else if (segment === 'start') layer(lane, `${x}px 100%`, '1px 50%');
+        else layer(lane, `${x}px 0`, '1px 50%');
+    });
+    if (guides.tick >= 0) {
+        const x = guides.tick * LANE_WIDTH + LANE_WIDTH / 2;
+        layer(guides.tick, `${x}px 50%`, `${guides.lanes * LANE_WIDTH - x}px 1px`);
+    }
+    return images.length ? { image: images.join(', '), position: positions.join(', '), size: sizes.join(', ') } : null;
+}
 
 /**
  * A flat, selectable list of rows with cells. Rows are keyed and reconciled in place, so a list
@@ -202,9 +255,17 @@ class ListView {
             if (shown) visible++;
 
             const indent = row.indent ?? 0;
-            if (entry.indent !== indent) {
+            const guides = row.guides ? `${row.guides.lanes}|${row.guides.segments.join(',')}|${row.guides.tick}` : '';
+            if (entry.indent !== indent || entry.guides !== guides) {
                 entry.indent = indent;
-                entry.el.style.paddingLeft = `${indent * 14 + 6}px`;
+                entry.guides = guides;
+                const gutter = row.guides ? row.guides.lanes * LANE_WIDTH + GUTTER_GAP : 0;
+                entry.el.style.paddingLeft = `${gutter + indent * 14 + 6}px`;
+                const style = row.guides ? guideStyle(row.guides) : null;
+                entry.el.style.backgroundImage = style?.image ?? '';
+                entry.el.style.backgroundPosition = style?.position ?? '';
+                entry.el.style.backgroundSize = style?.size ?? '';
+                entry.el.style.backgroundRepeat = style ? 'no-repeat' : '';
             }
             const title = row.title ?? '';
             if ((entry.el.dataset.tip ?? '') !== title) setTip(entry.el, title);
@@ -320,7 +381,7 @@ class ListView {
         rowEl.className = 'pci-lrow';
         rowEl.addEventListener('click', () => this.select(row.key));
 
-        const entry = { el: rowEl, cells: [], row, indent: -1 };
+        const entry = { el: rowEl, cells: [], row, indent: -1, guides: '' };
         this._entries.set(row.key, entry);
         return entry;
     }

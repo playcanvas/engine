@@ -1,3 +1,4 @@
+import { INDENT_COLORS } from './styles.js';
 import { setTip } from './tooltip.js';
 
 /** @import { Described } from './describe.js' */
@@ -38,9 +39,6 @@ import { setTip } from './tooltip.js';
 // where the first indent guide sits, and how far apart the levels are, in CSS pixels
 const INDENT_BASE = 8;
 const INDENT_STEP = 14;
-
-// one muted tone per level, cycling, so a deeply opened row can be read back to its parent
-const INDENT_COLORS = ['#3f4a5f', '#4a4459', '#3f5450', '#55503f'];
 
 /** @type {{ image: string, position: string }[]} */
 const indentGuideCache = [];

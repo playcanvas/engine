@@ -1774,6 +1774,40 @@ describe('Inspector frame graph capture', function () {
         expect(draws().expand()[0].value.text).to.equal('none of 0 matching "nothing like this"');
     });
 
+    it('lists passes flat, bracketing each owner with the passes it owns', function () {
+        const merged = pass('C', { _skipStart: true });
+        const inner = pass('B', { afterPasses: [merged] });
+        const first = pass('A');
+        const owner = pass('O', { beforePasses: [first, inner] });
+        const alone = pass('X');
+        const app = /** @type {any} */ ({
+            graphicsDevice: { backBuffer: {}, gpuProfiler: null },
+            frameGraph: { renderPasses: [alone, first, inner, merged, owner] }
+        });
+        const rows = passRows(captureFrameGraph(app), app.graphicsDevice);
+
+        // nothing is indented; the owners bracket their runs instead, each in the lane of its depth
+        expect(rows.map(row => row.indent ?? 0)).to.deep.equal([0, 0, 0, 0, 0]);
+        expect(rows.map(row => row.guides.lanes)).to.deep.equal([2, 2, 2, 2, 2]);
+        expect(rows.map(row => row.guides.segments)).to.deep.equal([
+            [null, null],
+            ['start', null],
+            ['mid', 'start'],
+            ['mid', 'end'],
+            ['end', null]
+        ]);
+        // the owner's own row is ticked: B above its after pass, O below its before passes
+        expect(rows.map(row => row.guides.tick)).to.deep.equal([-1, -1, 1, -1, 0]);
+
+        expect(rows[4].cells[2].text).to.equal('owns 2 passes');
+        // a merged pass keeps its number
+        expect(rows[3].cells[0].text).to.equal('3+');
+
+        // a frame where nothing owns anything has no gutter
+        app.frameGraph.renderPasses = [alone];
+        expect(passRows(captureFrameGraph(app), app.graphicsDevice)[0].guides).to.equal(undefined);
+    });
+
     it('flattens passes in execution order with wrapper depth and target usage', function () {
         const backBuffer = { name: 'Backbuffer' };
         const shadowMap = { name: 'ShadowMap' };
