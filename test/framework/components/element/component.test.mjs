@@ -205,7 +205,7 @@ describe('ElementComponent', function () {
             expect(position.y).to.equal(-40);
         });
 
-        it('keeps the position of an entity under a screen when the default size is given', function () {
+        it('keeps the position under a screen when the default size is given', function () {
             const e = new Entity();
             screen.addChild(e);
             e.setLocalPosition(0, -40, 0);
@@ -237,6 +237,40 @@ describe('ElementComponent', function () {
             const position = e.getLocalPosition();
             expect(position.x).to.equal(10);
             expect(position.y).to.equal(20);
+        });
+
+        it('keeps the vertical position when only horizontal margins are given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+
+            // a bar stretched across the top of the screen
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0, 1, 1, 1],
+                pivot: [0.5, 1],
+                left: 0,
+                right: 0
+            });
+
+            expect(e.getLocalPosition().y).to.equal(-40);
+        });
+
+        it('keeps the horizontal position when only vertical margins are given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(25, 0, 0);
+
+            // a bar stretched down the left of the screen
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0, 0, 0, 1],
+                pivot: [0, 0.5],
+                bottom: 0,
+                top: 0
+            });
+
+            expect(e.getLocalPosition().x).to.equal(25);
         });
 
         it('places the element with the margins it is given', function () {
