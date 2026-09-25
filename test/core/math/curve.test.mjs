@@ -189,6 +189,23 @@ describe('Curve', function () {
 
     });
 
+    describe('#closest', function () {
+
+        it('returns null for a curve with no keys', function () {
+            const c = new Curve();
+            expect(c.closest(5)).to.equal(null);
+        });
+
+        it('finds the nearest key outside the usual 0-to-1 range', function () {
+            const c = new Curve([0, 0, 10, 1]);
+
+            expect(c.closest(5.5)).to.deep.equal([10, 1]);
+            expect(c.closest(9)).to.deep.equal([10, 1]);
+            expect(c.closest(-5)).to.deep.equal([0, 0]);
+        });
+
+    });
+
     describe('#quantize', function () {
 
         it('returns the interpolated values at the given intervals (CURVE_LINEAR)', function () {
