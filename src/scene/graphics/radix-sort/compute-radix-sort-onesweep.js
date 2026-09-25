@@ -93,7 +93,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
 
     /**
      * Chained-scan lookback buffer: `MAX_PASSES × threadBlocks × RADIX` u32.
-     * Block 0's slot of each pass is initialised by Scan with FLAG_INCLUSIVE
+     * Block 0's slot of each pass is initialized by Scan with FLAG_INCLUSIVE
      * and the global exclusive prefix. Other blocks' slots are populated by
      * DigitBinningPass.
      *
@@ -440,7 +440,7 @@ class ComputeRadixSortOneSweep extends ComputeRadixSortBase {
      * @param {number} [numBits] - Number of bits to sort. Must be a multiple
      * of 8 (the OneSweep radix width is fixed at 8). Defaults to 16.
      * @param {StorageBuffer} [initialValues] - Optional caller-supplied
-     * initial values for pass 0. When omitted, pass 0 synthesises
+     * initial values for pass 0. When omitted, pass 0 synthesizes
      * sequential indices and the sort returns sorted indices.
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing sorted keys on
      * the last pass. Marginal perf win; only use when sorted keys are not

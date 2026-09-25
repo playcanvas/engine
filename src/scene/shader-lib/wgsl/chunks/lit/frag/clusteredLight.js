@@ -43,7 +43,7 @@ uniform clusterCellsMax: vec3i;
 uniform shadowAtlasParams: vec2f;
 
 // structure storing light properties of a clustered light. Vectors and scalars are interleaved
-// so each vec3 packs with an adjacent 4-byte field into a 16-byte slot, minimising padding for
+// so each vec3 packs with an adjacent 4-byte field into a 16-byte slot, minimizing padding for
 // compilers that don't reorder struct members.
 struct ClusterLightData {
 
@@ -582,7 +582,7 @@ fn addClusteredLights(
         return;
     }
 
-    // world space position to 3d integer cell cordinates in the cluster structure
+    // world space position to 3d integer cell coordinates in the cluster structure
     let cellCoords: vec3i = vec3i(floor((vPositionW - uniform.clusterBoundsMin) * uniform.clusterCellsCountByBoundsSize));
 
     // no lighting when cell coordinate is out of range

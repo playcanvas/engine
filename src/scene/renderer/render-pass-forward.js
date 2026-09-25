@@ -407,7 +407,7 @@ class RenderPassForward extends RenderPass {
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
-            // it requires (the properties are part of render pipeline on WebGPU anyways)
+            // it requires (the properties are part of render pipeline on WebGPU anyway)
             device.setBlendState(BlendState.NOBLEND);
             device.setStencilState(null, null);
             device.setAlphaToCoverage(false);

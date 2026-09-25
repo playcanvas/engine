@@ -1108,7 +1108,7 @@ class XrManager extends EventHandler {
     }
 
     /**
-     * Gets the current fixed foveation level, which is between 0 and 1. 0 is no forveation and 1
+     * Gets the current fixed foveation level, which is between 0 and 1. 0 is no foveation and 1
      * is highest foveation. If fixed foveation is not supported, this value returns null.
      *
      * @type {number|null}

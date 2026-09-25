@@ -28,7 +28,7 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
             this.onAvailable();
         }
 
-        // staging buffers are not stored in vram, but add them for tracking purposes anyways
+        // staging buffers are not stored in vram, but add them for tracking purposes anyway
         device._vram.ub += size;
 
         DebugHelper.setLabel(this.buffer, `DynamicBuffer-${isStaging ? 'Staging' : 'Gpu'}`);

@@ -803,7 +803,7 @@ export const PAD_R_STICK_Y = 3;
 export const XRPAD_TOUCHPAD_X = 0;
 
 /**
- * Vertical axis on the thouchpad of a XR pad.
+ * Vertical axis on the touchpad of a XR pad.
  *
  * @category Input Devices
  */

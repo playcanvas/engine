@@ -100,8 +100,8 @@ class FrameGraph {
     compile() {
         this._compilePasses(this.renderPasses);
 
-        // apply the same pass-merging / cube-mipmap optimisations to each multi-view wrapper's
-        // children so within-eye sequences benefit from the same optimisations as top-level passes
+        // apply the same pass-merging / cube-mipmap optimizations to each multi-view wrapper's
+        // children so within-eye sequences benefit from the same optimizations as top-level passes
         for (let i = 0; i < this.renderPasses.length; i++) {
             const pass = this.renderPasses[i];
             if (pass instanceof FramePassMultiView) {
@@ -111,10 +111,10 @@ class FrameGraph {
     }
 
     /**
-     * Run the frame-graph compile optimisations (store-on-no-clear, pass merging, cube mipmap
+     * Run the frame-graph compile optimizations (store-on-no-clear, pass merging, cube mipmap
      * skipping) over a flat list of passes.
      *
-     * @param {FramePass[]} passes - Passes to optimise.
+     * @param {FramePass[]} passes - Passes to optimize.
      * @private
      */
     _compilePasses(passes) {

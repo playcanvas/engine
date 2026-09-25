@@ -196,7 +196,7 @@ class GraphicsDevice extends EventHandler {
     maxColorAttachments = 1;
 
     /**
-     * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
+     * The highest shader precision supported by this graphics device. Can be 'highp', 'mediump' or
      * 'lowp'.
      *
      * @type {string}
