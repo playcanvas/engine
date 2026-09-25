@@ -855,6 +855,64 @@ describe('Inspector asset view', function () {
 
     afterEach(jsdomTeardown);
 
+    /**
+     * A loaded glb container with a render, a material and a texture, added to the registry the way
+     * the container adds them, and its model, made once something read it.
+     *
+     * @returns {any} The container and its parts.
+     */
+    const addContainer = () => {
+        const part = (name, type) => {
+            const asset = new Asset(name, type, { url: '' });
+            asset.loaded = true;
+            registry.add(asset);
+            return asset;
+        };
+        const render = part('robot.glb/render/0', 'render');
+        const material = part('robot.glb/material/0', 'material');
+        const texture = part('gltf-texture-7', 'texture');
+        const model = part('robot.glb/model/0', 'model');
+        const container = new Asset('robot.glb', 'container', { url: 'robot.glb' });
+        container.loaded = true;
+        /** @type {any} */ (container)._resources = [{ renders: [render], materials: [material], textures: [texture], animations: [], _model: model }];
+        registry.add(container);
+        return { container, render, material, texture, model };
+    };
+
+    it('lists the parts of a container under it, indented and bracketed, whatever the sort', function () {
+        const { container, render, material, texture, model } = addContainer();
+        const rows = assetRows(registry, 'name');
+        expect(rows.map(row => row.item)).to.deep.equal([small, unloaded, container, render, material, texture, model, big]);
+        const at = rows.findIndex(row => row.item === container);
+        const group = rows.slice(at, at + 5);
+        expect(group.map(row => row.indent ?? 0)).to.deep.equal([0, 1, 1, 1, 1]);
+        expect(group.map(row => row.guides.segments[0])).to.deep.equal(['start', 'mid', 'mid', 'mid', 'end']);
+        expect(group.map(row => row.guides.tick)).to.deep.equal([0, -1, -1, -1, -1]);
+        // the rest take the same gutter, unbracketed, so the names line up
+        expect(rows[0].guides).to.deep.equal({ lanes: 1, segments: [null], tick: -1 });
+        expect(group[3].cells.map(cell => cell.text)).to.include('embedded');
+
+        // a filter naming the container keeps its parts, and one naming a part keeps the container
+        expect(group[3].matches('robot')).to.be.true;
+        expect(group[0].matches('gltf-texture')).to.be.true;
+        expect(group[1].matches('gltf-texture')).to.be.false;
+    });
+
+    it('links a part to its container, and a container to its parts by kind', function () {
+        const { container, render, texture, model } = addContainer();
+        const app = /** @type {any} */ ({ assets: registry, root: null });
+        const byLabel = (section, label) => section.rows.find(row => row.label === label).value;
+
+        const [general] = buildAssetModel(texture, { app });
+        expect(byLabel(general, 'container').target).to.equal(container);
+        expect(byLabel(general, 'file').text).to.equal('embedded in "robot.glb"');
+
+        const contents = buildAssetModel(container, { app }).find(section => section.key === 'contents');
+        expect(contents.rows.filter(row => !row.depth).map(row => row.label)).to.deep.equal(['renders', 'materials', 'textures', 'model']);
+        expect(byLabel(contents, 'renders').items[0].target).to.equal(render);
+        expect(byLabel(contents, 'model').items[0].target).to.equal(model);
+    });
+
     it('sorts the registry and tags each row with its type and load state', function () {
         expect(collectAssets(registry).map(a => a.type)).to.deep.equal(['audio', 'cubemap', 'texture']);
         expect(collectAssets(registry, 'size').map(a => a.name)).to.deep.equal(['sky', 'bricks', 'clip']);

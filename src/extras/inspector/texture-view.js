@@ -5,7 +5,7 @@ import {
     FUNC_ALWAYS, FUNC_EQUAL, FUNC_GREATER, FUNC_GREATEREQUAL, FUNC_LESS, FUNC_LESSEQUAL, FUNC_NEVER, FUNC_NOTEQUAL
 } from '../../platform/graphics/constants.js';
 
-import { resourceAssets } from './asset-view.js';
+import { containerParts, resourceAssets } from './asset-view.js';
 import { describeValue } from './describe.js';
 import { formatBytes, formatName, makeSection, push, read, reflectRows } from './model.js';
 
@@ -151,8 +151,14 @@ function buildTextureModel(texture, ctx) {
     if (texture.volume) push(general, 'volume depth', read(texture, 'depth'));
     if (texture.array) push(general, 'array length', read(texture, 'arrayLength'));
 
-    const asset = resourceAssets(ctx.app?.assets ?? null).get(texture) ?? null;
-    if (asset) push(general, 'from asset', describeValue(asset));
+    const registry = ctx.app?.assets ?? null;
+    const asset = resourceAssets(registry).get(texture) ?? null;
+    if (asset) {
+        push(general, 'from asset', describeValue(asset));
+        // a texture a glb carries comes from the container that loaded it
+        const container = containerParts(registry).parentOf.get(asset);
+        if (container) push(general, 'from container', describeValue(container));
+    }
 
     const owners = attachmentTargets(ctx.device).get(texture) ?? [];
     push(general, 'attached to', {

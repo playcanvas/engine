@@ -1,8 +1,9 @@
+import { Asset } from '../../framework/asset/asset.js';
+
 import { collectProperties, describeValue } from './describe.js';
 import { formatBytes, makeSection, push, read, reflectRows } from './model.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
-/** @import { Asset } from '../../framework/asset/asset.js' */
 /** @import { AssetRegistry } from '../../framework/asset/asset-registry.js' */
 /** @import { Component } from '../../framework/components/component.js' */
 /** @import { Entity } from '../../framework/entity.js' */
@@ -20,6 +21,46 @@ const SKIP_ASSET = [
 const ASSET_SORTS = [
     ['type', 'type'], ['size', 'file size'], ['name', 'name'], ['id', 'id']
 ];
+
+// the sub-asset lists of a container's resource, in the order they are shown
+const CONTAINER_PARTS = [
+    ['renders', 'renders'], ['materials', 'materials'], ['textures', 'textures'], ['animations', 'animations'],
+    ['gsplats', 'gsplats']
+];
+
+/**
+ * The sub-assets of the loaded containers in a registry. A container asset adds the render,
+ * material, animation and gsplat assets it creates to the registry and keeps them on its resource,
+ * along with the texture assets it loads, and the model asset once something has asked for it. So
+ * the link from a sub-asset to its container is read from the container, not guessed from names,
+ * which the textures do not carry. A sub-asset shared by several containers belongs to the first.
+ *
+ * @param {AssetRegistry|null} registry - The registry.
+ * @returns {{ parentOf: Map<Asset, Asset>, parts: Map<Asset, [string, Asset[]][]> }} The container of
+ * each sub-asset, and the sub-assets of each container by kind.
+ */
+function containerParts(registry) {
+    /** @type {Map<Asset, Asset>} */
+    const parentOf = new Map();
+    /** @type {Map<Asset, [string, Asset[]][]>} */
+    const parts = new Map();
+    for (const asset of registry?.list() ?? []) {
+        const resource = asset.type === 'container' && asset.loaded ? asset.resource : null;
+        if (!resource) continue;
+        /** @type {[string, Asset[]][]} */
+        const kinds = [];
+        const take = (label, list) => {
+            const owned = (list ?? []).filter(child => child instanceof Asset && child !== asset && !parentOf.has(child));
+            for (const child of owned) parentOf.set(child, asset);
+            if (owned.length) kinds.push([label, owned]);
+        };
+        for (const [field, label] of CONTAINER_PARTS) take(label, resource[field]);
+        // made the first time something reads the container's model
+        take('model', resource._model ? [resource._model] : []);
+        parts.set(asset, kinds);
+    }
+    return { parentOf, parts };
+}
 
 /**
  * Cache of {@link assetPropertyNames}, keyed by the prototype the names were found on.
@@ -192,24 +233,58 @@ function assetUsers(app, asset) {
 }
 
 /**
- * One row per asset in the registry, dimmed while it is not loaded.
+ * One row per asset in the registry, dimmed while it is not loaded. The sub-assets of a container
+ * follow it, indented and bracketed with it, in the order the container keeps them, whatever the
+ * sort; the rest of the list is sorted as asked.
  *
  * @param {AssetRegistry|null} registry - The registry.
  * @param {string} sort - The order to list them in.
  * @returns {ListRow[]} The rows.
  */
 function assetRows(registry, sort) {
-    return collectAssets(registry, sort).map((asset) => {
+    const { parentOf, parts } = containerParts(registry);
+
+    const row = (asset, parent) => {
         const name = asset.name || '(unnamed)';
+        const size = parent ? 'embedded' : sizeText(asset);
         const cells = [{ text: name, cls: 'pci-cell-name' }];
         cells.push({ text: asset.type, cls: 'pci-cell-tag pci-cell-tag-info' });
         if (!asset.loaded) cells.push({ text: stateName(asset), cls: 'pci-cell-tag' });
-        cells.push({ text: sizeText(asset), cls: 'pci-cell-info' });
+        cells.push({ text: size, cls: 'pci-cell-info' });
         cells.push({ text: `#${asset.id}`, cls: 'pci-cell-info pci-cell-right' });
-        const title = `${name}\n${asset.type}, ${stateName(asset)}, ${sizeText(asset)}` +
-            `${asset.file?.url ? `\n${asset.file.url}` : ''}`;
+        const title = `${name}\n${asset.type}, ${stateName(asset)}, ${size}` +
+            `${parent ? `\nin container "${parent.name}"` : asset.file?.url ? `\n${asset.file.url}` : ''}`;
         return { key: `asset${asset.id}`, item: asset, name, dim: !asset.loaded, title, cells };
-    });
+    };
+
+    /** @type {ListRow[]} */
+    const rows = [];
+    for (const asset of collectAssets(registry, sort)) {
+        if (parentOf.has(asset)) continue;
+        const containerRow = row(asset, null);
+        rows.push(containerRow);
+
+        const children = (parts.get(asset) ?? []).flatMap(([, list]) => list);
+        if (!children.length) continue;
+        // a filter naming the container keeps what it holds, and one naming a part keeps the container
+        const names = children.map(child => child.name.toLowerCase());
+        const own = containerRow.name.toLowerCase();
+        containerRow.matches = filter => own.includes(filter) || names.some(name => name.includes(filter));
+        containerRow.guides = { lanes: 1, segments: ['start'], tick: 0 };
+        children.forEach((child, i) => {
+            const childRow = row(child, asset);
+            childRow.indent = 1;
+            childRow.matches = filter => names[i].includes(filter) || own.includes(filter);
+            childRow.guides = { lanes: 1, segments: [i === children.length - 1 ? 'end' : 'mid'], tick: -1 };
+            rows.push(childRow);
+        });
+    }
+
+    // every row takes the same gutter, so the names line up whether or not a row is bracketed
+    if (rows.some(r => r.guides)) {
+        for (const r of rows) r.guides ??= { lanes: 1, segments: [null], tick: -1 };
+    }
+    return rows;
 }
 
 /**
@@ -228,10 +303,17 @@ function buildAssetModel(asset, ctx) {
     push(general, 'name', describeValue(asset.name));
     push(general, 'id', describeValue(asset.id));
     push(general, 'type', { text: asset.type, cls: 'obj' });
+    const { parentOf, parts } = containerParts(ctx.app?.assets ?? null);
+    const container = parentOf.get(asset) ?? null;
+    if (container) push(general, 'container', describeValue(container));
     push(general, 'state', { text: stateName(asset), cls: asset.loaded ? 'bool' : 'null' });
     push(general, 'preload', read(asset, 'preload'));
-    push(general, 'url', file?.url ? describeValue(file.url) : { text: 'no file', cls: 'null' });
-    push(general, 'file size', { text: sizeText(asset), cls: file?.size ? 'num' : 'null' });
+    if (container) {
+        push(general, 'file', { text: `embedded in "${container.name}"`, cls: 'obj' });
+    } else {
+        push(general, 'url', file?.url ? describeValue(file.url) : { text: 'no file', cls: 'null' });
+        push(general, 'file size', { text: sizeText(asset), cls: file?.size ? 'num' : 'null' });
+    }
     if (asset.type === 'cubemap') push(general, 'load faces', read(asset, 'loadFaces'));
     if (file?.hash) push(general, 'hash', describeValue(file.hash));
     push(general, 'tags', describeValue(asset.tags));
@@ -246,6 +328,20 @@ function buildAssetModel(asset, ctx) {
         push(resources, 'resource', describeValue(asset.resource));
     }
     sections.push(resources);
+
+    // what a container made of its file, by kind, each linking to its asset
+    const kinds = parts.get(asset);
+    if (kinds?.length) {
+        const contents = makeSection('contents', 'Contents');
+        for (const [label, list] of kinds) {
+            push(contents, label, {
+                text: `${list.length} asset${list.length === 1 ? '' : 's'}`,
+                cls: 'obj',
+                items: list.map((child, i) => ({ label: `[${i}]`, ...describeValue(child) }))
+            });
+        }
+        sections.push(contents);
+    }
 
     const users = assetUsers(ctx.app, asset);
     const usage = makeSection('users', 'Used by');
@@ -269,6 +365,6 @@ function buildAssetModel(asset, ctx) {
 }
 
 export {
-    ASSET_SORTS, assetRows, assetUsers, buildAssetModel, collectAssets, describeAssetValue, pushAssetRows,
+    ASSET_SORTS, assetRows, assetUsers, buildAssetModel, collectAssets, containerParts, describeAssetValue, pushAssetRows,
     resourceAssets, stateName
 };
