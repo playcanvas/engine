@@ -155,7 +155,9 @@ screen.addChild(text);
 function createButton(labelText, x, y) {
     // Create a simple button
     const button = new Entity();
-    button.addComponent('button');
+    button.addComponent('button', {
+        imageEntity: button
+    });
     button.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         height: 40,
