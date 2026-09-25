@@ -179,6 +179,234 @@ describe('ElementComponent', function () {
         expect(() => newParent.addChild(e)).to.not.throw();
     });
 
+    describe('position', function () {
+
+        let screen;
+
+        beforeEach(function () {
+            screen = new Entity('screen');
+            screen.addComponent('screen', { screenSpace: true });
+            app.root.addChild(screen);
+        });
+
+        it('keeps the position of an entity that is already under a screen', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position under a screen when the default size is given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1],
+                width: 32,
+                height: 32
+            });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position of an entity that is added to a screen afterwards', function () {
+            const e = new Entity();
+            e.setLocalPosition(10, 20, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 0.5, 0.5, 0.5],
+                pivot: [0.5, 0.5]
+            });
+
+            screen.addChild(e);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(10);
+            expect(position.y).to.equal(20);
+        });
+
+        it('keeps a position set before the element is added to a screen', function () {
+            const e = new Entity();
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 0.5, 0.5, 0.5],
+                pivot: [0.5, 0.5]
+            });
+            e.setLocalPosition(10, 20, 0);
+
+            screen.addChild(e);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(10);
+            expect(position.y).to.equal(20);
+        });
+
+        it('keeps the position of an entity added to a screen with its parent', function () {
+            const panel = new Entity('panel');
+            panel.addComponent('element', {
+                type: 'group',
+                anchor: [0, 0, 1, 1],
+                margin: [0, 0, 0, 0]
+            });
+
+            const e = new Entity();
+            panel.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            screen.addChild(panel);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position of an entity whose screen is added afterwards', function () {
+            const ui = new Entity('ui');
+            app.root.addChild(ui);
+
+            const e = new Entity();
+            ui.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            ui.addComponent('screen', { screenSpace: true });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position of an entity when it is cloned', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            const clone = e.clone();
+            screen.addChild(clone);
+
+            const position = clone.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the vertical position when only horizontal margins are given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+
+            // a bar stretched across the top of the screen
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0, 1, 1, 1],
+                pivot: [0.5, 1],
+                left: 0,
+                right: 0
+            });
+
+            expect(e.getLocalPosition().y).to.equal(-40);
+        });
+
+        it('keeps the horizontal position when only vertical margins are given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(25, 0, 0);
+
+            // a bar stretched down the left of the screen
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0, 0, 0, 1],
+                pivot: [0, 0.5],
+                bottom: 0,
+                top: 0
+            });
+
+            expect(e.getLocalPosition().x).to.equal(25);
+        });
+
+        it('keeps a position set after the element is added when the screen resizes', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+            e.setLocalPosition(0, -40, 0);
+
+            app.graphicsDevice.setResolution(640, 320);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps a translation after the element is added when the screen resizes', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+            e.translateLocal(0, -40, 0);
+
+            // the next frame syncs the hierarchy, which updates the margins
+            app.root.syncHierarchy();
+            app.graphicsDevice.setResolution(640, 320);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('places the element with the margins it is given', function () {
+            const e = new Entity();
+            screen.addChild(e);
+
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0, 0, 0, 0],
+                pivot: [0, 0],
+                margin: [10, 20, -42, -52]
+            });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(10);
+            expect(position.y).to.equal(20);
+            expect(e.element.calculatedWidth).to.equal(32);
+            expect(e.element.calculatedHeight).to.equal(32);
+        });
+
+    });
+
     describe('#type', function () {
 
         it('adds model to layers when type is set to image after entity is in hierarchy', function () {

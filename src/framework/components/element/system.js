@@ -123,6 +123,23 @@ class ElementComponentSystem extends ComponentSystem {
 
         const splitHorAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001;
         const splitVerAnchors = Math.abs(component.anchor.y - component.anchor.w) > 0.001;
+
+        // On an axis where the anchor is a point, the entity's position places the element, so
+        // unless margins are given for that axis, derive them from the position, as setting a new
+        // size does. Do it first: applying the margins given for the other axis, or binding to a
+        // screen, places the element on both axes, and would move an entity that is already under
+        // a screen to wherever the default margins put it.
+        const position = component.entity.getLocalPosition();
+        const noMargin = data.margin === undefined;
+        if (!splitHorAnchors && noMargin && data.left === undefined && data.right === undefined) {
+            component._margin.x = position.x - component._calculatedWidth * component._pivot.x;
+            component._margin.z = -component._calculatedWidth - component._margin.x;
+        }
+        if (!splitVerAnchors && noMargin && data.bottom === undefined && data.top === undefined) {
+            component._margin.y = position.y - component._calculatedHeight * component._pivot.y;
+            component._margin.w = -component._calculatedHeight - component._margin.y;
+        }
+
         let _marginChange = false;
         let color;
 
