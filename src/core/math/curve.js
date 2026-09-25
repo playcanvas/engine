@@ -193,7 +193,7 @@ class Curve {
     closest(time) {
         const keys = this.keys;
         const length = keys.length;
-        let min = 2;
+        let min = Infinity;
         let result = null;
 
         for (let i = 0; i < length; i++) {
