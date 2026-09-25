@@ -129,8 +129,34 @@ function componentSection(name, component) {
         handled.push('meshInstances');
     }
 
+    // the scripts of a script component, each linking to its class in the Scripts tab
+    const scripts = /** @type {any} */ (component).scripts;
+    if (name === 'script' && Array.isArray(scripts)) {
+        push(section, 'scripts', {
+            text: `${scripts.length} script${scripts.length === 1 ? '' : 's'}`,
+            cls: scripts.length ? 'obj' : 'null',
+            items: scripts.map((script, index) => ({
+                label: `[${index}]`,
+                text: `${scriptNameOf(script)}${script.enabled ? '' : ' (disabled)'}`,
+                cls: 'ref',
+                target: script.constructor
+            }))
+        });
+        // the component also exposes each script by name, which its own section below shows
+        handled.push('scripts', ...scripts.map(scriptNameOf));
+    }
+
     reflectRows(section, component, [Component.prototype], handled);
     return section;
+}
+
+/**
+ * @param {ScriptType|Script} script - A script instance.
+ * @returns {string} The name its class is known by.
+ */
+function scriptNameOf(script) {
+    const ctor = /** @type {any} */ (script.constructor);
+    return ctor.scriptName ?? ctor.__name ?? ctor.name;
 }
 
 /**
@@ -330,24 +356,34 @@ function scriptSections(scriptComponent) {
 
     scripts.forEach((script, index) => {
         const ctor = /** @type {any} */ (script.constructor);
-        const name = ctor.scriptName ?? ctor.__name ?? ctor.name;
+        const name = scriptNameOf(script);
         const section = makeSection(`s:${index}:${name}`, `script › ${name}`);
-
-        push(section, 'enabled', read(script, 'enabled'));
-
-        if (script instanceof ScriptType) {
-            // classic scripts declare their attributes up front
-            for (const attribute in ctor.attributes?.index ?? {}) {
-                push(section, attribute, read(script, attribute));
-            }
-        } else {
-            reflectRows(section, script, [Script.prototype, ScriptType.prototype], SKIP_SCRIPT);
-        }
-
+        // the class links to the Scripts tab, which lists every entity using it and its source
+        push(section, 'script', { text: name, cls: 'ref', target: ctor });
+        section.rows.push(...scriptInstanceRows(script));
         sections.push(section);
     });
 
     return sections;
+}
+
+/**
+ * @param {ScriptType|Script} script - A script instance.
+ * @returns {PropertyRow[]} Its rows: whether it is enabled, then its attributes.
+ */
+function scriptInstanceRows(script) {
+    const rows = [];
+    const ctor = /** @type {any} */ (script.constructor);
+    pushRow(rows, 'enabled', read(script, 'enabled'));
+    if (script instanceof ScriptType) {
+        // classic scripts declare their attributes up front
+        for (const attribute in ctor.attributes?.index ?? {}) {
+            pushRow(rows, attribute, read(script, attribute));
+        }
+    } else {
+        reflectInto(rows, script, [Script.prototype, ScriptType.prototype], SKIP_SCRIPT);
+    }
+    return rows;
 }
 
 /**
@@ -374,4 +410,4 @@ function buildNodeModel(node) {
     return sections;
 }
 
-export { buildNodeModel, materialRows, materialTextures, meshInstanceRows, meshRows, vertexFormatValue };
+export { buildNodeModel, materialRows, materialTextures, meshInstanceRows, meshRows, scriptInstanceRows, vertexFormatValue };

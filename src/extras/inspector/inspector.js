@@ -28,6 +28,7 @@ import { buildNodeModel } from './node-model.js';
 import { AmmoDebugDraw, DEBUG_DRAW } from './physics-debug.js';
 import { bodyRows, drawCollisionShape, drawJoint, jointRows, physicsStats } from './physics-view.js';
 import { PropertyView } from './property-view.js';
+import { buildScriptModel, isScriptClass, scriptListRows, surveyScripts } from './script-view.js';
 import { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachments, previewSupport, renderTargetRows, storedBottomUp } from './render-target-view.js';
 import { buildShaderModel, collectShaders, shaderRows, stateName } from './shader-view.js';
 import { styles } from './styles.js';
@@ -111,6 +112,7 @@ const TAB_TIPS = {
     textures: 'The textures on the device, largest first, with a live preview',
     meshes: 'The meshes of the app, found through the components, layers and assets using them, largest first',
     materials: 'The materials of the app, found through the mesh instances and assets using them, most used first',
+    scripts: 'The script classes of the app, registered or found on its entities, with the entities using each and its source',
     memory: 'The vertex, index, uniform and storage buffers on the device, and what uses each',
     shaders: 'The compiled shaders, with their sources',
     physics: 'The rigid bodies and joints of the physics world, and its debug drawing'
@@ -170,6 +172,9 @@ function isTextTarget(e) {
  * - Materials: every material found through the mesh instances and assets using it, most used
  *   first, with its textures, compiled variants and users. Material values elsewhere link here, and
  *   the Textures and Shaders tabs list the materials using a texture or shader.
+ * - Scripts: every script class the script registry holds or an entity uses, with the entities using
+ *   it, its declared attributes and its source as the browser keeps it. The script sections of an
+ *   entity link here.
  * - Memory: video memory by kind of resource, and every buffer on the device, largest first, named
  *   after the mesh, material or asset it was found to belong to. Buffer values elsewhere link here.
  * - Shaders: every shader on the device with its language, state and vertex attributes. The
@@ -355,7 +360,7 @@ class Inspector {
     _nextPropertyRefresh = 0;
 
     /**
-     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'memory'|'shaders'|'physics'}
+     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'scripts'|'memory'|'shaders'|'physics'}
      * @private
      */
     _tab = 'hierarchy';
@@ -484,6 +489,12 @@ class Inspector {
     _materialList;
 
     /**
+     * @type {ListView}
+     * @private
+     */
+    _scriptList;
+
+    /**
      * @type {HTMLInputElement}
      * @private
      */
@@ -572,6 +583,15 @@ class Inspector {
      * @private
      */
     _materialModel = material => buildMaterialModel(material, this._context());
+
+    /**
+     * Model builder for the property view when a script class is selected.
+     *
+     * @param {Function} cls - The script class.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _scriptModel = cls => buildScriptModel(cls, this._context());
 
     /**
      * Model builder for the property view when a shader is selected, followed by the materials that
@@ -1132,7 +1152,7 @@ class Inspector {
         this._tabButtons = {};
         const tabList = [
             ['hierarchy', 'Hierarchy'], ['assets', 'Assets'], ['passes', 'Frame graph'],
-            ['targets', 'Render targets'], ['textures', 'Textures'], ['meshes', 'Meshes'], ['materials', 'Materials'], ['memory', 'Memory'],
+            ['targets', 'Render targets'], ['textures', 'Textures'], ['meshes', 'Meshes'], ['materials', 'Materials'], ['scripts', 'Scripts'], ['memory', 'Memory'],
             ['shaders', 'Shaders'], ['physics', 'Physics']
         ];
         for (const [id, label] of tabList) {
@@ -1221,6 +1241,11 @@ class Inspector {
         const materialList = el('div', 'pci-list');
         materialPanel.append(materialList);
 
+        // scripts: a plain list
+        const scriptPanel = el('div', 'pci-listpanel');
+        const scriptList = el('div', 'pci-list');
+        scriptPanel.append(scriptList);
+
         // memory: the totals over the buffers, which can be narrowed to one kind
         const memoryPanel = el('div', 'pci-listpanel');
         const memoryBar = el('div', 'pci-subbar');
@@ -1292,11 +1317,12 @@ class Inspector {
             textures: texturePanel,
             meshes: meshPanel,
             materials: materialPanel,
+            scripts: scriptPanel,
             memory: memoryPanel,
             shaders: shaderPanel,
             physics: physicsPanel
         };
-        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, meshPanel, materialPanel, memoryPanel, shaderPanel, physicsPanel);
+        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, meshPanel, materialPanel, scriptPanel, memoryPanel, shaderPanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1389,6 +1415,10 @@ class Inspector {
             if (this._tab === 'materials') this._properties.setSubject(material, this._materialModel, key);
             this._updateStatus();
         }, target => this._selectAny(target));
+        this._scriptList = new ListView(scriptList, (cls, key) => {
+            if (this._tab === 'scripts') this._properties.setSubject(cls, this._scriptModel, key);
+            this._updateStatus();
+        }, target => this._selectAny(target));
         this._meshList = new ListView(meshList, (mesh, key) => {
             if (this._tab === 'meshes') this._properties.setSubject(mesh, this._meshModel, key);
             this._updateStatus();
@@ -1413,7 +1443,7 @@ class Inspector {
         };
         const views = [
             this._properties, this._passList, this._targetList, this._textureList, this._shaderList, this._meshList,
-            this._materialList, this._bufferList, this._assetList, this._bodyList
+            this._materialList, this._scriptList, this._bufferList, this._assetList, this._bodyList
         ];
         for (const view of views) view.onHover = onHover;
     }
@@ -2144,7 +2174,7 @@ class Inspector {
     /**
      * Switches the list tab and points the property view at that tab's selection.
      *
-     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'memory'|'shaders'|'physics'} tab - The tab.
+     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'scripts'|'memory'|'shaders'|'physics'} tab - The tab.
      * @private
      */
     _setTab(tab) {
@@ -2209,6 +2239,12 @@ class Inspector {
             if (material !== this._properties.subject) {
                 this._properties.setSubject(material, this._materialModel, this._materialList.selectedKey);
             }
+        } else if (this._tab === 'scripts') {
+            this._scriptList.setRows(scriptListRows(surveyScripts(this._app)));
+            const cls = this._scriptList.selected;
+            if (cls !== this._properties.subject) {
+                this._properties.setSubject(cls, this._scriptModel, this._scriptList.selectedKey);
+            }
         } else if (this._tab === 'memory') {
             Inspector._setNote(this._memoryNote, memorySummary(device));
             this._bufferList.setRows(bufferRows(device, bufferOwners(this._app), this._bufferKind.value));
@@ -2264,6 +2300,7 @@ class Inspector {
         this._bufferList.filter = value;
         this._meshList.filter = value;
         this._materialList.filter = value;
+        this._scriptList.filter = value;
         this._bodyList.filter = value;
         this._refreshLists(false);
         // the instances listed under a forward pass narrow with the filter too
@@ -2296,6 +2333,9 @@ class Inspector {
         } else if (target instanceof Asset) {
             this._setTab('assets');
             this._assetList.selectItem(target);
+        } else if (isScriptClass(target)) {
+            this._setTab('scripts');
+            this._scriptList.selectItem(target);
         } else if (target instanceof Material) {
             this._setTab('materials');
             this._materialList.selectItem(target);
@@ -2481,6 +2521,13 @@ class Inspector {
                 counts = `${materials.length} materials · ${used} in use`;
                 const material = this._materialList.selected;
                 selected = material ? `${material.name || 'Material'} #${material.id}` : '';
+                break;
+            }
+            case 'scripts': {
+                const survey = surveyScripts(this._app);
+                const instances = [...survey.values()].reduce((sum, script) => sum + script.instances.length, 0);
+                counts = `${survey.size} scripts · ${instances} instances`;
+                selected = survey.get(this._scriptList.selected)?.name ?? '';
                 break;
             }
             case 'memory': {

@@ -17,12 +17,16 @@ import { formatBytes } from '../../../src/extras/inspector/model.js';
 import { buildNodeModel, materialRows as buildMaterialRows, meshInstanceRows, meshRows as buildMeshRows } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
 import { formatChannels, previewAttachments, previewSupport, storedBottomUp } from '../../../src/extras/inspector/render-target-view.js';
+import { buildScriptModel, isScriptClass, scriptListRows, surveyScripts } from '../../../src/extras/inspector/script-view.js';
 import { buildShaderModel, formatBindGroup, formatUniformBuffer, shaderRows } from '../../../src/extras/inspector/shader-view.js';
 import { buildTextureModel, collectTextures, textureRows } from '../../../src/extras/inspector/texture-view.js';
 import { installTooltip, setTip } from '../../../src/extras/inspector/tooltip.js';
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { createScript } from '../../../src/framework/script/script-create.js';
+import { ScriptRegistry } from '../../../src/framework/script/script-registry.js';
+import { Script } from '../../../src/framework/script/script.js';
 import { BindGroupFormat, BindStorageBufferFormat, BindTextureFormat, BindUniformBufferFormat } from '../../../src/platform/graphics/bind-group-format.js';
 import {
     FILTER_LINEAR, FILTER_NEAREST, FUNC_LESS, PIXELFORMAT_111110F, SAMPLETYPE_DEPTH, SEMANTIC_POSITION, SHADERLANGUAGE_WGSL,
@@ -1190,6 +1194,126 @@ describe('Inspector material view', function () {
         expect(section.rows[0].value.text).to.equal('1 material');
         expect(section.rows[1].value.target).to.equal(glass);
         expect(usedByMaterialsSection([]).rows[0].value.text).to.equal('none found');
+    });
+});
+
+describe('Inspector script view', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    /**
+     * @returns {any} An app with a registered classic script used by one entity, an ESM script
+     * created on two entities straight from its class, one of them disabled, and a registered
+     * script nothing uses.
+     */
+    function sceneApp() {
+        const app = /** @type {any} */ ({ root: new GraphNode('root'), assets: new AssetRegistry(null) });
+        // an app's root is enabled in the hierarchy, which its children take on as they are added
+        app.root._enabledInHierarchy = true;
+        app.scripts = new ScriptRegistry(app);
+
+        const Rotator = createScript('rotator', app);
+        Rotator.attributes.add('speed', { type: 'number', default: 1 });
+        Rotator.prototype.update = function (dt) {
+            this.entity.rotate(0, this.speed * dt, 0);
+        };
+        const Unused = createScript('unused', app);
+
+        class Spinner extends Script {
+            static scriptName = 'spinner';
+
+            rate = 2;
+
+            update(dt) {
+                return this.rate * dt;
+            }
+        }
+
+        // made without the constructor, which needs a live app, so the fields are set by hand
+        const instance = (cls, enabled, fields = {}) => {
+            const script = Object.assign(Object.create(cls.prototype), fields);
+            Object.defineProperty(script, 'enabled', { value: enabled });
+            return script;
+        };
+        const node = (name, scripts) => {
+            const entity = new GraphNode(name);
+            /** @type {any} */ (entity).c = { script: { enabled: true, scripts } };
+            app.root.addChild(entity);
+            return entity;
+        };
+        const wheel = node('wheel', [instance(Rotator, true), instance(Spinner, true, { rate: 2 })]);
+        const fan = node('fan', [instance(Spinner, false, { rate: 3 })]);
+        return Object.assign(app, { parts: { Rotator, Unused, Spinner, wheel, fan } });
+    }
+
+    it('finds the registered scripts and those created on entities from their class', function () {
+        const app = sceneApp();
+        const { Rotator, Unused, Spinner, wheel, fan } = app.parts;
+        const survey = surveyScripts(app);
+        expect([...survey.keys()]).to.deep.equal([Rotator, Unused, Spinner]);
+        expect(survey.get(Rotator).registered).to.be.true;
+        expect(survey.get(Spinner)).to.include({ name: 'spinner', registered: false });
+        expect(survey.get(Spinner).instances.map(i => i.entity)).to.deep.equal([wheel, fan]);
+        expect(isScriptClass(Spinner)).to.be.true;
+        expect(isScriptClass(GraphNode)).to.be.false;
+
+        const rows = scriptListRows(survey);
+        expect(rows.map(row => row.cells.map(cell => cell.text))).to.deep.equal([
+            ['rotator', 'classic', '1 instance · 1 running'],
+            ['spinner', 'esm', '2 instances · 1 running'],
+            ['unused', 'classic', '0 instances']
+        ]);
+        expect(rows.map(row => row.dim)).to.deep.equal([false, false, true]);
+        // found by the entities using it too
+        expect(rows[1].matches('fan')).to.be.true;
+    });
+
+    it('shows a script with its methods, attributes, users and source', function () {
+        const app = sceneApp();
+        const { Rotator, Spinner, fan } = app.parts;
+        const byLabel = (section, label) => section.rows.find(row => row.label === label).value;
+
+        const [general, usage, source] = buildScriptModel(Rotator, { app });
+        expect(general.title).to.equal('Script "rotator"');
+        expect(byLabel(general, 'kind').text).to.equal('ScriptType (classic)');
+        expect(byLabel(general, 'methods').text).to.equal('update');
+        expect(byLabel(general, 'attributes').items.map(item => [item.label, item.text])).to.deep.equal([['speed', 'number']]);
+        expect(byLabel(usage, 'instances').items[0].text).to.equal('wheel');
+        // a createScript script is put back together from the methods on its prototype
+        const code = byLabel(source, 'source').code;
+        expect(code).to.match(/^const script = pc\.createScript\('rotator'\);/);
+        expect(code).to.match(/script\.prototype\.update = function \(dt\) \{/);
+
+        const [spinner, spinnerUsage, spinnerSource] = buildScriptModel(Spinner, { app });
+        expect(byLabel(spinner, 'kind').text).to.equal('Script (ESM)');
+        expect(byLabel(spinner, 'registered').text).to.match(/^false/);
+        const instances = byLabel(spinnerUsage, 'instances');
+        expect(instances.text).to.equal('2 instances, 1 running');
+        expect(instances.items[1]).to.include({ text: 'fan (not running)', target: fan });
+        expect(instances.items[1].expand().map(row => row.label)).to.include.members(['enabled', 'rate']);
+        // a class is its whole source
+        expect(byLabel(spinnerSource, 'source').code).to.match(/^class Spinner extends Script \{/);
+    });
+
+    it('links the scripts of an entity\'s script component to their classes', function () {
+        const app = sceneApp();
+        const { Rotator, Spinner, wheel } = app.parts;
+        // entities register themselves by guid with their app
+        const entity = new Entity('wheel', /** @type {any} */ ({ _entityIndex: {} }));
+        const scripts = wheel.c.script.scripts;
+        /** @type {any} */ (entity).c = { script: { enabled: true, scripts, rotator: scripts[0], spinner: scripts[1] } };
+
+        const sections = buildNodeModel(entity);
+        const rows = sections.find(section => section.key === 'c:script').rows;
+        const list = rows.find(row => row.label === 'scripts');
+        expect(list.value.text).to.equal('2 scripts');
+        expect(list.value.items.map(item => [item.text, item.target])).to.deep.equal([['rotator', Rotator], ['spinner', Spinner]]);
+        // the component's property for each script by name is left to the script's own section
+        expect(rows.map(row => row.label)).to.not.include.members(['rotator', 'spinner']);
+
+        // each script's own section starts with the same link
+        const own = sections.filter(section => section.key.startsWith('s:'));
+        expect(own.map(section => section.rows[0].value.target)).to.deep.equal([Rotator, Spinner]);
     });
 });
 
