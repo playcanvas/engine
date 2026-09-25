@@ -218,7 +218,7 @@ class XrView extends RenderView {
     /**
      * An eye with which this view is associated. Can be any of:
      *
-     * - {@link XREYE_NONE}: None - inidcates a monoscopic view (likely mobile phone screen).
+     * - {@link XREYE_NONE}: None - indicates a monoscopic view (likely mobile phone screen).
      * - {@link XREYE_LEFT}: Left - indicates left eye view.
      * - {@link XREYE_RIGHT}: Right - indicates a right eye view.
      *

@@ -16,7 +16,7 @@ import { ComputeRadixSortBase } from './compute-radix-sort-base.js';
  */
 
 // Workgroup / batching constants. The reorder shader processes ELEMENTS_PER_THREAD
-// keys per thread to amortise shared-memory bitmask traffic.
+// keys per thread to amortize shared-memory bitmask traffic.
 const WORKGROUP_SIZE_X = 16;
 const WORKGROUP_SIZE_Y = 16;
 const THREADS_PER_WORKGROUP = WORKGROUP_SIZE_X * WORKGROUP_SIZE_Y; // 256

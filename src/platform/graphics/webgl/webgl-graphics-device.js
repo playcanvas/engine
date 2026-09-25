@@ -2522,7 +2522,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // The copy out of the pixel buffer is synchronous, and the driver services it by submitting
         // and then waiting for whatever commands are outstanding when it runs. This read's own fence
-        // has signalled by now, so that wait is spent entirely on unrelated work queued behind it,
+        // has signaled by now, so that wait is spent entirely on unrelated work queued behind it,
         // which on a heavy scene is a frame's worth of rendering.
         const copyOut = () => {
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);

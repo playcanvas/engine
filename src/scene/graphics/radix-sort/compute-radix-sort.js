@@ -177,7 +177,7 @@ class ComputeRadixSort {
      * @param {number} [numBits] - Number of bits to sort. Must be a multiple
      * of {@link radixBits}. Defaults to 16.
      * @param {StorageBuffer} [initialValues] - Optional caller-supplied
-     * initial values for pass 0. When omitted, pass 0 synthesises sequential
+     * initial values for pass 0. When omitted, pass 0 synthesizes sequential
      * indices and the sort returns sorted indices.
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing sorted keys on
      * the last pass (marginal perf win; only use when sorted keys aren't

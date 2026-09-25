@@ -335,7 +335,7 @@ class GSplatDirector {
      */
     update(comp) {
 
-        // remove camera / layer entires for cameras / layers no longer in the composition
+        // remove camera / layer entries for cameras / layers no longer in the composition
         this.camerasMap.forEach((cameraData, camera) => {
 
             // camera is no longer in the composition

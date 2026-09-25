@@ -96,7 +96,7 @@ const discardVec: vec4f = vec4f(0.0, 0.0, 2.0, 1.0);
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
 
-    // Same instance/quad linearisation as gsplatSourceVS:
+    // Same instance/quad linearization as gsplatSourceVS:
     // order = instanceIdx * GSPLAT_INSTANCE_SIZE + perInstanceQuadIdx.
     let order = pcInstanceIndex * {GSPLAT_INSTANCE_SIZE}u + u32(vertex_position.z);
 
@@ -159,7 +159,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
 
         #ifdef PICK_PASS
             // In the pick path slot 6 is repurposed as the picking ID; alpha is the only
-            // colour we care about in the FS gate. Slot 7's r channel is unused.
+            // color we care about in the FS gate. Slot 7's r channel is unused.
             var clr: half4 = half4(half(0.0), half(0.0), half(0.0), alpha);
         #else
             let rg = unpack2x16float(projCache[base + 6u]);
@@ -207,7 +207,7 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
     #endif
 
     #ifdef GSPLAT_OVERDRAW
-        // Overdraw mode renders a flat colour ramp; depth-shade input not needed.
+        // Overdraw mode renders a flat color ramp; depth-shade input not needed.
         let t: f32 = clamp(viewDepth / 20.0, 0.0, 1.0);
         let rampColor: vec3f = textureSampleLevel(colorRamp, colorRampSampler, vec2f(t, 0.5), 0.0).rgb;
         let outAlpha = alpha * half(1.0 / 32.0) * half(uniform.colorRampIntensity);

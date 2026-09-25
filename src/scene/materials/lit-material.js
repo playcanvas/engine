@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../constants.js';
 import { Material } from './material.js';
@@ -83,13 +84,33 @@ class LitMaterial extends Material {
 
     hasRefraction = false;
 
-    hasIrridescence = false;
+    hasIridescence = false;
 
     hasMetalness = false;
 
     hasClearCoat = false;
 
     hasClearCoatNormals = false;
+
+    /**
+     * @type {boolean}
+     * @deprecated Use `hasIridescence` instead.
+     * @ignore
+     */
+    set hasIrridescence(value) {
+        Debug.deprecated('LitMaterial#hasIrridescence is deprecated. Use LitMaterial#hasIridescence instead.');
+        this.hasIridescence = value;
+    }
+
+    /**
+     * @type {boolean}
+     * @deprecated Use `hasIridescence` instead.
+     * @ignore
+     */
+    get hasIrridescence() {
+        Debug.deprecated('LitMaterial#hasIrridescence is deprecated. Use LitMaterial#hasIridescence instead.');
+        return this.hasIridescence;
+    }
 
     /** @ignore */
     getShaderVariant(params) {

@@ -16,7 +16,7 @@ const lightmapFiltersChunksGLSL = {
 };
 
 // wgsl shaders
-const lightmapFiltersChunksWLSL = {
+const lightmapFiltersChunksWGSL = {
     wgslBilateralDeNoisePS,
     wgslDilatePS
 };
@@ -32,7 +32,7 @@ class LightmapFilters {
 
         // register shader chunks
         ShaderChunks.get(this.device, SHADERLANGUAGE_GLSL).add(lightmapFiltersChunksGLSL);
-        ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).add(lightmapFiltersChunksWLSL);
+        ShaderChunks.get(this.device, SHADERLANGUAGE_WGSL).add(lightmapFiltersChunksWGSL);
 
         this.constantTexSource = device.scope.resolve('source');
 

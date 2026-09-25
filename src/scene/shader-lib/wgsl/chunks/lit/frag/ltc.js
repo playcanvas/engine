@@ -331,7 +331,7 @@ fn LTC_EvaluateDisk(N: vec3f, V: vec3f, P: vec3f, Minv: mat3x3f, points: Coords)
     return formFactor * scale;
 }
 
-// LTC_EvaluateDisk in some rare cases genereates NaN values in a or b, just before 'float c0 = a * b;'
+// LTC_EvaluateDisk in some rare cases generates NaN values in a or b, just before 'float c0 = a * b;'
 // Get rid of those Nan values before they propagate further, as in case of bloom / DOF blurs they
 // propagate to large areas. I didn't find the actual reason where those come from, so that is still TODO.
 // Note that only disk/sphere lights are causing it, so only handle those.

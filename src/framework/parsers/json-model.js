@@ -209,7 +209,7 @@ class JsonModelParser {
                 targets = modelData.morphs[i].targets;
                 morphTargetArray = [];
 
-                // total number of verticies of the mesh
+                // total number of vertices of the mesh
                 vertexCount = this._getMorphVertexCount(modelData, i, vertexBuffers);
 
                 for (j = 0; j < targets.length; j++) {

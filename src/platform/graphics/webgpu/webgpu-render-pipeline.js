@@ -334,7 +334,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             (format === 'rgba32float' && this.device.textureFloatBlendable);
 
         // this case is worth reporting - alpha to coverage was asked for on a multi-sampled target,
-        // and the only reason it cannot be honoured is the format of the first color attachment
+        // and the only reason it cannot be honored is the format of the first color attachment
         if (!supported) {
             Debug.warnOnce('Alpha to coverage is ignored, as it requires the first color attachment to use a blendable format with an alpha channel. Format:', format);
         }

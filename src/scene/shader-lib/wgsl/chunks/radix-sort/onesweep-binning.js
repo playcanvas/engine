@@ -141,8 +141,8 @@ fn main(
     let ltMask = (1u << sgInvId) - 1u;
     // Active-lane mask for the match-any ballot below. WGSL says inactive-lane
     // bits of subgroupBallot are 0, but drivers (notably Mali / Imagination
-    // at sgSize<32) don't always honour this for subgroupBallot(is_valid).
-    // Initialising waveFlag to only cover active lanes makes the per-bit
+    // at sgSize<32) don't always honor this for subgroupBallot(is_valid).
+    // Initializing waveFlag to only cover active lanes makes the per-bit
     // AND-chain correct regardless of driver behaviour. 1u << 32u is UB so
     // branch on sgSize < 32.
     let activeMask = select(0xFFFFFFFFu, (1u << sgSize) - 1u, sgSize < 32u);
@@ -198,7 +198,7 @@ fn main(
         // Dummy 0xFFFFFFFF for invalid lanes: validBallot drops them from
         // any real digit's run.
         keys[i] = select(0xFFFFFFFFu, inputKeys[gid], is_valid);
-        // On the first pass, values are synthesised as the original index
+        // On the first pass, values are synthesized as the original index
         // (identity permutation), so we skip the value-buffer load entirely.
         // On subsequent passes, values are the permutation from the previous
         // pass; read once here and reuse in phase G.
