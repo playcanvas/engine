@@ -32,6 +32,11 @@ varying @interpolate(flat, either) vSubDraw: vec4i;
 
 uniform uColorMultiply: vec3f;
 
+#if SH_BANDS > 0
+    // 1 for an orthographic camera, whose view rays are all parallel to the camera forward
+    uniform uCameraOrtho: u32;
+#endif
+
 #ifdef GSPLAT_ID
     uniform uId: u32;
 #endif
@@ -64,8 +69,12 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         worldCenter = workBufferWorldCenter();
 
         #if SH_BANDS > 0
-            // model-space view direction (matches the source path up to non-uniform model scale)
-            dir = normalize(quatRotateInv(uniform.model_rotation, worldCenter - uniform.uCameraPosition));
+            // model-space view direction (matches the source path up to non-uniform model scale).
+            // Orthographic uses the world-space camera forward, (0, 0, -1) taken out of view space.
+            let view = uniform.matrix_view;
+            let orthoDir = vec3f(0.0, 0.0, -1.0) * mat3x3f(view[0].xyz, view[1].xyz, view[2].xyz);
+            let viewDir = select(worldCenter - uniform.uCameraPosition, orthoDir, uniform.uCameraOrtho != 0u);
+            dir = normalize(quatRotateInv(uniform.model_rotation, viewDir));
         #endif
 
     #else
@@ -100,12 +109,14 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
         modifySplatRotationScale(originalCenter, worldCenter, &worldRotation, &worldScale);
 
         #if SH_BANDS > 0
-            // calculate the model-space view direction
+            // calculate the model-space view direction. Orthographic view rays are all parallel to
+            // the camera forward, rather than running from the camera position to the splat.
             // Firefox on Windows (D3D12) returns a transposed matrix when a struct member is indexed
             // through a pointer, so load the whole matrix into a local first. Remove the local once
             // the fix has shipped: https://bugzilla.mozilla.org/show_bug.cgi?id=2059727
             let modelView = center.modelView;
-            dir = normalize(center.view * mat3x3f(modelView[0].xyz, modelView[1].xyz, modelView[2].xyz));
+            let viewDir = select(center.view, vec3f(0.0, 0.0, -1.0), uniform.uCameraOrtho != 0u);
+            dir = normalize(viewDir * mat3x3f(modelView[0].xyz, modelView[1].xyz, modelView[2].xyz));
         #endif
 
     #endif
