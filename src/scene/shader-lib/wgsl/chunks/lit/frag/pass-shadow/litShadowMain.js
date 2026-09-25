@@ -27,7 +27,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
             // spot/omni shadows currently use linear depth.
             // TODO: use perspective depth for spot/omni the same way as directional
             #if LIGHT_TYPE != DIRECTIONAL
-                depth = linearizeDepthWithParams(depth, camera_params);
+                depth = linearizeDepthWithParams(depth, uniform.camera_params);
             #endif
         #endif
 
