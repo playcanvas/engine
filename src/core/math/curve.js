@@ -181,7 +181,8 @@ class Curve {
     }
 
     /**
-     * Returns the key closest to the specified time.
+     * Returns the key closest to the specified time. When two keys are equally close, the later
+     * one is returned.
      *
      * @param {number} time - The time to find the closest key to.
      * @returns {number[]|null} The `[time, value]` pair closest to the specified time, or null if
@@ -193,11 +194,20 @@ class Curve {
     closest(time) {
         const keys = this.keys;
         const length = keys.length;
+        if (length === 0) {
+            return null;
+        }
+
+        // a time before or after the curve is closest to the key at that end. Clamp it first: far
+        // enough out, and always at -Infinity, every key is the same distance away and the
+        // tie-break would pick the last one
+        const t = Math.min(Math.max(time, keys[0][0]), keys[length - 1][0]);
+
         let min = Infinity;
         let result = null;
 
         for (let i = 0; i < length; i++) {
-            const diff = Math.abs(time - keys[i][0]);
+            const diff = Math.abs(t - keys[i][0]);
             if (min >= diff) {
                 min = diff;
                 result = keys[i];
