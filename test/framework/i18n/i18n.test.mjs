@@ -24,7 +24,7 @@ describe('I18n', function () {
 
     const DEFAULT_LOCALE_FALLBACKS = {
         'en': 'en-US',
-        'es': 'en-ES',
+        'es': 'es-ES',
         'zh': 'zh-CN',
         'fr': 'fr-FR',
         'de': 'de-DE',
@@ -102,6 +102,12 @@ describe('I18n', function () {
         it('should fallback to en-GB if translations are provided and en-US is the desired locale', function () {
             addText('en-GB', 'key', 'British');
             expect(app.i18n.findAvailableLocale('en-US')).to.equal('en-GB');
+        });
+
+        it('should prefer es-ES to other Spanish locales for es-AR', function () {
+            addText('es-MX', 'key', 'Mexican Spanish');
+            addText('es-ES', 'key', 'Spanish');
+            expect(app.i18n.findAvailableLocale('es-AR')).to.equal('es-ES');
         });
 
     });
