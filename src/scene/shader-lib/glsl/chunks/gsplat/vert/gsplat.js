@@ -69,8 +69,10 @@ void main(void) {
 
     // evaluate spherical harmonics
     #if SH_BANDS > 0
-        // calculate the model-space view direction
-        vec3 dir = normalize(center.view * mat3(center.modelView));
+        // calculate the model-space view direction. Orthographic view rays are all parallel to the
+        // camera forward, rather than running from the camera position to the splat.
+        vec3 viewDir = camera_params.w == 1.0 ? vec3(0.0, 0.0, -1.0) : center.view;
+        vec3 dir = normalize(viewDir * mat3(center.modelView));
 
         // read sh coefficients
         vec3 sh[SH_COEFFS];
