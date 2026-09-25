@@ -16,7 +16,7 @@ import { WireRenderer } from '../renderers/wire-renderer.js';
 import { ASSET_SORTS, assetRows, buildAssetModel, collectAssets } from './asset-view.js';
 import { INSTANCES_PER_PAGE, LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from './frame-graph-view.js';
 import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
-import { HierarchyView } from './hierarchy-view.js';
+import { HierarchyView, filterSuggestions } from './hierarchy-view.js';
 import { ListView } from './list-view.js';
 import {
     buildMaterialModel, materialListRows, materialsUsingShader, materialsUsingTexture, surveyMaterials,
@@ -298,6 +298,22 @@ class Inspector {
      * @private
      */
     _filterInput;
+
+    /**
+     * What the hierarchy filter matches: entity names, component types or script names.
+     *
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _filterBy;
+
+    /**
+     * The values offered while filtering the hierarchy by component or script.
+     *
+     * @type {HTMLDataListElement}
+     * @private
+     */
+    _filterSuggestions;
 
     /**
      * @type {HTMLButtonElement}
@@ -1164,11 +1180,20 @@ class Inspector {
         }
 
         const filter = el('div', 'pci-filter');
+        // what the hierarchy filter matches, shown on that tab only: the lists match names
+        this._filterBy = /** @type {HTMLSelectElement} */ (document.createElement('select'));
+        this._filterBy.className = 'pci-select';
+        this._fillSelect(this._filterBy, [['name', 'entity name'], ['component', 'component'], ['script', 'script']]);
+        setTip(this._filterBy, 'What the filter matches in the hierarchy: entity names, the types of their components,\nor the names of their scripts');
         this._filterInput = /** @type {HTMLInputElement} */ (document.createElement('input'));
         this._filterInput.placeholder = 'Filter by name…';
         setTip(this._filterInput, 'Show only the items of this tab whose name contains the text');
         this._filterInput.spellcheck = false;
-        filter.appendChild(this._filterInput);
+        // the component types or script names in the scene, offered while filtering by them
+        this._filterSuggestions = /** @type {HTMLDataListElement} */ (document.createElement('datalist'));
+        this._filterSuggestions.id = 'pci-filter-suggestions';
+        this._filterInput.setAttribute('list', this._filterSuggestions.id);
+        filter.append(this._filterBy, this._filterInput, this._filterSuggestions);
 
         const tree = el('div', 'pci-tree');
 
@@ -1341,6 +1366,13 @@ class Inspector {
         });
 
         this._filterInput.addEventListener('input', () => this._applyFilter(this._filterInput.value));
+        // the scene may have gained components or scripts since the suggestions were made
+        this._filterInput.addEventListener('focus', () => this._updateFilterHint());
+        this._filterBy.addEventListener('change', () => {
+            this._updateFilterHint();
+            this._applyFilter(this._filterInput.value);
+            this._saveSettings();
+        });
         this._filterInput.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this._filterInput.value = '';
@@ -1555,6 +1587,10 @@ class Inspector {
         }
         if (typeof stored.assetSort === 'string') this._assetSort.value = stored.assetSort;
         if (typeof stored.bufferKind === 'string') this._bufferKind.value = stored.bufferKind;
+        if (typeof stored.filterBy === 'string') {
+            this._filterBy.value = stored.filterBy;
+            this._hierarchy.filterBy = /** @type {any} */ (this._filterBy.value);
+        }
         if (stored.texturePreview && typeof stored.texturePreview === 'object') {
             if (typeof stored.texturePreview.enabled === 'boolean') this._texturePreviewToggle.checked = stored.texturePreview.enabled;
             if (typeof stored.texturePreview.channels === 'string') this._textureChannels.value = stored.texturePreview.channels;
@@ -1588,7 +1624,8 @@ class Inspector {
                 targetPreview: { enabled: this._previewToggle.checked, channels: this._previewChannels.value },
                 texturePreview: { enabled: this._texturePreviewToggle.checked, channels: this._textureChannels.value },
                 assetSort: this._assetSort.value,
-                bufferKind: this._bufferKind.value
+                bufferKind: this._bufferKind.value,
+                filterBy: this._filterBy.value
             }));
         } catch (e) {
             // storage unavailable or full: settings simply do not persist
@@ -2144,6 +2181,27 @@ class Inspector {
     }
 
     /**
+     * Words the filter box after what it matches on the active tab, and fills its suggestions with
+     * the component types or script names of the scene while the hierarchy is filtered by those.
+     *
+     * @private
+     */
+    _updateFilterHint() {
+        const by = this._tab === 'hierarchy' ? this._filterBy.value : 'name';
+        this._filterInput.placeholder = by === 'component' ? 'Filter by component…' :
+            by === 'script' ? 'Filter by script…' : this._tab === 'hierarchy' ? 'Filter by entity name…' : 'Filter by name…';
+
+        const values = filterSuggestions(this._app.root ?? null, /** @type {any} */ (by));
+        const options = this._filterSuggestions.options;
+        if (options.length === values.length && values.every((value, i) => options[i].value === value)) return;
+        this._filterSuggestions.replaceChildren(...values.map((value) => {
+            const option = document.createElement('option');
+            option.value = value;
+            return option;
+        }));
+    }
+
+    /**
      * @param {HTMLElement} element - A note element.
      * @param {string} text - The text, empty to hide the note.
      * @private
@@ -2179,6 +2237,8 @@ class Inspector {
      */
     _setTab(tab) {
         this._tab = tab;
+        this._filterBy.style.display = tab === 'hierarchy' ? '' : 'none';
+        this._updateFilterHint();
         for (const [id, button] of Object.entries(this._tabButtons)) {
             button.classList.toggle('pci-active', id === tab);
         }
@@ -2292,16 +2352,18 @@ class Inspector {
      */
     _applyFilter(value) {
         this._hierarchy.filter = value;
-        this._passList.filter = value;
-        this._targetList.filter = value;
-        this._textureList.filter = value;
-        this._shaderList.filter = value;
-        this._assetList.filter = value;
-        this._bufferList.filter = value;
-        this._meshList.filter = value;
-        this._materialList.filter = value;
-        this._scriptList.filter = value;
-        this._bodyList.filter = value;
+        this._hierarchy.filterBy = /** @type {any} */ (this._filterBy.value);
+        const names = value;
+        this._passList.filter = names;
+        this._targetList.filter = names;
+        this._textureList.filter = names;
+        this._shaderList.filter = names;
+        this._assetList.filter = names;
+        this._bufferList.filter = names;
+        this._meshList.filter = names;
+        this._materialList.filter = names;
+        this._scriptList.filter = names;
+        this._bodyList.filter = names;
         this._refreshLists(false);
         // the instances listed under a forward pass narrow with the filter too
         this._properties.refresh();

@@ -6,6 +6,7 @@ import { Vec3 } from '../../../src/core/math/vec3.js';
 import { assetRows, assetUsers, buildAssetModel, collectAssets, describeAssetValue, resourceAssets } from '../../../src/extras/inspector/asset-view.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from '../../../src/extras/inspector/frame-graph-view.js';
+import { HierarchyView, filterSuggestions, matchesFilter } from '../../../src/extras/inspector/hierarchy-view.js';
 import { Inspector } from '../../../src/extras/inspector/inspector.js';
 import { ListView } from '../../../src/extras/inspector/list-view.js';
 import {
@@ -1956,6 +1957,97 @@ describe('Inspector frame graph capture', function () {
         expect(frame.usage.get(backBuffer).map(e => e.pass)).to.deep.equal([forward]);
         expect(frame.nameCounts.get('Shadow')).to.equal(1);
         expect(frame.timings).to.be.null;
+    });
+});
+
+describe('Inspector hierarchy filter', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    /**
+     * @returns {any} A hierarchy of a group holding a rendered wall with a script, a rendered door and
+     * a light, and a camera outside the group.
+     */
+    function scene() {
+        const app = /** @type {any} */ ({ _entityIndex: {} });
+        const entity = (name, components) => {
+            const node = new Entity(name, app);
+            /** @type {any} */ (node).c = components;
+            return node;
+        };
+        class VatCharacters extends Script {
+            static scriptName = 'vatCharacters';
+        }
+        const root = entity('Root', {});
+        const group = entity('Buildings', {});
+        const wall = entity('Wall', { render: {}, script: { scripts: [Object.create(VatCharacters.prototype)] } });
+        const door = entity('Door', { render: {} });
+        const lamp = entity('Lamp', { light: {} });
+        const camera = entity('Camera', { camera: {} });
+        root.addChild(group);
+        group.addChild(wall);
+        group.addChild(door);
+        group.addChild(lamp);
+        root.addChild(camera);
+        return { root, group, wall, door, lamp, camera };
+    }
+
+    it('matches entity names, component types or script names', function () {
+        const { wall, door, lamp } = scene();
+        const match = (text, by) => [wall, door, lamp].map(node => matchesFilter(node, text, by));
+        expect(match('render', 'component')).to.deep.equal([true, true, false]);
+        expect(match('vatchar', 'script')).to.deep.equal([true, false, false]);
+        expect(match('lamp', 'name')).to.deep.equal([false, false, true]);
+        // each matches only what it is set to
+        expect(match('lamp', 'component')).to.deep.equal([false, false, false]);
+        expect(match('render', 'name')).to.deep.equal([false, false, false]);
+    });
+
+    it('suggests the component types or script names in the scene', function () {
+        const { root } = scene();
+        expect(filterSuggestions(root, 'component')).to.deep.equal(['camera', 'light', 'render', 'script']);
+        expect(filterSuggestions(root, 'script')).to.deep.equal(['vatCharacters']);
+        expect(filterSuggestions(root, 'name')).to.deep.equal([]);
+    });
+
+    it('counts the children of each node and every node below it', function () {
+        const { root, group, wall } = scene();
+        const view = new HierarchyView(document.createElement('div'), () => {});
+        view.setRoot(root);
+        view.refresh();
+        const counts = node => [view._entries.get(node).countEl.textContent, view._entries.get(node).totalEl.textContent];
+        // the root, opened from the start, holds the group and the camera, and the group three more
+        expect(counts(root)).to.deep.equal(['2', '5']);
+        expect(counts(group)).to.deep.equal(['3', '3']);
+        // both stay once the group is opened, and a leaf shows neither
+        view.toggle(group);
+        view.refresh();
+        expect(counts(group)).to.deep.equal(['3', '3']);
+        expect(counts(wall)).to.deep.equal(['', '']);
+        expect(view.nodeCount).to.equal(6);
+    });
+
+    it('shows the matching entities with their ancestors', function () {
+        const { root, wall, door, camera } = scene();
+        const container = document.createElement('div');
+        const view = new HierarchyView(container, () => {});
+        view.setRoot(root);
+        const shown = () => [...container.querySelectorAll('.pci-node')]
+        .filter(el => el.style.display !== 'none' && !el.closest('[style*="display: none"]'))
+        .map(el => el.querySelector('.pci-name').textContent);
+
+        view.filterBy = 'component';
+        view.filter = 'render';
+        view.refresh();
+        expect(shown()).to.deep.equal(['Root', 'Buildings', 'Wall', 'Door']);
+        expect(view._entries.get(wall).row.classList.contains('pci-match')).to.be.true;
+
+        view.filterBy = 'script';
+        view.filter = 'vatCharacters';
+        view.refresh();
+        expect(shown()).to.deep.equal(['Root', 'Buildings', 'Wall']);
+        expect(view._entries.get(door).el.style.display).to.equal('none');
+        expect(view._entries.get(camera).el.style.display).to.equal('none');
     });
 });
 

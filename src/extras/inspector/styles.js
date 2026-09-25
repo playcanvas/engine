@@ -145,12 +145,15 @@ const styles = /* css */ `
 
     .pci-filter {
         flex: 0 0 auto;
+        display: flex;
+        gap: 6px;
         padding: 6px 8px;
         border-bottom: 1px solid #2c2f36;
     }
 
     .pci-filter input {
-        width: 100%;
+        flex: 1 1 auto;
+        min-width: 0;
         font: inherit;
         color: #e8eaee;
         background: #14161a;
@@ -515,8 +518,18 @@ const styles = /* css */ `
 
     .pci-count {
         margin-left: auto;
+        min-width: 4ch;
+        text-align: right;
         color: #6b7079;
         font-size: 10.5px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* the whole subtree, in its own column after the children, dimmer */
+    .pci-count.pci-count-total {
+        margin-left: 6px;
+        min-width: 6ch;
+        color: #4f535b;
     }
 
     .pci-splitter {

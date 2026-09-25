@@ -5,6 +5,62 @@ import { setTip } from './tooltip.js';
 /** @import { GraphNode } from '../../scene/graph-node.js' */
 
 /**
+ * What the hierarchy filter matches its text against: a node's name, the type of one of its
+ * components, or the name of one of its scripts.
+ *
+ * @typedef {'name'|'component'|'script'} FilterBy
+ * @ignore
+ */
+
+/**
+ * @param {GraphNode} node - A node.
+ * @returns {string[]} The names of the scripts on it.
+ */
+function scriptNames(node) {
+    const scripts = /** @type {any} */ (node).c?.script?.scripts ?? [];
+    return scripts.map((script) => {
+        const ctor = script.constructor;
+        return String(ctor.scriptName ?? ctor.__name ?? ctor.name ?? '');
+    });
+}
+
+/**
+ * @param {GraphNode} node - A node.
+ * @returns {string[]} The types of the components on it.
+ */
+function componentTypes(node) {
+    return node instanceof Entity ? Object.keys(node.c) : [];
+}
+
+/**
+ * @param {GraphNode} node - A node.
+ * @param {string} text - The lower-cased filter text.
+ * @param {FilterBy} by - What the text matches.
+ * @returns {boolean} Whether the node matches.
+ */
+function matchesFilter(node, text, by) {
+    const values = by === 'component' ? componentTypes(node) : by === 'script' ? scriptNames(node) : [node.name || ''];
+    return values.some(value => value.toLowerCase().includes(text));
+}
+
+/**
+ * The distinct component types or script names in a hierarchy, sorted, to suggest while filtering
+ * by them.
+ *
+ * @param {GraphNode|null} root - The root of the hierarchy.
+ * @param {FilterBy} by - What to collect: 'component' or 'script'.
+ * @returns {string[]} The values, empty when filtering by name.
+ */
+function filterSuggestions(root, by) {
+    if (!root || by === 'name') return [];
+    const values = new Set();
+    root.forEach((node) => {
+        for (const value of by === 'component' ? componentTypes(node) : scriptNames(node)) values.add(value);
+    });
+    return [...values].sort();
+}
+
+/**
  * @typedef {object} HierarchyEntry
  * @ignore
  * @property {HTMLElement} el - The node container, holding the row and the children container.
@@ -13,7 +69,8 @@ import { setTip } from './tooltip.js';
  * @property {HTMLInputElement} toggleEl - The checkbox bound to the node's own enabled flag.
  * @property {HTMLElement} nameEl - The name label.
  * @property {HTMLElement} badgesEl - The component badges.
- * @property {HTMLElement} countEl - The child count shown while collapsed.
+ * @property {HTMLElement} countEl - The number of children.
+ * @property {HTMLElement} totalEl - The number of nodes in the whole subtree below the node.
  * @property {HTMLElement} childrenEl - The container the child entries live in.
  * @property {string|undefined} name - The name last rendered.
  * @property {string|undefined} badges - The badge text last rendered.
@@ -83,11 +140,18 @@ class HierarchyView {
     selected = null;
 
     /**
-     * Case-insensitive name filter. Nodes that match, and their ancestors, stay visible.
+     * Case-insensitive filter text. Nodes that match, and their ancestors, stay visible.
      *
      * @type {string}
      */
     filter = '';
+
+    /**
+     * What the filter text matches: node names, component types or script names.
+     *
+     * @type {FilterBy}
+     */
+    filterBy = 'name';
 
     /**
      * The number of nodes in the hierarchy as of the last refresh.
@@ -122,6 +186,14 @@ class HierarchyView {
     _seen = new Set();
 
     /**
+     * The number of nodes below each node, counted on every refresh.
+     *
+     * @type {Map<GraphNode, number>}
+     * @private
+     */
+    _descendants = new Map();
+
+    /**
      * @param {HTMLElement} container - The element to render into.
      * @param {(node: GraphNode|null) => void} onSelect - The selection callback.
      */
@@ -147,6 +219,23 @@ class HierarchyView {
     }
 
     /**
+     * Counts the nodes of a subtree, recording for each node how many are below it, and totals
+     * the nodes and entities of the hierarchy on the way.
+     *
+     * @param {GraphNode} node - The root of the subtree.
+     * @returns {number} The number of nodes below it.
+     * @private
+     */
+    _countSubtree(node) {
+        this.nodeCount++;
+        if (node instanceof Entity) this.entityCount++;
+        let below = 0;
+        for (const child of node.children) below += 1 + this._countSubtree(child);
+        this._descendants.set(node, below);
+        return below;
+    }
+
+    /**
      * Synchronizes the rendered tree with the hierarchy.
      */
     refresh() {
@@ -156,10 +245,8 @@ class HierarchyView {
 
         const root = this.root;
         if (root) {
-            root.forEach((node) => {
-                this.nodeCount++;
-                if (node instanceof Entity) this.entityCount++;
-            });
+            this._descendants.clear();
+            this._countSubtree(root);
 
             this._visit(root, 0, this.filter.trim().toLowerCase());
             const entry = this._entries.get(root);
@@ -237,7 +324,7 @@ class HierarchyView {
      *
      * @param {GraphNode} node - The node.
      * @param {number} depth - The depth of the node below the root.
-     * @param {string} filter - The lower-cased filter.
+     * @param {string} filter - The lower-cased filter text, empty for none.
      * @returns {boolean} Whether the node or one of its descendants matches the filter.
      * @private
      */
@@ -280,7 +367,7 @@ class HierarchyView {
             entry.toggleEl.style.visibility = toggleVisibility;
         }
 
-        // children are materialized only when shown, or when a filter needs their names
+        // children are materialized only when shown, or when a filter needs to match them
         const children = node.children;
         const childCount = children.length;
         const expanded = this._expanded.has(node);
@@ -302,7 +389,7 @@ class HierarchyView {
             entry.childrenEl.textContent = '';
         }
 
-        const selfMatch = !filter || (name || '').toLowerCase().includes(filter);
+        const selfMatch = !filter || matchesFilter(node, filter, this.filterBy);
         const match = selfMatch || anyChildMatch;
         const open = childCount > 0 && (expanded || (filter && anyChildMatch));
 
@@ -313,8 +400,10 @@ class HierarchyView {
         const arrow = childCount === 0 ? '' : (open ? '▾' : '▸');
         if (entry.arrowEl.textContent !== arrow) entry.arrowEl.textContent = arrow;
 
-        const count = childCount > 0 && !open ? String(childCount) : '';
+        const count = childCount > 0 ? String(childCount) : '';
         if (entry.countEl.textContent !== count) entry.countEl.textContent = count;
+        const total = childCount > 0 ? String(this._descendants.get(node) ?? 0) : '';
+        if (entry.totalEl.textContent !== total) entry.totalEl.textContent = total;
 
         entry.match = match;
         return match;
@@ -349,6 +438,7 @@ class HierarchyView {
             nameEl: el('span', 'pci-name'),
             badgesEl: el('span', 'pci-badges'),
             countEl: el('span', 'pci-count'),
+            totalEl: el('span', 'pci-count pci-count-total'),
             childrenEl: el('div', 'pci-children'),
             name: undefined,
             badges: undefined,
@@ -356,7 +446,9 @@ class HierarchyView {
             match: true
         };
 
-        entry.row.append(entry.arrowEl, entry.toggleEl, entry.nameEl, entry.badgesEl, entry.countEl);
+        setTip(entry.countEl, 'Children');
+        setTip(entry.totalEl, 'All nodes below, however deep');
+        entry.row.append(entry.arrowEl, entry.toggleEl, entry.nameEl, entry.badgesEl, entry.countEl, entry.totalEl);
         entry.el.append(entry.row, entry.childrenEl);
 
         entry.arrowEl.addEventListener('click', (e) => {
@@ -380,4 +472,4 @@ class HierarchyView {
     }
 }
 
-export { HierarchyView };
+export { HierarchyView, filterSuggestions, matchesFilter };
