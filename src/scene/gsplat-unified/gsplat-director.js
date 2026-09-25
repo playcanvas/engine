@@ -16,6 +16,7 @@ import { GSplatResourceCleanup } from '../gsplat/gsplat-resource-cleanup.js';
  */
 
 const tempLayersToRemove = [];
+const tempDirtyLayers = new Set();
 
 /**
  * Per layer data the director keeps track of.
@@ -268,8 +269,9 @@ class GSplatDirector {
      * data (a new world-state version) or when a CPU-sort result is waiting to be applied.
      *
      * Uses the cached `camerasMap` topology (built by {@link update} on the render path) — newly
-     * added cameras, layers, or gsplat components register on the next rendered frame. Does no GPU
-     * draw work.
+     * added cameras, layers, or gsplat components register on the next rendered frame, and cameras
+     * whose entity has lost its camera component since are skipped until that frame prunes them.
+     * Does no GPU draw work.
      */
     updateStreaming() {
 
@@ -284,7 +286,15 @@ class GSplatDirector {
 
         let needRender = false;
         let streamed = false;
-        this.camerasMap.forEach((cameraData) => {
+        this.camerasMap.forEach((cameraData, camera) => {
+
+            // Skip a camera whose entity lost its camera component after the last render (the
+            // entity was destroyed or the component removed), which the LOD pass reads. The next
+            // render prunes it. A disabled camera keeps its component and streams as before.
+            if (camera.node.camera?.camera !== camera) {
+                return;
+            }
+
             cameraData.layersMap.forEach((layerData) => {
                 const manager = layerData.gsplatManager;
                 if (manager) {
@@ -358,6 +368,18 @@ class GSplatDirector {
             }
         });
 
+        // Consume the layers' placement changes up front. The managers fire frame:ready from their
+        // update below, and a listener changing placements there (e.g. enabling a gsplat) raises the
+        // flag again, so the change is reconciled next frame for every camera instead of being lost.
+        const layerList = comp.layerList;
+        for (let i = 0; i < layerList.length; i++) {
+            const layer = layerList[i];
+            if (layer.gsplatPlacementsDirty) {
+                layer.gsplatPlacementsDirty = false;
+                tempDirtyLayers.add(layer);
+            }
+        }
+
         let gsplatCount = 0;
         let bufferCopyUploaded = 0;
         let bufferCopyTotal = 0;
@@ -381,9 +403,9 @@ class GSplatDirector {
 
                     // if layer's splat placements were modified, or the camera has no managers yet
                     // for a layer with splats — a new camera, or one that gained the layer after the
-                    // layer's dirty flag was cleared, e.g. by removing it from its layers and adding
-                    // it back
-                    if (layer.gsplatPlacementsDirty ||
+                    // layer's last placement change was consumed, e.g. by removing it from its
+                    // layers and adding it back
+                    if (tempDirtyLayers.has(layer) ||
                         ((hasNormalPlacements || hasShadowCasters) && !cameraData?.layersMap.has(layer))) {
 
                         if (!hasNormalPlacements && !hasShadowCasters) {
@@ -436,10 +458,7 @@ class GSplatDirector {
         // clear dirty flags
         this.gsplat.frameEnd();
 
-        // clear dirty flags on all layers of the composition
-        for (let i = 0; i < comp.layerList.length; i++) {
-            comp.layerList[i].gsplatPlacementsDirty = false;
-        }
+        tempDirtyLayers.clear();
     }
 
     /**
