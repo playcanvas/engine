@@ -91,6 +91,14 @@ class LitMaterial extends Material {
 
     hasClearCoatNormals = false;
 
+    constructor() {
+        super();
+
+        // the lit shader chunks tint the ambient lighting by the ambient color of the material,
+        // which a StandardMaterial holds as a property - white here, unless the material sets its own
+        this.setParameter('material_ambient', new Float32Array([1, 1, 1]));
+    }
+
     /** @ignore */
     getShaderVariant(params) {
 
