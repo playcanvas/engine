@@ -26,9 +26,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -74,8 +76,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    biker: new Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    biker: new Asset('gsplat', 'gsplat', { url: './assets/splats/biker.compressed.ply' })
 };
 
 await new Promise((resolve) => {
@@ -129,22 +130,26 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 
 camera.addComponent('script');
-const orbitCam = /** @type {any} */ (
-    camera.script.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            distanceMax: 60,
-            frameOnStart: false
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            zoomRange: new Vec2(0.01, 60),
+            enableFly: false
         }
     })
 );
-if (orbitCam) {
-    orbitCam.pivotPoint.copy(ORBIT_PIVOT);
-    orbitCam.reset(ORBIT_INITIAL_YAW, ORBIT_INITIAL_PITCH, ORBIT_DISTANCE);
-    orbitCam._updatePosition();
-}
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
+
+// place the camera on an orbit around the pivot (yaw/pitch in degrees, at ORBIT_DISTANCE)
+const orbitYaw = (ORBIT_INITIAL_YAW * Math.PI) / 180;
+const orbitPitch = (ORBIT_INITIAL_PITCH * Math.PI) / 180;
+cameraControls.reset(
+    ORBIT_PIVOT,
+    new Vec3(
+        ORBIT_PIVOT.x + ORBIT_DISTANCE * Math.sin(orbitYaw) * Math.cos(orbitPitch),
+        ORBIT_PIVOT.y - ORBIT_DISTANCE * Math.sin(orbitPitch),
+        ORBIT_PIVOT.z + ORBIT_DISTANCE * Math.cos(orbitYaw) * Math.cos(orbitPitch)
+    )
+);
 
 // Create ground to receive shadows
 const material = new StandardMaterial();

@@ -43,8 +43,11 @@ import {
     Texture,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { createHatchMaterial } from 'examples/assets/scripts/misc/hatch-material.mjs';
 import { data, deviceType } from 'examples/context';
@@ -53,8 +56,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-
     bitmoji: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
     danceAnim: new Asset('danceAnim', 'container', { url: './assets/animations/bitmoji/win-dance.glb' }),
     morph: new Asset('glb', 'container', { url: './assets/models/morph-stress-test.glb' }),
@@ -268,16 +269,14 @@ camera.setLocalEulerAngles(-23.69, -49.15, 0);
 
 // Add orbit camera script to the camera
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: bitmojiEntity,
-        distanceMax: 100
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 100)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 // Handle UI changes
 data.on('*:set', (path, value) => {

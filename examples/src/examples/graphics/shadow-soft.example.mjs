@@ -30,8 +30,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
+    Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -39,7 +42,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     terrain: new Asset('terrain', 'container', { url: './assets/models/terrain.glb' }),
     helipad: new Asset(
         'helipad-env-atlas',
@@ -153,9 +155,6 @@ pillar.setLocalScale(10, 130, 10);
 pillar.setLocalPosition(180, 50, 110);
 app.root.addChild(pillar);
 
-// Find a tree in the middle to use as a focus point
-const tree = terrain.findOne('name', 'Arbol 2.002');
-
 // Create an Entity with a camera component
 const camera = new Entity();
 camera.addComponent('camera', {
@@ -169,16 +168,16 @@ camera.setLocalPosition(-500, 160, 300);
 
 // Add orbit camera script with a mouse and a touch support
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: tree,
-        distanceMax: 600
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            focusPoint: new Vec3(-4.473, 37.152, 27.631),
+            zoomRange: new Vec2(0.01, 600),
+            enableFly: false
+        }
+    })
+);
 
 // Create a directional light casting soft shadows
 const { soft: softShadows, ...lightSettings } = data.get('settings.light');
@@ -219,8 +218,8 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // On the first frame, when camera is updated, move it further away from the focus tree
     if (frameNumber === 0) {
-        // @ts-ignore engine-tsd
-        camera.script.orbitCamera.distance = 470;
+        // match the original orbit-camera framing of the focus tree
+        cameraControls.reset(new Vec3(-4.473, 37.152, 27.631), new Vec3(-406.258, 136.76, 248.474));
     }
 
     // Move the clouds around

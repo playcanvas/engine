@@ -32,9 +32,11 @@ import {
     TONEMAP_ACES,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType, win } from 'examples/context';
 
@@ -46,7 +48,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -282,21 +283,19 @@ camera.addComponent('camera', {
     sensitivity: data.get('script.camera.sensitivity')
 });
 camera.setLocalPosition(0, 5, 11);
+app.root.addChild(camera);
 
 camera.camera.requestSceneColorMap(true);
+
+// Add camera controls
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: sheen1,
-        distanceMin: 1,
-        distanceMax: 400,
-        frameOnStart: false
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(7, -1, 0),
+        enableFly: false,
+        zoomRange: new Vec2(1, 400)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'script.sun.luminance') {

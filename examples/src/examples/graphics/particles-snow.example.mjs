@@ -18,9 +18,11 @@ import {
     ScriptHandler,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -28,7 +30,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     snowflake: new Asset('snowflake', 'texture', { url: './assets/textures/snowflake.png' }, { srgb: true })
 };
 
@@ -81,17 +82,8 @@ cameraEntity.addComponent('camera', {
 cameraEntity.rotateLocal(0, 0, 0);
 cameraEntity.translateLocal(0, 7, 10);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls
 cameraEntity.addComponent('script');
-cameraEntity.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMax: 190,
-        frameOnStart: false
-    }
-});
-cameraEntity.script.create('orbitCameraInputMouse');
-cameraEntity.script.create('orbitCameraInputTouch');
 
 // Create a directional light
 const lightDirEntity = new Entity();
@@ -105,6 +97,14 @@ lightDirEntity.setLocalEulerAngles(45, 0, 0);
 // Add Entities into the scene hierarchy
 app.root.addChild(cameraEntity);
 app.root.addChild(lightDirEntity);
+
+cameraEntity.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 190)
+    }
+});
 
 // Set up random downwards velocity from -0.4 to -0.7
 const velocityCurve = new CurveSet([

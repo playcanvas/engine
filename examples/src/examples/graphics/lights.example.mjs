@@ -23,10 +23,12 @@ import {
     StandardMaterial,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -44,7 +46,6 @@ function createMaterial(colors) {
 
 const assets = {
     statue: new Asset('statue', 'container', { url: './assets/models/statue.glb' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
     xmas_negx: new Asset('xmas_negx', 'texture', {
         url: './assets/cubemaps/xmas_faces/xmas_negx.png'
@@ -128,15 +129,13 @@ camera.rotate(-14, 0, 0);
 app.root.addChild(camera);
 
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        frameOnStart: false,
-        distanceMax: 500
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0.173, 7.523, 0.018),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 500)
     }
 });
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 
 // Ground material
 const material = new StandardMaterial();

@@ -24,9 +24,11 @@ import {
     ScriptHandler,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -75,8 +77,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    skull: new Asset('gsplat', 'gsplat', { url: './assets/splats/skull.compressed.ply' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    skull: new Asset('gsplat', 'gsplat', { url: './assets/splats/skull.compressed.ply' })
 };
 
 await new Promise((resolve) => {
@@ -114,24 +115,29 @@ camera.addComponent('camera', {
 });
 app.root.addChild(camera);
 
-// Add orbit camera script with a mouse and a touch support
+// Add camera controls with mouse and touch support
 camera.addComponent('script');
-const orbitCam = /** @type {any} */ (
-    camera.script?.create('orbitCamera', {
-        attributes: {
-            inertiaFactor: 0.2,
-            distanceMax: 6,
-            frameOnStart: false
+const orbitPivot = new Vec3(0, 0.9, -0.28);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            zoomRange: new Vec2(0.01, 6),
+            enableFly: false
         }
     })
 );
-if (orbitCam) {
-    orbitCam.pivotPoint.copy(new Vec3(0, 0.9, -0.28));
-    orbitCam.reset(88, -28, 0.9);
-    orbitCam._updatePosition();
-}
-camera.script?.create('orbitCameraInputMouse');
-camera.script?.create('orbitCameraInputTouch');
+
+// initial view: yaw 88, pitch -28 (degrees) at a distance of 0.9 around the pivot
+const initYaw = (88 * Math.PI) / 180;
+const initPitch = (-28 * Math.PI) / 180;
+cameraControls.reset(
+    orbitPivot,
+    new Vec3(
+        orbitPivot.x + 0.9 * Math.sin(initYaw) * Math.cos(initPitch),
+        orbitPivot.y - 0.9 * Math.sin(initPitch),
+        orbitPivot.z + 0.9 * Math.cos(initYaw) * Math.cos(initPitch)
+    )
+);
 
 // Auto-rotate camera when idle
 let autoRotateEnabled = true;
@@ -169,11 +175,20 @@ app.on('update', (dt) => {
         autoRotateEnabled = true;
     }
 
-    // Apply auto-rotation
+    // Apply auto-rotation by advancing the camera's azimuth around the pivot
     if (autoRotateEnabled) {
-        const orbitCamera = camera.script?.get('orbitCamera');
-        if (orbitCamera) {
-            orbitCamera.yaw += autoRotateSpeed * dt;
-        }
+        const offset = camera.getPosition().clone().sub(orbitPivot);
+        const r = offset.length();
+        const pitch = Math.asin(Math.max(-1, Math.min(1, offset.y / r)));
+        const yaw = Math.atan2(offset.x, offset.z) + (autoRotateSpeed * dt * Math.PI) / 180;
+        const cp = Math.cos(pitch);
+        cameraControls.reset(
+            orbitPivot,
+            new Vec3(
+                orbitPivot.x + r * Math.sin(yaw) * cp,
+                orbitPivot.y + r * Math.sin(pitch),
+                orbitPivot.z + r * Math.cos(yaw) * cp
+            )
+        );
     }
 });

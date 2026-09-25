@@ -28,9 +28,11 @@ import {
     ScriptHandler,
     TextureHandler,
     TouchDevice,
+    Vec2,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -76,8 +78,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' }),
-    orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' })
+    hotel: new Asset('gsplat', 'gsplat', { url: './assets/splats/hotel-culpture.compressed.ply' })
 };
 
 await new Promise((resolve) => {
@@ -103,17 +104,14 @@ camera.addComponent('camera', {
 camera.setLocalPosition(3, 1, 0.5);
 
 camera.addComponent('script');
-camera.script?.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        focusEntity: hotel,
-        distanceMax: 2,
-        frameOnStart: false
+app.root.addChild(camera);
+camera.script.create(CameraControls, {
+    properties: {
+        focusPoint: new Vec3(0, 0, 0),
+        enableFly: false,
+        zoomRange: new Vec2(0.01, 2)
     }
 });
-camera.script?.create('orbitCameraInputMouse');
-camera.script?.create('orbitCameraInputTouch');
-app.root.addChild(camera);
 
 data.on('renderer:set', () => {
     app.scene.gsplat.renderer = data.get('renderer');

@@ -56,6 +56,7 @@ import {
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
+import { CameraControls } from 'playcanvas/scripts/esm/camera-controls.mjs';
 
 import { data, deviceType } from 'examples/context';
 
@@ -63,7 +64,6 @@ const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('applic
 window.focus();
 
 const assets = {
-    orbitCamera: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -223,16 +223,15 @@ camera.setLocalPosition(0, 55, 160);
 
 camera.camera.requestSceneColorMap(true);
 camera.addComponent('script');
-camera.script.create('orbitCamera', {
-    attributes: {
-        inertiaFactor: 0.2,
-        distanceMin: 8,
-        distanceMax: 50
-    }
-});
-camera.script.create('orbitCameraInputMouse');
-camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
+const cameraControls = /** @type {CameraControls} */ (
+    camera.script.create(CameraControls, {
+        properties: {
+            zoomRange: new Vec2(8, 50),
+            enableFly: false
+        }
+    })
+);
 
 const directionalLight = new Entity();
 directionalLight.addComponent('light', {
@@ -283,8 +282,7 @@ function jumpToAsset(offset) {
     const newPos = new Vec3(0, 2.0, 6.0).add(pos);
     camera.setLocalPosition(newPos);
 
-    // @ts-ignore engine-tsd
-    camera.script.orbitCamera.focusEntity = assetList[currentAssetIndex];
+    cameraControls.focusPoint = assetList[currentAssetIndex].getPosition();
 }
 
 // Focus on mosquito
