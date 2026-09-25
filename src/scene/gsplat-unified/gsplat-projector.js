@@ -296,7 +296,8 @@ class GSplatProjector {
             new UniformFormat('minDist', UNIFORMTYPE_FLOAT),
             new UniformFormat('invRange', UNIFORMTYPE_FLOAT),
             new UniformFormat('foveationStrength', UNIFORMTYPE_FLOAT),
-            new UniformFormat('foveationCenter', UNIFORMTYPE_FLOAT)
+            new UniformFormat('foveationCenter', UNIFORMTYPE_FLOAT),
+            new UniformFormat('tieBits', UNIFORMTYPE_UINT)
         ];
 
         this._projectorUniformBufferFormat = new UniformBufferFormat(device, baseFields);
@@ -618,6 +619,9 @@ class GSplatProjector {
      * sortKeys (typically `worldState.totalActiveSplats`).
      * @param {boolean} params.radialSort - Whether to use the radial sort key variant.
      * @param {number} params.numBits - Sort key bit count (defines bucket count = 1 << numBits).
+     * @param {number} [params.tieBits] - Number of low key bits below the depth key that carry the
+     * projector workgroup index, so equal depths sort the same way every frame. The sort must then
+     * run over `numBits + tieBits` bits. 0 disables the tie-break.
      * @param {number} params.minDist - Minimum distance for sort key normalisation.
      * @param {number} params.maxDist - Maximum distance for sort key normalisation.
      * @param {number} params.alphaClip - Alpha cull threshold.
@@ -646,7 +650,7 @@ class GSplatProjector {
     dispatch(params) {
         const {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
-            totalCapacity, radialSort, numBits, minDist, maxDist,
+            totalCapacity, radialSort, numBits, tieBits = 0, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
             foveationStrength = 0, foveationCenter = 0.3,
             viewportWidth, viewportHeight,
@@ -795,6 +799,7 @@ class GSplatProjector {
         compute.setParameter('minDist', minDist);
         compute.setParameter('invRange', invRange);
         compute.setParameter('stochastic', stochastic ? 1 : 0);
+        compute.setParameter('tieBits', stochastic ? 0 : tieBits);
 
         if (fisheyeMode) {
             compute.setParameter('fisheye_k', fisheyeProj.k);

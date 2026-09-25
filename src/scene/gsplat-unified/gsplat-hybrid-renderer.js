@@ -491,11 +491,24 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const compactedSplatIds = ic.compactedSplatIds;
 
         let roundedNumBits = 0;
+        let tieBits = 0;
+        let sortBits = 0;
         let minDist = 0;
         let maxDist = 1;
         if (!stochastic) {
+            const radixBits = gpuSorter.radixBits;
             const numBits = Math.max(10, Math.min(20, Math.round(Math.log2(elementCount / 4))));
-            roundedNumBits = Math.ceil(numBits / gpuSorter.radixBits) * gpuSorter.radixBits;
+            roundedNumBits = Math.ceil(numBits / radixBits) * radixBits;
+
+            // The projector writes each workgroup's survivors to a range whose position varies from
+            // frame to frame, so the stable sort alone would order equal depth keys differently every
+            // frame (visible as flicker with a static camera). The projector packs its workgroup index
+            // (256 splats each) below the depth key; size that to the workgroup count, in whole radix
+            // passes, within the 32-bit key.
+            const workgroupBits = Math.ceil(Math.log2(Math.ceil(elementCount / 256)));
+            sortBits = Math.min(32, Math.ceil((roundedNumBits + workgroupBits) / radixBits) * radixBits);
+            tieBits = sortBits - roundedNumBits;
+
             ({ minDist, maxDist } = this.computeDistanceRange(worldState, cameraNode, params.radialSorting));
         }
 
@@ -508,6 +521,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             radialSort: params.radialSorting,
             stochastic,
             numBits: roundedNumBits,
+            tieBits,
             minDist,
             maxDist,
             alphaClip,
@@ -554,7 +568,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         return gpuSorter.sortIndirect(
             /** @type {StorageBuffer} */ (projector.sortKeys),
             elementCount,
-            roundedNumBits,
+            sortBits,
             this.indirectDispatchSlot + 1,
             /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             undefined,

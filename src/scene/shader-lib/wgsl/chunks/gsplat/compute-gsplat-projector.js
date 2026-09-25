@@ -5,10 +5,13 @@
 //      alpha / minPixelSize / minContribution / off-screen culls used by the compute renderer.
 //   2. Derives the eigen-vectors v1, v2 (same eigen-decomposition as gsplatCorner.js).
 //   3. Computes a depth-based sort key (camera-relative bin weighting; matches CPU worker sort keys,
-//      optionally radial via RADIAL_SORT define).
-//   4. Workgroup-local atomic compaction: each thread that survives culling gets a slot
-//      via a shared atomic, then the workgroup leader reserves a contiguous range in the
-//      global renderCounter. This caps global atomics at one per workgroup.
+//      optionally radial via RADIAL_SORT define), with the workgroup index packed into the
+//      low tieBits bits so that equal depths resolve the same way every frame (see step 4).
+//   4. Workgroup-local compaction: each thread that survives culling is ranked by thread index
+//      within its workgroup (survivor bitmask + popcount), then the workgroup leader reserves a
+//      contiguous range in the global renderCounter. This caps global atomics at one per
+//      workgroup. The order of the workgroup ranges still varies from frame to frame, so the
+//      stable radix sort relies on the workgroup index in the key to order equal depths.
 //   5. Writes the 8 u32 slots of the projection cache and the sort key.
 //
 // Bindings 0..6 are fixed; texture bindings for the work-buffer format follow them
@@ -59,6 +62,7 @@ struct ProjectorUniforms {
     invRange: f32,
     foveationStrength: f32,
     foveationCenter: f32,
+    tieBits: u32,
     #ifdef GSPLAT_XR
         // Eye-1 view-projection (raw XR projViewOffMat). Eye 0 uses viewProj above.
         // Appended only for the stereo variant - matches the conditional CPU UBO field.
@@ -85,7 +89,10 @@ struct ProjectorUniforms {
 
 // One global atomicAdd per workgroup (256 threads) — drastically lowers contention
 // vs a per-thread atomic on the global counter without needing subgroup ops.
+// Survivors are ranked from a bitmask (one bit per thread) rather than by the order of their
+// atomicAdd on wgCount, so their order inside the workgroup's output range is the same every frame.
 var<workgroup> wgCount: atomic<u32>;
+var<workgroup> wgMask: array<atomic<u32>, 8>;
 var<workgroup> wgBase: u32;
 
 @compute @workgroup_size(256)
@@ -96,6 +103,9 @@ fn main(
 ) {
     if (localIdx == 0u) {
         atomicStore(&wgCount, 0u);
+    }
+    if (localIdx < 8u) {
+        atomicStore(&wgMask[localIdx], 0u);
     }
     workgroupBarrier();
 
@@ -225,6 +235,14 @@ fn main(
                 let offset = min(u32(bw.divider * clamp(binFrac, 0.0, 1.0)), divider - 1u);
             #endif
             sortKey = u32(bw.base) + offset;
+
+            // Equal depth keys from different workgroups would otherwise be ordered by where each
+            // workgroup's range landed in the output, which changes every frame. The workgroup
+            // index below the depth key makes those ties resolve identically every frame.
+            if (uniforms.tieBits > 0u) {
+                let tieMask = (1u << uniforms.tieBits) - 1u;
+                sortKey = (sortKey << uniforms.tieBits) | ((threadIdx >> 8u) & tieMask);
+            }
         }
 
         // assemble (rgb, a) and run the render-stage color modifier on the modified center,
@@ -251,12 +269,22 @@ fn main(
         valid = true;
     }
 
-    // Reserve a per-workgroup slot for this thread.
-    var localDst: u32 = 0u;
+    // Count this thread and mark it as a survivor of the workgroup.
     if (valid) {
-        localDst = atomicAdd(&wgCount, 1u);
+        atomicAdd(&wgCount, 1u);
+        atomicOr(&wgMask[localIdx >> 5u], 1u << (localIdx & 31u));
     }
     workgroupBarrier();
+
+    // Slot within the workgroup's range = number of survivors with a lower thread index.
+    var localDst = 0u;
+    if (valid) {
+        let word = localIdx >> 5u;
+        localDst = countOneBits(atomicLoad(&wgMask[word]) & ((1u << (localIdx & 31u)) - 1u));
+        for (var w = 0u; w < word; w++) {
+            localDst += countOneBits(atomicLoad(&wgMask[w]));
+        }
+    }
 
     // Workgroup leader reserves a contiguous output range in renderCounter[0].
     if (localIdx == 0u) {
