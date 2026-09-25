@@ -505,6 +505,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
             compactedSplatIds: /** @type {StorageBuffer} */ (compactedSplatIds),
             sortElementCountBuffer: /** @type {StorageBuffer} */ (ic.sortElementCountBuffer),
             totalCapacity: elementCount,
+            indirectSlot: pickMode ? -1 : this.indirectDispatchSlot,
             radialSort: params.radialSorting,
             stochastic,
             numBits: roundedNumBits,

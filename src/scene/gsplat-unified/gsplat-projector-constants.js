@@ -30,3 +30,7 @@
 //   [7]   color     (pack4x8unorm)   — shared RGBA8 color + opacity (XR accepts 8-bit color)
 
 export const CACHE_STRIDE = 8;
+
+// Threads per workgroup of the projector pass. The interval compaction sizes the projector's
+// indirect dispatch from the frustum-visible splat count using this value, so both use it.
+export const PROJECTOR_WORKGROUP_SIZE = 256;

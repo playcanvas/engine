@@ -83,12 +83,12 @@ struct ProjectorUniforms {
 #include "gsplatModifyVS"
 #include "gsplatProjectCommonCS"
 
-// One global atomicAdd per workgroup (256 threads) — drastically lowers contention
-// vs a per-thread atomic on the global counter without needing subgroup ops.
+// One global atomicAdd per workgroup — drastically lowers contention vs a per-thread atomic on the
+// global counter without needing subgroup ops.
 var<workgroup> wgCount: atomic<u32>;
 var<workgroup> wgBase: u32;
 
-@compute @workgroup_size(256)
+@compute @workgroup_size({PROJECTOR_WORKGROUP_SIZE})
 fn main(
     @builtin(global_invocation_id) gid: vec3u,
     @builtin(num_workgroups) numWorkgroups: vec3u,
@@ -100,7 +100,7 @@ fn main(
     workgroupBarrier();
 
     // Indirect dispatch linearisation: a 2D grid expanded into a flat thread index.
-    let threadIdx = gid.y * (numWorkgroups.x * 256u) + gid.x;
+    let threadIdx = gid.y * (numWorkgroups.x * {PROJECTOR_WORKGROUP_SIZE}u) + gid.x;
     let numVisible = sortElementCount[0];
 
     var valid = false;

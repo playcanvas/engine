@@ -22,6 +22,7 @@ import { computeGsplatWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/
 import { PrefixSumKernel } from '../graphics/prefix-sum-kernel.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { buildGSplatIntervalData, INTERVAL_STRIDE } from './gsplat-interval-data.js';
+import { PROJECTOR_WORKGROUP_SIZE } from './gsplat-projector-constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -331,7 +332,7 @@ class GSplatIntervalCompaction {
 
         const cdefines = new Map([
             ['{INSTANCE_SIZE}', GSplatResourceBase.instanceSize],
-            ['{KEYGEN_THREADS_PER_WORKGROUP}', 256],
+            ['{PROJECTOR_WORKGROUP_SIZE}', PROJECTOR_WORKGROUP_SIZE],
             ['{MAX_WORKGROUPS_PER_DIM}', device.limits.maxComputeWorkgroupsPerDimension || 65535]
         ]);
 
@@ -472,8 +473,8 @@ class GSplatIntervalCompaction {
      *
      * @param {number} drawSlot - Slot index in the device's indirect draw buffer.
      * @param {number} dispatchSlotBase - Base slot index in the device's indirect
-     * dispatch buffer. Key-gen args go to `dispatchSlotBase`; sort args to
-     * `dispatchSlotBase + 1` onwards (as described by `sortIndirectInfo`).
+     * dispatch buffer. The projector's args go to `dispatchSlotBase`, sized for the visible count;
+     * sort args to `dispatchSlotBase + 1` onwards (as described by `sortIndirectInfo`).
      * @param {number} numIntervals - Total interval count (index into prefix sum for visible count).
      * @param {Uint32Array} sortIndirectInfo - Sorter-owned 4-element Uint32 array
      * returned by `ComputeRadixSort.prepareIndirect()`, used as a `vec4<u32>`

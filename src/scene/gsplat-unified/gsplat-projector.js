@@ -30,7 +30,7 @@ import { PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 import { Camera } from '../camera.js';
 import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js';
 import { GSplatSortBinWeights } from './gsplat-sort-bin-weights.js';
-import { CACHE_STRIDE } from './gsplat-projector-constants.js';
+import { CACHE_STRIDE, PROJECTOR_WORKGROUP_SIZE } from './gsplat-projector-constants.js';
 import { computeGsplatProjectorSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-projector.js';
 import { computeGsplatProjectorWriteIndirectArgsSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-projector-write-indirect-args.js';
 import { computeGsplatProjectCommonSource } from '../shader-lib/wgsl/chunks/gsplat/compute-gsplat-project-common.js';
@@ -46,13 +46,13 @@ import gsplatHelpersSource from '../shader-lib/wgsl/chunks/gsplat/vert/gsplatHel
  */
 
 const INDEX_COUNT = 6 * GSplatResourceBase.instanceSize;
-const PROJECTOR_WORKGROUP_SIZE = 256;
 
 // Defines owned by the projector itself - user render-stage material defines that collide with
 // these are ignored when merged into the projector compute, so user customization can't clobber
 // the projector's own variant/format configuration.
 const PROJECTOR_INTERNAL_DEFINES = new Set([
-    '{CACHE_STRIDE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA', 'GSPLAT_COLOR_FLOAT', 'GSPLAT_XR'
+    '{CACHE_STRIDE}', '{PROJECTOR_WORKGROUP_SIZE}', 'RADIAL_SORT', 'PICK_MODE', 'GSPLAT_FISHEYE', 'GSPLAT_AA',
+    'GSPLAT_COLOR_FLOAT', 'GSPLAT_XR'
 ]);
 
 const _cameraDir = new Vec3();
@@ -440,6 +440,7 @@ class GSplatProjector {
 
         const cdefines = new Map();
         cdefines.set('{CACHE_STRIDE}', (CACHE_STRIDE + this._userCacheWords).toString());
+        cdefines.set('{PROJECTOR_WORKGROUP_SIZE}', PROJECTOR_WORKGROUP_SIZE.toString());
         if (radialSort) {
             cdefines.set('RADIAL_SORT', '');
         }
@@ -642,11 +643,15 @@ class GSplatProjector {
      * @param {boolean} [params.isStereo] - Whether to project both XR eyes in a single pass
      * (GSPLAT_XR variant). Requires `cameraNode.camera.camera.xrViews` to have 2 views.
      * Mutually exclusive with pick and fisheye.
+     * @param {number} [params.indirectSlot] - Slot in the device's indirect dispatch buffer holding
+     * the dispatch size for the splats that survived the interval cull, written by the interval
+     * compaction's `writeIndirectArgs`. When negative, the dispatch covers the full
+     * `totalCapacity`. Defaults to -1.
      */
     dispatch(params) {
         const {
             workBuffer, cameraNode, compactedSplatIds, sortElementCountBuffer,
-            totalCapacity, radialSort, numBits, minDist, maxDist,
+            totalCapacity, indirectSlot = -1, radialSort, numBits, minDist, maxDist,
             alphaClip, minPixelSize, minContribution,
             foveationStrength = 0, foveationCenter = 0.3,
             viewportWidth, viewportHeight,
@@ -803,16 +808,21 @@ class GSplatProjector {
             compute.setParameter('fisheye_projMat11', fisheyeProj.projMat11);
         }
 
-        // 2D dispatch over the work-buffer capacity. The shader early-outs threads beyond
-        // sortElementCount[0]; sizing the dispatch for the full capacity (a CPU-known
-        // upper bound) avoids needing an extra indirect-args dispatch for this pass.
-        const workgroupCount = Math.ceil(totalCapacity / PROJECTOR_WORKGROUP_SIZE);
-        Compute.calcDispatchSize(
-            workgroupCount,
-            _dispatchSize,
-            this.device.limits.maxComputeWorkgroupsPerDimension || 65535
-        );
-        compute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
+        // The shader early-outs threads beyond sortElementCount[0]. The indirect dispatch launches
+        // workgroups only for the splats that survived the interval cull, which otherwise pay the
+        // workgroup launch cost for all of the frustum-culled capacity as well.
+        if (indirectSlot >= 0) {
+            compute.setupIndirectDispatch(indirectSlot);
+        } else {
+            // 2D dispatch over the work-buffer capacity, a CPU-known upper bound
+            const workgroupCount = Math.ceil(totalCapacity / PROJECTOR_WORKGROUP_SIZE);
+            Compute.calcDispatchSize(
+                workgroupCount,
+                _dispatchSize,
+                this.device.limits.maxComputeWorkgroupsPerDimension || 65535
+            );
+            compute.setupDispatch(_dispatchSize.x, _dispatchSize.y, 1);
+        }
         this.device.computeDispatch([compute], 'GSplatProjector');
     }
 

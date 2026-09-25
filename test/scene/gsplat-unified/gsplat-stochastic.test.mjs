@@ -130,6 +130,19 @@ describe('GSplat stochastic rendering', function () {
         expect(renderer.projector.dispatch.firstCall.args[0].stochastic).to.equal(false);
     });
 
+    // The interval compaction writes the projector's dispatch size into the first reserved slot.
+    // Picking keeps the capacity-sized dispatch, see the stale indirect args workaround in
+    // sortAndProjectForCamera.
+    it('sizes the projector dispatch from the interval cull, except when picking', function () {
+        for (const [stochastic, pickMode, expectedSlot] of [[false, false, 7], [true, false, 7], [false, true, -1]]) {
+            const renderer = pipeline();
+            renderer.device.getIndirectDispatchSlot = sinon.stub().returns(7);
+            render(renderer, stochastic, pickMode);
+            expect(renderer.intervalCompaction.writeIndirectArgs.firstCall.args[1]).to.equal(7);
+            expect(renderer.projector.dispatch.firstCall.args[0].indirectSlot).to.equal(expectedSlot);
+        }
+    });
+
     it('switches depth writes, blend state and shader defines together', function () {
         const renderer = Object.create(GSplatHybridRenderer.prototype);
         renderer._material = new ShaderMaterial();
