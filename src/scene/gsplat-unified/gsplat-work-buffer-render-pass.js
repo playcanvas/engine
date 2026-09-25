@@ -8,6 +8,7 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
@@ -220,6 +221,10 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const viewInvMat = cameraNode.getWorldTransform();
         const viewMat = _viewMat.copy(viewInvMat).invert();
         device.scope.resolve('matrix_view').setValue(viewMat.data);
+
+        // spherical harmonics are evaluated along the camera forward for orthographic cameras
+        const ortho = cameraNode.camera.projection === PROJECTION_ORTHOGRAPHIC;
+        device.scope.resolve('uCameraOrtho').setValue(ortho ? 1 : 0);
 
         // work-buffer-sourced geometry inputs for color-only (SH) updates. These are consumed
         // only by shaders compiled with GSPLAT_WORKBUFFER_GEOMETRY, so skip the setup unless a
