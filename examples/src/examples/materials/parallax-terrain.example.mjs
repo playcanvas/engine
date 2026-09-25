@@ -280,7 +280,7 @@ light.addComponent('light', {
 
     // The pcss penumbra is a fraction of the depth range the cascade covers, which over a terrain
     // this size is hundreds of units - so the same number reads as a far wider penumbra here than
-    // it would on a small scene, and much past this the shadow washes out into a flat grey.
+    // it would on a small scene, and much past this the shadow washes out into a flat gray.
     penumbraSize: 0.02
 });
 
@@ -330,7 +330,7 @@ data.set('data', {
     height: 0.35,
 
     // the height map value that sits at the level of the geometry - the engine default pivots the
-    // relief around mid-grey, and 1 treats the map as pure depth carved below the surface
+    // relief around mid-gray, and 1 treats the map as pure depth carved below the surface
     base: 0.5,
     shadowType: SHADOW_PCF3_32F,
     numCascades: 4,

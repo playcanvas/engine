@@ -87,7 +87,7 @@ class SSAOEffect extends pc.PostEffect {
             }
 
             // Compute normals using derivatives, which essentially results in half-resolution normals
-            // this creates arifacts around geometry edges.
+            // this creates artifacts around geometry edges.
             // Note: when using the spirv optimizer, this results in much slower execution time because
             //       this whole expression is inlined in the AO loop below.
             highp vec3 computeViewSpaceNormal(const highp vec3 position) {

@@ -99,7 +99,7 @@ const gray = createMaterial(new Color(0.7, 0.7, 0.7));
 const scene = [
     {
         // The Chair entity has a collision component of type 'compound' and a
-        // rigidbody component. This means that any descendent entity with a
+        // rigidbody component. This means that any descendant entity with a
         // collision component is added to a compound collision shape on the
         // Chair entity. You can use compound collision shapes to define
         // complex, rigid shapes.

@@ -3,9 +3,9 @@
 // Demonstrates independent blending, where each color attachment of a render target uses its own
 // blend state and color write mask, specified using BlendState#setAttachment.
 //
-// A dark grey base quad is rendered into both attachments of an MRT, and a semi-transparent light
-// grey overlay quad is then blended on top of it. Attachment 0 uses alpha blending and writes all
-// channels, so its overlay stays grey. Attachment 1 uses additive blending and writes the red channel
+// A dark gray base quad is rendered into both attachments of an MRT, and a semi-transparent light
+// gray overlay quad is then blended on top of it. Attachment 0 uses alpha blending and writes all
+// channels, so its overlay stays gray. Attachment 1 uses additive blending and writes the red channel
 // only, so its overlay turns red. Both attachments are then displayed side by side - left is
 // attachment 0, right is attachment 1.
 //
@@ -143,7 +143,7 @@ const createWritingMaterial = (r, g, b, a) => {
     return material;
 };
 
-// opaque grey base, identical in both attachments
+// opaque gray base, identical in both attachments
 const baseMaterial = createWritingMaterial(0.25, 0.25, 0.25, 1.0);
 baseMaterial.update();
 
@@ -157,11 +157,11 @@ base.setLocalEulerAngles(90, 0, 0);
 base.setLocalScale(1.8, 1, 1.8);
 app.root.addChild(base);
 
-// semi-transparent light grey overlay, blended differently into each attachment. A neutral color
+// semi-transparent light gray overlay, blended differently into each attachment. A neutral color
 // makes the color write mask obvious - the attachment which only writes red turns the overlay red.
 const overlayMaterial = createWritingMaterial(0.6, 0.6, 0.6, 0.5);
 
-// attachment 0 - regular alpha blending, writing all channels: 0.5 * 0.6 + 0.5 * 0.25 = grey 0.425
+// attachment 0 - regular alpha blending, writing all channels: 0.5 * 0.6 + 0.5 * 0.25 = gray 0.425
 const blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA);
 
 // attachment 1 - additive blending, writing the red channel only: red 0.6 + 0.25 = 0.85, green and

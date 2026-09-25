@@ -5,7 +5,7 @@
 // position and velocity are read and written each step, per-agent constants are read only and never
 // copied, and a fourth buffer is written only, holding just the world position and heading the
 // instanced cone draw consumes. The render pass never binds the simulation buffers at all. Cone
-// colour comes from the heading, so the value stored in the instancing buffer is visible.
+// color comes from the heading, so the value stored in the instancing buffer is visible.
 //
 // @flag WEBGPU_DISABLED
 
@@ -190,7 +190,7 @@ if (device.isWebGL2) {
     const chunks = material.getShaderChunks(SHADERLANGUAGE_GLSL);
     chunks.set('transformInstancingVS', transformInstancingGlslVert);
 
-    // take the per-instance colour written by the instancing chunk and use it as the albedo
+    // take the per-instance color written by the instancing chunk and use it as the albedo
     chunks.set('litUserDeclarationPS', shaderChunksGLSL.litUserDeclarationPS);
     chunks.set('diffusePS', shaderChunksGLSL.diffusePS);
 

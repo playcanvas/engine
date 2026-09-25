@@ -373,7 +373,7 @@ OrbitCamera.prototype._clampDistance = function (distance) {
 
 
 OrbitCamera.prototype._clampPitchAngle = function (pitch) {
-    // Negative due as the pitch is inversed since the camera is orbiting the entity
+    // Negative due as the pitch is inverted since the camera is orbiting the entity
     return pc.math.clamp(pitch, -this.pitchAngleMax, -this.pitchAngleMin);
 };
 

@@ -295,7 +295,7 @@ app.on('update', (dt) => {
         };
 
         // Primary and secondary tints: split-complementary (~90° apart)
-        // Far enough for contrast, close enough to not cancel to grey
+        // Far enough for contrast, close enough to not cancel to gray
         const hue1 = time * speed + phase;
         const hue2 = hue1 + 0.25; // ~90° offset
 

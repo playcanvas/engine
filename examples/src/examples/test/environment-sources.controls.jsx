@@ -96,7 +96,7 @@ export function Controls({ observer }) {
                 </LabelGroup>
             </Panel>
             <Panel headerText='Diagnostics'>
-                <LabelGroup text='Neighbour probe (green)'>
+                <LabelGroup text='Neighbor probe (green)'>
                     {toggle('data.probe.enabled')}
                 </LabelGroup>
                 <LabelGroup text='Trace shader alloc'>{toggle('data.traceShaderAlloc')}</LabelGroup>

@@ -14,7 +14,7 @@ import { GSplatWorld } from '../../../src/scene/gsplat-unified/gsplat-world.js';
 const FINE_COUNT = 100;
 const COARSE_COUNT = 10;
 
-// Leaves of unit half-extent centred on the given z positions of the camera axis. Each leaf has
+// Leaves of unit half-extent centered on the given z positions of the camera axis. Each leaf has
 // its own file per level - `fine_<i>` for LOD 0 and `coarse_<i>` for LOD 1 - so every load can
 // be traced back to the one node and level that asked for it.
 const makeOctree = (zs) => {

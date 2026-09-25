@@ -20,7 +20,7 @@ class IFrame {
     get window() {
         const e = document.getElementById(this._id);
         if (!(e instanceof HTMLIFrameElement)) {
-            console.warn('iframe doesnt exist yet.');
+            console.warn('iframe does not exist yet.');
             return null;
         }
         return e.contentWindow;

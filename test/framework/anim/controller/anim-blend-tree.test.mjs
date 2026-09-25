@@ -174,7 +174,7 @@ describe('AnimBlendTree1D', function () {
             expect(animBlendTree.getChild('child2').weight).to.equal(0.25);
         });
 
-        it('produces correct results when a parameter is the same as a childs point', function () {
+        it('produces correct results when a parameter is the same as the point of a child', function () {
             params.blendParam.value = 1;
             animBlendTree.calculateWeights();
             expect(animBlendTree.getChild('child1').weight).to.equal(0);

@@ -6,7 +6,7 @@
 // not cover fall back to constant ambient; useSkybox allows the scene environment when the material has
 // none; ambient follows the atlas unless SH is set; refraction reuses reflections.
 // Reference sphere: scene env (wide street, an HDR). Test spheres: material env from the controls (empty room; its
-// atlas, cubemap, sphere map and SH come from one HDR and should match). The green neighbour probe draws
+// atlas, cubemap, sphere map and SH come from one HDR and should match). The green neighbor probe draws
 // before the test spheres: green on them means a leaked texture. The overlay attributes each role.
 //
 // @flag HIDDEN
@@ -165,7 +165,7 @@ const roomSH = new Float32Array([
     -0.0337, 0.0059, 0.0067, 0.0097, 0.0161, 0.0168, 0.0162, 0.0022, 0.0032, 0.0023, -0.0038, -0.0019, -0.0025
 ]);
 
-// neighbour probe environment: a saturated green cubemap nothing else in the scene can be confused with
+// neighbor probe environment: a saturated green cubemap nothing else in the scene can be confused with
 const greenFace = new Uint8Array(4 * 4 * 4);
 for (let i = 0; i < 16; i++) {
     greenFace.set([0, 255, 0, 255], i * 4);
@@ -226,13 +226,13 @@ const createMaterial = (name) => {
 
 const referenceMaterial = createMaterial('reference');
 const testMaterial = createMaterial('test');
-// a mid grey dielectric, so the ambient readout does not blow out under a sunlit environment
+// a mid gray dielectric, so the ambient readout does not blow out under a sunlit environment
 const matteMaterial = createMaterial('test-matte');
 matteMaterial.diffuse = new Color(0.5, 0.5, 0.5);
 matteMaterial.metalness = 0;
 matteMaterial.gloss = 0.75; // roughness
 
-const probeMaterial = createMaterial('neighbour-probe');
+const probeMaterial = createMaterial('neighbor-probe');
 probeMaterial.envAtlas = probeAtlas;
 probeMaterial.useSkybox = false;
 probeMaterial.metalness = 1;
@@ -283,7 +283,7 @@ const createSphere = (label, material, x, y, radius, layer = LAYERID_WORLD) => {
 createSphere('reference: scene env', referenceMaterial, -2.95, 1, 1.4);
 const testSphere = createSphere('test: material env', testMaterial, 0, 1, 1.4, testLayer.id);
 createSphere('test: matte dielectric', matteMaterial, 2.95, 1, 1.4, testLayer.id);
-const probe = createSphere('neighbour probe (green atlas)', probeMaterial, 2.95, -2.6, 0.5, probeLayer.id);
+const probe = createSphere('neighbor probe (green atlas)', probeMaterial, 2.95, -2.6, 0.5, probeLayer.id);
 
 // capture the options selected for the test material's forward shader
 const reflectionNames = {
@@ -592,7 +592,7 @@ app.on('update', () => {
         `  publishes: ${escapeHtml(published || '(no textures)')}\n` +
         `  scope at test sphere draw:\n${escapeHtml(scopeAtTestDraw)}\n\n` +
         `MISSING TEXTURE ERRORS: ${textureErrors}${lastTextureError ? `\n  ${escapeHtml(lastTextureError)}` : ''}\n` +
-        'Drag to orbit the middle sphere. Green on a test sphere = a neighbour texture leaked through the scope.';
+        'Drag to orbit the middle sphere. Green on a test sphere = a neighbor texture leaked through the scope.';
 });
 
 app.on('destroy', () => {

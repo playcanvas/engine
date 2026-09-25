@@ -6,7 +6,7 @@
  * @description Creates new instance of the post effect.
  * @augments PostEffect
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
- * @property {number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 is 180 degrees in the postitive direction).
+ * @property {number} hue Controls the hue. Ranges from -1 to 1 (-1 is 180 degrees in the negative direction, 0 no change, 1 is 180 degrees in the positive direction).
  * @property {number} saturation Controls the saturation. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum saturation).
  */
 class HueSaturationEffect extends pc.PostEffect {

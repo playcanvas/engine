@@ -101,7 +101,7 @@ shared.diffuse = new Color(0.6, 0.6, 0.6);
 shared.gloss = 0.4;
 shared.update();
 
-// creates a labelled sphere using the shared material and returns its mesh instance
+// creates a labeled sphere using the shared material and returns its mesh instance
 const createSphere = (label, x) => {
     const root = new Entity(label);
     root.setLocalPosition(x, 0, 0);
