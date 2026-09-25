@@ -11,7 +11,7 @@ import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
-import { GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE } from '../constants.js';
+import { GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 import { SPLAT_BUDGET_DEFAULT } from './constants.js';
 
 /**
@@ -30,7 +30,7 @@ const _localCamPos = new Vec3();
 const _closestPt = new Vec3();
 const _meshInstanceAabb = new BoundingBox();
 const _tempPlacementAabb = new BoundingBox();
-const _cameraDeltas = { translationDelta: 0 };
+const _cameraDeltas = { translationDelta: 0, refreshAll: false };
 const tempUniqueOctrees = new Set();
 const _queuedSplats = new Set();
 const _updatedSplats = [];
@@ -146,6 +146,22 @@ class GSplatWorld {
 
     /** @type {Vec3} */
     _lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
+
+    /**
+     * Whether the spherical harmonics colors of all splats were last evaluated for an orthographic
+     * camera, or null before they were first evaluated.
+     *
+     * @type {boolean|null}
+     */
+    _colorViewOrtho = null;
+
+    /**
+     * The camera forward the spherical harmonics colors of all splats were last evaluated with. An
+     * orthographic camera evaluates every splat along it.
+     *
+     * @type {Vec3}
+     */
+    _colorViewForward = new Vec3();
 
     /** @type {GSplatPlacement[]} */
     _layerPlacements = [];
@@ -856,6 +872,11 @@ class GSplatWorld {
             this._workBuffer.render(splatsToRender, camera, this.getDebugColors(), changedAllocIds);
         }
 
+        // a full rebuild evaluated the colors of all splats for this camera
+        if (renderAll) {
+            this._recordColorView(camera);
+        }
+
         // update all splats to sync their transforms (prevents redundant re-render later)
         for (let i = 0; i < worldState.splats.length; i++) {
             worldState.splats[i].update();
@@ -947,8 +968,8 @@ class GSplatWorld {
         const cameraPos = camera.getPosition();
 
         // Calculate camera movement deltas for color updates
-        const { translationDelta } = this.calculateColorCameraDeltas(camera);
-        const hasCameraMovement = translationDelta > 0;
+        const { translationDelta, refreshAll } = this.calculateColorCameraDeltas(camera);
+        const hasCameraMovement = translationDelta > 0 || refreshAll;
 
         // check each splat for full or color update
         let movedAny = false;
@@ -983,7 +1004,7 @@ class GSplatWorld {
                         const nodeInfo = splat.nodeInfos[nodeIndices[j]];
                         nodeInfo.colorAccumulatedTranslation += translationDelta;
                         const threshold = ratio * Math.max(1, nodeInfo.worldDistance);
-                        if (nodeInfo.colorAccumulatedTranslation >= threshold) {
+                        if (refreshAll || nodeInfo.colorAccumulatedTranslation >= threshold) {
                             _changedColorAllocIds.add(splat.intervalAllocIds[j]);
                             nodeInfo.colorAccumulatedTranslation = 0;
                             uploadedBlocks++;
@@ -998,7 +1019,7 @@ class GSplatWorld {
                     const dist = _localCamPos.distance(_closestPt) *
                         splat.node.getWorldTransform().getScale().x;
                     const threshold = ratio * Math.max(1, dist);
-                    if (splat.colorAccumulatedTranslation >= threshold) {
+                    if (refreshAll || splat.colorAccumulatedTranslation >= threshold) {
                         _changedColorAllocIds.add(splat.allocId);
                         uploadedBlocks += splat.intervalAllocIds.length;
                         splat.colorAccumulatedTranslation = 0;
@@ -1026,6 +1047,11 @@ class GSplatWorld {
             _changedColorAllocIds.clear();
         }
         _splatsWithSH.length = 0;
+
+        // the colors of all splats were re-evaluated above, by the full or the color update
+        if (refreshAll) {
+            this._recordColorView(camera);
+        }
 
         return movedAny;
     }
@@ -1081,6 +1107,17 @@ class GSplatWorld {
     }
 
     /**
+     * Records the camera view the spherical harmonics colors of all splats were just evaluated for.
+     *
+     * @param {GraphNode} camera - The primary camera.
+     * @private
+     */
+    _recordColorView(camera) {
+        this._colorViewOrtho = camera.camera.projection === PROJECTION_ORTHOGRAPHIC;
+        this._colorViewForward.copy(camera.forward);
+    }
+
+    /**
      * Determines the colorization mode for rendering based on debug flags.
      *
      * @returns {Array<number[]>|undefined} Color array for debug visualization, or undefined for normal rendering.
@@ -1106,17 +1143,37 @@ class GSplatWorld {
     }
 
     /**
-     * Calculates camera translation delta since last color update. Updates and returns the shared
-     * _cameraDeltas object.
+     * Calculates camera translation delta since last color update, and whether the colors of all
+     * splats need to be re-evaluated. Updates and returns the shared _cameraDeltas object.
      *
      * @param {GraphNode} camera - The primary camera.
-     * @returns {{ translationDelta: number }} Shared camera movement deltas object.
+     * @returns {{ translationDelta: number, refreshAll: boolean }} Shared camera movement deltas object.
      */
     calculateColorCameraDeltas(camera) {
         _cameraDeltas.translationDelta = 0;
+        _cameraDeltas.refreshAll = false;
 
-        // Skip delta calculation on first frame (camera position not yet initialized)
-        if (isFinite(this._lastColorUpdateCameraPos.x)) {
+        const ortho = camera.camera.projection === PROJECTION_ORTHOGRAPHIC;
+        if (ortho !== this._colorViewOrtho) {
+
+            // the projection changed, so all colors were evaluated for the other kind of view direction
+            _cameraDeltas.refreshAll = true;
+
+        } else if (ortho) {
+
+            // orthographic view rays all run along the camera forward: moving the camera does not
+            // change the colors, rotating it changes the view direction of all splats at once. An
+            // unchanged forward is detected exactly, as its dot product with itself can round below 1,
+            // which would refresh a stationary camera every frame when colorUpdateAngle is 0.
+            const forward = camera.forward;
+            if (!this._colorViewForward.equals(forward)) {
+                const dot = math.clamp(this._colorViewForward.dot(forward), -1, 1);
+                _cameraDeltas.refreshAll = Math.acos(dot) * math.RAD_TO_DEG >= this._gsplat.colorUpdateAngle;
+            }
+
+        } else if (isFinite(this._lastColorUpdateCameraPos.x)) {
+
+            // Skip delta calculation on first frame (camera position not yet initialized)
             const currentCameraPos = camera.getPosition();
             _cameraDeltas.translationDelta = this._lastColorUpdateCameraPos.distance(currentCameraPos);
         }

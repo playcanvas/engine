@@ -384,7 +384,6 @@ class Renderer {
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
 
         this.alphaTestId = scope.resolve('alpha_ref');
-        this.opacityMapId = scope.resolve('texture_opacityMap');
 
         this.exposureId = scope.resolve('exposure');
 
@@ -632,23 +631,6 @@ class Renderer {
     setupCullMode(cullFaces, flipFactor, drawCall) {
         Debug.deprecated('Renderer.setupCullMode is deprecated. Use \'Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
         this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
-    }
-
-    setBaseConstants(device, material) {
-
-        // Cull mode
-        device.setCullMode(material.cull);
-
-        // Front face
-        device.setFrontFace(material.frontFace);
-
-        // Alpha test
-        if (material.opacityMap) {
-            this.opacityMapId.setValue(material.opacityMap);
-        }
-        if (material.opacityMap || material.alphaTest > 0) {
-            this.alphaTestId.setValue(material.alphaTest);
-        }
     }
 
     updateCpuSkinMatrices(drawCalls) {
@@ -1084,6 +1066,26 @@ class Renderer {
         if (bindGroup && bindGroup !== this._boundMaterialBindGroup) {
             device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
             this._boundMaterialBindGroup = bindGroup;
+        }
+    }
+
+    /**
+     * Unsets the overrides of a mesh instance back to the values of its material, after its draw
+     * when the next draw uses the same material, which then keeps the state the material switch
+     * set: the material bind group when the mesh instance bound its copy of it, and the scope
+     * parameters. The alpha test reference is set from the material by the renderer rather than
+     * being a material parameter, so it is restored with them.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance drawn.
+     * @param {Material} material - Its material.
+     */
+    restoreMaterialOverrides(meshInstance, material) {
+        if (this.hasMaterialOverrides(meshInstance)) {
+            this.setupMaterialBindGroup(material);
+        }
+        if (meshInstance._scopeParameters.length > 0) {
+            material.setParameters(this.device, meshInstance._scopeParameters);
+            this.alphaTestId.setValue(material.alphaTest);
         }
     }
 

@@ -204,7 +204,7 @@ class ShadowRenderer {
             this._cullShadowCastersInternal(casterLists[i], visible, camera);
         }
 
-        // this sorts the shadow casters by the shader id
+        // this sorts the shadow casters by the shader and the material
         visible.sort(this.sortCompareShader);
 
         // event after culling - the camera is null as this is internal (shadow) culling rather
@@ -445,7 +445,7 @@ class ShadowRenderer {
             }
         }
 
-        // this sorts the shadow casters by the shader id
+        // this sorts the shadow casters by the shader and the material
         for (let face = 0; face < 6; face++) {
             _faceLists[face].sort(this.sortCompareShader);
             _faceLists[face] = null;
@@ -457,6 +457,15 @@ class ShadowRenderer {
         this.renderer.scene?.fire(EVENT_POSTCULL, null);
     }
 
+    /**
+     * Orders shadow casters by their shader, then their material, then their mesh, so that the
+     * casters sharing a shader, a material and the vertex buffers are submitted together. See
+     * {@link MeshInstance#_sortKeyShadow}.
+     *
+     * @param {MeshInstance} drawCallA - The first mesh instance.
+     * @param {MeshInstance} drawCallB - The second mesh instance.
+     * @returns {number} The sort order.
+     */
     sortCompareShader(drawCallA, drawCallB) {
         const keyA = drawCallA._sortKeyShadow;
         const keyB = drawCallB._sortKeyShadow;
@@ -555,6 +564,12 @@ class ShadowRenderer {
         // reverse face culling when shadow map has flipY set to true which cases reversed winding order
         const flipFactor = camera.renderTarget.flipY ? -1 : 1;
 
+        // the casters are sorted by shader and material, and the state of a material is set when
+        // it changes, as in the forward render loop. The mesh instance of the previous caster may
+        // have overridden some of that state, see the restore below
+        let prevMaterial = null;
+        let prevMeshInstance = null;
+
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -574,32 +589,47 @@ class ShadowRenderer {
 
             DebugGraphics.pushGpuMarker(device, `Node: ${meshInstance.node.name}, Material: ${material.name}`);
 
-            // set basic material states/parameters
-            renderer.setBaseConstants(device, material);
             renderer.setSkinning(device, meshInstance);
 
-            material.prepareForRender(device, scene);
+            if (material !== prevMaterial) {
+                prevMaterial = material;
+
+                // Uniforms I (shadow): material - on the scope, and through the material bind group.
+                // The cull mode and the front face are set per caster below, as the caster can flip
+                // the front face - setting them from the material here too would change them twice
+                // per caster, dirtying the render pipeline each time
+                material.prepareForRender(device, scene);
+                material.setParameters(device);
+                renderer.setupMaterialBindGroup(material);
+                renderer.alphaTestId.setValue(material.alphaTest);
+
+            } else {
+
+                // the same material: unset the overrides of the previous caster's mesh instance
+                renderer.restoreMaterialOverrides(prevMeshInstance, material);
+            }
 
             renderer.setupCullModeAndFrontFace(true, flipFactor, meshInstance);
-
-            // Uniforms I (shadow): material
-            material.setParameters(device);
-            renderer.setupMaterialBindGroup(material);
 
             // Uniforms II (shadow): meshInstance overrides
             if (renderer.needsMaterialOverrideBindGroup(meshInstance, material)) {
                 renderer.setupMaterialOverrideBindGroup(meshInstance);
             }
             meshInstance.setParameters(device);
+            prevMeshInstance = meshInstance;
 
             const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
-            if (shadowShader.failed) continue;
+            if (shadowShader.failed) {
+                DebugGraphics.popGpuMarker(device);
+                continue;
+            }
 
-            // sort shadow casters by shader
-            meshInstance._sortKeyShadow = shadowShader.id;
+            // sort shadow casters by shader, and then by material - the material id takes the low
+            // 22 bits, as in the forward sort key, and the key stays an exact integer
+            meshInstance._sortKeyShadow = shadowShader.id * 0x400000 + (material.id & 0x3fffff);
 
             device.setShader(shadowShader);
             renderer.setupViewBindGroup(shadowShader);
