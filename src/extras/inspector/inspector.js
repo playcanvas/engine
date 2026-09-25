@@ -13,6 +13,7 @@ import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 import { TextureRenderer } from '../renderers/texture-renderer.js';
 import { WireRenderer } from '../renderers/wire-renderer.js';
 
+import { pushResourceUsage } from './asset-usage.js';
 import { ASSET_SORTS, assetRows, buildAssetModel, collectAssets } from './asset-view.js';
 import { INSTANCES_PER_PAGE, LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from './frame-graph-view.js';
 import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
@@ -626,13 +627,19 @@ class Inspector {
     _assetSort;
 
     /**
-     * Model builder for the property view when an asset is selected.
+     * Model builder for the property view when an asset is selected, with what uses its resource
+     * directly added to the components referencing it.
      *
      * @param {Asset} asset - The asset.
      * @returns {PropertySection[]} The sections.
      * @private
      */
-    _assetModel = asset => buildAssetModel(asset, this._context());
+    _assetModel = (asset) => {
+        const sections = buildAssetModel(asset, this._context());
+        const users = sections.find(section => section.key === 'users');
+        if (users) pushResourceUsage(users, asset, this._app);
+        return sections;
+    };
 
     /**
      * @type {HTMLInputElement}

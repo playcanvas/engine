@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import { EventHandler } from '../../../src/core/event-handler.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
+import { pushResourceUsage, resourceUsers } from '../../../src/extras/inspector/asset-usage.js';
 import { assetRows, assetUsers, buildAssetModel, collectAssets, describeAssetValue, resourceAssets } from '../../../src/extras/inspector/asset-view.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from '../../../src/extras/inspector/frame-graph-view.js';
@@ -14,7 +15,7 @@ import {
 } from '../../../src/extras/inspector/material-view.js';
 import { bufferOwners, bufferRows, buildBufferModel, collectBuffers, memorySummary } from '../../../src/extras/inspector/memory-view.js';
 import { buildMeshModel, meshListRows, meshNote, surveyMeshes } from '../../../src/extras/inspector/mesh-view.js';
-import { formatBytes } from '../../../src/extras/inspector/model.js';
+import { formatBytes, makeSection } from '../../../src/extras/inspector/model.js';
 import { buildNodeModel, materialRows as buildMaterialRows, meshInstanceRows, meshRows as buildMeshRows } from '../../../src/extras/inspector/node-model.js';
 import { PropertyView } from '../../../src/extras/inspector/property-view.js';
 import { formatChannels, previewAttachments, previewSupport, storedBottomUp } from '../../../src/extras/inspector/render-target-view.js';
@@ -911,6 +912,60 @@ describe('Inspector asset view', function () {
         expect(contents.rows.filter(row => !row.depth).map(row => row.label)).to.deep.equal(['renders', 'materials', 'textures', 'model']);
         expect(byLabel(contents, 'renders').items[0].target).to.equal(render);
         expect(byLabel(contents, 'model').items[0].target).to.equal(model);
+    });
+
+    it('finds what uses a resource handed over without its asset, and rolls it up to the container', function () {
+        const { container, material, texture } = addContainer();
+        const track = { name: 'walk' };
+        const animation = new Asset('walkAnim/animation/0', 'animation', { url: '' });
+        animation.loaded = true;
+        /** @type {any} */ (animation)._resources = [track];
+        registry.add(animation);
+        container.resource.animations = [animation];
+
+        const device = new NullGraphicsDevice(document.createElement('canvas'));
+        const brick = new StandardMaterial();
+        brick.diffuseMap = new Texture(device, { name: 'bricks', width: 4, height: 4 });
+        material._resources = [brick];
+        texture._resources = [brick.diffuseMap];
+
+        // a character playing the track, taken from the asset's resource, and a wall drawn with the material
+        const root = new GraphNode('root');
+        const character = new GraphNode('character');
+        /** @type {any} */ (character).c = {
+            anim: { layers: [{ name: 'Base', _controller: { animEvaluator: { clips: [{ name: 'Walk', track }] } } }] }
+        };
+        const wall = new GraphNode('wall');
+        const instance = new MeshInstance(new Mesh(device), brick, wall);
+        /** @type {any} */ (wall).c = { render: { meshInstances: [instance] } };
+        root.addChild(character);
+        root.addChild(wall);
+        const app = /** @type {any} */ ({ root, assets: registry });
+
+        expect(resourceUsers(app, animation).map(user => [user.text, user.target])).to.deep.equal([
+            ['character · layer "Base" · "Walk"', character]
+        ]);
+        expect(resourceUsers(app, material).map(user => user.target)).to.deep.equal([wall]);
+        expect(resourceUsers(app, texture).map(user => user.target)).to.deep.equal([brick]);
+        // a clip playing some other track is not a user
+        character.c.anim.layers[0]._controller.animEvaluator.clips[0].track = {};
+        expect(resourceUsers(app, animation)).to.deep.equal([]);
+        character.c.anim.layers[0]._controller.animEvaluator.clips[0].track = track;
+
+        // the container, referenced by nothing, lists which of its contents are in use
+        const section = makeSection('users', 'Used by');
+        pushResourceUsage(section, container, app);
+        const contents = section.rows.find(row => row.label === 'contents').value;
+        expect(contents.text).to.equal('3 in use');
+        expect(contents.items.map(item => [item.label, item.target])).to.deep.equal([
+            ['materials', material], ['textures', texture], ['animations', animation]
+        ]);
+
+        // an asset whose resource is used gets its own row
+        const own = makeSection('users', 'Used by');
+        pushResourceUsage(own, animation, app);
+        expect(own.rows[0].value.text).to.equal('used directly by 1');
+        device.destroy();
     });
 
     it('sorts the registry and tags each row with its type and load state', function () {
