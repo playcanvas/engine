@@ -25,6 +25,9 @@ export default /* glsl */`
         vec3 dSpecularity = vec3(0.0);
         float dGlossiness = 0.0;
 
+        // the ambient color of the material
+        uniform vec3 material_ambient;
+
         #ifdef LIT_REFRACTION
             float dTransmission;
             float dThickness;

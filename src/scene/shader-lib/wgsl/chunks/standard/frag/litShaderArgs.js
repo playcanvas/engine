@@ -15,6 +15,9 @@ var<private> litArgs_worldNormal: vec3f;
 // Ambient occlusion amount, range [0..1]
 var<private> litArgs_ao: f32;
 
+// Tint of the ambient lighting, white unless the front end sets it
+var<private> litArgs_ambient: vec3f = vec3f(1.0);
+
 // Light map color
 var<private> litArgs_lightmap: vec3f;
 
