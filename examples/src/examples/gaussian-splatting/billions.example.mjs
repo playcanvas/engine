@@ -140,7 +140,7 @@ const LAYOUT = {
     // MAX_INSTANCES / maxCols tiles make one ring (a complete loop)
     maxCols: 4,
     // Multiplier applied to the tile's world-space footprint to derive grid spacing.
-    // 0.8 = 20% overlap so neighbouring AABBs interpenetrate and hide the seams
+    // 0.8 = 20% overlap so neighboring AABBs interpenetrate and hide the seams
     spacingFactor: 0.8,
     // Bend the strip into the inside of a very large cylinder along its length (Z), so the
     // ground curves gently upward at both ends. Value is the fraction of a full circle the
@@ -248,7 +248,7 @@ const toB = (v) => `${(v / 1e9).toFixed(1)}B`;
 // Each instance's grid slot is a fixed function of its index — independent of the current
 // instance count — so changing the count never moves (and never re-streams) the tiles we
 // keep. Tiles are added one full RING at a time: a ring is a complete run along the loop
-// (one axial column), `ringSize` tiles, laid out centre-out so it grows symmetrically from
+// (one axial column), `ringSize` tiles, laid out center-out so it grows symmetrically from
 // the start tile. Only once a ring is full does the next axial column (ring) begin. With the
 // cylinder calibration a full ring is exactly one 360° loop, so the default fills the first
 // loop, then the second alongside it.
@@ -257,10 +257,10 @@ const ringSize = Math.ceil(MAX_INSTANCES / cols);
 const refRows = ringSize;
 const offX = (cols - 1) * 0.5 * spacingX;
 
-// Map a position-within-ring counter (0, 1, 2, …) to a centre-out signed offset: 0, +1, -1, …
+// Map a position-within-ring counter (0, 1, 2, …) to a center-out signed offset: 0, +1, -1, …
 const rowOffset = (r) => Math.ceil(r / 2) * (r % 2 === 1 ? 1 : -1);
 
-// Cylindrical bend along the length (Z): map each tile's centre-out length coordinate onto an
+// Cylindrical bend along the length (Z): map each tile's center-out length coordinate onto an
 // arc so the ground curves up to both sides and each tile tilts to stay tangent to the
 // surface. The curvature per tile is a fixed (count-independent) function of the bend radius,
 // so existing tiles stay put as the count changes.
@@ -283,7 +283,7 @@ const layoutForIndex = (idx) => {
     const c = Math.floor(idx / ringSize); // ring index = axial column (fill one ring first)
     const r = idx % ringSize; // position within the ring
     const x = c * spacingX - offX;
-    const s = rowOffset(r) * spacingZ; // centre-out length coordinate
+    const s = rowOffset(r) * spacingZ; // center-out length coordinate
     if (bendRadius === 0) {
         return { pos: [x, 0, s], eulerX: 180 };
     }
@@ -362,8 +362,8 @@ gsplatSystem.on('frame:ready', onFrameReady);
 const [camX, camY, camZ] = /** @type {[number, number, number]} */ (config.cameraPosition);
 const [focusX, focusY, focusZ] = /** @type {[number, number, number]} */ (config.focusPoint);
 
-// World-space centre of the first tile's content, used to centre the camera horizontally on
-// that tile. Only X/Z are taken from the tile centre; the camera keeps its configured
+// World-space center of the first tile's content, used to center the camera horizontally on
+// that tile. Only X/Z are taken from the tile center; the camera keeps its configured
 // (absolute) elevation rather than the tile's mid-height, so it starts above the ground.
 const tile0Center = instanceEntities[0]
     .getWorldTransform()
@@ -382,7 +382,7 @@ app.root.addChild(camera);
 
 if (USE_CYLINDER_CONTROLLER) {
     // Custom fly camera operating inside the cylinder; "up" follows the curved surface so the
-    // controls stay consistent all the way around the loop. Starts centred on the first tile
+    // controls stay consistent all the way around the loop. Starts centered on the first tile
     // (axial = its X) at the bottom of the loop (angle 0), at the configured eye height.
     const controller = new CylinderController(app, camera, {
         radius: bendRadius,

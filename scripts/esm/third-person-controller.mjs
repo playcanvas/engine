@@ -476,7 +476,7 @@ class ThirdPersonController extends Script {
 
     /**
      * Smoothed effective camera distance (lerps toward the raycast-clamped
-     * distance each frame). Initialised in `initialize()`.
+     * distance each frame). Initialized in `initialize()`.
      *
      * @type {number}
      * @private

@@ -312,7 +312,7 @@ const YELLOW = [230, 220, 40, 255];
     fillLevel(dst, 0, [60, 60, 60, 255]);
     dst.upload();
     const half = size / 2;
-    // Build expected: grey background with the source's top-left (RED) quadrant placed at (32,32)
+    // Build expected: gray background with the source's top-left (RED) quadrant placed at (32,32)
     const expected = new Uint8Array(size * size * 4);
     for (let y = 0; y < size; y++) {
         for (let x = 0; x < size; x++) {

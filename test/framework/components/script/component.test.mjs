@@ -233,7 +233,7 @@ describe('ScriptComponent', function () {
         checkInitCall(clone, 7, 'postInitialize scriptB');
     });
 
-    it('all initialize calls are before postInitialize calls when enabling entity from inside initilize function', function () {
+    it('all initialize calls are before postInitialize calls when enabling entity from inside initialize function', function () {
         const e = new Entity('entity to enable');
         e.enabled = false;
 
@@ -282,7 +282,7 @@ describe('ScriptComponent', function () {
         checkInitCall(enabler, 5, 'postInitialize enabler');
     });
 
-    it('all initialize calls are before postInitialize calls for entity whose script component is enabled inside initilize function', function () {
+    it('all initialize calls are before postInitialize calls for entity whose script component is enabled inside initialize function', function () {
         const e = new Entity('entity to enable');
 
         e.addComponent('script', {

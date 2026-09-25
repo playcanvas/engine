@@ -164,7 +164,7 @@ const terrainMeshes = terrain.findComponents('render').flatMap((render) => rende
 const terrainAabb = new BoundingBox();
 terrainMeshes.forEach((mi, i) => (i === 0 ? terrainAabb.copy(mi.aabb) : terrainAabb.add(mi.aabb)));
 
-// Scale so the terrain spans ~3000 units (out to the camera far clip), then centre it on the lab
+// Scale so the terrain spans ~3000 units (out to the camera far clip), then center it on the lab
 // And lower it so the top of the terrain sits near the old ground height, plus a hand-tuned
 // Offset that beds the laboratory nicely into the dunes
 const groundLevel = -40;

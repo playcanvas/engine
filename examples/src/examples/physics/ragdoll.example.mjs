@@ -88,7 +88,7 @@ app.scene.ambientLight = new Color(0.2, 0.2, 0.2);
 app.systems.rigidbody.gravity.set(0, -9.81, 0);
 
 // Ragdolls are chains of small fast-moving bodies - a finer physics timestep prevents limbs
-// tunnelling through the floor on impact
+// tunneling through the floor on impact
 app.systems.rigidbody.fixedTimeStep = 1 / 120;
 
 /**

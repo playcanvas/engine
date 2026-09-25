@@ -219,7 +219,7 @@ planeEntity.addComponent('render', {
 planeEntity.setLocalScale(15, 1, 15);
 planeEntity.setPosition(0, 0, 0);
 
-// Create the animatible lights
+// Create the animatable lights
 const lightsEntity = new Entity();
 lightsEntity.name = 'lights';
 

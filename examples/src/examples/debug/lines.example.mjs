@@ -139,7 +139,7 @@ const HUB = new Vec3(0, 17, 0);
 
 /**
  * Where a marker sits at a given time. Used both to place the markers and to seed the trail with
- * the path the leading one has already travelled.
+ * the path the leading one has already traveled.
  *
  * @param {number} index - The marker index.
  * @param {number} t - The time to evaluate at.
@@ -351,7 +351,7 @@ app.on('update', (/** @type {number} */ dt) => {
         comet.entity.setLocalPosition(cometPosition(comet, time, scratch));
     }
 
-    // seeding each buffer from the path already travelled means the trails are correct on the
+    // seeding each buffer from the path already traveled means the trails are correct on the
     // very first frame, and keeps them permanently full so the arrays can be handed to polyline
     // as they are rather than sliced every frame
     if (!trailSeeded) {

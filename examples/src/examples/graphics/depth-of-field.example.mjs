@@ -195,7 +195,7 @@ const applySettings = () => {
     cameraFrame.dof.blurRingPoints = data.get('data.dof.blurRingPoints');
     cameraFrame.dof.highQuality = data.get('data.dof.highQuality');
 
-    // Display number of bluring samples are used
+    // Display the number of blurring samples used
     const kernel = Kernel.concentric(cameraFrame.dof.blurRings, cameraFrame.dof.blurRingPoints);
     data.set('data.stats.blurSamples', `${kernel.length >> 1}`);
 

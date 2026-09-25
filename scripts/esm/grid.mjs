@@ -14,7 +14,7 @@ import {
 
 const tmpVa = new Vec2();
 
-const EPISILON = 1e-3;
+const EPSILON = 1e-3;
 
 const vertexGLSL = /* glsl */ `
     attribute vec3 vertex_position;
@@ -352,7 +352,7 @@ class Grid extends Script {
                 return;
             }
             const halfExtents = this._calcHalfExtents(tmpVa);
-            if (this._halfExtents.distance(halfExtents) > EPISILON) {
+            if (this._halfExtents.distance(halfExtents) > EPSILON) {
                 this._set('uHalfExtents', halfExtents);
             }
         });

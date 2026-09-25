@@ -18,7 +18,7 @@ describe('AnimState', function () {
             expect(animState.nodeCount).to.equal(1);
         });
 
-        it('instansiates correctly with a blend tree', function () {
+        it('instantiates correctly with a blend tree', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, {
                 type: ANIM_BLEND_1D,
                 parameter: 'param',

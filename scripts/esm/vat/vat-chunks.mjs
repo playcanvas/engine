@@ -46,7 +46,7 @@ const VAT_CHUNKS_VERSION = '2.22';
 // magnitude.
 //
 // The frame to display is supplied per instance as a fractional frame index, and the two
-// neighbouring frames are linearly interpolated, which gives smooth playback even at a low sampling
+// neighboring frames are linearly interpolated, which gives smooth playback even at a low sampling
 // rate. Positions are interpolated in their quantized form and dequantized once, as the
 // dequantization is affine; normals have to be decoded first, as the octahedral mapping is not.
 //

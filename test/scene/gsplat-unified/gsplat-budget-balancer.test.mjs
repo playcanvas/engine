@@ -192,7 +192,7 @@ describe('GSplatBudgetBalancer', function () {
         expect(lodsOf(inst)).to.deep.equal([1, 1]);
     });
 
-    it('pins the boundary behaviour when a ranked run only partly fits', function () {
+    it('pins the boundary behavior when a ranked run only partly fits', function () {
         // Deliberate trade-off, not a target. Node 0's rank comes from the run to lod0 - 10 error
         // for 80 splats - but at this budget only its 70-splat first step fits, removing 2 error
         // where node 1's 40-splat step would have removed 4. An affordability-aware drain that
@@ -294,7 +294,7 @@ describe('GSplatBudgetBalancer', function () {
         expect(lodsOf(b)).to.deep.equal([1]);
     });
 
-    it('honours each instance\'s own LOD range', function () {
+    it('honors each instance\'s own LOD range', function () {
         const a = makeInstance([{ lods: [{ count: 100, error: 0 }, { count: 50, error: 1 }, { count: 10, error: 4 }] }], [1], 0, 2);
         const b = makeInstance([{ lods: [{ count: 100, error: 0 }, { count: 50, error: 1 }, { count: 10, error: 4 }] }], [1], 2, 2);
         const instances = new Map([[{}, a], [{}, b]]);

@@ -6,7 +6,7 @@
 // animation frame.
 //
 // @credit
-// title: Сatapult
+// title: Catapult
 // author: AlexJJ
 // source: https://sketchfab.com/3d-models/atapult-1c33623dbe0049b98be97a750f27b51b
 // license: CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/)
@@ -129,7 +129,7 @@ const MAX_GROUPS = 14;
 // is no pressure to keep firing
 const MARCH_SPEED = 4.5;
 
-// how many leg cycles the walk animation plays per unit travelled, which keeps the feet planted
+// how many leg cycles the walk animation plays per unit traveled, which keeps the feet planted
 const WALK_CYCLE_PER_SPEED = 0.42;
 
 // destroying one group sends this many in its place, so the valley keeps filling up
@@ -351,7 +351,7 @@ const fbm = (x, y, octaves) => {
 };
 
 /**
- * The shape of the world. The valley runs along the z axis with ridges on both sides funnelling the
+ * The shape of the world. The valley runs along the z axis with ridges on both sides funneling the
  * enemies towards the hill the catapult stands on. Everything in the game - where a boulder lands,
  * how high a character's feet are - is answered by this function rather than by a raycast.
  *
@@ -386,7 +386,7 @@ const terrainHeight = (x, z) => {
 };
 
 /**
- * Builds the terrain mesh, colouring it per vertex - grass on the flat valley floor, rock where it
+ * Builds the terrain mesh, coloring it per vertex - grass on the flat valley floor, rock where it
  * is steep, and a dry band along the tops of the ridges.
  *
  * @returns {Mesh} The terrain mesh.
@@ -449,7 +449,7 @@ const createTerrainMesh = () => {
         const rockMix = smoothRamp(0.12, 0.45, steepness);
         const dryMix = smoothRamp(18, 52, y) * (1 - rockMix);
 
-        // two octaves of patchiness so large areas do not read as one flat colour
+        // two octaves of patchiness so large areas do not read as one flat color
         const patch = 1 + 0.16 * fbm(x * 0.05, z * 0.05, 2) + 0.08 * fbm(x * 0.31, z * 0.31, 2);
 
         for (let c = 0; c < 3; c++) {
@@ -650,7 +650,7 @@ sun.addComponent('light', {
 });
 app.root.addChild(sun);
 
-// the procedural sky drives the sun's direction, colour and intensity, and generates the image
+// the procedural sky drives the sun's direction, color and intensity, and generates the image
 // based lighting for everything in the scene
 const sky = new Entity('ProceduralSky');
 sky.addComponent('script');
@@ -658,7 +658,7 @@ const skyScript = /** @type {ProceduralSky} */ (sky.script.create(ProceduralSky)
 skyScript.sunLight = sun;
 // The sun sits just off the valley's axis rather than straight down it - the enemies stay readable
 // against the ground instead of being lost in the glare, and the ridges get some shape. It is low
-// enough for a sunset, but not so low that the machine's own shadow is thrown for sixty metres
+// enough for a sunset, but not so low that the machine's own shadow is thrown for sixty meters
 // straight at the camera and disappears behind it.
 skyScript.elevation = 7.5;
 skyScript.azimuth = LIGHT_AZIMUTH;
@@ -1342,7 +1342,7 @@ const predictArc = () => {
 
         // the half acceleration term makes this exact for a constant gravity rather than merely close,
         // which matters because the launch speed is solved analytically - without it the shot lands a
-        // couple of metres past the point the player asked for
+        // couple of meters past the point the player asked for
         const nx = x + vx * step;
         const ny = y + vy * step - 0.5 * GRAVITY * step * step;
         const nz = z + vz * step;

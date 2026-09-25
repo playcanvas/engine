@@ -308,7 +308,7 @@ describe('GSplatLodTable', function () {
         expect(table.totalStartCount).to.equal(0);
     });
 
-    it('honours the LOD range', function () {
+    it('honors the LOD range', function () {
         const octree = makeOctree([100, 50, 20, 8], [0, 1, 2, 3], true);
         const table = new GSplatLodTable(octree, 1, 2);
 

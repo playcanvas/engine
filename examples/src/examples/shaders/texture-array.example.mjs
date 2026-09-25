@@ -104,7 +104,7 @@ const assets = {
         { srgb: true }
     ),
     aerialRocks: new Asset(
-        'aeralRocks',
+        'aerialRocks',
         'texture',
         { url: './assets/textures/aerial_rocks_02_diff_1k.jpg' },
         { srgb: true }

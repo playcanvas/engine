@@ -244,7 +244,7 @@ class MaterialHandler extends ResourceHandler {
             assetReference = material._assetReferences[name];
 
             // data[name] contains an asset id for a cubemap
-            // if we have a asset id and the prefiltered cubemap data is not set
+            // if we have an asset id and the prefiltered cubemap data is not set
             if (data[name] && !materialAsset.data.prefilteredCubeMap128) {
                 if (!assetReference) {
                     assetReference = new AssetReference(name, materialAsset, assets, {

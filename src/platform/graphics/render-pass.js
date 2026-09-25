@@ -254,7 +254,7 @@ class RenderPass extends FramePass {
         // depth
         this.depthStencilOps = new DepthStencilAttachmentOps();
 
-        // if a RT is used (so not a backbuffer) that was created with a user supplied depth buffer,
+        // if an RT is used (so not a backbuffer) that was created with a user supplied depth buffer,
         // assume the user wants to use its content, and so store it by default
         if (rt?.depthBuffer) {
             this.depthStencilOps.storeDepth = true;

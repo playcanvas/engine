@@ -216,7 +216,7 @@ class WebglRenderTarget {
 
                 } else {
                     // --- Init a new depth/stencil buffer (optional) ---
-                    // if device is a MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
+                    // if device is an MSAA RT, and no buffer to resolve to, skip creating non-MSAA depth
                     const willRenderMsaa = target._samples > 1;
                     if (!willRenderMsaa) {
                         if (!this._glDepthBuffer) {
@@ -274,7 +274,7 @@ class WebglRenderTarget {
                 }
             }
 
-            // Optionally add a MSAA depth/stencil buffer
+            // Optionally add an MSAA depth/stencil buffer
             if (target._depth) {
 
                 Debug.assert(!this._glMsaaDepthBuffer);
