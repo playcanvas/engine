@@ -134,6 +134,9 @@ export default /* wgsl */`
             getAlbedo();
             litArgs_albedo = dAlbedo;
 
+            // ambient
+            litArgs_ambient = uniform.material_ambient;
+
             // normal
             #ifdef LIT_NEEDS_NORMAL
                 getNormal();

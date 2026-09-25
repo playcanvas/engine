@@ -2,7 +2,7 @@ export default /* glsl */`
 vec3 combineColor(vec3 albedo, vec3 sheenSpecularity, float clearcoatSpecularity) {
     vec3 ret = vec3(0);
 #ifdef LIT_OLD_AMBIENT
-    ret += (dDiffuseLight - light_globalAmbient) * albedo + material_ambient * light_globalAmbient;
+    ret += (dDiffuseLight - light_globalAmbient) * albedo + litArgs_ambient * light_globalAmbient;
 #else
     ret += albedo * dDiffuseLight;
 #endif

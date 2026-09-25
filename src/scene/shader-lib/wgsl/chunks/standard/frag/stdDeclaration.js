@@ -26,6 +26,9 @@ export default /* wgsl */`
         var<private> dSpecularity: vec3f = vec3f(0.0, 0.0, 0.0);
         var<private> dGlossiness: f32 = 0.0;
 
+        // the ambient color of the material
+        uniform material_ambient: vec3f;
+
         #ifdef LIT_REFRACTION
             var<private> dTransmission: f32;
             var<private> dThickness: f32;

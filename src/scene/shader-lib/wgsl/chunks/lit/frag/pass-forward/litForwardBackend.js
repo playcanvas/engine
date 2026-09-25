@@ -54,7 +54,7 @@ fn evaluateBackend() -> FragmentOutput {
     #endif
 
     #ifndef LIT_OLD_AMBIENT
-        dDiffuseLight = dDiffuseLight * uniform.material_ambient;
+        dDiffuseLight = dDiffuseLight * litArgs_ambient;
     #endif
 
     #ifdef LIT_AO
