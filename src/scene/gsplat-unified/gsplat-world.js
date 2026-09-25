@@ -1151,10 +1151,14 @@ class GSplatWorld {
         } else if (ortho) {
 
             // orthographic view rays all run along the camera forward: moving the camera does not
-            // change the colors, rotating it changes the view direction of all splats at once
-            const dot = math.clamp(this._colorViewForward.dot(camera.forward), -1, 1);
-            const angle = Math.acos(dot) * math.RAD_TO_DEG;
-            _cameraDeltas.refreshAll = angle > 0 && angle >= this._gsplat.colorUpdateAngle;
+            // change the colors, rotating it changes the view direction of all splats at once. An
+            // unchanged forward is detected exactly, as its dot product with itself can round below 1,
+            // which would refresh a stationary camera every frame when colorUpdateAngle is 0.
+            const forward = camera.forward;
+            if (!this._colorViewForward.equals(forward)) {
+                const dot = math.clamp(this._colorViewForward.dot(forward), -1, 1);
+                _cameraDeltas.refreshAll = Math.acos(dot) * math.RAD_TO_DEG >= this._gsplat.colorUpdateAngle;
+            }
 
         } else if (isFinite(this._lastColorUpdateCameraPos.x)) {
 
