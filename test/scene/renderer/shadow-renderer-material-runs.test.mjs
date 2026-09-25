@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { Entity } from '../../../src/framework/entity.js';
+import { DebugGraphics } from '../../../src/platform/graphics/debug-graphics.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -99,7 +100,7 @@ describe('ShadowRenderer caster submission', function () {
         record(a, 'setParameters', (device, restore) => !restore && counts.set(a, counts.get(a) + 1));
         record(b, 'setParameters', (device, restore) => !restore && counts.set(b, counts.get(b) + 1));
         const prepared = record(StandardMaterial.prototype, 'prepareForRender', () => 1);
-        const constants = record(app.renderer, 'setBaseConstants', () => 1);
+        const alphaTests = record(app.renderer.alphaTestId, 'setValue', value => value);
         app.render();
 
         // the materials interleaved in the layer are grouped in each pass
@@ -112,7 +113,7 @@ describe('ShadowRenderer caster submission', function () {
         expect(counts.get(a)).to.equal(submits.length);
         expect(counts.get(b)).to.equal(submits.length);
         expect(prepared).to.have.lengthOf(2 * submits.length);
-        expect(constants).to.have.lengthOf(2 * submits.length);
+        expect(alphaTests).to.have.lengthOf(2 * submits.length);
     });
 
     it('restores the scope parameters a caster overrides for the next caster of the material', function () {
@@ -131,6 +132,29 @@ describe('ShadowRenderer caster submission', function () {
         expect(values.length).to.equal(3 * submits.length);
         for (const [isOverriding, value] of values) {
             expect(value).to.equal(isOverriding ? 2 : 1);
+        }
+    });
+
+    it('restores the alpha test reference a caster overrides for the next caster of the material', function () {
+        const material = new StandardMaterial();
+        material.alphaTest = 0.5;
+        material.update();
+        const overriding = addBox(material, -2);
+        overriding.setParameter('alpha_ref', 0.9);
+        addBox(material, 0);
+        addBox(material, 2);
+        renderSorted();
+
+        const scopeId = app.graphicsDevice.scope.resolve('alpha_ref');
+        const values = record(app.renderer, 'setMeshInstanceMatrices', meshInstance => [meshInstance, scopeId.value]);
+        app.render();
+
+        // the overriding caster comes first in its run, so the next ones need the restore
+        expect(values).to.have.lengthOf(3 * submits.length);
+        for (let i = 0; i < values.length; i += 3) {
+            expect(values[i]).to.deep.equal([overriding, 0.9]);
+            expect(values[i + 1][1]).to.equal(0.5);
+            expect(values[i + 2][1]).to.equal(0.5);
         }
     });
 
@@ -213,6 +237,26 @@ describe('ShadowRenderer caster submission', function () {
         expect(light._shadowMap.renderTargets[0].flipY).to.equal(true);
         expect(submits.length).to.be.greaterThan(0);
         expect(dirtied).to.be.at.most(submits.length);
+    });
+
+    it('pops the GPU marker of a caster whose shadow shader failed', function () {
+        const material = new StandardMaterial();
+        const failing = addBox(material, -2);
+        addBox(material, 0);
+        renderSorted();
+
+        // the shadow shader of the first caster fails, the forward one does not
+        const getShaderInstance = failing.getShaderInstance;
+        sinon.stub(failing, 'getShaderInstance').callsFake(function (...args) {
+            return inShadows ? { shader: { failed: true } } : getShaderInstance.apply(this, args);
+        });
+        const pushed = record(DebugGraphics, 'pushGpuMarker', () => 1);
+        const popped = record(DebugGraphics, 'popGpuMarker', () => 1);
+        app.render();
+
+        expect(submits.length).to.be.greaterThan(0);
+        expect(pushed).to.have.lengthOf(2 * submits.length);
+        expect(popped).to.have.lengthOf(pushed.length);
     });
 
     describe('#sortCompareShader', function () {

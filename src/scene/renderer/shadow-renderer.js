@@ -594,23 +594,19 @@ class ShadowRenderer {
             if (material !== prevMaterial) {
                 prevMaterial = material;
 
-                // Uniforms I (shadow): material - on the scope, and through the material bind group
-                renderer.setBaseConstants(device, material);
+                // Uniforms I (shadow): material - on the scope, and through the material bind group.
+                // The cull mode and the front face are set per caster below, as the caster can flip
+                // the front face - setting them from the material here too would change them twice
+                // per caster, dirtying the render pipeline each time
                 material.prepareForRender(device, scene);
                 material.setParameters(device);
                 renderer.setupMaterialBindGroup(material);
+                renderer.alphaTestId.setValue(material.alphaTest);
 
-            } else if (prevMeshInstance) {
+            } else {
 
-                // the same material: unset the overrides of the previous caster's mesh instance back
-                // to the material values - the material bind group when it bound its copy of it,
-                // and the scope parameters
-                if (renderer.hasMaterialOverrides(prevMeshInstance)) {
-                    renderer.setupMaterialBindGroup(material);
-                }
-                if (prevMeshInstance._scopeParameters.length > 0) {
-                    material.setParameters(device, prevMeshInstance._scopeParameters);
-                }
+                // the same material: unset the overrides of the previous caster's mesh instance
+                renderer.restoreMaterialOverrides(prevMeshInstance, material);
             }
 
             renderer.setupCullModeAndFrontFace(true, flipFactor, meshInstance);
@@ -626,7 +622,10 @@ class ShadowRenderer {
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
-            if (shadowShader.failed) continue;
+            if (shadowShader.failed) {
+                DebugGraphics.popGpuMarker(device);
+                continue;
+            }
 
             // sort shadow casters by shader, and then by material - the material id takes the low
             // 22 bits, as in the forward sort key, and the key stays an exact integer
