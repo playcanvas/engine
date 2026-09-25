@@ -16,6 +16,7 @@ import { GSplatResourceCleanup } from '../gsplat/gsplat-resource-cleanup.js';
  */
 
 const tempLayersToRemove = [];
+const tempDirtyLayers = new Set();
 
 /**
  * Per layer data the director keeps track of.
@@ -358,6 +359,18 @@ class GSplatDirector {
             }
         });
 
+        // Consume the layers' placement changes up front. The managers fire frame:ready from their
+        // update below, and a listener changing placements there (e.g. enabling a gsplat) raises the
+        // flag again, so the change is reconciled next frame for every camera instead of being lost.
+        const layerList = comp.layerList;
+        for (let i = 0; i < layerList.length; i++) {
+            const layer = layerList[i];
+            if (layer.gsplatPlacementsDirty) {
+                layer.gsplatPlacementsDirty = false;
+                tempDirtyLayers.add(layer);
+            }
+        }
+
         let gsplatCount = 0;
         let bufferCopyUploaded = 0;
         let bufferCopyTotal = 0;
@@ -376,7 +389,7 @@ class GSplatDirector {
                 if (layer?.enabled) {
 
                     // if layer's splat placements were modified, or new camera
-                    if (layer.gsplatPlacementsDirty || !cameraData) {
+                    if (tempDirtyLayers.has(layer) || !cameraData) {
 
                         // check if there are any placements
                         const hasNormalPlacements = layer.gsplatPlacements.length > 0;
@@ -432,10 +445,7 @@ class GSplatDirector {
         // clear dirty flags
         this.gsplat.frameEnd();
 
-        // clear dirty flags on all layers of the composition
-        for (let i = 0; i < comp.layerList.length; i++) {
-            comp.layerList[i].gsplatPlacementsDirty = false;
-        }
+        tempDirtyLayers.clear();
     }
 
     /**
