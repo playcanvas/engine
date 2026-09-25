@@ -375,12 +375,16 @@ class GSplatDirector {
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer?.enabled) {
 
-                    // if layer's splat placements were modified, or new camera
-                    if (layer.gsplatPlacementsDirty || !cameraData) {
+                    // check if there are any placements
+                    const hasNormalPlacements = layer.gsplatPlacements.length > 0;
+                    const hasShadowCasters = layer.gsplatShadowCasters.length > 0;
 
-                        // check if there are any placements
-                        const hasNormalPlacements = layer.gsplatPlacements.length > 0;
-                        const hasShadowCasters = layer.gsplatShadowCasters.length > 0;
+                    // if layer's splat placements were modified, or the camera has no managers yet
+                    // for a layer with splats — a new camera, or one that gained the layer after the
+                    // layer's dirty flag was cleared, e.g. by removing it from its layers and adding
+                    // it back
+                    if (layer.gsplatPlacementsDirty ||
+                        ((hasNormalPlacements || hasShadowCasters) && !cameraData?.layersMap.has(layer))) {
 
                         if (!hasNormalPlacements && !hasShadowCasters) {
                             // no splats on layer - remove gsplat managers if they exist
