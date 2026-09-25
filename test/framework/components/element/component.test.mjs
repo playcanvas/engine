@@ -239,6 +239,84 @@ describe('ElementComponent', function () {
             expect(position.y).to.equal(20);
         });
 
+        it('keeps a position set before the element is added to a screen', function () {
+            const e = new Entity();
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 0.5, 0.5, 0.5],
+                pivot: [0.5, 0.5]
+            });
+            e.setLocalPosition(10, 20, 0);
+
+            screen.addChild(e);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(10);
+            expect(position.y).to.equal(20);
+        });
+
+        it('keeps the position of an entity added to a screen with its parent', function () {
+            const panel = new Entity('panel');
+            panel.addComponent('element', {
+                type: 'group',
+                anchor: [0, 0, 1, 1],
+                margin: [0, 0, 0, 0]
+            });
+
+            const e = new Entity();
+            panel.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            screen.addChild(panel);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position of an entity whose screen is added afterwards', function () {
+            const ui = new Entity('ui');
+            app.root.addChild(ui);
+
+            const e = new Entity();
+            ui.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            ui.addComponent('screen', { screenSpace: true });
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps the position of an entity when it is cloned', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.setLocalPosition(0, -40, 0);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+
+            const clone = e.clone();
+            screen.addChild(clone);
+
+            const position = clone.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
         it('keeps the vertical position when only horizontal margins are given', function () {
             const e = new Entity();
             screen.addChild(e);
@@ -271,6 +349,42 @@ describe('ElementComponent', function () {
             });
 
             expect(e.getLocalPosition().x).to.equal(25);
+        });
+
+        it('keeps a position set after the element is added when the screen resizes', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+            e.setLocalPosition(0, -40, 0);
+
+            app.graphicsDevice.setResolution(640, 320);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
+        });
+
+        it('keeps a translation after the element is added when the screen resizes', function () {
+            const e = new Entity();
+            screen.addChild(e);
+            e.addComponent('element', {
+                type: 'image',
+                anchor: [0.5, 1, 0.5, 1],
+                pivot: [0.5, 1]
+            });
+            e.translateLocal(0, -40, 0);
+
+            // the next frame syncs the hierarchy, which updates the margins
+            app.root.syncHierarchy();
+            app.graphicsDevice.setResolution(640, 320);
+
+            const position = e.getLocalPosition();
+            expect(position.x).to.equal(0);
+            expect(position.y).to.equal(-40);
         });
 
         it('places the element with the margins it is given', function () {
