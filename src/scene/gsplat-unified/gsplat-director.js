@@ -268,9 +268,9 @@ class GSplatDirector {
      * data (a new world-state version) or when a CPU-sort result is waiting to be applied.
      *
      * Uses the cached `camerasMap` topology (built by {@link update} on the render path) — newly
-     * added cameras, layers, or gsplat components register on the next rendered frame, and managers
-     * whose camera has left their layer since are skipped until that frame prunes them. Does no GPU
-     * draw work.
+     * added cameras, layers, or gsplat components register on the next rendered frame, and cameras
+     * whose entity has lost its camera component since are skipped until that frame prunes them.
+     * Does no GPU draw work.
      */
     updateStreaming() {
 
@@ -286,16 +286,15 @@ class GSplatDirector {
         let needRender = false;
         let streamed = false;
         this.camerasMap.forEach((cameraData, camera) => {
-            cameraData.layersMap.forEach((layerData, layer) => {
 
-                // Skip managers whose camera left the layer after the last render — e.g. its entity
-                // was destroyed, taking away the camera component the LOD pass reads. The next
-                // render prunes them. This tests the layer's camera set, which is updated right
-                // away, as the composition's set checked by update() only refreshes on render.
-                if (!layer.camerasSet.has(camera)) {
-                    return;
-                }
+            // Skip a camera whose entity lost its camera component after the last render (the
+            // entity was destroyed or the component removed), which the LOD pass reads. The next
+            // render prunes it. A disabled camera keeps its component and streams as before.
+            if (camera.node.camera?.camera !== camera) {
+                return;
+            }
 
+            cameraData.layersMap.forEach((layerData) => {
                 const manager = layerData.gsplatManager;
                 if (manager) {
                     needRender = manager.updateStreaming(token) || needRender;
