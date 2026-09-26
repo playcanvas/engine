@@ -94,4 +94,65 @@ describe('ElementInput', function () {
         expect(received).to.be.an.instanceof(ElementMouseEvent);
         expect(received.event).to.equal(mouseEvent);
     });
+
+    describe('touch positions', function () {
+        // dispatches a browser TouchEvent for one touch at a page position on the canvas
+        const dispatchTouch = (type, pageX, pageY) => {
+            const touch = { identifier: 7, target: canvas, pageX, pageY };
+            const lifted = type === 'touchend' || type === 'touchcancel';
+            canvas.dispatchEvent(new window.TouchEvent(type, {
+                touches: lifted ? [] : [touch],
+                changedTouches: [touch]
+            }));
+        };
+
+        // records the name and position of each of the given events the element receives
+        const recordEvents = (names) => {
+            const events = [];
+            for (const name of names) {
+                element.on(name, event => events.push([name, event.x, event.y]));
+            }
+            return events;
+        };
+
+        it('reports where the touch was released on touchend and click', function () {
+            const events = recordEvents(['touchstart', 'touchmove', 'touchend', 'click']);
+
+            dispatchTouch('touchstart', 50, 60);
+            dispatchTouch('touchmove', 70, 80);
+            dispatchTouch('touchend', 90, 100);
+
+            expect(events).to.deep.equal([
+                ['touchstart', 50, 60],
+                ['touchmove', 70, 80],
+                ['click', 90, 100],
+                ['touchend', 90, 100]
+            ]);
+        });
+
+        it('reports a release outside the element on touchend, without a click', function () {
+            const events = recordEvents(['touchstart', 'touchend', 'click']);
+
+            // the touch started on the element, so touchend still fires on it
+            dispatchTouch('touchstart', 50, 60);
+            dispatchTouch('touchend', 350, 100);
+
+            expect(events).to.deep.equal([
+                ['touchstart', 50, 60],
+                ['touchend', 350, 100]
+            ]);
+        });
+
+        it('reports the last touch position on touchcancel', function () {
+            const events = recordEvents(['touchstart', 'touchcancel']);
+
+            dispatchTouch('touchstart', 50, 60);
+            dispatchTouch('touchcancel', 90, 100);
+
+            expect(events).to.deep.equal([
+                ['touchstart', 50, 60],
+                ['touchcancel', 90, 100]
+            ]);
+        });
+    });
 });
