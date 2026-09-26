@@ -282,6 +282,24 @@ class JointComponent extends Component {
     _axisA = new Vec3();
 
     /**
+     * The joint frame in the local space of entityA, captured when the constraint was created, or
+     * null while there is no constraint. Kept for debug drawing of the anchor frames.
+     *
+     * @type {Mat4|null}
+     * @private
+     */
+    _frameA = null;
+
+    /**
+     * The joint frame in the local space of entityB (world space when pinned to the world),
+     * captured when the constraint was created, or null while there is no constraint.
+     *
+     * @type {Mat4|null}
+     * @private
+     */
+    _frameB = null;
+
+    /**
      * Sets the type of joint. Can be:
      *
      * - {@link JOINTTYPE_FIXED}: rigidly locks the bodies together.
@@ -1202,6 +1220,8 @@ class JointComponent extends Component {
 
         this._createFrame(entityA, this._anchorA, this._axisA, _frameMatA);
         this._createFrame(entityB, this._anchorB, _vec3b, _frameMatB);
+        this._frameA = _frameMatA.clone();
+        this._frameB = _frameMatB.clone();
 
         const world = this.system.app.systems.rigidbody.physicsWorld;
         this._joint = world.createJoint({
@@ -1250,6 +1270,8 @@ class JointComponent extends Component {
 
             this.system.app.systems.rigidbody.physicsWorld.destroyJoint(joint);
             this._joint = null;
+            this._frameA = null;
+            this._frameB = null;
 
             this._activateBodies();
         }

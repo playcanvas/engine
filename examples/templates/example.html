@@ -32,6 +32,7 @@
 
             window.addEventListener('requestFiles', () => loader.sendRequestedFiles());
             window.addEventListener('stats', (event) => loader.setMiniStats(!!event.detail?.state));
+            window.addEventListener('inspector', (event) => loader.setInspector(!!event.detail?.state));
             window.addEventListener('hotReload', () => loader.hotReload());
             window.addEventListener('reloadFiles', (event) => loader.reloadFiles(event.detail));
             window.addEventListener('destroy', () => loader.destroy());

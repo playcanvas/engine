@@ -220,6 +220,7 @@ const createState = () => {
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
  * @property {boolean} [showCredits] - Whether the desktop credits overlay is visible.
+ * @property {boolean} [hideDescription] - Hide the desktop description, e.g. while the inspector panel is shown.
  * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
@@ -710,7 +711,7 @@ class Example extends TypedComponent {
 
     renderDescription() {
         const { exampleLoaded, description } = this.state;
-        if (!exampleLoaded || !description || !iframe.ready) {
+        if (!exampleLoaded || !description || !iframe.ready || this.props.hideDescription) {
             return null;
         }
         return jsx(
