@@ -124,6 +124,8 @@ const textureSemantics = [
     'clearCoatNormalMap',
     'colorMap',
     'diffuseMap',
+    'diffuseTransmissionColorMap',
+    'diffuseTransmissionMap',
     'emissiveMap',
     'iridescenceMap',
     'iridescenceThicknessMap',
@@ -491,6 +493,26 @@ class GltfExporter extends CoreExporter {
             }
 
             this.addExtension(json, output, 'KHR_materials_clearcoat', clearcoatExt);
+        }
+
+        // KHR_materials_diffuse_transmission
+        if (mat.diffuseTransmission > 0) {
+            const diffuseTransmissionExt = {
+                diffuseTransmissionFactor: mat.diffuseTransmission
+            };
+
+            if (!mat.diffuseTransmissionColor.equals(Color.WHITE)) {
+                const { r, g, b } = mat.diffuseTransmissionColor.clone().linear();
+                diffuseTransmissionExt.diffuseTransmissionColorFactor = [r, g, b];
+            }
+
+            this.attachTexture(resources, mat, diffuseTransmissionExt,
+                'diffuseTransmissionTexture', 'diffuseTransmissionMap', json);
+            this.attachTexture(resources, mat, diffuseTransmissionExt,
+                'diffuseTransmissionColorTexture', 'diffuseTransmissionColorMap', json);
+
+            this.addExtension(json, output, 'KHR_materials_diffuse_transmission',
+                diffuseTransmissionExt);
         }
 
         // KHR_materials_dispersion

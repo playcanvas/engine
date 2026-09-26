@@ -400,6 +400,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
             this._addMapDefines(fDefines, 'diffuse', 'diffusePS', options, litShader.chunks, textureMapping, options.diffuseEncoding);
 
+            // diffuse transmission
+            if (options.litOptions.useDiffuseTransmission) {
+                this._addMapDefines(fDefines, 'diffuseTransmission', 'diffuseTransmissionPS', options, litShader.chunks, textureMapping);
+                this._addMapDefines(fDefines, 'diffuseTransmissionColor', 'diffuseTransmissionColorPS', options, litShader.chunks, textureMapping, options.diffuseTransmissionColorEncoding);
+            }
+
             // refraction
             if (options.litOptions.useRefraction) {
                 this._addMapDefines(fDefines, 'refraction', 'transmissionPS', options, litShader.chunks, textureMapping);

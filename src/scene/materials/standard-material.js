@@ -94,6 +94,7 @@ const _properties = {
     specular: new MaterialProperty('specular', 'material_specular', UNIFORMTYPE_VEC3, convertColorToLinear),
     sheen: new MaterialProperty('sheen', 'material_sheen', UNIFORMTYPE_VEC3, convertColorToLinear),
     attenuation: new MaterialProperty('attenuation', 'material_attenuation', UNIFORMTYPE_VEC3, convertColorToLinear),
+    diffuseTransmissionColor: new MaterialProperty('diffuseTransmissionColor', 'material_diffuseTransmissionColor', UNIFORMTYPE_VEC3, convertColorToLinear),
     specularityFactor: new MaterialProperty('specularityFactor', 'material_specularityFactor', UNIFORMTYPE_FLOAT, convertFloat),
     sheenGloss: new MaterialProperty('sheenGloss', 'material_sheenGloss', UNIFORMTYPE_FLOAT, convertFloat),
     gloss: new MaterialProperty('gloss', 'material_gloss', UNIFORMTYPE_FLOAT, convertFloat),
@@ -120,6 +121,7 @@ const _properties = {
     iridescenceRefractionIndex: new MaterialProperty('iridescenceRefractionIndex', 'material_iridescenceRefractionIndex', UNIFORMTYPE_FLOAT, convertFloat),
     iridescenceThicknessMin: new MaterialProperty('iridescenceThicknessMin', 'material_iridescenceThicknessMin', UNIFORMTYPE_FLOAT, convertFloat),
     iridescenceThicknessMax: new MaterialProperty('iridescenceThicknessMax', 'material_iridescenceThicknessMax', UNIFORMTYPE_FLOAT, convertFloat),
+    diffuseTransmission: new MaterialProperty('diffuseTransmission', 'material_diffuseTransmission', UNIFORMTYPE_FLOAT, convertFloat),
 
     // uniforms derived from the property
     anisotropyRotation: new MaterialProperty('anisotropyRotation', 'material_anisotropyRotation', UNIFORMTYPE_VEC2, convertDegreesToDirection),
@@ -183,7 +185,8 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * (`diffuseVertexColor`). The main families are `diffuse`; `specular`, or `metalness` when
  * `useMetalness` is set; `gloss`; `normalMap` with `bumpiness`; `emissive`; `opacity` together
  * with {@link Material#blendType}; `ao`; `lightMap`; and the advanced layers `clearCoat`, `sheen`,
- * `iridescence` and `refraction`. Lighting can be turned off entirely with `useLighting`.
+ * `iridescence`, `refraction` and `diffuseTransmission`. Lighting can be turned off entirely with
+ * `useLighting`.
  *
  * To go beyond the properties, replace individual shader chunks with
  * {@link Material#getShaderChunks}. When the surface is not a lit material at all, use
@@ -397,6 +400,41 @@ const { equalish, DEFAULT_REFRACTION_INDEX } = StandardMaterialOptionsBuilder;
  * thickness map is set, it will be multiplied by vertex colors.
  * @property {string} thicknessVertexColorChannel Vertex color channel to use for thickness. Can
  * be "r", "g", "b" or "a".
+ * @property {Texture|null} diffuseTransmissionMap The map of the fraction of light diffusely
+ * transmitted through the surface (default is null). If specified, it is multiplied by
+ * {@link diffuseTransmission}.
+ * @property {number} diffuseTransmissionMapUv Diffuse transmission map UV channel. Valid values
+ * are 0 to 7.
+ * @property {Vec2} diffuseTransmissionMapTiling Controls the 2D tiling of the diffuse
+ * transmission map.
+ * @property {Vec2} diffuseTransmissionMapOffset Controls the 2D offset of the diffuse
+ * transmission map. Each component is between 0 and 1.
+ * @property {number} diffuseTransmissionMapRotation Controls the 2D rotation (in degrees) of the
+ * diffuse transmission map.
+ * @property {string} diffuseTransmissionMapChannel Color channel of the diffuse transmission map
+ * to use. Can be "r", "g", "b" or "a" (default is "g").
+ * @property {boolean} diffuseTransmissionVertexColor Use mesh vertex colors for diffuse
+ * transmission. If diffuseTransmissionMap is set, it'll be multiplied by vertex colors.
+ * @property {string} diffuseTransmissionVertexColorChannel Vertex color channel to use for
+ * diffuse transmission. Can be "r", "g", "b" or "a".
+ * @property {Texture|null} diffuseTransmissionColorMap The map of the color tinting the light
+ * diffusely transmitted through the surface (default is null). If specified, it is multiplied by
+ * {@link diffuseTransmissionColor}.
+ * @property {number} diffuseTransmissionColorMapUv Diffuse transmission color map UV channel.
+ * Valid values are 0 to 7.
+ * @property {Vec2} diffuseTransmissionColorMapTiling Controls the 2D tiling of the diffuse
+ * transmission color map.
+ * @property {Vec2} diffuseTransmissionColorMapOffset Controls the 2D offset of the diffuse
+ * transmission color map. Each component is between 0 and 1.
+ * @property {number} diffuseTransmissionColorMapRotation Controls the 2D rotation (in degrees)
+ * of the diffuse transmission color map.
+ * @property {string} diffuseTransmissionColorMapChannel Color channels of the diffuse
+ * transmission color map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+ * @property {boolean} diffuseTransmissionColorVertexColor Use mesh vertex colors for the diffuse
+ * transmission color. If diffuseTransmissionColorMap is set, it'll be multiplied by vertex
+ * colors.
+ * @property {string} diffuseTransmissionColorVertexColorChannel Vertex color channels to use for
+ * the diffuse transmission color. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {Texture|null} emissiveMap The emissive map of the material (default is null). Can be
  * HDR. When the emissive map is applied, the emissive color is multiplied by the texel color in the
  * map. Since the emissive color is black by default, the emissive map won't be visible unless the
@@ -1543,6 +1581,58 @@ class StandardMaterial extends Material {
     }
 
     /**
+     * The fraction of the light entering the surface that is diffusely transmitted through it,
+     * from 0 to 1 (default is 0). The rest is diffusely reflected. Transmitted light passes from
+     * the side of the surface facing the light to the other side, so a thin surface such as a
+     * leaf, a sheet of paper or a lampshade glows when lit from behind. The transmission is
+     * disabled when the value is 0. If a diffuseTransmissionMap is specified, it is multiplied by
+     * this value.
+     *
+     * @type {number}
+     */
+    set diffuseTransmission(value) {
+        if (this._diffuseTransmission !== value) {
+            // only crossing zero adds or removes the transmission from the shader
+            this._dirtyShader = this._dirtyShader || (this._diffuseTransmission > 0) !== (value > 0);
+            this._diffuseTransmission = value;
+            this._markPropertyModified(_properties.diffuseTransmission);
+        }
+    }
+
+    /**
+     * Gets the diffuse transmission of the material.
+     *
+     * @type {number}
+     */
+    get diffuseTransmission() {
+        return this._diffuseTransmission;
+    }
+
+    /**
+     * The color tinting the light diffusely transmitted through the surface, specified in sRGB
+     * color space (default is white). This color value is 3-component (RGB), where each component
+     * is between 0 and 1. Only used when {@link diffuseTransmission} is above 0.
+     *
+     * @type {Color}
+     */
+    set diffuseTransmissionColor(value) {
+        if (!this._diffuseTransmissionColor.equals(value)) {
+            this._diffuseTransmissionColor.copy(value);
+            this._markPropertyModified(_properties.diffuseTransmissionColor);
+        }
+    }
+
+    /**
+     * Gets the diffuse transmission color of the material.
+     *
+     * @type {Color}
+     */
+    get diffuseTransmissionColor() {
+        this._markPropertyMutable(_properties.diffuseTransmissionColor, this._diffuseTransmissionColor);
+        return this._diffuseTransmissionColor;
+    }
+
+    /**
      * Defines the rotation (in degrees) of anisotropy.
      *
      * @type {number}
@@ -2190,6 +2280,7 @@ function _defineMaterialProps() {
     registerProp('specular', () => new Color(0, 0, 0), true);
     registerProp('sheen', () => new Color(1, 1, 1), true);
     registerProp('attenuation', () => new Color(1, 1, 1), true);
+    registerProp('diffuseTransmissionColor', () => new Color(1, 1, 1), true);
     registerProp('specularityFactor', () => 1);
     registerProp('sheenGloss', () => 0.0);
     registerProp('gloss', () => 0.25);
@@ -2216,6 +2307,7 @@ function _defineMaterialProps() {
     registerProp('iridescenceRefractionIndex', () => 1.0 / 1.5);
     registerProp('iridescenceThicknessMin', () => 0);
     registerProp('iridescenceThicknessMax', () => 0);
+    registerProp('diffuseTransmission', () => 0);
     registerProp('anisotropyRotation', () => 0);
     registerProp('attenuationDistance', () => 0);
     registerProp('heightMapFactor', () => 1);
@@ -2282,6 +2374,8 @@ function _defineMaterialProps() {
     _defineTex2D('iridescence', 'g');
     _defineTex2D('iridescenceThickness', 'g');
     _defineTex2D('anisotropy', '');
+    _defineTex2D('diffuseTransmission', 'g');
+    _defineTex2D('diffuseTransmissionColor', 'rgb');
 
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
     _defineFlag('aoDetailMode', DETAILMODE_MUL);

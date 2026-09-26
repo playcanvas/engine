@@ -31,6 +31,11 @@ fn evaluateBackend() -> FragmentOutput {
                 litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0, 1.0);
             #endif
             litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);
+
+            // the diffuse transmission is a dielectric lobe, like the diffuse reflection
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                litArgs_diffuseTransmission_color = getAlbedoModulate(litArgs_diffuseTransmission_color, litArgs_metalness);
+            #endif
         #endif
 
         #ifdef LIT_IRIDESCENCE
@@ -40,10 +45,23 @@ fn evaluateBackend() -> FragmentOutput {
 
     // ambient
     #ifdef LIT_ADD_AMBIENT
+
+        // the ambient light arriving at the back of the surface, which the diffuse transmission
+        // lets through, is added to the diffuse light first and moved out of it
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            addAmbient(-litArgs_worldNormal);
+            dDiffuseTransmissionLight = dDiffuseLight;
+            dDiffuseLight = vec3f(0.0);
+        #endif
+
         addAmbient(litArgs_worldNormal);
 
         #ifdef LIT_SPECULAR
             dDiffuseLight = dDiffuseLight * (1.0 - litArgs_specularity);
+
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight = dDiffuseTransmissionLight * (1.0 - litArgs_specularity);
+            #endif
         #endif
 
         // move ambient color out of diffuse (used by Lightmapper, to multiply ambient color by accumulated AO)
@@ -55,6 +73,10 @@ fn evaluateBackend() -> FragmentOutput {
 
     #ifndef LIT_OLD_AMBIENT
         dDiffuseLight = dDiffuseLight * litArgs_ambient;
+
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            dDiffuseTransmissionLight = dDiffuseTransmissionLight * litArgs_ambient;
+        #endif
     #endif
 
     #ifdef LIT_AO
@@ -174,6 +196,13 @@ fn evaluateBackend() -> FragmentOutput {
 
     #endif
 
+    // the diffuse transmission takes its share of the light entering the surface, and the diffuse
+    // reflection the rest
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        dDiffuseLight = dDiffuseLight * (1.0 - litArgs_diffuseTransmission_intensity);
+        dDiffuseTransmissionLight = dDiffuseTransmissionLight * litArgs_diffuseTransmission_intensity;
+    #endif
+
     // refraction is not gated on lighting / reflections, so that it also works without them
     #ifdef LIT_REFRACTION
         addRefraction(
@@ -191,6 +220,11 @@ fn evaluateBackend() -> FragmentOutput {
                 litArgs_iridescence_intensity
             #endif
         );
+
+        // refraction replaces the diffuse transmission as it replaces the diffuse reflection
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            dDiffuseTransmissionLight = dDiffuseTransmissionLight * (1.0 - litArgs_transmission);
+        #endif
     #endif
 
     // apply ambient occlusion

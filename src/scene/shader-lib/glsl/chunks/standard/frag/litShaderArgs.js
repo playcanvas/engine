@@ -54,6 +54,12 @@ float litArgs_ior;
 // Dispersion, range [0..1] typically, but can be higher
 float litArgs_dispersion;
 
+// Fraction of the light entering the surface that is diffusely transmitted through it, range [0..1]
+float litArgs_diffuseTransmission_intensity;
+
+// The color tinting the diffusely transmitted light
+vec3 litArgs_diffuseTransmission_color;
+
 // Iridescence effect intensity, range [0..1]
 float litArgs_iridescence_intensity;
 

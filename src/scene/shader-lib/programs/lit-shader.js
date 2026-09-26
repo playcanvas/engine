@@ -546,6 +546,7 @@ class LitShader {
         this.fDefineSet(options.useRefraction, 'LIT_REFRACTION');
         this.fDefineSet(options.useDynamicRefraction, 'LIT_DYNAMIC_REFRACTION');
         this.fDefineSet(options.dispersion, 'LIT_DISPERSION');
+        this.fDefineSet(options.useDiffuseTransmission, 'LIT_DIFFUSE_TRANSMISSION');
         this.fDefineSet(options.useHeights, 'LIT_HEIGHTS');
         this.fDefineSet(options.opacityFadesSpecular, 'LIT_OPACITY_FADES_SPECULAR');
         this.fDefineSet(options.alphaToCoverage, 'LIT_ALPHA_TO_COVERAGE');

@@ -25,6 +25,11 @@ var<private> ccSpecularLight: vec3f;
 var<private> ccSpecularityNoFres: f32;
 var<private> sSpecularLight: vec3f;
 
+#ifdef LIT_DIFFUSE_TRANSMISSION
+    // the light arriving at the back of the surface, which the diffuse transmission lets through
+    var<private> dDiffuseTransmissionLight: vec3f = vec3f(0.0);
+#endif
+
 // FRAGMENT SHADER INPUTS: UNIFORMS
 
 #ifdef LIT_DISPERSION
@@ -54,7 +59,7 @@ var<private> sSpecularLight: vec3f;
 #endif
 
 #ifdef LIT_SPECULAR
-    #if LIT_FRESNEL_MODEL == NONE && !defined(LIT_REFLECTIONS) && !defined(LIT_DIFFUSE_MAP) 
+    #if LIT_FRESNEL_MODEL == NONE && !defined(LIT_REFLECTIONS) && !defined(LIT_DIFFUSE_MAP) && !defined(LIT_DIFFUSE_TRANSMISSION)
         #define LIT_OLD_AMBIENT
     #endif
 #endif

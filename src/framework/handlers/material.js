@@ -20,6 +20,8 @@ const PLACEHOLDER_MAP = {
     glossMap: 'gray',
     sheenMap: 'black',
     sheenGlossMap: 'gray',
+    diffuseTransmissionMap: 'white',
+    diffuseTransmissionColorMap: 'white',
     clearCoatMap: 'black',
     clearCoatGlossMap: 'gray',
     clearCoatNormalMap: 'normal',
