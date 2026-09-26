@@ -24,6 +24,7 @@ import { BLEND_NONE, BLEND_NORMAL, PROJECTION_ORTHOGRAPHIC } from '../../scene/c
 
 /**
  * @import { Entity } from '../../framework/entity.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 const ARRAY_BUFFER = 34962;
@@ -139,6 +140,49 @@ const textureSemantics = [
     'thicknessMap'
 ];
 
+// the maps glTF reads from a fixed channel of their texture, which the material can read from
+// another channel
+const textureChannels = {
+    diffuseTransmissionMap: 'a'
+};
+
+/**
+ * A texture exported as a copy with one of its channels copied into another, for a map the
+ * material reads from a channel other than the one glTF reads.
+ *
+ * @ignore
+ */
+class ChannelCopy {
+    /**
+     * @param {Texture} texture - The texture to copy.
+     * @param {string} source - The channel the material reads, 'r', 'g', 'b' or 'a'.
+     * @param {string} target - The channel glTF reads.
+     */
+    constructor(texture, source, target) {
+        this.texture = texture;
+        this.source = source;
+        this.target = target;
+    }
+
+    get name() {
+        return this.texture.name;
+    }
+}
+
+// copies a channel of the pixels of a canvas into another channel, in place
+const copyCanvasChannel = (canvas, source, target) => {
+    const context = canvas.getContext('2d');
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const from = 'rgba'.indexOf(source);
+    const to = 'rgba'.indexOf(target);
+    for (let i = 0; i < data.length; i += 4) {
+        data[i + to] = data[i + from];
+    }
+    context.putImageData(imageData, 0, 0);
+    return canvas;
+};
+
 /**
  * Implementation of the GLTF 2.0 format exporter.
  *
@@ -161,7 +205,10 @@ class GltfExporter extends CoreExporter {
             // maps a buffer (vertex or index) to an array of bufferview indices
             bufferViewMap: new Map(),
 
-            compressibleTexture: new Set()
+            compressibleTexture: new Set(),
+
+            // the channel copies of each texture, see getExportedTexture
+            channelCopies: new Map()
         };
 
         const { materials, buffers, entityMeshInstances, textures } = resources;
@@ -181,7 +228,7 @@ class GltfExporter extends CoreExporter {
 
                     // collect textures
                     textureSemantics.forEach((semantic) => {
-                        const texture = material[semantic];
+                        const texture = this.getExportedTexture(resources, material, semantic);
                         if (texture && textures.indexOf(texture) < 0) {
                             // NOTE: don't store normal maps as jpeg,
                             // because of the way they are sampled, they don't compress well
@@ -349,8 +396,44 @@ class GltfExporter extends CoreExporter {
         }
     }
 
+    /**
+     * Returns the texture a map of a material is exported with: the texture itself, or a copy of
+     * it with the channel the material reads moved into the channel glTF reads.
+     *
+     * @param {object} resources - The resources of the export.
+     * @param {StandardMaterial} material - The material.
+     * @param {string} semantic - The map, for example 'diffuseTransmissionMap'.
+     * @returns {Texture|ChannelCopy|null} The texture to export.
+     * @private
+     */
+    getExportedTexture(resources, material, semantic) {
+        const texture = material[semantic];
+        const target = textureChannels[semantic];
+
+        // the shader samples the first channel listed for a single channel map
+        const source = material[`${semantic}Channel`]?.[0];
+        if (!texture || !target || !source || source === target) {
+            return texture;
+        }
+
+        resources.channelCopies ??= new Map();
+        let copies = resources.channelCopies.get(texture);
+        if (!copies) {
+            copies = new Map();
+            resources.channelCopies.set(texture, copies);
+        }
+
+        const key = source + target;
+        let copy = copies.get(key);
+        if (!copy) {
+            copy = new ChannelCopy(texture, source, target);
+            copies.set(key, copy);
+        }
+        return copy;
+    }
+
     attachTexture(resources, material, destination, name, textureSemantic, json) {
-        const texture = material[textureSemantic];
+        const texture = this.getExportedTexture(resources, material, textureSemantic);
 
         if (texture) {
             const textureIndex = resources.textures.indexOf(texture);
@@ -939,7 +1022,12 @@ class GltfExporter extends CoreExporter {
 
         const promises = [];
         srcTextures.forEach((srcTexture) => {
-            const promise = this.textureToCanvas(srcTexture, textureOptions);
+            const promise = srcTexture instanceof ChannelCopy ?
+                this.textureToCanvas(srcTexture.texture, textureOptions).then((canvas) => {
+                    const { source, target } = srcTexture;
+                    return canvas && copyCanvasChannel(canvas, source, target);
+                }) :
+                this.textureToCanvas(srcTexture, textureOptions);
             promise.then((canvas) => {
                 // eslint-disable-next-line no-promise-executor-return
                 return new Promise(resolve => resolve(canvas));
@@ -988,11 +1076,13 @@ class GltfExporter extends CoreExporter {
                         bufferView: bufferView[0]
                     };
 
+                    // a copy is sampled the same way as its texture
+                    const sampled = texture instanceof ChannelCopy ? texture.texture : texture;
                     json.samplers[i] = {
-                        minFilter: getFilter(texture.minFilter),
-                        magFilter: getFilter(texture.magFilter),
-                        wrapS: getWrap(texture.addressU),
-                        wrapT: getWrap(texture.addressV)
+                        minFilter: getFilter(sampled.minFilter),
+                        magFilter: getFilter(sampled.magFilter),
+                        wrapS: getWrap(sampled.addressU),
+                        wrapT: getWrap(sampled.addressV)
                     };
 
                     json.textures[i] = {
