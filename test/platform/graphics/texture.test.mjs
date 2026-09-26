@@ -25,6 +25,29 @@ describe('Texture', function () {
         jsdomTeardown();
     });
 
+    describe('#lock: cubemap', function () {
+
+        it('stores each face in the requested mip level', function () {
+            const texture = new Texture(device, {
+                width: 8,
+                height: 8,
+                format: PIXELFORMAT_RGBA8,
+                cubemap: true,
+                numLevels: 2
+            });
+
+            for (let face = 0; face < 6; face++) {
+                const data = texture.lock({ level: 1, face });
+                data[0] = face;
+                texture.unlock();
+
+                expect(texture._levels[1][face][0]).to.equal(face);
+            }
+
+            texture.destroy();
+        });
+    });
+
     describe('#constructor: srgb option', function () {
 
         it('creates the sRGB variant of the format when srgb is true', function () {
