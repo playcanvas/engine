@@ -70,9 +70,13 @@ describe('StandardMaterial uniform buffer', function () {
 
         it('describe the colors as vec3 uniforms and the numbers as floats, named after the property', function () {
             const descriptors = new StandardMaterial().propertyDescriptors;
-            expect(descriptors).to.have.lengthOf(39);
+            expect(descriptors).to.have.lengthOf(41);
             const byName = new Map(descriptors.map(descriptor => [descriptor.name, descriptor]));
-            for (const name of ['diffuse', 'emissive', 'ambient', 'specular', 'sheen', 'attenuation']) {
+            const colors = [
+                'diffuse', 'emissive', 'ambient', 'specular', 'sheen', 'attenuation',
+                'diffuseTransmissionColor'
+            ];
+            for (const name of colors) {
                 expect(byName.get(name).type, name).to.equal(UNIFORMTYPE_VEC3);
             }
             for (const name of ['emissiveIntensity', 'gloss', 'metalness', 'opacity', 'refractionIndex', 'parallaxShadowSamples']) {
@@ -102,7 +106,7 @@ describe('StandardMaterial uniform buffer', function () {
             material.update();
             expect(material.uniformBufferBindGroup).to.equal(null);
             expect(material._uniformBuffer).to.equal(null);
-            expect(material._modifiedProperties.size).to.equal(39);
+            expect(material._modifiedProperties.size).to.equal(41);
         });
 
         it('creates the uniform buffer and bind group on the first preparation, holding the defaults', function () {
@@ -433,14 +437,14 @@ describe('StandardMaterial uniform buffer', function () {
             const bindGroup = material.uniformBufferBindGroup;
             const layoutVersion = material.layoutVersion;
             expect(buffer.format.get('texture_diffuseMapTransform0')).to.equal(undefined);
-            expect(material.propertyDescriptors).to.have.lengthOf(39);
+            expect(material.propertyDescriptors).to.have.lengthOf(41);
 
             material.diffuse = new Color(0.5, 0.25, 0.75);
             assign(material);
             expect(material.layoutVersion).to.equal(layoutVersion + 1);
             expect(material._uniformBuffer).to.not.equal(buffer);
             expect(material.uniformBufferBindGroup).to.not.equal(bindGroup);
-            expect(material.propertyDescriptors).to.have.lengthOf(41);
+            expect(material.propertyDescriptors).to.have.lengthOf(43);
             expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.exist;
             expect(material._uniformBuffer.format.get('texture_diffuseMapTransform1')).to.exist;
 
@@ -484,7 +488,7 @@ describe('StandardMaterial uniform buffer', function () {
             material.diffuseMap = null;
             material.update();
             prepare(material);
-            expect(material.propertyDescriptors).to.have.lengthOf(39);
+            expect(material.propertyDescriptors).to.have.lengthOf(41);
             expect(material._uniformBuffer.format.get('texture_diffuseMapTransform0')).to.equal(undefined);
 
             assign(material);

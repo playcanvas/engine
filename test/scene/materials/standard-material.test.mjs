@@ -4,6 +4,7 @@ import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
+import { JsonStandardMaterialParser } from '../../../src/framework/parsers/material/json-standard-material.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
     AMBIENTSRC_CONSTANT, AMBIENTSRC_ENVALATLAS, CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK,
@@ -13,6 +14,7 @@ import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
+import { StandardMaterialValidator } from '../../../src/scene/materials/standard-material-validator.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { standard } from '../../../src/scene/shader-lib/programs/standard.js';
 import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
@@ -131,6 +133,19 @@ describe('StandardMaterial', function () {
         expect(material.diffuseMapTiling.x).to.equal(1);
         expect(material.diffuseMapTiling.y).to.equal(1);
         expect(material.diffuseMapUv).to.equal(0);
+        expect(material.diffuseTransmission).to.equal(0);
+        expect(material.diffuseTransmissionColor).to.be.an.instanceof(Color);
+        expect(material.diffuseTransmissionColor.r).to.equal(1);
+        expect(material.diffuseTransmissionColor.g).to.equal(1);
+        expect(material.diffuseTransmissionColor.b).to.equal(1);
+        expect(material.diffuseTransmissionColorMap).to.be.null;
+        expect(material.diffuseTransmissionColorMapChannel).to.equal('rgb');
+        expect(material.diffuseTransmissionColorMapUv).to.equal(0);
+        expect(material.diffuseTransmissionColorVertexColor).to.equal(false);
+        expect(material.diffuseTransmissionMap).to.be.null;
+        expect(material.diffuseTransmissionMapChannel).to.equal('g');
+        expect(material.diffuseTransmissionMapUv).to.equal(0);
+        expect(material.diffuseTransmissionVertexColor).to.equal(false);
         expect(material.diffuseVertexColor).to.equal(false);
         expect(material.diffuseVertexColorChannel).to.equal('rgb');
 
@@ -552,6 +567,30 @@ describe('StandardMaterial', function () {
             expect(material.variants.get(1)).to.equal(variant);
         });
 
+        it('invalidates shaders only when diffuseTransmission crosses 0', function () {
+            const material = new StandardMaterial();
+            material.update();
+            addVariant(material);
+
+            // enabling the transmission adds it to the shader
+            material.diffuseTransmission = 0.25;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+
+            // a change of the fraction or of the color only changes uniforms, even at 1
+            const variant = addVariant(material);
+            material.diffuseTransmission = 1;
+            material.diffuseTransmissionColor = new Color(1, 0, 0);
+            material.diffuseTransmissionColor.set(0, 1, 0);
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            // disabling it removes it from the shader
+            material.diffuseTransmission = 0;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+        });
+
         it('invalidates shaders when refractionIndex moves across its default constant', function () {
             const defaultIndex = StandardMaterialOptionsBuilder.DEFAULT_REFRACTION_INDEX;
             const material = new StandardMaterial();
@@ -931,6 +970,30 @@ describe('StandardMaterial', function () {
             standard.prepareFragmentDefines(options, defines, { isForward: true });
 
             expect(defines.has('STD_SPECULAR_CONSTANT')).to.equal(false);
+        });
+
+    });
+
+    describe('material asset', function () {
+
+        it('accepts the diffuse transmission and its maps', function () {
+            // without the parameter registry entries the validator rejects the whole material
+            const validator = new StandardMaterialValidator();
+            const data = {
+                diffuseTransmission: 0.5,
+                diffuseTransmissionMapChannel: 'a',
+                diffuseTransmissionColor: [1, 0.5, 0.25],
+                diffuseTransmissionColorMapUv: 1
+            };
+            validator.validate(data);
+            expect(validator.valid).to.equal(true);
+
+            const material = new StandardMaterial();
+            new JsonStandardMaterialParser().initialize(material, data);
+            expect(material.diffuseTransmission).to.equal(0.5);
+            expect(material.diffuseTransmissionMapChannel).to.equal('a');
+            expect(material.diffuseTransmissionColor.equals(new Color(1, 0.5, 0.25))).to.equal(true);
+            expect(material.diffuseTransmissionColorMapUv).to.equal(1);
         });
 
     });

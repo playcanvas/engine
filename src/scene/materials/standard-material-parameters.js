@@ -73,6 +73,11 @@ const standardMaterialParameterTypes = {
     sheenGlossInvert: 'boolean',
     ..._textureParameter('sheenGloss'),
 
+    diffuseTransmission: 'number',
+    ..._textureParameter('diffuseTransmission'),
+    diffuseTransmissionColor: 'rgb',
+    ..._textureParameter('diffuseTransmissionColor'),
+
     fresnelModel: 'number',
 
     emissive: 'rgb',

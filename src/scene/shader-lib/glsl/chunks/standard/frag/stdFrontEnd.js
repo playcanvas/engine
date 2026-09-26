@@ -25,6 +25,12 @@ export default /* glsl */`
         // diffuse
         #include  "diffusePS"
 
+        // diffuse transmission
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            #include "diffuseTransmissionPS"
+            #include "diffuseTransmissionColorPS"
+        #endif
+
         // normal
         #ifdef LIT_NEEDS_NORMAL
             #include "normalMapPS"
@@ -136,6 +142,14 @@ export default /* glsl */`
 
             // ambient
             litArgs_ambient = material_ambient;
+
+            // diffuse transmission
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                getDiffuseTransmission();
+                getDiffuseTransmissionColor();
+                litArgs_diffuseTransmission_intensity = dDiffuseTransmission;
+                litArgs_diffuseTransmission_color = dDiffuseTransmissionColor;
+            #endif
 
             // normal
             #ifdef LIT_NEEDS_NORMAL

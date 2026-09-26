@@ -6,6 +6,9 @@ vec3 combineColor(vec3 albedo, vec3 sheenSpecularity, float clearcoatSpecularity
 #else
     ret += albedo * dDiffuseLight;
 #endif
+#ifdef LIT_DIFFUSE_TRANSMISSION
+    ret += litArgs_diffuseTransmission_color * dDiffuseTransmissionLight;
+#endif
 #ifdef LIT_SPECULAR
     ret += dSpecularLight;
 #endif

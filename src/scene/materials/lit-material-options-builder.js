@@ -88,6 +88,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useClearCoat = material.hasClearCoat;
         litOptions.useSheen = material.hasSheen;
         litOptions.useIridescence = material.hasIridescence;
+        litOptions.useDiffuseTransmission = material.hasDiffuseTransmission;
         litOptions.useMetalness = material.hasMetalness;
         litOptions.useDynamicRefraction = material.dynamicRefraction;
         litOptions.dispersion = material.dispersion > 0;

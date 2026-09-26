@@ -76,6 +76,19 @@ export default /* glsl */`
             uniform sampler2D texture_diffuseDetailMap;
         #endif
 
+        // diffuse transmission
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            float dDiffuseTransmission;
+            vec3 dDiffuseTransmissionColor;
+
+            #ifdef STD_DIFFUSETRANSMISSION_TEXTURE_ALLOCATE
+                uniform sampler2D texture_diffuseTransmissionMap;
+            #endif
+            #ifdef STD_DIFFUSETRANSMISSIONCOLOR_TEXTURE_ALLOCATE
+                uniform sampler2D texture_diffuseTransmissionColorMap;
+            #endif
+        #endif
+
         // normal
         #ifdef STD_NORMAL_TEXTURE_ALLOCATE
             uniform sampler2D texture_normalMap;

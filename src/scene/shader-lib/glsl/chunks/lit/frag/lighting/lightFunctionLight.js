@@ -91,6 +91,23 @@ void evaluateLight{i}(
         #endif
     #endif
 
+    // diffuse transmission - the light arriving at the back of the surface, which is the diffuse
+    // lighting of the flipped normal. It is evaluated before the diffuse lighting of a punctual
+    // light multiplies into its attenuation
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        #if LIGHT{i}SHAPE == PUNCTUAL
+            float attenTransmission = dAtten * getLightDiffuse(-litArgs_worldNormal, vec3(0.0), dLightDirNormW);
+        #elif LIGHT{i}TYPE == DIRECTIONAL
+            float attenTransmission = dAtten * getLightDiffuse(-litArgs_worldNormal, dViewDirW, dLightDirNormW);
+        #elif LIGHT{i}SHAPE == RECT
+            float attenTransmission = dAtten * getRectLightDiffuse(-litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
+        #elif LIGHT{i}SHAPE == DISK
+            float attenTransmission = dAtten * getDiskLightDiffuse(-litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
+        #elif LIGHT{i}SHAPE == SPHERE
+            float attenTransmission = dAtten * getSphereLightDiffuse(-litArgs_worldNormal, dViewDirW, lightDirW, dLightDirNormW) * 16.0;
+        #endif
+    #endif
+
     // diffuse lighting - LTC lights do not mix diffuse lighting into attenuation that affects specular
     #if LIGHT{i}SHAPE != PUNCTUAL
 
@@ -135,6 +152,10 @@ void evaluateLight{i}(
 
         dAtten *= shadow;
 
+        #ifdef LIT_DIFFUSE_TRANSMISSION
+            attenTransmission *= shadow;
+        #endif
+
         #if defined(LIT_SHADOW_CATCHER) && LIGHT{i}TYPE == DIRECTIONAL
             // accumulate shadows for directional lights
             dShadowCatcher *= shadow;
@@ -153,15 +174,27 @@ void evaluateLight{i}(
         // area light - they do not mix diffuse lighting into specular attenuation
         #ifdef LIT_SPECULAR
             dDiffuseLight += ((attenDiffuse * dAtten) * lightColor) * (1.0 - dLTCSpecFres);
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += (attenTransmission * lightColor) * (1.0 - dLTCSpecFres);
+            #endif
         #else
             dDiffuseLight += (attenDiffuse * dAtten) * lightColor;
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += attenTransmission * lightColor;
+            #endif
         #endif                        
     #else
         // punctual light
         #if defined(AREA_LIGHTS) && defined(LIT_SPECULAR)
             dDiffuseLight += (dAtten * lightColor) * (1.0 - litArgs_specularity);
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += (attenTransmission * lightColor) * (1.0 - litArgs_specularity);
+            #endif
         #else
             dDiffuseLight += dAtten * lightColor;
+            #ifdef LIT_DIFFUSE_TRANSMISSION
+                dDiffuseTransmissionLight += attenTransmission * lightColor;
+            #endif
         #endif
     #endif
 
