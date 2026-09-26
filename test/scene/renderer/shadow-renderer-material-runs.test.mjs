@@ -3,6 +3,7 @@ import sinon from 'sinon';
 
 import { Entity } from '../../../src/framework/entity.js';
 import { DebugGraphics } from '../../../src/platform/graphics/debug-graphics.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -257,6 +258,22 @@ describe('ShadowRenderer caster submission', function () {
         expect(submits.length).to.be.greaterThan(0);
         expect(pushed).to.have.lengthOf(2 * submits.length);
         expect(popped).to.have.lengthOf(pushed.length);
+    });
+
+    it('builds the shadow shader of a caster against an empty light list', function () {
+        const caster = addBox(new StandardMaterial(), 0);
+
+        // the shader pass carries the type of the light rendered from and the pass lights
+        // nothing, so the shadow shader of a caster does not depend on the lights of its layers
+        const lightLists = record(caster, 'getShaderInstance', (pass, lightList) => lightList);
+        app.render();
+
+        expect(submits.length).to.be.greaterThan(0);
+        expect(lightLists).to.have.lengthOf(submits.length);
+        for (const lightList of lightLists) {
+            expect(lightList).to.be.an.instanceof(LightList);
+            expect(lightList.slots).to.be.empty;
+        }
     });
 
     describe('#sortCompareShader', function () {
