@@ -16,7 +16,7 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 // The diffuse transmission lobe lets part of the diffuse light through the surface: the light and
 // the ambient arriving at the back of the surface are gathered separately, and combined with the
 // transmission color. Under `npm run test:webgpu` the WGSL of each shader is compiled by Dawn, and
-// an error fails the test.
+// an error fails the test, so the expected code is given in both shading languages.
 describe('Lit shader diffuse transmission', function () {
 
     let app;
@@ -82,6 +82,9 @@ describe('Lit shader diffuse transmission', function () {
         return shader.definition.fshader;
     };
 
+    // the expected code in the shading language of the device, WGSL on WebGPU
+    const lang = (glsl, wgsl) => (app.graphicsDevice.isWebGPU ? wgsl : glsl);
+
     const transmissive = (value = 0.5) => {
         const material = new StandardMaterial();
         material.diffuseTransmission = value;
@@ -143,7 +146,7 @@ describe('Lit shader diffuse transmission', function () {
 
         expect(source).not.to.contain('DiffuseTransmission');
         expect(source).not.to.contain('attenTransmission');
-        expect(source).not.to.contain('faceforward');
+        expect(source).not.to.match(/faceforward/i);
     });
 
     it('gathers the ambient light arriving at the back of the surface', function () {
@@ -161,8 +164,11 @@ describe('Lit shader diffuse transmission', function () {
         const source = forwardShader(addBox(material));
 
         // the split happens in the backend, followed by the call of the refraction
-        const splitCode = 'dDiffuseTransmissionLight *= litArgs_diffuseTransmission_intensity;';
-        const overrideCode = 'dDiffuseTransmissionLight *= 1.0 - litArgs_transmission;';
+        const light = 'dDiffuseTransmissionLight';
+        const splitCode = lang(`${light} *= litArgs_diffuseTransmission_intensity;`,
+            `${light} = ${light} * litArgs_diffuseTransmission_intensity;`);
+        const overrideCode = lang(`${light} *= 1.0 - litArgs_transmission;`,
+            `${light} = ${light} * (1.0 - litArgs_transmission);`);
         const split = source.indexOf(splitCode);
         const refraction = source.indexOf('addRefraction(', split);
         expect(split).to.be.greaterThan(-1);
@@ -179,17 +185,26 @@ describe('Lit shader diffuse transmission', function () {
 
         // each light gathers its transmission, shadows it with the offset flipped to its side
         const patterns = [
-            /attenTransmission = dAtten \* getLightDiffuse\(-litArgs_worldNormal/g,
-            /attenTransmission \*= shadow;/g,
-            /dDiffuseTransmissionLight \+= attenTransmission \* lightColor;/g,
-            /faceforward\(dVertexNormalW, dLightDirNormW, dVertexNormalW\)/g
+            /attenTransmission(: f32)? = dAtten \* getLightDiffuse\(-litArgs_worldNormal/g,
+            lang(/attenTransmission \*= shadow;/g,
+                /attenTransmission = attenTransmission \* shadow;/g),
+            lang(/dDiffuseTransmissionLight \+= attenTransmission \* lightColor;/g,
+                /dDiffuseTransmissionLight \+ \(attenTransmission \* lightColor\);/g),
+            /face[fF]orward\(dVertexNormalW, dLightDirNormW, dVertexNormalW\)/g
         ];
+
+        // WebGPU clusters the omni and spot lights, leaving only the directional light
+        const count = lang(3, 1);
         for (const pattern of patterns) {
-            expect(source.match(pattern), String(pattern)).to.have.lengthOf(3);
+            expect(source.match(pattern), String(pattern)).to.have.lengthOf(count);
         }
     });
 
     it('evaluates the transmission of area lights with the flipped normal', function () {
+        // WebGPU clusters every local light
+        if (app.graphicsDevice.isWebGPU) {
+            this.skip();
+        }
         app.scene.clusteredLightingEnabled = false;
         addLight({ type: 'spot', shape: LIGHTSHAPE_RECT });
         const material = transmissive();
@@ -207,10 +222,26 @@ describe('Lit shader diffuse transmission', function () {
         addLight({ type: 'omni', castShadows: true });
         const source = forwardShader(addBox(transmissive()));
 
+        const light = 'dDiffuseTransmissionLight';
         expect(source).to.contain('= falloffAttenuation * getLightDiffuse(-worldNormal');
         expect(source).to.contain('max(falloffAttenuation, transmissionAttenuation) > 0.00001');
-        expect(source).to.contain('faceforward(geometricNormal, lightDirNormW, geometricNormal)');
-        expect(source).to.contain('dDiffuseTransmissionLight += punctualTransmission;');
+        expect(source).to.match(/face[fF]orward\(geometricNormal, lightDirNormW,/);
+        expect(source).to.contain(lang(`${light} += punctualTransmission;`,
+            `${light} = ${light} + punctualTransmission;`));
+    });
+
+    it('evaluates the transmission of clustered area lights with the flipped normal', function () {
+        app.scene.clusteredLightingEnabled = true;
+        app.scene.lighting.areaLightsEnabled = true;
+        addLight({ type: 'spot', shape: LIGHTSHAPE_RECT });
+        const material = transmissive();
+        material.useMetalness = true;
+        const source = forwardShader(addBox(material));
+
+        const light = 'dDiffuseTransmissionLight';
+        expect(source).to.contain('transmissionAttenuation = getRectLightDiffuse(-worldNormal');
+        expect(source).to.contain(lang(`${light} += areaTransmission;`,
+            `${light} = ${light} + areaTransmission;`));
     });
 
     it('modulates the transmission color by the metalness', function () {
@@ -232,7 +263,8 @@ describe('Lit shader diffuse transmission', function () {
 
         // the legacy combine has no room for the transmission
         expect(source).not.to.contain('light_globalAmbient) * albedo');
-        expect(source).to.contain('ret += albedo * dDiffuseLight;');
+        expect(source).to.contain(lang('ret += albedo * dDiffuseLight;',
+            'ret = ret + (albedo * dDiffuseLight);'));
     });
 
     it('samples the transmission from its map and the color from its map', function () {
@@ -243,7 +275,8 @@ describe('Lit shader diffuse transmission', function () {
         material.diffuseTransmissionColorMap = texture(PIXELFORMAT_SRGBA8);
         const source = forwardShader(addBox(material));
 
-        expect(source).to.match(/texture2DBias\(texture_diffuseTransmissionMap, [^)]*\)\.a;/);
+        // texture2DBias in GLSL, textureSampleBias in WGSL
+        expect(source).to.match(/Bias\(texture_diffuseTransmissionMap, [^)]*\)\.a;/);
         expect(source).to.match(/texture_diffuseTransmissionColorMap, [^)]*\)\)\.rgb;/);
         expect(source).not.to.contain('{STD_DIFFUSETRANSMISSION');
     });
@@ -256,8 +289,10 @@ describe('Lit shader diffuse transmission', function () {
         material.diffuseTransmissionColorVertexColor = true;
         const source = forwardShader(addColoredTriangle(material));
 
-        expect(source).to.contain('diffuseTransmission *= saturate(vVertexColor.r);');
-        expect(source).to.contain('diffuseTransmissionColor *= saturate(vVertexColor.rgb);');
+        expect(source).to.contain(lang('diffuseTransmission *= saturate(vVertexColor.r);',
+            'diffuseTransmission = diffuseTransmission * saturate(vVertexColor.r);'));
+        expect(source).to.contain(lang('diffuseTransmissionColor *= saturate(vVertexColor.rgb);',
+            'diffuseTransmissionColor = diffuseTransmissionColor * saturate3(vVertexColor.rgb);'));
     });
 
     it('supports a LitMaterial front end', function () {
