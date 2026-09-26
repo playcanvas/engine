@@ -24,10 +24,11 @@ export default /* glsl */`
 // TBN
 #ifdef LIT_TBN
     #include "TBNPS"
+#endif
 
-    #ifdef LIT_TWO_SIDED_LIGHTING
-        #include "twoSidedLightingPS"
-    #endif
+// two sided lighting
+#if defined(LIT_NEEDS_NORMAL) && defined(LIT_TWO_SIDED_LIGHTING)
+    #include "twoSidedLightingPS"
 #endif
 
 `;
