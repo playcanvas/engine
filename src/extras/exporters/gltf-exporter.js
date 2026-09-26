@@ -15,7 +15,7 @@ import {
     SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4,
     SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7, TYPE_INT8,
     TYPE_UINT8, TYPE_INT16, TYPE_UINT16,
-    TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+    TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 import { IndexBuffer } from '../../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
@@ -168,20 +168,6 @@ class ChannelCopy {
         return this.texture.name;
     }
 }
-
-// copies a channel of the pixels of a canvas into another channel, in place
-const copyCanvasChannel = (canvas, source, target) => {
-    const context = canvas.getContext('2d');
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    const from = 'rgba'.indexOf(source);
-    const to = 'rgba'.indexOf(target);
-    for (let i = 0; i < data.length; i += 4) {
-        data[i + to] = data[i + from];
-    }
-    context.putImageData(imageData, 0, 0);
-    return canvas;
-};
 
 /**
  * Implementation of the GLTF 2.0 format exporter.
@@ -1023,10 +1009,7 @@ class GltfExporter extends CoreExporter {
         const promises = [];
         srcTextures.forEach((srcTexture) => {
             const promise = srcTexture instanceof ChannelCopy ?
-                this.textureToCanvas(srcTexture.texture, textureOptions).then((canvas) => {
-                    const { source, target } = srcTexture;
-                    return canvas && copyCanvasChannel(canvas, source, target);
-                }) :
+                this.channelCopyToCanvas(srcTexture, textureOptions) :
                 this.textureToCanvas(srcTexture, textureOptions);
             promise.then((canvas) => {
                 // eslint-disable-next-line no-promise-executor-return
@@ -1035,6 +1018,38 @@ class GltfExporter extends CoreExporter {
             promises.push(promise);
         });
         return promises;
+    }
+
+    /**
+     * Converts a copy of a texture to a canvas, with a channel copied into another. The texture is
+     * rendered to a linear RGBA8 target, so the channel holds the value the material samples,
+     * decoded from sRGB. The channel is copied before the pixels reach a canvas, which stores them
+     * premultiplied by alpha and so loses the color of texels with zero alpha.
+     *
+     * @param {ChannelCopy} copy - The copy of the texture.
+     * @param {object} options - The texture options.
+     * @param {number} [options.maxTextureSize] - The maximum size of the texture.
+     * @returns {Promise<HTMLCanvasElement|undefined>} The canvas.
+     * @private
+     */
+    channelCopyToCanvas(copy, options) {
+        const { texture, source, target } = copy;
+        const size = this.calcTextureSize(texture.width, texture.height, options.maxTextureSize);
+        const { width, height } = size;
+
+        const read = this.readTexturePixels(texture, width, height, PIXELFORMAT_RGBA8);
+        return read.then((textureData) => {
+            const pixels = new Uint8ClampedArray(width * height * 4);
+            pixels.set(textureData);
+
+            const from = 'rgba'.indexOf(source);
+            const to = 'rgba'.indexOf(target);
+            for (let i = 0; i < pixels.length; i += 4) {
+                pixels[i + to] = pixels[i + from];
+            }
+
+            return this.pixelsToCanvas(pixels, width, height);
+        });
     }
 
     writeTextures(resources, textureCanvases, json, options) {

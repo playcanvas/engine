@@ -6,6 +6,7 @@ import { Entity } from '../../../src/framework/entity.js';
 import {
     KHR_materials_diffuse_transmission
 } from '../../../src/framework/parsers/glb/extensions/khr-materials-diffuse-transmission.js';
+import { PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -157,27 +158,27 @@ describe('GltfExporter', function () {
                 expect(resources.textures).to.deep.equal([texture]);
             });
 
-            it('moves the channel into alpha', async function () {
+            it('moves the sampled channel into alpha, before a canvas holds it', async function () {
                 const exporter = new GltfExporter();
-                const material = transmissive({ name: 'transmission' });
+                const material = transmissive({ name: 'transmission', width: 3, height: 1 });
                 const resources = collect(exporter, material);
 
-                // an opaque black texel transmits nothing, a green one everything
-                const pixels = new Uint8ClampedArray([0, 0, 0, 255, 0, 255, 0, 255]);
-                const canvas = {
-                    width: 2,
-                    height: 1,
-                    getContext: () => ({
-                        getImageData: () => ({ data: pixels }),
-                        putImageData: () => {}
-                    })
+                // An opaque black texel transmits nothing, and a green one with zero alpha
+                // everything - a canvas would have lost its green, as it premultiplies by alpha.
+                // The texture is sampled into a linear target, which decodes sRGB.
+                const read = [];
+                exporter.readTexturePixels = (texture, width, height, format) => {
+                    read.push({ width, height, format });
+                    const texels = [0, 0, 0, 255, 0, 255, 0, 0, 0, 55, 0, 255];
+                    return Promise.resolve(new Uint8Array(texels));
                 };
-                exporter.textureToCanvas = () => Promise.resolve(canvas);
+                exporter.pixelsToCanvas = (pixels, width, height) => ({ pixels, width, height });
                 const canvases = exporter.convertTextures(resources.textures, {});
                 const [converted] = await Promise.all(canvases);
 
-                expect(converted).to.equal(canvas);
-                expect(Array.from(pixels)).to.deep.equal([0, 0, 0, 0, 0, 255, 0, 255]);
+                expect(read).to.deep.equal([{ width: 3, height: 1, format: PIXELFORMAT_RGBA8 }]);
+                const moved = [0, 0, 0, 0, 0, 255, 0, 255, 0, 55, 0, 55];
+                expect(Array.from(converted.pixels)).to.deep.equal(moved);
             });
         });
 
