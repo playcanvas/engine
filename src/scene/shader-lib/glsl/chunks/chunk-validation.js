@@ -48,6 +48,7 @@ const chunkVersions = {
     shadowEVSMPS: '1.62',
     spotPS: '1.62',
     TBNPS: '1.62',
+    twoSidedLightingPS: '2.23',
 
     endPS: '1.65',
     metalnessModulatePS: '1.65',

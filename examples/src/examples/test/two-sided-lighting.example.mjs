@@ -89,8 +89,20 @@ light.addComponent('light', {
 light.setLocalEulerAngles(45, 30, 0);
 app.root.addChild(light);
 
+// the plane with its normal map, which is applied through a TBN matrix
 const entity = assets.model.resource.instantiateRenderEntity();
+entity.setLocalPosition(-1.1, 0, 0);
 app.root.addChild(entity);
+
+// the same plane without its normal map, which builds no TBN matrix and so is shaded with the
+// vertex normal
+const plain = assets.model.resource.instantiateRenderEntity();
+const plainMaterial = plain.render.meshInstances[0].material.clone();
+plainMaterial.normalMap = null;
+plainMaterial.update();
+plain.render.meshInstances[0].material = plainMaterial;
+plain.setLocalPosition(1.1, 0, 0);
+app.root.addChild(plain);
 
 const camera = new Entity();
 camera.addComponent('camera', {

@@ -39,10 +39,11 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
 
         #ifdef LIT_TBN
             getTBN(dTangentW, dBinormalW, dVertexNormalW);
+        #endif
 
-            #ifdef LIT_TWO_SIDED_LIGHTING
-                handleTwoSidedLighting();
-            #endif
+        // after the TBN matrix, which is built from the unflipped normal
+        #ifdef LIT_TWO_SIDED_LIGHTING
+            handleTwoSidedLighting();
         #endif
     #endif
 
