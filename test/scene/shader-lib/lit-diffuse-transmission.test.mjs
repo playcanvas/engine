@@ -154,9 +154,10 @@ describe('Lit shader diffuse transmission', function () {
     });
 
     it('splits the diffuse light, then lets refraction override both parts', function () {
+        // the refraction of the environment of the material
         const material = transmissive();
         material.refraction = 0.5;
-        material.useDynamicRefraction = true;
+        material.envAtlas = texture();
         const source = forwardShader(addBox(material));
 
         // the split happens in the backend, followed by the call of the refraction
