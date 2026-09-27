@@ -89,7 +89,9 @@ const tmpCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
  * - [Basic text rendering](https://playcanvas.github.io/#/user-interface/text)
  * - [Auto font sizing](https://playcanvas.github.io/#/user-interface/text-auto-font-size)
  * - [Emojis](https://playcanvas.github.io/#/user-interface/text-emojis)
+ * - [Justified text](https://playcanvas.github.io/#/user-interface/text-justify)
  * - [Text localization](https://playcanvas.github.io/#/user-interface/text-localization)
+ * - [Text markup](https://playcanvas.github.io/#/user-interface/text-markup)
  * - [Typewriter text](https://playcanvas.github.io/#/user-interface/text-typewriter)
  *
  * @hideconstructor
