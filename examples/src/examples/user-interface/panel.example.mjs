@@ -1,85 +1,72 @@
-// 9-scaled image rendering, using an asset from https://help.umajin.com/nine-slice-tutorial/
+// @config
+//
+// A quest dialog, achievement toasts and a quest log, all drawn from small sprites: **sliced**
+// panels keep their corners as they stretch to any size, like the toasts that fit their text, and
+// the **tiled** paper of the log repeats its lines as the log grows. Accept a quest to try it.
+
 import {
-    ADDRESS_CLAMP_TO_EDGE,
     AppBase,
     AppOptions,
     Asset,
     AssetListLoader,
+    ButtonComponentSystem,
     CameraComponentSystem,
     Color,
     ELEMENTTYPE_IMAGE,
+    ELEMENTTYPE_TEXT,
     ElementComponentSystem,
     ElementInput,
     Entity,
     FILLMODE_FILL_WINDOW,
-    FILTER_NEAREST,
-    Mouse,
+    FontHandler,
     RESOLUTION_AUTO,
-    RenderComponentSystem,
     SCALEMODE_BLEND,
     SPRITE_RENDERMODE_SIMPLE,
     SPRITE_RENDERMODE_SLICED,
     SPRITE_RENDERMODE_TILED,
     ScreenComponentSystem,
     Sprite,
-    TextureAtlas,
+    TextureAtlasHandler,
     TextureHandler,
-    TouchDevice,
     Vec2,
-    Vec4,
     createGraphicsDevice
 } from 'playcanvas';
 
-import { data, deviceType } from 'examples/context';
+import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    grey_button: new Asset(
-        'grey_button',
-        'texture',
-        {
-            url: './assets/button/grey_button.png'
-        },
-        { srgb: true }
-    )
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
+    bold: new Asset('bold', 'font', { url: './assets/fonts/roboto-bold.json' }),
+    ui: new Asset('ui', 'textureatlas', { url: './assets/ui/ui-atlas.png' }, uiAtlasData)
 };
 
-const gfxOptions = {
-    deviceTypes: [deviceType]
-};
-
-const device = await createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new Mouse(document.body);
-createOptions.touch = new TouchDevice(document.body);
 createOptions.elementInput = new ElementInput(canvas);
-
 createOptions.componentSystems = [
-    RenderComponentSystem,
     CameraComponentSystem,
     ScreenComponentSystem,
-    ElementComponentSystem
+    ElementComponentSystem,
+    ButtonComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler];
+createOptions.resourceHandlers = [TextureHandler, TextureAtlasHandler, FontHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Fill the window, and keep the canvas resolution the same as its size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
-
-// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
-app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
-});
+app.on('destroy', () => window.removeEventListener('resize', resize));
 
 await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
@@ -87,128 +74,211 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create a camera
-const camera = new Entity();
-camera.addComponent('camera', {
-    clearColor: new Color(30 / 255, 30 / 255, 30 / 255)
-});
+const ORANGE = new Color(1, 0.55, 0.2);
+const PANEL = new Color(0.16, 0.18, 0.23);
+const INK = new Color(0.12, 0.13, 0.16);
+const LIGHT = new Color(0.95, 0.96, 0.98);
+const MUTED = new Color(0.6, 0.64, 0.72);
+const SLATE = new Color(0.26, 0.29, 0.36);
+
+const camera = new Entity('camera');
+camera.addComponent('camera', { clearColor: new Color(0.1, 0.11, 0.13) });
 app.root.addChild(camera);
 
-// Create a 2D screen
-const screen = new Entity();
+const screen = new Entity('screen');
 screen.addComponent('screen', {
-    referenceResolution: new Vec2(1280, 720),
-    scaleBlend: 0.5,
+    screenSpace: true,
+    referenceResolution: [1280, 720],
     scaleMode: SCALEMODE_BLEND,
-    screenSpace: true
+    scaleBlend: 0.5
 });
 app.root.addChild(screen);
 
-// Create a simple panel
-const panel = new Entity();
-panel.addComponent('element', {
-    anchor: [0.5, 0.5, 0.5, 0.5],
-    width: 400,
-    height: 200,
-    pivot: [0.5, 0.5],
-    type: ELEMENTTYPE_IMAGE,
-    useInput: true
-});
-screen.addChild(panel);
-
-// Prepare the atlas with a single frame
-const texture = assets.grey_button.resource;
-texture.addressU = ADDRESS_CLAMP_TO_EDGE;
-texture.addressV = ADDRESS_CLAMP_TO_EDGE;
-texture.minFilter = FILTER_NEAREST;
-texture.magFilter = FILTER_NEAREST;
-
-const atlas = new TextureAtlas();
-atlas.frames = {
-    0: {
-        // x, y, width, height properties of the frame in pixels
-        rect: new Vec4(0, 0, 240, 135),
-
-        // The pivot of the frame - values are between 0-1
-        pivot: new Vec2(0.5, 0.5),
-
-        // Nine-slice border: left, bottom, right, top border in pixels
-        border: new Vec4(21, 28, 21, 33)
-    }
+// Sprites from the UI kit's texture atlas. Its panel frame is 128 x 128 pixels with 32 pixel
+// borders, so at 2 pixels per unit the corners stay 16 units wide, whatever the size of the panel
+const atlas = assets.ui.resource;
+const createSprite = (/** @type {string} */ frame, /** @type {number} */ renderMode) => {
+    return new Sprite(device, { atlas, frameKeys: [frame], pixelsPerUnit: 2, renderMode });
 };
-atlas.texture = texture;
+const panelSprite = createSprite('panel', SPRITE_RENDERMODE_SLICED);
+const shadowSprite = createSprite('shadow', SPRITE_RENDERMODE_SLICED);
+const paperSprite = createSprite('paper', SPRITE_RENDERMODE_TILED);
+const starSprite = createSprite('icon-star', SPRITE_RENDERMODE_SIMPLE);
+app.on('destroy', () => [panelSprite, shadowSprite, paperSprite, starSprite].forEach((s) => s.destroy()));
 
 /**
- * @param {string} frame - Frame key for Sprite.
- * @returns {Asset} The asset.
+ * Create an image or text element, centered on its parent unless the properties say otherwise.
+ *
+ * @param {Entity} parent - The parent entity.
+ * @param {string} name - The entity name.
+ * @param {object} properties - Properties of the element component.
+ * @returns {Entity} The entity.
  */
-const createSpriteAsset = (frame) => {
-    const sprite = new Sprite(app.graphicsDevice, {
-        atlas: atlas,
-        frameKeys: [frame],
-        pixelsPerUnit: 1,
-        renderMode: SPRITE_RENDERMODE_SLICED
+const createElement = (parent, name, properties) => {
+    const entity = new Entity(name);
+    entity.addComponent('element', {
+        type: ELEMENTTYPE_IMAGE,
+        anchor: [0.5, 0.5, 0.5, 0.5],
+        pivot: [0.5, 0.5],
+        fontAsset: assets.font.id,
+        color: LIGHT,
+        ...properties
     });
-
-    const spriteAsset = new Asset('sprite', 'sprite', { url: '' });
-    spriteAsset.resource = sprite;
-    spriteAsset.loaded = true;
-    app.assets.add(spriteAsset);
-    return spriteAsset;
+    parent.addChild(entity);
+    return entity;
 };
 
-panel.element.spriteAsset = createSpriteAsset('0').id;
+// The dialog: one sliced sprite, stretched to 400 x 240, over a soft sliced shadow
+const shadow = createElement(screen, 'shadow', { sprite: shadowSprite, color: Color.BLACK, width: 448, height: 288 });
+const dialog = createElement(screen, 'dialog', { sprite: panelSprite, color: PANEL, width: 400, height: 240 });
 
-// Animation variables
-let scaleXDirection = 1;
-let scaleYDirection = 1;
-const scaleXSpeed = 3;
-const scaleYSpeed = 1.5;
+// Its title and description, anchored to the top-left corner of the dialog
+const topLeft = {
+    type: ELEMENTTYPE_TEXT,
+    anchor: [0, 1, 0, 1],
+    pivot: [0, 1],
+    width: 352,
+    autoWidth: false,
+    alignment: [0, 1]
+};
+const title = createElement(dialog, 'title', { ...topLeft, fontAsset: assets.bold.id, fontSize: 28 });
+const body = createElement(dialog, 'body', { ...topLeft, fontSize: 22, lineHeight: 28, color: MUTED, wrapLines: true });
+title.setLocalPosition(24, -22, 0);
+body.setLocalPosition(24, -66, 0);
 
-app.on('update', (_dt) => {
-    const currentWidth = panel.element.width;
-    const currentHeight = panel.element.height;
+/**
+ * Create one of the dialog's buttons, a sliced sprite as well.
+ *
+ * @param {string} label - The button text.
+ * @param {number} x - The horizontal position.
+ * @param {Color[]} colors - The color, hover tint and pressed tint of the button.
+ * @returns {Entity} The button entity.
+ */
+const createButton = (label, x, [color, hoverTint, pressedTint]) => {
+    const button = createElement(dialog, label, {
+        sprite: panelSprite,
+        color,
+        anchor: [0.5, 0, 0.5, 0],
+        pivot: [0.5, 0],
+        width: 164,
+        height: 52,
+        useInput: true
+    });
+    button.setLocalPosition(x, 22, 0);
+    button.addComponent('button', { imageEntity: button, hoverTint, pressedTint });
+    createElement(button, 'label', { type: ELEMENTTYPE_TEXT, fontAsset: assets.bold.id, text: label, fontSize: 24 });
+    return button;
+};
+const decline = createButton('Decline', -90, [SLATE, new Color(0.33, 0.37, 0.45), new Color(0.2, 0.22, 0.28)]);
+const accept = createButton('Accept', 90, [ORANGE, new Color(1, 0.7, 0.45), new Color(0.8, 0.4, 0.1)]);
+accept.findByName('label').element.color = INK;
 
-    let targetWidth = currentWidth + scaleXDirection * scaleXSpeed;
-    let targetHeight = currentHeight + scaleYDirection * scaleYSpeed;
+// A toast, sized to its message: only the middle of the sliced panel grows
+const toast = createElement(screen, 'toast', {
+    sprite: panelSprite,
+    color: PANEL,
+    anchor: [0.5, 1, 0.5, 1],
+    pivot: [0.5, 1],
+    height: 64
+});
+createElement(toast, 'icon', {
+    sprite: starSprite,
+    color: ORANGE,
+    anchor: [0, 0.5, 0, 0.5],
+    width: 32,
+    height: 32
+}).setLocalPosition(38, 0, 0);
+const message = createElement(toast, 'message', {
+    type: ELEMENTTYPE_TEXT,
+    fontSize: 24,
+    anchor: [0, 0.5, 0, 0.5],
+    pivot: [0, 0.5]
+});
+message.setLocalPosition(66, 0, 0);
+let toastTime = Infinity;
 
-    // Bounce logic for width
-    if (targetWidth > 800) {
-        targetWidth = 800;
-        scaleXDirection = -1;
-    } else if (targetWidth < 100) {
-        targetWidth = 100;
-        scaleXDirection = 1;
+// The quest log: ruled paper whose tiled middle repeats as the log grows
+const log = createElement(screen, 'quest log', {
+    sprite: paperSprite,
+    color: Color.WHITE,
+    pivot: [0.5, 1],
+    width: 300,
+    height: 96
+});
+createElement(log, 'heading', {
+    type: ELEMENTTYPE_TEXT,
+    fontAsset: assets.bold.id,
+    text: 'Quest Log',
+    fontSize: 26,
+    color: INK,
+    anchor: [0.5, 1, 0.5, 1],
+    pivot: [0.5, 1]
+}).setLocalPosition(0, -18, 0);
+const entries = [];
+
+// Write a quest in the log, which grows by a line, keeping the last five
+const logQuest = (/** @type {string} */ name) => {
+    if (entries.length === 5) {
+        entries.shift().destroy();
     }
+    entries.push(
+        createElement(log, name, {
+            type: ELEMENTTYPE_TEXT,
+            text: `• ${name}`,
+            fontSize: 22,
+            color: INK,
+            anchor: [0, 1, 0, 1],
+            pivot: [0, 0.5]
+        })
+    );
+    entries.forEach((entry, i) => entry.setLocalPosition(28, -80 - i * 32, 0));
+    log.element.height = 96 + entries.length * 32;
+};
+logQuest('The Blacksmith’s Hammer');
 
-    // Bounce logic for height
-    if (targetHeight > 676) {
-        targetHeight = 676;
-        scaleYDirection = -1;
-    } else if (targetHeight < 100) {
-        targetHeight = 100;
-        scaleYDirection = 1;
-    }
+const quests = [
+    ['A Lost Heirloom', 'The innkeeper lost her ring near the old mill. Will you look for it?'],
+    ['Wolves at the Gate', 'Wolves prowl the east road. Drive them off before nightfall.'],
+    ['The Silent Bell', 'The chapel bell has not rung for a week. Find out why.']
+];
+let quest = -1;
 
-    panel.element.width = targetWidth;
-    panel.element.height = targetHeight;
+const nextQuest = () => {
+    quest = (quest + 1) % quests.length;
+    title.element.text = quests[quest][0];
+    body.element.text = quests[quest][1];
+};
+
+accept.button.on('click', () => {
+    const name = quests[quest][0];
+    logQuest(name);
+
+    message.element.text = `Quest accepted: ${name}`;
+    toast.element.width = message.element.width + 96;
+    toastTime = 0;
+
+    nextQuest();
+});
+decline.button.on('click', nextQuest);
+
+// Slide the toast down from the top of the screen, and back up after a couple of seconds
+app.on('update', (dt) => {
+    toastTime += dt;
+    const shown = Math.min(toastTime / 0.3, 1, Math.max((2.8 - toastTime) / 0.3, 0));
+    toast.setLocalPosition(0, 80 - 104 * (1 - (1 - shown) ** 3), 0);
 });
 
-// Apply UI changes
-data.on('*:set', (/** @type {string} */ path) => {
-    if (path === 'data.sliced' || path === 'data.tiled') {
-        let renderMode = SPRITE_RENDERMODE_SIMPLE;
-        if (data.get('data.tiled')) {
-            renderMode = SPRITE_RENDERMODE_TILED;
-        } else if (data.get('data.sliced')) {
-            renderMode = SPRITE_RENDERMODE_SLICED;
-        }
-        panel.element.sprite.renderMode = renderMode;
-    }
-});
+// Side by side on landscape canvases, and stacked on portrait ones
+const layout = () => {
+    const portrait = device.height > device.width;
+    const reference = portrait ? new Vec2(540, 960) : new Vec2(1280, 720);
+    screen.screen.referenceResolution = reference;
+    screen.screen.scaleBlend = device.width / reference.x > device.height / reference.y ? 1 : 0;
+    dialog.setLocalPosition(portrait ? 0 : -150, portrait ? 190 : 0, 0);
+    shadow.setLocalPosition(dialog.getLocalPosition().x, dialog.getLocalPosition().y - 8, 0);
+    log.setLocalPosition(portrait ? 0 : 230, portrait ? 30 : 120, 0);
+};
+device.on('resizecanvas', layout);
+layout();
 
-// Set initial values
-data.set('data', {
-    sliced: true,
-    tiled: false
-});
+nextQuest();
