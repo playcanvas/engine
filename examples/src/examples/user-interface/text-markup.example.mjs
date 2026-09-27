@@ -1,3 +1,9 @@
+// @config
+//
+// An adventure log whose lines are styled with **markup** tags: colored names and loot, outlined
+// damage numbers and a shadowed critical hit. `\[` writes a bracket that doesn't start a tag, and
+// a line with a tag that is never closed is drawn as written.
+
 import {
     AppBase,
     AppOptions,
@@ -5,61 +11,52 @@ import {
     AssetListLoader,
     CameraComponentSystem,
     Color,
+    ELEMENTTYPE_IMAGE,
     ELEMENTTYPE_TEXT,
     ElementComponentSystem,
     Entity,
     FILLMODE_FILL_WINDOW,
     FontHandler,
     RESOLUTION_AUTO,
-    RenderComponentSystem,
     SCALEMODE_BLEND,
+    SPRITE_RENDERMODE_SLICED,
     ScreenComponentSystem,
+    Sprite,
+    TextureAtlasHandler,
     TextureHandler,
     Vec2,
-    Vec4,
     createGraphicsDevice
 } from 'playcanvas';
 
+import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
 import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
+    bold: new Asset('bold', 'font', { url: './assets/fonts/roboto-bold.json' }),
+    ui: new Asset('ui', 'textureatlas', { url: './assets/ui/ui-atlas.png' }, uiAtlasData)
 };
 
-const gfxOptions = {
-    deviceTypes: [deviceType]
-};
-
-const device = await createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    ScreenComponentSystem,
-    ElementComponentSystem
-];
-createOptions.resourceHandlers = [TextureHandler, FontHandler];
+createOptions.componentSystems = [CameraComponentSystem, ScreenComponentSystem, ElementComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, TextureAtlasHandler, FontHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Fill the window, and keep the canvas resolution the same as its size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
-
-// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
-app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
-});
+app.on('destroy', () => window.removeEventListener('resize', resize));
 
 await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
@@ -67,108 +64,104 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create a camera
-const camera = new Entity();
-camera.addComponent('camera', {
-    clearColor: new Color(0.85, 0.85, 0.85)
-});
+const LIGHT = new Color(0.9, 0.92, 0.95);
+const MUTED = new Color(0.6, 0.64, 0.72);
+
+const camera = new Entity('camera');
+camera.addComponent('camera', { clearColor: new Color(0.1, 0.11, 0.13) });
 app.root.addChild(camera);
 
-// Create a 2D screen
-const screen = new Entity();
+const screen = new Entity('screen');
 screen.addComponent('screen', {
-    referenceResolution: new Vec2(1280, 720),
-    scaleBlend: 0.5,
+    screenSpace: true,
+    referenceResolution: [1280, 720],
     scaleMode: SCALEMODE_BLEND,
-    screenSpace: true
+    scaleBlend: 0.5
 });
 app.root.addChild(screen);
 
+const log = new Entity('log');
+log.addComponent('element', {
+    type: ELEMENTTYPE_IMAGE,
+    sprite: new Sprite(device, {
+        atlas: assets.ui.resource,
+        frameKeys: ['panel'],
+        pixelsPerUnit: 2,
+        renderMode: SPRITE_RENDERMODE_SLICED
+    }),
+    color: new Color(0.14, 0.16, 0.2),
+    anchor: [0.5, 0.5, 0.5, 0.5],
+    pivot: [0.5, 0.5]
+});
+screen.addChild(log);
+app.on('destroy', () => log.element.sprite.destroy());
+
+const entries = [];
+
 /**
- * Create a text element.
+ * Add a line to the log. Lines wrap at the width of the log, and are stacked by `layout`.
  *
- * @param {number} x - Local x position.
- * @param {number} y - Local y position.
- * @param {object} options - Options to merge into the element component data.
- * @returns {Entity} The created entity.
+ * @param {string} name - The entity name.
+ * @param {object} properties - Properties of the text element.
  */
-const createText = (x, y, options) => {
-    const entity = new Entity();
-    entity.setLocalPosition(x, y, 0);
-    entity.addComponent('element', {
-        pivot: new Vec2(0.5, 0.5),
-        anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
-        fontAsset: assets.font.id,
-        fontSize: 36,
+const addLine = (name, properties) => {
+    const line = new Entity(name);
+    line.addComponent('element', {
         type: ELEMENTTYPE_TEXT,
-        ...options
+        fontAsset: assets.font.id,
+        fontSize: 26,
+        lineHeight: 34,
+        color: LIGHT,
+        anchor: [0, 1, 0, 1],
+        pivot: [0, 1],
+        autoWidth: false,
+        wrapLines: true,
+        alignment: [0, 1],
+        ...properties
     });
-    screen.addChild(entity);
-    return entity;
+    log.addChild(line);
+    entries.push(line);
 };
 
-// Each row renders the same text twice: with markup disabled (left) and enabled (right). The two
-// sides must look identical - a color difference indicates a gamma space handling bug in the
-// per-vertex (markup) color path.
-const columnX = 300;
+addLine('heading', { fontAsset: assets.bold.id, text: 'Adventure Log', fontSize: 30, color: new Color(1, 0.55, 0.2) });
 
-createText(-columnX, 300, { text: 'Markup OFF', fontSize: 48, color: new Color().fromString('#000000') });
-createText(columnX, 300, { text: 'Markup ON', fontSize: 48, color: new Color().fromString('#000000') });
+// Each line turns markup on. A tag styles the text up to its closing tag, and tags can be nested
+[
+    '[color="#9aa3b5"]You enter the Sunken Crypt.[/color]',
+    'You found the [color="#ffcc00"]golden key[/color]!',
+    '[color="#7fc8ff"]Aria[/color] hits the [color="#ff7a6e"]Cave Troll[/color] for ' +
+        '[outline color="#c43c2c" thickness="0.8"]42[/outline] damage.',
+    '[shadow color="#8a3000" offset="0.6"][color="#ffb347"]Critical hit![/color][/shadow] ' +
+        'The [color="#ff7a6e"]Cave Troll[/color] is defeated.',
+    '[color="#7fc8ff"]Brom[/color]: back in five, I am \\[AFK]'
+].forEach((text, i) => addLine(`line ${i}`, { text, enableMarkup: true }));
 
-// element color, no tags
-createText(-columnX, 200, {
-    text: 'Element color #454A53',
-    color: new Color().fromString('#454A53')
-});
-createText(columnX, 200, {
-    text: 'Element color #454A53',
-    color: new Color().fromString('#454A53'),
-    enableMarkup: true
-});
-
-// color tags
-createText(-columnX, 100, {
-    text: 'Color tag #803333',
-    color: new Color().fromString('#803333')
-});
-createText(columnX, 100, {
-    text: '[color="#803333"]Color tag #803333[/color]',
-    enableMarkup: true
+// A tag that is never closed is a markup error: the engine logs a warning and draws the whole
+// line as written, tags included
+addLine('broken line', { text: '[color="#88e088"]Quest complete: Wolves at the Gate', enableMarkup: true });
+addLine('note', {
+    text: 'The line above never closes its color tag, so it is drawn as written.',
+    fontSize: 20,
+    color: MUTED
 });
 
-// outline color and thickness
-createText(-columnX, 0, {
-    text: 'Outline #204080',
-    color: new Color().fromString('#B0B8C4'),
-    outlineColor: new Color().fromString('#204080'),
-    outlineThickness: 0.6
-});
-createText(columnX, 0, {
-    text: '[outline color="#204080" thickness="0.6"]Outline #204080[/outline]',
-    color: new Color().fromString('#B0B8C4'),
-    enableMarkup: true
-});
+// A wide log on landscape canvases and a narrow one on portrait canvases. The lines wrap at its
+// width, and are stacked one below the other by their heights
+const layout = () => {
+    const portrait = device.height > device.width;
+    const reference = portrait ? new Vec2(540, 960) : new Vec2(1280, 720);
+    screen.screen.referenceResolution = reference;
+    screen.screen.scaleBlend = device.width / reference.x > device.height / reference.y ? 1 : 0;
 
-// shadow color and offset
-createText(-columnX, -100, {
-    text: 'Shadow #663311',
-    color: new Color().fromString('#B0B8C4'),
-    shadowColor: new Color().fromString('#663311'),
-    shadowOffset: new Vec2(0.25, -0.25)
-});
-createText(columnX, -100, {
-    text: '[shadow color="#663311" offsetX="0.25" offsetY="-0.25"]Shadow #663311[/shadow]',
-    color: new Color().fromString('#B0B8C4'),
-    enableMarkup: true
-});
-
-// mixed tags in one string
-createText(0, -220, {
-    text:
-        'Mixed: [color="#803333"]red[/color] plain [color="#204080"]blue[/color] ' +
-        '[outline color="#663311" thickness="0.5"]outlined[/outline] ' +
-        '[shadow color="#803333" offsetX="0.2" offsetY="-0.2"]shadowed[/shadow]',
-    color: new Color().fromString('#454A53'),
-    enableMarkup: true,
-    fontSize: 30
-});
+    const width = portrait ? 500 : 820;
+    let y = 26;
+    for (const line of entries) {
+        line.element.width = width - 64;
+        line.setLocalPosition(32, -y, 0);
+        y += line.element.height + 12;
+    }
+    log.element.width = width;
+    log.element.height = y + 14;
+};
+device.on('resizecanvas', layout);
+layout();
