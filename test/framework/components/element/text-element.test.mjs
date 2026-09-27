@@ -3,6 +3,8 @@ import { restore } from 'sinon';
 
 import { Color } from '../../../../src/core/math/color.js';
 import { Vec2 } from '../../../../src/core/math/vec2.js';
+import { Vec3 } from '../../../../src/core/math/vec3.js';
+import { BoundingBox } from '../../../../src/core/shape/bounding-box.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
@@ -2183,6 +2185,84 @@ describe('TextElement', function () {
         assertLineColors([
             w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w
         ]);
+    });
+
+    // min and max corners of the glyph quads laid out in the first mesh
+    function quadBounds() {
+        const meshInfo = element._text._meshInfo[0];
+        const min = new Vec3(Infinity, Infinity, Infinity);
+        const max = new Vec3(-Infinity, -Infinity, -Infinity);
+        for (let v = 0; v < meshInfo.quad * 4; v++) {
+            const x = meshInfo.positions[v * 3];
+            const y = meshInfo.positions[v * 3 + 1];
+            const z = meshInfo.positions[v * 3 + 2];
+            min.set(Math.min(min.x, x), Math.min(min.y, y), Math.min(min.z, z));
+            max.set(Math.max(max.x, x), Math.max(max.y, y), Math.max(max.z, z));
+        }
+        return { min, max };
+    }
+
+    it('never computes a NaN text mesh bounding box', function () {
+        const compute = BoundingBox.prototype.compute;
+        const boxes = [];
+        BoundingBox.prototype.compute = function (vertices, numVerts) {
+            compute.call(this, vertices, numVerts);
+            boxes.push([...this.getMin().toArray(), ...this.getMax().toArray()]);
+        };
+
+        try {
+            element.fontAsset = fontAsset;
+            element.text = 'ab\n';
+            element.text = 'abc\n\n';
+            element.text = '\n';
+        } finally {
+            BoundingBox.prototype.compute = compute;
+        }
+
+        expect(boxes).to.not.be.empty;
+        for (const box of boxes) {
+            expect(box.every(Number.isFinite), box.join(', ')).to.equal(true);
+        }
+
+        const aabb = element._text._meshInfo[0].meshInstance.mesh.aabb;
+        expect(aabb.center.toArray()).to.deep.equal([0, 0, 0]);
+        expect(aabb.halfExtents.toArray()).to.deep.equal([0, 0, 0]);
+    });
+
+    it('bounds only the glyphs of the current text', function () {
+        element.fontAsset = fontAsset;
+        element.text = 'abcd';
+        element.text = 'ab\n\n';
+
+        // same symbol count, so the mesh is reused and the last two quads are cleared
+        const meshInfo = element._text._meshInfo[0];
+        expect(meshInfo.count).to.equal(4);
+        expect(meshInfo.quad).to.equal(2);
+
+        const { min, max } = quadBounds();
+        const aabb = meshInfo.meshInstance.mesh.aabb;
+        expect(aabb.getMin().distance(min)).to.be.closeTo(0, 1e-5);
+        expect(aabb.getMax().distance(max)).to.be.closeTo(0, 1e-5);
+    });
+
+    it('builds text meshes of front facing quads', function () {
+        element.fontAsset = fontAsset;
+        element.text = 'abc';
+
+        const mesh = element._text._meshInfo[0].meshInstance.mesh;
+        expect(mesh.primitive[0].indexed).to.equal(true);
+        expect(mesh.primitive[0].count).to.equal(18);
+        const indices = [];
+        mesh.getIndices(indices);
+        expect(indices).to.deep.equal([
+            0, 1, 3, 2, 3, 1,
+            4, 5, 7, 6, 7, 5,
+            8, 9, 11, 10, 11, 9
+        ]);
+
+        const normals = [];
+        mesh.getNormals(normals);
+        expect(normals).to.deep.equal([].concat(...Array(12).fill([0, 0, -1])));
     });
 
 });
