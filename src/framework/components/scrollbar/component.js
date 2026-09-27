@@ -53,6 +53,10 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
  * console.log(entity.scrollbar.value); // Get the scroll value and print it
  * ```
  *
+ * Relevant Engine API examples:
+ *
+ * - [Slider](https://playcanvas.github.io/#/user-interface/common-widgets)
+ *
  * @hideconstructor
  * @category User Interface
  */
