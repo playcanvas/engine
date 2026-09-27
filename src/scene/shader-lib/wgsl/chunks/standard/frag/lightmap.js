@@ -21,7 +21,7 @@ fn getLightMap() {
     #endif
 
     #ifdef STD_LIGHT_VERTEX
-        dLightmap = dLightmap * saturate(vVertexColor.{STD_LIGHT_VERTEX_CHANNEL});
+        dLightmap = dLightmap * saturate3(vVertexColor.{STD_LIGHT_VERTEX_CHANNEL});
     #endif
 }
 `;

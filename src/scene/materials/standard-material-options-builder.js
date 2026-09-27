@@ -126,7 +126,7 @@ class StandardMaterialOptionsBuilder {
         options.useAO = options.litOptions.ssao;
 
         // All texture related lit options
-        options.litOptions.lightMapEnabled = options.lightMap;
+        options.litOptions.lightMapEnabled = options.lightMap || options.lightVertexColor;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
         options.litOptions.useHeights = options.heightMap;
 
