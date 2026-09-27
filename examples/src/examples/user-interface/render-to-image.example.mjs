@@ -208,7 +208,7 @@ createElement(details, 'role', { ...text, text: 'Level 12 · Acrobat', fontSize:
 );
 createElement(details, 'about', {
     ...text,
-    text: 'Quick on her feet, and quicker in the air. She lands every jump, and most of them twice.',
+    text: 'Quick on his feet, and quicker in the air. He lands every jump, and most of them twice.',
     fontSize: 22,
     lineHeight: 30,
     color: MUTED,
