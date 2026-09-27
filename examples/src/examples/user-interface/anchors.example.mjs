@@ -241,6 +241,12 @@ const grip = createElement(chat, 'grip', {
     height: 40,
     useInput: true
 });
+// The window's size is limited by the screen's reference resolution, so that it stays on the screen
+const resizeChat = (/** @type {number} */ width, /** @type {number} */ height) => {
+    const { x, y } = screen.screen.referenceResolution;
+    chat.element.width = math.clamp(width, 340, x - 80);
+    chat.element.height = math.clamp(height, 280, y - 150);
+};
 let drag = null;
 const press = (/** @type {{ x: number, y: number }} */ event) => {
     drag = { x: event.x, y: event.y, width: chat.element.width, height: chat.element.height };
@@ -250,9 +256,7 @@ const move = (/** @type {{ x: number, y: number }} */ event) => {
         // Events give the pointer in CSS pixels from the canvas's top-left corner. Convert the
         // distance it moved to screen units
         const units = canvas.width / canvas.clientWidth / screen.screen.scale;
-        const { x, y } = screen.screen.referenceResolution;
-        chat.element.width = math.clamp(drag.width + (event.x - drag.x) * units, 340, x - 80);
-        chat.element.height = math.clamp(drag.height + (event.y - drag.y) * units, 280, y - 150);
+        resizeChat(drag.width + (event.x - drag.x) * units, drag.height + (event.y - drag.y) * units);
     }
 };
 const release = () => {
@@ -262,14 +266,14 @@ const release = () => {
 ['mousemove', 'touchmove'].forEach((name) => grip.element.on(name, move));
 ['mouseup', 'touchend', 'touchcancel'].forEach((name) => grip.element.on(name, release));
 
-// Use a portrait reference resolution on portrait canvases, where the window starts narrower and
-// below the score
+// Use a portrait reference resolution on portrait canvases, where the window sits below the score.
+// A window sized in the other orientation can be too big for this one, so clamp its size again
 const layout = () => {
     const portrait = device.height > device.width;
     const reference = portrait ? new Vec2(540, 960) : new Vec2(1280, 720);
     screen.screen.referenceResolution = reference;
     screen.screen.scaleBlend = device.width / reference.x > device.height / reference.y ? 1 : 0;
-    chat.element.width = Math.min(chat.element.width, reference.x - 80);
+    resizeChat(chat.element.width, chat.element.height);
     chat.setLocalPosition(40, portrait ? -110 : -40, 0);
 };
 device.on('resizecanvas', layout);
