@@ -258,7 +258,7 @@ close.button.on('click', () => setTarget(0));
 setTarget(0);
 
 app.on('update', (dt) => {
-    raised = target > raised ? Math.min(raised + dt * 0.8, 1) : Math.max(raised - dt * 0.8, 0);
+    raised = target > raised ? Math.min(raised + dt * 0.8, target) : Math.max(raised - dt * 0.8, target);
     door.setPosition(0, 1.5 + raised * 2.9, -0.2);
     const text = raised === target ? (target ? 'Open' : 'Closed') : target ? 'Opening…' : 'Closing…';
     if (status.element.text !== text) {
