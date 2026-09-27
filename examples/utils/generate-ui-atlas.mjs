@@ -216,6 +216,59 @@ const TEXTURES = [
         <path d="M0 290 C80 250 150 300 230 265 C300 235 350 275 400 255 V400 H0 Z" fill="#4c5c86"/>
         <path d="M0 330 C90 300 170 345 260 318 C330 298 370 320 400 310 V400 H0 Z" fill="#2e3d5c"/>
         <path d="M0 370 C120 350 250 385 400 360 V400 H0 Z" fill="#1f2a40"/>`),
+    // level art of four shapes, for pictures that are fitted to their elements
+    frame('level-forest', 320, 180, `
+        <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7cc4ef"/><stop offset="1" stop-color="#d9f0e0"/>
+        </linearGradient></defs>
+        <rect width="320" height="180" fill="url(#sky)"/>
+        <circle cx="250" cy="45" r="20" fill="#fff6c8"/>
+        <path d="M0 110 C60 85 120 100 170 90 C230 78 280 95 320 88 V180 H0 Z" fill="#8fc17a"/>
+        <path d="M0 135 C70 115 140 135 210 122 C260 113 300 125 320 120 V180 H0 Z" fill="#5f9e5a"/>
+        <path d="M60 128 L72 96 L84 128 Z M90 134 L100 108 L110 134 Z M230 124 L243 92 L256 124 Z
+            M262 130 L272 106 L282 130 Z" fill="#2f5e38"/>
+        <path d="M0 160 C80 148 170 165 320 150 V180 H0 Z" fill="#3f7a45"/>`),
+    frame('level-crypt', 180, 240, `
+        <defs><linearGradient id="dark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1c1f33"/><stop offset="1" stop-color="#3a3553"/>
+        </linearGradient></defs>
+        <rect width="180" height="240" fill="url(#dark)"/>
+        <path d="M20 240 V110 C20 60 60 35 90 35 C120 35 160 60 160 110 V240 Z" fill="#5b5877"/>
+        <path d="M50 240 V120 C50 90 68 72 90 72 C112 72 130 90 130 120 V240 Z" fill="#f29a4a"/>
+        <path d="M62 240 V128 C62 104 75 90 90 90 C105 90 118 104 118 128 V240 Z" fill="#ffd08a"/>
+        <rect x="45" y="205" width="90" height="15" fill="#55526f"/>
+        <rect x="30" y="220" width="120" height="20" fill="#4a4766"/>`),
+    frame('level-desert', 360, 180, `
+        <defs><linearGradient id="dusk" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f28b54"/><stop offset="1" stop-color="#fbd38d"/>
+        </linearGradient></defs>
+        <rect width="360" height="180" fill="url(#dusk)"/>
+        <circle cx="90" cy="70" r="30" fill="#fff1c4"/>
+        <path d="M200 120 L250 60 L300 120 Z" fill="#c9824a"/>
+        <path d="M250 60 L300 120 H270 Z" fill="#a8683a"/>
+        <path d="M0 125 C80 105 160 130 240 115 C300 104 340 118 360 112 V180 H0 Z" fill="#e8b36b"/>
+        <path d="M0 150 C100 135 200 160 360 140 V180 H0 Z" fill="#d49a55"/>`),
+    frame('level-peak', 240, 240, `
+        <defs><linearGradient id="cold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#9fc3e8"/><stop offset="1" stop-color="#e6eef7"/>
+        </linearGradient></defs>
+        <rect width="240" height="240" fill="url(#cold)"/>
+        <path d="M0 190 L70 110 L100 140 L150 60 L240 175 V240 H0 Z" fill="#7d8aa6"/>
+        <path d="M150 60 L125 100 L140 95 L150 108 L162 94 L178 96 Z" fill="#fff"/>
+        <path d="M70 110 L58 124 L70 120 L80 128 Z" fill="#fff"/>
+        <path d="M0 205 C60 195 120 210 240 198 V240 H0 Z" fill="#4f6b8c"/>`),
+    // a map of the world the levels are in, for showing part of a texture
+    frame('world-map', 400, 300, `
+        <rect width="400" height="300" fill="#2e5d8a"/>
+        <path d="M40 150 C40 80 120 40 200 50 C290 60 360 90 360 150 C360 220 290 265 200 260
+            C110 255 40 220 40 150 Z" fill="#d8c99a"/>
+        <path d="M70 180 C80 150 130 145 150 170 C165 195 140 230 105 228 C80 226 64 205 70 180 Z"
+            fill="#4f8a4f"/>
+        <path d="M90 110 L115 75 L140 110 Z M120 115 L150 70 L180 115 Z" fill="#8a93a6"/>
+        <path d="M108 85 L115 75 L122 85 Z M142 82 L150 70 L158 82 Z" fill="#f2f4f8"/>
+        <path d="M230 80 C260 70 310 80 330 110 C300 115 260 112 230 80 Z" fill="#e3a35a"/>
+        <path d="M250 190 C270 170 320 175 325 205 C320 232 280 240 255 225 C240 215 240 200 250 190 Z"
+            fill="#4a4a6a"/>`),
     // the background of XrMenu buttons, stretched to each button
     frame('menu-button', 170, 54, `
         <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
