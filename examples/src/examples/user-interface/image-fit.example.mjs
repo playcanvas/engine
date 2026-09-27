@@ -39,13 +39,13 @@ import { deviceType } from 'examples/context';
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-// The levels: the name, the file of the art, the pivot the art is placed at when it covers a card,
-// and where the level is on the world map, in fractions of the map from its bottom-left corner
+// The levels: the name, the art, the pivot the art is placed at when it covers a card, and where
+// the level is on the world map, in fractions of the map from its bottom-left corner
 const LEVELS = [
-    { name: 'Sunken Crypt', file: 'level-crypt', pivot: [0.5, 0], map: [0.71, 0.31] },
-    { name: 'Emerald Forest', file: 'level-forest', pivot: [0.8, 0.5], map: [0.27, 0.37] },
-    { name: 'Dune Sea', file: 'level-desert', pivot: [0.7, 0.5], map: [0.7, 0.68] },
-    { name: 'Frost Peak', file: 'level-peak', pivot: [0.5, 0.5], map: [0.34, 0.68] }
+    { name: 'Sunken Crypt', url: './assets/ui/level-crypt.png', pivot: [0.5, 0], map: [0.71, 0.31] },
+    { name: 'Emerald Forest', url: './assets/ui/level-forest.png', pivot: [0.8, 0.5], map: [0.27, 0.37] },
+    { name: 'Dune Sea', url: './assets/ui/level-desert.png', pivot: [0.7, 0.5], map: [0.7, 0.68] },
+    { name: 'Frost Peak', url: './assets/ui/level-peak.png', pivot: [0.5, 0.5], map: [0.34, 0.68] }
 ];
 
 const assets = {
@@ -53,7 +53,7 @@ const assets = {
     ui: new Asset('ui', 'textureatlas', { url: './assets/ui/ui-atlas.png' }, uiAtlasData),
     map: new Asset('map', 'texture', { url: './assets/ui/world-map.png' }, { srgb: true })
 };
-const art = LEVELS.map(({ file }) => new Asset(file, 'texture', { url: `./assets/ui/${file}.png` }, { srgb: true }));
+const art = LEVELS.map(({ name, url }) => new Asset(name, 'texture', { url }, { srgb: true }));
 
 const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
