@@ -9,6 +9,7 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
 /**
  * @import { EventHandle } from '../../../core/event-handle.js'
  * @import { Entity } from '../../entity.js'
+ * @import { ScrollbarComponentSystem } from './system.js'
  */
 
 /**
@@ -52,6 +53,10 @@ import { ElementDragHelper } from '../element/element-drag-helper.js';
  * console.log(entity.scrollbar.value); // Get the scroll value and print it
  * ```
  *
+ * Relevant Engine API examples:
+ *
+ * - [Slider](https://playcanvas.github.io/#/user-interface/common-widgets)
+ *
  * @hideconstructor
  * @category User Interface
  */
@@ -78,6 +83,18 @@ class ScrollbarComponent extends Component {
     _handleSize = 0;
 
     /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtElementAdd = null;
+
+    /**
+     * @type {EventHandle[]}
+     * @private
+     */
+    _evtElementChanges = [];
+
+    /**
      * @type {Entity|null}
      * @private
      */
@@ -100,6 +117,22 @@ class ScrollbarComponent extends Component {
      * @private
      */
     _handleDragHelper = null;
+
+    /**
+     * Create a new ScrollbarComponent.
+     *
+     * @param {ScrollbarComponentSystem} system - The ComponentSystem that created this component.
+     * @param {Entity} entity - The entity that this component is attached to.
+     */
+    constructor(system, entity) {
+        super(system, entity);
+
+        this._evtElementAdd = this.entity.on('element:add', this._onElementGain, this);
+
+        if (this.entity.element) {
+            this._elementSubscribe();
+        }
+    }
 
     /**
      * Sets whether the scrollbar moves horizontally or vertically. Can be:
@@ -219,6 +252,26 @@ class ScrollbarComponent extends Component {
      */
     get handleEntity() {
         return this._handleEntity;
+    }
+
+    _elementSubscribe() {
+        const element = this.entity.element;
+
+        const handles = this._evtElementChanges;
+        handles.push(element.once('beforeremove', this._elementUnsubscribe, this));
+        handles.push(element.on('resize', this._updateHandlePositionAndSize, this));
+    }
+
+    _elementUnsubscribe() {
+        for (let i = 0; i < this._evtElementChanges.length; i++) {
+            this._evtElementChanges[i].off();
+        }
+        this._evtElementChanges.length = 0;
+    }
+
+    _onElementGain() {
+        this._elementSubscribe();
+        this._updateHandlePositionAndSize();
     }
 
     _handleEntitySubscribe() {
@@ -356,7 +409,12 @@ class ScrollbarComponent extends Component {
     }
 
     onBeforeRemove() {
-        this._destroyDragHelper();
+        this._evtElementAdd?.off();
+        this._evtElementAdd = null;
+        this._elementUnsubscribe();
+
+        // unsubscribing from the handle also destroys its drag helper
+        this._handleEntityUnsubscribe();
     }
 
     resolveDuplicatedEntityReferenceProperties(oldScrollbar, duplicatedIdsMap) {

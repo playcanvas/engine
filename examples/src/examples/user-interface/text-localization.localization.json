@@ -1,0 +1,55 @@
+{
+    "header": {
+        "version": 1
+    },
+    "data": [
+        {
+            "info": {
+                "locale": "en-US"
+            },
+            "messages": {
+                "title": "Treasure Hunt",
+                "item": "Lucky Coin",
+                "description": "Adds a coin to your purse.",
+                "buy": "Buy",
+                "coins": ["You have {number} coin", "You have {number} coins"]
+            }
+        },
+        {
+            "info": {
+                "locale": "fr-FR"
+            },
+            "messages": {
+                "title": "Chasse au trésor",
+                "item": "Pièce porte-bonheur",
+                "description": "Ajoute une pièce à votre bourse.",
+                "buy": "Acheter",
+                "coins": ["Vous avez {number} pièce", "Vous avez {number} pièces"]
+            }
+        },
+        {
+            "info": {
+                "locale": "es-ES"
+            },
+            "messages": {
+                "title": "Caza del tesoro",
+                "item": "Moneda de la suerte",
+                "description": "Añade una moneda a tu bolsa.",
+                "buy": "Comprar",
+                "coins": ["Tienes {number} moneda", "Tienes {number} monedas"]
+            }
+        },
+        {
+            "info": {
+                "locale": "pl-PL"
+            },
+            "messages": {
+                "title": "Poszukiwanie skarbu",
+                "item": "Szczęśliwa moneta",
+                "description": "Dodaje monetę do sakiewki.",
+                "buy": "Kup",
+                "coins": ["Masz {number} monetę", "Masz {number} monety", "Masz {number} monet", "Masz {number} monety"]
+            }
+        }
+    ]
+}
