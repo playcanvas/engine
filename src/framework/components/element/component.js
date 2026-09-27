@@ -80,6 +80,12 @@ const tmpCorners = [new Vec3(), new Vec3(), new Vec3(), new Vec3()];
  *
  * Relevant Engine API examples:
  *
+ * - [Anchors](https://playcanvas.github.io/#/user-interface/anchors)
+ * - [Image fitting](https://playcanvas.github.io/#/user-interface/image-fit)
+ * - [Sliced panels](https://playcanvas.github.io/#/user-interface/panel)
+ * - [Masking](https://playcanvas.github.io/#/user-interface/masking)
+ * - [Rendering 3D into an image](https://playcanvas.github.io/#/user-interface/render-to-image)
+ * - [Custom shader](https://playcanvas.github.io/#/user-interface/custom-shader)
  * - [Basic text rendering](https://playcanvas.github.io/#/user-interface/text)
  * - [Auto font sizing](https://playcanvas.github.io/#/user-interface/text-auto-font-size)
  * - [Emojis](https://playcanvas.github.io/#/user-interface/text-emojis)
