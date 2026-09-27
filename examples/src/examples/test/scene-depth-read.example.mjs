@@ -1,7 +1,7 @@
 // @config
 //
 // Functional test of {accent:SceneDepthReader}. Three boxes stand at known distances from the camera,
-// the depth of each is read back over a patch of samples centred on it, and a fourth patch is read from
+// the depth of each is read back over a patch of samples centered on it, and a fourth patch is read from
 // the empty space above them. The samples are compared against what the placement says they should be.
 //
 // Run once for each way the depth can be encoded, as the producers do not agree: the grab pass writes it
@@ -65,7 +65,7 @@ const BOX_SIZE = 2;
 /**
  * Where a box stands. Each sits at a height of its own, so that a read which mirrored the region
  * vertically would land on empty space rather than back on the same box - which is what a placement
- * symmetrical about the centre of the view would hide.
+ * symmetrical about the center of the view would hide.
  *
  * @param {number} i - The index of the box.
  * @returns {[number, number, number]} Its world position.
@@ -169,7 +169,7 @@ const PHASES = [
 const reader = new SceneDepthReader(camera.camera);
 
 // how much of the view a box covers depends on the aspect ratio, so each region is derived from the
-// projection rather than assumed - a small patch of samples centred on the box, well inside its edges
+// projection rather than assumed - a small patch of samples centered on the box, well inside its edges
 const SAMPLES = 4;
 const PATCH = 0.02;
 const boxRegions = DISTANCES.map(() => new Vec4());
@@ -178,12 +178,12 @@ const worldPoint = new Vec3();
 const screenPoint = new Vec3();
 
 /**
- * Centres a normalized region on a world position.
+ * Centers a normalized region on a world position.
  *
  * @param {Vec4} region - The region to place.
- * @param {number} x - The world x to centre it on.
- * @param {number} y - The world y to centre it on.
- * @param {number} z - The world z to centre it on.
+ * @param {number} x - The world x to center it on.
+ * @param {number} y - The world y to center it on.
+ * @param {number} z - The world z to center it on.
  */
 const placeRegion = (region, x, y, z) => {
     camera.camera.worldToScreen(worldPoint.set(x, y, z), screenPoint);

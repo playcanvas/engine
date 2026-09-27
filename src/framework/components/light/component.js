@@ -239,7 +239,7 @@ class LightComponent extends Component {
 
     /**
      * Preserves the user-facing type string. Required because `'point'` and `'omni'` both map to
-     * the same underlying int on the {@link Light}, so reverse-mapping would normalise the user's
+     * the same underlying int on the {@link Light}, so reverse-mapping would normalize the user's
      * input.
      *
      * @type {string}

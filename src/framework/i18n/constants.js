@@ -6,7 +6,7 @@ export const DEFAULT_LOCALE = 'en-US';
 // then pick the first that satisfies the language.
 export const DEFAULT_LOCALE_FALLBACKS = {
     'en': 'en-US',
-    'es': 'en-ES',
+    'es': 'es-ES',
     'zh': 'zh-CN',
     'zh-HK': 'zh-TW',
     'zh-TW': 'zh-HK',

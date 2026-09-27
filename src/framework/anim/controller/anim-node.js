@@ -25,7 +25,7 @@ class AnimNode {
      * is stored as part of an {@link AnimBlendTree} hierarchy.
      * @param {string} name - The name of the AnimNode. Used when assigning an {@link AnimTrack} to
      * it.
-     * @param {number[]|number} point - The coordinate/vector thats used to determine the weight of
+     * @param {number[]|number} point - The coordinate/vector that's used to determine the weight of
      * this node when it's part of an {@link AnimBlendTree}.
      * @param {number} [speed] - The speed that its {@link AnimTrack} should play at. Defaults to 1.
      */

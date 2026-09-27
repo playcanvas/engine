@@ -796,28 +796,28 @@ export const PAD_R_STICK_X = 2;
 export const PAD_R_STICK_Y = 3;
 
 /**
- * Horizontal axis on the touchpad of a XR pad.
+ * Horizontal axis on the touchpad of an XR pad.
  *
  * @category Input Devices
  */
 export const XRPAD_TOUCHPAD_X = 0;
 
 /**
- * Vertical axis on the thouchpad of a XR pad.
+ * Vertical axis on the touchpad of an XR pad.
  *
  * @category Input Devices
  */
 export const XRPAD_TOUCHPAD_Y = 1;
 
 /**
- * Horizontal axis on the stick of a XR pad.
+ * Horizontal axis on the stick of an XR pad.
  *
  * @category Input Devices
  */
 export const XRPAD_STICK_X = 2;
 
 /**
- * Vertical axis on the stick of a XR pad.
+ * Vertical axis on the stick of an XR pad.
  *
  * @category Input Devices
  */

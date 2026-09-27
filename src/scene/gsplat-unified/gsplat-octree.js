@@ -681,7 +681,7 @@ class GSplatOctree {
      * Every instance re-requests each file it still waits for on every LOD update, so a file no
      * instance's latest requests contain is no longer wanted. If it is still queued it is simply
      * dropped, as nothing has been fetched yet. A download already in progress is left to finish -
-     * cancelling it would waste the transfer if the camera swings back - and if nothing references
+     * canceling it would waste the transfer if the camera swings back - and if nothing references
      * the file it gets a cooldown, so it is released once the cooldown expires unless it is
      * requested again.
      */

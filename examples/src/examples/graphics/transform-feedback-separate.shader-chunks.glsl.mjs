@@ -1,5 +1,5 @@
 /**
- * GLSL shader chunks for the separate transform feedback example. They take the per-instance colour
+ * GLSL shader chunks for the separate transform feedback example. They take the per-instance color
  * written by the instancing chunk and use it as the albedo, so the cones are still lit normally.
  */
 
@@ -8,7 +8,7 @@ export const litUserDeclarationPS = /* glsl */ `
     varying vec3 vInstColor;
 `;
 
-// Use the per-instance colour as the albedo
+// Use the per-instance color as the albedo
 export const diffusePS = /* glsl */ `
     void getAlbedo() {
         dAlbedo = vInstColor;

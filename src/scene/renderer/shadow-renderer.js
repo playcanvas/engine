@@ -22,6 +22,7 @@ import {
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import { LightList } from '../lighting/light-list.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
@@ -38,6 +39,10 @@ import { BlendState } from '../../platform/graphics/blend-state.js';
  */
 
 const tempSet = new Set();
+
+// the lights of a shadow pass: none, as the shader pass carries the type of the light rendered
+// from, so the shadow shaders of a caster do not depend on the lights of its layers
+const _noLights = new LightList();
 
 // per-face scratch state for the omni cull - the visible caster list and the shadow camera of each
 // of the six cube map faces of the light currently being culled
@@ -618,7 +623,8 @@ class ShadowRenderer {
             meshInstance.setParameters(device);
             prevMeshInstance = meshInstance;
 
-            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, cameraShaderParams, this.viewUniformFormat);
+            const shaderInstance = meshInstance.getShaderInstance(shadowPass, _noLights, scene,
+                cameraShaderParams, this.viewUniformFormat);
             const shadowShader = shaderInstance.shader;
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 

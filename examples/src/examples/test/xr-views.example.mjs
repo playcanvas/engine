@@ -80,7 +80,7 @@ const app = new AppBase(canvas);
 app.init(createOptions);
 
 // Composite pass that samples a 4-layer texture array and writes the layers into a 2x2 grid on
-// the canvas backbuffer. Used by the WebGPU branch to visualise the per-eye renders produced by
+// the canvas backbuffer. Used by the WebGPU branch to visualize the per-eye renders produced by
 // FramePassMultiView.
 class CompositeArrayPass extends RenderPassShaderQuad {
     constructor(graphicsDevice, sourceTexture, numViews) {
@@ -225,7 +225,7 @@ camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
 // Create mock XR views using a loop. The number of views differs between backends because
-// each backend uses a different visualisation:
+// each backend uses a different visualization:
 // - WebGL: a single canvas-sized backbuffer with 4 sub-rect viewports (2x2 grid).
 // - WebGPU: a 4-layer array texture, one full-canvas-size view per layer, then composited
 //   into a 2x2 grid as a separate post-render pass.

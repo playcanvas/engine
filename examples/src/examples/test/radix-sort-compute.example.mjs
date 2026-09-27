@@ -644,7 +644,7 @@ const BENCH_BITS = 24;
 
 // Passes that are not part of the sort itself - excluded from per-cell
 // totals and per-pass breakdowns. `Forward` is the main PlayCanvas forward
-// render pass; its cost (and serialization-behind-compute timing artefacts)
+// render pass; its cost (and serialization-behind-compute timing artifacts)
 // Would pollute the sort-only comparison.
 const BENCH_EXCLUDED_PASSES = new Set(['Forward']);
 
@@ -777,7 +777,7 @@ function startBenchmark() {
 
 /**
  * Advance the benchmark state machine by one frame. Called from the app
- * update loop in lieu of the normal sort-every-frame behaviour while a
+ * update loop in lieu of the normal sort-every-frame behavior while a
  * benchmark is active.
  */
 function stepBenchmark() {
@@ -964,7 +964,7 @@ function renderBenchResults(results, onClose) {
     const baseline = BENCH_CONFIGS[0].label;
 
     // Explicit palette - PCUI's default styles inherit into the overlay and
-    // drag text toward panel-background grey, so we pin every cell to a
+    // drag text toward panel-background gray, so we pin every cell to a
     // high-contrast foreground.
     const TXT = '#e6e6e6';
     const MUTED = '#aaa';
@@ -1164,7 +1164,7 @@ function drawBenchChart(chartCanvas, bySize, sizes) {
     ctx.lineTo(W - PAD.right, H - PAD.bottom);
     ctx.stroke();
 
-    // Decade gridlines + labels, plus unlabelled minor lines at 2x/5x
+    // Decade gridlines + labels, plus unlabeled minor lines at 2x/5x
     // within each decade so the eye can still read sub-decade spacing.
     ctx.font = '11px monospace';
     ctx.textAlign = 'right';

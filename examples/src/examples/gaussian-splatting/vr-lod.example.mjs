@@ -353,7 +353,7 @@ const xrHud = /** @type {any} */ (menuEntity.script).xrMenu;
 // the ground far away, throwing you outside the scene), and AVP has no thumbstick for smooth
 // locomotion. A pinch moves a fixed distance along the head's horizontal forward, keeping the
 // current elevation (XZ only). The menu veto is preserved so pinches on the HUD just click.
-const MOVE_STEP = 1.5; // metres per pinch
+const MOVE_STEP = 1.5; // meters per pinch
 const moveDir = new Vec3();
 xrNavigation.tryTeleport = () => {
     if (xrHud?.isPointerOverMenu) return;
@@ -550,7 +550,7 @@ let sceneIndex = 0;
 
 // Place the XR rig for a scene: stand on the scene ground (y = 0, mirroring what XrSession does
 // at session start) and face the focus horizontally. In XR the headset supplies eye height and
-// pitch, so we keep yaw only — using the full desktop pos.y here would lift the viewer metres off
+// pitch, so we keep yaw only — using the full desktop pos.y here would lift the viewer meters off
 // the ground (the "giant" effect), and keeping the previous yaw would leave you facing the wrong
 // way after a scene switch.
 const placeForSceneXr = (scene) => {

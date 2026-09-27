@@ -34,7 +34,7 @@ class FloatPacking {
         // based on https://esdiscuss.org/topic/float16array
         // This method is faster than the OpenEXR implementation (very often
         // used, eg. in Ogre), with the additional benefit of rounding, inspired
-        // by James Tursa?s half-precision code.
+        // by James Tursa's half-precision code.
         floatView[0] = value;
         const x = int32View[0];
 

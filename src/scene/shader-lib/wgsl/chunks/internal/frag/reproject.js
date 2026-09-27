@@ -2,7 +2,7 @@
 //
 // PROCESS_FUNC - must be one of reproject, prefilter
 // DECODE_FUNC - must be one of decodeRGBM, decodeRGBE, decodeGamma or decodeLinear
-// ENCODE_FUNC - must be one of encodeRGBM, encodeRGBE, encideGamma or encodeLinear
+// ENCODE_FUNC - must be one of encodeRGBM, encodeRGBE, encodeGamma or encodeLinear
 // SOURCE_FUNC - must be one of sampleCubemap, sampleEquirect, sampleOctahedral
 // TARGET_FUNC - must be one of getDirectionCubemap, getDirectionEquirect, getDirectionOctahedral
 //

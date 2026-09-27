@@ -359,7 +359,7 @@ describe('AnimController', function () {
             expect(controller._animEvaluator.clips[0].track.name).to.equal('otherState2Track');
         });
 
-        it('sets the controller _isTransitoning property to true', function () {
+        it('sets the controller _isTransitioning property to true', function () {
             const transition = controller._findTransitionsBetweenStates('Other State 1', 'Other State 2')[0];
             expect(controller._isTransitioning).to.equal(false);
             controller.updateStateFromTransition(transition);

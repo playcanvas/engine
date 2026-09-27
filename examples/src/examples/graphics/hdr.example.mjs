@@ -245,7 +245,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 
         // brightness below which the scene does not contribute to bloom, in the scene-referred
         // units the scene is rendered in. 0 blooms the whole scene, the physically based
-        // behaviour; raise it to leave the lit interior alone and glow only the neon sign
+        // behavior; raise it to leave the lit interior alone and glow only the neon sign
         cameraFrame.bloom.threshold = data.get('data.bloom.threshold');
         cameraFrame.update();
     }

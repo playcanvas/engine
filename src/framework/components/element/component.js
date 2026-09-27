@@ -483,7 +483,8 @@ class ElementComponent extends Component {
 
     /**
      * Sets the distance from the bottom edge of the anchor. Can be used in combination with a
-     * split anchor to make the component's top edge always be 'top' units away from the top.
+     * split anchor to make the component's bottom edge always be 'bottom' units away from the
+     * bottom.
      *
      * @type {number}
      */
@@ -892,7 +893,7 @@ class ElementComponent extends Component {
 
     /**
      * Sets the distance from the top edge of the anchor. Can be used in combination with a split
-     * anchor to make the component's bottom edge always be 'bottom' units away from the bottom.
+     * anchor to make the component's top edge always be 'top' units away from the top.
      *
      * @type {number}
      */

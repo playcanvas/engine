@@ -107,7 +107,7 @@ class CodeEditorDesktop extends CodeEditorBase {
     /** @type {import('monaco-editor').IDisposable[]} */
     _navDisposables = [];
 
-    /** @type {Set<string>} - playcanvas/scripts specifiers already fetched and modelled. */
+    /** @type {Set<string>} - playcanvas/scripts specifiers already fetched and modeled. */
     _scriptsLoaded = new Set();
 
     /**

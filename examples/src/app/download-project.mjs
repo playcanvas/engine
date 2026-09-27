@@ -10,7 +10,7 @@ const IMPORT_RE = /(\b(?:from|import)[\s(]*)(['"])([^'"\n]+)\2/g;
 // matches runtime asset url string literals like './assets/x.glb' or '/scripts/y.js'
 const ASSET_RE = /['"`](\.?\/(?:assets|scripts)\/[\w./-]+)['"`]/g;
 
-// files imported for their raw text contents (mirrors the iframe runtime's blob behaviour)
+// files imported for their raw text contents (mirrors the iframe runtime's blob behavior)
 const RAW_EXT = /\.(?:vert|frag|wgsl|glsl|html|css|txt)$/;
 
 // the `// @config` comment block (browser-safe copy of utils/example-source.mjs configRegex)
@@ -71,7 +71,7 @@ const transformSource = source => source.replace(CONFIG_RE, '').replace(/^(?:[ \
 
 /**
  * @param {string[]} sources - Source strings to scan.
- * @returns {{ urls: string[], dynamic: string[] }} Static asset urls (normalised to '/assets/..') and dynamic-dir prefixes.
+ * @returns {{ urls: string[], dynamic: string[] }} Static asset urls (normalized to '/assets/..') and dynamic-dir prefixes.
  */
 const scanAssetUrls = (sources) => {
     const urls = new Set();
@@ -157,7 +157,7 @@ import { data } from './context.mjs';
 
 import './example.mjs';
 
-// replay the captured control state after the example initialises (mirrors the examples browser)
+// replay the captured control state after the example initializes (mirrors the examples browser)
 for (const [path, value] of Object.entries(seed)) {
     if (data.has(path)) {
         data.set(path, value);

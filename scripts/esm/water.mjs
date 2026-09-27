@@ -986,7 +986,7 @@ class Water extends Script {
     normalMap = null;
 
     /**
-     * The greyscale pattern used for the underwater caustics. Two scrolling layers of it are
+     * The grayscale pattern used for the underwater caustics. Two scrolling layers of it are
      * combined. When not set, the normal map is used as the pattern instead.
      *
      * @type {Texture|null}

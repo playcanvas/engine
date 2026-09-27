@@ -108,7 +108,7 @@ const createHighQualitySphere = (material, layer) => {
     const entity = new Entity('ShinyBall');
     app.root.addChild(entity);
 
-    // Create hight resolution sphere
+    // Create high resolution sphere
     const mesh = Mesh.fromGeometry(app.graphicsDevice, new SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
 
     // Add a render component with the mesh
@@ -125,7 +125,7 @@ const createHighQualitySphere = (material, layer) => {
  * helper function to create a primitive with shape type, position, scale, color and layer
  * @param {string} primitiveType - The primitive type.
  * @param {number | Vec3} position - The entity's position.
- * @param {number | Vec3} scale - The entisy's scale.
+ * @param {number | Vec3} scale - The entity's scale.
  * @param {Color} color - The color.
  * @param {number[]} layer - The render component's layers.
  * @returns {Entity} The returned entity.
@@ -273,7 +273,7 @@ function createReprojectionTexture(projection, size) {
     });
 }
 
-// Create 2 uqirect and 2 octahedral textures
+// Create 2 equirect and 2 octahedral textures
 const textureEqui = createReprojectionTexture(TEXTUREPROJECTION_EQUIRECT, 256);
 const textureEqui2 = createReprojectionTexture(TEXTUREPROJECTION_EQUIRECT, 256);
 const textureOcta = createReprojectionTexture(TEXTUREPROJECTION_OCTAHEDRAL, 64);

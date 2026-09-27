@@ -198,7 +198,7 @@ describe('Entity', function () {
         a_a.addChild(a_a_a);
         a_a.addChild(a_a_b);
 
-        // Add some components for testing clone behaviour
+        // Add some components for testing clone behavior
         a.addComponent('animation', { speed: 0.9, loop: true });
         a.addComponent('camera', { nearClip: 2, farClip: 3 });
         a_a.addComponent('rigidbody', { type: 'static' });

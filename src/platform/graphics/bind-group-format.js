@@ -255,7 +255,7 @@ class BindStorageTextureFormat extends BindBaseFormat {
      * - {@link TEXTUREDIMENSION_2D_ARRAY}
      * - {@link TEXTUREDIMENSION_3D}
      *
-     * @param {boolean} [write] - Whether the storage texture is writeable. Defaults to true.
+     * @param {boolean} [write] - Whether the storage texture is writable. Defaults to true.
      * @param {boolean} [read] - Whether the storage texture is readable. Defaults to false. Note
      * that storage texture reads are only supported if
      * {@link GraphicsDevice#supportsStorageTextureRead} is true. Also note that only a subset of
@@ -271,7 +271,7 @@ class BindStorageTextureFormat extends BindBaseFormat {
         // TEXTUREDIMENSION_***
         this.textureDimension = textureDimension;
 
-        // whether the texture is writeable
+        // whether the texture is writable
         this.write = write;
 
         // whether the texture is readable

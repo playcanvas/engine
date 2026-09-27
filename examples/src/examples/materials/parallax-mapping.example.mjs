@@ -213,7 +213,7 @@ spot.lookAt(spherePosition);
 spot.rotateLocal(90, 0, 0);
 app.root.addChild(spot);
 
-// an omni light in the opposite corner, filling the shadows with a cooler colour, and casting its
+// an omni light in the opposite corner, filling the shadows with a cooler color, and casting its
 // own set of them
 const omni = new Entity('omni light');
 omni.addComponent('light', {
@@ -265,7 +265,7 @@ data.set('data', {
     height: 0.4,
 
     // the height map value that sits at the level of the geometry - the engine default pivots the
-    // relief around mid-grey, and 1 treats the map as pure depth carved below the surface
+    // relief around mid-gray, and 1 treats the map as pure depth carved below the surface
     base: 0.5,
 
     spot: true,

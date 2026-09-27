@@ -154,7 +154,7 @@ if (app.graphicsDevice.isWebGL2) {
 
     // Create the material from the vertex and fragment shaders which is used to render point sprites
     const material = new ShaderMaterial({
-        uniqueName: 'TransformFeerback',
+        uniqueName: 'TransformFeedback',
         vertexGLSL: shaderCloudVert,
         fragmentGLSL: shaderCloudFrag,
         attributes: { aPosition: SEMANTIC_POSITION }

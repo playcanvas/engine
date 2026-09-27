@@ -94,7 +94,9 @@ app.root.addChild(screen);
 
 // Button
 const button = new Entity();
-button.addComponent('button');
+button.addComponent('button', {
+    imageEntity: button
+});
 button.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
     height: 40,

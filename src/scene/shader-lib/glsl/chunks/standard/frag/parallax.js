@@ -216,7 +216,7 @@ void getParallax() {
 
         float parallaxScale = material_heightMapFactor;
 
-        // uv travelled per unit of depth climbed towards the light, limited as the view march is
+        // uv traveled per unit of depth climbed towards the light, limited as the view march is
         vec2 climb = parallaxScale * lightDirUv / lightDirT.z;
         float climbLength = length(climb);
         float maxClimbLength = parallaxScale * parallaxShadowMaxSlope;

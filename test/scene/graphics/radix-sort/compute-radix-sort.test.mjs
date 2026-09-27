@@ -6,7 +6,7 @@ import { RADIX_SORT_ONESWEEP, RADIX_SORT_PORTABLE } from '../../../../src/scene/
 import { ComputeRadixSort } from '../../../../src/scene/graphics/radix-sort/compute-radix-sort.js';
 
 // The Null device has no compute or storage buffer backend; stub just enough for the sorters to
-// build their pipelines and allocate buffers. Dispatches are no-ops, so only allocation behaviour
+// build their pipelines and allocate buffers. Dispatches are no-ops, so only allocation behavior
 // is observable here.
 const createDevice = () => {
     const device = new NullGraphicsDevice({ width: 16, height: 16 });

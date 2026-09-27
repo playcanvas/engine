@@ -1571,7 +1571,7 @@ class XrMenu extends Script {
                 const br = corners[1];
                 const tl = corners[3];
 
-                // Width vector (BL -> BR) and height vector (BL -> TL), not normalised.
+                // Width vector (BL -> BR) and height vector (BL -> TL), not normalized.
                 tmpVec3A.sub2(br, bl);              // width vec
                 tmpVec3B.sub2(tl, bl);              // height vec
                 tmpVec3C.cross(tmpVec3A, tmpVec3B); // plane normal (length = w * h)
@@ -1586,7 +1586,7 @@ class XrMenu extends Script {
                 // Hit point relative to BL
                 tmpVec3D.copy(direction).mulScalar(t).add(origin).sub(bl);
 
-                // Project onto the (un-normalised) width and height vectors.
+                // Project onto the (un-normalized) width and height vectors.
                 // For a point inside the rectangle:
                 //   u = hit . widthVec   ∈ [0, widthVec.lengthSq]
                 //   v = hit . heightVec  ∈ [0, heightVec.lengthSq]

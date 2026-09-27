@@ -372,10 +372,10 @@ class ElementComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 
-    getTextElementMaterial(screenSpace, msdf, textAttibutes) {
+    getTextElementMaterial(screenSpace, msdf, textAttributes) {
         const hash = (screenSpace && (1 << 0)) |
                           (msdf && (1 << 1)) |
-                 (textAttibutes && (1 << 2));
+                 (textAttributes && (1 << 2));
 
         let material = this._defaultTextMaterials[hash];
 
@@ -390,7 +390,7 @@ class ElementComponentSystem extends ComponentSystem {
 
         if (msdf) {
             material.msdfMap = this._defaultTexture;
-            material.msdfTextAttribute = textAttibutes;
+            material.msdfTextAttribute = textAttributes;
             material.emissive.set(1, 1, 1);
         } else {
             name = `Bitmap${name}`;

@@ -122,7 +122,7 @@ const copyWGSL = /* wgsl */ `
 `;
 
 // --- Render stage: runs every frame for every splat. Reads the baked bind and applies a cheap
-// horizontal sway (cantilever oscillation growing with the baked sway amount, a wave travelling
+// horizontal sway (cantilever oscillation growing with the baked sway amount, a wave traveling
 // up the tree via the height fraction, a slow gust and a fast flutter). While editing, the
 // currently selected tree is tinted so you can see which splats it owns.
 const renderGLSL = /* glsl */ `

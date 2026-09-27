@@ -183,7 +183,7 @@ describe('ScriptRegistry', function () {
             class FreeScript extends Script {}
             registerScript(FreeScript, undefined, app);
 
-            // registerScript uses the verbatim class name (pre-2.19.3 behaviour), so projects that
+            // registerScript uses the verbatim class name (pre-2.19.3 behavior), so projects that
             // reference the script by its class name keep resolving it
             expect(FreeScript.__name).to.equal('FreeScript');
             expect(app.scripts.has('FreeScript')).to.equal(true);

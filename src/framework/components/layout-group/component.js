@@ -321,10 +321,7 @@ class LayoutGroupComponent extends Component {
     /**
      * Sets whether or not to wrap children onto a new row/column when the size of the container is
      * exceeded. Defaults to false, which means that children will be rendered in a single row
-     * (horizontal orientation) or column (vertical orientation). Note that setting wrap to true
-     * makes it impossible for the {@link FITTING_BOTH} fitting mode to operate in any logical
-     * manner. For this reason, when wrap is true, a {@link widthFitting} or {@link heightFitting}
-     * mode of {@link FITTING_BOTH} will be coerced to {@link FITTING_STRETCH}.
+     * (horizontal orientation) or column (vertical orientation).
      *
      * @type {boolean}
      */

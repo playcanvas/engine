@@ -164,9 +164,9 @@ class XrNavigation extends Script {
     movementSpeed = 1.5;
 
     /**
-     * Selects the right-thumbstick turn behaviour. One of:
+     * Selects the right-thumbstick turn behavior. One of:
      * - `'snap'`: discrete rotation of {@link XrNavigation#rotateSpeed} degrees per gesture
-     *   (default; existing behaviour).
+     *   (default; existing behavior).
      * - `'smooth'`: continuous rotation at {@link XrNavigation#smoothTurnSpeed} degrees/second
      *   while the thumbstick is past {@link XrNavigation#smoothTurnThreshold}.
      * - `'none'`: thumbstick X is ignored.
@@ -220,7 +220,7 @@ class XrNavigation extends Script {
 
     /**
      * Deadzone for the right-thumbstick X-axis when {@link XrNavigation#turnMode} is `'smooth'`.
-     * Below this magnitude the stick is treated as centred.
+     * Below this magnitude the stick is treated as centered.
      * @attribute
      * @range [0, 0.5]
      * @precision 0.01

@@ -423,7 +423,7 @@ class ImageElement {
         }
 
         if (this._renderable) {
-            // culling is always true for non-screenspace (frustrum is used); for screenspace, use the 'cull' property
+            // culling is always true for non-screenspace (frustum is used); for screenspace, use the 'cull' property
             this._renderable.setCull(!this._element._isScreenSpace() || this._element._isScreenCulled());
             this._renderable.setMaterial(this._material);
             this._renderable.setScreenSpace(screenSpace);

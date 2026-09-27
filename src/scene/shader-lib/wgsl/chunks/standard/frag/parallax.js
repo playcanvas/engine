@@ -216,7 +216,7 @@ fn getParallax() {
 
         let parallaxScale: f32 = uniform.material_heightMapFactor;
 
-        // uv travelled per unit of depth climbed towards the light, limited as the view march is
+        // uv traveled per unit of depth climbed towards the light, limited as the view march is
         let climb: vec2f = parallaxScale * lightDirUv / lightDirT.z;
         let climbLength: f32 = length(climb);
         let maxClimbLength: f32 = parallaxScale * parallaxShadowMaxSlope;

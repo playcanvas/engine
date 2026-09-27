@@ -165,7 +165,9 @@ screen.addChild(text);
 // Button
 const button = new Entity();
 button.setLocalPosition(0, -25, 0);
-button.addComponent('button');
+button.addComponent('button', {
+    imageEntity: button
+});
 button.addComponent('element', {
     anchor: [0.5, 0.5, 0.5, 0.5],
     width: 100,

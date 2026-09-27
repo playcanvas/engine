@@ -305,6 +305,21 @@ describe('ElementDragHelper', function () {
         runTransformTest.call(this, 20, -20);
     });
 
+    it('supports an element that is a direct child of a screen space screen', function () {
+        app.root.removeChild(parent);
+        parent.removeChild(entity);
+
+        const screen = new Entity('screen', app);
+        screen.addComponent('screen', { screenSpace: true });
+        screen.addChild(entity);
+        screen.screen.scale = 0.5;
+
+        app.root.addChild(screen);
+        entity.element.screen = screen;
+
+        runTransformTest.call(this, 20, -20);
+    });
+
     it('allows dragging to be constrained to the X axis', function () {
         dragHelper.destroy();
         createDragHelper('x');

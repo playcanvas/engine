@@ -150,7 +150,7 @@ camera.script.create('orbitCameraInputMouse');
 camera.script.create('orbitCameraInputTouch');
 app.root.addChild(camera);
 
-// Orbit around the statue's world-space centre
+// Orbit around the statue's world-space center
 const orbitPivot = new Vec3();
 hotel.getWorldTransform().transformPoint(new Vec3(0, 0.2, 0), orbitPivot);
 camera.script.orbitCamera.resetAndLookAtPoint(new Vec3(3, 1, 0.5), orbitPivot);

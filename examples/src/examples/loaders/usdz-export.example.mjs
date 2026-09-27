@@ -130,7 +130,7 @@ data.on('download', () => {
     link.click();
 });
 
-// Spin the meshe
+// Spin the mesh
 app.on('update', (dt) => {
     if (entity) {
         entity.rotate(0, -12 * dt, 0);

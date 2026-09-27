@@ -38,7 +38,7 @@ export const getTestDeviceType = () => (webgpu ? 'webgpu' : 'null');
 /**
  * Creates the graphics device the unit tests run on: the null device by default, or an engine
  * WebGPU device on the shared Dawn device under `npm run test:webgpu`. Tests that check the
- * behaviour of a specific device construct that device directly instead.
+ * behavior of a specific device construct that device directly instead.
  *
  * @param {object} canvas - The canvas, a jsdom canvas or a mock object.
  * @param {object} [options] - The graphics device options.

@@ -15,7 +15,7 @@ import { BUFFERUSAGE_COPY_SRC } from '../../platform/graphics/constants.js';
  *
  * Buffers here are written + read at disjoint points in the frame (the forward sort in
  * `update()`, the shadow cull in `updateShadows()`), so a single shared allocation is safe — the
- * backend serialises them with the usual read/write barriers. It is per-manager (hence per-world),
+ * backend serializes them with the usual read/write barriers. It is per-manager (hence per-world),
  * so separate cameras/layers never contend on the same buffer.
  *
  * Starts with just the compaction candidate-index list; further shared scratch can be added here as

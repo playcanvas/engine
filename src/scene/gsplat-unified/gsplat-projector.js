@@ -618,8 +618,8 @@ class GSplatProjector {
      * sortKeys (typically `worldState.totalActiveSplats`).
      * @param {boolean} params.radialSort - Whether to use the radial sort key variant.
      * @param {number} params.numBits - Sort key bit count (defines bucket count = 1 << numBits).
-     * @param {number} params.minDist - Minimum distance for sort key normalisation.
-     * @param {number} params.maxDist - Maximum distance for sort key normalisation.
+     * @param {number} params.minDist - Minimum distance for sort key normalization.
+     * @param {number} params.maxDist - Maximum distance for sort key normalization.
      * @param {number} params.alphaClip - Alpha cull threshold.
      * @param {number} params.minPixelSize - Minimum on-screen pixel size before culling.
      * @param {number} params.minContribution - Minimum total contribution before culling.
@@ -667,7 +667,7 @@ class GSplatProjector {
         const stereoMode = !!isStereo && !pickMode && !fisheyeMode;
 
         // A stochastic view generates no sort key, so the sort direction cannot affect it. Fold it
-        // away rather than compiling a second, behaviourally identical RADIAL_SORT variant.
+        // away rather than compiling a second, behaviorally identical RADIAL_SORT variant.
         const radialMode = radialSort && !stochastic;
 
         // AA only matters for the forward color path; skip it for picking to avoid

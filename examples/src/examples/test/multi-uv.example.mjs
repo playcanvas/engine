@@ -7,7 +7,7 @@
 // reads 0 to 7. **Bottom row, left to right:** a diffuse map on UV3 offset by half the atlas
 // height (the transformed uv path), which therefore reads 7; a dim diffuse map on UV1 under an
 // emissive map on UV6; a lightmap on UV5; and a mesh with only four UV sets whose material asks
-// for UV6, where the map must be dropped and the box drawn in its plain grey diffuse colour
+// for UV6, where the map must be dropped and the box drawn in its plain gray diffuse color
 // without a shader error.
 
 import {
@@ -75,7 +75,7 @@ app.start();
 
 app.scene.ambientLight = new Color(0.3, 0.3, 0.3);
 
-// the atlas: a 4x2 grid of coloured cells, cell N showing the digit N
+// the atlas: a 4x2 grid of colored cells, cell N showing the digit N
 const columns = 4;
 const rows = 2;
 const cellSize = 256;

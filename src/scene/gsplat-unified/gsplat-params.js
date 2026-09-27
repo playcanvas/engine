@@ -110,8 +110,8 @@ class GSplatParams {
         } else {
             // Large work buffer format (32 bytes/splat):
             // - dataColor (RGBA16F/RGBA16U): RGBA color with alpha
-            // - dataTransformA (RGBA32U): center.xyz (3×32-bit floats as uint) + rotation.xy (2×16-bit halfs)
-            // - dataTransformB (RG32U): rotation.z + scale.xyz (4×16-bit halfs, scale.w derived via sqrt)
+            // - dataTransformA (RGBA32U): center.xyz (3×32-bit floats as uint) + rotation.xy (2×16-bit halves)
+            // - dataTransformB (RG32U): rotation.z + scale.xyz (4×16-bit halves, scale.w derived via sqrt)
             const colorFormat = this._device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F]) || PIXELFORMAT_RGBA16U;
             format = new GSplatFormat(this._device, [
                 { name: 'dataColor', format: colorFormat },

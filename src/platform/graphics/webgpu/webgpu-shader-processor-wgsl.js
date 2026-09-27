@@ -588,7 +588,7 @@ class WebgpuShaderProcessorWGSL {
         parsedUniforms.forEach((uniform) => {
             uniform.ubName = 'ub_compute';
             const uniformType = uniformTypeToNameMapWGSL.get(uniform.type);
-            Debug.assert(uniformType !== undefined, `Uniform type ${uniform.type} is not recognised on line [${uniform.line}]`);
+            Debug.assert(uniformType !== undefined, `Uniform type ${uniform.type} is not recognized on line [${uniform.line}]`);
             meshUniforms.push(new UniformFormat(uniform.name, uniformType, uniform.arraySize));
         });
         // do not synthesize a dummy uniform when empty - reflection must stay strictly additive
@@ -720,7 +720,7 @@ class WebgpuShaderProcessorWGSL {
 
                 // Find the uniform type index in uniformTypeToNameWGSL
                 const uniformType = uniformTypeToNameMapWGSL.get(uniform.type);
-                Debug.assert(uniformType !== undefined, `Uniform type ${uniform.type} is not recognised on line [${uniform.line}]`);
+                Debug.assert(uniformType !== undefined, `Uniform type ${uniform.type} is not recognized on line [${uniform.line}]`);
 
                 const uniformFormat = new UniformFormat(uniform.name, uniformType, uniform.arraySize);
                 meshUniforms.push(uniformFormat);

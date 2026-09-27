@@ -297,7 +297,7 @@ describe('AmmoPhysicsWorld', function () {
                 return e;
             };
 
-            // node scale 2 makes the cube 2 units tall around its centre at y = 1 * entity scale
+            // node scale 2 makes the cube 2 units tall around its center at y = 1 * entity scale
             addModelEntity(0, 1);
             addModelEntity(10, 2);
 

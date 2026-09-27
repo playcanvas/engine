@@ -207,7 +207,7 @@ const entity = new Entity('TerrainEntity');
 entity.addComponent('render', { meshInstances: [meshInst] });
 app.root.addChild(entity);
 
-// allocater multi-draw: one sub-draw per patch
+// allocate multi-draw: one sub-draw per patch
 const numPatches = patchesX * patchesZ;
 const cmd = meshInst.setMultiDraw(null, numPatches);
 

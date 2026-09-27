@@ -426,7 +426,7 @@ describe('TextElement', function () {
         element.text = 'abcde fghij klmno pqrst uvwxyz';
 
         // guard against the reorder handler silently failing to turn rtl on, which would leave
-        // this exercising the ltr path and let the rtl behaviour regress unnoticed
+        // this exercising the ltr path and let the rtl behavior regress unnoticed
         expect(element._text._rtl).to.equal(true);
 
         assertJustifiedLinesAreFlushWithBothEdges();
@@ -514,7 +514,7 @@ describe('TextElement', function () {
         ]);
     });
 
-    it('breaks words on hypens', function () {
+    it('breaks words on hyphens', function () {
         element.fontAsset = fontAsset;
 
         element.text = 'abcde fghij-klm nopqr stuvwxyz';
@@ -738,7 +738,7 @@ describe('TextElement', function () {
         ]);
     });
 
-    it('rtl - breaks words on hypens', function () {
+    it('rtl - breaks words on hyphens', function () {
         registerRtlHandler();
         element.fontAsset = fontAsset;
         element.rtlReorder = true;

@@ -146,7 +146,7 @@ describe('GSplat stochastic rendering', function () {
         renderer._material.destroy();
     });
 
-    // opacityDitherPS only declares a noise source for a mode it recognises, so an unusable mode
+    // opacityDitherPS only declares a noise source for a mode it recognizes, so an unusable mode
     // has to resolve to a real one rather than reaching the shader and failing to compile.
     it('selects the dither noise source from the scene dither mode', function () {
         const renderer = Object.create(GSplatHybridRenderer.prototype);

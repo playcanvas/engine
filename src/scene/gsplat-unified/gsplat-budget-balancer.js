@@ -24,11 +24,11 @@ const keyOf = (value) => {
 // it. The ratio does: with derived errors it is `ln(a/b) / (a - b)` over adjacent frontier counts,
 // which peaks at ln 2 for counts 1 -> 2 and falls as ~ln2/count for large nodes. So the low end
 // tracks splats *per node* rather than scene size - 1e-24 leaves room for a node of ~1e12 splats.
-// The high end allows for authored errors far larger than any measured (~3), since the colour term
-// in splat-transform's metric is unnormalised and has no upper bound.
+// The high end allows for authored errors far larger than any measured (~3), since the color term
+// in splat-transform's metric is unnormalized and has no upper bound.
 //
 // Anything outside the window still resolves, it just shares the first or last bucket and loses
-// ordering against its neighbours there.
+// ordering against its neighbors there.
 const KEY_LO = keyOf(1e-24);
 const KEY_HI = keyOf(1e3);
 const KEY_SCALE = (NUM_VALUE_BUCKETS - 1) / (KEY_HI - KEY_LO);
@@ -39,7 +39,7 @@ const KEY_ONE = keyOf(1);
 
 // GSplatPlacement#lodFalloff is an exponent on coverage. It is applied in key space - the bit key
 // is piecewise-linear in log2, so cov^falloff becomes one multiply instead of a Math.pow per node,
-// at a cost of at most a bucket or two of quantisation. The exponent pivots around a mid-field
+// at a cost of at most a bucket or two of quantization. The exponent pivots around a mid-field
 // coverage (a node roughly a hundred radii away) rather than around 1: at the pivot the value is
 // unchanged by falloff, so the slider tilts a placement's budget between its near and far field
 // instead of deflating the whole placement against other instances.

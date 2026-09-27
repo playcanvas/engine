@@ -49,7 +49,7 @@ const _ambientGround = new Float32Array(3);
 /**
  * Renders a crowd of characters animated using a VAT (Vertex Animation Texture). The skinned position
  * and normal of every vertex is evaluated ahead of time and baked into a texture, one texel per vertex
- * per sampled frame, and the vertex shader reads it back and interpolates between two neighbouring
+ * per sampled frame, and the vertex shader reads it back and interpolates between two neighboring
  * frames. Skeletons, bone matrices and per character animation evaluation disappear entirely: the
  * whole crowd is one instanced draw call, and the only per character data is a world matrix and a
  * fractional frame index.

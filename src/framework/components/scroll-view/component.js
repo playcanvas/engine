@@ -44,7 +44,7 @@ const _tempScrollValue = new Vec2();
  * {@link Entity#scrollview} property:
  *
  * ```javascript
- * entity.scrollview.scroll = new Vec2(0, 1); // Scroll to the top
+ * entity.scrollview.scroll = new Vec2(0, 1); // Scroll to the bottom
  *
  * console.log(entity.scrollview.scroll);        // Get the scroll position and print it
  * ```
@@ -631,7 +631,8 @@ class ScrollViewComponent extends Component {
     }
 
     /**
-     * Sets the scroll value.
+     * Sets the scroll value. On the x axis, 0 scrolls to the left edge of the content and 1 to
+     * the right edge. On the y axis, 0 scrolls to the top edge and 1 to the bottom edge.
      *
      * @type {Vec2}
      */

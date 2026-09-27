@@ -188,7 +188,7 @@ class PhysicsWorld {
     nativeWorld = null;
 
     /**
-     * Whether mesh shapes honour the per-instance {@link PhysicsMeshSource} scale, so that a
+     * Whether mesh shapes honor the per-instance {@link PhysicsMeshSource} scale, so that a
      * mesh shape is rebuilt when the world scale of its entity changes. Backends that cannot
      * scale mesh instances independently return false, and mesh shapes are then left alone when
      * their entity is rescaled.

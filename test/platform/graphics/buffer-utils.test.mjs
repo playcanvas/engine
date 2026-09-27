@@ -84,7 +84,7 @@ describe('BufferUtils', function () {
             buffer.destroy();
         });
 
-        it('honours an explicit length', function () {
+        it('honors an explicit length', function () {
             const buffer = createVertexBuffer();
 
             expect(BufferUtils.createStorageView(buffer, Float32Array, 0, 3).length).to.equal(3);

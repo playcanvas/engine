@@ -339,7 +339,7 @@ class ShaderProcessorGLSL {
 
                 // sample type
                 // WebGpu does not currently support filtered float format textures, and so we map them to unfilterable type
-                // as we sample them without filtering anyways
+                // as we sample them without filtering anyway
                 let sampleType = SAMPLETYPE_FLOAT;
                 if (uniform.isSignedInt) {
                     sampleType = SAMPLETYPE_INT;

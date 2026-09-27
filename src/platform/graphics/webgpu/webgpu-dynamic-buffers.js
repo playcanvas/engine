@@ -88,7 +88,7 @@ class WebgpuDynamicBuffers extends DynamicBuffers {
      * Called when all scheduled command buffers are submitted to the device.
      */
     onCommandBuffersSubmitted() {
-        // map the staging buffers for write to alow them to be reused - this resolves when the CBs
+        // map the staging buffers for write to allow them to be reused - this resolves when the CBs
         // using them are done on the GPU
         const count = this.pendingStagingBuffers.length;
         if (count) {

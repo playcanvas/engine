@@ -87,7 +87,7 @@ describe('build / overridable exports (#8839)', function () {
 });
 
 // the spot-checks above prove the two real-world break cases (#8836 `app`, #8839 `createScript`)
-// end to end; this generalises the underlying invariant to the whole surface: every umd export
+// end to end; this generalizes the underlying invariant to the whole surface: every umd export
 // must be a live (get) and overridable (set) accessor, so a regression hitting any export — not
 // just those two — is caught.
 describe('build / all umd exports are live + overridable', function () {

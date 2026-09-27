@@ -111,6 +111,7 @@ app.root.addChild(screen);
 const button = new Entity();
 button.addComponent('button', {
     active: true,
+    imageEntity: button,
     transitionMode: BUTTON_TRANSITION_MODE_SPRITE_CHANGE
 });
 button.addComponent('element', {

@@ -258,7 +258,7 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
         }
 
-        this.fire('set:referenceresolution', this._resolution);
+        this.fire('set:referenceresolution', this._referenceResolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 
