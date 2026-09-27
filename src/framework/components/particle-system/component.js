@@ -1069,6 +1069,8 @@ class ParticleSystemComponent extends Component {
      * particle system to integrate with the rendering of {@link ElementComponent}s. Note that an
      * entity with ParticleSystem component cannot be parented directly to {@link ScreenComponent},
      * but has to be a child of a {@link ElementComponent}, for example {@link LayoutGroupComponent}.
+     * In screen space, particle sizes are measured in viewport heights on both axes, so a size of 1
+     * in {@link scaleGraph} makes a particle as tall as the viewport and just as wide.
      *
      * @type {boolean}
      */

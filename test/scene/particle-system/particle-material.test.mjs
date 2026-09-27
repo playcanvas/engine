@@ -8,10 +8,16 @@ import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
  * @import { Application } from '../../../src/framework/application.js'
+ * @import { Shader } from '../../../src/platform/graphics/shader.js'
  */
 
 // the exposure uniform as declared by the GLSL and the WGSL tonemapping chunks
 const EXPOSURE_UNIFORM = /uniform float exposure|uniform exposure: f32/;
+
+// the screen space scale of the particle offset x by height / width, and of the direction of
+// motion x by width / height, as written by the GLSL and the WGSL chunks
+const OFFSET_ASPECT = /localPos\.x \*= \S*viewport_size\.y \* \S*viewport_size\.z/;
+const MOTION_ASPECT = /velocityV\.x \*= \S*viewport_size\.x \* \S*viewport_size\.w/;
 
 describe('ParticleMaterial', function () {
     /** @type {Application} */
@@ -32,12 +38,12 @@ describe('ParticleMaterial', function () {
     });
 
     /**
-     * Generate the particle fragment shader for a camera which has both fog and tonemapping enabled.
+     * Generate the particle shader for a camera with both fog and tonemapping enabled.
      *
      * @param {object} options - Particle system component options.
-     * @returns {string} The generated fragment shader source.
+     * @returns {Shader} The generated shader.
      */
-    const fragmentSource = (options) => {
+    const createShader = (options) => {
         const entity = new Entity();
         entity.addComponent('particlesystem', { numParticles: 10, ...options });
         app.root.addChild(entity);
@@ -46,17 +52,43 @@ describe('ParticleMaterial', function () {
         cameraShaderParams.fog = FOG_EXP;
         cameraShaderParams.toneMapping = TONEMAP_ACES;
 
-        const shader = entity.particlesystem.emitter.material.getShaderVariant({
+        return entity.particlesystem.emitter.material.getShaderVariant({
             device: app.graphicsDevice,
             scene: app.scene,
             objDefs: 0,
             pass: SHADER_FORWARD,
             cameraShaderParams
         });
+    };
+
+    /**
+     * Generate the particle fragment shader for a camera with both fog and tonemapping enabled.
+     *
+     * @param {object} options - Particle system component options.
+     * @returns {string} The generated fragment shader source.
+     */
+    const fragmentSource = (options) => {
+        const shader = createShader(options);
 
         // a null source means the shader failed to preprocess
         expect(shader.definition.fshader).to.be.a('string');
         return shader.definition.fshader;
+    };
+
+    /**
+     * Generate the particle vertex shader.
+     *
+     * @param {object} options - Particle system component options.
+     * @param {boolean} gpu - Whether the emitter simulates on the GPU.
+     * @returns {string} The generated vertex shader source.
+     */
+    const vertexSource = (options, gpu) => {
+        app.graphicsDevice.supportsGpuParticles = gpu;
+        const shader = createShader(options);
+
+        // a null source means the shader failed to preprocess
+        expect(shader.definition.vshader).to.be.a('string');
+        return shader.definition.vshader;
     };
 
     it('follows the camera fog and tonemapping by default', function () {
@@ -77,5 +109,20 @@ describe('ParticleMaterial', function () {
         const source = fragmentSource({ useTonemap: false });
         expect(source).to.not.match(EXPOSURE_UNIFORM);
         expect(source).to.include('fog_color');
+    });
+
+    [true, false].forEach((gpu) => {
+        it(`keeps screen space particles square on the ${gpu ? 'GPU' : 'CPU'} path`, function () {
+            // clip space x spans the viewport width, so without these the particles stretch by
+            // the aspect ratio of the canvas, and turn away from their motion when aligned to it
+            const source = vertexSource({ screenSpace: true, alignToMotion: true }, gpu);
+            expect(source).to.match(OFFSET_ASPECT);
+            expect(source).to.match(MOTION_ASPECT);
+        });
+    });
+
+    it('does not read the viewport size outside screen space', function () {
+        expect(vertexSource({ alignToMotion: true }, true)).to.not.include('viewport_size');
+        expect(vertexSource({ alignToMotion: true }, false)).to.not.include('viewport_size');
     });
 });

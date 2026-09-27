@@ -85,7 +85,13 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         inVel = modelRotation * inVel;
     #endif
     let viewRotation = mat3x3f(uniform.matrix_view[0].xyz, uniform.matrix_view[1].xyz, uniform.matrix_view[2].xyz);
-    let velocityV = safeNormalize((viewRotation * inVel).xy);
+    var velocityV = safeNormalize((viewRotation * inVel).xy);
+    #ifdef SCREEN_SPACE
+        // particle_endVS scales the offset x by height / width, so measure the direction of
+        // motion in the same units to keep the particle aligned with its motion on screen
+        velocityV.x *= uniform.viewport_size.x * uniform.viewport_size.w;
+        velocityV = safeNormalize(velocityV);
+    #endif
 
     let particleLifetime = uniform.lifetime;
 
