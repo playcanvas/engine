@@ -24,10 +24,16 @@ const PC_RANGE = 'latest';
 const OBSERVER_VERSION = '1.7.1';
 const VITE_VERSION = '8.0.14';
 
-// folder-level license files whose terms require the file to ship alongside the assets. attribution
-// is preserved generally via @credit -> CREDITS.md; this co-locates the actual file only when its
-// assets are bundled (spine is the only such case today), avoiding any blanket sidecar probing.
-const COLOCATED_LICENSES = ['/assets/spine/license.txt'];
+// license files whose terms require them to ship with the assets they cover, mapped to those
+// assets' url prefixes. attribution is preserved generally via @credit -> CREDITS.md; this
+// co-locates the actual file only when its assets are bundled, avoiding blanket sidecar probing.
+const COLOCATED_LICENSES = {
+    '/assets/spine/license.txt': ['/assets/spine/'],
+    '/assets/fonts/roboto-license.txt': [
+        '/assets/fonts/roboto-regular.json',
+        '/assets/fonts/roboto-bold.json'
+    ]
+};
 
 /**
  * @param {string} spec - Import specifier.
@@ -346,15 +352,10 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
     };
     await Promise.all(urls.map(fetchAsset));
 
-    // co-locate folder-level license files whose terms require shipping the file with the assets
-    await Promise.all(COLOCATED_LICENSES.map(async (lic) => {
-        const dir = lic.slice(0, lic.lastIndexOf('/') + 1);
-        if (!urls.some(u => u.startsWith(dir))) {
-            return;
-        }
-        const res = await fetch(`${STATIC_BASE}${lic}`);
-        if (res.ok) {
-            out[`${root}/public${lic}`] = new Uint8Array(await res.arrayBuffer());
+    // co-locate license files whose terms require shipping the file with the assets they cover
+    await Promise.all(Object.entries(COLOCATED_LICENSES).map(async ([lic, covers]) => {
+        if (urls.some(u => covers.some(c => u.startsWith(c)))) {
+            await fetchAsset(lic);
         }
     }));
 
