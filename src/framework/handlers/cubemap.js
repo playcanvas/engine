@@ -2,6 +2,7 @@ import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
+import { path } from '../../core/path.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Asset } from '../asset/asset.js';
 import { ResourceHandler } from './handler.js';
@@ -325,14 +326,21 @@ class CubemapHandler extends ResourceHandler {
                     filename: assetId
                 } : assetId;
 
-                // if the referenced prefiltered texture is not a dds file, then we're loading an
-                // envAtlas. In this case we must specify the correct texture state.
-                const data = file.url.search('.dds') === -1 ? {
-                    type: 'rgbp',
-                    addressu: 'clamp',
-                    addressv: 'clamp',
-                    mipmaps: false
-                } : null;
+                const extension = path.getExtension(file.url).toLowerCase();
+                let data = null;
+
+                if (i === 0 && extension !== '.dds') {
+                    // A non-DDS prefiltered texture is an env atlas and needs its RGBP state.
+                    data = {
+                        type: 'rgbp',
+                        addressu: 'clamp',
+                        addressv: 'clamp',
+                        mipmaps: false
+                    };
+                } else if (i > 0 && !['.basis', '.dds', '.hdr', '.ktx', '.ktx2'].includes(extension)) {
+                    // Browser-decoded face images are ordinary color textures, not RGBP data.
+                    data = { srgb: true };
+                }
 
                 texAsset = new Asset(`${cubemapAsset.name}_part_${i}`, 'texture', file, data);
                 registry.add(texAsset);
