@@ -32,7 +32,8 @@ const COLOCATED_LICENSES = {
     '/assets/fonts/roboto-license.txt': [
         '/assets/fonts/roboto-regular.json',
         '/assets/fonts/roboto-bold.json'
-    ]
+    ],
+    '/assets/fonts/roboto-extralight-license.txt': ['/assets/fonts/roboto-extralight.json']
 };
 
 /**
