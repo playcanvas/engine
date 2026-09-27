@@ -33,7 +33,7 @@ import {
 import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
 import { deviceType } from 'examples/context';
 
-import localization from './data.json';
+import localization from './localization.json';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
