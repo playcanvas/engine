@@ -2,7 +2,7 @@
 //
 // A character card with a live 3D portrait. A second camera renders the character, on a layer of
 // its own, into a **render target**, and an image element shows its texture, behind the card's
-// text and buttons like any other image. Press Emote to see the portrait move.
+// text and buttons like any other image. Press Attack to see the portrait move.
 
 import {
     AnimComponentSystem,
@@ -50,9 +50,7 @@ const assets = {
     font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
     bold: new Asset('bold', 'font', { url: './assets/fonts/roboto-bold.json' }),
     ui: new Asset('ui', 'textureatlas', { url: './assets/ui/ui-atlas.png' }, uiAtlasData),
-    model: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
-    idle: new Asset('idle', 'container', { url: './assets/animations/bitmoji/idle.glb' }),
-    flip: new Asset('flip', 'container', { url: './assets/animations/bitmoji/jump-flip.glb' })
+    knight: new Asset('knight', 'container', { url: './assets/models/knight.glb' })
 };
 
 const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
@@ -125,18 +123,21 @@ previewCamera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
     fov: 30
 });
-previewCamera.setPosition(0, 1, 3.9);
-previewCamera.lookAt(0, 0.8, 0);
+previewCamera.setPosition(0, 0.86, 3.1);
+previewCamera.lookAt(0, 0.72, 0);
 app.root.addChild(previewCamera);
 
-// The character, and a light, on the preview layer only
-const character = assets.model.resource.instantiateRenderEntity();
+// The character, and a light, on the preview layer only. The model holds both animations
+const character = assets.knight.resource.instantiateRenderEntity();
 character.findComponents('render').forEach((render) => {
     render.layers = [previewLayer.id];
 });
+const [idleClip, attackClip] = ['Idle', 'Attack'].map(
+    (name) => assets.knight.resource.animations.find((asset) => asset.resource.name === name).resource
+);
 character.addComponent('anim', { activate: true });
-character.anim.assignAnimation('Idle', assets.idle.resource.animations[0].resource);
-character.anim.assignAnimation('Flip', assets.flip.resource.animations[0].resource, undefined, 1, false);
+character.anim.assignAnimation('Idle', idleClip);
+character.anim.assignAnimation('Attack', attackClip, undefined, 1, false);
 app.root.addChild(character);
 
 const light = new Entity('light');
@@ -200,15 +201,15 @@ const mask = createElement(frame, 'mask', { sprite: panel, anchor: [0, 0, 1, 1],
 createElement(mask, 'portrait', { texture: previewTexture, width: 400, height: 400 });
 
 const details = createElement(card, 'details', { type: ELEMENTTYPE_GROUP, pivot: [0, 1] });
-createElement(details, 'name', { ...text, fontAsset: assets.bold.id, text: 'Nova', fontSize: 48 });
-createElement(details, 'role', { ...text, text: 'Level 12 · Acrobat', fontSize: 26, color: ORANGE }).setLocalPosition(
+createElement(details, 'name', { ...text, fontAsset: assets.bold.id, text: 'Rowan', fontSize: 48 });
+createElement(details, 'role', { ...text, text: 'Level 12 · Knight', fontSize: 26, color: ORANGE }).setLocalPosition(
     0,
     -64,
     0
 );
 createElement(details, 'about', {
     ...text,
-    text: 'Quick on his feet, and quicker in the air. He lands every jump, and most of them twice.',
+    text: 'First through every crypt door, and last out of every fight. Never without a shield.',
     fontSize: 22,
     lineHeight: 30,
     color: MUTED,
@@ -218,28 +219,27 @@ createElement(details, 'about', {
     width: 280
 }).setLocalPosition(0, -110, 0);
 
-// Emote plays the flip once, and the character goes back to idling when it ends
-const emote = createElement(card, 'emote', { sprite: panel, color: ORANGE, width: 220, height: 64, useInput: true });
-emote.addComponent('button', {
-    imageEntity: emote,
+// Attack plays the swing once, and the character goes back to idling when it ends
+const attack = createElement(card, 'attack', { sprite: panel, color: ORANGE, width: 220, height: 64, useInput: true });
+attack.addComponent('button', {
+    imageEntity: attack,
     hoverTint: new Color(1, 0.7, 0.45),
     pressedTint: new Color(0.8, 0.4, 0.1)
 });
-createElement(emote, 'label', {
+createElement(attack, 'label', {
     type: ELEMENTTYPE_TEXT,
     fontAsset: assets.bold.id,
-    text: 'Emote',
+    text: 'Attack',
     fontSize: 28,
     color: new Color(0.1, 0.1, 0.1)
 });
-const flipLength = assets.flip.resource.animations[0].resource.duration;
 let idleIn = 0;
-emote.button.on('click', () => {
-    character.anim.baseLayer.transition('Flip', 0.2);
-    idleIn = flipLength;
+attack.button.on('click', () => {
+    character.anim.baseLayer.transition('Attack', 0.2);
+    idleIn = attackClip.duration;
 });
 
-// Turn the character slowly, and go back to idling after the flip
+// Turn the character slowly, and go back to idling after the attack
 app.on('update', (dt) => {
     character.rotateLocal(0, dt * 20, 0);
     if (idleIn > 0) {
@@ -260,7 +260,7 @@ const layout = () => {
     card.element.height = portraitCanvas ? 820 : 440;
     frame.setLocalPosition(portraitCanvas ? 0 : -160, portraitCanvas ? 190 : 0, 0);
     details.setLocalPosition(portraitCanvas ? -200 : 40, portraitCanvas ? -40 : 180, 0);
-    emote.setLocalPosition(portraitCanvas ? 0 : 150, portraitCanvas ? -330 : -160, 0);
+    attack.setLocalPosition(portraitCanvas ? 0 : 150, portraitCanvas ? -330 : -160, 0);
 };
 device.on('resizecanvas', layout);
 layout();
