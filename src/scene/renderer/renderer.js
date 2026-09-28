@@ -503,13 +503,6 @@ class Renderer {
                 }
             }
 
-            const jitterVec = jitter > 0 ? this.blueNoiseJitterVec : Vec4.ZERO;
-            this.blueNoiseJitterData[0] = jitterVec.x;
-            this.blueNoiseJitterData[1] = jitterVec.y;
-            this.blueNoiseJitterData[2] = jitterVec.z;
-            this.blueNoiseJitterData[3] = jitterVec.w;
-            this.blueNoiseJitterId.setValue(this.blueNoiseJitterData);
-
             this.projId.setValue(projMat.data);
             this.projSkyboxId.setValue(projMatSkybox.data);
 
@@ -553,6 +546,15 @@ class Renderer {
         // flip because screen-space dpdy has the opposite sign to WebGL's dFdy (framebuffer space is
         // Y-down), so the backend is XORed into the sign to keep normal mapping consistent (#5735).
         this.tbnBasis.setValue((this.device.isWebGPU !== !!flipY) ? -1 : 1);
+
+        // blue noise jitter, zero unless the camera jitters, which it does not in XR - set for all
+        // passes including XR, as it is part of the view uniform buffer
+        const jitterVec = (!camera.xrActive && camera.jitter > 0) ? this.blueNoiseJitterVec : Vec4.ZERO;
+        this.blueNoiseJitterData[0] = jitterVec.x;
+        this.blueNoiseJitterData[1] = jitterVec.y;
+        this.blueNoiseJitterData[2] = jitterVec.z;
+        this.blueNoiseJitterData[3] = jitterVec.w;
+        this.blueNoiseJitterId.setValue(this.blueNoiseJitterData);
 
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
@@ -805,11 +807,20 @@ class Renderer {
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
                 new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('screen_size', UNIFORMTYPE_VEC4),
+                new UniformFormat('camera_params', UNIFORMTYPE_VEC4),
+                new UniformFormat('blueNoiseJitter', UNIFORMTYPE_VEC4),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
                 new UniformFormat('view_index', UNIFORMTYPE_UINT),
                 new UniformFormat('light_globalAmbient', UNIFORMTYPE_VEC3),
                 new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
-                new UniformFormat('projectionFlipY', UNIFORMTYPE_FLOAT)
+                new UniformFormat('projectionFlipY', UNIFORMTYPE_FLOAT),
+                new UniformFormat('tbnBasis', UNIFORMTYPE_FLOAT),
+
+                // the fog of the camera or the scene, set per layer
+                new UniformFormat('fog_color', UNIFORMTYPE_VEC3),
+                new UniformFormat('fog_start', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fog_end', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fog_density', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
