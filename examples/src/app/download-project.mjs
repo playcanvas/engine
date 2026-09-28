@@ -2,7 +2,7 @@ import { zipSync, strToU8, strFromU8 } from 'fflate';
 
 import { VERSION } from './constants.mjs';
 import { getExampleSnapshot } from './example-snapshot.mjs';
-import { readState } from './url-state.mjs';
+import { readState, validPhysicsBackend } from './url-state.mjs';
 
 // matches the module specifier of `from '...'`, side-effect `import '...'`, and dynamic `import('...')`
 const IMPORT_RE = /(\b(?:from|import)[\s(]*)(['"])([^'"\n]+)\2/g;
@@ -33,7 +33,8 @@ const COLOCATED_LICENSES = {
         '/assets/fonts/roboto-regular.json',
         '/assets/fonts/roboto-bold.json'
     ],
-    '/assets/fonts/roboto-extralight-license.txt': ['/assets/fonts/roboto-extralight.json']
+    '/assets/fonts/roboto-extralight-license.txt': ['/assets/fonts/roboto-extralight.json'],
+    '/assets/wasm/jolt/LICENSE': ['/assets/wasm/jolt/']
 };
 
 /**
@@ -130,12 +131,14 @@ const fontPages = (url, bytes) => {
 // mirrors the example's runtime context (examples/context): an empty observer the example seeds itself
 /**
  * @param {string} deviceType - Graphics device type.
+ * @param {string} physicsBackend - Physics backend.
  * @returns {string} The context shim source.
  */
-const renderContextShim = deviceType => /* javascript */ `import { Observer } from '@playcanvas/observer';
+const renderContextShim = (deviceType, physicsBackend) => /* javascript */ `import { Observer } from '@playcanvas/observer';
 
 export const data = new Observer({});
 export const deviceType = ${JSON.stringify(deviceType)};
+export const physicsBackend = ${JSON.stringify(physicsBackend)};
 export const win = window;
 `;
 
@@ -259,11 +262,12 @@ ${credits.map((c) => {
  * @param {string} opts.category - Kebab category.
  * @param {string} opts.exampleName - Kebab example name.
  * @param {string} opts.deviceType - Graphics device type to hardcode in the shim.
+ * @param {string} [opts.physicsBackend] - Physics backend to hardcode in the shim.
  * @param {object} opts.data - The example's current control state, replayed after it loads.
  * @param {{ title: string, author: string, source?: string, license?: string }[]} [opts.credits] - Parsed @credit attribution, written to CREDITS.md.
  * @returns {Promise<Uint8Array>} The zip archive bytes.
  */
-export const buildProjectZip = async ({ files, category, exampleName, deviceType, data, credits }) => {
+export const buildProjectZip = async ({ files, category, exampleName, deviceType, physicsBackend = 'ammo', data, credits }) => {
     const root = `${category}-${exampleName}`;
     const title = `${category} / ${exampleName}`;
     /** @type {Record<string, Uint8Array>} */
@@ -321,7 +325,7 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
     await Promise.all([...vendored].map(vendorModule));
 
     // scaffold
-    add('src/context.mjs', renderContextShim(deviceType));
+    add('src/context.mjs', renderContextShim(deviceType, physicsBackend));
     add('src/data.json', `${JSON.stringify(data ?? {}, null, 2)}\n`);
     add('src/main.mjs', MAIN);
     add('index.html', renderIndexHtml(title));
@@ -389,11 +393,14 @@ export const downloadExampleProject = async () => {
     }
     const deviceType = window.activeGraphicsDevice ?? readState().device ??
         localStorage.getItem('preferredGraphicsDevice') ?? 'webgl2';
+    const physicsBackend = validPhysicsBackend(readState().physics) ??
+        validPhysicsBackend(localStorage.getItem('preferredPhysicsBackend')) ?? 'ammo';
     const bytes = await buildProjectZip({
         files: snap.files,
         category: snap.category,
         exampleName: snap.example,
         deviceType,
+        physicsBackend,
         data: snap.data,
         credits: snap.credits
     });

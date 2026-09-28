@@ -9,6 +9,7 @@ import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { SelectInput as OverlaySelectInput } from './OverlaySelectInput.mjs';
+import { PhysicsSelector } from './PhysicsSelector.mjs';
 import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from '../../../utils/inline-markdown.mjs';
 import { getFirstExample } from '../categories.mjs';
 import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
@@ -183,6 +184,7 @@ const createState = () => {
         loadError: null,
         controls: () => null,
         showDeviceSelector: true,
+        showPhysicsSelector: false,
         files: { 'example.mjs': '// loading' },
         observer: null,
         description: '',
@@ -233,6 +235,7 @@ const createState = () => {
  * @property {Control | null} controls - Controls function from example.
  * @property {Observer | null} observer - The PCUI observer
  * @property {boolean} showDeviceSelector - Show device selector.
+ * @property {boolean} showPhysicsSelector - Show the physics backend selector.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
  * @property {Credit[]} credits - Credits for the example.
@@ -324,7 +327,7 @@ class Example extends TypedComponent {
      * @param {LoadingEvent} event - The event
      */
     _handleExampleLoading(event) {
-        const { showDeviceSelector } = event.detail;
+        const { showDeviceSelector, showPhysicsSelector } = event.detail;
         this.bindObserver(null);
         this.mergeState({
             exampleLoaded: false,
@@ -332,6 +335,7 @@ class Example extends TypedComponent {
             loadError: null,
             controls: null,
             showDeviceSelector: showDeviceSelector,
+            showPhysicsSelector: showPhysicsSelector,
             description: '',
             credits: []
         });
@@ -579,6 +583,16 @@ class Example extends TypedComponent {
         }
 
         return jsx(DeviceSelector, {
+            onSelect: this._reloadIframe
+        });
+    }
+
+    renderPhysicsSelector() {
+        if (!this.state.showPhysicsSelector) {
+            return null;
+        }
+
+        return jsx(PhysicsSelector, {
             onSelect: this._reloadIframe
         });
     }
@@ -884,6 +898,7 @@ class Example extends TypedComponent {
                     id: 'mobileControlsPanel'
                 },
                 this.renderDeviceSelector(),
+                this.renderPhysicsSelector(),
                 jsx(
                     Container,
                     {
@@ -990,6 +1005,7 @@ class Example extends TypedComponent {
                         collapsed
                     },
                     this.renderDeviceSelector(),
+                    this.renderPhysicsSelector(),
                     jsx(
                         Container,
                         {

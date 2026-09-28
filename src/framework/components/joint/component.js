@@ -417,10 +417,10 @@ class JointComponent extends Component {
     }
 
     /**
-     * The physics backend's native constraint - a btTypedConstraint with the Ammo backend - or
-     * null if it has not been created, has broken or the backend has no native constraints. An
-     * unsupported escape hatch for native functionality the component does not expose: code that
-     * uses it only works with that physics backend.
+     * The physics backend's native constraint - a btTypedConstraint with the Ammo backend or a
+     * TwoBodyConstraint with the Jolt backend - or null if it has not been created, has broken or
+     * the backend has no native constraints. An unsupported escape hatch for native functionality
+     * the component does not expose: code that uses it only works with that physics backend.
      *
      * @type {object|null}
      * @ignore

@@ -268,6 +268,7 @@ export { ImageElement } from './framework/components/element/image-element.js';
 export * from './framework/components/joint/constants.js';
 export { JointComponent } from './framework/components/joint/component.js';
 export { JointComponentSystem } from './framework/components/joint/system.js';
+export { JoltPhysicsWorld } from './framework/physics/jolt/jolt-physics-world.js';
 export { LayoutCalculator } from './framework/components/layout-group/layout-calculator.js';
 export { LayoutChildComponent } from './framework/components/layout-child/component.js';
 export { LayoutChildComponentSystem } from './framework/components/layout-child/system.js';

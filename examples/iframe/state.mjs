@@ -2,6 +2,7 @@ import { Observer } from './playcanvas-observer.mjs';
 import { getQueryParams } from './runtime.mjs';
 
 const DEVICE_TYPES = ['webgpu', 'webgpu:bare', 'webgl2', 'webgl2:bare', 'null'];
+const PHYSICS_BACKENDS = ['ammo', 'jolt'];
 const params = getQueryParams(window.location.href);
 const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
 
@@ -10,6 +11,13 @@ const isWebGPU = dt => dt === 'webgpu' || dt.startsWith('webgpu:');
  */
 let data;
 let deviceType = 'webgl2';
+
+/**
+ * The physics backend picked in the examples browser, for examples that offer the choice.
+ *
+ * @type {'ammo' | 'jolt'}
+ */
+let physicsBackend = 'ammo';
 
 function refreshContext() {
     data = new Observer({});
@@ -62,4 +70,19 @@ function updateDeviceType(config) {
     }
 }
 
-export { data, deviceType, refreshContext, updateDeviceType };
+/**
+ * Resolves the physics backend: a physicsBackend query parameter, then the user's stored
+ * preference, then Ammo.
+ */
+function updatePhysicsBackend() {
+    const saved = localStorage.getItem('preferredPhysicsBackend');
+    if (params.physicsBackend && PHYSICS_BACKENDS.includes(params.physicsBackend)) {
+        physicsBackend = params.physicsBackend;
+    } else if (saved && PHYSICS_BACKENDS.includes(saved)) {
+        physicsBackend = /** @type {'ammo' | 'jolt'} */ (saved);
+    } else {
+        physicsBackend = 'ammo';
+    }
+}
+
+export { data, deviceType, physicsBackend, refreshContext, updateDeviceType, updatePhysicsBackend };

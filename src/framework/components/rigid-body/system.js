@@ -61,9 +61,10 @@ const _properties = [
  * and reports collisions.
  *
  * The system is only functional once a physics backend is installed: either by supplying
- * {@link AppOptions#physicsWorld} when creating the application, or automatically when the
- * application has loaded the Ammo.js {@link WasmModule}. Use a recent Ammo.js build: mesh
- * colliders only follow entity scale with a build that exposes `btScaledBvhTriangleMeshShape`.
+ * {@link AppOptions#physicsWorld} when creating the application, such as a
+ * {@link JoltPhysicsWorld}, or automatically when the application has loaded the Ammo.js
+ * {@link WasmModule}. Use a recent Ammo.js build: mesh colliders only follow entity scale with
+ * a build that exposes `btScaledBvhTriangleMeshShape`.
  *
  * Set {@link RigidBodyComponentSystem#timeScale} to slow the simulation down, speed it up or
  * pause it, for example while a pause menu is open, and call
@@ -106,10 +107,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
      * drive it from a custom time source.
      *
      * How slow motion below one fixed substep per frame looks depends on the backend: the Ammo
-     * backend interpolates body transforms between substeps so motion stays smooth, while other
-     * backends may only move bodies on the frames in which a substep runs. Fast forward is
-     * limited by the maximum number of substeps the simulation may take per frame, beyond which
-     * it runs slower than requested.
+     * and Jolt backends interpolate body transforms between substeps so motion stays smooth,
+     * while other backends may only move bodies on the frames in which a substep runs. Fast
+     * forward is limited by the maximum number of substeps the simulation may take per frame,
+     * beyond which it runs slower than requested.
      *
      * Forces applied with {@link RigidBodyComponent#applyForce} while paused accumulate on the
      * body and are applied together on the next step, because forces are only cleared when the
@@ -301,10 +302,11 @@ class RigidBodyComponentSystem extends ComponentSystem {
     }
 
     /**
-     * The physics backend's native world - a btDiscreteDynamicsWorld with the Ammo backend - or
-     * null if no backend is installed or it has no native world. Same as
-     * {@link PhysicsWorld#nativeWorld}. An unsupported escape hatch for native functionality the
-     * engine does not expose: code that uses it only works with that physics backend.
+     * The physics backend's native world - a btDiscreteDynamicsWorld with the Ammo backend or a
+     * PhysicsSystem with the Jolt backend - or null if no backend is installed or it has no
+     * native world. Same as {@link PhysicsWorld#nativeWorld}. An unsupported escape hatch for
+     * native functionality the engine does not expose: code that uses it only works with that
+     * physics backend.
      *
      * @type {*}
      * @ignore

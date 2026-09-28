@@ -21,8 +21,8 @@ class PhysicsBody {
     entity = null;
 
     /**
-     * The backend-native body object - btRigidBody when the Ammo backend is active, null
-     * otherwise. Surfaced by RigidBodyComponent#body.
+     * The backend-native body object - btRigidBody when the Ammo backend is active, Body when
+     * the Jolt backend is active, null otherwise. Surfaced by RigidBodyComponent#body.
      *
      * @type {object|null}
      */

@@ -144,6 +144,8 @@ export const stripConfig = (source) => {
  * @property {boolean} [HIDDEN] - The example is hidden from the sidebar list in production builds (`npm run build`). It is still built and reachable via its URL. In development (`npm run develop`) it is still shown in the sidebar.
  * @property {'development' | 'performance' | 'debug'} [ENGINE] - The engine type.
  * @property {boolean} [NO_DEVICE_SELECTOR] - No device selector.
+ * @property {boolean} [PHYSICS_SELECTOR] - Show the physics backend selector. The example reads
+ * the pick as `physicsBackend` from `examples/context`: 'ammo' (the default) or 'jolt'.
  * @property {boolean} [NO_MINISTATS] - No ministats.
  * @property {boolean} [WEBGPU_DISABLED] - If webgpu is disabled.
  * @property {boolean} [WEBGPU_BARE_DISABLED] - If webgpu bare is disabled.

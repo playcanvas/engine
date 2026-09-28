@@ -246,9 +246,10 @@ class CollisionComponent extends Component {
      * of the next physics step when that scale changes. Triangle mesh volumes share one set of
      * collision triangle data per mesh, so rescaling them is cheap; a
      * {@link CollisionComponent#convexHull} is rebuilt from the mesh vertices at the new scale.
-     * Sharing requires an Ammo.js build that exposes `btScaledBvhTriangleMeshShape`; with older
-     * builds, triangle mesh colliders sharing a mesh use the scale of the first one built and
-     * rescaling an entity at runtime does not affect its mesh collider.
+     * With the Ammo backend, sharing requires an Ammo.js build that exposes
+     * `btScaledBvhTriangleMeshShape`; with older builds, triangle mesh colliders sharing a mesh
+     * use the scale of the first one built and rescaling an entity at runtime does not affect
+     * its mesh collider.
      *
      * Defaults to "box".
      *
@@ -572,10 +573,10 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * The physics backend's collision shape - a btCollisionShape with the Ammo backend - or null
-     * if it has not been created. An unsupported escape hatch for native functionality the
-     * component does not expose: code that uses it only works with that physics backend. The
-     * setter is kept for compatibility and does not rebuild the body.
+     * The physics backend's collision shape - a btCollisionShape with the Ammo backend or a Shape
+     * with the Jolt backend - or null if it has not been created. An unsupported escape hatch
+     * for native functionality the component does not expose: code that uses it only works with
+     * that physics backend. The setter is kept for compatibility and does not rebuild the body.
      *
      * @type {*}
      * @ignore

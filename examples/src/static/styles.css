@@ -663,7 +663,8 @@ body {
     overflow: visible;
 }
 
-#controlPanel.desktop #deviceTypeSelectInput {
+#controlPanel.desktop #deviceTypeSelectInput,
+#controlPanel.desktop #physicsBackendSelectInput {
     flex-shrink: 0;
 }
 
@@ -944,18 +945,21 @@ body {
     box-shadow: none;
 }
 
-#deviceTypeSelectInput {
+#deviceTypeSelectInput,
+#physicsBackendSelectInput {
     flex: 0 0 32px;
     height: 32px;
     margin: 8px;
     min-width: 200px;
 }
 
-#deviceTypeSelectInput > .pcui-select-input-container-value {
+#deviceTypeSelectInput > .pcui-select-input-container-value,
+#physicsBackendSelectInput > .pcui-select-input-container-value {
     height: 32px;
 }
 
-#deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-value {
+#deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-value,
+#physicsBackendSelectInput > .pcui-select-input-container-value > .pcui-select-input-value {
     height: 32px;
     border-radius: 4px;
     display: flex;
@@ -963,7 +967,8 @@ body {
     align-items: center;
 }
 
-#deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-icon {
+#deviceTypeSelectInput > .pcui-select-input-container-value > .pcui-select-input-icon,
+#physicsBackendSelectInput > .pcui-select-input-container-value > .pcui-select-input-icon {
     top: 4px;
 }
 

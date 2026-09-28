@@ -1,4 +1,8 @@
+// @config
+// @flag PHYSICS_SELECTOR
+
 import {
+    AmmoPhysicsWorld,
     AnimClipHandler,
     AnimComponentSystem,
     AnimStateGraphHandler,
@@ -12,6 +16,7 @@ import {
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
+    JoltPhysicsWorld,
     Keyboard,
     LightComponentSystem,
     RESOLUTION_AUTO,
@@ -30,19 +35,29 @@ import {
     math
 } from 'playcanvas';
 
-import { deviceType } from 'examples/context';
+import { deviceType, physicsBackend } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
-WasmModule.setConfig('Ammo', {
-    glueUrl: './assets/wasm/ammo/ammo.wasm.js',
-    wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
-    fallbackUrl: './assets/wasm/ammo/ammo.js'
-});
-await new Promise((resolve) => {
-    WasmModule.getInstance('Ammo', () => resolve());
-});
+// Load the physics engine picked with the physics selector of the examples browser: Jolt
+// Physics for the JoltPhysicsWorld backend, or Ammo.js (Bullet) for the AmmoPhysicsWorld backend
+let physicsWorld;
+if (physicsBackend === 'jolt') {
+    const { default: initJolt } = await import('examples/assets/wasm/jolt/jolt-physics.wasm.js');
+    const Jolt = await initJolt({ locateFile: () => './assets/wasm/jolt/jolt-physics.wasm.wasm' });
+    physicsWorld = new JoltPhysicsWorld(Jolt);
+} else {
+    WasmModule.setConfig('Ammo', {
+        glueUrl: './assets/wasm/ammo/ammo.wasm.js',
+        wasmUrl: './assets/wasm/ammo/ammo.wasm.wasm',
+        fallbackUrl: './assets/wasm/ammo/ammo.js'
+    });
+    await new Promise((resolve) => {
+        WasmModule.getInstance('Ammo', () => resolve());
+    });
+    physicsWorld = new AmmoPhysicsWorld();
+}
 
 const assets = {
     model: new Asset('model', 'container', { url: './assets/models/bitmoji.glb' }),
@@ -64,6 +79,7 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
+createOptions.physicsWorld = physicsWorld;
 createOptions.keyboard = new Keyboard(document.body);
 
 createOptions.componentSystems = [

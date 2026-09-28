@@ -1,7 +1,9 @@
 import files from './files.mjs';
 import MiniStats from './ministats.mjs';
 import { fetchFile, importModule, clearImports, parseConfig, fire, win } from './runtime.mjs';
-import { data, deviceType as selectedDeviceType, refreshContext, updateDeviceType } from './state.mjs';
+import {
+    data, deviceType as selectedDeviceType, refreshContext, updateDeviceType, updatePhysicsBackend
+} from './state.mjs';
 import { blockZoom } from './zoom.mjs';
 
 /** @import { AppBase } from 'playcanvas' */
@@ -209,13 +211,15 @@ class ExampleLoader {
             ...parseConfig(files['example.mjs'])
         };
 
-        // update device type
+        // update device type and physics backend
         updateDeviceType(this._config);
+        updatePhysicsBackend();
 
         if (!this._started) {
             // just notify to clean UI, but not during hot-reload
             fire('exampleLoading', {
                 showDeviceSelector: !this._config.NO_DEVICE_SELECTOR,
+                showPhysicsSelector: !!this._config.PHYSICS_SELECTOR,
                 showMiniStats: !this._config.NO_MINISTATS
             });
         }
