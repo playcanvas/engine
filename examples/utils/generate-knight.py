@@ -1,16 +1,24 @@
 # Generates the knight of the render-to-image example, examples/assets/models/knight.glb: a
 # low-poly knight whose armor parts are built from primitives and hang on the bones of an
 # armature, with an Idle loop and an Attack. Each part moves rigidly with its bone, so the model
-# has no skin. Run it with Blender (made with 5.2):
+# has no skin.
 #
-#     blender --background --factory-startup --python examples/utils/generate-knight.py -- examples/assets/models/knight.glb
+# The Idle is motion capture from the examples' own Bitmoji assets. The Attack comes from
+# Quaternius's Universal Animation Library 2 (CC0): download its free Standard pack from
+# https://quaternius.itch.io/universal-animation-library-2, and give the generator the path of its
+# Unreal-Godot/UAL2_Standard.glb. Run it with Blender (made with 5.2):
+#
+#     blender --background --factory-startup --python examples/utils/generate-knight.py -- examples/assets/models/knight.glb <UAL2_Standard.glb>
 
+import json
 import math
+import os
+import struct
 import sys
 
 import bmesh
 import bpy
-from mathutils import Matrix, Vector
+from mathutils import Matrix, Quaternion, Vector
 
 FPS = 30
 
@@ -711,92 +719,214 @@ def apply_pose(rig, p):
         update()
 
 
-def record(rig, name, keys):
-    """Key each (frame, pose) of keys into an action, and push it onto an NLA track of the same
-    name, which the glTF exporter makes an animation of."""
+# -------------------------------------------------------------------------------------------------
+# Motion capture: the idle is the Bitmoji eager idle from the examples' assets, layered on the
+# knight's stance. Each of these bones turns in the world as its joint in the capture turns from
+# the capture's first frame, and the legs are solved to keep the feet planted
+
+MOCAP_IDLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'assets', 'animations', 'bitmoji',
+                          'idle-eager.glb')
+MOCAP_JOINTS = {
+    'Hips': 'C_spine0001_bind_JNT',
+    'Spine': 'C_spine0006_bind_JNT',
+    'Head': 'C_head0001_bind_JNT',
+    'UpperArm.R': 'R_armUpper0001_bind_JNT',
+    'Forearm.R': 'R_armLower0001_bind_JNT',
+    'Hand.R': 'R_hand0001_bind_JNT',
+    'UpperArm.L': 'L_armUpper0001_bind_JNT',
+    'Forearm.L': 'L_armLower0001_bind_JNT',
+    'Hand.L': 'L_hand0001_bind_JNT'
+}
+
+# glTF is Y up and faces +Z. Blender is Z up and the knight faces -Y
+GLTF_TO_BLENDER = Matrix(((1, 0, 0), (0, 0, -1), (0, 1, 0)))
+
+
+def read_glb(path):
+    with open(path, 'rb') as f:
+        data = f.read()
+    length = struct.unpack_from('<I', data, 12)[0]
+    return json.loads(data[20:20 + length]), data[20 + length + 8:]
+
+
+def read_accessor(gltf, binary, index):
+    """The floats of an accessor, as tuples for vectors."""
+    a = gltf['accessors'][index]
+    view = gltf['bufferViews'][a['bufferView']]
+    size = {'SCALAR': 1, 'VEC3': 3, 'VEC4': 4}[a['type']]
+    stride = view.get('byteStride', size * 4)
+    start = view.get('byteOffset', 0) + a.get('byteOffset', 0)
+    values = [struct.unpack_from('<%df' % size, binary, start + i * stride) for i in range(a['count'])]
+    return [v[0] for v in values] if size == 1 else values
+
+
+def sample(times, values, t, rotation):
+    """The value of a linear channel at time t."""
+    if t <= times[0]:
+        return values[0]
+    for i in range(1, len(times)):
+        if t <= times[i]:
+            k = (t - times[i - 1]) / (times[i] - times[i - 1])
+            a, b = values[i - 1], values[i]
+            if rotation:
+                qa, qb = Quaternion((a[3], a[0], a[1], a[2])), Quaternion((b[3], b[0], b[1], b[2]))
+                # slerp doesn't take the short way round by itself
+                if qa.dot(qb) < 0:
+                    qb.negate()
+                q = qa.slerp(qb, k)
+                return (q.x, q.y, q.z, q.w)
+            return tuple(x + (y - x) * k for x, y in zip(a, b))
+    return values[-1]
+
+
+def capture(path, joints, clips=None):
+    """For each frame, at FPS, of the clips in path, one after another (or of its first clip): the
+    world rotation of each of joints, and the world position of the first, in Blender's axes."""
+    gltf, binary = read_glb(path)
+    by_name = {a.get('name'): a for a in gltf['animations']}
+    frames = []
+    for animation in [by_name[c] for c in clips] if clips else gltf['animations'][:1]:
+        # a clip after the first starts where the one before it ended, so drop its first frame
+        frames += capture_clip(gltf, binary, animation, joints)[1 if frames else 0:]
+    return frames
+
+
+def capture_clip(gltf, binary, animation, joints):
+    nodes = gltf['nodes']
+    parent = {c: i for i, n in enumerate(nodes) for c in n.get('children', [])}
+    channels = {}
+    for ch in animation['channels']:
+        if ch['target']['path'] in ('translation', 'rotation'):
+            sampler = animation['samplers'][ch['sampler']]
+            channels[(ch['target']['node'], ch['target']['path'])] = (
+                read_accessor(gltf, binary, sampler['input']), read_accessor(gltf, binary, sampler['output']))
+    duration = max(times[-1] for times, _ in channels.values())
+    index = {n.get('name'): i for i, n in enumerate(nodes)}
+
+    def world(i, t, cache):
+        if i not in cache:
+            n = nodes[i]
+            tr, ro = channels.get((i, 'translation')), channels.get((i, 'rotation'))
+            p = sample(*tr, t, False) if tr else n.get('translation', (0, 0, 0))
+            q = sample(*ro, t, True) if ro else n.get('rotation', (0, 0, 0, 1))
+            local = Matrix.Translation(p) @ Quaternion((q[3], q[0], q[1], q[2])).to_matrix().to_4x4()
+            cache[i] = (world(parent[i], t, cache) if i in parent else Matrix.Identity(4)) @ local
+        return cache[i]
+
+    first = next(iter(joints))
+    frames = []
+    for f in range(int(round(duration * FPS)) + 1):
+        cache = {}
+        w = {bone: world(index[joint], f / FPS, cache) for bone, joint in joints.items()}
+        turns = {bone: GLTF_TO_BLENDER @ m.to_3x3().normalized() @ GLTF_TO_BLENDER.transposed()
+                 for bone, m in w.items()}
+        frames.append((turns, GLTF_TO_BLENDER @ w[first].translation))
+    return frames
+
+
+def solve_legs(rig, p):
+    """Solve the legs from where the hips are to the feet of pose p."""
+    bones = rig.pose.bones
+    for side in 'RL':
+        thigh, shin, foot = bones['Thigh.' + side], bones['Shin.' + side], bones['Foot.' + side]
+        hip = thigh.head.copy()
+        knee, ankle = two_bone(hip, ANKLE[side] + Vector(p['foot_' + side]), THIGH, SHIN, KNEE_POLE)
+        thigh.matrix = frame_matrix(hip, knee - hip, FORWARD)
+        update()
+        shin.matrix = frame_matrix(knee, ankle - knee, FORWARD)
+        update()
+        foot.matrix = frame_matrix(ankle, FORWARD, UP)
+        update()
+
+
+def apply_layered(rig, p, turns, hips_offset):
+    """Pose the rig as p, then turn each bone of turns in the world by its rotation, and move the
+    hips by hips_offset. Legs that turns doesn't move are solved to keep the feet planted."""
+    apply_pose(rig, p)
+    bones = rig.pose.bones
+    base = {name: bones[name].matrix.copy() for name in turns}
+    for name in BONE_NAMES:
+        if name not in turns:
+            continue
+        bone = bones[name]
+        m = (turns[name] @ base[name].to_3x3()).to_4x4()
+        m.translation = base[name].translation + hips_offset if name == 'Hips' else bone.head
+        bone.matrix = m
+        update()
+    if 'Thigh.R' not in turns:
+        solve_legs(rig, p)
+
+
+def key_rig(rig, frame, previous):
+    for bone in rig.pose.bones:
+        # keep each rotation in the same hemisphere as the last, so keys turn the short way
+        q = bone.rotation_quaternion.copy()
+        if bone.name in previous and previous[bone.name].dot(q) < 0:
+            q.negate()
+            bone.rotation_quaternion = q
+        previous[bone.name] = q
+        bone.keyframe_insert('location', frame=frame)
+        bone.keyframe_insert('rotation_quaternion', frame=frame)
+
+
+def facing(turn):
+    """How far a rotation turns the knight about the vertical, in radians."""
+    ahead = turn @ FORWARD
+    return math.atan2(ahead.x, -ahead.y)
+
+
+def record_mocap(rig, name, p, path, joints, hips_scale, clips=None, keep_turn=1.0):
+    """Key the capture of clips in path, layered on the pose p, into an action on an NLA track of
+    name. keep_turn is how much of the capture's turning about the vertical the knight follows: the
+    whole pose turns back by the rest, so the motion of its parts against each other stays."""
+    frames = capture(path, joints, clips)
+    first_turns, first_hips = frames[0]
     data = rig.animation_data or rig.animation_data_create()
     action = bpy.data.actions.new(name)
     data.action = action
     previous = {}
-    for frame, p in keys:
-        apply_pose(rig, p)
-        for bone in rig.pose.bones:
-            # keep each rotation in the same hemisphere as the last, so keys turn the short way
-            q = bone.rotation_quaternion.copy()
-            if bone.name in previous and previous[bone.name].dot(q) < 0:
-                q.negate()
-                bone.rotation_quaternion = q
-            previous[bone.name] = q
-            bone.keyframe_insert('location', frame=frame)
-            bone.keyframe_insert('rotation_quaternion', frame=frame)
+    for frame, (turns, hips) in enumerate(frames):
+        relative = {bone: turns[bone] @ first_turns[bone].transposed() for bone in joints}
+        back = Matrix.Rotation(-(1 - keep_turn) * facing(relative['Hips']), 3, 'Z')
+        relative = {bone: back @ turn for bone, turn in relative.items()}
+        apply_layered(rig, p, relative, back @ ((hips - first_hips) * hips_scale))
+        key_rig(rig, frame, previous)
     track = data.nla_tracks.new()
     track.name = name
-    track.strips.new(name, int(keys[0][0]), action)
+    track.strips.new(name, 0, action)
     data.action = None
     return action
 
 
-def pose(**changes):
-    return dict(BASE, **changes)
+# The attack is a sword slash and its recovery from Quaternius's Universal Animation Library 2
+# (CC0, https://quaternius.itch.io/universal-animation-library-2), whose UAL2_Standard.glb the
+# generator is given. Its legs move too, so the knight steps into the slash
+ATTACK_CLIPS = ['Sword_Regular_A', 'Sword_Regular_A_Rec']
+UAL2_JOINTS = {
+    'Hips': 'pelvis',
+    'Spine': 'spine_03',
+    'Head': 'Head',
+    'UpperArm.R': 'upperarm_r',
+    'Forearm.R': 'lowerarm_r',
+    'Hand.R': 'hand_r',
+    'UpperArm.L': 'upperarm_l',
+    'Forearm.L': 'lowerarm_l',
+    'Hand.L': 'hand_l',
+    'Thigh.R': 'thigh_r',
+    'Shin.R': 'calf_r',
+    'Foot.R': 'foot_r',
+    'Thigh.L': 'thigh_l',
+    'Shin.L': 'calf_l',
+    'Foot.L': 'foot_l'
+}
+UAL2_HIPS_HEIGHT = 0.917
 
 
-def idle_keys():
-    """Two seconds of breathing and looking around, which loop."""
-    keys = []
-    for frame in range(0, 61, 5):
-        t = 2 * math.pi * frame / 60
-        s = math.sin(t)
-        keys.append((frame, pose(
-            hips_dz=-0.006 * (1 - math.cos(t)) / 2,
-            spine=(-1.5 * s, 0, 0),
-            head=(1.5 * math.sin(2 * t), 5 * s, 0),
-            hand_R=tuple(Vector(BASE['hand_R']) + Vector((0, 0, 0.008 * s))),
-            blade_R=tuple(Vector(BASE['blade_R']) + Vector((0.03 * s, 0, 0))),
-            hand_L=tuple(Vector(BASE['hand_L']) + Vector((0, 0, 0.008 * s)))
-        )))
-    return keys
-
-
-# The blade turns about this axis during the swing, so its edge leads the way
-SWING_FLAT = (-0.11, -0.78, 0.62)
-
-
-def attack_keys():
-    """A wind-up over the right shoulder, a diagonal slash across the body with a step forward,
-    and a recovery to the first frame of the idle."""
-    wind_up = pose(
-        hips=(-4, -16, 0), hips_dz=-0.02, spine=(-8, -32, 0), head=(5, 32, 0),
-        hand_R=(-0.32, 0.12, 1.06), pole_R=(-0.8, -0.2, -0.6), blade_R=(0.3, 0.65, 0.7),
-        flat_R=SWING_FLAT, hand_L=(0.2, -0.22, 0.68), shield_L=(0.5, -1.0, 0.1), pole_L=(1, 0.4, -0.4)
-    )
-    strike = pose(
-        hips=(5, 12, 0), hips_dz=-0.05, spine=(10, 35, 0), head=(6, -30, 0),
-        hand_R=(0.06, -0.36, 0.52), pole_R=(-0.5, 0.3, -0.8), blade_R=(0.7, -0.5, -0.5), flat_R=SWING_FLAT,
-        hand_L=(0.34, 0.05, 0.62), shield_L=(1.0, -0.1, 0.0), foot_L=(0.02, -0.07, 0)
-    )
-    return [
-        (0, pose()),
-        (7, wind_up),
-        (10, dict(wind_up, hand_R=(-0.33, 0.12, 1.05), spine=(-6, -34, 0))),
-        (13, pose(
-            hips=(2, 0, 0), hips_dz=-0.03, spine=(4, 5, 0), head=(2, 5, 0),
-            hand_R=(-0.12, -0.36, 0.86), pole_R=(-0.8, 0.1, -0.6), blade_R=(0.8, -0.3, 0.5),
-            flat_R=SWING_FLAT, hand_L=(0.3, -0.05, 0.64), shield_L=(0.8, -0.6, 0.0), foot_L=(0.01, -0.04, 0)
-        )),
-        (16, strike),
-        (20, dict(strike, spine=(12, 40, 0), hand_R=(0.1, -0.33, 0.47), blade_R=(0.75, -0.45, -0.5))),
-        (28, pose(
-            hips=(2, 6, 0), hips_dz=-0.02, spine=(4, 15, 0), head=(2, -8, 0),
-            hand_R=(-0.15, -0.28, 0.55), blade_R=(0.25, -0.5, 0.8), flat_R=(0.05, -0.95, 0.3),
-            foot_L=(0.01, -0.03, 0)
-        )),
-        (40, pose())
-    ]
-
-
-def animate(rig):
-    record(rig, 'Idle', idle_keys())
-    record(rig, 'Attack', attack_keys())
+def animate(rig, ual2):
+    record_mocap(rig, 'Idle', BASE, MOCAP_IDLE, MOCAP_JOINTS, HIPS[0].z / 0.58)
+    # the slash turns the body far round, so the knight follows a third of that, and stays facing
+    # the portrait camera
+    record_mocap(rig, 'Attack', BASE, ual2, UAL2_JOINTS, HIPS[0].z / UAL2_HIPS_HEIGHT, ATTACK_CLIPS, 0.35)
     apply_pose(rig, BASE)
 
 
@@ -829,13 +959,16 @@ def export(path):
     bpy.ops.export_scene.gltf(**{k: v for k, v in options.items() if k in known})
 
 
-def main(out=None):
+def main(ual2, out=None):
     rig, _ = build()
-    animate(rig)
+    animate(rig, ual2)
     if out:
         export(out)
     return rig
 
 
 if __name__ == '__main__':
-    main(sys.argv[sys.argv.index('--') + 1] if '--' in sys.argv else None)
+    args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
+    if len(args) != 2:
+        sys.exit('usage: blender --background --factory-startup --python generate-knight.py -- <out.glb> <UAL2_Standard.glb>')
+    main(args[1], args[0])
