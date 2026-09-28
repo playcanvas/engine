@@ -440,12 +440,12 @@ class GSplatParams {
 
     /**
      * Sets how the camera distance to each part of a streamed GSplat is judged when choosing its
-     * level of detail. At 0, a part counts as near as soon as any of it is near, so large or
-     * sparse areas that reach towards the camera - sky, distant background, long thin regions -
-     * can get more detail than their surroundings and show up as patches of higher detail. Higher
-     * values judge each part closer to its middle instead, which removes those patches and lowers
-     * memory use, at the cost of slightly less detail right next to the camera. Use 1 when
-     * memory matters more than detail close up, for example on mobile - it gives the lowest
+     * level of detail. At 0, a part counts as near as soon as any of it is near, so unusually
+     * large or sparse areas that reach towards the camera - sky, distant background, long thin
+     * regions - can get more detail than their surroundings and show up as patches of higher
+     * detail. Higher values judge those oversized parts closer to their middle instead, which
+     * removes the patches and lowers memory use; parts of typical size are unaffected. Use 1
+     * when memory matters more than detail close up, for example on mobile - it gives the lowest
      * memory use. Clamped to [0, 1]. Defaults to 0.75.
      *
      * @type {number}
