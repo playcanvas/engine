@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
+import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
@@ -578,6 +579,11 @@ class ShadowRenderer {
         let prevMaterial = null;
         let prevMeshInstance = null;
 
+        // the casters set no normal matrix - the shadow pass of normalCoreVS derives it from the model
+        // matrix - so a shader declaring the uniform itself reads the identity, not the normal matrix
+        // of whichever mesh was rendered last
+        renderer.normalMatrixId.setValue(Mat3.IDENTITY.data);
+
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -660,6 +666,20 @@ class ShadowRenderer {
             const style = meshInstance.renderStyle;
             const indirectData = meshInstance.getDrawCommands(camera);
             device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
+
+            // warn about a shader reading the normal matrix, which is the identity here (see above), once
+            // that is known - after the draw, which links it on WebGL
+            Debug.call(() => {
+                if (!shadowShader._debugNormalMatrixChecked) {
+                    const readsNormalMatrix = shadowShader.debugReadsUniform('matrix_normal');
+                    if (readsNormalMatrix !== null) {
+                        shadowShader._debugNormalMatrixChecked = true;
+                    }
+                    if (readsNormalMatrix) {
+                        Debug.warnOnce(`Shader [${shadowShader.label}] reads matrix_normal in the shadow pass, where it is the identity. Use getNormalMatrix() of normalCoreVS, which derives it from the model matrix in the shadow pass.`);
+                    }
+                }
+            });
 
             renderer._shadowDrawCalls++;
             if (instancingData) {
