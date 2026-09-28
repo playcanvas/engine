@@ -332,6 +332,11 @@ class OutlineRenderer {
                         opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
                         opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
                         opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
+
+                        // the outline color replaces the lit output, so skip the lighting. The option
+                        // defaults to true, and the clustered lighting chunks do not exist unless the
+                        // scene has clustered lighting enabled.
+                        opts.litOptions.clusteredLightingEnabled = false;
                         return opts;
                     }
 
