@@ -27,6 +27,10 @@ const OPPOSITE_AXIS = {
 /**
  * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
  *
+ * Relevant Engine API examples:
+ *
+ * - [Drag and drop](https://playcanvas.github.io/#/user-interface/drag-and-drop)
+ *
  * @category User Interface
  */
 class ElementDragHelper extends EventHandler {

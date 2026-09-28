@@ -6,6 +6,31 @@ import { ORIENTATION_HORIZONTAL, ORIENTATION_VERTICAL } from '../../../../src/sc
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
+// A slider: a scrollbar on a track 280 long and 20 across, its handle a quarter of the track
+function createSlider(orientation, trackOptions = {}) {
+    const horizontal = orientation === ORIENTATION_HORIZONTAL;
+
+    // the handle spans the track's width or height, as in the scroll view example
+    const handle = new Entity('handle');
+    handle.addComponent('element', {
+        type: ELEMENTTYPE_IMAGE,
+        anchor: horizontal ? [0, 0, 0, 1] : [0, 1, 1, 1],
+        pivot: horizontal ? [0, 0] : [1, 1]
+    });
+
+    const track = new Entity('track');
+    track.addChild(handle);
+    track.addComponent('element', {
+        type: ELEMENTTYPE_IMAGE,
+        width: horizontal ? 280 : 20,
+        height: horizontal ? 20 : 280,
+        ...trackOptions
+    });
+    track.addComponent('scrollbar', { orientation, handleEntity: handle, handleSize: 0.25 });
+
+    return { track, handle };
+}
+
 describe('ScrollbarComponent', function () {
     let app;
 
@@ -267,6 +292,154 @@ describe('ScrollbarComponent', function () {
             expect(e.scrollbar.handleEntity).to.equal(handle2);
             expect(handle1.hasEvent('element:add')).to.equal(false);
             expect(handle2.hasEvent('element:add')).to.equal(true);
+        });
+
+    });
+
+    describe('track resize', function () {
+
+        // the handle is a quarter of the track, at 0.8 of the rest of the track: 70 long at 168
+        // on a track 280 long, and 45 long at 108 once the track is 180 long
+
+        it('fits a horizontal handle to the new track width', function () {
+            const { track, handle } = createSlider(ORIENTATION_HORIZONTAL);
+            track.scrollbar.value = 0.8;
+
+            expect(handle.getLocalPosition().x).to.be.closeTo(168, 1e-4);
+            expect(handle.element.width).to.be.closeTo(70, 1e-4);
+
+            track.element.width = 180;
+
+            expect(handle.getLocalPosition().x).to.be.closeTo(108, 1e-4);
+            expect(handle.element.width).to.be.closeTo(45, 1e-4);
+        });
+
+        it('fits a vertical handle to the new track height', function () {
+            const { track, handle } = createSlider(ORIENTATION_VERTICAL);
+            track.scrollbar.value = 0.8;
+
+            expect(handle.getLocalPosition().y).to.be.closeTo(-168, 1e-4);
+            expect(handle.element.height).to.be.closeTo(70, 1e-4);
+
+            track.element.height = 180;
+
+            expect(handle.getLocalPosition().y).to.be.closeTo(-108, 1e-4);
+            expect(handle.element.height).to.be.closeTo(45, 1e-4);
+        });
+
+        it('fits the handle to a track stretched across a parent that is resized', function () {
+            const screen = new Entity('screen');
+            screen.addComponent('screen', { screenSpace: true });
+            app.root.addChild(screen);
+
+            const panel = new Entity('panel');
+            panel.addComponent('element', { type: ELEMENTTYPE_IMAGE, width: 320, height: 60 });
+            screen.addChild(panel);
+
+            // split anchors stretch the track across the panel, 20 in from each side, so the
+            // track only gets its length once the hierarchy syncs
+            const { track, handle } = createSlider(ORIENTATION_HORIZONTAL, {
+                anchor: [0, 0.5, 1, 0.5],
+                margin: [20, -10, 20, -10]
+            });
+            track.scrollbar.value = 0.8;
+            panel.addChild(track);
+            app.root.syncHierarchy();
+
+            expect(track.element.calculatedWidth).to.be.closeTo(280, 1e-4);
+            expect(handle.getLocalPosition().x).to.be.closeTo(168, 1e-4);
+            expect(handle.element.width).to.be.closeTo(70, 1e-4);
+
+            panel.element.width = 220;
+            app.root.syncHierarchy();
+
+            expect(track.element.calculatedWidth).to.be.closeTo(180, 1e-4);
+            expect(handle.getLocalPosition().x).to.be.closeTo(108, 1e-4);
+            expect(handle.element.width).to.be.closeTo(45, 1e-4);
+        });
+
+        it('fits the handle to a track element added after the scrollbar', function () {
+            const handle = new Entity('handle');
+            handle.addComponent('element', {
+                type: ELEMENTTYPE_IMAGE,
+                anchor: [0, 0, 0, 1],
+                pivot: [0, 0]
+            });
+
+            const track = new Entity('track');
+            track.addChild(handle);
+            track.addComponent('scrollbar', { handleEntity: handle, handleSize: 0.25, value: 0.8 });
+            track.addComponent('element', { type: ELEMENTTYPE_IMAGE, width: 280, height: 20 });
+
+            expect(handle.getLocalPosition().x).to.be.closeTo(168, 1e-4);
+            expect(handle.element.width).to.be.closeTo(70, 1e-4);
+
+            track.element.width = 180;
+
+            expect(handle.getLocalPosition().x).to.be.closeTo(108, 1e-4);
+            expect(handle.element.width).to.be.closeTo(45, 1e-4);
+        });
+
+        it('fits the handle to a track element that replaces a removed one', function () {
+            const { track, handle } = createSlider(ORIENTATION_HORIZONTAL);
+            track.scrollbar.value = 0.8;
+
+            track.removeComponent('element');
+            track.addComponent('element', { type: ELEMENTTYPE_IMAGE, width: 280, height: 20 });
+            track.element.width = 180;
+
+            expect(handle.getLocalPosition().x).to.be.closeTo(108, 1e-4);
+            expect(handle.element.width).to.be.closeTo(45, 1e-4);
+        });
+
+        it('fits the handle to the track while the scrollbar is disabled', function () {
+            const { track, handle } = createSlider(ORIENTATION_HORIZONTAL);
+            app.root.addChild(track);
+            track.scrollbar.value = 0.8;
+
+            // a disabled slider can't be dragged, but it is still shown
+            track.scrollbar.enabled = false;
+            track.element.width = 180;
+
+            expect(handle.getLocalPosition().x).to.be.closeTo(108, 1e-4);
+            expect(handle.element.width).to.be.closeTo(45, 1e-4);
+        });
+
+    });
+
+    describe('removeComponent', function () {
+
+        it('stops fitting the handle to the track', function () {
+            const { track, handle } = createSlider(ORIENTATION_HORIZONTAL);
+            track.scrollbar.value = 0.8;
+
+            track.removeComponent('scrollbar');
+
+            expect(track.hasEvent('element:add')).to.equal(false);
+            expect(track.element.hasEvent('beforeremove')).to.equal(false);
+
+            track.element.width = 180;
+
+            expect(handle.getLocalPosition().x).to.be.closeTo(168, 1e-4);
+            expect(handle.element.width).to.be.closeTo(70, 1e-4);
+        });
+
+        it('stops laying out the handle', function () {
+            const { track, handle } = createSlider(ORIENTATION_HORIZONTAL);
+            track.scrollbar.value = 0.8;
+
+            track.removeComponent('scrollbar');
+
+            expect(handle.hasEvent('element:add')).to.equal(false);
+            expect(handle.element.hasEvent('beforeremove')).to.equal(false);
+            expect(handle.element.hasEvent('set:anchor')).to.equal(false);
+            expect(handle.element.hasEvent('set:margin')).to.equal(false);
+
+            // a listener left behind would size the handle for the removed scrollbar again
+            handle.element.width = 10;
+            handle.element.pivot = [0.5, 0.5];
+
+            expect(handle.element.width).to.equal(10);
         });
 
     });

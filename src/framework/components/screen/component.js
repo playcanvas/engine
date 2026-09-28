@@ -47,7 +47,7 @@ const _transform = new Mat4();
  *
  * Relevant Engine API examples:
  *
- * - [Screen Space Screen](https://playcanvas.github.io/#/user-interface/text)
+ * - [Screen Space Screen](https://playcanvas.github.io/#/user-interface/screen-scaling)
  * - [World Space Screen](https://playcanvas.github.io/#/user-interface/world-ui)
  *
  * @hideconstructor

@@ -1664,6 +1664,9 @@ class TextElement {
                     mesh.primitive[0].base = start * 3 * 2;
                     mesh.primitive[0].count = (end - start) * 3 * 2;
                 }
+
+                // a texture page with no characters in the range would draw 0 indices, so skip it
+                instance.visible = end > start;
             }
         }
     }

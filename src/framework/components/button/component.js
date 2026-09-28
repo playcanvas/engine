@@ -73,8 +73,8 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  *
  * Relevant Engine API examples:
  *
- * - [Basic Button](https://playcanvas.github.io/#/user-interface/button-basic)
- * - [Sprite Button](https://playcanvas.github.io/#/user-interface/button-sprite)
+ * - [Buttons](https://playcanvas.github.io/#/user-interface/buttons)
+ * - [Toggles and radio groups](https://playcanvas.github.io/#/user-interface/common-widgets)
  *
  * @hideconstructor
  * @category User Interface

@@ -8,6 +8,7 @@ import { BoundingBox } from '../../../../src/core/shape/bounding-box.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { CanvasFont } from '../../../../src/framework/font/canvas-font.js';
+import { Font } from '../../../../src/framework/font/font.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
@@ -2263,6 +2264,47 @@ describe('TextElement', function () {
         const normals = [];
         mesh.getNormals(normals);
         expect(normals).to.deep.equal([].concat(...Array(12).fill([0, 0, -1])));
+    });
+
+    it('does not draw text with an empty render range', function () {
+        element.fontAsset = fontAsset;
+        element.text = 'abc';
+        const meshInstance = element._text._meshInfo[0].meshInstance;
+
+        element.rangeEnd = 0;
+        expect(meshInstance.visible).to.equal(false);
+
+        element.rangeEnd = 3;
+        expect(meshInstance.visible).to.equal(true);
+
+        element.rangeStart = 1;
+        element.rangeEnd = 1;
+        expect(meshInstance.visible).to.equal(false);
+
+        // new text of the same length reuses the mesh and resets the range to the whole text
+        element.text = 'xyz';
+        expect(element._text._meshInfo[0].meshInstance).to.equal(meshInstance);
+        expect(meshInstance.visible).to.equal(true);
+    });
+
+    it('does not draw the texture pages with no characters in the render range', function () {
+        // the test font with 'b' moved to a second texture page
+        const data = structuredClone(fontAsset.resource.data);
+        data.info.maps.push({ ...data.info.maps[0] });
+        data.chars.b.map = 1;
+        const texture = fontAsset.resource.textures[0];
+        element.font = new Font([texture, texture], data);
+        element.text = 'ab';
+        const [pageA, pageB] = element._text._meshInfo.map(info => info.meshInstance);
+
+        element.rangeEnd = 1;
+        expect(pageA.visible).to.equal(true);
+        expect(pageB.visible).to.equal(false);
+
+        element.rangeStart = 1;
+        element.rangeEnd = 2;
+        expect(pageA.visible).to.equal(false);
+        expect(pageB.visible).to.equal(true);
     });
 
 });
