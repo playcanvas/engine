@@ -3,12 +3,6 @@
 // A character card with a live 3D portrait. A second camera renders the character, on a layer of
 // its own, into a **render target**, and an image element shows its texture, behind the card's
 // text and buttons like any other image. Press Attack to see the portrait move.
-//
-// @credit
-// title: Sword attack, from the Universal Animation Library 2
-// author: Quaternius
-// source: https://quaternius.itch.io/universal-animation-library-2
-// license: CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/)
 
 import {
     AnimComponentSystem,
