@@ -607,13 +607,21 @@ class Layer {
         const destMeshInstances = this.meshInstances;
         const destMeshInstancesSet = this.meshInstancesSet;
 
+        // the set is shared by all layers, so drop anything a previous call that threw left behind
+        _tempMaterials.clear();
+
         // add mesh instances to the layer's array and the set
         for (let i = 0; i < meshInstances.length; i++) {
             const mi = meshInstances[i];
             if (!destMeshInstancesSet.has(mi)) {
                 destMeshInstances.push(mi);
                 destMeshInstancesSet.add(mi);
-                _tempMaterials.add(mi.material);
+
+                // a mesh instance without a material is allowed, it renders with the default one
+                const mat = mi.material;
+                if (mat) {
+                    _tempMaterials.add(mat);
+                }
             }
         }
 
