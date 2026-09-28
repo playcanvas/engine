@@ -347,6 +347,10 @@ class ElementSelectEvent extends ElementInputEvent {
  * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
  * ElementComponent this fires the appropriate events on the ElementComponent.
  *
+ * Relevant Engine API examples:
+ *
+ * - [Input events](https://playcanvas.github.io/#/user-interface/input-events)
+ *
  * @category User Interface
  */
 class ElementInput {

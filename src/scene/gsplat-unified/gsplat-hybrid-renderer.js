@@ -425,11 +425,9 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @returns {MeshInstance|null} The pick mesh instance, or null if nothing was dispatched.
      */
     preparePickingView(world, worldState, pickParams) {
-        // pickMode writes pcId into the cache only when the work buffer actually carries that stream.
-        const pickMode = !!world.workBuffer.format.getStream('pcId');
         const sortedIndices = this.sortAndProjectForCamera(
             world, worldState, pickParams.cameraNode, pickParams.width, pickParams.height,
-            Math.max(ALPHA_VISIBILITY_THRESHOLD, pickParams.alphaClip), pickMode, false, pickParams
+            Math.max(ALPHA_VISIBILITY_THRESHOLD, pickParams.alphaClip), true, false, pickParams
         );
         if (!sortedIndices) return null;
 
@@ -455,17 +453,20 @@ class GSplatHybridRenderer extends GSplatRenderer {
      * @param {number} viewportWidth - Projection viewport width in pixels.
      * @param {number} viewportHeight - Projection viewport height in pixels.
      * @param {number} alphaClip - Projector producer alpha threshold.
-     * @param {boolean} pickMode - Whether the projector writes pcId into the cache.
+     * @param {boolean} isPicking - Whether this is a picking pass, including picks without per-splat IDs.
      * @param {boolean} isStereo - Whether to project both XR eyes in one pass (forward only).
      * @param {GSplatRenderViewParams} params - Per-call gsplat params.
      * @returns {StorageBuffer|null} The sorted cache indices, or null if no work was dispatched.
      * @private
      */
-    sortAndProjectForCamera(world, worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, pickMode, isStereo, params) {
+    sortAndProjectForCamera(world, worldState, cameraNode, viewportWidth, viewportHeight, alphaClip, isPicking, isStereo, params) {
         const elementCount = worldState.totalActiveSplats;
         if (elementCount === 0) return null;
 
-        const stochastic = !!params.stochastic && !pickMode;
+        // Depth / opacity picking still needs sorting and the pre-sort submission below, even
+        // when the work buffer has no per-splat IDs for the projector's PICK_MODE shader variant.
+        const pickMode = isPicking && !!world.workBuffer.format.getStream('pcId');
+        const stochastic = !!params.stochastic && !isPicking;
         this._ensureGpuPipeline(!stochastic);
         const gpuSorter = /** @type {ComputeRadixSort} */ (this.gpuSorter);
         const projector = /** @type {GSplatProjector} */ (this.projector);
@@ -540,10 +541,10 @@ class GSplatHybridRenderer extends GSplatRenderer {
         // runs with the previous frame's (larger) workgroup counts, and OneSweep's chained
         // lookback spins forever on partitions that never publish, hanging the device
         // (DXGI_ERROR_DEVICE_HUNG). Submitting pending work here places the args writes and the
-        // sort dispatches in separate submissions, which reliably avoids the stale read. Scoped
-        // to picking: the per-frame forward path has never exhibited the issue, and this keeps
-        // its work in a single submission.
-        if (pickMode) {
+        // sort dispatches in separate submissions, which reliably avoids the stale read. Apply
+        // this to all picking passes, including depth / opacity picks without a pcId stream.
+        // Forward rendering keeps its work in a single submission.
+        if (isPicking) {
             this.device.submit();
         }
 
