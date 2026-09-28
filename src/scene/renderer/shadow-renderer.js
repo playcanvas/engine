@@ -7,7 +7,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import {
     SEMANTIC_POSITION,
-    UNIFORMTYPE_MAT4
+    UNIFORMTYPE_FLOAT, UNIFORMTYPE_MAT4, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
@@ -134,6 +134,9 @@ class ShadowRenderer {
 
         // uniforms
         this.shadowMapLightRadiusId = scope.resolve('light_radius');
+
+        // part of the view uniform buffer of every shadow face, and set only for local lights
+        this.shadowMapLightRadiusId.setValue(0);
 
         // format of the view uniform buffer
         this.viewUniformFormat = null;
@@ -861,9 +864,17 @@ class ShadowRenderer {
         // view uniforms always go through a uniform buffer (on all backends)
         if (!this.viewUniformFormat) {
 
-            // format of the view uniform buffer
+            // format of the view uniform buffer - the uniforms constant for a shadow face, so that
+            // none of them is uploaded per caster: the camera params and the blue noise jitter of the
+            // shadow camera, the position and the range of a local light, which dispatchUniforms sets
+            // per face, and the texture bias
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('camera_params', UNIFORMTYPE_VEC4),
+                new UniformFormat('blueNoiseJitter', UNIFORMTYPE_VEC4),
+                new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('light_radius', UNIFORMTYPE_FLOAT),
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
             ], { pack: true });
         }
     }
