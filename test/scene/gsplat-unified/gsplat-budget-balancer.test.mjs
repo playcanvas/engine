@@ -3,40 +3,23 @@ import { expect } from 'chai';
 import { GSplatBudgetBalancer } from '../../../src/scene/gsplat-unified/gsplat-budget-balancer.js';
 import { GSplatLodTable } from '../../../src/scene/gsplat-unified/gsplat-lod-table.js';
 
-// Minimal stand-ins for the pieces the balancer touches: an octree exposing nodes and a table
-// cache, and an instance exposing nodeInfos, its resolved LOD range and its placement's falloff.
-const makeInstance = (nodes, coverage, rangeMin = 0, rangeMax = nodes[0].lods.length - 1, lodFalloff = 1) => {
-    const tables = new Map();
-    const octree = {
-        nodes: nodes.map(node => ({ lods: node.lods })),
-        acquireLodTable(min, max) {
-            const key = min * 256 + max;
-            if (!tables.has(key)) tables.set(key, new GSplatLodTable(this, min, max));
-            const table = tables.get(key);
-            table.refCount++;
-            return table;
-        }
-    };
+// Minimal stand-ins for the pieces the balancer touches: an octree exposing its nodes, and an
+// instance exposing nodeInfos, its resolved LOD range, its table and its placement's distances.
+const makeInstance = (nodes, distances, { rangeMin = 0, rangeMax = nodes[0].lods.length - 1, lodBaseDistance = 5, lodMultiplier = 3 } = {}) => {
+    const octree = { nodes: nodes.map(node => ({ lods: node.lods })) };
     return {
         octree,
-        placement: { lodFalloff },
-        nodeInfos: nodes.map((_, i) => ({ optimalLod: -1, lodCoverage: coverage?.[i] ?? 1 })),
+        placement: { lodBaseDistance, lodMultiplier },
+        nodeInfos: nodes.map((_, i) => ({ optimalLod: -1, worldDistanceSq: distances[i] * distances[i] })),
         rangeMin,
         rangeMax,
-        // resolveLodRange() supplies this in the engine; the balancer reads it rather than
-        // resolving the range itself
-        lodTable: octree.acquireLodTable(rangeMin, rangeMax)
+        lodTable: new GSplatLodTable(octree, rangeMin, rangeMax)
     };
 };
 
-const singleWithFalloff = (nodes, coverage, lodFalloff) => {
-    const inst = makeInstance(nodes, coverage, 0, nodes[0].lods.length - 1, lodFalloff);
-    return { inst, instances: new Map([[{}, inst]]) };
-};
-
-const single = (nodes, coverage, rangeMin, rangeMax) => {
-    const inst = makeInstance(nodes, coverage, rangeMin, rangeMax);
-    return { inst, instances: new Map([[{}, inst]]) };
+const run = (instances, budget, limit) => {
+    const map = new Map(instances.map(inst => [{}, inst]));
+    new GSplatBudgetBalancer().balance(map, budget, limit);
 };
 
 const lodsOf = inst => inst.nodeInfos.map(info => info.optimalLod);
@@ -50,364 +33,179 @@ const splatsOf = (inst) => {
     return total;
 };
 
-// Exact greedy over the same chains, used as an oracle: a max-heap keyed on the true
-// coverage-weighted ratio rather than a bucketed approximation of it. Same early exit.
-const exactGreedy = (inst, budget) => {
-    const table = inst.lodTable;
-    const chosen = [];
-    const heap = [];
-    let spent = 0;
+// A node whose levels each hold a fixed fraction of the finer one.
+const decimated = (levels, finest = 1000, ratio = 0.5) => ({
+    lods: Array.from({ length: levels }, (_, i) => ({ count: Math.round(finest * ratio ** i), fileIndex: i }))
+});
 
-    for (let n = 0; n < inst.nodeInfos.length; n++) {
-        chosen.push(table.startLod[n]);
-        if (table.startLod[n] < 0) continue;
-        spent += table.startCount[n];
-        const k = table.firstUpgrade[n];
-        if (k < table.firstUpgrade[n + 1]) {
-            heap.push({ n, k, value: inst.nodeInfos[n].lodCoverage * table.upgradeRatio[k] });
-        }
-    }
-
-    for (;;) {
-        if (heap.length === 0) break;
-        heap.sort((a, b) => b.value - a.value);
-        const top = heap.shift();
-        const cost = table.upgradeCost[top.k];
-        if (spent + cost > budget) break;
-        spent += cost;
-        chosen[top.n] = table.upgradeToLod[top.k];
-        const k2 = top.k + 1;
-        if (k2 < table.firstUpgrade[top.n + 1]) {
-            heap.push({ n: top.n, k: k2, value: inst.nodeInfos[top.n].lodCoverage * table.upgradeRatio[k2] });
-        }
-    }
-    return { lods: chosen, spent };
+// The 2.21 distance bands: level k from `base * multiplier^(k - 1)` on, clamped to the range.
+const bandOf = (d, base, multiplier, rangeMin, rangeMax) => {
+    const lod = d < base ? 0 : Math.floor(1 + Math.log(d / base) / Math.log(multiplier));
+    return Math.min(Math.max(lod, rangeMin), rangeMax);
 };
 
-const residual = (inst, lods) => {
-    let total = 0;
-    for (let i = 0; i < lods.length; i++) {
-        if (lods[i] >= 0) total += inst.octree.nodes[i].lods[lods[i]].error;
-    }
-    return total;
-};
-
-// Deterministic pseudo-random scene, shaped like a real capture: counts roughly halve per level,
-// errors grow unevenly, coverage spans orders of magnitude.
-const makeScene = (nodeCount, levels, seed = 1) => {
-    let s = seed >>> 0;
-    const rnd = () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296);
-    const nodes = [];
-    const coverage = [];
-    for (let n = 0; n < nodeCount; n++) {
-        const lods = [];
-        let count = 40 + Math.floor(rnd() * 200);
-        let error = 0;
-        lods.push({ count, error });
-        for (let l = 1; l < levels; l++) {
-            count = Math.max(1, Math.floor(count * (0.42 + rnd() * 0.12)));
-            error += 0.3 + rnd() * 2.2;
-            lods.push({ count, error });
-        }
-        nodes.push({ lods });
-        const d = 2 + 5000 * Math.cbrt(rnd());
-        const r = 3 + rnd() * 12;
-        const pr = r / (r + d);
-        coverage.push(pr * pr);
-    }
-    return { nodes, coverage };
+// Deterministic pseudo random distances.
+const distancesFor = (count, near, far, seed = 1) => {
+    let s = seed;
+    return Array.from({ length: count }, () => {
+        s = (s * 16807) % 2147483647;
+        return near * (far / near) ** (s / 2147483647);
+    });
 };
 
 describe('GSplatBudgetBalancer', function () {
 
-    it('puts every node at its finest level when the whole scene fits', function () {
-        const { inst, instances } = single([
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] },
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] }
-        ]);
+    describe('limit mode', function () {
 
-        new GSplatBudgetBalancer().balance(instances, 100);
+        it('reproduces the configured distance bands exactly when the budget does not bind', function () {
+            for (const [base, multiplier] of [[5, 3], [0.5, 2], [40, 1.2], [3, 10]]) {
+                const distances = distancesFor(500, 0.01, 1e5, base * 7);
+                const inst = makeInstance(distances.map(() => decimated(6)), distances, { lodBaseDistance: base, lodMultiplier: multiplier });
+                run([inst], Infinity, true);
+                expect(lodsOf(inst)).to.deep.equal(distances.map(d => bandOf(d, base, multiplier, 0, 5)));
+            }
+        });
 
-        expect(lodsOf(inst)).to.deep.equal([0, 0]);
+        it('clamps the bands to the LOD range', function () {
+            const distances = [0.1, 6, 20, 80, 1e6];
+            const inst = makeInstance(distances.map(() => decimated(6)), distances, { rangeMin: 1, rangeMax: 3 });
+            run([inst], Infinity, true);
+            expect(lodsOf(inst)).to.deep.equal([1, 1, 2, 3, 3]);
+        });
+
+        it('uses only what the distances call for when the camera is far away', function () {
+            const distances = distancesFor(200, 1e4, 2e4);
+            const inst = makeInstance(distances.map(() => decimated(4)), distances);
+            run([inst], 1e9, true);
+            expect(lodsOf(inst).every(lod => lod === 3)).to.equal(true);
+            expect(splatsOf(inst)).to.equal(200 * 125);
+        });
+
+        it('only ever coarsens the distance bands to fit the budget', function () {
+            const distances = distancesFor(300, 0.5, 200);
+            const nodes = distances.map(() => decimated(5));
+            const unlimited = makeInstance(nodes, distances);
+            run([unlimited], Infinity, true);
+
+            const budget = Math.round(splatsOf(unlimited) * 0.6);
+            const limited = makeInstance(nodes, distances);
+            run([limited], budget, true);
+
+            expect(splatsOf(limited)).to.be.at.most(budget);
+            expect(splatsOf(limited)).to.be.above(budget * 0.95);
+            limited.nodeInfos.forEach((info, i) => {
+                expect(info.optimalLod).to.be.at.least(unlimited.nodeInfos[i].optimalLod);
+            });
+        });
+
+        it('never raises detail above the distance bands, however large the budget', function () {
+            const distances = distancesFor(100, 1, 1000);
+            const inst = makeInstance(distances.map(() => decimated(5)), distances);
+            run([inst], 1e12, true);
+            expect(lodsOf(inst)).to.deep.equal(distances.map(d => bandOf(d, 5, 3, 0, 4)));
+        });
     });
 
-    it('floors every node when even the cheapest scene is over budget', function () {
-        const { inst, instances } = single([
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] },
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] }
-        ]);
+    describe('target mode', function () {
 
-        new GSplatBudgetBalancer().balance(instances, 4);
+        it('puts everything at its finest when the whole scene fits', function () {
+            const distances = distancesFor(50, 100, 1e5);
+            const inst = makeInstance(distances.map(() => decimated(4)), distances);
+            run([inst], 1e9, false);
+            expect(lodsOf(inst).every(lod => lod === 0)).to.equal(true);
+        });
 
-        expect(lodsOf(inst)).to.deep.equal([1, 1]);
-    });
+        it('puts everything at its coarsest when not even that fits', function () {
+            const distances = distancesFor(50, 1, 10);
+            const inst = makeInstance(distances.map(() => decimated(4)), distances);
+            run([inst], 10, false);
+            expect(lodsOf(inst).every(lod => lod === 3)).to.equal(true);
+        });
 
-    it('spends on the node whose error falls fastest per splat', function () {
-        // identical costs, so the only difference is how much error each upgrade removes
-        const { inst, instances } = single([
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 100 }] },
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] }
-        ]);
+        it('fills the budget, even when many nodes sit at nearly the same distance', function () {
+            // a far camera: every node within a few percent of the same distance, so a single bin
+            // of the scale axis holds most of the scene
+            const distances = distancesFor(2000, 3e4, 3.1e4);
+            const nodes = distances.map(() => decimated(5));
+            for (const budget of [200000, 400000, 1000000]) {
+                const inst = makeInstance(nodes, distances);
+                run([inst], budget, false);
+                expect(splatsOf(inst)).to.be.at.most(budget);
+                expect(splatsOf(inst)).to.be.above(budget * 0.99);
+            }
+        });
 
-        // floor is 5 + 5, and 15 affords exactly one cost-5 upgrade
-        new GSplatBudgetBalancer().balance(instances, 15);
+        it('keeps nearer nodes at least as fine as farther ones', function () {
+            const distances = distancesFor(400, 0.5, 5000);
+            const inst = makeInstance(distances.map(() => decimated(5)), distances);
+            run([inst], 150000, false);
+            const order = distances.map((d, i) => i).sort((a, b) => distances[a] - distances[b]);
+            for (let i = 1; i < order.length; i++) {
+                expect(inst.nodeInfos[order[i]].optimalLod).to.be.at.least(inst.nodeInfos[order[i - 1]].optimalLod);
+            }
+        });
 
-        expect(lodsOf(inst)).to.deep.equal([0, 1]);
-    });
+        it('matches an exact greedy walk along the scale axis', function () {
+            const distances = distancesFor(300, 1, 3000, 7);
+            const nodes = distances.map((_, i) => decimated(5, 500 + (i * 37) % 900, 0.4 + (i % 5) * 0.05));
+            const budget = 120000;
+            const inst = makeInstance(nodes, distances);
+            run([inst], budget, false);
 
-    it('weights that by how much screen the node covers', function () {
-        // node 1 removes 10x the error, but node 0 covers 100x the screen
-        const { inst, instances } = single([
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 10 }] },
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 100 }] }
-        ], [1, 0.01]);
+            // take every switch point in order of the scale at which it happens until one does not fit
+            const events = [];
+            const logM = Math.log(3);
+            nodes.forEach((node, n) => {
+                for (let lod = 1; lod < 5; lod++) {
+                    events.push({ t: Math.log(distances[n] / 5) - (lod - 1) * logM, delta: node.lods[lod - 1].count - node.lods[lod].count });
+                }
+            });
+            events.sort((a, b) => a.t - b.t);
+            let total = nodes.reduce((sum, node) => sum + node.lods[4].count, 0);
+            for (const e of events) {
+                if (total + e.delta > budget) break;
+                total += e.delta;
+            }
 
-        new GSplatBudgetBalancer().balance(instances, 15);
-
-        expect(lodsOf(inst)).to.deep.equal([0, 1]);
-    });
-
-    it('lets one node take several upgrades in a single pass', function () {
-        const { inst, instances } = single([
-            { lods: [{ count: 30, error: 0 }, { count: 20, error: 50 }, { count: 10, error: 100 }] },
-            { lods: [{ count: 30, error: 0 }, { count: 20, error: 1 }, { count: 10, error: 2 }] }
-        ]);
-
-        // floor is 10 + 10; 40 affords node 0's two 10-splat upgrades and nothing else
-        new GSplatBudgetBalancer().balance(instances, 40);
-
-        expect(lodsOf(inst)).to.deep.equal([0, 2]);
-    });
-
-    it('stops at the first upgrade that does not fit', function () {
-        // the best deal is node 0's, but it costs 40 and only 10 is spare. Node 1's cheap upgrade
-        // would fit - stopping anyway is what keeps the result stable as the camera moves.
-        const { inst, instances } = single([
-            { lods: [{ count: 50, error: 0 }, { count: 10, error: 1000 }] },
-            { lods: [{ count: 15, error: 0 }, { count: 10, error: 1 }] }
-        ]);
-
-        new GSplatBudgetBalancer().balance(instances, 30);
-
-        expect(lodsOf(inst)).to.deep.equal([1, 1]);
-    });
-
-    it('pins the boundary behavior when a ranked run only partly fits', function () {
-        // Deliberate trade-off, not a target. Node 0's rank comes from the run to lod0 - 10 error
-        // for 80 splats - but at this budget only its 70-splat first step fits, removing 2 error
-        // where node 1's 40-splat step would have removed 4. An affordability-aware drain that
-        // resolves this boundary (and the one below) optimally was built and measured: ~0.2%
-        // better in aggregate across four captures, for a per-pop walk and a relaxed early exit -
-        // traded away for a simpler drain and the hard early exit that keeps selection stable as
-        // the camera moves.
-        const { inst, instances } = single([
-            { lods: [{ count: 100, error: 0 }, { count: 90, error: 8 }, { count: 20, error: 10 }] },
-            { lods: [{ count: 60, error: 0 }, { count: 60, error: 0 }, { count: 20, error: 4 }] }
-        ]);
-
-        new GSplatBudgetBalancer().balance(instances, 110);
-
-        expect(lodsOf(inst)).to.deep.equal([1, 2]);
-        expect(splatsOf(inst)).to.equal(110);
-    });
-
-    it('pins the hard stop when the top-ranked step does not fit at all', function () {
-        // Same nodes at budget 100: node 0 ranks first but its 70-splat first step exceeds the 60
-        // spare, so the sweep stops - node 1's affordable step is deliberately left unbought rather
-        // than letting cheaper upgrades reshuffle the outcome as the camera moves.
-        const { inst, instances } = single([
-            { lods: [{ count: 100, error: 0 }, { count: 90, error: 8 }, { count: 20, error: 10 }] },
-            { lods: [{ count: 60, error: 0 }, { count: 60, error: 0 }, { count: 20, error: 4 }] }
-        ]);
-
-        new GSplatBudgetBalancer().balance(instances, 100);
-
-        expect(lodsOf(inst)).to.deep.equal([2, 2]);
-        expect(splatsOf(inst)).to.equal(40);
-    });
-
-    it('buys a compound upgrade that beats a cheaper rival outright', function () {
-        // Node 0's middle level sits below the chord, so its levels pool into one 80-splat step
-        // worth 10 error (0.125/splat). Node 1 offers 4 error for 40 splats (0.1/splat). Treating
-        // node 0 as two steps would price both at 2/70, letting node 1 win and then leaving too
-        // little budget for node 0's 70-splat first step - residual 10 instead of 4.
-        const { inst, instances } = single([
-            { lods: [{ count: 100, error: 0 }, { count: 90, error: 8 }, { count: 20, error: 10 }] },
-            { lods: [{ count: 60, error: 0 }, { count: 60, error: 0 }, { count: 20, error: 4 }] }
-        ]);
-
-        // floors are 20 + 20, so 120 affords exactly node 0's compound step
-        new GSplatBudgetBalancer().balance(instances, 120);
-
-        expect(inst.nodeInfos[0].optimalLod).to.equal(0);
-        expect(inst.nodeInfos[1].optimalLod).to.equal(2);
-        expect(splatsOf(inst)).to.equal(120);
-    });
-
-    it('never exceeds the budget', function () {
-        const { nodes, coverage } = makeScene(400, 5);
-        const { inst, instances } = single(nodes, coverage);
-        const balancer = new GSplatBudgetBalancer();
-
-        for (const budget of [5000, 20000, 50000, 200000]) {
-            balancer.balance(instances, budget);
             expect(splatsOf(inst)).to.be.at.most(budget);
-        }
+            expect(splatsOf(inst)).to.be.at.least(total * 0.99);
+        });
+
+        it('divides one budget between instances by their base distances', function () {
+            const distances = distancesFor(200, 1, 500);
+            const nodes = distances.map(() => decimated(5));
+            const plain = makeInstance(nodes, distances);
+            const favored = makeInstance(nodes, distances, { lodBaseDistance: 15 });
+            run([plain, favored], 200000, false);
+
+            expect(splatsOf(plain) + splatsOf(favored)).to.be.at.most(200000);
+            expect(splatsOf(favored)).to.be.above(splatsOf(plain));
+            favored.nodeInfos.forEach((info, i) => {
+                expect(info.optimalLod).to.be.at.most(plain.nodeInfos[i].optimalLod);
+            });
+        });
     });
 
-    it('leaves a node with nothing renderable unassigned', function () {
-        const { inst, instances } = single([
-            { lods: [{ count: 0, error: 0 }, { count: 0, error: 0 }] },
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] }
-        ]);
-
-        new GSplatBudgetBalancer().balance(instances, 12);
-
-        expect(lodsOf(inst)).to.deep.equal([-1, 0]);
+    it('keeps a barely decimated node on the level its distance calls for', function () {
+        // levels that barely differ in splat count, one even growing, still follow the band, so the
+        // node shares files with its neighbors instead of pulling in a finer one
+        const wobbly = { lods: [930, 926, 926, 925, 926].map((count, fileIndex) => ({ count, fileIndex })) };
+        const distances = [5 * 3 ** 3 * 1.5];
+        const inst = makeInstance([wobbly], distances);
+        run([inst], Infinity, true);
+        expect(lodsOf(inst)).to.deep.equal([4]);
+        run([inst], 1e9, false);
+        expect(lodsOf(inst)).to.deep.equal([0]);
     });
 
-    it('is deterministic across repeated runs', function () {
-        const { nodes, coverage } = makeScene(300, 5, 7);
-        const { inst, instances } = single(nodes, coverage);
-        const balancer = new GSplatBudgetBalancer();
-
-        balancer.balance(instances, 30000);
-        const first = lodsOf(inst);
-        balancer.balance(instances, 30000);
-        expect(lodsOf(inst)).to.deep.equal(first);
-
-        // and independent of the balancer instance, so scratch state cannot leak between runs
-        const fresh = new GSplatBudgetBalancer();
-        fresh.balance(instances, 30000);
-        expect(lodsOf(inst)).to.deep.equal(first);
+    it('gives a node with nothing renderable in range no level', function () {
+        const empty = { lods: [{ count: 0, fileIndex: -1 }, { count: 0, fileIndex: -1 }] };
+        const inst = makeInstance([decimated(2), empty], [1, 1]);
+        run([inst], 1e9, false);
+        expect(lodsOf(inst)).to.deep.equal([0, -1]);
     });
 
-    it('shares one budget across several instances', function () {
-        const a = makeInstance([{ lods: [{ count: 10, error: 0 }, { count: 5, error: 100 }] }], [1]);
-        const b = makeInstance([{ lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] }], [1]);
-        const instances = new Map([[{}, a], [{}, b]]);
-
-        // floor is 5 + 5, so 15 affords one upgrade and it should go to the instance that gains more
-        new GSplatBudgetBalancer().balance(instances, 15);
-
-        expect(lodsOf(a)).to.deep.equal([0]);
-        expect(lodsOf(b)).to.deep.equal([1]);
-    });
-
-    it('honors each instance\'s own LOD range', function () {
-        const a = makeInstance([{ lods: [{ count: 100, error: 0 }, { count: 50, error: 1 }, { count: 10, error: 4 }] }], [1], 0, 2);
-        const b = makeInstance([{ lods: [{ count: 100, error: 0 }, { count: 50, error: 1 }, { count: 10, error: 4 }] }], [1], 2, 2);
-        const instances = new Map([[{}, a], [{}, b]]);
-
-        new GSplatBudgetBalancer().balance(instances, 1000);
-
-        expect(lodsOf(a)).to.deep.equal([0]);
-        expect(lodsOf(b)).to.deep.equal([2]);
-    });
-
-    it('lands within a few percent of an exact greedy allocation', function () {
-        // Buckets resolve the greedy order approximately. This pins how much that costs, using an
-        // exact max-heap over the same chains as the reference.
-        //
-        // Budgets are sampled part-way between the floored and the fully upgraded scene. Very high
-        // fractions are deliberately not asserted on: almost everything gets bought, so the
-        // residual error is near zero and the *ratio* against it turns noisy while the absolute
-        // difference stays negligible.
-        const { nodes, coverage } = makeScene(2000, 5, 11);
-        const { inst, instances } = single(nodes, coverage);
-        const table = inst.lodTable;
-        const balancer = new GSplatBudgetBalancer();
-
-        for (const fraction of [0.2, 0.5]) {
-            const budget = Math.round(table.totalStartCount +
-                (table.totalFinestCount - table.totalStartCount) * fraction);
-            balancer.balance(instances, budget);
-            const bucketed = residual(inst, lodsOf(inst));
-            const exact = residual(inst, exactGreedy(inst, budget).lods);
-            expect(bucketed).to.be.at.most(exact * 1.03);
-        }
-    });
-
-    it('spends as much of the budget as an exact greedy allocation', function () {
-        // The early exit means both stop at their first misfit. If bucketing shifted where that
-        // lands, the two would diverge in how much they manage to spend.
-        const { nodes, coverage } = makeScene(2000, 5, 29);
-        const { inst, instances } = single(nodes, coverage);
-        const table = inst.lodTable;
-        const balancer = new GSplatBudgetBalancer();
-
-        for (const fraction of [0.2, 0.5, 0.8]) {
-            const budget = Math.round(table.totalStartCount +
-                (table.totalFinestCount - table.totalStartCount) * fraction);
-            balancer.balance(instances, budget);
-            const exact = exactGreedy(inst, budget).spent;
-            expect(splatsOf(inst)).to.be.at.least(exact * 0.99);
-        }
-    });
-
-    it('tilts the budget towards the camera as lodFalloff rises', function () {
-        // Two nodes compete for one 5-splat upgrade. The far node removes 16x the error, so at the
-        // neutral falloff it wins despite its lower coverage; at falloff 2 the coverage difference
-        // is amplified enough that the near node takes it. The pivot cancels in the comparison, so
-        // the flip point is exact: falloff * log2(covNear/covFar) vs log2(ratioFar/ratioNear).
-        const nodes = [
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] },
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 16 }] }
-        ];
-
-        const neutral = singleWithFalloff(nodes, [0.1, 0.01], 1);
-        new GSplatBudgetBalancer().balance(neutral.instances, 15);
-        expect(lodsOf(neutral.inst)).to.deep.equal([1, 0]);
-
-        const steep = singleWithFalloff(nodes, [0.1, 0.01], 2);
-        new GSplatBudgetBalancer().balance(steep.instances, 15);
-        expect(lodsOf(steep.inst)).to.deep.equal([0, 1]);
-    });
-
-    it('ignores the view entirely at lodFalloff 0', function () {
-        // With the exponent at 0 every node's coverage term is equal, so the far node's better
-        // error-per-splat must win regardless of how much closer the other sits.
-        const { inst, instances } = singleWithFalloff([
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 1 }] },
-            { lods: [{ count: 10, error: 0 }, { count: 5, error: 2 }] }
-        ], [1, 1e-9], 0);
-
-        new GSplatBudgetBalancer().balance(instances, 15);
-
-        expect(lodsOf(inst)).to.deep.equal([1, 0]);
-    });
-
-    it('matches the exact path at the default falloff', function () {
-        // falloff 1 must keep the exact value path, bit-identical to ranking without the feature
-        const { nodes, coverage } = makeScene(300, 5, 21);
-        const a = singleWithFalloff(nodes, coverage, 1);
-        const b = single(nodes, coverage);
-
-        const balancer = new GSplatBudgetBalancer();
-        balancer.balance(a.instances, 20000);
-        balancer.balance(b.instances, 20000);
-
-        expect(lodsOf(a.inst)).to.deep.equal(lodsOf(b.inst));
-    });
-
-    it('moves few nodes when the camera moves slightly', function () {
-        // Temporal stability is the point of the fixed bucket scale and the early exit, so a small
-        // change in coverage must not reshuffle the scene.
-        const { nodes, coverage } = makeScene(500, 5, 3);
-        const { inst, instances } = single(nodes, coverage);
-        const balancer = new GSplatBudgetBalancer();
-
-        balancer.balance(instances, 40000);
-        const before = lodsOf(inst);
-
-        // 1% closer on every node, as a small forward step would give
-        for (let i = 0; i < inst.nodeInfos.length; i++) {
-            inst.nodeInfos[i].lodCoverage *= 1.01;
-        }
-        balancer.balance(instances, 40000);
-        const after = lodsOf(inst);
-
-        const changed = before.reduce((n, lod, i) => n + (lod === after[i] ? 0 : 1), 0);
-        expect(changed).to.be.below(before.length * 0.1);
+    it('does nothing without instances', function () {
+        expect(() => new GSplatBudgetBalancer().balance(new Map(), 1000, false)).to.not.throw();
     });
 });

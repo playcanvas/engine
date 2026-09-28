@@ -76,30 +76,45 @@ class GSplatPlacement {
     _lodRangeMax = 99;
 
     /**
-     * @type {number}
-     */
-    /**
-     * How fast quality falls off away from the camera for this placement's nodes, applied as an
-     * exponent on projected coverage in the budget ranking. 1 is neutral, 0 spreads the budget with
-     * no view preference, 2 concentrates it near the camera. In distance LOD mode this sets the
-     * band spacing.
+     * Distance of the first LOD transition, from LOD 0 to LOD 1, in world units.
      *
      * @private
      */
-    _lodFalloff = 1;
+    _lodBaseDistance = 5;
+
+    /**
+     * Factor between successive LOD transition distances.
+     *
+     * @private
+     */
+    _lodMultiplier = 3;
 
     /**
      * @type {number}
      */
-    set lodFalloff(value) {
-        if (this._lodFalloff !== value) {
-            this._lodFalloff = value;
+    set lodBaseDistance(value) {
+        if (this._lodBaseDistance !== value) {
+            this._lodBaseDistance = value;
             this.lodDirty = true;
         }
     }
 
-    get lodFalloff() {
-        return this._lodFalloff;
+    get lodBaseDistance() {
+        return this._lodBaseDistance;
+    }
+
+    /**
+     * @type {number}
+     */
+    set lodMultiplier(value) {
+        if (this._lodMultiplier !== value) {
+            this._lodMultiplier = value;
+            this.lodDirty = true;
+        }
+    }
+
+    get lodMultiplier() {
+        return this._lodMultiplier;
     }
 
     /**

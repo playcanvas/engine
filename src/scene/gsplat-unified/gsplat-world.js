@@ -11,8 +11,7 @@ import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
-import { GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
-import { SPLAT_BUDGET_DEFAULT } from './constants.js';
+import { GSPLAT_BUDGET_LIMIT, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -585,16 +584,9 @@ class GSplatWorld {
             this._lastLodCameraFwd.copy(camera.forward);
             this._lastLodCameraFov = camera.camera.fov;
 
-            // LOD selection is always budget driven. A budget generous enough for the whole scene
-            // resolves to every node at its finest level, so there is no separate unbudgeted path -
-            // which also means a non-positive budget is not a way to disable LOD selection, it would
-            // simply pin every node to its coarsest level. Substitute the default and say so.
-            let budget = this._gsplat.splatBudget;
-            if (budget <= 0) {
-                Debug.warnOnce(`GSplatParams#splatBudget is ${budget}, which is not a way to disable LOD selection - LOD levels are always chosen to fit the budget, so a non-positive one would render everything at its coarsest level. Using the default of ${SPLAT_BUDGET_DEFAULT} instead; set a budget that suits the scene.`);
-                budget = SPLAT_BUDGET_DEFAULT;
-            }
-            this._enforceBudget(budget, camera);
+            // a non-positive budget means no budget
+            const budget = this._gsplat.splatBudget;
+            this._enforceBudget(budget > 0 ? budget : Infinity, camera);
         }
 
         // create new world state if needed
@@ -998,13 +990,15 @@ class GSplatWorld {
                 _splatsWithSH.push(splat);
 
                 if (splat.nodeInfos) {
-                    // Per-node accumulation for octree splats
+                    // Per-node accumulation for octree splats, compared squared against the node's
+                    // squared distance
                     const nodeIndices = splat.intervalNodeIndices;
+                    const ratioSq = ratio * ratio;
                     for (let j = 0; j < nodeIndices.length; j++) {
                         const nodeInfo = splat.nodeInfos[nodeIndices[j]];
-                        nodeInfo.colorAccumulatedTranslation += translationDelta;
-                        const threshold = ratio * Math.max(1, nodeInfo.worldDistance);
-                        if (refreshAll || nodeInfo.colorAccumulatedTranslation >= threshold) {
+                        const accumulated = nodeInfo.colorAccumulatedTranslation + translationDelta;
+                        nodeInfo.colorAccumulatedTranslation = accumulated;
+                        if (refreshAll || accumulated * accumulated >= ratioSq * Math.max(1, nodeInfo.worldDistanceSq)) {
                             _changedColorAllocIds.add(splat.intervalAllocIds[j]);
                             nodeInfo.colorAccumulatedTranslation = 0;
                             uploadedBlocks++;
@@ -1184,7 +1178,7 @@ class GSplatWorld {
     /**
      * Enforces the global splat budget across all octree instances.
      *
-     * @param {number} budget - Target splat budget from GSplatParams.splatBudget.
+     * @param {number} budget - Splat budget from GSplatParams.splatBudget, Infinity for none.
      * @param {GraphNode} camera - The primary camera.
      * @private
      */
@@ -1207,11 +1201,11 @@ class GSplatWorld {
         // Remaining budget for octrees after accounting for fixed splats.
         const octreeBudget = Math.max(1, budget - fixedSplats);
 
-        // Phase 1: resolve each instance's LOD range and evaluate per-node coverage, and collect
+        // Phase 1: resolve each instance's LOD range and evaluate per-node distances, and collect
         // padding for active placements
         for (const [, inst] of this._octreeInstances) {
-            inst.resolveLodRange(this._gsplat.lodMode);
-            inst.evaluateNodeCoverage(camera, this._gsplat);
+            inst.resolveLodRange();
+            inst.evaluateNodeDistances(camera, this._gsplat);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1223,7 +1217,7 @@ class GSplatWorld {
         const adjustedBudget = Math.max(1, octreeBudget - paddingEstimate);
 
         // Phase 2: choose a LOD level per node within that budget
-        this._budgetBalancer.balance(this._octreeInstances, adjustedBudget);
+        this._budgetBalancer.balance(this._octreeInstances, adjustedBudget, this._gsplat.splatBudgetMode === GSPLAT_BUDGET_LIMIT);
 
         // Phase 3: apply LOD changes
         for (const [, inst] of this._octreeInstances) {
