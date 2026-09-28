@@ -61,7 +61,7 @@ const message = (msg) => {
 };
 
 const assets = {
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
     monitor: new Asset('monitor', 'template', { url: './assets/templates/monitor.json' })
 };
 

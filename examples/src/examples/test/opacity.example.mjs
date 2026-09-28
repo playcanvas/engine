@@ -39,7 +39,7 @@ window.focus();
 
 const assets = {
     script: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
     rocks: new Asset(
         'rocks',
         'texture',

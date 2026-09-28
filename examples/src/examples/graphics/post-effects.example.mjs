@@ -67,7 +67,7 @@ const assets = {
         url: './scripts/posteffects/posteffect-vignette.js'
     }),
     ssao: new Asset('ssao', 'script', { url: './scripts/posteffects/posteffect-ssao.js' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',

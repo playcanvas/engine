@@ -233,7 +233,7 @@ const FOG_STEPS_DEFAULT = 12;
 
 const assets = {
     catapult: new Asset('catapult', 'container', { url: './assets/models/catapult.glb' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 
 const gfxOptions = {

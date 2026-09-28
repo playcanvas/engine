@@ -46,7 +46,7 @@ await new Promise((resolve) => {
 });
 
 const assets = {
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 
 const gfxOptions = {
