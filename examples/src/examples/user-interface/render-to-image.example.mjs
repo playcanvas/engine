@@ -123,8 +123,8 @@ previewCamera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
     fov: 30
 });
-previewCamera.setPosition(0, 0.86, 3.1);
-previewCamera.lookAt(0, 0.72, 0);
+previewCamera.setPosition(0, 0.9, 3.35);
+previewCamera.lookAt(0, 0.78, 0);
 app.root.addChild(previewCamera);
 
 // The character, and a light, on the preview layer only. The model holds both animations

@@ -1,7 +1,7 @@
-# Generates the knight of the render-to-image example, examples/assets/models/knight.glb: armor
-# parts built from primitives and hung on the bones of an armature, with an Idle loop and an
-# Attack. Each part moves rigidly with its bone, so the model has no skin. Run it with Blender
-# (made with 5.2):
+# Generates the knight of the render-to-image example, examples/assets/models/knight.glb: a
+# low-poly knight whose armor parts are built from primitives and hang on the bones of an
+# armature, with an Idle loop and an Attack. Each part moves rigidly with its bone, so the model
+# has no skin. Run it with Blender (made with 5.2):
 #
 #     blender --background --factory-startup --python examples/utils/generate-knight.py -- examples/assets/models/knight.glb
 
@@ -16,16 +16,17 @@ FPS = 30
 
 # Blender is Z up, and the knight faces -Y, which the glTF exporter turns into +Z
 
-# Colors are sRGB, with roughness and metalness. There is no environment map in the example, so
-# the metals are only slightly metallic, and read as metal by their highlights
+# The palette, in sRGB, with roughness and metalness. There is no environment map in the example,
+# so the metals are only slightly metallic, and read as metal by their facets and highlights
 PALETTE = {
-    'steel': ((0.8, 0.82, 0.86), 0.3, 0.2),
-    'dark': ((0.06, 0.065, 0.08), 0.45, 0.0),
-    'chain': ((0.34, 0.36, 0.4), 0.55, 0.1),
-    'cloth': ((1.0, 0.55, 0.2), 0.75, 0.0),
-    'gold': ((1.0, 0.78, 0.32), 0.35, 0.3),
-    'leather': ((0.45, 0.28, 0.17), 0.7, 0.0),
-    'white': ((0.97, 0.96, 0.92), 0.6, 0.0)
+    'steel': ((0.82, 0.8, 0.8), 0.45, 0.15),
+    'blade': ((0.94, 0.91, 0.88), 0.35, 0.1),
+    'cream': ((0.937, 0.867, 0.804), 0.75, 0.0),
+    'red': ((0.776, 0.173, 0.18), 0.7, 0.0),
+    'gold': ((0.82, 0.6, 0.34), 0.45, 0.05),
+    'leather': ((0.318, 0.224, 0.184), 0.75, 0.0),
+    'dark': ((0.196, 0.208, 0.251), 0.65, 0.0),
+    'slot': ((0.05, 0.05, 0.065), 0.5, 0.0)
 }
 
 # The pose the parts are built in, which is also the rest pose of the rig and the first frame of
@@ -36,26 +37,43 @@ BASE = {
     'hips_dz': 0.0,
     'spine': (0, 0, 0),
     'head': (0, 0, 0),
-    'hand_R': (-0.25, -0.17, 0.56),
-    'pole_R': (-1.0, 0.5, -0.3),
-    'blade_R': (0.05, -0.35, 1.0),
+    'hand_R': (-0.24, -0.14, 0.53),
+    'pole_R': (-1.0, 0.4, -0.3),
+    'blade_R': (-0.25, -0.4, 1.0),
     'flat_R': (0.0, -1.0, 0.0),
-    'hand_L': (0.27, -0.15, 0.58),
-    'pole_L': (1.0, 0.5, -0.3),
-    'shield_L': (1.0, -0.8, 0.0),
+    'hand_L': (0.19, -0.2, 0.6),
+    'pole_L': (1.0, 0.3, -0.5),
+    'shield_L': (0.35, -1.0, 0.0),
     'foot_R': (0.0, 0.0, 0.0),
     'foot_L': (0.0, 0.0, 0.0)
 }
 
 HIPS = (Vector((0, 0, 0.5)), Vector((0, 0, 0.58)))
-SPINE = (Vector((0, 0, 0.58)), Vector((0, 0, 0.86)))
-HEAD = (Vector((0, 0, 0.87)), Vector((0, 0, 1.25)))
-SHOULDER = {'R': Vector((-0.25, 0, 0.8)), 'L': Vector((0.25, 0, 0.8))}
-HIP_JOINT = {'R': Vector((-0.1, 0, 0.47)), 'L': Vector((0.1, 0, 0.47))}
-ANKLE = {'R': Vector((-0.12, 0, 0.1)), 'L': Vector((0.12, 0, 0.1))}
-UPPER_ARM, FOREARM, THIGH, SHIN = 0.17, 0.17, 0.2, 0.2
+SPINE = (Vector((0, 0, 0.58)), Vector((0, 0, 0.84)))
+HEAD = (Vector((0, 0, 0.86)), Vector((0, 0, 1.24)))
+SHOULDER = {'R': Vector((-0.2, 0, 0.78)), 'L': Vector((0.2, 0, 0.78))}
+HIP_JOINT = {'R': Vector((-0.09, 0, 0.47)), 'L': Vector((0.09, 0, 0.47))}
+ANKLE = {'R': Vector((-0.13, 0, 0.1)), 'L': Vector((0.13, 0, 0.1))}
+UPPER_ARM, FOREARM, THIGH, SHIN = 0.16, 0.16, 0.2, 0.2
 KNEE_POLE = Vector((0, -1, 0.2))
 FORWARD, UP = Vector((0, -1, 0)), Vector((0, 0, 1))
+
+# A rampant lion facing left, as an outline about a metre tall: the emblem on the tabard and shield
+LION = [
+    (0.10, 1.00), (0.16, 1.08), (0.26, 1.13), (0.34, 1.10), (0.36, 1.00), (0.44, 0.92), (0.50, 0.78),
+    (0.56, 0.62), (0.62, 0.50), (0.70, 0.52), (0.80, 0.66), (0.84, 0.82), (0.92, 0.90), (0.86, 0.78),
+    (0.78, 0.60), (0.70, 0.44), (0.68, 0.30), (0.72, 0.14), (0.82, 0.04), (0.62, 0.02), (0.60, 0.16),
+    (0.52, 0.34), (0.42, 0.26), (0.30, 0.14), (0.26, 0.20), (0.36, 0.34), (0.40, 0.46), (0.30, 0.52),
+    (0.16, 0.50), (0.16, 0.58), (0.32, 0.64), (0.30, 0.76), (0.16, 0.84), (0.18, 0.90), (0.32, 0.86),
+    (0.24, 0.92), (0.14, 0.94)
+]
+
+# A heater shield, 0.3 wide and 0.39 tall, about its middle
+HEATER = [
+    (-0.15, 0.17), (-0.075, 0.185), (0, 0.19), (0.075, 0.185), (0.15, 0.17), (0.15, 0.05), (0.14, -0.03),
+    (0.115, -0.1), (0.075, -0.15), (0.035, -0.18), (0, -0.2), (-0.035, -0.18), (-0.075, -0.15),
+    (-0.115, -0.1), (-0.14, -0.03), (-0.15, 0.05)
+]
 
 
 def srgb_to_linear(c):
@@ -98,7 +116,7 @@ def rest_joints():
 
 
 # -------------------------------------------------------------------------------------------------
-# Geometry: small bmesh builders, in local space
+# Geometry: small low-poly bmesh builders, in local space
 
 def bevel_edges(bm, edges, offset, segments):
     if edges:
@@ -107,94 +125,148 @@ def bevel_edges(bm, edges, offset, segments):
                         profile=0.5, clamp_overlap=True)
 
 
-def sharp_edges(bm, angle):
-    return [e for e in bm.edges if e.is_manifold and e.calc_face_angle(0) > math.radians(angle)]
-
-
-def rounded_box(sx, sy, sz, r_side, r_top, segments=4):
-    """A box whose vertical edges are rounded by r_side, and then its top and bottom by r_top."""
-    bm = bmesh.new()
-    bmesh.ops.create_cube(bm, size=1.0)
-    bmesh.ops.scale(bm, vec=(sx, sy, sz), verts=bm.verts)
-    vertical = [e for e in bm.edges if abs((e.verts[0].co - e.verts[1].co).normalized().z) > 0.99]
-    bevel_edges(bm, vertical, r_side, segments)
-    bevel_edges(bm, sharp_edges(bm, 50), r_top, segments)
+def finish(bm):
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     return bm
 
 
-def cylinder(r0, r1, length, segments=16, bevel=0.0):
+def chamfer_box(sx, sy, sz, c):
+    """A box centered on the origin, with every edge cut by a flat chamfer."""
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.scale(bm, vec=(sx, sy, sz), verts=bm.verts)
+    if c > 0:
+        bevel_edges(bm, list(bm.edges), c, 1)
+    return bm
+
+
+def cylinder(r0, r1, length, segments=8):
     """A cylinder, or a cone, from z = 0 to z = length."""
     bm = bmesh.new()
     bmesh.ops.create_cone(bm, cap_ends=True, cap_tris=False, segments=segments, radius1=r0,
                           radius2=r1, depth=length)
     bmesh.ops.translate(bm, vec=(0, 0, length / 2), verts=bm.verts)
-    if bevel:
-        bevel_edges(bm, sharp_edges(bm, 50), bevel, 2)
     return bm
 
 
-def sphere(r, scale=(1, 1, 1), u=20, v=10):
+def sphere(r, scale=(1, 1, 1), u=8, v=4):
     bm = bmesh.new()
     bmesh.ops.create_uvsphere(bm, u_segments=u, v_segments=v, radius=r)
     bmesh.ops.scale(bm, vec=scale, verts=bm.verts)
     return bm
 
 
-def arc_band(r_in, r_out, z0, z1, a0, a1, segments=16):
-    """A curved strip on a vertical cylinder, from angle a0 to a1, where 0 is the front, -Y, and
-    positive angles go towards +X."""
+def ring(r_in, r_out, height, segments=8):
+    """A band around the Z axis, from z = 0 to height, like a cuff or a rim."""
     bm = bmesh.new()
-    rings = []
-    for i in range(segments + 1):
-        a = a0 + (a1 - a0) * i / segments
-        d = Vector((math.sin(a), -math.cos(a), 0))
-        rings.append([bm.verts.new(d * r + Vector((0, 0, z))) for r, z in
-                      ((r_in, z0), (r_out, z0), (r_out, z1), (r_in, z1))])
+    rows = []
     for i in range(segments):
+        a = 2 * math.pi * (i + 0.5) / segments
+        c, s = math.cos(a), math.sin(a)
+        rows.append([bm.verts.new((c * r, s * r, z)) for r, z in
+                     ((r_in, 0), (r_out, 0), (r_out, height), (r_in, height))])
+    for i in range(segments):
+        j = (i + 1) % segments
         for k in range(4):
-            q = (rings[i][k], rings[i][(k + 1) % 4], rings[i + 1][(k + 1) % 4], rings[i + 1][k])
-            bm.faces.new(q)
-    bm.faces.new(rings[0])
-    bm.faces.new(list(reversed(rings[-1])))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    return bm
+            bm.faces.new((rows[i][k], rows[i][(k + 1) % 4], rows[j][(k + 1) % 4], rows[j][k]))
+    return finish(bm)
+
+
+def dome(rx, ry, rz, segments=8, rings=3):
+    """The top half of an ellipsoid, on a flat base at z = 0."""
+    bm = bmesh.new()
+    rows = []
+    for k in range(rings):
+        t = (math.pi / 2) * k / rings
+        rows.append([bm.verts.new((rx * math.cos(a) * math.cos(t), ry * math.sin(a) * math.cos(t),
+                                   rz * math.sin(t)))
+                     for a in (2 * math.pi * (i + 0.5) / segments for i in range(segments))])
+    for a, b in zip(rows, rows[1:]):
+        for i in range(segments):
+            j = (i + 1) % segments
+            bm.faces.new((a[i], a[j], b[j], b[i]))
+    top = bm.verts.new((0, 0, rz))
+    for i in range(segments):
+        bm.faces.new((rows[-1][i], rows[-1][(i + 1) % segments], top))
+    bm.faces.new(list(reversed(rows[0])))
+    return finish(bm)
+
+
+def extrude_xy(points, depth):
+    """A flat shape from an outline in the XY plane, from z = 0 to z = depth."""
+    bm = bmesh.new()
+    back = [bm.verts.new((x, y, 0)) for x, y in points]
+    front = [bm.verts.new((x, y, depth)) for x, y in points]
+    bm.faces.new(front)
+    bm.faces.new(list(reversed(back)))
+    for i in range(len(points)):
+        j = (i + 1) % len(points)
+        bm.faces.new((back[i], back[j], front[j], front[i]))
+    return finish(bm)
+
+
+def ribbon(spine, widths, thicknesses, side=Vector((1, 0, 0))):
+    """A faceted strip along the points of spine, with a diamond section as wide as widths across
+    side, and as thick as thicknesses."""
+    bm = bmesh.new()
+    spine = [Vector(p) for p in spine]
+    sections = []
+    for i, p in enumerate(spine):
+        t = (spine[min(i + 1, len(spine) - 1)] - spine[max(i - 1, 0)]).normalized()
+        s = (side - t * side.dot(t)).normalized()
+        u = t.cross(s)
+        w, h = widths[i] / 2, thicknesses[i] / 2
+        sections.append([bm.verts.new(p + s * w), bm.verts.new(p + u * h), bm.verts.new(p - s * w),
+                         bm.verts.new(p - u * h)])
+    for a, b in zip(sections, sections[1:]):
+        for k in range(4):
+            bm.faces.new((a[k], a[(k + 1) % 4], b[(k + 1) % 4], b[k]))
+    bm.faces.new(sections[0])
+    bm.faces.new(list(reversed(sections[-1])))
+    return finish(bm)
+
+
+def octagon(w, d, c, z, scale=1.0):
+    """A rectangle of w by d with its corners cut by c, at height z: the front edge is the first."""
+    points = ((-w / 2 + c, -d / 2), (w / 2 - c, -d / 2), (w / 2, -d / 2 + c), (w / 2, d / 2 - c),
+              (w / 2 - c, d / 2), (-w / 2 + c, d / 2), (-w / 2, d / 2 - c), (-w / 2, -d / 2 + c))
+    return [(x * scale, y * scale, z) for x, y in points]
+
+
+def loft(rows, cap_top=True, top=None):
+    """Join rows of points, each the same length, into a closed shell."""
+    bm = bmesh.new()
+    verts = [[bm.verts.new(p) for p in row] for row in rows]
+    n = len(rows[0])
+    for a, b in zip(verts, verts[1:]):
+        for i in range(n):
+            j = (i + 1) % n
+            bm.faces.new((a[i], a[j], b[j], b[i]))
+    bm.faces.new(list(reversed(verts[0])))
+    if top is not None:
+        apex = bm.verts.new(top)
+        for i in range(n):
+            bm.faces.new((verts[-1][i], verts[-1][(i + 1) % n], apex))
+    elif cap_top:
+        bm.faces.new(verts[-1])
+    return finish(bm)
 
 
 def blade(length, tip, width, thickness):
-    """A sword blade with a diamond section, along +Y, flat across X."""
+    """A sword blade with a six-sided section, along +Y, flat across X."""
     bm = bmesh.new()
 
     def section(y, w):
-        return [bm.verts.new(p) for p in ((w / 2, y, 0), (0, y, thickness / 2), (-w / 2, y, 0),
-                                          (0, y, -thickness / 2))]
-    base, top = section(0, width), section(length, width * 0.85)
+        return [bm.verts.new(p) for p in ((w / 2, y, 0), (w / 4, y, thickness / 2), (-w / 4, y, thickness / 2),
+                                          (-w / 2, y, 0), (-w / 4, y, -thickness / 2), (w / 4, y, -thickness / 2))]
+    base, top = section(0, width), section(length, width * 0.92)
     point = bm.verts.new((0, length + tip, 0))
-    for i in range(4):
-        j = (i + 1) % 4
+    for i in range(6):
+        j = (i + 1) % 6
         bm.faces.new((base[i], base[j], top[j], top[i]))
         bm.faces.new((top[i], top[j], point))
     bm.faces.new(list(reversed(base)))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    return bm
-
-
-def star(points, r_out, r_in, depth):
-    """A flat star facing -Y, from y = 0 to y = -depth."""
-    bm = bmesh.new()
-    outline = []
-    for i in range(points * 2):
-        a = math.pi * i / points
-        r = r_out if i % 2 == 0 else r_in
-        outline.append((r * math.sin(a), r * math.cos(a)))
-    back = [bm.verts.new((x, 0, z)) for x, z in outline]
-    front = [bm.verts.new((x, -depth, z)) for x, z in outline]
-    bm.faces.new(front)
-    bm.faces.new(list(reversed(back)))
-    for i in range(len(outline)):
-        j = (i + 1) % len(outline)
-        bm.faces.new((back[i], back[j], front[j], front[i]))
-    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-    return bm
+    return finish(bm)
 
 
 def placed(p0, p1):
@@ -211,23 +283,46 @@ def translated(x, y, z):
     return Matrix.Translation((x, y, z))
 
 
+def rotated(angle, axis):
+    return Matrix.Rotation(math.radians(angle), 4, axis)
+
+
+# Turns a shape built in the XY plane, facing +Z, into one standing upright and facing forwards, -Y
+UPRIGHT = rotated(90, 'X')
+
+
+def outline(points, scale, offset=(0, 0)):
+    return [(x * scale + offset[0], y * scale + offset[1]) for x, y in points]
+
+
+def lion(height, depth):
+    """The lion emblem, centered on the origin in the XY plane."""
+    xs, ys = [p[0] for p in LION], [p[1] for p in LION]
+    s = height / (max(ys) - min(ys))
+    cx, cy = (max(xs) + min(xs)) / 2, (max(ys) + min(ys)) / 2
+    return extrude_xy([((x - cx) * s, (y - cy) * s) for x, y in LION], depth)
+
+
+def hem(width, length, teeth):
+    """A cloth panel hanging from y = 0 down to about -length, with a torn hem of teeth: a list of
+    (x, depth below length) from the right edge to the left."""
+    return [(-width / 2, 0), (width / 2, 0)] + [(x * width / 2, -length - d) for x, d in teeth]
+
+
 class Parts:
-    """Collects the parts of each bone into one mesh, with a material per part."""
+    """Collects the parts of each bone into one mesh, with a material per part, or per face."""
 
     def __init__(self, materials):
         self.materials = materials
         self.meshes = {}
 
-    def add(self, owner, bm, material, matrix=None, smooth=True):
+    def add(self, owner, bm, material, matrix=None):
+        names = list(self.materials)
+        for f in bm.faces:
+            f.material_index = names.index(material(f) if callable(material) else material)
+            f.smooth = False
         if matrix is not None:
             bmesh.ops.transform(bm, matrix=matrix, verts=bm.verts)
-        index = list(self.materials).index(material)
-        for f in bm.faces:
-            f.material_index = index
-            f.smooth = smooth
-        # keep creases crisp where the faces of a part meet at a sharp angle
-        for e in sharp_edges(bm, 55):
-            e.smooth = False
         mesh = bpy.data.meshes.new('part')
         bm.to_mesh(mesh)
         bm.free()
@@ -253,80 +348,214 @@ class Parts:
         return result
 
 
+def split_at_x(bm, x=0.0):
+    """Cut a shape in two along a plane across X, so each side can have its own material."""
+    geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
+    bmesh.ops.bisect_plane(bm, geom=geom, plane_co=(x, 0, 0), plane_no=(1, 0, 0))
+    return bm
+
+
+def by_side(left, right, x=0.0):
+    """A material for each face by which side of x its middle is on."""
+    return lambda f: left if f.calc_center_median().x < x else right
+
+
+def shell(rows, thickness):
+    """A plate curving through a grid of points, rows by columns, as thick as thickness towards
+    the vertical axis, with a rim around its edges. Returns the plate, and the faces of its rim."""
+    bm = bmesh.new()
+    rim = set()
+
+    def inward(p):
+        k = max(math.hypot(p[0], p[1]) - thickness, 0) / math.hypot(p[0], p[1])
+        return (p[0] * k, p[1] * k, p[2])
+    outer = [[bm.verts.new(p) for p in row] for row in rows]
+    inner = [[bm.verts.new(inward(p)) for p in row] for row in rows]
+    for r in range(len(rows) - 1):
+        for c in range(len(rows[0]) - 1):
+            bm.faces.new((outer[r][c], outer[r][c + 1], outer[r + 1][c + 1], outer[r + 1][c]))
+            bm.faces.new((inner[r][c], inner[r + 1][c], inner[r + 1][c + 1], inner[r][c + 1]))
+    for c in range(len(rows[0]) - 1):
+        rim.add(bm.faces.new((outer[0][c], inner[0][c], inner[0][c + 1], outer[0][c + 1])))
+        rim.add(bm.faces.new((outer[-1][c], outer[-1][c + 1], inner[-1][c + 1], inner[-1][c])))
+    for r in range(len(rows) - 1):
+        rim.add(bm.faces.new((outer[r][0], outer[r + 1][0], inner[r + 1][0], inner[r][0])))
+        rim.add(bm.faces.new((outer[r][-1], inner[r][-1], inner[r + 1][-1], outer[r + 1][-1])))
+    return finish(bm), rim
+
+
+def slit(center, along, out, width, height):
+    """A dark slit on a face of the visor: its width runs along the face, and it stands out of it."""
+    m = Matrix((along, -out, Vector((0, 0, 1)))).transposed().to_4x4()
+    m.translation = center + out * 0.002
+    return chamfer_box(width, 0.012, height, 0.003), m
+
+
+def build_helmet(parts, base):
+    """An armet: a round skull, a visor standing proud of it with slits across its face, gold hinges
+    where the visor pivots at the sides, and a plume. base is where the middle of the skull's bottom
+    edge sits."""
+    h = 0.27
+    at = translated(*base) @ Matrix.Scale(1.08, 4)
+
+    # The skull: rings of ten sides, rounding over into a dome
+    sides = 10
+    profile = ((0.0, 0.165, 0.172), (0.08, 0.186, 0.19), (0.18, 0.192, 0.196), (0.26, 0.178, 0.182),
+               (0.32, 0.142, 0.146), (0.37, 0.085, 0.088))
+    angles = [2 * math.pi * (i + 0.5) / sides for i in range(sides)]
+    rows = [[(rx * math.sin(a), -ry * math.cos(a), z) for a in angles] for z, rx, ry in profile]
+    parts.add('Head', loft(rows, top=(0, 0.01, 0.395)), 'steel', at)
+
+    # The visor: a plate over the face, from hinge to hinge, with dark edges where it stands off the
+    # skull. Its middle band holds the slits under an overhanging brow, and it slopes back in to the
+    # skull above the brow and at its chin
+    plan = ((-0.208, 0.02), (-0.205, -0.105), (-0.108, -0.235), (0.108, -0.235), (0.205, -0.105), (0.208, 0.02))
+    band = (0.1, 0.205)
+    rows = ((0.03, 0.84), (band[0], 1.0), (band[1], 1.0), (0.215, 1.025), (0.232, 1.025), (0.265, 0.95))
+    visor, rim = shell([[(x * k, y * k, z) for x, y in plan] for z, k in rows], 0.02)
+    parts.add('Head', visor, lambda f: 'dark' if f in rim else 'steel', at)
+    # the shadow of the visor's top edge on the skull, which shows where the two plates part
+    gap = []
+    for z in (0.262, 0.29):
+        k = (z - 0.26) / 0.06
+        rx, ry = 0.178 - 0.036 * k + 0.004, 0.182 - 0.036 * k + 0.004
+        gap.append([(rx * math.sin(math.radians(t)), -ry * math.cos(math.radians(t)), z) for t in range(-80, 81, 20)])
+    parts.add('Head', shell(gap, 0.006)[0], 'dark', at)
+    mid = (band[0] + band[1]) / 2
+    for x in (-0.062, 0, 0.062):
+        box, m = slit(Vector((x, plan[2][1], mid)), Vector((1, 0, 0)), Vector((0, -1, 0)), 0.032, 0.085)
+        parts.add('Head', box, 'slot', at @ m)
+    for sx in (-1, 1):
+        p1, p2 = Vector((plan[1][0] * sx, plan[1][1], 0)), Vector((plan[2][0] * sx, plan[2][1], 0))
+        along = (p2 - p1).normalized()
+        out = Vector((-along.y, along.x, 0))
+        if out.dot(p1 + p2) < 0:
+            out.negate()
+        for t in (0.35, 0.65):
+            box, m = slit(p1.lerp(p2, t) + Vector((0, 0, mid)), along, out, 0.03, 0.08)
+            parts.add('Head', box, 'slot', at @ m)
+
+    # The gold hinges the visor turns on, each with a rivet, and the plume's holder on top
+    for sx in (-1, 1):
+        parts.add('Head', cylinder(0.042, 0.042, 0.02), 'gold',
+                  at @ translated(sx * 0.2, 0.02, mid) @ rotated(sx * 90, 'Y'))
+        parts.add('Head', sphere(0.013, (1, 1, 1), 4, 2), 'gold', at @ translated(sx * 0.222, 0.02, mid))
+    parts.add('Head', cylinder(0.034, 0.03, 0.05, 6), 'gold', at @ translated(0, 0.04, 0.355))
+
+    # The plume rises from the holder, and sweeps back in two tails
+    main = [(0.0, 0.04, h + 0.14), (0.01, 0.02, h + 0.24), (0.04, 0.06, h + 0.34), (0.07, 0.15, h + 0.39),
+            (0.085, 0.27, h + 0.36), (0.085, 0.37, h + 0.26), (0.07, 0.42, h + 0.13), (0.05, 0.42, h + 0.01),
+            (0.035, 0.38, h - 0.08)]
+    parts.add('Head', ribbon(main, [0.07, 0.13, 0.18, 0.2, 0.19, 0.17, 0.14, 0.1, 0.03],
+                             [0.05, 0.08, 0.1, 0.11, 0.1, 0.09, 0.08, 0.06, 0.02]), 'red', at)
+    tail = [(0.05, 0.12, h + 0.33), (0.02, 0.25, h + 0.31), (-0.02, 0.36, h + 0.22), (-0.045, 0.43, h + 0.09),
+            (-0.05, 0.43, h - 0.03)]
+    parts.add('Head', ribbon(tail, [0.12, 0.14, 0.12, 0.09, 0.03], [0.07, 0.08, 0.07, 0.05, 0.02]), 'red', at)
+
+
 def build_parts(parts, j):
     """The knight, in the rest pose. Each part is added to the bone it moves with."""
-    # Legs: mail thighs, steel knees and greaves, and leather boots
+    # Legs: dark hose, steel knees with gold bands, steel greaves, and pointed steel sabatons
     for side, sx in (('R', -1), ('L', 1)):
         hip, knee, ankle = HIP_JOINT[side], j['knee_' + side], j['ankle_' + side]
-        parts.add('Thigh.' + side, cylinder(0.062, 0.058, (knee - hip).length), 'chain', placed(hip, knee))
-        parts.add('Thigh.' + side, sphere(0.068, (1, 1, 1), 16, 8), 'steel', translated(*knee))
-        parts.add('Shin.' + side, cylinder(0.066, 0.058, (ankle - knee).length + 0.02, bevel=0.01), 'steel',
-                  placed(knee, ankle))
-        parts.add('Foot.' + side, rounded_box(0.13, 0.21, 0.1, 0.05, 0.03), 'leather',
-                  translated(ankle.x + sx * 0.005, -0.035, 0.05))
+        down = (ankle - knee).normalized()
+        parts.add('Thigh.' + side, cylinder(0.058, 0.054, (knee - hip).length), 'dark', placed(hip, knee))
+        parts.add('Thigh.' + side, sphere(0.068, (1, 0.85, 1)), 'steel', translated(*knee))
+        parts.add('Shin.' + side, cylinder(0.064, 0.054, (ankle - knee).length), 'steel', placed(knee, ankle))
+        parts.add('Shin.' + side, ring(0.06, 0.074, 0.022), 'gold', placed(knee + down * 0.045, ankle))
+        shoe = chamfer_box(0.13, 0.22, 0.085, 0.014)
+        for v in shoe.verts:
+            f = max(0.0, -v.co.y / 0.11)
+            v.co.x *= 1 - 0.45 * f
+            if v.co.z > 0:
+                v.co.z -= 0.035 * f
+        parts.add('Foot.' + side, shoe, 'steel', translated(ankle.x + sx * 0.005, -0.04, 0.05))
+        parts.add('Foot.' + side, chamfer_box(0.132, 0.222, 0.014, 0.004), 'leather',
+                  translated(ankle.x + sx * 0.005, -0.04, 0.007))
+        parts.add('Foot.' + side, ring(0.052, 0.068, 0.024), 'gold', translated(ankle.x, 0, 0.085))
 
-    # Hips: a leather belt with a gold buckle, and the tabard's front and back flaps
-    belt = rounded_box(0.43, 0.33, 0.06, 0.11, 0.015)
-    parts.add('Hips', belt, 'leather', translated(0, 0, 0.53))
-    parts.add('Hips', rounded_box(0.08, 0.03, 0.055, 0.012, 0.01), 'gold', translated(0, -0.165, 0.53))
-    for y, tilt in ((-0.13, 8), (0.13, -8)):
-        flap = rounded_box(0.22, 0.025, 0.18, 0.01, 0.01)
-        bmesh.ops.translate(flap, vec=(0, 0, -0.09), verts=flap.verts)
-        m = translated(0, y, 0.52) @ Matrix.Rotation(math.radians(tilt), 4, 'X')
-        parts.add('Hips', flap, 'cloth', m)
+    # Hips: a leather belt with a gold buckle and a pouch, and the skirt of the tabard, red in the
+    # middle of the front and cream at its sides, cream in the middle of the back, with torn hems
+    parts.add('Hips', loft([octagon(0.37, 0.29, 0.07, 0.49), octagon(0.37, 0.29, 0.07, 0.56)]), 'leather')
+    parts.add('Hips', chamfer_box(0.085, 0.02, 0.075, 0.006), 'gold', translated(0, -0.152, 0.525))
+    parts.add('Hips', chamfer_box(0.048, 0.014, 0.038, 0.004), 'leather', translated(0, -0.158, 0.525))
+    parts.add('Hips', chamfer_box(0.09, 0.06, 0.09, 0.01), 'leather', translated(0.2, -0.03, 0.47))
+    parts.add('Hips', chamfer_box(0.096, 0.066, 0.034, 0.008), 'leather', translated(0.2, -0.03, 0.51))
+    panels = [
+        # (material, width, length, teeth, x, y, turn about Z)
+        ('red', 0.15, 0.2, [(1, 0.03), (0.4, -0.02), (-0.1, 0.05), (-0.6, 0.01), (-1, 0.035)], 0, -0.146, 0),
+        ('cream', 0.1, 0.17, [(1, 0.02), (0.3, -0.015), (-0.4, 0.03), (-1, 0.0)], -0.125, -0.13, 30),
+        ('cream', 0.1, 0.17, [(1, 0.0), (0.4, 0.03), (-0.3, -0.015), (-1, 0.02)], 0.125, -0.13, -30),
+        ('red', 0.13, 0.19, [(1, 0.02), (0.2, -0.015), (-0.5, 0.03), (-1, 0.0)], -0.185, 0, 90),
+        ('red', 0.13, 0.19, [(1, 0.0), (0.5, 0.03), (-0.2, -0.015), (-1, 0.02)], 0.185, 0, -90),
+        ('cream', 0.16, 0.2, [(1, 0.02), (0.35, -0.01), (-0.2, 0.04), (-1, 0.01)], 0, 0.146, 180)
+    ]
+    for material, width, length, teeth, x, y, turn in panels:
+        m = translated(x, y, 0.505) @ rotated(turn, 'Z') @ rotated(-7, 'X') @ UPRIGHT
+        parts.add('Hips', extrude_xy(hem(width, length, teeth), 0.014), material, m)
 
-    # Chest: the tabard over the body, a white star on it, and a mail collar
-    chest = rounded_box(0.42, 0.31, 0.32, 0.12, 0.06)
+    # Chest: a steel breastplate, a red tabard with the lion, and a red scarf around the neck that
+    # hangs in a point at the front and the back
+    chest = chamfer_box(0.34, 0.26, 0.3, 0.035)
     for v in chest.verts:
         if v.co.z < 0:
-            taper = 1 - 0.08 * (-v.co.z / 0.16)
-            v.co.x *= taper
-            v.co.y *= taper
-    parts.add('Spine', chest, 'cloth', translated(0, 0, 0.71))
-    parts.add('Spine', star(4, 0.075, 0.025, 0.012), 'white', translated(0, -0.152, 0.74))
-    parts.add('Spine', cylinder(0.1, 0.09, 0.08), 'chain', translated(0, 0, 0.84))
+            v.co.x *= 0.93
+            v.co.y *= 0.93
+    parts.add('Spine', chest, 'steel', translated(0, 0, 0.7))
+    parts.add('Spine', chamfer_box(0.21, 0.02, 0.23, 0.004), 'red', translated(0, -0.137, 0.665))
+    parts.add('Spine', lion(0.1, 0.006), 'cream', translated(0, -0.147, 0.615) @ UPRIGHT)
+    parts.add('Spine', cylinder(0.08, 0.075, 0.1), 'dark', translated(0, 0, 0.8))
+    collar = loft([octagon(0.31, 0.29, 0.08, 0.77), octagon(0.27, 0.25, 0.07, 0.875)])
+    parts.add('Spine', collar, 'red')
+    parts.add('Spine', extrude_xy([(-0.15, 0), (0.15, 0), (0, -0.1)], 0.022), 'red',
+              translated(0, -0.14, 0.815) @ rotated(-10, 'X') @ UPRIGHT)
+    parts.add('Spine', extrude_xy([(-0.16, 0), (0.16, 0), (0, -0.2)], 0.022), 'red',
+              translated(0, 0.14, 0.81) @ rotated(180, 'Z') @ rotated(-8, 'X') @ UPRIGHT)
 
-    # Head: a round helmet with an eye slit, a gold brow and an orange plume
-    center = Vector((0, 0, 1.07))
-    parts.add('Head', sphere(0.21, (1, 1, 0.97), 32, 16), 'steel', translated(*center))
-    parts.add('Head', arc_band(0.2, 0.214, -0.012, 0.03, -1.0, 1.0, 20), 'dark', translated(*center))
-    parts.add('Head', arc_band(0.2, 0.216, 0.05, 0.075, -1.25, 1.25, 24), 'gold', translated(*center))
-    parts.add('Head', cylinder(0.215, 0.2, 0.05, 32, 0.01), 'steel', translated(0, 0, 0.87))
-    for i in range(11):
-        t = i / 10
-        a = math.radians(55 + 115 * t)
-        r = 0.05 + 0.035 * math.sin(math.pi * min(1, t * 1.25))
-        p = center + Vector((0, -math.cos(a) * 0.215, math.sin(a) * 0.215))
-        parts.add('Head', sphere(r, (0.5, 1, 1), 12, 6), 'cloth', translated(*p))
+    build_helmet(parts, HEAD[0])
 
-    # Arms: steel pauldrons, mail upper arms, steel elbows and gauntlets, and leather fists
+    # Arms: layered steel pauldrons with gold rims and rivets, dark sleeves, steel elbows and
+    # vambraces with gold cuffs, and dark gauntlets
     for side, sx in (('R', -1), ('L', 1)):
         shoulder, elbow, hand = SHOULDER[side], j['elbow_' + side], j['hand_' + side]
-        pauldron = sphere(0.1, (1.15, 1.05, 0.85), 20, 10)
-        parts.add('UpperArm.' + side, pauldron, 'steel', translated(shoulder.x + sx * 0.02, 0, shoulder.z + 0.03))
-        parts.add('UpperArm.' + side, cylinder(0.05, 0.047, (elbow - shoulder).length), 'chain',
-                  placed(shoulder, elbow))
-        parts.add('Forearm.' + side, sphere(0.056, (1, 1, 1), 16, 8), 'steel', translated(*elbow))
-        parts.add('Forearm.' + side, cylinder(0.052, 0.06, (hand - elbow).length - 0.03, bevel=0.008), 'steel',
-                  placed(elbow, hand))
-        parts.add('Hand.' + side, sphere(0.055, (1, 1, 1), 16, 8), 'leather', translated(*hand))
+        top = translated(shoulder.x + sx * 0.035, 0, shoulder.z + 0.03) @ rotated(-sx * 25, 'Y')
+        parts.add('UpperArm.' + side, dome(0.12, 0.12, 0.085), 'steel', top)
+        parts.add('UpperArm.' + side, ring(0.108, 0.126, 0.018), 'gold', top)
+        lower = translated(shoulder.x + sx * 0.085, 0, shoulder.z - 0.02) @ rotated(-sx * 45, 'Y')
+        parts.add('UpperArm.' + side, dome(0.1, 0.105, 0.055), 'steel', lower)
+        parts.add('UpperArm.' + side, ring(0.09, 0.106, 0.015), 'gold', lower)
+        parts.add('UpperArm.' + side, sphere(0.018, (1, 1, 1), 4, 2), 'gold', top @ translated(0, -0.07, 0.06))
+        parts.add('UpperArm.' + side, cylinder(0.042, 0.04, (elbow - shoulder).length), 'dark', placed(shoulder, elbow))
+        along = (hand - elbow).normalized()
+        parts.add('Forearm.' + side, sphere(0.05), 'steel', translated(*elbow))
+        parts.add('Forearm.' + side, cylinder(0.046, 0.055, (hand - elbow).length - 0.03), 'steel', placed(elbow, hand))
+        parts.add('Forearm.' + side, ring(0.05, 0.063, 0.022), 'gold', placed(hand - along * 0.05, hand))
+        parts.add('Hand.' + side, chamfer_box(0.085, 0.09, 0.09, 0.016), 'dark', translated(*hand))
 
-    # The sword, in the right hand: its blade points along the hand bone
+    # The sword, in the right hand: its blade points along the hand bone, flat across its X axis
     hand = frame_matrix(j['hand_R'], BASE['blade_R'], BASE['flat_R'])
-    parts.add('Hand.R', blade(0.5, 0.08, 0.075, 0.018), 'steel', hand @ translated(0, 0.075, 0), smooth=False)
-    parts.add('Hand.R', rounded_box(0.2, 0.035, 0.035, 0.012, 0.012), 'gold', hand @ translated(0, 0.06, 0))
-    grip = cylinder(0.018, 0.018, 0.13, 12)
-    parts.add('Hand.R', grip, 'leather', hand @ translated(0, -0.07, 0) @ Matrix.Rotation(-math.pi / 2, 4, 'X'))
-    parts.add('Hand.R', sphere(0.03, (1, 1, 1), 12, 6), 'gold', hand @ translated(0, -0.085, 0))
+    parts.add('Hand.R', blade(0.46, 0.13, 0.085, 0.024), 'blade', hand @ translated(0, 0.075, 0))
+    guard = [(-0.13, 0), (-0.11, 0.022), (-0.035, 0.018), (-0.03, 0.035), (0.03, 0.035), (0.035, 0.018),
+             (0.11, 0.022), (0.13, 0), (0.11, -0.022), (0.035, -0.018), (0.03, -0.03), (-0.03, -0.03),
+             (-0.035, -0.018), (-0.11, -0.022)]
+    parts.add('Hand.R', extrude_xy(guard, 0.034), 'gold', hand @ translated(0, 0.055, -0.017))
+    along_blade = rotated(-90, 'X')
+    parts.add('Hand.R', cylinder(0.02, 0.02, 0.12, 6), 'leather', hand @ translated(0, -0.07, 0) @ along_blade)
+    for y in (-0.045, -0.01, 0.025):
+        parts.add('Hand.R', ring(0.018, 0.024, 0.012, 6), 'leather', hand @ translated(0, y, 0) @ along_blade)
+    parts.add('Hand.R', sphere(0.032, (1, 1, 1.5), 6, 2), 'gold', hand @ translated(0, -0.1, 0) @ along_blade)
 
-    # The shield, on the left forearm, facing out and forwards
+    # The shield, on the left forearm: gold rimmed, red and cream halves, and a lion in the colors
+    # of the other half. It stands upright, facing forwards and a little out, in front of the fist
     elbow, hand = j['elbow_L'], j['hand_L']
     normal = Vector(BASE['shield_L']).normalized()
-    shield = frame_matrix((elbow + hand) / 2 + normal * 0.075, (hand - elbow), normal)
-    # frame_matrix puts Z along the normal: build the shield's discs along Z
-    parts.add('Forearm.L', cylinder(0.18, 0.18, 0.025, 32, 0.008), 'steel', shield)
-    parts.add('Forearm.L', cylinder(0.155, 0.155, 0.04, 32, 0.01), 'cloth', shield)
-    parts.add('Forearm.L', sphere(0.05, (1, 1, 0.7), 16, 8), 'gold', shield @ translated(0, 0, 0.04))
+    shield = frame_matrix(hand + (elbow - hand) * 0.35 + normal * 0.07 + UP * -0.08, UP, normal)
+    parts.add('Forearm.L', extrude_xy(HEATER, 0.025), 'gold', shield)
+    field = split_at_x(extrude_xy(outline(HEATER, 0.88, (0, -0.004)), 0.016))
+    parts.add('Forearm.L', field, by_side('red', 'cream'), shield @ translated(0, 0, 0.025))
+    parts.add('Forearm.L', split_at_x(lion(0.22, 0.006)), by_side('cream', 'red'), shield @ translated(0, 0, 0.041))
+    for x, y in ((-0.125, 0.155), (0.125, 0.155), (-0.13, 0.0), (0.13, 0.0), (-0.06, -0.15), (0.06, -0.15)):
+        parts.add('Forearm.L', sphere(0.011, (1, 1, 1), 4, 2), 'gold', shield @ translated(x, y, 0.03))
 
 
 # -------------------------------------------------------------------------------------------------
@@ -521,9 +750,9 @@ def idle_keys():
             hips_dz=-0.006 * (1 - math.cos(t)) / 2,
             spine=(-1.5 * s, 0, 0),
             head=(1.5 * math.sin(2 * t), 5 * s, 0),
-            hand_R=(-0.25, -0.17, 0.56 + 0.008 * s),
-            blade_R=(0.05 + 0.03 * s, -0.35, 1.0),
-            hand_L=(0.27, -0.15, 0.58 + 0.008 * s)
+            hand_R=tuple(Vector(BASE['hand_R']) + Vector((0, 0, 0.008 * s))),
+            blade_R=tuple(Vector(BASE['blade_R']) + Vector((0.03 * s, 0, 0))),
+            hand_L=tuple(Vector(BASE['hand_L']) + Vector((0, 0, 0.008 * s)))
         )))
     return keys
 
