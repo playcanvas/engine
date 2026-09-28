@@ -435,11 +435,11 @@ class GSplatComponent extends Component {
 
     /**
      * Sets the multiplier between successive LOD distance thresholds. Each LOD level transitions
-     * at this factor times the previous level's distance, creating a geometric progression. Lower
-     * values keep higher quality at distance; higher values switch to coarser LODs sooner. LOD
-     * distances are compensated for the camera's field of view - a wider FOV makes objects appear
-     * smaller on screen, so LOD switches to coarser levels sooner. Clamped to a minimum of 1.2.
-     * Defaults to 3.
+     * at this factor times the previous level's distance, creating a geometric progression. Higher
+     * values keep finer detail further from the camera, at a higher memory cost; lower values
+     * switch to coarser levels sooner. LOD distances are compensated for the camera's field of
+     * view - a wider FOV makes objects appear smaller on screen, so LOD switches to coarser levels
+     * sooner. Clamped to a minimum of 1.2. Defaults to 3.
      *
      * @type {number}
      */
