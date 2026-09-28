@@ -1,8 +1,10 @@
 import { expect } from 'chai';
+import { restore, stub } from 'sinon';
 
 import { Color } from '../../../src/core/math/color.js';
 import { OutlineRenderer } from '../../../src/extras/renderers/outline-renderer.js';
 import { Entity } from '../../../src/framework/entity.js';
+import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -18,6 +20,7 @@ describe('OutlineRenderer', function () {
     });
 
     afterEach(function () {
+        restore();
         renderer?.destroy();
         renderer = null;
         app?.destroy();
@@ -87,5 +90,88 @@ describe('OutlineRenderer', function () {
         expect(outlinedCount()).to.equal(0);
         expect(meshInstance.getParameter('pcOutlineColor')).to.equal(undefined);
         expect(meshInstance.material.onUpdateShader).to.equal(null);
+    });
+
+    it('resets the materials when removing all entities', function () {
+        const entity = createEntity();
+        renderer.addEntity(entity, Color.RED);
+        const meshInstance = entity.render.meshInstances[0];
+
+        renderer.removeAllEntities();
+
+        expect(outlinedCount()).to.equal(0);
+        expect(meshInstance.getParameter('pcOutlineColor')).to.equal(undefined);
+        expect(meshInstance.material.onUpdateShader).to.equal(null);
+    });
+
+    it('keeps the shader callback of a material it did not outline when removing all entities', function () {
+        // a mesh instance added to the shared rendering layer by other code
+        const other = createEntity();
+        other.render.material = new StandardMaterial();
+        const callback = options => options;
+        other.render.material.onUpdateShader = callback;
+        renderer.renderingLayer.addMeshInstances(other.render.meshInstances);
+
+        renderer.addEntity(createEntity(), Color.RED);
+        renderer.removeAllEntities();
+
+        expect(other.render.material.onUpdateShader).to.equal(callback);
+    });
+
+    describe('#frameUpdate', function () {
+
+        let cameraEntity;
+        let blendLayer;
+
+        beforeEach(function () {
+            cameraEntity = new Entity();
+            cameraEntity.addComponent('camera');
+            app.root.addChild(cameraEntity);
+            blendLayer = app.scene.layers.getLayerByName('Immediate');
+        });
+
+        const renderBlendLayer = () => app.scene.fire('prerender:layer', cameraEntity.camera, blendLayer, false);
+
+        it('composites the outlines once per update', function () {
+            const blend = stub(renderer, 'blendOutlines');
+
+            renderer.frameUpdate(cameraEntity, blendLayer, false);
+            renderBlendLayer();
+            renderBlendLayer();
+
+            expect(blend.callCount).to.equal(1);
+        });
+
+        it('composites the outlines once after updates on frames the blend layer was not rendered', function () {
+            const blend = stub(renderer, 'blendOutlines');
+
+            renderer.frameUpdate(cameraEntity, blendLayer, false);
+            renderer.frameUpdate(cameraEntity, blendLayer, false);
+            renderer.frameUpdate(cameraEntity, blendLayer, false);
+            renderBlendLayer();
+
+            expect(blend.callCount).to.equal(1);
+        });
+
+        it('only composites the outlines before the requested layer', function () {
+            const blend = stub(renderer, 'blendOutlines');
+
+            renderer.frameUpdate(cameraEntity, blendLayer, false);
+            app.scene.fire('prerender:layer', cameraEntity.camera, blendLayer, true);
+            app.scene.fire('prerender:layer', cameraEntity.camera, app.scene.layers.getLayerByName('World'), false);
+
+            expect(blend.callCount).to.equal(0);
+        });
+
+        it('does not composite the outlines after it is destroyed', function () {
+            const blend = stub(renderer, 'blendOutlines');
+
+            renderer.frameUpdate(cameraEntity, blendLayer, false);
+            renderer.destroy();
+            renderer = null;
+            renderBlendLayer();
+
+            expect(blend.callCount).to.equal(0);
+        });
     });
 });

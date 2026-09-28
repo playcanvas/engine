@@ -148,6 +148,53 @@ class OutlineRenderer {
         };
         app.scene.on('postrender', this.postRender);
 
+        // the scene camera and the layer before which the outlines are composited, set by
+        // frameUpdate. The camera is cleared once the outlines are composited, so that they are
+        // composited at most once per update, even if frameUpdate was called on frames in which
+        // the scene camera did not render the layer.
+        this.blendCamera = null;
+        this.blendLayer = null;
+        this.blendLayerTransparent = false;
+
+        // function called before a camera renders a layer, which composites the outlines
+        this.preRenderLayer = (cameraComponent, layer, transparent) => {
+            if (this.blendCamera === cameraComponent && this.blendLayer === layer && this.blendLayerTransparent === transparent) {
+                this.blendCamera = null;
+                this.blendOutlines();
+            }
+        };
+        app.scene.on('prerender:layer', this.preRenderLayer);
+
+        // shader options callback set on the materials of the outlined mesh instances. A single
+        // function, so that the outline renderer can recognize the materials it has set it on.
+        this.updateOutlineShader = (options) => {
+
+            if (options.pass === this.outlineShaderPass) {
+
+                // custom shader for the outline shader pass, preserving material opacity
+                const opts = new StandardMaterialOptions();
+                opts.defines = options.defines;
+                opts.opacityMap = options.opacityMap;
+                opts.opacityMapUv = options.opacityMapUv;
+                opts.opacityMapChannel = options.opacityMapChannel;
+                opts.opacityMapTransform = options.opacityMapTransform;
+                opts.opacityVertexColor = options.opacityVertexColor;
+                opts.opacityVertexColorChannel = options.opacityVertexColorChannel;
+                opts.litOptions.vertexColors = options.litOptions.vertexColors;
+                opts.litOptions.alphaTest = options.litOptions.alphaTest;
+                opts.litOptions.skin = options.litOptions.skin;
+                opts.litOptions.batch = options.litOptions.batch;
+                opts.litOptions.useInstancing = options.litOptions.useInstancing;
+                opts.litOptions.useMorphPosition = options.litOptions.useMorphPosition;
+                opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
+                opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
+                opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
+                return opts;
+            }
+
+            return options;
+        };
+
         // add the camera to the scene
         this.app.root.addChild(this.outlineCameraEntity);
 
@@ -193,6 +240,9 @@ class OutlineRenderer {
         this.tempRt = null;
 
         this.app.scene.off('postrender', this.postRender);
+        this.app.scene.off('prerender:layer', this.preRenderLayer);
+        this.blendCamera = null;
+        this.blendLayer = null;
 
         this.quadRenderer?.destroy();
         this.quadRenderer = null;
@@ -250,34 +300,7 @@ class OutlineRenderer {
         // update all materials
         meshInstances.forEach((meshInstance) => {
             if (meshInstance.material instanceof StandardMaterial) {
-                const outlineShaderPass = this.outlineShaderPass;
-                meshInstance.material.onUpdateShader = (options) => {
-
-                    if (options.pass === outlineShaderPass) {
-
-                        // custom shader for the outline shader pass, preserving material opacity
-                        const opts = new StandardMaterialOptions();
-                        opts.defines = options.defines;
-                        opts.opacityMap = options.opacityMap;
-                        opts.opacityMapUv = options.opacityMapUv;
-                        opts.opacityMapChannel = options.opacityMapChannel;
-                        opts.opacityMapTransform = options.opacityMapTransform;
-                        opts.opacityVertexColor = options.opacityVertexColor;
-                        opts.opacityVertexColorChannel = options.opacityVertexColorChannel;
-                        opts.litOptions.vertexColors = options.litOptions.vertexColors;
-                        opts.litOptions.alphaTest = options.litOptions.alphaTest;
-                        opts.litOptions.skin = options.litOptions.skin;
-                        opts.litOptions.batch = options.litOptions.batch;
-                        opts.litOptions.useInstancing = options.litOptions.useInstancing;
-                        opts.litOptions.useMorphPosition = options.litOptions.useMorphPosition;
-                        opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
-                        opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
-                        opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
-                        return opts;
-                    }
-
-                    return options;
-                };
+                meshInstance.material.onUpdateShader = this.updateOutlineShader;
 
                 // set the color consumed only by the pcOutline shader variant
                 _tempColor.linear(color);
@@ -301,17 +324,32 @@ class OutlineRenderer {
         // outline material state cleaned up
         const meshInstances = this.getMeshInstances(entity, recursive, true);
         this.renderingLayer.removeMeshInstances(meshInstances);
-
-        meshInstances.forEach((meshInstance) => {
-            if (meshInstance.material instanceof StandardMaterial) {
-                meshInstance.material.onUpdateShader = null;
-                meshInstance.deleteParameter('pcOutlineColor');
-            }
-        });
+        meshInstances.forEach(meshInstance => this.resetMeshInstance(meshInstance));
     }
 
     removeAllEntities() {
-        this.renderingLayer.clearMeshInstances();
+        // the rendering layer can be shared, so only mesh instances outlined by this renderer are
+        // reset, but all of them are removed from the layer
+        const layer = this.renderingLayer;
+        layer.meshInstances.forEach(meshInstance => this.resetMeshInstance(meshInstance));
+        layer.clearMeshInstances();
+    }
+
+    /**
+     * Reset the outline state set on a mesh instance by {@link OutlineRenderer#addEntity}.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance to reset.
+     * @ignore
+     */
+    resetMeshInstance(meshInstance) {
+        const material = meshInstance.material;
+        if (material instanceof StandardMaterial) {
+            // leave a callback which was not set by this renderer in place
+            if (material.onUpdateShader === this.updateOutlineShader) {
+                material.onUpdateShader = null;
+            }
+            meshInstance.deleteParameter('pcOutlineColor');
+        }
     }
 
     blendOutlines() {
@@ -402,13 +440,10 @@ class OutlineRenderer {
         const sceneCamera = sceneCameraEntity.camera;
         this.updateRenderTarget(sceneCamera);
 
-        // function called before the scene camera renders a layer
-        const evt = this.app.scene.on('prerender:layer', (cameraComponent, layer, transparent) => {
-            if (sceneCamera === cameraComponent && transparent === blendLayerTransparent && layer === blendLayer) {
-                this.blendOutlines();
-                evt.off();
-            }
-        });
+        // composite the outlines before the scene camera renders the blend layer
+        this.blendCamera = sceneCamera;
+        this.blendLayer = blendLayer;
+        this.blendLayerTransparent = blendLayerTransparent;
 
         // copy the transform
         this.outlineCameraEntity.setLocalPosition(sceneCameraEntity.getPosition());
