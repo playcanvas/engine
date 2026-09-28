@@ -25,7 +25,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLATDATA_LARGE,
     GSPLAT_DEBUG_NONE,
-    GSPLAT_LODMODE_DISTANCE,
+    GSPLAT_BUDGET_TARGET,
     GSPLAT_RENDERER_AUTO,
     GSplatComponentSystem,
     GSplatHandler,
@@ -272,8 +272,13 @@ data.set('culling', device.isWebGPU);
 data.set('compact', true);
 data.set('debug', GSPLAT_DEBUG_NONE);
 data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
-data.set('lodMode', GSPLAT_LODMODE_DISTANCE);
-data.set('lodFalloff', 1);
+// How the splat budget is used: a target that detail is raised to fill, or a limit on the detail
+// the LOD distances ask for. Splat Budget 0 means no budget at all.
+data.set('splatBudgetMode', GSPLAT_BUDGET_TARGET);
+data.set('lodBaseDistance', 5);
+data.set('lodMultiplier', 3);
+// Experimental: shrink each LOD node's bounds towards its center before measuring its distance
+data.set('lodDistanceShrink', 0.75);
 data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');
 data.set('fogDensity', 0);
@@ -524,7 +529,8 @@ const loadGSplat = async (/** @type {string|null} */ url) => {
     gsplatEntity.setLocalScale(1, 1, 1);
     app.root.addChild(gsplatEntity);
     gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
-    gsplatGs.lodFalloff = data.get('lodFalloff');
+    gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
+    gsplatGs.lodMultiplier = data.get('lodMultiplier');
 
     // Start with lowest LOD for fast initial display, then stream up
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
@@ -566,13 +572,28 @@ await loadGSplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);
 
-data.on('lodMode:set', () => {
-    app.scene.gsplat.lodMode = data.get('lodMode');
+const applySplatBudgetMode = () => {
+    app.scene.gsplat.splatBudgetMode = data.get('splatBudgetMode');
+};
+applySplatBudgetMode();
+data.on('splatBudgetMode:set', applySplatBudgetMode);
+
+const applyLodDistanceShrink = () => {
+    // @ts-ignore - experimental, not part of the public API
+    app.scene.gsplat.lodDistanceShrink = data.get('lodDistanceShrink');
+};
+applyLodDistanceShrink();
+data.on('lodDistanceShrink:set', applyLodDistanceShrink);
+
+data.on('lodBaseDistance:set', () => {
+    if (gsplatGs) {
+        gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
+    }
 });
 
-data.on('lodFalloff:set', () => {
+data.on('lodMultiplier:set', () => {
     if (gsplatGs) {
-        gsplatGs.lodFalloff = data.get('lodFalloff');
+        gsplatGs.lodMultiplier = data.get('lodMultiplier');
     }
 });
 

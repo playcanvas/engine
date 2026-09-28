@@ -1,50 +1,30 @@
-import { GSPLAT_LODMODE_DISTANCE, GSPLAT_LODMODE_ERROR } from '../constants.js';
-
 /**
  * @import { GSplatOctree } from './gsplat-octree.js'
  */
 
-// Band spacing for GSPLAT_LODMODE_DISTANCE. A step to absolute level i is priced at
-// M^(2 * (i - 1)) error per splat, so node content cancels out of the ranking and a node of a
-// given size steps down one level per xM^(1/lodFalloff) of distance, with the band edges set by
-// the budget. 3 matches the multiplier the old distance-band system defaulted to.
-const DISTANCE_BAND_MULTIPLIER = 3;
-
 /**
- * Everything the budget allocator can know about an octree before it sees a camera, precomputed
+ * Everything the LOD allocator needs to know about an octree before it sees a camera, precomputed
  * once per LOD range.
  *
- * Each node is reduced to a chain of single-level *upgrades*, ordered cheapest level first. The
- * chain is the Pareto frontier over (splat count, error): a level is kept only when it strictly
- * improves on the cheapest error seen so far, which discards levels that cost more and look worse
- * than something else the node already offers - a small fraction in practice, and redundant by
- * definition. Requiring a *strict* improvement also collapses levels identical in both, so
- * consecutive entries always differ in both and every upgrade's cost stays above zero.
+ * LOD selection is by distance band: a node's band is the LOD index its distance calls for,
+ * clamped to the range. The table maps each band to the level the node actually renders for it,
+ * and that level's splat count. Normally that is the band itself, since every level is kept - a
+ * node whose levels barely differ in splat count still renders the level its distance asks for, so
+ * nearby nodes keep sharing the same files instead of pulling in finer ones for a handful of
+ * splats.
  *
- * Every level that survives is a level the node can render, and the allocator moves one level at a
- * time. Nothing else is dropped: levels that are poor value for their splats are still real
- * improvements, and the chain doubles as the set of states streaming and underfill may pass
- * through, so removing them would deny a loaded level to underfill and turn prefetch's one-level
- * climb into a multi-level jump.
+ * Levels a node has no data for are resolved to one it has:
+ * - A gap between two levels with data renders the next finer level with data, or the next coarser
+ * one when there is nothing finer.
+ * - A node whose data stops before `rangeMax` - the generator decimated the region to nothing at
+ * the coarser levels - renders nothing at the bands past its coarsest data. That is its *empty*
+ * level: zero splats and no file, placed at the first missing index. Without it such a node would
+ * be pinned to its finest available data at any distance, which loads a whole file for a handful
+ * of splats.
  *
- * Per update the allocator needs one number per node - its projected screen coverage - and the
- * value of an upgrade is `coverage * error removed / splats added`. The second factor is fixed and
- * coverage is a single non-negative scalar multiplying every upgrade of that node equally, so
- * {@link GSplatLodTable#upgradeRatio} holds the fixed part and selection costs one multiply per
- * upgrade.
- *
- * In {@link GSPLAT_LODMODE_DISTANCE} the node's error metadata is deliberately ignored and a
- * synthetic table is used instead, shaped so that error-per-splat is a per-level constant across
- * all nodes. Content then cancels out of the ranking entirely and selection degenerates to
- * distance bands: every node steps coarser at fixed distance ratios, which is the guarantee that
- * mode exists to provide.
- *
- * A node whose data stops before `rangeMax` - the generator decimated the region to nothing at the
- * coarser levels - gets one *empty* level at the first missing index: zero splats, no file, and an
- * error one decimation step worse than its coarsest data. It is the chain's start, so the node draws
- * nothing until the allocator buys its real coarsest level, exactly as it would for a node that held
- * that level with zero splats. Without it such a node was pinned to its finest available data at any
- * distance, which loads a whole file for a handful of splats.
+ * The distinct levels of a node's bands, coarsest first, form its *chain*: the states streaming and
+ * underfill step through. Chain entries are ordered by LOD index, not by splat count - nothing
+ * guarantees a coarser level holds fewer splats, and barely decimated nodes often do not.
  *
  * @ignore
  */
@@ -64,12 +44,12 @@ class GSplatLodTable {
     rangeMax;
 
     /**
-     * The LOD selection mode this table was built for - GSPLAT_LODMODE_ERROR or
-     * GSPLAT_LODMODE_DISTANCE. Part of the octree's cache identity alongside the range.
+     * Number of bands, `rangeMax - rangeMin + 1`, and so the row length of
+     * {@link GSplatLodTable#bandLod} and {@link GSplatLodTable#bandCount}.
      *
-     * @type {string}
+     * @type {number}
      */
-    lodMode;
+    span;
 
     /**
      * How many octree instances currently hold this table. Managed by the owning
@@ -82,68 +62,32 @@ class GSplatLodTable {
     refCount = 0;
 
     /**
-     * Per node, the cheapest renderable level in range - where the allocator starts before it
-     * spends anything. May be the node's empty level (see above): zero splats and a file index of
-     * -1. -1 when the node has no renderable level in range at all.
+     * Per node and band, the LOD index rendered for that band. Node `n`, band `b` (absolute LOD
+     * index `rangeMin + b`) is at `n * span + b`. -1 across the whole row when the node has nothing
+     * renderable in range. May be the node's empty level, which has no file.
      *
      * @type {Int16Array}
      */
-    startLod;
+    bandLod;
 
     /**
-     * Per node, the splat count at {@link GSplatLodTable#startLod}.
+     * Per node and band, the splat count of {@link GSplatLodTable#bandLod}. Same layout.
      *
      * @type {Int32Array}
      */
-    startCount;
+    bandCount;
 
     /**
-     * Per node, where its upgrade slice begins. Node `n` owns
-     * `[firstUpgrade[n], firstUpgrade[n + 1])`, so the array holds one extra entry and the slice
-     * length needs no second array.
-     *
-     * @type {Int32Array}
-     */
-    firstUpgrade;
-
-    /**
-     * Per upgrade, the LOD index it moves the node to.
-     *
-     * @type {Int16Array}
-     */
-    upgradeToLod;
-
-    /**
-     * Per upgrade, the additional splats it costs. Always above zero.
-     *
-     * @type {Int32Array}
-     */
-    upgradeCost;
-
-    /**
-     * Per upgrade, error removed per additional splat over the best run this upgrade opens up -
-     * `max` over the levels reachable from where it starts, rather than its own slope. Multiplying
-     * by the node's coverage yields the upgrade's value.
-     *
-     * Note this is not monotone along a chain: once a poorly-valued step has been taken, what
-     * remains can be worth more than what was just bought. The allocator tolerates that, see
-     * GSplatBudgetBalancer.
-     *
-     * @type {Float32Array}
-     */
-    upgradeRatio;
-
-    /**
-     * Sum of {@link GSplatLodTable#startCount} over all nodes - the splat cost of the whole octree
-     * before any upgrade is bought.
+     * Sum of the coarsest band's splat count over all nodes - the splat cost of the whole octree at
+     * its coarsest.
      *
      * @type {number}
      */
-    totalStartCount = 0;
+    totalCoarsestCount = 0;
 
     /**
-     * Sum of the finest renderable level in range over all nodes - the splat cost with every
-     * upgrade bought.
+     * Sum of the finest band's splat count over all nodes - the splat cost of the whole octree at
+     * its finest.
      *
      * @type {number}
      */
@@ -153,48 +97,25 @@ class GSplatLodTable {
      * @param {GSplatOctree} octree - The octree to build the table for.
      * @param {number} rangeMin - Finest allowed LOD index.
      * @param {number} rangeMax - Coarsest allowed LOD index.
-     * @param {string} [lodMode] - GSPLAT_LODMODE_ERROR or GSPLAT_LODMODE_DISTANCE; callers pass the
-     * scene's GSplatParams#lodMode. GSPLAT_LODMODE_ERROR when omitted.
      */
-    constructor(octree, rangeMin, rangeMax, lodMode = GSPLAT_LODMODE_ERROR) {
+    constructor(octree, rangeMin, rangeMax) {
         this.rangeMin = rangeMin;
         this.rangeMax = rangeMax;
-        this.lodMode = lodMode;
 
         const nodes = octree.nodes;
         const nodeCount = nodes.length;
-        const spanLength = rangeMax - rangeMin + 1;
+        const span = rangeMax - rangeMin + 1;
+        this.span = span;
 
-        this.startLod = new Int16Array(nodeCount);
-        this.startCount = new Int32Array(nodeCount);
-        this.firstUpgrade = new Int32Array(nodeCount + 1);
+        const bandLod = new Int16Array(nodeCount * span);
+        const bandCount = new Int32Array(nodeCount * span);
 
-        // A node contributes at most one upgrade per level boundary in range.
-        const maxUpgrades = nodeCount * Math.max(0, spanLength - 1);
-        const upgradeToLod = new Int16Array(maxUpgrades);
-        const upgradeCost = new Int32Array(maxUpgrades);
-        const upgradeRatio = new Float32Array(maxUpgrades);
-
-        // Reused per node: the candidate levels, then the frontier compacted in place over them.
-        const scratch = new Int16Array(spanLength);
-
-        // The error each level is judged by, indexed by absolute LOD. In error mode this mirrors
-        // the node's own table; in distance mode it is synthesized per node so that every step's
-        // error-per-splat is the per-level band weight, making the ranking content-free.
-        const distanceMode = lodMode === GSPLAT_LODMODE_DISTANCE;
-        const err = new Float64Array(rangeMax + 1);
-        const bandWeight = new Float64Array(rangeMax + 1);
-        for (let lod = 1; lod <= rangeMax; lod++) {
-            bandWeight[lod] = Math.pow(DISTANCE_BAND_MULTIPLIER, 2 * (lod - 1));
-        }
-
-        let upgradeCount = 0;
-        let totalStartCount = 0;
+        let totalCoarsestCount = 0;
         let totalFinestCount = 0;
 
         for (let n = 0; n < nodeCount; n++) {
             const lods = nodes[n].lods;
-            this.firstUpgrade[n] = upgradeCount;
+            const row = n * span;
 
             // The coarsest level in range holding data. When that is finer than rangeMax, the level
             // just above it becomes the node's empty level - see the class notes.
@@ -205,126 +126,48 @@ class GSplatLodTable {
                     break;
                 }
             }
-            const emptyLod = (coarsestData >= 0 && coarsestData < rangeMax) ? coarsestData + 1 : -1;
 
-            if (distanceMode) {
-                let finerCount = -1;
-                let e = 0;
-                for (let lod = rangeMin; lod <= rangeMax; lod++) {
-                    if (lods[lod].count <= 0) continue;
-                    if (finerCount >= 0) {
-                        e += Math.max(finerCount - lods[lod].count, 1) * bandWeight[lod];
-                    }
-                    err[lod] = e;
-                    finerCount = lods[lod].count;
-                }
-                // one more band step: dropping the coarsest data altogether
-                if (emptyLod >= 0) {
-                    err[emptyLod] = e + Math.max(finerCount, 1) * bandWeight[emptyLod];
-                }
-            } else {
-                for (let lod = rangeMin; lod <= rangeMax; lod++) {
-                    err[lod] = lods[lod].error;
-                }
-                // The manifest carries no error for a level it holds no data at. Extrapolate the
-                // node's last decimation step, so the empty level is strictly worse than its coarsest
-                // data and error mode can still choose to lift the node when that is worth its splats.
-                // The step is taken from the node's own finer levels, including any below rangeMin,
-                // so its magnitude is the asset's: only a node with data at a single level overall
-                // falls through to the constant, one halving in derived-error units.
-                if (emptyLod >= 0) {
-                    const ec = err[coarsestData];
-                    let step = 0;
-                    for (let lod = coarsestData - 1; lod >= 0; lod--) {
-                        if (lods[lod].count > 0) {
-                            step = ec - lods[lod].error;
-                            break;
-                        }
-                    }
-                    err[emptyLod] = ec + (step > 0 ? step : Math.LN2);
-                }
-            }
-
-            // Collect renderable levels in range, ordered by ascending cost and then ascending
-            // error. Insertion sort: the list is at most spanLength long and, since coarser levels
-            // normally hold fewer splats, usually already in order. The empty level holds no splats,
-            // so it sorts first and starts the chain.
-            let candidateCount = 0;
-            for (let lod = rangeMax; lod >= rangeMin; lod--) {
-                if (lods[lod].count <= 0 && lod !== emptyLod) continue;
-                let j = candidateCount++;
-                while (j > 0) {
-                    const prev = scratch[j - 1];
-                    if (lods[prev].count < lods[lod].count ||
-                        (lods[prev].count === lods[lod].count && err[prev] <= err[lod])) {
-                        break;
-                    }
-                    scratch[j] = prev;
-                    j--;
-                }
-                scratch[j] = lod;
-            }
-
-            // Pareto frontier in one sweep of that order. Compacts in place, since the write index
-            // never runs ahead of the read index.
-            let frontierCount = 0;
-            let bestError = Infinity;
-            for (let i = 0; i < candidateCount; i++) {
-                const lod = scratch[i];
-                if (err[lod] < bestError) {
-                    bestError = err[lod];
-                    scratch[frontierCount++] = lod;
-                }
-            }
-
-            if (frontierCount === 0) {
-                this.startLod[n] = -1;
-                this.startCount[n] = 0;
+            if (coarsestData < 0) {
+                bandLod.fill(-1, row, row + span);
                 continue;
             }
 
-            const startLod = scratch[0];
-            this.startLod[n] = startLod;
-            this.startCount[n] = lods[startLod].count;
-            totalStartCount += lods[startLod].count;
-            totalFinestCount += lods[scratch[frontierCount - 1]].count;
-
-            for (let i = 1; i < frontierCount; i++) {
-                const coarseLod = scratch[i - 1];
-                const fineLod = scratch[i];
-
-                // Value this step by the best deal reachable by carrying on from where it starts,
-                // not by its own slope. A step can be poor on its own while the run it opens is
-                // excellent - for levels (20,10) -> (90,8) -> (100,0) the first step removes 2
-                // error for 70 splats, but reaching 100 removes 10 for 80. Priced locally the node
-                // looks worthless and loses the budget to genuinely inferior upgrades elsewhere;
-                // priced by its reach it competes on what it is actually worth, then climbs one
-                // level at a time. O(levels) per step over a handful of levels.
-                let ratio = 0;
-                for (let j = i; j < frontierCount; j++) {
-                    const reach = scratch[j];
-                    const r = (err[coarseLod] - err[reach]) /
-                              (lods[reach].count - lods[coarseLod].count);
-                    if (r > ratio) ratio = r;
+            const emptyLod = coarsestData + 1;
+            for (let b = 0; b < span; b++) {
+                const band = rangeMin + b;
+                let lod = band;
+                if (band > coarsestData) {
+                    lod = emptyLod;
+                } else if (lods[band].count <= 0) {
+                    // a gap: the next finer level with data, else the next coarser one
+                    lod = -1;
+                    for (let l = band - 1; l >= rangeMin; l--) {
+                        if (lods[l].count > 0) {
+                            lod = l;
+                            break;
+                        }
+                    }
+                    if (lod < 0) {
+                        for (let l = band + 1; l <= coarsestData; l++) {
+                            if (lods[l].count > 0) {
+                                lod = l;
+                                break;
+                            }
+                        }
+                    }
                 }
-
-                upgradeToLod[upgradeCount] = fineLod;
-                upgradeCost[upgradeCount] = lods[fineLod].count - lods[coarseLod].count;
-                upgradeRatio[upgradeCount] = ratio;
-                upgradeCount++;
+                bandLod[row + b] = lod;
+                bandCount[row + b] = lod === emptyLod ? 0 : lods[lod].count;
             }
 
+            totalFinestCount += bandCount[row];
+            totalCoarsestCount += bandCount[row + span - 1];
         }
 
-        this.firstUpgrade[nodeCount] = upgradeCount;
-        this.totalStartCount = totalStartCount;
+        this.bandLod = bandLod;
+        this.bandCount = bandCount;
+        this.totalCoarsestCount = totalCoarsestCount;
         this.totalFinestCount = totalFinestCount;
-
-        // Trim to what was actually used - dominated levels mean this is often well short of the
-        // upper bound, and the arrays live as long as the octree.
-        this.upgradeToLod = upgradeToLod.subarray(0, upgradeCount).slice();
-        this.upgradeCost = upgradeCost.subarray(0, upgradeCount).slice();
-        this.upgradeRatio = upgradeRatio.subarray(0, upgradeCount).slice();
     }
 
     /**
@@ -332,9 +175,7 @@ class GSplatLodTable {
      * `limit` levels above it, preferring the finest such level that satisfies `accept`.
      *
      * Streaming fallbacks use this instead of walking raw LOD indices, so they can only ever pick
-     * a level the allocator itself would consider. That keeps the splat count monotone as a node
-     * climbs towards its target: chain entries are ordered by ascending cost, whereas raw level
-     * indices are not - nothing guarantees a coarser level holds fewer splats.
+     * a level the allocator itself could choose.
      *
      * @param {number} nodeIndex - The node.
      * @param {number} lod - The target LOD index, expected to be on the node's chain.
@@ -343,42 +184,41 @@ class GSplatLodTable {
      * @returns {number} The chosen LOD index, or -1 when nothing in the window qualifies.
      */
     findCoarserAccepted(nodeIndex, lod, limit, accept) {
-        const start = this.firstUpgrade[nodeIndex];
-        const end = this.firstUpgrade[nodeIndex + 1];
+        const bandLod = this.bandLod;
+        const row = nodeIndex * this.span;
+        const end = row + this.span;
 
-        // Position of `lod` in the chain. Entry -1 is startLod, entry k is upgradeToLod[start + k].
-        let position = -1;
-        for (let k = start; k < end; k++) {
-            if (this.upgradeToLod[k] === lod) {
-                position = k - start;
-                break;
-            }
-        }
-        if (position < 0 && this.startLod[nodeIndex] !== lod) return -1;
+        // first band rendering `lod`; bands are non-decreasing in LOD, so the chain continues after it
+        let b = row;
+        while (b < end && bandLod[b] !== lod) b++;
+        if (b === end) return -1;
 
-        // Finest first: the target itself, then progressively coarser chain entries.
-        const lowest = Math.max(-1, position - limit);
-        for (let p = position; p >= lowest; p--) {
-            const candidate = p < 0 ? this.startLod[nodeIndex] : this.upgradeToLod[start + p];
+        // finest first: the target itself, then progressively coarser chain entries
+        let steps = 0;
+        let previous = -1;
+        for (; b < end && steps <= limit; b++) {
+            const candidate = bandLod[b];
+            if (candidate === previous) continue;
+            if (previous >= 0) steps++;
+            if (steps > limit) break;
             if (accept(candidate)) return candidate;
+            previous = candidate;
         }
         return -1;
     }
 
     /**
-     * Returns the next coarser level on a node's chain, or -1 when `lod` is already its cheapest.
+     * Returns the next coarser level on a node's chain, or -1 when `lod` is already its coarsest.
      *
      * @param {number} nodeIndex - The node.
      * @param {number} lod - A LOD index on the node's chain.
      * @returns {number} The next coarser chain entry, or -1.
      */
     coarserOnChain(nodeIndex, lod) {
-        const start = this.firstUpgrade[nodeIndex];
-        const end = this.firstUpgrade[nodeIndex + 1];
-        for (let k = start; k < end; k++) {
-            if (this.upgradeToLod[k] === lod) {
-                return k === start ? this.startLod[nodeIndex] : this.upgradeToLod[k - 1];
-            }
+        const bandLod = this.bandLod;
+        const row = nodeIndex * this.span;
+        for (let b = row, end = row + this.span; b < end; b++) {
+            if (bandLod[b] > lod) return bandLod[b];
         }
         return -1;
     }
@@ -391,12 +231,10 @@ class GSplatLodTable {
      * @returns {number} The next finer chain entry, or -1.
      */
     finerOnChain(nodeIndex, lod) {
-        const start = this.firstUpgrade[nodeIndex];
-        const end = this.firstUpgrade[nodeIndex + 1];
-        if (start === end) return -1;
-        if (this.startLod[nodeIndex] === lod) return this.upgradeToLod[start];
-        for (let k = start; k < end - 1; k++) {
-            if (this.upgradeToLod[k] === lod) return this.upgradeToLod[k + 1];
+        const bandLod = this.bandLod;
+        const row = nodeIndex * this.span;
+        for (let b = row + this.span - 1; b >= row; b--) {
+            if (bandLod[b] >= 0 && bandLod[b] < lod) return bandLod[b];
         }
         return -1;
     }

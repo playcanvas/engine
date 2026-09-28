@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { GSplatAssetLoader } from '../../../src/framework/components/gsplat/gsplat-asset-loader.js';
-import { GSPLAT_LODMODE_ERROR, PROJECTION_PERSPECTIVE } from '../../../src/scene/constants.js';
+import { PROJECTION_PERSPECTIVE } from '../../../src/scene/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { GSplatBudgetBalancer } from '../../../src/scene/gsplat-unified/gsplat-budget-balancer.js';
 import { GSplatOctreeInstance } from '../../../src/scene/gsplat-unified/gsplat-octree-instance.js';
@@ -107,7 +107,6 @@ const makeStreaming = (zs, maxConcurrentLoads = 2) => {
 // several cameras, each flushing the shared octree on its own LOD updates.
 const addView = (octree, { lodUnderfillLimit = 1, lodBehindPenalty = 1.5 } = {}) => {
     const placement = new GSplatPlacement(null, new GraphNode());
-    placement.lodFalloff = 1;
 
     const device = { on: () => ({ off() {} }) };
     const inst = new GSplatOctreeInstance(device, octree, placement);
@@ -118,9 +117,9 @@ const addView = (octree, { lodUnderfillLimit = 1, lodBehindPenalty = 1.5 } = {})
 
     const lodUpdate = (budget = 1e6) => {
         inst.update();
-        inst.resolveLodRange(GSPLAT_LODMODE_ERROR);
-        inst.evaluateNodeCoverage(camera, params);
-        balancer.balance(new Map([[placement, inst]]), budget);
+        inst.resolveLodRange();
+        inst.evaluateNodeDistances(camera, params);
+        balancer.balance(new Map([[placement, inst]]), budget, false);
         inst.applyLodChanges(params);
         octree.flushRequests();
     };

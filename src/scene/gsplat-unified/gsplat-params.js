@@ -14,7 +14,7 @@ import {
     GSPLAT_DEBUG_NONE, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, GSPLAT_DEBUG_HEATMAP,
     GSPLAT_DEBUG_AABBS, GSPLAT_DEBUG_NODE_AABBS,
     GSPLAT_LODMODE_DISTANCE,
-    GSPLAT_LODMODE_ERROR
+    GSPLAT_BUDGET_TARGET, GSPLAT_BUDGET_LIMIT
 } from '../constants.js';
 
 import glslCompactRead from '../shader-lib/glsl/chunks/gsplat/vert/formats/containerCompactRead.js';
@@ -435,6 +435,38 @@ class GSplatParams {
         return this._lodBehindPenalty;
     }
 
+    /** @private */
+    _lodDistanceShrink = 0.75;
+
+    /**
+     * Sets how the camera distance to each part of a streamed GSplat is judged when choosing its
+     * level of detail. At 0, a part counts as near as soon as any of it is near, so large or
+     * sparse areas that reach towards the camera - sky, distant background, long thin regions -
+     * can get more detail than their surroundings and show up as patches of higher detail. Higher
+     * values judge each part closer to its middle instead, which removes those patches and lowers
+     * memory use, at the cost of slightly less detail right next to the camera. Use 1 when
+     * memory matters more than detail close up, for example on mobile - it gives the lowest
+     * memory use. Clamped to [0, 1]. Defaults to 0.75.
+     *
+     * @type {number}
+     * @ignore
+     */
+    set lodDistanceShrink(value) {
+        value = Math.min(Math.max(value, 0), 1);
+        if (this._lodDistanceShrink !== value) {
+            this._lodDistanceShrink = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    get lodDistanceShrink() {
+        return this._lodDistanceShrink;
+    }
+
     /**
      * @type {number}
      * @deprecated Set {@link GSplatComponent#lodRangeMin} on the gsplat component instead.
@@ -504,13 +536,11 @@ class GSplatParams {
     _splatBudget = SPLAT_BUDGET_DEFAULT;
 
     /**
-     * Target number of splats across all GSplats in the scene. LOD levels are chosen globally to
-     * stay within this budget, spending it as {@link GSplatParams#lodMode} directs - by distance
-     * band (the default), or where it removes the most approximation error per splat. A budget
-     * larger than the scene resolves to every node at its finest level. Defaults to 1000000.
-     *
-     * There is no way to disable budgeted LOD selection: a non-positive value would pin every node
-     * to its coarsest level rather than lift the cap, so it warns and the default is used instead.
+     * Number of splats across all GSplats in the scene. How it is used depends on
+     * {@link GSplatParams#splatBudgetMode}: as a target that LOD detail is raised to fill, or as a
+     * limit that only lowers the detail the LOD distances of each GSplat ask for. Set to 0 for no
+     * budget at all - in target mode everything then renders at its finest level, in limit mode
+     * the LOD distances alone decide. Defaults to 1000000.
      *
      * @type {number}
      */
@@ -522,7 +552,7 @@ class GSplatParams {
     }
 
     /**
-     * Gets the target number of splats across all GSplats in the scene.
+     * Gets the number of splats across all GSplats in the scene.
      *
      * @type {number}
      */
@@ -531,38 +561,59 @@ class GSplatParams {
     }
 
     /** @private */
-    _lodMode = GSPLAT_LODMODE_DISTANCE;
+    _splatBudgetMode = GSPLAT_BUDGET_TARGET;
 
     /**
-     * How LOD levels are chosen for streamed GSplats, within {@link GSplatParams#splatBudget}.
-     * {@link GSPLAT_LODMODE_DISTANCE} (default) orders detail by camera distance alone - it steps
-     * down in concentric distance bands around the camera, with band edges adapting to the budget,
-     * and ignores any error metadata. {@link GSPLAT_LODMODE_ERROR} instead spends the budget where
-     * it removes the most approximation error per splat, using the asset's error tables when
-     * present. That lifts sparse, low-quality regions such as sky and distant background that
-     * distance alone leaves coarse, at the cost of holding noticeably more source data in memory -
-     * prefer the default on memory-constrained devices.
+     * Sets how {@link GSplatParams#splatBudget} is used for streamed GSplats. Can be:
+     *
+     * - {@link GSPLAT_BUDGET_TARGET}: detail is raised until the budget is used up, wherever the
+     * camera is. The LOD distances of each GSplat only shape how detail falls off with distance
+     * and how it divides between GSplats.
+     * - {@link GSPLAT_BUDGET_LIMIT}: the LOD distances of each GSplat decide the detail, and the
+     * budget only lowers it when they would exceed it. A distant GSplat uses only the few splats
+     * its distance calls for.
+     *
+     * Defaults to {@link GSPLAT_BUDGET_TARGET}.
      *
      * @type {string}
      */
-    set lodMode(value) {
-        if (value !== GSPLAT_LODMODE_ERROR && value !== GSPLAT_LODMODE_DISTANCE) {
-            Debug.warnOnce(`GSplatParams#lodMode: ignoring invalid value '${value}', expected GSPLAT_LODMODE_ERROR or GSPLAT_LODMODE_DISTANCE.`);
+    set splatBudgetMode(value) {
+        if (value !== GSPLAT_BUDGET_TARGET && value !== GSPLAT_BUDGET_LIMIT) {
+            Debug.warnOnce(`GSplatParams#splatBudgetMode: ignoring invalid value '${value}', expected GSPLAT_BUDGET_TARGET or GSPLAT_BUDGET_LIMIT.`);
             return;
         }
-        if (this._lodMode !== value) {
-            this._lodMode = value;
+        if (this._splatBudgetMode !== value) {
+            this._splatBudgetMode = value;
             this.dirty = true;
         }
     }
 
     /**
-     * Gets the LOD selection mode.
+     * Gets how the splat budget is used.
      *
      * @type {string}
      */
+    get splatBudgetMode() {
+        return this._splatBudgetMode;
+    }
+
+    /**
+     * @type {string}
+     * @deprecated LOD levels are always chosen by distance.
+     * @ignore
+     */
+    set lodMode(value) {
+        Debug.removed('GSplatParams#lodMode is removed. LOD levels are always chosen by distance, see GSplatComponent#lodBaseDistance and GSplatParams#splatBudgetMode.');
+    }
+
+    /**
+     * @type {string}
+     * @deprecated LOD levels are always chosen by distance.
+     * @ignore
+     */
     get lodMode() {
-        return this._lodMode;
+        Debug.removed('GSplatParams#lodMode is removed. LOD levels are always chosen by distance, see GSplatComponent#lodBaseDistance and GSplatParams#splatBudgetMode.');
+        return GSPLAT_LODMODE_DISTANCE;
     }
 
     /**
@@ -1051,7 +1102,7 @@ class GSplatParams {
         this.lodBehindPenalty = render.gsplatLodBehindPenalty ?? this.lodBehindPenalty;
         this.lodUnderfillLimit = render.gsplatLodUnderfillLimit ?? this.lodUnderfillLimit;
         this.splatBudget = render.gsplatSplatBudget ?? this.splatBudget;
-        this.lodMode = render.gsplatLodMode ?? this.lodMode;
+        this.splatBudgetMode = render.gsplatSplatBudgetMode ?? this.splatBudgetMode;
 
         this.alphaClip = render.gsplatAlphaClip ?? this.alphaClip;
         this.alphaClipForward = render.gsplatAlphaClipForward ?? this.alphaClipForward;
