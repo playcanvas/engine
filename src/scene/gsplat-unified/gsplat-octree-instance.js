@@ -503,9 +503,10 @@ class GSplatOctreeInstance {
     evaluateNodeDistances(cameraNode, params) {
         const { lodBehindPenalty } = params;
 
-        // bounds shrink towards their center, as a fraction of the half extents - see
-        // GSplatParams#lodDistanceShrink. Applied to both corners, so it is half of it per corner.
-        const shrink = (params.lodDistanceShrink ?? 0) * 0.5;
+        // bounds shrink towards their center by this fraction of how much larger than a typical
+        // node they are - see GSplatParams#lodDistanceShrink and GSplatOctree#nodeBoundsExcess
+        const shrink = params.lodDistanceShrink ?? 0;
+        const excessFlat = this.octree.nodeBoundsExcess;
 
         // Uniform scale of the octree transform, for world-space distance conversion.
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
@@ -569,9 +570,10 @@ class GSplatOctreeInstance {
             let minZ = boundsFlat[b + 2];
             let maxZ = boundsFlat[b + 5];
             if (shrink > 0) {
-                const sx = (maxX - minX) * shrink;
-                const sy = (maxY - minY) * shrink;
-                const sz = (maxZ - minZ) * shrink;
+                const e = nodeIndex * 3;
+                const sx = excessFlat[e] * shrink;
+                const sy = excessFlat[e + 1] * shrink;
+                const sz = excessFlat[e + 2] * shrink;
                 minX += sx;
                 maxX -= sx;
                 minY += sy;

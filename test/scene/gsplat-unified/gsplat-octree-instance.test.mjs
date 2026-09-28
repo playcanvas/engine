@@ -120,19 +120,40 @@ describe('GSplatOctreeInstance#evaluateNodeDistances', function () {
         }
     });
 
-    it('measures to bounds shrunk towards their center by lodDistanceShrink', function () {
-        // a long node reaching towards the camera: its nearest face is 1 unit away, its center 50
-        const instance = makeInstance(makeOctree([[0, 0, -50, 49]]));
+    it('shrinks only the part of a node larger than a typical node, by lodDistanceShrink', function () {
+        // three typical unit nodes off to the side, and a long node reaching towards the camera:
+        // its nearest face is 1 unit away and its center 50. The typical half extent is 1 on every
+        // axis, so the long node exceeds it by 48 along its length and nothing across it.
+        const instance = makeInstance(makeOctree([[100, 0, -10], [110, 0, -10], [120, 0, -10], [0, 0, -50, 49]]));
         const camera = makeCamera(PROJECTION_PERSPECTIVE);
+        const typical = () => distanceOf(instance.nodeInfos[0]);
+        const long = () => distanceOf(instance.nodeInfos[3]);
 
         instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 0 });
-        expect(distanceOf(instance.nodeInfos[0])).to.be.closeTo(1, 1e-4);
+        const typicalAtZero = typical();
+        expect(long()).to.be.closeTo(1, 1e-4);
 
         instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 0.5 });
-        expect(distanceOf(instance.nodeInfos[0])).to.be.closeTo(50 - 24.5, 1e-4);
+        expect(long()).to.be.closeTo(1 + 24, 1e-4);
+        expect(typical()).to.be.closeTo(typicalAtZero, 1e-4);
 
+        // at 1 the long node is judged as a typical node around its center
         instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 1 });
-        expect(distanceOf(instance.nodeInfos[0])).to.be.closeTo(50, 1e-4);
+        expect(long()).to.be.closeTo(49, 1e-4);
+        expect(typical()).to.be.closeTo(typicalAtZero, 1e-4);
+    });
+
+    it('leaves nodes of uniform size unaffected by lodDistanceShrink', function () {
+        // a grid of equal nodes has no outliers, so even a node the camera stands in stays near
+        const instance = makeInstance(makeOctree([[0, 0, 0, 64], [128, 0, 0, 64], [0, 0, 128, 64], [128, 0, 128, 64]]));
+        const camera = makeCamera(PROJECTION_PERSPECTIVE);
+        camera.setPosition(-60, 0, -60);
+
+        instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 0 });
+        const atZero = instance.nodeInfos.map(distanceOf);
+        instance.evaluateNodeDistances(camera, { lodBehindPenalty: 1, lodDistanceShrink: 1 });
+        expect(instance.nodeInfos.map(distanceOf)).to.deep.equal(atZero);
+        expect(atZero[0]).to.equal(0);
     });
 
     it('penalizes nodes behind the camera under both projections', function () {

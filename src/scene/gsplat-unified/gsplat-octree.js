@@ -34,6 +34,18 @@ class GSplatOctree {
     nodeBoundsMinMax;
 
     /**
+     * Per node, how far its half extents exceed the octree's typical node on each axis - zero on
+     * any axis where the node is no larger. Length is {@link GSplatOctree.nodes}.length * 3,
+     * `[x, y, z]` per node. The typical node is the median half extent on each axis, so it follows
+     * the content: a node standing out from its neighbours in size, such as a sparse region the
+     * generator left as one wide node, has an excess, while ordinary nodes have none. The distance
+     * pass trims only this excess - see GSplatParams#lodDistanceShrink.
+     *
+     * @type {Float32Array}
+     */
+    nodeBoundsExcess;
+
+    /**
      * @type {{ url: string, lodLevel: number }[]}
      */
     files;
@@ -235,6 +247,33 @@ class GSplatOctree {
             boundsFlat[b + 5] = mx.z;
         }
         this.nodeBoundsMinMax = boundsFlat;
+        this.nodeBoundsExcess = GSplatOctree._computeBoundsExcess(boundsFlat, nodeCount);
+    }
+
+    /**
+     * Computes {@link GSplatOctree#nodeBoundsExcess} from packed node bounds.
+     *
+     * @param {Float32Array} boundsFlat - Packed per-node bounds, see nodeBoundsMinMax.
+     * @param {number} nodeCount - Number of nodes.
+     * @returns {Float32Array} The per-node, per-axis excess over the median half extent.
+     * @private
+     */
+    static _computeBoundsExcess(boundsFlat, nodeCount) {
+        const excess = new Float32Array(nodeCount * 3);
+        if (nodeCount === 0) return excess;
+
+        const half = new Float32Array(nodeCount);
+        for (let axis = 0; axis < 3; axis++) {
+            for (let i = 0; i < nodeCount; i++) {
+                half[i] = (boundsFlat[i * 6 + 3 + axis] - boundsFlat[i * 6 + axis]) * 0.5;
+            }
+            const sorted = half.slice().sort();
+            const typical = sorted[nodeCount >> 1];
+            for (let i = 0; i < nodeCount; i++) {
+                excess[i * 3 + axis] = Math.max(0, half[i] - typical);
+            }
+        }
+        return excess;
     }
 
     /**

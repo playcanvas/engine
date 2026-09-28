@@ -419,6 +419,12 @@ class ForwardRenderer extends Renderer {
                 this.restoreMaterialOverrides(drawCall, material);
             }
 
+            // the parameters its material does not have are restored to the values they replaced,
+            // such as global ones, whatever the next draw - no material sets them again
+            if (drawCall._scopeParameters.length > 0) {
+                drawCall.restoreReplacedParameters(material);
+            }
+
             DebugGraphics.popGpuMarker(device);
         }
     }

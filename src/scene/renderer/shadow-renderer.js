@@ -638,6 +638,9 @@ class ShadowRenderer {
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
             if (shadowShader.failed) {
+                if (meshInstance._scopeParameters.length > 0) {
+                    meshInstance.restoreReplacedParameters(material);
+                }
                 DebugGraphics.popGpuMarker(device);
                 continue;
             }
@@ -666,6 +669,12 @@ class ShadowRenderer {
             const style = meshInstance.renderStyle;
             const indirectData = meshInstance.getDrawCommands(camera);
             device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
+
+            // the parameters its material does not have are restored to the values they replaced,
+            // such as global ones, whatever the next caster - no material sets them again
+            if (meshInstance._scopeParameters.length > 0) {
+                meshInstance.restoreReplacedParameters(material);
+            }
 
             // warn about a shader reading the normal matrix, which is the identity here (see above), once
             // that is known - after the draw, which links it on WebGL
