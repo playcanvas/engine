@@ -875,21 +875,185 @@ def facing(turn):
     return math.atan2(ahead.x, -ahead.y)
 
 
-def record_mocap(rig, name, p, path, joints, hips_scale, clips=None, keep_turn=1.0):
+# The knight's arms are short and his helmet big, so a swing made for a person can pass the blade
+# through him. These ellipsoids stand in for his body, in the frames of their bones (X across, Y
+# along the bone and Z forwards): the helmet, the plume behind it, the chest and the hips
+BODY = (('Head', (0, 0.2, 0), (0.235, 0.235, 0.26)), ('Head', (0, 0.5, -0.12), (0.12, 0.17, 0.2)),
+        ('Spine', (0, 0.12, 0), (0.19, 0.17, 0.15)), ('Hips', (0, 0, 0), (0.2, 0.12, 0.16)))
+BLADE = (0.075, 0.665)
+BLADE_HALF_WIDTH = 0.03
+
+
+def blade_depth(rig):
+    """How far the sword's blade is inside the knight: for points along it, how far inside the
+    ellipsoids of BODY each is, as a fraction of their size, summed."""
+    bones = rig.pose.bones
+    hand = bones['Hand.R'].matrix
+    points = [hand @ Vector((0, BLADE[0] + (BLADE[1] - BLADE[0]) * k / 15, 0)) for k in range(16)]
+    total = 0.0
+    for bone, offset, radii in BODY:
+        inverse = bones[bone].matrix.inverted()
+        for point in points:
+            local = inverse @ point - Vector(offset)
+            scaled = Vector([local[k] / (radii[k] + BLADE_HALF_WIDTH) for k in range(3)]).length
+            total += max(0.0, 1 - scaled)
+    return total
+
+
+def move_sword_hand(rig, offset):
+    """Move the sword hand by offset, solving the arm to reach it with the elbow bending the way it
+    was, and keep the sword pointing as it was."""
+    bones = rig.pose.bones
+    upper, fore, hand = bones['UpperArm.R'], bones['Forearm.R'], bones['Hand.R']
+    shoulder, elbow, grip = upper.head.copy(), fore.head.copy(), hand.head.copy()
+    turn = hand.matrix.to_3x3()
+    pole = elbow - (shoulder + grip) / 2
+    elbow, grip = two_bone(shoulder, grip + offset, UPPER_ARM, FOREARM, pole)
+    upper.matrix = frame_matrix(shoulder, elbow - shoulder, pole)
+    update()
+    fore.matrix = frame_matrix(elbow, grip - elbow, pole)
+    update()
+    m = turn.to_4x4()
+    m.translation = grip
+    hand.matrix = m
+    update()
+
+
+# Points along the sword from its grip to its tip, along the hand bone: the fist and blade both
+# have to stay out of the knight
+SWORD_POINTS = [-0.03 + 0.695 * k / 15 for k in range(16)]
+
+
+def sword_push(rig):
+    """The smallest move of the sword, without turning it, that takes it out of the knight's body.
+    Like resolving a contact, it steps out along the surface of whichever ellipsoid of BODY a point
+    is deepest in, until no point is inside any."""
+    bones = rig.pose.bones
+    hand = bones['Hand.R'].matrix
+    shapes = [(bones[bone].matrix, Vector(offset), Vector(radii) + Vector([BLADE_HALF_WIDTH] * 3))
+              for bone, offset, radii in BODY]
+    push = Vector((0, 0, 0))
+    for _ in range(24):
+        deepest = None
+        for m, offset, radii in shapes:
+            inverse = m.inverted()
+            for y in SWORD_POINTS:
+                local = inverse @ (hand @ Vector((0, y, 0)) + push) - offset
+                scaled = Vector([local[k] / radii[k] for k in range(3)])
+                size = scaled.length
+                if size < 1:
+                    # the way out is along the ellipsoid's normal, as far as the surface is along the
+                    # line from its center through the point
+                    normal = m.to_3x3() @ Vector([scaled[k] / radii[k] for k in range(3)]).normalized()
+                    depth = (1 - size) * local.length / max(size, 1e-3)
+                    if deepest is None or depth > deepest[0]:
+                        deepest = (depth, normal.normalized())
+        if deepest is None:
+            break
+        push += deepest[1] * (deepest[0] + 0.005)
+    return push
+
+
+def turn_sword(rig, q):
+    """Turn the sword at the wrist, about its grip."""
+    hand = rig.pose.bones['Hand.R']
+    m = (q.to_matrix() @ hand.matrix.to_3x3()).to_4x4()
+    m.translation = hand.head
+    hand.matrix = m
+    update()
+
+
+def wrist_turn(rig):
+    """Where moving the hand wasn't enough, the smallest turn of the sword at the wrist that takes
+    what is left of it out of the knight: towards the way it still has to go."""
+    push = sword_push(rig)
+    if push.length < 0.005:
+        return Quaternion()
+    hand = rig.pose.bones['Hand.R']
+    start = hand.matrix.copy()
+    axis = (start.to_3x3() @ Vector((0, 1, 0))).cross(push)
+    if axis.length < 1e-6:
+        return Quaternion()
+    axis.normalize()
+    best = (push.length, Quaternion())
+    for step in range(1, 31):
+        q = Quaternion(axis, math.radians(3 * step))
+        hand.matrix = start
+        update()
+        turn_sword(rig, q)
+        left = sword_push(rig).length
+        if left < best[0]:
+            best = (left, q)
+        if left < 0.005:
+            break
+    hand.matrix = start
+    update()
+    return best[1]
+
+
+def ease_turns(turns, reach=2, weights=(1, 2, 3, 4, 3, 2, 1)):
+    """Take each turn as the largest near it, then blend, so the wrist turns before it's needed and
+    back after, smoothly."""
+    count = len(turns)
+    widest = [max(turns[max(0, i - reach):i + reach + 1], key=lambda q: q.angle) for i in range(count)]
+    half = len(weights) // 2
+    eased = []
+    for i in range(count):
+        total = Vector((0, 0, 0, 0))
+        for k, w in enumerate(weights):
+            q = widest[min(max(i + k - half, 0), count - 1)]
+            v = Vector((q.w, q.x, q.y, q.z))
+            total += (v if v[0] >= 0 else -v) * w
+        eased.append(Quaternion(total.normalized()))
+    return eased
+
+
+def ease_pushes(pushes, reach=2, weights=(1, 2, 3, 4, 3, 2, 1)):
+    """Take each push as the largest near it, then blur, so the sword moves out of the way before
+    it's needed and back after, smoothly."""
+    count = len(pushes)
+    widest = [max(pushes[max(0, i - reach):i + reach + 1], key=lambda v: v.length) for i in range(count)]
+    half = len(weights) // 2
+    return [sum((widest[min(max(i + k - half, 0), count - 1)] * w for k, w in enumerate(weights)), Vector((0, 0, 0))) /
+            sum(weights) for i in range(count)]
+
+
+def record_mocap(rig, name, p, path, joints, hips_scale, clips=None, keep_turn=1.0, clear_sword=False):
     """Key the capture of clips in path, layered on the pose p, into an action on an NLA track of
     name. keep_turn is how much of the capture's turning about the vertical the knight follows: the
-    whole pose turns back by the rest, so the motion of its parts against each other stays."""
+    whole pose turns back by the rest, so the motion of its parts against each other stays. With
+    clear_sword, the sword is carried in front of him wherever its blade would pass through him."""
     frames = capture(path, joints, clips)
     first_turns, first_hips = frames[0]
+    poses = []
+    for turns, hips in frames:
+        relative = {bone: turns[bone] @ first_turns[bone].transposed() for bone in joints}
+        back = Matrix.Rotation(-(1 - keep_turn) * facing(relative['Hips']), 3, 'Z')
+        poses.append(({bone: back @ turn for bone, turn in relative.items()},
+                      back @ ((hips - first_hips) * hips_scale)))
+    pushes = [Vector((0, 0, 0)) for _ in poses]
+    wrists = [Quaternion() for _ in poses]
+    if clear_sword:
+        for i, (turns, offset) in enumerate(poses):
+            apply_layered(rig, p, turns, offset)
+            pushes[i] = sword_push(rig)
+        pushes = ease_pushes(pushes)
+        for i, ((turns, offset), push) in enumerate(zip(poses, pushes)):
+            apply_layered(rig, p, turns, offset)
+            if push.length > 0:
+                move_sword_hand(rig, push)
+            wrists[i] = wrist_turn(rig)
+        wrists = ease_turns(wrists)
     data = rig.animation_data or rig.animation_data_create()
     action = bpy.data.actions.new(name)
     data.action = action
     previous = {}
-    for frame, (turns, hips) in enumerate(frames):
-        relative = {bone: turns[bone] @ first_turns[bone].transposed() for bone in joints}
-        back = Matrix.Rotation(-(1 - keep_turn) * facing(relative['Hips']), 3, 'Z')
-        relative = {bone: back @ turn for bone, turn in relative.items()}
-        apply_layered(rig, p, relative, back @ ((hips - first_hips) * hips_scale))
+    for frame, ((turns, offset), push, wrist) in enumerate(zip(poses, pushes, wrists)):
+        apply_layered(rig, p, turns, offset)
+        if push.length > 0:
+            move_sword_hand(rig, push)
+        if wrist.angle > 0:
+            turn_sword(rig, wrist)
         key_rig(rig, frame, previous)
     track = data.nla_tracks.new()
     track.name = name
@@ -926,7 +1090,7 @@ def animate(rig, ual2):
     record_mocap(rig, 'Idle', BASE, MOCAP_IDLE, MOCAP_JOINTS, HIPS[0].z / 0.58)
     # the slash turns the body far round, so the knight follows a third of that, and stays facing
     # the portrait camera
-    record_mocap(rig, 'Attack', BASE, ual2, UAL2_JOINTS, HIPS[0].z / UAL2_HIPS_HEIGHT, ATTACK_CLIPS, 0.35)
+    record_mocap(rig, 'Attack', BASE, ual2, UAL2_JOINTS, HIPS[0].z / UAL2_HIPS_HEIGHT, ATTACK_CLIPS, 0.35, True)
     apply_pose(rig, BASE)
 
 
