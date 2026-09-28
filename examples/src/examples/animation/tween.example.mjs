@@ -30,7 +30,7 @@ window.focus();
 await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
 const assets = {
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
     script: new Asset('script', 'script', { url: './scripts/animation/tween.js' })
 };
 

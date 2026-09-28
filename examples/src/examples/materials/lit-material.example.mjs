@@ -12,7 +12,6 @@ import {
     ElementComponentSystem,
     Entity,
     FILLMODE_FILL_WINDOW,
-    FontHandler,
     JsonHandler,
     Keyboard,
     LightComponentSystem,
@@ -42,7 +41,6 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
     color: new Asset('color', 'texture', { url: './assets/textures/seaside-rocks01-color.jpg' }),
     normal: new Asset('normal', 'texture', { url: './assets/textures/seaside-rocks01-normal.jpg' }),
     gloss: new Asset('gloss', 'texture', { url: './assets/textures/seaside-rocks01-gloss.jpg' })
@@ -68,7 +66,7 @@ createOptions.componentSystems = [
     ScriptComponentSystem,
     ElementComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler, FontHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, JsonHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);

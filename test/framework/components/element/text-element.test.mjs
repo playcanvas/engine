@@ -46,8 +46,8 @@ describe('TextElement', function () {
         element.wrapLines = true;
         element.width = 200;
 
-        fontAsset = new Asset('arial.json', 'font', {
-            url: '/test/assets/fonts/arial.json'
+        fontAsset = new Asset('roboto-regular.json', 'font', {
+            url: '/test/assets/fonts/roboto-regular.json'
         });
 
         fontAsset.ready(function () {
@@ -469,9 +469,9 @@ describe('TextElement', function () {
 
         element.text = 'abcdefghijklmnopqrstuvwxyz';
         assertLineContents([
-            'abcdefghijklm',
-            'nopqrstuvwxy',
-            'z'
+            'abcdefghijkl',
+            'mnopqrstuvw',
+            'xyz'
         ]);
     });
 
@@ -687,9 +687,9 @@ describe('TextElement', function () {
 
         element.text = 'abcdefghijklmnopqrstuvwxyz';
         assertLineContents([
-            'abcdefghijklm',
-            'nopqrstuvwxy',
-            'z'
+            'abcdefghijkl',
+            'mnopqrstuvw',
+            'xyz'
         ]);
     });
 
@@ -1077,8 +1077,8 @@ describe('TextElement', function () {
         element.height = 50;
         element.text = 'ab\nab';
         element.autoFitHeight = true;
-        expect(element.fontSize).to.equal(25);
-        expect(element._text._scaledLineHeight).to.equal(25);
+        expect(element.fontSize).to.equal(24);
+        expect(element._text._scaledLineHeight).to.equal(24);
     });
 
     it('does not reduce font size when height is larger then the element height and autoFitHeight is false', function () {
@@ -1943,8 +1943,8 @@ describe('TextElement', function () {
     });
 
     it('changing the locale changes the font asset', function (done) {
-        assets.font2 = new Asset('courier.json', 'font', {
-            url: '/test/assets/fonts/courier.json'
+        assets.font2 = new Asset('roboto-bold.json', 'font', {
+            url: '/test/assets/fonts/roboto-bold.json'
         });
 
         app.assets.add(assets.font2);
@@ -1968,8 +1968,8 @@ describe('TextElement', function () {
     });
 
     it('does not render the previous locale text when a cached localized font is swapped in on locale change', function (done) {
-        assets.font2 = new Asset('courier.json', 'font', {
-            url: '/test/assets/fonts/courier.json'
+        assets.font2 = new Asset('roboto-bold.json', 'font', {
+            url: '/test/assets/fonts/roboto-bold.json'
         });
 
         app.assets.add(assets.font2);
@@ -2012,8 +2012,8 @@ describe('TextElement', function () {
     });
 
     it('text element that does not use localization uses the default font asset not its localized variant', function (done) {
-        assets.font2 = new Asset('courier.json', 'font', {
-            url: '/test/assets/fonts/courier.json'
+        assets.font2 = new Asset('roboto-bold.json', 'font', {
+            url: '/test/assets/fonts/roboto-bold.json'
         });
 
         app.assets.add(assets.font2);
@@ -2034,8 +2034,8 @@ describe('TextElement', function () {
     });
 
     it('if text element is disabled it does not automatically load localizedAssets', function () {
-        assets.font2 = new Asset('courier.json', 'font', {
-            url: '/test/assets/fonts/courier.json'
+        assets.font2 = new Asset('roboto-bold.json', 'font', {
+            url: '/test/assets/fonts/roboto-bold.json'
         });
 
         app.assets.add(assets.font2);

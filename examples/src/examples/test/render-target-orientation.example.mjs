@@ -75,7 +75,7 @@ window.focus();
 
 const assets = {
     channels: new Asset('channels', 'texture', { url: './assets/textures/channels.png' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 
 const gfxOptions = {

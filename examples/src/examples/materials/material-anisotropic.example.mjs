@@ -33,7 +33,7 @@ const assets = {
         { url: './assets/cubemaps/helipad-env-atlas.png' },
         { type: TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 
 const gfxOptions = {

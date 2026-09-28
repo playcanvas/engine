@@ -43,7 +43,7 @@ window.focus();
 
 const assets = {
     lightmap: new Asset('lightmap', 'texture', { url: './assets/textures/clouds.jpg' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 
 const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
