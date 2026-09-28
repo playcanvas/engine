@@ -1,35 +1,31 @@
 
-/**
- * Simple Color-Inverse Fragment Shader with intensity control.
- * 
- * Usage: the following parameters must be set:
- *   uDiffuseMap: image texture.
- *   amount: float that controls the amount of the inverse-color effect. 0 means none (normal color), while 1 means full inverse.
- *
- * Additionally, the Vertex shader that is paired with this Fragment shader must specify:
- *   varying vec2 vUv0: for the UV.
- */
+// A radial cooldown: a circle the size of the element, whose shaded part shrinks clockwise from
+// twelve o'clock as the cooldown runs out.
 
 #include "gammaPS"
 
-// Additional varying from vertex shader
 varying vUv0: vec2f;
 
-// Custom Parameters (must be set from code via material.setParameter())
-var uDiffuseMap: texture_2d<f32>;
-var uDiffuseMapSampler: sampler;
-uniform amount: f32;
+// the fraction of the cooldown that is left, from 1 down to 0
+uniform uProgress: f32;
+
+// the color and opacity of the shading, in linear space
+uniform uColor: vec4f;
 
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
-    
-    let color: vec4f = textureSample(uDiffuseMap, uDiffuseMapSampler, input.vUv0);
-    let roloc: vec3f = vec3f(1.0) - color.rgb;
-    let mixedColor: vec3f = mix(color.rgb, roloc, uniform.amount);
-    let correctedColor: vec3f = gammaCorrectOutput(mixedColor);
-    
-    output.color = vec4f(correctedColor, color.a);
+    // the position from the center, with y up: v runs down the element
+    let p = vec2f(input.vUv0.x - 0.5, 0.5 - input.vUv0.y);
+    let r = length(p);
+
+    // the circle, with an edge a pixel wide
+    let inside = 1.0 - smoothstep(0.5 - fwidth(r), 0.5, r);
+
+    // the angle clockwise from twelve o'clock, from 0 to 1, and whether it is still shaded
+    let angle = fract(atan2(p.x, p.y) / 6.28318530718 + 1.0);
+    let shaded = step(1.0 - uniform.uProgress, angle);
+
+    output.color = vec4f(gammaCorrectOutput(uniform.uColor.rgb), uniform.uColor.a * inside * shaded);
     return output;
 }
-

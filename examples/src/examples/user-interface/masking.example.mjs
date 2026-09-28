@@ -1,10 +1,8 @@
 // @config
 //
-// Demonstrates UI masking with the element system. A mask is an
-// ELEMENTTYPE_IMAGE element with `mask: true` - its children are rendered only
-// where the mask passes the stencil test. The top panel clips scrolling
-// content to a rectangle, while the bottom panel clips it to the alpha shape of
-// a heart texture (the visible region follows the texture's opaque pixels).
+// A player profile card that uses **masks** three ways. The cover photo pans inside a rectangle
+// mask, a shaped mask clips the avatar to a circle, and the card's own rounded mask clips both,
+// so the masks nest.
 
 import {
     AppBase,
@@ -20,57 +18,46 @@ import {
     FILLMODE_FILL_WINDOW,
     FontHandler,
     RESOLUTION_AUTO,
-    RenderComponentSystem,
     SCALEMODE_BLEND,
+    SPRITE_RENDERMODE_SLICED,
     ScreenComponentSystem,
+    Sprite,
+    TextureAtlasHandler,
     TextureHandler,
     Vec2,
-    Vec4,
     createGraphicsDevice
 } from 'playcanvas';
 
-import { data, deviceType } from 'examples/context';
+import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
+import { deviceType } from 'examples/context';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    colors: new Asset('colors', 'texture', { url: './assets/textures/colors.webp' }, { srgb: true }),
-    heart: new Asset('heart', 'texture', { url: './assets/textures/heart.png' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
+    bold: new Asset('bold', 'font', { url: './assets/fonts/roboto-bold.json' }),
+    ui: new Asset('ui', 'textureatlas', { url: './assets/ui/ui-atlas.png' }, uiAtlasData),
+    landscape: new Asset('landscape', 'texture', { url: './assets/ui/landscape.png' }, { srgb: true })
 };
 
-const gfxOptions = {
-    deviceTypes: [deviceType]
-};
-
-const device = await createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-
-createOptions.componentSystems = [
-    RenderComponentSystem,
-    CameraComponentSystem,
-    ScreenComponentSystem,
-    ElementComponentSystem
-];
-createOptions.resourceHandlers = [TextureHandler, FontHandler];
+createOptions.componentSystems = [CameraComponentSystem, ScreenComponentSystem, ElementComponentSystem];
+createOptions.resourceHandlers = [TextureHandler, TextureAtlasHandler, FontHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Fill the window, and keep the canvas resolution the same as its size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
-
-// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
-app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
-});
+app.on('destroy', () => window.removeEventListener('resize', resize));
 
 await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
@@ -78,159 +65,129 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create a camera
-const camera = new Entity('Camera');
-camera.addComponent('camera', {
-    clearColor: new Color(0.1, 0.1, 0.12)
-});
+const PANEL = new Color(0.16, 0.18, 0.23);
+const LIGHT = new Color(0.95, 0.96, 0.98);
+const MUTED = new Color(0.6, 0.64, 0.72);
+
+const camera = new Entity('camera');
+camera.addComponent('camera', { clearColor: new Color(0.1, 0.11, 0.13) });
 app.root.addChild(camera);
 
-// Create a 2D screen
-const screen = new Entity('Screen');
+const screen = new Entity('screen');
 screen.addComponent('screen', {
-    referenceResolution: new Vec2(1280, 720),
-    scaleBlend: 0.5,
+    screenSpace: true,
+    referenceResolution: [1280, 720],
     scaleMode: SCALEMODE_BLEND,
-    screenSpace: true
+    scaleBlend: 0.5
 });
 app.root.addChild(screen);
 
+// Use a portrait reference resolution on portrait canvases, and scale to whichever axis has
+// less room, so the whole card stays on screen
+const layout = () => {
+    const portrait = device.height > device.width;
+    const reference = portrait ? new Vec2(540, 960) : new Vec2(1280, 720);
+    screen.screen.referenceResolution = reference;
+    screen.screen.scaleBlend = device.width / reference.x > device.height / reference.y ? 1 : 0;
+};
+device.on('resizecanvas', layout);
+layout();
+
+const atlas = assets.ui.resource;
+const rounded = new Sprite(device, {
+    atlas,
+    frameKeys: ['panel'],
+    pixelsPerUnit: 2,
+    renderMode: SPRITE_RENDERMODE_SLICED
+});
+const circle = new Sprite(device, { atlas, frameKeys: ['circle'] });
+const portrait = new Sprite(device, { atlas, frameKeys: ['avatar-2'] });
+app.on('destroy', () => [rounded, circle, portrait].forEach((sprite) => sprite.destroy()));
+
 /**
- * Creates a screen-space text label.
- * @param {string} text - The label text.
- * @param {number} x - The horizontal offset from the screen center.
- * @param {number} y - The vertical offset from the screen center.
- * @param {number} fontSize - The font size.
+ * Create an image or text element, centered on its parent unless the properties say otherwise.
+ *
+ * @param {Entity} parent - The parent entity.
+ * @param {string} name - The entity name.
+ * @param {object} properties - Properties of the element component.
+ * @returns {Entity} The entity.
  */
-const createLabel = (text, x, y, fontSize) => {
-    const label = new Entity(`Label: ${text}`);
-    label.addComponent('element', {
-        type: ELEMENTTYPE_TEXT,
-        anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
-        pivot: new Vec2(0.5, 0.5),
+const createElement = (parent, name, properties) => {
+    const entity = new Entity(name);
+    entity.addComponent('element', {
+        type: ELEMENTTYPE_IMAGE,
+        anchor: [0.5, 0.5, 0.5, 0.5],
+        pivot: [0.5, 0.5],
         fontAsset: assets.font.id,
-        fontSize: fontSize,
-        text: text,
-        color: new Color(1, 1, 1)
+        color: LIGHT,
+        ...properties
     });
-    label.setLocalPosition(x, y, 0);
-    screen.addChild(label);
+    parent.addChild(entity);
+    return entity;
 };
 
-// --- Panel A: rectangular mask (top) -------------------------------------
-// The mask is a plain image element (no texture), so its rectangle defines
-// the masked region. A row of square tiles (matching the square source
-// texture, so it renders undistorted) scrolls horizontally behind it on a
-// treadmill, and is continuously clipped at the left and right edges of the
-// rectangle.
-const rectWidth = 440;
-const rectHeight = 190;
+// The card is a mask, so its rounded shape clips everything below it. A mask is not drawn
+// itself, so the card's color comes from an image that fills it
+const card = createElement(screen, 'card', { sprite: rounded, width: 360, height: 470, mask: true });
+createElement(card, 'background', { color: PANEL, anchor: [0, 0, 1, 1], margin: [0, 0, 0, 0] });
 
-const rectMask = new Entity('RectMask');
-rectMask.addComponent('element', {
-    type: ELEMENTTYPE_IMAGE,
-    anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
-    pivot: new Vec2(0.5, 0.5),
-    width: rectWidth,
-    height: rectHeight,
-    mask: true
+// The cover is a rectangle mask across the top of the card, over a larger photo that pans inside
+// it. The photo is clipped by both masks, so its top corners follow the rounded card
+const cover = createElement(card, 'cover', { anchor: [0, 1, 1, 1], pivot: [0.5, 1], mask: true });
+cover.element.left = 0;
+cover.element.right = 0;
+cover.element.height = 200;
+const photo = createElement(cover, 'photo', { textureAsset: assets.landscape.id, width: 400, height: 400 });
+
+// The avatar is a shaped mask: the transparent corners of the circle sprite clip the square
+// picture below it into a circle. A ring behind it cuts it out of the cover
+createElement(card, 'ring', { sprite: circle, color: PANEL, width: 132, height: 132 }).setLocalPosition(0, 35, 0);
+const avatar = createElement(card, 'avatar', { sprite: circle, width: 116, height: 116, mask: true });
+avatar.setLocalPosition(0, 35, 0);
+createElement(avatar, 'picture', { sprite: portrait, width: 116, height: 116 });
+createElement(card, 'online', {
+    sprite: circle,
+    color: new Color(0.3, 0.85, 0.45),
+    width: 24,
+    height: 24
+}).setLocalPosition(40, -5, 0);
+
+createElement(card, 'name', {
+    type: ELEMENTTYPE_TEXT,
+    fontAsset: assets.bold.id,
+    text: 'Aria Nightfall',
+    fontSize: 34
+}).setLocalPosition(0, -70, 0);
+createElement(card, 'class', {
+    type: ELEMENTTYPE_TEXT,
+    text: 'Level 42 · Ranger',
+    fontSize: 24,
+    color: MUTED
+}).setLocalPosition(0, -108, 0);
+
+[
+    ['318', 'Wins'],
+    ['#12', 'Rank'],
+    ['96h', 'Played']
+].forEach(([value, label], i) => {
+    const x = (i - 1) * 110;
+    createElement(card, label, {
+        type: ELEMENTTYPE_TEXT,
+        fontAsset: assets.bold.id,
+        text: value,
+        fontSize: 30
+    }).setLocalPosition(x, -168, 0);
+    createElement(card, `${label} label`, {
+        type: ELEMENTTYPE_TEXT,
+        text: label,
+        fontSize: 20,
+        color: MUTED
+    }).setLocalPosition(x, -200, 0);
 });
-rectMask.setLocalPosition(0, 155, 0);
-screen.addChild(rectMask);
 
-// Square tiles the height of the mask, enough of them to cover the masked
-// width with room to wrap around seamlessly as they scroll.
-const tileSize = rectHeight;
-const tileCount = 5;
-const tileTotal = tileSize * tileCount;
-const rectContent = [];
-for (let i = 0; i < tileCount; i++) {
-    const content = new Entity(`RectContent: ${i}`);
-    content.addComponent('element', {
-        type: ELEMENTTYPE_IMAGE,
-        anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
-        pivot: new Vec2(0.5, 0.5),
-        width: tileSize,
-        height: tileSize,
-        textureAsset: assets.colors.id
-    });
-    rectMask.addChild(content);
-    rectContent.push(content);
-}
-
-createLabel('Rectangular mask', 0, 25, 26);
-
-// --- Panel B: alpha-shaped mask (bottom) ---------------------------------
-// The mask uses the heart texture. As the mask material runs an alpha test,
-// the visible region follows the heart's opaque pixels rather than a
-// rectangle. The content drifts behind it, and the heart itself "beats" by
-// animating the mask element's size.
-const heartSize = 230;
-
-const heartMask = new Entity('HeartMask');
-heartMask.addComponent('element', {
-    type: ELEMENTTYPE_IMAGE,
-    anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
-    pivot: new Vec2(0.5, 0.5),
-    width: heartSize,
-    height: heartSize,
-    textureAsset: assets.heart.id,
-    mask: true
-});
-heartMask.setLocalPosition(0, -150, 0);
-screen.addChild(heartMask);
-
-// Content is larger than the heart so it always covers it as it drifts.
-const heartContent = new Entity('HeartContent');
-heartContent.addComponent('element', {
-    type: ELEMENTTYPE_IMAGE,
-    anchor: new Vec4(0.5, 0.5, 0.5, 0.5),
-    pivot: new Vec2(0.5, 0.5),
-    width: 380,
-    height: 380,
-    textureAsset: assets.colors.id
-});
-heartMask.addChild(heartContent);
-
-createLabel('Heart alpha mask', 0, -295, 26);
-
-// Animate the content. Time only advances while animation is enabled, so
-// toggling it off freezes the scene in place.
+// Drift the photo, so the cover shows a different part of it
 let time = 0;
 app.on('update', (dt) => {
-    if (data.get('data.animate')) {
-        time += dt;
-    }
-
-    // Panel A: scroll the row of square tiles on a treadmill. Each tile is
-    // wrapped around a belt as wide as all tiles combined, so the strip
-    // scrolls continuously and is clipped at the rectangle edges.
-    const scrollX = (time * 100) % tileTotal;
-    for (let i = 0; i < tileCount; i++) {
-        let x = (i * tileSize - scrollX) % tileTotal;
-        if (x < 0) x += tileTotal;
-        x -= tileTotal / 2;
-        rectContent[i].setLocalPosition(x, 0, 0);
-    }
-
-    // Panel B: drift the content and pulse the heart-shaped mask.
-    heartContent.setLocalPosition(40 * Math.sin(time * 0.7), 35 * Math.sin(time * 1.1), 0);
-    const beat = heartSize + 20 * Math.sin(time * 2.5);
-    heartMask.element.width = beat;
-    heartMask.element.height = beat;
-});
-
-// Toggle masking on both elements. With masking off the content renders
-// unclipped, which shows what the mask is actually hiding.
-data.on('*:set', (/** @type {string} */ path, value) => {
-    if (path === 'data.mask') {
-        rectMask.element.mask = value;
-        heartMask.element.mask = value;
-    }
-});
-
-// Set initial control values
-data.set('data', {
-    animate: true,
-    mask: true
+    time += dt;
+    photo.setLocalPosition(Math.sin(time * 0.4) * 20, Math.sin(time * 0.25) * 90, 0);
 });

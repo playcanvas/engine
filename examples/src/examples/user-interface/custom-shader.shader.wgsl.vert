@@ -1,34 +1,20 @@
 
-/**
- * Simple Screen-Space Vertex Shader with one UV coordinate.
- * This shader is useful for simple UI shaders.
- * 
- * Usage: the following attributes must be configured when creating a new Shader:
- *   vertex_position: SEMANTIC_POSITION
- *   vertex_texCoord0: SEMANTIC_TEXCOORD0
- */
+// A vertex shader for image elements on a screen-space screen, which pass one UV set through.
+// There, matrix_model already maps the element straight to clip space, so the camera's matrices
+// are not needed. An element on a world-space screen would use matrix_viewProjection as well.
 
-// Default PlayCanvas uniforms
-uniform matrix_viewProjection: mat4x4f;
 uniform matrix_model: mat4x4f;
 
-// Additional inputs
 attribute vertex_position: vec3f;
 attribute vertex_texCoord0: vec2f;
 
-// Additional shader outputs
 varying vUv0: vec2f;
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {
     var output: VertexOutput;
-    
-    // UV is simply passed along as varying
     output.vUv0 = input.vertex_texCoord0;
-
-    // Position for screen-space
-    var pos: vec4f = uniform.matrix_model * vec4f(input.vertex_position, 1.0);
-    output.position = vec4f(pos.xy, 0.0, 1.0);
-    
+    let position = uniform.matrix_model * vec4f(input.vertex_position, 1.0);
+    output.position = vec4f(position.xy, 0.0, 1.0);
     return output;
 }

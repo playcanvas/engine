@@ -1,7 +1,12 @@
 // @config
 //
-// Independent image and text colors across shared materials. Pause to compare image modes,
-// markup, bitmap fonts, masks and custom materials, in screen space or world space.
+// Hidden test for independent element colors on shared materials (#9338). Every tile, label and
+// band animates its own color and opacity, and none may take on a neighbor's. The two COLOR FLOW
+// rows must match, CLIPPED must not be masked, and in the material switch the left square keeps
+// the material's color while the right one follows the element's. Pause to compare, in screen
+// or world space.
+//
+// @flag HIDDEN
 
 import {
     AppBase,

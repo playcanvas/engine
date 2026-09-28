@@ -3,8 +3,17 @@ import { string } from '../../../core/string.js';
 import { math } from '../../../core/math/math.js';
 import { Color } from '../../../core/math/color.js';
 import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 import { BoundingBox } from '../../../core/shape/bounding-box.js';
-import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9, TYPE_FLOAT32 } from '../../../platform/graphics/constants.js';
+import {
+    BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, PRIMITIVE_TRIANGLES, SEMANTIC_POSITION,
+    SEMANTIC_NORMAL, SEMANTIC_TEXCOORD0, SEMANTIC_COLOR, SEMANTIC_ATTR8, SEMANTIC_ATTR9,
+    TYPE_FLOAT32, TYPE_UINT8
+} from '../../../platform/graphics/constants.js';
+import { DeviceCache } from '../../../platform/graphics/device-cache.js';
+import { IndexBuffer } from '../../../platform/graphics/index-buffer.js';
+import { VertexBuffer } from '../../../platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../../../platform/graphics/vertex-iterator.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
@@ -17,6 +26,7 @@ import { Markup } from './markup.js';
 
 /**
  * @import { CanvasFont } from '../../../framework/font/canvas-font.js'
+ * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  * @import { Font } from '../../../framework/font/font.js'
  */
 
@@ -30,14 +40,10 @@ class MeshInfo {
         this.lines = {};
         // float array for positions
         this.positions = [];
-        // float array for normals
-        this.normals = [];
         // float array for UVs
         this.uvs = [];
         // float array for vertex colors
         this.colors = [];
-        // float array for indices
-        this.indices = [];
         // float array for outline
         this.outlines = [];
         // float array for shadows
@@ -49,26 +55,54 @@ class MeshInfo {
     }
 }
 
+// per device cached vertex format, to share it by all text meshes
+const _vertexFormatDeviceCache = new DeviceCache();
+
 /**
- * Creates a new text mesh object from the supplied vertex information and topology.
+ * Creates a text mesh with room for the given number of quads. Only the indices are filled in
+ * here, as they never change - the vertices and the bounding box are written by _updateMeshes.
  *
- * @param {object} device - The graphics device used to manage the mesh.
- * @param {MeshInfo} [meshInfo] - An object that specifies optional inputs for the function as follows:
- * @returns {Mesh} A new Mesh constructed from the supplied vertex and triangle data.
+ * @param {GraphicsDevice} device - The graphics device used to manage the mesh.
+ * @param {number} numQuads - The number of quads the mesh can hold.
+ * @returns {Mesh} The new mesh.
  * @ignore
  */
-function createTextMesh(device, meshInfo) {
+function createTextMesh(device, numQuads) {
+    const vertexFormat = _vertexFormatDeviceCache.get(device, () => {
+        return new VertexFormat(device, [
+            { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_NORMAL, components: 3, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_COLOR, components: 4, type: TYPE_UINT8, normalize: true },
+            { semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_ATTR8, components: 3, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_ATTR9, components: 3, type: TYPE_FLOAT32 }
+        ]);
+    });
+
+    const numVertices = numQuads * 4;
+    const numIndices = numQuads * 6;
+    const uint32 = numVertices > 0xffff;
+    const indices = uint32 ? new Uint32Array(numIndices) : new Uint16Array(numIndices);
+    for (let q = 0; q < numQuads; q++) {
+        const i = q * 6;
+        const v = q * 4;
+        indices[i + 0] = v;
+        indices[i + 1] = v + 1;
+        indices[i + 2] = v + 3;
+        indices[i + 3] = v + 2;
+        indices[i + 4] = v + 3;
+        indices[i + 5] = v + 1;
+    }
+    const indexFormat = uint32 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;
+
     const mesh = new Mesh(device);
-
-    mesh.setPositions(meshInfo.positions);
-    mesh.setNormals(meshInfo.normals);
-    mesh.setColors32(meshInfo.colors);
-    mesh.setUvs(0, meshInfo.uvs);
-    mesh.setIndices(meshInfo.indices);
-    mesh.setVertexStream(SEMANTIC_ATTR8, meshInfo.outlines, 3, undefined, TYPE_FLOAT32, false);
-    mesh.setVertexStream(SEMANTIC_ATTR9, meshInfo.shadows, 3, undefined, TYPE_FLOAT32, false);
-
-    mesh.update();
+    mesh.vertexBuffer = new VertexBuffer(device, vertexFormat, numVertices);
+    mesh.indexBuffer[0] = new IndexBuffer(device, indexFormat, numIndices, BUFFER_STATIC,
+        indices.buffer);
+    mesh.primitive[0].type = PRIMITIVE_TRIANGLES;
+    mesh.primitive[0].base = 0;
+    mesh.primitive[0].count = numIndices;
+    mesh.primitive[0].indexed = true;
     return mesh;
 }
 
@@ -635,8 +669,7 @@ class TextElement {
                 }
 
                 meshInfo.count = l;
-                meshInfo.positions.length = meshInfo.normals.length = l * 3 * 4;
-                meshInfo.indices.length = l * 3 * 2;
+                meshInfo.positions.length = l * 3 * 4;
                 meshInfo.uvs.length = l * 2 * 4;
                 meshInfo.colors.length = l * 4 * 4;
                 meshInfo.outlines.length = l * 4 * 3;
@@ -654,35 +687,7 @@ class TextElement {
                     continue;
                 }
 
-                // set up indices and normals whose values don't change when we call _updateMeshes
-                for (let v = 0; v < l; v++) {
-                    // create index and normal arrays since they don't change
-                    // if the length doesn't change
-                    meshInfo.indices[v * 3 * 2 + 0] = v * 4;
-                    meshInfo.indices[v * 3 * 2 + 1] = v * 4 + 1;
-                    meshInfo.indices[v * 3 * 2 + 2] = v * 4 + 3;
-                    meshInfo.indices[v * 3 * 2 + 3] = v * 4 + 2;
-                    meshInfo.indices[v * 3 * 2 + 4] = v * 4 + 3;
-                    meshInfo.indices[v * 3 * 2 + 5] = v * 4 + 1;
-
-                    meshInfo.normals[v * 4 * 3 + 0] = 0;
-                    meshInfo.normals[v * 4 * 3 + 1] = 0;
-                    meshInfo.normals[v * 4 * 3 + 2] = -1;
-
-                    meshInfo.normals[v * 4 * 3 + 3] = 0;
-                    meshInfo.normals[v * 4 * 3 + 4] = 0;
-                    meshInfo.normals[v * 4 * 3 + 5] = -1;
-
-                    meshInfo.normals[v * 4 * 3 + 6] = 0;
-                    meshInfo.normals[v * 4 * 3 + 7] = 0;
-                    meshInfo.normals[v * 4 * 3 + 8] = -1;
-
-                    meshInfo.normals[v * 4 * 3 + 9] = 0;
-                    meshInfo.normals[v * 4 * 3 + 10] = 0;
-                    meshInfo.normals[v * 4 * 3 + 11] = -1;
-                }
-
-                const mesh = createTextMesh(this._system.app.graphicsDevice, meshInfo);
+                const mesh = createTextMesh(this._system.app.graphicsDevice, l);
 
                 const mi = new MeshInstance(mesh, this._material, this._node);
                 mi.name = `Text Element: ${this._entity.name}`;
@@ -1430,6 +1435,7 @@ class TextElement {
             const vertMax = this._meshInfo[i].quad * 4;  // number of verts we need (usually count minus line break characters)
             const it = new VertexIterator(this._meshInfo[i].meshInstance.mesh.vertexBuffer);
             for (let v = 0; v < numVertices; v++) {
+                it.element[SEMANTIC_NORMAL].set(0, 0, -1);
                 if (v >= vertMax) {
                     // clear unused vertices
                     it.element[SEMANTIC_POSITION].set(0, 0, 0);
@@ -1457,7 +1463,13 @@ class TextElement {
             }
             it.end();
 
-            this._meshInfo[i].meshInstance.mesh.aabb.compute(this._meshInfo[i].positions);
+            // bound only the vertices in use, the rest are cleared to the origin
+            const aabb = this._meshInfo[i].meshInstance.mesh.aabb;
+            if (vertMax > 0) {
+                aabb.compute(this._meshInfo[i].positions, vertMax);
+            } else {
+                aabb.setMinMax(Vec3.ZERO, Vec3.ZERO);
+            }
 
             // force update meshInstance aabb
             this._meshInfo[i].meshInstance._aabbVer = -1;
@@ -1652,6 +1664,9 @@ class TextElement {
                     mesh.primitive[0].base = start * 3 * 2;
                     mesh.primitive[0].count = (end - start) * 3 * 2;
                 }
+
+                // a texture page with no characters in the range would draw 0 indices, so skip it
+                instance.visible = end > start;
             }
         }
     }
