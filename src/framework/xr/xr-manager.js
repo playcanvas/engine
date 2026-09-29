@@ -91,7 +91,9 @@ class XrManager extends EventHandler {
     static EVENT_START = 'start';
 
     /**
-     * Fired when XR session is ended.
+     * Fired when XR session is ended. While the handlers run, {@link XrManager#camera},
+     * {@link XrManager#type} and {@link XrManager#spaceType} still describe the session that has
+     * ended, and they are reset once all handlers have run.
      *
      * @event
      * @example
@@ -833,35 +835,41 @@ class XrManager extends EventHandler {
 
         // clean up once session is ended
         const onEnd = () => {
-            if (this._camera) {
-                this._camera.off('set_nearClip', onClipPlanesChange);
-                this._camera.off('set_farClip', onClipPlanesChange);
-                this._camera.camera.xrViews = null;
-                this._camera = null;
-            }
-
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
             session.removeEventListener('frameratechange', onFrameRateChange);
 
-            if (!failed) this.fire('end');
+            try {
+                // fired before the session state is reset, so that its handlers, including those
+                // of the input sources removed as it ends, can still use the camera
+                if (!failed) this.fire('end');
+            } finally {
+                // reset even when a handler throws, which would otherwise leave the manager active
+                // with no frames to drive the application
+                if (this._camera) {
+                    this._camera.off('set_nearClip', onClipPlanesChange);
+                    this._camera.off('set_farClip', onClipPlanesChange);
+                    this._camera.camera.xrViews = null;
+                    this._camera = null;
+                }
 
-            if (this.xrBridge) {
-                this.xrBridge.destroy();
-                this.xrBridge = null;
-            }
+                if (this.xrBridge) {
+                    this.xrBridge.destroy();
+                    this.xrBridge = null;
+                }
 
-            this._session = null;
-            this._referenceSpace = null;
-            this._width = 0;
-            this._height = 0;
-            this._type = null;
-            this._spaceType = null;
+                this._session = null;
+                this._referenceSpace = null;
+                this._width = 0;
+                this._height = 0;
+                this._type = null;
+                this._spaceType = null;
 
-            // old requestAnimationFrame will never be triggered,
-            // so queue up new tick
-            if (this.app.systems) {
-                this.app.requestAnimationFrame();
+                // old requestAnimationFrame will never be triggered,
+                // so queue up new tick
+                if (this.app.systems) {
+                    this.app.requestAnimationFrame();
+                }
             }
         };
 

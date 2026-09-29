@@ -515,7 +515,8 @@ class XrInputSource extends EventHandler {
             this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
         }
 
-        const parent = this._manager.camera.parent;
+        // the camera is null once the session has ended
+        const parent = this._manager.camera?.parent;
         if (parent) {
             this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);
         } else {
@@ -528,7 +529,7 @@ class XrInputSource extends EventHandler {
         const dirty = this._dirtyRay;
         this._dirtyRay = false;
 
-        const parent = this._manager.camera.parent;
+        const parent = this._manager.camera?.parent;
         if (parent) {
             const parentTransform = parent.getWorldTransform();
 
