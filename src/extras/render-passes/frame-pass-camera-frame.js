@@ -959,6 +959,7 @@ class FramePassCameraFrame extends FramePass {
         // TAA history buffer is double buffered, assign the current one to the follow up passes.
         this.composePass.sceneTexture = sceneTexture;
         this.scenePassHalf?.setSourceTexture(sceneTexture);
+        this.dofPass?.setSceneTexture(sceneTexture);
     }
 }
 
