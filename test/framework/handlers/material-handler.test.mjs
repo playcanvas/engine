@@ -278,6 +278,19 @@ describe('MaterialHandler', function () {
             expect(sampledValue(material, 'metalnessMap')).to.equal(0);
         });
 
+        it('samples the neutral value of a map using its value from the placeholder of an sRGB texture', async function () {
+            const gloss = pendingTexture('glossMap', { srgb: true });
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                useMetalness: true, glossMap: gloss.id
+            }));
+
+            // the value sampling decodes from the sRGB texel
+            const c = sampledValue(material, 'glossMap');
+            const value = c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+            expect(material.glossMap.encoding).to.equal('linear');
+            expect(value).to.be.closeTo(0.5, 0.01);
+        });
+
         it('assigns an .hdr file a placeholder of the rgbe type before the hdr parser records the type', async function () {
             const emissive = pendingTexture('emissiveMap', {}, { url: textureUrl('emissive').replace('.png', '.hdr') });
             const material = await loadMaterial(new Asset('material', 'material', null, {

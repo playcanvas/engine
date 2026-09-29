@@ -39,6 +39,12 @@ const PLACEHOLDER_MAP = {
     anisotropyMap: 'black'
 };
 
+// the texture parameters a shader samples as a color, decoding it by the encoding of the texture,
+// where the other parameters use the sampled value as it is
+const COLOR_PARAMETERS = new Set([
+    'diffuseMap', 'diffuseDetailMap', 'emissiveMap', 'lightMap', 'specularMap', 'sheenMap', 'sphereMap', 'envAtlas'
+]);
+
 // the texel of each color, in a texture of the default type
 const COLORS = {
     white: [255, 255, 255, 255],
@@ -71,6 +77,9 @@ const encodeRGBE = (linear) => {
     return [...linear.map(c => c / Math.pow(2, e)), (e + 128) / 255];
 };
 
+// a linear value in the range 0..1 as an sRGB texture stores it, which sampling decodes
+const linearToSrgb = c => (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(c, 1 / 2.4) - 0.055);
+
 const ENCODERS = {
     [TEXTURETYPE_RGBM]: encodeRGBM,
     [TEXTURETYPE_RGBP]: encodeRGBP,
@@ -102,19 +111,26 @@ const CHANNELS = 'rgba';
  * metalness, rather than white, for no occlusion. Channels no parameter samples show the color of
  * the first parameter.
  *
- * A texel of an encoded type shows the color the texel of the default type shows when a shader
- * decodes it from gamma space, as the color textures a texture of an encoded type stands in for
- * are.
+ * Sampling an sRGB texture decodes its color channels, so the channels of an sRGB placeholder a
+ * parameter uses as a value rather than a color store the value gamma encoded, to sample the value
+ * the texel of the default type holds. A texel of an encoded type shows the color the texel of the
+ * default type shows when a shader decodes it from gamma space, as the color textures a texture of
+ * an encoded type stands in for are.
  *
  * @param {PlaceholderMap[]} maps - The texture parameters.
+ * @param {boolean} srgb - Whether the texture is sRGB.
  * @param {string} type - The type of the texture.
  * @returns {number[]} The four channels of the texel, in the range 0..255.
  */
-const getTexel = (maps, type) => {
+const getTexel = (maps, srgb, type) => {
     const texelOf = (name) => {
         const color = PLACEHOLDER_MAP[name];
         Debug.assert(color, `No placeholder texture found for parameter: ${name}`);
-        return type === TEXTURETYPE_SWIZZLEGGGR && color === 'normal' ? SWIZZLED_NORMAL : COLORS[color ?? 'gray'];
+        const texel = type === TEXTURETYPE_SWIZZLEGGGR && color === 'normal' ? SWIZZLED_NORMAL : COLORS[color ?? 'gray'];
+        if (srgb && !ENCODERS[type] && !COLOR_PARAMETERS.has(name)) {
+            return [...texel.slice(0, 3).map(c => Math.round(linearToSrgb(c / 255) * 255)), texel[3]];
+        }
+        return texel;
     };
 
     const texel = texelOf(maps[0].name).slice();
@@ -213,7 +229,7 @@ class PlaceholderTextures {
      * @returns {Texture} The placeholder texture.
      */
     get(maps, srgb, type) {
-        const texel = getTexel(maps, type);
+        const texel = getTexel(maps, srgb, type);
         const hex = texel.map(c => c.toString(16).padStart(2, '0')).join('');
         const name = `placeholder-${maps[0].name}-${srgb ? 'srgb' : 'linear'}-${type}-${hex}`;
         let texture = this._textures.get(name);

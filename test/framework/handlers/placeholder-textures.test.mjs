@@ -93,6 +93,39 @@ describe('PlaceholderTextures', function () {
         }
     });
 
+    describe('an sRGB texture', function () {
+
+        // the value sampling decodes from an sRGB texel, as the graphics hardware does
+        const srgbToLinear = c => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+        const sampled = texture => texel(texture).slice(0, 3).map(srgbToLinear);
+
+        it('samples the value of the default texel in the maps using the value as it is', function () {
+            const gloss = placeholders.get(one('glossMap'), true, TEXTURETYPE_DEFAULT);
+            expect(gloss.format).to.equal(PIXELFORMAT_SRGBA8);
+
+            // stored gamma encoded, sampled as the linear placeholder stores it
+            expect(Array.from(gloss._levels[0])).to.eql([188, 188, 188, 255]);
+            for (const c of sampled(gloss)) {
+                expect(c).to.be.closeTo(128 / 255, 0.005);
+            }
+
+            // a flat normal
+            const normal = sampled(placeholders.get(one('normalMap'), true, TEXTURETYPE_DEFAULT)).map(c => c * 2 - 1);
+            expect(normal[0]).to.be.closeTo(0, 0.01);
+            expect(normal[1]).to.be.closeTo(0, 0.01);
+            expect(normal[2]).to.be.closeTo(1, 1e-6);
+        });
+
+        it('samples the color of the default texel in the maps decoding a color', function () {
+            // the hardware decodes the color the shader decodes from the texel of a linear texture
+            const diffuse = placeholders.get(one('diffuseMap'), true, TEXTURETYPE_DEFAULT);
+            expect(Array.from(diffuse._levels[0])).to.eql([128, 128, 128, 255]);
+            for (const c of sampled(diffuse)) {
+                expect(c).to.be.closeTo((128 / 255) ** 2.2, 0.005);
+            }
+        });
+    });
+
     it('stores a flat normal in the channels a swizzled normal map uses', function () {
         const [, g, , a] = texel(placeholders.get(one('normalMap'), false, TEXTURETYPE_SWIZZLEGGGR));
 
