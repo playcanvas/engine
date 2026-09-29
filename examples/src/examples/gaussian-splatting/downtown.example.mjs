@@ -32,7 +32,6 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_DEBUG_LOD,
     GSPLAT_DEBUG_NONE,
-    GSPLAT_LODMODE_DISTANCE,
     GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSplatComponentSystem,
@@ -160,17 +159,6 @@ app.scene.gsplat.minPixelSize = 2;
 app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
 app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
-
-// How the splat budget picks LOD levels: 'distance' (the default) orders detail by camera
-// distance alone and ignores error metadata; 'error' spends it where the bundle's per-node
-// error metadata says detail is worth most - that metadata is why the bundle carries the
-// metrics, and it lifts sparse regions that distance leaves coarse.
-data.set('lodMode', GSPLAT_LODMODE_DISTANCE);
-const applyLodMode = () => {
-    app.scene.gsplat.lodMode = data.get('lodMode');
-};
-applyLodMode();
-data.on('lodMode:set', applyLodMode);
 
 // Colorize LODs debug toggle (off by default)
 data.set('colorizeLods', false);

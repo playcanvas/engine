@@ -2,8 +2,6 @@ export default /* wgsl */`
 
 attribute vertex_normal: vec3f;
 
-uniform matrix_normal: mat3x3f;
-
 #ifdef MORPHING_NORMAL
     #ifdef MORPHING_INT
         var morphNormalTex: texture_2d<u32>;
@@ -36,15 +34,15 @@ fn getLocalNormal(vertexNormal: vec3f) -> vec3f {
     return localNormal;
 }
 
-#if defined(SKIN) || defined(BATCH)
-    fn getNormalMatrix(modelMatrix: mat4x4f) -> mat3x3f {
-        return mat3x3f(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
-    }
-#elif defined(INSTANCING)
+// the normal matrix is the upper 3x3 of the model matrix, exact for a uniform scale, for skinned, batched
+// and instanced meshes, which have no normal matrix of their own, and in the shadow pass, which sets none
+#if defined(SKIN) || defined(BATCH) || defined(INSTANCING) || defined(SHADOW_PASS)
     fn getNormalMatrix(modelMatrix: mat4x4f) -> mat3x3f {
         return mat3x3f(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
     }
 #else
+    uniform matrix_normal: mat3x3f;
+
     fn getNormalMatrix(modelMatrix: mat4x4f) -> mat3x3f {
         return uniform.matrix_normal;
     }

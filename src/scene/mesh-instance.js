@@ -47,6 +47,9 @@ import { isViewTexture } from './renderer/view-textures.js';
  * buffer, resolved on first use for overrides.
  * @property {number} textureSlot - The index of the texture slot of the material bind group the
  * parameter overrides, or -1 when it does not override a texture of the material.
+ * @property {*} replacedValue - The value of the scope the parameter replaced when last applied,
+ * such as a value set globally, restored after the draw when the material does not have the
+ * parameter.
  * @ignore
  * @import { ScopeId } from '../platform/graphics/scope-id.js'
  * @import { Shader } from '../platform/graphics/shader.js'
@@ -1514,7 +1517,8 @@ class MeshInstance {
                 scopeId: null,
                 override: false,
                 uniformFormat: null,
-                textureSlot: -1
+                textureSlot: -1,
+                replacedValue: undefined
             };
             this.parameters.set(name, parameter);
             this._addParameter(parameter);
@@ -1583,7 +1587,30 @@ class MeshInstance {
             if (!parameter.scopeId) {
                 parameter.scopeId = device.scope.resolve(parameter.name);
             }
+
+            // the value it replaces, such as one set globally, see restoreReplacedParameters
+            parameter.replacedValue = parameter.scopeId.value;
             parameter.scopeId.setValue(parameter.data);
+        }
+    }
+
+    /**
+     * Restores the scope values the parameters of this mesh instance replaced, such as values set
+     * globally, for the parameters its material does not have - no material sets those again for
+     * the draws that follow. The parameters the material has are restored to its values when the
+     * next draw uses the same material. Called internally by the renderers after a draw.
+     *
+     * @param {Material} material - The material the mesh instance was drawn with.
+     * @ignore
+     */
+    restoreReplacedParameters(material) {
+        const parameters = this._scopeParameters;
+        const materialParameters = material.parameters;
+        for (let i = 0; i < parameters.length; i++) {
+            const parameter = parameters[i];
+            if (!materialParameters[parameter.name]) {
+                parameter.scopeId.setValue(parameter.replacedValue);
+            }
         }
     }
 

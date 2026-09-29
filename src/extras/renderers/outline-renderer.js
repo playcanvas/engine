@@ -106,7 +106,53 @@ const _tempFloatArray = new Float32Array(2);
 const _tempColor = new Color();
 
 /**
- * Class responsible for rendering color outlines around objects in the scene.
+ * The OutlineRenderer draws solid color outlines around the silhouettes of entities, for example
+ * to highlight objects that are selected or hovered in an editor. Each entity can be outlined in
+ * its own color.
+ *
+ * The outlines are generated in three steps:
+ *
+ * - An internal camera renders the mesh instances of the added entities into an offscreen texture
+ * matching the resolution of the scene camera, with each object drawn in its outline color.
+ * - The edges of the objects in the texture are detected and expanded to form the outlines.
+ * - The outlines are composited on top of the scene, just before the scene camera renders the
+ * layer passed to {@link OutlineRenderer#frameUpdate}.
+ *
+ * The outlines are drawn over everything the scene camera has rendered up to that layer, so they
+ * remain visible when the outlined objects are occluded by other objects. Anything rendered in
+ * that layer or after it, such as gizmos, is drawn on top of the outlines.
+ *
+ * {@link OutlineRenderer#frameUpdate} needs to be called every frame to keep the outlines in sync
+ * with the scene camera. Only render and model components are outlined, and the outline color is
+ * applied to mesh instances using a {@link StandardMaterial}.
+ *
+ * Relevant Engine API examples:
+ *
+ * - [Outlines Colored](https://playcanvas.github.io/#/graphics/outlines-colored)
+ * - [Editor](https://playcanvas.github.io/#/misc/editor)
+ *
+ * @example
+ * // Create a layer used to render the outlined objects. It is added to the layer composition, but
+ * // not to the scene camera, so that the camera does not render the outlined objects a second time.
+ * const outlineLayer = new Layer({ name: 'OutlineLayer' });
+ * app.scene.layers.push(outlineLayer);
+ *
+ * // Create the outline renderer
+ * const outlineRenderer = new OutlineRenderer(app, outlineLayer);
+ *
+ * // Outline an entity and its descendants in red, and another entity in white
+ * outlineRenderer.addEntity(entity1, Color.RED);
+ * outlineRenderer.addEntity(entity2, Color.WHITE);
+ *
+ * // Each frame, composite the outlines into the scene before the scene camera renders the opaque
+ * // part of the 'Immediate' layer
+ * const immediateLayer = app.scene.layers.getLayerByName('Immediate');
+ * app.on('update', () => {
+ *     outlineRenderer.frameUpdate(cameraEntity, immediateLayer, false);
+ * });
+ *
+ * // Later, stop outlining the first entity
+ * outlineRenderer.removeEntity(entity1);
  *
  * @category Graphics
  */
@@ -115,11 +161,14 @@ class OutlineRenderer {
      * Create a new OutlineRenderer.
      *
      * @param {AppBase} app - The application.
-     * @param {Layer} [renderingLayer] - A layer used internally to render the outlines. If not
-     * provided, the renderer will use the 'Immediate' layer. This needs to be supplied only if the
-     * 'Immediate' layer is not present in the scene.
-     * @param {number} [priority] - The priority of the camera rendering the outlines. Should be
-     * smaller value than the priority of the scene camera, to be updated first. Defaults to -1.
+     * @param {Layer} [renderingLayer] - The layer the outlined mesh instances are added to, and
+     * which the internal outline camera renders. It must be part of the scene's layer composition.
+     * Defaults to the 'Immediate' layer. As the scene camera renders the 'Immediate' layer by
+     * default, the outlined objects are then rendered by the scene camera a second time - to avoid
+     * this, supply a dedicated layer which is not rendered by any other camera.
+     * @param {number} [priority] - The priority of the internal outline camera. It needs to render
+     * before the scene camera, so it has to be smaller than the priority of the scene camera.
+     * Defaults to -1.
      */
     constructor(app, renderingLayer, priority = -1) {
         this.app = app;
@@ -234,15 +283,25 @@ class OutlineRenderer {
     }
 
     /**
-     * Add an entity to the outline renderer. Render and model components that are not currently
-     * rendered, because they or their entity are disabled, are skipped - this is evaluated when
-     * the entity is added.
+     * Add an entity to the outline renderer, to draw an outline around it. The mesh instances of
+     * the entity's render and model components are outlined, including those of its descendants
+     * unless `recursive` is false. Adding an entity that is already outlined changes its outline
+     * color.
      *
-     * @param {Entity} entity - The entity to add. All MeshInstance of the entity and its
-     * descendants will be added.
-     * @param {Color} color - The color of the outline.
-     * @param {boolean} [recursive] - Whether to add MeshInstances of the entity's descendants.
-     * Defaults to true.
+     * Render and model components that are not currently rendered, because they or their entity
+     * are disabled, are skipped - this is evaluated when the entity is added.
+     *
+     * Note that this sets {@link StandardMaterial#onUpdateShader} on the materials of the outlined
+     * mesh instances, replacing any existing callback. {@link OutlineRenderer#removeEntity} clears
+     * it.
+     *
+     * @param {Entity} entity - The entity to add.
+     * @param {Color} color - The color of the outline. The alpha component is ignored.
+     * @param {boolean} [recursive] - Whether to also add the mesh instances of the entity's
+     * descendants. Defaults to true.
+     * @example
+     * // outline an entity and its descendants in orange
+     * outlineRenderer.addEntity(entity, new Color(1, 0.5, 0));
      */
     addEntity(entity, color, recursive = true) {
         const meshInstances = this.getMeshInstances(entity, recursive);
@@ -273,6 +332,11 @@ class OutlineRenderer {
                         opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
                         opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
                         opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
+
+                        // the outline color replaces the lit output, so skip the lighting. The option
+                        // defaults to true, and the clustered lighting chunks do not exist unless the
+                        // scene has clustered lighting enabled.
+                        opts.litOptions.clusteredLightingEnabled = false;
                         return opts;
                     }
 
@@ -290,11 +354,14 @@ class OutlineRenderer {
     }
 
     /**
-     * Remove an entity from the outline renderer.
+     * Remove an entity from the outline renderer, to stop drawing its outline. This also works for
+     * an entity that has been disabled since it was added.
      *
      * @param {Entity} entity - The entity to remove.
-     * @param {boolean} [recursive] - Whether to add MeshInstances of the entity's descendants.
-     * Defaults to true.
+     * @param {boolean} [recursive] - Whether to also remove the mesh instances of the entity's
+     * descendants. Defaults to true.
+     * @example
+     * outlineRenderer.removeEntity(entity);
      */
     removeEntity(entity, recursive = true) {
         // include disabled components, so an entity disabled after it was added still has its
@@ -310,6 +377,15 @@ class OutlineRenderer {
         });
     }
 
+    /**
+     * Remove all entities from the outline renderer, for example to clear the selection. Note
+     * that this removes all mesh instances from the rendering layer supplied to the constructor.
+     *
+     * @example
+     * // outline only the newly selected entity
+     * outlineRenderer.removeAllEntities();
+     * outlineRenderer.addEntity(selectedEntity, Color.WHITE);
+     */
     removeAllEntities() {
         this.renderingLayer.clearMeshInstances();
     }
@@ -390,12 +466,27 @@ class OutlineRenderer {
     }
 
     /**
-     * Update the outline renderer. Should be called once per frame.
+     * Update the outline renderer. This needs to be called once per frame, after the scene camera
+     * has been positioned, for example from the application's `update` event, which fires after
+     * scripts have been updated. It matches the internal outline camera to the scene camera's
+     * transform, projection, clip planes and resolution, and schedules the outlines to be
+     * composited into the scene for this frame.
      *
-     * @param {Entity} sceneCameraEntity - The camera used to render the scene, which is used to provide
-     * the camera properties to the outline rendering camera.
-     * @param {Layer} blendLayer - The layer in which the outlines should be rendered.
-     * @param {boolean} blendLayerTransparent - Whether the blend layer is transparent.
+     * The outlines are composited just before the scene camera renders the opaque or transparent
+     * part of `blendLayer`, so that part of the layer, and everything rendered after it, is drawn
+     * on top of the outlines. The scene camera needs to render `blendLayer`, otherwise the
+     * outlines are not visible.
+     *
+     * @param {Entity} sceneCameraEntity - The entity with the camera component used to render the
+     * scene.
+     * @param {Layer} blendLayer - The layer before which the outlines are composited.
+     * @param {boolean} blendLayerTransparent - True to composite the outlines before the
+     * transparent part of `blendLayer`, false to composite them before its opaque part.
+     * @example
+     * const immediateLayer = app.scene.layers.getLayerByName('Immediate');
+     * app.on('update', () => {
+     *     outlineRenderer.frameUpdate(cameraEntity, immediateLayer, false);
+     * });
      */
     frameUpdate(sceneCameraEntity, blendLayer, blendLayerTransparent) {
 

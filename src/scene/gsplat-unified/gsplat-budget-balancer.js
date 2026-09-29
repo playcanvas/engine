@@ -1,341 +1,279 @@
 /**
  * @import { GSplatOctreeInstance } from './gsplat-octree-instance.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
- * @import { GSplatLodTable } from './gsplat-lod-table.js'
  */
 
-import { NUM_VALUE_BUCKETS } from './constants.js';
+import { NUM_SCALE_BINS, NUM_SUB_BINS } from './constants.js';
 
-// Monotonic float -> integer key. The bit pattern of a positive float is order preserving, and
-// linear in log2 of the value, so bucketing on it is a log-spaced bucketing without a Math.log.
-const _f32 = new Float32Array(1);
-const _u32 = new Uint32Array(_f32.buffer);
-const keyOf = (value) => {
-    _f32[0] = value;
-    return _u32[0];
-};
+// The histogram axis is the natural log of the scene-wide distance scale. The window covers any
+// switch point a scene can produce - world distances from 1e-6 to far beyond any scene, over the
+// base distances and multipliers the component allows - and anything outside it still resolves, it
+// only shares the first or last bin. It is symmetric so that a scale of 1 falls exactly on a bin
+// edge, which is what makes limit mode reproduce the configured distances exactly rather than to
+// within a bin.
+const LOG_SCALE_MIN = -48;
+const LOG_SCALE_MAX = 48;
+const BIN_SCALE = NUM_SCALE_BINS / (LOG_SCALE_MAX - LOG_SCALE_MIN);
+const LAST_BIN = NUM_SCALE_BINS - 1;
+const LAST_SUB_BIN = NUM_SUB_BINS - 1;
 
-// Fixed bucket scale rather than one derived from the values seen this update. A derived range
-// shifts every update, which moves a node between buckets when nothing about that node changed -
-// and that is a flicker source in its own right.
-//
-// The window has to cover every `coverage * error-per-splat` a scene can produce. Coverage is
-// structurally bounded to [1e-12, 1] by NodeInfo#lodCoverage, so scene extent does not enter into
-// it. The ratio does: with derived errors it is `ln(a/b) / (a - b)` over adjacent frontier counts,
-// which peaks at ln 2 for counts 1 -> 2 and falls as ~ln2/count for large nodes. So the low end
-// tracks splats *per node* rather than scene size - 1e-24 leaves room for a node of ~1e12 splats.
-// The high end allows for authored errors far larger than any measured (~3), since the color term
-// in splat-transform's metric is unnormalized and has no upper bound.
-//
-// Anything outside the window still resolves, it just shares the first or last bucket and loses
-// ordering against its neighbors there.
-const KEY_LO = keyOf(1e-24);
-const KEY_HI = keyOf(1e3);
-const KEY_SCALE = (NUM_VALUE_BUCKETS - 1) / (KEY_HI - KEY_LO);
+// The first bin past a scale of exactly 1: every switch point below it is taken at that scale.
+const UNIT_SCALE_BIN = NUM_SCALE_BINS / 2;
 
-// The bit key of 1.0 - log2 of 0 in key units. Subtracted when adding two keys, since each
-// carries the exponent bias once.
-const KEY_ONE = keyOf(1);
+// Floor on squared node distance before taking its log, so a camera inside a node stays finite.
+const MIN_DISTANCE_SQ = 1e-12;
 
-// GSplatPlacement#lodFalloff is an exponent on coverage. It is applied in key space - the bit key
-// is piecewise-linear in log2, so cov^falloff becomes one multiply instead of a Math.pow per node,
-// at a cost of at most a bucket or two of quantization. The exponent pivots around a mid-field
-// coverage (a node roughly a hundred radii away) rather than around 1: at the pivot the value is
-// unchanged by falloff, so the slider tilts a placement's budget between its near and far field
-// instead of deflating the whole placement against other instances.
-const KEY_PIVOT = keyOf(1e-4);
+// Nodes carry squared distances, so the log of the distance is half the log taken.
+const HALF_BIN_SCALE = BIN_SCALE * 0.5;
 
 /**
- * Distributes a splat budget across octree instances by choosing a LOD level per node.
+ * Chooses a LOD level per node from its distance, fitted to the splat budget.
  *
- * Every node starts at the cheapest level it can render, which is the coarsest the scene can be and
- * therefore always within budget. Each single-level upgrade available anywhere in the scene is then
- * ranked by `coverage * error removed / splats added` - value for money, weighted by how much
- * screen the node covers - and they are bought best first until one does not fit.
+ * A node at world distance `d` renders the LOD band `1 + log_m(d / (s * b))`, floored and clamped
+ * to its LOD range, where `b` and `m` are its placement's base distance and multiplier. `s` is one
+ * scene-wide scale on every base distance: raising it pushes every band outward, so the splat total
+ * grows with it. The allocator's whole job is to pick `s`:
+ * - in target mode, the largest `s` whose total still fits the budget;
+ * - in limit mode, the same but never above 1, so the configured distances are an upper bound on
+ * detail and the budget only ever lowers it.
  *
- * Stopping at the first upgrade that does not fit, rather than skipping it and continuing, is
- * deliberate. Continuing would make a node's outcome depend on whether some unrelated cheaper
- * upgrade happened to be considered first, so small camera movements would flip levels on and off.
- * The cost is leaving some budget unspent.
+ * Every node switches band at a scale known in closed form - it is finer than band `L` exactly when
+ * `ln s > ln(d / b) - (L - 1) ln m`. Those switch points all lie on the one `ln s` axis, whatever
+ * the per-placement base distances and multipliers, so the allocator drops each one into a
+ * histogram over that axis with the splat change it causes, then runs a prefix sum from the
+ * coarsest end until a bin would exceed the budget. That bin alone is then resolved the same way on
+ * a finer histogram of its own, so the budget is filled to within a fraction of a percent of
+ * distance rather than to within a bin - captures often hold many nodes at nearly the same distance, and a
+ * single bin can carry a large share of the scene. A last pass assigns each node the band the
+ * resulting cut gives it. There is no queue and no sort.
  *
- * Only a node's next unbought upgrade is ever in the queue; buying it enqueues its successor. That
- * keeps at most one entry per node live, which is what lets the buckets be intrusive lists over
- * preallocated typed arrays with no per-entry storage at all.
- *
- * A successor can be worth more than what was just bought, since values are the best deal reachable
- * from a level rather than that level's own slope. Requeueing is therefore capped at the bucket
- * being drained, so a run always completes within the sweep that started it - see the drain.
+ * Stopping at the first sub-bin that does not fit, rather than skipping it and continuing, keeps a
+ * node's level from depending on unrelated nodes further along the axis, so small camera movements
+ * do not flip levels on and off. Nodes sharing a sub-bin switch together.
  *
  * @ignore
  */
 class GSplatBudgetBalancer {
-    /** @type {Int32Array} */
-    _bucketHead = new Int32Array(NUM_VALUE_BUCKETS);
-
-    /** @type {Int32Array} */
-    _bucketTail = new Int32Array(NUM_VALUE_BUCKETS);
-
     /**
-     * Next node in the same bucket, indexed by global node index. -1 terminates the list.
-     *
-     * @type {Int32Array}
-     * @private
-     */
-    _next = new Int32Array(0);
-
-    /**
-     * Index of a node's next unbought upgrade, indexed by global node index.
-     *
-     * @type {Int32Array}
-     * @private
-     */
-    _pending = new Int32Array(0);
-
-    /**
-     * Node coverage, indexed by global node index. Copied out of NodeInfo during the seed pass so
-     * the drain, which visits nodes in value order rather than index order, reads a flat array.
-     *
-     * @type {Float32Array}
-     * @private
-     */
-    _coverage = new Float32Array(0);
-
-    /**
-     * Per node, the falloff-scaled bit key of its coverage, used instead of {@link _coverage} when
-     * any instance has a non-default lodFalloff. See KEY_PIVOT.
+     * Splat change per bin of the scale axis, and then per sub-bin of the bin being resolved.
      *
      * @type {Float64Array}
      * @private
      */
-    _coverageKey = new Float64Array(0);
+    _histogram = new Float64Array(Math.max(NUM_SCALE_BINS, NUM_SUB_BINS));
 
     /**
-     * Which instance owns each global node index.
+     * Per global node index, the node's position on the scale axis in bin units, offset so that
+     * its switch point leaving band `rangeMin + b` sits at `position - b * step`. Computed once,
+     * read by every later pass.
      *
-     * @type {Uint16Array}
+     * @type {Float64Array}
      * @private
      */
-    _instanceOf = new Uint16Array(0);
-
-    /**
-     * Global node index of each instance's first node.
-     *
-     * @type {number[]}
-     * @private
-     */
-    _instanceBase = [];
-
-    /** @type {GSplatOctreeInstance[]} */
-    _instances = [];
-
-    /** @type {GSplatLodTable[]} */
-    _tables = [];
-
-    /**
-     * @param {number} capacity - Required global node capacity.
-     * @private
-     */
-    _ensureCapacity(capacity) {
-        if (this._next.length >= capacity) return;
-        const size = Math.max(capacity, this._next.length * 2, 1024);
-        this._next = new Int32Array(size);
-        this._pending = new Int32Array(size);
-        this._coverage = new Float32Array(size);
-        this._coverageKey = new Float64Array(size);
-        this._instanceOf = new Uint16Array(size);
-    }
-
-    /**
-     * Maps an upgrade value to a bucket. Monotonic in the value, so ordering between different
-     * upgrades is preserved; the drain caps where a successor may be requeued.
-     *
-     * @param {number} value - Coverage-weighted error reduction per splat.
-     * @returns {number} Bucket index.
-     * @private
-     */
-    _bucketOf(value) {
-        const bucket = ((keyOf(value) - KEY_LO) * KEY_SCALE) | 0;
-        return bucket < 0 ? 0 : (bucket >= NUM_VALUE_BUCKETS ? NUM_VALUE_BUCKETS - 1 : bucket);
-    }
-
-    /**
-     * Maps a value already expressed as a bit key - the sum of a falloff-scaled coverage key and a
-     * ratio key - to a bucket.
-     *
-     * @param {number} key - Bit-key of the value.
-     * @returns {number} Bucket index.
-     * @private
-     */
-    _bucketOfKey(key) {
-        const bucket = ((key - KEY_LO) * KEY_SCALE) | 0;
-        return bucket < 0 ? 0 : (bucket >= NUM_VALUE_BUCKETS ? NUM_VALUE_BUCKETS - 1 : bucket);
-    }
-
-    /**
-     * @param {number} bucket - Bucket to append to.
-     * @param {number} node - Global node index.
-     * @private
-     */
-    _push(bucket, node) {
-        this._next[node] = -1;
-        if (this._bucketHead[bucket] < 0) {
-            this._bucketHead[bucket] = node;
-        } else {
-            this._next[this._bucketTail[bucket]] = node;
-        }
-        this._bucketTail[bucket] = node;
-    }
+    _position = new Float64Array(0);
 
     /**
      * Assigns a LOD level to every node of every instance, keeping the total splat count within
-     * budget. Reads NodeInfo#lodCoverage, writes NodeInfo#optimalLod.
+     * budget. Reads NodeInfo#worldDistanceSq, writes NodeInfo#optimalLod.
      *
      * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - Map of
      * GSplatOctreeInstance objects.
-     * @param {number} budget - Target splat budget for octrees.
+     * @param {number} budget - Splat budget for octrees. Infinity for no budget.
+     * @param {boolean} limit - True when the budget only limits the configured LOD distances,
+     * false when detail is raised to fill it.
      */
-    balance(octreeInstances, budget) {
-        const instances = this._instances;
-        const tables = this._tables;
-        const bases = this._instanceBase;
-        instances.length = 0;
-        tables.length = 0;
-        bases.length = 0;
-
+    balance(octreeInstances, budget, limit) {
         let nodeTotal = 0;
-        let totalStartCount = 0;
-        let totalFinestCount = 0;
-        // With every instance at the default falloff the exact value path is used, bit-identical
-        // to ranking without the feature; any non-default falloff switches all ranking to the
-        // key-space path, where the exponent is a multiply. See KEY_PIVOT.
-        let useKeys = false;
+        let total = 0;
+        let finestTotal = 0;
         for (const [, inst] of octreeInstances) {
-            // resolveLodRange() already built this for the instance's range; resolving it again
-            // here would rebuild whenever two instances of one octree differ in range
-            const table = inst.lodTable;
-            bases.push(nodeTotal);
-            instances.push(inst);
-            tables.push(table);
             nodeTotal += inst.octree.nodes.length;
-            totalStartCount += table.totalStartCount;
-            totalFinestCount += table.totalFinestCount;
-            if (inst.placement.lodFalloff !== 1) useKeys = true;
+            total += inst.lodTable.totalCoarsestCount;
+            finestTotal += inst.lodTable.totalFinestCount;
         }
-        if (instances.length === 0) return;
+        if (nodeTotal === 0) return;
 
-        // Everything fits, or nothing does - either way there is nothing to trade off.
-        if (totalFinestCount <= budget) {
-            this._assignChainEnd(true);
+        // Nothing to fit when not even the coarsest scene fits, or in target mode when the finest
+        // does.
+        if (total >= budget) {
+            this._assignChainEnd(octreeInstances, false);
             return;
         }
-        if (totalStartCount >= budget) {
-            this._assignChainEnd(false);
+        if (!limit && finestTotal <= budget) {
+            this._assignChainEnd(octreeInstances, true);
             return;
         }
 
-        this._ensureCapacity(nodeTotal);
-        this._bucketHead.fill(-1);
+        if (this._position.length < nodeTotal) {
+            this._position = new Float64Array(Math.max(nodeTotal, this._position.length * 2, 1024));
+        }
+        const position = this._position;
 
-        const next = this._next;
-        const pending = this._pending;
-        const coverage = this._coverage;
-        const coverageKey = this._coverageKey;
-        const instanceOf = this._instanceOf;
-
-        // Seed pass: floor every node and queue its first upgrade.
-        for (let i = 0; i < instances.length; i++) {
-            const inst = instances[i];
-            const table = tables[i];
+        // Position pass: each node's place on the scale axis. In limit mode it also totals the
+        // splats at the configured distances, which is all there is to do when those fit.
+        let unitTotal = 0;
+        let base = 0;
+        for (const [, inst] of octreeInstances) {
+            const { bandLod, bandCount, span } = inst.lodTable;
             const nodeInfos = inst.nodeInfos;
-            const base = bases[i];
-            const { startLod, firstUpgrade, upgradeRatio } = table;
-            const falloff = inst.placement.lodFalloff;
+            const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
+            const offset = (-Math.log(inst.placement.lodBaseDistance) - LOG_SCALE_MIN) * BIN_SCALE - (inst.rangeMin - 1) * step;
 
             for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                const nodeInfo = nodeInfos[n];
-                const lod = startLod[n];
-                nodeInfo.optimalLod = lod;
-                if (lod < 0) continue;
+                const row = n * span;
+                if (bandLod[row] < 0) continue;
 
-                const first = firstUpgrade[n];
-                if (first >= firstUpgrade[n + 1]) continue;
+                const dSq = nodeInfos[n].worldDistanceSq;
+                const p = Math.log(dSq > MIN_DISTANCE_SQ ? dSq : MIN_DISTANCE_SQ) * HALF_BIN_SCALE + offset;
+                position[base + n] = p;
 
-                const g = base + n;
-                const cov = nodeInfo.lodCoverage;
-                coverage[g] = cov;
-                instanceOf[g] = i;
-                pending[g] = first;
-                if (useKeys) {
-                    coverageKey[g] = falloff * (keyOf(cov) - KEY_PIVOT) + KEY_PIVOT;
-                    this._push(this._bucketOfKey(coverageKey[g] + keyOf(upgradeRatio[first]) - KEY_ONE), g);
-                } else {
-                    this._push(this._bucketOf(cov * upgradeRatio[first]), g);
+                if (limit) {
+                    let b = span - 1;
+                    while (b > 0) {
+                        const t = p - b * step;
+                        if ((t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0)) >= UNIT_SCALE_BIN) break;
+                        b--;
+                    }
+                    unitTotal += bandCount[row + b];
+                }
+            }
+            base += nodeInfos.length;
+        }
+
+        // The cut along the scale axis: every switch point in a bin below `cutBin` is taken, and
+        // in `cutBin` itself those in a sub-bin below `cutSub`.
+        let cutBin = UNIT_SCALE_BIN;
+        let cutSub = 0;
+        if (!limit || unitTotal > budget) {
+            const stopBin = limit ? UNIT_SCALE_BIN : NUM_SCALE_BINS;
+            const histogram = this._histogram;
+
+            // Histogram pass: each node's switch points with the splat change each one makes.
+            histogram.fill(0, 0, NUM_SCALE_BINS);
+            this._accumulate(octreeInstances, -1);
+
+            // Sweep: take whole bins from the coarsest end while the total fits. Limit mode never
+            // goes past a scale of 1, the configured distances.
+            cutBin = 0;
+            while (cutBin < stopBin) {
+                const next = total + histogram[cutBin];
+                if (next > budget) break;
+                total = next;
+                cutBin++;
+            }
+
+            // The bin that did not fit as a whole is split into sub-bins and swept the same way.
+            if (cutBin < stopBin) {
+                histogram.fill(0, 0, NUM_SUB_BINS);
+                this._accumulate(octreeInstances, cutBin);
+                while (cutSub < NUM_SUB_BINS) {
+                    const next = total + histogram[cutSub];
+                    if (next > budget) break;
+                    total = next;
+                    cutSub++;
                 }
             }
         }
 
-        // Drain: best deals first, stopping at the first upgrade that does not fit.
-        //
-        // Each bucket is consumed as a queue: pop the head, then push the node's successor, which
-        // may land back in this same bucket and must be appended behind whatever is still queued.
-        // Popping first is what makes that safe - reading the popped node's link afterwards would
-        // miss a same-bucket re-push whenever it was the tail.
-        let spent = totalStartCount;
-        for (let bucket = NUM_VALUE_BUCKETS - 1; bucket >= 0; bucket--) {
-            let g = this._bucketHead[bucket];
-            while (g >= 0) {
-                this._bucketHead[bucket] = next[g];
+        // Assignment pass: step each node finer while its next switch point is taken. Switch
+        // points rise as bands get finer, so the first one not taken ends the walk.
+        base = 0;
+        for (const [, inst] of octreeInstances) {
+            const { bandLod, span } = inst.lodTable;
+            const nodeInfos = inst.nodeInfos;
+            const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
 
-                const i = instanceOf[g];
-                const table = tables[i];
-                const k = pending[g];
-                const cost = table.upgradeCost[k];
-                if (spent + cost > budget) return;
-
-                spent += cost;
-                const n = g - bases[i];
-                instances[i].nodeInfos[n].optimalLod = table.upgradeToLod[k];
-
-                const k2 = k + 1;
-                if (k2 < table.firstUpgrade[n + 1]) {
-                    pending[g] = k2;
-                    // Never above the bucket being drained. A successor can be worth more than what
-                    // was just bought - values are the best deal reachable from a level, so a poorly
-                    // valued step opens a better run - and this sweep has already passed the higher
-                    // buckets. Since every update re-floors from the cheapest level, a node pushed
-                    // above the sweep would be dropped on every update, not merely delayed, and
-                    // could never finish the run it started. Requeueing it here instead completes
-                    // the run in this sweep, at the priority of the step that opened it.
-                    const target = useKeys ?
-                        this._bucketOfKey(coverageKey[g] + keyOf(table.upgradeRatio[k2]) - KEY_ONE) :
-                        this._bucketOf(coverage[g] * table.upgradeRatio[k2]);
-                    this._push(target > bucket ? bucket : target, g);
+            for (let n = 0, len = nodeInfos.length; n < len; n++) {
+                const row = n * span;
+                if (bandLod[row] < 0) {
+                    nodeInfos[n].optimalLod = -1;
+                    continue;
                 }
-                g = this._bucketHead[bucket];
+
+                const p = position[base + n];
+                let b = span - 1;
+                while (b > 0) {
+                    const t = p - b * step;
+                    const bin = t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0);
+                    if (bin > cutBin) break;
+                    if (bin === cutBin) {
+                        const sub = (t - cutBin) * NUM_SUB_BINS;
+                        if ((sub < 0 ? 0 : (sub >= NUM_SUB_BINS ? LAST_SUB_BIN : sub | 0)) >= cutSub) break;
+                    }
+                    b--;
+                }
+                nodeInfos[n].optimalLod = bandLod[row + b];
             }
+            base += nodeInfos.length;
         }
     }
 
     /**
-     * Puts every node at one end of its LOD chain, for the cases where the budget makes the ranking
-     * irrelevant - either the whole scene fits at its finest, or not even the cheapest scene does.
+     * Adds every switch point's splat change to the histogram: by bin when `bin` is negative, or
+     * by sub-bin for the switch points inside `bin` only.
      *
-     * @param {boolean} finest - True for the finest level in range, false for the cheapest.
+     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
+     * @param {number} bin - The bin to split into sub-bins, or -1 for the whole axis.
      * @private
      */
-    _assignChainEnd(finest) {
-        for (let i = 0; i < this._instances.length; i++) {
-            const table = this._tables[i];
-            const nodeInfos = this._instances[i].nodeInfos;
-            const { startLod, firstUpgrade, upgradeToLod } = table;
-            for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                const lod = startLod[n];
-                if (lod < 0 || !finest) {
-                    nodeInfos[n].optimalLod = lod;
-                    continue;
+    _accumulate(octreeInstances, bin) {
+        const position = this._position;
+        const histogram = this._histogram;
+
+        // Bands lie more than a bin apart - the multiplier is at least 1.2, about two bins - so a
+        // node has at most one switch point in a given bin and it is found directly. The end
+        // bins also hold everything clamped from outside the window, so those are scanned.
+        const scan = bin < 0 || bin === 0 || bin === LAST_BIN;
+
+        let base = 0;
+        for (const [, inst] of octreeInstances) {
+            const { bandLod, bandCount, span } = inst.lodTable;
+            const len = inst.nodeInfos.length;
+            const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
+            const invStep = 1 / step;
+
+            for (let n = 0; n < len; n++) {
+                const row = n * span;
+                if (bandLod[row] < 0) continue;
+                const p = position[base + n];
+
+                // the candidate and its neighbor, in case rounding lands the floor one short
+                let b = scan ? 1 : Math.floor((p - bin) * invStep);
+                const end = scan ? span : Math.min(b + 2, span);
+                if (b < 1) b = 1;
+
+                for (; b < end; b++) {
+                    const delta = bandCount[row + b - 1] - bandCount[row + b];
+                    if (delta === 0) continue;
+                    const t = p - b * step;
+                    const tb = t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0);
+                    if (bin < 0) {
+                        histogram[tb] += delta;
+                    } else if (tb === bin) {
+                        const sub = (t - bin) * NUM_SUB_BINS;
+                        histogram[sub < 0 ? 0 : (sub >= NUM_SUB_BINS ? LAST_SUB_BIN : sub | 0)] += delta;
+                    }
                 }
-                const end = firstUpgrade[n + 1];
-                nodeInfos[n].optimalLod = end > firstUpgrade[n] ? upgradeToLod[end - 1] : lod;
+            }
+            base += len;
+        }
+    }
+
+    /**
+     * Puts every node at one end of its LOD chain, for the cases where the budget decides
+     * everything - either the whole scene fits at its finest, or not even the coarsest scene does.
+     *
+     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
+     * @param {boolean} finest - True for the finest band, false for the coarsest.
+     * @private
+     */
+    _assignChainEnd(octreeInstances, finest) {
+        for (const [, inst] of octreeInstances) {
+            const { bandLod, span } = inst.lodTable;
+            const nodeInfos = inst.nodeInfos;
+            const offset = finest ? 0 : span - 1;
+            for (let n = 0, len = nodeInfos.length; n < len; n++) {
+                nodeInfos[n].optimalLod = bandLod[n * span + offset];
             }
         }
     }

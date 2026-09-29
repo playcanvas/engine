@@ -61,7 +61,10 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType]
+    deviceTypes: [deviceType],
+
+    // the gaussian splats are several times more expensive to render into a multisampled target
+    antialias: false
 };
 
 const device = await createGraphicsDevice(canvas, gfxOptions);

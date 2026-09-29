@@ -229,6 +229,8 @@ export function Controls({ observer }) {
                         value={observer.get('compact') || false}
                     />
                 </LabelGroup>
+            </Panel>
+            <Panel headerText='LOD'>
                 <LabelGroup text='LOD Preset'>
                     <SelectInput
                         type='string'
@@ -243,24 +245,44 @@ export function Controls({ observer }) {
                         ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='LOD Mode'>
+                <LabelGroup text='Budget Mode'>
                     <SelectInput
                         type='string'
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodMode' }}
-                        value={observer.get('lodMode') || 'distance'}
+                        link={{ observer, path: 'splatBudgetMode' }}
+                        value={observer.get('splatBudgetMode') || 'target'}
                         options={[
-                            { v: 'error', t: 'Error' },
-                            { v: 'distance', t: 'Distance' }
+                            { v: 'target', t: 'Target' },
+                            { v: 'limit', t: 'Limit' }
                         ]}
                     />
                 </LabelGroup>
-                <LabelGroup text='LOD Falloff'>
+                <LabelGroup text='LOD Base Distance'>
                     <SliderInput
                         binding={new BindingTwoWay()}
-                        link={{ observer, path: 'lodFalloff' }}
+                        link={{ observer, path: 'lodBaseDistance' }}
+                        min={0.1}
+                        max={100}
+                        precision={1}
+                        step={0.1}
+                    />
+                </LabelGroup>
+                <LabelGroup text='LOD Multiplier'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'lodMultiplier' }}
+                        min={1.2}
+                        max={10}
+                        precision={2}
+                        step={0.01}
+                    />
+                </LabelGroup>
+                <LabelGroup text='LOD Box Shrink'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'lodDistanceShrink' }}
                         min={0}
-                        max={8}
+                        max={1}
                         precision={2}
                         step={0.01}
                     />

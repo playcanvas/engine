@@ -3,7 +3,6 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import {
-    FOG_NONE, FOG_LINEAR,
     LAYERID_DEPTH
 } from '../constants.js';
 import { LightList } from '../lighting/light-list.js';
@@ -420,6 +419,12 @@ class ForwardRenderer extends Renderer {
                 this.restoreMaterialOverrides(drawCall, material);
             }
 
+            // the parameters its material does not have are restored to the values they replaced,
+            // such as global ones, whatever the next draw - no material sets them again
+            if (drawCall._scopeParameters.length > 0) {
+                drawCall.restoreReplacedParameters(material);
+            }
+
             DebugGraphics.popGpuMarker(device);
         }
     }
@@ -602,23 +607,20 @@ class ForwardRenderer extends Renderer {
 
     setFogConstants(fogParams) {
 
-        if (fogParams.type !== FOG_NONE) {
+        // all of them, whatever the fog type - they are part of the view uniform buffer, see
+        // getViewUniformFormat
 
-            // color in linear space
-            tmpColor.linear(fogParams.color);
-            const fogUniform = this.fogColor;
-            fogUniform[0] = tmpColor.r;
-            fogUniform[1] = tmpColor.g;
-            fogUniform[2] = tmpColor.b;
-            this.fogColorId.setValue(fogUniform);
+        // color in linear space
+        tmpColor.linear(fogParams.color);
+        const fogUniform = this.fogColor;
+        fogUniform[0] = tmpColor.r;
+        fogUniform[1] = tmpColor.g;
+        fogUniform[2] = tmpColor.b;
+        this.fogColorId.setValue(fogUniform);
 
-            if (fogParams.type === FOG_LINEAR) {
-                this.fogStartId.setValue(fogParams.start);
-                this.fogEndId.setValue(fogParams.end);
-            } else {
-                this.fogDensityId.setValue(fogParams.density);
-            }
-        }
+        this.fogStartId.setValue(fogParams.start);
+        this.fogEndId.setValue(fogParams.end);
+        this.fogDensityId.setValue(fogParams.density);
     }
 
     setSceneConstants() {

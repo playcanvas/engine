@@ -4,8 +4,8 @@ import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } 
  * Loads and displays a streamed gaussian splat scene ({@link StreamedGSplat#splatUrl}), plus an
  * optional environment splat ({@link StreamedGSplat#environmentUrl}) on a child entity, using
  * unified gsplat components. The main splat has four LOD presets — ultra, high, medium or low —
- * each with a configurable detail falloff and allowed LOD range. The scene-wide splat budget
- * and LOD mode are configured through `app.scene.gsplat` in code or the Editor's scene settings.
+ * each with its own LOD distances and allowed LOD range. The scene-wide splat budget and how it
+ * is used are configured through `app.scene.gsplat` in code or the Editor's scene settings.
  * The initial preset is low on mobile and medium on desktop, and can be switched at runtime by
  * firing the `preset:ultra`, `preset:high`, `preset:medium` or `preset:low` app events. Firing
  * `colorize:toggle` toggles the LOD debug visualization.
@@ -36,42 +36,81 @@ class StreamedGSplat extends Script {
     environmentUrl = '';
 
     /**
-     * Detail falloff for the ultra preset. Higher values concentrate detail near the camera;
-     * values towards 0 spread it more evenly. See
-     * [GSplatComponent.lodFalloff](https://api.playcanvas.com/engine/classes/GSplatComponent.html#lodfalloff).
+     * Distance of the first LOD transition for the ultra preset, in world units: the splat
+     * renders at its finest level closer than this. See
+     * [GSplatComponent.lodBaseDistance](https://api.playcanvas.com/engine/classes/GSplatComponent.html#lodbasedistance).
      *
      * @attribute
      * @type {number}
-     * @range [0, 8]
      */
-    ultraLodFalloff = 1;
+    ultraLodBaseDistance = 5;
 
     /**
-     * Detail falloff for the high preset. See {@link StreamedGSplat#ultraLodFalloff}.
+     * Factor between successive LOD transition distances for the ultra preset. See
+     * [GSplatComponent.lodMultiplier](https://api.playcanvas.com/engine/classes/GSplatComponent.html#lodmultiplier).
      *
      * @attribute
      * @type {number}
-     * @range [0, 8]
+     * @range [1.2, 10]
      */
-    highLodFalloff = 1;
+    ultraLodMultiplier = 3;
 
     /**
-     * Detail falloff for the medium preset. See {@link StreamedGSplat#ultraLodFalloff}.
+     * Distance of the first LOD transition for the high preset. See
+     * {@link StreamedGSplat#ultraLodBaseDistance}.
      *
      * @attribute
      * @type {number}
-     * @range [0, 8]
      */
-    mediumLodFalloff = 1;
+    highLodBaseDistance = 5;
 
     /**
-     * Detail falloff for the low preset. See {@link StreamedGSplat#ultraLodFalloff}.
+     * Factor between successive LOD transition distances for the high preset. See
+     * {@link StreamedGSplat#ultraLodMultiplier}.
      *
      * @attribute
      * @type {number}
-     * @range [0, 8]
+     * @range [1.2, 10]
      */
-    lowLodFalloff = 1;
+    highLodMultiplier = 3;
+
+    /**
+     * Distance of the first LOD transition for the medium preset. See
+     * {@link StreamedGSplat#ultraLodBaseDistance}.
+     *
+     * @attribute
+     * @type {number}
+     */
+    mediumLodBaseDistance = 5;
+
+    /**
+     * Factor between successive LOD transition distances for the medium preset. See
+     * {@link StreamedGSplat#ultraLodMultiplier}.
+     *
+     * @attribute
+     * @type {number}
+     * @range [1.2, 10]
+     */
+    mediumLodMultiplier = 3;
+
+    /**
+     * Distance of the first LOD transition for the low preset. See
+     * {@link StreamedGSplat#ultraLodBaseDistance}.
+     *
+     * @attribute
+     * @type {number}
+     */
+    lowLodBaseDistance = 5;
+
+    /**
+     * Factor between successive LOD transition distances for the low preset. See
+     * {@link StreamedGSplat#ultraLodMultiplier}.
+     *
+     * @attribute
+     * @type {number}
+     * @range [1.2, 10]
+     */
+    lowLodMultiplier = 3;
 
     /**
      * @attribute
@@ -139,7 +178,6 @@ class StreamedGSplat extends Script {
                 // Add component directly to this entity
                 this.entity.addComponent('gsplat', {
                     unified: true,
-                    lodFalloff: this._getCurrentLodFalloff(),
                     asset: a
                 });
 
@@ -185,21 +223,6 @@ class StreamedGSplat extends Script {
         });
     }
 
-    _getCurrentLodFalloff() {
-        switch (this._currentPreset) {
-            case 'ultra':
-                return this.ultraLodFalloff;
-            case 'high':
-                return this.highLodFalloff;
-            case 'medium':
-                return this.mediumLodFalloff;
-            case 'low':
-                return this.lowLodFalloff;
-            default:
-                return 1;
-        }
-    }
-
     _getCurrentLodRange() {
         let range;
         switch (this._currentPreset) {
@@ -226,10 +249,14 @@ class StreamedGSplat extends Script {
         if (!range) return;
 
         // Apply to main streaming asset only (environment doesn't support these settings)
-        if (this.entity.gsplat) {
-            this.entity.gsplat.lodRangeMin = range[0];
-            this.entity.gsplat.lodRangeMax = range[1];
-            this.entity.gsplat.lodFalloff = this._getCurrentLodFalloff();
+        const gsplat = this.entity.gsplat;
+        if (gsplat) {
+            gsplat.lodRangeMin = range[0];
+            gsplat.lodRangeMax = range[1];
+
+            // per-preset LOD distances, e.g. mediumLodBaseDistance for the medium preset
+            gsplat.lodBaseDistance = this[`${this._currentPreset}LodBaseDistance`] ?? 5;
+            gsplat.lodMultiplier = this[`${this._currentPreset}LodMultiplier`] ?? 3;
         }
     }
 
