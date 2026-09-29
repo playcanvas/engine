@@ -817,7 +817,7 @@ class FramePassCameraFrame extends FramePass {
     setupSceneHalfPass(options, sourceTexture) {
 
         if (this._sceneHalfEnabled) {
-            this.scenePassHalf = new RenderPassDownsample(this.device, this.sceneTexture, {
+            this.scenePassHalf = new RenderPassDownsample(this.device, sourceTexture, {
                 boxFilter: true,
                 removeInvalid: true // remove invalid pixels to avoid bloom / dof artifacts
             });
@@ -959,6 +959,7 @@ class FramePassCameraFrame extends FramePass {
         // TAA history buffer is double buffered, assign the current one to the follow up passes.
         this.composePass.sceneTexture = sceneTexture;
         this.scenePassHalf?.setSourceTexture(sceneTexture);
+        this.dofPass?.setSceneTexture(sceneTexture);
     }
 }
 

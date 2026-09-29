@@ -33,6 +33,13 @@ class RenderPassDownsample extends RenderPassShaderQuad {
      */
     constructor(device, sourceTexture, options = {}) {
         super(device);
+
+        /**
+         * The texture to downsample. Use {@link RenderPassDownsample#setSourceTexture} to change it,
+         * which also sizes the render target from the new texture.
+         *
+         * @type {Texture}
+         */
         this.sourceTexture = sourceTexture;
         this.premultiplyTexture = options.premultiplyTexture;
 
@@ -89,8 +96,13 @@ class RenderPassDownsample extends RenderPassShaderQuad {
         this.prefilterThresholdKneeValue = new Float32Array(2);
     }
 
+    /**
+     * Sets the texture to downsample, and the texture the render target is sized from.
+     *
+     * @param {Texture} value - The source texture.
+     */
     setSourceTexture(value) {
-        this._sourceTexture = value;
+        this.sourceTexture = value;
 
         // change resize source
         this.options.resizeSource = value;
