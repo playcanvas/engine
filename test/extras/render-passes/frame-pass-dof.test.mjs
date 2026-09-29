@@ -1,15 +1,10 @@
 import { expect } from 'chai';
 
 import { FramePassDof } from '../../../src/extras/render-passes/frame-pass-dof.js';
-import { PIXELFORMAT_RGBA16F, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
-import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
-import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
-import { ProgramLibrary } from '../../../src/scene/shader-lib/program-library.js';
-import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
-import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
-import { createGraphicsDevice } from '../../device.mjs';
+import { createGraphicsDevice, setupShaderLibrary } from '../../device.mjs';
 
 describe('FramePassDof', function () {
 
@@ -51,10 +46,8 @@ describe('FramePassDof', function () {
     beforeEach(function () {
         device = createGraphicsDevice({ width: 128, height: 128 });
 
-        // the passes compile shaders, which an app would have set the device up for
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
-        setProgramLibrary(device, new ProgramLibrary(device));
+        // the passes compile shaders
+        setupShaderLibrary(device);
 
         sceneTexture = createTexture('Scene', 64, 64);
         sceneTextureHalf = createTexture('SceneHalf', 32, 32);

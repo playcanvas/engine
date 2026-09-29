@@ -1,15 +1,10 @@
 import { expect } from 'chai';
 
 import { RenderPassDownsample } from '../../../src/extras/render-passes/render-pass-downsample.js';
-import { PIXELFORMAT_RGBA16F, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA16F } from '../../../src/platform/graphics/constants.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
-import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
-import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
-import { ProgramLibrary } from '../../../src/scene/shader-lib/program-library.js';
-import { ShaderChunks } from '../../../src/scene/shader-lib/shader-chunks.js';
-import { shaderChunksWGSL } from '../../../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
-import { createGraphicsDevice } from '../../device.mjs';
+import { createGraphicsDevice, setupShaderLibrary } from '../../device.mjs';
 
 describe('RenderPassDownsample', function () {
 
@@ -46,10 +41,8 @@ describe('RenderPassDownsample', function () {
     beforeEach(function () {
         device = createGraphicsDevice({ width: 128, height: 128 });
 
-        // the pass compiles a shader, which an app would have set the device up for
-        ShaderChunks.get(device, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
-        ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
-        setProgramLibrary(device, new ProgramLibrary(device));
+        // the pass compiles a shader
+        setupShaderLibrary(device);
 
         renderTarget = new RenderTarget({
             colorBuffer: createTexture('Downsampled', 1, 1),
