@@ -104,18 +104,76 @@ describe('OutlineRenderer', function () {
         expect(meshInstance.material.onUpdateShader).to.equal(null);
     });
 
-    it('keeps the shader callback of a material it did not outline when removing all entities', function () {
+    it('leaves mesh instances it did not add untouched', function () {
         // a mesh instance added to the shared rendering layer by other code
         const other = createEntity();
         other.render.material = new StandardMaterial();
         const callback = options => options;
         other.render.material.onUpdateShader = callback;
+        const otherMeshInstance = other.render.meshInstances[0];
+        const otherColor = new Float32Array([0, 1, 0]);
+        otherMeshInstance.setParameter('pcOutlineColor', otherColor);
         renderer.renderingLayer.addMeshInstances(other.render.meshInstances);
 
         renderer.addEntity(createEntity(), Color.RED);
+        renderer.removeEntity(other);
         renderer.removeAllEntities();
 
+        expect(outlinedCount()).to.equal(1);
+        expect(renderer.renderingLayer.meshInstances[0]).to.equal(otherMeshInstance);
         expect(other.render.material.onUpdateShader).to.equal(callback);
+        expect(otherMeshInstance.getParameter('pcOutlineColor').data).to.equal(otherColor);
+    });
+
+    it('keeps a shared material outlined until its last entity is removed', function () {
+        // both boxes use the default material
+        const entity1 = createEntity();
+        const entity2 = createEntity();
+        const material = entity1.render.meshInstances[0].material;
+        expect(entity2.render.meshInstances[0].material).to.equal(material);
+        renderer.addEntity(entity1, Color.RED);
+        renderer.addEntity(entity2, Color.WHITE);
+
+        renderer.removeEntity(entity1);
+
+        expect(material.onUpdateShader).to.equal(renderer.updateOutlineShader);
+        expect(entity2.render.meshInstances[0].getParameter('pcOutlineColor')).to.not.equal(undefined);
+
+        renderer.removeEntity(entity2);
+
+        expect(material.onUpdateShader).to.equal(null);
+    });
+
+    it('does not remove the entities of another renderer sharing the rendering layer', function () {
+        const renderer2 = new OutlineRenderer(app);
+        const entity1 = createEntity();
+        const entity2 = createEntity();
+        entity2.render.material = new StandardMaterial();
+        renderer.addEntity(entity1, Color.RED);
+        renderer2.addEntity(entity2, Color.WHITE);
+
+        renderer.removeAllEntities();
+
+        expect(outlinedCount()).to.equal(1);
+        expect(renderer.renderingLayer.meshInstances[0]).to.equal(entity2.render.meshInstances[0]);
+        expect(entity2.render.material.onUpdateShader).to.equal(renderer2.updateOutlineShader);
+        expect(entity2.render.meshInstances[0].getParameter('pcOutlineColor')).to.not.equal(undefined);
+
+        renderer2.destroy();
+    });
+
+    it('removes its entities when destroyed', function () {
+        const entity = createEntity();
+        renderer.addEntity(entity, Color.RED);
+        const meshInstance = entity.render.meshInstances[0];
+        const layer = renderer.renderingLayer;
+
+        renderer.destroy();
+        renderer = null;
+
+        expect(layer.meshInstances.length).to.equal(0);
+        expect(meshInstance.getParameter('pcOutlineColor')).to.equal(undefined);
+        expect(meshInstance.material.onUpdateShader).to.equal(null);
     });
 
     describe('#frameUpdate', function () {

@@ -214,6 +214,15 @@ class OutlineRenderer {
         };
         app.scene.on('prerender:layer', this.preRenderLayer);
 
+        // the mesh instances added by this renderer, mapped to the material the outline shader
+        // callback was set on, or null if their material is not a StandardMaterial. The rendering
+        // layer can be shared, so only these are removed from it and reset.
+        this.outlinedMeshInstances = new Map();
+
+        // the number of outlined mesh instances using each material the callback was set on, so
+        // that a shared material keeps the callback until the last of them is removed
+        this.outlinedMaterials = new Map();
+
         // shader options callback set on the materials of the outlined mesh instances. A single
         // function, so that the outline renderer can recognize the materials it has set it on.
         this.updateOutlineShader = (options) => {
@@ -278,9 +287,13 @@ class OutlineRenderer {
     }
 
     /**
-     * Destroy the outline renderer and its resources.
+     * Destroy the outline renderer and its resources. All entities are removed from the outline
+     * renderer first.
      */
     destroy() {
+
+        // restore the materials, which would otherwise keep referencing this renderer
+        this.removeAllEntities();
 
         this.outlineCameraEntity.destroy();
         this.outlineCameraEntity = null;
@@ -347,8 +360,8 @@ class OutlineRenderer {
      * are disabled, are skipped - this is evaluated when the entity is added.
      *
      * Note that this sets {@link StandardMaterial#onUpdateShader} on the materials of the outlined
-     * mesh instances, replacing any existing callback. {@link OutlineRenderer#removeEntity} clears
-     * it.
+     * mesh instances, replacing any existing callback. It is cleared once no outlined mesh instance
+     * uses the material, or when the outline renderer is destroyed.
      *
      * @param {Entity} entity - The entity to add.
      * @param {Color} color - The color of the outline. The alpha component is ignored.
@@ -363,8 +376,22 @@ class OutlineRenderer {
 
         // update all materials
         meshInstances.forEach((meshInstance) => {
-            if (meshInstance.material instanceof StandardMaterial) {
-                meshInstance.material.onUpdateShader = this.updateOutlineShader;
+            const material = meshInstance.material instanceof StandardMaterial ? meshInstance.material : null;
+
+            // track a new mesh instance, or one whose material has changed since it was added
+            const trackedMaterial = this.outlinedMeshInstances.get(meshInstance);
+            if (trackedMaterial !== material) {
+                if (trackedMaterial) {
+                    this.releaseMaterial(trackedMaterial);
+                }
+                this.outlinedMeshInstances.set(meshInstance, material);
+                if (material) {
+                    this.outlinedMaterials.set(material, (this.outlinedMaterials.get(material) ?? 0) + 1);
+                }
+            }
+
+            if (material) {
+                material.onUpdateShader = this.updateOutlineShader;
 
                 // set the color consumed only by the pcOutline shader variant
                 _tempColor.linear(color);
@@ -390,13 +417,11 @@ class OutlineRenderer {
         // include disabled components, so an entity disabled after it was added still has its
         // outline material state cleaned up
         const meshInstances = this.getMeshInstances(entity, recursive, true);
-        this.renderingLayer.removeMeshInstances(meshInstances);
-        meshInstances.forEach(meshInstance => this.resetMeshInstance(meshInstance));
+        this.removeMeshInstances(meshInstances.filter(meshInstance => this.outlinedMeshInstances.has(meshInstance)));
     }
 
     /**
-     * Remove all entities from the outline renderer, for example to clear the selection. Note
-     * that this removes all mesh instances from the rendering layer supplied to the constructor.
+     * Remove all entities from the outline renderer, for example to clear the selection.
      *
      * @example
      * // outline only the newly selected entity
@@ -404,27 +429,48 @@ class OutlineRenderer {
      * outlineRenderer.addEntity(selectedEntity, Color.WHITE);
      */
     removeAllEntities() {
-        // the rendering layer can be shared, so only mesh instances outlined by this renderer are
-        // reset, but all of them are removed from the layer
-        const layer = this.renderingLayer;
-        layer.meshInstances.forEach(meshInstance => this.resetMeshInstance(meshInstance));
-        layer.clearMeshInstances();
+        this.removeMeshInstances([...this.outlinedMeshInstances.keys()]);
     }
 
     /**
-     * Reset the outline state set on a mesh instance by {@link OutlineRenderer#addEntity}.
+     * Remove outlined mesh instances from the rendering layer and reset their outline state.
      *
-     * @param {MeshInstance} meshInstance - The mesh instance to reset.
+     * @param {MeshInstance[]} meshInstances - The mesh instances, all added by this renderer.
      * @ignore
      */
-    resetMeshInstance(meshInstance) {
-        const material = meshInstance.material;
-        if (material instanceof StandardMaterial) {
-            // leave a callback which was not set by this renderer in place
-            if (material.onUpdateShader === this.updateOutlineShader) {
-                material.onUpdateShader = null;
+    removeMeshInstances(meshInstances) {
+        this.renderingLayer.removeMeshInstances(meshInstances);
+
+        meshInstances.forEach((meshInstance) => {
+            // the material the callback was set on, which may since have been replaced
+            const material = this.outlinedMeshInstances.get(meshInstance);
+            this.outlinedMeshInstances.delete(meshInstance);
+            if (material) {
+                this.releaseMaterial(material);
+                meshInstance.deleteParameter('pcOutlineColor');
             }
-            meshInstance.deleteParameter('pcOutlineColor');
+        });
+    }
+
+    /**
+     * Release a material used by an outlined mesh instance, clearing the outline shader callback
+     * once no outlined mesh instance uses it.
+     *
+     * @param {StandardMaterial} material - The material.
+     * @ignore
+     */
+    releaseMaterial(material) {
+        const count = this.outlinedMaterials.get(material) - 1;
+        if (count > 0) {
+            this.outlinedMaterials.set(material, count);
+            return;
+        }
+
+        this.outlinedMaterials.delete(material);
+
+        // leave a callback which was not set by this renderer in place
+        if (material.onUpdateShader === this.updateOutlineShader) {
+            material.onUpdateShader = null;
         }
     }
 
