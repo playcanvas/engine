@@ -6,10 +6,6 @@ fn unpack3NFloats(src: f32) -> vec3f {
     return vec3f(r, g, b);
 }
 
-fn saturate(x: f32) -> f32 {
-    return clamp(x, 0.0, 1.0);
-}
-
 struct TexLerpUnpackResult {
     result: vec4f,
     unpacked: vec3f
