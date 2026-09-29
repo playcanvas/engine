@@ -49,10 +49,10 @@ class StandardMaterialOptionsBuilder {
         return Math.abs(a - b) < 1e-4;
     }
 
-    // Minimal options for Depth and Shadow passes
-    updateMinRef(options, scene, stdMat, objDefs, pass, lightList, vertexFormat) {
+    // Minimal options for Depth and Shadow passes, and the outline pass
+    updateMinRef(options, scene, stdMat, objDefs, pass, lightList, vertexFormat, outlinePass = false) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
-        this._updateMinOptions(options, stdMat, pass);
+        this._updateMinOptions(options, stdMat, pass, outlinePass);
         this._updateUVOptions(options, stdMat, objDefs, vertexFormat, true);
     }
 
@@ -195,13 +195,25 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateMinOptions(options, stdMat, pass) {
+    _updateMinOptions(options, stdMat, pass, outlinePass) {
 
         // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
         const isPrepass = pass === SHADER_PREPASS;
         options.litOptions.opacityShadowDither = isPrepass ? stdMat.opacityDither : stdMat.opacityShadowDither;
 
         options.litOptions.lights = [];
+
+        // the outline pass is a forward pass which outputs the outline color, so it skips the
+        // clustered lighting too, and outputs an alpha of 1 with the opacity used by the alpha
+        // test only. Both are set by the shared options on every call, so they do not leak into
+        // the other minimal passes.
+        if (outlinePass) {
+            options.litOptions.blendType = BLEND_NONE;
+            options.litOptions.clusteredLightingEnabled = false;
+            options.litOptions.clusteredLightingCookiesEnabled = false;
+            options.litOptions.clusteredLightingShadowsEnabled = false;
+            options.litOptions.clusteredLightingAreaLightsEnabled = false;
+        }
     }
 
     _updateMaterialOptions(options, stdMat, scene) {

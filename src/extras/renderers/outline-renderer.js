@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
@@ -11,14 +12,13 @@ import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { QuadRender } from '../../scene/graphics/quad-render.js';
-import { StandardMaterialOptions } from '../../scene/materials/standard-material-options.js';
-import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 
 /**
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { Layer } from "../../scene/layer.js"
  * @import { MeshInstance } from '../../scene/mesh-instance.js'
+ * @import { StandardMaterial } from '../../scene/materials/standard-material.js'
  */
 
 // Whether a render or model component currently has its mesh instances in the scene's layers.
@@ -186,7 +186,8 @@ class OutlineRenderer {
             renderTarget: this.rt
         });
 
-        // custom shader pass for the outline camera
+        // custom shader pass for the outline camera, in which the lit shader outputs the outline
+        // color. The standard material evaluates only its opacity for it.
         this.outlineShaderPass = this.outlineCameraEntity.camera.setShaderPass('pcOutline');
 
         // function called after the camera has rendered the outline objects to the texture
@@ -196,6 +197,27 @@ class OutlineRenderer {
             }
         };
         app.scene.on('postrender', this.postRender);
+
+        // the scene camera and the layer before which the outlines are composited, set by
+        // frameUpdate. The camera is cleared once the outlines are composited, so that they are
+        // composited at most once per update, even if frameUpdate was called on frames in which
+        // the scene camera did not render the layer.
+        this.blendCamera = null;
+        this.blendLayer = null;
+        this.blendLayerTransparent = false;
+
+        // function called before a camera renders a layer, which composites the outlines
+        this.preRenderLayer = (cameraComponent, layer, transparent) => {
+            if (this.blendCamera === cameraComponent && this.blendLayer === layer && this.blendLayerTransparent === transparent) {
+                this.blendCamera = null;
+                this.blendOutlines();
+            }
+        };
+        app.scene.on('prerender:layer', this.preRenderLayer);
+
+        // the mesh instances added by this renderer. The rendering layer can be shared, so only
+        // these are removed from it and reset.
+        this.outlinedMeshInstances = new Set();
 
         // add the camera to the scene
         this.app.root.addChild(this.outlineCameraEntity);
@@ -226,9 +248,13 @@ class OutlineRenderer {
     }
 
     /**
-     * Destroy the outline renderer and its resources.
+     * Destroy the outline renderer and its resources. All entities are removed from the outline
+     * renderer first.
      */
     destroy() {
+
+        // remove the outlined mesh instances from the rendering layer, which can outlive this renderer
+        this.removeAllEntities();
 
         this.outlineCameraEntity.destroy();
         this.outlineCameraEntity = null;
@@ -242,6 +268,9 @@ class OutlineRenderer {
         this.tempRt = null;
 
         this.app.scene.off('postrender', this.postRender);
+        this.app.scene.off('prerender:layer', this.preRenderLayer);
+        this.blendCamera = null;
+        this.blendLayer = null;
 
         this.quadRenderer?.destroy();
         this.quadRenderer = null;
@@ -291,9 +320,9 @@ class OutlineRenderer {
      * Render and model components that are not currently rendered, because they or their entity
      * are disabled, are skipped - this is evaluated when the entity is added.
      *
-     * Note that this sets {@link StandardMaterial#onUpdateShader} on the materials of the outlined
-     * mesh instances, replacing any existing callback. {@link OutlineRenderer#removeEntity} clears
-     * it.
+     * An entity should be outlined by a single outline renderer at a time. The outline color is
+     * stored on its mesh instances, so they cannot be outlined by more than one renderer, and
+     * removing them from one renderer would remove their outline from the other as well.
      *
      * @param {Entity} entity - The entity to add.
      * @param {Color} color - The color of the outline. The alpha component is ignored.
@@ -306,48 +335,22 @@ class OutlineRenderer {
     addEntity(entity, color, recursive = true) {
         const meshInstances = this.getMeshInstances(entity, recursive);
 
-        // update all materials
-        meshInstances.forEach((meshInstance) => {
-            if (meshInstance.material instanceof StandardMaterial) {
-                const outlineShaderPass = this.outlineShaderPass;
-                meshInstance.material.onUpdateShader = (options) => {
-
-                    if (options.pass === outlineShaderPass) {
-
-                        // custom shader for the outline shader pass, preserving material opacity
-                        const opts = new StandardMaterialOptions();
-                        opts.defines = options.defines;
-                        opts.opacityMap = options.opacityMap;
-                        opts.opacityMapUv = options.opacityMapUv;
-                        opts.opacityMapChannel = options.opacityMapChannel;
-                        opts.opacityMapTransform = options.opacityMapTransform;
-                        opts.opacityVertexColor = options.opacityVertexColor;
-                        opts.opacityVertexColorChannel = options.opacityVertexColorChannel;
-                        opts.litOptions.vertexColors = options.litOptions.vertexColors;
-                        opts.litOptions.alphaTest = options.litOptions.alphaTest;
-                        opts.litOptions.skin = options.litOptions.skin;
-                        opts.litOptions.batch = options.litOptions.batch;
-                        opts.litOptions.useInstancing = options.litOptions.useInstancing;
-                        opts.litOptions.useMorphPosition = options.litOptions.useMorphPosition;
-                        opts.litOptions.useMorphNormal = options.litOptions.useMorphNormal;
-                        opts.litOptions.useMorphTextureBasedInt = options.litOptions.useMorphTextureBasedInt;
-                        opts.litOptions.opacityFadesSpecular = options.litOptions.opacityFadesSpecular;
-
-                        // the outline color replaces the lit output, so skip the lighting. The option
-                        // defaults to true, and the clustered lighting chunks do not exist unless the
-                        // scene has clustered lighting enabled.
-                        opts.litOptions.clusteredLightingEnabled = false;
-                        return opts;
-                    }
-
-                    return options;
-                };
-
-                // set the color consumed only by the pcOutline shader variant
-                _tempColor.linear(color);
-                const colArray = new Float32Array([_tempColor.r, _tempColor.g, _tempColor.b]);
-                meshInstance.setParameter('pcOutlineColor', colArray);
+        // a mesh instance with an outline color this renderer did not set is outlined elsewhere
+        Debug.call(() => {
+            const shared = meshInstances.find(meshInstance => !this.outlinedMeshInstances.has(meshInstance) &&
+                meshInstance.getParameter('pcOutlineColor'));
+            if (shared) {
+                Debug.warnOnce(`OutlineRenderer#addEntity: the mesh instance of '${shared.node?.name}' is already outlined by another outline renderer, which is not supported.`);
             }
+        });
+
+        // the materials are not modified - the outline camera renders them with its shader pass,
+        // in which the lit shader outputs this color instead of the lit result
+        _tempColor.linear(color);
+        const colorArray = new Float32Array([_tempColor.r, _tempColor.g, _tempColor.b]);
+        meshInstances.forEach((meshInstance) => {
+            this.outlinedMeshInstances.add(meshInstance);
+            meshInstance.setParameter('pcOutlineColor', colorArray);
         });
 
         this.renderingLayer.addMeshInstances(meshInstances, true);
@@ -364,22 +367,13 @@ class OutlineRenderer {
      * outlineRenderer.removeEntity(entity);
      */
     removeEntity(entity, recursive = true) {
-        // include disabled components, so an entity disabled after it was added still has its
-        // outline material state cleaned up
+        // include disabled components, so an entity disabled after it was added is still removed
         const meshInstances = this.getMeshInstances(entity, recursive, true);
-        this.renderingLayer.removeMeshInstances(meshInstances);
-
-        meshInstances.forEach((meshInstance) => {
-            if (meshInstance.material instanceof StandardMaterial) {
-                meshInstance.material.onUpdateShader = null;
-                meshInstance.deleteParameter('pcOutlineColor');
-            }
-        });
+        this.removeMeshInstances(meshInstances.filter(meshInstance => this.outlinedMeshInstances.has(meshInstance)));
     }
 
     /**
-     * Remove all entities from the outline renderer, for example to clear the selection. Note
-     * that this removes all mesh instances from the rendering layer supplied to the constructor.
+     * Remove all entities from the outline renderer, for example to clear the selection.
      *
      * @example
      * // outline only the newly selected entity
@@ -387,7 +381,22 @@ class OutlineRenderer {
      * outlineRenderer.addEntity(selectedEntity, Color.WHITE);
      */
     removeAllEntities() {
-        this.renderingLayer.clearMeshInstances();
+        this.removeMeshInstances([...this.outlinedMeshInstances]);
+    }
+
+    /**
+     * Remove outlined mesh instances from the rendering layer and delete their outline color.
+     *
+     * @param {MeshInstance[]} meshInstances - The mesh instances, all added by this renderer.
+     * @ignore
+     */
+    removeMeshInstances(meshInstances) {
+        this.renderingLayer.removeMeshInstances(meshInstances);
+
+        meshInstances.forEach((meshInstance) => {
+            this.outlinedMeshInstances.delete(meshInstance);
+            meshInstance.deleteParameter('pcOutlineColor');
+        });
     }
 
     blendOutlines() {
@@ -493,13 +502,10 @@ class OutlineRenderer {
         const sceneCamera = sceneCameraEntity.camera;
         this.updateRenderTarget(sceneCamera);
 
-        // function called before the scene camera renders a layer
-        const evt = this.app.scene.on('prerender:layer', (cameraComponent, layer, transparent) => {
-            if (sceneCamera === cameraComponent && transparent === blendLayerTransparent && layer === blendLayer) {
-                this.blendOutlines();
-                evt.off();
-            }
-        });
+        // composite the outlines before the scene camera renders the blend layer
+        this.blendCamera = sceneCamera;
+        this.blendLayer = blendLayer;
+        this.blendLayerTransparent = blendLayerTransparent;
 
         // copy the transform
         this.outlineCameraEntity.setLocalPosition(sceneCameraEntity.getPosition());
