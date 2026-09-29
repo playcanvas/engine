@@ -1,3 +1,4 @@
+import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
@@ -319,6 +320,10 @@ class OutlineRenderer {
      * Render and model components that are not currently rendered, because they or their entity
      * are disabled, are skipped - this is evaluated when the entity is added.
      *
+     * An entity should be outlined by a single outline renderer at a time. The outline color is
+     * stored on its mesh instances, so they cannot be outlined by more than one renderer, and
+     * removing them from one renderer would remove their outline from the other as well.
+     *
      * @param {Entity} entity - The entity to add.
      * @param {Color} color - The color of the outline. The alpha component is ignored.
      * @param {boolean} [recursive] - Whether to also add the mesh instances of the entity's
@@ -329,6 +334,15 @@ class OutlineRenderer {
      */
     addEntity(entity, color, recursive = true) {
         const meshInstances = this.getMeshInstances(entity, recursive);
+
+        // a mesh instance with an outline color this renderer did not set is outlined elsewhere
+        Debug.call(() => {
+            const shared = meshInstances.find(meshInstance => !this.outlinedMeshInstances.has(meshInstance) &&
+                meshInstance.getParameter('pcOutlineColor'));
+            if (shared) {
+                Debug.warnOnce(`OutlineRenderer#addEntity: the mesh instance of '${shared.node?.name}' is already outlined by another outline renderer, which is not supported.`);
+            }
+        });
 
         // the materials are not modified - the outline camera renders them with its shader pass,
         // in which the lit shader outputs this color instead of the lit result

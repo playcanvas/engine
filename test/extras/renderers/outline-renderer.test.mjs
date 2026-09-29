@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { restore, stub } from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { Color } from '../../../src/core/math/color.js';
 import { OutlineRenderer } from '../../../src/extras/renderers/outline-renderer.js';
 import { Entity } from '../../../src/framework/entity.js';
@@ -180,6 +181,28 @@ describe('OutlineRenderer', function () {
 
         expect(layer.meshInstances.length).to.equal(0);
         expect(meshInstance.getParameter('pcOutlineColor')).to.equal(undefined);
+    });
+
+    it('warns when an entity is already outlined by another renderer', function () {
+        const warnOnce = stub(Debug, 'warnOnce');
+        const renderer2 = new OutlineRenderer(app);
+        const entity = createEntity();
+        renderer.addEntity(entity, Color.RED);
+
+        renderer2.addEntity(entity, Color.WHITE);
+
+        expect(warnOnce.calledOnce).to.equal(true);
+        renderer2.destroy();
+    });
+
+    it('does not warn when an outlined entity is added again', function () {
+        const warnOnce = stub(Debug, 'warnOnce');
+        const entity = createEntity();
+        renderer.addEntity(entity, Color.RED);
+
+        renderer.addEntity(entity, Color.WHITE);
+
+        expect(warnOnce.called).to.equal(false);
     });
 
     describe('#frameUpdate', function () {
