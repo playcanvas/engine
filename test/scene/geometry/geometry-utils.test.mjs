@@ -33,6 +33,29 @@ describe('calculateNormals', function () {
 
         expect(normals).to.deep.equal(calculateNormals(POSITIONS, INDICES));
     });
+
+    it('generates a zero normal for a vertex not used by any triangle', function () {
+        const normals = calculateNormals([...POSITIONS, 5, 5, 5], INDICES);
+
+        expect(normals).to.deep.equal([
+            0, 0, 1,
+            0, 0, 1,
+            0, 0, 1,
+            0, 0, 0
+        ]);
+    });
+
+    it('generates a zero normal for a vertex used only by degenerate triangles', function () {
+        // vertex 3 sits on vertex 0, and the only triangle using it has zero area
+        const normals = calculateNormals([...POSITIONS, 0, 0, 0], [...INDICES, 3, 1, 0]);
+
+        expect(normals.slice(9)).to.deep.equal([0, 0, 0]);
+        expect(normals.slice(0, 9)).to.deep.equal([
+            0, 0, 1,
+            0, 0, 1,
+            0, 0, 1
+        ]);
+    });
 });
 
 describe('calculateTangents', function () {

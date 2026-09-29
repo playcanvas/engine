@@ -5,7 +5,7 @@ export default /* wgsl */`
     // and multiply ambient light color by the AO
     dDiffuseLight = ((dDiffuseLight - 0.5) * max(uniform.ambientBakeOcclusionContrast + 1.0, 0.0)) + 0.5;
     dDiffuseLight = dDiffuseLight + vec3f(uniform.ambientBakeOcclusionBrightness);
-    dDiffuseLight = saturate3(dDiffuseLight);
+    dDiffuseLight = saturate(dDiffuseLight);
     dDiffuseLight = dDiffuseLight * dAmbientLight;
 #endif
 

@@ -1313,24 +1313,27 @@ export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 export const GSPLAT_RENDERER_COMPUTE = 3;
 
 /**
- * LOD selection driven by per-level approximation errors: the splat budget is spent where it
- * removes the most error per splat, using the manifest's error tables when present and errors
- * derived from splat counts otherwise. This lifts sparse, low-quality regions - sky, distant
- * background - that distance alone leaves coarse, but it keeps considerably more source data
- * resident, so memory use is noticeably higher than with {@link GSPLAT_LODMODE_DISTANCE}.
+ * The splat budget is a target: LOD detail is raised until {@link GSplatParams#splatBudget} is
+ * used up, wherever the camera is. The LOD distances of each GSplat still shape how detail falls
+ * off with distance and how it divides between GSplats, but not how much of it there is. The
+ * default.
  *
  * @category Graphics
  */
-export const GSPLAT_LODMODE_ERROR = 'error';
+export const GSPLAT_BUDGET_TARGET = 'target';
 
 /**
- * LOD selection ordered by camera distance alone: detail steps down in concentric distance bands
- * around the camera, with the band edges adapting to the splat budget. Any error metadata in the
- * asset is ignored. Uses the least memory of the two modes, so prefer it on memory-constrained
- * devices. The default.
+ * The splat budget is a limit: the LOD distances of each GSplat decide the detail, and
+ * {@link GSplatParams#splatBudget} only lowers it when they would ask for more splats than it
+ * allows. A distant GSplat uses only the few splats its distance calls for, leaving the rest of
+ * the budget unused.
  *
  * @category Graphics
  */
+export const GSPLAT_BUDGET_LIMIT = 'limit';
+
+// deprecated
+export const GSPLAT_LODMODE_ERROR = 'error';
 export const GSPLAT_LODMODE_DISTANCE = 'distance';
 
 /**

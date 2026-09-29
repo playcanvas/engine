@@ -1,0 +1,6 @@
+{
+    "mappingFormat": "path",
+    "useMetalness": true,
+    "diffuseMap": "textures/diffuse.png",
+    "glossMap": "textures/gloss.png"
+}

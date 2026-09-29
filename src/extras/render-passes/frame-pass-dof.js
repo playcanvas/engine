@@ -177,6 +177,20 @@ class FramePassDof extends FramePass {
         });
     }
 
+    /**
+     * Sets the full resolution scene texture the blur reads. The camera frame sets it every frame,
+     * as with TAA enabled it alternates between the two TAA history textures.
+     *
+     * @param {Texture} texture - The full resolution scene texture.
+     */
+    setSceneTexture(texture) {
+        // only the high quality setup blurs the full resolution texture - the low quality one
+        // blurs the half resolution texture, which the camera frame keeps up to date itself
+        if (this.highQuality) {
+            this.farPass.setSourceTexture(texture);
+        }
+    }
+
     frameUpdate() {
         super.frameUpdate();
 

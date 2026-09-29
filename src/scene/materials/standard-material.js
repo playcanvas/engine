@@ -14,6 +14,7 @@ import {
     SHADER_PICK,
     SHADER_PREPASS,
     SPECOCC_AO,
+    TONEMAP_NONE,
     tonemapNames
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -23,7 +24,7 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { MaterialProperty, convertColorToLinear, convertFloat } from './material-property.js';
 import { getMaterialLayout } from './material-uniform-buffer-layout.js';
-import { getTextureDescriptors, getTextureIdentifiers } from './standard-material-textures.js';
+import { getTextureDescriptors, getTextureIdentifiers, getTextureSharing } from './standard-material-textures.js';
 import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
@@ -640,6 +641,22 @@ class StandardMaterial extends Material {
      * @private
      */
     _specularIsBlack;
+
+    /**
+     * Which of the assigned maps share a texture, as of the last update.
+     *
+     * @type {string}
+     * @private
+     */
+    _textureSharing = '';
+
+    /**
+     * The texture assignment version the texture sharing was last checked for.
+     *
+     * @type {number}
+     * @private
+     */
+    _sharingCheckedVersion = -1;
 
     /**
      * Texture transform grouping state.
@@ -1760,6 +1777,18 @@ class StandardMaterial extends Material {
             this._dirtyShader = true;
         }
 
+        // maps pointing at one texture share its sampler in the shader, so pointing a map at
+        // another texture changes the shader when it changes that sharing, even though the map
+        // holds a texture of the same format before and after
+        if (this._sharingCheckedVersion !== this._textureAssignmentVersion) {
+            this._sharingCheckedVersion = this._textureAssignmentVersion;
+            const textureSharing = getTextureSharing(this);
+            if (this._textureSharing !== textureSharing) {
+                this._textureSharing = textureSharing;
+                this._dirtyShader = true;
+            }
+        }
+
         super.update();
     }
 
@@ -1864,14 +1893,16 @@ class StandardMaterial extends Material {
 
         const { device, scene, pass, objDefs, lightList, cameraShaderParams, vertexFormat } = params;
 
-        // Minimal options for Depth, Shadow and Prepass passes
+        // Minimal options for Depth, Shadow and Prepass passes, and the outline pass, in which the lit
+        // shader outputs the outline color instead of the lit result, so only the opacity is needed
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
+        const outlinePass = shaderPassInfo.defines.has('PCOUTLINE_PASS');
+        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow || outlinePass;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
         options.defines = ShaderUtils.getCoreDefines(this, params);
 
         if (minimalOptions) {
-            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, lightList, vertexFormat);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, lightList, vertexFormat, outlinePass);
         } else {
             this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, lightList, vertexFormat);
         }
@@ -1882,8 +1913,10 @@ class StandardMaterial extends Material {
         // standard material can overwrite camera's fog setting
         if (!this.useFog) options.defines.set('FOG', 'NONE');
 
-        // standard material can overwrite camera's tonemapping setting
-        options.defines.set('TONEMAP', tonemapNames[options.litOptions.toneMap]);
+        // standard material can overwrite camera's tonemapping setting. The outline color is not
+        // tone mapped. This is set on the define rather than the options, which the minimal passes
+        // share.
+        options.defines.set('TONEMAP', tonemapNames[outlinePass ? TONEMAP_NONE : options.litOptions.toneMap]);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {

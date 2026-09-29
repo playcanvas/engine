@@ -2,12 +2,13 @@ import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
+import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import {
     SEMANTIC_POSITION,
-    UNIFORMTYPE_MAT4
+    UNIFORMTYPE_FLOAT, UNIFORMTYPE_MAT4, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC4
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
@@ -134,6 +135,9 @@ class ShadowRenderer {
 
         // uniforms
         this.shadowMapLightRadiusId = scope.resolve('light_radius');
+
+        // part of the view uniform buffer of every shadow face, and set only for local lights
+        this.shadowMapLightRadiusId.setValue(0);
 
         // format of the view uniform buffer
         this.viewUniformFormat = null;
@@ -575,6 +579,11 @@ class ShadowRenderer {
         let prevMaterial = null;
         let prevMeshInstance = null;
 
+        // the casters set no normal matrix - the shadow pass of normalCoreVS derives it from the model
+        // matrix - so a shader declaring the uniform itself reads the identity, not the normal matrix
+        // of whichever mesh was rendered last
+        renderer.normalMatrixId.setValue(Mat3.IDENTITY.data);
+
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -629,6 +638,9 @@ class ShadowRenderer {
             Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
 
             if (shadowShader.failed) {
+                if (meshInstance._scopeParameters.length > 0) {
+                    meshInstance.restoreReplacedParameters(material);
+                }
                 DebugGraphics.popGpuMarker(device);
                 continue;
             }
@@ -657,6 +669,26 @@ class ShadowRenderer {
             const style = meshInstance.renderStyle;
             const indirectData = meshInstance.getDrawCommands(camera);
             device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
+
+            // the parameters its material does not have are restored to the values they replaced,
+            // such as global ones, whatever the next caster - no material sets them again
+            if (meshInstance._scopeParameters.length > 0) {
+                meshInstance.restoreReplacedParameters(material);
+            }
+
+            // warn about a shader reading the normal matrix, which is the identity here (see above), once
+            // that is known - after the draw, which links it on WebGL
+            Debug.call(() => {
+                if (!shadowShader._debugNormalMatrixChecked) {
+                    const readsNormalMatrix = shadowShader.debugReadsUniform('matrix_normal');
+                    if (readsNormalMatrix !== null) {
+                        shadowShader._debugNormalMatrixChecked = true;
+                    }
+                    if (readsNormalMatrix) {
+                        Debug.warnOnce(`Shader [${shadowShader.label}] reads matrix_normal in the shadow pass, where it is the identity. Use getNormalMatrix() of normalCoreVS, which derives it from the model matrix in the shadow pass.`);
+                    }
+                }
+            });
 
             renderer._shadowDrawCalls++;
             if (instancingData) {
@@ -861,9 +893,17 @@ class ShadowRenderer {
         // view uniforms always go through a uniform buffer (on all backends)
         if (!this.viewUniformFormat) {
 
-            // format of the view uniform buffer
+            // format of the view uniform buffer - the uniforms constant for a shadow face, so that
+            // none of them is uploaded per caster: the camera params and the blue noise jitter of the
+            // shadow camera, the position and the range of a local light, which dispatchUniforms sets
+            // per face, and the texture bias
             this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4)
+                new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
+                new UniformFormat('camera_params', UNIFORMTYPE_VEC4),
+                new UniformFormat('blueNoiseJitter', UNIFORMTYPE_VEC4),
+                new UniformFormat('view_position', UNIFORMTYPE_VEC3),
+                new UniformFormat('light_radius', UNIFORMTYPE_FLOAT),
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT)
             ], { pack: true });
         }
     }

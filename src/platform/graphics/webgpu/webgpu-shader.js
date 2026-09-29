@@ -339,6 +339,19 @@ class WebgpuShader {
      */
     restoreContext(device, shader) {
     }
+
+    // #if _DEBUG
+    /**
+     * See {@link Shader#debugReadsUniform}.
+     *
+     * @param {Shader} shader - The shader.
+     * @param {string} name - The name of the uniform.
+     * @returns {boolean} Whether the shader declares the uniform in its mesh uniform buffer.
+     */
+    debugReadsUniform(shader, name) {
+        return !!shader.meshUniformBufferFormat?.get(name);
+    }
+    // #endif
 }
 
 export { WebgpuShader };

@@ -292,17 +292,18 @@ const vatNormalCoreGLSL = /* glsl */ `
 
     attribute vec3 vertex_normal;
 
-    uniform mat3 matrix_normal;
-
     vec3 getLocalNormal(vec3 vertexNormal) {
         return vatNormal();
     }
 
-    #ifdef INSTANCING
+    // the upper 3x3 of the model matrix for instances, and in the shadow pass, which sets no normal matrix
+    #if defined(INSTANCING) || defined(SHADOW_PASS)
         mat3 getNormalMatrix(mat4 modelMatrix) {
             return mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
         }
     #else
+        uniform mat3 matrix_normal;
+
         mat3 getNormalMatrix(mat4 modelMatrix) {
             return matrix_normal;
         }
@@ -313,17 +314,18 @@ const vatNormalCoreWGSL = /* wgsl */ `
 
     attribute vertex_normal: vec3f;
 
-    uniform matrix_normal: mat3x3f;
-
     fn getLocalNormal(vertexNormal: vec3f) -> vec3f {
         return vatNormal();
     }
 
-    #ifdef INSTANCING
+    // the upper 3x3 of the model matrix for instances, and in the shadow pass, which sets no normal matrix
+    #if defined(INSTANCING) || defined(SHADOW_PASS)
         fn getNormalMatrix(modelMatrix: mat4x4f) -> mat3x3f {
             return mat3x3f(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
         }
     #else
+        uniform matrix_normal: mat3x3f;
+
         fn getNormalMatrix(modelMatrix: mat4x4f) -> mat3x3f {
             return uniform.matrix_normal;
         }

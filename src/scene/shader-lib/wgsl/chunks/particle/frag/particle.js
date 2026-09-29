@@ -19,10 +19,6 @@ uniform graphNumSamples: f32;
 #endif
 uniform colorMult: f32;
 
-fn saturate(x: f32) -> f32 {
-    return clamp(x, 0.0, 1.0);
-}
-
 @fragment
 fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
