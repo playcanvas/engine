@@ -1,42 +1,16 @@
-import { Debug } from '../../core/debug.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from '../../scene/materials/standard-material-parameters.js';
 import { StandardMaterial } from '../../scene/materials/standard-material.js';
 import { AssetReference } from '../asset/asset-reference.js';
 import { JsonStandardMaterialParser } from '../parsers/material/json-standard-material.js';
 import { ResourceHandler } from './handler.js';
+import { PlaceholderTextures } from './placeholder-textures.js';
+import { getTextureAssetEncoding } from './texture.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  */
-
-const PLACEHOLDER_MAP = {
-    aoMap: 'white',
-    aoDetailMap: 'white',
-    diffuseMap: 'gray',
-    diffuseDetailMap: 'gray',
-    specularMap: 'gray',
-    specularityFactorMap: 'white',
-    metalnessMap: 'black',
-    glossMap: 'gray',
-    sheenMap: 'black',
-    sheenGlossMap: 'gray',
-    clearCoatMap: 'black',
-    clearCoatGlossMap: 'gray',
-    clearCoatNormalMap: 'normal',
-    refractionMap: 'white',
-    emissiveMap: 'gray',
-    normalMap: 'normal',
-    normalDetailMap: 'normal',
-    heightMap: 'gray',
-    opacityMap: 'gray',
-    sphereMap: 'gray',
-    lightMap: 'white',
-    thicknessMap: 'black',
-    iridescenceMap: 'black',
-    iridescenceThicknessMap: 'black',
-    envAtlas: 'black',
-    anisotropyMap: 'black'
-};
 
 /**
  * Resource handler for the `material` asset type. Loads material JSON into a
@@ -56,7 +30,9 @@ class MaterialHandler extends ResourceHandler {
         super(app, 'material');
 
         this._assets = app.assets;
-        this._device = app.graphicsDevice;
+
+        // the textures assigned to the texture parameters of materials while their textures load
+        this._placeholders = new PlaceholderTextures(app.graphicsDevice);
 
         // the json parser is the catch-all for material assets; the handler keeps a reference to
         // it as patch uses its migrate/initialize when binding standard material assets
@@ -100,17 +76,31 @@ class MaterialHandler extends ResourceHandler {
         materialAsset.resource[parameterName] = texture;
     }
 
-    // returns the correct placeholder texture for the texture parameter
-    _getPlaceholderTexture(parameterName) {
-        const placeholder = PLACEHOLDER_MAP[parameterName];
-        Debug.assert(placeholder, `No placeholder texture found for parameter: ${parameterName}`);
-        return this._device.builtInTextures[placeholder];
+    /**
+     * Returns the placeholder texture for a texture parameter of a material while its texture
+     * asset loads. The placeholder decodes like the texture of the asset, and the parameters of
+     * the material which reference the same texture asset get the same placeholder, as they get
+     * the same texture, so the material is drawn with the same shader before and after the texture
+     * loads.
+     *
+     * @param {string} parameterName - The name of the texture parameter.
+     * @param {Asset} materialAsset - The material asset.
+     * @param {Asset} textureAsset - The texture asset the parameter references.
+     * @returns {Texture} The placeholder texture.
+     * @private
+     */
+    _getPlaceholderTexture(parameterName, materialAsset, textureAsset) {
+        // the placeholder of the first parameter which references the texture asset
+        const references = materialAsset.resource._assetReferences;
+        const name = standardMaterialTextureParameters.find(name => references[name]?.asset === textureAsset);
+
+        const { srgb, type } = getTextureAssetEncoding(textureAsset);
+        return this._placeholders.get(name ?? parameterName, srgb, type);
     }
 
     // assign a placeholder texture while waiting for one to load
-    _assignPlaceholderTexture(parameterName, materialAsset) {
-
-        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName);
+    _assignPlaceholderTexture(parameterName, materialAsset, textureAsset) {
+        materialAsset.resource[parameterName] = this._getPlaceholderTexture(parameterName, materialAsset, textureAsset);
     }
 
     _onTextureLoad(parameterName, materialAsset, textureAsset) {
@@ -126,7 +116,7 @@ class MaterialHandler extends ResourceHandler {
         const material = materialAsset.resource;
         if (material) {
             if (materialAsset.resource[parameterName] === textureAsset.resource) {
-                this._assignPlaceholderTexture(parameterName, materialAsset);
+                this._assignPlaceholderTexture(parameterName, materialAsset, textureAsset);
                 material.update();
             }
         }
@@ -188,7 +178,7 @@ class MaterialHandler extends ResourceHandler {
             const dataAssetId = data[name];
 
             const materialTexture = material[name];
-            const isPlaceHolderTexture = materialTexture === this._getPlaceholderTexture(name);
+            const isPlaceHolderTexture = this._placeholders.has(materialTexture);
             const dataValidated = data.validated;
 
             if (dataAssetId && (!materialTexture || !dataValidated || isPlaceHolderTexture)) {
@@ -215,7 +205,7 @@ class MaterialHandler extends ResourceHandler {
                         // asset is already loaded
                         this._assignTexture(name, materialAsset, assetReference.asset.resource);
                     } else {
-                        this._assignPlaceholderTexture(name, materialAsset);
+                        this._assignPlaceholderTexture(name, materialAsset, assetReference.asset);
                     }
 
                     assets.load(assetReference.asset);

@@ -23,7 +23,7 @@ import { _matTex2D, standard } from '../shader-lib/programs/standard.js';
 import { Material } from './material.js';
 import { MaterialProperty, convertColorToLinear, convertFloat } from './material-property.js';
 import { getMaterialLayout } from './material-uniform-buffer-layout.js';
-import { getTextureDescriptors, getTextureIdentifiers } from './standard-material-textures.js';
+import { getTextureDescriptors, getTextureIdentifiers, getTextureSharing } from './standard-material-textures.js';
 import { StandardMaterialMapTransforms } from './standard-material-map-transforms.js';
 import { StandardMaterialOptionsBuilder } from './standard-material-options-builder.js';
 import { standardMaterialCubemapParameters, standardMaterialTextureParameters } from './standard-material-parameters.js';
@@ -640,6 +640,22 @@ class StandardMaterial extends Material {
      * @private
      */
     _specularIsBlack;
+
+    /**
+     * Which of the assigned maps share a texture, as of the last update.
+     *
+     * @type {string}
+     * @private
+     */
+    _textureSharing = '';
+
+    /**
+     * The texture assignment version the texture sharing was last checked for.
+     *
+     * @type {number}
+     * @private
+     */
+    _sharingCheckedVersion = -1;
 
     /**
      * Texture transform grouping state.
@@ -1758,6 +1774,18 @@ class StandardMaterial extends Material {
             // specular shading, in which case this transition only changes a uniform. We can avoid
             // that redundant variant clear later by tracking the derived useSpecular state here.
             this._dirtyShader = true;
+        }
+
+        // maps pointing at one texture share its sampler in the shader, so pointing a map at
+        // another texture changes the shader when it changes that sharing, even though the map
+        // holds a texture of the same format before and after
+        if (this._sharingCheckedVersion !== this._textureAssignmentVersion) {
+            this._sharingCheckedVersion = this._textureAssignmentVersion;
+            const textureSharing = getTextureSharing(this);
+            if (this._textureSharing !== textureSharing) {
+                this._textureSharing = textureSharing;
+                this._dirtyShader = true;
+            }
         }
 
         super.update();

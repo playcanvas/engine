@@ -17,6 +17,7 @@ import { ResourceHandler } from './handler.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
  */
 
 const JSON_ADDRESS_MODE = {
@@ -40,6 +41,39 @@ const JSON_TEXTURE_TYPE = {
     'rgbe': TEXTURETYPE_RGBE,
     'rgbp': TEXTURETYPE_RGBP,
     'swizzleGGGR': TEXTURETYPE_SWIZZLEGGGR
+};
+
+// the type of the texture of a texture asset, as its data specifies it (this is bit of a mess)
+const getAssetDataTextureType = (asset) => {
+    const assetData = asset.data;
+    if (assetData.hasOwnProperty('type')) {
+        return JSON_TEXTURE_TYPE[assetData.type];
+    }
+    if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
+        return TEXTURETYPE_RGBM;
+    }
+    if (asset.file && (asset.file.opt & 8) !== 0) {
+        // basis normalmaps flag the variant as swizzled
+        return TEXTURETYPE_SWIZZLEGGGR;
+    }
+    return TEXTURETYPE_DEFAULT;
+};
+
+/**
+ * Returns whether the texture of a texture asset is sRGB, and its type, which together decide how
+ * a shader decodes the texture. These are known before the asset loads: its data specifies them,
+ * unless its per-load texture options override them.
+ *
+ * @param {Asset} asset - The texture asset.
+ * @returns {{srgb: boolean, type: string}} Whether the texture is sRGB, and its type.
+ * @ignore
+ */
+const getTextureAssetEncoding = (asset) => {
+    const options = asset.options?.texture;
+    return {
+        srgb: !!(options?.srgb ?? asset.data.srgb),
+        type: options?.type ?? getAssetDataTextureType(asset)
+    };
 };
 
 // In the case where a texture has more than 1 level of mip data specified, but not the full
@@ -200,16 +234,7 @@ class TextureHandler extends ResourceHandler {
                 options.srgb = !!assetData.srgb;
             }
 
-            // extract asset type (this is bit of a mess)
-            options.type = TEXTURETYPE_DEFAULT;
-            if (assetData.hasOwnProperty('type')) {
-                options.type = JSON_TEXTURE_TYPE[assetData.type];
-            } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
-                options.type = TEXTURETYPE_RGBM;
-            } else if (asset.file && (asset.file.opt & 8) !== 0) {
-                // basis normalmaps flag the variant as swizzled
-                options.type = TEXTURETYPE_SWIZZLEGGGR;
-            }
+            options.type = getAssetDataTextureType(asset);
 
             // per-load creation options (raw Texture constructor options, for example
             // { mipmaps: false, minFilter: FILTER_LINEAR }) override the asset-derived options
@@ -273,4 +298,4 @@ class TextureHandler extends ResourceHandler {
     }
 }
 
-export { TextureHandler };
+export { TextureHandler, getTextureAssetEncoding };

@@ -1,7 +1,16 @@
 import { expect } from 'chai';
 
 import { Asset } from '../../../src/framework/asset/asset.js';
+import { PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR } from '../../../src/platform/graphics/constants.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
+import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
+import { SHADER_FORWARD } from '../../../src/scene/constants.js';
+import { BoxGeometry } from '../../../src/scene/geometry/box-geometry.js';
+import { GraphNode } from '../../../src/scene/graph-node.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { MeshInstance } from '../../../src/scene/mesh-instance.js';
+import { Mesh } from '../../../src/scene/mesh.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -95,5 +104,197 @@ describe('MaterialHandler', function () {
 
         app.assets.add(asset);
         app.assets.load(asset);
+    });
+
+    describe('placeholder textures', function () {
+
+        const lightList = new LightList();
+        const cameraShaderParams = new CameraShaderParams();
+
+        const PATH_MAPPED_URL = '/test/assets/materials/path-mapped.json';
+        const textureUrl = name => `/test/assets/materials/textures/${name}.png`;
+
+        // a texture asset whose load the test completes, see completeLoad
+        const pendingTexture = (name, data = {}, file = { url: textureUrl(name) }, id) => {
+            const asset = new Asset(name, 'texture', file, data);
+            if (id !== undefined) {
+                asset.id = id;
+            }
+            asset.loading = true;
+            app.assets.add(asset);
+            return asset;
+        };
+
+        // completes the load of a pending texture asset with the texture the texture handler
+        // creates for a PNG or JPG image, and fires the events the asset registry fires
+        const completeLoad = (asset) => {
+            const options = app.loader.getHandler('texture')._getTextureOptions(asset);
+            asset.resource = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, ...options });
+            asset.loading = false;
+            asset.loaded = true;
+            app.assets.fire('load', asset);
+            app.assets.fire(`load:${asset.id}`, asset);
+            app.assets.fire(`load:url:${asset.file.url}`, asset);
+            asset.fire('load', asset);
+        };
+
+        const loadMaterial = asset => new Promise((resolve, reject) => {
+            asset.ready(() => resolve(asset.resource));
+            asset.on('error', err => reject(new Error(err)));
+            app.assets.add(asset);
+            app.assets.load(asset);
+        });
+
+        const meshInstance = material => new MeshInstance(Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry()), material, new GraphNode());
+
+        // the shader the renderer draws the mesh instance with in the forward pass
+        const drawnShader = (instance) => {
+            instance.material.prepareForRender(app.graphicsDevice, app.scene);
+            const viewUniformFormat = app.renderer.getViewUniformFormat(false, lightList);
+            return instance.getShaderInstance(SHADER_FORWARD, lightList, app.scene, cameraShaderParams, viewUniformFormat).shader;
+        };
+
+        // the shader the material needs as it is now, generated again rather than taken from the
+        // shaders of the material, which a change it did not detect leaves in place
+        const neededShader = (instance) => {
+            instance.material.clearVariants();
+            return drawnShader(instance);
+        };
+
+        // the shader drawn with placeholders is the one the loaded textures need: no shader is
+        // generated when they load, and the one drawn is not a stale one
+        const expectSameShaderAfterLoad = (material, textureAssets) => {
+            const instance = meshInstance(material);
+            const shader = drawnShader(instance);
+            for (const asset of textureAssets) {
+                completeLoad(asset);
+                expect(material[asset.name]).to.equal(asset.resource);
+                expect(drawnShader(instance)).to.equal(shader);
+            }
+            expect(neededShader(instance)).to.equal(shader);
+        };
+
+        const loadById = (diffuse, gloss) => loadMaterial(new Asset('material', 'material', null, {
+            useMetalness: true, diffuseMap: diffuse.id, glossMap: gloss.id
+        }));
+
+        // the ways a material references its textures: by the ids of the assets of a project, by
+        // the ids of assets created at runtime, which are negative, and by paths from the material
+        const referenceKinds = [
+            { label: 'asset ids', ids: [1001, 1002], load: loadById },
+            { label: 'ids of runtime assets', ids: [undefined, undefined], load: loadById },
+            { label: 'paths', ids: [undefined, undefined], load: () => loadMaterial(new Asset('material', 'material', { url: PATH_MAPPED_URL })) }
+        ];
+
+        // an sRGB color map and a linear map, the placeholders of which were of one format
+        const colorAndGloss = kind => [
+            pendingTexture('diffuseMap', { srgb: true }, { url: textureUrl('diffuse') }, kind.ids[0]),
+            pendingTexture('glossMap', {}, { url: textureUrl('gloss') }, kind.ids[1])
+        ];
+
+        referenceKinds.forEach((kind) => {
+            it(`assigns placeholders to maps referencing textures by ${kind.label}, which load without changing the shader`, async function () {
+                const [diffuse, gloss] = colorAndGloss(kind);
+                const material = await kind.load(diffuse, gloss);
+
+                const placeholders = app.loader.getHandler('material')._placeholders;
+                expect(placeholders.has(material.diffuseMap)).to.equal(true);
+                expect(placeholders.has(material.glossMap)).to.equal(true);
+                expect(material.diffuseMap).to.not.equal(material.glossMap);
+                expect(material.diffuseMap.encoding).to.equal('linear');
+                expect(material.glossMap.encoding).to.equal('srgb');
+
+                expectSameShaderAfterLoad(material, [gloss, diffuse]);
+            });
+
+            it(`keeps the loaded textures of maps referencing them by ${kind.label}`, async function () {
+                const [diffuse, gloss] = colorAndGloss(kind);
+                completeLoad(diffuse);
+                completeLoad(gloss);
+                const material = await kind.load(diffuse, gloss);
+
+                expect(material.diffuseMap).to.equal(diffuse.resource);
+                expect(material.glossMap).to.equal(gloss.resource);
+            });
+        });
+
+        it('gives maps referencing one texture asset one placeholder, and others their own', async function () {
+            const packed = pendingTexture('packed');
+            const normal = pendingTexture('normalMap');
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                useMetalness: true, aoMap: packed.id, glossMap: packed.id, metalnessMap: packed.id, normalMap: normal.id
+            }));
+
+            const placeholders = app.loader.getHandler('material')._placeholders;
+            expect(placeholders.has(material.aoMap)).to.equal(true);
+            expect(material.glossMap).to.equal(material.aoMap);
+            expect(material.metalnessMap).to.equal(material.aoMap);
+            expect(placeholders.has(material.normalMap)).to.equal(true);
+            expect(material.normalMap).to.not.equal(material.aoMap);
+
+            const instance = meshInstance(material);
+            const shader = drawnShader(instance);
+            completeLoad(packed);
+            completeLoad(normal);
+            expect(material.glossMap).to.equal(packed.resource);
+            expect(material.metalnessMap).to.equal(packed.resource);
+            expect(drawnShader(instance)).to.equal(shader);
+            expect(neededShader(instance)).to.equal(shader);
+        });
+
+        it('assigns placeholders of the encoded types, which load without changing the shader', async function () {
+            const light = pendingTexture('lightMap', { type: 'rgbm' });
+            const emissive = pendingTexture('emissiveMap', { rgbm: true });
+            const specular = pendingTexture('specularMap', { type: 'rgbe' });
+            const sheen = pendingTexture('sheenMap', { type: 'rgbp' });
+            const normal = pendingTexture('normalMap', {}, { url: '/test/assets/materials/textures/normal.basis', opt: 8 });
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                lightMap: light.id,
+                emissiveMap: emissive.id,
+                emissive: [1, 1, 1],
+                useMetalness: false,
+                specularMap: specular.id,
+                sheenMap: sheen.id,
+                useSheen: true,
+                normalMap: normal.id
+            }));
+
+            expect(material.lightMap.encoding).to.equal('rgbm');
+            expect(material.emissiveMap.encoding).to.equal('rgbm');
+            expect(material.specularMap.encoding).to.equal('rgbe');
+            expect(material.sheenMap.encoding).to.equal('rgbp');
+            expect(material.normalMap.type).to.equal(TEXTURETYPE_SWIZZLEGGGR);
+
+            expectSameShaderAfterLoad(material, [light, emissive, specular, sheen, normal]);
+        });
+
+        it('assigns a placeholder of the environment atlas type', async function () {
+            const atlas = pendingTexture('envAtlas', { type: 'rgbp' });
+            const material = await loadMaterial(new Asset('material', 'material', null, { envAtlas: atlas.id }));
+
+            expect(material.envAtlas.encoding).to.equal('rgbp');
+            expectSameShaderAfterLoad(material, [atlas]);
+        });
+
+        it('assigns the same placeholders again when the textures unload', async function () {
+            const diffuse = pendingTexture('diffuseMap', { srgb: true });
+            const packed = pendingTexture('packed');
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                useMetalness: true, diffuseMap: diffuse.id, glossMap: packed.id, metalnessMap: packed.id
+            }));
+            const placeholders = [material.diffuseMap, material.glossMap];
+
+            const instance = meshInstance(material);
+            const shader = drawnShader(instance);
+            completeLoad(diffuse);
+            completeLoad(packed);
+
+            diffuse.unload();
+            packed.unload();
+            expect([material.diffuseMap, material.glossMap]).to.eql(placeholders);
+            expect(material.metalnessMap).to.equal(material.glossMap);
+            expect(drawnShader(instance)).to.equal(shader);
+            expect(neededShader(instance)).to.equal(shader);
+        });
     });
 });
