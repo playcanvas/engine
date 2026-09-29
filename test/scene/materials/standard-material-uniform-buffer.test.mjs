@@ -10,8 +10,11 @@ import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 import { Tracing } from '../../../src/core/tracing.js';
 import { UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
-import { CUBEPROJ_BOX, CUBEPROJ_NONE } from '../../../src/scene/constants.js';
+import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
+import { CUBEPROJ_BOX, CUBEPROJ_NONE, SHADER_FORWARD } from '../../../src/scene/constants.js';
+import { BoxGeometry } from '../../../src/scene/geometry/box-geometry.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
 import { Mesh } from '../../../src/scene/mesh.js';
@@ -883,6 +886,31 @@ describe('StandardMaterial uniform buffer', function () {
             material.update();
             prepare(material);
             expect(slots(material)).to.eql(['texture_diffuseMap']);
+        });
+
+        it('draws a map moving from a shared texture to one of its own with a shader sampling it', function () {
+            const shared = texture('shared');
+            const material = new StandardMaterial();
+            material.useMetalness = true;
+            material.diffuseMap = shared;
+            material.glossMap = shared;
+            material.update();
+
+            const meshInstance = new MeshInstance(Mesh.fromGeometry(app.graphicsDevice, new BoxGeometry()), material, new GraphNode());
+            const lightList = new LightList();
+            const drawnShader = () => {
+                prepare(material);
+                const viewUniformFormat = app.renderer.getViewUniformFormat(false, lightList);
+                return meshInstance.getShaderInstance(SHADER_FORWARD, lightList, app.scene, new CameraShaderParams(), viewUniformFormat).shader;
+            };
+
+            // the gloss map is sampled from the texture of the diffuse map
+            expect(drawnShader().definition.fshader).to.not.include('texture_glossMap');
+
+            // a texture of the same format, so only the sharing changes
+            material.glossMap = texture('gloss');
+            material.update();
+            expect(drawnShader().definition.fshader).to.include('texture_glossMap');
         });
 
         it('keeps the slots of a material whose maps are pointed at other textures without sharing changing', function () {

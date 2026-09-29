@@ -1,3 +1,4 @@
+import { path } from '../../core/path.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -17,6 +18,7 @@ import { ResourceHandler } from './handler.js';
 
 /**
  * @import { AppBase } from '../app-base.js'
+ * @import { Asset } from '../asset/asset.js'
  */
 
 const JSON_ADDRESS_MODE = {
@@ -40,6 +42,54 @@ const JSON_TEXTURE_TYPE = {
     'rgbe': TEXTURETYPE_RGBE,
     'rgbp': TEXTURETYPE_RGBP,
     'swizzleGGGR': TEXTURETYPE_SWIZZLEGGGR
+};
+
+// the type of the texture of a texture asset, as its data specifies it (this is bit of a mess)
+const getAssetDataTextureType = (asset) => {
+    const assetData = asset.data;
+    if (assetData.hasOwnProperty('type')) {
+        return JSON_TEXTURE_TYPE[assetData.type];
+    }
+    if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
+        return TEXTURETYPE_RGBM;
+    }
+    if (asset.file && (asset.file.opt & 8) !== 0) {
+        // basis normalmaps flag the variant as swizzled
+        return TEXTURETYPE_SWIZZLEGGGR;
+    }
+    return TEXTURETYPE_DEFAULT;
+};
+
+// whether the file of a texture asset is an .hdr file, by the extension the parser is selected by
+const isHdrFile = (asset) => {
+    const name = asset.file?.filename || asset.file?.url;
+    return !!name && path.getExtension(name.split('?')[0]).toLowerCase() === '.hdr';
+};
+
+/**
+ * Returns whether the texture of a texture asset is sRGB, and its type, which together decide how
+ * a shader decodes the texture. These are known before the asset loads: its data specifies them,
+ * unless its per-load texture options override them.
+ *
+ * A few files decide these themselves, and are only known once loaded: a KTX file storing an sRGB
+ * format when the asset data does not specify srgb, a basis normal map which the transcoder
+ * unswizzles, and a DXT5 normal map.
+ *
+ * @param {Asset} asset - The texture asset.
+ * @returns {{srgb: boolean, type: string}} Whether the texture is sRGB, and its type.
+ * @ignore
+ */
+const getTextureAssetEncoding = (asset) => {
+    const options = asset.options?.texture;
+
+    // the hdr parser records the rgbe type of an .hdr file in the asset data as it starts loading
+    // the file, which can be after this is needed - such as when the file is in a bundle
+    const type = !asset.data.type && isHdrFile(asset) ? TEXTURETYPE_RGBE : getAssetDataTextureType(asset);
+
+    return {
+        srgb: !!(options?.srgb ?? asset.data.srgb),
+        type: options?.type ?? type
+    };
 };
 
 // In the case where a texture has more than 1 level of mip data specified, but not the full
@@ -200,16 +250,7 @@ class TextureHandler extends ResourceHandler {
                 options.srgb = !!assetData.srgb;
             }
 
-            // extract asset type (this is bit of a mess)
-            options.type = TEXTURETYPE_DEFAULT;
-            if (assetData.hasOwnProperty('type')) {
-                options.type = JSON_TEXTURE_TYPE[assetData.type];
-            } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
-                options.type = TEXTURETYPE_RGBM;
-            } else if (asset.file && (asset.file.opt & 8) !== 0) {
-                // basis normalmaps flag the variant as swizzled
-                options.type = TEXTURETYPE_SWIZZLEGGGR;
-            }
+            options.type = getAssetDataTextureType(asset);
 
             // per-load creation options (raw Texture constructor options, for example
             // { mipmaps: false, minFilter: FILTER_LINEAR }) override the asset-derived options
@@ -273,4 +314,4 @@ class TextureHandler extends ResourceHandler {
     }
 }
 
-export { TextureHandler };
+export { TextureHandler, getTextureAssetEncoding };

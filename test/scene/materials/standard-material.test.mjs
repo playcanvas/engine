@@ -466,6 +466,58 @@ describe('StandardMaterial', function () {
             expect(material.variants.get(1)).to.equal(undefined);
         });
 
+        describe('maps sharing a texture', function () {
+
+            // textures of one format and type, which differ only in their identity
+            let nextId = 1;
+            const texture = () => ({ id: nextId++, format: 7, type: 'default' });
+
+            it('invalidates shaders when a map stops sharing the texture of another map', function () {
+                const shared = texture();
+                const material = new StandardMaterial();
+                material.diffuseMap = shared;
+                material.glossMap = shared;
+                material.update();
+                addVariant(material);
+
+                // the shader samples the gloss from the sampler of the diffuse map
+                material.glossMap = texture();
+                material.update();
+                expect(material.variants.get(1)).to.equal(undefined);
+            });
+
+            it('invalidates shaders when a map starts sharing the texture of another map', function () {
+                const shared = texture();
+                const material = new StandardMaterial();
+                material.diffuseMap = shared;
+                material.glossMap = texture();
+                material.update();
+                addVariant(material);
+
+                material.glossMap = shared;
+                material.update();
+                expect(material.variants.get(1)).to.equal(undefined);
+            });
+
+            it('keeps shaders when maps are pointed at other textures without the sharing changing', function () {
+                const shared = texture();
+                const material = new StandardMaterial();
+                material.diffuseMap = shared;
+                material.glossMap = shared;
+                material.metalnessMap = texture();
+                material.update();
+                const variant = addVariant(material);
+
+                // the maps sharing a texture move to another one together
+                const other = texture();
+                material.diffuseMap = other;
+                material.glossMap = other;
+                material.metalnessMap = texture();
+                material.update();
+                expect(material.variants.get(1)).to.equal(variant);
+            });
+        });
+
         it('forwards the deprecated aoUvSet to aoMapUv', function () {
             const material = new StandardMaterial();
             material.aoUvSet = 1;

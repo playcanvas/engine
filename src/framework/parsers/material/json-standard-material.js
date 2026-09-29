@@ -94,15 +94,16 @@ class JsonStandardMaterialParser {
             } else if (type === 'texture') {
                 if (value instanceof Texture) {
                     material[key] = value;
-                } else if (!(material[key] instanceof Texture && typeof value === 'number' && value > 0)) {
+                } else if (!(material[key] instanceof Texture && value)) {
                     material[key] = null;
                 }
-                // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
-                // leave current texture (probably a placeholder) until the asset is loaded
+                // OTHERWISE: the data references a texture asset - by its id, which is negative for
+                // an asset created at runtime, or by its path - and the material already has a
+                // texture assigned: the asset's texture, or a placeholder until it loads. Leave it.
             } else if (type === 'cubemap') {
                 if (value instanceof Texture) {
                     material[key] = value;
-                } else if (!(material[key] instanceof Texture && typeof value === 'number' && value > 0)) {
+                } else if (!(material[key] instanceof Texture && value)) {
                     material[key] = null;
                 }
 
@@ -111,8 +112,8 @@ class JsonStandardMaterialParser {
                     material.prefilteredCubemaps = null;
                 }
 
-                // OTHERWISE: material already has a texture assigned, but data contains a valid asset id (which means the asset isn't yet loaded)
-                // leave current texture (probably a placeholder) until the asset is loaded
+                // OTHERWISE: the data references a cubemap asset, and the material already has
+                // its texture assigned. Leave it.
             } else if (type === 'boundingbox') {
                 const center = new Vec3(value.center[0], value.center[1], value.center[2]);
                 const halfExtents = new Vec3(value.halfExtents[0], value.halfExtents[1], value.halfExtents[2]);
