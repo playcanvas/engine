@@ -1,14 +1,46 @@
 import { expect } from 'chai';
+import { restore, spy } from 'sinon';
 
+import { Vec3 } from '../../../src/core/math/vec3.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { XRSPACE_LOCALFLOOR, XRTYPE_VR } from '../../../src/framework/xr/constants.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 /**
+ * Creates a stand-in for the XRInputSource of a tracked controller.
+ *
+ * @returns {object} The input source.
+ */
+const createController = () => ({
+    handedness: 'right',
+    targetRayMode: 'tracked-pointer',
+    targetRaySpace: {},
+    gripSpace: {},
+    profiles: [],
+    gamepad: null,
+    hand: null
+});
+
+/**
+ * Creates a stand-in for an XRFrame, in which every space has the same pose.
+ *
+ * @param {{ x: number, y: number, z: number }} position - The position of every space.
+ * @returns {object} The frame.
+ */
+const createFrame = position => ({
+    getPose: () => ({
+        transform: {
+            position,
+            orientation: { x: 0, y: 0, z: 0, w: 1 }
+        }
+    })
+});
+
+/**
  * Stand-in for an XRSession, implementing what XrManager uses to start and end a session.
  */
-class FakeXRSession extends EventTarget {
+class FakeXRSession {
     enabledFeatures = [];
 
     inputSources = [];
@@ -27,11 +59,47 @@ class FakeXRSession extends EventTarget {
     endEventFired = null;
 
     /**
+     * Errors thrown by event listeners. Like the browser, the session reports these instead of
+     * passing them to the code that fired the event, and carries on.
+     *
+     * @type {Error[]}
+     */
+    listenerErrors = [];
+
+    _listeners = new Map();
+
+    /**
+     * @param {object[]} inputSources - The input sources of the session.
      * @param {Function} onShutdown - Called when the session shuts down.
      */
-    constructor(onShutdown) {
-        super();
+    constructor(inputSources, onShutdown) {
+        this.inputSources = inputSources;
         this._onShutdown = onShutdown;
+    }
+
+    addEventListener(type, listener) {
+        let listeners = this._listeners.get(type);
+        if (!listeners) {
+            listeners = new Set();
+            this._listeners.set(type, listeners);
+        }
+        listeners.add(listener);
+    }
+
+    removeEventListener(type, listener) {
+        this._listeners.get(type)?.delete(listener);
+    }
+
+    dispatchEvent(event) {
+        const listeners = this._listeners.get(event.type) ?? [];
+        for (const listener of [...listeners]) {
+            try {
+                listener(event);
+            } catch (err) {
+                this.listenerErrors.push(err);
+            }
+        }
+        return true;
     }
 
     requestReferenceSpace(type) {
@@ -93,6 +161,13 @@ class FakeXRSystem extends EventTarget {
      */
     nextRequestError = null;
 
+    /**
+     * The input sources of the sessions granted.
+     *
+     * @type {object[]}
+     */
+    inputSources = [];
+
     _pending = false;
 
     _active = null;
@@ -121,7 +196,7 @@ class FakeXRSystem extends EventTarget {
                     return;
                 }
 
-                const session = new FakeXRSession((ended) => {
+                const session = new FakeXRSession(this.inputSources, (ended) => {
                     if (this._active === ended) {
                         this._active = null;
                     }
@@ -192,6 +267,8 @@ describe('XrManager', function () {
     });
 
     afterEach(async function () {
+        restore();
+
         // end any session a test left running, so its end event fires before teardown
         if (app.xr.active) {
             app.xr.end();
@@ -317,6 +394,97 @@ describe('XrManager', function () {
             attachPresentation = () => {};
             expect(await startVr()).to.be.null;
             expect(app.xr.active).to.be.true;
+        });
+
+    });
+
+    describe('#end', function () {
+
+        /**
+         * Ends the active session.
+         *
+         * @returns {Promise<FakeXRSession>} Resolves with the session once its end event has fired.
+         */
+        const endVr = async () => {
+            const session = app.xr.session;
+            app.xr.end();
+            await session.endEventFired;
+            return session;
+        };
+
+        it('lets end handlers read the session, and remove handlers read input source poses', async function () {
+            // the camera is on a rig, as for locomotion, so input source poses depend on the camera
+            const rig = new Entity();
+            rig.setLocalPosition(1, 2, 3);
+            app.root.addChild(rig);
+            camera.reparent(rig);
+
+            xr.inputSources = [createController()];
+            expect(await startVr()).to.be.null;
+            app.xr.input.inputSources[0].update(createFrame({ x: 0, y: 0, z: -0.5 }));
+
+            // the input sources are removed as the session ends
+            const removed = [];
+            app.xr.input.on('remove', (inputSource) => {
+                removed.push({
+                    position: inputSource.getPosition().clone(),
+                    origin: inputSource.getOrigin().clone()
+                });
+            });
+
+            let ended = null;
+            app.xr.on('end', () => {
+                ended = { camera: app.xr.camera, type: app.xr.type };
+            });
+
+            const session = await endVr();
+
+            expect(session.listenerErrors).to.be.empty;
+            expect(removed).to.deep.equal([{
+                position: new Vec3(1, 2, 2.5),
+                origin: new Vec3(1, 2, 2.5)
+            }]);
+            expect(ended.camera).to.equal(camera);
+            expect(ended.type).to.equal(XRTYPE_VR);
+            expect(app.xr.active).to.be.false;
+            expect(app.xr.camera).to.be.null;
+            expect(app.xr.type).to.be.null;
+        });
+
+        it('finishes ending the session when an end handler throws', async function () {
+            expect(await startVr()).to.be.null;
+
+            const handlerError = new Error('The end handler failed.');
+            app.xr.on('end', () => {
+                throw handlerError;
+            });
+            const requestAnimationFrame = spy(app, 'requestAnimationFrame');
+
+            const session = await endVr();
+
+            // the error still reaches the browser
+            expect(session.listenerErrors).to.deep.equal([handlerError]);
+
+            // and the manager is reset, with the frame loop of the application resumed
+            expect(app.xr.active).to.be.false;
+            expect(app.xr.camera).to.be.null;
+            expect(camera.camera.camera.xrViews).to.be.null;
+            expect(requestAnimationFrame.called).to.be.true;
+
+            expect(await startVr()).to.be.null;
+        });
+
+        it('can read the pose of an input source after the session has ended', async function () {
+            xr.inputSources = [createController()];
+            expect(await startVr()).to.be.null;
+
+            const [inputSource] = app.xr.input.inputSources;
+            inputSource.update(createFrame({ x: 0, y: 0, z: -0.5 }));
+
+            await endVr();
+
+            expect(inputSource.getPosition()).to.deep.equal(new Vec3(0, 0, -0.5));
+            expect(inputSource.getOrigin()).to.deep.equal(new Vec3(0, 0, -0.5));
         });
 
     });
