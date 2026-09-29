@@ -14,6 +14,7 @@ import {
     SHADER_PICK,
     SHADER_PREPASS,
     SPECOCC_AO,
+    TONEMAP_NONE,
     tonemapNames
 } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
@@ -1864,14 +1865,16 @@ class StandardMaterial extends Material {
 
         const { device, scene, pass, objDefs, lightList, cameraShaderParams, vertexFormat } = params;
 
-        // Minimal options for Depth, Shadow and Prepass passes
+        // Minimal options for Depth, Shadow and Prepass passes, and the outline pass, in which the lit
+        // shader outputs the outline color instead of the lit result, so only the opacity is needed
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow;
+        const outlinePass = shaderPassInfo.defines.has('PCOUTLINE_PASS');
+        const minimalOptions = pass === SHADER_PICK || pass === SHADER_PREPASS || shaderPassInfo.isShadow || outlinePass;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
         options.defines = ShaderUtils.getCoreDefines(this, params);
 
         if (minimalOptions) {
-            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, lightList, vertexFormat);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, lightList, vertexFormat, outlinePass);
         } else {
             this.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, this, objDefs, pass, lightList, vertexFormat);
         }
@@ -1882,8 +1885,10 @@ class StandardMaterial extends Material {
         // standard material can overwrite camera's fog setting
         if (!this.useFog) options.defines.set('FOG', 'NONE');
 
-        // standard material can overwrite camera's tonemapping setting
-        options.defines.set('TONEMAP', tonemapNames[options.litOptions.toneMap]);
+        // standard material can overwrite camera's tonemapping setting. The outline color is not
+        // tone mapped. This is set on the define rather than the options, which the minimal passes
+        // share.
+        options.defines.set('TONEMAP', tonemapNames[outlinePass ? TONEMAP_NONE : options.litOptions.toneMap]);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {

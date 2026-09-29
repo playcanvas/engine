@@ -89,10 +89,9 @@ describe('OutlineRenderer', function () {
 
         expect(outlinedCount()).to.equal(0);
         expect(meshInstance.getParameter('pcOutlineColor')).to.equal(undefined);
-        expect(meshInstance.material.onUpdateShader).to.equal(null);
     });
 
-    it('resets the materials when removing all entities', function () {
+    it('resets the mesh instances when removing all entities', function () {
         const entity = createEntity();
         renderer.addEntity(entity, Color.RED);
         const meshInstance = entity.render.meshInstances[0];
@@ -101,7 +100,20 @@ describe('OutlineRenderer', function () {
 
         expect(outlinedCount()).to.equal(0);
         expect(meshInstance.getParameter('pcOutlineColor')).to.equal(undefined);
-        expect(meshInstance.material.onUpdateShader).to.equal(null);
+    });
+
+    it('does not modify the materials', function () {
+        const entity = createEntity();
+        const material = new StandardMaterial();
+        const callback = options => options;
+        material.onUpdateShader = callback;
+        entity.render.material = material;
+
+        renderer.addEntity(entity, Color.RED);
+        expect(material.onUpdateShader).to.equal(callback);
+
+        renderer.removeEntity(entity);
+        expect(material.onUpdateShader).to.equal(callback);
     });
 
     it('leaves mesh instances it did not add untouched', function () {
@@ -125,30 +137,11 @@ describe('OutlineRenderer', function () {
         expect(otherMeshInstance.getParameter('pcOutlineColor').data).to.equal(otherColor);
     });
 
-    it('keeps a shared material outlined until its last entity is removed', function () {
-        // both boxes use the default material
-        const entity1 = createEntity();
-        const entity2 = createEntity();
-        const material = entity1.render.meshInstances[0].material;
-        expect(entity2.render.meshInstances[0].material).to.equal(material);
-        renderer.addEntity(entity1, Color.RED);
-        renderer.addEntity(entity2, Color.WHITE);
-
-        renderer.removeEntity(entity1);
-
-        expect(material.onUpdateShader).to.equal(renderer.updateOutlineShader);
-        expect(entity2.render.meshInstances[0].getParameter('pcOutlineColor')).to.not.equal(undefined);
-
-        renderer.removeEntity(entity2);
-
-        expect(material.onUpdateShader).to.equal(null);
-    });
-
     it('does not remove the entities of another renderer sharing the rendering layer', function () {
+        // both boxes use the default material
         const renderer2 = new OutlineRenderer(app);
         const entity1 = createEntity();
         const entity2 = createEntity();
-        entity2.render.material = new StandardMaterial();
         renderer.addEntity(entity1, Color.RED);
         renderer2.addEntity(entity2, Color.WHITE);
 
@@ -156,10 +149,24 @@ describe('OutlineRenderer', function () {
 
         expect(outlinedCount()).to.equal(1);
         expect(renderer.renderingLayer.meshInstances[0]).to.equal(entity2.render.meshInstances[0]);
-        expect(entity2.render.material.onUpdateShader).to.equal(renderer2.updateOutlineShader);
         expect(entity2.render.meshInstances[0].getParameter('pcOutlineColor')).to.not.equal(undefined);
 
         renderer2.destroy();
+    });
+
+    it('keeps the entities of another renderer outlined when destroyed', function () {
+        // both boxes use the default material
+        const renderer2 = new OutlineRenderer(app);
+        const entity1 = createEntity();
+        const entity2 = createEntity();
+        renderer.addEntity(entity1, Color.RED);
+        renderer2.addEntity(entity2, Color.WHITE);
+
+        renderer2.destroy();
+
+        expect(outlinedCount()).to.equal(1);
+        expect(renderer.renderingLayer.meshInstances[0]).to.equal(entity1.render.meshInstances[0]);
+        expect(entity1.render.meshInstances[0].getParameter('pcOutlineColor')).to.not.equal(undefined);
     });
 
     it('removes its entities when destroyed', function () {
@@ -173,7 +180,6 @@ describe('OutlineRenderer', function () {
 
         expect(layer.meshInstances.length).to.equal(0);
         expect(meshInstance.getParameter('pcOutlineColor')).to.equal(undefined);
-        expect(meshInstance.material.onUpdateShader).to.equal(null);
     });
 
     describe('#frameUpdate', function () {
