@@ -43,7 +43,12 @@ class FloatPacking {
         const e = (x >> 23) & 0xff; // Using int is faster here
 
         // If zero, or denormal, or exponent underflows too much for a denormal half, return signed zero.
-        if (e < 102) {
+        if (e < 103) {
+            // Between 2^-25 and 2^-24 round up to the smallest denormal, but exactly 2^-25 is a tie that
+            // rounds to even (zero).
+            if (e === 102 && (x & 0x007fffff)) {
+                bits |= 1;
+            }
             return bits;
         }
 

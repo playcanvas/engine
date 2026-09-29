@@ -31,6 +31,11 @@ describe('FloatPacking', function () {
             expect(FloatPacking.float2Half(-(2 ** -26))).to.equal(0x8000);
         });
 
+        it('rounds the tie halfway to the smallest denormal to signed zero', function () {
+            expect(FloatPacking.float2Half(2 ** -25)).to.equal(0x0000);
+            expect(FloatPacking.float2Half(-(2 ** -25))).to.equal(0x8000);
+        });
+
         it('packs values too large for a half float as infinity of the same sign', function () {
             expect(FloatPacking.float2Half(65520)).to.equal(0x7c00);
             expect(FloatPacking.float2Half(65536)).to.equal(0x7c00);
