@@ -1,5 +1,11 @@
+import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../src/platform/graphics/null/null-graphics-device.js';
 import { WebgpuGraphicsDevice } from '../src/platform/graphics/webgpu/webgpu-graphics-device.js';
+import { setProgramLibrary } from '../src/scene/shader-lib/get-program-library.js';
+import { shaderChunksGLSL } from '../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
+import { ProgramLibrary } from '../src/scene/shader-lib/program-library.js';
+import { ShaderChunks } from '../src/scene/shader-lib/shader-chunks.js';
+import { shaderChunksWGSL } from '../src/scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
 
 /**
  * @typedef {object} WebgpuTestDevice
@@ -81,4 +87,16 @@ export const createGraphicsDevice = (canvas, options = {}) => {
             delete globalThis.window;
         }
     }
+};
+
+/**
+ * Sets a graphics device up to compile the engine's shaders, as an application would. Tests that
+ * create render passes on a device without an application need it.
+ *
+ * @param {NullGraphicsDevice|WebgpuGraphicsDevice} device - The graphics device.
+ */
+export const setupShaderLibrary = (device) => {
+    ShaderChunks.get(device, SHADERLANGUAGE_GLSL).add(shaderChunksGLSL);
+    ShaderChunks.get(device, SHADERLANGUAGE_WGSL).add(shaderChunksWGSL);
+    setProgramLibrary(device, new ProgramLibrary(device));
 };

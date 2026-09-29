@@ -1472,8 +1472,8 @@ class AppBase extends EventHandler {
      * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 90.
      * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.5.
      * @param {number} [settings.render.gsplatLodUnderfillLimit] - Maximum number of gsplat LOD levels allowed below the optimal level when optimal data is not resident. Defaults to 0.
-     * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. LOD levels are chosen globally to stay within it; a non-positive value is not a way to disable this and the default is used instead. Defaults to 1000000.
-     * @param {string} [settings.render.gsplatLodMode] - How LOD levels are chosen for streamed GSplats: 'distance' (default) orders detail by camera distance alone in concentric bands and ignores error metadata; 'error' spends the budget by measured approximation error, lifting sparse regions that distance leaves coarse at a higher memory cost.
+     * @param {number} [settings.render.gsplatSplatBudget] - Number of splats across all GSplats in the scene, used as set by `gsplatSplatBudgetMode`. 0 means no budget. Defaults to 1000000.
+     * @param {string} [settings.render.gsplatSplatBudgetMode] - How the splat budget is used for streamed GSplats: 'target' (default) raises detail until the budget is used up; 'limit' lets the LOD distances of each GSplat decide the detail and only lowers it when they would exceed the budget.
      * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
      * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.

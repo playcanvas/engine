@@ -165,7 +165,7 @@ const lodPresetKey = platform.mobile ? 'mobile' : 'desktop';
 const assets = {
     church: new Asset('gsplat', 'gsplat', { url: config.url }),
     // Monospace font for the in-XR debug HUD (XrMenu) text rendering.
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 
 /**

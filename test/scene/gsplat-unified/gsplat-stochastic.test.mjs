@@ -48,7 +48,7 @@ describe('GSplat stochastic rendering', function () {
     };
 
     const render = (renderer, stochastic, pickMode = false) => renderer.sortAndProjectForCamera(
-        { hasBounds: false, workBuffer: { frustumCuller: {} } },
+        { hasBounds: false, workBuffer: { frustumCuller: {}, format: { getStream: () => ({}) } } },
         { totalActiveSplats: 1000, totalIntervals: 1 },
         {}, 960, 540, 1 / 255, pickMode, false,
         { stochastic, radialSorting: true, minPixelSize: 0, varyings: { words: 0 } }
@@ -128,6 +128,9 @@ describe('GSplat stochastic rendering', function () {
         );
         expect(renderer.gpuSorter.sortIndirect.calledOnce).to.equal(true);
         expect(renderer.projector.dispatch.firstCall.args[0].stochastic).to.equal(false);
+        expect(renderer.projector.dispatch.firstCall.args[0].pickMode).to.equal(false);
+        expect(renderer.device.submit.calledOnce).to.equal(true);
+        sinon.assert.callOrder(renderer.projector.writeIndirectArgs, renderer.device.submit, renderer.gpuSorter.sortIndirect);
     });
 
     it('switches depth writes, blend state and shader defines together', function () {

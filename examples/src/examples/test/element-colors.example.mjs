@@ -56,7 +56,7 @@ app.init(options);
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
 
-const fontAsset = new Asset('courier', 'font', { url: './assets/fonts/courier.json' });
+const fontAsset = new Asset('roboto-regular', 'font', { url: './assets/fonts/roboto-regular.json' });
 await new Promise((resolve) => {
     new AssetListLoader([fontAsset], app.assets).load(resolve);
 });

@@ -104,7 +104,7 @@ const assets = {
         { url: './assets/cubemaps/empty-room-spheremap.png' },
         { srgb: true }
     ),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 for (const face of faceNames) {
     assets[`room_${face}`] = new Asset(

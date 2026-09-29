@@ -2,8 +2,6 @@ export default /* glsl */`
 
 attribute vec3 vertex_normal;
 
-uniform mat3 matrix_normal;
-
 #ifdef MORPHING_NORMAL
     #ifdef MORPHING_INT
         uniform highp usampler2D morphNormalTex;
@@ -33,15 +31,15 @@ vec3 getLocalNormal(vec3 vertexNormal) {
     return localNormal;
 }
 
-#if defined(SKIN) || defined(BATCH)
-    mat3 getNormalMatrix(mat4 modelMatrix) {
-        return mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
-    }
-#elif defined(INSTANCING)
+// the normal matrix is the upper 3x3 of the model matrix, exact for a uniform scale, for skinned, batched
+// and instanced meshes, which have no normal matrix of their own, and in the shadow pass, which sets none
+#if defined(SKIN) || defined(BATCH) || defined(INSTANCING) || defined(SHADOW_PASS)
     mat3 getNormalMatrix(mat4 modelMatrix) {
         return mat3(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
     }
 #else
+    uniform mat3 matrix_normal;
+
     mat3 getNormalMatrix(mat4 modelMatrix) {
         return matrix_normal;
     }

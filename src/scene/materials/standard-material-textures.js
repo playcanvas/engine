@@ -49,6 +49,27 @@ const getTextureIdentifiers = (material) => {
 };
 
 /**
+ * Describes which of the assigned maps of a material use the sampler of another map, as a string
+ * which is empty when no two maps point at the same texture. The shader of the material samples
+ * its maps from other samplers when this changes. See {@link getTextureIdentifiers}.
+ *
+ * @param {StandardMaterial} material - The material.
+ * @returns {string} The sharing of the maps of the material.
+ * @ignore
+ */
+const getTextureSharing = (material) => {
+
+    let sharing = '';
+    getTextureIdentifiers(material).forEach((claimed, map) => {
+        if (claimed !== map) {
+            sharing += `${map}:${claimed};`;
+        }
+    });
+
+    return sharing;
+};
+
+/**
  * The textures of a material, one per texture its assigned maps point at, in the order of the maps
  * which claimed them. See {@link getTextureIdentifiers}.
  *
@@ -74,4 +95,4 @@ const getTextureDescriptors = (material) => {
     return descriptors;
 };
 
-export { getTextureDescriptors, getTextureIdentifiers };
+export { getTextureDescriptors, getTextureIdentifiers, getTextureSharing };

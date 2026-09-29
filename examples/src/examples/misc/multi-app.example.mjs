@@ -60,7 +60,7 @@ async function createGraphicsDevice(canvas, deviceType) {
  */
 async function createApp(deviceType) {
     const assets = {
-        font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
+        font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
     };
 
     const canvas = document.createElement('canvas');

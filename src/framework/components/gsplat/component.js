@@ -99,11 +99,18 @@ class GSplatComponent extends Component {
     _materialTmp = null;
 
     /**
-     * How fast quality falls off away from the camera, exponent on projected coverage.
+     * Base distance for the first LOD transition.
      *
      * @private
      */
-    _lodFalloff = 1;
+    _lodBaseDistance = 5;
+
+    /**
+     * Geometric multiplier between successive LOD transition distances.
+     *
+     * @private
+     */
+    _lodMultiplier = 3;
 
     /**
      * Minimum allowed LOD index (inclusive).
@@ -379,67 +386,77 @@ class GSplatComponent extends Component {
     }
 
     /**
-     * Sets how quickly this splat's level of detail drops with distance from the camera. The
-     * default of 1 gives a balanced falloff. Higher values concentrate detail near the camera at
-     * the cost of the far field, while values towards 0 spread it evenly across the scene
-     * regardless of the view. This primarily redistributes the detail this splat receives from
-     * the global {@link GSplatParams#splatBudget} between its near and far field, though it can
-     * also shift how the budget divides between splats. Clamped to [0, 8].
+     * @type {number}
+     * @deprecated Use {@link GSplatComponent#lodBaseDistance} and
+     * {@link GSplatComponent#lodMultiplier} instead.
+     * @ignore
+     */
+    set lodFalloff(value) {
+        Debug.removed('GSplatComponent#lodFalloff is removed. Use GSplatComponent#lodBaseDistance and GSplatComponent#lodMultiplier to control how detail falls off with distance.');
+    }
+
+    /**
+     * @type {number}
+     * @deprecated Use {@link GSplatComponent#lodBaseDistance} and
+     * {@link GSplatComponent#lodMultiplier} instead.
+     * @ignore
+     */
+    get lodFalloff() {
+        Debug.removed('GSplatComponent#lodFalloff is removed. Use GSplatComponent#lodBaseDistance and GSplatComponent#lodMultiplier to control how detail falls off with distance.');
+        return 1;
+    }
+
+    /**
+     * Sets the base distance for the first LOD transition (LOD 0 to LOD 1). Objects closer than
+     * this distance use the highest quality LOD. Each subsequent LOD level transitions at a
+     * progressively larger distance, controlled by {@link GSplatComponent#lodMultiplier}. In world
+     * units, and compensated for the camera's field of view. How these distances combine with the
+     * scene's splat budget is set by {@link GSplatParams#splatBudgetMode}: in target mode they only
+     * shape the falloff and how detail divides between splats, in limit mode they decide the
+     * detail. Clamped to a minimum of 0.1. Defaults to 5.
      *
      * @type {number}
      */
-    set lodFalloff(value) {
-        this._lodFalloff = Math.min(Math.max(value, 0), 8);
+    set lodBaseDistance(value) {
+        this._lodBaseDistance = Math.max(0.1, value);
         if (this._placement) {
-            this._placement.lodFalloff = this._lodFalloff;
+            this._placement.lodBaseDistance = this._lodBaseDistance;
         }
     }
 
     /**
-     * Gets how quickly this splat's level of detail drops with distance from the camera.
+     * Gets the base distance for the first LOD transition.
      *
      * @type {number}
      */
-    get lodFalloff() {
-        return this._lodFalloff;
-    }
-
-    /**
-     * @type {number}
-     * @deprecated LOD level selection is driven by `app.scene.gsplat.splatBudget`.
-     * @ignore
-     */
-    set lodBaseDistance(value) {
-        Debug.removed('GSplatComponent#lodBaseDistance is removed. LOD levels are chosen to fit app.scene.gsplat.splatBudget; use that to control quality.');
-    }
-
-    /**
-     * @type {number}
-     * @deprecated LOD level selection is driven by `app.scene.gsplat.splatBudget`.
-     * @ignore
-     */
     get lodBaseDistance() {
-        Debug.removed('GSplatComponent#lodBaseDistance is removed. LOD levels are chosen to fit app.scene.gsplat.splatBudget; use that to control quality.');
-        return 0;
+        return this._lodBaseDistance;
     }
 
     /**
+     * Sets the multiplier between successive LOD distance thresholds. Each LOD level transitions
+     * at this factor times the previous level's distance, creating a geometric progression. Higher
+     * values keep finer detail further from the camera, at a higher memory cost; lower values
+     * switch to coarser levels sooner. LOD distances are compensated for the camera's field of
+     * view - a wider FOV makes objects appear smaller on screen, so LOD switches to coarser levels
+     * sooner. Clamped to a minimum of 1.2. Defaults to 3.
+     *
      * @type {number}
-     * @deprecated LOD level selection is driven by `app.scene.gsplat.splatBudget`.
-     * @ignore
      */
     set lodMultiplier(value) {
-        Debug.removed('GSplatComponent#lodMultiplier is removed. LOD levels are chosen to fit app.scene.gsplat.splatBudget; use that to control quality.');
+        this._lodMultiplier = Math.max(1.2, value);
+        if (this._placement) {
+            this._placement.lodMultiplier = this._lodMultiplier;
+        }
     }
 
     /**
+     * Gets the geometric multiplier between successive LOD distance thresholds.
+     *
      * @type {number}
-     * @deprecated LOD level selection is driven by `app.scene.gsplat.splatBudget`.
-     * @ignore
      */
     get lodMultiplier() {
-        Debug.removed('GSplatComponent#lodMultiplier is removed. LOD levels are chosen to fit app.scene.gsplat.splatBudget; use that to control quality.');
-        return 0;
+        return this._lodMultiplier;
     }
 
     /**
@@ -492,20 +509,20 @@ class GSplatComponent extends Component {
 
     /**
      * @type {number[]|null}
-     * @deprecated LOD level selection is driven by `app.scene.gsplat.splatBudget`.
+     * @deprecated Use {@link GSplatComponent#lodBaseDistance} and {@link GSplatComponent#lodMultiplier} instead.
      * @ignore
      */
     set lodDistances(value) {
-        Debug.removed('GSplatComponent#lodDistances is removed. LOD levels are chosen to fit app.scene.gsplat.splatBudget; use that to control quality.');
+        Debug.removed('GSplatComponent#lodDistances is removed. Use GSplatComponent#lodBaseDistance and GSplatComponent#lodMultiplier to set the LOD transition distances.');
     }
 
     /**
      * @type {number[]}
-     * @deprecated LOD level selection is driven by `app.scene.gsplat.splatBudget`.
+     * @deprecated Use {@link GSplatComponent#lodBaseDistance} and {@link GSplatComponent#lodMultiplier} instead.
      * @ignore
      */
     get lodDistances() {
-        Debug.removed('GSplatComponent#lodDistances is removed. LOD levels are chosen to fit app.scene.gsplat.splatBudget; use that to control quality.');
+        Debug.removed('GSplatComponent#lodDistances is removed. Use GSplatComponent#lodBaseDistance and GSplatComponent#lodMultiplier to set the LOD transition distances.');
         return [];
     }
 
@@ -1011,7 +1028,8 @@ class GSplatComponent extends Component {
             this._placement = null;
 
             this._placement = new GSplatPlacement(resource, this.entity, 0, this._parameters, null, this._id);
-            this._placement.lodFalloff = this._lodFalloff;
+            this._placement.lodBaseDistance = this._lodBaseDistance;
+            this._placement.lodMultiplier = this._lodMultiplier;
             this._placement.lodRangeMin = this._lodRangeMin;
             this._placement.lodRangeMax = this._lodRangeMax;
             this._placement.workBufferUpdate = this._workBufferUpdate;

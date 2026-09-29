@@ -5,14 +5,11 @@
 import {
     AppBase,
     AppOptions,
-    Asset,
-    AssetListLoader,
     CameraComponentSystem,
     Color,
     ContainerHandler,
     Entity,
     FILLMODE_FILL_WINDOW,
-    FontHandler,
     Layer,
     LightComponentSystem,
     OutlineRenderer,
@@ -38,7 +35,7 @@ import { GizmoHandler } from './gizmo-handler.mjs';
 import { Selector } from './selector.mjs';
 
 /**
- * @import { AssetRegistry, Material } from 'playcanvas'
+ * @import { Material } from 'playcanvas'
  */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
@@ -60,7 +57,7 @@ createOptions.componentSystems = [
     LightComponentSystem,
     ScriptComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler, FontHandler];
+createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
@@ -68,23 +65,6 @@ app.init(createOptions);
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
-
-// Load assets
-const assets = {
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
-};
-/**
- * @param {Asset[] | number[]} assetList - The asset list.
- * @param {AssetRegistry} assetRegistry - The asset registry.
- * @returns {Promise<void>} The promise.
- */
-const loadAssets = (assetList, assetRegistry) => {
-    return new Promise((resolve) => {
-        const assetListLoader = new AssetListLoader(assetList, assetRegistry);
-        assetListLoader.load(resolve);
-    });
-};
-await loadAssets(Object.values(assets), app.assets);
 
 app.start();
 
