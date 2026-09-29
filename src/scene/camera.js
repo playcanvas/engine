@@ -807,11 +807,11 @@ class Camera {
 
     /**
      * Refreshes the derived per-view matrices of all {@link Camera#xrViews}, using this camera's
-     * parent world transform. The renderer (and the gsplat passes, which run earlier in the frame)
+     * parent world transform. The renderer, the gsplat passes and {@link Camera#updateXrFrustum}
      * call this before reading the per-view matrices.
      *
      * Note: this recomputes on every call. Within a frame the parent transform is stable, so the
-     * 2-3 calls/frame could be collapsed to a single recompute by guarding on
+     * several calls per frame could be collapsed to a single recompute by guarding on
      * `device.renderVersion` (as {@link Camera#_storeShaderMatrices} does) - left as a future
      * optimization, as it needs checking against cameras that render multiple times per frame
      * (e.g. multiple render targets).
@@ -843,6 +843,10 @@ class Camera {
         if (!views?.length) {
             return false;
         }
+
+        // culling runs before the renderer refreshes the derived per-view matrices, so refresh them
+        // here, for the current pose of the views and transform of the camera's parent
+        this.updateViewTransforms();
 
         // first view establishes the base frustum
         _xrViewProjMat.mul2(views[0].projMat, views[0].viewOffMat);
