@@ -31,9 +31,21 @@ class ConeBaseGeometry extends Geometry {
         // Define the body of the cone/cylinder
         if (height > 0) {
             for (let i = 0; i <= heightSegments; i++) {
+
+                // A row with a zero radius collapses to the tip, and each of its vertices is used
+                // by a single triangle, so center the vertex on that triangle's segment to keep its
+                // normal and u unskewed. The triangles use the vertex at the segment's start at the
+                // top, and the one at its end at the bottom.
+                let tipOffset = 0;
+                if (i === heightSegments && peakRadius === 0) {
+                    tipOffset = 0.5;
+                } else if (i === 0 && baseRadius === 0) {
+                    tipOffset = -0.5;
+                }
+
                 for (let j = 0; j <= capSegments; j++) {
                     // Sweep the cone body from the positive Y axis to match a 3DS Max cone/cylinder
-                    const theta = (j / capSegments) * 2 * Math.PI - Math.PI;
+                    const theta = ((j + tipOffset) / capSegments) * 2 * Math.PI - Math.PI;
                     const sinTheta = Math.sin(theta);
                     const cosTheta = Math.cos(theta);
                     bottom.set(sinTheta * baseRadius, -height / 2, cosTheta * baseRadius);
@@ -45,7 +57,7 @@ class ConeBaseGeometry extends Geometry {
 
                     positions.push(pos.x, pos.y, pos.z);
                     normals.push(norm.x, norm.y, norm.z);
-                    let u = j / capSegments;
+                    let u = (j + tipOffset) / capSegments;
                     let v = i / heightSegments;
                     uvs.push(u, 1 - v);
 
@@ -64,8 +76,13 @@ class ConeBaseGeometry extends Geometry {
                         const third   = ((i + 1)) * (capSegments + 1) + ((j));
                         const fourth  = ((i + 1)) * (capSegments + 1) + ((j + 1));
 
-                        indices.push(first, second, third);
-                        indices.push(second, fourth, third);
+                        // Skip the triangle that collapses to a line at a tip
+                        if (i > 0 || baseRadius > 0) {
+                            indices.push(first, second, third);
+                        }
+                        if (i < heightSegments - 1 || peakRadius > 0) {
+                            indices.push(second, fourth, third);
+                        }
                     }
                 }
             }
@@ -76,7 +93,14 @@ class ConeBaseGeometry extends Geometry {
             const longitudeBands = capSegments;
             const capOffset = height / 2;
 
-            // Generate top cap
+            // Each pole vertex is used by a single triangle, so center its u on that triangle's
+            // segment. The top triangles use the vertex at the segment's end, the bottom ones the
+            // vertex at its start.
+            const poleUOffset = 0.5 / longitudeBands;
+
+            // Generate top cap - the caps index from the vertices generated so far, as the body is
+            // skipped when the height is zero
+            offset = positions.length / 3;
             for (let lat = 0; lat <= latitudeBands; lat++) {
                 const theta = (lat * Math.PI * 0.5) / latitudeBands;
                 const sinTheta = Math.sin(theta);
@@ -91,7 +115,7 @@ class ConeBaseGeometry extends Geometry {
                     const x = cosPhi * sinTheta;
                     const y = cosTheta;
                     const z = sinPhi * sinTheta;
-                    let u = 1 - lon / longitudeBands;
+                    let u = 1 - lon / longitudeBands + (lat === 0 ? poleUOffset : 0);
                     let v = 1 - lat / latitudeBands;
 
                     positions.push(x * peakRadius, y * peakRadius + capOffset, z * peakRadius);
@@ -108,18 +132,21 @@ class ConeBaseGeometry extends Geometry {
                 }
             }
 
-            offset = (heightSegments + 1) * (capSegments + 1);
             for (let lat = 0; lat < latitudeBands; ++lat) {
                 for (let lon = 0; lon < longitudeBands; ++lon) {
                     const first  = (lat * (longitudeBands + 1)) + lon;
                     const second = first + longitudeBands + 1;
 
-                    indices.push(offset + first + 1, offset + second, offset + first);
+                    // Skip the triangle that collapses to a line at the pole
+                    if (lat !== 0) {
+                        indices.push(offset + first + 1, offset + second, offset + first);
+                    }
                     indices.push(offset + first + 1, offset + second + 1, offset + second);
                 }
             }
 
             // Generate bottom cap
+            offset = positions.length / 3;
             for (let lat = 0; lat <= latitudeBands; lat++) {
                 const theta = Math.PI * 0.5 + (lat * Math.PI * 0.5) / latitudeBands;
                 const sinTheta = Math.sin(theta);
@@ -134,7 +161,7 @@ class ConeBaseGeometry extends Geometry {
                     const x = cosPhi * sinTheta;
                     const y = cosTheta;
                     const z = sinPhi * sinTheta;
-                    let u = 1 - lon / longitudeBands;
+                    let u = 1 - lon / longitudeBands - (lat === latitudeBands ? poleUOffset : 0);
                     let v = 1 - lat / latitudeBands;
 
                     positions.push(x * peakRadius, y * peakRadius - capOffset, z * peakRadius);
@@ -151,19 +178,23 @@ class ConeBaseGeometry extends Geometry {
                 }
             }
 
-            offset = (heightSegments + 1) * (capSegments + 1) + (longitudeBands + 1) * (latitudeBands + 1);
             for (let lat = 0; lat < latitudeBands; ++lat) {
                 for (let lon = 0; lon < longitudeBands; ++lon) {
                     const first  = (lat * (longitudeBands + 1)) + lon;
                     const second = first + longitudeBands + 1;
 
                     indices.push(offset + first + 1, offset + second, offset + first);
-                    indices.push(offset + first + 1, offset + second + 1, offset + second);
+
+                    // Skip the triangle that collapses to a line at the pole
+                    if (lat !== latitudeBands - 1) {
+                        indices.push(offset + first + 1, offset + second + 1, offset + second);
+                    }
                 }
             }
         } else {
-            // Generate bottom cap
-            offset = (heightSegments + 1) * (capSegments + 1);
+            // Generate bottom cap - the caps index from the vertices generated so far, as the body is
+            // skipped when the height is zero, and a cap is skipped when its radius is zero
+            offset = positions.length / 3;
             if (baseRadius > 0) {
                 for (let i = 0; i < capSegments; i++) {
                     const theta = (i / capSegments) * 2 * Math.PI;
@@ -192,7 +223,7 @@ class ConeBaseGeometry extends Geometry {
             }
 
             // Generate top cap
-            offset += capSegments;
+            offset = positions.length / 3;
             if (peakRadius > 0) {
                 for (let i = 0; i < capSegments; i++) {
                     const theta = (i / capSegments) * 2 * Math.PI;
