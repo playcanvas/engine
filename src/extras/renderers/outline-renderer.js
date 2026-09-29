@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { Entity } from '../../framework/entity.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, BLENDEQUATION_ADD, BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_SRC_ALPHA,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR, PIXELFORMAT_SRGBA8,
@@ -405,7 +406,13 @@ class OutlineRenderer {
         const device = this.app.graphicsDevice;
         device.scope.resolve('source').setValue(this.rt.colorBuffer);
 
-        device.setDrawStates(this.blendState);
+        // the scene pass can render additional color attachments (for example the scene depth used
+        // by CameraFrame), which the outlines do not write - their writes need to be disabled
+        const attachmentCount = device.renderTarget?.colorBufferCount ?? 1;
+        const blendState = attachmentCount > 1 ?
+            getSingleAttachmentBlendState(this.blendState, attachmentCount) : this.blendState;
+
+        device.setDrawStates(blendState);
         this.quadRenderer.render();
     }
 
