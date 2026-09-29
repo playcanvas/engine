@@ -123,16 +123,16 @@ previewCamera.addComponent('camera', {
     clearColor: new Color(0, 0, 0, 0),
     fov: 30
 });
-previewCamera.setPosition(0, 0.9, 3.35);
-previewCamera.lookAt(0, 0.78, 0);
+previewCamera.setPosition(0, 1.1, 5.2);
+previewCamera.lookAt(0, 1, 0);
 app.root.addChild(previewCamera);
 
-// The character, and a light, on the preview layer only. The model holds both animations
+// The character, and a light, on the preview layer only. The model holds its animations
 const character = assets.knight.resource.instantiateRenderEntity();
 character.findComponents('render').forEach((render) => {
     render.layers = [previewLayer.id];
 });
-const [idleClip, attackClip] = ['Idle', 'Attack'].map(
+const [idleClip, attackClip] = ['Idle_FightingStance', 'Attack_SwordThrust'].map(
     (name) => assets.knight.resource.animations.find((asset) => asset.resource.name === name).resource
 );
 character.addComponent('anim', { activate: true });
@@ -209,7 +209,7 @@ createElement(details, 'role', { ...text, text: 'Level 12 · Knight', fontSize: 
 );
 createElement(details, 'about', {
     ...text,
-    text: 'First through every crypt door, and last out of every fight. Never without a shield.',
+    text: 'First through every crypt door, and last out of every fight. Never lowers his guard.',
     fontSize: 22,
     lineHeight: 30,
     color: MUTED,
@@ -219,7 +219,7 @@ createElement(details, 'about', {
     width: 280
 }).setLocalPosition(0, -110, 0);
 
-// Attack plays the swing once, and the character goes back to idling when it ends
+// Attack plays the thrust once, and the character goes back to idling when it ends
 const attack = createElement(card, 'attack', { sprite: panel, color: ORANGE, width: 220, height: 64, useInput: true });
 attack.addComponent('button', {
     imageEntity: attack,
