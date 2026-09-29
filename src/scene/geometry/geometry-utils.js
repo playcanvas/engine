@@ -58,7 +58,11 @@ const calculateNormals = (positions, indices) => {
         const nx = normals[i * 3];
         const ny = normals[i * 3 + 1];
         const nz = normals[i * 3 + 2];
-        const invLen = 1 / Math.sqrt(nx * nx + ny * ny + nz * nz);
+        const lenSq = nx * nx + ny * ny + nz * nz;
+
+        // the sum is zero for a vertex used only by degenerate triangles, or by no triangle - keep
+        // a zero normal instead of dividing by zero, which would give NaN
+        const invLen = lenSq > 0 ? 1 / Math.sqrt(lenSq) : 0;
         normals[i * 3] *= invLen;
         normals[i * 3 + 1] *= invLen;
         normals[i * 3 + 2] *= invLen;
