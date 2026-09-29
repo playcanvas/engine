@@ -12,6 +12,13 @@ import { getTextureAssetEncoding } from './texture.js';
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
+// whether a reference of a material is to a texture asset - to the asset itself, or by the id or
+// url it keeps when the asset is removed from the registry, as the references of a material learn
+// of the removal one after another
+const referencesAsset = (reference, asset) => reference.asset === asset ||
+    (reference.id !== null && reference.id === asset.id) ||
+    (reference.url !== null && reference.url === asset.file?.url);
+
 /**
  * Resource handler for the `material` asset type. Loads material JSON into a
  * {@link StandardMaterial} and binds the texture assets it references. A custom parser may
@@ -90,12 +97,20 @@ class MaterialHandler extends ResourceHandler {
      * @private
      */
     _getPlaceholderTexture(parameterName, materialAsset, textureAsset) {
-        // the placeholder of the first parameter which references the texture asset
-        const references = materialAsset.resource._assetReferences;
-        const name = standardMaterialTextureParameters.find(name => references[name]?.asset === textureAsset);
+        const material = materialAsset.resource;
+        const references = material._assetReferences;
+
+        // the parameters referencing the texture asset, each with the channels of it they sample
+        const maps = [];
+        for (const name of standardMaterialTextureParameters) {
+            const reference = references[name];
+            if (name === parameterName || (reference && referencesAsset(reference, textureAsset))) {
+                maps.push({ name, channel: material[`${name}Channel`] });
+            }
+        }
 
         const { srgb, type } = getTextureAssetEncoding(textureAsset);
-        return this._placeholders.get(name ?? parameterName, srgb, type);
+        return this._placeholders.get(maps, srgb, type);
     }
 
     // assign a placeholder texture while waiting for one to load
@@ -166,6 +181,8 @@ class MaterialHandler extends ResourceHandler {
         const TEXTURES = standardMaterialTextureParameters;
 
         let i, name, assetReference;
+        const boundTextures = [];
+
         // iterate through all texture parameters
         for (i = 0; i < TEXTURES.length; i++) {
             name = TEXTURES[i];
@@ -201,14 +218,7 @@ class MaterialHandler extends ResourceHandler {
                 }
 
                 if (assetReference.asset) {
-                    if (assetReference.asset.resource) {
-                        // asset is already loaded
-                        this._assignTexture(name, materialAsset, assetReference.asset.resource);
-                    } else {
-                        this._assignPlaceholderTexture(name, materialAsset, assetReference.asset);
-                    }
-
-                    assets.load(assetReference.asset);
+                    boundTextures.push(name);
                 }
             } else {
                 if (assetReference) {
@@ -223,6 +233,21 @@ class MaterialHandler extends ResourceHandler {
                     // do nothing
                 }
             }
+        }
+
+        // the textures are assigned once all the parameters reference their assets, as the
+        // placeholder of a texture asset is shared by all the parameters referencing it
+        for (i = 0; i < boundTextures.length; i++) {
+            name = boundTextures[i];
+            const textureAsset = material._assetReferences[name].asset;
+            if (textureAsset.resource) {
+                // asset is already loaded
+                this._assignTexture(name, materialAsset, textureAsset.resource);
+            } else {
+                this._assignPlaceholderTexture(name, materialAsset, textureAsset);
+            }
+
+            assets.load(textureAsset);
         }
 
         const CUBEMAPS = standardMaterialCubemapParameters;

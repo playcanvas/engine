@@ -242,6 +242,72 @@ describe('MaterialHandler', function () {
             expect(neededShader(instance)).to.equal(shader);
         });
 
+        // the value the placeholder of a map shows in the channel the map samples, in the range 0..1
+        const sampledValue = (material, name) => {
+            const index = 'rgba'.indexOf(material[`${name}Channel`]);
+            return material[name]._levels[0][index] / 255;
+        };
+
+        it('shows the neutral value of each map packed into the channels of one texture asset', async function () {
+            const packed = pendingTexture('packed');
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                useMetalness: true,
+                aoMap: packed.id,
+                aoMapChannel: 'r',
+                glossMap: packed.id,
+                glossMapChannel: 'g',
+                metalnessMap: packed.id,
+                metalnessMapChannel: 'b'
+            }));
+
+            expect(material.glossMap).to.equal(material.aoMap);
+            expect(material.metalnessMap).to.equal(material.aoMap);
+            expect(sampledValue(material, 'aoMap')).to.equal(1);
+            expect(sampledValue(material, 'glossMap')).to.be.closeTo(0.5, 0.01);
+            expect(sampledValue(material, 'metalnessMap')).to.equal(0);
+        });
+
+        it('shows no metalness where the metalness and the occlusion maps sample one channel', async function () {
+            // both sample the green channel by default
+            const packed = pendingTexture('packed');
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                useMetalness: true, aoMap: packed.id, metalnessMap: packed.id
+            }));
+
+            expect(material.metalnessMap).to.equal(material.aoMap);
+            expect(sampledValue(material, 'metalnessMap')).to.equal(0);
+        });
+
+        it('assigns an .hdr file a placeholder of the rgbe type before the hdr parser records the type', async function () {
+            const emissive = pendingTexture('emissiveMap', {}, { url: textureUrl('emissive').replace('.png', '.hdr') });
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                emissiveMap: emissive.id, emissive: [1, 1, 1]
+            }));
+            expect(material.emissiveMap.encoding).to.equal('rgbe');
+
+            // the hdr parser records the type in the asset data as it starts loading the file
+            emissive.data.type = 'rgbe';
+            expectSameShaderAfterLoad(material, [emissive]);
+        });
+
+        it('keeps the placeholder of maps sharing a texture asset shared when the asset is removed', async function () {
+            const packed = pendingTexture('packed');
+            const material = await loadMaterial(new Asset('material', 'material', null, {
+                useMetalness: true, aoMap: packed.id, glossMap: packed.id
+            }));
+            const placeholder = material.aoMap;
+
+            const instance = meshInstance(material);
+            const shader = drawnShader(instance);
+            completeLoad(packed);
+
+            app.assets.remove(packed);
+            expect(material.aoMap).to.equal(placeholder);
+            expect(material.glossMap).to.equal(placeholder);
+            expect(drawnShader(instance)).to.equal(shader);
+            expect(neededShader(instance)).to.equal(shader);
+        });
+
         it('assigns placeholders of the encoded types, which load without changing the shader', async function () {
             const light = pendingTexture('lightMap', { type: 'rgbm' });
             const emissive = pendingTexture('emissiveMap', { rgbm: true });

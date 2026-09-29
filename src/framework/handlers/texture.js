@@ -1,3 +1,4 @@
+import { path } from '../../core/path.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
@@ -59,10 +60,20 @@ const getAssetDataTextureType = (asset) => {
     return TEXTURETYPE_DEFAULT;
 };
 
+// whether the file of a texture asset is an .hdr file, by the extension the parser is selected by
+const isHdrFile = (asset) => {
+    const name = asset.file?.filename || asset.file?.url;
+    return !!name && path.getExtension(name.split('?')[0]).toLowerCase() === '.hdr';
+};
+
 /**
  * Returns whether the texture of a texture asset is sRGB, and its type, which together decide how
  * a shader decodes the texture. These are known before the asset loads: its data specifies them,
  * unless its per-load texture options override them.
+ *
+ * A few files decide these themselves, and are only known once loaded: a KTX file storing an sRGB
+ * format when the asset data does not specify srgb, a basis normal map which the transcoder
+ * unswizzles, and a DXT5 normal map.
  *
  * @param {Asset} asset - The texture asset.
  * @returns {{srgb: boolean, type: string}} Whether the texture is sRGB, and its type.
@@ -70,9 +81,14 @@ const getAssetDataTextureType = (asset) => {
  */
 const getTextureAssetEncoding = (asset) => {
     const options = asset.options?.texture;
+
+    // the hdr parser records the rgbe type of an .hdr file in the asset data as it starts loading
+    // the file, which can be after this is needed - such as when the file is in a bundle
+    const type = !asset.data.type && isHdrFile(asset) ? TEXTURETYPE_RGBE : getAssetDataTextureType(asset);
+
     return {
         srgb: !!(options?.srgb ?? asset.data.srgb),
-        type: options?.type ?? getAssetDataTextureType(asset)
+        type: options?.type ?? type
     };
 };
 

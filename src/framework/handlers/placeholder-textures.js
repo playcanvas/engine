@@ -77,21 +77,55 @@ const ENCODERS = {
     [TEXTURETYPE_RGBE]: encodeRGBE
 };
 
+// a tangent space normal pointing straight out of the surface, as a swizzled normal map stores it:
+// its x and y in the alpha and green channels
+const SWIZZLED_NORMAL = [128, 128, 128, 128];
+
+const CHANNELS = 'rgba';
+
 /**
- * Returns the texel of a placeholder texture of the given type, which shows the color the texel of
- * the default type shows when a shader decodes it from gamma space, as the color textures a
- * texture of an encoded type stands in for are.
+ * A texture parameter a placeholder stands in for, with the channels of the texture it samples.
  *
- * @param {string} color - The name of the color.
+ * @typedef {object} PlaceholderMap
+ * @property {string} name - The name of the texture parameter, such as 'aoMap'.
+ * @property {string} [channel] - The channels the parameter samples, such as 'g', or all of them
+ * when not specified.
+ * @ignore
+ */
+
+/**
+ * Returns the texel of a placeholder texture which stands in for one texture referenced by the
+ * given texture parameters. Each parameter shows its color in the channels it samples, so a
+ * texture packing several maps into its channels shows the color of each. Where two parameters
+ * sample the same channel, one value serves both, as it does once the texture loads, and the lower
+ * value wins: a channel sampled by the metalness and the ambient occlusion maps is black, for no
+ * metalness, rather than white, for no occlusion. Channels no parameter samples show the color of
+ * the first parameter.
+ *
+ * A texel of an encoded type shows the color the texel of the default type shows when a shader
+ * decodes it from gamma space, as the color textures a texture of an encoded type stands in for
+ * are.
+ *
+ * @param {PlaceholderMap[]} maps - The texture parameters.
  * @param {string} type - The type of the texture.
  * @returns {number[]} The four channels of the texel, in the range 0..255.
  */
-const getTexel = (color, type) => {
-    const texel = COLORS[color];
+const getTexel = (maps, type) => {
+    const texelOf = (name) => {
+        const color = PLACEHOLDER_MAP[name];
+        Debug.assert(color, `No placeholder texture found for parameter: ${name}`);
+        return type === TEXTURETYPE_SWIZZLEGGGR && color === 'normal' ? SWIZZLED_NORMAL : COLORS[color ?? 'gray'];
+    };
 
-    // a swizzled normal map stores the x and y of the normal in the alpha and green channels
-    if (type === TEXTURETYPE_SWIZZLEGGGR && color === 'normal') {
-        return [128, 128, 128, 128];
+    const texel = texelOf(maps[0].name).slice();
+    const sampled = [false, false, false, false];
+    for (const { name, channel } of maps) {
+        const mapTexel = texelOf(name);
+        for (const c of channel || CHANNELS) {
+            const i = CHANNELS.indexOf(c);
+            texel[i] = sampled[i] ? Math.min(texel[i], mapTexel[i]) : mapTexel[i];
+            sampled[i] = true;
+        }
     }
 
     const encode = ENCODERS[type];
@@ -109,8 +143,9 @@ const getTexel = (color, type) => {
  *
  * A placeholder decodes like the texture it stands in for, as it is sRGB and of the type that
  * texture is, so the shader generated for the placeholder is the one the texture needs as well.
- * Each texture parameter has placeholders of its own, as a material samples maps holding the same
- * texture from one sampler.
+ * A placeholder is named after the first of the texture parameters it stands in for, and
+ * placeholders named after different parameters are different textures, as a material samples
+ * maps holding the same texture from one sampler.
  *
  * The textures are created the first time they are needed, which is when an asset is bound to a
  * material or unloads - never while rendering, where creating a texture is not supported.
@@ -168,20 +203,21 @@ class PlaceholderTextures {
     }
 
     /**
-     * Returns the placeholder of a texture parameter, created on the first request.
+     * Returns the placeholder standing in for one texture referenced by the given texture
+     * parameters of a material, created on the first request.
      *
-     * @param {string} parameterName - The name of the texture parameter, such as 'diffuseMap'.
+     * @param {PlaceholderMap[]} maps - The texture parameters referencing the texture, the first
+     * of which names the placeholder.
      * @param {boolean} srgb - Whether the texture it stands in for is sRGB.
      * @param {string} type - The type of the texture it stands in for.
      * @returns {Texture} The placeholder texture.
      */
-    get(parameterName, srgb, type) {
-        const name = `placeholder-${parameterName}-${srgb ? 'srgb' : 'linear'}-${type}`;
+    get(maps, srgb, type) {
+        const texel = getTexel(maps, type);
+        const hex = texel.map(c => c.toString(16).padStart(2, '0')).join('');
+        const name = `placeholder-${maps[0].name}-${srgb ? 'srgb' : 'linear'}-${type}-${hex}`;
         let texture = this._textures.get(name);
         if (!texture) {
-            const color = PLACEHOLDER_MAP[parameterName];
-            Debug.assert(color, `No placeholder texture found for parameter: ${parameterName}`);
-
             texture = new Texture(this.device, {
                 name,
                 width: 1,
@@ -194,7 +230,7 @@ class PlaceholderTextures {
                 magFilter: FILTER_NEAREST,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
-                levels: [new Uint8Array(getTexel(color ?? 'gray', type))]
+                levels: [new Uint8Array(texel)]
             });
 
             this._textures.set(name, texture);
