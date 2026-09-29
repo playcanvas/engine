@@ -43,7 +43,7 @@ class FloatPacking {
         const e = (x >> 23) & 0xff; // Using int is faster here
 
         // If zero, or denormal, or exponent underflows too much for a denormal half, return signed zero.
-        if (e < 103) {
+        if (e < 102) {
             return bits;
         }
 
@@ -53,7 +53,9 @@ class FloatPacking {
 
             // If exponent was 0xff and one mantissa bit was set, it means NaN,
             // not Inf, so make sure we set one mantissa bit too.
-            bits |= ((e === 255) ? 0 : 1) && (x & 0x007fffff);
+            if (e === 255 && (x & 0x007fffff)) {
+                bits |= 0x0200;
+            }
             return bits;
         }
 
