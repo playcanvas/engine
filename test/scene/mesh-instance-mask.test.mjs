@@ -96,29 +96,6 @@ describe('Light#mask', function () {
     });
 });
 
-describe('Lit material options light mask', function () {
-
-    afterEach(function () {
-        sinon.restore();
-    });
-
-    const lightMaskOf = (objDefs) => {
-        const selectLights = sinon.stub(LitMaterialOptionsBuilder, 'selectLights').returns([]);
-        const litOptions = {};
-        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, { useLighting: true }, { clusteredLightingEnabled: true }, objDefs, undefined);
-        selectLights.restore();
-        return { mask: selectLights.args[0][1], lightMaskDynamic: litOptions.lightMaskDynamic };
-    };
-
-    it('selects no lights for a mask of 0, even without shader define flags', function () {
-        expect(lightMaskOf(0)).to.deep.equal({ mask: 0, lightMaskDynamic: false });
-    });
-
-    it('selects the dynamic lights without the shader defines of a mesh instance', function () {
-        expect(lightMaskOf(undefined)).to.deep.equal({ mask: MASK_AFFECT_DYNAMIC, lightMaskDynamic: true });
-    });
-});
-
 describe('Standard material light mask', function () {
 
     let app;

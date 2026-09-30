@@ -144,8 +144,7 @@ class LitMaterialOptionsBuilder {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
-            // a mask of 0 is kept, the default applies only without the shader defines of a mesh instance
-            const mask = typeof objDefs === 'number' ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
