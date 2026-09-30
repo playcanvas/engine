@@ -85,7 +85,8 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * depth prepass, or any depth resolve, as the depth cannot be sampled or copied out. Defaults to
  * false.
  * @returns {Promise<GraphicsDevice>} - Promise object representing the created graphics device.
- * It is rejected if none of the device types can be created.
+ * It is rejected if none of the device types can be created, with an `AggregateError` whose
+ * `errors` contain the error of each device type that failed.
  * @category Graphics
  */
 function createGraphicsDevice(canvas, options = {}) {
@@ -127,9 +128,10 @@ function createGraphicsDevice(canvas, options = {}) {
     // execute each device creation function returning the first successful result
     return new Promise((resolve, reject) => {
         let attempt = 0;
+        const errors = [];
         const next = () => {
             if (attempt >= deviceCreateFuncs.length) {
-                reject(new Error('Failed to create a graphics device'));
+                reject(new AggregateError(errors, 'Failed to create a graphics device'));
             } else {
                 // create the device inside a promise, so that a synchronous throw (as from the
                 // WebGL device when WebGL 2 is unavailable) is handled below as a rejection,
@@ -144,6 +146,7 @@ function createGraphicsDevice(canvas, options = {}) {
                     }
                 }).catch((err) => {
                     console.log(err);
+                    errors.push(err);
                     next();
                 });
             }

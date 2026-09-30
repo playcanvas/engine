@@ -43,10 +43,11 @@ describe('createGraphicsDevice', function () {
         sinon.restore();
     });
 
-    const expectFailure = (result) => {
+    const expectFailure = (result, errorMessages) => {
         expect(result.status).to.equal('rejected');
-        expect(result.reason).to.be.an.instanceof(Error);
+        expect(result.reason).to.be.an.instanceof(AggregateError);
         expect(result.reason.message).to.equal('Failed to create a graphics device');
+        expect(result.reason.errors.map(err => err.message)).to.deep.equal(errorMessages);
         expect(canvas.getContext.calledWith('webgl2')).to.be.true;
     };
 
@@ -63,7 +64,7 @@ describe('createGraphicsDevice', function () {
             const result = await settle(createGraphicsDevice(canvas, {
                 deviceTypes: [DEVICETYPE_WEBGL2]
             }));
-            expectFailure(result);
+            expectFailure(result, ['WebGL not supported']);
         });
 
         it('falls back to a requested null device when WebGL fails', async function () {
@@ -103,7 +104,7 @@ describe('createGraphicsDevice', function () {
             const result = await settle(createGraphicsDevice(canvas, {
                 deviceTypes: [DEVICETYPE_WEBGPU]
             }));
-            expectFailure(result);
+            expectFailure(result, ['No WebGPU adapter', 'WebGL not supported']);
         });
 
         it('rejects when WebGPU resolves without a device and WebGL fails', async function () {
@@ -111,7 +112,16 @@ describe('createGraphicsDevice', function () {
             const result = await settle(createGraphicsDevice(canvas, {
                 deviceTypes: [DEVICETYPE_WEBGPU]
             }));
-            expectFailure(result);
+            expectFailure(result, ['WebGL not supported']);
+        });
+
+        it('rejects when no WebGPU adapter is available and WebGL fails', async function () {
+            initWebGpu.callThrough();
+            globalThis.window.navigator.gpu.requestAdapter = sinon.stub().resolves(null);
+            const result = await settle(createGraphicsDevice(canvas, {
+                deviceTypes: [DEVICETYPE_WEBGPU]
+            }));
+            expectFailure(result, ['Unable to retrieve a WebGPU adapter', 'WebGL not supported']);
         });
 
         it('falls back to a requested null device when WebGPU and WebGL fail', async function () {
