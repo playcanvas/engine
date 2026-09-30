@@ -663,8 +663,13 @@ class AppBase extends EventHandler {
         }
 
         // announce the initialized app to a devtools extension, such as the PlayCanvas Inspector,
-        // which defines this hook before the page runs. Without the hook this is a single lookup
-        globalThis[Symbol.for('playcanvas.inspector')]?.register?.(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
+        // which defines this hook before the page runs. Without the hook this is a single lookup.
+        // A broken or outdated extension must not break the app, so its failures are contained
+        try {
+            globalThis[Symbol.for('playcanvas.inspector')]?.register?.(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
+        } catch (e) {
+            Debug.warn('The devtools hook failed to register the app.', e);
+        }
     }
 
     static _applications = {};
@@ -1798,7 +1803,11 @@ class AppBase extends EventHandler {
             return;
         }
 
-        globalThis[Symbol.for('playcanvas.inspector')]?.unregister?.(this);
+        try {
+            globalThis[Symbol.for('playcanvas.inspector')]?.unregister?.(this);
+        } catch (e) {
+            Debug.warn('The devtools hook failed to unregister the app.', e);
+        }
 
         const canvasId = this.graphicsDevice.canvas.id;
 

@@ -56,6 +56,26 @@ describe('AppBase devtools hook', function () {
         expect(app.root).to.equal(null);
     });
 
+    it('initializes and destroys the app as usual when the hook throws', function () {
+        globalThis[HOOK] = {
+            register: () => {
+                throw new Error('broken extension');
+            },
+            unregister: () => {
+                throw new Error('broken extension');
+            }
+        };
+
+        const app = createApp();
+        expect(app.root).to.not.equal(null);
+        expect(app.graphicsDevice).to.exist;
+
+        app.destroy();
+        // destroy ran to the end, releasing the root and the device
+        expect(app.root).to.equal(null);
+        expect(app.graphicsDevice).to.equal(null);
+    });
+
     it('runs as usual without a hook, or with a hook that offers neither method', function () {
         expect(globalThis[HOOK]).to.equal(undefined);
         const app = createApp();
