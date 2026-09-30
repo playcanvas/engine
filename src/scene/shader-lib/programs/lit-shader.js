@@ -242,6 +242,13 @@ class LitShader {
             varyings.set('vLinearDepth', 'float');
         }
 
+        // dynamic refraction, evaluated by the forward pass, scales the refraction by the scale of
+        // the model matrix
+        if (options.useRefraction && options.useDynamicRefraction && this.shaderPassInfo.isForward) {
+            vDefines.set('LIT_DYNAMIC_REFRACTION', true);
+            varyings.set('vModelScale', 'vec3');
+        }
+
         if (this.needsNormal) vDefines.set('NORMALS', true);
 
         if (this.options.useInstancing) {

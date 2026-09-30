@@ -42,14 +42,9 @@ void addRefraction(
 #endif
 ) {
 
-    // Extract scale from the model transform
-    vec3 modelScale;
-    modelScale.x = length(vec3(matrix_model[0].xyz));
-    modelScale.y = length(vec3(matrix_model[1].xyz));
-    modelScale.z = length(vec3(matrix_model[2].xyz));
-
-    // Calculate the refraction vector, scaled by the thickness and scale of the object
-    vec3 scale = thickness * modelScale;
+    // Calculate the refraction vector, scaled by the thickness and the scale of the model matrix,
+    // passed from the vertex shader
+    vec3 scale = thickness * vModelScale;
     vec3 refractionVector = normalize(refract(-viewDir, worldNormal, refractionIndex)) * scale;
     vec3 refraction = evalRefractionColor(refractionVector, gloss, refractionIndex);
 
