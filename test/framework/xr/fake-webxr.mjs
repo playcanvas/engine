@@ -3,6 +3,8 @@
  * tests.
  */
 
+import { Mat4 } from '../../../src/core/math/mat4.js';
+
 /**
  * Creates a stand-in for the XRInputSource of a tracked controller.
  *
@@ -32,6 +34,37 @@ const createFrame = position => ({
         }
     })
 });
+
+/**
+ * Creates a stand-in for an XRFrame of a session, in which the viewer is at the origin looking
+ * down -z, through one view with a 90 degree field of view. Like the browser, the frame projects
+ * with the depth range of the render state of the session.
+ *
+ * @param {FakeXRSession} session - The session.
+ * @returns {object} The frame.
+ */
+const createViewerFrame = (session) => {
+    const { depthNear, depthFar } = session.renderState;
+    const identity = new Mat4().data;
+
+    return {
+        session,
+        getViewerPose: () => ({
+            transform: {
+                position: { x: 0, y: 0, z: 0 },
+                orientation: { x: 0, y: 0, z: 0, w: 1 }
+            },
+            views: [{
+                eye: 'none',
+                projectionMatrix: new Mat4().setPerspective(90, 1, depthNear, depthFar).data,
+                transform: {
+                    matrix: identity,
+                    inverse: { matrix: identity }
+                }
+            }]
+        })
+    };
+};
 
 /**
  * Stand-in for an XRSession, implementing what XrManager uses to start and end a session.
@@ -213,4 +246,4 @@ class FakeXRSystem extends EventTarget {
     }
 }
 
-export { createController, createFrame, FakeXRSession, FakeXRSystem };
+export { createController, createFrame, createViewerFrame, FakeXRSession, FakeXRSystem };
