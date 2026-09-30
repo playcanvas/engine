@@ -148,6 +148,14 @@ class XrManager extends EventHandler {
     _available = {};
 
     /**
+     * Listener for the `devicechange` event of `navigator.xr`, which is removed on destroy.
+     *
+     * @type {Function|null}
+     * @private
+     */
+    _onDeviceChange = null;
+
+    /**
      * @type {string|null}
      * @private
      */
@@ -334,9 +342,10 @@ class XrManager extends EventHandler {
         // 3. Controllers class
 
         if (this._supported && XrManager._allowsSpatialTracking()) {
-            navigator.xr.addEventListener('devicechange', () => {
+            this._onDeviceChange = () => {
                 this._deviceAvailabilityCheck();
-            });
+            };
+            navigator.xr.addEventListener('devicechange', this._onDeviceChange);
             this._deviceAvailabilityCheck();
         }
     }
@@ -419,6 +428,12 @@ class XrManager extends EventHandler {
      * @ignore
      */
     destroy() {
+        // navigator.xr outlives the application, which its listener would otherwise keep alive
+        if (this._onDeviceChange) {
+            navigator.xr.removeEventListener('devicechange', this._onDeviceChange);
+            this._onDeviceChange = null;
+        }
+
         if (this.xrBridge) {
             this.xrBridge.destroy();
             this.xrBridge = null;

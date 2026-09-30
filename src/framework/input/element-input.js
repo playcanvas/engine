@@ -797,6 +797,7 @@ class ElementInput {
     }
 
     _onXrEnd() {
+        this.app.xr.off('end', this._onXrEnd, this);
         this.app.xr.off('update', this._onXrUpdate, this);
         this.app.xr.input.off('selectstart', this._onSelectStart, this);
         this.app.xr.input.off('selectend', this._onSelectEnd, this);
