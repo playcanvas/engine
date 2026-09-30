@@ -81,6 +81,7 @@ function getDefaultMobilePanelWidth() {
  * @property {number} mobilePanelHeight - Active mobile panel height.
  * @property {number} mobilePanelWidth - Active mobile panel width.
  * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
+ * @property {boolean} showInspector - Whether the inspector panel is shown, which hides the desktop description.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -101,7 +102,8 @@ class MainLayout extends TypedComponent {
             mobilePanel: getInitialMobilePanel(layout, panel),
             mobilePanelHeight: getMobilePanelHeight(height),
             mobilePanelWidth: getMobilePanelWidth(width),
-            showCredits: localStorage.getItem('showCredits') !== 'false'
+            showCredits: localStorage.getItem('showCredits') !== 'false',
+            showInspector: false
         };
     })();
 
@@ -242,12 +244,14 @@ class MainLayout extends TypedComponent {
     componentDidMount() {
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('orientationchange', this._onLayoutChange);
+        window.addEventListener('inspector', this._handleInspector);
     }
 
     componentWillUnmount() {
         this.stopMobilePanelDrag();
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('orientationchange', this._onLayoutChange);
+        window.removeEventListener('inspector', this._handleInspector);
     }
 
     /**
@@ -255,6 +259,22 @@ class MainLayout extends TypedComponent {
      */
     updateShowMiniStats = (value) => {
         iframe.fire('stats', { state: value });
+    };
+
+    /**
+     * @param {boolean} value - Show Inspector state.
+     */
+    updateShowInspector = (value) => {
+        this.setState({ showInspector: value });
+        iframe.fire('inspector', { state: value });
+    };
+
+    /**
+     * @param {Event} event - Inspector state event from the iframe, carrying the resolved state.
+     */
+    _handleInspector = (event) => {
+        const customEvent = /** @type {CustomEvent<{ state: boolean }>} */ (event);
+        this.setState({ showInspector: !!customEvent.detail.state });
     };
 
     /**
@@ -266,7 +286,7 @@ class MainLayout extends TypedComponent {
     };
 
     render() {
-        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth, showCredits } = this.state;
+        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth, showCredits, showInspector } = this.state;
         return jsx(
             'div',
             {
@@ -304,6 +324,7 @@ class MainLayout extends TypedComponent {
                                 jsx(Menu, {
                                     layout,
                                     setShowMiniStats: this.updateShowMiniStats.bind(this),
+                                    setShowInspector: this.updateShowInspector,
                                     showCredits,
                                     setShowCredits: this.setShowCredits
                                 }),
@@ -316,6 +337,7 @@ class MainLayout extends TypedComponent {
                                         mobilePanel,
                                         setMobilePanel: this.setMobilePanel,
                                         showCredits,
+                                        hideDescription: showInspector,
                                         onMobilePanelDragStart: this.startMobilePanelDrag
                                     })
                                 )

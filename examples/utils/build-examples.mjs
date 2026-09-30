@@ -71,7 +71,8 @@ export const STATIC_TARGETS = [
         dest: 'dist/iframe/playcanvas-observer.mjs'
     },
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
+    { src: './node_modules/@playcanvas/inspector/src', dest: 'dist/modules/inspector' }
 ];
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.
