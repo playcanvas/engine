@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { replace, restore, spy } from 'sinon';
 
-import { createController, createFrame, FakeXRSystem } from './fake-webxr.mjs';
+import { createController, createFrame, createViewerFrame, FakeXRSystem } from './fake-webxr.mjs';
 import { Vec3 } from '../../../src/core/math/vec3.js';
 import { platform } from '../../../src/core/platform.js';
 import { Entity } from '../../../src/framework/entity.js';
@@ -22,15 +22,29 @@ describe('XrManager', function () {
     let attachPresentation;
 
     /**
-     * Starts an immersive VR session on the test camera.
+     * Starts an immersive VR session.
      *
+     * @param {Entity} [cameraEntity] - The camera to start the session on. Defaults to the test
+     * camera.
      * @returns {Promise<Error|null>} Resolves with the error passed to the start callback.
      */
-    const startVr = () => new Promise((resolve) => {
-        app.xr.start(camera.camera, XRTYPE_VR, XRSPACE_LOCALFLOOR, {
+    const startVr = (cameraEntity = camera) => new Promise((resolve) => {
+        app.xr.start(cameraEntity.camera, XRTYPE_VR, XRSPACE_LOCALFLOOR, {
             callback: resolve
         });
     });
+
+    /**
+     * Ends the active session.
+     *
+     * @returns {Promise<FakeXRSession>} Resolves with the session once its end event has fired.
+     */
+    const endVr = async () => {
+        const session = app.xr.session;
+        app.xr.end();
+        await session.endEventFired;
+        return session;
+    };
 
     /**
      * Records the start, end and error events fired by the XR manager.
@@ -56,13 +70,18 @@ describe('XrManager', function () {
         // availability is only probed in a browser
         app.xr._available[XRTYPE_VR] = true;
 
-        // the null graphics device has no XR presentation backend, so provide one that presents
-        // nothing
-        attachPresentation = () => {};
+        // the null graphics device has no XR presentation backend, so provide one that, like the
+        // real ones, sets the depth range of the session, and presents nothing
+        attachPresentation = (session, options) => {
+            session.updateRenderState({ depthNear: options.depthNear, depthFar: options.depthFar });
+        };
         app.graphicsDevice.createXrBridgeImpl = () => ({
             attachPresentation: (session, options) => attachPresentation(session, options),
             releasePresentation: () => {},
+            beginFrame: () => {},
             endFrame: () => {},
+            getFramebufferSize: (frame, out) => out.set(1, 1),
+            getViewport: () => ({ x: 0, y: 0, width: 1, height: 1 }),
             destroy: () => {}
         });
 
@@ -205,18 +224,6 @@ describe('XrManager', function () {
 
     describe('#end', function () {
 
-        /**
-         * Ends the active session.
-         *
-         * @returns {Promise<FakeXRSession>} Resolves with the session once its end event has fired.
-         */
-        const endVr = async () => {
-            const session = app.xr.session;
-            app.xr.end();
-            await session.endEventFired;
-            return session;
-        };
-
         it('lets end handlers read the session, and remove handlers read input source poses', async function () {
             // the camera is on a rig, as for locomotion, so input source poses depend on the camera
             const rig = new Entity();
@@ -290,6 +297,45 @@ describe('XrManager', function () {
 
             expect(inputSource.getPosition()).to.deep.equal(new Vec3(0, 0, -0.5));
             expect(inputSource.getOrigin()).to.deep.equal(new Vec3(0, 0, -0.5));
+        });
+
+    });
+
+    describe('#update', function () {
+
+        it('follows changes to the clip planes of the camera', async function () {
+            camera.camera.nearClip = 0.1;
+            camera.camera.farClip = 100;
+            expect(await startVr()).to.be.null;
+
+            const session = xr.sessions[0];
+            app.xr.update(createViewerFrame(session));
+
+            // the session is given the clip planes set on the camera
+            camera.camera.nearClip = 0.5;
+            camera.camera.farClip = 50;
+            expect(session.renderState.depthNear).to.equal(0.5);
+            expect(session.renderState.depthFar).to.equal(50);
+
+            // and the camera reports them once the views are projected with them
+            app.xr.update(createViewerFrame(session));
+            expect(camera.camera.nearClip).to.be.closeTo(0.5, 1e-4);
+            expect(camera.camera.farClip).to.be.closeTo(50, 1e-2);
+        });
+
+        it('derives the camera properties on the first frame of every session', async function () {
+            expect(await startVr()).to.be.null;
+            app.xr.update(createViewerFrame(xr.sessions[0]));
+            await endVr();
+
+            // a session on another camera, projected in the same way
+            const other = new Entity();
+            other.addComponent('camera', { fov: 45 });
+            app.root.addChild(other);
+
+            expect(await startVr(other)).to.be.null;
+            app.xr.update(createViewerFrame(xr.sessions[1]));
+            expect(other.camera.fov).to.be.closeTo(90, 1e-4);
         });
 
     });
