@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import { restore, spy } from 'sinon';
 
 import { XrView } from '../../../src/framework/xr/xr-view.js';
-import { PIXELFORMAT_R32F } from '../../../src/platform/graphics/constants.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -27,18 +26,16 @@ describe('XrView', function () {
         it('stops listening for the loss of the graphics device', function () {
             const onDeviceLost = spy(XrView.prototype, '_onDeviceLost');
 
-            // a view with a depth sensing texture listens for the loss of the graphics device
+            // a view with a camera image texture listens for the loss of the graphics device
             const manager = {
                 app,
                 views: {
-                    supportedColor: false,
-                    supportedDepth: true,
-                    availableDepth: true,
-                    depthGpuOptimized: false,
-                    depthPixelFormat: PIXELFORMAT_R32F
+                    supportedColor: true,
+                    availableColor: true,
+                    supportedDepth: false
                 }
             };
-            const view = new XrView(manager, { eye: 'none' }, 1);
+            const view = new XrView(manager, { eye: 'none', camera: { width: 4, height: 4 } }, 1);
 
             app.graphicsDevice.fire('devicelost');
             expect(onDeviceLost.callCount).to.equal(1);
