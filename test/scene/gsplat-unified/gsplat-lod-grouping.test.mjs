@@ -233,6 +233,20 @@ describe('LOD grouping', function () {
         inst.evaluateNodeDistances(makeCamera(), { lodBehindPenalty: 1, lodGroupThreshold: 0, splatBudget: 1000 });
         expect(inst.lodUnits).to.equal(null);
     });
+
+    it('releases the instances it no longer balances', function () {
+        const octree = new GSplatOctree('/scene/lod-meta.json', makeGridManifest(4));
+        const inst = makeInstance(octree);
+        inst.resolveLodRange();
+        inst.evaluateNodeDistances(makeCamera(), { lodBehindPenalty: 1, lodGroupThreshold: 0.1, splatBudget: 1000 });
+
+        const balancer = new GSplatBudgetBalancer();
+        balancer.balance(new Map([[inst.placement, inst]]), 1000, false);
+        expect(balancer._views.map(view => view.inst)).to.deep.equal([inst]);
+
+        balancer.balance(new Map(), 1000, false);
+        expect(balancer._views).to.deep.equal([]);
+    });
 });
 
 describe('GSplatOctreeInstance#applyLodChanges', function () {
@@ -349,6 +363,31 @@ describe('GSplatInfo draw ranges', function () {
             expect(otherLevel.intervalAllocIds).to.not.include(first.intervalAllocIds[r]);
         }
         expect(new Set(first.intervalAllocIds).size).to.equal(first.intervalAllocIds.length);
+    });
+
+    it('updates a range\'s colors by the distance of its nearest leaf', function () {
+        const octree = new GSplatOctree('/scene/lod-meta.json', makeGridManifest(4));
+        const inst = makeInstance(octree);
+        const { tree } = octree;
+        inst.nodeInfos.forEach((info) => {
+            info.worldDistanceSq = 100 * 100;
+        });
+
+        // one leaf near the camera, not the first of its range
+        const info = makeInfo(octree, inst, allLeaves(octree), 0, 4);
+        const r = info.intervalNodeIndices.findIndex(first => first === 4);
+        expect(tree.leafEnd[info.intervalBoundsIndices[r]]).to.be.above(5);
+        inst.nodeInfos[5].worldDistanceSq = 1;
+
+        expect(info.intervalDistanceSq(r)).to.equal(1);
+        for (let i = 0; i < info.intervals.length / 2; i++) {
+            if (i !== r) expect(info.intervalDistanceSq(i)).to.equal(100 * 100);
+        }
+
+        // unmerged, each leaf keeps its own distance
+        const single = makeInfo(octree, inst, allLeaves(octree), 0, 1);
+        expect(single.intervalDistanceSq(single.intervalNodeIndices.indexOf(4))).to.equal(100 * 100);
+        expect(single.intervalDistanceSq(single.intervalNodeIndices.indexOf(5))).to.equal(1);
     });
 
     it('culls each range against the bounds of the subtree it draws', function () {

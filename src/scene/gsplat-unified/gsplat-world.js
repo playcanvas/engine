@@ -1031,15 +1031,15 @@ class GSplatWorld {
                 _splatsWithSH.push(splat);
 
                 if (splat.nodeInfos) {
-                    // Per-node accumulation for octree splats, compared squared against the node's
-                    // squared distance
+                    // Per-interval accumulation for octree splats, compared squared against the
+                    // squared distance of the interval's nearest leaf
                     const nodeIndices = splat.intervalNodeIndices;
                     const ratioSq = ratio * ratio;
                     for (let j = 0; j < nodeIndices.length; j++) {
                         const nodeInfo = splat.nodeInfos[nodeIndices[j]];
                         const accumulated = nodeInfo.colorAccumulatedTranslation + translationDelta;
                         nodeInfo.colorAccumulatedTranslation = accumulated;
-                        if (refreshAll || accumulated * accumulated >= ratioSq * Math.max(1, nodeInfo.worldDistanceSq)) {
+                        if (refreshAll || accumulated * accumulated >= ratioSq * Math.max(1, splat.intervalDistanceSq(j))) {
                             _changedColorAllocIds.add(splat.intervalAllocIds[j]);
                             nodeInfo.colorAccumulatedTranslation = 0;
                             uploadedBlocks++;

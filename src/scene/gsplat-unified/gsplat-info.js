@@ -399,6 +399,27 @@ class GSplatInfo {
     }
 
     /**
+     * The smallest NodeInfo#worldDistanceSq among the leaves an octree interval draws. A merged
+     * range is refreshed as a whole, so its color updates follow its nearest leaf.
+     *
+     * @param {number} index - The interval index.
+     * @returns {number} The squared distance.
+     */
+    intervalDistanceSq(index) {
+        const nodeInfos = /** @type {NodeInfo[]} */ (this.nodeInfos);
+        const first = this.intervalNodeIndices[index];
+        let distanceSq = nodeInfos[first].worldDistanceSq;
+        if (this.octreeTree) {
+            const end = this.octreeTree.leafEnd[this.intervalBoundsIndices[index]];
+            for (let leaf = first + 1; leaf < end; leaf++) {
+                const d = nodeInfos[leaf].worldDistanceSq;
+                if (d < distanceSq) distanceSq = d;
+            }
+        }
+        return distanceSq;
+    }
+
+    /**
      * Builds the draw ranges of an octree file placement. Leaves are taken in tree order, and a run
      * of consecutive leaves whose splats follow one another in the file is drawn as few ranges as
      * possible: split into whole subtrees of at most {@link GSplatInfo#rangeMerge} leaves, each one

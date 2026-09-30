@@ -98,13 +98,6 @@ class GSplatBudgetBalancer {
     _views = [];
 
     /**
-     * Number of valid entries in {@link GSplatBudgetBalancer#_views}.
-     *
-     * @private
-     */
-    _viewCount = 0;
-
-    /**
      * Fills {@link GSplatBudgetBalancer#_views} for the instances of this balance.
      *
      * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
@@ -136,7 +129,8 @@ class GSplatBudgetBalancer {
             }
             v++;
         }
-        this._viewCount = v;
+        // drop the views of instances no longer balanced, so they can be collected
+        views.length = v;
     }
 
     /**
@@ -158,7 +152,7 @@ class GSplatBudgetBalancer {
     balance(octreeInstances, budget, limit) {
         this._prepareViews(octreeInstances);
         const views = this._views;
-        const viewCount = this._viewCount;
+        const viewCount = views.length;
 
         let nodeTotal = 0;
         let total = 0;
@@ -329,7 +323,7 @@ class GSplatBudgetBalancer {
         const scan = bin < 0 || bin === 0 || bin === LAST_BIN;
 
         let base = 0;
-        for (let v = 0; v < this._viewCount; v++) {
+        for (let v = 0; v < views.length; v++) {
             const { inst, table, units, count, counts, renderable } = views[v];
             const { bandLod, span } = table;
             const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
@@ -372,7 +366,7 @@ class GSplatBudgetBalancer {
      */
     _assignChainEnd(finest) {
         const views = this._views;
-        for (let v = 0; v < this._viewCount; v++) {
+        for (let v = 0; v < views.length; v++) {
             const { inst, table, units, count, renderable } = views[v];
             const { bandLod, span } = table;
             const offset = finest ? 0 : span - 1;
