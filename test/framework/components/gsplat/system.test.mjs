@@ -92,6 +92,7 @@ describe('GSplatComponentSystem', function () {
             const manager = {
                 hasPendingSort: false,
                 dirtySeen: [],
+                reconcile() {},
                 updateStreaming() {
                     this.dirtySeen.push(app.scene.gsplat.dirty);
                     return false;

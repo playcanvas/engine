@@ -268,10 +268,11 @@ class GSplatDirector {
      * {@link GSplatManager#updateStreaming}. Fires `frame:request` once when a render would show new
      * data (a new world-state version) or when a CPU-sort result is waiting to be applied.
      *
-     * Uses the cached `camerasMap` topology (built by {@link update} on the render path) — newly
-     * added cameras, layers, or gsplat components register on the next rendered frame, and cameras
-     * whose entity has lost its camera component since are skipped until that frame prunes them.
-     * Does no GPU draw work.
+     * Uses the cached `camerasMap` topology (built by {@link update} on the render path). Placement
+     * changes on layers that already have managers are reconciled here, so they reach the world state
+     * this frame. Newly added cameras, and layers without managers yet, register on the next rendered
+     * frame, and cameras whose entity has lost its camera component since are skipped until that
+     * frame prunes them. Does no GPU draw work.
      */
     updateStreaming() {
 
@@ -295,7 +296,19 @@ class GSplatDirector {
                 return;
             }
 
-            cameraData.layersMap.forEach((layerData) => {
+            cameraData.layersMap.forEach((layerData, layer) => {
+
+                // Reconcile placement changes made since the last render before the managers rebuild
+                // their world state from them below. Replacing a gsplat's asset destroys its old
+                // placement, and a rebuild from the last render's placements would drop it with its
+                // replacement not yet added, rendering a frame without the splat. The render path
+                // still consumes the flag to reconfigure the managers, and reconciling the same
+                // placements there again changes nothing.
+                if (layer.gsplatPlacementsDirty) {
+                    layerData.gsplatManager?.reconcile(layer.gsplatPlacements);
+                    layerData.gsplatManagerShadow?.reconcile(layer.gsplatShadowCasters);
+                }
+
                 const manager = layerData.gsplatManager;
                 if (manager) {
                     needRender = manager.updateStreaming(token) || needRender;
