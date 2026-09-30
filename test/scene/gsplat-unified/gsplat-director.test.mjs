@@ -109,3 +109,83 @@ describe('GSplatDirector#update', function () {
         expect(manager.reconciled).to.have.lengthOf(1);
     });
 });
+
+describe('GSplatDirector#updateStreaming', function () {
+
+    // A stand-in for the manager of one camera and layer. It logs the calls the streaming tick makes
+    // and records the placements it is reconciled with.
+    const makeManager = calls => ({
+        reconciled: [],
+        hasPendingSort: false,
+        reconcile(placements) {
+            calls.push('reconcile');
+            this.reconciled.push([...placements]);
+        },
+        updateStreaming() {
+            calls.push('updateStreaming');
+            return false;
+        }
+    });
+
+    // A camera rendering the layer, with its managers in place from an earlier render, and the
+    // layer's placement changes consumed by that render.
+    const makeScene = ({ shadowManager = false } = {}) => {
+        const director = new GSplatDirector({ on() {} }, {}, null, { fire() {} }, { frameUpdate() {} });
+        const layer = new Layer({ name: 'World' });
+        const calls = [];
+        const layerData = {
+            gsplatManager: makeManager(calls),
+            gsplatManagerShadow: shadowManager ? makeManager(calls) : null
+        };
+        const camera = { node: {} };
+        camera.node.camera = { camera };
+        director.camerasMap.set(camera, { layersMap: new Map([[layer, layerData]]) });
+        layer.gsplatPlacementsDirty = false;
+        return { director, layer, layerData, calls };
+    };
+
+    it('reconciles a replaced placement before the world state is rebuilt', function () {
+        const { director, layer, layerData, calls } = makeScene();
+        const replaced = {};
+        const replacement = {};
+
+        // the last render reconciled this placement
+        layer.addGSplatPlacement(replaced);
+        layer.gsplatPlacementsDirty = false;
+
+        // replacing a gsplat's asset removes its placement and adds a new one
+        layer.removeGSplatPlacement(replaced);
+        layer.addGSplatPlacement(replacement);
+
+        director.updateStreaming();
+        expect(calls).to.deep.equal(['reconcile', 'updateStreaming']);
+        expect(layerData.gsplatManager.reconciled.at(-1)).to.have.ordered.members([replacement]);
+    });
+
+    it('reconciles the shadow manager with the shadow casters', function () {
+        const { director, layer, layerData } = makeScene({ shadowManager: true });
+        const placement = {};
+        const caster = {};
+        layer.addGSplatPlacement(placement);
+        layer.addGSplatShadowCaster(caster);
+
+        director.updateStreaming();
+        expect(layerData.gsplatManager.reconciled.at(-1)).to.have.ordered.members([placement]);
+        expect(layerData.gsplatManagerShadow.reconciled.at(-1)).to.have.ordered.members([caster]);
+    });
+
+    it('leaves the change for the render path to consume', function () {
+        const { director, layer } = makeScene();
+        layer.addGSplatPlacement({});
+
+        director.updateStreaming();
+        expect(layer.gsplatPlacementsDirty).to.equal(true);
+    });
+
+    it('does not reconcile when nothing changed', function () {
+        const { director, calls } = makeScene();
+
+        director.updateStreaming();
+        expect(calls).to.deep.equal(['updateStreaming']);
+    });
+});
