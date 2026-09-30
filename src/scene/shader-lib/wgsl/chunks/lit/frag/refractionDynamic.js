@@ -1,5 +1,4 @@
 export default /* wgsl */`
-uniform matrix_model: mat4x4f;
 uniform material_invAttenuationDistance: f32;
 uniform material_attenuation: vec3f;
 
@@ -43,14 +42,9 @@ fn addRefraction(
 #endif
 ) {
 
-    // Extract scale from the model transform
-    var modelScale: vec3f;
-    modelScale.x = length(uniform.matrix_model[0].xyz);
-    modelScale.y = length(uniform.matrix_model[1].xyz);
-    modelScale.z = length(uniform.matrix_model[2].xyz);
-
-    // Calculate the refraction vector, scaled by the thickness and scale of the object
-    let scale: vec3f = thickness * modelScale;
+    // Calculate the refraction vector, scaled by the thickness and the scale of the model matrix,
+    // passed from the vertex shader
+    let scale: vec3f = thickness * vModelScale;
     var refractionVector = normalize(refract(-viewDir, worldNormal, refractionIndex)) * scale;
     var refraction = evalRefractionColor(refractionVector, gloss, refractionIndex);
 

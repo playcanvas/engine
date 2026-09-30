@@ -50,7 +50,6 @@ export default /* wgsl */`
 
         #ifdef LIT_TRANSFORMS
             var<private> matrix_viewProjection: mat4x4f;
-            var<private> matrix_model: mat4x4f;
         #endif
 
         // parallax

@@ -48,7 +48,6 @@ export default /* glsl */`
 
         #ifdef LIT_TRANSFORMS
             uniform mat4 matrix_viewProjection;
-            uniform mat4 matrix_model;
         #endif
 
         // parallax
