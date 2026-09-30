@@ -781,6 +781,15 @@ class MeshInstance {
         }
 
         if (this._mesh) {
+
+            // a mesh instance without a mesh is not drawn, so it releases its slot in the mesh
+            // instance storage, and gets a new one when drawn with a mesh again. Owners dropping a
+            // mesh instance without destroying it, such as the sprite component, clear its mesh
+            if (!mesh && this.storageSlot >= 0) {
+                this._mesh.device.meshInstanceStorage?.free(this.storageSlot);
+                this.storageSlot = -1;
+            }
+
             this._mesh.decRefCount();
         }
 
@@ -1199,13 +1208,7 @@ class MeshInstance {
         const mesh = this.mesh;
         if (mesh) {
 
-            // release the mesh instance storage slot
-            if (this.storageSlot >= 0) {
-                mesh.device.meshInstanceStorage?.free(this.storageSlot);
-                this.storageSlot = -1;
-            }
-
-            // this decreases ref count on the mesh
+            // this decreases ref count on the mesh, and releases the mesh instance storage slot
             this.mesh = null;
 
             // destroy mesh

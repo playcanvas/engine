@@ -1,11 +1,16 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
+import { Vec2 } from '../../../src/core/math/vec2.js';
+import { Vec4 } from '../../../src/core/math/vec4.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { UNUSED_UNIFORM_NAME } from '../../../src/platform/graphics/constants.js';
+import { Texture } from '../../../src/platform/graphics/texture.js';
 import { VertexBuffer } from '../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
+import { Sprite } from '../../../src/scene/sprite.js';
+import { TextureAtlas } from '../../../src/scene/texture-atlas.js';
 import { createApp } from '../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
@@ -208,6 +213,72 @@ describe('Mesh instance storage', function () {
         meshInstance.node = node;
         app.render();
         expectSlots([meshInstance, other.render.meshInstances[0]]);
+    });
+
+    it('releases the slot of a mesh instance losing its mesh, and gives it a new one when drawn with a mesh', function () {
+        if (!app.graphicsDevice.isWebGPU) this.skip();
+
+        const mat = material();
+        const [box] = addBoxes(1, mat);
+        app.render();
+
+        const meshInstanceStorage = app.graphicsDevice.meshInstanceStorage;
+        const meshInstance = box.render.meshInstances[0];
+        const mesh = meshInstance.mesh;
+        const slot = meshInstance.storageSlot;
+        expect(slot).to.be.at.least(0);
+
+        // hidden while it has no mesh, as a mesh instance without one cannot be culled
+        meshInstance.mesh = null;
+        meshInstance.visible = false;
+        expect(meshInstance.storageSlot).to.equal(-1);
+
+        // the released slot is the next one allocated
+        const [other] = addBoxes(1, mat);
+        app.render();
+        expect(other.render.meshInstances[0].storageSlot).to.equal(slot);
+
+        meshInstance.mesh = mesh;
+        meshInstance.visible = true;
+        app.render();
+        expect(meshInstance.storageSlot).to.be.at.least(0);
+        expect(meshInstance.storageSlot).not.to.equal(slot);
+        expectSlots([meshInstance, other.render.meshInstances[0]]);
+
+        // destroying it releases its slot once
+        const count = meshInstanceStorage.count;
+        const released = meshInstance.storageSlot;
+        box.destroy();
+        expect(meshInstanceStorage.allocate()).to.equal(released);
+        expect(meshInstanceStorage.count).to.equal(count);
+    });
+
+    it('releases the slot of a removed sprite, for the next sprite to reuse', function () {
+        if (!app.graphicsDevice.isWebGPU) this.skip();
+
+        const atlas = new TextureAtlas();
+        atlas.texture = new Texture(app.graphicsDevice, { width: 4, height: 4 });
+        atlas.frames = { 0: { rect: new Vec4(0, 0, 4, 4), pivot: new Vec2(0.5, 0.5), border: new Vec4() } };
+        const sprite = new Sprite(app.graphicsDevice, { atlas, frameKeys: ['0'], pixelsPerUnit: 1 });
+
+        const addSprite = () => {
+            const entity = new Entity('sprite');
+            entity.addComponent('sprite', { type: 'simple', sprite });
+            app.root.addChild(entity);
+            return entity;
+        };
+
+        const first = addSprite();
+        app.render();
+        const slot = first.sprite._meshInstance.storageSlot;
+        expect(slot).to.be.at.least(0);
+
+        // removing the component drops its mesh instance without destroying it
+        first.removeComponent('sprite');
+
+        const second = addSprite();
+        app.render();
+        expect(second.sprite._meshInstance.storageSlot).to.equal(slot);
     });
 
     it('reuses the slots of destroyed mesh instances', function () {
