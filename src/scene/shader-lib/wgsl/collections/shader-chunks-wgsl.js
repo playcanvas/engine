@@ -80,6 +80,7 @@ import litShaderArgsPS from '../chunks/standard/frag/litShaderArgs.js';
 import litShaderCorePS from '../chunks/standard/frag/litShaderCore.js';
 import litShadowMainPS from '../chunks/lit/frag/pass-shadow/litShadowMain.js';
 import ltcPS from '../chunks/lit/frag/ltc.js';
+import meshInstanceStorageVS from '../chunks/common/vert/meshInstanceStorage.js';
 import metalnessPS from '../chunks/standard/frag/metalness.js';
 import msdfPS from '../chunks/common/frag/msdf.js';
 import metalnessModulatePS from '../chunks/lit/frag/metalnessModulate.js';
@@ -260,6 +261,7 @@ const shaderChunksWGSL = {
     litUserMainEndPS: '',  // empty chunk allowing user to add custom code
     litUserMainEndVS: '',  // empty chunk allowing user to add custom code
     ltcPS,
+    meshInstanceStorageVS,
     metalnessPS,
     metalnessModulatePS,
     morphPS,

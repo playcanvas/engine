@@ -36,6 +36,7 @@ import { UniformBuffer } from './uniform-buffer.js';
  * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
  * @import { DynamicBuffers } from './dynamic-buffers.js'
  * @import { GpuProfiler } from './gpu-profiler.js'
+ * @import { MeshInstanceStorage } from './mesh-instance-storage.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
@@ -243,6 +244,26 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsIndirectDraw = false;
+
+    /**
+     * True if the vertex shaders can read the model and normal matrices of a mesh instance from
+     * a storage buffer the device holds, see {@link GraphicsDevice#meshInstanceStorage} (WebGPU
+     * only).
+     *
+     * @type {boolean}
+     * @readonly
+     * @ignore
+     */
+    supportsMeshInstanceStorage = false;
+
+    /**
+     * The storage of the per mesh instance data read by the vertex shaders, or null when not
+     * supported, see {@link GraphicsDevice#supportsMeshInstanceStorage}.
+     *
+     * @type {MeshInstanceStorage|null}
+     * @ignore
+     */
+    meshInstanceStorage = null;
 
     /**
      * True if the device supports compute shaders.
@@ -893,6 +914,10 @@ class GraphicsDevice extends EventHandler {
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        // after the destroy event, whose listeners may free the slots of their mesh instances
+        this.meshInstanceStorage?.destroy();
+        this.meshInstanceStorage = null;
 
         this._destroyed = true;
     }
@@ -1556,6 +1581,8 @@ class GraphicsDevice extends EventHandler {
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is cleared. Defaults to true.
+     * @param {number} [firstInstance] - The first instance of a draw without draw commands,
+     * which offsets the instance index of the vertex shader. Ignored on WebGL. Defaults to 0.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
@@ -1567,7 +1594,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true, firstInstance = 0) {
         Debug.assert(false);
     }
 

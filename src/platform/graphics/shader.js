@@ -36,6 +36,15 @@ class Shader {
     meshUniformBufferFormat;
 
     /**
+     * True when the mesh uniform buffer holds no uniforms of the shader, only a placeholder, as
+     * WebGPU requires the buffer bound. Its draws can share one buffer, bound once per pass.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    meshUniformBufferEmpty = false;
+
+    /**
      * Format of the bind group for the mesh bind group.
      *
      * @type {BindGroupFormat}
@@ -53,6 +62,17 @@ class Shader {
      * @ignore
      */
     viewBindGroupFormat = null;
+
+    /**
+     * True when the vertex shader reads the model and normal matrices of the mesh instance from the
+     * mesh instance storage of the device, see {@link GraphicsDevice#meshInstanceStorage}, indexed
+     * by the instance index. The draws of such a shader pass the slot of the mesh instance as the
+     * first instance.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    usesMeshInstanceStorage = false;
 
     /**
      * The attributes that this shader code uses. The location is the key, the value is the name.

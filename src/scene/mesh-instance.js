@@ -12,6 +12,7 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SHADERDEF_DRAWCOMMANDS,
     SHADOW_CASCADE_ALL,
     instanceLightmapUniformNames
 } from './constants.js';
@@ -317,11 +318,10 @@ class MeshInstance {
     _drawBucket = 127;
 
     /**
-     * The graph node defining the transform for this instance.
-     *
      * @type {GraphNode}
+     * @private
      */
-    node;
+    _node;
 
     /**
      * Enable rendering for this mesh instance. Use visible property to enable/disable rendering
@@ -542,6 +542,25 @@ class MeshInstance {
     _aabbMeshVer = -1;
 
     /**
+     * The slot of the mesh instance in the mesh instance storage of the device, or -1 when it has
+     * none, see {@link GraphicsDevice#meshInstanceStorage}. Allocated on the first draw with a
+     * shader reading it.
+     *
+     * @type {number}
+     * @ignore
+     */
+    storageSlot = -1;
+
+    /**
+     * The transform version of the node the slot was last written for, see
+     * {@link Renderer#updateStorageSlot}.
+     *
+     * @type {number}
+     * @ignore
+     */
+    storageSlotVersion = -1;
+
+    /**
      * @type {BoundingBox|null}
      * @private
      */
@@ -670,6 +689,31 @@ class MeshInstance {
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
+    }
+
+    /**
+     * Sets the graph node defining the transform for this instance.
+     *
+     * @type {GraphNode}
+     */
+    set node(node) {
+        if (node !== this._node) {
+            this._node = node;
+
+            // the transform versions cached for the previous node do not apply to this one, whose
+            // version counter can hold the same value
+            this._aabbVer = -1;
+            this.storageSlotVersion = -1;
+        }
+    }
+
+    /**
+     * Gets the graph node defining the transform for this instance.
+     *
+     * @type {GraphNode}
+     */
+    get node() {
+        return this._node;
     }
 
     /**
@@ -1155,6 +1199,12 @@ class MeshInstance {
         const mesh = this.mesh;
         if (mesh) {
 
+            // release the mesh instance storage slot
+            if (this.storageSlot >= 0) {
+                mesh.device.meshInstanceStorage?.free(this.storageSlot);
+                this.storageSlot = -1;
+            }
+
             // this decreases ref count on the mesh
             this.mesh = null;
 
@@ -1192,6 +1242,7 @@ class MeshInstance {
                 cmd?.destroy();
             }
             this.drawCommands = null;
+            this._updateShaderDefs(this._shaderDefs & ~SHADERDEF_DRAWCOMMANDS);
         }
     }
 
@@ -1386,6 +1437,11 @@ class MeshInstance {
         }
 
         if (!cmd) {
+
+            // the draw commands set the first instance of their draws, which the shaders reading the
+            // mesh instance storage would take for the slot
+            this._updateShaderDefs(this._shaderDefs | SHADERDEF_DRAWCOMMANDS);
+
             // multi-draw on WebGL needs the index size of the current mesh index buffer
             let indexSizeBytes = 0;
             if (multiDraw) {

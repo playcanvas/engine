@@ -269,6 +269,8 @@ class WebgpuShader {
         shader.meshUniformBufferFormat = processed.meshUniformBufferFormat;
         shader.meshBindGroupFormat = processed.meshBindGroupFormat;
         shader.viewBindGroupFormat = processed.viewBindGroupFormat;
+        shader.usesMeshInstanceStorage = processed.usesMeshInstanceStorage;
+        shader.meshUniformBufferEmpty = processed.meshUniformBufferEmpty;
         this._ownedMeshBindGroupFormat = processed.meshBindGroupFormat;
         shader.attributes = processed.attributes;
     }

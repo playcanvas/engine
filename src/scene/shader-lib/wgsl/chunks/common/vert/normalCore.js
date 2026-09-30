@@ -34,9 +34,15 @@ fn getLocalNormal(vertexNormal: vec3f) -> vec3f {
     return localNormal;
 }
 
+// the normal matrix of the mesh instance storage, which holds it in every pass
+#if defined(MESH_INSTANCE_STORAGE) && !defined(SKIN)
+    fn getNormalMatrix(modelMatrix: mat4x4f) -> mat3x3f {
+        return getStoredNormalMatrix();
+    }
+
 // the normal matrix is the upper 3x3 of the model matrix, exact for a uniform scale, for skinned, batched
 // and instanced meshes, which have no normal matrix of their own, and in the shadow pass, which sets none
-#if defined(SKIN) || defined(BATCH) || defined(INSTANCING) || defined(SHADOW_PASS)
+#elif defined(SKIN) || defined(BATCH) || defined(INSTANCING) || defined(SHADOW_PASS)
     fn getNormalMatrix(modelMatrix: mat4x4f) -> mat3x3f {
         return mat3x3f(modelMatrix[0].xyz, modelMatrix[1].xyz, modelMatrix[2].xyz);
     }
