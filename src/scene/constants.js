@@ -754,7 +754,7 @@ export const ambientSrcNames = {
     [AMBIENTSRC_CONSTANT]: 'CONSTANT'
 };
 
-// 16 bits for shader defs
+// the shader defines of a mesh instance: flags in the lowest 24 bits, see SHADERDEF_MASK_SHIFT
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;
 export const SHADERDEF_UV0 = 4;
@@ -771,6 +771,9 @@ export const SHADERDEF_LMAMBIENT = 4096; // lightmaps contain ambient
 export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
 export const SHADERDEF_BATCH = 16384;
 export const SHADERDEF_INSTANCEINDEX = 32768; // the draws use the instance index themselves
+
+// the shift of the light mask of a mesh instance, in the top 8 bits of its shader defines
+export const SHADERDEF_MASK_SHIFT = 24;
 
 /**
  * The shadow map is not to be updated.
