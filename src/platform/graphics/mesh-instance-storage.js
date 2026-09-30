@@ -61,10 +61,22 @@ class MeshInstanceStorage {
     data = new Float32Array(0);
 
     /**
+     * The slots which can be allocated.
+     *
      * @type {number[]}
      * @private
      */
     _freeSlots = [];
+
+    /**
+     * The slots released since the last submit, which can be allocated once it is done. The
+     * draws recorded before it may still use them, and the data of the slots is uploaded once
+     * for all of these draws.
+     *
+     * @type {number[]}
+     * @private
+     */
+    _releasedSlots = [];
 
     /**
      * A bit per slot, set when the slot was written since the last upload, which walks them in
@@ -104,9 +116,10 @@ class MeshInstanceStorage {
      */
     restoreContext() {
 
-        // the upload covers the slots written since the last one
+        // the upload covers the slots written since the last one, and no draws are pending
         this._dirtyBits.fill(0);
         this._dirty = false;
+        this._recycleReleasedSlots();
 
         if (this.count > 0) {
             this._writeRange(0, this.count - 1);
@@ -134,8 +147,8 @@ class MeshInstanceStorage {
      * @param {number} slot - The slot.
      */
     free(slot) {
-        Debug.assert(slot >= 0 && slot < this.count && !this._freeSlots.includes(slot), `Freeing an invalid mesh instance storage slot ${slot}`);
-        this._freeSlots.push(slot);
+        Debug.assert(slot >= 0 && slot < this.count && !this._freeSlots.includes(slot) && !this._releasedSlots.includes(slot), `Freeing an invalid mesh instance storage slot ${slot}`);
+        this._releasedSlots.push(slot);
     }
 
     /**
@@ -159,15 +172,45 @@ class MeshInstanceStorage {
         data[o + 25] = normal[7];
         data[o + 26] = normal[8];
 
+        // all draws recorded before the next submit read the data written last, so a slot is
+        // expected to be written once between the submits
+        Debug.call(() => {
+            if (this._dirtyBits[slot >> 5] & (1 << (slot & 31))) {
+                Debug.warnOnce('The transform of a node changed after its mesh instance was drawn in this frame. On WebGPU all draws of a mesh instance in a frame use its last transform, so transforms need to be final before the frame renders.');
+            }
+        });
+
         this._dirtyBits[slot >> 5] |= 1 << (slot & 31);
         this._dirty = true;
     }
 
     /**
      * Uploads the slots written since the last upload, merging slots close together into one
-     * write. Called by the device before it submits its command buffers.
+     * write, and makes the slots released since available for allocation. Called by the device
+     * before it submits its command buffers, which then run after the upload.
      */
     upload() {
+        this._uploadDirtySlots();
+        this._recycleReleasedSlots();
+    }
+
+    /**
+     * Makes the released slots available for allocation, once no draws recorded before their
+     * release are pending.
+     *
+     * @private
+     */
+    _recycleReleasedSlots() {
+        const released = this._releasedSlots;
+        while (released.length > 0) {
+            this._freeSlots.push(released.pop());
+        }
+    }
+
+    /**
+     * @private
+     */
+    _uploadDirtySlots() {
         if (!this._dirty) {
             return;
         }
@@ -236,7 +279,7 @@ class MeshInstanceStorage {
 
         const old = this.buffer;
         if (old) {
-            this.upload();
+            this._uploadDirtySlots();
             old.destroy();
         }
 

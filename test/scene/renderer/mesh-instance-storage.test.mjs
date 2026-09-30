@@ -8,6 +8,7 @@ import { UNUSED_UNIFORM_NAME } from '../../../src/platform/graphics/constants.js
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { VertexBuffer } from '../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
+import { Layer } from '../../../src/scene/layer.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { Sprite } from '../../../src/scene/sprite.js';
 import { TextureAtlas } from '../../../src/scene/texture-atlas.js';
@@ -233,7 +234,8 @@ describe('Mesh instance storage', function () {
         meshInstance.visible = false;
         expect(meshInstance.storageSlot).to.equal(-1);
 
-        // the released slot is the next one allocated
+        // the released slot is the next one allocated, once the frame using it was submitted
+        app.render();
         const [other] = addBoxes(1, mat);
         app.render();
         expect(other.render.meshInstances[0].storageSlot).to.equal(slot);
@@ -249,6 +251,7 @@ describe('Mesh instance storage', function () {
         const count = meshInstanceStorage.count;
         const released = meshInstance.storageSlot;
         box.destroy();
+        app.render();
         expect(meshInstanceStorage.allocate()).to.equal(released);
         expect(meshInstanceStorage.count).to.equal(count);
     });
@@ -275,10 +278,55 @@ describe('Mesh instance storage', function () {
 
         // removing the component drops its mesh instance without destroying it
         first.removeComponent('sprite');
+        app.render();
 
         const second = addSprite();
         app.render();
         expect(second.sprite._meshInstance.storageSlot).to.equal(slot);
+    });
+
+    it('keeps a slot released during a frame for the draws recorded before, until the frame is submitted', function () {
+        if (!app.graphicsDevice.isWebGPU) this.skip();
+
+        // a layer rendered after the world layer
+        const lateLayer = new Layer({ name: 'Late' });
+        app.scene.layers.push(lateLayer);
+        const camera = app.root.findByName('camera');
+        camera.camera.layers = camera.camera.layers.concat(lateLayer.id);
+
+        const mat = material();
+        const [early] = addBoxes(1, mat);
+        app.render();
+
+        const earlyMeshInstance = early.render.meshInstances[0];
+        const slot = earlyMeshInstance.storageSlot;
+        const expected = expectedSlot(earlyMeshInstance.node);
+
+        // a box first drawn in the late layer, after the early box loses its mesh in the same frame
+        const late = new Entity('late');
+        late.addComponent('render', { type: 'box', material: mat, layers: [lateLayer.id] });
+        late.setPosition(-3, 1, 0);
+        app.root.addChild(late);
+
+        app.scene.on('postrender:layer', (cameraComponent, layer, transparent) => {
+            if (layer.name === 'World' && !transparent && earlyMeshInstance.mesh) {
+                earlyMeshInstance.mesh = null;
+                earlyMeshInstance.visible = false;
+            }
+        });
+        app.render();
+
+        const lateMeshInstance = late.render.meshInstances[0];
+        expect(lateMeshInstance.storageSlot).to.be.at.least(0);
+        expect(lateMeshInstance.storageSlot).not.to.equal(slot);
+
+        // the draw of the early box reads its own matrix, the late box its own
+        expectSlots([lateMeshInstance]);
+        const data = gpuCopies.get(app.graphicsDevice.meshInstanceStorage.buffer.impl);
+        const uploaded = data.slice(slot * 28, slot * 28 + 16);
+        for (let i = 0; i < 16; i++) {
+            expect(uploaded[i]).to.be.closeTo(expected[i], 1e-5);
+        }
     });
 
     it('reuses the slots of destroyed mesh instances', function () {
@@ -292,6 +340,7 @@ describe('Mesh instance storage', function () {
         const count = meshInstanceStorage.count;
         const freed = boxes.slice(0, 4).map(box => box.render.meshInstances[0].storageSlot);
         boxes.slice(0, 4).forEach(box => box.destroy());
+        app.render();
 
         const added = addBoxes(4, mat);
         app.render();

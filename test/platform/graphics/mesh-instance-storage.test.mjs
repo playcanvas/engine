@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import sinon from 'sinon';
 
+import { Debug } from '../../../src/core/debug.js';
 import { MeshInstanceStorage } from '../../../src/platform/graphics/mesh-instance-storage.js';
 
 // the floats of a slot, see MeshInstanceStorage
@@ -102,6 +104,36 @@ describe('MeshInstanceStorage', function () {
         writes.length = 0;
         storage.upload();
         expect(writes).to.deep.equal([]);
+    });
+
+    it('reuses a released slot only after the next upload, which the draws recorded before it read', function () {
+        const storage = create(4);
+        storage.free(2);
+        expect(storage.allocate()).to.equal(4);
+
+        storage.upload();
+        expect(storage.allocate()).to.equal(2);
+    });
+
+    it('warns when a slot is written again before the upload', function () {
+        const warn = sinon.stub(Debug, 'warnOnce');
+        try {
+            const storage = create(4);
+            storage.write(1, model, normal);
+            storage.write(2, model, normal);
+            expect(warn.called).to.equal(false);
+
+            storage.write(1, model, normal);
+            expect(warn.calledOnce).to.equal(true);
+
+            // a new frame
+            warn.resetHistory();
+            storage.upload();
+            storage.write(1, model, normal);
+            expect(warn.called).to.equal(false);
+        } finally {
+            warn.restore();
+        }
     });
 
     it('uploads all slots after the device is restored, and drops the pending writes', function () {
