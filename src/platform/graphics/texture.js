@@ -1216,20 +1216,27 @@ class Texture {
             this
         );
 
-        this._lockedMode = options.mode;
-        this._lockedLevel = options.level;
-
-        const levels = this.cubemap ? this._levels[options.face] : this._levels;
-        if (!levels[options.level]) {
+        // cubemap levels are stored as [mip][face]
+        const levels = this._cubemap ? (this._levels[options.level] ??= [null, null, null, null, null, null]) : this._levels;
+        const index = this._cubemap ? options.face : options.level;
+        if (!levels[index]) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
             const depth = Math.max(1, this._depth >> options.level);
             const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, depth, this._format));
-            levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
+            levels[index] = new (getPixelFormatArrayType(this._format))(data);
         }
 
-        return levels[options.level];
+        // WebGL only re-uploads the cubemap faces flagged as updated
+        if (this._cubemap && options.mode === TEXTURELOCK_WRITE) {
+            this._levelsUpdated[0][options.face] = true;
+        }
+
+        this._lockedMode = options.mode;
+        this._lockedLevel = options.level;
+
+        return levels[index];
     }
 
     /**
