@@ -26,6 +26,7 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightList } from '../lighting/light-list.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
+import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 
 /**
@@ -613,6 +614,7 @@ class ShadowRenderer {
                 material.setParameters(device);
                 renderer.setupMaterialBindGroup(material);
                 renderer.alphaTestId.setValue(material.alphaTest);
+                Debug.call(() => warnViewUniformMaterialParameters(material, this.viewUniformFormat));
 
             } else {
 
@@ -627,6 +629,7 @@ class ShadowRenderer {
                 renderer.setupMaterialOverrideBindGroup(meshInstance);
             }
             meshInstance.setParameters(device);
+            Debug.call(() => warnViewUniformMeshInstanceParameters(meshInstance, this.viewUniformFormat));
             prevMeshInstance = meshInstance;
 
             const shaderInstance = meshInstance.getShaderInstance(shadowPass, _noLights, scene,

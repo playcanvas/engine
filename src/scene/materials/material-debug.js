@@ -5,6 +5,7 @@ import { Tracing } from '../../core/tracing.js';
 /**
  * @import { Material } from './material.js'
  * @import { MeshInstance, MeshInstanceParameter } from '../mesh-instance.js'
+ * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js'
  */
 
 // Debug-only helpers for Material and for the mesh instance overrides of its uniform buffer. They
@@ -203,7 +204,50 @@ const warnMutatedOverrides = (meshInstance, names) => {
     Debug.warnOnce(`MeshInstance${where} (material '${material.name}', id ${material.id}) changed the array value of parameter${plural} ${list} in place after it was applied to the material uniform buffer; the change is not applied until setParameter() is called again with the value.`, meshInstance);
 };
 
+/**
+ * Warns about the parameters of a material named like a uniform of the view uniform buffer of the
+ * pass. The renderer uploads that buffer once per pass, before any draw, so a value set on the
+ * material is ignored.
+ *
+ * @param {Material} material - The material.
+ * @param {UniformBufferFormat|undefined} viewUniformFormat - The format of the view uniform buffer
+ * of the pass.
+ * @ignore
+ */
+const warnViewUniformMaterialParameters = (material, viewUniformFormat) => {
+    if (viewUniformFormat) {
+        for (const name in material.parameters) {
+            if (viewUniformFormat.get(name)) {
+                Debug.warnOnce(`Material#setParameter: '${name}' is a uniform the renderer supplies once per pass, and a value set per material is ignored.`, material);
+            }
+        }
+    }
+};
+
+/**
+ * Warns about the parameters of a mesh instance named like a uniform of the view uniform buffer
+ * of the pass, which the renderer uploads once per pass, so a value set on the mesh instance is
+ * ignored.
+ *
+ * @param {MeshInstance} meshInstance - The mesh instance.
+ * @param {UniformBufferFormat|undefined} viewUniformFormat - The format of the view uniform buffer
+ * of the pass.
+ * @ignore
+ */
+const warnViewUniformMeshInstanceParameters = (meshInstance, viewUniformFormat) => {
+    if (viewUniformFormat) {
+        const parameters = meshInstance._scopeParameters;
+        for (let i = 0; i < parameters.length; i++) {
+            const name = parameters[i].name;
+            if (viewUniformFormat.get(name)) {
+                Debug.warnOnce(`MeshInstance#setParameter: '${name}' is a uniform the renderer supplies once per pass, and a value set per mesh instance is ignored.`, meshInstance);
+            }
+        }
+    }
+};
+
 export {
     initMaterialDebug, recordMaterialChange, getUnappliedMaterialProperties, warnUnappliedMaterialProperties,
-    initMeshInstanceDebug, recordAppliedOverrides, getMutatedOverrides, warnMutatedOverrides
+    initMeshInstanceDebug, recordAppliedOverrides, getMutatedOverrides, warnMutatedOverrides,
+    warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters
 };
