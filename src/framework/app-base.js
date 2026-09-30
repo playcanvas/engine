@@ -90,6 +90,18 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 let app = null;
 
 /**
+ * The version of the contract under which an app announces itself to a devtools hook, defined on
+ * the global object under `Symbol.for('playcanvas.inspector')`. The hook's `register(app, info)` is
+ * called once an app is initialized, with its graphics device, scene, root entity and component
+ * systems in place, and `unregister(app)` as it is destroyed. The symbol is looked up
+ * at those two points only, not when the module loads, so the module stays free of side effects.
+ *
+ * @type {number}
+ * @ignore
+ */
+const DEVTOOLS_PROTOCOL = 1;
+
+/**
  * AppBase represents the base functionality for all PlayCanvas applications. It is responsible for
  * initializing and managing the application lifecycle. It coordinates core engine systems such
  * as:
@@ -648,6 +660,15 @@ class AppBase extends EventHandler {
 
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
+        }
+
+        // announce the initialized app to a devtools extension, such as the PlayCanvas Inspector,
+        // which defines this hook before the page runs. Without the hook this is a single lookup.
+        // A broken or outdated extension must not break the app, so its failures are contained
+        try {
+            globalThis[Symbol.for('playcanvas.inspector')]?.register?.(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
+        } catch (e) {
+            Debug.warn('The devtools hook failed to register the app.', e);
         }
     }
 
@@ -1780,6 +1801,12 @@ class AppBase extends EventHandler {
         if (this._inFrameUpdate) {
             this._destroyRequested = true;
             return;
+        }
+
+        try {
+            globalThis[Symbol.for('playcanvas.inspector')]?.unregister?.(this);
+        } catch (e) {
+            Debug.warn('The devtools hook failed to unregister the app.', e);
         }
 
         const canvasId = this.graphicsDevice.canvas.id;
