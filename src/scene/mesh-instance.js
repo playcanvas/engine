@@ -12,7 +12,7 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SHADERDEF_INSTANCEINDEX,
+    SHADERDEF_INSTANCEINDEX, SHADERDEF_MASK_SHIFT,
     SHADOW_CASCADE_ALL,
     instanceLightmapUniformNames
 } from './constants.js';
@@ -635,11 +635,12 @@ class MeshInstance {
     _shaderCache = new Map();
 
     /**
-     * 2 byte toggles, 2 bytes light mask; Default value is no toggles and mask = MASK_AFFECT_DYNAMIC
+     * The shader defines: 24 bits of flags, and the light mask in the top 8 bits, see
+     * SHADERDEF_MASK_SHIFT. Defaults to no flags and a mask of MASK_AFFECT_DYNAMIC.
      *
      * @private
      */
-    _shaderDefs = MASK_AFFECT_DYNAMIC << 16;
+    _shaderDefs = MASK_AFFECT_DYNAMIC << SHADERDEF_MASK_SHIFT;
 
     /**
      * @type {CalculateSortDistanceCallback|null}
@@ -1164,14 +1165,15 @@ class MeshInstance {
 
     /**
      * Sets the light mask of this mesh instance: which {@link LightComponent}s light it. The value
-     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`.
-     * Defaults to `MASK_AFFECT_DYNAMIC`.
+     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`, and
+     * only its lowest 8 bits are used. Defaults to `MASK_AFFECT_DYNAMIC`.
      *
      * @type {number}
      */
     set mask(val) {
-        const toggles = this._shaderDefs & 0x0000FFFF;
-        this._updateShaderDefs(toggles | (val << 16));
+        Debug.assert((val & ~0xff) === 0, `MeshInstance#mask ${val} does not fit the 8 bits of the light mask`);
+        const flags = this._shaderDefs & ((1 << SHADERDEF_MASK_SHIFT) - 1);
+        this._updateShaderDefs(flags | ((val & 0xff) << SHADERDEF_MASK_SHIFT));
     }
 
     /**
@@ -1180,7 +1182,7 @@ class MeshInstance {
      * @type {number}
      */
     get mask() {
-        return this._shaderDefs >> 16;
+        return this._shaderDefs >>> SHADERDEF_MASK_SHIFT;
     }
 
     /**

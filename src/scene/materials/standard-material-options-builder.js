@@ -12,7 +12,7 @@ import {
     DITHER_NONE,
     PARALLAX_OCCLUSION,
     PARALLAX_OFFSET,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH, SHADERDEF_MASK_SHIFT,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
@@ -397,7 +397,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         if (stdMat.useLighting) {
-            const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);

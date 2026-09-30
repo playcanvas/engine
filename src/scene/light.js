@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { math } from '../core/math/math.js';
 import { Color } from '../core/math/color.js';
 import { Mat4 } from '../core/math/mat4.js';
@@ -420,6 +421,11 @@ class Light {
     }
 
     set mask(value) {
+
+        // the mask of a mesh instance holds 8 bits, so only these can match, see MeshInstance#mask
+        Debug.assert((value & ~0xff) === 0, `Light#mask ${value} does not fit the 8 bits of the light mask`);
+        value &= 0xff;
+
         if (this._mask !== value) {
             this._mask = value;
             this.updateKey();
