@@ -1,8 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
+import { Debug } from '../../src/core/debug.js';
 import { Entity } from '../../src/framework/entity.js';
-import { MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE, SHADERDEF_INSTANCEINDEX } from '../../src/scene/constants.js';
+import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE, SHADERDEF_INSTANCEINDEX } from '../../src/scene/constants.js';
+import { Light } from '../../src/scene/light.js';
 import { LitMaterialOptionsBuilder } from '../../src/scene/materials/lit-material-options-builder.js';
 import { ShaderMaterial } from '../../src/scene/materials/shader-material.js';
 import { StandardMaterial } from '../../src/scene/materials/standard-material.js';
@@ -49,6 +51,17 @@ describe('MeshInstance#mask', function () {
         expect(meshInstance.mask).to.equal(MASK_BAKE | 0x80);
     });
 
+    it('keeps the lowest 8 bits of a larger value, and asserts in debug builds', function () {
+        const assert = sinon.stub(Debug, 'assert');
+        try {
+            meshInstance.mask = MASK_AFFECT_DYNAMIC | 0x100;
+            expect(meshInstance.mask).to.equal(MASK_AFFECT_DYNAMIC);
+            expect(assert.calledWith(false)).to.equal(true);
+        } finally {
+            assert.restore();
+        }
+    });
+
     it('does not share a bit with the highest flag', function () {
         const highestFlag = 1 << 23;
         meshInstance._updateShaderDefs(meshInstance._shaderDefs | highestFlag);
@@ -57,6 +70,52 @@ describe('MeshInstance#mask', function () {
         meshInstance.mask = 0xff;
         expect(meshInstance._shaderDefs & highestFlag).to.equal(highestFlag);
         expect(meshInstance.mask).to.equal(0xff);
+    });
+});
+
+describe('Light#mask', function () {
+
+    it('keeps the lowest 8 bits, as the mask of a mesh instance does, and asserts in debug builds', function () {
+        const device = createGraphicsDevice({ width: 1, height: 1 });
+        const light = new Light(device, false);
+        light.type = LIGHTTYPE_DIRECTIONAL;
+
+        light.mask = MASK_AFFECT_LIGHTMAPPED | 0x80;
+        expect(light.mask).to.equal(MASK_AFFECT_LIGHTMAPPED | 0x80);
+
+        const assert = sinon.stub(Debug, 'assert');
+        try {
+            light.mask = MASK_AFFECT_DYNAMIC | 0x100;
+            expect(light.mask).to.equal(MASK_AFFECT_DYNAMIC);
+            expect(assert.calledWith(false)).to.equal(true);
+        } finally {
+            assert.restore();
+            light.destroy();
+            device.destroy();
+        }
+    });
+});
+
+describe('Lit material options light mask', function () {
+
+    afterEach(function () {
+        sinon.restore();
+    });
+
+    const lightMaskOf = (objDefs) => {
+        const selectLights = sinon.stub(LitMaterialOptionsBuilder, 'selectLights').returns([]);
+        const litOptions = {};
+        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, { useLighting: true }, { clusteredLightingEnabled: true }, objDefs, undefined);
+        selectLights.restore();
+        return { mask: selectLights.args[0][1], lightMaskDynamic: litOptions.lightMaskDynamic };
+    };
+
+    it('selects no lights for a mask of 0, even without shader define flags', function () {
+        expect(lightMaskOf(0)).to.deep.equal({ mask: 0, lightMaskDynamic: false });
+    });
+
+    it('selects the dynamic lights without the shader defines of a mesh instance', function () {
+        expect(lightMaskOf(undefined)).to.deep.equal({ mask: MASK_AFFECT_DYNAMIC, lightMaskDynamic: true });
     });
 });
 
