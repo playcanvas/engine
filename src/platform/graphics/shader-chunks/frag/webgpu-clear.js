@@ -1,5 +1,5 @@
-// Shader used by WebgpuClearRenderer to clear the color and / or depth of the viewport area, by
-// rendering a fullscreen quad.
+// Shader used by WebgpuClearRenderer to clear the color, depth and / or stencil of the viewport
+// area, by rendering a fullscreen quad. The stencil is written by the stencil state, not the shader.
 import { BINDGROUP_MESH_UB } from '../../constants.js';
 
 export default /* wgsl */`
