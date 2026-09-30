@@ -1067,10 +1067,60 @@ class Light {
 
             const scl = Math.abs(Math.sin(angle * math.DEG_TO_RAD) * range);
 
-            box.center.set(0, -range * 0.5, 0);
-            box.halfExtents.set(scl, range * 0.5, scl);
+            // The spot shines down the normalized -Y axis of its world transform, and its range and
+            // angle are not scaled. A non-uniform scale on the light or a parent skews that
+            // transform, so the box is placed in an orthonormal frame built around the Y axis.
+            const m = node.getWorldTransform().data;
 
-            box.setFromTransformedAabb(box, node.getWorldTransform(), true);
+            let yx = m[4];
+            let yy = m[5];
+            let yz = m[6];
+            const yLength = Math.sqrt(yx * yx + yy * yy + yz * yz);
+            if (yLength > 0) {
+                yx /= yLength;
+                yy /= yLength;
+                yz /= yLength;
+            }
+
+            // X axis with its component along Y removed
+            const dot = m[0] * yx + m[1] * yy + m[2] * yz;
+            let xx = m[0] - dot * yx;
+            let xy = m[1] - dot * yy;
+            let xz = m[2] - dot * yz;
+            let xLengthSq = xx * xx + xy * xy + xz * xz;
+            if (xLengthSq < 1e-12) {
+                // X is scaled to zero or lies along Y, so use any axis perpendicular to Y
+                if (Math.abs(yx) < 0.9) {
+                    xx = 0;
+                    xy = yz;
+                    xz = -yy;
+                } else {
+                    xx = -yz;
+                    xy = 0;
+                    xz = yx;
+                }
+                xLengthSq = xx * xx + xy * xy + xz * xz;
+            }
+            if (xLengthSq > 0) {
+                const xLength = Math.sqrt(xLengthSq);
+                xx /= xLength;
+                xy /= xLength;
+                xz /= xLength;
+            }
+
+            // Z = X x Y
+            const zx = xy * yz - xz * yy;
+            const zy = xz * yx - xx * yz;
+            const zz = xx * yy - xy * yx;
+
+            // box of half size (scl, range / 2, scl) centered range / 2 down the axis
+            const halfRange = range * 0.5;
+            box.center.set(m[12] - yx * halfRange, m[13] - yy * halfRange, m[14] - yz * halfRange);
+            box.halfExtents.set(
+                (Math.abs(xx) + Math.abs(zx)) * scl + Math.abs(yx) * halfRange,
+                (Math.abs(xy) + Math.abs(zy)) * scl + Math.abs(yy) * halfRange,
+                (Math.abs(xz) + Math.abs(zz)) * scl + Math.abs(yz) * halfRange
+            );
 
         } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());
