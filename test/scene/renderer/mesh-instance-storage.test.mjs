@@ -300,12 +300,12 @@ describe('Mesh instance storage', function () {
         expect(added.map(box => box.render.meshInstances[0].storageSlot).sort()).to.deep.equal(freed.sort());
     });
 
-    it('keeps the uniforms for hardware instancing and draw commands, which set the first instance', function () {
+    it('keeps the uniforms for instancing and draw commands, which use the instance index themselves', function () {
         if (!app.graphicsDevice.isWebGPU) this.skip();
 
         const device = app.graphicsDevice;
         const mat = material();
-        const [instanced, multiDraw] = addBoxes(2, mat);
+        const [instanced, multiDraw, attributeless] = addBoxes(3, mat);
 
         const instancedMeshInstance = instanced.render.meshInstances[0];
         const matrices = new Float32Array(2 * 16);
@@ -319,9 +319,15 @@ describe('Mesh instance storage', function () {
         cmd.add(0, multiDrawMeshInstance.mesh.primitive[0].count, 1, 0);
         cmd.update(1);
 
+        // instancing without a vertex buffer, whose shaders index the instance data by the instance
+        // index
+        const attributelessMeshInstance = attributeless.render.meshInstances[0];
+        attributelessMeshInstance.setInstancing(true);
+        attributelessMeshInstance.instancingCount = 2;
+
         app.render();
 
-        for (const meshInstance of [instancedMeshInstance, multiDrawMeshInstance]) {
+        for (const meshInstance of [instancedMeshInstance, multiDrawMeshInstance, attributelessMeshInstance]) {
             const shaders = shadersOf(meshInstance);
             expect(shaders.length).to.be.above(0);
             for (const shader of shaders) {

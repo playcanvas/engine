@@ -12,7 +12,7 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SHADERDEF_DRAWCOMMANDS,
+    SHADERDEF_INSTANCEINDEX,
     SHADOW_CASCADE_ALL,
     instanceLightmapUniformNames
 } from './constants.js';
@@ -1245,8 +1245,23 @@ class MeshInstance {
                 cmd?.destroy();
             }
             this.drawCommands = null;
-            this._updateShaderDefs(this._shaderDefs & ~SHADERDEF_DRAWCOMMANDS);
+            this._updateShaderDefs(this._applyInstanceIndexDef(this._shaderDefs));
         }
+    }
+
+    /**
+     * Returns the shader defines with {@link SHADERDEF_INSTANCEINDEX} set when the draws of this
+     * mesh instance use the instance index for their own data: draw commands set the first
+     * instance of their draws, and instancing without a vertex buffer indexes the data of the
+     * instances by it. The shaders of other draws read the mesh instance storage by it.
+     *
+     * @param {number} shaderDefs - The shader defines.
+     * @returns {number} The shader defines with the flag updated.
+     * @private
+     */
+    _applyInstanceIndexDef(shaderDefs) {
+        const usesInstanceIndex = !!this.drawCommands || (!!this.instancingData && !this.instancingData.vertexBuffer);
+        return usesInstanceIndex ? (shaderDefs | SHADERDEF_INSTANCEINDEX) : (shaderDefs & ~SHADERDEF_INSTANCEINDEX);
     }
 
     // shader uniform names for the lightmaps of a mesh instance
@@ -1350,9 +1365,9 @@ class MeshInstance {
             this.cull = true;
         }
 
-        this._updateShaderDefs(vertexBuffer instanceof VertexBuffer ?
+        this._updateShaderDefs(this._applyInstanceIndexDef(vertexBuffer instanceof VertexBuffer ?
             (this._shaderDefs | SHADERDEF_INSTANCING) :
-            (this._shaderDefs & ~SHADERDEF_INSTANCING));
+            (this._shaderDefs & ~SHADERDEF_INSTANCING)));
     }
 
     /**
@@ -1443,7 +1458,7 @@ class MeshInstance {
 
             // the draw commands set the first instance of their draws, which the shaders reading the
             // mesh instance storage would take for the slot
-            this._updateShaderDefs(this._shaderDefs | SHADERDEF_DRAWCOMMANDS);
+            this._updateShaderDefs(this._applyInstanceIndexDef(this._shaderDefs));
 
             // multi-draw on WebGL needs the index size of the current mesh index buffer
             let indexSizeBytes = 0;
