@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
 import {
-    FUNC_LESSEQUAL, FUNC_ALWAYS, FUNC_NOTEQUAL
+    FUNC_LESSEQUAL, FUNC_ALWAYS, FUNC_GREATER, FUNC_NOTEQUAL
 } from '../../../src/platform/graphics/constants.js';
 import { DepthState } from '../../../src/platform/graphics/depth-state.js';
 
@@ -37,6 +37,28 @@ describe('DepthState', function () {
             ds.test = false;
             expect(ds.func).to.equal(FUNC_ALWAYS);
             expect(ds.test).to.equal(false);
+        });
+
+        it('enabling an enabled test keeps the depth function', function () {
+            const ds = new DepthState(FUNC_GREATER);
+            const key = ds.key;
+            ds.test = true;
+            expect(ds.func).to.equal(FUNC_GREATER);
+            expect(ds.key).to.equal(key);
+        });
+
+        it('enabling a disabled test sets the default depth function', function () {
+            const ds = new DepthState(FUNC_ALWAYS);
+            ds.test = true;
+            expect(ds.func).to.equal(FUNC_LESSEQUAL);
+            expect(ds.equals(DepthState.DEFAULT)).to.equal(true);
+        });
+
+        it('disabling the test keeps depth writes', function () {
+            const ds = new DepthState(FUNC_GREATER, true);
+            ds.test = false;
+            expect(ds.write).to.equal(true);
+            expect(ds.equals(DepthState.WRITEDEPTH)).to.equal(true);
         });
 
     });

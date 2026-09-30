@@ -56,6 +56,9 @@ const _primitiveTopology = [
     undefined           // PRIMITIVE_TRIFAN
 ];
 
+// WebGPU applies a depth bias only to triangles, and requires it to be zero for other topologies
+const _usesDepthBias = topology => topology === 'triangle-list' || topology === 'triangle-strip';
+
 const _blendOperation = [
     'add',              // BLENDEQUATION_ADD
     'subtract',         // BLENDEQUATION_SUBTRACT
@@ -141,7 +144,10 @@ class CacheEntry {
 }
 
 class WebgpuRenderPipeline extends WebgpuPipeline {
-    lookupHashes = new Uint32Array(17);
+    lookupHashes = new Uint32Array(20);
+
+    // a float view of the lookup hashes, to store the float values by their bits
+    lookupHashesFloat = new Float32Array(this.lookupHashes.buffer);
 
     constructor(device) {
         super(device);
@@ -214,12 +220,18 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         // state is what needs to take part in the hash
         const alphaToCoverageEnabled = this.getAlphaToCoverage(alphaToCoverage, renderTarget);
 
+        // the depth bias takes part in the hash as WebGPU applies it - only to triangles, and with
+        // its constant part truncated to an integer - so that the depth states differing only in
+        // what WebGPU ignores share a pipeline
+        const primitiveTopology = _primitiveTopology[primitiveType];
+        const usesDepthBias = _usesDepthBias(primitiveTopology);
+
         // render pipeline unique hash
-        const lookupHashes = this.lookupHashes;
+        const { lookupHashes, lookupHashesFloat } = this;
         lookupHashes[0] = primitiveType;
         lookupHashes[1] = shader.id;
         lookupHashes[2] = cullMode;
-        lookupHashes[3] = depthState.key;
+        lookupHashes[3] = depthState.func;
         lookupHashes[4] = blendState.key;
         lookupHashes[5] = vertexFormat0?.renderingHash ?? 0;
         lookupHashes[6] = vertexFormat1?.renderingHash ?? 0;
@@ -233,6 +245,9 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         lookupHashes[14] = ibFormat ?? 0;
         lookupHashes[15] = frontFace;
         lookupHashes[16] = alphaToCoverageEnabled ? 1 : 0;
+        lookupHashes[17] = depthState.write ? 1 : 0;
+        lookupHashes[18] = usesDepthBias ? Math.trunc(depthState.depthBias) : 0;
+        lookupHashesFloat[19] = usesDepthBias ? depthState.depthBiasSlope : 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline
@@ -249,7 +264,6 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
         }
 
         // no match or a hash collision, so create a new pipeline
-        const primitiveTopology = _primitiveTopology[primitiveType];
         Debug.assert(primitiveTopology, 'Unsupported primitive topology', primitive);
 
         // pipeline layout
@@ -369,8 +383,9 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
                 depthStencil.depthWriteEnabled = depthState.write;
                 depthStencil.depthCompare = _compareFunction[depthState.func];
 
-                const biasAllowed = primitiveTopology === 'triangle-list' || primitiveTopology === 'triangle-strip';
-                depthStencil.depthBias = biasAllowed ? depthState.depthBias : 0;
+                // GPUDepthBias is an integer, which the pipeline hash relies on as well
+                const biasAllowed = _usesDepthBias(primitiveTopology);
+                depthStencil.depthBias = biasAllowed ? Math.trunc(depthState.depthBias) : 0;
                 depthStencil.depthBiasSlopeScale = biasAllowed ? depthState.depthBiasSlope : 0;
             } else {
                 // if render target does not have depth buffer

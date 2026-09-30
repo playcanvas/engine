@@ -2,7 +2,6 @@ import { TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Tracing } from '../../core/tracing.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { LayerRenderStep } from './layer-render-step.js';
@@ -408,8 +407,7 @@ class RenderPassForward extends RenderPass {
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
             // it requires (the properties are part of render pipeline on WebGPU anyway)
-            device.setBlendState(BlendState.NOBLEND);
-            device.setStencilState(null, null);
+            device.setDrawStates();
             device.setAlphaToCoverage(false);
 
             // layer post render event
