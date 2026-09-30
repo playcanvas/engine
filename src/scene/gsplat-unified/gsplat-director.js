@@ -383,6 +383,9 @@ class GSplatDirector {
         let gsplatCount = 0;
         let bufferCopyUploaded = 0;
         let bufferCopyTotal = 0;
+        let lodUpdateNodes = 0;
+        let lodUpdateTime = 0;
+        let drawRanges = 0;
 
         // for all cameras in the composition
         const camerasComponents = comp.cameras;
@@ -440,11 +443,16 @@ class GSplatDirector {
                         gsplatCount += layerData.gsplatManager.update();
                         bufferCopyUploaded += layerData.gsplatManager.bufferCopyUploaded;
                         bufferCopyTotal += layerData.gsplatManager.bufferCopyTotal;
+                        lodUpdateNodes += layerData.gsplatManager.lodUpdateNodes;
+                        lodUpdateTime += layerData.gsplatManager.lodUpdateTime;
+                        drawRanges += layerData.gsplatManager.drawRanges;
                     }
                     if (layerData.gsplatManagerShadow) {
                         gsplatCount += layerData.gsplatManagerShadow.update();
                         bufferCopyUploaded += layerData.gsplatManagerShadow.bufferCopyUploaded;
                         bufferCopyTotal += layerData.gsplatManagerShadow.bufferCopyTotal;
+                        lodUpdateNodes += layerData.gsplatManagerShadow.lodUpdateNodes;
+                        lodUpdateTime += layerData.gsplatManagerShadow.lodUpdateTime;
                     }
                 }
             }
@@ -454,6 +462,9 @@ class GSplatDirector {
         this.renderer._gsplatCount = gsplatCount;
         this.renderer._gsplatBufferCopy = bufferCopyTotal > 0 ?
             (bufferCopyUploaded / bufferCopyTotal * 100) : 0;
+        this.renderer._gsplatLodNodes = lodUpdateNodes;
+        this.renderer._gsplatLodTime = lodUpdateTime;
+        this.renderer._gsplatDrawRanges = drawRanges;
 
         // clear dirty flags
         this.gsplat.frameEnd();

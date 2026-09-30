@@ -1,6 +1,23 @@
 /**
  * @import { GSplatOctreeInstance } from './gsplat-octree-instance.js'
  * @import { GSplatPlacement } from './gsplat-placement.js'
+ * @import { GSplatLodTable } from './gsplat-lod-table.js'
+ */
+
+/**
+ * What one octree instance chooses levels for in a balance: its leaves, or with LOD grouping the
+ * units of its cut through the tree - see GSplatOctreeInstance#lodUnits.
+ *
+ * @typedef {object} BalanceView
+ * @property {GSplatOctreeInstance} inst - The instance.
+ * @property {GSplatLodTable} table - Its selection table.
+ * @property {Int32Array|null} units - Tree node of each unit, or null to choose per leaf.
+ * @property {number} count - Number of choosers: units, or leaves.
+ * @property {Int32Array|Float64Array} counts - Band splat counts, rows indexed by leaf, or by
+ * tree node for units.
+ * @property {Uint8Array|null} renderable - Per tree node, whether it has anything renderable, for
+ * units. Leaves read their table's bandLod instead.
+ * @ignore
  */
 
 import { NUM_SCALE_BINS, NUM_SUB_BINS } from './constants.js';
@@ -73,8 +90,64 @@ class GSplatBudgetBalancer {
     _position = new Float64Array(0);
 
     /**
+     * Per instance of the current balance, what it chooses levels for. Reused across balances.
+     *
+     * @type {BalanceView[]}
+     * @private
+     */
+    _views = [];
+
+    /**
+     * Number of valid entries in {@link GSplatBudgetBalancer#_views}.
+     *
+     * @private
+     */
+    _viewCount = 0;
+
+    /**
+     * Fills {@link GSplatBudgetBalancer#_views} for the instances of this balance.
+     *
+     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
+     * @private
+     */
+    _prepareViews(octreeInstances) {
+        const views = this._views;
+        let v = 0;
+        for (const [, inst] of octreeInstances) {
+            const table = /** @type {GSplatLodTable} */ (inst.lodTable);
+            const units = inst.lodUnits ?? null;
+            let view = views[v];
+            if (!view) {
+                view = { inst, table, units, count: 0, counts: table.bandCount, renderable: null };
+                views[v] = view;
+            }
+            view.inst = inst;
+            view.table = table;
+            view.units = units;
+            if (units) {
+                const groups = table.getGroupCounts(inst.octree.tree);
+                view.count = inst.lodUnitCount;
+                view.counts = groups.bandCount;
+                view.renderable = groups.renderable;
+            } else {
+                view.count = inst.nodeInfos.length;
+                view.counts = table.bandCount;
+                view.renderable = null;
+            }
+            v++;
+        }
+        this._viewCount = v;
+    }
+
+    /**
      * Assigns a LOD level to every node of every instance, keeping the total splat count within
      * budget. Reads NodeInfo#worldDistanceSq, writes NodeInfo#optimalLod.
+     *
+     * An instance grouped for this update (GSplatOctreeInstance#lodUnits set) is balanced over the
+     * units of its cut instead of its leaves: each unit is a tree node, with its distance in
+     * GSplatOctreeInstance#lodUnitDistanceSq and its leaves' band splat counts summed, and the
+     * band it is given is written to GSplatOctreeInstance#lodUnitBand for the instance to hand to
+     * its leaves. Nothing else changes - a unit is placed on the scale axis exactly as a leaf is.
      *
      * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - Map of
      * GSplatOctreeInstance objects.
@@ -83,24 +156,40 @@ class GSplatBudgetBalancer {
      * false when detail is raised to fill it.
      */
     balance(octreeInstances, budget, limit) {
+        this._prepareViews(octreeInstances);
+        const views = this._views;
+        const viewCount = this._viewCount;
+
         let nodeTotal = 0;
         let total = 0;
         let finestTotal = 0;
-        for (const [, inst] of octreeInstances) {
-            nodeTotal += inst.octree.nodes.length;
-            total += inst.lodTable.totalCoarsestCount;
-            finestTotal += inst.lodTable.totalFinestCount;
+        for (let v = 0; v < viewCount; v++) {
+            const { table, units, count, counts, renderable } = views[v];
+            nodeTotal += count;
+            if (units) {
+                // the table covers the whole tree, so total only the units of the cut
+                const span = table.span;
+                for (let u = 0; u < count; u++) {
+                    const row = units[u] * span;
+                    if (!(/** @type {Uint8Array} */ (renderable))[units[u]]) continue;
+                    total += counts[row + span - 1];
+                    finestTotal += counts[row];
+                }
+            } else {
+                total += table.totalCoarsestCount;
+                finestTotal += table.totalFinestCount;
+            }
         }
         if (nodeTotal === 0) return;
 
         // Nothing to fit when not even the coarsest scene fits, or in target mode when the finest
         // does.
         if (total >= budget) {
-            this._assignChainEnd(octreeInstances, false);
+            this._assignChainEnd(false);
             return;
         }
         if (!limit && finestTotal <= budget) {
-            this._assignChainEnd(octreeInstances, true);
+            this._assignChainEnd(true);
             return;
         }
 
@@ -113,17 +202,20 @@ class GSplatBudgetBalancer {
         // splats at the configured distances, which is all there is to do when those fit.
         let unitTotal = 0;
         let base = 0;
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, bandCount, span } = inst.lodTable;
+        for (let v = 0; v < viewCount; v++) {
+            const { inst, table, units, count, counts, renderable } = views[v];
+            const { bandLod, span } = table;
             const nodeInfos = inst.nodeInfos;
+            const unitDistanceSq = inst.lodUnitDistanceSq;
             const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
             const offset = (-Math.log(inst.placement.lodBaseDistance) - LOG_SCALE_MIN) * BIN_SCALE - (inst.rangeMin - 1) * step;
 
-            for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                const row = n * span;
-                if (bandLod[row] < 0) continue;
+            for (let n = 0; n < count; n++) {
+                const node = units ? units[n] : n;
+                const row = node * span;
+                if (units ? !(/** @type {Uint8Array} */ (renderable))[node] : bandLod[row] < 0) continue;
 
-                const dSq = nodeInfos[n].worldDistanceSq;
+                const dSq = units ? unitDistanceSq[n] : nodeInfos[n].worldDistanceSq;
                 const p = Math.log(dSq > MIN_DISTANCE_SQ ? dSq : MIN_DISTANCE_SQ) * HALF_BIN_SCALE + offset;
                 position[base + n] = p;
 
@@ -134,10 +226,10 @@ class GSplatBudgetBalancer {
                         if ((t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0)) >= UNIT_SCALE_BIN) break;
                         b--;
                     }
-                    unitTotal += bandCount[row + b];
+                    unitTotal += counts[row + b];
                 }
             }
-            base += nodeInfos.length;
+            base += count;
         }
 
         // The cut along the scale axis: every switch point in a bin below `cutBin` is taken, and
@@ -150,7 +242,7 @@ class GSplatBudgetBalancer {
 
             // Histogram pass: each node's switch points with the splat change each one makes.
             histogram.fill(0, 0, NUM_SCALE_BINS);
-            this._accumulate(octreeInstances, -1);
+            this._accumulate(-1);
 
             // Sweep: take whole bins from the coarsest end while the total fits. Limit mode never
             // goes past a scale of 1, the configured distances.
@@ -165,7 +257,7 @@ class GSplatBudgetBalancer {
             // The bin that did not fit as a whole is split into sub-bins and swept the same way.
             if (cutBin < stopBin) {
                 histogram.fill(0, 0, NUM_SUB_BINS);
-                this._accumulate(octreeInstances, cutBin);
+                this._accumulate(cutBin);
                 while (cutSub < NUM_SUB_BINS) {
                     const next = total + histogram[cutSub];
                     if (next > budget) break;
@@ -178,15 +270,22 @@ class GSplatBudgetBalancer {
         // Assignment pass: step each node finer while its next switch point is taken. Switch
         // points rise as bands get finer, so the first one not taken ends the walk.
         base = 0;
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, span } = inst.lodTable;
+        for (let v = 0; v < viewCount; v++) {
+            const { inst, table, units, count, renderable } = views[v];
+            const { bandLod, span } = table;
             const nodeInfos = inst.nodeInfos;
+            const unitBand = inst.lodUnitBand;
             const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
 
-            for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                const row = n * span;
-                if (bandLod[row] < 0) {
-                    nodeInfos[n].optimalLod = -1;
+            for (let n = 0; n < count; n++) {
+                const node = units ? units[n] : n;
+                const row = node * span;
+                if (units ? !(/** @type {Uint8Array} */ (renderable))[node] : bandLod[row] < 0) {
+                    if (units) {
+                        unitBand[n] = -1;
+                    } else {
+                        nodeInfos[n].optimalLod = -1;
+                    }
                     continue;
                 }
 
@@ -202,9 +301,13 @@ class GSplatBudgetBalancer {
                     }
                     b--;
                 }
-                nodeInfos[n].optimalLod = bandLod[row + b];
+                if (units) {
+                    unitBand[n] = b;
+                } else {
+                    nodeInfos[n].optimalLod = bandLod[row + b];
+                }
             }
-            base += nodeInfos.length;
+            base += count;
         }
     }
 
@@ -212,13 +315,13 @@ class GSplatBudgetBalancer {
      * Adds every switch point's splat change to the histogram: by bin when `bin` is negative, or
      * by sub-bin for the switch points inside `bin` only.
      *
-     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
      * @param {number} bin - The bin to split into sub-bins, or -1 for the whole axis.
      * @private
      */
-    _accumulate(octreeInstances, bin) {
+    _accumulate(bin) {
         const position = this._position;
         const histogram = this._histogram;
+        const views = this._views;
 
         // Bands lie more than a bin apart - the multiplier is at least 1.2, about two bins - so a
         // node has at most one switch point in a given bin and it is found directly. The end
@@ -226,15 +329,16 @@ class GSplatBudgetBalancer {
         const scan = bin < 0 || bin === 0 || bin === LAST_BIN;
 
         let base = 0;
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, bandCount, span } = inst.lodTable;
-            const len = inst.nodeInfos.length;
+        for (let v = 0; v < this._viewCount; v++) {
+            const { inst, table, units, count, counts, renderable } = views[v];
+            const { bandLod, span } = table;
             const step = Math.log(inst.placement.lodMultiplier) * BIN_SCALE;
             const invStep = 1 / step;
 
-            for (let n = 0; n < len; n++) {
-                const row = n * span;
-                if (bandLod[row] < 0) continue;
+            for (let n = 0; n < count; n++) {
+                const node = units ? units[n] : n;
+                const row = node * span;
+                if (units ? !(/** @type {Uint8Array} */ (renderable))[node] : bandLod[row] < 0) continue;
                 const p = position[base + n];
 
                 // the candidate and its neighbor, in case rounding lands the floor one short
@@ -243,7 +347,7 @@ class GSplatBudgetBalancer {
                 if (b < 1) b = 1;
 
                 for (; b < end; b++) {
-                    const delta = bandCount[row + b - 1] - bandCount[row + b];
+                    const delta = counts[row + b - 1] - counts[row + b];
                     if (delta === 0) continue;
                     const t = p - b * step;
                     const tb = t < 0 ? 0 : (t >= NUM_SCALE_BINS ? LAST_BIN : t | 0);
@@ -255,7 +359,7 @@ class GSplatBudgetBalancer {
                     }
                 }
             }
-            base += len;
+            base += count;
         }
     }
 
@@ -263,17 +367,24 @@ class GSplatBudgetBalancer {
      * Puts every node at one end of its LOD chain, for the cases where the budget decides
      * everything - either the whole scene fits at its finest, or not even the coarsest scene does.
      *
-     * @param {Map<GSplatPlacement, GSplatOctreeInstance>} octreeInstances - The octree instances.
      * @param {boolean} finest - True for the finest band, false for the coarsest.
      * @private
      */
-    _assignChainEnd(octreeInstances, finest) {
-        for (const [, inst] of octreeInstances) {
-            const { bandLod, span } = inst.lodTable;
-            const nodeInfos = inst.nodeInfos;
+    _assignChainEnd(finest) {
+        const views = this._views;
+        for (let v = 0; v < this._viewCount; v++) {
+            const { inst, table, units, count, renderable } = views[v];
+            const { bandLod, span } = table;
             const offset = finest ? 0 : span - 1;
-            for (let n = 0, len = nodeInfos.length; n < len; n++) {
-                nodeInfos[n].optimalLod = bandLod[n * span + offset];
+            if (units) {
+                for (let u = 0; u < count; u++) {
+                    inst.lodUnitBand[u] = (/** @type {Uint8Array} */ (renderable))[units[u]] ? offset : -1;
+                }
+            } else {
+                const nodeInfos = inst.nodeInfos;
+                for (let n = 0; n < count; n++) {
+                    nodeInfos[n].optimalLod = bandLod[n * span + offset];
+                }
             }
         }
     }

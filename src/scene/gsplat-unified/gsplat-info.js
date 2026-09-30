@@ -26,6 +26,12 @@ let subDrawDataArray = new Uint32Array(0);
 // Temporary full-range interval used by updateSubDraws when this.intervals is empty
 const _fullRangeInterval = [0, 0];
 
+// Temporaries reused to build octree draw ranges
+/** @type {number[]} */
+const _rangeLeaves = [];
+/** @type {number[]} */
+const _rangeStack = [];
+
 
 /**
  * Represents a snapshot of gsplat state for rendering. This class captures all necessary data
@@ -99,8 +105,8 @@ class GSplatInfo {
 
     /**
      * Per-interval allocation IDs for persistent tracking. Parallel to intervals: for octree
-     * splats each entry is the NodeInfo.allocId for that interval's node; for non-octree
-     * splats this has one entry equal to this.allocId.
+     * splats each entry is the id of that range, see GSplatOctreeInstance#rangeAllocId; for
+     * non-octree splats this has one entry equal to this.allocId.
      *
      * @type {number[]}
      */
@@ -108,11 +114,21 @@ class GSplatInfo {
 
     /**
      * Per-interval octree node indices. Parallel to intervals: for octree splats each entry
-     * is the nodeIndex for that interval. Empty for non-octree splats.
+     * is the leaf the interval starts at, whose NodeInfo tracks the interval's color updates.
+     * Empty for non-octree splats.
      *
      * @type {number[]}
      */
     intervalNodeIndices = [];
+
+    /**
+     * Per-interval index of its bounding sphere among this splat's bounds entries. Parallel to
+     * intervals for octree splats: the tree node the interval covers when the octree's tree is
+     * known (see {@link GSplatInfo#octreeTree}), else its leaf. Empty for non-octree splats.
+     *
+     * @type {number[]}
+     */
+    intervalBoundsIndices = [];
 
     /** @type {Mat4} */
     previousWorldTransform = new Mat4();
@@ -159,6 +175,23 @@ class GSplatInfo {
      * @type {NodeInfo[]|null}
      */
     nodeInfos = null;
+
+    /**
+     * The octree's spatial tree, when known. Consecutive leaves drawn from this file are then
+     * merged into draw ranges of whole subtrees, and bounds entries cover every tree node rather
+     * than only the leaves, so each range is culled against the bounds of the subtree it draws.
+     * Null for non-octree splats, and for octree splats drawn one interval per leaf.
+     *
+     * @type {import('./gsplat-octree.js').GSplatOctreeTree|null}
+     */
+    octreeTree = null;
+
+    /**
+     * Largest number of leaves merged into one draw range - see GSplatParams#lodRangeMerge.
+     *
+     * @type {number}
+     */
+    rangeMerge = 1;
 
     /** @type {number} */
     colorAccumulatedTranslation = 0;
@@ -224,8 +257,11 @@ class GSplatInfo {
      * renders. Only shader configuration and dirty state may be read live, via accessor closures.
      * @param {GSplatOctreeNode[]|null} [octreeNodes] - Octree nodes for bounds lookup.
      * @param {NodeInfo[]|null} [nodeInfos] - Per-node info array from octree instance.
+     * @param {import('./gsplat-octree.js').GSplatOctreeTree|null} [octreeTree] - The octree's tree,
+     * to merge consecutive leaves into draw ranges of whole subtrees.
+     * @param {number} [rangeMerge] - Largest number of leaves merged into one draw range.
      */
-    constructor(device, resource, placement, octreeNodes = null, nodeInfos = null) {
+    constructor(device, resource, placement, octreeNodes = null, nodeInfos = null, octreeTree = null, rangeMerge = 1) {
         Debug.assert(resource);
         Debug.assert(placement);
 
@@ -249,6 +285,8 @@ class GSplatInfo {
         this._getDirtySource = () => placement.parentPlacement ?? placement;
         this.octreeNodes = octreeNodes;
         this.nodeInfos = nodeInfos;
+        this.octreeTree = octreeNodes ? octreeTree : null;
+        this.rangeMerge = Math.max(1, rangeMerge | 0);
 
         this.updateIntervals(placement.intervals);
     }
@@ -258,6 +296,7 @@ class GSplatInfo {
         this.intervalOffsets.length = 0;
         this.intervalAllocIds.length = 0;
         this.intervalNodeIndices.length = 0;
+        this.intervalBoundsIndices.length = 0;
         this.subDrawTexture?.destroy();
         this.subDrawTexture = null;
         this.subDrawCount = 0;
@@ -291,9 +330,9 @@ class GSplatInfo {
     }
 
     /**
-     * Updates the flattened intervals array from placement intervals. Intervals are sorted and
-     * stored as half-open pairs [start, end). Called once from the constructor; sub-draw data
-     * is built later in setLayout when the work buffer texture width is known.
+     * Updates the flattened intervals array from placement intervals. Intervals are stored as
+     * half-open pairs [start, end). Called once from the constructor; sub-draw data is built later
+     * in setLayout when the work buffer texture width is known.
      *
      * @param {Map<number, Vec2>} intervals - Map of node index to inclusive [x, y] intervals.
      */
@@ -303,7 +342,15 @@ class GSplatInfo {
         this.intervals.length = 0;
         this.intervalAllocIds.length = 0;
         this.intervalNodeIndices.length = 0;
+        this.intervalBoundsIndices.length = 0;
         this.activeSplats = resource.numSplats;
+
+        // Octree with its tree: draw ranges of whole subtrees, bounds for every tree node
+        if (intervals.size > 0 && this.octreeTree) {
+            this.activeSplats = this._buildRanges(intervals);
+            this.numBoundsEntries = this.octreeTree.count;
+            return;
+        }
 
         // If placement has intervals defined
         if (intervals.size > 0) {
@@ -320,6 +367,7 @@ class GSplatInfo {
                 if (this.nodeInfos) {
                     this.intervalAllocIds.push(this.nodeInfos[nodeIndex].allocId);
                     this.intervalNodeIndices.push(nodeIndex);
+                    this.intervalBoundsIndices.push(nodeIndex);
                 }
             }
 
@@ -348,6 +396,77 @@ class GSplatInfo {
                 this.intervals[1] = this.activeSplats;
             }
         }
+    }
+
+    /**
+     * Builds the draw ranges of an octree file placement. Leaves are taken in tree order, and a run
+     * of consecutive leaves whose splats follow one another in the file is drawn as few ranges as
+     * possible: split into whole subtrees of at most {@link GSplatInfo#rangeMerge} leaves, each one
+     * range culled against its subtree's bounds. Whole subtrees keep culling as tight as per leaf -
+     * a subtree's bounds are the union of its leaves' - where an arbitrary run could span a large
+     * part of the scene.
+     *
+     * Each range takes the allocation id of the leaf and level it starts at, see
+     * GSplatOctreeInstance#rangeAllocId, so a range whose contents change is copied to the work
+     * buffer again, and an unchanged one keeps its allocation.
+     *
+     * @param {Map<number, Vec2>} intervals - Map of leaf index to inclusive [x, y] intervals.
+     * @returns {number} Total number of splats in the ranges.
+     * @private
+     */
+    _buildRanges(intervals) {
+        const { leafStart, leafEnd, childStart, childCount, children } = /** @type {import('./gsplat-octree.js').GSplatOctreeTree} */ (this.octreeTree);
+        const nodeInfos = /** @type {NodeInfo[]} */ (this.nodeInfos);
+        const cap = this.rangeMerge;
+        const level = this.lodIndex;
+
+        const leaves = _rangeLeaves;
+        leaves.length = 0;
+        for (const leaf of intervals.keys()) {
+            leaves.push(leaf);
+        }
+        leaves.sort((a, b) => a - b);
+        const inst = /** @type {import('./gsplat-octree-instance.js').GSplatOctreeInstance} */ (nodeInfos[leaves[0]].inst);
+
+        let total = 0;
+        const stack = _rangeStack;
+        for (let i = 0; i < leaves.length;) {
+            // a run of consecutive leaves whose splats follow one another in the file
+            let j = i + 1;
+            while (j < leaves.length && leaves[j] === leaves[j - 1] + 1) {
+                const previous = /** @type {Vec2} */ (intervals.get(leaves[j - 1]));
+                const current = /** @type {Vec2} */ (intervals.get(leaves[j]));
+                if (current.x !== previous.y + 1) break;
+                j++;
+            }
+            const runStart = leaves[i];
+            const runEnd = leaves[j - 1] + 1;
+
+            // the run's maximal subtrees, walking down from the root
+            stack.length = 0;
+            stack.push(0);
+            while (stack.length > 0) {
+                const n = /** @type {number} */ (stack.pop());
+                const ls = leafStart[n];
+                const le = leafEnd[n];
+                if (le <= runStart || ls >= runEnd || le === ls) continue;
+                if (runStart <= ls && le <= runEnd && (le - ls <= cap || childCount[n] === 0)) {
+                    const start = /** @type {Vec2} */ (intervals.get(ls)).x;
+                    const end = /** @type {Vec2} */ (intervals.get(le - 1)).y + 1;
+                    this.intervals.push(start, end);
+                    this.intervalAllocIds.push(inst.rangeAllocId(ls, level));
+                    this.intervalNodeIndices.push(ls);
+                    this.intervalBoundsIndices.push(n);
+                    total += end - start;
+                    continue;
+                }
+                for (let k = childCount[n] - 1; k >= 0; k--) {
+                    stack.push(children[childStart[n] + k]);
+                }
+            }
+            i = j;
+        }
+        return total;
     }
 
     /**
@@ -499,7 +618,27 @@ class GSplatInfo {
      * @param {number} offset - The float offset to start writing at.
      */
     writeBoundsSpheres(data, offset) {
-        if (this.octreeNodes) {
+        if (this.octreeTree) {
+            // Every tree node, indexed by tree node: a leaf's own sphere, and for an interior node
+            // the sphere of its bounds, for the ranges that draw it whole.
+            const tree = this.octreeTree;
+            const bounds = tree.boundsMinMax;
+            for (let n = 0; n < tree.count; n++) {
+                if (tree.childCount[n] === 0 && tree.leafEnd[n] > tree.leafStart[n]) {
+                    const s = /** @type {GSplatOctreeNode[]} */ (this.octreeNodes)[tree.leafStart[n]].boundingSphere;
+                    data[offset++] = s.x;
+                    data[offset++] = s.y;
+                    data[offset++] = s.z;
+                    data[offset++] = s.w;
+                } else {
+                    const b = n * 6;
+                    data[offset++] = (bounds[b] + bounds[b + 3]) * 0.5;
+                    data[offset++] = (bounds[b + 1] + bounds[b + 4]) * 0.5;
+                    data[offset++] = (bounds[b + 2] + bounds[b + 5]) * 0.5;
+                    data[offset++] = tree.radius[n];
+                }
+            }
+        } else if (this.octreeNodes) {
             for (let i = 0; i < this.octreeNodes.length; i++) {
                 const s = this.octreeNodes[i].boundingSphere;
                 data[offset++] = s.x;

@@ -1,4 +1,5 @@
 import { math } from '../../core/math/math.js';
+import { now } from '../../core/time.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Debug } from '../../core/debug.js';
@@ -108,6 +109,29 @@ class GSplatWorld {
 
     /** @type {number} */
     _bufferCopyTotal = 0;
+
+    /**
+     * Number of nodes that chose a LOD level in the last LOD update - leaves, or the units of the
+     * cut when LOD grouping is on. Kept until the next update, for stats.
+     *
+     * @type {number}
+     */
+    _lodUpdateNodes = 0;
+
+    /**
+     * Duration of the last LOD update's distance, allocation and apply passes, in milliseconds.
+     * Kept until the next update, for stats.
+     *
+     * @type {number}
+     */
+    _lodUpdateTime = 0;
+
+    /**
+     * Number of draw ranges (intervals) in the newest world state, for stats.
+     *
+     * @type {number}
+     */
+    _drawRanges = 0;
 
     /** @type {GSplatPlacementStateTracker} */
     _stateTracker = new GSplatPlacementStateTracker();
@@ -255,6 +279,21 @@ class GSplatWorld {
     /** @type {number} */
     get bufferCopyTotal() {
         return this._bufferCopyTotal;
+    }
+
+    /** @type {number} */
+    get lodUpdateNodes() {
+        return this._lodUpdateNodes;
+    }
+
+    /** @type {number} */
+    get lodUpdateTime() {
+        return this._lodUpdateTime;
+    }
+
+    /** @type {number} */
+    get drawRanges() {
+        return this._drawRanges;
     }
 
     /** @type {boolean} */
@@ -649,7 +688,8 @@ class GSplatWorld {
                     p.ensureInstanceStreams(this._device);
                     const octreeNodes = p.intervals.size > 0 ? inst.octree.nodes : null;
                     const nodeInfos = octreeNodes ? inst.nodeInfos : null;
-                    const splatInfo = new GSplatInfo(this._device, p.resource, p, octreeNodes, nodeInfos);
+                    const splatInfo = new GSplatInfo(this._device, p.resource, p, octreeNodes, nodeInfos,
+                        inst.octree.tree, this._gsplat.lodRangeMerge ?? 1);
                     splats.push(splatInfo);
                 }
             });
@@ -659,6 +699,7 @@ class GSplatWorld {
             this._device, this._lastWorldStateVersion, splats,
             this._allocator, this._allocationMap
         );
+        this._drawRanges = newState.totalIntervals;
 
         // increment ref count for all resources in new state
         for (const splat of newState.splats) {
@@ -1201,6 +1242,8 @@ class GSplatWorld {
         // Remaining budget for octrees after accounting for fixed splats.
         const octreeBudget = Math.max(1, budget - fixedSplats);
 
+        const startTime = now();
+
         // Phase 1: resolve each instance's LOD range and evaluate per-node distances, and collect
         // padding for active placements
         for (const [, inst] of this._octreeInstances) {
@@ -1220,9 +1263,13 @@ class GSplatWorld {
         this._budgetBalancer.balance(this._octreeInstances, adjustedBudget, this._gsplat.splatBudgetMode === GSPLAT_BUDGET_LIMIT);
 
         // Phase 3: apply LOD changes
+        let lodNodes = 0;
         for (const [, inst] of this._octreeInstances) {
             inst.applyLodChanges(this._gsplat);
+            lodNodes += inst.lodUnits ? inst.lodUnitCount : inst.octree.nodes.length;
         }
+        this._lodUpdateNodes = lodNodes;
+        this._lodUpdateTime = now() - startTime;
 
         // Phase 4: issue the file loads requested in phase 3, once per octree so that every
         // instance sharing it in this world has contributed its priorities first. Instances in the

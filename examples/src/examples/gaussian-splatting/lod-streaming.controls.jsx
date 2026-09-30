@@ -297,6 +297,26 @@ export function Controls({ observer }) {
                         step={0.1}
                     />
                 </LabelGroup>
+                <LabelGroup text='LOD Grouping'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'lodGroupThreshold' }}
+                        min={0}
+                        max={0.2}
+                        precision={3}
+                        step={0.005}
+                    />
+                </LabelGroup>
+                <LabelGroup text='LOD Range Merge'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'lodRangeMerge' }}
+                        min={1}
+                        max={64}
+                        precision={0}
+                        step={1}
+                    />
+                </LabelGroup>
             </Panel>
             <Panel headerText='Debug'>
                 <LabelGroup text='Debug Render'>
@@ -340,6 +360,27 @@ export function Controls({ observer }) {
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'data.stats.gsplats' }}
                         value={observer.get('data.stats.gsplats')}
+                    />
+                </LabelGroup>
+                <LabelGroup text='LOD Nodes'>
+                    <Label
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.stats.lodNodes' }}
+                        value={observer.get('data.stats.lodNodes')}
+                    />
+                </LabelGroup>
+                <LabelGroup text='LOD Update'>
+                    <Label
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.stats.lodTime' }}
+                        value={observer.get('data.stats.lodTime')}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Draw Ranges'>
+                    <Label
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.stats.drawRanges' }}
+                        value={observer.get('data.stats.drawRanges')}
                     />
                 </LabelGroup>
             </Panel>
