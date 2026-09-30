@@ -90,6 +90,17 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 let app = null;
 
 /**
+ * The version of the contract under which an app announces itself to a devtools hook, defined on
+ * the global object under `Symbol.for('playcanvas.inspector')`. The hook's `register(app, info)` is
+ * called as an app is constructed, and `unregister(app)` as it is destroyed. The symbol is looked up
+ * at those two points only, not when the module loads, so the module stays free of side effects.
+ *
+ * @type {number}
+ * @ignore
+ */
+const DEVTOOLS_PROTOCOL = 1;
+
+/**
  * AppBase represents the base functionality for all PlayCanvas applications. It is responsible for
  * initializing and managing the application lifecycle. It coordinates core engine systems such
  * as:
@@ -536,6 +547,10 @@ class AppBase extends EventHandler {
         setApplication(this);
 
         app = this;
+
+        // announce the app to a devtools extension, such as the PlayCanvas Inspector, which defines
+        // this hook before the page runs. Without the hook this is a single lookup
+        globalThis[Symbol.for('playcanvas.inspector')]?.register?.(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
 
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
@@ -1781,6 +1796,8 @@ class AppBase extends EventHandler {
             this._destroyRequested = true;
             return;
         }
+
+        globalThis[Symbol.for('playcanvas.inspector')]?.unregister?.(this);
 
         const canvasId = this.graphicsDevice.canvas.id;
 
