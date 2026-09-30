@@ -92,7 +92,8 @@ let app = null;
 /**
  * The version of the contract under which an app announces itself to a devtools hook, defined on
  * the global object under `Symbol.for('playcanvas.inspector')`. The hook's `register(app, info)` is
- * called as an app is constructed, and `unregister(app)` as it is destroyed. The symbol is looked up
+ * called once an app is initialized, with its graphics device, scene, root entity and component
+ * systems in place, and `unregister(app)` as it is destroyed. The symbol is looked up
  * at those two points only, not when the module loads, so the module stays free of side effects.
  *
  * @type {number}
@@ -548,10 +549,6 @@ class AppBase extends EventHandler {
 
         app = this;
 
-        // announce the app to a devtools extension, such as the PlayCanvas Inspector, which defines
-        // this hook before the page runs. Without the hook this is a single lookup
-        globalThis[Symbol.for('playcanvas.inspector')]?.register?.(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
-
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
     }
@@ -664,6 +661,10 @@ class AppBase extends EventHandler {
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         }
+
+        // announce the initialized app to a devtools extension, such as the PlayCanvas Inspector,
+        // which defines this hook before the page runs. Without the hook this is a single lookup
+        globalThis[Symbol.for('playcanvas.inspector')]?.register?.(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
     }
 
     static _applications = {};

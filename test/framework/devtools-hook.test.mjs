@@ -17,10 +17,15 @@ describe('AppBase devtools hook', function () {
         jsdomTeardown();
     });
 
-    it('announces an app to the hook as it is constructed, and withdraws it on destroy', function () {
+    it('announces an app to the hook once it is initialized, and withdraws it on destroy', function () {
         const calls = [];
+        // what the hook can rely on when it is called
+        let ready = null;
         globalThis[HOOK] = {
-            register: (app, info) => calls.push(['register', app, info]),
+            register: (app, info) => {
+                calls.push(['register', app, info]);
+                ready = { device: !!app.graphicsDevice, scene: !!app.scene, root: !!app.root, systems: !!app.systems?.render };
+            },
             unregister: app => calls.push(['unregister', app])
         };
 
@@ -29,6 +34,7 @@ describe('AppBase devtools hook', function () {
         expect(calls[0][0]).to.equal('register');
         expect(calls[0][1]).to.equal(app);
         expect(calls[0][2]).to.deep.equal({ version, revision, protocol: 1 });
+        expect(ready).to.deep.equal({ device: true, scene: true, root: true, systems: true });
 
         app.destroy();
         expect(calls.map(call => call[0])).to.deep.equal(['register', 'unregister']);
