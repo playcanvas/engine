@@ -180,7 +180,8 @@ class ShadowRenderer {
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
 
-            if (meshInstance.castShadow) {
+            // test visible here, as _isVisible, which also tests it, is skipped when culling is off
+            if (meshInstance.castShadow && meshInstance.visible) {
                 if (!meshInstance.cull || meshInstance._isVisible(camera)) {
                     meshInstance.visibleThisFrame = true;
                     visible.push(meshInstance);
@@ -345,7 +346,7 @@ class ShadowRenderer {
             for (let i = 0; i < numInstances; i++) {
 
                 const meshInstance = meshInstances[i];
-                if (!meshInstance.castShadow) {
+                if (!meshInstance.castShadow || !meshInstance.visible) {
                     continue;
                 }
 
@@ -358,10 +359,6 @@ class ShadowRenderer {
                             _faceLists[face].push(meshInstance);
                         }
                     }
-                    continue;
-                }
-
-                if (!meshInstance.visible) {
                     continue;
                 }
 

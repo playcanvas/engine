@@ -1,12 +1,15 @@
 import { expect } from 'chai';
 
 import { Color } from '../../src/core/math/color.js';
+import { Mat4 } from '../../src/core/math/mat4.js';
 import { Vec2 } from '../../src/core/math/vec2.js';
 import { Vec3 } from '../../src/core/math/vec3.js';
 import { Vec4 } from '../../src/core/math/vec4.js';
 import { Entity } from '../../src/framework/entity.js';
 import { Camera } from '../../src/scene/camera.js';
 import { ASPECT_AUTO, ASPECT_MANUAL, PROJECTION_ORTHOGRAPHIC } from '../../src/scene/constants.js';
+import { GraphNode } from '../../src/scene/graph-node.js';
+import { RenderView } from '../../src/scene/render-view.js';
 import { createApp } from '../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
@@ -289,6 +292,83 @@ describe('Camera', function () {
             const clone = camera.clone();
             expect(clone.device).to.equal(camera.device);
             expect(clone.aspectRatio).to.equal(2);
+        });
+    });
+
+    describe('#updateFrustum (XR)', function () {
+
+        /**
+         * Creates a camera on a rig node, rendering a single XR view.
+         *
+         * @returns {{ camera: Camera, rig: GraphNode, view: RenderView }} The camera, its rig and
+         * its view.
+         */
+        const createXrCamera = () => {
+            const rig = new GraphNode();
+            const node = new GraphNode();
+            rig.addChild(node);
+
+            const camera = new Camera(app.graphicsDevice);
+            camera.node = node;
+
+            const view = new RenderView();
+            camera.xrViews = [view];
+
+            return { camera, rig, view };
+        };
+
+        /**
+         * Sets the pose of an XR view relative to the camera's parent, with a 90 degree field of
+         * view reaching 20 units.
+         *
+         * @param {RenderView} view - The view.
+         * @param {number} yaw - The rotation of the view around the y axis, in degrees.
+         */
+        const setViewPose = (view, yaw) => {
+            const projMat = new Mat4().setPerspective(90, 1, 0.1, 20);
+            const viewInvMat = new Mat4().setFromAxisAngle(Vec3.UP, yaw);
+            view.setView(projMat.data, viewInvMat.data);
+        };
+
+        it('culls with the current pose of the views', function () {
+            const { camera, view } = createXrCamera();
+
+            // the previous frame was rendered looking down -z
+            setViewPose(view, 0);
+            camera.updateViewTransforms();
+
+            // and the head has since turned to look down -x
+            setViewPose(view, 90);
+            camera.updateFrustum();
+
+            expect(camera.frustum.containsPoint(new Vec3(-10, 0, 0))).to.be.true;
+            expect(camera.frustum.containsPoint(new Vec3(0, 0, -10))).to.be.false;
+        });
+
+        it('culls with the current transform of the camera parent', function () {
+            const { camera, rig, view } = createXrCamera();
+            setViewPose(view, 0);
+
+            // the previous frame was rendered with the rig at the origin
+            camera.updateViewTransforms();
+
+            // and the rig has since been teleported
+            rig.setLocalPosition(0, 0, 50);
+            camera.updateFrustum();
+
+            expect(camera.frustum.containsPoint(new Vec3(0, 0, 40))).to.be.true;
+            expect(camera.frustum.containsPoint(new Vec3(0, 0, -10))).to.be.false;
+        });
+
+        it('culls with the pose of the views on the first frame of a session', function () {
+            const { camera, rig, view } = createXrCamera();
+            rig.setLocalPosition(0, 0, 50);
+            setViewPose(view, 0);
+
+            camera.updateFrustum();
+
+            expect(camera.frustum.containsPoint(new Vec3(0, 0, 40))).to.be.true;
+            expect(camera.frustum.containsPoint(new Vec3(0, 0, -10))).to.be.false;
         });
     });
 });

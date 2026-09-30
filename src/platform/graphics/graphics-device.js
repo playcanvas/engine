@@ -449,7 +449,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      * @ignore
      */
-    renderPassIndex;
+    renderPassIndex = 0;
 
     /** @type {boolean} */
     insideRenderPass = false;
