@@ -96,7 +96,6 @@ class StencilParameters {
      */
     set ref(value) {
         this._ref = value;
-        this._dirty = true;
     }
 
     /**
@@ -235,9 +234,11 @@ class StencilParameters {
         this._evalKey();
     }
 
+    // The key identifies the state baked into a WebGPU render pipeline. The reference value is not
+    // part of it, as it is set on the render pass encoder, and so does not need its own pipeline.
     _evalKey() {
-        const { _func, _ref, _fail, _zfail, _zpass, _readMask, _writeMask } = this;
-        const key = `${_func},${_ref},${_fail},${_zfail},${_zpass},${_readMask},${_writeMask}`;
+        const { _func, _fail, _zfail, _zpass, _readMask, _writeMask } = this;
+        const key = `${_func},${_fail},${_zfail},${_zpass},${_readMask},${_writeMask}`;
         this._key = stringIds.get(key);
         this._dirty = false;
     }

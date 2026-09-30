@@ -382,7 +382,7 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             if (stencil && stencilEnabled) {
 
                 // Note that WebGPU only supports a single mask, we use the one from front, but not from back.
-                depthStencil.stencilReadMas = stencilFront.readMask;
+                depthStencil.stencilReadMask = stencilFront.readMask;
                 depthStencil.stencilWriteMask = stencilFront.writeMask;
 
                 depthStencil.stencilFront = {
