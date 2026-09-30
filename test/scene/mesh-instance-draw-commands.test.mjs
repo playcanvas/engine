@@ -1,6 +1,9 @@
 import { expect } from 'chai';
 
+import { VertexBuffer } from '../../src/platform/graphics/vertex-buffer.js';
+import { VertexFormat } from '../../src/platform/graphics/vertex-format.js';
 import { Camera } from '../../src/scene/camera.js';
+import { SHADERDEF_INSTANCEINDEX, SHADERDEF_INSTANCING } from '../../src/scene/constants.js';
 import { ShaderMaterial } from '../../src/scene/materials/shader-material.js';
 import { MeshInstance } from '../../src/scene/mesh-instance.js';
 import { Mesh } from '../../src/scene/mesh.js';
@@ -136,5 +139,46 @@ describe('MeshInstance draw commands', function () {
 
     it('assigns each camera a unique id', function () {
         expect(new Camera(device).id).to.not.equal(new Camera(device).id);
+    });
+
+    describe('SHADERDEF_INSTANCEINDEX', function () {
+
+        const flag = () => (meshInstance._shaderDefs & SHADERDEF_INSTANCEINDEX) !== 0;
+
+        it('is set while the mesh instance has draw commands', function () {
+            expect(flag()).to.equal(false);
+            meshInstance.setMultiDraw(null, 1);
+            expect(flag()).to.equal(true);
+            meshInstance.setMultiDraw(null, 0);
+            expect(flag()).to.equal(false);
+        });
+
+        it('is set for instancing without a vertex buffer, and not with one', function () {
+            meshInstance.setInstancing(true);
+            expect(flag()).to.equal(true);
+            expect(meshInstance._shaderDefs & SHADERDEF_INSTANCING).to.equal(0);
+
+            const vertexBuffer = new VertexBuffer(device, VertexFormat.getDefaultInstancingFormat(device), 2);
+            meshInstance.setInstancing(vertexBuffer);
+            expect(flag()).to.equal(false);
+            expect(meshInstance._shaderDefs & SHADERDEF_INSTANCING).to.equal(SHADERDEF_INSTANCING);
+
+            meshInstance.setInstancing(null);
+            expect(flag()).to.equal(false);
+            vertexBuffer.destroy();
+        });
+
+        it('stays set while either uses the instance index', function () {
+            meshInstance.setInstancing(true);
+            meshInstance.setMultiDraw(null, 1);
+            meshInstance.setMultiDraw(null, 0);
+            expect(flag()).to.equal(true);
+
+            meshInstance.setMultiDraw(null, 1);
+            meshInstance.setInstancing(null);
+            expect(flag()).to.equal(true);
+            meshInstance.setMultiDraw(null, 0);
+            expect(flag()).to.equal(false);
+        });
     });
 });

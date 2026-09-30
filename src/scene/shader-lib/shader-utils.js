@@ -4,6 +4,7 @@ import { getProgramLibrary } from './get-program-library.js';
 import { Debug } from '../../core/debug.js';
 import { ShaderGenerator } from './programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
+import { SHADERDEF_BATCH, SHADERDEF_INSTANCEINDEX, SHADERDEF_INSTANCING } from '../constants.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderChunks } from './shader-chunks.js';
 import { MapUtils } from '../../core/map-utils.js';
@@ -149,6 +150,13 @@ class ShaderUtils {
         // add pass defines
         const shaderPassInfo = ShaderPass.get(params.device).getByIndex(params.pass);
         shaderPassInfo.defines.forEach((value, key) => defines.set(key, value));
+
+        // the model and normal matrices are read from the mesh instance storage, indexed by the first
+        // instance of the draw - unless the draws use the instance index for their own data, and
+        // batching reads the matrices of its bones instead
+        if (params.device.supportsMeshInstanceStorage && (params.objDefs & (SHADERDEF_INSTANCING | SHADERDEF_BATCH | SHADERDEF_INSTANCEINDEX)) === 0) {
+            defines.set('MESH_INSTANCE_STORAGE', '');
+        }
 
         return defines;
     }

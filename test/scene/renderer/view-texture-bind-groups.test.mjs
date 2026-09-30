@@ -340,7 +340,7 @@ describe('Renderer view texture bind groups', function () {
 
             expect(shadersOf(ditheredBox).some(shader => viewTexturesOf(shader).includes('blueNoiseTex32')), 'blue noise').to.equal(true);
             expect(shadersOf(refractionBox).some(shader => viewTexturesOf(shader).includes('uSceneColorMap')), 'scene color').to.equal(true);
-            expect(shadersOf(unlitBox).every(shader => shader.viewBindGroupFormat === null), 'unlit').to.equal(true);
+            expect(shadersOf(unlitBox).every(shader => viewTexturesOf(shader).length === 0), 'unlit').to.equal(true);
 
             // the user's texture stays in the mesh bind group, and is the one bound
             const customInstance = Array.from(customBox._shaderCache.values()).find(instance => instance.bindGroup);

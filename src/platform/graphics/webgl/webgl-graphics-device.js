@@ -2145,7 +2145,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true, firstInstance = 0) {
 
         const shader = this.shader;
         if (shader) {

@@ -657,15 +657,17 @@ class ShadowRenderer {
                 device.setVertexBuffer(instancingData.vertexBuffer);
             }
 
-            // mesh / mesh normal matrix
+            // mesh / mesh normal matrix - on the scope, or in the mesh instance storage for a shader
+            // reading it, which the draw indexes by its first instance
             renderer.setMeshInstanceMatrices(meshInstance);
+            const firstInstance = shadowShader.usesMeshInstanceStorage ? renderer.updateStorageSlot(meshInstance, shadowShader) : 0;
 
             renderer.setupMeshUniformBuffers(shaderInstance);
 
             // draw
             const style = meshInstance.renderStyle;
             const indirectData = meshInstance.getDrawCommands(camera);
-            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
+            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData, true, true, firstInstance);
 
             // the parameters its material does not have are restored to the values they replaced,
             // such as global ones, whatever the next caster - no material sets them again

@@ -369,8 +369,12 @@ class ForwardRenderer extends Renderer {
                 device.setVertexBuffer(instancingData.vertexBuffer);
             }
 
-            // mesh / mesh normal matrix
+            // mesh / mesh normal matrix - on the scope, or in the mesh instance storage for a shader
+            // reading it, which the draw indexes by its first instance. The scope is set for it too,
+            // as a fragment shader can still read the matrix_model uniform
             this.setMeshInstanceMatrices(drawCall, true);
+            const shader = shaderInstance.shader;
+            const firstInstance = shader.usesMeshInstanceStorage ? this.updateStorageSlot(drawCall, shader) : 0;
 
             this.setupMeshUniformBuffers(shaderInstance);
 
@@ -395,7 +399,7 @@ class ForwardRenderer extends Renderer {
 
                     const first = v === viewListStart;
                     const last = v === viewListEnd - 1;
-                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last);
+                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last, firstInstance);
 
                     this._forwardDrawCalls++;
                     if (drawCall.instancingData) {
@@ -403,7 +407,7 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             } else {
-                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, true, true, firstInstance);
 
                 this._forwardDrawCalls++;
                 if (drawCall.instancingData) {

@@ -1,4 +1,5 @@
 export default /* wgsl */`
+uniform matrix_model: mat4x4f;
 uniform material_invAttenuationDistance: f32;
 uniform material_attenuation: vec3f;
 
