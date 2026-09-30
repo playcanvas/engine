@@ -245,6 +245,14 @@ class XrInputSource extends EventHandler {
      */
     _linearVelocity = null;
 
+    /**
+     * Linear velocity relative to the parent of the XR camera.
+     *
+     * @type {Vec3|null}
+     * @private
+     */
+    _localLinearVelocity = null;
+
     /** @private */
     _dirtyLocal = true;
 
@@ -472,6 +480,7 @@ class XrInputSource extends EventHandler {
                         this._localRotation = new Quat();
 
                         this._linearVelocity = new Vec3();
+                        this._localLinearVelocity = new Vec3();
                     }
 
                     const timestamp = now();
@@ -484,13 +493,18 @@ class XrInputSource extends EventHandler {
                     this._localPosition.copy(gripPose.transform.position);
                     this._localRotation.copy(gripPose.transform.orientation);
 
-                    this._velocitiesAvailable = true;
                     if (this._manager.input.velocitiesSupported && gripPose.linearVelocity) {
-                        this._linearVelocity.copy(gripPose.linearVelocity);
+                        this._localLinearVelocity.copy(gripPose.linearVelocity);
+                    } else if (!this._velocitiesAvailable) {
+                        // the first pose, and the first once tracking resumes, have no previous
+                        // position to estimate the velocity from
+                        this._localLinearVelocity.set(0, 0, 0);
                     } else if (dt > 0) {
                         vec3A.sub2(this._localPosition, this._localPositionLast).divScalar(dt);
-                        this._linearVelocity.lerp(this._linearVelocity, vec3A, 0.15);
+                        this._localLinearVelocity.lerp(this._localLinearVelocity, vec3A, 0.15);
                     }
+
+                    this._velocitiesAvailable = true;
                 } else {
                     this._velocitiesAvailable = false;
                 }
@@ -531,14 +545,10 @@ class XrInputSource extends EventHandler {
 
         const parent = this._manager.camera?.parent;
         if (parent) {
+            // the full transform of the parent, as for the grip, so the ray also follows its scale
             const parentTransform = parent.getWorldTransform();
-
-            parentTransform.getTranslation(this._position);
-            this._rotation.setFromMat4(parentTransform);
-
-            this._rotation.transformVector(this._rayLocal.origin, this._ray.origin);
-            this._ray.origin.add(this._position);
-            this._rotation.transformVector(this._rayLocal.direction, this._ray.direction);
+            parentTransform.transformPoint(this._rayLocal.origin, this._ray.origin);
+            parentTransform.transformVector(this._rayLocal.direction, this._ray.direction).normalize();
         } else if (dirty) {
             this._ray.origin.copy(this._rayLocal.origin);
             this._ray.direction.copy(this._rayLocal.direction);
@@ -597,13 +607,21 @@ class XrInputSource extends EventHandler {
 
     /**
      * Get the linear velocity (units per second) of the input source if it is handheld
-     * ({@link grip} is true). Otherwise it will return null.
+     * ({@link grip} is true). Otherwise it will return null. The velocity is relative to the
+     * parent of the XR camera, so it does not include the motion of the parent.
      *
      * @returns {Vec3|null} The world space linear velocity of the handheld input source.
      */
     getLinearVelocity() {
         if (!this._velocitiesAvailable) {
             return null;
+        }
+
+        const parent = this._manager.camera?.parent;
+        if (parent) {
+            parent.getWorldTransform().transformVector(this._localLinearVelocity, this._linearVelocity);
+        } else {
+            this._linearVelocity.copy(this._localLinearVelocity);
         }
 
         return this._linearVelocity;

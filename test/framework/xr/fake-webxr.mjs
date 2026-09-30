@@ -24,14 +24,20 @@ const createController = () => ({
  * Creates a stand-in for an XRFrame, in which every space has the same pose.
  *
  * @param {{ x: number, y: number, z: number }} position - The position of every space.
+ * @param {object} [options] - The rest of the pose.
+ * @param {{ x: number, y: number, z: number, w: number }} [options.orientation] - The orientation
+ * of every space. Defaults to the identity.
+ * @param {{ x: number, y: number, z: number }} [options.linearVelocity] - The linear velocity of
+ * every space, which only some browsers report.
  * @returns {object} The frame.
  */
-const createFrame = position => ({
+const createFrame = (position, { orientation = { x: 0, y: 0, z: 0, w: 1 }, linearVelocity } = {}) => ({
     getPose: () => ({
         transform: {
             position,
-            orientation: { x: 0, y: 0, z: 0, w: 1 }
-        }
+            orientation
+        },
+        linearVelocity
     })
 });
 
