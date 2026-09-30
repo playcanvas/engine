@@ -2,7 +2,7 @@ import { createRoot } from 'react-dom/client';
 
 import { MainLayout } from './components/MainLayout.mjs';
 import { jsx } from './jsx.mjs';
-import { applyInitialDeviceType } from './url-state.mjs';
+import { applyInitialDeviceType, applyInitialPhysicsBackend } from './url-state.mjs';
 import { blockZoom } from '../../iframe/zoom.mjs';
 
 
@@ -15,6 +15,7 @@ if (process.env.NODE_ENV === 'development' && import.meta.hot) {
 function main() {
     blockZoom();
     applyInitialDeviceType();
+    applyInitialPhysicsBackend();
 
     // render out the app
     const container = document.getElementById('app');

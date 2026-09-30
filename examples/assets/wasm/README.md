@@ -14,6 +14,18 @@ includes the btScaledBvhTriangleMeshShape binding (PR #448) that mesh colliders 
 entity scale.
 
 
+jolt
+----
+JoltPhysics.js, the WebAssembly port of the Jolt Physics engine (MIT, see jolt/LICENSE), used
+by JoltPhysicsWorld.
+https://github.com/jrouwe/JoltPhysics.js
+
+The shipped build is the single-threaded `wasm` flavor of the jolt-physics 1.1.0 npm package
+(published 2026-07-11), copied unmodified: the ES module glue jolt-physics.wasm.js and the binary
+jolt-physics.wasm.wasm, which the glue loads from beside itself. The build uses single precision
+and has a fixed 128MB heap that does not grow.
+
+
 basis.js
 --------
 Basis Universal GPU Texture Codec.

@@ -2,14 +2,16 @@ import { deflateSync, inflateSync, strFromU8, strToU8 } from 'fflate';
 
 const STATE_PARAM = 's';
 const DEVICE_TYPES = new Set(['webgpu', 'webgpu:bare', 'webgl2', 'webgl2:bare', 'null']);
-const STATE_KEY_SHORT = /** @type {const} */ ({ device: 'd', ui: 'u', controls: 'c' });
-const STATE_KEY_LONG = /** @type {Record<string, string>} */ ({ d: 'device', u: 'ui', c: 'controls' });
+const PHYSICS_BACKENDS = new Set(['ammo', 'jolt']);
+const STATE_KEY_SHORT = /** @type {const} */ ({ device: 'd', physics: 'p', ui: 'u', controls: 'c' });
+const STATE_KEY_LONG = /** @type {Record<string, string>} */ ({ d: 'device', p: 'physics', u: 'ui', c: 'controls' });
 
 /** @typedef {Record<string, any>} StateRecord */
 /** @typedef {string | number | boolean | null | any[] | { [key: string]: any }} JsonValue */
 /**
  * @typedef {object} AppState
  * @property {string} [device] - Selected device type.
+ * @property {string} [physics] - Selected physics backend.
  * @property {StateRecord} [ui] - UI state slice.
  * @property {StateRecord} [controls] - Example control overrides.
  */
@@ -37,6 +39,12 @@ const isRecord = value => value !== null && typeof value === 'object' && !Array.
  * @returns {string | undefined} Valid device type.
  */
 const validDeviceType = value => (value && DEVICE_TYPES.has(value) ? value : undefined);
+
+/**
+ * @param {string | null | undefined} value - Value to normalize.
+ * @returns {string | undefined} Valid physics backend.
+ */
+const validPhysicsBackend = value => (value && PHYSICS_BACKENDS.has(value) ? value : undefined);
 
 const hashParts = () => {
     const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
@@ -159,7 +167,7 @@ const initialRaw = initial.params.get(STATE_PARAM);
 
 /**
  * Payload: deflate(JSON), base64url. Top-level keys are shortened to single
- * letters (device→d, ui→u, controls→c) to shave a few bytes before deflate.
+ * letters (device→d, physics→p, ui→u, controls→c) to shave a few bytes before deflate.
  *
  * @param {string | null} raw - Encoded state from URL.
  * @returns {AppState} Decoded app state (empty if missing or malformed).
@@ -189,6 +197,7 @@ const encodeState = () => {
     /** @type {Record<string, any>} */
     const trimmed = {};
     if (pendingState.device) trimmed[STATE_KEY_SHORT.device] = pendingState.device;
+    if (pendingState.physics) trimmed[STATE_KEY_SHORT.physics] = pendingState.physics;
     if (pendingState.ui && Object.keys(pendingState.ui).length) trimmed[STATE_KEY_SHORT.ui] = pendingState.ui;
     if (pendingState.controls && Object.keys(pendingState.controls).length) trimmed[STATE_KEY_SHORT.controls] = pendingState.controls;
     if (!Object.keys(trimmed).length) return '';
@@ -198,7 +207,7 @@ const encodeState = () => {
 
 /**
  * On example change (react-router pushState), drop the controls slice — it was
- * scoped to the previous example. Keep ui + device because those are global.
+ * scoped to the previous example. Keep ui, device and physics because those are global.
  */
 const syncPath = () => {
     const { path } = hashParts();
@@ -229,6 +238,9 @@ export const patchState = (patch) => {
     syncPath();
     if (patch.device !== undefined) {
         pendingState.device = patch.device;
+    }
+    if (patch.physics !== undefined) {
+        pendingState.physics = patch.physics;
     }
     if (patch.ui) {
         pendingState.ui = { ...(pendingState.ui ?? {}), ...patch.ui };
@@ -283,6 +295,16 @@ export const applyInitialDeviceType = () => {
 };
 
 /**
+ * Seeds the stored physics backend preference from the URL on first paint, which the iframe
+ * reads when an example loads.
+ */
+export const applyInitialPhysicsBackend = () => {
+    const physics = validPhysicsBackend(pendingState.physics);
+    if (!physics) return;
+    localStorage.setItem('preferredPhysicsBackend', physics);
+};
+
+/**
  * @param {Record<string, string>} files - Example files.
  * @param {string} [fallback] - Fallback selected file.
  * @returns {string} Selected file.
@@ -296,4 +318,4 @@ export const getSelectedFile = (files, fallback = 'example.mjs') => {
     return defaultFile;
 };
 
-export { isVolatileControlPath, isRecord, valuesEqual, sanitizeControlValue };
+export { isVolatileControlPath, isRecord, valuesEqual, sanitizeControlValue, validPhysicsBackend };

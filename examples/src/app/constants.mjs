@@ -14,4 +14,8 @@ export const DEVICETYPE_WEBGPU_BARE = 'webgpu:bare';
 
 export const DEVICETYPE_NULL = 'null';
 
+export const PHYSICS_AMMO = 'ammo';
+
+export const PHYSICS_JOLT = 'jolt';
+
 export const CLOSE_SELECTS_EVENT = 'closeSelects';

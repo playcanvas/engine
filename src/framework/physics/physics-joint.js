@@ -12,7 +12,8 @@
 class PhysicsJoint {
     /**
      * The backend-native constraint object - btTypedConstraint when the Ammo backend is
-     * active, null otherwise. Surfaced by JointComponent#constraint.
+     * active, TwoBodyConstraint when the Jolt backend is active, null otherwise. Surfaced by
+     * JointComponent#constraint.
      *
      * @type {object|null}
      */

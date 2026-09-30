@@ -181,7 +181,7 @@ class PhysicsWorld {
 
     /**
      * The backend-native world object - btDiscreteDynamicsWorld when the Ammo backend is
-     * active, null otherwise.
+     * active, PhysicsSystem when the Jolt backend is active, null otherwise.
      *
      * @type {object|null}
      */

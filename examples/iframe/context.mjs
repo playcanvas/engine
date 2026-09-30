@@ -1,2 +1,2 @@
 export { win } from './runtime.mjs';
-export { data, deviceType } from './state.mjs';
+export { data, deviceType, physicsBackend } from './state.mjs';
