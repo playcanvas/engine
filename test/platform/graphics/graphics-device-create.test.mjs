@@ -124,6 +124,18 @@ describe('createGraphicsDevice', function () {
             expectFailure(result, ['Unable to retrieve a WebGPU adapter', 'WebGL not supported']);
         });
 
+        it('rejects when WebGPU is disabled on a PowerVR adapter and WebGL fails', async function () {
+            initWebGpu.callThrough();
+            globalThis.window.navigator.gpu.requestAdapter = sinon.stub().resolves({ info: { vendor: 'img-tec' } });
+            const result = await settle(createGraphicsDevice(canvas, {
+                deviceTypes: [DEVICETYPE_WEBGPU]
+            }));
+            expectFailure(result, [
+                'WebGPU is disabled on Imagination PowerVR GPUs due to driver issues. See https://github.com/playcanvas/engine/issues/8874',
+                'WebGL not supported'
+            ]);
+        });
+
         it('falls back to a requested null device when WebGPU and WebGL fail', async function () {
             initWebGpu.rejects(new Error('No WebGPU adapter'));
             const result = await settle(createGraphicsDevice(canvas, {
