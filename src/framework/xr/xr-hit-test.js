@@ -169,6 +169,9 @@ class XrHitTest extends EventHandler {
 
     /** @private */
     _onSessionEnd() {
+        // the next session checks the availability again
+        this._checkingAvailability = false;
+
         if (!this._available) return;
         this._available = false;
 
