@@ -2,7 +2,7 @@ import { expect } from 'chai';
 
 import {
     PIXELFORMAT_111110F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB,
-    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, isMultisampleCapablePixelFormat
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, TEXTURELOCK_READ, isMultisampleCapablePixelFormat
 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { createGraphicsDevice } from '../../device.mjs';
@@ -146,6 +146,60 @@ describe('Texture', function () {
             } finally {
                 console.error = error;
             }
+        });
+    });
+
+    describe('#lock: cubemap', function () {
+
+        const createCubemap = (options = {}) => new Texture(device, {
+            width: 8,
+            height: 8,
+            format: PIXELFORMAT_RGBA8,
+            cubemap: true,
+            ...options
+        });
+
+        it('stores each face in the requested mip level', function () {
+            const texture = createCubemap();
+
+            for (let level = 0; level < 2; level++) {
+                for (let face = 0; face < 6; face++) {
+                    const data = texture.lock({ level, face });
+                    expect(data.length).to.equal((8 >> level) * (8 >> level) * 4);
+                    texture.unlock();
+                    expect(texture._levels[level][face]).to.equal(data);
+                }
+            }
+
+            texture.destroy();
+        });
+
+        it('returns the face data the texture was created with', function () {
+            const faces = [0, 1, 2, 3, 4, 5].map(() => new Uint8Array(8 * 8 * 4));
+            const texture = createCubemap({ levels: [faces] });
+
+            for (let face = 0; face < 6; face++) {
+                expect(texture.lock({ face, mode: TEXTURELOCK_READ })).to.equal(faces[face]);
+                texture.unlock();
+            }
+
+            texture.destroy();
+        });
+
+        it('flags the face locked for writing as updated', function () {
+            const texture = createCubemap();
+
+            // the state after an upload, which clears the flags
+            texture._levelsUpdated[0].fill(false);
+
+            texture.lock({ face: 2, mode: TEXTURELOCK_READ });
+            texture.unlock();
+            texture.lock({ face: 4 });
+            texture.unlock();
+
+            expect(texture._levelsUpdated[0]).to.deep.equal([false, false, false, false, true, false]);
+
+            texture.destroy();
         });
     });
 
