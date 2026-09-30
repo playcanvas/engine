@@ -173,6 +173,19 @@ describe('WebGPU render pipeline binding', function () {
         expect(encoder.setPipeline.calledOnce).to.be.true;
     });
 
+    it('keeps the pipeline when only the stencil reference changes', function () {
+        device.setStencilState(new StencilParameters({ ref: 1 }));
+        device.draw(primitive);
+        expect(lookups()).to.equal(1);
+
+        // the reference is set on the render pass encoder, not baked into the pipeline
+        device.setStencilState(new StencilParameters({ ref: 2 }));
+        device.draw(primitive);
+
+        expect(lookups()).to.equal(1);
+        expect(encoder.setStencilReference.lastCall.args[0]).to.equal(2);
+    });
+
     it('binds each pipeline change, including returning to a previously used pipeline', function () {
         const otherPipeline = {};
         device.renderPipeline.get.onSecondCall().returns(otherPipeline);
