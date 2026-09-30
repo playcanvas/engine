@@ -15,6 +15,7 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
  * order in which the devices are attempted to get created. Defaults to an empty array. If the
  * specified array does not contain {@link DEVICETYPE_WEBGL2}, it is internally added to its end.
+ * A {@link DEVICETYPE_NULL} device, which renders nothing, is only created if it is specified.
  * Typically, you'd only specify {@link DEVICETYPE_WEBGPU}, or leave it empty. Use
  * {@link DEVICETYPE_WEBGPU_BARE} or {@link DEVICETYPE_WEBGL2_BARE} to create a device without
  * optional features and with the limits of the least capable devices, useful for testing on
@@ -84,18 +85,18 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * depth prepass, or any depth resolve, as the depth cannot be sampled or copied out. Defaults to
  * false.
  * @returns {Promise<GraphicsDevice>} - Promise object representing the created graphics device.
+ * It is rejected if none of the device types can be created, with an `AggregateError` whose
+ * `errors` contain the error of each device type that failed.
  * @category Graphics
  */
 function createGraphicsDevice(canvas, options = {}) {
 
     const deviceTypes = options.deviceTypes ?? [];
 
-    // automatically added fallbacks
+    // automatically added fallback. The null device is not added, as it renders nothing, so the
+    // promise rejects when no device can be created
     if (!deviceTypes.includes(DEVICETYPE_WEBGL2)) {
         deviceTypes.push(DEVICETYPE_WEBGL2);
-    }
-    if (!deviceTypes.includes(DEVICETYPE_NULL)) {
-        deviceTypes.push(DEVICETYPE_NULL);
     }
 
     // make a list of device creation functions in priority order
@@ -127,12 +128,17 @@ function createGraphicsDevice(canvas, options = {}) {
     // execute each device creation function returning the first successful result
     return new Promise((resolve, reject) => {
         let attempt = 0;
+        const errors = [];
         const next = () => {
             if (attempt >= deviceCreateFuncs.length) {
-                reject(new Error('Failed to create a graphics device'));
+                reject(new AggregateError(errors, 'Failed to create a graphics device'));
             } else {
-                Promise.resolve(deviceCreateFuncs[attempt++]())
-                .then((device) => {
+                // create the device inside a promise, so that a synchronous throw (as from the
+                // WebGL device when WebGL 2 is unavailable) is handled below as a rejection,
+                // rather than escaping from next
+                new Promise((resolveAttempt) => {
+                    resolveAttempt(deviceCreateFuncs[attempt++]());
+                }).then((device) => {
                     if (device) {
                         resolve(device);
                     } else {
@@ -140,6 +146,7 @@ function createGraphicsDevice(canvas, options = {}) {
                     }
                 }).catch((err) => {
                     console.log(err);
+                    errors.push(err);
                     next();
                 });
             }
