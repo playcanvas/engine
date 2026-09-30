@@ -410,4 +410,4 @@ function buildNodeModel(node) {
     return sections;
 }
 
-export { buildNodeModel, materialRows, materialTextures, meshInstanceRows, meshRows, scriptInstanceRows, vertexFormatValue };
+export { buildNodeModel, layersValue, materialRows, materialTextures, meshInstanceRows, meshRows, scriptInstanceRows, vertexFormatValue };

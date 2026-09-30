@@ -15,6 +15,7 @@ import { WireRenderer } from '../renderers/wire-renderer.js';
 
 import { pushResourceUsage } from './asset-usage.js';
 import { ASSET_SORTS, assetRows, buildAssetModel, collectAssets } from './asset-view.js';
+import { buildCameraModel, cameraRows, collectCameras } from './camera-view.js';
 import { INSTANCES_PER_PAGE, LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from './frame-graph-view.js';
 import { BUFFER_KINDS, bufferBytes, bufferKind, bufferOwners, bufferRows, buildBufferModel, collectBuffers, idOf, memorySummary } from './memory-view.js';
 import { HierarchyView, filterSuggestions } from './hierarchy-view.js';
@@ -34,6 +35,7 @@ import { buildRenderTargetModel, formatChannels, isDepthFormat, previewAttachmen
 import { buildShaderModel, collectShaders, shaderRows, stateName } from './shader-view.js';
 import { styles } from './styles.js';
 import { installTooltip, setTip } from './tooltip.js';
+import { CameraFly, CanvasCapture, RENDER_MODES, ViewportPicker, WireframeMode, isScreenCamera, screenCameraAt } from './viewport-tools.js';
 import { buildTextureModel, collectTextures, textureRows } from './texture-view.js';
 
 /** @import { AppBase } from '../../framework/app-base.js' */
@@ -107,6 +109,7 @@ const PROPERTY_INTERVAL = 0.1;
 // the tooltips of the tabs
 const TAB_TIPS = {
     hierarchy: 'The entity tree, and the components and properties of the selected entity',
+    cameras: 'The cameras of the scene in render order, with where they draw, their render mode and a way to fly each',
     assets: 'The assets of the registry, and what uses each',
     passes: 'The passes that rendered the last frame, with the layers, draws and targets of each',
     targets: 'The render targets on the device, with a live preview of their textures',
@@ -159,6 +162,9 @@ function isTextTarget(e) {
  * - Hierarchy: the entity tree. The property view shows the node's transform, every component it
  *   carries and every script instance with its attributes. The selected node is outlined in the
  *   viewport.
+ * - Cameras: every camera in render order, with its target, viewport, layers and render mode. The
+ *   render mode of a camera can be switched to a debug view of the material inputs, the whole scene
+ *   drawn in wireframe, and any camera flown.
  * - Frame graph: the render passes of the last frame in execution order, as the render pass trace
  *   prints them, with the layer steps of forward passes, the light of shadow passes and optional
  *   GPU timings. Render target cells link to the next tab.
@@ -377,7 +383,7 @@ class Inspector {
     _nextPropertyRefresh = 0;
 
     /**
-     * @type {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'scripts'|'memory'|'shaders'|'physics'}
+     * @type {'hierarchy'|'cameras'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'scripts'|'memory'|'shaders'|'physics'}
      * @private
      */
     _tab = 'hierarchy';
@@ -512,6 +518,109 @@ class Inspector {
     _scriptList;
 
     /**
+     * @type {ListView}
+     * @private
+     */
+    _cameraList;
+
+    /**
+     * The render mode applied from the Cameras tab.
+     *
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _renderMode;
+
+    /**
+     * Whether the render mode applies to the selected camera or to all of them.
+     *
+     * @type {HTMLSelectElement}
+     * @private
+     */
+    _renderScope;
+
+    /**
+     * The cameras last listed in the render mode scope, to rebuild it only when they change.
+     *
+     * @type {string}
+     * @private
+     */
+    _scopeSignature = '';
+
+    /**
+     * @type {HTMLInputElement}
+     * @private
+     */
+    _wireframeToggle;
+
+    /**
+     * Ends the render mode changes and wireframe.
+     *
+     * @type {HTMLButtonElement}
+     * @private
+     */
+    _resetViewBtn;
+
+    /**
+     * The shader pass each camera the panel changed had before, to put back.
+     *
+     * @type {Map<CameraComponent, string|null>}
+     * @private
+     */
+    _changedPasses = new Map();
+
+    /** @private */
+    _wireframe = new WireframeMode();
+
+    /**
+     * @type {ViewportPicker|null}
+     * @private
+     */
+    _picker = null;
+
+    /**
+     * The pointer events taken while picking, or while waiting for a click choosing the camera to
+     * fly, null otherwise.
+     *
+     * @type {CanvasCapture|null}
+     * @private
+     */
+    _canvasCapture = null;
+
+    /**
+     * What the canvas capture is for.
+     *
+     * @type {'pick'|'choose'|null}
+     * @private
+     */
+    _canvasMode = null;
+
+    /**
+     * The entity under the pointer while picking.
+     *
+     * @type {Entity|null}
+     * @private
+     */
+    _hovered = null;
+
+    /**
+     * @type {CameraFly|null}
+     * @private
+     */
+    _fly = null;
+
+    /** @private */
+    _hoverColor = new Color(0.35, 0.8, 1);
+
+    /**
+     * The latest pointer position to pick under while hovering, null once it has been picked.
+     *
+     * @type {number[]|null}
+     * @private
+     */
+    _hoverPoint = null;
+
+    /**
      * @type {HTMLInputElement}
      * @private
      */
@@ -600,6 +709,18 @@ class Inspector {
      * @private
      */
     _materialModel = material => buildMaterialModel(material, this._context());
+
+    /**
+     * Model builder for the property view when a camera is selected.
+     *
+     * @param {CameraComponent} camera - The camera.
+     * @returns {PropertySection[]} The sections.
+     * @private
+     */
+    _cameraModel = camera => buildCameraModel(camera, {
+        app: this._app,
+        cameraActions: { fly: target => this._startFly(target), flying: this._fly?.camera ?? null }
+    });
 
     /**
      * Model builder for the property view when a script class is selected.
@@ -855,6 +976,9 @@ class Inspector {
         app.off('destroy', this.destroy, this);
         window.removeEventListener('keydown', this._onKeyDown);
         this._setDebugFrame(false);
+        this._endViewportModes();
+        this._picker?.destroy();
+        this._picker = null;
 
         this.paused = false;
         const profiler = app.graphicsDevice?.gpuProfiler;
@@ -879,6 +1003,8 @@ class Inspector {
         value = !!value;
         // a hidden panel leaves nothing on screen saying the frame is cut short
         if (!value && this._debugFrame) this._setDebugFrame(false);
+        // nor that the view is being picked, flown, or drawn differently
+        if (!value) this._endViewportModes();
         const changed = value !== this._visible;
         this._visible = value;
         if (this._host) {
@@ -1069,7 +1195,15 @@ class Inspector {
         if (now >= this._nextListRefresh) {
             this._nextListRefresh = now + LIST_INTERVAL * 1000;
             this._refreshLists(true);
+            // mesh instances the app added since are drawn in wireframe too
+            if (this._wireframeToggle.checked) this._wireframe.apply(this._app);
         }
+
+        if (this._canvasMode === 'pick' && this._hovered) this._drawHighlight(this._hovered, this._hoverColor);
+        if (this._tab === 'cameras' && this._cameraList.selected && this._cameraList.selected !== this._fly?.camera) {
+            this._drawHighlight(this._cameraList.selected.entity);
+        }
+        this._updateModeStatus();
         if (now >= this._nextPropertyRefresh) {
             this._nextPropertyRefresh = now + PROPERTY_INTERVAL * 1000;
             this._properties.refresh();
@@ -1147,17 +1281,26 @@ class Inspector {
         this._pauseBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Pause'));
         this._stepBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Step'));
         const refreshBtn = el('button', 'pci-btn', 'Refresh');
+        this._pickBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Pick'));
+        this._flyBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Fly'));
+        setTip(this._pickBtn, 'Pick an entity in the view: hover to see it outlined, click to select it. Esc stops');
+        setTip(this._flyBtn, 'Fly the camera of the view with the mouse and WASD, without moving the app\'s own camera. Esc stops');
         this._popBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Pop out'));
         const closeBtn = el('button', 'pci-btn', '✕');
         const toggleLabel = Inspector._keyLabel(this._toggleKey);
         setTip(closeBtn, `Hide the panel${toggleLabel ? `. Press ${toggleLabel} to show it again` : ''}`);
         setTip(refreshBtn, 'Rebuild the list and the properties now, instead of at the next refresh');
-        toolbar.append(title, this._pauseBtn, this._stepBtn, refreshBtn, el('span', 'pci-spacer'), this._popBtn, closeBtn);
+        toolbar.append(title, this._pauseBtn, this._stepBtn, refreshBtn, this._pickBtn, this._flyBtn, el('span', 'pci-spacer'), this._popBtn, closeBtn);
 
         this._pauseBtn.addEventListener('click', () => {
             this.paused = !this._paused;
         });
         this._stepBtn.addEventListener('click', () => this.step());
+        this._pickBtn.addEventListener('click', () => this._setPicking(this._canvasMode !== 'pick'));
+        this._flyBtn.addEventListener('click', () => {
+            if (this._fly || this._canvasMode === 'choose') this._stopFly();
+            else this._startFly(null);
+        });
         refreshBtn.addEventListener('click', () => this._refresh());
         this._popBtn.addEventListener('click', () => {
             if (this._popup) this._dockBack();
@@ -1174,7 +1317,7 @@ class Inspector {
         const tabs = el('div', 'pci-tabs');
         this._tabButtons = {};
         const tabList = [
-            ['hierarchy', 'Hierarchy'], ['assets', 'Assets'], ['passes', 'Frame graph'],
+            ['hierarchy', 'Hierarchy'], ['cameras', 'Cameras'], ['assets', 'Assets'], ['passes', 'Frame graph'],
             ['targets', 'Render targets'], ['textures', 'Textures'], ['meshes', 'Meshes'], ['materials', 'Materials'], ['scripts', 'Scripts'], ['memory', 'Memory'],
             ['shaders', 'Shaders'], ['physics', 'Physics']
         ];
@@ -1273,6 +1416,29 @@ class Inspector {
         const materialList = el('div', 'pci-list');
         materialPanel.append(materialList);
 
+        // cameras: the render mode and wireframe over the list
+        const cameraPanel = el('div', 'pci-listpanel');
+        const cameraBar = el('div', 'pci-subbar');
+        this._renderMode = this._makeSelect(cameraBar, 'Render', RENDER_MODES,
+            'Draw with the lit scene, or a debug view of one input of the materials');
+        this._renderScope = this._makeSelect(cameraBar, 'for', [['all', 'all cameras']],
+            'The camera to switch the render mode of, or all of them');
+        this._wireframeToggle = this._makeToggle(cameraBar, 'Wireframe', 'Draw every mesh instance of the scene in wireframe, for every camera');
+        this._resetViewBtn = /** @type {HTMLButtonElement} */ (el('button', 'pci-btn', 'Reset'));
+        setTip(this._resetViewBtn, 'Put back the render mode each camera had, and turn wireframe off');
+        this._resetViewBtn.disabled = true;
+        this._resetViewBtn.addEventListener('click', () => this._resetRenderOverrides());
+        cameraBar.appendChild(this._resetViewBtn);
+        const cameraList = el('div', 'pci-list');
+        cameraPanel.append(cameraBar, cameraList);
+        this._renderMode.addEventListener('change', () => this._applyRenderMode());
+        // choosing a camera shows its render mode, and changes nothing until a mode is picked
+        this._renderScope.addEventListener('change', () => {
+            const camera = this._scopeCamera();
+            if (camera) this._renderMode.value = camera.camera.shaderPassInfo?.name ?? RENDER_MODES[0][0];
+        });
+        this._wireframeToggle.addEventListener('change', () => this._applyWireframe());
+
         // scripts: a plain list
         const scriptPanel = el('div', 'pci-listpanel');
         const scriptList = el('div', 'pci-list');
@@ -1350,11 +1516,12 @@ class Inspector {
             meshes: meshPanel,
             materials: materialPanel,
             scripts: scriptPanel,
+            cameras: cameraPanel,
             memory: memoryPanel,
             shaders: shaderPanel,
             physics: physicsPanel
         };
-        this._hierarchyEl.append(tabs, filter, tree, assetPanel, passPanel, targetPanel, texturePanel, meshPanel, materialPanel, scriptPanel, memoryPanel, shaderPanel, physicsPanel);
+        this._hierarchyEl.append(tabs, filter, tree, cameraPanel, assetPanel, passPanel, targetPanel, texturePanel, meshPanel, materialPanel, scriptPanel, memoryPanel, shaderPanel, physicsPanel);
 
         const splitter = el('div', 'pci-splitter');
         const properties = el('div', 'pci-properties');
@@ -1399,8 +1566,9 @@ class Inspector {
         this._countsEl = el('span', 'pci-counts');
         this._pausedEl = el('span', 'pci-paused');
         this._debugEl = el('span', 'pci-paused');
+        this._modeEl = el('span', 'pci-paused');
         this._pathEl = el('span', 'pci-path');
-        status.append(this._countsEl, this._pausedEl, this._debugEl, this._pathEl);
+        status.append(this._countsEl, this._pausedEl, this._debugEl, this._modeEl, this._pathEl);
 
         // width handle on the inner edge
         const edge = el('div', 'pci-edge');
@@ -1454,6 +1622,10 @@ class Inspector {
             if (this._tab === 'materials') this._properties.setSubject(material, this._materialModel, key);
             this._updateStatus();
         }, target => this._selectAny(target));
+        this._cameraList = new ListView(cameraList, (camera, key) => {
+            if (this._tab === 'cameras') this._properties.setSubject(camera, this._cameraModel, key);
+            this._updateStatus();
+        }, target => this._selectAny(target));
         this._scriptList = new ListView(scriptList, (cls, key) => {
             if (this._tab === 'scripts') this._properties.setSubject(cls, this._scriptModel, key);
             this._updateStatus();
@@ -1482,7 +1654,7 @@ class Inspector {
         };
         const views = [
             this._properties, this._passList, this._targetList, this._textureList, this._shaderList, this._meshList,
-            this._materialList, this._scriptList, this._bufferList, this._assetList, this._bodyList
+            this._materialList, this._scriptList, this._cameraList, this._bufferList, this._assetList, this._bodyList
         ];
         for (const view of views) view.onHover = onHover;
     }
@@ -2239,7 +2411,7 @@ class Inspector {
     /**
      * Switches the list tab and points the property view at that tab's selection.
      *
-     * @param {'hierarchy'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'scripts'|'memory'|'shaders'|'physics'} tab - The tab.
+     * @param {'hierarchy'|'cameras'|'assets'|'passes'|'targets'|'textures'|'meshes'|'materials'|'scripts'|'memory'|'shaders'|'physics'} tab - The tab.
      * @private
      */
     _setTab(tab) {
@@ -2306,6 +2478,21 @@ class Inspector {
             if (material !== this._properties.subject) {
                 this._properties.setSubject(material, this._materialModel, this._materialList.selectedKey);
             }
+        } else if (this._tab === 'cameras') {
+            const rows = cameraRows(this._app, this._fly?.camera ?? null);
+            this._cameraList.setRows(rows);
+            // the render mode can be switched for any one camera, or all of them. The options are
+            // rebuilt only when the cameras change: rebuilding them closes an open drop down
+            const scopes = [['all', 'all cameras'], ...rows.map(row => [row.key, row.name])];
+            const signature = scopes.map(([key, name]) => `${key}\0${name}`).join('\n');
+            if (signature !== this._scopeSignature) {
+                this._scopeSignature = signature;
+                this._fillSelect(this._renderScope, scopes);
+            }
+            const camera = this._cameraList.selected;
+            if (camera !== this._properties.subject) {
+                this._properties.setSubject(camera, this._cameraModel, this._cameraList.selectedKey);
+            }
         } else if (this._tab === 'scripts') {
             this._scriptList.setRows(scriptListRows(surveyScripts(this._app)));
             const cls = this._scriptList.selected;
@@ -2370,6 +2557,7 @@ class Inspector {
         this._meshList.filter = names;
         this._materialList.filter = names;
         this._scriptList.filter = names;
+        this._cameraList.filter = names;
         this._bodyList.filter = names;
         this._refreshLists(false);
         // the instances listed under a forward pass narrow with the filter too
@@ -2592,6 +2780,13 @@ class Inspector {
                 selected = material ? `${material.name || 'Material'} #${material.id}` : '';
                 break;
             }
+            case 'cameras': {
+                const cameras = collectCameras(this._app);
+                const screen = cameras.filter(isScreenCamera).length;
+                counts = `${cameras.length} cameras · ${screen} drawing to the screen`;
+                selected = this._cameraList.selected?.entity.name ?? '';
+                break;
+            }
             case 'scripts': {
                 const survey = surveyScripts(this._app);
                 const instances = [...survey.values()].reduce((sum, script) => sum + script.instances.length, 0);
@@ -2647,14 +2842,252 @@ class Inspector {
     }
 
     /**
+     * Picking: hovering the view outlines the entity under the pointer, and a click selects it in
+     * the hierarchy. The pointer is taken from the app while it is on.
+     *
+     * @param {boolean} on - Whether to pick.
+     * @private
+     */
+    _setPicking(on) {
+        if (on === (this._canvasMode === 'pick')) return;
+        this._releaseCanvas();
+        if (on) {
+            this._stopFly();
+            this._picker ??= new ViewportPicker(this._app);
+            this._takeCanvas('pick', this._onPickEvent);
+        }
+        this._pickBtn.classList.toggle('pci-active', on);
+    }
+
+    /**
+     * @param {Event} e - A pointer event on the canvas, while picking.
+     * @private
+     */
+    _onPickEvent = (e) => {
+        const pointer = /** @type {PointerEvent} */ (e);
+        if (e.type === 'pointermove') {
+            // a moving pointer picks where it is now, not everywhere it has been
+            const busy = !!this._hoverPoint;
+            this._hoverPoint = [pointer.clientX, pointer.clientY];
+            if (!busy) this._pickHover();
+        } else if (e.type === 'pointerup') {
+            this._picker.pick(pointer.clientX, pointer.clientY).then((hit) => {
+                if (hit && this._canvasMode === 'pick') this._selectAny(hit.entity);
+            });
+        }
+    };
+
+    /**
+     * Picks under the latest pointer position until the pointer rests, outlining what it finds.
+     *
+     * @private
+     */
+    _pickHover() {
+        const [x, y] = this._hoverPoint;
+        this._picker.pick(x, y).then((hit) => {
+            const latest = this._hoverPoint;
+            if (this._canvasMode !== 'pick' || !latest) {
+                this._hoverPoint = null;
+                return;
+            }
+            this._hovered = hit?.entity ?? null;
+            // pick again only if the pointer moved while this one was reading back
+            if (latest[0] !== x || latest[1] !== y) {
+                this._pickHover();
+            } else {
+                this._hoverPoint = null;
+            }
+        });
+    }
+
+    /**
+     * Flies a camera, or with no camera given, the one camera drawing to the screen, or the one
+     * clicked next when several do.
+     *
+     * @param {CameraComponent|null} camera - The camera to fly, or null to find it from the view.
+     * @private
+     */
+    _startFly(camera) {
+        this._stopFly();
+        this._setPicking(false);
+        if (!camera) {
+            const screen = collectCameras(this._app).filter(isScreenCamera);
+            if (screen.length > 1) {
+                this._takeCanvas('choose', (e) => {
+                    if (e.type !== 'pointerup') return;
+                    const pointer = /** @type {PointerEvent} */ (e);
+                    const bounds = /** @type {HTMLCanvasElement} */ (this._app.graphicsDevice.canvas).getBoundingClientRect();
+                    const chosen = screenCameraAt(this._app, (pointer.clientX - bounds.left) / bounds.width, (pointer.clientY - bounds.top) / bounds.height);
+                    if (chosen) this._startFly(chosen);
+                });
+                this._flyBtn.classList.add('pci-active');
+                return;
+            }
+            camera = screen[0] ?? null;
+            if (!camera) {
+                this._modeEl.textContent = 'FLY · no camera draws to the screen, fly one from the Cameras tab';
+                return;
+            }
+        }
+        this._fly = new CameraFly(this._app, camera, () => this._stopFly());
+        this._flyBtn.classList.add('pci-active');
+        this._properties.refresh();
+    }
+
+    /** @private */
+    _stopFly() {
+        if (this._canvasMode === 'choose') this._releaseCanvas();
+        if (this._fly) {
+            this._fly.destroy();
+            this._fly = null;
+            this._properties.refresh();
+        }
+        this._flyBtn?.classList.remove('pci-active');
+    }
+
+    /**
+     * Takes the pointer on the canvas for a mode, and Esc to end it.
+     *
+     * @param {'pick'|'choose'} mode - The mode.
+     * @param {(e: Event) => void} onEvent - Called with the pointer events.
+     * @private
+     */
+    _takeCanvas(mode, onEvent) {
+        this._canvasCapture = new CanvasCapture(/** @type {HTMLCanvasElement} */ (this._app.graphicsDevice.canvas), onEvent);
+        this._canvasMode = mode;
+        window.addEventListener('keydown', this._onModeKey, true);
+    }
+
+    /** @private */
+    _releaseCanvas() {
+        this._canvasCapture?.destroy();
+        this._canvasCapture = null;
+        if (this._canvasMode === 'choose') this._flyBtn.classList.remove('pci-active');
+        this._canvasMode = null;
+        this._hovered = null;
+        this._hoverPoint = null;
+        window.removeEventListener('keydown', this._onModeKey, true);
+    }
+
+    /**
+     * @param {KeyboardEvent} e - A key pressed while the canvas is taken.
+     * @private
+     */
+    _onModeKey = (e) => {
+        if (e.key !== 'Escape') return;
+        e.stopImmediatePropagation();
+        if (this._canvasMode === 'pick') this._setPicking(false);
+        else this._stopFly();
+    };
+
+    /**
+     * Ends every mode that changes the view: picking, flying, the render modes and wireframe.
+     *
+     * @private
+     */
+    _endViewportModes() {
+        if (!this._pickBtn) return;
+        this._setPicking(false);
+        this._stopFly();
+        this._resetRenderOverrides();
+        this._modeEl.textContent = '';
+    }
+
+    /**
+     * Puts back the shader pass each camera had before the panel changed it, and turns wireframe
+     * off.
+     *
+     * @private
+     */
+    _resetRenderOverrides() {
+        for (const [camera, name] of this._changedPasses) camera.setShaderPass(name);
+        this._changedPasses.clear();
+        this._renderMode.value = RENDER_MODES[0][0];
+        this._wireframe.restore();
+        this._wireframeToggle.checked = false;
+        this._updateResetButton();
+        this._refreshLists(false);
+        this._properties.refresh();
+    }
+
+    /**
+     * Enables the reset button while a camera renders with a changed mode or wireframe is on.
+     *
+     * @private
+     */
+    _updateResetButton() {
+        const changed = this._wireframeToggle.checked ||
+            [...this._changedPasses].some(([camera, name]) => (camera.camera.shaderPassInfo?.name ?? null) !== name);
+        this._resetViewBtn.disabled = !changed;
+    }
+
+    /**
+     * Applies the render mode chosen on the Cameras tab to the selected camera, or to every camera,
+     * keeping the shader pass each had to put back when the panel closes.
+     *
+     * @private
+     */
+    _applyRenderMode() {
+        const name = this._renderMode.value;
+        const chosen = this._scopeCamera();
+        const cameras = chosen ? [chosen] : collectCameras(this._app);
+        for (const camera of cameras) {
+            if (!this._changedPasses.has(camera)) this._changedPasses.set(camera, camera.camera.shaderPassInfo?.name ?? null);
+            const original = this._changedPasses.get(camera);
+            // back to standard gives a camera the pass it had before, which the app may have chosen
+            camera.setShaderPass(name === RENDER_MODES[0][0] ? original : name);
+        }
+        this._updateResetButton();
+        this._refreshLists(false);
+        this._properties.refresh();
+    }
+
+    /**
+     * @returns {CameraComponent|null} The camera the render mode is switched for, or null when it is
+     * switched for all of them.
+     * @private
+     */
+    _scopeCamera() {
+        const key = this._renderScope.value;
+        if (key === 'all') return null;
+        return cameraRows(this._app, null).find(row => row.key === key)?.item ?? null;
+    }
+
+    /** @private */
+    _applyWireframe() {
+        if (this._wireframeToggle.checked) this._wireframe.apply(this._app);
+        else this._wireframe.restore();
+        this._updateResetButton();
+    }
+
+    /**
+     * Says in the status bar what the view is doing while it is picked or flown.
+     *
+     * @private
+     */
+    _updateModeStatus() {
+        let text = '';
+        if (this._canvasMode === 'pick') {
+            text = `PICK · ${this._hovered ? `"${this._hovered.name}", click to select` : 'hover an entity, click to select'} · Esc stops`;
+        } else if (this._canvasMode === 'choose') {
+            text = 'FLY · click the view of the camera to fly · Esc stops';
+        } else if (this._fly) {
+            const keys = this._fly.zooms ? 'W S zoom, A D Q E pan' : 'WASD QE move';
+            text = `FLY · "${this._fly.camera.entity.name}" · ${keys}, drag to look, wheel speed ${this._fly.speed.toFixed(1)}, Shift faster · Esc stops`;
+        }
+        if (this._modeEl.textContent !== text && (text || !this._modeEl.textContent.startsWith('FLY · no camera'))) this._modeEl.textContent = text;
+    }
+
+    /**
      * Outlines a node in the viewport for the current frame.
      *
      * @param {GraphNode} node - The node.
+     * @param {Color} [color] - The color to outline it in. Defaults to the highlight color.
      * @private
      */
-    _drawHighlight(node) {
+    _drawHighlight(node, color = this._highlightColor) {
         const wire = this._wire;
-        wire.color.copy(this._highlightColor);
+        wire.color.copy(color);
         wire.depthTest = false;
 
         let drawn = false;

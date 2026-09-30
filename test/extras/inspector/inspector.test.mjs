@@ -3,8 +3,10 @@ import { expect } from 'chai';
 import { EventHandler } from '../../../src/core/event-handler.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Vec3 } from '../../../src/core/math/vec3.js';
+import { Vec4 } from '../../../src/core/math/vec4.js';
 import { pushResourceUsage, resourceUsers } from '../../../src/extras/inspector/asset-usage.js';
 import { assetRows, assetUsers, buildAssetModel, collectAssets, describeAssetValue, resourceAssets } from '../../../src/extras/inspector/asset-view.js';
+import { buildCameraModel, cameraRows } from '../../../src/extras/inspector/camera-view.js';
 import { collectProperties, describeValue, formatNumber } from '../../../src/extras/inspector/describe.js';
 import { LayerStepSelection, buildPassModel, buildStepModel, captureFrameGraph, passRows } from '../../../src/extras/inspector/frame-graph-view.js';
 import { HierarchyView, filterSuggestions, matchesFilter } from '../../../src/extras/inspector/hierarchy-view.js';
@@ -23,6 +25,7 @@ import { buildScriptModel, isScriptClass, scriptListRows, surveyScripts } from '
 import { buildShaderModel, formatBindGroup, formatUniformBuffer, shaderRows } from '../../../src/extras/inspector/shader-view.js';
 import { buildTextureModel, collectTextures, textureRows } from '../../../src/extras/inspector/texture-view.js';
 import { installTooltip, setTip } from '../../../src/extras/inspector/tooltip.js';
+import { CameraFly, WireframeMode, screenCameraAt } from '../../../src/extras/inspector/viewport-tools.js';
 import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
 import { Asset } from '../../../src/framework/asset/asset.js';
 import { Entity } from '../../../src/framework/entity.js';
@@ -43,7 +46,7 @@ import { StorageBuffer } from '../../../src/platform/graphics/storage-buffer.js'
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { UniformBufferFormat, UniformFormat } from '../../../src/platform/graphics/uniform-buffer-format.js';
 import { UniformBuffer } from '../../../src/platform/graphics/uniform-buffer.js';
-import { BLEND_NORMAL } from '../../../src/scene/constants.js';
+import { BLEND_NORMAL, PROJECTION_ORTHOGRAPHIC, RENDERSTYLE_POINTS, RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME } from '../../../src/scene/constants.js';
 import { GraphNode } from '../../../src/scene/graph-node.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -2070,6 +2073,244 @@ describe('Inspector frame graph capture', function () {
         expect(frame.usage.get(backBuffer).map(e => e.pass)).to.deep.equal([forward]);
         expect(frame.nameCounts.get('Shadow')).to.equal(1);
         expect(frame.timings).to.be.null;
+    });
+});
+
+describe('Inspector viewport tools', function () {
+    beforeEach(jsdomSetup);
+    afterEach(jsdomTeardown);
+
+    /**
+     * @param {string} name - The camera entity's name.
+     * @param {object} [props] - The camera component's fields.
+     * @returns {any} A camera component stub on an enabled entity.
+     */
+    const cameraStub = (name, props = {}) => {
+        const entity = new Entity(name, /** @type {any} */ ({ _entityIndex: {} }));
+        /** @type {any} */ (entity)._enabledInHierarchy = true;
+        // an entity calls these on its components as it moves in and out of the hierarchy
+        const noop = () => {};
+        const camera = {
+            entity,
+            enabled: true,
+            renderTarget: null,
+            rect: new Vec4(0, 0, 1, 1),
+            priority: 0,
+            layers: [0],
+            projection: 0,
+            camera: {},
+            onEnable: noop,
+            onDisable: noop,
+            onPostStateChange: noop,
+            ...props
+        };
+        /** @type {any} */ (entity).c = { camera };
+        return camera;
+    };
+
+    it('resets the render modes and wireframe it changed, back to what each camera had', function () {
+        const app = createApp();
+        const inspector = /** @type {any} */ (new Inspector(app));
+        // one camera renders with the app's own pass, which the reset must give back
+        const passCamera = (name, pass) => {
+            const node = new GraphNode(name);
+            const camera = {
+                entity: node,
+                camera: { shaderPassInfo: pass ? { name: pass } : null },
+                setShaderPass(passName) {
+                    this.camera.shaderPassInfo = passName ? { name: passName } : null;
+                }
+            };
+            /** @type {any} */ (node).c = { camera };
+            app.root.addChild(node);
+            return camera;
+        };
+        const plain = passCamera('plain', null);
+        const custom = passCamera('custom', 'app_pass');
+        expect(inspector._resetViewBtn.disabled).to.be.true;
+
+        inspector._renderScope.value = 'all';
+        inspector._renderMode.value = 'debug_albedo';
+        inspector._renderMode.dispatchEvent(new window.Event('change'));
+        expect([plain, custom].map(c => c.camera.shaderPassInfo?.name)).to.deep.equal(['debug_albedo', 'debug_albedo']);
+        expect(inspector._resetViewBtn.disabled).to.be.false;
+
+        inspector._wireframeToggle.checked = true;
+        inspector._wireframeToggle.dispatchEvent(new window.Event('change'));
+
+        inspector._resetViewBtn.click();
+        expect([plain, custom].map(c => c.camera.shaderPassInfo?.name ?? null)).to.deep.equal([null, 'app_pass']);
+        expect(inspector._wireframeToggle.checked).to.be.false;
+        expect(inspector._renderMode.value).to.equal('forward');
+        expect(inspector._resetViewBtn.disabled).to.be.true;
+        inspector.destroy();
+    });
+
+    it('switches the render mode of all cameras, or of one chosen by name', function () {
+        const app = createApp();
+        const inspector = /** @type {any} */ (new Inspector(app));
+        const setShaderPass = function (name) {
+            this.camera.shaderPassInfo = name ? { name } : null;
+        };
+        const left = cameraStub('Left', { setShaderPass });
+        const right = cameraStub('Right', { setShaderPass, camera: { shaderPassInfo: { name: 'debug_gloss' } } });
+        app.root.addChild(left.entity);
+        app.root.addChild(right.entity);
+        inspector._setTab('cameras');
+
+        const scope = inspector._renderScope;
+        expect([...scope.options].map(option => option.textContent)).to.deep.equal(['all cameras', 'Left', 'Right']);
+        expect(scope.value).to.equal('all');
+
+        // the list refreshes twice a second, which must leave the options alone, as rebuilding them
+        // closes a drop down the user has open
+        const option = scope.options[1];
+        inspector._refreshLists(false);
+        expect(scope.options[1]).to.equal(option);
+
+        // choosing a camera shows its mode and changes nothing
+        scope.value = scope.options[2].value;
+        scope.dispatchEvent(new window.Event('change'));
+        expect(inspector._renderMode.value).to.equal('debug_gloss');
+        expect(left.camera.shaderPassInfo ?? null).to.equal(null);
+
+        // a mode picked then applies to that camera only
+        inspector._renderMode.value = 'debug_uv0';
+        inspector._renderMode.dispatchEvent(new window.Event('change'));
+        expect([left.camera.shaderPassInfo?.name ?? null, right.camera.shaderPassInfo.name]).to.deep.equal([null, 'debug_uv0']);
+        inspector.destroy();
+        expect(right.camera.shaderPassInfo.name).to.equal('debug_gloss');
+    });
+
+    it('finds the screen camera whose viewport holds a point, the one drawn last on top', function () {
+        // a split screen, with an overlay over the top right corner drawn after both
+        const left = cameraStub('left', { rect: new Vec4(0, 0, 0.5, 1) });
+        const right = cameraStub('right', { rect: new Vec4(0.5, 0, 0.5, 1) });
+        const overlay = cameraStub('overlay', { rect: new Vec4(0.75, 0.75, 0.25, 0.25) });
+        const offscreen = cameraStub('offscreen', { renderTarget: {} });
+        const app = /** @type {any} */ ({ systems: { camera: { cameras: [left, right, overlay, offscreen] } } });
+
+        expect(screenCameraAt(app, 0.25, 0.5)).to.equal(left);
+        expect(screenCameraAt(app, 0.6, 0.5)).to.equal(right);
+        // the rect's origin is at the bottom, the point's at the top
+        expect(screenCameraAt(app, 0.9, 0.1)).to.equal(overlay);
+        expect(screenCameraAt(app, 0.9, 0.9)).to.equal(right);
+        left.enabled = false;
+        expect(screenCameraAt(app, 0.25, 0.5)).to.equal(null);
+    });
+
+    it('draws every mesh instance in wireframe and puts back the style each had', function () {
+        const device = new NullGraphicsDevice(document.createElement('canvas'));
+        const mesh = new Mesh(device);
+        mesh.setPositions([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+        mesh.setIndices([0, 1, 2]);
+        mesh.update();
+        const root = new GraphNode('root');
+        const solid = new MeshInstance(mesh, new StandardMaterial(), root);
+        const points = new MeshInstance(mesh, new StandardMaterial(), root);
+        points.renderStyle = RENDERSTYLE_POINTS;
+        /** @type {any} */ (root).c = { render: { meshInstances: [solid, points] } };
+        const app = /** @type {any} */ ({ root, scene: { layers: { layerList: [] } } });
+
+        const wireframe = new WireframeMode();
+        wireframe.apply(app);
+        expect([solid.renderStyle, points.renderStyle]).to.deep.equal([RENDERSTYLE_WIREFRAME, RENDERSTYLE_WIREFRAME]);
+        wireframe.restore();
+        expect([solid.renderStyle, points.renderStyle]).to.deep.equal([RENDERSTYLE_SOLID, RENDERSTYLE_POINTS]);
+        mesh.destroy();
+        device.destroy();
+    });
+
+    it('draws a flown camera from its own pose while the app keeps moving the camera', function () {
+        const app = /** @type {any} */ (new EventHandler());
+        app.graphicsDevice = { canvas: document.createElement('canvas') };
+        const camera = cameraStub('Camera');
+        const entity = camera.entity;
+        entity.setPosition(0, 1, 5);
+
+        let ended = 0;
+        const fly = new CameraFly(app, camera, () => ended++);
+        const frame = () => {
+            fly._lastTime = performance.now() - 100;
+            app.fire('prerender');
+        };
+
+        // holding W flies forward, which for a camera is down its negative z
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { code: 'KeyW', key: 'w' }));
+        frame();
+        const flown = entity.getPosition().clone();
+        expect(flown.z).to.be.below(5);
+        app.fire('postrender');
+        // after the frame the app has its own transform back
+        expect(entity.getPosition().z).to.equal(5);
+
+        // the app moving its camera meanwhile does not move the flown view, and keeps its move
+        entity.setPosition(10, 1, 5);
+        window.dispatchEvent(new window.KeyboardEvent('keyup', { code: 'KeyW', key: 'w' }));
+        frame();
+        expect(entity.getPosition().x).to.be.closeTo(flown.x, 1e-3);
+        app.fire('postrender');
+        expect(entity.getPosition().x).to.equal(10);
+
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { code: 'Escape', key: 'Escape' }));
+        expect(ended).to.equal(1);
+        fly.destroy();
+        expect(app.hasEvent('prerender')).to.be.false;
+    });
+
+    it('holds the projection of a flown camera, zooming an orthographic one with W and S', function () {
+        const app = /** @type {any} */ (new EventHandler());
+        app.graphicsDevice = { canvas: document.createElement('canvas') };
+        const camera = cameraStub('Top', { projection: PROJECTION_ORTHOGRAPHIC, orthoHeight: 100, fov: 45 });
+        const fly = new CameraFly(app, camera, () => {});
+        expect(fly.zooms).to.be.true;
+        const frame = () => {
+            fly._lastTime = performance.now() - 100;
+            app.fire('prerender');
+        };
+
+        // the app animates the height, which the flown view does not follow
+        camera.orthoHeight = 60;
+        frame();
+        expect(camera.orthoHeight).to.equal(100);
+        app.fire('postrender');
+        expect(camera.orthoHeight).to.equal(60);
+
+        // forward zooms in, without moving the camera along its view
+        const start = camera.entity.getPosition().clone();
+        window.dispatchEvent(new window.KeyboardEvent('keydown', { code: 'KeyW', key: 'w' }));
+        frame();
+        expect(camera.orthoHeight).to.be.below(100);
+        expect(camera.entity.getPosition().distance(start)).to.be.below(1e-6);
+        app.fire('postrender');
+        window.dispatchEvent(new window.KeyboardEvent('keyup', { code: 'KeyW', key: 'w' }));
+        fly.destroy();
+    });
+
+    it('lists cameras in render order with where they draw and their render mode', function () {
+        const root = new GraphNode('root');
+        const main = cameraStub('Main', { priority: 1 });
+        const minimap = cameraStub('Minimap', { priority: 0, renderTarget: { name: 'MapRT' } });
+        const albedo = cameraStub('Albedo', { priority: 2, rect: new Vec4(0.5, 0, 0.5, 1), camera: { shaderPassInfo: { name: 'debug_albedo' } } });
+        for (const camera of [main, minimap, albedo]) root.addChild(camera.entity);
+        const app = /** @type {any} */ ({ root, scene: {} });
+
+        const rows = cameraRows(app, main);
+        expect(rows.map(row => row.name)).to.deep.equal(['Minimap', 'Main', 'Albedo']);
+        expect(rows.map(row => row.cells[1].text)).to.deep.equal(['texture', 'screen', 'screen']);
+        expect(rows[1].cells.map(cell => cell.text)).to.include('flying');
+        expect(rows[2].cells.map(cell => cell.text)).to.include('albedo');
+        expect(rows[2].cells.at(-1).text).to.match(/screen rect 0.5, 0, 0.5, 1$/);
+
+        let flown = null;
+        const [general] = buildCameraModel(main, { app,
+            cameraActions: { fly: (camera) => {
+                flown = camera;
+            },
+            flying: null } });
+        const fly = general.rows.find(row => row.label === 'fly').value.actions[0];
+        fly.run();
+        expect(flown).to.equal(main);
     });
 });
 

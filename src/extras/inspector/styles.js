@@ -84,6 +84,7 @@ const styles = /* css */ `
 
     .pci-toolbar {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 4px;
         padding: 6px 8px;
@@ -212,8 +213,9 @@ const styles = /* css */ `
     .pci-subbar {
         flex: 0 0 auto;
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        gap: 14px;
+        gap: 4px 14px;
         padding: 4px 8px;
         border-bottom: 1px solid #2c2f36;
         color: #a3a8b1;
