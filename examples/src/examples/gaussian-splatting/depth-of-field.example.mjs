@@ -265,12 +265,16 @@ fpc._angles.set(-10.2, 35.3, 0);
 app.root.addChild(characterController);
 
 // ------ Camera frame with Depth of Field ------
-// Enabling DOF automatically enables the camera depth prepass. The prepass renders opaque
-// world-layer meshes that write depth (our proxy mesh) into a linear depth texture, which the
-// DOF effect samples. The transparent splat is then blurred according to the proxy depth.
+// The camera depth prepass renders opaque world-layer meshes that write depth (our proxy mesh)
+// into a linear depth texture, which the DOF effect samples. The transparent splat is then
+// blurred according to the proxy depth.
 const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_ACES;
 cameraFrame.rendering.samples = 1;
+// Request the scene depth map to force the depth prepass. Without it, a single-sampled camera
+// frame renders the depth in the forward pass instead, which the proxy mesh is excluded from,
+// so the depth would be empty and the whole frame out of focus.
+cameraFrame.rendering.sceneDepthMap = true;
 cameraFrame.vignette.inner = 0.5;
 cameraFrame.vignette.outer = 1.4;
 cameraFrame.vignette.curvature = 0.5;
