@@ -610,9 +610,11 @@ class WebgpuTexture {
                 bytesPerRow: formatInfo.blockSize * blockDim(width),
                 rowsPerImage: blockDim(height)
             };
+            // the copy covers whole blocks, so a level whose size is not a multiple of the block
+            // size - such as 90x45 of a 1440x720 texture, or 1x1 - rounds up to its last block
             size = {
-                width: Math.max(4, width),
-                height: Math.max(4, height)
+                width: blockDim(width) * 4,
+                height: blockDim(height) * 4
             };
         } else {
             Debug.assert(false, `WebGPU does not yet support texture format ${formatInfo.name} for texture ${texture.name}`, texture);
