@@ -53,6 +53,11 @@
     "typescript": "5.9.3",
     "vite": "8.3.0"
   },
+  "overrides": {
+    "@playcanvas/inspector": {
+      "playcanvas": "$playcanvas"
+    }
+  },
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT"
 }
