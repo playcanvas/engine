@@ -675,7 +675,7 @@ class MeshInstance {
         Debug.assert(!(mesh instanceof GraphNode), 'Incorrect parameters for MeshInstance\'s constructor. Use new MeshInstance(mesh, material, node)');
         Debug.call(() => initMeshInstanceDebug(this));
 
-        this.node = node;           // The node that defines the transform of the mesh instance
+        this._node = node;          // The node that defines the transform of the mesh instance
         this._mesh = mesh;          // The mesh that this instance renders
         mesh.incRefCount();
         this.material = material;   // The material with which to render this instance
@@ -695,7 +695,7 @@ class MeshInstance {
     /**
      * Sets the graph node defining the transform for this instance.
      *
-     * @type {GraphNode|null}
+     * @type {GraphNode}
      */
     set node(node) {
         if (node !== this._node) {
