@@ -13,6 +13,7 @@ import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
+import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -331,6 +332,7 @@ class ForwardRenderer extends Renderer {
                 // Uniforms II: material - on the scope, and through the material bind group
                 material.setParameters(device);
                 this.setupMaterialBindGroup(material);
+                Debug.call(() => warnViewUniformMaterialParameters(material, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
                 this.alphaTestId.setValue(material.alphaTest);
 
@@ -355,6 +357,7 @@ class ForwardRenderer extends Renderer {
                 this.setupMaterialOverrideBindGroup(drawCall);
             }
             drawCall.setParameters(device);
+            Debug.call(() => warnViewUniformMeshInstanceParameters(drawCall, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
             // mesh ID - used by the picker
             device.scope.resolve('meshInstanceId').setValue(drawCall.id);
