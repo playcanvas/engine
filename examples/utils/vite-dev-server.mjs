@@ -90,6 +90,7 @@ const ROOT_FILES = {
 const IFRAME_FILES = {
     '/iframe/context.mjs': 'iframe/context.mjs',
     '/iframe/files.mjs': 'iframe/files.mjs',
+    '/iframe/inspector.mjs': 'iframe/inspector.mjs',
     '/iframe/loader.mjs': 'iframe/loader.mjs',
     '/iframe/main.css': 'iframe/main.css',
     '/iframe/ministats.mjs': 'iframe/ministats.mjs',
