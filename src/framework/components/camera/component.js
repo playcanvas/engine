@@ -645,6 +645,7 @@ class CameraComponent extends Component {
      */
     set farClip(value) {
         this._camera.farClip = value;
+        this.fire('set:farClip', value);
     }
 
     /**
@@ -817,6 +818,7 @@ class CameraComponent extends Component {
      */
     set nearClip(value) {
         this._camera.nearClip = value;
+        this.fire('set:nearClip', value);
     }
 
     /**

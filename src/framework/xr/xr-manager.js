@@ -25,6 +25,15 @@ import { DEVICETYPE_WEBGPU } from '../../platform/graphics/constants.js';
  * @import { Entity } from '../entity.js'
  */
 
+// camera properties derived from the projection of the XR views, reused to avoid allocations
+const xrProperties = {
+    aspectRatio: 1,
+    farClip: 1000,
+    fov: 90,
+    horizontalFov: false,
+    nearClip: 0.1
+};
+
 /**
  * @callback XrErrorCallback
  * Callback used by {@link XrManager#start} and {@link XrManager#end}.
@@ -146,6 +155,14 @@ class XrManager extends EventHandler {
      * @private
      */
     _available = {};
+
+    /**
+     * Listener for the `devicechange` event of `navigator.xr`, which is removed on destroy.
+     *
+     * @type {Function|null}
+     * @private
+     */
+    _onDeviceChange = null;
 
     /**
      * @type {string|null}
@@ -303,6 +320,14 @@ class XrManager extends EventHandler {
     _framebufferScaleFactor = 1.0;
 
     /**
+     * Projection matrix of the first view, which the camera properties were last derived from.
+     *
+     * @type {Mat4}
+     * @private
+     */
+    _xrPropertiesProjMat = new Mat4();
+
+    /**
      * Create a new XrManager instance.
      *
      * @param {AppBase} app - The main application.
@@ -334,9 +359,10 @@ class XrManager extends EventHandler {
         // 3. Controllers class
 
         if (this._supported && XrManager._allowsSpatialTracking()) {
-            navigator.xr.addEventListener('devicechange', () => {
+            this._onDeviceChange = () => {
                 this._deviceAvailabilityCheck();
-            });
+            };
+            navigator.xr.addEventListener('devicechange', this._onDeviceChange);
             this._deviceAvailabilityCheck();
         }
     }
@@ -419,6 +445,12 @@ class XrManager extends EventHandler {
      * @ignore
      */
     destroy() {
+        // navigator.xr outlives the application, which its listener would otherwise keep alive
+        if (this._onDeviceChange) {
+            navigator.xr.removeEventListener('devicechange', this._onDeviceChange);
+            this._onDeviceChange = null;
+        }
+
         if (this.xrBridge) {
             this.xrBridge.destroy();
             this.xrBridge = null;
@@ -825,8 +857,14 @@ class XrManager extends EventHandler {
             this.fire('visibility:change', session.visibilityState);
         };
 
-        const onClipPlanesChange = () => {
-            this._setClipPlanes(this._camera.nearClip, this._camera.farClip);
+        // while the session runs, the camera reports the clip planes of the XR views, so follow the
+        // values set on it
+        const onNearClipChange = (nearClip) => {
+            this._setClipPlanes(nearClip, this._depthFar);
+        };
+
+        const onFarClipChange = (farClip) => {
+            this._setClipPlanes(this._depthNear, farClip);
         };
 
         const onFrameRateChange = () => {
@@ -847,8 +885,8 @@ class XrManager extends EventHandler {
                 // reset even when a handler throws, which would otherwise leave the manager active
                 // with no frames to drive the application
                 if (this._camera) {
-                    this._camera.off('set_nearClip', onClipPlanesChange);
-                    this._camera.off('set_farClip', onClipPlanesChange);
+                    this._camera.off('set:nearClip', onNearClipChange);
+                    this._camera.off('set:farClip', onFarClipChange);
                     this._camera.camera.xrViews = null;
                     this._camera = null;
                 }
@@ -864,6 +902,10 @@ class XrManager extends EventHandler {
                 this._height = 0;
                 this._type = null;
                 this._spaceType = null;
+
+                // the next session, possibly on another camera, derives its camera properties on
+                // its first frame
+                this._xrPropertiesProjMat.setIdentity();
 
                 // old requestAnimationFrame will never be triggered,
                 // so queue up new tick
@@ -902,8 +944,8 @@ class XrManager extends EventHandler {
 
             session.addEventListener('visibilitychange', onVisibilityChange);
 
-            this._camera.on('set_nearClip', onClipPlanesChange);
-            this._camera.on('set_farClip', onClipPlanesChange);
+            this._camera.on('set:nearClip', onNearClipChange);
+            this._camera.on('set:farClip', onFarClipChange);
 
             // A framebufferScaleFactor scale of 1 is the full resolution of the display
             // so we need to calculate this based on devicePixelRatio of the display and what
@@ -994,8 +1036,6 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
-        const lengthOld = this.views.list.length;
-
         // add views
         this.views.update(frame, pose.views);
 
@@ -1005,28 +1045,19 @@ class XrManager extends EventHandler {
         this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
         this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
-        // update the camera fov properties only when we had 0 views
-        if (lengthOld === 0 && this.views.list.length > 0) {
-            const viewProjMat = new Mat4();
-            const view = this.views.list[0];
+        // derive the camera properties from the projection of the first view whenever it changes,
+        // as on the first frame, or once a change to the depth range of the session is applied
+        const view = this.views.list[0];
+        if (view && !view.projMat.equals(this._xrPropertiesProjMat)) {
+            this._xrPropertiesProjMat.copy(view.projMat);
+            const data = view.projMat.data;
 
-            viewProjMat.copy(view.projMat);
-            const data = viewProjMat.data;
+            xrProperties.fov = (2.0 * Math.atan(1.0 / data[5]) * 180.0) / Math.PI;
+            xrProperties.aspectRatio = data[5] / data[0];
+            xrProperties.farClip = data[14] / (data[10] + 1);
+            xrProperties.nearClip = data[14] / (data[10] - 1);
 
-            const fov = (2.0 * Math.atan(1.0 / data[5]) * 180.0) / Math.PI;
-            const aspectRatio = data[5] / data[0];
-            const farClip = data[14] / (data[10] + 1);
-            const nearClip = data[14] / (data[10] - 1);
-            const horizontalFov = false;
-
-            const camera = this._camera.camera;
-            camera.setXrProperties({
-                aspectRatio,
-                farClip,
-                fov,
-                horizontalFov,
-                nearClip
-            });
+            this._camera.camera.setXrProperties(xrProperties);
         }
 
         // position and rotate camera based on calculated vectors

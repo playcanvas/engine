@@ -165,10 +165,10 @@ const renderInlineMarkdown = (text) => {
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
-    examples: 'EXAMPLES',
-    code: 'SOURCE',
-    controls: 'CONTROLS',
-    description: 'INFO'
+    examples: 'Examples',
+    code: 'Source',
+    controls: 'Controls',
+    description: 'Info'
 };
 
 const createState = () => {
@@ -962,6 +962,7 @@ class Example extends TypedComponent {
                     id: 'controlPanel',
                     class: ['mobile', `${activePanel}-sheet`],
                     headerText: MOBILE_PANEL_TITLES[activePanel],
+                    headerSize: 44,
                     collapsible: false
                 },
                 this.renderMobilePanel()
@@ -986,7 +987,8 @@ class Example extends TypedComponent {
                         id: 'controlPanel',
                         class: ['desktop'],
                         resizable: 'top',
-                        headerText: 'CONTROLS',
+                        headerText: 'Controls',
+                        headerSize: 40,
                         collapsible: true,
                         collapsed
                     },
@@ -1033,7 +1035,7 @@ class Example extends TypedComponent {
                         jsx('div', { className: 'example-loading-message' }, error.message)
                     ) : fragment(
                         jsx(Spinner, { size: 34 }),
-                        jsx('div', { className: 'example-loading-title' }, 'LOADING')
+                        jsx('div', { className: 'example-loading-title' }, 'Loading')
                     )
                 )
             ),

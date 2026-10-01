@@ -18,7 +18,8 @@ let ids = 0;
  */
 class XrPlane extends EventHandler {
     /**
-     * Fired when an {@link XrPlane} is removed.
+     * Fired when an {@link XrPlane} is removed. Its attributes, such as its points and label, keep
+     * their last values.
      *
      * @event
      * @example
@@ -64,11 +65,8 @@ class XrPlane extends EventHandler {
      */
     _lastChangedTime;
 
-    /**
-     * @type {"horizontal"|"vertical"|null}
-     * @private
-     */
-    _orientation;
+    /** @private */
+    _destroyed = false;
 
     /** @private */
     _position = new Vec3();
@@ -90,13 +88,14 @@ class XrPlane extends EventHandler {
         this._planeDetection = planeDetection;
         this._xrPlane = xrPlane;
         this._lastChangedTime = xrPlane.lastChangedTime;
-        this._orientation = xrPlane.orientation;
     }
 
     /** @ignore */
     destroy() {
-        if (!this._xrPlane) return;
-        this._xrPlane = null;
+        if (this._destroyed) return;
+
+        // the XRPlane is kept, so the attributes of the plane stay readable once it is removed
+        this._destroyed = true;
         this.fire('remove');
     }
 
@@ -164,7 +163,7 @@ class XrPlane extends EventHandler {
      * }
      */
     get orientation() {
-        return this._orientation;
+        return this._xrPlane.orientation;
     }
 
     /**

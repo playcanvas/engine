@@ -552,7 +552,8 @@ class CodeEditorDesktop extends CodeEditorBase {
         return jsx(
             Panel,
             {
-                headerText: 'CODE',
+                headerText: 'Code',
+                headerSize: 44,
                 id: 'codePane',
                 class: this._codePaneCollapsed ? 'collapsed' : undefined,
                 resizable: 'left',
@@ -572,15 +573,31 @@ class CodeEditorDesktop extends CodeEditorBase {
                     {
                         class: 'code-editor-menu-container'
                     },
-                    jsx(Button, {
+                    jsx('button', {
+                        type: 'button',
                         id: 'play-button',
-                        icon: 'E304',
-                        text: '',
+                        className: 'pcui-button',
+                        title: 'Reload example',
+                        'aria-label': 'Reload example',
                         onClick: () => iframe.fire('hotReload')
-                    }),
-                    jsx(Button, {
-                        icon: 'E259',
-                        text: '',
+                    }, jsx('svg', {
+                        viewBox: '0 0 24 24',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        strokeWidth: 2,
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        width: 15,
+                        height: 15
+                    },
+                    jsx('path', { d: 'M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8' }),
+                    jsx('path', { d: 'M21 3v5h-5' })
+                    )),
+                    jsx('button', {
+                        type: 'button',
+                        className: 'pcui-button',
+                        title: 'View on GitHub',
+                        'aria-label': 'View on GitHub',
                         onClick: () => {
                             const [, category, example] = getHashPath().split('/');
                             const examplePath = `${category}/${example || getFirstExample(category)}`;
@@ -588,7 +605,19 @@ class CodeEditorDesktop extends CodeEditorBase {
                                 `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.example.mjs`
                             );
                         }
-                    }),
+                    }, jsx('svg', {
+                        viewBox: '0 0 24 24',
+                        fill: 'none',
+                        stroke: 'currentColor',
+                        strokeWidth: 2,
+                        strokeLinecap: 'round',
+                        strokeLinejoin: 'round',
+                        width: 15,
+                        height: 15
+                    },
+                    jsx('path', { d: 'M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4' }),
+                    jsx('path', { d: 'M9 18c-4.51 2-5-2-5-2' })
+                    )),
                     jsx('button', {
                         type: 'button',
                         className: 'pcui-button code-editor-download',
