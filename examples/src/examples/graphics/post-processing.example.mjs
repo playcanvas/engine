@@ -350,11 +350,6 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// Apply UI changes
-data.on('*:set', () => {
-    applySettings();
-});
-
 // Set initial values
 data.set('data', {
     enabled: true,
@@ -401,6 +396,13 @@ data.set('data', {
         jitter: 1
     }
 });
+
+// Apply UI changes. This is registered after the initial values are set, as setting them fires an
+// event for each value while the remaining values are still undefined.
+data.on('*:set', () => {
+    applySettings();
+});
+applySettings();
 
 // Update things every frame
 let angle = 0;

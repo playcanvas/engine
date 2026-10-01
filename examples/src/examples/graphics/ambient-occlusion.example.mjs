@@ -231,11 +231,6 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// Apply UI changes
-data.on('*:set', () => {
-    applySettings();
-});
-
 // Initial settings
 data.set('data', {
     enabled: true,
@@ -253,3 +248,10 @@ data.set('data', {
         debug: false
     }
 });
+
+// Apply UI changes. This is registered after the initial values are set, as setting them fires an
+// event for each value while the remaining values are still undefined.
+data.on('*:set', () => {
+    applySettings();
+});
+applySettings();

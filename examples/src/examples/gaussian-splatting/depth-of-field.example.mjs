@@ -295,10 +295,23 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// Apply UI changes
+// Set initial values
+data.set('data', {
+    dof: {
+        // enabled once the first (coarse) splat frame is ready - see the frame:ready handler
+        enabled: false,
+        blurRadius: 5,
+        blurRings: 4,
+        blurRingPoints: 5
+    }
+});
+
+// Apply UI changes. This is registered after the initial values are set, as setting them fires an
+// event for each value while the remaining values are still undefined.
 data.on('*:set', () => {
     applySettings();
 });
+applySettings();
 
 // ------ Autofocus ------
 // Raycast the physics (collision) mesh straight ahead from the camera and focus DOF on the hit
@@ -350,15 +363,4 @@ app.on('update', (dt) => {
     cameraFrame.dof.focusDistance = smoothedFocus;
     cameraFrame.dof.focusRange = focusRangeForDistance(smoothedFocus);
     cameraFrame.update();
-});
-
-// Set initial values
-data.set('data', {
-    dof: {
-        // enabled once the first (coarse) splat frame is ready - see the frame:ready handler
-        enabled: false,
-        blurRadius: 5,
-        blurRings: 4,
-        blurRingPoints: 5
-    }
 });

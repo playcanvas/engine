@@ -273,10 +273,6 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-data.on('*:set', () => {
-    applySettings();
-});
-
 data.set('data', {
     scene: {
         scale: 1
@@ -286,6 +282,11 @@ data.set('data', {
     }
 });
 
+// registered after the initial values are set, as setting them fires an event for each value while
+// the remaining values are still undefined
+data.on('*:set', () => {
+    applySettings();
+});
 applySettings();
 
 const displayCamera = new Entity('DisplayCamera');
