@@ -270,7 +270,7 @@ app.root.addChild(characterController);
 // DOF effect samples. The transparent splat is then blurred according to the proxy depth.
 const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_ACES;
-cameraFrame.rendering.samples = 4;
+cameraFrame.rendering.samples = 1;
 cameraFrame.vignette.inner = 0.5;
 cameraFrame.vignette.outer = 1.4;
 cameraFrame.vignette.curvature = 0.5;
