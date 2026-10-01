@@ -75,14 +75,14 @@ class LitShader {
     /**
      * The vertex shader defines needed for the shader compilation.
      *
-     * @type {Map<string, string>}
+     * @type {Map<string, string|number|boolean>}
      */
     vDefines = new Map();
 
     /**
      * The fragment shader defines needed for the shader compilation.
      *
-     * @type {Map<string, string>}
+     * @type {Map<string, string|number|boolean>}
      */
     fDefines = new Map();
 
@@ -207,7 +207,7 @@ class LitShader {
      *
      * @param {boolean} condition - The define is added if the condition is true.
      * @param {string} name - The define name.
-     * @param {string} [value] - The define value.
+     * @param {string|boolean} [value] - The define value.
      */
     sharedDefineSet(condition, name, value = '') {
         if (condition) {

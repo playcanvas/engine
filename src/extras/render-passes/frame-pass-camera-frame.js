@@ -77,8 +77,6 @@ class CameraFrameOptions {
     volumetricFogEnabled = false;
 }
 
-const _defaultOptions = new CameraFrameOptions();
-
 // the formats the scene depth can be rendered to, in the order of preference
 const _sceneDepthFormats = [PIXELFORMAT_R32F, PIXELFORMAT_R16F];
 
@@ -250,7 +248,7 @@ class FramePassCameraFrame extends FramePass {
     }
 
     sanitizeOptions(options) {
-        options = Object.assign({}, _defaultOptions, options);
+        options = Object.assign(new CameraFrameOptions(), options);
 
         // depth consumed by the passes running after the scene pass. SSAO belongs here when the compose
         // pass is what applies it, as it is then free to run after the scene - see collectPasses.
