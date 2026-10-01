@@ -13,6 +13,7 @@ import { Script } from 'playcanvas';
  * - Support for both hand tracking and gamepad controllers
  * - Automatic cleanup on input source removal or XR session end, with each model loaded once and
  *   kept for later input sources and sessions until the script is destroyed
+ * - Models hidden while their pose is not tracked, such as behind the system menu
  * - Visibility control for integration with other XR scripts
  * - Fires events for controller lifecycle coordination
  *
@@ -41,10 +42,11 @@ class XrControllers extends Script {
     basePath = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles';
 
     /**
-     * Map of input sources to their controller data (entity, joint mappings, and asset). The asset
+     * Map of input sources to their controller data (entity, joint mappings, asset, whether its
+     * pose is tracked, and the enabled state its entity returns to once tracking resumes). The asset
      * is owned by the script and shared by every input source that uses the same model.
      *
-     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset<'container'> }>}
+     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset<'container'>, tracked: boolean, enabledWhenTracked: boolean }>}
      */
     controllers = new Map();
 
@@ -244,7 +246,7 @@ class XrControllers extends Script {
                 }
             }
 
-            this.controllers.set(inputSource, { entity, jointMap, asset });
+            this.controllers.set(inputSource, { entity, jointMap, asset, tracked: true, enabledWhenTracked: true });
 
             // Fire event for other scripts to coordinate
             this.app.fire('xr:controller:add', inputSource, entity);
@@ -355,7 +357,12 @@ class XrControllers extends Script {
         this._visible = value;
 
         for (const [, controller] of this.controllers) {
-            controller.entity.enabled = value;
+            // a model hidden while untracked takes the new state once tracking resumes
+            if (controller.tracked) {
+                controller.entity.enabled = value;
+            } else {
+                controller.enabledWhenTracked = value;
+            }
         }
     }
 
@@ -371,7 +378,27 @@ class XrControllers extends Script {
     update(dt) {
         if (!this.app.xr?.active || !this._visible) return;
 
-        for (const [inputSource, { entity, jointMap }] of this.controllers) {
+        // While the session is not fully visible, such as behind the system menu, the browser
+        // sends no poses, so the models would stay frozen where they were last tracked
+        const sessionVisible = this.app.xr.visibilityState === 'visible';
+
+        for (const [inputSource, controller] of this.controllers) {
+            // a hand also loses tracking when it leaves the view of the headset. A model hidden
+            // while untracked gets back the enabled state it had, so one the app hid stays hidden
+            const tracked = sessionVisible && (!inputSource.hand || inputSource.hand.tracking);
+            if (controller.tracked !== tracked) {
+                controller.tracked = tracked;
+                if (tracked) {
+                    controller.entity.enabled = controller.enabledWhenTracked;
+                } else {
+                    controller.enabledWhenTracked = controller.entity.enabled;
+                    controller.entity.enabled = false;
+                }
+            }
+            if (!tracked) continue;
+
+            const { entity, jointMap } = controller;
+
             if (inputSource.hand) {
                 // Update hand joint positions
                 for (const [joint, jointEntity] of jointMap) {
