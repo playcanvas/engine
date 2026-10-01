@@ -1,7 +1,10 @@
 import { expect } from 'chai';
 
 import { revision, version } from '../../src/core/core.js';
+import { AppOptions } from '../../src/framework/app-options.js';
+import { Application } from '../../src/framework/application.js';
 import { createApp } from '../app.mjs';
+import { createGraphicsDevice } from '../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../jsdom.mjs';
 
 const HOOK = Symbol.for('playcanvas.inspector');
@@ -74,6 +77,33 @@ describe('AppBase devtools hook', function () {
         // destroy ran to the end, releasing the root and the device
         expect(app.root).to.equal(null);
         expect(app.graphicsDevice).to.equal(null);
+    });
+
+    it('does not announce an app created with devtools off', function () {
+        const calls = [];
+        globalThis[HOOK] = {
+            register: () => calls.push('register'),
+            unregister: () => calls.push('unregister')
+        };
+
+        const canvas = document.createElement('canvas');
+        const app = new Application(canvas, { graphicsDevice: createGraphicsDevice(canvas), devtools: false });
+        app.destroy();
+        expect(calls).to.deep.equal([]);
+        expect(new AppOptions().devtools).to.be.true;
+    });
+
+    it('does not withdraw an app the hook never saw', function () {
+        const app = createApp();
+
+        // the hook is defined only after the app was created, so it never registered it
+        const calls = [];
+        globalThis[HOOK] = {
+            register: () => calls.push('register'),
+            unregister: () => calls.push('unregister')
+        };
+        app.destroy();
+        expect(calls).to.deep.equal([]);
     });
 
     it('runs as usual without a hook, or with a hook that offers neither method', function () {

@@ -142,6 +142,16 @@ class AppOptions {
      * @type {typeof ResourceHandler[]}
      */
     resourceHandlers = [];
+
+    /**
+     * Whether the app announces itself to developer tools, such as the PlayCanvas Inspector
+     * browser extension, so they can find and inspect it. Set to false to keep a production build
+     * from announcing itself. This is an opt-out, not a protection: code running on the page can
+     * still reach the app by other means. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    devtools = true;
 }
 
 export { AppOptions };
