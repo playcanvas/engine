@@ -69,15 +69,15 @@ class ShaderDefinitionUtils {
      * @param {Map<string, string>} [options.vertexIncludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.
-     * @param {Map<string, string>} [options.vertexDefines] - A map containing key-value pairs of
-     * define names and their values. These are used for resolving #ifdef style of directives in the
-     * vertex code.
+     * @param {Map<string, string|number|boolean>} [options.vertexDefines] - A map containing
+     * key-value pairs of define names and their values. These are used for resolving #ifdef style
+     * of directives in the vertex code.
      * @param {Map<string, string>} [options.fragmentIncludes] - A map containing key-value pairs
      * of include names and their content. These are used for resolving #include directives in the
      * fragment shader source.
-     * @param {Map<string, string>} [options.fragmentDefines] - A map containing key-value pairs of
-     * define names and their values. These are used for resolving #ifdef style of directives in the
-     * fragment code.
+     * @param {Map<string, string|number|boolean>} [options.fragmentDefines] - A map containing
+     * key-value pairs of define names and their values. These are used for resolving #ifdef style
+     * of directives in the fragment code.
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
@@ -271,7 +271,7 @@ class ShaderDefinitionUtils {
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {Map<string, string>} [defines] - A map containing key-value pairs.
+     * @param {Map<string, string|number|boolean>} [defines] - A map containing key-value pairs.
      * @returns {string} The shader code for the defines.
      * @ignore
      */

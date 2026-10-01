@@ -142,7 +142,7 @@ class Material {
      * {@link Material#setDefine} (or {@link Material#copy}); direct mutation bypasses the cached
      * {@link Material#definesKey}.
      *
-     * @type {Map<string, string>}
+     * @type {Map<string, string|boolean>}
      * @ignore
      */
     defines = new Map();

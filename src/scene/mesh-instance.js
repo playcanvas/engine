@@ -695,7 +695,7 @@ class MeshInstance {
     /**
      * Sets the graph node defining the transform for this instance.
      *
-     * @type {GraphNode}
+     * @type {GraphNode|null}
      */
     set node(node) {
         if (node !== this._node) {

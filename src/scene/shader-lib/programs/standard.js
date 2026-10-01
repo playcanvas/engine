@@ -19,6 +19,7 @@ import { MapUtils } from '../../../core/map-utils.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
+ * @import { ShaderPassInfo } from '../../shader-pass.js'
  */
 
 /**
@@ -145,7 +146,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
     /**
      * Add shader defines for a texture map.
      *
-     * @param {Map<string, string>} fDefines - The fragment defines.
+     * @param {Map<string, string|number|boolean>} fDefines - The fragment defines.
      * @param {string} propName - The base name of the map: diffuse | emissive | opacity | light | height | metalness | specular | gloss | ao.
      * @param {string} chunkName - The name of the chunk to use. Usually "basenamePS".
      * @param {object} options - The options passed into createShaderDefinition.
@@ -201,9 +202,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
             const uv = this._getUvSourceExpression(transformPropName, uVPropName, options);
 
-            // chunk injection defines
+            // chunk injection defines. Maps which use all channels of the texture, such as the normal
+            // map, have no channel and their chunks do not inject it.
             fDefines.set(`{STD_${propNameCaps}_TEXTURE_UV}`, uv);
-            fDefines.set(`{STD_${propNameCaps}_TEXTURE_CHANNEL}`, options[channelPropName]);
+            const channel = options[channelPropName];
+            if (channel) {
+                fDefines.set(`{STD_${propNameCaps}_TEXTURE_CHANNEL}`, channel);
+            }
 
             // texture sampler define
             const textureId = `{STD_${propNameCaps}_TEXTURE_NAME}`;
@@ -319,8 +324,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
 
     /**
      * @param {StandardMaterialOptions} options - The create options.
-     * @param {Map<string, string>} fDefines - The fragment defines.
-     * @param {ShaderPass} shaderPassInfo - The shader pass info.
+     * @param {Map<string, string|number|boolean>} fDefines - The fragment defines.
+     * @param {ShaderPassInfo} shaderPassInfo - The shader pass info.
      */
     prepareFragmentDefines(options, fDefines, shaderPassInfo) {
 
