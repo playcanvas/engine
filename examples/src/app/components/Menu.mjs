@@ -247,8 +247,8 @@ class Menu extends TypedComponent {
                     strokeWidth: 2,
                     strokeLinecap: 'round',
                     strokeLinejoin: 'round',
-                    width: 20,
-                    height: 20
+                    width: 18,
+                    height: 18
                 },
                 jsx('circle', { cx: 18, cy: 5, r: 3 }),
                 jsx('circle', { cx: 6, cy: 12, r: 3 }),
@@ -257,7 +257,6 @@ class Menu extends TypedComponent {
                 jsx('line', { x1: 15.41, y1: 6.51, x2: 8.59, y2: 10.49 })
                 )),
                 hasMiniStats && jsx(Button, {
-                    icon: 'E149',
                     id: 'showMiniStatsButton',
                     class: showMiniStats ? 'selected' : undefined,
                     text: '',
@@ -270,7 +269,6 @@ class Menu extends TypedComponent {
                     onClick: this.toggleCredits
                 }),
                 jsx(Button, {
-                    icon: 'E127',
                     text: '',
                     id: 'fullscreen-button',
                     onClick: this.toggleFullscreen.bind(this)
