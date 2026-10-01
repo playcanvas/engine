@@ -11,7 +11,8 @@ import { Script } from 'playcanvas';
  * Features:
  * - Automatic controller model loading from WebXR Input Profiles repository
  * - Support for both hand tracking and gamepad controllers
- * - Automatic cleanup on input source removal or XR session end
+ * - Automatic cleanup on input source removal or XR session end, with each model loaded once and
+ *   kept for later input sources and sessions until the script is destroyed
  * - Visibility control for integration with other XR scripts
  * - Fires events for controller lifecycle coordination
  *
@@ -40,7 +41,8 @@ class XrControllers extends Script {
     basePath = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles';
 
     /**
-     * Map of input sources to their controller data (entity, joint mappings, and asset).
+     * Map of input sources to their controller data (entity, joint mappings, and asset). The asset
+     * is owned by the script and shared by every input source that uses the same model.
      *
      * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset<'container'> }>}
      */
@@ -53,6 +55,17 @@ class XrControllers extends Script {
      * @private
      */
     _pendingInputSources = new Set();
+
+    /**
+     * Model loads by URL, shared by every input source that uses the model. The asset registry
+     * hands back one asset per URL, so a model is loaded once and only unloaded when the script is
+     * destroyed: unloading it as one input source went away would take it from any other input
+     * source using it, or still waiting for it to load.
+     *
+     * @type {Map<string, Promise<import('playcanvas').Asset<'container'>>>}
+     * @private
+     */
+    _models = new Map();
 
     /**
      * Whether controller models are currently visible.
@@ -113,6 +126,15 @@ class XrControllers extends Script {
 
         this._handlers = null;
         this._pendingInputSources.clear();
+
+        // Release the models, including those still loading once they land
+        for (const load of this._models.values()) {
+            load.then((asset) => {
+                this.app.assets.remove(asset);
+                asset.unload();
+            }, () => {});
+        }
+        this._models.clear();
     }
 
     /**
@@ -135,12 +157,8 @@ class XrControllers extends Script {
         const controller = this.controllers.get(inputSource);
         if (!controller) return;
 
+        // the model asset stays loaded for other input sources and later sessions
         controller.entity.destroy();
-
-        if (controller.asset) {
-            this.app.assets.remove(controller.asset);
-            controller.asset.unload();
-        }
 
         this.controllers.delete(inputSource);
         this.app.fire('xr:controller:remove', inputSource);
@@ -194,13 +212,9 @@ class XrControllers extends Script {
         // Load profiles sequentially and stop on first success
         const successfulResult = await this._tryLoadProfiles(inputSource, inputSource.profiles);
 
-        // Check if input source was removed during loading
+        // Check if input source was removed during loading. Its model stays loaded, as an input
+        // source added since may be using it
         if (!this._pendingInputSources.has(inputSource)) {
-            // Clean up the loaded asset if we got one
-            if (successfulResult?.asset) {
-                this.app.assets.remove(successfulResult.asset);
-                successfulResult.asset.unload();
-            }
             return;
         }
 
@@ -258,19 +272,41 @@ class XrControllers extends Script {
             const layoutPath = profile.layouts[inputSource.handedness]?.assetPath || '';
             const assetPath = `${this.basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right)/, '')}`;
 
-            // Load the model
-            const asset = await new Promise((resolve, reject) => {
-                this.app.assets.loadFromUrl(assetPath, 'container', (err, asset) => {
-                    if (err) reject(err);
-                    else resolve(asset);
-                });
-            });
+            // the input source was removed, or the script destroyed, while the profile loaded
+            if (!this._pendingInputSources.has(inputSource)) return null;
 
+            const asset = await this._loadModel(assetPath);
             return { profileId, asset };
         } catch (error) {
             // Silently fail for individual profiles - we'll try the next one
             return null;
         }
+    }
+
+    /**
+     * Loads a model, or returns the load already made for its URL.
+     *
+     * @param {string} url - The model URL.
+     * @returns {Promise<import('playcanvas').Asset<'container'>>} The loaded model asset.
+     * @private
+     */
+    _loadModel(url) {
+        let load = this._models.get(url);
+        if (!load) {
+            load = new Promise((resolve, reject) => {
+                this.app.assets.loadFromUrl(url, 'container', (err, asset) => {
+                    if (err) reject(err);
+                    else resolve(asset);
+                });
+            });
+            this._models.set(url, load);
+
+            // forget a failed load, so a later input source can try again
+            load.catch(() => {
+                if (this._models.get(url) === load) this._models.delete(url);
+            });
+        }
+        return load;
     }
 
     /**
