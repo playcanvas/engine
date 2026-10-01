@@ -2,6 +2,11 @@
 // by the fragment shader of the standard shader.
 export default /* wgsl */`
 
+    #ifdef MESH_COLOR
+        // Linear RGB replaces material emission; alpha replaces material opacity.
+        uniform mesh_color: vec4f;
+    #endif
+
     // globals
     var<private> dAlpha: f32 = 1.0;
 
@@ -21,6 +26,9 @@ export default /* wgsl */`
         var<private> dSpecularity: vec3f = vec3f(0.0, 0.0, 0.0);
         var<private> dGlossiness: f32 = 0.0;
 
+        // the ambient color of the material
+        uniform material_ambient: vec3f;
+
         #ifdef LIT_REFRACTION
             var<private> dTransmission: f32;
             var<private> dThickness: f32;
@@ -37,12 +45,11 @@ export default /* wgsl */`
         #endif
 
         #ifdef LIT_SCREEN_SIZE
-            uniform uScreenSize: vec4f;
+            uniform screen_size: vec4f;
         #endif
 
         #ifdef LIT_TRANSFORMS
             var<private> matrix_viewProjection: mat4x4f;
-            var<private> matrix_model: mat4x4f;
         #endif
 
         // parallax
@@ -222,8 +229,8 @@ export default /* wgsl */`
         #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
             var<private> dLightmap: vec3f;
             #ifdef STD_LIGHT_TEXTURE_ALLOCATE
-                var texture_lightMap : texture_2d<f32>;
-                var texture_lightMapSampler : sampler;
+                var {STD_LIGHT_TEXTURE_NAME} : texture_2d<f32>;
+                var {STD_LIGHT_TEXTURE_NAME}Sampler : sampler;
             #endif
         #endif
     #endif

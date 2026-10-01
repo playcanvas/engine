@@ -11,7 +11,7 @@ void getGlossiness() {
     #endif
 
     #ifdef STD_GLOSS_TEXTURE
-    dGlossiness *= texture2DBias({STD_GLOSS_TEXTURE_NAME}, {STD_GLOSS_TEXTURE_UV}, textureBias).{STD_GLOSS_TEXTURE_CHANNEL};
+    dGlossiness *= texture2DBias({STD_GLOSS_TEXTURE_NAME}, {STD_GLOSS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_GLOSS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_GLOSS_VERTEX

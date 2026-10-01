@@ -46,6 +46,19 @@ class BindBaseFormat {
         // SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT, SHADERSTAGE_COMPUTE
         this.visibility = visibility;
     }
+
+    /**
+     * A string describing the resource for the purpose of keying caches of shaders processed
+     * against it. Subclasses prefix it with the kind of the resource and append the properties
+     * that select their shader declaration. Valid once the slot has been assigned by the
+     * {@link BindGroupFormat}.
+     *
+     * @type {string}
+     * @ignore
+     */
+    get key() {
+        return `${this.slot}:${this.name}:${this.visibility}`;
+    }
 }
 
 /**
@@ -54,6 +67,10 @@ class BindBaseFormat {
  * @category Graphics
  */
 class BindUniformBufferFormat extends BindBaseFormat {
+    /** @ignore */
+    get key() {
+        return `U${super.key}`;
+    }
 }
 
 /**
@@ -90,6 +107,11 @@ class BindStorageBufferFormat extends BindBaseFormat {
         this.readOnly = readOnly;
         Debug.assert(readOnly || !(visibility & SHADERSTAGE_VERTEX), 'Storage buffer can only be used in read-only mode in SHADERSTAGE_VERTEX.');
     }
+
+    /** @ignore */
+    get key() {
+        return `SB${super.key}:${this.readOnly ? 1 : 0}:${this.format}`;
+    }
 }
 
 /**
@@ -119,6 +141,15 @@ class BindTextureFormat extends BindBaseFormat {
      * @type {boolean}
      */
     multisampled;
+
+    /**
+     * The name of the built-in texture to substitute when a bind group has no value for this slot,
+     * which is an error. Resolved from the name here, so the render path does not have to.
+     *
+     * @type {string}
+     * @ignore
+     */
+    substituteTexture;
 
     /**
      * Create a new instance.
@@ -183,9 +214,19 @@ class BindTextureFormat extends BindBaseFormat {
         this.sampleType = (multisampled && sampleType === SAMPLETYPE_FLOAT) ?
             SAMPLETYPE_UNFILTERABLE_FLOAT : sampleType;
 
+        // a missing scene depth reads as the far plane, where a missing color is better off
+        // obvious; anything else is a plain mistake, so make it obvious as well
+        this.substituteTexture = name === 'uSceneDepthMap' ? 'white' : 'pink';
+
         if (multisampled) {
             Debug.assert(textureDimension === TEXTUREDIMENSION_2D, `Multisampled texture binding '${name}' requires TEXTUREDIMENSION_2D.`);
         }
+    }
+
+    /** @ignore */
+    get key() {
+        const sampler = this.hasSampler ? this.samplerName : '';
+        return `T${super.key}:${this.textureDimension}:${this.sampleType}:${sampler}:${this.multisampled ? 1 : 0}`;
     }
 }
 
@@ -214,7 +255,7 @@ class BindStorageTextureFormat extends BindBaseFormat {
      * - {@link TEXTUREDIMENSION_2D_ARRAY}
      * - {@link TEXTUREDIMENSION_3D}
      *
-     * @param {boolean} [write] - Whether the storage texture is writeable. Defaults to true.
+     * @param {boolean} [write] - Whether the storage texture is writable. Defaults to true.
      * @param {boolean} [read] - Whether the storage texture is readable. Defaults to false. Note
      * that storage texture reads are only supported if
      * {@link GraphicsDevice#supportsStorageTextureRead} is true. Also note that only a subset of
@@ -230,11 +271,16 @@ class BindStorageTextureFormat extends BindBaseFormat {
         // TEXTUREDIMENSION_***
         this.textureDimension = textureDimension;
 
-        // whether the texture is writeable
+        // whether the texture is writable
         this.write = write;
 
         // whether the texture is readable
         this.read = read;
+    }
+
+    /** @ignore */
+    get key() {
+        return `ST${super.key}:${this.format}:${this.textureDimension}:${this.write ? 1 : 0}:${this.read ? 1 : 0}`;
     }
 }
 
@@ -244,6 +290,9 @@ class BindStorageTextureFormat extends BindBaseFormat {
  * resource type, and the visibility of these resources in the shader stages.
  * Currently this class is only used on WebGPU platform to specify the input and output resources
  * for vertex, fragment and compute shaders written in {@link SHADERLANGUAGE_WGSL} language.
+ *
+ * Call {@link BindGroupFormat#destroy} when no longer needed. On WebGPU, the graphics device
+ * retains bind group formats for device recovery until they are explicitly destroyed.
  *
  * @category Graphics
  */
@@ -271,6 +320,25 @@ class BindGroupFormat {
      * @private
      */
     storageBufferFormats = [];
+
+    /**
+     * A string uniquely describing the resources of the format (their kinds, names, slots and
+     * the properties that select the shader declaration), used to key caches of shaders
+     * processed against this format.
+     *
+     * @type {string}
+     * @ignore
+     */
+    key;
+
+    /**
+     * True when the format holds no resources. A bind group of it binds nothing, so the empty bind
+     * group of the device can be bound in its place.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    empty;
 
     /**
      * Create a new instance.
@@ -306,9 +374,13 @@ class BindGroupFormat {
             } else if (format instanceof BindStorageBufferFormat) {
                 this.storageBufferFormats.push(format);
             } else {
-                Debug.assert('Invalid bind format', format);
+                Debug.error('Invalid bind format', format);
             }
         });
+
+        // the slots are assigned above, so the resource keys are complete
+        this.key = formats.map(format => format.key).join(',');
+        this.empty = formats.length === 0;
 
         /** @type {GraphicsDevice} */
         this.device = graphicsDevice;

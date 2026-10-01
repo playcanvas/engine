@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 
-import { NullGraphicsDevice } from '../../src/platform/graphics/null/null-graphics-device.js';
 import { Mesh } from '../../src/scene/mesh.js';
+import { createGraphicsDevice } from '../device.mjs';
 
 const POSITIONS = [
     0, 0, 0,
@@ -30,7 +30,7 @@ describe('Mesh', function () {
     let device;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ id: 'mock' });
+        device = createGraphicsDevice({ id: 'mock' });
     });
 
     afterEach(function () {

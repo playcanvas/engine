@@ -18,6 +18,7 @@ class WebgpuGpuProfiler extends GpuProfiler {
     }
 
     destroy() {
+        this.invalidateTimings();
         this.timestampQueriesSet?.destroy();
         this.timestampQueriesSet = null;
     }

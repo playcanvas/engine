@@ -9,6 +9,13 @@ import { AnimEvents } from './anim-events.js';
  * An AnimTrack stores the curve data necessary to animate a set of target nodes. It can be linked
  * to the nodes it should animate using the {@link AnimComponent#assignAnimation} method.
  *
+ * A track is the engine's animation clip: a {@link name}, a {@link duration} in seconds and a list
+ * of {@link curves}, each of which reads keyframe times from one of the {@link inputs} and values
+ * from one of the {@link outputs}, and writes the result to a target path such as a node's local
+ * position or a component property. Optional {@link events} fire at set times during playback.
+ * Tracks come from `animation` assets, GLB animations among them, and are what an
+ * {@link AnimState} plays; one track can be assigned in any number of components.
+ *
  * @category Animation
  */
 class AnimTrack {

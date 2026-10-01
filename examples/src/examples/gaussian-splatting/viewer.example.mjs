@@ -197,6 +197,8 @@ cameraFrame.grading.enabled = true;
 
 // Setup skydome toggle function
 const applySkydome = () => {
+    const oldSkybox = app.scene.skybox;
+    const oldEnvAtlas = app.scene.envAtlas;
     const enabled = data.get('data.skydome');
     if (enabled) {
         const hdriTexture = assets.hdri.resource;
@@ -214,7 +216,13 @@ const applySkydome = () => {
         app.scene.skybox = null;
         app.scene.envAtlas = null;
     }
+
+    oldSkybox?.destroy();
+    oldEnvAtlas?.destroy();
 };
+
+// Rebuild generated textures while preserving the skydome toggle.
+device.on('devicerestored', applySkydome);
 
 // Initialize data values
 data.set('data', {

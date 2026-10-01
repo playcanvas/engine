@@ -118,12 +118,20 @@ class FramePass {
     frameUpdate() {
     }
 
+    /**
+     * Called before execution when the pass is enabled, even if {@link executeEnabled} is false.
+     * Overrides that require execution must check {@link executeEnabled} themselves.
+     */
     before() {
     }
 
     execute() {
     }
 
+    /**
+     * Called after execution when the pass is enabled, even if {@link executeEnabled} is false.
+     * Overrides that require execution must check {@link executeEnabled} themselves.
+     */
     after() {
     }
 

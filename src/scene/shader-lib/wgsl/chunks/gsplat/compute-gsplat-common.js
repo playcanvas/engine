@@ -2,8 +2,6 @@ export const computeGsplatCommonSource = /* wgsl */`
 
 #include "halfTypesCS"
 
-const TILE_SIZE: u32 = 16u;
-
 fn quatToMat3(r: half4) -> half3x3 {
     let r2: half4 = r + r;
     let x: half   = r2.x * r.w;
@@ -40,7 +38,7 @@ fn computeSplatCov(
     scale: half3,
     viewMatrix: mat4x4f,
     viewProj: mat4x4f,
-    focal: f32,
+    focal: vec2f,           // focal length in pixels, per axis
     viewportWidth: f32,
     viewportHeight: f32,
     nearClip: f32,
@@ -160,11 +158,11 @@ fn computeSplatCov(
 
         // Compute TT columns directly without materializing full J and W matrices.
         // Original code:
-        //   let J = mat3x3f(vec3f(J1, 0.0, J2.x), vec3f(0.0, J1, J2.y), vec3f(0.0, 0.0, 0.0));
+        //   let J = mat3x3f(vec3f(J1.x, 0.0, J2.x), vec3f(0.0, J1.y, J2.y), vec3f(0.0, 0.0, 0.0));
         //   let W = transpose(mat3x3f(viewMatrix[0].xyz, viewMatrix[1].xyz, viewMatrix[2].xyz));
         //   let TT = W * J;
-        let tt0 = J1 * w0 + J2.x * w2;
-        let tt1 = J1 * w1 + J2.y * w2;
+        let tt0 = J1.x * w0 + J2.x * w2;
+        let tt1 = J1.y * w1 + J2.y * w2;
 
     #endif
 
@@ -216,15 +214,6 @@ fn computeSplatCov(
     if (totalContribution < effMinContribution) {
         return result;
     }
-
-    // Opacity-aware radius tightening based on FlashGS
-    // https://github.com/InternLandMark/FlashGS
-    // The fixed factor 8.0 corresponds to power = -4.0 (exp(-4) ≈ 0.018).
-    // For low-opacity splats, pixels become invisible (alpha < alphaClip) at a closer
-    // distance. We solve for the power where opacity * exp(power) = alphaClip,
-    // giving radiusFactor = min(8.0, 2.0 * ln(opacity / alphaClip)). This shrinks
-    // the effective radius for low-opacity splats, reducing tile assignments.
-    let radiusFactor = computeRadiusFactor(half(opacity), alphaClip);
 
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
     let maxRadius = vmin;

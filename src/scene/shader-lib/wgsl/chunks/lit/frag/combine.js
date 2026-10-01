@@ -3,7 +3,7 @@ fn combineColor(albedo: vec3f, sheenSpecularity: vec3f, clearcoatSpecularity: f3
     var ret: vec3f = vec3f(0.0);
 
     #ifdef LIT_OLD_AMBIENT
-        ret = ret + ((dDiffuseLight - uniform.light_globalAmbient) * albedo + uniform.material_ambient * uniform.light_globalAmbient);
+        ret = ret + ((dDiffuseLight - uniform.light_globalAmbient) * albedo + litArgs_ambient * uniform.light_globalAmbient);
     #else
         ret = ret + (albedo * dDiffuseLight);
     #endif // LIT_OLD_AMBIENT

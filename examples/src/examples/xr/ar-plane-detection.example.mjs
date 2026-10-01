@@ -65,7 +65,7 @@ const message = (msg) => {
 };
 
 const assets = {
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' })
 };
 
 const gfxOptions = {

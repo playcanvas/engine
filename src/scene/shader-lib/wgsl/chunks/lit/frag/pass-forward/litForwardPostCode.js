@@ -66,8 +66,6 @@ export default /* wgsl */`
     #include "lightSheenPS"
 #endif
 
-uniform material_ambient: vec3f;
-
 #ifdef LIT_SPECULAR
     #ifdef LIT_LIGHTING
         #ifdef LIT_GGX_SPECULAR

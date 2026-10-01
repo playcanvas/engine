@@ -18,9 +18,13 @@ const startsWith = (str, prefix) => str.indexOf(prefix) === 0;
 const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length) !== -1;
 
 /**
- * Dual gesture input source.
+ * Dual gesture input source. Two virtual controls for a touch screen, one on the left of the
+ * element and one on the right, producing `leftInput` and `rightInput` deltas as `[x, y]` and a
+ * `doubleTap` delta. The {@link layout} chooses a joystick or a plain touch area for each side,
+ * for example `joystick-touch`, and the joysticks are exposed as {@link leftJoystick} and
+ * {@link rightJoystick}.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  *
  * @typedef {object} DualGestureSourceDeltas

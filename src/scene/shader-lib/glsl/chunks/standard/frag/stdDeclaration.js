@@ -2,6 +2,11 @@
 // by the fragment shader of the standard shader.
 export default /* glsl */`
 
+    #ifdef MESH_COLOR
+        // Linear RGB replaces material emission; alpha replaces material opacity.
+        uniform vec4 mesh_color;
+    #endif
+
     // globals
     float dAlpha = 1.0;
 
@@ -20,6 +25,9 @@ export default /* glsl */`
         vec3 dSpecularity = vec3(0.0);
         float dGlossiness = 0.0;
 
+        // the ambient color of the material
+        uniform vec3 material_ambient;
+
         #ifdef LIT_REFRACTION
             float dTransmission;
             float dThickness;
@@ -35,12 +43,11 @@ export default /* glsl */`
         #endif
 
         #ifdef LIT_SCREEN_SIZE
-            uniform vec4 uScreenSize;
+            uniform vec4 screen_size;
         #endif
 
         #ifdef LIT_TRANSFORMS
             uniform mat4 matrix_viewProjection;
-            uniform mat4 matrix_model;
         #endif
 
         // parallax
@@ -198,7 +205,7 @@ export default /* glsl */`
         #if defined(STD_LIGHTMAP) || defined(STD_LIGHT_VERTEX_COLOR)
             vec3 dLightmap;
             #ifdef STD_LIGHT_TEXTURE_ALLOCATE
-                uniform sampler2D texture_lightMap;
+                uniform sampler2D {STD_LIGHT_TEXTURE_NAME};
             #endif
         #endif
     #endif

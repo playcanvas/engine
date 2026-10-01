@@ -9,8 +9,8 @@ export default /* wgsl */`
 
     #ifndef ENV_ATLAS
         #define ENV_ATLAS
-        var texture_envAtlas: texture_2d<f32>;
-        var texture_envAtlasSampler: sampler;
+        var {LIT_ENV_ATLAS}: texture_2d<f32>;
+        var {LIT_ENV_ATLAS}Sampler: sampler;
     #endif
 #endif
 
@@ -38,7 +38,7 @@ fn addAmbient(worldNormal: vec3f) {
         let dir: vec3f = normalize(cubeMapRotate(worldNormal) * vec3f(-1.0, 1.0, 1.0));
         let uv: vec2f = mapUv(toSphericalUv(dir), vec4f(128.0, 256.0 + 128.0, 64.0, 32.0) / atlasSize);
 
-        let raw: vec4f = textureSample(texture_envAtlas, texture_envAtlasSampler, uv);
+        let raw: vec4f = textureSample({LIT_ENV_ATLAS}, {LIT_ENV_ATLAS}Sampler, uv);
         let linear: vec3f = {ambientDecode}(raw);
         dDiffuseLight += processEnvironment(linear);
 

@@ -1,7 +1,8 @@
+import { Debug } from '../../core/debug.js';
 import { BINDGROUP_VIEW } from './constants.js';
 
 /**
- * @import { BindGroupFormat } from './bind-group-format.js'
+ * @import { BindGroupFormat, BindTextureFormat } from './bind-group-format.js'
  * @import { GraphicsDevice } from './graphics-device.js'
  * @import { UniformBufferFormat } from './uniform-buffer-format.js'
  * @import { VertexFormat } from './vertex-format.js'
@@ -23,19 +24,34 @@ class ShaderProcessorOptions {
     vertexFormat;
 
     /**
+     * The names of the textures the renderer supplies per pass in the view bind group, or null when
+     * the view bind group holds only the view uniform buffer.
+     *
+     * @type {Set<string>|null}
+     */
+    viewTextures = null;
+
+    /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
-     * @param {UniformBufferFormat} [viewUniformFormat] - Format of the view uniform buffer. The
-     * view bind group contains only this single uniform buffer (no textures), so its layout is
-     * derived from the uniform format alone and no bind group format is required.
+     * @param {UniformBufferFormat} [viewUniformFormat] - Format of the view uniform buffer, the
+     * first binding of the view bind group.
      * @param {VertexFormat} [vertexFormat] - Format of the vertex buffer.
+     * @param {Set<string>|null} [viewTextures] - The names of the textures which are part of the
+     * view bind group, following the uniform buffer. On WebGPU each shader gets a view bind group
+     * format of exactly the view textures it declares. Only used with a view uniform format, and
+     * must be a function of it, as only the format is part of the processing key.
      */
-    constructor(viewUniformFormat, vertexFormat) {
+    constructor(viewUniformFormat, vertexFormat, viewTextures) {
 
         // construct a sparse array
         this.uniformFormats[BINDGROUP_VIEW] = viewUniformFormat;
 
         this.vertexFormat = vertexFormat;
+
+        if (viewUniformFormat && viewTextures) {
+            this.viewTextures = viewTextures;
+        }
     }
 
     /**
@@ -45,15 +61,23 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the uniform exists, false otherwise.
      */
     hasUniform(name) {
+        return this.getUniformBindGroup(name) >= 0;
+    }
 
+    /**
+     * Get the index of the bind group whose uniform buffer contains the uniform.
+     *
+     * @param {string} name - The name of the uniform.
+     * @returns {number} - The bind group index, or -1 if no uniform buffer contains the uniform.
+     */
+    getUniformBindGroup(name) {
         for (let i = 0; i < this.uniformFormats.length; i++) {
             const uniformFormat = this.uniformFormats[i];
             if (uniformFormat?.get(name)) {
-                return true;
+                return i;
             }
         }
-
-        return false;
+        return -1;
     }
 
     /**
@@ -63,15 +87,43 @@ class ShaderProcessorOptions {
      * @returns {boolean} - Returns true if the texture uniform exists, false otherwise.
      */
     hasTexture(name) {
+        return !!this.getTexture(name);
+    }
+
+    /**
+     * Get the format of the texture, if one of the supplied bind groups contains it.
+     *
+     * @param {string} name - The name of the texture.
+     * @returns {BindTextureFormat|null} - The format of the texture, or null if no supplied bind
+     * group contains it.
+     */
+    getTexture(name) {
 
         for (let i = 0; i < this.bindGroupFormats.length; i++) {
             const groupFormat = this.bindGroupFormats[i];
-            if (groupFormat?.getTexture(name)) {
-                return true;
+            const textureFormat = groupFormat?.getTexture(name);
+            if (textureFormat) {
+                return textureFormat;
             }
         }
 
-        return false;
+        return null;
+    }
+
+    /**
+     * Debug check of a uniform no supplied format claims, which so falls to the per-draw mesh
+     * uniform buffer. A light uniform belongs in the view uniform buffer whenever a view format is
+     * supplied, so one landing here means the lighting chunks declare something the format does
+     * not carry, and it is uploaded per draw again.
+     *
+     * @param {string} name - The name of the uniform.
+     */
+    debugCheckMeshUniform(name) {
+        Debug.call(() => {
+            if (this.uniformFormats[BINDGROUP_VIEW] && /^light\d+_/.test(name)) {
+                Debug.warnOnce(`Light uniform '${name}' is not part of the view uniform buffer format and is uploaded per draw. Add it to LightSlotUniforms#appendFormats.`);
+            }
+        });
     }
 
     getVertexElement(semantic) {
@@ -85,13 +137,31 @@ class ShaderProcessorOptions {
      * @returns {string} - Returns the key.
      */
     generateKey(device) {
-        // TODO: Optimize. Uniform and BindGroup formats should have their keys evaluated in their
-        // constructors, and here we should simply concatenate those.
-        let key = JSON.stringify(this.uniformFormats) + JSON.stringify(this.bindGroupFormats);
+        // the formats describe their layout in a key computed once in their constructors, and
+        // the bind group index they are assigned to is part of the emitted declaration
+        let key = '';
+        const { uniformFormats, bindGroupFormats } = this;
+        for (let i = 0; i < uniformFormats.length; i++) {
+            const format = uniformFormats[i];
+            if (format) {
+                key += `|u${i}:${format.key}`;
+            }
+        }
+        for (let i = 0; i < bindGroupFormats.length; i++) {
+            const format = bindGroupFormats[i];
+            if (format) {
+                key += `|b${i}:${format.key}`;
+            }
+        }
 
-        // WebGPU shaders are processed per vertex format
+        // WebGPU shaders are processed per vertex format, and the view textures move to the view
+        // bind group. Their names follow from the view uniform format, and the format of that group
+        // from the source, so only the flag is needed
         if (device.isWebGPU) {
-            key += this.vertexFormat?.shaderProcessingHashString;
+            key += `|v:${this.vertexFormat?.shaderProcessingHashString}`;
+            if (this.viewTextures) {
+                key += '|vt';
+            }
         }
 
         return key;

@@ -8,6 +8,8 @@ import { standardMaterialTextureParameters } from '../../scene/materials/standar
 import { Asset } from './asset.js';
 
 /**
+ * @import { AssetType } from './asset.js'
+ * @import { Bundle } from '../bundle/bundle.js'
  * @import { BundleRegistry } from '../bundle/bundle-registry.js'
  * @import { ResourceLoader } from '../handlers/loader.js'
  */
@@ -20,11 +22,13 @@ import { Asset } from './asset.js';
  */
 
 /**
+ * @template {AssetType | (string & {})} [K=string]
  * @callback LoadAssetCallback
  * Callback used by {@link AssetRegistry#loadFromUrl} and called when an asset is loaded (or an
  * error occurs).
  * @param {string|null} err - The error message is null if no errors were encountered.
- * @param {Asset} [asset] - The loaded asset if no errors were encountered.
+ * @param {Asset<K>} [asset] - The loaded asset if no errors were encountered. Its type follows the
+ * `type` passed to {@link AssetRegistry#loadFromUrl}.
  * @returns {void}
  */
 
@@ -37,9 +41,29 @@ import { Asset } from './asset.js';
  */
 
 /**
- * Container for all assets that are available to this application. Note that PlayCanvas scripts
- * are provided with an AssetRegistry instance as `app.assets`.
+ * The AssetRegistry holds every {@link Asset} an application knows about and drives their loading
+ * through the {@link ResourceLoader}. Each application has one at {@link AppBase#assets}.
  *
+ * Look assets up by id with {@link get}, by name and type with {@link find} and {@link findAll}, by
+ * URL with {@link getByUrl}, or by tag with {@link findByTag}. Register an asset with {@link add},
+ * or create and load one in a single call with {@link loadFromUrl}, which reuses any asset already
+ * registered for that URL.
+ *
+ * Adding an asset does not fetch it unless {@link Asset#preload} is true. Call {@link load} to
+ * fetch it, then wait with {@link Asset#ready} or listen for the registry's `load`, `error`, `add`
+ * and `remove` events. Each also fires per asset as `load:[id]` and, except for `error`, per URL as
+ * `load:url:[url]`.
+ *
+ * @example
+ * const asset = app.assets.find('brick', 'texture');
+ * app.assets.load(asset);
+ * asset.ready((asset) => {
+ *     material.diffuseMap = asset.resource;
+ * });
+ * @example
+ * app.assets.loadFromUrl('models/robot.glb', 'container', (err, asset) => {
+ *     app.root.addChild(asset.resource.instantiateRenderEntity());
+ * });
  * @category Asset
  */
 class AssetRegistry extends EventHandler {
@@ -205,7 +229,9 @@ class AssetRegistry extends EventHandler {
     prefix = null;
 
     /**
-     * BundleRegistry
+     * The bundle registry that tracks which assets are packed into bundle assets and serves
+     * their files from loaded bundles. Assigned when the application creates its bundle registry;
+     * null until then.
      *
      * @type {BundleRegistry|null}
      */
@@ -401,6 +427,11 @@ class AssetRegistry extends EventHandler {
      * Load the asset's file from a remote source. Listen for `load` events on the asset to find
      * out when it is loaded.
      *
+     * Container-backed render assets wait for the container referenced by `data.containerAsset`
+     * to be registered and loaded before firing `load`. The container can be registered later,
+     * but if it is never registered, the render asset remains loading indefinitely. If that
+     * render asset is marked for preload, it also prevents {@link AppBase#preload} from completing.
+     *
      * @param {Asset} asset - The asset to load.
      * @param {object} [options] - Options for asset loading.
      * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
@@ -467,7 +498,8 @@ class AssetRegistry extends EventHandler {
                     }
                 }
 
-                if (asset.resource.loaded) {
+                const bundle = /** @type {Bundle} */ (asset.resource);
+                if (bundle.loaded) {
                     _fireLoad();
                 } else {
                     this.fire('load:start', asset);
@@ -476,7 +508,7 @@ class AssetRegistry extends EventHandler {
                         this.fire(`load:start:url:${file.url}`, asset);
                     }
                     asset.fire('load:start', asset);
-                    asset.resource.on('load', _fireLoad);
+                    bundle.on('load', _fireLoad);
                 }
             } else {
                 _fireLoad();
@@ -509,7 +541,7 @@ class AssetRegistry extends EventHandler {
             }
         };
 
-        if (file || asset.type === 'cubemap') {
+        if (file || asset.type === 'cubemap' || (asset.type === 'render' && asset.data.containerAsset)) {
             // start loading the resource
             this.fire('load:start', asset);
             this.fire(`load:${asset.id}:start`, asset);
@@ -549,13 +581,19 @@ class AssetRegistry extends EventHandler {
      * Use this to load and create an asset if you don't have assets created. Usually you would
      * only use this if you are not integrated with the PlayCanvas Editor.
      *
+     * The `type` also types the loaded asset: `loadFromUrl(url, 'texture', callback)` passes an
+     * `Asset<'texture'>` to `callback`, whose `resource` is a {@link Texture}. See {@link AssetMap}.
+     * An asset already registered for the URL is reused, whatever its type, so load a URL as one
+     * type only; otherwise the callback can receive an asset of another type than requested.
+     *
+     * @template {AssetType | (string & {})} K
      * @param {string} url - The url to load.
-     * @param {string} type - The type of asset to load.
-     * @param {LoadAssetCallback} callback - Function called when asset is loaded, passed (err,
+     * @param {K} type - The type of asset to load (an {@link AssetType}).
+     * @param {LoadAssetCallback<K>} callback - Function called when asset is loaded, passed (err,
      * asset), where err is null if no errors were encountered.
      * @example
      * app.assets.loadFromUrl("../path/to/texture.jpg", "texture", function (err, asset) {
-     *     const texture = asset.resource;
+     *     const texture = asset.resource; // a Texture
      * });
      */
     loadFromUrl(url, type, callback) {
@@ -567,15 +605,16 @@ class AssetRegistry extends EventHandler {
      * example, use this function when loading BLOB assets, where the URL does not adequately
      * identify the file.
      *
+     * @template {AssetType | (string & {})} K
      * @param {string} url - The url to load.
      * @param {string} filename - The filename of the asset to load.
-     * @param {string} type - The type of asset to load.
-     * @param {LoadAssetCallback} callback - Function called when asset is loaded, passed (err,
+     * @param {K} type - The type of asset to load (an {@link AssetType}).
+     * @param {LoadAssetCallback<K>} callback - Function called when asset is loaded, passed (err,
      * asset), where err is null if no errors were encountered.
      * @example
      * const file = magicallyObtainAFile();
      * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", function (err, asset) {
-     *     const texture = asset.resource;
+     *     const texture = asset.resource; // a Texture
      * });
      */
     loadFromUrlAndFilename(url, filename, type, callback) {
@@ -586,7 +625,9 @@ class AssetRegistry extends EventHandler {
             url: url
         };
 
-        let asset = this.getByUrl(url);
+        // the URL index holds one asset per URL regardless of type, so this hands back whichever
+        // asset is registered for the URL; indexing by URL and type is tracked in #8489
+        let asset = /** @type {Asset<K> | undefined} */ (this.getByUrl(url));
         if (!asset) {
             asset = new Asset(name, type, file);
             this.add(asset);
@@ -786,11 +827,35 @@ class AssetRegistry extends EventHandler {
     /**
      * Return the first Asset with the specified name and type found in the registry.
      *
+     * The `type` also types the result: `find('brick', 'texture')` returns
+     * `Asset<'texture'> | null`, whose `resource` is a {@link Texture}. See {@link AssetMap}.
+     *
+     * @template {AssetType | (string & {})} K
+     * @overload
+     * @param {string} name - The name of the Asset to find.
+     * @param {K} type - The type of the Asset to find (an {@link AssetType}).
+     * @returns {Asset<K>|null} A single Asset or null if no Asset is found.
+     * @example
+     * const asset = app.assets.find("myTextureAsset", "texture");
+     * if (asset) {
+     *     const texture = asset.resource; // a Texture
+     * }
+     */
+    /**
+     * Return the first Asset with the specified name found in the registry, of any type or of a
+     * type only known as a `string`. The result is a plain `Asset`, whose `resource` is `unknown`.
+     *
+     * @overload
      * @param {string} name - The name of the Asset to find.
      * @param {string} [type] - The type of the Asset to find.
      * @returns {Asset|null} A single Asset or null if no Asset is found.
      * @example
-     * const asset = app.assets.find("myTextureAsset", "texture");
+     * const asset = app.assets.find("myAsset");
+     */
+    /**
+     * @param {string} name - The name of the Asset to find.
+     * @param {string} [type] - The type of the Asset to find.
+     * @returns {Asset|null} A single Asset or null if no Asset is found.
      */
     find(name, type) {
         const items = this._nameToAsset.get(name);
@@ -808,12 +873,34 @@ class AssetRegistry extends EventHandler {
     /**
      * Return all Assets with the specified name and type found in the registry.
      *
+     * The `type` also types the result, as for {@link AssetRegistry#find}:
+     * `findAll('brick', 'texture')` returns `Asset<'texture'>[]`.
+     *
+     * @template {AssetType | (string & {})} K
+     * @overload
+     * @param {string} name - The name of the Assets to find.
+     * @param {K} type - The type of the Assets to find (an {@link AssetType}).
+     * @returns {Asset<K>[]} A list of all Assets found.
+     * @example
+     * const assets = app.assets.findAll('brick', 'texture');
+     * console.log(`Found ${assets.length} texture assets named 'brick'`);
+     * const textures = assets.map(asset => asset.resource); // Texture[]
+     */
+    /**
+     * Return all Assets with the specified name found in the registry, of any type or of a type
+     * only known as a `string`.
+     *
+     * @overload
      * @param {string} name - The name of the Assets to find.
      * @param {string} [type] - The type of the Assets to find.
      * @returns {Asset[]} A list of all Assets found.
      * @example
-     * const assets = app.assets.findAll('brick', 'texture');
-     * console.log(`Found ${assets.length} texture assets named 'brick'`);
+     * const assets = app.assets.findAll('brick');
+     */
+    /**
+     * @param {string} name - The name of the Assets to find.
+     * @param {string} [type] - The type of the Assets to find.
+     * @returns {Asset[]} A list of all Assets found.
      */
     findAll(name, type) {
         const items = this._nameToAsset.get(name);

@@ -12,9 +12,11 @@ import { GSplatResourceCleanup } from '../gsplat/gsplat-resource-cleanup.js';
  * @import { Scene } from '../scene.js'
  * @import { Renderer } from '../renderer/renderer.js'
  * @import { EventHandler } from '../../core/event-handler.js'
+ * @import { GSplatParams } from './gsplat-params.js'
  */
 
 const tempLayersToRemove = [];
+const tempDirtyLayers = new Set();
 
 /**
  * Per layer data the director keeps track of.
@@ -183,6 +185,11 @@ class GSplatDirector {
     scene;
 
     /**
+     * @type {GSplatParams}
+     */
+    gsplat;
+
+    /**
      * @type {EventHandler}
      */
     eventHandler;
@@ -208,12 +215,14 @@ class GSplatDirector {
      * @param {Renderer} renderer - The renderer.
      * @param {Scene} scene - The scene.
      * @param {EventHandler} eventHandler - Event handler for firing events.
+     * @param {GSplatParams} gsplat - The GSplat parameters.
      */
-    constructor(device, renderer, scene, eventHandler) {
+    constructor(device, renderer, scene, eventHandler, gsplat) {
         this.device = device;
         this.renderer = renderer;
         this.scene = scene;
         this.eventHandler = eventHandler;
+        this.gsplat = gsplat;
     }
 
     destroy() {
@@ -259,14 +268,16 @@ class GSplatDirector {
      * {@link GSplatManager#updateStreaming}. Fires `frame:request` once when a render would show new
      * data (a new world-state version) or when a CPU-sort result is waiting to be applied.
      *
-     * Uses the cached `camerasMap` topology (built by {@link update} on the render path) — newly
-     * added cameras, layers, or gsplat components register on the next rendered frame. Does no GPU
-     * draw work.
+     * Uses the cached `camerasMap` topology (built by {@link update} on the render path). Placement
+     * changes on layers that already have managers are reconciled here, so they reach the world state
+     * this frame. Newly added cameras, and layers without managers yet, register on the next rendered
+     * frame, and cameras whose entity has lost its camera component since are skipped until that
+     * frame prunes them. Does no GPU draw work.
      */
     updateStreaming() {
 
         // apply pending gsplat params changes (e.g. varying streams) before the world reads them
-        this.scene.gsplat.frameUpdate();
+        this.gsplat.frameUpdate();
 
         // process any pending resource destructions
         GSplatResourceCleanup.process(this.device);
@@ -276,8 +287,28 @@ class GSplatDirector {
 
         let needRender = false;
         let streamed = false;
-        this.camerasMap.forEach((cameraData) => {
-            cameraData.layersMap.forEach((layerData) => {
+        this.camerasMap.forEach((cameraData, camera) => {
+
+            // Skip a camera whose entity lost its camera component after the last render (the
+            // entity was destroyed or the component removed), which the LOD pass reads. The next
+            // render prunes it. A disabled camera keeps its component and streams as before.
+            if (camera.node.camera?.camera !== camera) {
+                return;
+            }
+
+            cameraData.layersMap.forEach((layerData, layer) => {
+
+                // Reconcile placement changes made since the last render before the managers rebuild
+                // their world state from them below. Replacing a gsplat's asset destroys its old
+                // placement, and a rebuild from the last render's placements would drop it with its
+                // replacement not yet added, rendering a frame without the splat. The render path
+                // still consumes the flag to reconfigure the managers, and reconciling the same
+                // placements there again changes nothing.
+                if (layer.gsplatPlacementsDirty) {
+                    layerData.gsplatManager?.reconcile(layer.gsplatPlacements);
+                    layerData.gsplatManagerShadow?.reconcile(layer.gsplatShadowCasters);
+                }
+
                 const manager = layerData.gsplatManager;
                 if (manager) {
                     needRender = manager.updateStreaming(token) || needRender;
@@ -301,7 +332,7 @@ class GSplatDirector {
         // setup. Material changes are tracked independently by each renderer using the material's
         // update version, so they do not need to be cleared here.
         if (streamed) {
-            this.scene.gsplat.dirty = false;
+            this.gsplat.dirty = false;
         }
 
         // request a render when streaming advanced, or a CPU sort result is waiting to be applied
@@ -317,7 +348,7 @@ class GSplatDirector {
      */
     update(comp) {
 
-        // remove camera / layer entires for cameras / layers no longer in the composition
+        // remove camera / layer entries for cameras / layers no longer in the composition
         this.camerasMap.forEach((cameraData, camera) => {
 
             // camera is no longer in the composition
@@ -350,6 +381,18 @@ class GSplatDirector {
             }
         });
 
+        // Consume the layers' placement changes up front. The managers fire frame:ready from their
+        // update below, and a listener changing placements there (e.g. enabling a gsplat) raises the
+        // flag again, so the change is reconciled next frame for every camera instead of being lost.
+        const layerList = comp.layerList;
+        for (let i = 0; i < layerList.length; i++) {
+            const layer = layerList[i];
+            if (layer.gsplatPlacementsDirty) {
+                layer.gsplatPlacementsDirty = false;
+                tempDirtyLayers.add(layer);
+            }
+        }
+
         let gsplatCount = 0;
         let bufferCopyUploaded = 0;
         let bufferCopyTotal = 0;
@@ -367,12 +410,16 @@ class GSplatDirector {
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer?.enabled) {
 
-                    // if layer's splat placements were modified, or new camera
-                    if (layer.gsplatPlacementsDirty || !cameraData) {
+                    // check if there are any placements
+                    const hasNormalPlacements = layer.gsplatPlacements.length > 0;
+                    const hasShadowCasters = layer.gsplatShadowCasters.length > 0;
 
-                        // check if there are any placements
-                        const hasNormalPlacements = layer.gsplatPlacements.length > 0;
-                        const hasShadowCasters = layer.gsplatShadowCasters.length > 0;
+                    // if layer's splat placements were modified, or the camera has no managers yet
+                    // for a layer with splats — a new camera, or one that gained the layer after the
+                    // layer's last placement change was consumed, e.g. by removing it from its
+                    // layers and adding it back
+                    if (tempDirtyLayers.has(layer) ||
+                        ((hasNormalPlacements || hasShadowCasters) && !cameraData?.layersMap.has(layer))) {
 
                         if (!hasNormalPlacements && !hasShadowCasters) {
                             // no splats on layer - remove gsplat managers if they exist
@@ -422,12 +469,9 @@ class GSplatDirector {
             (bufferCopyUploaded / bufferCopyTotal * 100) : 0;
 
         // clear dirty flags
-        this.scene.gsplat.frameEnd();
+        this.gsplat.frameEnd();
 
-        // clear dirty flags on all layers of the composition
-        for (let i = 0; i < comp.layerList.length; i++) {
-            comp.layerList[i].gsplatPlacementsDirty = false;
-        }
+        tempDirtyLayers.clear();
     }
 
     /**

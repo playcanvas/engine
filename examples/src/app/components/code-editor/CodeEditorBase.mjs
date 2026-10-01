@@ -30,7 +30,7 @@ const PC_MODULE_SHIM = 'declare module \'playcanvas\' {\n    export = pc;\n}\n';
 // etc. resolve to their default string export. without these the imports stay unresolved.
 const EXAMPLE_MODULE_SHIM = [
     'declare module \'examples/context\' {',
-    '    export const deviceType: \'webgpu\' | \'webgpu:bare\' | \'webgl2\' | \'null\';',
+    '    export const deviceType: \'webgpu\' | \'webgpu:bare\' | \'webgl2\' | \'webgl2:bare\' | \'null\';',
     '    export const data: any;',
     '    export const win: Window;',
     '}',
@@ -45,8 +45,14 @@ const EXAMPLE_MODULE_SHIM = [
     'declare module \'*.txt\' { const data: string; export default data; }'
 ].join('\n');
 
+/**
+ * The minimap is off by default, as example code is usually short. It can be turned on with the
+ * 'View: Toggle Minimap' command (F1).
+ *
+ * @returns {boolean} Whether to show the minimap.
+ */
 function getShowMinimap() {
-    let showMinimap = true;
+    let showMinimap = false;
     if (localStorage.getItem('showMinimap')) {
         showMinimap = localStorage.getItem('showMinimap') === 'true';
     }
@@ -203,4 +209,4 @@ class CodeEditorBase extends TypedComponent {
     }
 }
 
-export { CodeEditorBase };
+export { CodeEditorBase, getShowMinimap };

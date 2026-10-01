@@ -99,7 +99,11 @@ class SkyMesh {
     set depthWrite(value) {
         this._depthWrite = value;
         if (this.meshInstance) {
-            this.meshInstance.material.depthWrite = value;
+            const material = this.meshInstance.material;
+            material.depthWrite = value;
+
+            // Post-processing can consume depth from the scene pass instead of a prepass.
+            material.sceneTexturesWrite = value && material.getDefine('SKYMESH');
         }
     }
 

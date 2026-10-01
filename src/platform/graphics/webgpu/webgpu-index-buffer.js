@@ -17,9 +17,9 @@ class WebgpuIndexBuffer extends WebgpuBuffer {
         this.format = indexBuffer.format === INDEXFORMAT_UINT16 ? 'uint16' : 'uint32';
     }
 
-    unlock(indexBuffer) {
+    unlock(indexBuffer, byteOffset, byteLength) {
         const device = indexBuffer.device;
-        super.unlock(device, indexBuffer.storage);
+        super.unlock(device, indexBuffer.storage, byteOffset, byteLength);
     }
 }
 

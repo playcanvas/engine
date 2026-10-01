@@ -74,7 +74,7 @@ const assets = {
     mosquito: new Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
     sheen: new Asset('sheen', 'container', { url: './assets/models/SheenChair.glb' }),
     lamp: new Asset('lamp', 'container', { url: './assets/models/StainedGlassLamp.glb' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
     checkerboard: new Asset('checkerboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true })
 };
 

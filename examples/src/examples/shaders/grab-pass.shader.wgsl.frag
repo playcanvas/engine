@@ -15,7 +15,7 @@ var uRoughnessMapSampler: sampler;
 uniform tints: array<vec3f, 4>;
 
 // engine built-in constant storing render target size in .xy and inverse size in .zw
-uniform uScreenSize: vec4f;
+uniform screen_size: vec4f;
 
 varying texCoord: vec2f;
 
@@ -33,7 +33,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     offset = offset * (0.2 + roughness) * 0.015;
 
     // get normalized uv coordinates for canvas
-    let grabUv: vec2f = pcPosition.xy * uniform.uScreenSize.zw;
+    let grabUv: vec2f = pcPosition.xy * uniform.screen_size.zw;
 
     // roughness dictates which mipmap level gets used, in 0..4 range
     let mipmap: f32 = roughness * 5.0;

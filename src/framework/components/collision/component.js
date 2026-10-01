@@ -3,6 +3,9 @@ import { Vec3 } from '../../../core/math/vec3.js';
 import { Asset } from '../../asset/asset.js';
 import { Component } from '../component.js';
 
+// whether the compound sync walk in progress wrote to the compound shape
+let _compoundChanged = false;
+
 /**
  * @import { CollisionComponentSystem } from './system.js'
  * @import { Entity } from '../../entity.js'
@@ -121,7 +124,10 @@ class CollisionComponent extends Component {
      */
     static EVENT_TRIGGERLEAVE = 'triggerleave';
 
-    /** @private */
+    /**
+     * @type {'box'|'capsule'|'compound'|'cone'|'cylinder'|'mesh'|'sphere'}
+     * @private
+     */
     _type = 'box';
 
     /** @private */
@@ -178,6 +184,17 @@ class CollisionComponent extends Component {
     /** @private */
     _compoundParent = null;
 
+    /**
+     * For a compound child, the local transforms of the nodes between the entity and its
+     * compound root as of the last write into the compound, and the pose that was written. The
+     * per-step sync compares against these to skip a child whose relative pose cannot have
+     * changed. Created when the child first joins a compound.
+     *
+     * @type {{ nodes: { node: GraphNode, position: Vec3, rotation: Quat, scale: Vec3 }[], position: Vec3, rotation: Quat }|null}
+     * @private
+     */
+    _compoundSync = null;
+
     /** @private */
     _hasOffset = false;
 
@@ -188,6 +205,15 @@ class CollisionComponent extends Component {
      * @private
      */
     _builtWorldScale = null;
+
+    /**
+     * The signs of the local scales of the entity and its ancestors when a mesh shape was last
+     * built, one entry per node - see getScaleSigns in the collision system.
+     *
+     * @type {number[]|null}
+     * @private
+     */
+    _builtScaleSigns = null;
 
     /**
      * Create a new CollisionComponent.
@@ -213,9 +239,20 @@ class CollisionComponent extends Component {
      * - "mesh": A collision volume that uses a model asset as its shape.
      * - "sphere": A sphere-shaped collision volume.
      *
+     * Primitive volumes are sized by their own properties ({@link CollisionComponent#halfExtents},
+     * {@link CollisionComponent#radius} and {@link CollisionComponent#height}) and ignore the
+     * scale of the entity. Mesh volumes follow the world scale of the entity, including the scale
+     * of its ancestors and any mirroring by negative scale factors, and are rebuilt at the start
+     * of the next physics step when that scale changes. Triangle mesh volumes share one set of
+     * collision triangle data per mesh, so rescaling them is cheap; a
+     * {@link CollisionComponent#convexHull} is rebuilt from the mesh vertices at the new scale.
+     * Sharing requires an Ammo.js build that exposes `btScaledBvhTriangleMeshShape`; with older
+     * builds, triangle mesh colliders sharing a mesh use the scale of the first one built and
+     * rescaling an entity at runtime does not affect its mesh collider.
+     *
      * Defaults to "box".
      *
-     * @type {string}
+     * @type {'box'|'capsule'|'compound'|'cone'|'cylinder'|'mesh'|'sphere'}
      */
     set type(arg) {
         if (this._type === arg) {
@@ -230,7 +267,7 @@ class CollisionComponent extends Component {
     /**
      * Gets the type of the collision volume.
      *
-     * @type {string}
+     * @type {'box'|'capsule'|'compound'|'cone'|'cylinder'|'mesh'|'sphere'}
      */
     get type() {
         return this._type;
@@ -403,6 +440,9 @@ class CollisionComponent extends Component {
 
     /**
      * Sets the asset or asset id for the model of the mesh collision volume. Defaults to null.
+     * The node hierarchy of the model is interpreted in the local space of the entity: the
+     * transform of each node is applied to its mesh and the world scale of the entity multiplies
+     * the result.
      *
      * @type {Asset|number|null}
      */
@@ -450,7 +490,8 @@ class CollisionComponent extends Component {
 
     /**
      * Sets the render asset or asset id of the mesh collision volume. Defaults to null.
-     * If not set then the asset property will be checked instead.
+     * If not set then the asset property will be checked instead. The meshes are used in the
+     * local space of the entity, scaled by the world scale of the entity.
      *
      * @type {Asset|number|null}
      */
@@ -499,7 +540,9 @@ class CollisionComponent extends Component {
     /**
      * Sets whether the collision mesh should be treated as a convex hull. When false, the mesh can
      * only be used with a static body. When true, the mesh can be used with a static, dynamic or
-     * kinematic body. Defaults to `false`.
+     * kinematic body. The hull is built from the mesh vertices at the world scale of the entity.
+     * Only applies to meshes from {@link CollisionComponent#renderAsset} or
+     * `render`. Defaults to `false`.
      *
      * @type {boolean}
      */
@@ -520,10 +563,23 @@ class CollisionComponent extends Component {
         return this._convexHull;
     }
 
+    /**
+     * @type {*}
+     * @ignore
+     */
     set shape(arg) {
         this._shape = arg;
     }
 
+    /**
+     * The physics backend's collision shape - a btCollisionShape with the Ammo backend - or null
+     * if it has not been created. An unsupported escape hatch for native functionality the
+     * component does not expose: code that uses it only works with that physics backend. The
+     * setter is kept for compatibility and does not rebuild the body.
+     *
+     * @type {*}
+     * @ignore
+     */
     get shape() {
         return this._shape;
     }
@@ -553,6 +609,10 @@ class CollisionComponent extends Component {
         return this._model;
     }
 
+    /**
+     * @type {*}
+     * @ignore
+     */
     set render(arg) {
         this._render = arg;
 
@@ -563,6 +623,15 @@ class CollisionComponent extends Component {
         }
     }
 
+    /**
+     * The render resource whose meshes form the mesh collision volume. It is set when
+     * {@link CollisionComponent#renderAsset} loads, and assigning a resource directly rebuilds
+     * the shape from its meshes. Application code should use
+     * {@link CollisionComponent#renderAsset} or {@link CollisionComponent#model} instead.
+     *
+     * @type {*}
+     * @ignore
+     */
     get render() {
         return this._render;
     }
@@ -619,71 +688,85 @@ class CollisionComponent extends Component {
      * @private
      */
     _onInsert(parent) {
-        const world = this.system.physicsWorld;
-        if (!world) {
+        if (!this.system.physicsWorld) {
             return;
         }
 
         if (this._compoundParent) {
-            this.system.recreatePhysicalShapes(this);
-        } else if (!this.entity.rigidbody) {
-            let ancestor = this.entity.parent;
-            while (ancestor) {
-                if (ancestor.collision && ancestor.collision.type === 'compound') {
-                    if (world.getCompoundChildCount(ancestor.collision.shape) === 0) {
-                        this.system.recreatePhysicalShapes(ancestor.collision);
-                    } else {
-                        this.system.recreatePhysicalShapes(this);
-                    }
-                    break;
-                }
-                ancestor = ancestor.parent;
+            // a child adopted by onEnable during this same insertion is already in place
+            if (!this.system.isCompoundChildInPlace(this)) {
+                this.system.recreatePhysicalShapes(this);
             }
+        } else {
+            this._joinCompoundAncestor();
         }
     }
 
     /**
-     * An {@link Entity#forEach} callback that refreshes the compound child transform of each
-     * descendant wired to the same compound root. Invoked with `this` set to the compound
-     * root's entity.
+     * Wires this component into the nearest compound ancestor, if there is one and the entity
+     * is not a body of its own. Rebuilds the compound when it has no children yet, otherwise
+     * rebuilds this shape so it joins at the current pose.
+     *
+     * @returns {boolean} True if the component joined a compound.
+     * @private
+     */
+    _joinCompoundAncestor() {
+        const world = this.system.physicsWorld;
+        if (!world || this.entity.rigidbody) {
+            return false;
+        }
+
+        let ancestor = this.entity.parent;
+        while (ancestor) {
+            if (ancestor.collision && ancestor.collision.type === 'compound') {
+                if (world.getCompoundChildCount(ancestor.collision.shape) === 0) {
+                    this.system.recreatePhysicalShapes(ancestor.collision);
+                } else {
+                    this.system.recreatePhysicalShapes(this);
+                }
+                return true;
+            }
+            ancestor = ancestor.parent;
+        }
+
+        return false;
+    }
+
+    /**
+     * An {@link Entity#forEach} callback that syncs the compound child transform of each
+     * descendant wired to this compound root. Invoked with `this` set to the compound root's
+     * entity.
      *
      * @param {Entity} entity - The visited descendant entity.
      * @private
      */
     _updateEachDescendantTransform(entity) {
-        if (!entity.collision || entity.collision._compoundParent !== this.collision._compoundParent) {
-            return;
+        const root = this.collision;
+        const component = entity.collision;
+        if (component && component !== root && component._compoundParent === root) {
+            if (root.system.updateCompoundChildTransform(entity, false)) {
+                _compoundChanged = true;
+            }
         }
-
-        this.collision.system.updateCompoundChildTransform(entity, false);
     }
 
-    /** @private */
+    /**
+     * Applies the transform changes of this compound root's children to the compound shape.
+     * Called by the rigid body system before each step for the roots of dynamic and kinematic
+     * compounds. A child is written only when a local transform between it and the root has
+     * changed since the last write, so a compound at rest or moving as a whole costs a walk of
+     * its descendants and a few comparisons per child, nothing more.
+     *
+     * @private
+     */
     _updateCompound() {
         const entity = this.entity;
-        if (entity._dirtyWorld) {
-            let dirty = entity._dirtyLocal;
-            let parent = entity;
-            while (parent && !dirty) {
-                if (parent.collision && parent.collision === this._compoundParent) {
-                    break;
-                }
 
-                if (parent._dirtyLocal) {
-                    dirty = true;
-                }
+        _compoundChanged = false;
+        entity.forEach(this._updateEachDescendantTransform, entity);
 
-                parent = parent.parent;
-            }
-
-            if (dirty) {
-                entity.forEach(this._updateEachDescendantTransform, entity);
-
-                const bodyComponent = this._compoundParent.entity.rigidbody;
-                if (bodyComponent) {
-                    bodyComponent.activate();
-                }
-            }
+        if (_compoundChanged && entity.rigidbody) {
+            entity.rigidbody.activate();
         }
     }
 
@@ -748,7 +831,10 @@ class CollisionComponent extends Component {
                     this._compoundParent.entity.rigidbody.activate();
                 }
             }
-        } else if (this.entity.trigger) {
+        } else if (this.entity.trigger && !this._joinCompoundAncestor()) {
+            // becoming active inside a compound wires the shape into it instead: the insert hook
+            // only fires on the inserted node, so a collision component deeper in a subtree that
+            // was parented as a whole arrives here as a stray trigger
             this.entity.trigger.enable();
         }
     }

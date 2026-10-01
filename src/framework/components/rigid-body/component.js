@@ -16,6 +16,7 @@ import {
 // Shared math variables to avoid excessive allocation
 const _quat1 = new Quat();
 const _quat2 = new Quat();
+const _quat3 = new Quat();
 const _vec3 = new Vec3();
 const _position = new Vec3();
 const _rotation = new Quat();
@@ -156,6 +157,9 @@ class RigidBodyComponent extends Component {
     _friction = 0.5;
 
     /** @private */
+    _gravityScale = 1;
+
+    /** @private */
     _group = BODYGROUP_STATIC;
 
     /** @private */
@@ -239,7 +243,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Sets the rotational speed of the body around each world axis.
+     * Sets the rotational speed of the body around each world axis. Only valid for rigid bodies
+     * of type {@link BODYTYPE_DYNAMIC}.
      *
      * @type {Vec3}
      */
@@ -280,8 +285,10 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * The native physics body - btRigidBody when the Ammo backend is active, null otherwise.
-     * The setter takes the backend {@link PhysicsBody} and is internal.
+     * The physics backend's native body - a btRigidBody with the Ammo backend - or null if the
+     * body has not been created or the backend has no native bodies. An unsupported escape hatch
+     * for native functionality the component does not expose: code that uses it only works with
+     * that physics backend. The setter takes the backend {@link PhysicsBody} and is internal.
      *
      * @type {*}
      * @ignore
@@ -316,8 +323,49 @@ class RigidBodyComponent extends Component {
     }
 
     /**
+     * Sets the scale applied to the world gravity ({@link RigidBodyComponentSystem#gravity}) for
+     * this body. Only valid for rigid bodies of type {@link BODYTYPE_DYNAMIC}. Defaults to 1, so
+     * the body falls under the world gravity. Set to 0 to make the body ignore gravity, or to a
+     * negative value to make it rise. To give a body its own gravity direction, set this to 0 and
+     * apply the force yourself each frame with {@link applyForce}.
+     *
+     * @type {number}
+     * @example
+     * // A balloon that drifts slowly upwards
+     * entity.rigidbody.gravityScale = -0.2;
+     * @example
+     * // A body that orbits a planet at the origin under its own gravity
+     * entity.rigidbody.gravityScale = 0;
+     * const force = new pc.Vec3();
+     * app.on('update', () => {
+     *     force.copy(entity.getPosition()).normalize().mulScalar(-entity.rigidbody.mass * 9.81);
+     *     entity.rigidbody.applyForce(force);
+     * });
+     */
+    set gravityScale(scale) {
+        if (this._gravityScale !== scale) {
+            this._gravityScale = scale;
+
+            if (this._body && this._type === BODYTYPE_DYNAMIC) {
+                this._body.setGravityScale(scale);
+            }
+        }
+    }
+
+    /**
+     * Gets the scale applied to the world gravity for this body.
+     *
+     * @type {number}
+     */
+    get gravityScale() {
+        return this._gravityScale;
+    }
+
+    /**
      * Sets the collision group this body belongs to. Combine the group and the mask to prevent bodies
-     * colliding with each other. Defaults to 1.
+     * colliding with each other. The default depends on the body {@link RigidBodyComponent#type}:
+     * 1 for dynamic bodies, 2 for static bodies and 4 for kinematic bodies. Setting the type
+     * resets the group to the default for the new type, so set the group after the type.
      *
      * @type {number}
      */
@@ -393,7 +441,8 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Sets the speed of the body in a given direction.
+     * Sets the speed of the body in a given direction. Only valid for rigid bodies of type
+     * {@link BODYTYPE_DYNAMIC}.
      *
      * @type {Vec3}
      */
@@ -420,7 +469,11 @@ class RigidBodyComponent extends Component {
 
     /**
      * Sets the collision mask sets which groups this body collides with. It is a bit field of 16
-     * bits, the first 8 bits are reserved for engine use. Defaults to 65535.
+     * bits, the first 8 bits are reserved for engine use. The default depends on the body
+     * {@link RigidBodyComponent#type}: 65533 for static bodies, which collides with everything
+     * except other static bodies, and 65535 for dynamic and kinematic bodies, which collides with
+     * everything. Setting the type resets the mask to the default for the new type, so set the
+     * mask after the type.
      *
      * @type {number}
      */
@@ -538,7 +591,9 @@ class RigidBodyComponent extends Component {
      * - {@link BODYTYPE_KINEMATIC}: infinite mass and does not respond to forces (can only be
      * moved by setting the position and rotation of component's {@link Entity}).
      *
-     * Defaults to {@link BODYTYPE_STATIC}.
+     * Defaults to {@link BODYTYPE_STATIC}. Changing the type also resets
+     * {@link RigidBodyComponent#group} and {@link RigidBodyComponent#mask} to the defaults for
+     * the new type.
      *
      * @type {BODYTYPE_DYNAMIC|BODYTYPE_KINEMATIC|BODYTYPE_STATIC}
      */
@@ -680,7 +735,9 @@ class RigidBodyComponent extends Component {
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset from this point by specifying a world
-     * space vector from the body's origin to the point of application.
+     * space vector from the body's origin to the point of application. The body's origin is the
+     * entity's world position, shifted by the collision component's
+     * {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {number} x - X-component of the force in world space.
@@ -703,7 +760,9 @@ class RigidBodyComponent extends Component {
     /**
      * Apply a force to the body at a point. By default, the force is applied at the origin of the
      * body. However, the force can be applied at an offset from this point by specifying a world
-     * space vector from the body's origin to the point of application.
+     * space vector from the body's origin to the point of application. The body's origin is the
+     * entity's world position, shifted by the collision component's
+     * {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {Vec3} force - Vector representing the force in world space.
@@ -807,58 +866,72 @@ class RigidBodyComponent extends Component {
     }
 
     /**
-     * Apply an impulse (instantaneous change of velocity) to the body at a point.
+     * Apply an impulse (instantaneous change of velocity) to the body at a point. By default, the
+     * impulse is applied at the origin of the body. However, the impulse can be applied at an
+     * offset from this point by specifying a world space vector from the body's origin to the
+     * point of application. The body's origin is the entity's world position, shifted by the
+     * collision component's {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {number} x - X-component of the impulse in world space.
      * @param {number} y - Y-component of the impulse in world space.
      * @param {number} z - Z-component of the impulse in world space.
-     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
-     * space of the entity.
+     * @param {number} [px] - X-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the impulse in
+     * world space.
      * @returns {void}
      * @example
-     * // Apply an impulse along the world space positive y-axis at the entity's position.
+     * // Apply an impulse along the world space positive y-axis at the body's origin
      * entity.rigidbody.applyImpulse(0, 10, 0);
      * @example
-     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local space.
+     * // Apply an impulse along the world space positive y-axis at 1 unit along the world space
+     * // positive z-axis from the body's origin
      * entity.rigidbody.applyImpulse(0, 10, 0, 0, 0, 1);
      */
     /**
-     * Apply an impulse (instantaneous change of velocity) to the body at a point.
+     * Apply an impulse (instantaneous change of velocity) to the body at a point. By default, the
+     * impulse is applied at the origin of the body. However, the impulse can be applied at an
+     * offset from this point by specifying a world space vector from the body's origin to the
+     * point of application. The body's origin is the entity's world position, shifted by the
+     * collision component's {@link CollisionComponent#linearOffset}.
      *
      * @overload
      * @param {Vec3} impulse - Vector representing the impulse in world space.
      * @param {Vec3} [relativePoint] - Optional vector representing the relative point at which to
-     * apply the impulse in the local space of the entity.
+     * apply the impulse in world space.
      * @returns {void}
      * @example
-     * // Apply an impulse along the world space positive y-axis at the entity's position.
+     * // Apply an impulse along the world space positive y-axis at the body's origin
      * const impulse = new Vec3(0, 10, 0);
      * entity.rigidbody.applyImpulse(impulse);
      * @example
-     * // Apply an impulse along the world space positive y-axis at 1 unit down the positive
-     * // z-axis of the entity's local space.
+     * // Apply an impulse along the world space positive y-axis at 1 unit along the world space
+     * // positive z-axis from the body's origin
      * const impulse = new Vec3(0, 10, 0);
      * const relativePoint = new Vec3(0, 0, 1);
+     * entity.rigidbody.applyImpulse(impulse, relativePoint);
+     * @example
+     * // Apply an impulse at an offset given in the entity's local space, by first rotating the
+     * // offset into world space
+     * const impulse = new Vec3(0, 10, 0);
+     * const relativePoint = entity.getRotation().transformVector(new Vec3(0, 0, 1));
      * entity.rigidbody.applyImpulse(impulse, relativePoint);
      */
     /**
      * @param {number|Vec3} x - X-component of the impulse in world space or a vector representing
      * the impulse in world space.
      * @param {number|Vec3} [y] - Y-component of the impulse in world space or a vector representing
-     * the relative point at which to apply the impulse in the local space of the entity.
+     * the relative point at which to apply the impulse in world space.
      * @param {number} [z] - Z-component of the impulse in world space.
-     * @param {number} [px] - X-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [py] - Y-component of the point at which to apply the impulse in the local
-     * space of the entity.
-     * @param {number} [pz] - Z-component of the point at which to apply the impulse in the local
-     * space of the entity.
+     * @param {number} [px] - X-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [py] - Y-component of the relative point at which to apply the impulse in
+     * world space.
+     * @param {number} [pz] - Z-component of the relative point at which to apply the impulse in
+     * world space.
      */
     applyImpulse(x, y, z, px, py, pz) {
         const body = this._body;
@@ -1004,6 +1077,8 @@ class RigidBodyComponent extends Component {
 
             body.getTransform(_position, _rotation);
 
+            let entityRot = _rotation;
+
             const component = entity.collision;
             if (component && component._hasOffset) {
                 const lo = component.linearOffset;
@@ -1013,14 +1088,57 @@ class RigidBodyComponent extends Component {
                 // un-translate the linear offset in local space
                 // Order of operations matter here
                 const invertedAo = _quat2.copy(ao).invert();
-                const entityRot = _quat1.copy(_rotation).mul(invertedAo);
+                entityRot = _quat1.copy(_rotation).mul(invertedAo);
 
                 entityRot.transformVector(lo, _vec3);
-                entity.setPositionAndRotation(_position.sub(_vec3), entityRot);
+                _position.sub(_vec3);
+            }
+
+            const scale = entity.getLocalScale();
+            if (scale.x < 0 || scale.y < 0 || scale.z < 0 || entity.worldScaleSign < 0) {
+                this._setMirroredTransform(_position, entityRot);
             } else {
-                entity.setPositionAndRotation(_position, _rotation);
+                entity.setPositionAndRotation(_position, entityRot);
             }
         }
+    }
+
+    /**
+     * Writes a body pose to an entity with a negative local scale or a mirrored world transform.
+     * The rotation read from such an entity's world transform is not its rotation: a mirrored
+     * basis has its X axis negated to make it a rotation, and a pair of negative scale factors
+     * reads as a 180 degree turn. The body was created with that rotation, so writing the body
+     * rotation back as the world rotation would bake the correction into the local rotation.
+     * Instead, the rotation the body turned through since the entity was last synced is applied
+     * to the local rotation.
+     *
+     * @param {Vec3} position - The world space position of the entity.
+     * @param {Quat} rotation - The world space rotation of the body, without angular offset.
+     * @private
+     */
+    _setMirroredTransform(position, rotation) {
+        const entity = this.entity;
+        const parent = entity.parent;
+
+        // world space rotation from the entity's current rotation to the body's
+        const delta = _quat2.copy(entity.getRotation()).invert();
+        delta.mul2(rotation, delta);
+
+        if (parent) {
+            // express it in the parent's space
+            const parentRot = parent.getRotation();
+            delta.mul2(_quat3.copy(parentRot).invert(), delta).mul(parentRot);
+
+            // a mirrored parent's rotation is read with its X axis negated, so the parent's space
+            // is the mirror image of that rotation's and the delta is reflected through YZ
+            if (parent.worldScaleSign < 0) {
+                delta.y = -delta.y;
+                delta.z = -delta.z;
+            }
+        }
+
+        entity.setPosition(position);
+        entity.setLocalRotation(delta.mul(entity.getLocalRotation()).normalize());
     }
 
     /**

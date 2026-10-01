@@ -7,10 +7,10 @@ import { platform } from '../../../../src/core/platform.js';
 import { Application } from '../../../../src/framework/application.js';
 import { ElementDragHelper } from '../../../../src/framework/components/element/element-drag-helper.js';
 import { Entity } from '../../../../src/framework/entity.js';
-import { NullGraphicsDevice } from '../../../../src/platform/graphics/null/null-graphics-device.js';
 import { Mouse } from '../../../../src/platform/input/mouse.js';
 import { TouchDevice } from '../../../../src/platform/input/touch-device.js';
 import { ASPECT_MANUAL } from '../../../../src/scene/constants.js';
+import { createGraphicsDevice } from '../../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
 
 describe('ElementDragHelper', function () {
@@ -61,7 +61,7 @@ describe('ElementDragHelper', function () {
             };
         };
 
-        const graphicsDevice = new NullGraphicsDevice(canvas);
+        const graphicsDevice = createGraphicsDevice(canvas);
         graphicsDevice.updateClientRect();
 
         app = new Application(canvas, {
@@ -297,6 +297,21 @@ describe('ElementDragHelper', function () {
         const screen = new Entity('screen', app);
         screen.addComponent('screen', { screenSpace: true });
         screen.addChild(parent);
+        screen.screen.scale = 0.5;
+
+        app.root.addChild(screen);
+        entity.element.screen = screen;
+
+        runTransformTest.call(this, 20, -20);
+    });
+
+    it('supports an element that is a direct child of a screen space screen', function () {
+        app.root.removeChild(parent);
+        parent.removeChild(entity);
+
+        const screen = new Entity('screen', app);
+        screen.addComponent('screen', { screenSpace: true });
+        screen.addChild(entity);
         screen.screen.scale = 0.5;
 
         app.root.addChild(screen);

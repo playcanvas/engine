@@ -870,6 +870,12 @@ class WebglTexture {
      */
     uploadImmediate(device, texture) {
 
+        // Downloads can complete during context loss. Keep the upload pending so its source
+        // survives and a valid GPU texture is created when it is next used after recovery.
+        if (device.isContextLost()) {
+            return;
+        }
+
         if (texture._needsUpload || texture._needsMipmapsUpload) {
 
             // this uploads the texture as well

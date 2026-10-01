@@ -78,7 +78,8 @@ const STATIC_ROUTES = [
     { url: '/icons/', root: 'src/static/icons' },
     { url: '/thumbnails/', root: 'thumbnails' },
     { url: '/modules/monaco-editor/min/vs/', root: 'node_modules/monaco-editor/min/vs' },
-    { url: '/modules/fflate/esm/', root: '../node_modules/fflate/esm' }
+    { url: '/modules/fflate/esm/', root: '../node_modules/fflate/esm' },
+    { url: '/modules/inspector/', root: 'node_modules/@playcanvas/inspector/src' }
 ];
 const ROOT_FILES = {
     '/styles.css': 'src/static/styles.css',
@@ -89,6 +90,7 @@ const ROOT_FILES = {
 const IFRAME_FILES = {
     '/iframe/context.mjs': 'iframe/context.mjs',
     '/iframe/files.mjs': 'iframe/files.mjs',
+    '/iframe/inspector.mjs': 'iframe/inspector.mjs',
     '/iframe/loader.mjs': 'iframe/loader.mjs',
     '/iframe/main.css': 'iframe/main.css',
     '/iframe/ministats.mjs': 'iframe/ministats.mjs',

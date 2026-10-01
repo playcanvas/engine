@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { QuadRender } from './quad-render.js';
 import { RenderPassQuad } from './render-pass-quad.js';
@@ -23,19 +23,14 @@ const _tempRect = new Vec4();
  * `[0, 0, target.width, target.height]`.
  * @param {Vec4} [scissorRect] - The scissor rectangle of the quad, in pixels. Defaults to fullscreen:
  * `[0, 0, target.width, target.height]`.
+ * @param {string} [name] - The render pass name used for GPU profiling and debugging in debug
+ * builds. Defaults to 'RenderPassQuad'.
  * @category Graphics
  */
-function drawQuadWithShader(device, target, shader, rect, scissorRect) {
+function drawQuadWithShader(device, target, shader, rect, scissorRect, name) {
 
     // a valid target or a null target (framebuffer) are supported
     Debug.assert(target !== undefined);
-
-    const useBlend = arguments[5];
-    Debug.call(() => {
-        if (useBlend !== undefined) {
-            Debug.warnOnce('drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
-        }
-    });
 
     // prepare the quad for rendering with the shader
     const quad = new QuadRender(shader);
@@ -51,6 +46,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     // prepare a render pass to render the quad to the render target
     const renderPass = new RenderPassQuad(device, quad, rect, scissorRect);
+    DebugHelper.setName(renderPass, name ?? 'RenderPassQuad');
     renderPass.init(target);
     renderPass.colorOps.clear = false;
     renderPass.depthStencilOps.clearDepth = false;

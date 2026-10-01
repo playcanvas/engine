@@ -17,6 +17,8 @@
 /**
  * AppOptions holds configuration settings utilized in the creation of an {@link AppBase} instance.
  * It allows functionality to be included or excluded from the AppBase instance.
+ *
+ * @category Framework
  */
 class AppOptions {
     /**
@@ -89,8 +91,8 @@ class AppOptions {
      * {@link AppOptions#componentSystems} must include {@link RigidBodyComponentSystem}. A
      * useful simulation also requires {@link CollisionComponentSystem} - rigid bodies and
      * triggers obtain their shapes from collision components - and {@link JointComponentSystem}
-     * if joints are used. The rigid body system registers itself as the world's contact
-     * listener. When omitted, an {@link AmmoPhysicsWorld} is created automatically once
+     * if joints are used. The rigid body system registers its contact listener with the
+     * world. When omitted, an {@link AmmoPhysicsWorld} is created automatically once
      * application libraries have loaded, if the Ammo.js WasmModule is present. The application
      * takes ownership of the world and destroys it with the application.
      *
@@ -140,6 +142,16 @@ class AppOptions {
      * @type {typeof ResourceHandler[]}
      */
     resourceHandlers = [];
+
+    /**
+     * Whether the app announces itself to developer tools, such as the PlayCanvas Inspector
+     * browser extension, so they can find and inspect it. Set to false to keep a production build
+     * from announcing itself. This is an opt-out, not a protection: code running on the page can
+     * still reach the app by other means. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    devtools = true;
 }
 
 export { AppOptions };

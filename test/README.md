@@ -12,6 +12,18 @@ To run the tests, simply do:
 npm test
 ```
 
+## Running the Unit Tests on WebGPU
+
+The tests can also run on a real WebGPU implementation, Google Dawn, through the [`webgpu`](https://www.npmjs.com/package/webgpu) package:
+
+```
+npm run test:webgpu
+```
+
+This runs the same tests with the engine's WebGPU device instead of the null device, so the engine's use of the WebGPU API is validated and its WGSL shaders are compiled. By default Dawn's `null` backend is used: it performs the full validation but executes no GPU work, so it runs anywhere, including CI machines without a GPU. Set `PC_WEBGPU_BACKEND` to `metal`, `vulkan` or `d3d12` to run on the GPU instead. Any error WebGPU reports during a test fails that test.
+
+Tests obtain their device from `createGraphicsDevice()` in `test/device.mjs`, which returns whichever device the run uses. A test that checks the behaviour of one specific device constructs that device directly. Tests that need the GLSL transpilers, which are not available in Node, are excluded from this run.
+
 ## Code Coverage
 
 PlayCanvas uses [C8](https://github.com/bcoe/c8) to analyze and report unit test code coverage. To print a code coverage report, do:

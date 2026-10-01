@@ -6,6 +6,7 @@ import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
 import { lit } from '../shader-lib/programs/lit.js';
 import { ShaderUtils } from '../shader-lib/shader-utils.js';
+import { getViewTextures } from '../renderer/view-textures.js';
 
 const options = new LitMaterialOptions();
 
@@ -20,6 +21,9 @@ const options = new LitMaterialOptions();
  * @ignore
  */
 class LitMaterial extends Material {
+    /** @ignore */
+    _usesViewTextures = true;
+
     usedUvs = [true];
 
     shaderChunkGLSL = null;
@@ -79,7 +83,7 @@ class LitMaterial extends Material {
 
     hasRefraction = false;
 
-    hasIrridescence = false;
+    hasIridescence = false;
 
     hasMetalness = false;
 
@@ -95,8 +99,8 @@ class LitMaterial extends Material {
         options.shaderChunkWGSL = this.shaderChunkWGSL;
         options.defines = ShaderUtils.getCoreDefines(this, params);
 
-        LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.sortedLights);
-        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat);
+        LitMaterialOptionsBuilder.update(options.litOptions, this, params.scene, params.cameraShaderParams, params.objDefs, params.pass, params.lightList);
+        const processingOptions = new ShaderProcessorOptions(params.viewUniformFormat, params.vertexFormat, getViewTextures(params.viewUniformFormat));
         const library = getProgramLibrary(params.device);
         library.register('lit', lit);
         const shader = library.getProgram('lit', options, processingOptions, this.userId);

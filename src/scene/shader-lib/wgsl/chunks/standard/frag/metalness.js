@@ -11,7 +11,7 @@ fn getMetalness() {
     #endif
 
     #ifdef STD_METALNESS_TEXTURE
-        metalness = metalness * textureSampleBias({STD_METALNESS_TEXTURE_NAME}, {STD_METALNESS_TEXTURE_NAME}Sampler, {STD_METALNESS_TEXTURE_UV}, uniform.textureBias).{STD_METALNESS_TEXTURE_CHANNEL};
+        metalness = metalness * textureSampleBias({STD_METALNESS_TEXTURE_NAME}, {STD_METALNESS_TEXTURE_NAME}Sampler, {STD_METALNESS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_METALNESS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_METALNESS_VERTEX

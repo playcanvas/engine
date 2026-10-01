@@ -109,7 +109,7 @@ const vertShader = /* glsl */ `
     }`;
 
 const fragShader = /* glsl */ `
-    uniform vec4 uScreenSize;
+    uniform vec4 screen_size;
     uniform mat4 matrix_depth_uv;
     uniform float depth_raw_to_meters;
 
@@ -121,7 +121,7 @@ const fragShader = /* glsl */ `
     #endif
 
     void main (void) {
-        vec2 uvScreen = gl_FragCoord.xy * uScreenSize.zw;
+        vec2 uvScreen = gl_FragCoord.xy * screen_size.zw;
 
         // Use texture array for multi-view
         #ifdef XRDEPTH_ARRAY

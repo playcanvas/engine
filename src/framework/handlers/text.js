@@ -1,6 +1,11 @@
 import { TextParser } from '../parsers/text.js';
 import { ResourceHandler } from './handler.js';
 
+/**
+ * Resource handler for the `text` asset type. Loads a file as a string.
+ *
+ * @ignore
+ */
 class TextHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.

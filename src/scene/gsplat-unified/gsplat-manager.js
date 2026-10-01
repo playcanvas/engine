@@ -27,6 +27,7 @@ import { Color } from '../../core/math/color.js';
  * @import { GSplatDirector } from './gsplat-director.js'
  * @import { GSplatRenderer } from './gsplat-renderer.js'
  * @import { GSplatRenderViewParams } from './gsplat-renderer.js'
+ * @import { GSplatParams } from './gsplat-params.js'
  */
 
 const cameraPosition = new Vec3();
@@ -77,6 +78,9 @@ class GSplatManager {
      * @type {GSplatWorld}
      */
     world;
+
+    /** @type {GSplatParams} */
+    gsplat;
 
     /** @type {GSplatRenderer} */
     renderer;
@@ -217,15 +221,16 @@ class GSplatManager {
     constructor(device, director, layer, cameraNode) {
         this.device = device;
         this.scene = director.scene;
+        this.gsplat = director.gsplat;
         this.director = director;
         this.cameraNode = cameraNode;
 
         // The world owns the work buffer + allocator + streaming + LOD. Create it before the
         // renderer, which reads world.workBuffer in _createRenderer.
-        this.world = new GSplatWorld(device, this.scene);
+        this.world = new GSplatWorld(device, this.scene, this.gsplat);
 
         this.layer = layer;
-        this._createRenderer(this.scene.gsplat.currentRenderer);
+        this._createRenderer(this.gsplat.currentRenderer);
 
         // On a graphics context restore the work buffer render target comes back blank (its
         // contents are GPU-rendered, not re-uploaded from CPU like source textures), so the splats
@@ -364,8 +369,10 @@ class GSplatManager {
      * @private
      */
     _writeGsplatParams(p) {
-        const gsplat = this.scene.gsplat;
+        const gsplat = this.gsplat;
         p.radialSorting = gsplat.radialSorting;
+        p.stochastic = gsplat.stochastic;
+        p.dither = gsplat.dither;
         p.alphaClip = gsplat.alphaClip;
         p.alphaClipForward = gsplat.alphaClipForward;
         p.minPixelSize = gsplat.minPixelSize;
@@ -403,6 +410,8 @@ class GSplatManager {
     _fillPickParams(camera, width, height) {
         const p = this._pickParams;
         this._writeGsplatParams(p);
+        // Picking needs sorted indices even when the work buffer has no per-splat IDs.
+        p.stochastic = false;
         p.cameraNode = camera.node;
         p.width = width;
         p.height = height;
@@ -491,7 +500,7 @@ class GSplatManager {
      * @private
      */
     prepareRendererMode() {
-        const requested = this.scene.gsplat.currentRenderer;
+        const requested = this.gsplat.currentRenderer;
         if (requested === this.activeRenderer) return;
 
         // CPU raster sort vs GPU paths differ on which placements need centers; force a full
@@ -567,7 +576,7 @@ class GSplatManager {
     testCameraMovedForSort() {
         const epsilon = 0.001;
 
-        if (this.scene.gsplat.radialSorting) {
+        if (this.gsplat.radialSorting) {
             // For radial sorting, only position changes matter
             const currentCameraPos = this.cameraNode.getPosition();
             return this.lastSortCameraPos.distance(currentCameraPos) > epsilon;
@@ -626,12 +635,12 @@ class GSplatManager {
 
         // World LOD / streaming / world-state creation.
         this.world.update(this.cameraNode, allowLodUpdate, !!this.cpuSorter, this._updateResult);
-        if (this._updateResult.overdrawDirty) this.renderer.updateOverdrawMode(this.scene.gsplat);
+        if (this._updateResult.overdrawDirty) this.renderer.updateOverdrawMode(this.gsplat);
         if (this._updateResult.sortNeeded) this.sortNeeded = true;
         if (this._updateResult.newVersion) this._feedCpuSorterCenters();
 
-        // tick cooldowns once per frame per unique octree
-        this.world.tickCooldowns();
+        // tick cooldowns once per frame per unique octree, across the worlds of all managers
+        this.world.tickCooldowns(token);
 
         this._streamAdvanced = this._updateResult.newVersion || this._formatResult.bufferRecreated;
         return this._streamAdvanced;
@@ -665,7 +674,7 @@ class GSplatManager {
 
             // debug render world space bounds for all splats
             Debug.call(() => {
-                if (this.scene.gsplat.debug === GSPLAT_DEBUG_AABBS) {
+                if (this.gsplat.debug === GSPLAT_DEBUG_AABBS) {
                     const tempAabb = new BoundingBox();
                     const scene = this.scene;
                     lastState.splats.forEach((splat) => {
@@ -748,14 +757,14 @@ class GSplatManager {
         this.fireFrameReadyEvent();
 
         // If event listeners dirtied params (e.g. changed LOD range), ensure LOD is re-evaluated
-        if (this.scene.gsplat.dirty) {
+        if (this.gsplat.dirty) {
             this.world.markInstancesNeedLodUpdate();
         }
 
         // Renderer per-frame update (material syncing, deferred setup). Must run after
         // fireFrameReadyEvent(): listeners may change material state (e.g. antiAlias), and
         // syncing here applies it this same frame before frameEnd() clears the dirty flag.
-        this.renderer.frameUpdate(this.scene.gsplat);
+        this.renderer.frameUpdate(this.gsplat);
 
         // return the number of active splats for stats
         const sortedState = this.world.getState(this.world.currentVersion);
@@ -769,7 +778,7 @@ class GSplatManager {
      * manager has a {@link shadowRenderer} (GPU-sort forward path with a shadow render mode).
      */
     updateShadows() {
-        this.shadowRenderer?.cull(this.scene.gsplat);
+        this.shadowRenderer?.cull(this.gsplat);
     }
 
     /**
@@ -816,7 +825,7 @@ class GSplatManager {
         cameraMat.getTranslation(cameraPosition);
         cameraMat.getZ(cameraDirection).normalize();
 
-        const radialSort = this.scene.gsplat.radialSorting;
+        const radialSort = this.gsplat.radialSorting;
 
         const sorterRequest = [];
         lastState.splats.forEach((splat) => {

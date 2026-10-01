@@ -7,6 +7,8 @@ import { SceneParser } from './parsers/scene.js';
 
 /**
  * Create a Template resource from raw database data.
+ *
+ * @category Framework
  */
 class Template {
     /**

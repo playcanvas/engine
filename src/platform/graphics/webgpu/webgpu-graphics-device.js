@@ -5,12 +5,13 @@ import {
     PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
     BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST, semanticToLocation,
     PIXELFORMAT_SRGBA8, DISPLAYFORMAT_LDR_SRGB, PIXELFORMAT_SBGRA8, DISPLAYFORMAT_HDR,
-    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT
+    PIXELFORMAT_RGBA16F, UNUSED_UNIFORM_NAME, BUFFERUSAGE_INDIRECT, BINDGROUP_VIEW
 } from '../constants.js';
 import { BindGroupFormat } from '../bind-group-format.js';
 import { BindGroup } from '../bind-group.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { GraphicsDevice } from '../graphics-device.js';
+import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
@@ -32,16 +33,20 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
+import { MeshInstanceStorage } from '../mesh-instance-storage.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
 
 /**
  * @import { RenderPass } from '../render-pass.js'
+ * @import { Shader } from '../shader.js'
  * @import { Texture } from '../texture.js'
  */
 
+// #if _DEBUG
 const _uniqueLocations = new Map();
+// #endif
 
 // size of indirect draw entry in bytes, 5 x 32bit
 const _indirectEntryByteSize = 5 * 4;
@@ -69,6 +74,81 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @private
      */
     _deferredDestroys = [];
+
+    /**
+     * @type {GPUAdapter|null}
+     * @private
+     */
+    gpuAdapter = null;
+
+    /**
+     * @type {GPUDevice|null}
+     * @private
+     */
+    wgpu = null;
+
+    /**
+     * True when this graphics device owns {@link WebgpuGraphicsDevice#wgpu} and so destroys it and
+     * recovers from its loss. Cleared by {@link WebgpuGraphicsDevice#initFromGpuDevice} when a host
+     * supplies the device and keeps both jobs.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _ownsGpuDevice = true;
+
+    /**
+     * Listener for uncaptured errors registered on {@link WebgpuGraphicsDevice#wgpu}, removed on
+     * destroy.
+     *
+     * @type {((event: GPUUncapturedErrorEvent) => void)|null}
+     * @private
+     */
+    _uncapturedErrorHandler = null;
+
+    /**
+     * Configuration of the canvas textures returned by getCurrentTexture.
+     *
+     * @type {GPUCanvasConfiguration|null}
+     * @private
+     */
+    canvasConfig = null;
+
+    /**
+     * Strong references used for device recovery. Owners must explicitly destroy bind groups
+     * when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuBindGroup>}
+     * @private
+     */
+    _bindGroups = new Set();
+
+    /**
+     * Strong references used for device recovery. Owners must explicitly destroy bind group
+     * formats when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuBindGroupFormat>}
+     * @private
+     */
+    _bindGroupFormats = new Set();
+
+    /**
+     * Strong references used to restore compute pipelines. Owners must explicitly destroy
+     * compute instances when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuCompute>}
+     * @private
+     */
+    _computes = new Set();
+
+    /**
+     * Strong references used to restore CPU-authored draw commands. Owners must explicitly
+     * destroy draw commands when no longer needed to unregister them.
+     *
+     * @type {Set<WebgpuDrawCommands>}
+     * @private
+     */
+    _drawCommands = new Set();
 
     /**
      * Object responsible for caching and creation of render pipelines.
@@ -145,6 +225,70 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @private
      */
     pipeline = null;
+
+    /**
+     * True when a render state the render pipeline depends on has changed since the pipeline was
+     * last looked up, see {@link WebgpuGraphicsDevice#draw}. The setters raise it only when a
+     * value actually changes, so a run of draws with the same state reuses the pipeline without
+     * building and hashing its key.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _pipelineDirty = true;
+
+    /**
+     * The per-draw inputs of the render pipeline, as of its last lookup - these are arguments of
+     * the draw rather than device state, so they are compared on each draw. Vertex formats are
+     * compared by their rendering hash, as meshes of the same layout have distinct formats.
+     *
+     * @private
+     */
+    _pipelinePrimitiveType = -1;
+
+    /** @private */
+    _pipelineVertexHash0 = -1;
+
+    /** @private */
+    _pipelineVertexHash1 = -1;
+
+    /**
+     * The index format of a strip topology, which is the only one the pipeline depends on, or -1.
+     *
+     * @private
+     */
+    _pipelineIndexFormat = -1;
+
+    /**
+     * The GPU buffer bound to each vertex buffer slot in the current render pass, and the offset
+     * it is bound at. WebGPU keeps the vertex and index buffers bound across draws and pipeline
+     * changes for the whole pass, so a draw binds only what differs from the previous one - the
+     * draws of a mesh in a row bind its buffers once. Cleared at the start of each pass.
+     *
+     * @type {GPUBuffer[]}
+     * @private
+     */
+    _boundVertexBuffers = [];
+
+    /**
+     * @type {number[]}
+     * @private
+     */
+    _boundVertexOffsets = [];
+
+    /**
+     * The GPU buffer bound as the index buffer in the current render pass, and its format.
+     *
+     * @type {GPUBuffer|null}
+     * @private
+     */
+    _boundIndexBuffer = null;
+
+    /**
+     * @type {GPUIndexFormat|null}
+     * @private
+     */
+    _boundIndexFormat = null;
 
     /**
      * An array of bind group formats, based on currently assigned bind groups
@@ -265,9 +409,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         super(canvas, options);
         options = this.initOptions;
 
-        // alpha defaults to true
-        options.alpha = options.alpha ?? true;
-
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
@@ -277,24 +418,87 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * @param {Map<string, number>} counts - Receives current tracked resource counts.
+     * @ignore
+     */
+    getResourceCounts(counts) {
+        super.getResourceCounts(counts);
+        counts.set('bindGroups', this._bindGroups.size);
+        counts.set('bindGroupFormats', this._bindGroupFormats.size);
+        counts.set('computes', this._computes.size);
+        counts.set('drawCommands', this._drawCommands.size);
+        let renderPipelines = 0;
+        let computePipelines = 0;
+        // Hash collisions share a cache bucket, so Map.size is not the pipeline count.
+        for (const bucket of this.renderPipeline.cache.values()) renderPipelines += bucket.length;
+        for (const bucket of this.computePipeline.cache.values()) computePipelines += bucket.length;
+        counts.set('renderPipelines', renderPipelines);
+        counts.set('computePipelines', computePipelines);
+    }
+
+    /**
      * Destroy the graphics device.
      */
     destroy() {
 
-        this.clearRenderer.destroy();
-        this.clearRenderer = null;
-
-        this.mipmapRenderer.destroy();
-        this.mipmapRenderer = null;
-
-        this.resolver.destroy();
-        this.resolver = null;
+        this.destroyDeviceResources();
 
         this._clearXrState();
-
         this.externalBackbuffer = null;
 
         super.destroy();
+
+        // Destroy listeners can enqueue more resources, and no further submit will drain them.
+        this.destroyDeferredResources();
+        this.clearDeviceState();
+
+        this._bindGroups.clear();
+        this._bindGroupFormats.clear();
+        this._computes.clear();
+        this._drawCommands.clear();
+
+        this.gpuContext?.unconfigure();
+
+        if (this._uncapturedErrorHandler) {
+            this.wgpu?.removeEventListener?.('uncapturederror', this._uncapturedErrorHandler);
+            this._uncapturedErrorHandler = null;
+        }
+
+        // a device supplied by the host is the host's to destroy
+        if (this._ownsGpuDevice) {
+            this.wgpu?.destroy();
+        }
+        this.wgpu = null;
+        this.gpuAdapter = null;
+        this.gpuContext = null;
+        this.canvasConfig = null;
+    }
+
+    /** @private */
+    destroyDeviceResources() {
+
+        this.clearRenderer?.destroy();
+        this.clearRenderer = null;
+
+        this.mipmapRenderer?.destroy();
+        this.mipmapRenderer = null;
+
+        this.resolver?.destroy();
+        this.resolver = null;
+
+        this.quadVertexBuffer?.destroy();
+        this.quadVertexBuffer = null;
+        this.quadIndexBuffer?.destroy();
+        this.quadIndexBuffer = null;
+        this.emptyBindGroup?.format.destroy();
+        this.emptyBindGroup?.destroy();
+        this.emptyBindGroup = null;
+        this.dynamicBuffers?.destroy();
+        this.dynamicBuffers = null;
+        this.gpuProfiler?.destroy();
+        this.gpuProfiler = null;
+        this.backBuffer?.destroy();
+        this.backBuffer = null;
     }
 
     /**
@@ -352,13 +556,19 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxAnisotropy = 16;
         this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
-        this.supportsUniformBuffers = true;
+        this.usesMeshBindGroups = true;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = true;
         this.supportsCompute = true;
+        this.supportsIndirectDraw = true;
+
+        // the vertex shaders read the per mesh instance data from a storage buffer
+        this.supportsMeshInstanceStorage = (limits.maxStorageBuffersInVertexStage ?? limits.maxStorageBuffersPerShaderStage) > 0;
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
-        this.supportsImageBitmap = true;
+        // ImageBitmap decoding is used for texture loading when the host provides it (browsers and
+        // workers do, headless hosts such as Node do not)
+        this.supportsImageBitmap = typeof createImageBitmap === 'function';
 
         // WebGPU specifies the blend state per color target, and so this is always supported
         this.supportsIndependentBlending = true;
@@ -417,6 +627,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     async createDevice() {
 
+        if (this._destroyed) {
+            return null;
+        }
+
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
             powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined,
@@ -425,74 +639,40 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             xrCompatible: !!this.initOptions.xrCompatible
         };
 
-        /**
-         * @type {GPUAdapter}
-         * @private
-         */
-        this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
+        const gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
+        if (this._destroyed) {
+            return null;
+        }
+
+        // no adapter is available, for example when WebGPU is disabled or the GPU is blocklisted.
+        // Throw rather than return null, so that device loss recovery does not restore the context
+        // without a device
+        if (!gpuAdapter) {
+            throw new Error('Unable to retrieve a WebGPU adapter');
+        }
 
         // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
         // compute, shader miscompiles), so fail device creation here to let createGraphicsDevice
         // fall back to WebGL2. Remove when fixed: https://github.com/playcanvas/engine/issues/8874
-        if (this.gpuAdapter?.info?.vendor === 'img-tec') {
-            Debug.warn('WebGPU is disabled on Imagination PowerVR GPUs due to driver issues, falling back to WebGL2. See https://github.com/playcanvas/engine/issues/8874');
-            return null;
+        if (gpuAdapter?.info?.vendor === 'img-tec') {
+            throw new Error('WebGPU is disabled on Imagination PowerVR GPUs due to driver issues. See https://github.com/playcanvas/engine/issues/8874');
         }
 
-        const featureLevel = this.initOptions.featureLevel;
-        const bare = featureLevel === 'bare';
+        const bare = this.initOptions.featureLevel === 'bare';
 
-        // request optional features (returns false for bare mode to simulate the most constrained device)
-        const requiredFeatures = [];
-        const requireFeature = bare ? () => false : (feature) => {
-            const supported = this.gpuAdapter.features.has(feature);
-            if (supported) {
-                requiredFeatures.push(feature);
-            }
-            return supported;
-        };
-        this.textureFloatFilterable = requireFeature('float32-filterable');
-        this.textureFloatBlendable = requireFeature('float32-blendable');
-        this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
-        this.extCompressedTextureS3TCSliced3D = requireFeature('texture-compression-bc-sliced-3d');
-        this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
-        this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
-        this.extCompressedTextureASTCSliced3D = requireFeature('texture-compression-astc-sliced-3d');
-        this.supportsTimestampQuery = requireFeature('timestamp-query');
-        this.supportsDepthClip = requireFeature('depth-clip-control');
-        this.supportsDepth32Stencil = requireFeature('depth32float-stencil8');
-        this.supportsIndirectFirstInstance = requireFeature('indirect-first-instance');
-        this.supportsShaderF16 = requireFeature('shader-f16');
-        this.supportsStorageRGBA8 = requireFeature('bgra8unorm-storage');
-        this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
-        this.supportsClipDistances = requireFeature('clip-distances');
-        this.supportsDualSourceBlending = requireFeature('dual-source-blending');
-        this.supportsTextureFormatTier1 = requireFeature('texture-format-tier1');
-        this.supportsTextureFormatTier2 = requireFeature('texture-format-tier2');
-        this.supportsTextureFormatTier1 ||= this.supportsTextureFormatTier2;
-        this.supportsPrimitiveIndex = requireFeature('primitive-index');
-        this.supportsSubgroups = requireFeature('subgroups');
-        this.supportsSubgroupSizeControl = requireFeature('subgroup-size-control');
-        this.maxSubgroupSize = this.gpuAdapter?.info?.subgroupMaxSize ?? 0;
-        this.minSubgroupSize = this.gpuAdapter?.info?.subgroupMinSize ?? 0;
-        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
-            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
-        Debug.log(
-            `WEBGPU${this.gpuAdapter?.info ?
-                ` (${this.gpuAdapter.info.vendor || '?'} / ${this.gpuAdapter.info.architecture || this.gpuAdapter.info.device || '?'})` :
-                ''
-            } features [${bare ? 'bare' : 'full'}]: ${requiredFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
-        );
+        // request the optional features the adapter supports (none in bare mode, to simulate the
+        // most constrained device). The capabilities are set again from the created device.
+        const requiredFeatures = bare ? [] : this._applyFeatures(gpuAdapter.features);
 
         // copy all adapter limits to the requiredLimits object (skipped for bare mode to use spec defaults)
         const requiredLimits = {};
         if (!bare) {
-            const adapterLimits = this.gpuAdapter?.limits;
+            const adapterLimits = gpuAdapter?.limits;
             if (adapterLimits) {
                 for (const limitName in adapterLimits) {
-                    // subgroup sizes are exposed via GPUAdapterInfo (read above), not as requestable
-                    // limits - some implementations (e.g. Windows Chrome) still surface them here and
-                    // reject them in requiredLimits, so skip them
+                    // subgroup sizes are exposed via GPUAdapterInfo, not as requestable limits - some
+                    // implementations (e.g. Windows Chrome) still surface them here and reject them in
+                    // requiredLimits, so skip them
                     if (limitName === 'minSubgroupSize' || limitName === 'maxSubgroupSize') {
                         continue;
                     }
@@ -513,11 +693,94 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         DebugHelper.setLabel(deviceDescr, 'PlayCanvasWebGPUDevice');
 
-        /**
-         * @type {GPUDevice}
-         * @private
-         */
-        this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
+        const wgpu = await gpuAdapter.requestDevice(deviceDescr);
+        // Teardown can finish while the request is pending. Do not revive the device or its resources.
+        if (this._destroyed) {
+            wgpu.destroy();
+            return null;
+        }
+
+        return this.initFromGpuDevice(gpuAdapter, wgpu, true);
+    }
+
+    /**
+     * Sets the capability flags from a set of WebGPU features and returns the names of the optional
+     * features the engine uses that the set contains. Called with the adapter's features to build
+     * the device request, and with the created device's features to derive the final capabilities.
+     *
+     * @param {GPUSupportedFeatures} features - The features to derive the capabilities from.
+     * @returns {string[]} The optional features the engine uses that are present in the set.
+     * @private
+     */
+    _applyFeatures(features) {
+        const supported = [];
+        const has = (feature) => {
+            const present = features.has(feature);
+            if (present) {
+                supported.push(feature);
+            }
+            return present;
+        };
+        this.textureFloatFilterable = has('float32-filterable');
+        this.textureFloatBlendable = has('float32-blendable');
+        this.extCompressedTextureS3TC = has('texture-compression-bc');
+        this.extCompressedTextureS3TCSliced3D = has('texture-compression-bc-sliced-3d');
+        this.extCompressedTextureETC = has('texture-compression-etc2');
+        this.extCompressedTextureASTC = has('texture-compression-astc');
+        this.extCompressedTextureASTCSliced3D = has('texture-compression-astc-sliced-3d');
+        this.supportsTimestampQuery = has('timestamp-query');
+        this.supportsDepthClip = has('depth-clip-control');
+        this.supportsDepth32Stencil = has('depth32float-stencil8');
+        this.supportsIndirectFirstInstance = has('indirect-first-instance');
+        this.supportsShaderF16 = has('shader-f16');
+        this.supportsStorageRGBA8 = has('bgra8unorm-storage');
+        this.textureRG11B10Renderable = has('rg11b10ufloat-renderable');
+        this.supportsClipDistances = has('clip-distances');
+        this.supportsDualSourceBlending = has('dual-source-blending');
+        this.supportsTextureFormatsTier1 = has('texture-formats-tier1');
+        this.supportsTextureFormatsTier2 = has('texture-formats-tier2');
+        this.supportsTextureFormatsTier1 ||= this.supportsTextureFormatsTier2;
+        this.supportsPrimitiveIndex = has('primitive-index');
+        this.supportsSubgroups = has('subgroups');
+        this.supportsSubgroupSizeControl = has('subgroup-size-control');
+        return supported;
+    }
+
+    /**
+     * Initializes this graphics device on an already created WebGPU device: derives the
+     * capabilities from the features the device was created with, configures the canvas and
+     * allocates the internal resources. Called by {@link WebgpuGraphicsDevice#createDevice}, and
+     * usable by a host that acquires the adapter and device itself, such as a headless test
+     * harness, in place of {@link WebgpuGraphicsDevice#initWebGpu}.
+     *
+     * @param {GPUAdapter|null} gpuAdapter - The adapter the device was created from, used for its
+     * info (vendor, architecture, subgroup sizes).
+     * @param {GPUDevice} wgpu - The WebGPU device.
+     * @param {boolean} [ownsGpuDevice] - True when this graphics device owns the WebGPU device: it
+     * then destroys it on {@link WebgpuGraphicsDevice#destroy} and recovers from its loss. A host
+     * that supplies the device keeps both responsibilities. Defaults to false.
+     * @returns {this} The initialized graphics device.
+     * @private
+     */
+    initFromGpuDevice(gpuAdapter, wgpu, ownsGpuDevice = false) {
+
+        this.gpuAdapter = gpuAdapter;
+        this.wgpu = wgpu;
+        this._ownsGpuDevice = ownsGpuDevice;
+
+        // capabilities derived from the features the device was created with
+        const enabledFeatures = this._applyFeatures(wgpu.features);
+        this.maxSubgroupSize = gpuAdapter?.info?.subgroupMaxSize ?? 0;
+        this.minSubgroupSize = gpuAdapter?.info?.subgroupMinSize ?? 0;
+
+        const wgslFeatureNames = window.navigator.gpu.wgslLanguageFeatures ?
+            Array.from(window.navigator.gpu.wgslLanguageFeatures) : [];
+        Debug.log(
+            `WEBGPU${gpuAdapter?.info ?
+                ` (${gpuAdapter.info.vendor || '?'} / ${gpuAdapter.info.architecture || gpuAdapter.info.device || '?'})` :
+                ''
+            } features [${this.initOptions.featureLevel === 'bare' ? 'bare' : 'full'}]: ${enabledFeatures.join(', ') || 'none'}, wgslFeatures(${wgslFeatureNames.join(', ') || 'none'})`
+        );
 
         // HTML-in-Canvas support (copyElementImageToTexture)
         this.supportsHtmlTextures = typeof this.wgpu.queue?.copyElementImageToTexture === 'function';
@@ -525,14 +788,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // transient (memoryless) attachment support (GPUTextureUsage.TRANSIENT_ATTACHMENT)
         this.supportsTransientAttachments = typeof GPUTextureUsage !== 'undefined' && 'TRANSIENT_ATTACHMENT' in GPUTextureUsage;
 
-        // handle lost device
-        this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+        // handle lost device (a host that supplied the device handles its loss)
+        if (ownsGpuDevice) {
+            this.wgpu.lost?.then(this.handleDeviceLost.bind(this));
+        }
 
         // surface any uncaptured WebGPU errors
-        this.wgpu.addEventListener?.('uncapturederror', (ev) => {
+        this._uncapturedErrorHandler = (ev) => {
             const e = /** @type {any} */ (ev).error;
             Debug.error(`WebGPU uncaptured ${e?.constructor?.name ?? 'Error'}: ${e?.message ?? e}`);
-        });
+        };
+        this.wgpu.addEventListener?.('uncapturederror', this._uncapturedErrorHandler);
 
         this.initDeviceCaps();
 
@@ -574,12 +840,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        /**
-         * Configuration of the main colorframebuffer we obtain using getCurrentTexture
-         *
-         * @type {GPUCanvasConfiguration}
-         * @private
-         */
         this.canvasConfig = {
             device: this.wgpu,
             colorSpace: 'srgb',
@@ -614,19 +874,127 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return this;
     }
 
+    // #if _DEBUG
+    /**
+     * @type {(() => Promise<void>) | null}
+     * @private
+     */
+    _debugRestoreDelay = null;
+    // #endif
+
+    /** @ignore */
+    debugLoseContext(delay = 100) {
+        Debug.call(() => {
+            if (this._destroyed || this.contextLost || this._debugRestoreDelay) {
+                return;
+            }
+
+            // Distinguish this deliberate loss from normal device destruction. Start the timer
+            // in the loss handler so the application stops rendering throughout the delay.
+            this._debugRestoreDelay = () => new Promise((resolve) => {
+                setTimeout(resolve, delay);
+            });
+            // destroy() detaches mapped buffers immediately, before the asynchronous lost
+            // notification. Stop subsequent frames from allocating out of those buffers.
+            this.contextLost = true;
+            this.wgpu.destroy();
+        });
+    }
+
     async handleDeviceLost(info) {
+        let recover = info.reason !== 'destroyed';
+        Debug.call(() => {
+            recover ||= !!this._debugRestoreDelay;
+        });
+
         // reason is 'destroyed' if we intentionally destroy the device
-        if (info.reason !== 'destroyed') {
+        if (recover && !this._destroyed) {
             Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
 
-            super.loseContext(); // 'super' works correctly here
+            const profilerEnabled = this.gpuProfiler.enabled;
+            this.loseContext();
             this.fire('devicelost');
+
+            let restoreDelay;
+            Debug.call(() => {
+                restoreDelay = this._debugRestoreDelay?.();
+                this._debugRestoreDelay = null;
+            });
+            if (restoreDelay) {
+                await restoreDelay;
+            }
+            if (this._destroyed) {
+                return;
+            }
 
             await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
 
-            super.restoreContext(); // 'super' works correctly here
+            if (this._destroyed) {
+                return;
+            }
+
+            this.restoreContext();
+            this.gpuProfiler.enabled = profilerEnabled;
             this.fire('devicerestored');
         }
+    }
+
+    /** @private */
+    clearDeviceState() {
+        // Recorded commands and cached pipelines cannot outlive their native device.
+        this.commandEncoder = null;
+        this.commandBuffers.length = 0;
+        this.passEncoder = null;
+        this.pipeline = null;
+        this.insideRenderPass = false;
+        this.bindGroupFormats.length = 0;
+        this.renderPipeline.cache.clear();
+        this.computePipeline.cache.clear();
+    }
+
+    /** @ignore */
+    loseContext() {
+        this.clearDeviceState();
+
+        // Release owned buffers before their handles are invalidated, so destruction also
+        // removes their VRAM accounting. The remaining application resources are restored below.
+        this.destroyDeviceResources();
+        super.loseContext();
+
+        for (const bindGroup of this._bindGroups) {
+            bindGroup.loseContext();
+        }
+        for (const format of this._bindGroupFormats) {
+            format.loseContext();
+        }
+        for (const compute of this._computes) {
+            compute.loseContext();
+        }
+
+        this.destroyDeferredResources();
+    }
+
+    /** @ignore */
+    restoreContext() {
+        for (const texture of this.textures) {
+            texture.impl.create(this);
+        }
+        for (const format of this._bindGroupFormats) {
+            format.restoreContext();
+        }
+        for (const compute of this._computes) {
+            compute.restoreContext();
+        }
+        // Bind groups rebuild through their normal dirty update after buffer allocations are ready.
+        super.restoreContext();
+
+        // Reupload commands after their storage buffers have been recreated.
+        for (const drawCommands of this._drawCommands) {
+            drawCommands.restoreContext();
+        }
+
+        // and the mesh instance storage, from its CPU copy
+        this.meshInstanceStorage?.restoreContext();
     }
 
     postInit() {
@@ -643,6 +1011,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // empty bind group
         this.emptyBindGroup = new BindGroup(this, new BindGroupFormat(this, []));
         this.emptyBindGroup.update();
+
+        // created once, and kept across a device loss, when this runs again
+        if (this.supportsMeshInstanceStorage && !this.meshInstanceStorage) {
+            this.meshInstanceStorage = new MeshInstanceStorage(this);
+        }
     }
 
     createBackbuffer() {
@@ -778,7 +1151,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     createBindGroupImpl(bindGroup) {
-        return new WebgpuBindGroup();
+        return new WebgpuBindGroup(bindGroup);
     }
 
     createComputeImpl(compute) {
@@ -856,18 +1229,33 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * @param {number} index - Index of the bind group slot
      * @param {BindGroup} bindGroup - Bind group to attach
-     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group.
+     * @param {Uint32Array} [offsets] - Byte offsets for all uniform buffers in the bind group.
+     * Defaults to the offsets the bind group holds.
      */
     setBindGroup(index, bindGroup, offsets) {
 
         // TODO: this condition should be removed, it's here to handle fake grab pass, which should be refactored instead
         if (this.passEncoder) {
 
-            // set it on the device
-            this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, offsets ?? bindGroup.uniformBufferOffsets);
+            // The offsets are passed as a typed array with an explicit range, which WebGPU reads
+            // directly. A JS array - or a typed array without the range, which selects the same
+            // overload - is converted to a sequence on every call, even an empty one, which is a
+            // large part of the cost of a bind. A bind group without dynamic offsets passes none.
+            const dynamicOffsets = offsets ?? bindGroup.uniformBufferOffsets;
+            const count = dynamicOffsets.length;
+            if (count === 0) {
+                this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup);
+            } else {
+                this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, dynamicOffsets, 0, count);
+            }
 
-            // store the active formats, used by the pipeline creation
-            this.bindGroupFormats[index] = bindGroup.format.impl;
+            // store the active formats, used by the pipeline creation. A format takes part in the
+            // pipeline by its key, so a different format of the same layout keeps the pipeline
+            const formatImpl = bindGroup.format.impl;
+            if (this.bindGroupFormats[index]?.key !== formatImpl.key) {
+                this._pipelineDirty = true;
+            }
+            this.bindGroupFormats[index] = formatImpl;
         }
     }
 
@@ -880,16 +1268,51 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         if (interleaved) {
             // for interleaved buffers, we use a single vertex buffer, and attributes are specified using the layout
-            this.passEncoder.setVertexBuffer(slot, vbBuffer);
+            this.bindVertexBuffer(slot, vbBuffer, 0);
             return 1;
         }
 
         // non-interleaved - vertex buffer per attribute
         for (let i = 0; i < elementCount; i++) {
-            this.passEncoder.setVertexBuffer(slot + i, vbBuffer, elements[i].offset);
+            this.bindVertexBuffer(slot + i, vbBuffer, elements[i].offset);
         }
 
         return elementCount;
+    }
+
+    /**
+     * Binds a GPU buffer to a vertex buffer slot, unless the slot already holds it at the offset.
+     *
+     * @param {number} slot - The vertex buffer slot.
+     * @param {GPUBuffer} buffer - The GPU buffer.
+     * @param {number} offset - The offset in the buffer, in bytes.
+     * @private
+     */
+    bindVertexBuffer(slot, buffer, offset) {
+        if (this._boundVertexBuffers[slot] !== buffer || this._boundVertexOffsets[slot] !== offset) {
+            this._boundVertexBuffers[slot] = buffer;
+            this._boundVertexOffsets[slot] = offset;
+            this.passEncoder.setVertexBuffer(slot, buffer, offset);
+        }
+    }
+
+    // #if _DEBUG
+    /**
+     * Validates that the bind group at the view index holds the textures the shader reads from it,
+     * see {@link Shader#viewBindGroupFormat} - the renderer binds it per shader, and so a draw
+     * issued without the renderer setting it up would miss them.
+     *
+     * @param {Shader} shader - The shader of the draw.
+     * @private
+     */
+    validateViewBindGroup(shader) {
+        const viewFormat = shader.viewBindGroupFormat;
+        if (viewFormat) {
+            const bound = this.bindGroupFormats[BINDGROUP_VIEW];
+            Debug.assert(bound?.key === viewFormat.impl.key,
+                `The view bind group of shader [${shader.label}] holds textures [${viewFormat.textureFormats.map(format => format.name).join(', ')}], but a bind group of a different format is bound at the view index. Draws of such shaders need Renderer#setupViewBindGroup after the shader is set.`,
+                { shader, bound: bound?.bindGroupFormat, expected: viewFormat });
+        }
     }
 
     validateVBLocations(vb0, vb1) {
@@ -911,8 +1334,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         validateVB(vb1);
         _uniqueLocations.clear();
     }
+    // #endif
 
-    draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true, firstInstance = 0) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -938,21 +1362,54 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 }
 
                 Debug.call(() => this.validateAttributes(this.shader, [vb0, vb1]));
+                Debug.call(() => this.validateViewBindGroup(this.shader));
 
-                // render pipeline
-                pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
-                    this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
-                    this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
-                Debug.assert(pipeline);
+                // render pipeline - looked up only when one of its inputs changed since the last
+                // lookup: the device state (tracked by the setters), or the arguments of the draw.
+                // The pipeline is reset at the start of each pass.
+                const primitiveType = primitive.type;
+                const vertexHash0 = vb0 ? vb0.format.renderingHash : 0;
+                const vertexHash1 = vb1 ? vb1.format.renderingHash : 0;
+                const indexFormat = WebgpuRenderPipeline.stripIndexFormat(primitiveType, indexBuffer?.format) ?? -1;
+                if (this._pipelineDirty || !pipeline ||
+                    this._pipelinePrimitiveType !== primitiveType ||
+                    this._pipelineVertexHash0 !== vertexHash0 ||
+                    this._pipelineVertexHash1 !== vertexHash1 ||
+                    this._pipelineIndexFormat !== indexFormat) {
 
-                if (this.pipeline !== pipeline) {
-                    this.pipeline = pipeline;
-                    passEncoder.setPipeline(pipeline);
+                    this._pipelineDirty = false;
+                    this._pipelinePrimitiveType = primitiveType;
+                    this._pipelineVertexHash0 = vertexHash0;
+                    this._pipelineVertexHash1 = vertexHash1;
+                    this._pipelineIndexFormat = indexFormat;
+
+                    pipeline = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
+                    Debug.assert(pipeline);
+
+                    if (this.pipeline !== pipeline) {
+                        this.pipeline = pipeline;
+                        passEncoder.setPipeline(pipeline);
+                    }
                 }
+
+                Debug.call(() => {
+                    // the pipeline reused without a lookup is the one a lookup would return
+                    const expected = this.renderPipeline.get(primitive, vb0?.format, vb1?.format, indexBuffer?.format, this.shader, this.renderTarget,
+                        this.bindGroupFormats, this.blendState, this.depthState, this.cullMode,
+                        this.stencilEnabled, this.stencilFront, this.stencilBack, this.frontFace, this.alphaToCoverage);
+                    Debug.assert(expected === pipeline, 'A render state change was not tracked, the draw reused a stale render pipeline.', this);
+                });
             }
 
             if (indexBuffer) {
-                passEncoder.setIndexBuffer(indexBuffer.impl.buffer, indexBuffer.impl.format);
+                const { buffer, format } = indexBuffer.impl;
+                if (this._boundIndexBuffer !== buffer || this._boundIndexFormat !== format) {
+                    this._boundIndexBuffer = buffer;
+                    this._boundIndexFormat = format;
+                    passEncoder.setIndexBuffer(buffer, format);
+                }
             }
 
             // draw
@@ -974,9 +1431,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } else { // single draw path
 
                 if (indexBuffer) {
-                    passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
+                    passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, firstInstance);
                 } else {
-                    passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
+                    passEncoder.draw(primitive.count, numInstances, primitive.base, firstInstance);
                 }
             }
 
@@ -987,11 +1444,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // track primitive count
             if (drawCommands) {
                 // use pre-calculated primitive count from drawCommands
-                this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type);
             } else {
                 // single draw
-                const primCount = primitive.count * (numInstances > 1 ? numInstances : 1);
-                this._primsPerFrame[primitive.type] += primCount;
+                this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * numInstances;
             }
             // #endif
 
@@ -1006,9 +1462,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         if (last) {
-            // empty array of vertex buffers
+            // Clear pending vertex buffers; encoder state remains bound until the pass ends.
             this.clearVertexBuffer();
-            this.pipeline = null;
         }
     }
 
@@ -1016,6 +1471,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         if (shader !== this.shader) {
             this.shader = shader;
+            this._pipelineDirty = true;
 
             // #if _PROFILER
             // TODO: we should probably track other stats instead, like pipeline switches
@@ -1028,18 +1484,29 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.assert(!blendState.usesDualSourceBlending || this.supportsDualSourceBlending,
             'Dual-source blending is not supported by this graphics device.');
 
+        if (this.blendState.key !== blendState.key) {
+            this._pipelineDirty = true;
+        }
         this.blendState.copy(blendState);
     }
 
     setDepthState(depthState) {
+        if (this.depthState.key !== depthState.key) {
+            this._pipelineDirty = true;
+        }
         this.depthState.copy(depthState);
     }
 
     setStencilState(stencilFront, stencilBack) {
         if (stencilFront || stencilBack) {
+            const front = stencilFront ?? StencilParameters.DEFAULT;
+            const back = stencilBack ?? StencilParameters.DEFAULT;
+            if (!this.stencilEnabled || this.stencilFront.key !== front.key || this.stencilBack.key !== back.key) {
+                this._pipelineDirty = true;
+            }
             this.stencilEnabled = true;
-            this.stencilFront.copy(stencilFront ?? StencilParameters.DEFAULT);
-            this.stencilBack.copy(stencilBack ?? StencilParameters.DEFAULT);
+            this.stencilFront.copy(front);
+            this.stencilBack.copy(back);
 
             // ref value - based on stencil front
             const ref = this.stencilFront.ref;
@@ -1048,6 +1515,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 this.passEncoder.setStencilReference(ref);
             }
         } else {
+            if (this.stencilEnabled) {
+                this._pipelineDirty = true;
+            }
             this.stencilEnabled = false;
         }
     }
@@ -1061,15 +1531,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setCullMode(cullMode) {
-        this.cullMode = cullMode;
+        if (this.cullMode !== cullMode) {
+            this.cullMode = cullMode;
+            this._pipelineDirty = true;
+        }
     }
 
     setFrontFace(frontFace) {
-        this.frontFace = frontFace;
+        if (this.frontFace !== frontFace) {
+            this.frontFace = frontFace;
+            this._pipelineDirty = true;
+        }
     }
 
     setAlphaToCoverage(state) {
-        this.alphaToCoverage = state;
+        if (this.alphaToCoverage !== state) {
+            this.alphaToCoverage = state;
+            this._pipelineDirty = true;
+        }
     }
 
     initializeContextCaches() {
@@ -1083,6 +1562,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.pipeline = null;
         this.stencilRef = 0;
         this.blendColor.set(0, 0, 0, 0);
+
+        // a new pass encoder starts with no vertex or index buffer bound
+        this._boundVertexBuffers.length = 0;
+        this._boundVertexOffsets.length = 0;
+        this._boundIndexBuffer = null;
+        this._boundIndexFormat = null;
     }
 
     _uploadDirtyTextures() {
@@ -1095,6 +1580,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setupTimeStampWrites(passDesc, name) {
+        // Cached descriptors can retain queries from an earlier frame or device.
+        if (passDesc) {
+            passDesc.timestampWrites = undefined;
+        }
         if (this.gpuProfiler._enabled) {
             if (this.gpuProfiler.timestampQueriesSet) {
                 const slot = this.gpuProfiler.getSlot(name);
@@ -1336,6 +1825,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             // copy dynamic buffers data to the GPU (this schedules the copy CB to run before all other CBs)
             this.dynamicBuffers.submit();
 
+            // upload the mesh instance storage written by the recorded draws, which the queue runs
+            // before them
+            this.meshInstanceStorage?.upload();
+
             // trace all scheduled command buffers
             Debug.call(() => {
                 if (this.commandBuffers.length > 0) {
@@ -1355,6 +1848,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
 
         // destroy deferred resources after submit to ensure they're no longer referenced
+        this.destroyDeferredResources();
+    }
+
+    /** @private */
+    destroyDeferredResources() {
         const deferredDestroys = this._deferredDestroys;
         if (deferredDestroys.length > 0) {
             for (let i = 0; i < deferredDestroys.length; i++) {
@@ -1367,13 +1865,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Defer destruction of a GPU resource until after the current command buffers are submitted.
      * This ensures the resource is not destroyed while still referenced by pending GPU commands.
+     * Resources released after device destruction are destroyed immediately.
      *
      * @param {GPUTexture|GPUBuffer|GPUQuerySet} gpuResource - The GPU resource to destroy.
      * @private
      */
     deferDestroy(gpuResource) {
         if (gpuResource) {
-            this._deferredDestroys.push(gpuResource);
+            if (this._destroyed) {
+                gpuResource.destroy();
+            } else {
+                this._deferredDestroys.push(gpuResource);
+            }
         }
     }
 
@@ -1422,9 +1925,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 return;
             }
 
-            if (!this.renderTarget.flipY) {
-                y = this.renderTarget.height - y - h;
+            const rt = this.renderTarget;
+            const rtWidth = rt.width;
+            const rtHeight = rt.height;
+
+            if (!rt.flipY) {
+                y = rtHeight - y - h;
             }
+
+            // Unlike the viewport, the scissor rectangle must lie within the render target, so
+            // clamp it. This allows a viewport extending past the render target bounds, which
+            // uses the viewport rectangle as its scissor rectangle by default.
+            const x0 = Math.min(Math.max(x, 0), rtWidth);
+            const y0 = Math.min(Math.max(y, 0), rtHeight);
+            w = Math.max(Math.min(x + w, rtWidth) - x0, 0);
+            h = Math.max(Math.min(y + h, rtHeight) - y0, 0);
+            x = x0;
+            y = y0;
 
             this.sx = x;
             this.sy = y;
@@ -1508,50 +2025,31 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return this.readBuffer(stagingBuffer, size, data, immediate);
     }
 
-    readBuffer(stagingBuffer, size, data = null, immediate = false) {
-
+    async readBuffer(stagingBuffer, size, data = null, immediate = false) {
         const destBuffer = stagingBuffer.buffer;
-
-        // return a promise that resolves with the data
-        return new Promise((resolve, reject) => {
-
-            const read = () => {
-
-                this.mapBufferAsync(destBuffer, GPUMapMode.READ).then((mapped) => {
-
-                    if (!mapped) {
-                        stagingBuffer.destroy(this);
-                        reject(new Error('Failed to map a staging buffer for reading, most likely because the device was lost.'));
-                        return;
-                    }
-
-                    // copy data to a buffer
-                    data ??= new Uint8Array(size);
-                    const copySrc = destBuffer.getMappedRange(0, size);
-
-                    // use the same type as the target
-                    const srcType = data.constructor;
-                    data.set(new srcType(copySrc));
-
-                    // release staging buffer
-                    destBuffer.unmap();
-                    stagingBuffer.destroy(this);
-
-                    resolve(data);
-                });
-            };
-
+        try {
             if (immediate) {
-                // submit the command buffer immediately
                 this.submit();
-                read();
             } else {
-                // map the buffer during the next event handling cycle, when the command buffer is submitted
-                setTimeout(() => {
-                    read();
+                // Wait until recorded copies have been submitted before mapping.
+                await new Promise((resolve) => {
+                    setTimeout(resolve);
                 });
             }
-        });
+
+            // Preserve the native AbortError so callers can distinguish interrupted reads,
+            // even when mapping rejects before the device-lost event arrives.
+            await destBuffer.mapAsync(GPUMapMode.READ);
+
+            data ??= new Uint8Array(size);
+            const copySrc = destBuffer.getMappedRange(0, size);
+            const srcType = data.constructor;
+            data.set(new srcType(copySrc));
+            return data;
+        } finally {
+            destBuffer.unmap();
+            stagingBuffer.destroy(this);
+        }
     }
 
     /**

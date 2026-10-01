@@ -27,6 +27,7 @@ import { Asset } from '../asset/asset.js';
  * string.
  * @property {Asset|undefined} asset - The asset being loaded, if any.
  * @property {AppBase} app - The running {@link AppBase}.
+ * @category Asset
  */
 
 /**
@@ -46,13 +47,38 @@ import { Asset } from '../asset/asset.js';
  * `open(url, data, device, textureOptions)` on its parsers.
  * @property {ResourceHandler} [handler] - Assigned by the owning handler on registration; available in
  * `load`/`open` (for example `this.handler.fetch(...)`).
+ * @category Asset
  */
 
 /**
- * Base class for ResourceHandlers used by {@link ResourceLoader}. A handler is a collection of
- * {@link ResourceParser}s for a single asset type; register parsers with {@link ResourceHandler#addParser}
- * and the base implementation selects the matching one to load and open the resource. A handler with a
- * single parser is the common (single-format) case.
+ * A ResourceHandler loads and opens resources of one asset type on behalf of the
+ * {@link ResourceLoader}. The engine ships a handler for every built-in {@link AssetType}, and an
+ * application registers the ones listed in {@link AppOptions#resourceHandlers}, so a
+ * hand-configured {@link AppBase} may support only some types. Register your own with
+ * {@link ResourceLoader#addHandler} to add a new type.
+ *
+ * A handler works in two steps. {@link load} fetches the raw data for a URL and {@link open} turns
+ * that data into the resource stored on {@link Asset#resource}. A handler may also implement
+ * {@link patch} to resolve references to other assets once the resource exists. Rather than
+ * overriding those methods, a handler can register one {@link ResourceParser} per file format with
+ * {@link addParser} and let the base class pick the parser that claims the file.
+ *
+ * @example
+ * class CsvHandler extends ResourceHandler {
+ *     constructor(app) {
+ *         super(app, 'csv');
+ *     }
+ *
+ *     load(url, callback) {
+ *         this.fetch(url, 'text', callback);
+ *     }
+ *
+ *     open(url, data) {
+ *         return data.split('\n').map(line => line.split(','));
+ *     }
+ * }
+ * app.loader.addHandler('csv', new CsvHandler(app));
+ * @category Asset
  */
 class ResourceHandler {
     /**
@@ -182,7 +208,7 @@ class ResourceHandler {
      *
      * @param {string | {load: string, original: string}} url - The resource URL, or a load/original
      * structure.
-     * @param {string} responseType - The {@link Http.ResponseType} to fetch as (for example
+     * @param {string} responseType - The {@link Http} response type to fetch as (for example
      * `Http.ResponseType.ARRAY_BUFFER` for a binary format, or `Http.ResponseType.TEXT`).
      * @param {ResourceHandlerCallback} callback - Called with `(err, data)` when the fetch completes.
      * @param {Asset} [asset] - The asset being loaded, used to reuse already-fetched contents.

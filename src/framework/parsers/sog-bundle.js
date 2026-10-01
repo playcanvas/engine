@@ -1,4 +1,5 @@
 import { Asset } from '../../framework/asset/asset.js';
+import { getFetchCredentials } from '../../platform/net/http.js';
 import { GSplatResource } from '../../scene/gsplat/gsplat-resource.js';
 import { GSplatSogData } from '../../scene/gsplat/gsplat-sog-data.js';
 import { GSplatSogResource } from '../../scene/gsplat/gsplat-sog-resource.js';
@@ -99,7 +100,7 @@ const inflate = async (compressed) => {
 };
 
 const downloadArrayBuffer = async (url, asset) => {
-    const response = await (asset.file?.contents ?? fetch(url.load));
+    const response = await (asset.file?.contents ?? fetch(url.load, { credentials: getFetchCredentials() }));
     if (!response) {
         throw new Error('Error loading resource');
     }
@@ -363,7 +364,13 @@ class SogBundleParser {
                 // no need to prepare gpu data if decompressing
                 data.prepareCodebook();
                 if (gsplatCentersEnabledAtLoad) {
-                    await data.prepareGpuData();
+                    // An unload must cancel preparation even if the device never recovers.
+                    const onUnload = asset.once('unload', () => data.destroy());
+                    try {
+                        await data.prepareGpuData();
+                    } finally {
+                        onUnload.off();
+                    }
                 }
             }
 

@@ -66,8 +66,6 @@ export default /* glsl */`
     #include "lightSheenPS"
 #endif
 
-uniform vec3 material_ambient;
-
 #ifdef LIT_SPECULAR
     #ifdef LIT_LIGHTING
         #ifdef LIT_GGX_SPECULAR

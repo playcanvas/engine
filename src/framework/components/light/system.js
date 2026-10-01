@@ -5,10 +5,29 @@ import { _properties, LightComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
  */
 
 /**
- * A Light Component is used to dynamically light the scene.
+ * Options of the `light` component accepted by {@link LightComponentSystem} that differ from the
+ * properties of {@link LightComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} LightComponentOptionsOverrides
+ * @property {Color | number[]} [color] - Same as {@link LightComponent#color}, also accepting an
+ * `[r, g, b]` array.
+ * @property {Vec2 | number[]} [cookieOffset] - Same as {@link LightComponent#cookieOffset}, also
+ * accepting an `[x, y]` array.
+ * @property {Vec2 | number[]} [cookieScale] - Same as {@link LightComponent#cookieScale}, also
+ * accepting an `[x, y]` array.
+ * @property {boolean} [enable] - Deprecated alias of `enabled`.
+ * @ignore
+ */
+
+/**
+ * Manages the {@link LightComponent}s of an application. Reach it through `app.systems.light`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Graphics
  */

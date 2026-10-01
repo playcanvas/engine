@@ -2,6 +2,7 @@ import { path } from '../../core/path.js';
 import { Asset } from '../../framework/asset/asset.js';
 import { GlbParser } from './glb-parser.js';
 import { GlbContainerResource } from './glb-container-resource.js';
+import { getGlbResourceExtensions } from './glb-resource-extension.js';
 
 class GlbContainerParser {
     constructor(device, assets) {
@@ -32,6 +33,7 @@ class GlbContainerParser {
                     this._device,
                     asset.registry,
                     asset.options,
+                    getGlbResourceExtensions(this.handler),
                     (err, result) => {
                         if (err) {
                             callback(err);

@@ -52,7 +52,7 @@ void evaluateBackend() {
     #endif
 
     #ifndef LIT_OLD_AMBIENT
-        dDiffuseLight *= material_ambient;
+        dDiffuseLight *= litArgs_ambient;
     #endif
 
     #ifdef LIT_AO

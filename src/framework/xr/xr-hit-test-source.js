@@ -173,38 +173,27 @@ class XrHitTestSource extends EventHandler {
             return;
         }
 
-        const origin = poolVec3.pop() ?? new Vec3();
-
-        if (inputSource) {
-            origin.copy(inputSource.getOrigin());
-        } else {
-            origin.copy(this.manager.camera.getPosition());
+        // the results are sorted by their distance along the ray, so the nearest is the first to
+        // have a pose
+        let pose = null;
+        let hitTestResult = null;
+        for (let i = 0; i < results.length && !pose; i++) {
+            pose = results[i].getPose(this.manager._referenceSpace);
+            hitTestResult = results[i];
         }
 
-        let candidateDistance = Infinity;
-        let candidateHitTestResult = null;
+        if (!pose) {
+            return;
+        }
 
         const position = poolVec3.pop() ?? new Vec3();
         const rotation = poolQuat.pop() ?? new Quat();
+        position.copy(pose.transform.position);
+        rotation.copy(pose.transform.orientation);
 
-        for (let i = 0; i < results.length; i++) {
-            const pose = results[i].getPose(this.manager._referenceSpace);
+        this.fire('result', position, rotation, inputSource || this._inputSource, hitTestResult);
+        this.manager.hitTest.fire('result', this, position, rotation, inputSource || this._inputSource, hitTestResult);
 
-            const distance = origin.distance(pose.transform.position);
-            if (distance >= candidateDistance) {
-                continue;
-            }
-
-            candidateDistance = distance;
-            candidateHitTestResult = results[i];
-            position.copy(pose.transform.position);
-            rotation.copy(pose.transform.orientation);
-        }
-
-        this.fire('result', position, rotation, inputSource || this._inputSource, candidateHitTestResult);
-        this.manager.hitTest.fire('result', this, position, rotation, inputSource || this._inputSource, candidateHitTestResult);
-
-        poolVec3.push(origin);
         poolVec3.push(position);
         poolQuat.push(rotation);
     }

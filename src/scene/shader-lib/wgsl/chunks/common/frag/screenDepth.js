@@ -4,7 +4,7 @@ var uSceneDepthMap: texture_2d<uff>;
 
 #ifndef SCREENSIZE
     #define SCREENSIZE
-    uniform uScreenSize: vec4f;
+    uniform screen_size: vec4f;
 #endif
 
 #ifndef VIEWMATRIX
@@ -64,7 +64,7 @@ fn getLinearScreenDepth(uv: vec2f) -> f32 {
 #ifndef VERTEXSHADER
     // Retrieves rendered linear camera depth under the current pixel
     fn getLinearScreenDepthFrag() -> f32 {
-        let uv: vec2f = pcPosition.xy * uniform.uScreenSize.zw;
+        let uv: vec2f = pcPosition.xy * uniform.screen_size.zw;
         return getLinearScreenDepth(uv);
     }
 #endif

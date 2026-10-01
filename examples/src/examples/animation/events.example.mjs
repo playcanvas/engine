@@ -99,7 +99,6 @@ cameraEntity.translate(0, 1, 0);
 const cameraFrame = new CameraFrame(app, cameraEntity.camera);
 cameraFrame.rendering.toneMapping = TONEMAP_NEUTRAL;
 cameraFrame.rendering.samples = 4;
-cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.update();
 

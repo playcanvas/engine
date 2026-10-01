@@ -5,12 +5,31 @@ import { LayoutGroupComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ */
+
+/**
+ * Options of the `layoutgroup` component accepted by {@link LayoutGroupComponentSystem} that differ
+ * from the properties of {@link LayoutGroupComponent}. Each replaces the same-named property of the
+ * options that {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} LayoutGroupComponentOptionsOverrides
+ * @property {Vec2 | number[]} [alignment] - Same as {@link LayoutGroupComponent#alignment}, also
+ * accepting an `[x, y]` array.
+ * @property {Vec4 | number[]} [padding] - Same as {@link LayoutGroupComponent#padding}, also
+ * accepting an `[x, y, z, w]` array.
+ * @property {Vec2 | number[]} [spacing] - Same as {@link LayoutGroupComponent#spacing}, also
+ * accepting an `[x, y]` array.
+ * @ignore
  */
 
 const MAX_ITERATIONS = 100;
 
 /**
- * Manages creation of {@link LayoutGroupComponent}s.
+ * Manages the {@link LayoutGroupComponent}s of an application. Reach it through
+ * `app.systems.layoutgroup`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category User Interface
  */

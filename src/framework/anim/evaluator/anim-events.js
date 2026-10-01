@@ -1,6 +1,9 @@
 /**
  * AnimEvents stores a sorted array of animation events which should fire sequentially during the
- * playback of an {@link AnimTrack}.
+ * playback of an {@link AnimTrack}. Each event is an object with a `name` and a `time` in
+ * seconds plus any extra properties you attach. When playback passes an event's time it is fired
+ * on the {@link AnimComponent} under the event's name, so a script listens with
+ * `entity.anim.on('footstep', callback)` and receives the event object.
  *
  * @category Animation
  */

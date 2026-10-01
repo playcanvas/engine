@@ -3,6 +3,10 @@
  * {@link Asset}. An audio asset can be assigned to a {@link SoundSlot} owned by a
  * {@link SoundComponent}.
  *
+ * The {@link buffer} is the decoded Web Audio `AudioBuffer`, so {@link duration} is known as soon
+ * as the asset has loaded. Playing a sound creates one {@link SoundInstance} per playback, normally
+ * through a slot rather than by constructing the instance directly.
+ *
  * @category Sound
  */
 class Sound {

@@ -29,6 +29,7 @@ import { Debug } from '../core/debug.js';
  *     evt.off();
  * });
  * events = [];
+ * @category Framework
  */
 class EventHandle {
     /**

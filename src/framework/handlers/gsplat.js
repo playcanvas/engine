@@ -8,6 +8,15 @@ import { ResourceHandler } from './handler.js';
  * @import { AppBase } from '../app-base.js'
  */
 
+/**
+ * Resource handler for the `gsplat` asset type. Loads Gaussian splat scenes from PLY files, SOG
+ * files and SOG bundles, and level-of-detail scenes from their octree metadata, into a Gaussian
+ * splat resource. SPZ files are supported once the `SpzParser` shipped
+ * in `playcanvas/scripts/esm/parsers/spz-parser.mjs` is registered with
+ * {@link ResourceHandler#addParser}.
+ *
+ * @ignore
+ */
 class GSplatHandler extends ResourceHandler {
     /**
      * Create a new GSplatHandler instance.

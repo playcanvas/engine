@@ -3,13 +3,14 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
 import * as ReactJsxRuntime from 'react/jsx-runtime';
-import { useParams } from 'react-router-dom';
+import { Navigate, useLocation, useParams } from 'react-router-dom';
 
 import { CodeEditorMobile } from './code-editor/CodeEditorMobile.mjs';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { SelectInput as OverlaySelectInput } from './OverlaySelectInput.mjs';
 import { COLOR_NAMES, INLINE_MD_PATTERN, SAFE_URL_PATTERN } from '../../../utils/inline-markdown.mjs';
+import { getFirstExample } from '../categories.mjs';
 import { CLOSE_SELECTS_EVENT } from '../constants.mjs';
 import { setExampleSnapshotProvider } from '../example-snapshot.mjs';
 import { iframe } from '../iframe.mjs';
@@ -164,10 +165,10 @@ const renderInlineMarkdown = (text) => {
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
-    examples: 'EXAMPLES',
-    code: 'SOURCE',
-    controls: 'CONTROLS',
-    description: 'INFO'
+    examples: 'Examples',
+    code: 'Source',
+    controls: 'Controls',
+    description: 'Info'
 };
 
 const createState = () => {
@@ -219,6 +220,7 @@ const createState = () => {
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
  * @property {boolean} [showCredits] - Whether the desktop credits overlay is visible.
+ * @property {boolean} [hideDescription] - Hide the desktop description, e.g. while the inspector panel is shown.
  * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
@@ -709,7 +711,7 @@ class Example extends TypedComponent {
 
     renderDescription() {
         const { exampleLoaded, description } = this.state;
-        if (!exampleLoaded || !description || !iframe.ready) {
+        if (!exampleLoaded || !description || !iframe.ready || this.props.hideDescription) {
             return null;
         }
         return jsx(
@@ -960,6 +962,7 @@ class Example extends TypedComponent {
                     id: 'controlPanel',
                     class: ['mobile', `${activePanel}-sheet`],
                     headerText: MOBILE_PANEL_TITLES[activePanel],
+                    headerSize: 44,
                     collapsible: false
                 },
                 this.renderMobilePanel()
@@ -984,7 +987,8 @@ class Example extends TypedComponent {
                         id: 'controlPanel',
                         class: ['desktop'],
                         resizable: 'top',
-                        headerText: 'CONTROLS',
+                        headerText: 'Controls',
+                        headerSize: 40,
                         collapsible: true,
                         collapsed
                     },
@@ -1031,7 +1035,7 @@ class Example extends TypedComponent {
                         jsx('div', { className: 'example-loading-message' }, error.message)
                     ) : fragment(
                         jsx(Spinner, { size: 34 }),
-                        jsx('div', { className: 'example-loading-title' }, 'LOADING')
+                        jsx('div', { className: 'example-loading-title' }, 'Loading')
                     )
                 )
             ),
@@ -1048,13 +1052,18 @@ class Example extends TypedComponent {
 }
 
 /**
+ * Category routes display their first example without replacing the shareable URL.
+ *
  * @param {Omit<Props, 'match'>} props - Component properties.
  * @returns {ReactElement} The Example component with router params.
  */
 function ExampleWithRouter(props) {
-    const params = useParams();
-    // @ts-ignore
-    return jsx(Example, { ...props, match: { params } });
+    const { category = '', example = getFirstExample(category) } = useParams();
+    const { search } = useLocation();
+    if (!example) {
+        return jsx(Navigate, { to: { pathname: '/misc/hello-world', search }, replace: true });
+    }
+    return jsx(Example, { ...props, match: { params: { category, example } } });
 }
 
 export { ExampleWithRouter as Example };

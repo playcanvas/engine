@@ -1,7 +1,7 @@
 #include "gammaPS" // Preserved include
 
 // engine built-in constant storing render target size in .xy and inverse size in .zw
-uniform uScreenSize: vec4f;
+uniform screen_size: vec4f;
 
 // reflection texture
 var uDiffuseMap: texture_2d<f32>;
@@ -12,7 +12,7 @@ fn fragmentMain(input: FragmentInput) -> FragmentOutput {
     var output: FragmentOutput;
 
     // sample reflection texture
-    var coord: vec2f = pcPosition.xy * uniform.uScreenSize.zw;
+    var coord: vec2f = pcPosition.xy * uniform.screen_size.zw;
     coord.y = 1.0 - coord.y;
     let reflection: vec4f = textureSample(uDiffuseMap, uDiffuseMapSampler, coord);
 

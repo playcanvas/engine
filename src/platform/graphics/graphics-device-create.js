@@ -1,21 +1,47 @@
-import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE, DEVICETYPE_NULL } from './constants.js';
+import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL2_BARE, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE, DEVICETYPE_NULL } from './constants.js';
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
 import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
 import { NullGraphicsDevice } from './null/null-graphics-device.js';
 
 /**
+ * @import { GraphicsDevice } from './graphics-device.js'
+ */
+
+/**
  * Creates a graphics device.
  *
  * @param {HTMLCanvasElement} canvas - The canvas element.
- * @param {object} options - Graphics device options.
+ * @param {object} [options] - Graphics device options.
  * @param {string[]} [options.deviceTypes] - An array of DEVICETYPE_*** constants, defining the
  * order in which the devices are attempted to get created. Defaults to an empty array. If the
  * specified array does not contain {@link DEVICETYPE_WEBGL2}, it is internally added to its end.
+ * A {@link DEVICETYPE_NULL} device, which renders nothing, is only created if it is specified.
  * Typically, you'd only specify {@link DEVICETYPE_WEBGPU}, or leave it empty. Use
- * {@link DEVICETYPE_WEBGPU_BARE} to create a WebGPU device without optional features and with
- * default spec limits, useful for testing on constrained devices.
+ * {@link DEVICETYPE_WEBGPU_BARE} or {@link DEVICETYPE_WEBGL2_BARE} to create a device without
+ * optional features and with the limits of the least capable devices, useful for testing on
+ * constrained devices.
  * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
  * anti-aliasing if possible. Defaults to true.
+ * @param {boolean} [options.alpha] - Boolean that indicates whether the canvas composites with
+ * the page behind it. Defaults to true. This is a compositing option rather than a memory one -
+ * neither backend has an alpha-less backbuffer format that saves any space. The backends
+ * implement it differently:
+ *
+ * - {@link DEVICETYPE_WEBGL2}: forwarded as the WebGL `alpha` context attribute, so the browser
+ * decides whether the drawing buffer actually has an alpha channel. When it does not, the device's
+ * `backBufferFormat` becomes {@link PIXELFORMAT_RGB8} rather than {@link PIXELFORMAT_RGBA8}, which
+ * also changes the format of the scene color grab pass.
+ * - {@link DEVICETYPE_WEBGPU}: selects the canvas alpha mode ('premultiplied' when true, 'opaque'
+ * when false). The backbuffer always has an alpha channel, so `backBufferFormat` is unaffected and
+ * 'opaque' simply tells the compositor to ignore the alpha that is already there.
+ *
+ * Compositing is premultiplied on both backends, so a transparent canvas needs a camera
+ * {@link CameraComponent#clearColor} with both its alpha and its RGB set to zero. A non-zero color
+ * with zero alpha is not valid premultiplied data and composites inconsistently across browsers.
+ *
+ * Note that this default applies to this function. The legacy {@link Application} constructor
+ * instead defaults `alpha` to false.
+ *
  * @param {string} [options.displayFormat] - The display format of the canvas. Defaults to
  * {@link DISPLAYFORMAT_LDR}. Can be:
  *
@@ -58,19 +84,19 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  * transient attachment support. Incompatible with a scene depth grab pass (`sceneDepthMap`), a
  * depth prepass, or any depth resolve, as the depth cannot be sampled or copied out. Defaults to
  * false.
- * @returns {Promise} - Promise object representing the created graphics device.
+ * @returns {Promise<GraphicsDevice>} - Promise object representing the created graphics device.
+ * It is rejected if none of the device types can be created, with an `AggregateError` whose
+ * `errors` contain the error of each device type that failed.
  * @category Graphics
  */
 function createGraphicsDevice(canvas, options = {}) {
 
     const deviceTypes = options.deviceTypes ?? [];
 
-    // automatically added fallbacks
+    // automatically added fallback. The null device is not added, as it renders nothing, so the
+    // promise rejects when no device can be created
     if (!deviceTypes.includes(DEVICETYPE_WEBGL2)) {
         deviceTypes.push(DEVICETYPE_WEBGL2);
-    }
-    if (!deviceTypes.includes(DEVICETYPE_NULL)) {
-        deviceTypes.push(DEVICETYPE_NULL);
     }
 
     // make a list of device creation functions in priority order
@@ -86,9 +112,9 @@ function createGraphicsDevice(canvas, options = {}) {
             });
         }
 
-        if (deviceType === DEVICETYPE_WEBGL2) {
+        if (deviceType === DEVICETYPE_WEBGL2 || deviceType === DEVICETYPE_WEBGL2_BARE) {
             deviceCreateFuncs.push(() => {
-                return new WebglGraphicsDevice(canvas, options);
+                return new WebglGraphicsDevice(canvas, { ...options, deviceType });
             });
         }
 
@@ -102,12 +128,17 @@ function createGraphicsDevice(canvas, options = {}) {
     // execute each device creation function returning the first successful result
     return new Promise((resolve, reject) => {
         let attempt = 0;
+        const errors = [];
         const next = () => {
             if (attempt >= deviceCreateFuncs.length) {
-                reject(new Error('Failed to create a graphics device'));
+                reject(new AggregateError(errors, 'Failed to create a graphics device'));
             } else {
-                Promise.resolve(deviceCreateFuncs[attempt++]())
-                .then((device) => {
+                // create the device inside a promise, so that a synchronous throw (as from the
+                // WebGL device when WebGL 2 is unavailable) is handled below as a rejection,
+                // rather than escaping from next
+                new Promise((resolveAttempt) => {
+                    resolveAttempt(deviceCreateFuncs[attempt++]());
+                }).then((device) => {
                     if (device) {
                         resolve(device);
                     } else {
@@ -115,6 +146,7 @@ function createGraphicsDevice(canvas, options = {}) {
                     }
                 }).catch((err) => {
                     console.log(err);
+                    errors.push(err);
                     next();
                 });
             }

@@ -26,6 +26,11 @@ flat varying ivec4 vSubDraw;
 
 uniform vec3 uColorMultiply;
 
+#if SH_BANDS > 0
+    // 1 for an orthographic camera, whose view rays are all parallel to the camera forward
+    uniform uint uCameraOrtho;
+#endif
+
 #ifdef GSPLAT_ID
     uniform uint uId;
 #endif
@@ -57,8 +62,10 @@ void main(void) {
         worldCenter = workBufferWorldCenter();
 
         #if SH_BANDS > 0
-            // model-space view direction (matches the source path up to non-uniform model scale)
-            dir = normalize(quatRotateInv(model_rotation, worldCenter - uCameraPosition));
+            // model-space view direction (matches the source path up to non-uniform model scale).
+            // Orthographic uses the world-space camera forward, (0, 0, -1) taken out of view space.
+            vec3 viewDir = uCameraOrtho != 0u ? vec3(0.0, 0.0, -1.0) * mat3(matrix_view) : worldCenter - uCameraPosition;
+            dir = normalize(quatRotateInv(model_rotation, viewDir));
         #endif
 
     #else
@@ -93,8 +100,10 @@ void main(void) {
         modifySplatRotationScale(originalCenter, worldCenter, worldRotation, worldScale);
 
         #if SH_BANDS > 0
-            // calculate the model-space view direction
-            dir = normalize(center.view * mat3(center.modelView));
+            // calculate the model-space view direction. Orthographic view rays are all parallel to
+            // the camera forward, rather than running from the camera position to the splat.
+            vec3 viewDir = uCameraOrtho != 0u ? vec3(0.0, 0.0, -1.0) : center.view;
+            dir = normalize(viewDir * mat3(center.modelView));
         #endif
 
     #endif

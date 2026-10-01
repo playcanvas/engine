@@ -1,6 +1,7 @@
 import { string } from '../../core/string.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { Color } from '../../core/math/color.js';
+import { math } from '../../core/math/math.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
@@ -21,6 +22,7 @@ class Atlas {
         this.canvas.width = width;
         this.canvas.height = height;
 
+        // filled from the pixels of the canvas by upload()
         this.texture = new Texture(device, {
             name: name,
             format: PIXELFORMAT_SRGBA8,
@@ -30,12 +32,12 @@ class Atlas {
             minFilter: FILTER_LINEAR_MIPMAP_LINEAR,
             magFilter: FILTER_LINEAR,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            levels: [this.canvas]
+            addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
         this.ctx = this.canvas.getContext('2d', {
-            alpha: true
+            alpha: true,
+            willReadFrequently: true
         });
     }
 
@@ -43,15 +45,73 @@ class Atlas {
         this.texture.destroy();
     }
 
-    clear(clearColor) {
+    clear() {
         const { width, height } = this.canvas;
-
-        // clear to black first to remove everything as clear color is transparent
         this.ctx.clearRect(0, 0, width, height);
+    }
 
-        // clear to color
-        this.ctx.fillStyle = clearColor;
-        this.ctx.fillRect(0, 0, width, height);
+    /**
+     * Copies the canvas to the texture. A canvas stores premultiplied colors, so its transparent
+     * pixels read back as black, and filtering and mipmaps would blend that black into the glyph
+     * edges. Each transparent texel takes the alpha weighted color of the glyph pixels next to it
+     * instead, or the font color away from glyphs, and stays fully transparent.
+     *
+     * @param {Color} color - The font color.
+     */
+    upload(color) {
+        const { width, height } = this.canvas;
+        const src = this.ctx.getImageData(0, 0, width, height).data;
+        const dst = this.texture.lock();
+        const r = math.clamp(Math.round(255 * color.r), 0, 255);
+        const g = math.clamp(Math.round(255 * color.g), 0, 255);
+        const b = math.clamp(Math.round(255 * color.b), 0, 255);
+
+        for (let y = 0; y < height; y++) {
+            const y0 = Math.max(y - 1, 0);
+            const y1 = Math.min(y + 1, height - 1);
+
+            for (let x = 0; x < width; x++) {
+                const i = (y * width + x) * 4;
+
+                if (src[i + 3] > 0) {
+                    dst[i] = src[i];
+                    dst[i + 1] = src[i + 1];
+                    dst[i + 2] = src[i + 2];
+                    dst[i + 3] = src[i + 3];
+                    continue;
+                }
+
+                // the colors of the surrounding pixels, weighted by their alpha
+                const x0 = Math.max(x - 1, 0);
+                const x1 = Math.min(x + 1, width - 1);
+                let sr = 0, sg = 0, sb = 0, sa = 0;
+                for (let ny = y0; ny <= y1; ny++) {
+                    for (let nx = x0; nx <= x1; nx++) {
+                        const j = (ny * width + nx) * 4;
+                        const a = src[j + 3];
+                        if (a > 0) {
+                            sr += src[j] * a;
+                            sg += src[j + 1] * a;
+                            sb += src[j + 2] * a;
+                            sa += a;
+                        }
+                    }
+                }
+
+                if (sa > 0) {
+                    dst[i] = sr / sa;
+                    dst[i + 1] = sg / sa;
+                    dst[i + 2] = sb / sa;
+                } else {
+                    dst[i] = r;
+                    dst[i + 1] = g;
+                    dst[i + 2] = b;
+                }
+                dst[i + 3] = 0;
+            }
+        }
+
+        this.texture.unlock();
     }
 }
 
@@ -227,20 +287,12 @@ class CanvasFont extends EventHandler {
         // fill color
         const color = this._colorToRgbString(this.color, false);
 
-        // generate a "transparent" color for the background
-        // browsers seem to optimize away all color data if alpha=0
-        // so setting alpha to min value and hope this isn't noticeable
-        const a = this.color.a;
-        this.color.a = 1 / 255;
-        const transparent = this._colorToRgbString(this.color, true);
-        this.color.a = a;
-
         const TEXT_ALIGN = 'center';
         const TEXT_BASELINE = 'alphabetic';
 
         let atlasIndex = 0;
         let atlas = this._getAtlas(atlasIndex++);
-        atlas.clear(transparent);
+        atlas.clear();
 
         this.data = this._createJson(this.chars, this.fontName, w, h);
 
@@ -298,7 +350,7 @@ class CanvasFont extends EventHandler {
                 if (_y + sy > h) {
                     // We ran out of space on this texture!
                     atlas = this._getAtlas(atlasIndex++);
-                    atlas.clear(transparent);
+                    atlas.clear();
                     _y = 0;
                 }
             }
@@ -308,7 +360,7 @@ class CanvasFont extends EventHandler {
         this.atlases.splice(atlasIndex).forEach(atlas => atlas.destroy());
 
         // upload textures
-        this.atlases.forEach(atlas => atlas.texture.upload());
+        this.atlases.forEach(atlas => atlas.upload(this.color));
 
         // alert text-elements that the font has been re-rendered
         this.fire('render');

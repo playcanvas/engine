@@ -8,6 +8,13 @@ import {
  * as their source (from) state. If so and the AnimTransitions parameter based conditions are met,
  * the controller will transition to the destination state.
  *
+ * Each condition compares a parameter with a value using one of the predicates such as
+ * {@link ANIM_GREATER_THAN} or {@link ANIM_EQUAL_TO}. `time` is the blend duration,
+ * `exitTime` restricts the transition to a point in the source state's playback,
+ * `priority` orders transitions whose conditions pass together, and
+ * `interruptionSource` says which other transitions may cut this one short. A transition
+ * may also start from the {@link ANIM_STATE_ANY} state so that it applies from every state.
+ *
  * @category Animation
  */
 class AnimTransition {

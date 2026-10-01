@@ -81,3 +81,38 @@ jobs:
         with:
           name: version
           path: version.txt
+
+  # npm publish is asynchronous: it returns as soon as the tarball is accepted ("Your package
+  # is being processed and may take a few minutes to become available"), so the job above going
+  # green no longer means the version is on the registry - it can lag by many minutes, and a
+  # publish that is rejected during processing would leave this workflow green having shipped
+  # nothing. This job holds the run open until the version actually resolves, so the workflow's
+  # conclusion means "published" for everything keyed off it (the Upload workflow, and anyone
+  # reading the run). It is a separate job so a timeout can be re-run on its own without
+  # re-running the build and re-attempting a publish that would now conflict.
+  await-npm:
+    name: Await npm
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Parse tag name
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "VERSION=${TAG_NAME/v/}" >> $GITHUB_ENV
+
+      - name: Wait for npm
+        run: |
+          url="https://registry.npmjs.org/playcanvas/${{ env.VERSION }}"
+          for i in $(seq 1 120); do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -H 'Cache-Control: no-cache' "$url" || true)
+            if [ "$code" = "200" ]; then
+              echo "playcanvas@${{ env.VERSION }} is available on npm"
+              exit 0
+            fi
+            echo "Not on npm yet (HTTP $code), retrying in 15s ($i/120)"
+            sleep 15
+          done
+          echo "Timed out waiting for playcanvas@${{ env.VERSION }} to appear on npm"
+          exit 1

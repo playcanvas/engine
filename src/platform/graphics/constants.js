@@ -1200,8 +1200,9 @@ export const isIntegerPixelFormat = (format) => {
  *
  * {@link PIXELFORMAT_111110F} is reported as capable even though it is gated on the
  * 'rg11b10ufloat-renderable' device feature - the feature is near-universally available, and on a
- * device without it the WebGPU validation reports the failure. Snorm formats (RG8S, RGBA8S) would
- * become capable via 'texture-formats-tier1', which the engine does not currently request.
+ * device without it the WebGPU validation reports the failure. Snorm formats (RG8S, RGBA8S) become
+ * capable when the device reports supportsTextureFormatsTier1, which this static table does not yet
+ * reflect.
  *
  * @param {number} format - The pixel format.
  * @returns {boolean} True if the format supports multisampling.
@@ -2275,6 +2276,16 @@ export const uniformTypeToStorage = new Uint8Array([
 export const DEVICETYPE_WEBGL2 = 'webgl2';
 
 /**
+ * A WebGL 2 device type with only the extensions available on 99%+ of devices exposed, and
+ * capabilities clamped to the values 99%+ of devices report. Useful for testing engine behavior
+ * on the most constrained WebGL 2 devices (e.g. no multi-draw, no float texture filtering, no
+ * compressed textures, 4k textures).
+ *
+ * @category Graphics
+ */
+export const DEVICETYPE_WEBGL2_BARE = 'webgl2:bare';
+
+/**
  * A WebGPU device type.
  *
  * @category Graphics
@@ -2361,11 +2372,12 @@ export const TEXPROPERTY_ALL = 255; // 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128
 
 // indices of commonly used bind groups, sorted from the least commonly changing to avoid internal rebinding
 export const BINDGROUP_VIEW = 0;        // view bind group, textures, samplers and uniforms
-export const BINDGROUP_MESH = 1;        // mesh bind group - textures and samplers
-export const BINDGROUP_MESH_UB = 2;     // mesh bind group - a single uniform buffer
+export const BINDGROUP_MATERIAL = 1;    // material bind group - reserved for the material uniform buffer and textures, bound empty until materials own one
+export const BINDGROUP_MESH = 2;        // mesh bind group - textures and samplers
+export const BINDGROUP_MESH_UB = 3;     // mesh bind group - a single uniform buffer
 
 // names of bind groups
-export const bindGroupNames = ['view', 'mesh', 'mesh_ub'];
+export const bindGroupNames = ['view', 'material', 'mesh', 'mesh_ub'];
 
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';

@@ -14,6 +14,10 @@ import { Vec3 } from '../../../core/math/vec3.js';
  * The impulse property can be particularly useful for gameplay mechanics that need to respond
  * differently based on the force of impact, such as damage calculations or sound effect volume.
  *
+ * Contact points are pooled and reused by the physics system, so a contact point and its vectors
+ * are only valid inside the event handler that receives them. Copy any values that are needed
+ * later, for example with {@link Vec3#clone}.
+ *
  * @example
  * // Access contact points from a collision event
  * entity.collision.on('contact', (result) => {
@@ -33,14 +37,18 @@ import { Vec3 } from '../../../core/math/vec3.js';
  */
 class ContactPoint {
     /**
-     * The point on the entity where the contact occurred, relative to the entity.
+     * The point on the entity where the contact occurred, in the local space of its rigid body.
+     * That space has the entity's world position and rotation, with any
+     * {@link CollisionComponent#linearOffset} and {@link CollisionComponent#angularOffset}
+     * applied, and ignores the entity's scale.
      *
      * @type {Vec3}
      */
     localPoint;
 
     /**
-     * The point on the other entity where the contact occurred, relative to the other entity.
+     * The point on the other entity where the contact occurred, in the local space of the other
+     * entity's rigid body (see {@link ContactPoint#localPoint}).
      *
      * @type {Vec3}
      */
@@ -79,10 +87,10 @@ class ContactPoint {
     /**
      * Create a new ContactPoint instance.
      *
-     * @param {Vec3} [localPoint] - The point on the entity where the contact occurred, relative to
-     * the entity.
+     * @param {Vec3} [localPoint] - The point on the entity where the contact occurred, in the
+     * local space of its rigid body.
      * @param {Vec3} [localPointOther] - The point on the other entity where the contact occurred,
-     * relative to the other entity.
+     * in the local space of the other entity's rigid body.
      * @param {Vec3} [point] - The point on the entity where the contact occurred, in world space.
      * @param {Vec3} [pointOther] - The point on the other entity where the contact occurred, in
      * world space.

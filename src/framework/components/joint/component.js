@@ -417,10 +417,10 @@ class JointComponent extends Component {
     }
 
     /**
-     * The underlying Ammo (Bullet) constraint, or null if it has not been created or has broken.
-     * An unsupported escape hatch for native functionality the component does not yet expose - it
-     * is deliberately kept off the public, backend-agnostic API surface, mirroring
-     * {@link RigidBodyComponent#body}.
+     * The physics backend's native constraint - a btTypedConstraint with the Ammo backend - or
+     * null if it has not been created, has broken or the backend has no native constraints. An
+     * unsupported escape hatch for native functionality the component does not expose: code that
+     * uses it only works with that physics backend.
      *
      * @type {object|null}
      * @ignore

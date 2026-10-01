@@ -254,7 +254,7 @@ class RenderPass extends FramePass {
         // depth
         this.depthStencilOps = new DepthStencilAttachmentOps();
 
-        // if a RT is used (so not a backbuffer) that was created with a user supplied depth buffer,
+        // if an RT is used (so not a backbuffer) that was created with a user supplied depth buffer,
         // assume the user wants to use its content, and so store it by default
         if (rt?.depthBuffer) {
             this.depthStencilOps.storeDepth = true;
@@ -321,7 +321,6 @@ class RenderPass extends FramePass {
      */
     setClearColor(color, index) {
 
-        // TODO: expose per color buffer clear parameters on the camera, and copy them here.
         const count = this.colorArrayOps.length;
         Debug.assert(index === undefined || (index >= 0 && index < count),
             `setClearColor index ${index} is out of range, the render pass has ${count} color attachments.`);

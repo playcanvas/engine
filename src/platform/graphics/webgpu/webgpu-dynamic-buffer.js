@@ -28,13 +28,19 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
             this.onAvailable();
         }
 
-        // staging buffers are not stored in vram, but add them for tracking purposes anyways
+        // staging buffers are not stored in vram, but add them for tracking purposes anyway
         device._vram.ub += size;
 
         DebugHelper.setLabel(this.buffer, `DynamicBuffer-${isStaging ? 'Staging' : 'Gpu'}`);
     }
 
     destroy(device) {
+
+        this.bindGroupCache.forEach(bindGroup => bindGroup.destroy());
+        this.bindGroupCache.clear();
+        this.bindGroupFormat.destroy();
+        this.mappedRange = null;
+        this.setStorage(null);
 
         device._vram.ub -= this.buffer.size;
 
@@ -46,12 +52,10 @@ class WebgpuDynamicBuffer extends DynamicBuffer {
      * Called when the staging buffer is mapped for writing.
      */
     onAvailable() {
-        // map the whole buffer
+        // map the whole buffer - each mapping returns new memory, so the storage views are created
+        // for it here, once per mapping instead of once per allocation
         this.mappedRange = this.buffer.getMappedRange();
-    }
-
-    alloc(offset, size) {
-        return new Int32Array(this.mappedRange, offset, size / 4);
+        this.setStorage(this.mappedRange);
     }
 }
 

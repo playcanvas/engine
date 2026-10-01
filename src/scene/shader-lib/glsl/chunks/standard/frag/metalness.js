@@ -11,7 +11,7 @@ void getMetalness() {
     #endif
 
     #ifdef STD_METALNESS_TEXTURE
-    metalness *= texture2DBias({STD_METALNESS_TEXTURE_NAME}, {STD_METALNESS_TEXTURE_UV}, textureBias).{STD_METALNESS_TEXTURE_CHANNEL};
+    metalness *= texture2DBias({STD_METALNESS_TEXTURE_NAME}, {STD_METALNESS_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_METALNESS_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_METALNESS_VERTEX

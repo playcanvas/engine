@@ -19,6 +19,24 @@ class WebgpuPipeline {
         this.device = device;
     }
 
+    /**
+     * Compares two pipeline cache keys. Used instead of a generic array comparison, whose element
+     * access is shared with plain arrays elsewhere and so is slower on the typed arrays the keys
+     * are - the comparison runs on every pipeline cache hit.
+     *
+     * @param {Uint32Array} a - A key.
+     * @param {Uint32Array} b - Another key, of the same length.
+     * @returns {boolean} True if the keys are equal.
+     */
+    static keysEqual(a, b) {
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // TODO: this could be cached using bindGroupKey
 
     /**
@@ -27,10 +45,14 @@ class WebgpuPipeline {
      */
     getPipelineLayout(bindGroupFormats) {
 
+        // the layout cannot skip an index - a gap would shift every following bind group to a
+        // wrong slot, so each index up to the highest bound group needs a format
         const bindGroupLayouts = [];
-        bindGroupFormats.forEach((format) => {
+        for (let i = 0; i < bindGroupFormats.length; i++) {
+            const format = bindGroupFormats[i];
+            Debug.assert(format, `Bind group format at index ${i} is not set, the pipeline layout cannot have a gap.`);
             bindGroupLayouts.push(format.bindGroupLayout);
-        });
+        }
 
         const desc = {
             bindGroupLayouts: bindGroupLayouts

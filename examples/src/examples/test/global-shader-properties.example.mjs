@@ -61,7 +61,10 @@ const assets = {
 };
 
 const gfxOptions = {
-    deviceTypes: [deviceType]
+    deviceTypes: [deviceType],
+
+    // the gaussian splats are several times more expensive to render into a multisampled target
+    antialias: false
 };
 
 const device = await createGraphicsDevice(canvas, gfxOptions);
@@ -288,11 +291,19 @@ data.on('*:set', (path, value) => {
     if (propertyName === 'gamma') {
         camera.camera.gammaCorrection = value ? GAMMA_SRGB : GAMMA_NONE;
     }
+    if (propertyName === 'particleFog') {
+        entity.particlesystem.useFog = value;
+    }
+    if (propertyName === 'particleTonemap') {
+        entity.particlesystem.useTonemap = value;
+    }
 });
 
 // Initial values
 data.set('data', {
     tonemapping: TONEMAP_ACES,
     fog: FOG_LINEAR,
-    gamma: true
+    gamma: true,
+    particleFog: true,
+    particleTonemap: true
 });

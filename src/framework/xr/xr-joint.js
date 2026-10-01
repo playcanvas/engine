@@ -128,8 +128,9 @@ class XrJoint {
             this._localTransform.setTRS(this._localPosition, this._localRotation, Vec3.ONE);
         }
 
+        // the camera is null once the session has ended
         const manager = this._hand._manager;
-        const parent = manager.camera.parent;
+        const parent = manager.camera?.parent;
 
         if (parent) {
             this._worldTransform.mul2(parent.getWorldTransform(), this._localTransform);

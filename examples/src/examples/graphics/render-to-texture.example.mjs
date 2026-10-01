@@ -29,6 +29,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Vec3,
     createGraphicsDevice
@@ -92,6 +93,8 @@ createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -217,6 +220,7 @@ app.scene.layers.insert(excludedLayer, 1);
 const worldLayer = app.scene.layers.getLayerByName('World');
 const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 const uiLayer = app.scene.layers.getLayerByName('UI');
+const immediateLayer = app.scene.layers.getLayerByName('Immediate');
 
 // Create ground plane and 3 primitives, visible in world layer
 const plane = createPrimitive('plane', new Vec3(0, 0, 0), new Vec3(20, 20, 20), new Color(3, 4, 2), [worldLayer.id]);
@@ -238,7 +242,7 @@ createParticleSystem(new Vec3(2, 3, 0));
 const camera = new Entity('Camera');
 camera.addComponent('camera', {
     fov: 100,
-    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id],
+    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id],
     toneMapping: TONEMAP_ACES
 });
 camera.translate(0, 9, 15);
@@ -328,7 +332,6 @@ app.on('update', (dt) => {
         }
     }
 
-    // Debug draw the texture on the screen in the excludedLayer layer of the main camera
-    // @ts-ignore engine-tsd
-    app.drawTexture(0.7, -0.7, 0.5, 0.5, texture, null, excludedLayer);
+    // Display the texture after the skybox, only in the main camera
+    textures.draw(texture, 0.725, 0.725, 0.25, 0.25);
 });

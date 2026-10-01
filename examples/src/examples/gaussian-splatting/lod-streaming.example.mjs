@@ -16,6 +16,7 @@ import {
     CameraFrame,
     Color,
     ContainerHandler,
+    DITHER_BLUENOISE,
     Entity,
     EnvLighting,
     FILLMODE_FILL_WINDOW,
@@ -24,7 +25,7 @@ import {
     GSPLATDATA_COMPACT,
     GSPLATDATA_LARGE,
     GSPLAT_DEBUG_NONE,
-    GSPLAT_LODMODE_ERROR,
+    GSPLAT_BUDGET_TARGET,
     GSPLAT_RENDERER_AUTO,
     GSplatComponentSystem,
     GSplatHandler,
@@ -218,6 +219,15 @@ data.on('radialSorting:set', () => {
     app.scene.gsplat.radialSorting = !!data.get('radialSorting');
 });
 
+// Stochastic alpha: the GPU-sort renderer drops the sort entirely and dithers coverage instead.
+// Ignored by the CPU-sort renderer.
+data.on('stochastic:set', () => {
+    app.scene.gsplat.stochastic = !!data.get('stochastic');
+});
+data.on('dither:set', () => {
+    app.scene.gsplat.dither = data.get('dither');
+});
+
 app.scene.gsplat.lodUpdateDistance = config.lodUpdateDistance;
 app.scene.gsplat.lodUnderfillLimit = config.lodUnderfillLimit;
 
@@ -255,13 +265,20 @@ data.set('minPixelSize', 2);
 data.set('alphaClipForward', 1 / 255);
 data.set('minContribution', 3);
 data.set('radialSorting', true);
+data.set('stochastic', false);
+data.set('dither', DITHER_BLUENOISE);
 data.set('renderer', GSPLAT_RENDERER_AUTO);
 data.set('culling', device.isWebGPU);
 data.set('compact', true);
 data.set('debug', GSPLAT_DEBUG_NONE);
 data.set('lodPreset', platform.mobile ? 'mobile' : 'desktop');
-data.set('lodMode', GSPLAT_LODMODE_ERROR);
-data.set('lodFalloff', 1);
+// How the splat budget is used: a target that detail is raised to fill, or a limit on the detail
+// the LOD distances ask for. Splat Budget 0 means no budget at all.
+data.set('splatBudgetMode', GSPLAT_BUDGET_TARGET);
+data.set('lodBaseDistance', 5);
+data.set('lodMultiplier', 3);
+// Experimental: shrink each LOD node's bounds towards its center before measuring its distance
+data.set('lodDistanceShrink', 0.75);
 data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');
 data.set('fogDensity', 0);
@@ -276,7 +293,7 @@ camera.addComponent('camera', {
     clearColor: new Color(1, 1, 1),
     fov: 75,
     // Generous, because this example loads arbitrary captures via the `url` hash parameter and some
-    // span kilometres. The far plane cuts on view-space depth, so at the default 1000 a distant node
+    // span kilometers. The far plane cuts on view-space depth, so at the default 1000 a distant node
     // vanishes when looked at head-on and returns when it moves off to the side - which reads as
     // patches popping around the horizon rather than as a clipped horizon.
     farClip: 100000,
@@ -392,7 +409,7 @@ document.body.appendChild(phCredit);
 app.on('destroy', () => phCredit.remove());
 
 // HDRI environment loading
-/** @type {Map<string, { skybox: Texture, envAtlas: Texture }>} */
+/** @type {Map<string, { source: Texture, skybox: Texture, envAtlas: Texture }>} */
 const hdriCache = new Map();
 
 const applyEnvironment = async (/** @type {string} */ name) => {
@@ -422,7 +439,7 @@ const applyEnvironment = async (/** @type {string} */ name) => {
         const lighting = EnvLighting.generateLightingSource(source);
         const envAtlas = EnvLighting.generateAtlas(lighting);
         lighting.destroy();
-        hdriCache.set(preset.url, { skybox, envAtlas });
+        hdriCache.set(preset.url, { source, skybox, envAtlas });
     }
 
     const cached = /** @type {{ skybox: Texture, envAtlas: Texture }} */ (hdriCache.get(preset.url));
@@ -432,6 +449,22 @@ const applyEnvironment = async (/** @type {string} */ name) => {
     data.set('exposure', preset.exposure ?? 1);
     phCredit.style.display = 'block';
 };
+
+// Rebuild every cached preset so switching environments after recovery remains valid.
+device.on('devicerestored', () => {
+    hdriCache.forEach((cached) => {
+        const oldSkybox = cached.skybox;
+        cached.skybox = EnvLighting.generateSkyboxCubemap(cached.source);
+        const lighting = EnvLighting.generateLightingSource(cached.source);
+        EnvLighting.generateAtlas(lighting, { target: cached.envAtlas });
+        lighting.destroy();
+
+        if (app.scene.skybox === oldSkybox) {
+            app.scene.skybox = cached.skybox;
+        }
+        oldSkybox.destroy();
+    });
+});
 
 data.on('environment:set', () => {
     applyEnvironment(data.get('environment')).catch((err) => {
@@ -496,7 +529,8 @@ const loadGSplat = async (/** @type {string|null} */ url) => {
     gsplatEntity.setLocalScale(1, 1, 1);
     app.root.addChild(gsplatEntity);
     gsplatGs = /** @type {any} */ (gsplatEntity.gsplat);
-    gsplatGs.lodFalloff = data.get('lodFalloff');
+    gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
+    gsplatGs.lodMultiplier = data.get('lodMultiplier');
 
     // Start with lowest LOD for fast initial display, then stream up
     const lodLevels = gsplatGs.resource?.octree?.lodLevels;
@@ -538,13 +572,28 @@ await loadGSplat(data.get('url') || null);
 
 data.on('lodPreset:set', applyPreset);
 
-data.on('lodMode:set', () => {
-    app.scene.gsplat.lodMode = data.get('lodMode');
+const applySplatBudgetMode = () => {
+    app.scene.gsplat.splatBudgetMode = data.get('splatBudgetMode');
+};
+applySplatBudgetMode();
+data.on('splatBudgetMode:set', applySplatBudgetMode);
+
+const applyLodDistanceShrink = () => {
+    // @ts-ignore - experimental, not part of the public API
+    app.scene.gsplat.lodDistanceShrink = data.get('lodDistanceShrink');
+};
+applyLodDistanceShrink();
+data.on('lodDistanceShrink:set', applyLodDistanceShrink);
+
+data.on('lodBaseDistance:set', () => {
+    if (gsplatGs) {
+        gsplatGs.lodBaseDistance = data.get('lodBaseDistance');
+    }
 });
 
-data.on('lodFalloff:set', () => {
+data.on('lodMultiplier:set', () => {
     if (gsplatGs) {
-        gsplatGs.lodFalloff = data.get('lodFalloff');
+        gsplatGs.lodMultiplier = data.get('lodMultiplier');
     }
 });
 

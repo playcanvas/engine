@@ -7,6 +7,11 @@ varying vec2 uv0;
     uniform sampler2D premultiplyTexture;
 #endif
 
+#ifdef PREFILTER
+    // x: threshold, y: knee
+    uniform vec2 prefilterThresholdKnee;
+#endif
+
 void main()
 {
     vec3 e = texture2D (sourceTexture, uv0).rgb;
@@ -48,6 +53,19 @@ void main()
 
     #ifdef REMOVE_INVALID
         value = max(value, vec3(0.0));
+    #endif
+
+    #ifdef PREFILTER
+        // Soft-knee high pass: scale the result down by how far its brightest channel sits below
+        // the threshold, with a quadratic knee of half the threshold smoothing the transition.
+        // This runs on the filtered result rather than on each tap, so an isolated bright pixel,
+        // which the filter has already averaged down, needs a proportionally lower threshold.
+        float luminance = max(value.r, max(value.g, value.b));
+        float threshold = prefilterThresholdKnee.x;
+        float knee = prefilterThresholdKnee.y;
+        float soft = clamp(luminance - threshold + knee, 0.0, 2.0 * knee);
+        soft = soft * soft / (4.0 * knee + 1e-4);
+        value *= clamp(max(soft, luminance - threshold) / max(luminance, 1e-4), 0.0, 1.0);
     #endif
 
     gl_FragColor = vec4(value, 1.0);

@@ -27,6 +27,10 @@ const OPPOSITE_AXIS = {
 /**
  * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
  *
+ * Relevant Engine API examples:
+ *
+ * - [Drag and drop](https://playcanvas.github.io/#/user-interface/drag-and-drop)
+ *
  * @category User Interface
  */
 class ElementDragHelper extends EventHandler {
@@ -228,12 +232,14 @@ class ElementDragHelper extends EventHandler {
         dragScale.set(screenScale, screenScale, screenScale);
 
         while (current) {
-            dragScale.mul(current.getLocalScale());
-            current = current.parent;
-
+            // Stop at the screen of a screen space element. The element can be a direct child of
+            // its screen, so test each ancestor before its scale is applied, not after moving on
             if (isWithin2DScreen && current.screen) {
                 break;
             }
+
+            dragScale.mul(current.getLocalScale());
+            current = current.parent;
         }
 
         dragScale.x = 1 / dragScale.x;
@@ -242,9 +248,9 @@ class ElementDragHelper extends EventHandler {
     }
 
     /**
-     * This method is linked to `_element` events: `mousemove` and `touchmove`
+     * This method is linked to `_element` events: `mousemove`, `touchmove` and `selectmove`.
      *
-     * @param {ElementTouchEvent} event - The event.
+     * @param {ElementTouchEvent|ElementMouseEvent|ElementSelectEvent} event - The event.
      * @private
      */
     _onMove(event) {

@@ -1,5 +1,7 @@
 /**
- * Wraps a set of data used in animation.
+ * Wraps a set of data used in animation: a flat {@link data} array read {@link components} values
+ * at a time, so a three-component set holds positions and a four-component set holds quaternions.
+ * An {@link AnimTrack} keeps its keyframe times and values as AnimData that its curves index into.
  *
  * @category Animation
  */

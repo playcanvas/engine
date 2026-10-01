@@ -41,6 +41,15 @@ class WebglDynamicBuffers extends DynamicBuffers {
         super(device, 0, 0);
     }
 
+    /** @type {number} */
+    get bufferCount() {
+        let count = this.used?.length ?? 0;
+        if (this.free) {
+            for (const buffers of this.free.values()) count += buffers.length;
+        }
+        return count;
+    }
+
     destroy() {
         this.used.forEach(buffer => buffer.destroy(this.device));
         this.free.forEach(buffers => buffers.forEach(buffer => buffer.destroy(this.device)));
@@ -66,7 +75,8 @@ class WebglDynamicBuffers extends DynamicBuffers {
         // a whole buffer per allocation - the offset is always zero
         allocation.gpuBuffer = buffer;
         allocation.offset = 0;
-        allocation.storage = buffer.storage;
+        allocation.storageBuffer = buffer;
+        allocation.storageOffset = 0;
     }
 
     /**

@@ -154,7 +154,10 @@ class ComputeRadixSort {
     /**
      * High-water mark for internal buffer allocation. Setting this raises
      * the floor for the next sort's allocation; lowering it requests
-     * shrinkage at the next sort call.
+     * shrinkage at the next sort call. Raising it above the current
+     * allocation releases the undersized result buffers, so
+     * {@link sortedIndices} and {@link sortedKeys} return `null` until the
+     * next sort has run at the new size.
      *
      * @type {number}
      */
@@ -174,7 +177,7 @@ class ComputeRadixSort {
      * @param {number} [numBits] - Number of bits to sort. Must be a multiple
      * of {@link radixBits}. Defaults to 16.
      * @param {StorageBuffer} [initialValues] - Optional caller-supplied
-     * initial values for pass 0. When omitted, pass 0 synthesises sequential
+     * initial values for pass 0. When omitted, pass 0 synthesizes sequential
      * indices and the sort returns sorted indices.
      * @param {boolean} [skipLastPassKeyWrite] - Skip writing sorted keys on
      * the last pass (marginal perf win; only use when sorted keys aren't

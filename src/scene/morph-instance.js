@@ -183,7 +183,7 @@ class MorphInstance {
     /**
      * Create the shader for texture based morphing.
      *
-     * @param {number} maxCount - Maximum bumber of textures to blend.
+     * @param {number} maxCount - Maximum number of textures to blend.
      * @returns {Shader} Shader.
      * @private
      */
@@ -219,7 +219,7 @@ class MorphInstance {
         this.morphIndex.setValue(this._shaderMorphIndex);
 
         // render quad with shader
-        drawQuadWithShader(device, renderTarget, this.shader);
+        drawQuadWithShader(device, renderTarget, this.shader, undefined, undefined, 'MorphBlend');
     }
 
     _updateTextureMorph(activeCount) {

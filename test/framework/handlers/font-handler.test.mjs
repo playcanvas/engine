@@ -21,8 +21,8 @@ describe('FontHandler', function () {
     });
 
     it('loads a font and its textures', function (done) {
-        const asset = new Asset('arial', 'font', {
-            url: 'http://localhost:3210/test/assets/fonts/arial.json'
+        const asset = new Asset('roboto-regular', 'font', {
+            url: 'http://localhost:3210/test/assets/fonts/roboto-regular.json'
         });
 
         app.assets.add(asset);
@@ -38,13 +38,45 @@ describe('FontHandler', function () {
         asset.on('error', err => done(new Error(err)));
     });
 
+    // font data older than version 3 keys its characters by char code, and the handler rekeys
+    // them by letter, which is how text elements look characters up
+    it('upgrades version 2 font data', function (done) {
+        const asset = new Asset('roboto-regular', 'font', {
+            url: 'http://localhost:3210/test/assets/fonts/roboto-regular.png'
+        }, {
+            version: 2,
+            info: {
+                face: 'Roboto Regular',
+                maps: [{ width: 1024, height: 512 }]
+            },
+            chars: {
+                65: { id: 65, letter: 'A', map: 0 },
+                66: { id: 66, letter: 'B', map: 0 }
+            }
+        });
+
+        app.assets.add(asset);
+        app.assets.load(asset);
+
+        asset.ready(function () {
+            const data = asset.resource.data;
+            expect(data.version).to.equal(3);
+            expect(Object.keys(data.chars)).to.deep.equal(['A', 'B']);
+            expect(data.chars.B.id).to.equal(66);
+            expect(asset.resource.textures).to.have.lengthOf(1);
+            done();
+        });
+
+        asset.on('error', err => done(new Error(err)));
+    });
+
     // regression test for https://github.com/playcanvas/engine/issues/8997 - MSDF atlases must
     // load without mipmaps and with a non-mip minFilter: mip levels average the distance-field
     // channels, corrupting the median under minification (visible as faint flickering artifacts
     // below thin strokes on small text)
     it('loads MSDF atlas textures without mipmaps', function (done) {
-        const asset = new Asset('arial', 'font', {
-            url: 'http://localhost:3210/test/assets/fonts/arial.json'
+        const asset = new Asset('roboto-regular', 'font', {
+            url: 'http://localhost:3210/test/assets/fonts/roboto-regular.json'
         });
 
         app.assets.add(asset);
@@ -66,8 +98,8 @@ describe('FontHandler', function () {
     // regression test for https://github.com/playcanvas/engine/issues/7033 - unloading a font
     // asset must destroy its textures and remove them from the resource loader cache
     it('destroys its textures and clears the loader cache on unload', function (done) {
-        const asset = new Asset('arial', 'font', {
-            url: 'http://localhost:3210/test/assets/fonts/arial.json'
+        const asset = new Asset('roboto-regular', 'font', {
+            url: 'http://localhost:3210/test/assets/fonts/roboto-regular.json'
         });
 
         app.assets.add(asset);

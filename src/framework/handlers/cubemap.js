@@ -1,3 +1,4 @@
+import { path } from '../../core/path.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
@@ -10,10 +11,24 @@ import { ResourceHandler } from './handler.js';
  * @import { AppBase } from '../app-base.js'
  */
 
+// the texture type of the faces and prelit cubemaps, as the data of the cubemap asset specifies it,
+// or null when it doesn't
+const getAssetDataType = (assetData) => {
+    if (assetData.hasOwnProperty('type')) {
+        return assetData.type;
+    }
+    if (assetData.hasOwnProperty('rgbm')) {
+        return assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
+    }
+    return null;
+};
+
 /**
- * Resource handler used for loading cubemap {@link Texture} resources.
+ * Resource handler for the `cubemap` asset type. Assembles a cube map {@link Texture} from six
+ * face texture assets, from a prefiltered environment file, or both, and stores the results in
+ * {@link Asset#resources}.
  *
- * @category Graphics
+ * @category Asset
  */
 class CubemapHandler extends ResourceHandler {
     /**
@@ -95,17 +110,7 @@ class CubemapHandler extends ResourceHandler {
         // faces, prelit cubemap 128, 64, 32, 16, 8, 4
         const resources = [null, null, null, null, null, null, null];
 
-        // texture type used for faces and prelit cubemaps are both taken from
-        // cubemap.data.rgbm
-        const getType = function () {
-            if (assetData.hasOwnProperty('type')) {
-                return assetData.type;
-            }
-            if (assetData.hasOwnProperty('rgbm')) {
-                return assetData.rgbm ? TEXTURETYPE_RGBM : TEXTURETYPE_DEFAULT;
-            }
-            return null;
-        };
+        const type = getAssetDataType(assetData);
 
         // handle the prelit data
         if (!cubemapAsset.loaded || assets[0] !== oldAssets[0]) {
@@ -118,7 +123,7 @@ class CubemapHandler extends ResourceHandler {
                             name: `${cubemapAsset.name}_prelitCubemap${tex.width >> i}`,
                             cubemap: true,
                             // assume prefiltered data has same encoding as the faces asset
-                            type: getType() || tex.type,
+                            type: type || tex.type,
                             width: tex.width >> i,
                             height: tex.height >> i,
                             format: tex.format,
@@ -167,7 +172,7 @@ class CubemapHandler extends ResourceHandler {
                 const faces = new Texture(this._device, {
                     name: `${cubemapAsset.name}_faces`,
                     cubemap: true,
-                    type: getType() || faceTextures[0].type,
+                    type: type || faceTextures[0].type,
                     width: faceTextures[0].width,
                     height: faceTextures[0].height,
                     format: format === PIXELFORMAT_RGB8 ? PIXELFORMAT_RGBA8 : format,
@@ -323,14 +328,24 @@ class CubemapHandler extends ResourceHandler {
                     filename: assetId
                 } : assetId;
 
-                // if the referenced prefiltered texture is not a dds file, then we're loading an
-                // envAtlas. In this case we must specify the correct texture state.
-                const data = file.url.search('.dds') === -1 ? {
-                    type: 'rgbp',
-                    addressu: 'clamp',
-                    addressv: 'clamp',
-                    mipmaps: false
-                } : null;
+                let data = null;
+                if (i === 0) {
+                    // if the referenced prefiltered texture is not a dds file, then we're loading an
+                    // envAtlas. In this case we must specify the correct texture state.
+                    if (path.getExtension(file.url).toLowerCase() !== '.dds') {
+                        data = {
+                            type: 'rgbp',
+                            addressu: 'clamp',
+                            addressv: 'clamp',
+                            mipmaps: false
+                        };
+                    }
+                } else {
+                    // a face is a color image, which is sRGB unless the cubemap specifies an
+                    // encoding for it (such as rgbm), as encoded data is decoded from linear values
+                    const type = getAssetDataType(cubemapAsset.data || {});
+                    data = { srgb: !type || type === TEXTURETYPE_DEFAULT };
+                }
 
                 texAsset = new Asset(`${cubemapAsset.name}_part_${i}`, 'texture', file, data);
                 registry.add(texAsset);

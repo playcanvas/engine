@@ -170,7 +170,7 @@ const shader = device.supportsCompute
           // Format of a uniform buffer used by the compute shader
           computeUniformBufferFormats: {
               ub: new UniformBufferFormat(device, [
-                  // metadata about the mesh (how many indicies it has and similar, used to generate draw call parameters)
+                  // metadata about the mesh (how many indices it has and similar, used to generate draw call parameters)
                   new UniformFormat('indirectMetaData', UNIFORMTYPE_IVEC4),
 
                   // Time to animate number of visible instances

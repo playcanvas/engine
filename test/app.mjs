@@ -1,13 +1,14 @@
+import { createGraphicsDevice } from './device.mjs';
 import { Application } from '../src/framework/application.js';
-import { NullGraphicsDevice } from '../src/platform/graphics/null/null-graphics-device.js';
 
 /**
- * Create a new application instance that uses the null graphics device.
+ * Create a new application instance on the graphics device the tests run on: the null device, or
+ * a WebGPU device under `npm run test:webgpu`.
  * @returns {Application} The new application instance.
  */
 function createApp() {
     const canvas = document.createElement('canvas');
-    const graphicsDevice = new NullGraphicsDevice(canvas);
+    const graphicsDevice = createGraphicsDevice(canvas);
     return new Application(canvas, { graphicsDevice });
 }
 

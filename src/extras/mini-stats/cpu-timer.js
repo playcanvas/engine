@@ -2,70 +2,47 @@ import { now } from '../../core/time.js';
 
 class CpuTimer {
     constructor(app) {
-        this._frameIndex = 0;
-        this._frameTimings = [];
-        this._timings = [];
-        this._prevTimings = [];
+        this.app = app;
         this.unitsName = 'ms';
         this.decimalPlaces = 1;
-
         this.enabled = true;
-
-        app.on('frameupdate', this.begin.bind(this, 'update'));
-        app.on('framerender', this.mark.bind(this, 'render'));
-        app.on('frameend', this.mark.bind(this, 'other'));
+        this._pending = new Float64Array(2);
+        this._timings = new Float64Array(2);
+        this._updateStart = 0;
+        this._renderStart = 0;
+        app.on('frameupdate', this.begin, this);
+        app.on('framerender', this.mark, this);
+        app.on('frameend', this.end, this);
     }
 
-    // mark the beginning of the frame
-    begin(name) {
-        if (!this.enabled) {
-            return;
+    begin() {
+        if (this.enabled) {
+            this._timings.set(this._pending);
+            this._updateStart = now();
         }
-
-        // end previous frame timings
-        if (this._frameIndex < this._frameTimings.length) {
-            this._frameTimings.splice(this._frameIndex);
-        }
-        const tmp = this._prevTimings;
-        this._prevTimings = this._timings;
-        this._timings = this._frameTimings;
-        this._frameTimings = tmp;
-        this._frameIndex = 0;
-
-        this.mark(name);
     }
 
-    // mark
-    mark(name) {
-        if (!this.enabled) {
-            return;
+    mark() {
+        if (this.enabled) {
+            this._renderStart = now();
+            this._pending[0] = this._renderStart - this._updateStart;
         }
+    }
 
-        const timestamp = now();
-
-        // end previous mark
-        if (this._frameIndex > 0) {
-            const prev = this._frameTimings[this._frameIndex - 1];
-            prev[1] = timestamp - prev[1];
-        } else if (this._timings.length > 0) {
-            const prev = this._timings[this._timings.length - 1];
-            prev[1] = timestamp - prev[1];
+    end() {
+        if (this.enabled) {
+            this._pending[1] = now() - this._renderStart;
         }
-
-        if (this._frameIndex >= this._frameTimings.length) {
-            this._frameTimings.push([name, timestamp]);
-        } else {
-            const timing = this._frameTimings[this._frameIndex];
-            timing[0] = name;
-            timing[1] = timestamp;
-        }
-        this._frameIndex++;
     }
 
     get timings() {
-        // remove the last time point from the list (which is the time spent outside
-        // of PlayCanvas)
-        return this._timings.slice(0, -1).map(v => v[1]);
+        return this._timings;
+    }
+
+    destroy() {
+        this.app.off('frameupdate', this.begin, this);
+        this.app.off('framerender', this.mark, this);
+        this.app.off('frameend', this.end, this);
     }
 }
 

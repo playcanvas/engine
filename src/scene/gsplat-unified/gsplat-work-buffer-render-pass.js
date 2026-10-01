@@ -8,6 +8,7 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
+import { PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
@@ -221,6 +222,10 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const viewMat = _viewMat.copy(viewInvMat).invert();
         device.scope.resolve('matrix_view').setValue(viewMat.data);
 
+        // spherical harmonics are evaluated along the camera forward for orthographic cameras
+        const ortho = cameraNode.camera.projection === PROJECTION_ORTHOGRAPHIC;
+        device.scope.resolve('uCameraOrtho').setValue(ortho ? 1 : 0);
+
         // work-buffer-sourced geometry inputs for color-only (SH) updates. These are consumed
         // only by shaders compiled with GSPLAT_WORKBUFFER_GEOMETRY, so skip the setup unless a
         // splat in this pass opts in (see GSplatResourceBase#supportsWorkBufferGeometry).
@@ -274,12 +279,12 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         const formatDeclarations = resource.format.getInputDeclarations();
 
         // quad renderer and material are cached in the resource
-        const workBufferRenderInfo = resource.getWorkBufferRenderInfo(
+        const workBufferRenderInfo = this.workBuffer.getRenderInfo(
+            resource,
             this.colorOnly,
             workBufferModifier,
             formatHash,
-            formatDeclarations,
-            this.workBuffer.format
+            formatDeclarations
         );
 
         // Assign material properties to scope

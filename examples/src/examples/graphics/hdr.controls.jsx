@@ -70,6 +70,37 @@ export function Controls({ observer }) {
                     precision={2}
                 />
             </LabelGroup>
+            <Panel headerText='Bloom'>
+                <LabelGroup text='Intensity'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.bloom.intensity' }}
+                        min={0}
+                        max={0.1}
+                        precision={3}
+                        step={0.001}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Blur Level'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.bloom.blurLevel' }}
+                        min={1}
+                        max={16}
+                        precision={0}
+                    />
+                </LabelGroup>
+                <LabelGroup text='Threshold'>
+                    <SliderInput
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'data.bloom.threshold' }}
+                        min={0}
+                        max={100}
+                        precision={2}
+                        step={0.01}
+                    />
+                </LabelGroup>
+            </Panel>
         </>
     );
 }

@@ -21,15 +21,15 @@ const qTmp = new Quat();
 /**
  * Free-fly camera for the inside of a horizontal cylinder (axis parallel to world X at height
  * `radius`, passing through z = 0). The camera position and orientation are fully free — you can
- * fly anywhere inside the tube, including straight across or through the centre, and look in any
- * direction. The only cylinder-specific behaviour is a gentle auto-level: the camera's roll is
+ * fly anywhere inside the tube, including straight across or through the center, and look in any
+ * direction. The only cylinder-specific behavior is a gentle auto-level: the camera's roll is
  * eased so the horizon stays flat relative to the curved ground (its "up" tends toward the
  * cylinder axis). That keeps controls feeling right while walking the curved floor, but it only
  * corrects roll (pitch/yaw stay free) and fades out near the axis, so flying across the open
  * interior never snaps or spins.
  *
  * Tracking position and orientation directly (rather than angle/radius) avoids the singularity at
- * the axis that makes angular schemes spin out as you approach the centre.
+ * the axis that makes angular schemes spin out as you approach the center.
  *
  * Controls: keyboard (WASD/arrows move, Q/E or Ctrl/Space down/up, Shift to sprint) + mouse look
  * (pointer lock) on desktop; twin virtual joysticks (left = move, right = look) on touch.

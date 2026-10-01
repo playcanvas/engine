@@ -38,6 +38,19 @@ const DIST_EPSILON = 1e-4;
 /**
  * The base class for all gizmos.
  *
+ * A gizmo is an interactive widget drawn over the scene in its own {@link Layer};
+ * {@link createLayer} makes such a layer and adds it to the scene and the camera. Construct a gizmo
+ * for a {@link CameraComponent}, then {@link attach} the {@link GraphNode}s it should act on, which
+ * are then listed in {@link nodes}; {@link detach} releases them. A gizmo updates and renders
+ * itself from the application's update and prerender hooks, so it needs no per-frame call and is
+ * torn down with {@link destroy}. {@link size} scales the widget, which otherwise keeps a constant
+ * apparent size as the camera moves; {@link coordSpace} selects `'world'` or `'local'` axes;
+ * {@link enabled} hides it without detaching; and {@link mouseButtons} chooses which buttons
+ * interact. Pointer interaction is reported through the `pointer:down`, `pointer:move` and
+ * `pointer:up` events, node changes through `nodes:attach` and `nodes:detach`, and the
+ * resulting transforms through `position:update`, `rotation:update` and `scale:update`.
+ * {@link TransformGizmo} builds the translate, rotate and scale gizmos on this base.
+ *
  * @category Gizmo
  */
 class Gizmo extends EventHandler {

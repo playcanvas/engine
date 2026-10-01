@@ -13,24 +13,12 @@ export const BODYTYPE_STATIC = 'static';
 export const BODYTYPE_DYNAMIC = 'dynamic';
 
 /**
- * Rigid body has infinite mass and does not respond to forces but can still be moved by setting
- * their velocity or position.
+ * Rigid body has infinite mass and does not respond to forces. It is moved by setting the
+ * position and rotation of its entity.
  *
  * @category Physics
  */
 export const BODYTYPE_KINEMATIC = 'kinematic';
-
-// Collision flags
-export const BODYFLAG_STATIC_OBJECT = 1;
-export const BODYFLAG_KINEMATIC_OBJECT = 2;
-export const BODYFLAG_NORESPONSE_OBJECT = 4;
-
-// Activation states
-export const BODYSTATE_ACTIVE_TAG = 1;
-export const BODYSTATE_ISLAND_SLEEPING = 2;
-export const BODYSTATE_WANTS_DEACTIVATION = 3;
-export const BODYSTATE_DISABLE_DEACTIVATION = 4;
-export const BODYSTATE_DISABLE_SIMULATION = 5;
 
 // groups
 export const BODYGROUP_NONE = 0;

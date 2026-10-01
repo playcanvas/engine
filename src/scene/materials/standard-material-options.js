@@ -38,6 +38,12 @@ class StandardMaterialOptions {
 
     lightMapEncoding = 'linear';
 
+    /**
+     * True if the lightmap comes from the mesh instance rather than from the material, and so is
+     * sampled from the mesh instance's own texture slot. See {@link Lightmapper}.
+     */
+    useInstanceLightMap = false;
+
     vertexColorGamma = false;
 
     /**

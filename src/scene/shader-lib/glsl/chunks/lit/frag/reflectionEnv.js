@@ -1,7 +1,7 @@
 export default /* glsl */`
 #ifndef ENV_ATLAS
 #define ENV_ATLAS
-    uniform sampler2D texture_envAtlas;
+    uniform sampler2D {LIT_ENV_ATLAS};
 #endif
 uniform float material_reflectivity;
 
@@ -45,10 +45,10 @@ vec3 calcReflection(vec3 reflDir, float gloss) {
         weight = 0.0;
     }
 
-    vec3 linearA = {reflectionDecode}(texture2D(texture_envAtlas, uv0));
-    vec3 linearB = {reflectionDecode}(texture2D(texture_envAtlas, uv1));
+    vec3 linearA = {reflectionDecode}(texture2D({LIT_ENV_ATLAS}, uv0));
+    vec3 linearB = {reflectionDecode}(texture2D({LIT_ENV_ATLAS}, uv1));
     vec3 linear0 = mix(linearA, linearB, weight);
-    vec3 linear1 = {reflectionDecode}(texture2D(texture_envAtlas, mapRoughnessUv(uv, ilevel + 1.0)));
+    vec3 linear1 = {reflectionDecode}(texture2D({LIT_ENV_ATLAS}, mapRoughnessUv(uv, ilevel + 1.0)));
 
     return processEnvironment(mix(linear0, linear1, level - ilevel));
 }

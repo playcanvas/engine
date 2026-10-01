@@ -1,39 +1,25 @@
-// Stats timer interface for graph
 class StatsTimer {
-    constructor(app, statNames, decimalPlaces, unitsName, multiplier) {
+    constructor(app, statNames, decimalPlaces = 0, unitsName = '', multiplier = 1) {
         this.app = app;
-        this.values = [];
-
-        // support one or more stats and accumulate them in the graph total
-        this.statNames = statNames;
-
+        this.paths = statNames.map(path => path.split('.'));
+        this.values = new Float64Array(statNames.length);
         this.unitsName = unitsName;
         this.decimalPlaces = decimalPlaces;
-        this.multiplier = multiplier || 1;
-
-        // recursively look up properties of objects specified in a string
-        const resolve = (path, obj) => {
-            return path.split('.').reduce((prev, curr) => {
-                if (!prev) return null;
-                // handle Map objects
-                if (prev instanceof Map) {
-                    return prev.get(curr);
-                }
-                return prev[curr];
-            }, obj || this);
-        };
-
-        app.on('frameupdate', (ms) => {
-            for (let i = 0; i < this.statNames.length; i++) {
-
-                // read specified stat from app.stats object
-                const value = resolve(this.statNames[i], this.app.stats);
-                this.values[i] = (value ?? 0) * this.multiplier;
-            }
-        });
+        this.multiplier = multiplier;
+        this.enabled = true;
     }
 
     get timings() {
+        // Resolve from the current stats object, which may be replaced by the application.
+        // Paths are parsed once, and no event subscription is needed for a sampled counter.
+        for (let i = 0; i < this.paths.length; i++) {
+            const path = this.paths[i];
+            let value = this.app.stats;
+            for (let j = 0; j < path.length && value != null; j++) {
+                value = value instanceof Map ? value.get(path[j]) : value[path[j]];
+            }
+            this.values[i] = (value ?? 0) * this.multiplier;
+        }
         return this.values;
     }
 }

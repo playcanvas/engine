@@ -15,6 +15,7 @@ struct SplatCenter {
     proj: vec4f,          // center in clip space
     modelView: mat4x4f,   // model-view matrix
     projMat00: f32,       // element [0][0] of the projection matrix
+    projMat11: f32,       // element [1][1] of the projection matrix
     modelCenterOriginal: vec3f,   // original model center before modification
     modelCenterModified: vec3f,   // model center after modification
     #ifdef GSPLAT_FISHEYE

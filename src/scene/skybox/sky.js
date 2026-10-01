@@ -145,10 +145,11 @@ class Sky {
      * Sets whether depth writing is enabled for the sky. Defaults to false.
      *
      * Writing a depth value for the skydome is supported when its type is not
-     * {@link SKYTYPE_INFINITE}. When enabled, the depth is written during a prepass render pass and
-     * can be utilized by subsequent passes to apply depth-based effects, such as Depth of Field.
+     * {@link SKYTYPE_INFINITE}. When enabled, the depth is written to the scene depth texture during
+     * the scene pass or a depth prepass, allowing subsequent passes to apply depth-based effects,
+     * such as Depth of Field.
      *
-     * Note: For the skydome to be rendered during the prepass, the Sky Layer must be ordered before
+     * Note: When a depth prepass is used, the Sky Layer must be ordered before
      * the Depth layer, which is the final layer used in the prepass.
      *
      * @type {boolean}

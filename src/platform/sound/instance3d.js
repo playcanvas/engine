@@ -14,6 +14,13 @@ const MAX_DISTANCE = 10000;
 /**
  * A SoundInstance3d plays a {@link Sound} in 3D.
  *
+ * It is what a positional {@link SoundComponent} creates. The sound is placed at {@link position}
+ * and its volume falls off with distance from the {@link AudioListenerComponent} according to
+ * {@link distanceModel}, one of {@link DISTANCE_LINEAR}, {@link DISTANCE_INVERSE} and
+ * {@link DISTANCE_EXPONENTIAL}, shaped by {@link refDistance}, {@link maxDistance} and
+ * {@link rollOffFactor}. The owning slot keeps {@link position} in step with its entity, so these
+ * properties are usually set on the component rather than on each instance.
+ *
  * @category Sound
  */
 class SoundInstance3d extends SoundInstance {

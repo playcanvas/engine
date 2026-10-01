@@ -4,9 +4,12 @@ import { Pose } from './pose.js';
 /** @import { HandleEventCallback } from '../../core/event-handler.js' */
 
 /**
- * Represents an input delta.
+ * Represents an input delta: a fixed-length array of numbers that accumulates input between reads.
+ * Sources {@link append} raw values to it as events arrive, and {@link read} returns the total and
+ * resets it to zero, so each read yields the change since the previous one. An {@link InputFrame}
+ * groups named deltas together.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  */
 class InputDelta {
@@ -93,9 +96,13 @@ class InputDelta {
 }
 
 /**
- * Represents an input frame, which contains a map of input deltas.
+ * Represents an input frame, which contains a map of input deltas. The keys and lengths are fixed
+ * by the object passed to the constructor, for example `{ move: [0, 0, 0], rotate: [0, 0, 0] }`,
+ * and {@link read} flushes every delta at once. A frame is the unit of exchange in this input
+ * system: {@link InputSource}s are frames that fill themselves from a device, and an application
+ * combines their values into a frame with the shape an {@link InputController} expects.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  *
  * @template {Record<string, number[]>} T - The shape of the input frame.
@@ -130,9 +137,14 @@ class InputFrame {
 }
 
 /**
- * The base class for all input devices.
+ * The base class for all input devices. An input source is an {@link InputFrame} that fills its own
+ * deltas from DOM events or device polling once {@link attach} is given an element, and stops on
+ * {@link detach}. Call {@link InputFrame#read} once per frame to take the accumulated deltas. The
+ * built-in sources are {@link KeyboardMouseSource}, {@link GamepadSource},
+ * {@link MultiTouchSource}, {@link SingleGestureSource} and {@link DualGestureSource}; subclass
+ * this to add another device.
  *
- * @category Input Source
+ * @category Input
  * @alpha
  *
  * @template {Record<string, number[]>} T - The shape of the input source.
@@ -207,9 +219,12 @@ class InputSource extends InputFrame {
 }
 
 /**
- * The base class for all input consumers, which are used to process input frames.
+ * The base class for all input consumers, which are used to process input frames. A consumer
+ * implements {@link update}, receiving an {@link InputFrame} and the frame time, and does whatever
+ * that input means for it. {@link InputController} is the consumer that turns input into a
+ * {@link Pose}.
  *
- * @category Input Consumer
+ * @category Input
  * @alpha
  */
 class InputConsumer {
@@ -224,9 +239,20 @@ class InputConsumer {
 }
 
 /**
- * The base class for all input controllers.
+ * The base class for all input controllers. A controller consumes an {@link InputFrame} carrying
+ * `move` and `rotate` deltas and produces a {@link Pose}: {@link attach} sets the pose it starts
+ * from, {@link update} applies a frame and returns the current pose, and {@link detach} releases
+ * it. The application applies the returned pose to an entity. {@link FlyController},
+ * {@link OrbitController} and {@link FocusController} implement three ways of doing this.
  *
- * @category Input Consumer
+ * @example
+ * controller.attach(pose.look(cameraPosition, target));
+ *
+ * // each frame, after filling the frame's move and rotate deltas from your sources
+ * const result = controller.update(frame, dt);
+ * camera.setPosition(result.position);
+ * camera.setEulerAngles(result.angles);
+ * @category Input
  * @alpha
  */
 class InputController extends InputConsumer {

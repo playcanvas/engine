@@ -61,6 +61,7 @@ import { XrManager } from './xr/xr-manager.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Mouse } from '../platform/input/mouse.js'
+ * @import { PhysicsWorld } from './physics/physics-world.js'
  * @import { TouchDevice } from '../platform/input/touch-device.js'
  */
 
@@ -102,6 +103,8 @@ import { XrManager } from './xr/xr-manager.js';
  * {@link AppBase#gamepads} and {@link AppBase#elementInput} stay `null` unless the matching device
  * is passed to this constructor, so a game that reads input must construct with, for example,
  * `{ keyboard: new Keyboard(window), mouse: new Mouse(canvas), touch: new TouchDevice(canvas) }`.
+ *
+ * @category Framework
  */
 class Application extends AppBase {
     /**
@@ -131,7 +134,6 @@ class Application extends AppBase {
      * - scrollview ({@link ScrollViewComponentSystem})
      * - sound ({@link SoundComponentSystem})
      * - sprite ({@link SpriteComponentSystem})
-     * - zone ({@link ZoneComponentSystem})
      *
      * @param {HTMLCanvasElement | OffscreenCanvas} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
@@ -147,6 +149,12 @@ class Application extends AppBase {
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
      * {@link GraphicsDevice} constructor.
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
+     * @param {PhysicsWorld} [options.physicsWorld] - The physics backend used to simulate rigid
+     * bodies, collisions and joints. When omitted, the Ammo.js backend is created automatically if
+     * the Ammo library is loaded. See {@link AppOptions#physicsWorld}.
+     * @param {boolean} [options.devtools] - Whether the app announces itself to developer tools,
+     * such as the PlayCanvas Inspector browser extension. Defaults to true. See
+     * {@link AppOptions#devtools}.
      * @example
      * // Engine-only example: create the application manually
      * const app = new Application(canvas, options);
@@ -173,6 +181,9 @@ class Application extends AppBase {
         appOptions.assetPrefix = options.assetPrefix;
         appOptions.scriptsOrder = options.scriptsOrder;
 
+        appOptions.physicsWorld = options.physicsWorld;
+        appOptions.devtools = options.devtools ?? true;
+
         appOptions.soundManager = new SoundManager();
         appOptions.lightmapper = Lightmapper;
         appOptions.batchManager = BatchManager;
@@ -189,6 +200,9 @@ class Application extends AppBase {
         if (platform.browser && !!navigator.xr) {
             options.graphicsDeviceOptions.xrCompatible = true;
         }
+        // note this defaults alpha to false, unlike GraphicsDevice and createGraphicsDevice,
+        // which default it to true. Kept for backwards compatibility - changing it would make
+        // existing canvases composite with the page.
         options.graphicsDeviceOptions.alpha = options.graphicsDeviceOptions.alpha || false;
 
         return new WebglGraphicsDevice(canvas, options.graphicsDeviceOptions);

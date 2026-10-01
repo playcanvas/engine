@@ -453,10 +453,10 @@ class SceneRegistry {
                     // so data will be invalid
                     app.loader.clearCache(url, 'scene');
 
-                    app.loader.patch({
+                    app.loader.patch(/** @type {any} */ ({
                         resource: scene,
                         type: 'scene'
-                    }, app.assets);
+                    }), app.assets);
 
                     app.root.addChild(scene.root);
 

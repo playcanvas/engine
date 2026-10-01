@@ -78,7 +78,15 @@ await new Promise((resolve) => {
 
 app.start();
 
-app.scene.skybox = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+const applyHdri = () => {
+    const oldSkybox = app.scene.skybox;
+    app.scene.skybox = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+    oldSkybox?.destroy();
+};
+
+// The skybox is generated on the GPU and needs rebuilding after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
 app.scene.sky.type = SKYTYPE_INFINITE;
 app.scene.ambientLight = new Color(0.16, 0.2, 0.3);
 app.scene.exposure = 1.05;

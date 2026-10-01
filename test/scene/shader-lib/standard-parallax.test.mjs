@@ -1,7 +1,9 @@
 import { expect } from 'chai';
 
 import { JsonStandardMaterialParser } from '../../../src/framework/parsers/material/json-standard-material.js';
+import { SEMANTIC_POSITION, SEMANTIC_TEXCOORD0, TYPE_FLOAT32 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import {
     PARALLAX_OCCLUSION, PARALLAX_OFFSET,
@@ -40,8 +42,12 @@ describe('StandardMaterial parallax mapping', function () {
         jsdomSetup();
         app = createApp();
 
-        // the clustered lighting shader chunks are registered by the renderer, which does not run
-        // in these tests - disable clustered lighting so they are not required
+        // these tests inspect the generated GLSL, and disable clustered lighting because its shader
+        // chunks are registered by the renderer, which does not run here. Neither applies to WebGPU,
+        // which generates WGSL and only supports clustered lighting.
+        if (app.graphicsDevice.isWebGPU) {
+            this.skip();
+        }
         app.scene.clusteredLightingEnabled = false;
     });
 
@@ -85,8 +91,13 @@ describe('StandardMaterial parallax mapping', function () {
             scene: app.scene,
             objDefs: objDefs,
             pass: pass,
-            sortedLights: [[], [], []],
-            cameraShaderParams: new CameraShaderParams()
+            cameraShaderParams: new CameraShaderParams(),
+
+            // the maps are only sampled when the mesh provides the uv set they use
+            vertexFormat: new VertexFormat(app.graphicsDevice, [
+                { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
+                { semantic: SEMANTIC_TEXCOORD0, components: 2, type: TYPE_FLOAT32 }
+            ])
         });
 
         // a null source means the shader failed to preprocess

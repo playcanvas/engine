@@ -47,7 +47,7 @@ const _transform = new Mat4();
  *
  * Relevant Engine API examples:
  *
- * - [Screen Space Screen](https://playcanvas.github.io/#/user-interface/text)
+ * - [Screen Space Screen](https://playcanvas.github.io/#/user-interface/screen-scaling)
  * - [World Space Screen](https://playcanvas.github.io/#/user-interface/world-ui)
  *
  * @hideconstructor
@@ -258,7 +258,7 @@ class ScreenComponent extends Component {
             this.entity._dirtifyLocal();
         }
 
-        this.fire('set:referenceresolution', this._resolution);
+        this.fire('set:referenceresolution', this._referenceResolution);
         this._elements.forEach(element => element._onScreenResize(this._resolution));
     }
 

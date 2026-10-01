@@ -41,6 +41,14 @@ class WebgpuBindGroupFormat {
      */
     constructor(bindGroupFormat) {
 
+        this.bindGroupFormat = bindGroupFormat;
+        bindGroupFormat.device._bindGroupFormats.add(this);
+        this.restoreContext();
+    }
+
+    restoreContext() {
+        const bindGroupFormat = this.bindGroupFormat;
+
         /** @type {WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
@@ -67,11 +75,12 @@ class WebgpuBindGroupFormat {
     }
 
     destroy() {
+        this.bindGroupFormat.device._bindGroupFormats.delete(this);
         this.bindGroupLayout = null;
     }
 
     loseContext() {
-        // this.bindGroupLayout = null;
+        this.bindGroupLayout = null;
     }
 
     /**

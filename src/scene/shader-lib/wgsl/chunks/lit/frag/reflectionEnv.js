@@ -1,8 +1,8 @@
 export default /* wgsl */`
 #ifndef ENV_ATLAS
 #define ENV_ATLAS
-    var texture_envAtlas: texture_2d<f32>;
-    var texture_envAtlasSampler: sampler;
+    var {LIT_ENV_ATLAS}: texture_2d<f32>;
+    var {LIT_ENV_ATLAS}Sampler: sampler;
 #endif
 uniform material_reflectivity: f32;
 
@@ -48,10 +48,10 @@ fn calcReflection(reflDir: vec3f, gloss: f32) -> vec3f {
         weight = 0.0;
     }
 
-    let linearA: vec3f = {reflectionDecode}(textureSample(texture_envAtlas, texture_envAtlasSampler, uv0));
-    let linearB: vec3f = {reflectionDecode}(textureSample(texture_envAtlas, texture_envAtlasSampler, uv1));
+    let linearA: vec3f = {reflectionDecode}(textureSample({LIT_ENV_ATLAS}, {LIT_ENV_ATLAS}Sampler, uv0));
+    let linearB: vec3f = {reflectionDecode}(textureSample({LIT_ENV_ATLAS}, {LIT_ENV_ATLAS}Sampler, uv1));
     let linear0: vec3f = mix(linearA, linearB, weight);
-    let linear1: vec3f = {reflectionDecode}(textureSample(texture_envAtlas, texture_envAtlasSampler, mapRoughnessUv(uv, ilevel + 1.0)));
+    let linear1: vec3f = {reflectionDecode}(textureSample({LIT_ENV_ATLAS}, {LIT_ENV_ATLAS}Sampler, mapRoughnessUv(uv, ilevel + 1.0)));
 
     return processEnvironment(mix(linear0, linear1, level - ilevel));
 }

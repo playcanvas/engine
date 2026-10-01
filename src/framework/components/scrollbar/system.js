@@ -8,7 +8,9 @@ import { ScrollbarComponent } from './component.js';
 const _properties = ['orientation', 'value', 'handleSize', 'handleEntity'];
 
 /**
- * Manages creation of {@link ScrollbarComponent}s.
+ * Manages the {@link ScrollbarComponent}s of an application. Reach it through
+ * `app.systems.scrollbar`; components are created with {@link Entity#addComponent}, never by
+ * calling the system directly.
  *
  * @category User Interface
  */

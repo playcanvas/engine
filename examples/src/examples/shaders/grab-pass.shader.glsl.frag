@@ -12,7 +12,7 @@ uniform sampler2D uRoughnessMap;
 uniform vec3 tints[4];
 
 // engine built-in constant storing render target size in .xy and inverse size in .zw
-uniform vec4 uScreenSize;
+uniform vec4 screen_size;
 
 varying vec2 texCoord;
 
@@ -28,7 +28,7 @@ void main(void)
     offset *= (0.2 + roughness) * 0.015;
 
     // get normalized uv coordinates for canvas
-    vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;
+    vec2 grabUv = gl_FragCoord.xy * screen_size.zw;
 
     // roughness dictates which mipmap level gets used, in 0..4 range
     float mipmap = roughness * 5.0;

@@ -7,6 +7,7 @@ import { SoundInstance } from '../../../platform/sound/instance.js';
 import { SoundInstance3d } from '../../../platform/sound/instance3d.js';
 
 /**
+ * @import { Sound } from '../../../platform/sound/sound.js'
  * @import { SoundComponent } from './component.js'
  */
 
@@ -34,6 +35,19 @@ const instanceOptions = {
  * {@link SoundComponent}s. To add and remove SoundSlots on a SoundComponent, use
  * {@link SoundComponent#addSlot} and {@link SoundComponent#removeSlot} respectively.
  *
+ * A slot holds one audio {@link asset} and the settings applied to every instance it creates:
+ * {@link volume}, {@link pitch}, {@link loop}, {@link startTime} and {@link duration}, plus
+ * {@link autoPlay} to start as soon as the asset has loaded and {@link overlap} to let several
+ * instances play at once instead of stopping the previous one. {@link play} returns the new
+ * {@link SoundInstance} and {@link instances} lists those currently playing. The slot forwards the
+ * instances' `play`, `pause`, `resume`, `stop` and `end` events and fires `load` when its asset
+ * is ready.
+ *
+ * @example
+ * const slot = entity.sound.slot('footsteps');
+ * slot.overlap = true;   // let quick steps overlap rather than cut each other off
+ * slot.volume = 0.6;
+ * slot.play();
  * @hideconstructor
  * @category Sound
  */
@@ -596,8 +610,8 @@ class SoundSlot extends EventHandler {
     get duration() {
         let assetDuration = 0;
         if (this._hasAsset()) {
-            const asset = this._assets.get(this._asset);
-            assetDuration = asset?.resource ? asset.resource.duration : 0;
+            const sound = /** @type {Sound | undefined} */ (this._assets.get(this._asset)?.resource);
+            assetDuration = sound ? sound.duration : 0;
         }
 
         // != intentional

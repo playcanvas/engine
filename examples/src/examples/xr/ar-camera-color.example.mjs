@@ -14,6 +14,7 @@ import {
     RenderComponentSystem,
     StandardMaterial,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     XRSPACE_LOCALFLOOR,
     XRTYPE_AR,
@@ -67,6 +68,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -197,7 +200,7 @@ if (app.xr.supported) {
                 }
 
                 // Debug draw camera color texture on the screen
-                app.drawTexture(0.5, -0.5, 1, 1, view.textureColor);
+                textures.draw(view.textureColor, 0.5, 0.5, 0.5, 0.5);
             }
         }
     });

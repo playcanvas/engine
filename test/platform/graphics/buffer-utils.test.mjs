@@ -3,17 +3,17 @@ import { expect } from 'chai';
 import { BufferUtils } from '../../../src/platform/graphics/buffer-utils.js';
 import { INDEXFORMAT_UINT32, SEMANTIC_POSITION, TYPE_FLOAT32 } from '../../../src/platform/graphics/constants.js';
 import { IndexBuffer } from '../../../src/platform/graphics/index-buffer.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { VertexBuffer } from '../../../src/platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../../../src/platform/graphics/vertex-format.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('BufferUtils', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 100, height: 100 });
+        device = createGraphicsDevice({ width: 100, height: 100 });
     });
 
     afterEach(function () {
@@ -84,7 +84,7 @@ describe('BufferUtils', function () {
             buffer.destroy();
         });
 
-        it('honours an explicit length', function () {
+        it('honors an explicit length', function () {
             const buffer = createVertexBuffer();
 
             expect(BufferUtils.createStorageView(buffer, Float32Array, 0, 3).length).to.equal(3);

@@ -11,10 +11,10 @@ class WebgpuVertexBuffer extends WebgpuBuffer {
         super(BUFFERUSAGE_VERTEX | (options?.storage ? BUFFERUSAGE_STORAGE : 0));
     }
 
-    unlock(vertexBuffer) {
+    unlock(vertexBuffer, byteOffset, byteLength) {
 
         const device = vertexBuffer.device;
-        super.unlock(device, vertexBuffer.storage);
+        super.unlock(device, vertexBuffer.storage, byteOffset, byteLength);
     }
 }
 

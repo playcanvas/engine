@@ -18,6 +18,7 @@ import {
     StandardMaterial,
     TONEMAP_ACES,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Vec3,
     createGraphicsDevice
@@ -73,6 +74,8 @@ createOptions.resourceHandlers = [ScriptHandler, TextureHandler, CubemapHandler]
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -292,8 +295,7 @@ app.on('update', (/** @type {number} */ dt) => {
         const texture = app.renderer.lightTextureAtlas.shadowAtlas?.texture;
         // Skip if texture is not ready (placeholder or destroyed)
         if (texture?.device && texture.width > 1) {
-            // @ts-ignore engine-tsd
-            app.drawTexture(-0.7, -0.7, 0.5, 0.5, texture, undefined, undefined, false);
+            textures.draw(texture, 0.025, 0.725, 0.25, 0.25);
         }
     }
 });

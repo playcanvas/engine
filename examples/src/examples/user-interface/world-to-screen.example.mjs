@@ -1,11 +1,17 @@
+// @config
+//
+// An arena whose fighters have name tags and health bars. Each tag is a screen-space element, placed
+// over its fighter every frame with the camera's **worldToScreen**, so it stays the same size at any
+// distance. Tags fade with distance, and hide when their fighter is off screen. Tap one to hit it.
+
 import {
     AppBase,
     AppOptions,
     Asset,
     AssetListLoader,
-    ButtonComponentSystem,
     CameraComponentSystem,
     Color,
+    ELEMENTTYPE_GROUP,
     ELEMENTTYPE_IMAGE,
     ELEMENTTYPE_TEXT,
     ElementComponentSystem,
@@ -14,13 +20,16 @@ import {
     FILLMODE_FILL_WINDOW,
     FontHandler,
     LightComponentSystem,
-    Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    SCALEMODE_BLEND,
+    SHADOW_PCF3_32F,
+    SPRITE_RENDERMODE_SLICED,
     ScreenComponentSystem,
+    Sprite,
     StandardMaterial,
+    TextureAtlasHandler,
     TextureHandler,
-    TouchDevice,
     Vec2,
     Vec3,
     Vec4,
@@ -28,56 +37,41 @@ import {
     math
 } from 'playcanvas';
 
+import { uiAtlasData } from 'examples/assets/ui/ui-atlas.mjs';
 import { deviceType } from 'examples/context';
-
-/**
- * @import { CameraComponent, ScreenComponent } from 'playcanvas'
- */
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
 
 const assets = {
-    checkboard: new Asset('checkboard', 'texture', { url: './assets/textures/checkboard.png' }, { srgb: true }),
-    font: new Asset('font', 'font', { url: './assets/fonts/courier.json' })
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-bold.json' }),
+    ui: new Asset('ui', 'textureatlas', { url: './assets/ui/ui-atlas.png' }, uiAtlasData)
 };
 
-const gfxOptions = {
-    deviceTypes: [deviceType]
-};
-
-const device = await createGraphicsDevice(canvas, gfxOptions);
+const device = await createGraphicsDevice(canvas, { deviceTypes: [deviceType] });
 device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.mouse = new Mouse(document.body);
-createOptions.touch = new TouchDevice(document.body);
 createOptions.elementInput = new ElementInput(canvas);
-
 createOptions.componentSystems = [
     RenderComponentSystem,
     CameraComponentSystem,
     LightComponentSystem,
     ScreenComponentSystem,
-    ButtonComponentSystem,
     ElementComponentSystem
 ];
-createOptions.resourceHandlers = [TextureHandler, FontHandler];
+createOptions.resourceHandlers = [TextureHandler, TextureAtlasHandler, FontHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 
-// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+// Fill the window, and keep the canvas resolution the same as its size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
-
-// Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
 window.addEventListener('resize', resize);
-app.on('destroy', () => {
-    window.removeEventListener('resize', resize);
-});
+app.on('destroy', () => window.removeEventListener('resize', resize));
 
 await new Promise((resolve) => {
     new AssetListLoader(Object.values(assets), app.assets).load(resolve);
@@ -85,180 +79,183 @@ await new Promise((resolve) => {
 
 app.start();
 
-// Create an Entity with a camera component
-const camera = new Entity();
-camera.addComponent('camera', {
-    clearColor: new Color(30 / 255, 30 / 255, 30 / 255)
-});
-camera.rotateLocal(-30, 0, 0);
-camera.translateLocal(0, 0, 7);
-app.root.addChild(camera);
+/**
+ * Create a material of one color.
+ *
+ * @param {number[]} rgb - The color.
+ * @returns {StandardMaterial} The material.
+ */
+const createMaterial = (rgb) => {
+    const material = new StandardMaterial();
+    material.diffuse = new Color(...rgb);
+    material.gloss = 0.4;
+    material.update();
+    return material;
+};
 
-// Create an Entity for the ground
-const material = new StandardMaterial();
-material.diffuse = Color.WHITE;
-material.diffuseMap = assets.checkboard.resource;
-material.diffuseMapTiling = new Vec2(50, 50);
-material.update();
+// The arena: a floor, lit from above, and a camera looking down at it
+app.scene.ambientLight = new Color(0.3, 0.32, 0.38);
+const floor = new Entity('floor');
+floor.addComponent('render', { type: 'plane', material: createMaterial([0.24, 0.26, 0.32]) });
+floor.setLocalScale(200, 1, 200);
+app.root.addChild(floor);
 
-const ground = new Entity();
-ground.addComponent('render', {
-    type: 'box',
-    material: material
-});
-ground.setLocalScale(50, 1, 50);
-ground.setLocalPosition(0, -0.5, 0);
-app.root.addChild(ground);
-
-// Create an Entity with a light component
-const light = new Entity();
+const light = new Entity('light');
 light.addComponent('light', {
     type: 'directional',
-    color: new Color(1, 1, 1),
     castShadows: true,
-    intensity: 1,
+    shadowType: SHADOW_PCF3_32F,
+    shadowDistance: 30,
     shadowBias: 0.2,
-    shadowDistance: 16,
-    normalOffsetBias: 0.05,
-    shadowResolution: 2048
+    normalOffsetBias: 0.05
 });
-light.setLocalEulerAngles(45, 30, 0);
+light.setLocalEulerAngles(50, 30, 0);
 app.root.addChild(light);
 
-// Create a 2D screen
-const screen = new Entity();
-screen.setLocalScale(0.01, 0.01, 0.01);
+const camera = new Entity('camera');
+camera.addComponent('camera', { clearColor: new Color(0.1, 0.11, 0.13), fov: 45 });
+camera.setPosition(0, 7, 12);
+camera.lookAt(0, 0, 0);
+app.root.addChild(camera);
+
+// The screen the tags are on
+const screen = new Entity('screen');
 screen.addComponent('screen', {
-    referenceResolution: new Vec2(1280, 720),
-    screenSpace: true
+    screenSpace: true,
+    referenceResolution: [1280, 720],
+    scaleMode: SCALEMODE_BLEND,
+    scaleBlend: 0.5
 });
 app.root.addChild(screen);
 
+const atlas = assets.ui.resource;
+const track = new Sprite(device, {
+    atlas,
+    frameKeys: ['track'],
+    pixelsPerUnit: 4,
+    renderMode: SPRITE_RENDERMODE_SLICED
+});
+app.on('destroy', () => track.destroy());
+const DARK = new Color(0.05, 0.05, 0.07);
+const GREEN = new Color(0.35, 0.85, 0.35);
+const RED = new Color(0.95, 0.3, 0.25);
+
 /**
- * Converts a coordinate in world space into a screen's space.
+ * Create an element on a parent, centered on it unless the properties say otherwise.
  *
- * @param {Vec3} worldPosition - the Vec3 representing the world-space coordinate.
- * @param {CameraComponent} camera - the Camera.
- * @param {ScreenComponent} screen - the Screen
- * @returns {Vec3} a Vec3 of the input worldPosition relative to the camera and screen. The Z coordinate represents the depth,
- * and negative numbers signal that the worldPosition is behind the camera.
+ * @param {Entity} parent - The parent entity.
+ * @param {string} name - The entity name.
+ * @param {object} properties - Properties of the element component.
+ * @returns {Entity} The entity.
  */
-function worldToScreenSpace(worldPosition, camera, screen) {
-    const screenPos = camera.worldToScreen(worldPosition);
+const createElement = (parent, name, properties) => {
+    const entity = new Entity(name);
+    entity.addComponent('element', { anchor: [0.5, 0.5, 0.5, 0.5], pivot: [0.5, 0.5], ...properties });
+    parent.addChild(entity);
+    return entity;
+};
 
-    // Take pixel ratio into account
-    const pixelRatio = app.graphicsDevice.maxPixelRatio;
-    screenPos.x *= pixelRatio;
-    screenPos.y *= pixelRatio;
+// The fighters walk around the arena, each on a circle of its own
+const fighters = [
+    ['Aria', [1, 0.55, 0.2], 2.5, 0.5],
+    ['Brom', [0.3, 0.6, 1], 4.5, -0.3],
+    ['Cai', [0.45, 0.8, 0.4], 6.5, 0.2],
+    ['Dara', [0.7, 0.45, 0.95], 4, 0.4]
+].map(([name, color, radius, speed], i) => {
+    const body = new Entity(name);
+    body.addComponent('render', { type: 'capsule', material: createMaterial(color) });
+    body.setLocalScale(0.8, 1, 0.8);
+    app.root.addChild(body);
 
-    // Account for screen scaling
-    const scale = screen.scale;
-
-    // Invert the y position
-    screenPos.y = screen.resolution.y - screenPos.y;
-
-    // Put that into a Vec3
-    return new Vec3(screenPos.x / scale, screenPos.y / scale, screenPos.z / scale);
-}
-
-/**
- * @param {number} id - The player ID.
- * @param {number} startingAngle - The starting angle.
- * @param {number} speed - The speed.
- * @param {number} radius - The radius.
- */
-function createPlayer(id, startingAngle, speed, radius) {
-    // Create a capsule entity to represent a player in the 3d world
-    const entity = new Entity();
-    entity.setLocalScale(new Vec3(0.5, 0.5, 0.5));
-    entity.addComponent('render', {
-        type: 'capsule'
+    // The tag is anchored to the bottom-left corner of the screen, and its pivot is the middle of
+    // its bottom edge, so it sits over the point it is placed at. Tapping it hits the fighter
+    const tag = createElement(screen, `${name} tag`, {
+        type: ELEMENTTYPE_GROUP,
+        anchor: [0, 0, 0, 0],
+        pivot: [0.5, 0],
+        width: 140,
+        height: 56,
+        useInput: true
     });
-    app.root.addChild(entity);
-
-    // Update the player position every frame with some mock logic
-    // Normally, this would be taking inputs, running physics simulation, etc
-    let angle = startingAngle;
-    const height = 0.5;
-    app.on('update', (dt) => {
-        angle += dt * speed;
-        if (angle > 360) {
-            angle -= 360;
-        }
-        entity.setLocalPosition(
-            radius * Math.sin(angle * math.DEG_TO_RAD),
-            height,
-            radius * Math.cos(angle * math.DEG_TO_RAD)
-        );
-        entity.setLocalEulerAngles(0, angle + 90, 0);
-    });
-
-    // Create a text element that will hover the player's head
-    const playerInfo = new Entity();
-    playerInfo.addComponent('element', {
-        pivot: new Vec2(0.5, 0),
-        anchor: new Vec4(0, 0, 0, 0),
-        width: 150,
-        height: 50,
-        opacity: 0.05,
-        type: ELEMENTTYPE_IMAGE
-    });
-    screen.addChild(playerInfo);
-
-    const name = new Entity();
-    name.addComponent('element', {
-        pivot: new Vec2(0.5, 0.5),
-        anchor: new Vec4(0, 0.4, 1, 1),
-        margin: new Vec4(0, 0, 0, 0),
+    const label = createElement(tag, 'name', {
+        type: ELEMENTTYPE_TEXT,
         fontAsset: assets.font.id,
-        fontSize: 20,
-        text: `Player ${id}`,
-        useInput: true,
-        type: ELEMENTTYPE_TEXT
+        text: name,
+        fontSize: 24,
+        outlineColor: DARK,
+        outlineThickness: 0.5
     });
-    name.addComponent('button', {
-        imageEntity: name
+    label.setLocalPosition(0, 10, 0);
+
+    // The health bar: a dark track, and a fill whose right anchor is the fraction of health left
+    const bar = createElement(tag, 'bar', {
+        type: ELEMENTTYPE_IMAGE,
+        sprite: track,
+        color: DARK,
+        width: 120,
+        height: 12
     });
-    name.button.on('click', () => {
-        const color = new Color(Math.random(), Math.random(), Math.random());
-        name.element.color = color;
-        entity.render.material.setParameter('material_diffuse', [color.r, color.g, color.b]);
+    bar.setLocalPosition(0, -14, 0);
+    const health = createElement(bar, 'health', {
+        type: ELEMENTTYPE_IMAGE,
+        sprite: track,
+        color: GREEN,
+        anchor: [0, 0, 1, 1],
+        margin: [2, 2, 2, 2]
     });
-    playerInfo.addChild(name);
 
-    const healthBar = new Entity();
-    healthBar.addComponent('element', {
-        pivot: new Vec2(0.5, 0),
-        anchor: new Vec4(0, 0, 1, 0.4),
-        margin: new Vec4(0, 0, 0, 0),
-        color: new Color(0.2, 0.6, 0.2, 1),
-        opacity: 1,
-        type: ELEMENTTYPE_IMAGE
+    const fighter = { body, parts: [label, bar, health], tag, hp: 1, radius, speed, angle: i * 1.7 };
+    tag.element.on('click', () => {
+        fighter.hp = fighter.hp > 0.3 ? fighter.hp - 0.25 : 1;
+        health.element.anchor = new Vec4(0, 0, fighter.hp, 1);
+        health.element.color = new Color().lerp(RED, GREEN, fighter.hp);
     });
-    playerInfo.addChild(healthBar);
+    return fighter;
+});
 
-    // Update the player text's position to always hover the player
-    app.on('update', () => {
-        // Get the desired world position
-        const worldPosition = entity.getPosition();
-        worldPosition.y += 0.6; // Slightly above the player's head
+// One update handler walks the fighters and places their tags. worldToScreen gives CSS pixels from
+// the canvas's top-left corner, and the tags are placed in the screen's units from its bottom-left
+const head = new Vec3();
+const view = new Vec3();
+const onCanvas = new Vec3();
+const overHead = new Vec3(0, 1.4, 0);
+app.on('update', (dt) => {
+    const units = canvas.width / canvas.clientWidth / screen.screen.scale;
+    fighters.forEach((fighter) => {
+        const { body, tag, parts, radius, speed } = fighter;
+        fighter.angle += dt * speed;
+        body.setPosition(radius * Math.sin(fighter.angle), 1, radius * Math.cos(fighter.angle));
 
-        // Convert to screen position
-        const screenPosition = worldToScreenSpace(worldPosition, camera.camera, screen.screen);
+        head.add2(body.getPosition(), overHead);
+        camera.camera.worldToScreen(head, onCanvas);
 
-        if (screenPosition.z > 0) {
-            // If world position is in front of the camera, show it
-            playerInfo.enabled = true;
+        // Hide the tag when its fighter is behind the camera, which the depth in view space tells,
+        // or off the canvas
+        camera.camera.viewMatrix.transformPoint(head, view);
+        tag.enabled =
+            view.z < 0 &&
+            onCanvas.x > 0 &&
+            onCanvas.x < canvas.clientWidth &&
+            onCanvas.y > 0 &&
+            onCanvas.y < canvas.clientHeight;
+        if (tag.enabled) {
+            tag.setLocalPosition(onCanvas.x * units, (canvas.clientHeight - onCanvas.y) * units, 0);
 
-            // Set the UI position
-            playerInfo.setLocalPosition(screenPosition);
-        } else {
-            // If world position is actually *behind* the camera, hide the UI
-            playerInfo.enabled = false;
+            // Fade the tags of distant fighters, so that the nearest ones stand out
+            const opacity = math.clamp(2.2 - -view.z / 10, 0.35, 1);
+            for (const part of parts) {
+                part.element.opacity = opacity;
+            }
         }
     });
-}
+});
 
-createPlayer(1, 135, 30, 1.5);
-createPlayer(2, 65, -18, 1);
-createPlayer(3, 0, 15, 2.5);
+// On portrait canvases, fit the arena to the width of the view rather than its height, and use a
+// portrait reference resolution for the tags
+const layout = () => {
+    const portrait = device.height > device.width;
+    camera.camera.horizontalFov = portrait;
+    screen.screen.referenceResolution = portrait ? new Vec2(540, 960) : new Vec2(1280, 720);
+};
+device.on('resizecanvas', layout);
+layout();

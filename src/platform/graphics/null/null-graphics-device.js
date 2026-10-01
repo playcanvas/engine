@@ -16,7 +16,8 @@ import { NullBindGroupFormat } from './null-bind-group-format.js';
 import { NullDynamicBuffers } from './null-dynamic-buffers.js';
 
 class NullGraphicsDevice extends GraphicsDevice {
-    constructor(canvas, options = {}) {
+    constructor(canvas = { width: 1, height: 1 }, options = {}) {
+        // nothing is rendered, so headless environments such as Node.js can omit the canvas
         super(canvas, options);
         options = this.initOptions;
 
@@ -36,10 +37,16 @@ class NullGraphicsDevice extends GraphicsDevice {
 
         // no-op dynamic buffers so the (unconditional) view uniform buffer path runs harmlessly
         this.dynamicBuffers = new NullDynamicBuffers(this);
+
+        this.postInit();
     }
 
     destroy() {
         super.destroy();
+    }
+
+    /** @ignore */
+    debugLoseContext(delay = 100) {
     }
 
     initDeviceCaps() {
@@ -55,7 +62,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = 8;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
-        this.supportsUniformBuffers = false;
+        this.usesMeshBindGroups = false;
         this.supportsAreaLights = true;
         this.supportsGpuParticles = false;
         this.textureFloatRenderable = true;
@@ -127,7 +134,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true, firstInstance = 0) {
     }
 
     setShader(shader, asyncCompile = false) {

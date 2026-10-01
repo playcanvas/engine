@@ -17,10 +17,6 @@ fn decodeRGBM(rgbm: vec4f) -> vec3f {
     return color * color;
 }
 
-fn saturate(x: f32) -> f32 {
-    return clamp(x, 0.0, 1.0);
-}
-
 fn encodeRGBM(color: vec3f) -> vec4f {
     var encoded: vec4f;
     let rgb_processed = pow(color.rgb, vec3f(0.5)) * (1.0 / 8.0);

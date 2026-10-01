@@ -38,6 +38,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_VEC4,
     UniformBufferFormat,
@@ -85,6 +86,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -232,7 +235,7 @@ app.on('update', (/** @type {number} */ dt) => {
         device.computeDispatch([compute1, compute2], 'ComputeModifyTextureDispatch');
 
         // debug render the generated textures
-        app.drawTexture(0.6, 0.5, 0.6, 0.3, compute1.getParameter('outTexture'));
-        app.drawTexture(0.6, -0.5, 0.6, 0.3, compute2.getParameter('outTexture'));
+        textures.draw(compute1.getParameter('outTexture'), 0.65, 0.175, 0.3, 0.15);
+        textures.draw(compute2.getParameter('outTexture'), 0.65, 0.675, 0.3, 0.15);
     }
 });

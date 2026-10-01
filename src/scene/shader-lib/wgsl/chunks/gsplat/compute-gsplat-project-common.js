@@ -36,7 +36,7 @@ fn projectSplatCommon(
     foveationCenter: f32,
     viewMatrix: mat4x4f,
     viewProj: mat4x4f,
-    focal: f32,
+    focal: vec2f,
     viewportWidth: f32,
     viewportHeight: f32,
     nearClip: f32,

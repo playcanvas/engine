@@ -6,6 +6,10 @@ export default /* glsl */`
         uniform vec2 animTexIndexParams;
     #endif
 
+    #ifdef SCREEN_SPACE
+        uniform vec4 viewport_size; // viewport width, height, 1/width, 1/height
+    #endif
+
     #if NORMAL == MAP
         varying mat3 ParticleMat;
     #endif

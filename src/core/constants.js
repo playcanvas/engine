@@ -98,6 +98,14 @@ export const TRACEID_VRAM_SB = 'VRAM.Sb';
 export const TRACEID_BINDGROUP_ALLOC = 'BindGroupAlloc';
 
 /**
+ * Records where a material was created and last changed, so that the debug build can report them
+ * when a material property is changed without a subsequent call to {@link Material#update}.
+ *
+ * @category Debug
+ */
+export const TRACEID_MATERIAL_UPDATE = 'MaterialUpdate';
+
+/**
  * Logs the creation of bind group formats.
  *
  * @category Debug

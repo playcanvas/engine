@@ -3,9 +3,10 @@ import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } 
 /**
  * Loads and displays a streamed gaussian splat scene ({@link StreamedGSplat#splatUrl}), plus an
  * optional environment splat ({@link StreamedGSplat#environmentUrl}) on a child entity, using
- * unified gsplat components. Rendering quality is controlled by one of four LOD presets — ultra,
- * high, medium or low — each with a configurable LOD base distance, multiplier and range. The
- * initial preset is low on mobile and medium on desktop, and can be switched at runtime by
+ * unified gsplat components. The main splat has four LOD presets — ultra, high, medium or low —
+ * each with its own LOD distances and allowed LOD range. The scene-wide splat budget and how it
+ * is used are configured through `app.scene.gsplat` in code or the Editor's scene settings.
+ * The initial preset is low on mobile and medium on desktop, and can be switched at runtime by
  * firing the `preset:ultra`, `preset:high`, `preset:medium` or `preset:low` app events. Firing
  * `colorize:toggle` toggles the LOD debug visualization.
  *
@@ -13,7 +14,7 @@ import { Script, Asset, Entity, platform, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_NONE } 
  * splatEntity.addComponent('script');
  * splatEntity.script.create(StreamedGSplat, {
  *     properties: {
- *         splatUrl: 'scene.sog',
+ *         splatUrl: 'scene.lod-meta.json',
  *         environmentUrl: 'environment.sog'
  *     }
  * });
@@ -35,52 +36,81 @@ class StreamedGSplat extends Script {
     environmentUrl = '';
 
     /**
+     * Distance of the first LOD transition for the ultra preset, in world units: the splat
+     * renders at its finest level closer than this. See
+     * [GSplatComponent.lodBaseDistance](https://api.playcanvas.com/engine/classes/GSplatComponent.html#lodbasedistance).
+     *
      * @attribute
      * @type {number}
      */
-    ultraLodBaseDistance = 7;
+    ultraLodBaseDistance = 5;
 
     /**
+     * Factor between successive LOD transition distances for the ultra preset. See
+     * [GSplatComponent.lodMultiplier](https://api.playcanvas.com/engine/classes/GSplatComponent.html#lodmultiplier).
+     *
      * @attribute
      * @type {number}
+     * @range [1.2, 10]
      */
     ultraLodMultiplier = 3;
 
     /**
+     * Distance of the first LOD transition for the high preset. See
+     * {@link StreamedGSplat#ultraLodBaseDistance}.
+     *
      * @attribute
      * @type {number}
      */
     highLodBaseDistance = 5;
 
     /**
+     * Factor between successive LOD transition distances for the high preset. See
+     * {@link StreamedGSplat#ultraLodMultiplier}.
+     *
      * @attribute
      * @type {number}
+     * @range [1.2, 10]
      */
     highLodMultiplier = 3;
 
     /**
+     * Distance of the first LOD transition for the medium preset. See
+     * {@link StreamedGSplat#ultraLodBaseDistance}.
+     *
      * @attribute
      * @type {number}
      */
     mediumLodBaseDistance = 5;
 
     /**
+     * Factor between successive LOD transition distances for the medium preset. See
+     * {@link StreamedGSplat#ultraLodMultiplier}.
+     *
      * @attribute
      * @type {number}
+     * @range [1.2, 10]
      */
-    mediumLodMultiplier = 2;
+    mediumLodMultiplier = 3;
 
     /**
+     * Distance of the first LOD transition for the low preset. See
+     * {@link StreamedGSplat#ultraLodBaseDistance}.
+     *
      * @attribute
      * @type {number}
      */
     lowLodBaseDistance = 5;
 
     /**
+     * Factor between successive LOD transition distances for the low preset. See
+     * {@link StreamedGSplat#ultraLodMultiplier}.
+     *
      * @attribute
      * @type {number}
+     * @range [1.2, 10]
      */
-    lowLodMultiplier = 2;
+    lowLodMultiplier = 3;
 
     /**
      * @attribute
@@ -121,13 +151,6 @@ class StreamedGSplat extends Script {
 
         this._currentPreset = platform.mobile ? 'low' : 'medium';
 
-        // global settings
-        app.scene.gsplat.radialSorting = true;
-        app.scene.gsplat.lodUpdateAngle = 90;
-        app.scene.gsplat.lodBehindPenalty = 5;
-        app.scene.gsplat.lodUpdateDistance = 1;
-        app.scene.gsplat.lodUnderfillLimit = 10;
-
         // Listen for UI events
         app.on('preset:ultra', () => this._setPreset('ultra'), this);
         app.on('preset:high', () => this._setPreset('high'), this);
@@ -155,8 +178,6 @@ class StreamedGSplat extends Script {
                 // Add component directly to this entity
                 this.entity.addComponent('gsplat', {
                     unified: true,
-                    lodBaseDistance: this._getCurrentLodBaseDistance(),
-                    lodMultiplier: this._getCurrentLodMultiplier(),
                     asset: a
                 });
 
@@ -189,8 +210,6 @@ class StreamedGSplat extends Script {
                 // Add the component while entity is disabled
                 child.addComponent('gsplat', {
                     unified: true,
-                    lodBaseDistance: this._getCurrentLodBaseDistance(),
-                    lodMultiplier: this._getCurrentLodMultiplier(),
                     asset: a
                 });
 
@@ -202,36 +221,6 @@ class StreamedGSplat extends Script {
         this.once('destroy', () => {
             this.onDestroy();
         });
-    }
-
-    _getCurrentLodBaseDistance() {
-        switch (this._currentPreset) {
-            case 'ultra':
-                return this.ultraLodBaseDistance;
-            case 'high':
-                return this.highLodBaseDistance;
-            case 'medium':
-                return this.mediumLodBaseDistance;
-            case 'low':
-                return this.lowLodBaseDistance;
-            default:
-                return 5;
-        }
-    }
-
-    _getCurrentLodMultiplier() {
-        switch (this._currentPreset) {
-            case 'ultra':
-                return this.ultraLodMultiplier;
-            case 'high':
-                return this.highLodMultiplier;
-            case 'medium':
-                return this.mediumLodMultiplier;
-            case 'low':
-                return this.lowLodMultiplier;
-            default:
-                return 3;
-        }
     }
 
     _getCurrentLodRange() {
@@ -260,11 +249,14 @@ class StreamedGSplat extends Script {
         if (!range) return;
 
         // Apply to main streaming asset only (environment doesn't support these settings)
-        if (this.entity.gsplat) {
-            this.entity.gsplat.lodRangeMin = range[0];
-            this.entity.gsplat.lodRangeMax = range[1];
-            this.entity.gsplat.lodBaseDistance = this._getCurrentLodBaseDistance();
-            this.entity.gsplat.lodMultiplier = this._getCurrentLodMultiplier();
+        const gsplat = this.entity.gsplat;
+        if (gsplat) {
+            gsplat.lodRangeMin = range[0];
+            gsplat.lodRangeMax = range[1];
+
+            // per-preset LOD distances, e.g. mediumLodBaseDistance for the medium preset
+            gsplat.lodBaseDistance = this[`${this._currentPreset}LodBaseDistance`] ?? 5;
+            gsplat.lodMultiplier = this[`${this._currentPreset}LodMultiplier`] ?? 3;
         }
     }
 

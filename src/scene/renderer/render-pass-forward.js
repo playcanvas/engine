@@ -2,7 +2,6 @@ import { TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Tracing } from '../../core/tracing.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { LayerRenderStep } from './layer-render-step.js';
@@ -214,9 +213,17 @@ class RenderPassForward extends RenderPass {
 
             // when this pass renders the scene textures, the camera's clear color describes the scene
             // color attachment alone - the clear values of the scene texture attachments belong to
-            // whoever owns them, and are left alone here
-            const colorIndex = this.sceneTextures?.length ? 0 : undefined;
-            this.setClearColor(fullSizeClearRect && step.clearColor ? camera.clearColor : undefined, colorIndex);
+            // whoever owns them, and are left alone here. Otherwise each color attachment of the
+            // render target clears to the color the camera specifies for it.
+            const clearColor = fullSizeClearRect && step.clearColor;
+            if (this.sceneTextures?.length) {
+                this.setClearColor(clearColor ? camera.clearColor : undefined, 0);
+            } else {
+                const count = this.colorArrayOps.length;
+                for (let i = 0; i < count; i++) {
+                    this.setClearColor(clearColor ? camera.getClearColor(i) : undefined, i);
+                }
+            }
             this.setClearDepth(fullSizeClearRect && step.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && step.clearStencil ? camera.clearStencil : undefined);
         }
@@ -228,14 +235,21 @@ class RenderPassForward extends RenderPass {
         this.updateCameraBeforePasses();
         this.updateClears();
 
-        // request mesh-instance culling for the (camera, layer) pairs this pass will render, so
-        // their culled lists are ready by the time the pass executes. Gated by the same isEnabled
-        // check execute() uses, so a disabled sub-layer (e.g. one left in a persistent CameraFrame
-        // pass) is neither culled nor rendered. The same (camera, layer) appearing as both an
-        // opaque and a transparent step is de-duplicated by the request.
-        const { renderer, layerComposition, layerRenderSteps } = this;
+        // Per step, request the frame setup its layer needs so it is ready when the pass executes:
+        // under clustered lighting, a light cluster for the layer (shared between steps with the same
+        // light set); and mesh-instance culling for the (camera, layer) pairs this pass renders,
+        // gated by the same isEnabled check execute() uses so a disabled sub-layer (e.g. one left in
+        // a persistent CameraFrame pass) is neither culled nor rendered. The same (camera, layer) as
+        // both an opaque and a transparent step is de-duplicated by each request.
+        const { renderer, scene, layerComposition, layerRenderSteps } = this;
+        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
         for (let i = 0; i < layerRenderSteps.length; i++) {
             const step = layerRenderSteps[i];
+
+            if (clusteredLightingEnabled) {
+                renderer.worldClustersAllocator.request(step);
+            }
+
             if (layerComposition.isEnabled(step.layer, step.transparent)) {
                 renderer.culler.requestMeshInstanceCull(step.cameraComponent.camera, step.layer);
             }
@@ -378,14 +392,22 @@ class RenderPassForward extends RenderPass {
             }
 
             const renderTarget = step.renderTarget ?? device.backBuffer;
+
+            // splats are blended into every sample of a multisampled target, which makes them several
+            // times more expensive to render
+            Debug.call(() => {
+                if (renderTarget?.samples > 1 && layer.gsplatPlacements.length > 0) {
+                    Debug.warnOnce(`Gaussian splats on layer '${layer.name}' are rendered into the multisampled render target '${renderTarget.name}' (${renderTarget.samples} samples), which makes them several times more expensive to render. Render them into a single-sampled target: create the graphics device with antialias set to false, or use a CameraFrame with rendering.samples set to 1.`);
+                }
+            });
+
             renderer.renderForwardLayer(cameraComponent.camera, renderTarget, layer, transparent,
                 shaderPass, options);
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what
-            // it requires (the properties are part of render pipeline on WebGPU anyways)
-            device.setBlendState(BlendState.NOBLEND);
-            device.setStencilState(null, null);
+            // it requires (the properties are part of render pipeline on WebGPU anyway)
+            device.setDrawStates();
             device.setAlphaToCoverage(false);
 
             // layer post render event

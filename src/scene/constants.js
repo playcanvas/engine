@@ -754,7 +754,7 @@ export const ambientSrcNames = {
     [AMBIENTSRC_CONSTANT]: 'CONSTANT'
 };
 
-// 16 bits for shader defs
+// the shader defines of a mesh instance: flags in the lowest 24 bits, see SHADERDEF_MASK_SHIFT
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;
 export const SHADERDEF_UV0 = 4;
@@ -770,6 +770,10 @@ export const SHADERDEF_MORPH_NORMAL = 2048;
 export const SHADERDEF_LMAMBIENT = 4096; // lightmaps contain ambient
 export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
 export const SHADERDEF_BATCH = 16384;
+export const SHADERDEF_INSTANCEINDEX = 32768; // the draws use the instance index themselves
+
+// the shift of the light mask of a mesh instance, in the top 8 bits of its shader defines
+export const SHADERDEF_MASK_SHIFT = 24;
 
 /**
  * The shadow map is not to be updated.
@@ -792,10 +796,41 @@ export const SHADOWUPDATE_THISFRAME = 1;
  */
 export const SHADOWUPDATE_REALTIME = 2;
 
-// flags used on the mask property of the Light, and also on mask property of the MeshInstance
+/**
+ * Light mask bit: on a light, it lights mesh instances that are lit at runtime rather than from a
+ * lightmap; on a mesh instance, it is lit at runtime by such lights. This is the default mask
+ * value of both {@link LightComponent#mask} and {@link MeshInstance#mask}.
+ *
+ * @ignore
+ */
 export const MASK_AFFECT_DYNAMIC = 1;
+
+/**
+ * Light mask bit: on a light, it lights mesh instances that are lightmapped; on a mesh instance,
+ * it receives its lighting from a lightmap and is lit at runtime only by lights carrying this bit.
+ * See {@link LightComponent#mask} and {@link MeshInstance#mask}.
+ *
+ * @ignore
+ */
 export const MASK_AFFECT_LIGHTMAPPED = 2;
+
+/**
+ * Light mask bit: on a light, it is baked into lightmaps by the {@link Lightmapper}; on a mesh
+ * instance, it is a lightmap target that such lights bake into. See {@link LightComponent#mask}
+ * and {@link MeshInstance#mask}.
+ *
+ * @ignore
+ */
 export const MASK_BAKE = 4;
+
+/**
+ * The light mask bits under which a light is applied at runtime. A light carrying none of them
+ * contributes only to lightmaps, reaches no mesh instance while rendering, and so takes no light
+ * slot in a shader. See {@link MASK_AFFECT_DYNAMIC} and {@link MASK_AFFECT_LIGHTMAPPED}.
+ *
+ * @ignore
+ */
+export const MASK_AFFECT_RUNTIME = MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED;
 
 /**
  * Render shaded materials using forward rendering.
@@ -1282,21 +1317,27 @@ export const GSPLAT_RENDERER_RASTER_GPU_SORT = 2;
 export const GSPLAT_RENDERER_COMPUTE = 3;
 
 /**
- * LOD selection driven by per-level approximation errors: the splat budget is spent where it
- * removes the most error per splat, using the manifest's error tables when present and errors
- * derived from splat counts otherwise. The default.
+ * The splat budget is a target: LOD detail is raised until {@link GSplatParams#splatBudget} is
+ * used up, wherever the camera is. The LOD distances of each GSplat still shape how detail falls
+ * off with distance and how it divides between GSplats, but not how much of it there is. The
+ * default.
  *
  * @category Graphics
  */
-export const GSPLAT_LODMODE_ERROR = 'error';
+export const GSPLAT_BUDGET_TARGET = 'target';
 
 /**
- * LOD selection ordered by camera distance alone: detail steps down in concentric distance bands
- * around the camera, with the band edges adapting to the splat budget. Any error metadata in the
- * asset is ignored. Useful when a capture's quality makes its error tables unreliable.
+ * The splat budget is a limit: the LOD distances of each GSplat decide the detail, and
+ * {@link GSplatParams#splatBudget} only lowers it when they would ask for more splats than it
+ * allows. A distant GSplat uses only the few splats its distance calls for, leaving the rest of
+ * the budget unused.
  *
  * @category Graphics
  */
+export const GSPLAT_BUDGET_LIMIT = 'limit';
+
+// deprecated
+export const GSPLAT_LODMODE_ERROR = 'error';
 export const GSPLAT_LODMODE_DISTANCE = 'distance';
 
 /**
@@ -1347,30 +1388,30 @@ export const GSPLAT_DEBUG_NODE_AABBS = 5;
 /**
  * Automatically selects the best radix sort backend for the current WebGPU device:
  * OneSweep on supported hardware (NVIDIA), the portable backend elsewhere. See
- * {@link ComputeRadixSort}.
+ * `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_AUTO = 0;
 
 /**
  * Portable radix sort backend. Runs on every WebGPU device (no subgroup
  * intrinsics required) and is chosen by {@link RADIX_SORT_AUTO} when no
- * faster hardware-specific backend is available. See {@link ComputeRadixSort}.
+ * faster hardware-specific backend is available. See `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_PORTABLE = 1;
 
 /**
  * Single-sweep 8-bit radix sort (OneSweep). Requires subgroup support, 32-lane
  * subgroups, and forward-thread-progress guarantees — currently enabled only on
- * NVIDIA. See {@link ComputeRadixSort}.
+ * NVIDIA. See `ComputeRadixSort`.
  *
  * @type {number}
- * @category Graphics
+ * @ignore
  */
 export const RADIX_SORT_ONESWEEP = 2;
 
@@ -1395,3 +1436,15 @@ export const SCENETEXTURE_DEPTH = 'depth';
 export const sceneTextureUniformNames = {
     [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
 };
+
+/**
+ * The uniforms a mesh instance publishes its own lightmaps under, the color lightmap first and the
+ * directional one second, matching the order of the lightmapper's bake passes. The color one is
+ * deliberately not `texture_lightMap`, the uniform of a lightmap assigned to a material, so that a
+ * mesh instance keeping a lightmap of its own leaves the material's lightmap alone. A mesh instance
+ * lightmap takes priority when both are present.
+ *
+ * @type {string[]}
+ * @ignore
+ */
+export const instanceLightmapUniformNames = ['instance_lightMap', 'texture_dirLightMap'];

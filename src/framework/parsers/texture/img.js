@@ -14,6 +14,8 @@ import { TextureParser } from './texture.js';
 
 /**
  * Parser for browser-supported image formats.
+ *
+ * @category Graphics
  */
 class ImgParser extends TextureParser {
     constructor(registry, device) {

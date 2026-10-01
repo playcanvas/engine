@@ -106,6 +106,9 @@ class ShadowRendererLocal {
 
     prepareLights(shadowLights, lights) {
 
+        // A previous frame may have been interrupted before the shadow pass cleared this list.
+        shadowLights.length = 0;
+
         let shadowCamera;
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];

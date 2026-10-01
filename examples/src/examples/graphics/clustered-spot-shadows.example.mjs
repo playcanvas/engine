@@ -19,6 +19,7 @@ import {
     StandardMaterial,
     TEXTURETYPE_RGBP,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Vec3,
     createGraphicsDevice
@@ -69,6 +70,8 @@ createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -388,7 +391,6 @@ app.on('update', (/** @type {number} */ dt) => {
 
     // Display cookie texture (debug feature)
     if (debugAtlas) {
-        // @ts-ignore engine-tsd
-        app.drawTexture(-0.7, 0.2, 0.4, 0.4, app.renderer.lightTextureAtlas.cookieAtlas);
+        textures.draw(app.renderer.lightTextureAtlas.cookieAtlas, 0.05, 0.3, 0.2, 0.2);
     }
 });

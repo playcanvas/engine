@@ -15,7 +15,7 @@ uniform uTextureSize: vec2i;  // (width, height)
 uniform uSubDrawBase: i32;
 
 // packed sub-draw params: (sourceBase, colStart, rowWidth, rowStart)
-varying @interpolate(flat) vSubDraw: vec4i;
+varying @interpolate(flat, either) vSubDraw: vec4i;
 
 @vertex
 fn vertexMain(input: VertexInput) -> VertexOutput {

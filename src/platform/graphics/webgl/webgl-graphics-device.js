@@ -23,11 +23,12 @@ import {
     UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation, getPixelFormatArrayType,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
-    DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL2_BARE,
     TEXPROPERTY_MIN_FILTER, TEXPROPERTY_MAG_FILTER, TEXPROPERTY_ADDRESS_U, TEXPROPERTY_ADDRESS_V,
     TEXPROPERTY_ADDRESS_W, TEXPROPERTY_COMPARE_ON_READ, TEXPROPERTY_COMPARE_FUNC, TEXPROPERTY_ANISOTROPY
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
+import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -50,7 +51,6 @@ import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
 import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 import { TextureUtils } from '../texture-utils.js';
-import { getBuiltInTexture } from '../built-in-textures.js';
 
 /**
  * @import { BindGroup } from '../bind-group.js'
@@ -101,6 +101,35 @@ const getPixelFormatChannelsForRgbaReadback = (format) => {
 };
 
 const invalidateAttachments = [];
+
+// The extensions a bare device (DEVICETYPE_WEBGL2_BARE) keeps exposed - only those
+// available on 99%+ of devices, as reported by https://web3dsurvey.com/webgl2. Everything else the
+// device queries is hidden, so the engine takes the same code paths it would on a device without
+// it. Note that WEBGL_debug_renderer_info is kept because the renderer string it provides drives
+// device blocklists, which are about device identity rather than the feature level.
+const bareExtensions = new Set([
+    'EXT_color_buffer_float',           // 99.93%
+    'EXT_texture_filter_anisotropic',   // 99.43%
+    'WEBGL_debug_renderer_info'         // 99.99%
+]);
+
+// The capabilities a bare device reports, being the values 99%+ of devices report, as per
+// https://web3dsurvey.com/webgl2. Real limits smaller than these are left alone - bare simulates
+// the least capable devices, it does not lift any restriction.
+const bareCapabilities = {
+    maxTextureSize: 4096,           // 4232 on 97%
+    maxCubeMapSize: 4096,           // 8192 on 97%
+    maxRenderBufferSize: 8192,      // 16383 on 95%
+    maxTextures: 16,                // 24 on 14%
+    maxCombinedTextures: 32,        // 48 on 24%
+    maxVertexTextures: 16,          // 24 on 14%
+    vertexUniformsCount: 256,       // 300 on 96%
+    fragmentUniformsCount: 256,     // 300 on 96%
+    maxColorAttachments: 4,         // 6 on 98%
+    maxVolumeSize: 2048,            // 4096 on 8%
+    maxAnisotropy: 16,              // no device reports more
+    maxSamples: 4                   // 8 on 63%
+};
 
 // How long a pixel buffer copy waits for the start of the next frame before going ahead without it,
 // long enough that a frame arriving at a badly degraded rate still counts as arriving.
@@ -257,15 +286,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
 
-        const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
-        const isMac = platform.browser && navigator.appVersion.indexOf('Mac') !== -1;
-
-        // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = isSafari;
-
-        // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
-        this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
         canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
         canvas.addEventListener('webglcontextrestored', this._contextRestoredHandler, false);
@@ -472,6 +493,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.targetToSlot[gl.TEXTURE_2D] = 0;
         this.targetToSlot[gl.TEXTURE_CUBE_MAP] = 1;
         this.targetToSlot[gl.TEXTURE_3D] = 2;
+        this.targetToSlot[gl.TEXTURE_2D_ARRAY] = 3;
 
         // Define the uniform commit functions
         let scopeX, scopeY, scopeZ, scopeW;
@@ -781,7 +803,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * @param {number} index - Index of the bind group slot
      * @param {BindGroup} bindGroup - Bind group to attach
-     * @param {number[]} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
+     * @param {Uint32Array} [offsets] - Byte offsets for all uniform buffers in the bind group. Unused
      * on WebGL: every uniform buffer is bound as a whole buffer from offset zero (see below).
      */
     setBindGroup(index, bindGroup, offsets) {
@@ -906,6 +928,18 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * True when the device was created as {@link DEVICETYPE_WEBGL2_BARE}, and so reports only the
+     * extensions and capabilities available on almost all devices. A getter rather than a field,
+     * as the extensions are initialized from the constructor of this class.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get bare() {
+        return this.initOptions.deviceType === DEVICETYPE_WEBGL2_BARE;
+    }
+
+    /**
      * Initialize the extensions provided by the WebGL context.
      *
      * @ignore
@@ -914,6 +948,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         this.supportedExtensions = gl.getSupportedExtensions() ?? [];
         this._extDisjointTimerQuery = null;
+
+        // a bare device only exposes the extensions available on almost all devices
+        if (this.bare) {
+            this.supportedExtensions = this.supportedExtensions.filter(name => bareExtensions.has(name));
+        }
 
         this.textureRG11B10Renderable = true;
 
@@ -941,6 +980,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.supportsIndependentBlending = !!this.extDrawBuffersIndexed;
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
+        this.extProvokingVertex = this.getExtension('WEBGL_provoking_vertex');
 
         this.extMultiDraw = this.getExtension('WEBGL_multi_draw');
         this.supportsMultiDraw = !!this.extMultiDraw;
@@ -955,8 +995,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
         this.extTextureCompressionBPTC = this.getExtension('EXT_texture_compression_bptc');
 
-        // HTML-in-Canvas support (texElementImage2D)
-        this.supportsHtmlTextures = typeof gl.texElementImage2D === 'function';
+        // HTML-in-Canvas support (texElementImage2D). Not an extension, so it needs hiding
+        // explicitly on a bare device - it is still experimental and behind an origin trial.
+        this.supportsHtmlTextures = !this.bare && typeof gl.texElementImage2D === 'function';
     }
 
     /**
@@ -1011,6 +1052,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // some devices incorrectly report max samples larger than 4
         this.maxSamples = Math.min(this.maxSamples, 4);
 
+        // a bare device reports no more than the least capable devices do
+        if (this.bare) {
+            for (const name in bareCapabilities) {
+                this[name] = Math.min(this[name], bareCapabilities[name]);
+            }
+        }
+
         // we handle anti-aliasing internally by allocating multi-sampled backbuffer
         this.samples = antialiasSupported && this.backBufferAntialias ? this.maxSamples : 1;
 
@@ -1036,6 +1084,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
 
         // Initialize render state to a known start state
+
+        // The extension is exposed when the first-vertex convention is more efficient.
+        const ext = this.extProvokingVertex;
+        if (ext) {
+            ext.provokingVertexWEBGL(ext.FIRST_VERTEX_CONVENTION_WEBGL);
+        }
 
         // default blend state
         gl.disable(gl.BLEND);
@@ -1110,7 +1164,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initTextureUnits(count = 16) {
         this.textureUnits = [];
         for (let i = 0; i < count; i++) {
-            this.textureUnits.push([null, null, null]);
+            this.textureUnits.push([null, null, null, null]);
         }
     }
 
@@ -1129,6 +1183,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.textureUnit = 0;
         this.initTextureUnits(this.maxCombinedTextures);
+    }
+
+    /** @ignore */
+    isContextLost() {
+        return super.isContextLost() || (this.gl?.isContextLost() ?? true);
     }
 
     /**
@@ -1175,6 +1234,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const shader of this.shaders) {
             shader.restoreContext();
         }
+
+        // Restore the supplied framebuffer before callbacks or update-time rendering (such as
+        // transform feedback) can use the backbuffer, without waiting for frameStart.
+        this.updateBackbuffer();
 
         this.fire('devicerestored');
     }
@@ -1643,15 +1706,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.boundVao = null;
 
-        // clear texture units once a frame on desktop safari
-        if (this._tempEnableSafariTextureUnitWorkaround) {
-            for (let unit = 0; unit < this.textureUnits.length; ++unit) {
-                for (let slot = 0; slot < 3; ++slot) {
-                    this.textureUnits[unit][slot] = null;
-                }
-            }
-        }
-
         // Set the render target
         const target = this.renderTarget ?? this.backBuffer;
         Debug.assert(target);
@@ -2059,9 +2113,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const gl = this.gl;
 
+        // the number of active sub-draws is tracked by the owner, the implementation only holds
+        // the per-sub-draw arrays
+        const count = drawCommands.count;
+
         if (primitive.indexed) {
             const format = indexBuffer.impl.glFormat;
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+            const { glCounts, glOffsetsBytes, glInstanceCounts } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {
@@ -2073,7 +2131,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
         } else {
-            const { glCounts, glOffsetsBytes, glInstanceCounts, count } = drawCommands.impl;
+            const { glCounts, glOffsetsBytes, glInstanceCounts } = drawCommands.impl;
 
             if (numInstances > 0) {
                 for (let i = 0; i < count; i++) {
@@ -2087,7 +2145,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true, firstInstance = 0) {
 
         const shader = this.shader;
         if (shader) {
@@ -2127,17 +2185,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         if (samplerName === 'uSceneDepthMap') {
                             Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                            samplerValue = getBuiltInTexture(this, 'white');
+                            samplerValue = this.builtInTextures.white;
                         }
                         if (samplerName === 'uSceneColorMap') {
                             Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-                            samplerValue = getBuiltInTexture(this, 'pink');
+                            samplerValue = this.builtInTextures.pink;
                         }
 
                         // missing generic texture
                         if (!samplerValue) {
                             Debug.errorOnce(`Shader ${shader.name} requires ${samplerName} texture which was not set. Rendering [${DebugGraphics.toString()}]`, shader);
-                            samplerValue = getBuiltInTexture(this, 'pink');
+                            samplerValue = this.builtInTextures.pink;
                         }
                     }
 
@@ -2272,10 +2330,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // #if _PROFILER
                 if (drawCommands) {
                     // use pre-calculated primitive count from drawCommands
-                    this._primsPerFrame[primitive.type] += drawCommands.primitiveCount;
+                    this._primitiveCount += drawCommands.getPrimitiveCount(primitive.type, numInstances > 0);
                 } else {
                     // single draw
-                    this._primsPerFrame[primitive.type] += primitive.count * (numInstances > 1 ? numInstances : 1);
+                    this._primitiveCount += getPrimitiveCount(primitive.type, primitive.count) * (numInstances > 0 ? numInstances : 1);
                 }
                 // #endif
             }
@@ -2464,7 +2522,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // The copy out of the pixel buffer is synchronous, and the driver services it by submitting
         // and then waiting for whatever commands are outstanding when it runs. This read's own fence
-        // has signalled by now, so that wait is spent entirely on unrelated work queued behind it,
+        // has signaled by now, so that wait is spent entirely on unrelated work queued behind it,
         // which on a heavy scene is a frame's worth of rendering.
         const copyOut = () => {
             gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
@@ -3171,13 +3229,38 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     // #if _DEBUG
-    // debug helper to force lost context
-    debugLoseContext(sleep = 100) {
-        const context = this.gl.getExtension('WEBGL_lose_context');
-        context.loseContext();
-        setTimeout(() => context.restoreContext(), sleep);
-    }
+    /** @private */
+    _debugContextLossPending = false;
     // #endif
+
+    /** @ignore */
+    debugLoseContext(delay = 100) {
+        Debug.call(() => {
+            if (this._destroyed || this.contextLost || this._debugContextLossPending) {
+                return;
+            }
+
+            const context = this.gl.getExtension('WEBGL_lose_context');
+            if (!context) {
+                Debug.warn('WEBGL_lose_context is unavailable.');
+                return;
+            }
+
+            this._debugContextLossPending = true;
+            this.once('devicerestored', () => {
+                this._debugContextLossPending = false;
+            });
+            this.once('devicelost', () => {
+                // The browser must dispatch the loss event before restoration can be requested.
+                setTimeout(() => {
+                    if (!this._destroyed) {
+                        context.restoreContext();
+                    }
+                }, delay);
+            });
+            context.loseContext();
+        });
+    }
 }
 
 export { WebglGraphicsDevice };

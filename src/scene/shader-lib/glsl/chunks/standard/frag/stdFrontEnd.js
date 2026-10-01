@@ -134,6 +134,9 @@ export default /* glsl */`
             getAlbedo();
             litArgs_albedo = dAlbedo;
 
+            // ambient
+            litArgs_ambient = material_ambient;
+
             // normal
             #ifdef LIT_NEEDS_NORMAL
                 getNormal();

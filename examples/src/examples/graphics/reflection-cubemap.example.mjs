@@ -27,6 +27,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     Vec3,
     createGraphicsDevice,
     reprojectTexture
@@ -72,6 +73,8 @@ createOptions.resourceHandlers = [TextureHandler, ScriptHandler];
 const app = new AppBase(canvas);
 app.init(createOptions);
 
+const textures = new TextureRenderer(app);
+
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -105,7 +108,7 @@ const createHighQualitySphere = (material, layer) => {
     const entity = new Entity('ShinyBall');
     app.root.addChild(entity);
 
-    // Create hight resolution sphere
+    // Create high resolution sphere
     const mesh = Mesh.fromGeometry(app.graphicsDevice, new SphereGeometry({ latitudeBands: 200, longitudeBands: 200 }));
 
     // Add a render component with the mesh
@@ -122,7 +125,7 @@ const createHighQualitySphere = (material, layer) => {
  * helper function to create a primitive with shape type, position, scale, color and layer
  * @param {string} primitiveType - The primitive type.
  * @param {number | Vec3} position - The entity's position.
- * @param {number | Vec3} scale - The entisy's scale.
+ * @param {number | Vec3} scale - The entity's scale.
  * @param {Color} color - The color.
  * @param {number[]} layer - The render component's layers.
  * @returns {Entity} The returned entity.
@@ -270,7 +273,7 @@ function createReprojectionTexture(projection, size) {
     });
 }
 
-// Create 2 uqirect and 2 octahedral textures
+// Create 2 equirect and 2 octahedral textures
 const textureEqui = createReprojectionTexture(TEXTUREPROJECTION_EQUIRECT, 256);
 const textureEqui2 = createReprojectionTexture(TEXTUREPROJECTION_EQUIRECT, 256);
 const textureOcta = createReprojectionTexture(TEXTUREPROJECTION_OCTAHEDRAL, 64);
@@ -304,36 +307,31 @@ app.on('update', (dt) => {
     reprojectTexture(srcCube, textureEqui, {
         numSamples: 1
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(-0.6, 0.7, 0.6, 0.3, textureEqui);
+    textures.draw(textureEqui, 0.05, 0.075, 0.3, 0.15);
 
     // Cube -> octa1
     reprojectTexture(srcCube, textureOcta, {
         numSamples: 1
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(0.7, 0.7, 0.4, 0.4, textureOcta);
+    textures.draw(textureOcta, 0.75, 0.05, 0.2, 0.2);
 
     // Equi1 -> octa2
     reprojectTexture(textureEqui, textureOcta2, {
         specularPower: 32,
         numSamples: 1024
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(-0.7, -0.7, 0.4, 0.4, textureOcta2);
+    textures.draw(textureOcta2, 0.05, 0.75, 0.2, 0.2);
 
     // Octa1 -> equi2
     reprojectTexture(textureOcta, textureEqui2, {
         specularPower: 16,
         numSamples: 512
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(0.6, -0.7, 0.6, 0.3, textureEqui2);
+    textures.draw(textureEqui2, 0.65, 0.775, 0.3, 0.15);
 
     // Cube -> envAtlas
     EnvLighting.generateAtlas(srcCube, {
         target: textureAtlas
     });
-    // @ts-ignore engine-tsd
-    app.drawTexture(0, -0.7, 0.5, 0.4, textureAtlas);
+    textures.draw(textureAtlas, 0.375, 0.75, 0.25, 0.2);
 });

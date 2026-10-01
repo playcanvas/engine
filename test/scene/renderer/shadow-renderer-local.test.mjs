@@ -245,7 +245,7 @@ describe('ShadowRendererLocal', function () {
             faces.forEach(face => expect(face.has(caster)).to.equal(true));
         });
 
-        it('honours a custom visibility function', function () {
+        it('honors a custom visibility function', function () {
             const light = createLight(new Vec3(0, 0, 0));
             const hidden = createCaster(new Vec3(50, 0, 0), 1);
             const shown = createCaster(new Vec3(-50, 0, 0), 1);

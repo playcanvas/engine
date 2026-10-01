@@ -122,6 +122,13 @@ class GeometryVertexStream {
  * {@link IndexBuffer}. It also contains a primitive definition which controls the type of the
  * primitive and the portion of the vertex or index buffer to use.
  *
+ * A mesh holds geometry only. To draw it, pair it with a {@link Material} in a {@link MeshInstance}
+ * and give that instance to a {@link RenderComponent} or a {@link Layer}; one mesh can back any
+ * number of instances. {@link Mesh.fromGeometry} builds a mesh from a {@link Geometry} such as
+ * {@link BoxGeometry} in one call. Meshes are reference counted: every {@link MeshInstance} holds
+ * a reference to its mesh, so call {@link destroy} on a mesh you created only once no instance
+ * uses it.
+ *
  * ## Mesh APIs
  * There are two ways a mesh can be generated or updated.
  *

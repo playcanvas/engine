@@ -22,6 +22,8 @@ import { math } from '../../core/math/math.js';
 
 /**
  * Used to send and receive HTTP requests.
+ *
+ * @category Framework
  */
 class Http {
     static ContentType = {
@@ -75,7 +77,8 @@ class Http {
      * `options.withCredentials`. Defaults to false.
      *
      * This is a process-global default on the shared {@link http} instance and applies to all
-     * XHR-based requests (most asset loads). Prefer setting it via
+     * XHR-based requests (most asset loads). Loaders that stream with `fetch` instead read it
+     * through {@link getFetchCredentials}. Prefer setting it via
      * {@link ResourceLoader#withCredentials}.
      *
      * @type {boolean}
@@ -553,32 +556,23 @@ class Http {
 
     _onReadyStateChange(method, url, options, xhr) {
         if (xhr.readyState === 4) {
-            switch (xhr.status) {
-                case 0: {
-                    // If status code 0, it is assumed that the browser has cancelled the request
-
-                    // Add support for running Chrome browsers in 'allow-file-access-from-file'
-                    // This is to allow for specialized programs and libraries such as CefSharp
-                    // which embed Chromium in the native app.
-                    if (xhr.responseURL && xhr.responseURL.startsWith('file:///')) {
-                        // Assume that any file loaded from disk is fine
-                        this._onSuccess(method, url, options, xhr);
-                    } else {
-                        this._onError(method, url, options, xhr);
-                    }
-                    break;
-                }
-                case 200:
-                case 201:
-                case 206:
-                case 304: {
+            const status = xhr.status;
+            if (status === 0) {
+                // Over http(s), status 0 means the request failed or was blocked (network, CORS,
+                // cancelled), and a failed response has an empty responseURL. Non-http schemes
+                // served by an embedded browser or WebView (file:// in CefSharp or Chrome with
+                // file access, ionic://, capacitor://, app:// and so on) have no HTTP status and
+                // report 0 on success, so a response that resolved to such a URL is a success.
+                const responseURL = xhr.responseURL;
+                if (responseURL && !responseURL.startsWith('http:') && !responseURL.startsWith('https:')) {
                     this._onSuccess(method, url, options, xhr);
-                    break;
-                }
-                default: {
+                } else {
                     this._onError(method, url, options, xhr);
-                    break;
                 }
+            } else if ((status >= 200 && status < 300) || status === 304) {
+                this._onSuccess(method, url, options, xhr);
+            } else {
+                this._onError(method, url, options, xhr);
             }
         }
     }
@@ -596,7 +590,10 @@ class Http {
         }
         try {
             // Check the content type to see if we want to parse it
-            if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
+            if (xhr.status === 204 || xhr.status === 205) {
+                // No Content and Reset Content responses have no body, so there is nothing to parse
+                response = null;
+            } else if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
                 // It's a binary response
                 response = xhr.response;
             } else if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith('.json')) {
@@ -721,4 +718,15 @@ class Http {
 
 const http = new Http();
 
-export { http, Http };
+/**
+ * The `fetch` credentials mode matching {@link Http#withCredentials}. A loader that streams asset
+ * data with `fetch` instead of going through {@link Http#request} has to apply the flag itself,
+ * since it only reaches `XMLHttpRequest`. `same-origin` is `fetch`'s own default, so passing this
+ * when the flag is off changes nothing.
+ *
+ * @returns {RequestCredentials} The credentials mode to pass to `fetch`.
+ * @ignore
+ */
+const getFetchCredentials = () => (http.withCredentials ? 'include' : 'same-origin');
+
+export { http, Http, getFetchCredentials };

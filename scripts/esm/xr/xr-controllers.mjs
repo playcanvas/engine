@@ -11,7 +11,9 @@ import { Script } from 'playcanvas';
  * Features:
  * - Automatic controller model loading from WebXR Input Profiles repository
  * - Support for both hand tracking and gamepad controllers
- * - Automatic cleanup on input source removal or XR session end
+ * - Automatic cleanup on input source removal or XR session end, with each model loaded once and
+ *   kept for later input sources and sessions until the script is destroyed
+ * - Models hidden while their pose is not tracked, such as behind the system menu
  * - Visibility control for integration with other XR scripts
  * - Fires events for controller lifecycle coordination
  *
@@ -40,9 +42,11 @@ class XrControllers extends Script {
     basePath = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles';
 
     /**
-     * Map of input sources to their controller data (entity, joint mappings, and asset).
+     * Map of input sources to their controller data (entity, joint mappings, asset, whether its
+     * pose is tracked, and the enabled state its entity returns to once tracking resumes). The asset
+     * is owned by the script and shared by every input source that uses the same model.
      *
-     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset }>}
+     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset<'container'>, tracked: boolean, enabledWhenTracked: boolean }>}
      */
     controllers = new Map();
 
@@ -53,6 +57,17 @@ class XrControllers extends Script {
      * @private
      */
     _pendingInputSources = new Set();
+
+    /**
+     * Model loads by URL, shared by every input source that uses the model. The asset registry
+     * hands back one asset per URL, so a model is loaded once and only unloaded when the script is
+     * destroyed: unloading it as one input source went away would take it from any other input
+     * source using it, or still waiting for it to load.
+     *
+     * @type {Map<string, { load: Promise<import('playcanvas').Asset<'container'>>, asset: import('playcanvas').Asset<'container'> | null }>}
+     * @private
+     */
+    _models = new Map();
 
     /**
      * Whether controller models are currently visible.
@@ -113,6 +128,17 @@ class XrControllers extends Script {
 
         this._handlers = null;
         this._pendingInputSources.clear();
+
+        // Release the models now, as an application being destroyed drops its asset registry next,
+        // and those still loading once they land
+        for (const model of this._models.values()) {
+            if (model.asset) {
+                this._releaseModel(model.asset);
+            } else {
+                model.load.then(asset => this._releaseModel(asset), () => {});
+            }
+        }
+        this._models.clear();
     }
 
     /**
@@ -135,12 +161,8 @@ class XrControllers extends Script {
         const controller = this.controllers.get(inputSource);
         if (!controller) return;
 
+        // the model asset stays loaded for other input sources and later sessions
         controller.entity.destroy();
-
-        if (controller.asset) {
-            this.app.assets.remove(controller.asset);
-            controller.asset.unload();
-        }
 
         this.controllers.delete(inputSource);
         this.app.fire('xr:controller:remove', inputSource);
@@ -163,7 +185,7 @@ class XrControllers extends Script {
      * @param {XrInputSource} inputSource - The input source.
      * @param {string[]} profiles - Array of profile IDs to try.
      * @param {number} [index=0] - Current index in the profiles array.
-     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset } | null>} The result or null.
+     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset<'container'> } | null>} The result or null.
      * @private
      */
     async _tryLoadProfiles(inputSource, profiles, index = 0) {
@@ -194,13 +216,9 @@ class XrControllers extends Script {
         // Load profiles sequentially and stop on first success
         const successfulResult = await this._tryLoadProfiles(inputSource, inputSource.profiles);
 
-        // Check if input source was removed during loading
+        // Check if input source was removed during loading. Its model stays loaded, as an input
+        // source added since may be using it
         if (!this._pendingInputSources.has(inputSource)) {
-            // Clean up the loaded asset if we got one
-            if (successfulResult?.asset) {
-                this.app.assets.remove(successfulResult.asset);
-                successfulResult.asset.unload();
-            }
             return;
         }
 
@@ -209,7 +227,8 @@ class XrControllers extends Script {
 
         if (successfulResult) {
             const { asset } = successfulResult;
-            const container = asset.resource;
+            // loaded by _loadProfile, so the resource is present
+            const container = /** @type {import('playcanvas').ContainerResource} */ (asset.resource);
             const entity = container.instantiateRenderEntity();
             this.app.root.addChild(entity);
 
@@ -227,7 +246,7 @@ class XrControllers extends Script {
                 }
             }
 
-            this.controllers.set(inputSource, { entity, jointMap, asset });
+            this.controllers.set(inputSource, { entity, jointMap, asset, tracked: true, enabledWhenTracked: true });
 
             // Fire event for other scripts to coordinate
             this.app.fire('xr:controller:add', inputSource, entity);
@@ -241,7 +260,7 @@ class XrControllers extends Script {
      *
      * @param {XrInputSource} inputSource - The input source.
      * @param {string} profileId - The profile ID to load.
-     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset } | null>} The result or null on failure.
+     * @returns {Promise<{ profileId: string, asset: import('playcanvas').Asset<'container'> } | null>} The result or null on failure.
      * @private
      */
     async _loadProfile(inputSource, profileId) {
@@ -257,19 +276,62 @@ class XrControllers extends Script {
             const layoutPath = profile.layouts[inputSource.handedness]?.assetPath || '';
             const assetPath = `${this.basePath}/${profile.profileId}/${inputSource.handedness}${layoutPath.replace(/^\/?(left|right)/, '')}`;
 
-            // Load the model
-            const asset = await new Promise((resolve, reject) => {
-                this.app.assets.loadFromUrl(assetPath, 'container', (err, asset) => {
-                    if (err) reject(err);
-                    else resolve(asset);
-                });
-            });
+            // the input source was removed, or the script destroyed, while the profile loaded
+            if (!this._pendingInputSources.has(inputSource)) return null;
 
+            const asset = await this._loadModel(assetPath);
             return { profileId, asset };
         } catch (error) {
             // Silently fail for individual profiles - we'll try the next one
             return null;
         }
+    }
+
+    /**
+     * Loads a model, or returns the load already made for its URL.
+     *
+     * @param {string} url - The model URL.
+     * @returns {Promise<import('playcanvas').Asset<'container'>>} The loaded model asset.
+     * @private
+     */
+    _loadModel(url) {
+        const existing = this._models.get(url);
+        if (existing) return existing.load;
+
+        const model = {
+            load: new Promise((resolve, reject) => {
+                this.app.assets.loadFromUrl(url, 'container', (err, asset) => {
+                    if (err) reject(err);
+                    else resolve(asset);
+                });
+            }),
+            asset: null
+        };
+        this._models.set(url, model);
+
+        model.load.then((asset) => {
+            model.asset = asset;
+        }, () => {
+            // forget a failed load, so a later input source can try again
+            if (this._models.get(url) === model) this._models.delete(url);
+        });
+
+        return model.load;
+    }
+
+    /**
+     * Removes a model from the asset registry and unloads it.
+     *
+     * @param {import('playcanvas').Asset<'container'>} asset - The model asset.
+     * @private
+     */
+    _releaseModel(asset) {
+        // a destroyed application has unloaded its assets and dropped its registry
+        const { assets } = this.app;
+        if (!assets) return;
+
+        assets.remove(asset);
+        asset.unload();
     }
 
     /**
@@ -295,7 +357,12 @@ class XrControllers extends Script {
         this._visible = value;
 
         for (const [, controller] of this.controllers) {
-            controller.entity.enabled = value;
+            // a model hidden while untracked takes the new state once tracking resumes
+            if (controller.tracked) {
+                controller.entity.enabled = value;
+            } else {
+                controller.enabledWhenTracked = value;
+            }
         }
     }
 
@@ -311,7 +378,27 @@ class XrControllers extends Script {
     update(dt) {
         if (!this.app.xr?.active || !this._visible) return;
 
-        for (const [inputSource, { entity, jointMap }] of this.controllers) {
+        // While the session is not fully visible, such as behind the system menu, the browser
+        // sends no poses, so the models would stay frozen where they were last tracked
+        const sessionVisible = this.app.xr.visibilityState === 'visible';
+
+        for (const [inputSource, controller] of this.controllers) {
+            // a hand also loses tracking when it leaves the view of the headset. A model hidden
+            // while untracked gets back the enabled state it had, so one the app hid stays hidden
+            const tracked = sessionVisible && (!inputSource.hand || inputSource.hand.tracking);
+            if (controller.tracked !== tracked) {
+                controller.tracked = tracked;
+                if (tracked) {
+                    controller.entity.enabled = controller.enabledWhenTracked;
+                } else {
+                    controller.enabledWhenTracked = controller.entity.enabled;
+                    controller.entity.enabled = false;
+                }
+            }
+            if (!tracked) continue;
+
+            const { entity, jointMap } = controller;
+
             if (inputSource.hand) {
                 // Update hand joint positions
                 for (const [joint, jointEntity] of jointMap) {

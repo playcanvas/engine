@@ -1,24 +1,19 @@
 import { now } from '../../core/time.js';
 import { Debug } from '../../core/debug.js';
-import { math } from '../../core/math/math.js';
-import { Vec3 } from '../../core/math/vec3.js';
 import { Color } from '../../core/math/color.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import {
-    FOG_NONE, FOG_LINEAR,
-    LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
-    LIGHTSHAPE_PUNCTUAL,
-    LAYERID_DEPTH,
-    PROJECTION_ORTHOGRAPHIC
+    LAYERID_DEPTH
 } from '../constants.js';
+import { LightList } from '../lighting/light-list.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 import { Renderer } from './renderer.js';
-import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
+import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -34,20 +29,18 @@ import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-sta
  * @import { WorldClusters } from '../lighting/world-clusters.js'
  */
 
-const _noLights = [[], [], []];
+const _noLights = new LightList();
 const tmpColor = new Color();
 
 const _drawCallList = {
     drawCalls: [],
     shaderInstances: [],
     isNewMaterial: [],
-    lightMaskChanged: [],
 
     clear: function () {
         this.drawCalls.length = 0;
         this.shaderInstances.length = 0;
         this.isNewMaterial.length = 0;
-        this.lightMaskChanged.length = 0;
     }
 };
 
@@ -76,6 +69,30 @@ function vogelSpherePrecalculationSamples(numSamples) {
  * @ignore
  */
 class ForwardRenderer extends Renderer {
+    /** @type {WorldClustersDebug|null} */
+    _worldClustersDebug = null;
+
+    /**
+     * Limits how much of one render pass is drawn, for stepping through its draw calls with a
+     * debugging tool. Matched by the camera and render target the pass renders with; for each layer
+     * of the pass, an entry per sub-layer (opaque, transparent) gives either how many of its sorted
+     * instances to draw, or `{ instance, index }` to draw up to and including that instance, found
+     * by identity and falling back to the index when it was culled. Layers without an entry draw in
+     * full. Only honored by the debug engine; other builds ignore it.
+     *
+     * @type {{ camera: Camera, renderTarget: RenderTarget|null, layers: Map<Layer, Array<number|{ instance: MeshInstance, index: number }|undefined>> }|null}
+     * @ignore
+     */
+    debugDrawLimit = null;
+
+    /**
+     * Whether this build honors {@link debugDrawLimit}, which only the debug engine does.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    debugDrawLimitSupported = false;
+
     /**
      * Create a new ForwardRenderer instance.
      *
@@ -86,6 +103,10 @@ class ForwardRenderer extends Renderer {
         super(graphicsDevice, scene);
 
         const device = this.device;
+
+        Debug.call(() => {
+            this.debugDrawLimitSupported = true;
+        });
 
         this._forwardDrawCalls = 0;
         this._materialSwitches = 0;
@@ -104,40 +125,12 @@ class ForwardRenderer extends Renderer {
         this.ambientId = scope.resolve('light_globalAmbient');
         this.skyboxIntensityId = scope.resolve('skyboxIntensity');
         this.cubeMapRotationMatrixId = scope.resolve('cubeMapRotationMatrix');
+        this.sceneEnvAtlasId = scope.resolve('scene_envAtlas');
+        this.sceneSkyboxId = scope.resolve('scene_skybox');
         this.pcssDiskSamplesId = scope.resolve('pcssDiskSamples[0]');
         this.pcssSphereSamplesId = scope.resolve('pcssSphereSamples[0]');
-        this.lightColorId = [];
-        this.lightDir = [];
-        this.lightDirId = [];
-        this.lightShadowMapId = [];
-        this.lightShadowMatrixId = [];
-        this.lightShadowParamsId = [];
-        this.lightShadowIntensity = [];
-        this.lightRadiusId = [];
-        this.lightPos = [];
-        this.lightPosId = [];
-        this.lightWidth = [];
-        this.lightWidthId = [];
-        this.lightHeight = [];
-        this.lightHeightId = [];
-        this.lightInAngleId = [];
-        this.lightOutAngleId = [];
-        this.lightCookieId = [];
-        this.lightCookieIntId = [];
-        this.lightCookieMatrixId = [];
-        this.lightCookieOffsetId = [];
-        this.lightShadowSearchAreaId = [];
-        this.lightCameraParamsId = [];
-        this.lightSoftShadowParamsId = [];
-
-        // shadow cascades
-        this.shadowMatrixPaletteId = [];
-        this.shadowCascadeDistancesId = [];
-        this.shadowCascadeCountId = [];
-        this.shadowCascadeBlendId = [];
-        this.shadowCascadeRadiiId = [];
-
-        this.screenSizeId = scope.resolve('uScreenSize');
+        this.screenSizeId = scope.resolve('screen_size');
+        this.screenSizeLegacyId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
 
         this.fogColor = new Float32Array(3);
@@ -148,6 +141,8 @@ class ForwardRenderer extends Renderer {
     }
 
     destroy() {
+        this._worldClustersDebug?.destroy();
+        this._worldClustersDebug = null;
         super.destroy();
     }
 
@@ -181,342 +176,31 @@ class ForwardRenderer extends Renderer {
 
         this.skyboxIntensityId.setValue(scene.physicalUnits ? scene.skyboxLuminance : scene.skyboxIntensity);
         this.cubeMapRotationMatrixId.setValue(scene._skyboxRotationMat3.data);
+
+        // the scene environment textures, sampled by materials without an environment of their own
+        this.sceneEnvAtlasId.setValue(scene.envAtlas);
+        this.sceneSkyboxId.setValue(scene.skybox);
     }
 
-    _resolveLight(scope, i) {
-        const light = `light${i}`;
-        this.lightColorId[i] = scope.resolve(`${light}_color`);
-        this.lightDir[i] = new Float32Array(3);
-        this.lightDirId[i] = scope.resolve(`${light}_direction`);
-        this.lightShadowMapId[i] = scope.resolve(`${light}_shadowMap`);
-        this.lightShadowMatrixId[i] = scope.resolve(`${light}_shadowMatrix`);
-        this.lightShadowParamsId[i] = scope.resolve(`${light}_shadowParams`);
-        this.lightShadowIntensity[i] = scope.resolve(`${light}_shadowIntensity`);
-        this.lightShadowSearchAreaId[i] = scope.resolve(`${light}_shadowSearchArea`);
-        this.lightRadiusId[i] = scope.resolve(`${light}_radius`);
-        this.lightPos[i] = new Float32Array(3);
-        this.lightPosId[i] = scope.resolve(`${light}_position`);
-        this.lightWidth[i] = new Float32Array(3);
-        this.lightWidthId[i] = scope.resolve(`${light}_halfWidth`);
-        this.lightHeight[i] = new Float32Array(3);
-        this.lightHeightId[i] = scope.resolve(`${light}_halfHeight`);
-        this.lightInAngleId[i] = scope.resolve(`${light}_innerConeAngle`);
-        this.lightOutAngleId[i] = scope.resolve(`${light}_outerConeAngle`);
-        this.lightCookieId[i] = scope.resolve(`${light}_cookie`);
-        this.lightCookieIntId[i] = scope.resolve(`${light}_cookieIntensity`);
-        this.lightCookieMatrixId[i] = scope.resolve(`${light}_cookieMatrix`);
-        this.lightCookieOffsetId[i] = scope.resolve(`${light}_cookieOffset`);
-        this.lightCameraParamsId[i] = scope.resolve(`${light}_cameraParams`);
-        this.lightSoftShadowParamsId[i] = scope.resolve(`${light}_softShadowParams`);
-
-        // shadow cascades
-        this.shadowMatrixPaletteId[i] = scope.resolve(`${light}_shadowMatrixPalette[0]`);
-        this.shadowCascadeDistancesId[i] = scope.resolve(`${light}_shadowCascadeDistances`);
-        this.shadowCascadeCountId[i] = scope.resolve(`${light}_shadowCascadeCount`);
-        this.shadowCascadeBlendId[i] = scope.resolve(`${light}_shadowCascadeBlend`);
-        this.shadowCascadeRadiiId[i] = scope.resolve(`${light}_shadowCascadeRadii`);
-    }
-
-    setLTCDirectionalLight(wtm, cnt, dir, campos, far) {
-        this.lightPos[cnt][0] = campos.x - dir.x * far;
-        this.lightPos[cnt][1] = campos.y - dir.y * far;
-        this.lightPos[cnt][2] = campos.z - dir.z * far;
-        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
-
-        const hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
-        this.lightWidth[cnt][0] = hWidth.x * far;
-        this.lightWidth[cnt][1] = hWidth.y * far;
-        this.lightWidth[cnt][2] = hWidth.z * far;
-        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
-
-        const hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
-        this.lightHeight[cnt][0] = hHeight.x * far;
-        this.lightHeight[cnt][1] = hHeight.y * far;
-        this.lightHeight[cnt][2] = hHeight.z * far;
-        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
-    }
-
-    dispatchDirectLights(dirs, mask, camera) {
-        let cnt = 0;
-
-        const scope = this.device.scope;
-
-        for (let i = 0; i < dirs.length; i++) {
-            if (!(dirs[i].mask & mask)) continue;
-
-            const directional = dirs[i];
-            const wtm = directional._node.getWorldTransform();
-
-            if (!this.lightColorId[cnt]) {
-                this._resolveLight(scope, cnt);
-            }
-
-            this.lightColorId[cnt].setValue(directional._colorLinear);
-
-            // Directional lights shine down the negative Y axis
-            wtm.getY(directional._direction).mulScalar(-1);
-            directional._direction.normalize();
-            this.lightDir[cnt][0] = directional._direction.x;
-            this.lightDir[cnt][1] = directional._direction.y;
-            this.lightDir[cnt][2] = directional._direction.z;
-            this.lightDirId[cnt].setValue(this.lightDir[cnt]);
-
-            if (directional.shape !== LIGHTSHAPE_PUNCTUAL) {
-                // non-punctual shape - NB directional area light specular is approximated by putting the area light at the far clip
-                this.setLTCDirectionalLight(wtm, cnt, directional._direction, camera._node.getPosition(), camera.farClip);
-            }
-
-            if (directional.castShadows) {
-
-                // ortho projection does not support cascades
-                Debug.call(() => {
-                    if (camera.projection === PROJECTION_ORTHOGRAPHIC && directional.numCascades !== 1) {
-                        Debug.errorOnce(`Camera [${camera.node.name}] with orthographic projection cannot use cascaded shadows, expect incorrect rendering.`);
-                    }
-                });
-
-                const lightRenderData = directional.getRenderData(camera, 0);
-                const biases = directional._getUniformBiasValues(lightRenderData);
-
-                this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
-                this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-
-                this.shadowMatrixPaletteId[cnt].setValue(directional._shadowMatrixPalette);
-                this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
-                this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
-                this.shadowCascadeBlendId[cnt].setValue(1 - directional.cascadeBlend);
-                this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
-
-                // PCSS-only uniforms — skipped for the common PCF / VSM paths, which don't
-                // declare or read them in the shader.
-                if (directional._isPcss) {
-
-                    this.lightSoftShadowParamsId[cnt].setValue(directional._softShadowParams);
-
-                    const shadowRT = lightRenderData.shadowCamera.renderTarget;
-                    if (shadowRT) {
-                        this.lightShadowSearchAreaId[cnt].setValue(directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width * lightRenderData.projectionCompensation);
-                    }
-
-                    const cameraParams = directional._shadowCameraParams;
-                    cameraParams.length = 4;
-                    // ortho radius (world half-extent of the directional shadow camera) — consumed by world-space PCSS
-                    cameraParams[0] = lightRenderData.projectionCompensation;
-                    cameraParams[1] = lightRenderData.shadowCamera._farClip;
-                    cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-                    cameraParams[3] = 1;
-                    this.lightCameraParamsId[cnt].setValue(cameraParams);
-
-                    // Per-cascade ortho radii. Only cameraParams.x (the ortho radius) varies per
-                    // cascade — the depth range is cascade-stable thanks to the union AABB. The
-                    // shader overrides cameraParams.x with the radius of the cascade a fragment
-                    // samples from, so far cascades don't inherit cascade 0's much smaller radius
-                    // (which would over-soften them). Packed into a single vec4 (max 4 cascades).
-                    // Stored per-light (setValue keeps the reference, read at draw time) so
-                    // multiple directional PCSS lights don't alias one shared buffer. Allocated
-                    // lazily here so only directional PCSS lights ever create it.
-                    const radii = directional._shadowCascadeRadii ??= new Float32Array(4);
-                    for (let c = 0; c < 4; c++) {
-                        const r = c < directional.numCascades ? directional.getRenderData(camera, c).projectionCompensation : 0;
-                        // fall back to cascade 0's radius for unused / not-yet-culled cascades to
-                        // avoid a zero ortho radius (which would divide-by-zero in the shader)
-                        radii[c] = r > 0 ? r : lightRenderData.projectionCompensation;
-                    }
-                    this.shadowCascadeRadiiId[cnt].setValue(radii);
-                }
-
-                const params = directional._shadowRenderParams;
-                params.length = 4;
-                params[0] = directional._shadowResolution;  // Note: this needs to change for non-square shadow maps (2 cascades). Currently square is used
-                params[1] = biases.normalBias;
-                params[2] = biases.bias;
-                params[3] = 0;
-                this.lightShadowParamsId[cnt].setValue(params);
-            }
-            cnt++;
-        }
-        return cnt;
-    }
-
-    setLTCPositionalLight(wtm, cnt) {
-        const hWidth = wtm.transformVector(new Vec3(-0.5, 0, 0));
-        this.lightWidth[cnt][0] = hWidth.x;
-        this.lightWidth[cnt][1] = hWidth.y;
-        this.lightWidth[cnt][2] = hWidth.z;
-        this.lightWidthId[cnt].setValue(this.lightWidth[cnt]);
-
-        const hHeight = wtm.transformVector(new Vec3(0, 0, 0.5));
-        this.lightHeight[cnt][0] = hHeight.x;
-        this.lightHeight[cnt][1] = hHeight.y;
-        this.lightHeight[cnt][2] = hHeight.z;
-        this.lightHeightId[cnt].setValue(this.lightHeight[cnt]);
-    }
-
-    dispatchOmniLight(scope, omni, cnt) {
-        const wtm = omni._node.getWorldTransform();
-
-        if (!this.lightColorId[cnt]) {
-            this._resolveLight(scope, cnt);
-        }
-
-        this.lightRadiusId[cnt].setValue(omni.attenuationEnd);
-        this.lightColorId[cnt].setValue(omni._colorLinear);
-        wtm.getTranslation(omni._position);
-        this.lightPos[cnt][0] = omni._position.x;
-        this.lightPos[cnt][1] = omni._position.y;
-        this.lightPos[cnt][2] = omni._position.z;
-        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
-
-        if (omni.shape !== LIGHTSHAPE_PUNCTUAL) {
-            // non-punctual shape
-            this.setLTCPositionalLight(wtm, cnt);
-        }
-
-        if (omni.castShadows) {
-
-            // shadow map
-            const lightRenderData = omni.getRenderData(null, 0);
-            this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
-
-            const biases = omni._getUniformBiasValues(lightRenderData);
-            const params = omni._shadowRenderParams;
-            params.length = 4;
-            params[0] = omni._shadowResolution;
-            params[1] = biases.normalBias;
-            params[2] = biases.bias;
-            params[3] = 1.0 / omni.attenuationEnd;
-            this.lightShadowParamsId[cnt].setValue(params);
-            this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
-
-            const pixelsPerMeter = omni.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
-            this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
-            const cameraParams = omni._shadowCameraParams;
-
-            cameraParams.length = 4;
-            cameraParams[0] = 0; // unused
-            cameraParams[1] = lightRenderData.shadowCamera._farClip;
-            cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-            cameraParams[3] = 0;
-            this.lightCameraParamsId[cnt].setValue(cameraParams);
-        }
-        if (omni._cookie) {
-            this.lightCookieId[cnt].setValue(omni._cookie);
-            this.lightShadowMatrixId[cnt].setValue(wtm.data);
-            this.lightCookieIntId[cnt].setValue(omni.cookieIntensity);
-        }
-    }
-
-    dispatchSpotLight(scope, spot, cnt) {
-        const wtm = spot._node.getWorldTransform();
-
-        if (!this.lightColorId[cnt]) {
-            this._resolveLight(scope, cnt);
-        }
-
-        this.lightInAngleId[cnt].setValue(spot._innerConeAngleCos);
-        this.lightOutAngleId[cnt].setValue(spot._outerConeAngleCos);
-        this.lightRadiusId[cnt].setValue(spot.attenuationEnd);
-        this.lightColorId[cnt].setValue(spot._colorLinear);
-        wtm.getTranslation(spot._position);
-        this.lightPos[cnt][0] = spot._position.x;
-        this.lightPos[cnt][1] = spot._position.y;
-        this.lightPos[cnt][2] = spot._position.z;
-        this.lightPosId[cnt].setValue(this.lightPos[cnt]);
-
-        if (spot.shape !== LIGHTSHAPE_PUNCTUAL) {
-            // non-punctual shape
-            this.setLTCPositionalLight(wtm, cnt);
-        }
-
-        // Spots shine down the negative Y axis
-        wtm.getY(spot._direction).mulScalar(-1);
-        spot._direction.normalize();
-        this.lightDir[cnt][0] = spot._direction.x;
-        this.lightDir[cnt][1] = spot._direction.y;
-        this.lightDir[cnt][2] = spot._direction.z;
-        this.lightDirId[cnt].setValue(this.lightDir[cnt]);
-
-        if (spot.castShadows) {
-
-            // shadow map
-            const lightRenderData = spot.getRenderData(null, 0);
-            this.lightShadowMapId[cnt].setValue(lightRenderData.shadowBuffer);
-
-            this.lightShadowMatrixId[cnt].setValue(lightRenderData.shadowMatrix.data);
-
-            const biases = spot._getUniformBiasValues(lightRenderData);
-            const params = spot._shadowRenderParams;
-            params.length = 4;
-            params[0] = spot._shadowResolution;
-            params[1] = biases.normalBias;
-            params[2] = biases.bias;
-            params[3] = 1.0 / spot.attenuationEnd;
-            this.lightShadowParamsId[cnt].setValue(params);
-            this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
-
-            const pixelsPerMeter = spot.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
-            const fov = lightRenderData.shadowCamera._fov * math.DEG_TO_RAD;
-            const fovRatio = 1.0 / Math.tan(fov / 2.0);
-            this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
-
-            const cameraParams = spot._shadowCameraParams;
-            cameraParams.length = 4;
-            cameraParams[0] = 0; // unused
-            cameraParams[1] = lightRenderData.shadowCamera._farClip;
-            cameraParams[2] = lightRenderData.shadowCamera._nearClip;
-            cameraParams[3] = 0;
-            this.lightCameraParamsId[cnt].setValue(cameraParams);
-        }
-
-        if (spot._cookie) {
-
-            // if shadow is not rendered, we need to evaluate light projection matrix
-            if (!spot.castShadows) {
-                const cookieMatrix = LightCamera.evalSpotCookieMatrix(spot);
-                this.lightShadowMatrixId[cnt].setValue(cookieMatrix.data);
-            }
-
-            this.lightCookieId[cnt].setValue(spot._cookie);
-            this.lightCookieIntId[cnt].setValue(spot.cookieIntensity);
-            if (spot._cookieTransform) {
-                spot._cookieTransformUniform[0] = spot._cookieTransform.x;
-                spot._cookieTransformUniform[1] = spot._cookieTransform.y;
-                spot._cookieTransformUniform[2] = spot._cookieTransform.z;
-                spot._cookieTransformUniform[3] = spot._cookieTransform.w;
-                this.lightCookieMatrixId[cnt].setValue(spot._cookieTransformUniform);
-                spot._cookieOffsetUniform[0] = spot._cookieOffset.x;
-                spot._cookieOffsetUniform[1] = spot._cookieOffset.y;
-                this.lightCookieOffsetId[cnt].setValue(spot._cookieOffsetUniform);
-            }
-        }
-    }
-
-    dispatchLocalLights(sortedLights, mask, usedDirLights) {
-
-        let cnt = usedDirLights;
-        const scope = this.device.scope;
-
-        const omnis = sortedLights[LIGHTTYPE_OMNI];
-        const numOmnis = omnis.length;
-        for (let i = 0; i < numOmnis; i++) {
-            const omni = omnis[i];
-            if (!(omni.mask & mask)) continue;
-            this.dispatchOmniLight(scope, omni, cnt);
-            cnt++;
-        }
-
-        const spts = sortedLights[LIGHTTYPE_SPOT];
-        const numSpts = spts.length;
-        for (let i = 0; i < numSpts; i++) {
-            const spot = spts[i];
-            if (!(spot.mask & mask)) continue;
-            this.dispatchSpotLight(scope, spot, cnt);
-            cnt++;
+    /**
+     * Sets the uniforms of the lights of a pass, each at its light slot. The slot order is the
+     * same for every mesh instance in the pass whatever its light mask selects, so this runs once
+     * per pass, before the view uniform buffer is filled - the light uniforms are part of it, see
+     * {@link Renderer#getViewUniformFormat} - and each shader reads its own slots. The shader
+     * generator reads the same list, so the two cannot disagree about which light a slot holds.
+     *
+     * @param {LightList} lightList - The lights of the pass.
+     * @param {Camera} camera - The camera, for the shadow data rendered for it.
+     */
+    dispatchLights(lightList, camera) {
+        const slots = lightList.slots;
+        for (let i = 0; i < slots.length; i++) {
+            this.getLightSlotUniforms(i).dispatch(slots[i], camera);
         }
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, sortedLights, layer, pass, viewUniformFormat) {
+    renderForwardPrepareMaterials(camera, renderTarget, drawCalls, lightList, layer, pass, viewUniformFormat) {
 
         // fog params from the scene, or overridden by the camera
         const fogParams = camera.fogParams ?? this.scene.fog;
@@ -526,11 +210,10 @@ class ForwardRenderer extends Renderer {
         shaderParams.fog = fogParams.type;
         shaderParams.srgbRenderTarget = renderTarget?.isColorBufferSrgb(0) ?? false;    // output gamma correction is determined by the render target
 
-        const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
+        const addCall = (drawCall, shaderInstance, isNewMaterial) => {
             _drawCallList.drawCalls.push(drawCall);
             _drawCallList.shaderInstances.push(shaderInstance);
             _drawCallList.isNewMaterial.push(isNewMaterial);
-            _drawCallList.lightMaskChanged.push(lightMaskChanged);
         };
 
         // start with empty arrays
@@ -538,9 +221,7 @@ class ForwardRenderer extends Renderer {
 
         const device = this.device;
         const scene = this.scene;
-        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
-        const lightHash = layer?.getLightHash(clusteredLightingEnabled) ?? 0;
-        let prevMaterial = null, prevObjDefs, prevLightMask;
+        let prevMaterial = null, prevObjDefs;
 
         const drawCallsCount = drawCalls.length;
         for (let i = 0; i < drawCallsCount; i++) {
@@ -561,12 +242,6 @@ class ForwardRenderer extends Renderer {
                 }
                 ForwardRenderer._skipRenderCounter++;
             }
-            if (layer) {
-                if (layer._skipRenderCounter >= layer.skipRenderAfter) {
-                    continue;
-                }
-                layer._skipRenderCounter++;
-            }
             // #endif
 
             // Skip hardware-instanced rendering with 0 instances. When draw commands (indirect /
@@ -581,7 +256,6 @@ class ForwardRenderer extends Renderer {
             const material = drawCall.material;
 
             const objDefs = drawCall._shaderDefs;
-            const lightMask = drawCall.mask;
 
             if (material && material === prevMaterial && objDefs !== prevObjDefs) {
                 prevMaterial = null; // force change shader if the object uses a different variant of the same material
@@ -593,23 +267,26 @@ class ForwardRenderer extends Renderer {
                 material.prepareForRender(device, scene);
             }
 
-            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, shaderParams, viewUniformFormat, sortedLights);
+            const shaderInstance = drawCall.getShaderInstance(pass, lightList, scene, shaderParams, viewUniformFormat);
 
-            addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
+            addCall(drawCall, shaderInstance, material !== prevMaterial);
 
             prevMaterial = material;
             prevObjDefs = objDefs;
-            prevLightMask = lightMask;
         }
 
         return _drawCallList;
     }
 
-    renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces) {
+    renderForwardInternal(camera, preparedCalls, pass, drawCallback, flipFaces) {
+        // nothing to draw - a pass that only clears gets here
+        const preparedCallsCount = preparedCalls.drawCalls.length;
+        if (preparedCallsCount === 0) {
+            return;
+        }
+
         const device = this.device;
-        const scene = this.scene;
         const flipFactor = flipFaces ? -1 : 1;
-        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
         // when this pass renders the scene textures, the additional attachments of the materials whose
         // shader does not generate them need masking off
@@ -634,7 +311,6 @@ class ForwardRenderer extends Renderer {
         const viewListEnd = (viewList && activeView >= 0) ? activeView + 1 : (viewList ? viewList.length : 0);
 
         // Render the scene
-        const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
             /** @type {MeshInstance} */
@@ -642,10 +318,8 @@ class ForwardRenderer extends Renderer {
 
             // We have a mesh instance
             const newMaterial = preparedCalls.isNewMaterial[i];
-            const lightMaskChanged = preparedCalls.lightMaskChanged[i];
             const shaderInstance = preparedCalls.shaderInstances[i];
             const material = drawCall.material;
-            const lightMask = drawCall.mask;
 
             if (shaderInstance.shader.failed) continue;
 
@@ -653,17 +327,12 @@ class ForwardRenderer extends Renderer {
 
                 const asyncCompile = false;
                 device.setShader(shaderInstance.shader, asyncCompile);
+                this.setupViewBindGroup(shaderInstance.shader);
 
-                // Uniforms I: material
+                // Uniforms II: material - on the scope, and through the material bind group
                 material.setParameters(device);
-
-                if (lightMaskChanged) {
-                    const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], lightMask, camera);
-
-                    if (!clusteredLightingEnabled) {
-                        this.dispatchLocalLights(sortedLights, lightMask, usedDirLights);
-                    }
-                }
+                this.setupMaterialBindGroup(material);
+                Debug.call(() => warnViewUniformMaterialParameters(material, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
                 this.alphaTestId.setValue(material.alphaTest);
 
@@ -682,8 +351,13 @@ class ForwardRenderer extends Renderer {
             const stencilBack = drawCall.stencilBack ?? material.stencilBack;
             device.setStencilState(stencilFront, stencilBack);
 
-            // Uniforms II: meshInstance overrides
+            // Uniforms II: meshInstance overrides - on the scope, and for a mesh instance that
+            // overrides uniforms of the material uniform buffer, through its copy of it
+            if (this.needsMaterialOverrideBindGroup(drawCall, material)) {
+                this.setupMaterialOverrideBindGroup(drawCall);
+            }
             drawCall.setParameters(device);
+            Debug.call(() => warnViewUniformMeshInstanceParameters(drawCall, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
             // mesh ID - used by the picker
             device.scope.resolve('meshInstanceId').setValue(drawCall.id);
@@ -698,8 +372,12 @@ class ForwardRenderer extends Renderer {
                 device.setVertexBuffer(instancingData.vertexBuffer);
             }
 
-            // mesh / mesh normal matrix
+            // mesh / mesh normal matrix - on the scope, or in the mesh instance storage for a shader
+            // reading it, which the draw indexes by its first instance. The scope is set for it too,
+            // as a fragment shader can still read the matrix_model uniform
             this.setMeshInstanceMatrices(drawCall, true);
+            const shader = shaderInstance.shader;
+            const firstInstance = shader.usesMeshInstanceStorage ? this.updateStorageSlot(drawCall, shader) : 0;
 
             this.setupMeshUniformBuffers(shaderInstance);
 
@@ -716,14 +394,15 @@ class ForwardRenderer extends Renderer {
 
                     device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
-                    // per-view dynamic bind group + offset captured during setupViewUniformBuffers
-                    // (the per-view scope values were set there too)
+                    // per-view bind group + offset of the shader's view bind group, captured by
+                    // setupViewBindGroup (the per-view scope values were set by
+                    // setupViewUniformBuffers)
                     this._viewOffsetScratch[0] = this._viewBindGroupOffsets[v];
                     device.setBindGroup(BINDGROUP_VIEW, this._viewBindGroups[v], this._viewOffsetScratch);
 
                     const first = v === viewListStart;
                     const last = v === viewListEnd - 1;
-                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last);
+                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last, firstInstance);
 
                     this._forwardDrawCalls++;
                     if (drawCall.instancingData) {
@@ -731,7 +410,7 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             } else {
-                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, true, true, firstInstance);
 
                 this._forwardDrawCalls++;
                 if (drawCall.instancingData) {
@@ -739,26 +418,35 @@ class ForwardRenderer extends Renderer {
                 }
             }
 
-            // Unset meshInstance overrides back to material values if next draw call will use the same material
+            // Unset meshInstance overrides back to material values if next draw call will use the
+            // same material. The same question as the one which bound the copy of the material bind
+            // group - a mesh instance whose parameters only needed splitting against a changed
+            // layout has no copy to restore from, as it overrides nothing
             if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
-                material.setParameters(device, drawCall.parameters);
+                this.restoreMaterialOverrides(drawCall, material);
+            }
+
+            // the parameters its material does not have are restored to the values they replaced,
+            // such as global ones, whatever the next draw - no material sets them again
+            if (drawCall._scopeParameters.length > 0) {
+                drawCall.restoreReplacedParameters(material);
             }
 
             DebugGraphics.popGpuMarker(device);
         }
     }
 
-    renderForward(camera, renderTarget, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces, viewUniformFormat) {
+    renderForward(camera, renderTarget, allDrawCalls, lightList, pass, drawCallback, layer, flipFaces, viewUniformFormat) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, sortedLights, layer, pass, viewUniformFormat);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, renderTarget, allDrawCalls, lightList, layer, pass, viewUniformFormat);
 
         // render mesh instances
-        this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
+        this.renderForwardInternal(camera, preparedCalls, pass, drawCallback, flipFaces);
 
         _drawCallList.clear();
 
@@ -785,13 +473,14 @@ class ForwardRenderer extends Renderer {
      * clustered lighting.
      * @param {MeshInstance[]} [options.meshInstances] - The mesh instances to be rendered. Use
      * when layer is not provided.
-     * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
+     * @param {LightList} [options.lightList] - The lights to render with. Use when layer is not
+     * provided; none by default.
      * @param {Function} [options.drawCallback] - Function called before each mesh instance is
      * rendered, with the mesh instance as the argument.
      * @param {UniformBufferFormat} [options.viewUniformFormat] - A custom view uniform buffer
-     * format to use for this layer. When not provided, the renderer's default view uniform format
-     * is used. The shaders are processed and the view uniform buffer is set up using the same
-     * format, so they always match.
+     * format to use for this layer. When not provided, the renderer's format for the lights of the
+     * pass is used, see {@link Renderer#getViewUniformFormat}. The shaders are processed and the
+     * view uniform buffer is set up using the same format, so they always match.
      */
     renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, options = {}) {
 
@@ -800,7 +489,7 @@ class ForwardRenderer extends Renderer {
 
         this.setupViewport(camera, renderTarget);
 
-        let visible, splitLights;
+        let visible, lightList;
         if (layer) {
             // #if _PROFILER
             const sortTime = now();
@@ -815,8 +504,28 @@ class ForwardRenderer extends Renderer {
             const culledInstances = layer.getCulledInstances(camera);
             visible = transparent ? culledInstances.transparent : culledInstances.opaque;
 
-            // add debug mesh instances to visible list
+            // add debug lines to visible list
             scene.immediate.onPreRenderLayer(layer, visible, transparent);
+
+            this._worldClustersDebug?.onPreRenderLayer(layer, visible);
+
+            // cut the list short when a debugging tool steps through this pass, after the debug
+            // lines were added so the indices match what the tool saw. A copy, as the layer's own
+            // list is left as culled for the tool to read
+            Debug.call(() => {
+                const limit = this.debugDrawLimit;
+                if (limit && limit.camera === camera && limit.renderTarget === renderTarget) {
+                    const entry = limit.layers.get(layer)?.[transparent ? 1 : 0];
+                    if (entry !== undefined) {
+                        let count = entry;
+                        if (typeof entry === 'object') {
+                            const found = visible.indexOf(entry.instance);
+                            count = (found >= 0 ? found : entry.index) + 1;
+                        }
+                        visible = visible.slice(0, Math.max(0, count));
+                    }
+                }
+            });
 
             // set up layer uniforms
             if (layer.requiresLightCube) {
@@ -824,11 +533,11 @@ class ForwardRenderer extends Renderer {
                 this.constantLightCube.setValue(this.lightCube.colors);
             }
 
-            splitLights = layer.splitLights;
+            lightList = layer.getLightList(clusteredLightingEnabled);
 
         } else {
             visible = options.meshInstances;
-            splitLights = options.splitLights ?? _noLights;
+            lightList = options.lightList ?? _noLights;
         }
 
         Debug.assert(visible, 'Either layer or options.meshInstances must be provided');
@@ -842,7 +551,8 @@ class ForwardRenderer extends Renderer {
             if (layer) {
                 if (!this.clustersDebugRendered && scene.lighting.debugLayer === layer.id) {
                     this.clustersDebugRendered = true;
-                    WorldClustersDebug.render(lightClusters, this.scene);
+                    this._worldClustersDebug ??= new WorldClustersDebug();
+                    this._worldClustersDebug.render(lightClusters, scene);
                 }
             }
         }
@@ -855,21 +565,31 @@ class ForwardRenderer extends Renderer {
 
         const viewList = this.setCameraUniforms(camera, renderTarget);
 
-        // ensure the default view uniform format exists - renderForwardLayer can run outside
-        // the main frame update (e.g. the picker and lightmapper passes)
-        this.initViewUniformFormat(scene.clusteredLightingEnabled);
+        // Nothing to draw and nothing to clear: leave before the per-pass work below. An empty
+        // layer step is common - a layer's opaque and transparent sublayers are both enabled and
+        // neither is filtered out when empty.
+        const clearColor = options.clearColor ?? false;
+        const clearDepth = options.clearDepth ?? false;
+        const clearStencil = options.clearStencil ?? false;
+        const clearing = clearColor || clearDepth || clearStencil;
+        if (visible.length === 0 && !clearing) {
+            return;
+        }
 
-        // callers may supply a custom view uniform format, otherwise the renderer default is used
-        const viewUniformFormat = options.viewUniformFormat ?? this.viewUniformFormat;
+        // Uniforms I: the lights of the pass, dispatched once - the slot order is the same for every
+        // mesh instance drawn, whatever its light mask selects. They go before the view uniform
+        // buffer is filled, as the light uniforms are part of it.
+        this.dispatchLights(lightList, camera);
+
+        // callers may supply a custom view uniform format, otherwise the one matching the lights of
+        // the pass is used - the same format the shaders of the pass are processed against
+        const viewUniformFormat = options.viewUniformFormat ?? this.getViewUniformFormat(clusteredLightingEnabled, lightList);
 
         // view uniforms always go through a uniform buffer (on all backends)
         this.setupViewUniformBuffers(viewUniformFormat, viewList);
 
         // clearing - do it after the view bind groups are set up, to avoid overriding those
-        const clearColor = options.clearColor ?? false;
-        const clearDepth = options.clearDepth ?? false;
-        const clearStencil = options.clearStencil ?? false;
-        if (clearColor || clearDepth || clearStencil) {
+        if (clearing) {
             this.clear(camera, clearColor, clearDepth, clearStencil);
         }
 
@@ -880,7 +600,7 @@ class ForwardRenderer extends Renderer {
         this.renderForward(camera,
             renderTarget,
             visible,
-            splitLights,
+            lightList,
             shaderPass,
             options.drawCallback ?? null,
             layer,
@@ -894,23 +614,20 @@ class ForwardRenderer extends Renderer {
 
     setFogConstants(fogParams) {
 
-        if (fogParams.type !== FOG_NONE) {
+        // all of them, whatever the fog type - they are part of the view uniform buffer, see
+        // getViewUniformFormat
 
-            // color in linear space
-            tmpColor.linear(fogParams.color);
-            const fogUniform = this.fogColor;
-            fogUniform[0] = tmpColor.r;
-            fogUniform[1] = tmpColor.g;
-            fogUniform[2] = tmpColor.b;
-            this.fogColorId.setValue(fogUniform);
+        // color in linear space
+        tmpColor.linear(fogParams.color);
+        const fogUniform = this.fogColor;
+        fogUniform[0] = tmpColor.r;
+        fogUniform[1] = tmpColor.g;
+        fogUniform[2] = tmpColor.b;
+        this.fogColorId.setValue(fogUniform);
 
-            if (fogParams.type === FOG_LINEAR) {
-                this.fogStartId.setValue(fogParams.start);
-                this.fogEndId.setValue(fogParams.end);
-            } else {
-                this.fogDensityId.setValue(fogParams.density);
-            }
-        }
+        this.fogStartId.setValue(fogParams.start);
+        this.fogEndId.setValue(fogParams.end);
+        this.fogDensityId.setValue(fogParams.density);
     }
 
     setSceneConstants() {
@@ -926,6 +643,8 @@ class ForwardRenderer extends Renderer {
         this._screenSize[2] = 1 / device.width;
         this._screenSize[3] = 1 / device.height;
         this.screenSizeId.setValue(this._screenSize);
+        // Keep legacy shader declarations working through the non-view uniform path.
+        this.screenSizeLegacyId.setValue(this._screenSize);
 
         this.pcssDiskSamplesId.setValue(this.pcssDiskSamples);
         this.pcssSphereSamplesId.setValue(this.pcssSphereSamples);
@@ -948,7 +667,7 @@ class ForwardRenderer extends Renderer {
 
             // clustered lighting passes
             const { shadowsEnabled, cookiesEnabled } = scene.lighting;
-            this._renderPassUpdateClustered.update(frameGraph, shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
+            this._renderPassUpdateClustered.update(shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
             frameGraph.addRenderPass(this._renderPassUpdateClustered);
 
         } else {
@@ -1106,6 +825,7 @@ class ForwardRenderer extends Renderer {
      */
     update(comp) {
 
+        this._worldClustersDebug?.frameUpdate();
         this.frameUpdate();
         this.shadowRenderer.frameUpdate();
 

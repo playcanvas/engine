@@ -656,12 +656,12 @@ describe('ImageElement', function () {
         expect(e.element.color.b).to.equal(1);
         expect(e.element.opacity).to.equal(1);
 
-        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('mesh_color').data;
         expect(emissive[0]).to.equal(1);
         expect(emissive[1]).to.equal(1);
         expect(emissive[2]).to.equal(1);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.equal(1);
     });
 
@@ -680,12 +680,12 @@ describe('ImageElement', function () {
         expect(e.element.color.g).to.be.closeTo(color.g, 0.001);
         expect(e.element.color.b).to.be.closeTo(color.b, 0.001);
 
-        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('mesh_color').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.be.closeTo(0.1, 0.001);
     });
 
@@ -702,12 +702,12 @@ describe('ImageElement', function () {
         expect(e.element.color.b).to.equal(0);
         expect(e.element.opacity).to.equal(1);
 
-        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('mesh_color').data;
         expect(emissive[0]).to.equal(0);
         expect(emissive[1]).to.equal(0);
         expect(emissive[2]).to.equal(0);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.equal(1);
     });
 
@@ -721,7 +721,7 @@ describe('ImageElement', function () {
 
         expect(e.element.opacity).to.equal(0);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.equal(0);
     });
 
@@ -742,12 +742,12 @@ describe('ImageElement', function () {
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('mesh_color').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
     });
@@ -770,12 +770,12 @@ describe('ImageElement', function () {
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('mesh_color').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
     });
@@ -804,12 +804,12 @@ describe('ImageElement', function () {
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('mesh_color').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
     });
@@ -839,14 +839,102 @@ describe('ImageElement', function () {
 
         expect(e.element.material).to.equal(defaultMaterial);
 
-        const emissive = e.element._image._renderable.meshInstance.getParameter('material_emissive').data;
+        const emissive = e.element._image._renderable.meshInstance.getParameter('mesh_color').data;
         expect(emissive[0]).to.be.closeTo(linear.r, 0.001);
         expect(emissive[1]).to.be.closeTo(linear.g, 0.001);
         expect(emissive[2]).to.be.closeTo(linear.b, 0.001);
 
-        const opacity = e.element._image._renderable.meshInstance.getParameter('material_opacity').data;
+        const opacity = e.element._image._renderable.meshInstance.getParameter('mesh_color').data[3];
         expect(opacity).to.be.closeTo(0.4, 0.001);
 
+    });
+
+    it('Keeps image tint independent on shared materials and propagates it to the unmask mesh', function () {
+        const a = new Entity();
+        const b = new Entity();
+        app.root.addChild(a);
+        app.root.addChild(b);
+        a.addComponent('element', { type: 'image' });
+        b.addComponent('element', { type: 'image' });
+        const material = a.element.material;
+        expect(b.element.material).to.equal(material);
+        const mi = a.element._image._renderable.meshInstance;
+        const color = mi.getParameter('mesh_color').data;
+        a.element.opacity = 0.25;
+        a.element.color = new Color(0.5, 0.25, 0.75, 0);
+        expect(color[3]).to.equal(0.25);
+        const rgb = Array.from(color).slice(0, 3);
+        a.element.opacity = 0.75;
+        expect(Array.from(color).slice(0, 3)).to.deep.equal(rgb);
+        expect(color[3]).to.equal(0.75);
+        expect(mi.getParameter('mesh_color').data).to.equal(color);
+        expect(mi.getParameter('material_emissive')).to.be.undefined;
+        expect(mi.getParameter('material_opacity')).to.be.undefined;
+        expect(material.getParameter('mesh_color')).to.be.undefined;
+        expect(material.opacity).to.equal(1);
+        expect(Array.from(b.element._image._renderable.meshInstance.getParameter('mesh_color').data)).to.deep.equal([1, 1, 1, 1]);
+
+        a.element.mask = true;
+        const unmask = a.element._image._renderable.unmaskMeshInstance;
+        expect(unmask.getParameter('mesh_color').data).to.equal(color);
+        a.element.opacity = 0.5;
+        expect(unmask.getParameter('mesh_color').data[3]).to.equal(0.5);
+    });
+
+    it('Preserves independent legacy color and opacity overrides for custom image materials', function () {
+        const e = new Entity();
+        app.root.addChild(e);
+        e.addComponent('element', { type: 'image', color: new Color(0.5, 0.25, 0.75), opacity: 0.25, mask: true });
+        const custom = new StandardMaterial();
+        custom.emissive.set(0.2, 0.3, 0.4);
+        custom.opacity = 0.8;
+        e.element.material = custom;
+        const meshes = [e.element._image._renderable.meshInstance, e.element._image._renderable.unmaskMeshInstance];
+        for (const mi of meshes) {
+            expect(mi.getParameter('mesh_color')).to.be.undefined;
+            expect(mi.getParameter('material_emissive')).to.be.undefined;
+            expect(mi.getParameter('material_opacity')).to.be.undefined;
+        }
+        e.element.color = new Color(0.25, 0.5, 0.75);
+        for (const mi of meshes) {
+            expect(mi.getParameter('material_emissive').data).to.have.lengthOf(3);
+            expect(mi.getParameter('material_opacity')).to.be.undefined;
+        }
+        e.element.opacity = 0.5;
+        expect(meshes[0].getParameter('material_opacity').data).to.equal(0.5);
+        e.element.material = null;
+        e.element.material = custom;
+        e.element.opacity = 0.75;
+        for (const mi of meshes) {
+            expect(mi.getParameter('material_opacity').data).to.equal(0.75);
+            expect(mi.getParameter('material_emissive')).to.be.undefined;
+        }
+        e.element.material = null;
+        for (const mi of meshes) {
+            expect(mi.getParameter('mesh_color').data[3]).to.equal(0.75);
+            expect(mi.getParameter('material_emissive')).to.be.undefined;
+            expect(mi.getParameter('material_opacity')).to.be.undefined;
+        }
+        expect(custom.emissive).to.deep.equal(new Color(0.2, 0.3, 0.4));
+        expect(custom.opacity).to.equal(0.8);
+        custom.destroy();
+    });
+
+    it('Supplies mesh color to custom image materials that opt in', function () {
+        const e = new Entity();
+        app.root.addChild(e);
+        e.addComponent('element', { type: 'image', opacity: 0.25 });
+        const custom = e.element.material.clone();
+        e.element.material = custom;
+        const mi = e.element._image._renderable.meshInstance;
+        expect(custom.getDefine('MESH_COLOR')).to.equal(true);
+        expect(Array.from(mi.getParameter('mesh_color').data)).to.deep.equal([1, 1, 1, 0.25]);
+        e.element.color = new Color(0, 1, 0);
+        expect(Array.from(mi.getParameter('mesh_color').data)).to.deep.equal([0, 1, 0, 0.25]);
+        expect(mi.getParameter('material_emissive')).to.be.undefined;
+        expect(mi.getParameter('material_opacity')).to.be.undefined;
+        e.element.material = null;
+        custom.destroy();
     });
 
     it('Offscreen element is culled', function () {

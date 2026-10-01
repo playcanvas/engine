@@ -35,6 +35,8 @@ mat4 dModelMatrix;
     #include "uv1VS"
 #endif
 
+// expand attributes for additional uv sets (UV2 and up)
+#include "uvSetAttributeVS, UV_SET_COUNT"
 
 #ifdef LINEAR_DEPTH
     #ifndef VIEWMATRIX
@@ -107,6 +109,10 @@ void main(void) {
         #endif
     #endif
 
+    // expand code for additional uv sets (UV2 and up)
+    #include "uvSetVS, UV_SET_COUNT"
+    #include "uvSetVaryingVS, UV_VARYING_SET_COUNT"
+
     // expand code for uv transforms
     #include "uvTransformVS, UV_TRANSFORMS_COUNT"
 
@@ -121,6 +127,11 @@ void main(void) {
     #ifdef LINEAR_DEPTH
         // linear depth from the worldPosition, see getLinearDepth
         vLinearDepth = -(matrix_view * vec4(vPositionW, 1.0)).z;
+    #endif
+
+    #ifdef LIT_DYNAMIC_REFRACTION
+        // the scale of the model matrix, which scales the thickness of the refraction
+        vModelScale = vec3(length(dModelMatrix[0].xyz), length(dModelMatrix[1].xyz), length(dModelMatrix[2].xyz));
     #endif
 
     #ifdef MSDF

@@ -80,6 +80,7 @@ import litShaderArgsPS from '../chunks/standard/frag/litShaderArgs.js';
 import litShaderCorePS from '../chunks/standard/frag/litShaderCore.js';
 import litShadowMainPS from '../chunks/lit/frag/pass-shadow/litShadowMain.js';
 import ltcPS from '../chunks/lit/frag/ltc.js';
+import meshInstanceStorageVS from '../chunks/common/vert/meshInstanceStorage.js';
 import metalnessPS from '../chunks/standard/frag/metalness.js';
 import msdfPS from '../chunks/common/frag/msdf.js';
 import metalnessModulatePS from '../chunks/lit/frag/metalnessModulate.js';
@@ -151,6 +152,9 @@ import transmissionPS from '../chunks/standard/frag/transmission.js';
 import twoSidedLightingPS from '../chunks/lit/frag/twoSidedLighting.js';
 import uv0VS from '../chunks/lit/vert/uv0.js';
 import uv1VS from '../chunks/lit/vert/uv1.js';
+import uvSetAttributeVS from '../chunks/lit/vert/uvSetAttribute.js';
+import uvSetVS from '../chunks/lit/vert/uvSet.js';
+import uvSetVaryingVS from '../chunks/lit/vert/uvSetVarying.js';
 import uvTransformVS from '../chunks/lit/vert/uvTransform.js';
 import uvTransformUniformsPS from '../chunks/lit/vert/uvTransformUniforms.js';
 import viewDirPS from '../chunks/lit/frag/viewDir.js';
@@ -257,6 +261,7 @@ const shaderChunksWGSL = {
     litUserMainEndPS: '',  // empty chunk allowing user to add custom code
     litUserMainEndVS: '',  // empty chunk allowing user to add custom code
     ltcPS,
+    meshInstanceStorageVS,
     metalnessPS,
     metalnessModulatePS,
     morphPS,
@@ -328,6 +333,9 @@ const shaderChunksWGSL = {
     twoSidedLightingPS,
     uv0VS,
     uv1VS,
+    uvSetAttributeVS,
+    uvSetVS,
+    uvSetVaryingVS,
     uvTransformVS,
     uvTransformUniformsPS,
     viewDirPS,

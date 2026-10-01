@@ -4,6 +4,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
+ * @import { EventHandle } from '../../core/event-handle.js'
  * @import { XrManager } from './xr-manager.js'
  */
 
@@ -63,6 +64,12 @@ class XrView extends RenderView {
      * @private
      */
     _depthInfo = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtDeviceLost = null;
 
     /**
      * @type {Uint8Array}
@@ -132,7 +139,7 @@ class XrView extends RenderView {
         }
 
         if (this._textureColor || this._textureDepth) {
-            device.on('devicelost', this._onDeviceLost, this);
+            this._evtDeviceLost = device.on('devicelost', this._onDeviceLost, this);
         }
     }
 
@@ -151,7 +158,7 @@ class XrView extends RenderView {
      * AR system. This texture can be used (not limited to) for reconstructing real world
      * geometry, virtual object placement, occlusion of virtual object by the real world geometry,
      * and more.
-     * The format of this texture is any of {@link PIXELFORMAT_LA8}, {@link PIXELFORMAT_DEPTH}, or
+     * The format of this texture is any of `PIXELFORMAT_LA8`, {@link PIXELFORMAT_DEPTH}, or
      * {@link PIXELFORMAT_R32F} based on {@link XrViews#depthPixelFormat}. It is UV transformed
      * based on the underlying AR system which can be normalized using {@link depthUvMatrix}.
      * Equals to null if camera depth is not supported.
@@ -218,7 +225,7 @@ class XrView extends RenderView {
     /**
      * An eye with which this view is associated. Can be any of:
      *
-     * - {@link XREYE_NONE}: None - inidcates a monoscopic view (likely mobile phone screen).
+     * - {@link XREYE_NONE}: None - indicates a monoscopic view (likely mobile phone screen).
      * - {@link XREYE_LEFT}: Left - indicates left eye view.
      * - {@link XREYE_RIGHT}: Right - indicates a right eye view.
      *
@@ -365,6 +372,10 @@ class XrView extends RenderView {
     /** @ignore */
     destroy() {
         this._depthInfo = null;
+
+        // the graphics device outlives the view, which its listener would otherwise keep alive
+        this._evtDeviceLost?.off();
+        this._evtDeviceLost = null;
 
         if (this._textureColor) {
             this._textureColor.destroy();

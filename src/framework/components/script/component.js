@@ -54,7 +54,7 @@ class ScriptComponent extends Component {
     _attributeDataMap = new Map();
 
     /**
-     * Fired when a {@link ScriptType} instance is created and attached to the script component.
+     * Fired when a {@link Script} instance is created and attached to the script component.
      * This event is available in two forms. They are as follows:
      *
      * 1. `create` - Fired when a script instance is created. The name of the script type and the
@@ -75,7 +75,7 @@ class ScriptComponent extends Component {
     static EVENT_CREATE = 'create';
 
     /**
-     * Fired when a {@link ScriptType} instance is destroyed and removed from the script component.
+     * Fired when a {@link Script} instance is destroyed and removed from the script component.
      * This event is available in two forms. They are as follows:
      *
      * 1. `destroy` - Fired when a script instance is destroyed. The name of the script type and
@@ -144,7 +144,7 @@ class ScriptComponent extends Component {
     static EVENT_STATE = 'state';
 
     /**
-     * Fired when the index of a {@link ScriptType} instance is changed in the script component.
+     * Fired when the index of a {@link Script} instance is changed in the script component.
      * This event is available in two forms. They are as follows:
      *
      * 1. `move` - Fired when a script instance is moved. The name of the script type, the script
@@ -165,7 +165,7 @@ class ScriptComponent extends Component {
     static EVENT_MOVE = 'move';
 
     /**
-     * Fired when a {@link ScriptType} instance had an exception. The handler is passed the script
+     * Fired when a {@link Script} instance had an exception. The handler is passed the script
      * instance, the exception and the method name that the exception originated from.
      *
      * @event
@@ -188,7 +188,7 @@ class ScriptComponent extends Component {
         /**
          * Holds all script instances for this component.
          *
-         * @type {ScriptType[]}
+         * @type {Script[]}
          * @private
          */
         this._scripts = [];
@@ -280,7 +280,7 @@ class ScriptComponent extends Component {
      * Gets the array of all script instances attached to an entity. Use create, destroy and move to
      * change attached scripts or their order.
      *
-     * @type {ReadonlyArray<ScriptType>}
+     * @type {ReadonlyArray<Script>}
      */
     get scripts() {
         return this._scripts;
@@ -646,7 +646,7 @@ class ScriptComponent extends Component {
     /**
      * Detect if script is attached to an entity.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof Script} nameOrType - The name or class of the {@link Script}.
      * @returns {boolean} If script is attached to an entity.
      * @example
      * if (entity.script.has('playerController')) {
@@ -667,18 +667,36 @@ class ScriptComponent extends Component {
     }
 
     /**
-     * Get a script instance (if attached).
+     * Get a script instance (if attached) by its class. The result is typed as an instance of that
+     * class, so no cast is needed.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {ScriptType|null} If script is attached, the instance is returned. Otherwise null
-     * is returned.
+     * @template {Script} T
+     * @overload
+     * @param {new (...args: any[]) => T} type - The script class.
+     * @returns {T|null} If a script of the class is attached, the instance is returned. Otherwise
+     * null is returned.
+     * @example
+     * const controller = entity.script.get(PlayerController); // PlayerController | null
+     */
+    /**
+     * Get a script instance (if attached) by its name.
+     *
+     * @overload
+     * @param {string} name - The name of the script.
+     * @returns {Script|null} If a script with the name is attached, the instance is returned.
+     * Otherwise null is returned, including while a script declared by name is still awaiting its
+     * class to be added to the {@link ScriptRegistry}.
      * @example
      * const controller = entity.script.get('playerController');
      */
+    /**
+     * @param {string|typeof Script} nameOrType - The name or class of the script.
+     * @returns {Script|null} The script instance, or null.
+     */
     get(nameOrType) {
         if (typeof nameOrType === 'string') {
-            const data = this._scriptsIndex[nameOrType];
-            return data ? data.instance : null;
+            // an entry that is still awaiting its script class has no instance yet
+            return this._scriptsIndex[nameOrType]?.instance || null;
         }
 
         if (!nameOrType) return null;
@@ -690,29 +708,63 @@ class ScriptComponent extends Component {
     }
 
     /**
-     * Create a script instance and attach to an entity script component.
+     * Create a script instance of the specified class and attach it to the entity's script
+     * component. The result is typed as an instance of that class, so no cast is needed.
      *
-     * @param {string|typeof Script} nameOrType - The name or type of {@link Script}.
+     * @template {Script} T
+     * @overload
+     * @param {new (...args: any[]) => T} type - The script class.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
      * true.
      * @param {object} [args.attributes] - Object with values for attributes (if any), where key is
      * name of an attribute.
-     * @param {object} [args.properties] - Object with values that are **assigned** to the script instance.
+     * @param {object} [args.properties] - Object with values that are **assigned** to the script
+     * instance.
      * @param {boolean} [args.preloading] - If script instance is created during preload. If true,
      * script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
      * -1, which means append it at the end.
-     * @returns {ScriptType|null} Returns an instance of a {@link ScriptType} if successfully
-     * attached to an entity, or null if it failed because a script with a same name has already
-     * been added or if the {@link ScriptType} cannot be found by name in the
-     * {@link ScriptRegistry}.
+     * @returns {T|null} Returns an instance of the class if successfully attached to the entity,
+     * or null if it failed because a script with the same name has already been added.
+     * @example
+     * const controller = entity.script.create(PlayerController, {
+     *     properties: {
+     *         speed: 4
+     *     }
+     * }); // PlayerController | null
+     */
+    /**
+     * Create a script instance by name and attach it to the entity's script component. The name
+     * is looked up in the application's {@link ScriptRegistry}.
+     *
+     * @overload
+     * @param {string} name - The name of the script.
+     * @param {object} [args] - Object with arguments for a script.
+     * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
+     * true.
+     * @param {object} [args.attributes] - Object with values for attributes (if any), where key is
+     * name of an attribute.
+     * @param {object} [args.properties] - Object with values that are **assigned** to the script
+     * instance.
+     * @param {boolean} [args.preloading] - If script instance is created during preload. If true,
+     * script and attributes must be initialized manually. Defaults to false.
+     * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
+     * -1, which means append it at the end.
+     * @returns {Script|null} Returns the script instance if successfully attached to the entity,
+     * or null if it failed because a script with the same name has already been added or if the
+     * name cannot be found in the {@link ScriptRegistry}.
      * @example
      * entity.script.create('playerController', {
      *     attributes: {
      *         speed: 4
      *     }
      * });
+     */
+    /**
+     * @param {string|typeof Script} nameOrType - The name or class of the script.
+     * @param {object} [args] - Object with arguments for a script.
+     * @returns {Script|null} The new script instance, or null.
      */
     create(nameOrType, args = {}) {
         const self = this;
@@ -848,7 +900,7 @@ class ScriptComponent extends Component {
     /**
      * Destroy the script instance that is attached to an entity.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof Script} nameOrType - The name or class of the {@link Script}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
      * entity.script.destroy('playerController');
@@ -912,7 +964,7 @@ class ScriptComponent extends Component {
     /**
      * Swap the script instance.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof Script} nameOrType - The name or class of the {@link Script}.
      * @returns {boolean} If it was successfully swapped.
      * @private
      */
@@ -1084,7 +1136,7 @@ class ScriptComponent extends Component {
     /**
      * Move script instance to different position to alter update order of scripts within entity.
      *
-     * @param {string|typeof ScriptType} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof Script} nameOrType - The name or class of the {@link Script}.
      * @param {number} ind - New position index.
      * @returns {boolean} If it was successfully moved.
      * @example

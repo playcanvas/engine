@@ -34,7 +34,7 @@ const vertexGLSL = /* glsl */ `
     attribute vec4 instance_dashFlags;
 
     uniform mat4 matrix_viewProjection;
-    uniform vec4 uScreenSize;
+    uniform vec4 screen_size;
     #ifdef WIDE_LINE_WORLD_SPACE_WIDTH
         uniform mat4 matrix_projection;
     #endif
@@ -55,17 +55,17 @@ const vertexGLSL = /* glsl */ `
 
     vec2 toScreen(vec4 clipPosition) {
         float w = abs(clipPosition.w) > 0.00001 ? clipPosition.w : 0.00001;
-        return clipPosition.xy / w * uScreenSize.xy * 0.5;
+        return clipPosition.xy / w * screen_size.xy * 0.5;
     }
 
     vec4 offsetClip(vec4 clipPosition, vec2 pixelOffset) {
-        clipPosition.xy += pixelOffset * (2.0 * uScreenSize.zw) * clipPosition.w;
+        clipPosition.xy += pixelOffset * (2.0 * screen_size.zw) * clipPosition.w;
         return clipPosition;
     }
 
     float resolveHalfWidth(float width, vec4 clipPosition) {
         #ifdef WIDE_LINE_WORLD_SPACE_WIDTH
-            float pixelsPerWorldUnit = abs(matrix_projection[1][1]) * uScreenSize.y * 0.5 /
+            float pixelsPerWorldUnit = abs(matrix_projection[1][1]) * screen_size.y * 0.5 /
                 max(abs(clipPosition.w), 0.00001);
             return width * 0.5 * pixelsPerWorldUnit;
         #else
@@ -224,7 +224,7 @@ const vertexWGSL = /* wgsl */ `
     attribute instance_dashFlags: vec4f;
 
     uniform matrix_viewProjection: mat4x4f;
-    uniform uScreenSize: vec4f;
+    uniform screen_size: vec4f;
     #ifdef WIDE_LINE_WORLD_SPACE_WIDTH
         uniform matrix_projection: mat4x4f;
     #endif
@@ -245,19 +245,19 @@ const vertexWGSL = /* wgsl */ `
 
     fn toScreen(clipPosition: vec4f) -> vec2f {
         let w = select(0.00001, clipPosition.w, abs(clipPosition.w) > 0.00001);
-        return clipPosition.xy / w * uniform.uScreenSize.xy * 0.5;
+        return clipPosition.xy / w * uniform.screen_size.xy * 0.5;
     }
 
     fn offsetClip(position: vec4f, pixelOffset: vec2f) -> vec4f {
         var clipPosition = position;
-        clipPosition.x += pixelOffset.x * (2.0 * uniform.uScreenSize.z) * clipPosition.w;
-        clipPosition.y += pixelOffset.y * (2.0 * uniform.uScreenSize.w) * clipPosition.w;
+        clipPosition.x += pixelOffset.x * (2.0 * uniform.screen_size.z) * clipPosition.w;
+        clipPosition.y += pixelOffset.y * (2.0 * uniform.screen_size.w) * clipPosition.w;
         return clipPosition;
     }
 
     fn resolveHalfWidth(width: f32, clipPosition: vec4f) -> f32 {
         #ifdef WIDE_LINE_WORLD_SPACE_WIDTH
-            let pixelsPerWorldUnit = abs(uniform.matrix_projection[1][1]) * uniform.uScreenSize.y * 0.5 /
+            let pixelsPerWorldUnit = abs(uniform.matrix_projection[1][1]) * uniform.screen_size.y * 0.5 /
                 max(abs(clipPosition.w), 0.00001);
             return width * 0.5 * pixelsPerWorldUnit;
         #else

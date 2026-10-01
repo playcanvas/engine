@@ -15,7 +15,7 @@ void getAnisotropy() {
 #endif
 
     #ifdef STD_ANISOTROPY_TEXTURE
-    vec3 anisotropyTex = texture2DBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_UV}, textureBias).rgb;
+    vec3 anisotropyTex = texture2DBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_UV}, {STD_TEXTURE_BIAS}).rgb;
     dAnisotropy *= anisotropyTex.b;
 
     vec2 anisotropyRotationFromTex = anisotropyTex.rg * 2.0 - vec2(1.0);

@@ -30,8 +30,9 @@ import { PhysicsJoint } from './physics-joint.js';
 
 /**
  * @typedef {object} PhysicsMeshSource
- * @property {number} id - A stable cache key for the source geometry (mesh id). Backends may
- * cache built triangle data per id for the lifetime of the world.
+ * @property {number} id - A stable cache key for the source geometry (mesh id). Sources sharing
+ * an id must describe identical unit-scale geometry - backends may cache built triangle data per
+ * id for the lifetime of the world.
  * @property {Float32Array|number[]} positions - Vertex positions, possibly interleaved.
  * @property {number} stride - The number of floats between consecutive positions (3 when
  * tightly packed).
@@ -42,8 +43,9 @@ import { PhysicsJoint } from './physics-joint.js';
  * convexHull is true - hulls consume every position.
  * @property {boolean} convexHull - Build a convex hull instead of a triangle mesh.
  * @property {boolean} checkDuplicates - Weld duplicate vertices while building triangle data.
- * @property {Vec3|null} bakeScale - Scaling to bake into the positions while building, or null.
- * @property {Vec3|null} shapeScale - Scaling to apply to the built sub-shape, or null.
+ * @property {Vec3|null} scale - The per-instance scale of the source geometry, or null for unit
+ * scale. Backends apply it to the built sub-shape, or bake it into the triangle data when they
+ * cannot - data baked at one scale must never be reused at another.
  * @property {Vec3} position - The sub-shape position within the mesh shape. Collision component
  * offsets are already applied by the caller.
  * @property {Quat} rotation - The sub-shape rotation within the mesh shape.
@@ -61,7 +63,6 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {number} [axis] - The capsule/cylinder/cone alignment axis: 0 (X), 1 (Y) or 2 (Z).
  * @property {PhysicsMeshSource[]} [sources] - The geometry sources of a 'mesh' shape. Mesh
  * shapes are created in one atomic call so backends may build immutable composites.
- * @property {Vec3|null} [scale] - Whole-shape scaling of a 'mesh' shape, or null.
  * @ignore
  */
 
@@ -70,7 +71,10 @@ import { PhysicsJoint } from './physics-joint.js';
  * methods. JointComponent structurally satisfies this contract and passes itself.
  *
  * @typedef {object} PhysicsJointSettings
- * @property {boolean} enableLimits - Whether hinge/slider limits are enabled.
+ * @property {number} breakImpulse - The impulse threshold above which the joint breaks, or
+ * Infinity for an unbreakable joint. Applied at creation - later changes go through
+ * {@link PhysicsJoint#setBreakImpulse}.
+ * @property {boolean} enableLimits - Whether hinge, slider and ball joint limits are enabled.
  * @property {Vec2} limits - The hinge (degrees) or slider (meters) limits.
  * @property {number} motorSpeed - The hinge (deg/s) or slider (m/s) motor speed.
  * @property {number} maxMotorForce - The maximum motor force. The motor is engaged while > 0.
@@ -127,7 +131,10 @@ import { PhysicsJoint } from './physics-joint.js';
  * @property {boolean} triggerB - True if the second body has no contact response.
  * @property {number} contactCount - The number of contact points (always >= 1).
  * @property {(index: number, out: ContactPoint) => void} readContact - Fills out with contact
- * point index from A's perspective, allocation free.
+ * point index from A's perspective, allocation free: point and localPoint lie on A, pointOther
+ * and localPointOther on B, and normal is the normal of B's surface at the contact, pointing away
+ * from B toward A. The system derives B's view of the contact by swapping the points and negating
+ * the normal.
  * @ignore
  */
 
@@ -181,6 +188,19 @@ class PhysicsWorld {
     nativeWorld = null;
 
     /**
+     * Whether mesh shapes honor the per-instance {@link PhysicsMeshSource} scale, so that a
+     * mesh shape is rebuilt when the world scale of its entity changes. Backends that cannot
+     * scale mesh instances independently return false, and mesh shapes are then left alone when
+     * their entity is rescaled.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get supportsMeshScaling() {
+        return true;
+    }
+
+    /**
      * Destroys the world and all native resources it owns. The world is unusable afterwards.
      *
      * @ignore
@@ -189,8 +209,8 @@ class PhysicsWorld {
     }
 
     /**
-     * Applies gravity if it differs from the current world gravity. Safe (and expected) to be
-     * called every frame - backends deduplicate.
+     * Applies the given world space gravity. Called once when the backend is installed and again
+     * whenever the system's gravity changes, so backends can apply the value unconditionally.
      *
      * @param {Vec3} gravity - The world space gravity.
      * @ignore
@@ -359,6 +379,8 @@ class PhysicsWorld {
      * @param {object} [options] - The raycast options.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {boolean} [options.hitBackFaces] - Whether the ray can hit the back faces of mesh
+     * colliders. Defaults to true.
      * @returns {RaycastResult|null} The hit, or null if there was none.
      * @ignore
      */
@@ -374,6 +396,8 @@ class PhysicsWorld {
      * @param {object} [options] - The raycast options.
      * @param {number} [options.filterCollisionGroup] - Collision group to apply to the raycast.
      * @param {number} [options.filterCollisionMask] - Collision mask to apply to the raycast.
+     * @param {boolean} [options.hitBackFaces] - Whether the ray can hit the back faces of mesh
+     * colliders. Defaults to true.
      * @param {any[]} [options.filterTags] - Tags filters. Defined the same way as a
      * {@link Tags#has} query but within an array. Hits filtered here are never allocated.
      * @param {Function} [options.filterCallback] - Custom function to use to filter entities.

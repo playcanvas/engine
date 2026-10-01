@@ -1,16 +1,16 @@
-import { Debug } from '../../../core/debug.js';
 import { UniformBufferFormat, UniformFormat } from '../uniform-buffer-format.js';
 import { BlendState } from '../blend-state.js';
 import {
     PRIMITIVE_TRISTRIP, SHADERLANGUAGE_WGSL,
     UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC4, BINDGROUP_MESH, CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_MESH_UB
+    BINDGROUP_MESH_UB, BINDGROUP_MATERIAL, CULLFACE_NONE, FRONTFACE_CCW, FUNC_ALWAYS, STENCILOP_REPLACE
 } from '../constants.js';
 import { Shader } from '../shader.js';
 import { DynamicBindGroup } from '../bind-group.js';
 import { UniformBuffer } from '../uniform-buffer.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { DepthState } from '../depth-state.js';
+import { StencilParameters } from '../stencil-parameters.js';
 import webgpuClear from '../shader-chunks/frag/webgpu-clear.js';
 
 const primitive = {
@@ -51,6 +51,13 @@ class WebgpuClearRenderer {
 
         // uniform data
         this.colorData = new Float32Array(4);
+
+        // stencil state replacing the stencil value with the reference value, which is set to the
+        // clear value
+        this.stencilState = new StencilParameters({
+            func: FUNC_ALWAYS,
+            zpass: STENCILOP_REPLACE
+        });
     }
 
     destroy() {
@@ -77,6 +84,9 @@ class WebgpuClearRenderer {
             // not using mesh bind group
             device.setBindGroup(BINDGROUP_MESH, device.emptyBindGroup);
 
+            // not using material bind group
+            device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
+
             // setup clear color
             let blendState;
             if ((flags & CLEARFLAG_COLOR) && (renderTarget.colorBuffer || renderTarget.impl.assignedColorTexture)) {
@@ -100,13 +110,15 @@ class WebgpuClearRenderer {
             }
 
             // setup stencil clear
+            let stencilState = null;
             if ((flags & CLEARFLAG_STENCIL) && renderTarget.stencil) {
-                Debug.warnOnce('ClearRenderer does not support stencil clear at the moment');
+                stencilState = this.stencilState;
+                stencilState.ref = options.stencil ?? defaultOptions.stencil;
             }
 
             uniformBuffer.endUpdate();
 
-            device.setDrawStates(blendState, depthState);
+            device.setDrawStates(blendState, depthState, CULLFACE_NONE, FRONTFACE_CCW, stencilState, stencilState);
 
             // render 4 vertices without vertex buffer
             device.setShader(this.shader);

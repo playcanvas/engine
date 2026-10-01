@@ -5,6 +5,29 @@ import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
 
 describe('BoundingBox', function () {
 
+    describe('#equals', function () {
+
+        it('returns true for boxes with the same center and half extents', function () {
+            const a = new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
+            const b = new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
+            expect(a.equals(b)).to.equal(true);
+            expect(a.equals(a.clone())).to.equal(true);
+        });
+
+        it('returns false when the center differs', function () {
+            const a = new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
+            const b = new BoundingBox(new Vec3(1, 2, 4), new Vec3(4, 5, 6));
+            expect(a.equals(b)).to.equal(false);
+        });
+
+        it('returns false when the half extents differ', function () {
+            const a = new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
+            const b = new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 7));
+            expect(a.equals(b)).to.equal(false);
+        });
+
+    });
+
     describe('#containsPoint', function () {
 
         it('returns true for point at center', function () {

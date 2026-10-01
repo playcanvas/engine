@@ -124,7 +124,7 @@ class CoreExporter {
 
         device.scope.resolve('source').setValue(texture);
         device.setBlendState(BlendState.NOBLEND);
-        drawQuadWithShader(device, renderTarget, shader);
+        drawQuadWithShader(device, renderTarget, shader, undefined, undefined, 'ExportTexture');
 
         // async read back the pixels of the texture
         // released as soon as the read settles, before the pixels are copied out and turned into a

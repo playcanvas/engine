@@ -132,7 +132,6 @@ camera.setLocalPosition(0, 0.5, 0);
 const cameraFrame = new CameraFrame(app, camera.camera);
 cameraFrame.rendering.samples = 4;
 cameraFrame.rendering.toneMapping = TONEMAP_ACES2;
-cameraFrame.bloom.enabled = true;
 cameraFrame.bloom.intensity = 0.01;
 cameraFrame.update();
 

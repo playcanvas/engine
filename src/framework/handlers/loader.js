@@ -5,6 +5,7 @@ import { http } from '../../platform/net/http.js';
  * @import { AppBase } from '../app-base.js'
  * @import { AssetRegistry } from '../asset/asset-registry.js'
  * @import { Asset } from '../asset/asset.js'
+ * @import { AssetType } from '../asset/asset.js'
  * @import { BundlesFilterCallback } from '../asset/asset-registry.js'
  * @import { ResourceHandler } from './handler.js'
  */
@@ -18,15 +19,26 @@ import { http } from '../../platform/net/http.js';
  */
 
 /**
- * Load resource data, potentially from remote sources. Caches resource on load to prevent multiple
- * requests. Add ResourceHandlers to handle different types of resources.
+ * The ResourceLoader turns a URL and an asset type into a loaded resource. It owns one
+ * {@link ResourceHandler} per type, dispatches each request to the matching handler, and caches the
+ * result by URL and type so the same request is fetched once. Each application has one at
+ * {@link AppBase#loader}.
  *
- * Parsers for formats the engine does not load by default ship in the package and are registered
- * on an existing handler rather than added as one:
- * `playcanvas/scripts/esm/parsers/obj-model.mjs` adds `.obj` model loading via
- * `loader.getHandler('model').addParser(new ObjModelParser(device))`, and
- * `playcanvas/scripts/esm/parsers/spz-parser.mjs` adds `.spz` Gaussian-splat loading via
- * `loader.getHandler('gsplat').addParser(new SpzParser(app))`.
+ * Most code never calls the loader directly: the {@link AssetRegistry} does so on its behalf when
+ * an {@link Asset} loads. Use the loader to add support for a new asset type with
+ * {@link addHandler}, to reach an existing handler with {@link getHandler}, or to tune requests
+ * with {@link maxConcurrentRequests}, {@link withCredentials} and {@link enableRetry}.
+ *
+ * Parsers for formats the engine does not load by default ship in the package and are registered on
+ * an existing handler rather than added as one: `playcanvas/scripts/esm/parsers/obj-model.mjs` adds
+ * `.obj` model loading and `playcanvas/scripts/esm/parsers/spz-parser.mjs` adds `.spz`
+ * Gaussian-splat loading.
+ *
+ * @example
+ * app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice));
+ * @example
+ * app.loader.getHandler('gsplat').addParser(new SpzParser(app));
+ * @category Asset
  */
 class ResourceLoader {
     /**
@@ -46,29 +58,15 @@ class ResourceLoader {
      * and `open()`. Handlers can optionally support patch(asset, assets) to handle dependencies on
      * other assets.
      *
-     * @param {string} type - The name of the resource type that the handler will be registered
-     * with. Can be:
-     *
-     * - {@link ASSET_ANIMATION}
-     * - {@link ASSET_AUDIO}
-     * - {@link ASSET_IMAGE}
-     * - {@link ASSET_JSON}
-     * - {@link ASSET_MODEL}
-     * - {@link ASSET_MATERIAL}
-     * - {@link ASSET_TEXT}
-     * - {@link ASSET_TEXTURE}
-     * - {@link ASSET_CUBEMAP}
-     * - {@link ASSET_SHADER}
-     * - {@link ASSET_CSS}
-     * - {@link ASSET_HTML}
-     * - {@link ASSET_SCRIPT}
-     * - {@link ASSET_CONTAINER}
-     *
+     * @param {AssetType | (string & {})} type - The name of the resource type that the handler will
+     * be registered with: one of the built-in {@link AssetType} names, such as `'texture'`, `'model'`
+     * or `'container'`, or a new name for an application-defined handler. See {@link AssetMap} for
+     * typing the resource of a new name.
      * @param {ResourceHandler} handler - An instance of a resource handler
      * supporting at least `load()` and `open()`.
      * @example
-     * const loader = new ResourceLoader();
-     * loader.addHandler("json", new JsonHandler());
+     * // register a handler for a new 'csv' asset type (see ResourceHandler for the class)
+     * app.loader.addHandler('csv', new CsvHandler(app));
      */
     addHandler(type, handler) {
         this._handlers[type] = handler;
@@ -78,7 +76,7 @@ class ResourceLoader {
     /**
      * Remove a {@link ResourceHandler} for a resource type.
      *
-     * @param {string} type - The name of the type that the handler will be removed.
+     * @param {AssetType | (string & {})} type - The name of the type that the handler will be removed.
      */
     removeHandler(type) {
         delete this._handlers[type];
@@ -87,7 +85,8 @@ class ResourceLoader {
     /**
      * Get a {@link ResourceHandler} for a resource type.
      *
-     * @param {string} type - The name of the resource type that the handler is registered with.
+     * @param {AssetType | (string & {})} type - The name of the resource type that the handler is
+     * registered with.
      * @returns {ResourceHandler|undefined} The registered handler, or
      * undefined if the requested handler is not registered.
      */
@@ -404,8 +403,9 @@ class ResourceLoader {
      *
      * Set this before assets start loading (i.e. before {@link AppBase#preload} or
      * {@link AssetRegistry#load}). Note this is a process-global setting (it applies to the shared
-     * HTTP layer), so with multiple applications the last value set wins. It applies to all
-     * XHR-based requests, which covers the large majority of asset loads.
+     * HTTP layer), so with multiple applications the last value set wins. It covers every asset
+     * load, including the asset bundle and gaussian splat loaders that fetch their data directly
+     * rather than through the HTTP layer.
      *
      * @type {boolean}
      * @example

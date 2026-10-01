@@ -34,7 +34,7 @@ class InterpolatedKey {
 /**
  * Represents a skeleton used to play animations.
  *
- * @category Animation
+ * @category Animation (Legacy)
  */
 class Skeleton {
     /**

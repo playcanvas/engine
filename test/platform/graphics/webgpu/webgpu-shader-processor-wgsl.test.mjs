@@ -4,6 +4,26 @@ import { WebgpuShaderProcessorWGSL } from '../../../../src/platform/graphics/web
 
 describe('WebgpuShaderProcessorWGSL', function () {
 
+    it('preserves flat either interpolation and matches varying locations across stages', function () {
+        const color = '@interpolate(flat, either) color: vec4f';
+        const id = '@interpolate(flat, either) id: u32';
+        const vertex = WebgpuShaderProcessorWGSL.extract(`varying ${color};\nvarying ${id};`);
+        const fragment = WebgpuShaderProcessorWGSL.extract(`varying ${id};\nvarying ${color};`);
+        const varyingMap = new Map();
+
+        const vertexCode = WebgpuShaderProcessorWGSL.processVaryings(vertex.varyings, varyingMap, true, {});
+        const fragmentCode = WebgpuShaderProcessorWGSL.processVaryings(fragment.varyings, varyingMap, false, {});
+
+        for (const code of [vertexCode, fragmentCode]) {
+            expect(code).to.contain(`@location(0) ${color},`);
+            expect(code).to.contain(`@location(1) ${id},`);
+        }
+        expect(fragmentCode).to.contain('var<private> color: vec4f;');
+        expect(fragmentCode).to.contain('var<private> id: u32;');
+        expect(fragmentCode).to.contain('color = input.color;');
+        expect(fragmentCode).to.contain('id = input.id;');
+    });
+
     it('inserts generated declarations after WGSL directives', function () {
         const source = `enable dual_source_blending;
 @fragment fn fragmentMain(input: FragmentInput) -> FragmentOutput {

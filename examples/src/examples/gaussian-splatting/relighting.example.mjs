@@ -58,6 +58,7 @@ import {
     TRACEID_BUFFERS,
     TRACEID_TEXTURES,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Tracing,
     TranslateGizmo,
@@ -122,6 +123,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -628,7 +631,7 @@ data.on('fogDensity:set', () => {
 });
 
 // HDRI environment loading
-/** @type {Map<string, { skybox: Texture, envAtlas: Texture }>} */
+/** @type {Map<string, { source: Texture, skybox: Texture, envAtlas: Texture }>} */
 const hdriCache = new Map();
 
 const applyEnvironment = async (/** @type {string} */ name) => {
@@ -657,7 +660,7 @@ const applyEnvironment = async (/** @type {string} */ name) => {
         const lighting = EnvLighting.generateLightingSource(source);
         const envAtlas = EnvLighting.generateAtlas(lighting);
         lighting.destroy();
-        hdriCache.set(url, { skybox, envAtlas });
+        hdriCache.set(url, { source, skybox, envAtlas });
     }
 
     const cached = /** @type {{ skybox: Texture, envAtlas: Texture }} */ (hdriCache.get(url));
@@ -665,6 +668,22 @@ const applyEnvironment = async (/** @type {string} */ name) => {
     app.scene.envAtlas = cached.envAtlas;
     app.scene.sky.type = SKYTYPE_INFINITE;
 };
+
+// Rebuild every cached preset so switching environments after recovery remains valid.
+device.on('devicerestored', () => {
+    hdriCache.forEach((cached) => {
+        const oldSkybox = cached.skybox;
+        cached.skybox = EnvLighting.generateSkyboxCubemap(cached.source);
+        const lighting = EnvLighting.generateLightingSource(cached.source);
+        EnvLighting.generateAtlas(lighting, { target: cached.envAtlas });
+        lighting.destroy();
+
+        if (app.scene.skybox === oldSkybox) {
+            app.scene.skybox = cached.skybox;
+        }
+        oldSkybox.destroy();
+    });
+});
 
 data.on('environment:set', () => {
     applyEnvironment(data.get('environment')).catch((err) => {
@@ -799,8 +818,7 @@ data.on('logBuffers', () => {
 app.on('update', () => {
     // debug display of the relighting texture
     if (data.get('debugRt') && relighting.texture) {
-        // @ts-ignore engine-tsd
-        app.drawTexture(0.6, -0.6, 0.7, 0.7, relighting.texture);
+        textures.draw(relighting.texture, 0.625, 0.625, 0.35, 0.35);
     }
 
     // Log textures for one frame if requested

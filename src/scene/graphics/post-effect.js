@@ -84,7 +84,7 @@ class PostEffect {
         }
 
         this.device.setBlendState(BlendState.NOBLEND);
-        drawQuadWithShader(this.device, target, shader, viewport);
+        drawQuadWithShader(this.device, target, shader, viewport, undefined, shader.name);
     }
 }
 

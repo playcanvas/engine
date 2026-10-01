@@ -11,10 +11,30 @@ import { SpriteComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
+ * @import { SpriteAnimationClip } from './sprite-animation-clip.js'
  */
 
 /**
- * Manages creation of {@link SpriteComponent}s.
+ * Options of the `sprite` component accepted by {@link SpriteComponentSystem} that differ from the
+ * properties of {@link SpriteComponent}. Each replaces the same-named property of the options that
+ * {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} SpriteComponentOptionsOverrides
+ * @property {number | null} [batchGroupId] - Same as {@link SpriteComponent#batchGroupId}. `null`
+ * selects no batch group.
+ * @property {{ [name: string]: SpriteAnimationClip | { name?: string, fps?: number, loop?: boolean, spriteAsset?: number } }} [clips] -
+ * Same as {@link SpriteComponent#clips}, also accepting the plain clip data of
+ * {@link SpriteComponent#addClip}.
+ * @property {Color | number[]} [color] - Same as {@link SpriteComponent#color}, also accepting an
+ * `[r, g, b]` array.
+ * @ignore
+ */
+
+/**
+ * Manages the {@link SpriteComponent}s of an application. Reach it through `app.systems.sprite`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category Graphics
  */
@@ -65,6 +85,8 @@ class SpriteComponentSystem extends ComponentSystem {
             texture.unlock();
 
             const material = new StandardMaterial();
+            // Sprite color is per-instance data, independent of the shared material uniforms.
+            material.setDefine('MESH_COLOR', true);
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
             material.emissive.set(1, 1, 1);
             material.emissiveMap = texture;

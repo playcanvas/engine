@@ -11,8 +11,7 @@ import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
-import { GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE } from '../constants.js';
-import { SPLAT_BUDGET_DEFAULT } from './constants.js';
+import { GSPLAT_BUDGET_LIMIT, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -21,6 +20,7 @@ import { SPLAT_BUDGET_DEFAULT } from './constants.js';
  * @import { GSplatResourceBase } from '../gsplat/gsplat-resource-base.js'
  * @import { Scene } from '../scene.js'
  * @import { MemBlock } from '../../core/block-allocator.js'
+ * @import { GSplatParams } from './gsplat-params.js'
  */
 
 // Module-scope scratch (stateless)
@@ -29,8 +29,8 @@ const _localCamPos = new Vec3();
 const _closestPt = new Vec3();
 const _meshInstanceAabb = new BoundingBox();
 const _tempPlacementAabb = new BoundingBox();
-const _cameraDeltas = { translationDelta: 0 };
-const tempOctreesTicked = new Set();
+const _cameraDeltas = { translationDelta: 0, refreshAll: false };
+const tempUniqueOctrees = new Set();
 const _queuedSplats = new Set();
 const _updatedSplats = [];
 const _splatsWithSH = [];
@@ -68,6 +68,9 @@ const ALLOCATOR_GROW_MULTIPLIER = 1.15;
  * @ignore
  */
 class GSplatWorld {
+    /** @type {GSplatParams} */
+    _gsplat;
+
     /** @type {GraphicsDevice} */
     _device;
 
@@ -143,6 +146,22 @@ class GSplatWorld {
     /** @type {Vec3} */
     _lastColorUpdateCameraPos = new Vec3(Infinity, Infinity, Infinity);
 
+    /**
+     * Whether the spherical harmonics colors of all splats were last evaluated for an orthographic
+     * camera, or null before they were first evaluated.
+     *
+     * @type {boolean|null}
+     */
+    _colorViewOrtho = null;
+
+    /**
+     * The camera forward the spherical harmonics colors of all splats were last evaluated with. An
+     * orthographic camera evaluates every splat along it.
+     *
+     * @type {Vec3}
+     */
+    _colorViewForward = new Vec3();
+
     /** @type {GSplatPlacement[]} */
     _layerPlacements = [];
 
@@ -172,15 +191,17 @@ class GSplatWorld {
     /**
      * @param {GraphicsDevice} device - The graphics device.
      * @param {Scene} scene - The scene.
+     * @param {GSplatParams} gsplat - The GSplat parameters.
      */
-    constructor(device, scene) {
+    constructor(device, scene, gsplat) {
         this._device = device;
         this._scene = scene;
+        this._gsplat = gsplat;
 
-        const budget = scene.gsplat.splatBudget;
+        const budget = gsplat.splatBudget;
         this._allocator = new BlockAllocator(budget > 0 ? Math.ceil(budget * ALLOCATOR_GROW_MULTIPLIER) : 0, ALLOCATOR_GROW_MULTIPLIER);
 
-        this._workBuffer = new GSplatWorkBuffer(device, scene.gsplat.format);
+        this._workBuffer = new GSplatWorkBuffer(device, gsplat.format);
         this._workBufferFormatVersion = this._workBuffer.format.extraStreamsVersion;
     }
 
@@ -339,7 +360,7 @@ class GSplatWorld {
         result.sortNeeded = false;
 
         // wholesale format-object swap (e.g. dataFormat changed): recreate the work buffer
-        const currentFormat = this._scene.gsplat.format;
+        const currentFormat = this._gsplat.format;
         if (this._workBuffer.format !== currentFormat) {
             this._workBuffer.destroy();
             this._workBuffer = new GSplatWorkBuffer(this._device, currentFormat);
@@ -457,6 +478,17 @@ class GSplatWorld {
             }
         }
 
+        // Standalone placements destroyed before reconcile have a null resource as well, which would
+        // crash the world-state rebuild below. Drop them the same way.
+        const layerPlacements = this._layerPlacements;
+        for (let i = layerPlacements.length - 1; i >= 0; i--) {
+            if (!layerPlacements[i].resource) {
+                layerPlacements.splice(i, 1);
+                this._layerPlacementsDirty = true;
+                this._placementSetChanged = true;
+            }
+        }
+
         // Cadence: a free-running metronome raises a latched request every 10 frames.
         if (--this._framesTillFullUpdate <= 0) {
             this._framesTillFullUpdate = 10;
@@ -504,7 +536,7 @@ class GSplatWorld {
             });
 
             // check if any octree instances have moved enough to require LOD update
-            const threshold = this._scene.gsplat.lodUpdateDistance;
+            const threshold = this._gsplat.lodUpdateDistance;
             for (const [, inst] of this._octreeInstances) {
                 const moved = inst.testMoved(threshold);
                 anyOctreeMoved ||= moved;
@@ -523,7 +555,7 @@ class GSplatWorld {
         });
 
         // if parameters are dirty, rebuild world state
-        if (this._scene.gsplat.dirty) {
+        if (this._gsplat.dirty) {
             this._layerPlacementsDirty = true;
             result.overdrawDirty = true;
 
@@ -540,7 +572,7 @@ class GSplatWorld {
         }
 
         // when camera or octree need LOD evaluated, or params are dirty, or resources completed, or new instances added
-        if (cameraMovedOrRotatedForLod || anyOctreeMoved || this._scene.gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
+        if (cameraMovedOrRotatedForLod || anyOctreeMoved || this._gsplat.dirty || anyInstanceNeedsLodUpdate || hasNewInstances) {
 
             // update the previous position where LOD was evaluated for octree instances
             for (const [, inst] of this._octreeInstances) {
@@ -552,16 +584,9 @@ class GSplatWorld {
             this._lastLodCameraFwd.copy(camera.forward);
             this._lastLodCameraFov = camera.camera.fov;
 
-            // LOD selection is always budget driven. A budget generous enough for the whole scene
-            // resolves to every node at its finest level, so there is no separate unbudgeted path -
-            // which also means a non-positive budget is not a way to disable LOD selection, it would
-            // simply pin every node to its coarsest level. Substitute the default and say so.
-            let budget = this._scene.gsplat.splatBudget;
-            if (budget <= 0) {
-                Debug.warnOnce(`GSplatParams#splatBudget is ${budget}, which is not a way to disable LOD selection - LOD levels are always chosen to fit the budget, so a non-positive one would render everything at its coarsest level. Using the default of ${SPLAT_BUDGET_DEFAULT} instead; set a budget that suits the scene.`);
-                budget = SPLAT_BUDGET_DEFAULT;
-            }
-            this._enforceBudget(budget, camera);
+            // a non-positive budget means no budget
+            const budget = this._gsplat.splatBudget;
+            this._enforceBudget(budget > 0 ? budget : Infinity, camera);
         }
 
         // create new world state if needed
@@ -839,6 +864,11 @@ class GSplatWorld {
             this._workBuffer.render(splatsToRender, camera, this.getDebugColors(), changedAllocIds);
         }
 
+        // a full rebuild evaluated the colors of all splats for this camera
+        if (renderAll) {
+            this._recordColorView(camera);
+        }
+
         // update all splats to sync their transforms (prevents redundant re-render later)
         for (let i = 0; i < worldState.splats.length; i++) {
             worldState.splats[i].update();
@@ -849,7 +879,7 @@ class GSplatWorld {
 
         // apply pending file-release requests
         if (worldState.pendingReleases && worldState.pendingReleases.length) {
-            const cooldownTicks = this._scene.gsplat.cooldownTicks;
+            const cooldownTicks = this._gsplat.cooldownTicks;
             for (const [octree, fileIndex] of worldState.pendingReleases) {
                 // decrement once for each staged release; refcount system guards against premature unload
                 octree.decRefCount(fileIndex, cooldownTicks);
@@ -925,13 +955,13 @@ class GSplatWorld {
      */
     applyWorkBufferUpdates(state, camera) {
         // color update thresholds
-        const { colorUpdateAngle } = this._scene.gsplat;
+        const { colorUpdateAngle } = this._gsplat;
         const ratio = Math.tan(colorUpdateAngle * math.DEG_TO_RAD);
         const cameraPos = camera.getPosition();
 
         // Calculate camera movement deltas for color updates
-        const { translationDelta } = this.calculateColorCameraDeltas(camera);
-        const hasCameraMovement = translationDelta > 0;
+        const { translationDelta, refreshAll } = this.calculateColorCameraDeltas(camera);
+        const hasCameraMovement = translationDelta > 0 || refreshAll;
 
         // check each splat for full or color update
         let movedAny = false;
@@ -960,13 +990,15 @@ class GSplatWorld {
                 _splatsWithSH.push(splat);
 
                 if (splat.nodeInfos) {
-                    // Per-node accumulation for octree splats
+                    // Per-node accumulation for octree splats, compared squared against the node's
+                    // squared distance
                     const nodeIndices = splat.intervalNodeIndices;
+                    const ratioSq = ratio * ratio;
                     for (let j = 0; j < nodeIndices.length; j++) {
                         const nodeInfo = splat.nodeInfos[nodeIndices[j]];
-                        nodeInfo.colorAccumulatedTranslation += translationDelta;
-                        const threshold = ratio * Math.max(1, nodeInfo.worldDistance);
-                        if (nodeInfo.colorAccumulatedTranslation >= threshold) {
+                        const accumulated = nodeInfo.colorAccumulatedTranslation + translationDelta;
+                        nodeInfo.colorAccumulatedTranslation = accumulated;
+                        if (refreshAll || accumulated * accumulated >= ratioSq * Math.max(1, nodeInfo.worldDistanceSq)) {
                             _changedColorAllocIds.add(splat.intervalAllocIds[j]);
                             nodeInfo.colorAccumulatedTranslation = 0;
                             uploadedBlocks++;
@@ -981,7 +1013,7 @@ class GSplatWorld {
                     const dist = _localCamPos.distance(_closestPt) *
                         splat.node.getWorldTransform().getScale().x;
                     const threshold = ratio * Math.max(1, dist);
-                    if (splat.colorAccumulatedTranslation >= threshold) {
+                    if (refreshAll || splat.colorAccumulatedTranslation >= threshold) {
                         _changedColorAllocIds.add(splat.allocId);
                         uploadedBlocks += splat.intervalAllocIds.length;
                         splat.colorAccumulatedTranslation = 0;
@@ -1010,6 +1042,11 @@ class GSplatWorld {
         }
         _splatsWithSH.length = 0;
 
+        // the colors of all splats were re-evaluated above, by the full or the color update
+        if (refreshAll) {
+            this._recordColorView(camera);
+        }
+
         return movedAny;
     }
 
@@ -1022,17 +1059,18 @@ class GSplatWorld {
     testCameraMovedForLod(camera) {
 
         // distance-based movement check
-        const distanceThreshold = this._scene.gsplat.lodUpdateDistance;
+        const distanceThreshold = this._gsplat.lodUpdateDistance;
         const currentCameraPos = camera.getPosition();
         const cameraMoved = this._lastLodCameraPos.distance(currentCameraPos) > distanceThreshold;
         if (cameraMoved) {
             return true;
         }
 
-        // rotation-based movement check (optional)
+        // rotation-based movement check (optional). Only the behind-camera penalty makes LOD depend
+        // on the view direction, so without it a rotation would change nothing.
         let cameraRotated = false;
-        const lodUpdateAngleDeg = this._scene.gsplat.lodUpdateAngle;
-        if (lodUpdateAngleDeg > 0) {
+        const lodUpdateAngleDeg = this._gsplat.lodUpdateAngle;
+        if (lodUpdateAngleDeg > 0 && this._gsplat.lodBehindPenalty > 1) {
             if (Number.isFinite(this._lastLodCameraFwd.x)) {
                 const currentCameraFwd = camera.forward;
                 const dot = Math.min(1, Math.max(-1, this._lastLodCameraFwd.dot(currentCameraFwd)));
@@ -1063,12 +1101,23 @@ class GSplatWorld {
     }
 
     /**
+     * Records the camera view the spherical harmonics colors of all splats were just evaluated for.
+     *
+     * @param {GraphNode} camera - The primary camera.
+     * @private
+     */
+    _recordColorView(camera) {
+        this._colorViewOrtho = camera.camera.projection === PROJECTION_ORTHOGRAPHIC;
+        this._colorViewForward.copy(camera.forward);
+    }
+
+    /**
      * Determines the colorization mode for rendering based on debug flags.
      *
      * @returns {Array<number[]>|undefined} Color array for debug visualization, or undefined for normal rendering.
      */
     getDebugColors() {
-        const debug = this._scene.gsplat.debug;
+        const debug = this._gsplat.debug;
         if (debug === GSPLAT_DEBUG_SH_UPDATE) {
             _randomColorRaw ??= [];
             const r = Math.random();
@@ -1088,17 +1137,37 @@ class GSplatWorld {
     }
 
     /**
-     * Calculates camera translation delta since last color update. Updates and returns the shared
-     * _cameraDeltas object.
+     * Calculates camera translation delta since last color update, and whether the colors of all
+     * splats need to be re-evaluated. Updates and returns the shared _cameraDeltas object.
      *
      * @param {GraphNode} camera - The primary camera.
-     * @returns {{ translationDelta: number }} Shared camera movement deltas object.
+     * @returns {{ translationDelta: number, refreshAll: boolean }} Shared camera movement deltas object.
      */
     calculateColorCameraDeltas(camera) {
         _cameraDeltas.translationDelta = 0;
+        _cameraDeltas.refreshAll = false;
 
-        // Skip delta calculation on first frame (camera position not yet initialized)
-        if (isFinite(this._lastColorUpdateCameraPos.x)) {
+        const ortho = camera.camera.projection === PROJECTION_ORTHOGRAPHIC;
+        if (ortho !== this._colorViewOrtho) {
+
+            // the projection changed, so all colors were evaluated for the other kind of view direction
+            _cameraDeltas.refreshAll = true;
+
+        } else if (ortho) {
+
+            // orthographic view rays all run along the camera forward: moving the camera does not
+            // change the colors, rotating it changes the view direction of all splats at once. An
+            // unchanged forward is detected exactly, as its dot product with itself can round below 1,
+            // which would refresh a stationary camera every frame when colorUpdateAngle is 0.
+            const forward = camera.forward;
+            if (!this._colorViewForward.equals(forward)) {
+                const dot = math.clamp(this._colorViewForward.dot(forward), -1, 1);
+                _cameraDeltas.refreshAll = Math.acos(dot) * math.RAD_TO_DEG >= this._gsplat.colorUpdateAngle;
+            }
+
+        } else if (isFinite(this._lastColorUpdateCameraPos.x)) {
+
+            // Skip delta calculation on first frame (camera position not yet initialized)
             const currentCameraPos = camera.getPosition();
             _cameraDeltas.translationDelta = this._lastColorUpdateCameraPos.distance(currentCameraPos);
         }
@@ -1109,7 +1178,7 @@ class GSplatWorld {
     /**
      * Enforces the global splat budget across all octree instances.
      *
-     * @param {number} budget - Target splat budget from GSplatParams.splatBudget.
+     * @param {number} budget - Splat budget from GSplatParams.splatBudget, Infinity for none.
      * @param {GraphNode} camera - The primary camera.
      * @private
      */
@@ -1132,11 +1201,11 @@ class GSplatWorld {
         // Remaining budget for octrees after accounting for fixed splats.
         const octreeBudget = Math.max(1, budget - fixedSplats);
 
-        // Phase 1: resolve each instance's LOD range and evaluate per-node coverage, and collect
+        // Phase 1: resolve each instance's LOD range and evaluate per-node distances, and collect
         // padding for active placements
         for (const [, inst] of this._octreeInstances) {
-            inst.resolveLodRange(this._scene.gsplat.lodMode);
-            inst.evaluateNodeCoverage(camera, this._scene.gsplat);
+            inst.resolveLodRange();
+            inst.evaluateNodeDistances(camera, this._gsplat);
             for (const placement of inst.activePlacements) {
                 const resource = /** @type {GSplatResourceBase} */ (placement.resource);
                 const numSplats = resource?.numSplats ?? 0;
@@ -1148,12 +1217,24 @@ class GSplatWorld {
         const adjustedBudget = Math.max(1, octreeBudget - paddingEstimate);
 
         // Phase 2: choose a LOD level per node within that budget
-        this._budgetBalancer.balance(this._octreeInstances, adjustedBudget);
+        this._budgetBalancer.balance(this._octreeInstances, adjustedBudget, this._gsplat.splatBudgetMode === GSPLAT_BUDGET_LIMIT);
 
         // Phase 3: apply LOD changes
         for (const [, inst] of this._octreeInstances) {
-            inst.applyLodChanges(this._scene.gsplat);
+            inst.applyLodChanges(this._gsplat);
         }
+
+        // Phase 4: issue the file loads requested in phase 3, once per octree so that every
+        // instance sharing it in this world has contributed its priorities first. Instances in the
+        // worlds of other cameras keep their latest requests, which the octree combines with these.
+        for (const [, inst] of this._octreeInstances) {
+            const octree = inst.octree;
+            if (!tempUniqueOctrees.has(octree)) {
+                tempUniqueOctrees.add(octree);
+                octree.flushRequests();
+            }
+        }
+        tempUniqueOctrees.clear();
     }
 
     /**
@@ -1195,19 +1276,16 @@ class GSplatWorld {
     }
 
     /**
-     * Ticks octree cooldown timers once per frame per unique octree.
+     * Ticks octree cooldown timers once per frame per unique octree. The octrees are shared with
+     * the worlds of other cameras and layers, and each octree ignores a repeated token, so this
+     * does not depend on how many worlds use it.
+     *
+     * @param {number} token - Per-frame token, see GSplatDirector#_streamToken.
      */
-    tickCooldowns() {
-        if (this._octreeInstances.size) {
-            const cooldownTicks = this._scene.gsplat.cooldownTicks;
-            for (const [, inst] of this._octreeInstances) {
-                const octree = inst.octree;
-                if (!tempOctreesTicked.has(octree)) {
-                    tempOctreesTicked.add(octree);
-                    octree.updateCooldownTick(cooldownTicks);
-                }
-            }
-            tempOctreesTicked.clear();
+    tickCooldowns(token) {
+        const cooldownTicks = this._gsplat.cooldownTicks;
+        for (const [, inst] of this._octreeInstances) {
+            inst.octree.updateCooldownTick(cooldownTicks, token);
         }
     }
 

@@ -1,5 +1,7 @@
 import { expect } from 'chai';
 
+import { Asset } from '../../../src/framework/asset/asset.js';
+import { getTextureAssetEncoding } from '../../../src/framework/handlers/texture.js';
 import { BasisParser } from '../../../src/framework/parsers/texture/basis.js';
 import { DdsParser } from '../../../src/framework/parsers/texture/dds.js';
 import { HdrParser } from '../../../src/framework/parsers/texture/hdr.js';
@@ -66,5 +68,30 @@ describe('TextureHandler (parser selection)', function () {
         const handler = app.loader.getHandler('texture');
         handler.removeParser(handler.imgParser);
         expect(handler.open('tex.xyz', {})).to.be.undefined;
+    });
+});
+
+describe('getTextureAssetEncoding', function () {
+
+    const encoding = (file, data = {}, options = {}) => getTextureAssetEncoding(new Asset('texture', 'texture', file, data, options));
+
+    it('returns the color space and the type the asset data specifies', function () {
+        expect(encoding({ url: 'color.png' }, { srgb: true })).to.eql({ srgb: true, type: 'default' });
+        expect(encoding({ url: 'light.png' }, { type: 'rgbm' })).to.eql({ srgb: false, type: 'rgbm' });
+        expect(encoding({ url: 'light.png' }, { rgbm: true })).to.eql({ srgb: false, type: 'rgbm' });
+        expect(encoding({ url: 'normal.basis', opt: 8 })).to.eql({ srgb: false, type: 'swizzleGGGR' });
+    });
+
+    it('lets the per-load texture options override the asset data', function () {
+        expect(encoding({ url: 'color.png' }, { srgb: true }, { texture: { srgb: false, type: 'rgbp' } })).to.eql({ srgb: false, type: 'rgbp' });
+    });
+
+    it('returns the rgbe type of an .hdr file before the hdr parser records it in the asset data', function () {
+        expect(encoding({ url: 'env.hdr' })).to.eql({ srgb: false, type: 'rgbe' });
+        expect(encoding({ url: 'env.HDR?t=1234' })).to.eql({ srgb: false, type: 'rgbe' });
+        expect(encoding({ url: 'files/1234/env', filename: 'env.hdr' })).to.eql({ srgb: false, type: 'rgbe' });
+
+        // a type in the data is kept, as the parser keeps it
+        expect(encoding({ url: 'env.hdr' }, { type: 'default' })).to.eql({ srgb: false, type: 'default' });
     });
 });

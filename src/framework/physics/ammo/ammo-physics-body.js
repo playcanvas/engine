@@ -5,6 +5,10 @@ import { PhysicsBody } from '../physics-body.js';
  * @import { AmmoPhysicsWorld } from './ammo-physics-world.js'
  */
 
+// btRigidBodyFlags::BT_DISABLE_WORLD_GRAVITY - stops btDiscreteDynamicsWorld overwriting the
+// body's gravity when the body is added to the world or the world gravity changes
+const BT_DISABLE_WORLD_GRAVITY = 1;
+
 /**
  * An Ammo.js rigid body. Converts engine math types to Bullet types using the owning world's
  * cached temporaries - no method allocates.
@@ -32,6 +36,14 @@ class AmmoPhysicsBody extends PhysicsBody {
      * @private
      */
     _noContactResponse;
+
+    /**
+     * Whether the native body is in the dynamics world, and so has a broadphase proxy.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _inWorld = false;
 
     /**
      * @param {AmmoPhysicsWorld} world - The owning world.
@@ -74,6 +86,24 @@ class AmmoPhysicsBody extends PhysicsBody {
         const vec = this._world._btVec1;
         vec.setValue(factor.x, factor.y, factor.z);
         this.nativeBody.setAngularFactor(vec);
+    }
+
+    setGravityScale(scale) {
+        const body = this.nativeBody;
+
+        // Older ammo.js builds do not bind the rigid body flags. Without the flag Bullet resets the
+        // body to world gravity when it is added to the world and when the world gravity changes;
+        // the system re-applies the scale at both points, so the flag only avoids that churn.
+        if (body.setFlags && body.getFlags) {
+            const flags = body.getFlags();
+            body.setFlags(scale === 1 ? flags & ~BT_DISABLE_WORLD_GRAVITY : flags | BT_DISABLE_WORLD_GRAVITY);
+        }
+
+        // the world returns its gravity by value into a scratch vector, so it can be scaled in
+        // place; the body's own gravity is not a usable source because it is already scaled
+        const gravity = this._world.nativeWorld.getGravity();
+        gravity.op_mul(scale);
+        body.setGravity(gravity);
     }
 
     setLinearVelocity(velocity) {
@@ -142,6 +172,13 @@ class AmmoPhysicsBody extends PhysicsBody {
             vec.setValue(0, 0, 0);
             body.setInterpolationLinearVelocity(vec);
             body.setInterpolationAngularVelocity(vec);
+        }
+
+        // Bullet only refreshes broadphase bounds inside a fixed substep, so without this a
+        // raycast before the next one would find the body at its previous pose
+        const nativeWorld = this._world.nativeWorld;
+        if (this._inWorld && nativeWorld.updateSingleAabb) {
+            nativeWorld.updateSingleAabb(body);
         }
 
         body.activate();

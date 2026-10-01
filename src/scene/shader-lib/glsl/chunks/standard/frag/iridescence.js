@@ -11,7 +11,7 @@ void getIridescence() {
     #endif
 
     #ifdef STD_IRIDESCENCE_TEXTURE
-    iridescence *= texture2DBias({STD_IRIDESCENCE_TEXTURE_NAME}, {STD_IRIDESCENCE_TEXTURE_UV}, textureBias).{STD_IRIDESCENCE_TEXTURE_CHANNEL};
+    iridescence *= texture2DBias({STD_IRIDESCENCE_TEXTURE_NAME}, {STD_IRIDESCENCE_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_IRIDESCENCE_TEXTURE_CHANNEL};
     #endif
 
     dIridescence = iridescence; 

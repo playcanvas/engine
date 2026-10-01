@@ -22,10 +22,10 @@ class WebglVertexBuffer extends WebglBuffer {
         this.vao = null;
     }
 
-    unlock(vertexBuffer) {
+    unlock(vertexBuffer, byteOffset, byteLength) {
 
         const device = vertexBuffer.device;
-        super.unlock(device, vertexBuffer.usage, device.gl.ARRAY_BUFFER, vertexBuffer.storage);
+        super.unlock(device, vertexBuffer.usage, device.gl.ARRAY_BUFFER, vertexBuffer.storage, byteOffset, byteLength);
     }
 }
 

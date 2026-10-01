@@ -57,6 +57,50 @@ const createMockTexture = (device, overrides = {}) => {
 
 describe('WebgpuTexture', function () {
 
+    it('discards native textures, views and samplers when the device is lost', function () {
+        const device = createMockDevice([]);
+        const impl = new WebgpuTexture(createMockTexture(device));
+        const oldTexture = impl.gpuTexture;
+        const oldView = impl.view;
+        impl.samplers.push({});
+        impl.viewCache.set(1, {});
+
+        impl.loseContext();
+        expect(impl.gpuTexture).to.equal(null);
+        expect(impl.view).to.equal(null);
+        expect(impl.samplers).to.have.lengthOf(0);
+        expect(impl.viewCache.size).to.equal(0);
+
+        device.wgpu = createMockDevice([]).wgpu;
+        impl.create(device);
+        expect(impl.gpuTexture).not.to.equal(oldTexture);
+        expect(impl.view).not.to.equal(oldView);
+    });
+
+    it('defers allocation and uploads during loss until the replacement device is ready', function () {
+        const created = [];
+        const device = createMockDevice(created);
+        device.contextLost = true;
+        const texture = createMockTexture(device, { _needsUpload: true, _needsMipmapsUpload: true });
+        const impl = new WebgpuTexture(texture);
+        let uploads = 0;
+        impl.uploadData = () => uploads++;
+
+        impl.uploadImmediate(device, texture);
+        expect(created).to.have.lengthOf(0);
+        expect(uploads).to.equal(0);
+        expect(texture._needsUpload).to.be.true;
+        expect(texture._needsMipmapsUpload).to.be.true;
+
+        impl.create(device);
+        device.contextLost = false;
+        impl.uploadImmediate(device, texture);
+        expect(created).to.have.lengthOf(1);
+        expect(uploads).to.equal(1);
+        expect(texture._needsUpload).to.be.false;
+        expect(texture._needsMipmapsUpload).to.be.false;
+    });
+
     it('creates a single-sampled texture by default', function () {
         const created = [];
         const device = createMockDevice(created);

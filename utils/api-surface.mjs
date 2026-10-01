@@ -1,4 +1,4 @@
-// Serialises a TypeDoc JSON model (`typedoc --json`) into a stable, sorted, full-signature text
+// Serializes a TypeDoc JSON model (`typedoc --json`) into a stable, sorted, full-signature text
 // view of the public API. Because it consumes TypeDoc's model, it inherits the docs' public-API
 // rules (excludeNotDocumented, @ignore, @private, the custom typedoc plugin) — so internal/ignored
 // symbols are absent. `@protected` members are dropped here as well, see member().
@@ -6,7 +6,7 @@
 
 import { readFileSync } from 'node:fs';
 
-// TypeDoc ReflectionKind values we serialise at the top level
+// TypeDoc ReflectionKind values we serialize at the top level
 const NAMESPACE = 4, ENUM = 8, VARIABLE = 32, FUNCTION = 64, CLASS = 128, INTERFACE = 256;
 const CONSTRUCTOR = 512, PROPERTY = 1024, METHOD = 2048, ACCESSOR = 262144, TYPE_ALIAS = 2097152;
 const TOP = [NAMESPACE, ENUM, VARIABLE, FUNCTION, CLASS, INTERFACE, TYPE_ALIAS];

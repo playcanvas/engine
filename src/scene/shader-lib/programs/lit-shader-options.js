@@ -8,6 +8,13 @@ import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE, REFLECTIONSRC_NONE } fro
  * The lit shader options determines how the lit-shader gets generated. It specifies a set of
  * parameters which triggers different fragment and vertex shader generation in the backend.
  *
+ * You do not create one. The engine fills a LitShaderOptions from the material and scene state
+ * each time a {@link StandardMaterial} needs a shader variant, and every distinct set of values
+ * produces a distinct compiled shader. Developers rarely need to touch it: the material properties
+ * such as `useFog`, `useLighting` and `useSkybox` on {@link StandardMaterial} cover the usual
+ * cases, and the values here mirror them together with the scene state. It is exposed for the
+ * rare case of customizing shader generation through {@link StandardMaterial#onUpdateShader}.
+ *
  * @category Graphics
  */
 class LitShaderOptions {
@@ -244,6 +251,13 @@ class LitShaderOptions {
      * If cube map rotation is enabled.
      */
     useCubeMapRotation = false;
+
+    /**
+     * If the environment chunks sample the scene environment, published by the renderer as
+     * `scene_envAtlas` and `scene_skybox`, instead of the textures owned by the material
+     * (`texture_envAtlas`, `texture_cubeMap`).
+     */
+    useSceneEnv = false;
 
     lightMapWithoutAmbient = false;
 

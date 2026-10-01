@@ -56,6 +56,7 @@ import {
     TONEMAP_ACES,
     Texture,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     UNIFORMTYPE_FLOAT,
     UNIFORMTYPE_UINT,
@@ -102,6 +103,8 @@ createOptions.resourceHandlers = [TextureHandler, ContainerHandler, ScriptHandle
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -240,17 +243,29 @@ await new Promise((resolve) => {
 });
 
 // Setup skydome from HDR texture
-const hdriSource = assets.hdri.resource;
+const applyHdri = () => {
+    const oldSkybox = app.scene.skybox;
+    const oldEnvAtlas = app.scene.envAtlas;
 
-// Convert to high resolution cubemap for the skybox
-const skybox = EnvLighting.generateSkyboxCubemap(hdriSource);
-app.scene.skybox = skybox;
+    const hdriSource = assets.hdri.resource;
 
-// Generate env-atlas texture for the lighting
-const lighting = EnvLighting.generateLightingSource(hdriSource);
-const envAtlas = EnvLighting.generateAtlas(lighting);
-lighting.destroy();
-app.scene.envAtlas = envAtlas;
+    // Convert to high resolution cubemap for the skybox
+    const skybox = EnvLighting.generateSkyboxCubemap(hdriSource);
+    app.scene.skybox = skybox;
+
+    // Generate env-atlas texture for the lighting
+    const lighting = EnvLighting.generateLightingSource(hdriSource);
+    const envAtlas = EnvLighting.generateAtlas(lighting);
+    lighting.destroy();
+    app.scene.envAtlas = envAtlas;
+
+    oldSkybox?.destroy();
+    oldEnvAtlas?.destroy();
+};
+
+// Generated environment textures need to be rebuilt after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
 
 // Configure projected skydome
 app.scene.sky.type = SKYTYPE_DOME;
@@ -300,7 +315,7 @@ rtCamera.setLocalPosition(-4, 5, 22);
 rtCamera.lookAt(0, 0, 1);
 app.root.addChild(rtCamera);
 
-// Create main camera (for final view - only immediate layer for drawTexture)
+// Create main camera (for final view - only the Immediate layer for texture previews)
 const immediateLayer = app.scene.layers.getLayerByName('Immediate');
 const mainCamera = new Entity('mainCamera');
 mainCamera.addComponent('camera', {
@@ -445,9 +460,9 @@ if (device.supportsCompute) {
         const gap = 0.02;
 
         // Top half: original RT texture
-        app.drawTexture(0, 0.5 - gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, renderTarget.colorBuffer);
+        textures.draw(renderTarget.colorBuffer, gap * 0.5, gap * 0.75, 1 - gap, 0.5 - gap);
 
         // Bottom half: compute-processed texture (red edge tiles, blue smooth tiles)
-        app.drawTexture(0, -0.5 + gap * 0.5, 2.0 - gap * 2, 1.0 - gap * 2, outputTexture);
+        textures.draw(outputTexture, gap * 0.5, 0.5 + gap * 0.25, 1 - gap, 0.5 - gap);
     });
 }

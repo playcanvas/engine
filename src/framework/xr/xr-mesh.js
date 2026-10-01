@@ -14,7 +14,8 @@ import { Quat } from '../../core/math/quat.js';
  */
 class XrMesh extends EventHandler {
     /**
-     * Fired when an {@link XrMesh} is removed.
+     * Fired when an {@link XrMesh} is removed. Its attributes, such as its vertices and label,
+     * keep their last values.
      *
      * @event
      * @example
@@ -50,6 +51,9 @@ class XrMesh extends EventHandler {
 
     /** @private */
     _lastChanged = 0;
+
+    /** @private */
+    _destroyed = false;
 
     /** @private */
     _position = new Vec3();
@@ -111,8 +115,10 @@ class XrMesh extends EventHandler {
 
     /** @ignore */
     destroy() {
-        if (!this._xrMesh) return;
-        this._xrMesh = null;
+        if (this._destroyed) return;
+
+        // the XRMesh is kept, so the attributes of the mesh stay readable once it is removed
+        this._destroyed = true;
         this.fire('remove');
     }
 

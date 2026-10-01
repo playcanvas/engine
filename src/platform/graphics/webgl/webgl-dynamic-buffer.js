@@ -6,8 +6,8 @@ import { DynamicBuffer } from '../dynamic-buffer.js';
 
 /**
  * A WebGL implementation of a dynamic buffer - a single whole uniform buffer that is handed out
- * from a pool for one frame at a time. The data is written into a CPU-side backing array and
- * uploaded with `bufferData` (a full respecify), which orphans the previous storage and lets the
+ * from a pool for one frame at a time. The data is written into the CPU-side storage views of the
+ * buffer and uploaded with `bufferData` (a full respecify), which orphans the previous storage and lets the
  * driver hand back fresh storage - so reusing a buffer never stalls on in-flight draws. As each use
  * gets its own buffer, the offset into it is always zero.
  *
@@ -21,14 +21,6 @@ class WebglDynamicBuffer extends DynamicBuffer {
      * @type {WebGLBuffer|null}
      */
     bufferId = null;
-
-    /**
-     * CPU-side backing for the whole buffer, written to during the uniform buffer update and
-     * uploaded by {@link upload}.
-     *
-     * @type {Int32Array}
-     */
-    storage;
 
     /**
      * Byte size of the buffer.
@@ -45,7 +37,7 @@ class WebglDynamicBuffer extends DynamicBuffer {
         super(device);
 
         this.size = size;
-        this.storage = new Int32Array(size / 4);
+        this.setStorage(new ArrayBuffer(size));
 
         device._vram.ub += size;
     }
@@ -78,7 +70,7 @@ class WebglDynamicBuffer extends DynamicBuffer {
             this.bufferId = gl.createBuffer();
         }
         gl.bindBuffer(gl.UNIFORM_BUFFER, this.bufferId);
-        gl.bufferData(gl.UNIFORM_BUFFER, this.storage, gl.STREAM_DRAW);
+        gl.bufferData(gl.UNIFORM_BUFFER, this.storageInt32, gl.STREAM_DRAW);
     }
 }
 

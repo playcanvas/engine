@@ -20,9 +20,20 @@ class WebgpuBindGroup {
      */
     bindGroup;
 
+    /** @param {BindGroup} owner - The engine bind group owning this implementation. */
+    constructor(owner) {
+        this.owner = owner;
+        owner.device._bindGroups.add(this);
+    }
+
+    loseContext() {
+        this.bindGroup = null;
+        this.owner.dirty = true;
+    }
+
     update(bindGroup) {
 
-        this.destroy();
+        this.bindGroup = null;
         const device = bindGroup.device;
 
         /** @type {GPUBindGroupDescriptor} */
@@ -41,6 +52,7 @@ class WebgpuBindGroup {
     }
 
     destroy() {
+        this.owner.device._bindGroups.delete(this);
         this.bindGroup = null;
     }
 

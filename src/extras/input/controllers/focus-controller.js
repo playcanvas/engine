@@ -14,9 +14,12 @@ const position = new Vec3();
 const rotation = new Quat();
 
 /**
- * The focus controller.
+ * The focus controller. It ignores the input frame and instead eases the pose from where it was
+ * towards the pose given to {@link attach}, smoothed by {@link focusDamping}. Use it to animate a
+ * camera onto a new target and then hand over to another controller; {@link complete} reports
+ * when the target has been reached.
  *
- * @category Input Controller
+ * @category Input
  * @alpha
  */
 class FocusController extends InputController {

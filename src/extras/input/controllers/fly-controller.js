@@ -16,9 +16,12 @@ const up = new Vec3();
 const rotation = new Quat();
 
 /**
- * The fly controller.
+ * The fly controller. Free flight: `rotate` deltas turn the pose about yaw and pitch, limited by
+ * {@link yawRange} and {@link pitchRange}, and `move` deltas translate it along its own right, up
+ * and forward axes, so movement follows where the camera looks. Motion is smoothed with
+ * {@link rotateDamping} and {@link moveDamping}.
  *
- * @category Input Controller
+ * @category Input
  * @alpha
  */
 class FlyController extends InputController {

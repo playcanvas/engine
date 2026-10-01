@@ -20,6 +20,10 @@ import { AnimNode } from './anim-node.js';
  * as long as there is no {@link AnimTransition} with its conditions met that has that AnimState
  * as its source state.
  *
+ * `speed` and `loop` control the playback of the state's tracks. States are defined in
+ * the {@link AnimStateGraph} and entered either by a transition or directly with
+ * {@link AnimComponentLayer#play}.
+ *
  * @category Animation
  */
 class AnimState {

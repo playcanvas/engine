@@ -2,14 +2,14 @@ import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../../src/platform/graphics/constants.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { RenderPass } from '../../../src/platform/graphics/render-pass.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
+import { createGraphicsDevice } from '../../device.mjs';
 
 describe('RenderPass', function () {
 
-    /** @type {NullGraphicsDevice} */
+    /** @type {import('../../../src/platform/graphics/graphics-device.js').GraphicsDevice} */
     let device;
 
     /** @type {RenderTarget} */
@@ -27,7 +27,7 @@ describe('RenderPass', function () {
     });
 
     beforeEach(function () {
-        device = new NullGraphicsDevice({ width: 100, height: 100 });
+        device = createGraphicsDevice({ width: 100, height: 100 });
         renderTarget = new RenderTarget({
             colorBuffers: [createTexture('color0'), createTexture('color1')],
             depth: false

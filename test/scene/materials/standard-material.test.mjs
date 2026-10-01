@@ -2,8 +2,16 @@ import { expect } from 'chai';
 
 import { Color } from '../../../src/core/math/color.js';
 import { Vec2 } from '../../../src/core/math/vec2.js';
-import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO } from '../../../src/scene/constants.js';
+import { Vec3 } from '../../../src/core/math/vec3.js';
+import { BoundingBox } from '../../../src/core/shape/bounding-box.js';
+import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
+import {
+    AMBIENTSRC_CONSTANT, AMBIENTSRC_ENVALATLAS, CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK,
+    REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_NONE, SHADER_FORWARD, SPECOCC_AO
+} from '../../../src/scene/constants.js';
+import { LightList } from '../../../src/scene/lighting/light-list.js';
 import { Material } from '../../../src/scene/materials/material.js';
+import { StandardMaterialOptionsBuilder } from '../../../src/scene/materials/standard-material-options-builder.js';
 import { StandardMaterialOptions } from '../../../src/scene/materials/standard-material-options.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { standard } from '../../../src/scene/shader-lib/programs/standard.js';
@@ -348,6 +356,11 @@ describe('StandardMaterial', function () {
                     return 0.375;
                 }
 
+                // the projection box is snapshotted by the setter, so it has to be a real box
+                if (name === 'cubeMapProjectionBox') {
+                    return new BoundingBox(new Vec3(1, 2, 3), new Vec3(4, 5, 6));
+                }
+
                 switch (typeof value) {
                     case 'boolean':
                         return !value;
@@ -372,7 +385,7 @@ describe('StandardMaterial', function () {
 
                 const sourceValue = src[name];
                 const copiedValue = dst[name];
-                if (sourceValue instanceof Color || sourceValue instanceof Vec2) {
+                if (sourceValue instanceof Color || sourceValue instanceof Vec2 || sourceValue instanceof BoundingBox) {
                     expect(copiedValue, name).to.not.equal(sourceValue);
                     expect(copiedValue.equals(sourceValue), name).to.equal(true);
                 } else if (Array.isArray(sourceValue)) {
@@ -416,6 +429,102 @@ describe('StandardMaterial', function () {
             return variant;
         };
 
+        it('invalidates shaders when alphaTest moves across 0, through the accessor of the subclass', function () {
+            const material = new StandardMaterial();
+            material.update();
+            let variant = addVariant(material);
+
+            // the base class stores the value in a backing field, no own property shadows the accessor
+            expect(Object.getOwnPropertyDescriptor(material, 'alphaTest')).to.equal(undefined);
+            material.alphaTest = 0.5;
+            expect(material.alphaTest).to.equal(0.5);
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            variant = addVariant(material);
+            material.alphaTest = 0.7;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.alphaTest = 0;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            // a negative value disables the test like 0 does, but keeps an opacity map in the shader
+            variant = addVariant(material);
+            material.alphaTest = -0.25;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+
+            variant = addVariant(material);
+            material.alphaTest = -0.5;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.alphaTest = 0.5;
+            material.update();
+            expect(material.variants.get(1)).to.equal(undefined);
+        });
+
+        describe('maps sharing a texture', function () {
+
+            // textures of one format and type, which differ only in their identity
+            let nextId = 1;
+            const texture = () => ({ id: nextId++, format: 7, type: 'default' });
+
+            it('invalidates shaders when a map stops sharing the texture of another map', function () {
+                const shared = texture();
+                const material = new StandardMaterial();
+                material.diffuseMap = shared;
+                material.glossMap = shared;
+                material.update();
+                addVariant(material);
+
+                // the shader samples the gloss from the sampler of the diffuse map
+                material.glossMap = texture();
+                material.update();
+                expect(material.variants.get(1)).to.equal(undefined);
+            });
+
+            it('invalidates shaders when a map starts sharing the texture of another map', function () {
+                const shared = texture();
+                const material = new StandardMaterial();
+                material.diffuseMap = shared;
+                material.glossMap = texture();
+                material.update();
+                addVariant(material);
+
+                material.glossMap = shared;
+                material.update();
+                expect(material.variants.get(1)).to.equal(undefined);
+            });
+
+            it('keeps shaders when maps are pointed at other textures without the sharing changing', function () {
+                const shared = texture();
+                const material = new StandardMaterial();
+                material.diffuseMap = shared;
+                material.glossMap = shared;
+                material.metalnessMap = texture();
+                material.update();
+                const variant = addVariant(material);
+
+                // the maps sharing a texture move to another one together
+                const other = texture();
+                material.diffuseMap = other;
+                material.glossMap = other;
+                material.metalnessMap = texture();
+                material.update();
+                expect(material.variants.get(1)).to.equal(variant);
+            });
+        });
+
+        it('forwards the deprecated aoUvSet to aoMapUv', function () {
+            const material = new StandardMaterial();
+            material.aoUvSet = 1;
+            expect(material.aoMapUv).to.equal(1);
+            expect(material.aoUvSet).to.equal(1);
+        });
+
         it('does not invalidate shaders when color properties are read', function () {
             const material = new StandardMaterial();
             material.update();
@@ -453,13 +562,159 @@ describe('StandardMaterial', function () {
             material.update();
             const variant = addVariant(material);
 
-            material.diffuse.set(0.5, 0.25, 0.75);
-            material.updateUniforms();
+            // all colors live in the material uniform buffer, none is published as a parameter
+            material.ambient.set(0.5, 0.25, 0.75);
+            material.attenuation = new Color(0.1, 0.2, 0.3);
+            material.update();
 
-            const uniform = material.getParameter('material_diffuse').data;
-            expect(uniform[0]).to.be.closeTo(Math.pow(0.5, 2.2), 1e-6);
-            expect(uniform[1]).to.be.closeTo(Math.pow(0.25, 2.2), 1e-6);
-            expect(uniform[2]).to.be.closeTo(Math.pow(0.75, 2.2), 1e-6);
+            expect(material.parameters.material_ambient).to.equal(undefined);
+            expect(material.parameters.material_attenuation).to.equal(undefined);
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('invalidates shaders when a number property moves between 0 and 1', function () {
+            for (const [name, from, to] of [
+                ['refraction', 0, 1],
+                ['refraction', 1, 0],
+                ['metalness', 1, 0],
+                ['clearCoat', 0, 1],
+                ['clearCoat', 0, 0.5]
+            ]) {
+                const material = new StandardMaterial();
+                material[name] = from;
+                material.update();
+                addVariant(material);
+
+                material[name] = to;
+                material.update();
+                expect(material.variants.size, `${name} ${from} -> ${to}`).to.equal(0);
+            }
+        });
+
+        it('does not invalidate shaders when a number property changes between fractional values', function () {
+            const material = new StandardMaterial();
+            material.metalness = 0.3;
+            material.clearCoat = 0.3;
+            material.update();
+            const variant = addVariant(material);
+
+            material.metalness = 0.7;
+            material.clearCoat = 0.7;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+        });
+
+        it('invalidates shaders when refractionIndex moves across its default constant', function () {
+            const defaultIndex = StandardMaterialOptionsBuilder.DEFAULT_REFRACTION_INDEX;
+            const material = new StandardMaterial();
+            material.update();
+            addVariant(material);
+
+            material.refractionIndex = defaultIndex + 0.0002;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+
+            const variant = addVariant(material);
+            material.refractionIndex = 0.8;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.refractionIndex = defaultIndex;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+        });
+
+        it('invalidates shaders when refraction moves across the constant tint tolerance', function () {
+            const material = new StandardMaterial();
+            material.refraction = 0.9;
+            material.update();
+            const variant = addVariant(material);
+
+            material.refraction = 0.6;
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.refraction = 0.99995;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+        });
+
+        const envTexture = encoding => ({ encoding });
+
+        it('invalidates shaders when an environment texture is added or removed', function () {
+            for (const name of ['envAtlas', 'cubeMap', 'sphereMap']) {
+                const material = new StandardMaterial();
+                material.update();
+
+                addVariant(material);
+                material[name] = envTexture('rgbm');
+                material.update();
+                expect(material.variants.size, `${name} added`).to.equal(0);
+
+                addVariant(material);
+                material[name] = null;
+                material.update();
+                expect(material.variants.size, `${name} removed`).to.equal(0);
+            }
+        });
+
+        it('does not invalidate shaders when an environment texture is replaced with the same encoding', function () {
+            for (const name of ['envAtlas', 'cubeMap', 'sphereMap']) {
+                const material = new StandardMaterial();
+                material[name] = envTexture('rgbm');
+                material.update();
+                const variant = addVariant(material);
+
+                material[name] = envTexture('rgbm');
+                material.update();
+                expect(material.variants.get(1), name).to.equal(variant);
+            }
+        });
+
+        it('invalidates shaders when an environment texture is replaced with a different encoding', function () {
+            for (const name of ['envAtlas', 'cubeMap', 'sphereMap']) {
+                const material = new StandardMaterial();
+                material[name] = envTexture('rgbm');
+                material.update();
+                addVariant(material);
+
+                material[name] = envTexture('rgbp');
+                material.update();
+                expect(material.variants.size, name).to.equal(0);
+            }
+        });
+
+        it('invalidates shaders when ambient SH is added or removed but not when replaced', function () {
+            const material = new StandardMaterial();
+            material.update();
+            addVariant(material);
+
+            material.ambientSH = new Float32Array(27);
+            material.update();
+            expect(material.variants.size).to.equal(0);
+
+            const variant = addVariant(material);
+            material.ambientSH = new Float32Array(27);
+            material.update();
+            expect(material.variants.get(1)).to.equal(variant);
+
+            material.ambientSH = null;
+            material.update();
+            expect(material.variants.size).to.equal(0);
+        });
+
+        it('does not invalidate shaders when the cube map projection box changes', function () {
+            const material = new StandardMaterial();
+            material.update();
+            const variant = addVariant(material);
+
+            material.cubeMapProjectionBox = new BoundingBox();
+            material.update();
+            material.cubeMapProjectionBox = new BoundingBox();
+            material.update();
+            material.cubeMapProjectionBox = null;
+            material.update();
+
             expect(material.variants.get(1)).to.equal(variant);
         });
 
@@ -605,6 +860,95 @@ describe('StandardMaterial', function () {
             expect(material.variants.size).to.equal(0);
         });
 
+    });
+
+    describe('environment textures', function () {
+        const envTexture = name => ({ name, encoding: 'rgbm' });
+        const scene = {
+            envAtlas: envTexture('sceneAtlas'),
+            skybox: envTexture('sceneSkybox'),
+            _skyboxRotationShaderInclude: false
+        };
+        const cameraShaderParams = new CameraShaderParams();
+        const noLights = new LightList();
+
+        const resolve = (material) => {
+            const options = new StandardMaterialOptions();
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights);
+            return options.litOptions;
+        };
+
+        it('keeps aoMapUv as the uv set of the ambient occlusion map', function () {
+            const material = new StandardMaterial();
+            material.aoMap = { name: 'ao', encoding: 'linear' };
+            material.aoMapUv = 1;
+            material.update();
+            const options = new StandardMaterialOptions();
+            const vertexFormat = { hasUv: () => true, hasColor: false };
+            material.shaderOptBuilder.updateRef(options, scene, cameraShaderParams, material, 0, SHADER_FORWARD, noLights, vertexFormat);
+            expect(options.aoMapUv).to.equal(1);
+        });
+
+        it('publishes only the material environment textures', function () {
+            const material = new StandardMaterial();
+            material.update();
+            material.updateUniforms(null, scene);
+            expect(material.getParameter('texture_envAtlas')).to.be.undefined;
+            expect(material.getParameter('texture_cubeMap')).to.be.undefined;
+
+            const atlas = envTexture('materialAtlas');
+            const cubemap = envTexture('materialCubemap');
+            material.envAtlas = atlas;
+            material.cubeMap = cubemap;
+            material.update();
+            material.updateUniforms(null, scene);
+            expect(material.getParameter('texture_envAtlas').data).to.equal(atlas);
+            expect(material.getParameter('texture_cubeMap').data).to.equal(cubemap);
+
+            material.envAtlas = null;
+            material.cubeMap = null;
+            material.update();
+            material.updateUniforms(null, scene);
+            expect(material.getParameter('texture_envAtlas')).to.be.undefined;
+            expect(material.getParameter('texture_cubeMap')).to.be.undefined;
+        });
+
+        it('uses the scene environment only when the material has none', function () {
+            const material = new StandardMaterial();
+            let lit = resolve(material);
+            expect(lit.useSceneEnv).to.equal(true);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_ENVATLASHQ);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_ENVALATLAS);
+
+            material.useSkybox = false;
+            lit = resolve(material);
+            expect(lit.useSceneEnv).to.equal(false);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_NONE);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_CONSTANT);
+        });
+
+        it('switches every role to the material when it has an environment texture', function () {
+            const material = new StandardMaterial();
+            material.cubeMap = envTexture('materialCubemap');
+            let lit = resolve(material);
+            expect(lit.useSceneEnv).to.equal(false);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_CUBEMAP);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_CONSTANT);
+            expect(lit.skyboxIntensity).to.equal(false);
+
+            material.envAtlas = envTexture('materialAtlas');
+            lit = resolve(material);
+            expect(lit.reflectionSource).to.equal(REFLECTIONSRC_ENVATLASHQ);
+            expect(lit.ambientSource).to.equal(AMBIENTSRC_ENVALATLAS);
+        });
+
+        it('includes the environment ownership in the shader key', function () {
+            const options = new StandardMaterialOptions();
+            const materialKey = standard.generateKey(options);
+
+            options.litOptions.useSceneEnv = true;
+            expect(standard.generateKey(options)).to.not.equal(materialKey);
+        });
     });
 
     describe('shader generation', function () {

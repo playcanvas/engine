@@ -44,7 +44,7 @@ class Debug {
     /**
      * Assertion deprecated message. If the assertion is false, the deprecated message is written to the log.
      *
-     * @param {boolean|object} assertion - The assertion to check.
+     * @param {*} assertion - The assertion to check. Any falsy value fails.
      * @param {string} message - The message to log.
      */
     static assertDeprecated(assertion, message) {
@@ -56,7 +56,7 @@ class Debug {
     /**
      * Assertion error message. If the assertion is false, the error message is written to the log.
      *
-     * @param {boolean|object} assertion - The assertion to check.
+     * @param {*} assertion - The assertion to check. Any falsy value fails.
      * @param {...*} args - The values to be written to the log.
      */
     static assert(assertion, ...args) {

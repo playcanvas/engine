@@ -12,7 +12,7 @@ fn getRefraction() {
     #endif
 
     #ifdef STD_REFRACTION_TEXTURE
-    refraction = refraction * textureSampleBias({STD_REFRACTION_TEXTURE_NAME}, {STD_REFRACTION_TEXTURE_NAME}Sampler, {STD_REFRACTION_TEXTURE_UV}, uniform.textureBias).{STD_REFRACTION_TEXTURE_CHANNEL};
+    refraction = refraction * textureSampleBias({STD_REFRACTION_TEXTURE_NAME}, {STD_REFRACTION_TEXTURE_NAME}Sampler, {STD_REFRACTION_TEXTURE_UV}, {STD_TEXTURE_BIAS}).{STD_REFRACTION_TEXTURE_CHANNEL};
     #endif
 
     #ifdef STD_REFRACTION_VERTEX

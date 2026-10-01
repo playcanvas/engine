@@ -1,4 +1,4 @@
-import { zipSync, strToU8 } from 'fflate';
+import { zipSync, strToU8, strFromU8 } from 'fflate';
 
 import { VERSION } from './constants.mjs';
 import { getExampleSnapshot } from './example-snapshot.mjs';
@@ -10,7 +10,7 @@ const IMPORT_RE = /(\b(?:from|import)[\s(]*)(['"])([^'"\n]+)\2/g;
 // matches runtime asset url string literals like './assets/x.glb' or '/scripts/y.js'
 const ASSET_RE = /['"`](\.?\/(?:assets|scripts)\/[\w./-]+)['"`]/g;
 
-// files imported for their raw text contents (mirrors the iframe runtime's blob behaviour)
+// files imported for their raw text contents (mirrors the iframe runtime's blob behavior)
 const RAW_EXT = /\.(?:vert|frag|wgsl|glsl|html|css|txt)$/;
 
 // the `// @config` comment block (browser-safe copy of utils/example-source.mjs configRegex)
@@ -24,10 +24,17 @@ const PC_RANGE = 'latest';
 const OBSERVER_VERSION = '1.7.1';
 const VITE_VERSION = '8.0.14';
 
-// folder-level license files whose terms require the file to ship alongside the assets. attribution
-// is preserved generally via @credit -> CREDITS.md; this co-locates the actual file only when its
-// assets are bundled (spine is the only such case today), avoiding any blanket sidecar probing.
-const COLOCATED_LICENSES = ['/assets/spine/license.txt'];
+// license files whose terms require them to ship with the assets they cover, mapped to those
+// assets' url prefixes. attribution is preserved generally via @credit -> CREDITS.md; this
+// co-locates the actual file only when its assets are bundled, avoiding blanket sidecar probing.
+const COLOCATED_LICENSES = {
+    '/assets/spine/license.txt': ['/assets/spine/'],
+    '/assets/fonts/roboto-license.txt': [
+        '/assets/fonts/roboto-regular.json',
+        '/assets/fonts/roboto-bold.json'
+    ],
+    '/assets/fonts/roboto-extralight-license.txt': ['/assets/fonts/roboto-extralight.json']
+};
 
 /**
  * @param {string} spec - Import specifier.
@@ -71,7 +78,7 @@ const transformSource = source => source.replace(CONFIG_RE, '').replace(/^(?:[ \
 
 /**
  * @param {string[]} sources - Source strings to scan.
- * @returns {{ urls: string[], dynamic: string[] }} Static asset urls (normalised to '/assets/..') and dynamic-dir prefixes.
+ * @returns {{ urls: string[], dynamic: string[] }} Static asset urls (normalized to '/assets/..') and dynamic-dir prefixes.
  */
 const scanAssetUrls = (sources) => {
     const urls = new Set();
@@ -92,6 +99,32 @@ const scanAssetUrls = (sources) => {
         }
     }
     return { urls: [...urls], dynamic: [...dynamic] };
+};
+
+/**
+ * A font asset loads its texture pages from urls derived from its own, which the example source
+ * never names: 'name.png', then 'name1.png', 'name2.png' and so on (mirrors FontHandler).
+ *
+ * @param {string} url - Url of a bundled asset.
+ * @param {Uint8Array} bytes - The asset's contents.
+ * @returns {string[]} The urls of the font's texture pages, or none if the asset is not a font.
+ */
+const fontPages = (url, bytes) => {
+    if (!url.endsWith('.json')) {
+        return [];
+    }
+    let data;
+    try {
+        data = JSON.parse(strFromU8(bytes));
+    } catch {
+        return [];
+    }
+    if (!data?.info || !data.chars) {
+        return [];
+    }
+    const first = url.replace('.json', '.png');
+    const count = Array.isArray(data.info.maps) ? data.info.maps.length : 1;
+    return Array.from({ length: count }, (_, i) => (i === 0 ? first : first.replace('.png', `${i}.png`)));
 };
 
 // mirrors the example's runtime context (examples/context): an empty observer the example seeds itself
@@ -157,7 +190,7 @@ import { data } from './context.mjs';
 
 import './example.mjs';
 
-// replay the captured control state after the example initialises (mirrors the examples browser)
+// replay the captured control state after the example initializes (mirrors the examples browser)
 for (const [path, value] of Object.entries(seed)) {
     if (data.has(path)) {
         data.set(path, value);
@@ -295,26 +328,35 @@ export const buildProjectZip = async ({ files, category, exampleName, deviceType
     add('package.json', renderPackageJson(root));
     add('vite.config.mjs', VITE_CONFIG);
 
-    // scan + fetch referenced assets into public/ (paths resolve unchanged under Vite)
+    // scan + fetch referenced assets into public/ (paths resolve unchanged under Vite), with the
+    // texture pages of any fonts among them
     const { urls, dynamic } = scanAssetUrls([files['example.mjs']]);
-    await Promise.all(urls.map(async (u) => {
+    /** @type {Set<string>} */
+    const fetched = new Set();
+    /**
+     * @param {string} u - Asset url, from the site root.
+     * @returns {Promise<void>} Resolves once the asset, and any pages it has, are bundled.
+     */
+    const fetchAsset = async (u) => {
+        if (fetched.has(u)) {
+            return;
+        }
+        fetched.add(u);
         const res = await fetch(`${STATIC_BASE}${u}`);
         if (!res.ok) {
             failed.push(u);
             return;
         }
-        out[`${root}/public${u}`] = new Uint8Array(await res.arrayBuffer());
-    }));
+        const bytes = new Uint8Array(await res.arrayBuffer());
+        out[`${root}/public${u}`] = bytes;
+        await Promise.all(fontPages(u, bytes).map(fetchAsset));
+    };
+    await Promise.all(urls.map(fetchAsset));
 
-    // co-locate folder-level license files whose terms require shipping the file with the assets
-    await Promise.all(COLOCATED_LICENSES.map(async (lic) => {
-        const dir = lic.slice(0, lic.lastIndexOf('/') + 1);
-        if (!urls.some(u => u.startsWith(dir))) {
-            return;
-        }
-        const res = await fetch(`${STATIC_BASE}${lic}`);
-        if (res.ok) {
-            out[`${root}/public${lic}`] = new Uint8Array(await res.arrayBuffer());
+    // co-locate license files whose terms require shipping the file with the assets they cover
+    await Promise.all(Object.entries(COLOCATED_LICENSES).map(async ([lic, covers]) => {
+        if (urls.some(u => covers.some(c => u.startsWith(c)))) {
+            await fetchAsset(lic);
         }
     }));
 

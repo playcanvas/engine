@@ -135,7 +135,8 @@ class ParticleGPUUpdater {
             emitter.swapTex ? emitter.rtParticleTexIN : emitter.rtParticleTexOUT,
             !isOnStop ?
                 (emitter.loop ? emitter.shaderParticleUpdateRespawn : emitter.shaderParticleUpdateNoRespawn) :
-                emitter.shaderParticleUpdateOnStop);
+                emitter.shaderParticleUpdateOnStop,
+            undefined, undefined, 'ParticleUpdate');
 
         // this.constantParticleTexOUT.setValue(texOUT);
 

@@ -24,6 +24,7 @@ import {
     TextureHandler,
     TouchDevice,
     Vec3,
+    WireRenderer,
     createGraphicsDevice
 } from 'playcanvas';
 
@@ -156,65 +157,6 @@ ground.setLocalScale(70, 1, 70);
 ground.setLocalPosition(0, -0.5, 0);
 app.root.addChild(ground);
 
-// Setup light data
-data.set('lights', {
-    spot: {
-        enabled: true,
-        intensity: 0.8,
-        cookieIntensity: 1,
-        shadowIntensity: 1
-    },
-    omni: {
-        enabled: true,
-        intensity: 0.8,
-        cookieIntensity: 1,
-        shadowIntensity: 1
-    },
-    directional: {
-        enabled: true,
-        intensity: 0.8,
-        shadowIntensity: 1
-    }
-});
-
-// Setup material data. Note this is set up before the observer handler below is registered, so that
-// it does not fire for the initial value.
-data.set('material', {
-    flatShading: false
-});
-
-/** @type {{[key: string]: Entity }} */
-const lights = {};
-
-// Create an spot light
-lights.spot = new Entity();
-lights.spot.addComponent('light', {
-    ...{
-        type: 'spot',
-        color: Color.WHITE,
-        innerConeAngle: 30,
-        outerConeAngle: 31,
-        range: 100,
-        castShadows: true,
-        shadowBias: 0.05,
-        normalOffsetBias: 0.03,
-        shadowResolution: 2048,
-        // Heart texture's alpha channel as a cookie texture
-        cookie: assets.heart.resource,
-        cookieChannel: 'a'
-    },
-    ...data.get('lights.spot')
-});
-
-const cone = new Entity();
-cone.addComponent('render', {
-    type: 'cone',
-    castShadows: false,
-    material: createMaterial({ emissive: Color.WHITE })
-});
-lights.spot.addChild(cone);
-app.root.addChild(lights.spot);
-
 // Construct the cubemap asset for the omni light cookie texture
 // Note: the textures array could contain 6 texture asset names to load instead as well
 const cubemapAsset = new Asset('xmas_cubemap', 'cubemap', null, {
@@ -230,47 +172,186 @@ const cubemapAsset = new Asset('xmas_cubemap', 'cubemap', null, {
 cubemapAsset.loadFaces = true;
 app.assets.add(cubemapAsset);
 
-// Create a omni light
-lights.omni = new Entity();
-lights.omni.addComponent('light', {
-    ...{
-        type: 'omni',
-        color: Color.YELLOW,
-        castShadows: true,
-        shadowBias: 0.05,
-        normalOffsetBias: 0.03,
-        shadowType: SHADOW_PCF3_32F,
-        shadowResolution: 256,
-        range: 111,
-        cookieAsset: cubemapAsset,
-        cookieChannel: 'rgb'
+// Setup light data. The settings of a type apply to every light of that type; 'count' is how
+// many there are, driven by the Add / Remove buttons.
+data.set('lights', {
+    spot: {
+        enabled: true,
+        intensity: 0.8,
+        cookieIntensity: 1,
+        shadowIntensity: 1,
+        count: 0
     },
-    ...data.get('lights.omni')
-});
-lights.omni.addComponent('render', {
-    type: 'sphere',
-    castShadows: false,
-    material: createMaterial({ diffuse: Color.BLACK, emissive: Color.YELLOW })
-});
-app.root.addChild(lights.omni);
-
-// Create a directional light
-lights.directional = new Entity();
-lights.directional.addComponent('light', {
-    ...{
-        type: 'directional',
-        color: Color.CYAN,
-        range: 100,
-        shadowDistance: 50,
-        castShadows: true,
-        shadowBias: 0.1,
-        normalOffsetBias: 0.2
+    omni: {
+        enabled: true,
+        intensity: 0.8,
+        cookieIntensity: 1,
+        shadowIntensity: 1,
+        count: 0
     },
-    ...data.get('lights.directional')
+    directional: {
+        enabled: true,
+        intensity: 0.8,
+        shadowIntensity: 1,
+        count: 0
+    }
 });
-app.root.addChild(lights.directional);
 
-// Allow user to toggle individual lights
+// Setup material data. Note this is set up before the observer handler below is registered, so that
+// it does not fire for the initial value.
+data.set('material', {
+    flatShading: false
+});
+
+// Debug rendering of the shape and extent of every light, in the light's own color
+data.set('debug', {
+    lightShapes: true
+});
+const wire = new WireRenderer(app);
+
+// A palette per type, so that several lights of one type are told apart by their color as well as
+// by where their light and shadows fall. The first light of each type keeps its traditional color.
+const palettes = {
+    spot: [Color.WHITE, new Color(1, 0.6, 0.3), new Color(0.5, 0.8, 1)],
+    omni: [Color.YELLOW, new Color(0.4, 1, 0.5), new Color(1, 0.4, 0.5)],
+    directional: [Color.CYAN, new Color(1, 0.5, 0.2), new Color(1, 0.3, 1)]
+};
+
+/** @type {{ spot: Entity[], omni: Entity[], directional: Entity[] }} */
+const lights = {
+    spot: [],
+    omni: [],
+    directional: []
+};
+
+/**
+ * The light settings the user controls, from the data for a type - excluding 'count', which is
+ * not a light property.
+ *
+ * @param {string} type - The light type.
+ * @returns {object} The settings to apply to a light component.
+ */
+const lightSettings = (type) => {
+    const { enabled, intensity, cookieIntensity, shadowIntensity } = data.get(`lights.${type}`);
+    return type === 'directional'
+        ? { enabled, intensity, shadowIntensity }
+        : { enabled, intensity, cookieIntensity, shadowIntensity };
+};
+
+/**
+ * Creates a light of the given type. Its index picks its color and, in the update loop, where it
+ * sits or points, so that several lights of one type cast visibly separate light and shadows.
+ *
+ * @param {'spot'|'omni'|'directional'} type - The light type.
+ * @param {number} index - The index of the light among its type.
+ * @returns {Entity} The light entity.
+ */
+function createLight(type, index) {
+    const palette = palettes[type];
+    const color = palette[index % palette.length];
+    const light = new Entity(`${type} ${index}`);
+
+    switch (type) {
+        case 'spot': {
+            light.addComponent('light', {
+                type: 'spot',
+                color: color,
+                innerConeAngle: 30,
+                outerConeAngle: 31,
+                range: 100,
+                castShadows: true,
+                shadowBias: 0.05,
+                normalOffsetBias: 0.03,
+                shadowResolution: 2048,
+                // Heart texture's alpha channel as a cookie texture
+                cookie: assets.heart.resource,
+                cookieChannel: 'a',
+                ...lightSettings(type)
+            });
+            const cone = new Entity();
+            cone.addComponent('render', {
+                type: 'cone',
+                castShadows: false,
+                material: createMaterial({ emissive: color })
+            });
+            light.addChild(cone);
+            break;
+        }
+
+        case 'omni':
+            light.addComponent('light', {
+                type: 'omni',
+                color: color,
+                castShadows: true,
+                shadowBias: 0.05,
+                normalOffsetBias: 0.03,
+                shadowType: SHADOW_PCF3_32F,
+                shadowResolution: 256,
+                range: 111,
+                cookieAsset: cubemapAsset,
+                cookieChannel: 'rgb',
+                ...lightSettings(type)
+            });
+            light.addComponent('render', {
+                type: 'sphere',
+                castShadows: false,
+                material: createMaterial({ diffuse: Color.BLACK, emissive: color })
+            });
+            break;
+
+        case 'directional':
+            light.addComponent('light', {
+                type: 'directional',
+                color: color,
+                range: 100,
+                shadowDistance: 300,
+                numCascades: 2,
+                shadowResolution: 2048,
+                castShadows: true,
+                shadowBias: 0.1,
+                normalOffsetBias: 0.2,
+                ...lightSettings(type)
+            });
+            // a directional light shines from everywhere, so its position only places the arrow
+            // that visualizes its direction - above the statue, out of the way of the shadows
+            light.setLocalPosition(0, 22, 0);
+            break;
+    }
+
+    app.root.addChild(light);
+    return light;
+}
+
+/**
+ * @param {'spot'|'omni'|'directional'} type - The light type.
+ */
+function addLight(type) {
+    const list = lights[type];
+    list.push(createLight(type, list.length));
+    data.set(`lights.${type}.count`, list.length);
+}
+
+/**
+ * @param {'spot'|'omni'|'directional'} type - The light type.
+ */
+function removeLight(type) {
+    const list = lights[type];
+    const light = list.pop();
+    if (light) {
+        light.destroy();
+        data.set(`lights.${type}.count`, list.length);
+    }
+}
+
+// start with one light of each type
+addLight('spot');
+addLight('omni');
+addLight('directional');
+
+data.on('add', (type) => addLight(type));
+data.on('remove', (type) => removeLight(type));
+
+// Allow user to toggle the lights of a type
 app.keyboard.on(
     'keydown',
     (e) => {
@@ -291,19 +372,49 @@ app.keyboard.on(
     this
 );
 
-// Simple update loop to rotate the light
+// Simple update loop to move the lights. The lights of a type share a turn round the statue
+// equally - and the directional lights differ in elevation too - so that however many there are,
+// their light and shadows are told apart.
 let angleRad = 1;
 app.on('update', (dt) => {
     angleRad += 0.3 * dt;
     if (entity) {
-        lights.spot.lookAt(new Vec3(0, -5, 0));
-        lights.spot.rotateLocal(90, 0, 0);
-        lights.spot.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
+        const turn = Math.PI * 2;
 
-        lights.omni.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
-        lights.omni.rotate(0, 50 * dt, 0);
+        lights.spot.forEach((spot, i) => {
+            const angle = angleRad + (i / lights.spot.length) * turn;
+            spot.lookAt(new Vec3(0, -5, 0));
+            spot.rotateLocal(90, 0, 0);
+            spot.setLocalPosition(15 * Math.sin(angle), 25, 15 * Math.cos(angle));
+        });
 
-        lights.directional.setLocalEulerAngles(45, -60 * angleRad, 0);
+        lights.omni.forEach((omni, i) => {
+            const angle = -2 * angleRad + (i / lights.omni.length) * turn;
+            omni.setLocalPosition(5 * Math.sin(angle), 10, 5 * Math.cos(angle));
+            omni.rotate(0, 50 * dt, 0);
+        });
+
+        lights.directional.forEach((directional, i) => {
+            const yaw = -60 * angleRad + (i / lights.directional.length) * 360;
+            directional.setLocalEulerAngles(45 + ((i % 3) - 1) * 12, yaw, 0);
+        });
+
+        // Visualize the shape and extent of every enabled light, each drawn in the light's own
+        // color. A light is disabled together with its entity, see the 'enabled' setting below.
+        if (data.get('debug.lightShapes')) {
+            /**
+             * @param {Entity[]} entities - The light entities of one type.
+             * @param {number} [size] - The arrow length, for directional lights that have no extent.
+             */
+            const drawShapes = (entities, size) => {
+                entities.forEach((entity) => {
+                    if (entity.enabled) wire.light(entity.light, size);
+                });
+            };
+            drawShapes(lights.omni);
+            drawShapes(lights.spot);
+            drawShapes(lights.directional, 8);
+        }
     }
 });
 
@@ -323,10 +434,18 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         return;
     }
 
-    if (pathArray[2] === 'enabled') {
-        lights[pathArray[1]].enabled = value;
-    } else {
-        // @ts-ignore
-        lights[pathArray[1]].light[pathArray[2]] = value;
+    if (pathArray[0] !== 'lights' || pathArray[2] === 'count') {
+        return;
     }
+
+    // a setting of a type applies to every light of that type
+    const property = pathArray[2];
+    lights[pathArray[1]].forEach((light) => {
+        if (property === 'enabled') {
+            light.enabled = value;
+        } else {
+            // @ts-ignore
+            light.light[property] = value;
+        }
+    });
 });

@@ -4,11 +4,12 @@ import { restore, spy, stub } from 'sinon';
 import { Debug } from '../../../src/core/debug.js';
 import { AppBase } from '../../../src/framework/app-base.js';
 import { AppOptions } from '../../../src/framework/app-options.js';
+import { Application } from '../../../src/framework/application.js';
 import { CollisionComponentSystem } from '../../../src/framework/components/collision/system.js';
 import { RigidBodyComponentSystem } from '../../../src/framework/components/rigid-body/system.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { NullPhysicsWorld } from '../../../src/framework/physics/null/null-physics-world.js';
-import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
+import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
 
 describe('AppOptions.physicsWorld', function () {
@@ -20,7 +21,7 @@ describe('AppOptions.physicsWorld', function () {
         const canvas = document.createElement('canvas');
         const appBase = new AppBase(canvas);
         const options = new AppOptions();
-        options.graphicsDevice = new NullGraphicsDevice(canvas);
+        options.graphicsDevice = createGraphicsDevice(canvas);
         options.componentSystems = [RigidBodyComponentSystem, CollisionComponentSystem];
         options.resourceHandlers = [];
         options.physicsWorld = physicsWorld;
@@ -46,11 +47,23 @@ describe('AppOptions.physicsWorld', function () {
         expect(app.systems.rigidbody.physicsWorld).to.equal(world);
     });
 
-    it('registers the rigid body system as the contact listener', function () {
+    it('is installed from the options of the Application constructor', function () {
+        const world = new NullPhysicsWorld();
+        const canvas = document.createElement('canvas');
+        app = new Application(canvas, {
+            graphicsDevice: createGraphicsDevice(canvas),
+            physicsWorld: world
+        });
+
+        expect(app.systems.rigidbody.physicsWorld).to.equal(world);
+        expect(world.contactListener).to.equal(app.systems.rigidbody._contactListener);
+    });
+
+    it('registers the contact listener of the rigid body system', function () {
         const world = new NullPhysicsWorld();
         app = createAppBase(world);
 
-        expect(world.contactListener).to.equal(app.systems.rigidbody);
+        expect(world.contactListener).to.equal(app.systems.rigidbody._contactListener);
     });
 
     it('skips Ammo auto-detection when a world is injected', function () {

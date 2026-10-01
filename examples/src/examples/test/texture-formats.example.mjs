@@ -15,6 +15,7 @@ import {
     FILLMODE_FILL_WINDOW,
     RESOLUTION_AUTO,
     TextureHandler,
+    TextureRenderer,
     basisInitialize,
     createGraphicsDevice
 } from 'playcanvas';
@@ -57,6 +58,8 @@ createOptions.resourceHandlers = [TextureHandler];
 const app = new AppBase(canvas);
 app.init(createOptions);
 
+const textures = new TextureRenderer(app);
+
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -74,25 +77,25 @@ await new Promise((resolve) => {
 
 app.start();
 
-// a camera is required to render the immediate-mode textures
+// A camera is required to render the texture previews
 const camera = new Entity();
 camera.addComponent('camera', {
     clearColor: new Color(0.1, 0.1, 0.1)
 });
 app.root.addChild(camera);
 
-// Grid layout (screen-space NDC, -1..1), one tile per format
+// Grid layout in normalized viewport coordinates, one tile per format
 const grid = [
-    { asset: assets.png, x: -0.5, y: 0.42 },
-    { asset: assets.dds, x: 0.0, y: 0.42 },
-    { asset: assets.ktx2, x: 0.5, y: 0.42 },
-    { asset: assets.basis, x: -0.25, y: -0.42 },
-    { asset: assets.hdr, x: 0.25, y: -0.42 }
+    { asset: assets.png, x: 0.15, y: 0.14 },
+    { asset: assets.dds, x: 0.4, y: 0.14 },
+    { asset: assets.ktx2, x: 0.65, y: 0.14 },
+    { asset: assets.basis, x: 0.275, y: 0.56 },
+    { asset: assets.hdr, x: 0.525, y: 0.56 }
 ];
 
-// Immediate-mode texture draws must be re-issued every frame
+// Submit the texture previews every frame
 app.on('update', () => {
     grid.forEach(({ asset, x, y }) => {
-        app.drawTexture(x, y, 0.4, 0.6, asset.resource);
+        textures.draw(asset.resource, x, y, 0.2, 0.3);
     });
 });

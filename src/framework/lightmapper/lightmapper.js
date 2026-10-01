@@ -19,12 +19,13 @@ import { Texture } from '../../platform/graphics/texture.js';
 import {
     BAKE_COLORDIR,
     GAMMA_NONE, TONEMAP_LINEAR,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT,
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../../scene/constants.js';
+import { LightList } from '../../scene/lighting/light-list.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
 import { LightingParams } from '../../scene/lighting/lighting-params.js';
 import { WorldClusters } from '../../scene/lighting/world-clusters.js';
@@ -252,8 +253,6 @@ class Lightmapper {
             }
 
             if (!this.bakeHDR) material.setDefine('LIGHTMAP_RGBM', '');
-
-            material.lightMap = this.blackTex;
         } else {
             material.setDefine('LIT_LIGHTMAP_BAKING_DIR', '');
             material.setDefine('STD_LIGHTMAP_DIR', '');
@@ -335,7 +334,7 @@ class Lightmapper {
             let hasUv1 = true;
 
             for (let i = 0; i < meshInstances.length; i++) {
-                if (!meshInstances[i].mesh.vertexBuffer.format.hasUv1) {
+                if (!meshInstances[i].mesh.vertexBuffer.format.hasUv(1)) {
                     Debug.log(`Lightmapper - node [${node.name}] contains meshes without required uv1, excluding it from baking.`);
                     hasUv1 = false;
                     break;
@@ -824,14 +823,9 @@ class Lightmapper {
         return lightAffectsNode;
     }
 
-    // set up light array for a single light
-    setupLightArray(lightArray, light) {
-
-        lightArray[LIGHTTYPE_DIRECTIONAL].length = 0;
-        lightArray[LIGHTTYPE_OMNI].length = 0;
-        lightArray[LIGHTTYPE_SPOT].length = 0;
-
-        lightArray[light.type][0] = light;
+    // set up the light list for the single light being baked
+    setupLightList(lightList, light, clustered) {
+        lightList.update([light], clustered);
         light.visibleThisFrame = true;
     }
 
@@ -849,7 +843,7 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRendererDirectional.prepareShadowMap(light);
+                this.renderer._shadowRendererDirectional.prepareShadowMap(light, this.camera);
                 this.renderer._shadowRendererDirectional.cull(light, comp, this.camera, casters);
 
                 const shadowPass = this.renderer._shadowRendererDirectional.getLightRenderPass(light, this.camera);
@@ -923,10 +917,11 @@ class Lightmapper {
 
                     this.lightmapFilters.setSourceTexture(lightmap);
                     const bilateralFilterEnabled = filterLightmap && pass === 0 && i === 0;
-                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? denoiseShader : dilateShader);
+                    drawQuadWithShader(device, tempRT, bilateralFilterEnabled ? denoiseShader : dilateShader,
+                        undefined, undefined, bilateralFilterEnabled ? 'LightmapDenoise' : 'LightmapDilate');
 
                     this.lightmapFilters.setSourceTexture(tempTex);
-                    drawQuadWithShader(device, nodeRT, dilateShader);
+                    drawQuadWithShader(device, nodeRT, dilateShader, undefined, undefined, 'LightmapDilate');
                 }
             }
 
@@ -985,9 +980,15 @@ class Lightmapper {
                 m.setLightmapped(false);
                 m.mask = MASK_BAKE; // only affected by LM lights
 
-                // patch material
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], this.blackTex);
-                m.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], this.blackTex);
+                // patch material - the receiver samples the lightmap of its mesh instance for
+                // the whole bake, which starts out black and then accumulates the passes, so the
+                // lightmap path is forced on even when its material has no lightmap of its own.
+                // Only the slots this bake writes are bound, so a color only bake leaves no black
+                // directional lightmap behind.
+                for (let pass = 0; pass < passCount; pass++) {
+                    m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], this.blackTex);
+                }
+                m._shaderDefs |= SHADERDEF_LM;
             }
         }
 
@@ -996,7 +997,7 @@ class Lightmapper {
             bakeLights[j].light.enabled = false;
         }
 
-        const lightArray = [[], [], []];
+        const lightList = new LightList();
         let pass, node;
         let shadersUpdatedOn1stPass = false;
 
@@ -1039,7 +1040,7 @@ class Lightmapper {
                         continue;
                     }
 
-                    this.setupLightArray(lightArray, bakeLight.light);
+                    this.setupLightList(lightList, bakeLight.light, clusteredLightingEnabled);
                     const clusterLights = isDirectional ? [] : [bakeLight.light];
 
                     if (clusteredLightingEnabled) {
@@ -1108,7 +1109,7 @@ class Lightmapper {
 
                         const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
                             clusteredLightingEnabled ? this.worldClusters : null,
-                            rcv, lightArray);
+                            rcv, lightList);
                         renderPass.init(tempRT);
                         renderPass.colorOps.clear = true;
                         renderPass.colorOps.clearValue.copy(this.camera.clearColor);
@@ -1130,7 +1131,6 @@ class Lightmapper {
                         for (j = 0; j < rcv.length; j++) {
                             m = rcv[j];
                             m.setRealtimeLightmap(MeshInstance.lightmapParamNames[pass], tempTex); // ping-ponging input
-                            m._shaderDefs |= SHADERDEF_LM; // force using LM even if material doesn't have it
                         }
 
                         DebugGraphics.popGpuMarker(device);

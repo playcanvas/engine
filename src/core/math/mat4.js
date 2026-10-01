@@ -14,9 +14,35 @@ const z = new Vec3();
 const scale = new Vec3();
 
 /**
- * A 4x4 matrix. Mat4 is commonly used to represent world, view and projection transformations in
- * 3D graphics, combining rotation, translation and scale into a single matrix.
+ * A 4x4 matrix. Mat4 is commonly used to represent world, view and projection transformations in 3D
+ * graphics, combining rotation, translation and scale into a single matrix.
  *
+ * A new Mat4 is the identity. Elements live in {@link data}, a 16-element `Float32Array` in
+ * column-major order: the translation occupies elements 12, 13 and 14. Build a transform with
+ * {@link setTRS}, {@link setFromEulerAngles} or {@link setFromAxisAngle}, a camera matrix with
+ * {@link setLookAt}, {@link setPerspective} or {@link setOrtho}, and read parts back with
+ * {@link getTranslation}, {@link getScale} and {@link getEulerAngles}. Angles are in degrees.
+ *
+ * Matrices combine by multiplication: `r.mul2(a, b)` computes `a * b`, so `b` is applied first when
+ * the result transforms a point. {@link transformPoint} applies the full transform including
+ * translation, while {@link transformVector} applies only rotation and scale, which is what
+ * directions need.
+ *
+ * Methods modify the matrix they are called on and return it for chaining. Use {@link clone} for an
+ * independent copy and {@link copy} to overwrite. {@link IDENTITY} and {@link ZERO} are frozen
+ * shared instances, and the matrix returned by {@link GraphNode#getWorldTransform} is internal
+ * storage to be treated as read-only.
+ *
+ * @example
+ * // Compose a transform from position, rotation and scale
+ * const world = new Mat4().setTRS(
+ *     new Vec3(0, 1, 0),
+ *     new Quat().setFromEulerAngles(0, 45, 0),
+ *     Vec3.ONE
+ * );
+ * @example
+ * // Transform a local point into world space
+ * const worldPoint = entity.getWorldTransform().transformPoint(localPoint);
  * @category Math
  */
 class Mat4 {

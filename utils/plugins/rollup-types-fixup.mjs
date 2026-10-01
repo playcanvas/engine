@@ -8,16 +8,11 @@ const REGULAR_OUT = '\x1b[22m';
 const TYPES_PATH = './build/playcanvas/src';
 
 const STANDARD_MAT_PROPS = [
-    ['alphaFade', 'number'],
-    ['ambient', 'Color'],
-    ['anisotropyIntensity', 'number'],
-    ['anisotropyRotation', 'number'],
     ['anisotropyMap', 'Texture|null'],
     ['anisotropyMapOffset', 'Vec2'],
     ['anisotropyMapRotation', 'number'],
     ['anisotropyMapTiling', 'Vec2'],
     ['anisotropyMapUv', 'number'],
-    ['aoIntensity', 'number'],
     ['aoMap', 'Texture|null'],
     ['aoMapChannel', 'string'],
     ['aoMapOffset', 'Vec2'],
@@ -33,9 +28,6 @@ const STANDARD_MAT_PROPS = [
     ['aoDetailMode', 'string'],
     ['aoVertexColor', 'boolean'],
     ['aoVertexColorChannel', 'string'],
-    ['bumpiness', 'number'],
-    ['clearCoat', 'number'],
-    ['clearCoatBumpiness', 'number'],
     ['clearCoatGlossInvert', 'boolean'],
     ['clearCoatGlossMap', 'Texture|null'],
     ['clearCoatGlossMapChannel', 'string'],
@@ -45,7 +37,6 @@ const STANDARD_MAT_PROPS = [
     ['clearCoatGlossMapUv', 'number'],
     ['clearCoatGlossVertexColor', 'boolean'],
     ['clearCoatGlossVertexColorChannel', 'string'],
-    ['clearCoatGloss', 'number'],
     ['clearCoatMap', 'Texture|null'],
     ['clearCoatMapChannel', 'string'],
     ['clearCoatMapOffset', 'Vec2'],
@@ -61,8 +52,6 @@ const STANDARD_MAT_PROPS = [
     ['clearCoatVertexColorChannel', 'string'],
     ['cubeMap', 'Texture|null'],
     ['cubeMapProjection', 'number'],
-    ['cubeMapProjectionBox', 'BoundingBox'],
-    ['diffuse', 'Color'],
     ['diffuseDetailMap', 'Texture|null'],
     ['diffuseDetailMapChannel', 'string'],
     ['diffuseDetailMapOffset', 'Vec2'],
@@ -78,8 +67,6 @@ const STANDARD_MAT_PROPS = [
     ['diffuseMapUv', 'number'],
     ['diffuseVertexColor', 'boolean'],
     ['diffuseVertexColorChannel', 'string'],
-    ['emissive', 'Color'],
-    ['emissiveIntensity', 'number'],
     ['emissiveMap', 'Texture|null'],
     ['emissiveMapChannel', 'string'],
     ['emissiveMapOffset', 'Vec2'],
@@ -91,7 +78,6 @@ const STANDARD_MAT_PROPS = [
     ['enableGGXSpecular', 'boolean'],
     ['envAtlas', 'Texture|null'],
     ['fresnelModel', 'number'],
-    ['gloss', 'number'],
     ['glossInvert', 'boolean'],
     ['glossMap', 'Texture|null'],
     ['glossMapChannel', 'string'],
@@ -103,7 +89,6 @@ const STANDARD_MAT_PROPS = [
     ['glossVertexColorChannel', 'string'],
     ['heightMap', 'Texture|null'],
     ['heightMapChannel', 'string'],
-    ['heightMapFactor', 'number'],
     ['heightMapOffset', 'Vec2'],
     ['heightMapRotation', 'number'],
     ['heightMapTiling', 'Vec2'],
@@ -116,7 +101,6 @@ const STANDARD_MAT_PROPS = [
     ['lightMapUv', 'number'],
     ['lightVertexColor', 'boolean'],
     ['lightVertexColorChannel', 'string'],
-    ['metalness', 'number'],
     ['metalnessMap', 'Texture|null'],
     ['metalnessMapChannel', 'string'],
     ['metalnessMapOffset', 'Vec2'],
@@ -126,7 +110,6 @@ const STANDARD_MAT_PROPS = [
     ['metalnessVertexColor', 'boolean'],
     ['metalnessVertexColorChannel', 'string'],
     ['normalDetailMap', 'Texture|null'],
-    ['normalDetailMapBumpiness', 'number'],
     ['normalDetailMapOffset', 'Vec2'],
     ['normalDetailMapRotation', 'number'],
     ['normalDetailMapTiling', 'Vec2'],
@@ -138,8 +121,6 @@ const STANDARD_MAT_PROPS = [
     ['normalMapUv', 'number'],
     ['occludeDirect', 'boolean'],
     ['occludeSpecular', 'number'],
-    ['occludeSpecularIntensity', 'number'],
-    ['opacity', 'number'],
     ['opacityDither', 'string'],
     ['opacityShadowDither', 'string'],
     ['opacityFadesSpecular', 'boolean'],
@@ -152,12 +133,7 @@ const STANDARD_MAT_PROPS = [
     ['opacityVertexColor', 'boolean'],
     ['opacityVertexColorChannel', 'string'],
     ['pixelSnap', 'boolean'],
-    ['reflectivity', 'number'],
-    ['refraction', 'number'],
-    ['refractionIndex', 'number'],
-    ['dispersion', 'number'],
     ['shadowCatcher', 'boolean'],
-    ['specular', 'Color'],
     ['specularMap', 'Texture|null'],
     ['specularMapChannel', 'string'],
     ['specularMapOffset', 'Vec2'],
@@ -166,7 +142,6 @@ const STANDARD_MAT_PROPS = [
     ['specularMapUv', 'number'],
     ['specularVertexColor', 'boolean'],
     ['specularVertexColorChannel', 'string'],
-    ['specularityFactor', 'number'],
     ['specularityFactorMap', 'Texture|null'],
     ['specularityFactorMapChannel', 'string'],
     ['specularityFactorMapOffset', 'Vec2'],
@@ -174,7 +149,6 @@ const STANDARD_MAT_PROPS = [
     ['specularityFactorMapTiling', 'Vec2'],
     ['specularityFactorMapUv', 'number'],
     ['useSheen', 'boolean'],
-    ['sheen', 'Color'],
     ['sheenMap', 'Texture|null'],
     ['sheenMapChannel', 'string'],
     ['sheenMapOffset', 'Vec2'],
@@ -202,6 +176,12 @@ const STANDARD_MAT_ANCHOR = 'reset(): void;';
 // block in place rather than add a second copy, which matters when an incremental tsc run leaves
 // behind a declaration file that was fixed up with an older STANDARD_MAT_PROPS.
 const STANDARD_MAT_INJECTED = /^(?:\r?\n(?: *\t[^\n]*)?)*(?=\r?\n)/;
+
+// tsc emits the AssetMap typedef as a type alias, which cannot be augmented. Rewriting it into an
+// interface lets an application add its own asset types with
+// `declare module 'playcanvas' { interface AssetMap { mytype: MyResource } }`.
+const ASSET_MAP_ALIAS = 'export type AssetMap = {';
+const ASSET_MAP_INTERFACE = 'export interface AssetMap {';
 
 const REPLACEMENTS = [{
     path: `${TYPES_PATH}/scene/materials/standard-material.d.ts`,
@@ -285,6 +265,27 @@ import { Texture } from '../../platform/graphics/texture.js';
     swap?(old: ScriptType): void;
 `
     }
+}, {
+    path: `${TYPES_PATH}/framework/asset/asset.d.ts`,
+    replacement: {
+        guard: ASSET_MAP_INTERFACE,
+        transformer: (contents) => {
+            const start = contents.indexOf(ASSET_MAP_ALIAS);
+            if (start === -1) {
+                throw new Error(`types-fixup: '${ASSET_MAP_ALIAS}' not found in the Asset declarations`);
+            }
+
+            // tsc puts each member on its own indented line and the closing `};` at column 0, so
+            // the first line-initial `};` after the alias closes it
+            const closing = contents.slice(start).match(/^\};\r?$/m);
+            if (!closing) {
+                throw new Error('types-fixup: the end of the AssetMap alias was not found in the Asset declarations');
+            }
+            const end = start + closing.index;
+            const body = contents.slice(start + ASSET_MAP_ALIAS.length, end);
+            return `${contents.slice(0, start)}${ASSET_MAP_INTERFACE}${body}}${contents.slice(end + 2)}`;
+        }
+    }
 }];
 
 export function fixTypes(root = '.') {
@@ -294,8 +295,18 @@ export function fixTypes(root = '.') {
         if (!guard || !contents.includes(guard)) {
             contents = transformer ? transformer(contents) : contents.replace(from, to);
         }
-        if (footer && !contents.includes(footer.trim())) {
-            contents += footer;
+        if (footer) {
+            // append only the footer lines the file does not already contain - tsc emits the import
+            // itself when the source references the type (e.g. an explicit accessor)
+            // tsc emits a type-only import for a type it only sees in JSDoc, so compare without the
+            // import keyword: "{ BoundingBox } from '...'" is present either way
+            const missing = footer.split('\n').filter((line) => {
+                const trimmed = line.trim();
+                return trimmed && !contents.includes(trimmed.replace(/^import (type )?/, ''));
+            });
+            if (missing.length > 0) {
+                contents += `\n${missing.join('\n')}\n`;
+            }
         }
         fs.writeFileSync(path.resolve(root, item.path), contents, 'utf-8');
         console.log(`${GREEN_OUT}type fixed ${BOLD_OUT}${item.path}${REGULAR_OUT}`);

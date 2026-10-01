@@ -2,9 +2,21 @@ import { CURVE_SMOOTHSTEP } from './constants.js';
 import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
- * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its
- * type that specifies an interpolation scheme for the keys.
+ * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its type
+ * that specifies an interpolation scheme for the keys.
  *
+ * Keys are kept sorted by time. Supply them to the constructor as a flat `[time, value, ...]` array
+ * or insert them one at a time with {@link add}, then evaluate the curve at any time with
+ * {@link value}. The {@link type} selects how values between keys are computed:
+ * {@link CURVE_LINEAR}, {@link CURVE_SMOOTHSTEP}, {@link CURVE_SPLINE} or {@link CURVE_STEP}.
+ * Curves drive values that change over time or over a normalized range, such as particle size over
+ * a particle's lifetime.
+ *
+ * @example
+ * // Ease a value in over one second and read it back a quarter of the way through
+ * const curve = new Curve([0, 0, 1, 1]);
+ * curve.type = CURVE_SMOOTHSTEP;
+ * const v = curve.value(0.25);
  * @category Math
  */
 class Curve {
@@ -169,7 +181,8 @@ class Curve {
     }
 
     /**
-     * Returns the key closest to the specified time.
+     * Returns the key closest to the specified time. When two keys are equally close, the later
+     * one is returned.
      *
      * @param {number} time - The time to find the closest key to.
      * @returns {number[]|null} The `[time, value]` pair closest to the specified time, or null if
@@ -181,11 +194,20 @@ class Curve {
     closest(time) {
         const keys = this.keys;
         const length = keys.length;
-        let min = 2;
+        if (length === 0) {
+            return null;
+        }
+
+        // a time before or after the curve is closest to the key at that end. Clamp it first: far
+        // enough out, and always at -Infinity, every key is the same distance away and the
+        // tie-break would pick the last one
+        const t = Math.min(Math.max(time, keys[0][0]), keys[length - 1][0]);
+
+        let min = Infinity;
         let result = null;
 
         for (let i = 0; i < length; i++) {
-            const diff = Math.abs(time - keys[i][0]);
+            const diff = Math.abs(t - keys[i][0]);
             if (min >= diff) {
                 min = diff;
                 result = keys[i];

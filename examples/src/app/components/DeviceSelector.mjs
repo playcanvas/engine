@@ -5,6 +5,7 @@ import {
     DEVICETYPE_WEBGPU,
     DEVICETYPE_WEBGPU_BARE,
     DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGL2_BARE,
     DEVICETYPE_NULL
 } from '../constants.mjs';
 import { jsx } from '../jsx.mjs';
@@ -23,6 +24,7 @@ const deviceTypeNames = {
     [DEVICETYPE_WEBGPU]: 'WebGPU',
     [DEVICETYPE_WEBGPU_BARE]: 'WebGPU Bare',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
+    [DEVICETYPE_WEBGL2_BARE]: 'WebGL 2 Bare',
     [DEVICETYPE_NULL]: 'Null'
 };
 
@@ -188,6 +190,9 @@ class DeviceSelector extends TypedComponent {
                 { t: deviceTypeNames[DEVICETYPE_WEBGPU_BARE], v: DEVICETYPE_WEBGPU_BARE }
             ] : []),
             { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
+            ...(process.env.NODE_ENV === 'development' ? [
+                { t: deviceTypeNames[DEVICETYPE_WEBGL2_BARE], v: DEVICETYPE_WEBGL2_BARE }
+            ] : []),
             { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
         ];
         return jsx(SelectInput, {

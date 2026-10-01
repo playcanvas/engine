@@ -127,14 +127,14 @@ describe('AnimNode', function () {
 
     describe('#absoluteSpeed', function () {
 
-        it('returns an absolue speed when speed is negative', function () {
+        it('returns an absolute speed when speed is negative', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1, -5);
             expect(animNode.speed).to.equal(-5);
             expect(animNode.absoluteSpeed).to.equal(5);
         });
 
-        it('returns an absolue speed when speed is positive', function () {
+        it('returns an absolute speed when speed is positive', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1, 5);
             expect(animNode.speed).to.equal(5);
@@ -145,7 +145,7 @@ describe('AnimNode', function () {
 
     describe('#speed', function () {
 
-        it('returns a speed value thats weighted by the weightedSpeed value', function () {
+        it('returns a speed value that is weighted by the weightedSpeed value', function () {
             const animState = new AnimState({ findParameter: () => {} }, 'state', 1, true, null);
             const animNode = new AnimNode(animState, null, 'node', 1, 0.5);
             animNode.weightedSpeed = 0.5;

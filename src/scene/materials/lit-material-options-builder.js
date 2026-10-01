@@ -1,21 +1,26 @@
 import {
-    CUBEPROJ_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    CUBEPROJ_NONE,
     MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_MASK_SHIFT,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
     SHADER_PREPASS, SCENETEXTURE_DEPTH
 } from '../constants.js';
 
+/**
+ * @import { Light } from '../light.js'
+ * @import { LightList } from '../lighting/light-list.js'
+ */
+
 class LitMaterialOptionsBuilder {
-    static update(litOptions, material, scene, renderParams, objDefs, pass, sortedLights) {
+    static update(litOptions, material, scene, renderParams, objDefs, pass, lightList) {
         LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass, renderParams);
         LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
         LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene, renderParams);
-        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, scene, objDefs, sortedLights);
+        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, scene, objDefs, lightList);
     }
 
     static updateSharedOptions(litOptions, material, scene, objDefs, pass, renderParams) {
@@ -82,7 +87,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useRefraction = material.hasRefraction;
         litOptions.useClearCoat = material.hasClearCoat;
         litOptions.useSheen = material.hasSheen;
-        litOptions.useIridescence = material.hasIrridescence;
+        litOptions.useIridescence = material.hasIridescence;
         litOptions.useMetalness = material.hasMetalness;
         litOptions.useDynamicRefraction = material.dynamicRefraction;
         litOptions.dispersion = material.dispersion > 0;
@@ -135,26 +140,17 @@ class LitMaterialOptionsBuilder {
         litOptions.useCubeMapRotation = hasSkybox && scene._skyboxRotationShaderInclude;
     }
 
-    static updateLightingOptions(litOptions, material, scene, objDefs, sortedLights) {
+    static updateLightingOptions(litOptions, material, scene, objDefs, lightList) {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
-            const lightsFiltered = [];
-            const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
             litOptions.lightMapWithoutAmbient = false;
 
-            if (sortedLights) {
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-
-                if (!scene.clusteredLightingEnabled) {
-                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
-                    LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
-                }
-            }
-            litOptions.lights = lightsFiltered;
+            litOptions.lights = LitMaterialOptionsBuilder.selectLights(lightList, mask);
         } else {
             litOptions.lights = [];
         }
@@ -164,15 +160,28 @@ class LitMaterialOptionsBuilder {
         }
     }
 
-    static collectLights(lType, lights, lightsFiltered, mask) {
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            if (light.enabled) {
+    /**
+     * Returns the lights a mask selects, each at its light slot. A slot is the light's index in
+     * {@link LightList#slots}, the same for every mesh instance in the pass, so the slots this
+     * mask does not select are left as holes and the shader compiles them out. The renderer
+     * dispatches the lights from the same list, so the two cannot disagree.
+     *
+     * @param {LightList|undefined} lightList - The lights of the pass.
+     * @param {number} mask - The light mask of the mesh instance being drawn.
+     * @returns {Light[]} The selected lights, indexed by light slot.
+     */
+    static selectLights(lightList, mask) {
+        const selected = [];
+        if (lightList) {
+            const slots = lightList.slots;
+            for (let i = 0; i < slots.length; i++) {
+                const light = slots[i];
                 if (light.mask & mask) {
-                    lightsFiltered.push(light);
+                    selected[i] = light;
                 }
             }
         }
+        return selected;
     }
 }
 

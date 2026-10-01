@@ -1,10 +1,13 @@
 import { expect } from 'chai';
+import { restore, spy, stub } from 'sinon';
 
 import { Quat } from '../../../../src/core/math/quat.js';
 import { Vec3 } from '../../../../src/core/math/vec3.js';
 import { Asset } from '../../../../src/framework/asset/asset.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { NullPhysicsWorld } from '../../../../src/framework/physics/null/null-physics-world.js';
+import { PhysicsBody } from '../../../../src/framework/physics/physics-body.js';
+import { GraphNode } from '../../../../src/scene/graph-node.js';
 import { Model } from '../../../../src/scene/model.js';
 import { createApp } from '../../../app.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../../jsdom.mjs';
@@ -18,6 +21,7 @@ describe('CollisionComponent', function () {
     });
 
     afterEach(function () {
+        restore();
         app?.destroy();
         app = null;
         jsdomTeardown();
@@ -519,6 +523,290 @@ describe('CollisionComponent', function () {
 
             expect(() => e.destroy()).to.not.throw();
             expect(e.collision).to.not.exist;
+        });
+
+    });
+
+    describe('mesh scale', function () {
+        let world;
+
+        beforeEach(function () {
+            world = new NullPhysicsWorld();
+            app.systems.rigidbody.setPhysicsWorld(world);
+        });
+
+        /**
+         * A duck-typed render source - the null backend never reads the geometry.
+         *
+         * @param {number} [id] - The mesh id.
+         * @returns {object} The render source.
+         */
+        function createRender(id = 1) {
+            return { meshes: [{ id: id, primitive: [{ base: 0, count: 3 }] }] };
+        }
+
+        /**
+         * Creates an initialized mesh collision entity.
+         *
+         * @param {Entity} [parent] - The parent entity.
+         * @param {object} [data] - Extra collision component data.
+         * @returns {Entity} The entity.
+         */
+        function createMeshEntity(parent = app.root, data = {}) {
+            const e = new Entity();
+            parent.addChild(e);
+            e.addComponent('collision', { type: 'mesh', render: createRender(), ...data });
+            return e;
+        }
+
+        /**
+         * Creates a static compound root with a rigid body.
+         *
+         * @returns {Entity} The root entity.
+         */
+        function createCompoundRoot() {
+            const root = new Entity();
+            app.root.addChild(root);
+            root.addComponent('rigidbody');
+            root.addComponent('collision', { type: 'compound' });
+            return root;
+        }
+
+        function step() {
+            app.systems.rigidbody.step(1 / 60);
+        }
+
+        it('rebuilds the shape when the entity world scale changes', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+            expect(shape).to.exist;
+
+            e.setLocalScale(2, 2, 2);
+            step();
+
+            expect(e.collision.shape).to.exist;
+            expect(e.collision.shape).to.not.equal(shape);
+            expect(e.collision._builtWorldScale.equals(new Vec3(2, 2, 2))).to.equal(true);
+        });
+
+        it('rebuilds the shape when an ancestor scale changes', function () {
+            const parent = new Entity();
+            app.root.addChild(parent);
+            const e = createMeshEntity(parent);
+            const shape = e.collision.shape;
+
+            parent.setLocalScale(3, 3, 3);
+            step();
+
+            expect(e.collision.shape).to.not.equal(shape);
+        });
+
+        it('does not rebuild without a scale change', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+
+            step();
+            step();
+
+            expect(e.collision.shape).to.equal(shape);
+        });
+
+        it('does not rebuild when the entity merely moves or rotates', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+
+            e.setLocalPosition(1, 2, 3);
+            e.setLocalEulerAngles(10, 20, 30);
+            step();
+
+            expect(e.collision.shape).to.equal(shape);
+        });
+
+        it('defers the rebuild while the component is disabled', function () {
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+
+            e.collision.enabled = false;
+            e.setLocalScale(2, 2, 2);
+            step();
+            expect(e.collision.shape).to.equal(shape);
+
+            e.collision.enabled = true;
+            step();
+            expect(e.collision.shape).to.not.equal(shape);
+        });
+
+        it('rebuilds a scaled compound child inside its compound', function () {
+            const root = createCompoundRoot();
+            const child = createMeshEntity(root);
+            expect(child.collision._compoundParent).to.equal(root.collision);
+            expect(child.trigger).to.equal(undefined);
+            const shape = child.collision.shape;
+
+            const removeChild = spy(world, 'removeCompoundChild');
+            const updateChild = spy(world, 'updateCompoundChild');
+
+            root.setLocalScale(2, 2, 2);
+            step();
+
+            expect(child.collision.shape).to.not.equal(shape);
+            expect(removeChild.calledOnceWith(root.collision.shape, shape)).to.equal(true);
+            expect(updateChild.calledOnceWith(root.collision.shape, child.collision.shape)).to.equal(true);
+            expect(child.collision._compoundParent).to.equal(root.collision);
+            expect(child.trigger).to.equal(undefined);
+        });
+
+        it('rebuilds a compound child from a new render source without creating a trigger', function () {
+            const root = createCompoundRoot();
+            const child = createMeshEntity(root);
+            const shape = child.collision.shape;
+
+            const removeChild = spy(world, 'removeCompoundChild');
+            const updateChild = spy(world, 'updateCompoundChild');
+
+            child.collision.render = createRender(2);
+
+            expect(child.collision.shape).to.not.equal(shape);
+            expect(removeChild.calledOnceWith(root.collision.shape, shape)).to.equal(true);
+            expect(updateChild.calledOnceWith(root.collision.shape, child.collision.shape)).to.equal(true);
+            expect(child.trigger).to.equal(undefined);
+        });
+
+        it('wires an asynchronously loaded mesh child into its compound', function () {
+            const root = createCompoundRoot();
+
+            const asset = new Asset('render', 'render');
+            app.assets.add(asset);
+            // keep the asset pending - the registry would otherwise try to fetch it
+            const load = stub(app.assets, 'load');
+
+            const child = new Entity();
+            root.addChild(child);
+            child.addComponent('collision', { type: 'mesh', renderAsset: asset.id });
+            expect(load.called).to.equal(true);
+            expect(child.collision.shape).to.equal(null);
+
+            // the asset arrives
+            asset.resource = createRender();
+            asset.loaded = true;
+            asset.fire('load', asset);
+
+            expect(child.collision.shape).to.exist;
+            expect(child.collision._compoundParent).to.equal(root.collision);
+            expect(child.trigger).to.equal(undefined);
+            expect(app.systems.collision._meshComponents).to.include(child.collision);
+        });
+
+        it('ignores an asset that finishes loading after the component was removed', function () {
+            const asset = new Asset('render', 'render');
+            app.assets.add(asset);
+            stub(app.assets, 'load');
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('collision', { type: 'mesh', renderAsset: asset.id });
+            const component = e.collision;
+            e.removeComponent('collision');
+
+            asset.resource = createRender();
+            asset.loaded = true;
+            expect(() => asset.fire('load', asset)).to.not.throw();
+
+            expect(component._shape).to.equal(null);
+            expect(e.trigger).to.equal(undefined);
+            expect(app.systems.collision._meshComponents).to.have.lengthOf(0);
+        });
+
+        it('stops watching a component that changes type or is removed', function () {
+            const system = app.systems.collision;
+
+            const e = createMeshEntity();
+            expect(system._meshComponents).to.include(e.collision);
+
+            e.collision.type = 'box';
+            expect(system._meshComponents).to.have.lengthOf(0);
+
+            const e2 = createMeshEntity();
+            const component = e2.collision;
+            expect(system._meshComponents).to.include(component);
+
+            e2.destroy();
+            expect(system._meshComponents).to.have.lengthOf(0);
+        });
+
+        it('passes the entity world scale to the backend for render sources', function () {
+            const createShape = spy(world, 'createShape');
+
+            const e = new Entity();
+            e.setLocalScale(2, 3, 4);
+            app.root.addChild(e);
+            e.addComponent('collision', { type: 'mesh', render: createRender() });
+
+            const desc = createShape.lastCall.args[0];
+            expect(desc.type).to.equal('mesh');
+            expect(desc.scale).to.equal(undefined);
+            expect(desc.sources).to.have.lengthOf(1);
+            expect(desc.sources[0].scale.equals(new Vec3(2, 3, 4))).to.equal(true);
+            expect(desc.sources[0].position.equals(Vec3.ZERO)).to.equal(true);
+            expect(desc.sources[0].shapeScale).to.equal(undefined);
+        });
+
+        it('combines the node and entity scale of model sources', function () {
+            const createShape = spy(world, 'createShape');
+
+            // a model whose single node sits 1 unit up, scaled by 2 along X - the collision
+            // system only reads the mesh and node of a mesh instance
+            const model = new Model();
+            model.graph = new GraphNode();
+            const node = new GraphNode();
+            node.setLocalPosition(0, 1, 0);
+            node.setLocalScale(2, 1, 1);
+            model.graph.addChild(node);
+            model.meshInstances = [{ mesh: createRender().meshes[0], node: node }];
+
+            const e = new Entity();
+            e.setLocalScale(3, 3, 3);
+            app.root.addChild(e);
+            e.addComponent('collision', { type: 'mesh', model: model });
+
+            const source = createShape.lastCall.args[0].sources[0];
+            expect(source.scale.equals(new Vec3(6, 3, 3))).to.equal(true);
+            expect(source.position.equals(new Vec3(0, 3, 0))).to.equal(true);
+        });
+
+        it('keeps the velocities of a dynamic body across a rebuild', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('rigidbody', { type: 'dynamic' });
+            e.addComponent('collision', { type: 'mesh', convexHull: true, render: createRender() });
+            e.rigidbody.linearVelocity = new Vec3(1, 2, 3);
+            e.rigidbody.angularVelocity = new Vec3(4, 5, 6);
+
+            const setLinear = spy(PhysicsBody.prototype, 'setLinearVelocity');
+            const setAngular = spy(PhysicsBody.prototype, 'setAngularVelocity');
+
+            e.setLocalScale(2, 2, 2);
+            step();
+
+            expect(setLinear.calledOnce).to.equal(true);
+            expect(setLinear.firstCall.thisValue).to.equal(e.rigidbody._body);
+            expect(setLinear.firstCall.args[0].equals(new Vec3(1, 2, 3))).to.equal(true);
+            expect(setAngular.calledOnce).to.equal(true);
+            expect(setAngular.firstCall.args[0].equals(new Vec3(4, 5, 6))).to.equal(true);
+        });
+
+        it('does not watch mesh components when the backend cannot scale mesh instances', function () {
+            Object.defineProperty(world, 'supportsMeshScaling', { value: false });
+
+            const e = createMeshEntity();
+            const shape = e.collision.shape;
+            expect(shape).to.exist;
+            expect(app.systems.collision._meshComponents).to.have.lengthOf(0);
+
+            e.setLocalScale(2, 2, 2);
+            step();
+
+            expect(e.collision.shape).to.equal(shape);
         });
 
     });

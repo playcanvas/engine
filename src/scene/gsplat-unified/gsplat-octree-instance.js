@@ -7,7 +7,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 import { GsplatAllocId } from './gsplat-alloc-id.js';
-import { GSPLAT_DEBUG_NODE_AABBS, GSPLAT_LODMODE_DISTANCE, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
+import { GSPLAT_DEBUG_NODE_AABBS, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
@@ -25,6 +25,12 @@ const _tempDebugAabb = new BoundingBox();
 
 // tan(22.5deg) for the engine's default 45-degree vertical FOV, used as the FOV compensation reference
 const REF_TAN_HALF_FOV = Math.tan(22.5 * math.DEG_TO_RAD);
+
+// Load priority tiers, see GSplatOctreeInstance#applyLodChanges. A tier's priorities lie in
+// [tier, tier + 1), so a higher tier always loads first.
+const LOAD_TIER_PREFETCH = 0;
+const LOAD_TIER_SWITCH = 1;
+const LOAD_TIER_VISIBLE = 2;
 
 // Color instances used by debug wireframe rendering for LOD visualization
 const _lodColors = [
@@ -53,18 +59,12 @@ class NodeInfo {
     optimalLod = -1;
 
     /**
-     * World-space distance from camera to this node.
-     * Used for non-linear bucket mapping in budget enforcement.
+     * Squared world-space distance from the camera to this node, with the FOV compensation and
+     * the behind-camera penalty folded in. The only way camera position influences LOD selection,
+     * and what orders loads within a priority tier. Kept squared so the per-node pass needs no
+     * square root - every consumer works in squared or log space.
      */
-    worldDistance = 0;
-
-    /**
-     * Approximate projected screen coverage: the square of the node's projected radius, including
-     * the FOV scale and the behind-camera penalty already folded into the distance. This is the
-     * view-dependent half of an upgrade's value in the budget allocator, and the only way distance
-     * influences LOD selection.
-     */
-    lodCoverage = 0;
+    worldDistanceSq = 0;
 
     /**
      * Accumulated camera translation for SH color update threshold tracking.
@@ -185,12 +185,21 @@ class GSplatOctreeInstance {
     needsLodUpdate = false;
 
     /**
-     * Tracks prefetched file indices that are being loaded without active placements.
-     * When any completes, we trigger LOD re-evaluation to allow promotion.
+     * Tracks prefetched file indices that are being loaded without active placements, rebuilt on
+     * every LOD update. When any completes, we trigger LOD re-evaluation to allow promotion.
      *
      * @type {Set<number>}
      */
     prefetchPending = new Set();
+
+    /**
+     * Files this instance waits for, mapped to their load priority. Rebuilt on every LOD update
+     * and submitted to the octree, which combines the requests of all its instances.
+     *
+     * @type {Map<number, number>}
+     * @private
+     */
+    _fileRequests = new Map();
 
     /**
      * Tracks invisible->visible pending adds per node: nodeIndex -> fileIndex.
@@ -277,29 +286,20 @@ class GSplatOctreeInstance {
         // reference counts, so it is released regardless of skipRefCounting.
         if (this.octree && !this.octree.destroyed) {
             this.octree.releaseLodTable(this.lodTable);
+
+            // Withdraw this instance's file requests. A file another instance still requests, for
+            // another camera for example, keeps loading. Without deferred ref counting nothing
+            // releases an unreferenced download later, so it is unloaded right away.
+            this.octree.removeRequests(this, !skipRefCounting);
         }
         this.lodTable = null;
+        this._fileRequests.clear();
 
         if (!skipRefCounting && this.octree && !this.octree.destroyed) {
             // Decrement ref counts for all files currently in use (loaded files)
             const filesToDecRef = this.getFileDecrements();
             for (const fileIndex of filesToDecRef) {
                 this.octree.decRefCount(fileIndex, 0);
-            }
-
-            // Also unload files that are pending (requested but not loaded yet)
-            for (const fileIndex of this.pending) {
-                // Skip if already in filePlacements (already handled above)
-                if (!this.filePlacements[fileIndex]) {
-                    this.octree.unloadResource(fileIndex);
-                }
-            }
-
-            // Same for prefetch pending
-            for (const fileIndex of this.prefetchPending) {
-                if (!this.filePlacements[fileIndex]) {
-                    this.octree.unloadResource(fileIndex);
-                }
             }
 
             // Clean up environment if present
@@ -386,10 +386,8 @@ class GSplatOctreeInstance {
      * coarser than the target, so a node shows something rather than nothing while its target
      * streams in. If none are loaded it takes the coarsest level in that window.
      *
-     * Steps are taken along the node's LOD chain rather than over raw LOD indices. Chain entries
-     * are ordered by ascending splat count, whereas raw indices are not - nothing guarantees a
-     * coarser level holds fewer splats, and real captures do contain inversions. Walking the chain
-     * is what keeps a node's splat count from exceeding what the allocator budgeted for it.
+     * Steps are taken along the node's LOD chain rather than over raw LOD indices, so levels the
+     * node has no data for are skipped - see GSplatLodTable.
      *
      * @param {number} nodeIndex - The octree node index.
      * @param {number} optimalLodIndex - LOD index the allocator chose.
@@ -401,10 +399,12 @@ class GSplatOctreeInstance {
             const table = this.lodTable;
             const node = this.octree.nodes[nodeIndex];
 
-            // prefer the finest already-loaded level within the allowed window
+            // prefer the finest already-loaded level within the allowed window. A node's empty level
+            // (no data, no file, see GSplatLodTable) always qualifies: while its real coarsest data
+            // streams in the node draws nothing, instead of being pinned to finer data early.
             const loaded = table.findCoarserAccepted(nodeIndex, optimalLodIndex, lodUnderfillLimit, (lod) => {
                 const fi = node.lods[lod].fileIndex;
-                return fi !== -1 && !!this.octree.getFileResource(fi);
+                return fi === -1 || !!this.octree.getFileResource(fi);
             });
             if (loaded >= 0) return loaded;
 
@@ -424,50 +424,55 @@ class GSplatOctreeInstance {
     /**
      * Prefetch only the next-better LOD toward optimal. This stages loading in steps across all
      * nodes, avoiding intermixing requests before coarse is present. Steps follow the node's LOD
-     * chain, so each step is a strict increase in splat count and can never overshoot the level
-     * the allocator budgeted for.
+     * chain, so they skip levels the node has no data for and never overshoot the level the
+     * allocator chose.
      *
      * @param {number} nodeIndex - The octree node index.
      * @param {number} desiredLodIndex - Currently selected LOD for display (may be coarser than optimal).
      * @param {number} optimalLodIndex - Target optimal LOD.
+     * @param {number} priority - Load priority for the prefetched file.
      */
-    prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex) {
+    prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex, priority) {
         if (desiredLodIndex === -1 || optimalLodIndex === -1) return;
 
-        const node = this.octree.nodes[nodeIndex];
-
-        // If we're already at optimal but it's not loaded yet, request it
-        if (desiredLodIndex === optimalLodIndex) {
-            const fi = node.lods[optimalLodIndex].fileIndex;
-            if (fi !== -1) {
-                this.octree.ensureFileResource(fi);
-                if (!this.octree.getFileResource(fi)) {
-                    this.prefetchPending.add(fi);
-                }
-            }
-            return;
-        }
-
-        // Step one chain entry finer toward optimal
-        const targetLod = this.lodTable.finerOnChain(nodeIndex, desiredLodIndex);
+        // If we're already at optimal but it's not loaded yet, request it, otherwise step one
+        // chain entry finer toward optimal
+        const targetLod = desiredLodIndex === optimalLodIndex ?
+            optimalLodIndex :
+            this.lodTable.finerOnChain(nodeIndex, desiredLodIndex);
         if (targetLod < 0) return;
-        const fi = node.lods[targetLod].fileIndex;
-        if (fi !== -1) {
-            this.octree.ensureFileResource(fi);
-            if (!this.octree.getFileResource(fi)) {
-                this.prefetchPending.add(fi);
-            }
+
+        const fi = this.octree.nodes[nodeIndex].lods[targetLod].fileIndex;
+        if (fi !== -1 && !this.requestFile(fi, priority)) {
+            this.prefetchPending.add(fi);
         }
     }
 
     /**
-     * Resolves the configured LOD range against the octree and caches the selection table for it.
-     * Called before {@link GSplatOctreeInstance#evaluateNodeCoverage} so both that and the budget
-     * allocator see the same range.
+     * Requests a file for this LOD update, unless it is already loaded. A file requested more than
+     * once keeps its highest priority.
      *
-     * @param {string} lodMode - The scene's LOD selection mode, part of the table's identity.
+     * @param {number} fileIndex - The file index.
+     * @param {number} priority - Load priority, higher loads first.
+     * @returns {boolean} True if the file is already loaded.
      */
-    resolveLodRange(lodMode) {
+    requestFile(fileIndex, priority) {
+        if (this.octree.pollFileResource(fileIndex)) {
+            return true;
+        }
+
+        const current = this._fileRequests.get(fileIndex);
+        if (current === undefined || priority > current) {
+            this._fileRequests.set(fileIndex, priority);
+        }
+        return false;
+    }
+
+    /**
+     * Resolves the configured LOD range against the octree and caches the selection table for it.
+     * Called before the budget allocator, so it sees the current range.
+     */
+    resolveLodRange() {
         const maxLod = this.octree.lodLevels - 1;
         const { lodRangeMin, lodRangeMax } = this.placement;
         const rangeMin = Math.max(0, Math.min(lodRangeMin ?? 0, maxLod));
@@ -475,40 +480,33 @@ class GSplatOctreeInstance {
         this.rangeMin = rangeMin;
         this.rangeMax = rangeMax;
 
-        // Hold a reference only while this instance is on that range and mode, so a table is built
-        // once per live combination and dropped when the last instance moves off it.
+        // Hold a reference only while this instance is on that range, so a table is built once per
+        // live range and dropped when the last instance moves off it.
         const table = this.lodTable;
-        if (!table || table.rangeMin !== rangeMin || table.rangeMax !== rangeMax || table.lodMode !== lodMode) {
-            this.lodTable = this.octree.acquireLodTable(rangeMin, rangeMax, lodMode);
+        if (!table || table.rangeMin !== rangeMin || table.rangeMax !== rangeMax) {
+            this.lodTable = this.octree.acquireLodTable(rangeMin, rangeMax);
             this.octree.releaseLodTable(table);
         }
     }
 
     /**
-     * Evaluates per-node projected screen coverage and world distance from the camera. This is
-     * Pass 1 of the LOD update process; results are stored in the nodeInfos array and consumed by
-     * the budget allocator, which is what actually picks a LOD level.
-     *
-     * Coverage is the square of the node's projected radius. Under a perspective camera that
-     * attenuates with distance, with FOV compensation so it is comparable across cameras; under an
-     * orthographic camera a node's footprint does not depend on depth, so coverage is the radius
-     * against the ortho window, mirroring Camera#getScreenSize. The behind-camera penalty applies
-     * in both. Coverage is the only route by which camera position influences LOD.
-     *
-     * In distance LOD mode the node's size is factored out instead: coverage is the inverse square
-     * of the world distance under both projections, so equal-distance nodes always rank equally and
-     * the selection forms clean concentric bands, matching what that mode promises. This is also
-     * what gives an orthographic camera a distance ordering at all - its footprint carries no depth
-     * term to rank by.
+     * Evaluates each node's squared world distance from the camera, with FOV compensation and the
+     * behind-camera penalty folded in. This is Pass 1 of the LOD update process; results are
+     * stored in the nodeInfos array and consumed by the budget allocator, which is what actually
+     * picks a LOD level. Distance is measured to the nearest point of the node's bounds, and the
+     * same way under both projections - an orthographic footprint carries no depth term, so this
+     * is what gives it a distance ordering at all.
      *
      * @param {GraphNode} cameraNode - The camera node.
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      */
-    evaluateNodeCoverage(cameraNode, params) {
+    evaluateNodeDistances(cameraNode, params) {
         const { lodBehindPenalty } = params;
 
-        // resolveLodRange has run just before this, so the table always reflects the current mode
-        const distanceMode = this.lodTable.lodMode === GSPLAT_LODMODE_DISTANCE;
+        // bounds shrink towards their center by this fraction of how much larger than a typical
+        // node they are - see GSplatParams#lodDistanceShrink and GSplatOctree#nodeBoundsExcess
+        const shrink = params.lodDistanceShrink ?? 0;
+        const excessFlat = this.octree.nodeBoundsExcess;
 
         // Uniform scale of the octree transform, for world-space distance conversion.
         const uniformScale = this.placement.node.getWorldTransform().getScale().x;
@@ -517,20 +515,21 @@ class GSplatOctreeInstance {
         const ortho = camera.projection === PROJECTION_ORTHOGRAPHIC;
 
         // FOV compensation, perspective only: use min(tanHalfV, tanHalfH) to handle ultra-wide and
-        // portrait. An orthographic footprint depends on neither FOV nor distance.
+        // portrait.
         let fovScale = 1;
         if (!ortho) {
+            // a backbuffer with no size in either dimension (e.g. a hidden canvas) reports a 0, NaN
+            // or infinite aspect ratio, which would turn every distance, and so every LOD choice and
+            // load priority, into NaN
+            const cameraAspect = camera.aspectRatio;
+            const aspectRatio = cameraAspect > 0 && Number.isFinite(cameraAspect) ? cameraAspect : 1;
             let tanHalfVFov = Math.tan(camera.fov * 0.5 * math.DEG_TO_RAD);
             if (camera.horizontalFov) {
-                tanHalfVFov /= camera.aspectRatio;
+                tanHalfVFov /= aspectRatio;
             }
-            const tanHalfHFov = tanHalfVFov * camera.aspectRatio;
+            const tanHalfHFov = tanHalfVFov * aspectRatio;
             fovScale = Math.min(tanHalfVFov, tanHalfHFov) / REF_TAN_HALF_FOV;
         }
-        // Node radii are octree-local while orthoHeight is a world-space window, so the placement's
-        // uniform scale is folded in here. The perspective path needs no such conversion - its
-        // radius and distance are both local, so the scale cancels in the ratio.
-        const invOrthoHeight = ortho ? uniformScale / Math.max(camera.orthoHeight, 1e-12) : 0;
 
         // transform camera position to octree local space
         const worldCameraPosition = cameraNode.getPosition();
@@ -546,6 +545,11 @@ class GSplatOctreeInstance {
         // Packed [minX,minY,minZ,maxX,maxY,maxZ] per node — see GSplatOctree.nodeBoundsMinMax (hot path; avoids BoundingBox.closestPoint per iteration).
         const boundsFlat = this.octree.nodeBoundsMinMax;
 
+        // Everything that scales the distance, squared once. Node bounds are octree-local, so the
+        // placement's uniform scale converts to world units.
+        const distanceScaleSq = (fovScale * uniformScale) * (fovScale * uniformScale);
+        const penalty = lodBehindPenalty > 1 ? lodBehindPenalty - 1 : 0;
+
         // Camera position and forward in octree local space (scalars cached for the inner loop).
         const px = localCameraPosition.x;
         const py = localCameraPosition.y;
@@ -559,74 +563,56 @@ class GSplatOctreeInstance {
 
             // Nearest point on this node's AABB to the camera (same result as BoundingBox.closestPoint).
             const b = nodeIndex * 6;
+            let minX = boundsFlat[b];
+            let maxX = boundsFlat[b + 3];
+            let minY = boundsFlat[b + 1];
+            let maxY = boundsFlat[b + 4];
+            let minZ = boundsFlat[b + 2];
+            let maxZ = boundsFlat[b + 5];
+            if (shrink > 0) {
+                const e = nodeIndex * 3;
+                const sx = excessFlat[e] * shrink;
+                const sy = excessFlat[e + 1] * shrink;
+                const sz = excessFlat[e + 2] * shrink;
+                minX += sx;
+                maxX -= sx;
+                minY += sy;
+                maxY -= sy;
+                minZ += sz;
+                maxZ -= sz;
+            }
+
             let qx = px;
-            const minX = boundsFlat[b];
-            const maxX = boundsFlat[b + 3];
             if (qx < minX) qx = minX;
             else if (qx > maxX) qx = maxX;
 
             let qy = py;
-            const minY = boundsFlat[b + 1];
-            const maxY = boundsFlat[b + 4];
             if (qy < minY) qy = minY;
             else if (qy > maxY) qy = maxY;
 
             let qz = pz;
-            const minZ = boundsFlat[b + 2];
-            const maxZ = boundsFlat[b + 5];
             if (qz < minZ) qz = minZ;
             else if (qz > maxZ) qz = maxZ;
 
-            // Vector from camera to closest point on the box; length is world-space distance to the volume.
+            // Vector from camera to closest point on the box; its length is the distance to the volume.
             const dx = qx - px;
             const dy = qy - py;
             const dz = qz - pz;
-            const actualDistance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            const distanceSq = dx * dx + dy * dy + dz * dz;
 
-            // Angular multiplier for nodes behind the camera when enabled - kept as a factor so the
-            // orthographic path, whose coverage does not go through distance, can still apply it.
+            // Angular multiplier for nodes behind the camera when enabled. Only those need the
+            // actual distance, to normalize the angle.
             let penaltyFactor = 1;
-            if (lodBehindPenalty > 1 && actualDistance > 0.01) {
-                // forward · (dx,dy,dz) / |d| — same as Vec3.dot(dir, forward) / distance without temporaries
-                const dotOverDistance = (fwx * dx + fwy * dy + fwz * dz) / actualDistance;
-
-                // Only apply penalty when behind the camera (dot < 0)
-                if (dotOverDistance < 0) {
-                    const t = -dotOverDistance; // 0 .. 1 for front -> directly behind
-                    penaltyFactor = 1 + t * (lodBehindPenalty - 1);
+            if (penalty > 0 && distanceSq > 0.0001) {
+                const dot = fwx * dx + fwy * dy + fwz * dz;
+                if (dot < 0) {
+                    // 0 .. 1 for side-on -> directly behind
+                    const t = -dot / Math.sqrt(distanceSq);
+                    penaltyFactor = 1 + t * penalty;
                 }
             }
 
-            const fovAdjustedDistance = actualDistance * penaltyFactor * fovScale;
-            nodeInfo.worldDistance = fovAdjustedDistance * uniformScale;
-
-            // Squared projected radius. Floored just above zero so a degenerate node still has a
-            // well-defined, lowest-possible priority rather than a value the allocator has to
-            // special-case.
-            const radius = nodes[nodeIndex].boundingSphere.w;
-            let coverage;
-            if (distanceMode) {
-                // Inverse-square world distance, both projections: node size is deliberately not a
-                // factor, so equal-distance nodes rank equally whatever leaf sizes the octree cut
-                // produced and the selection forms clean concentric bands. The scale converts the
-                // octree-local distance to world units so differently scaled placements stay
-                // comparable under the shared budget; the behind penalty and FOV compensation
-                // arrive through fovAdjustedDistance. The floor is a constant, not the node radius,
-                // as a per-node guard would put size back into the ranking near the camera.
-                const worldDist = Math.max(fovAdjustedDistance * uniformScale, 1e-6);
-                coverage = 1 / (worldDist * worldDist);
-            } else if (ortho) {
-                // No distance attenuation: the footprint is the radius against the ortho window,
-                // clamped to a full-window 1 as the perspective ratio is bounded by 1. The behind
-                // penalty divides squared, matching how a penalized distance scales the far-field
-                // perspective coverage.
-                const projectedRadius = Math.min(radius * invOrthoHeight, 1);
-                coverage = (projectedRadius * projectedRadius) / (penaltyFactor * penaltyFactor);
-            } else {
-                const projectedRadius = radius / Math.max(radius + fovAdjustedDistance, 1e-12);
-                coverage = projectedRadius * projectedRadius;
-            }
-            nodeInfo.lodCoverage = Math.max(coverage, 1e-12);
+            nodeInfo.worldDistanceSq = distanceSq * penaltyFactor * penaltyFactor * distanceScaleSq;
         }
     }
 
@@ -635,11 +621,25 @@ class GSplatOctreeInstance {
      * This is Pass 2 of the LOD update process. Reads the levels the budget allocator wrote into
      * the nodeInfos array.
      *
+     * Also requests every file this instance still waits for, with a load priority. The priority
+     * is ranked by tier first - a node that shows nothing yet, then a node waiting to switch LOD,
+     * then a prefetch of the next finer level - and within a tier by the node's
+     * {@link NodeInfo#worldDistanceSq}, so the view fills with coarse data first and then refines
+     * nearest the camera first. A file shared by several nodes takes the highest priority of them.
+     * The requests are submitted to the octree, which combines them with those of its other
+     * instances and issues them in {@link GSplatOctree#flushRequests}.
+     *
      * @param {import('./gsplat-params.js').GSplatParams} params - Global gsplat parameters.
      */
     applyLodChanges(params) {
-        const nodes = this.octree.nodes;
+        const octree = this.octree;
+        const nodes = octree.nodes;
         const { lodUnderfillLimit = 0 } = params;
+
+        // rebuilt below from what the nodes still want, so a file nothing wants any more stops
+        // being requested and tracked
+        this.prefetchPending.clear();
+        this._fileRequests.clear();
 
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const node = nodes[nodeIndex];
@@ -744,9 +744,31 @@ class GSplatOctreeInstance {
                 }
             }
 
+            // Priority within a tier, nearer first: inverse square distance mapped monotonically
+            // into [0, 1).
+            const rank = 1 / (1 + Math.max(nodeInfo.worldDistanceSq, 1e-12));
+
+            // request the file the node waits for, to become visible or to switch LOD
+            const visibleAddFi = this.pendingVisibleAdds.get(nodeIndex);
+            if (visibleAddFi !== undefined) {
+                this.requestFile(visibleAddFi, LOAD_TIER_VISIBLE + rank);
+            }
+            const pendingSwitch = this.pendingDecrements.get(nodeIndex);
+            if (pendingSwitch) {
+                this.requestFile(pendingSwitch.newFileIndex, LOAD_TIER_SWITCH + rank);
+            }
+
             // Prefetch loading: request only the next-better LOD toward optimal
-            this.prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex);
+            this.prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex, LOAD_TIER_PREFETCH + rank);
         }
+
+        // Every placement still waiting for its file must stay requested, or flushRequests would
+        // withdraw it. The nodes above cover these with their own priorities, this is only a floor.
+        for (const fileIndex of this.pending) {
+            this.requestFile(fileIndex, LOAD_TIER_PREFETCH);
+        }
+
+        octree.submitRequests(this, this._fileRequests);
     }
 
     /**
@@ -777,8 +799,7 @@ class GSplatOctreeInstance {
             // if resource is already loaded, allow it to be used
             if (!this.addFilePlacement(fileIndex)) {
 
-                // resource not loaded yet, kick off load and add to pending
-                this.octree.ensureFileResource(fileIndex);
+                // resource not loaded yet, add to pending - applyLodChanges requests the load
                 this.pending.add(fileIndex);
             }
         }

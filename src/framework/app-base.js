@@ -1,19 +1,14 @@
 // #if _DEBUG
 import { version, revision } from '../core/core.js';
 // #endif
-import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
 import { EventHandler } from '../core/event-handler.js';
-import { Mat4 } from '../core/math/mat4.js';
 import { math } from '../core/math/math.js';
-import { Quat } from '../core/math/quat.js';
-import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    CULLFACE_NONE,
     SHADERLANGUAGE_GLSL,
     SHADERLANGUAGE_WGSL
 } from '../platform/graphics/constants.js';
@@ -32,7 +27,6 @@ import { AreaLightLuts } from '../scene/area-light-luts.js';
 import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Scene } from '../scene/scene.js';
-import { ShaderMaterial } from '../scene/materials/shader-material.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
@@ -51,7 +45,7 @@ import { ScriptRegistry } from './script/script-registry.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
 import { script } from './script.js';
-import { ApplicationStats } from './stats.js';
+import { AppStats } from './app-stats.js';
 import { getApplication, setApplication } from './globals.js';
 import { shaderChunksGLSL } from '../scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { shaderChunksWGSL } from '../scene/shader-lib/wgsl/collections/shader-chunks-wgsl.js';
@@ -66,13 +60,10 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
  * @import { GraphicsDevice } from '../platform/graphics/graphics-device.js'
  * @import { Keyboard } from '../platform/input/keyboard.js'
  * @import { Lightmapper } from './lightmapper/lightmapper.js'
- * @import { Material } from '../scene/materials/material.js'
- * @import { MeshInstance } from '../scene/mesh-instance.js'
- * @import { Mesh } from '../scene/mesh.js'
  * @import { Mouse } from '../platform/input/mouse.js'
  * @import { SoundManager } from '../platform/sound/manager.js'
- * @import { Texture } from '../platform/graphics/texture.js'
  * @import { TouchDevice } from '../platform/input/touch-device.js'
+ * @import { Vec3 } from '../core/math/vec3.js'
  * @import { XrManager } from './xr/xr-manager.js'
  */
 
@@ -99,6 +90,19 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 let app = null;
 
 /**
+ * The version of the contract under which an app announces itself to a devtools hook, defined on
+ * the global object under `Symbol.for('playcanvas.inspector')`. The hook's `register(app, info)` is
+ * called once an app is initialized, with its graphics device, scene, root entity and component
+ * systems in place, and `unregister(app)` as it is destroyed. An app created with
+ * {@link AppOptions#devtools} set to false does neither. The symbol is looked up at those two
+ * points only, not when the module loads, so the module stays free of side effects.
+ *
+ * @type {number}
+ * @ignore
+ */
+const DEVTOOLS_PROTOCOL = 1;
+
+/**
  * AppBase represents the base functionality for all PlayCanvas applications. It is responsible for
  * initializing and managing the application lifecycle. It coordinates core engine systems such
  * as:
@@ -122,6 +126,8 @@ let app = null;
  * {@link AppBase#init} with an {@link AppOptions} supplying at minimum `graphicsDevice`,
  * `componentSystems` and `resourceHandlers` before adding components or calling
  * {@link AppBase#start}. Create the `graphicsDevice` with {@link createGraphicsDevice}.
+ *
+ * @category Framework
  */
 class AppBase extends EventHandler {
     /**
@@ -137,6 +143,13 @@ class AppBase extends EventHandler {
 
     /** @private */
     _inFrameUpdate = false;
+
+    /**
+     * Whether the app announced itself to a devtools hook, and so withdraws on destroy.
+     *
+     * @private
+     */
+    _devtoolsRegistered = false;
 
     /** @private */
     _librariesLoaded = false;
@@ -338,12 +351,10 @@ class AppBase extends EventHandler {
     scriptsOrder = [];
 
     /**
-     * The application's performance stats.
-     *
-     * @type {ApplicationStats}
-     * @ignore
+     * @type {AppStats}
+     * @private
      */
-    stats;
+    _stats;
 
     /**
      * When true, the application's render function is called every frame. Setting autoRender to
@@ -571,7 +582,7 @@ class AppBase extends EventHandler {
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
-        this.stats = new ApplicationStats(this);
+        this._stats = new AppStats(this);
 
         this._soundManager = soundManager;
         this.scene = new Scene(graphicsDevice);
@@ -658,6 +669,20 @@ class AppBase extends EventHandler {
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
         }
+
+        // announce the initialized app to a devtools extension, such as the PlayCanvas Inspector,
+        // which defines this hook before the page runs, unless the app opted out. Without the hook
+        // this is a single lookup. A broken or outdated extension must not break the app, so its
+        // failures are contained
+        const hook = appOptions.devtools !== false ? globalThis[Symbol.for('playcanvas.inspector')] : undefined;
+        if (hook?.register) {
+            this._devtoolsRegistered = true;
+            try {
+                hook.register(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
+            } catch (e) {
+                Debug.warn('The devtools hook failed to register the app.', e);
+            }
+        }
     }
 
     static _applications = {};
@@ -687,7 +712,7 @@ class AppBase extends EventHandler {
 
     /** @private */
     _initProgramLibrary() {
-        const library = new ProgramLibrary(this.graphicsDevice, new StandardMaterial());
+        const library = new ProgramLibrary(this.graphicsDevice);
         setProgramLibrary(this.graphicsDevice, library);
     }
 
@@ -722,6 +747,17 @@ class AppBase extends EventHandler {
      */
     get fillMode() {
         return this._fillMode;
+    }
+
+    /**
+     * The application's performance statistics. Returns the same {@link AppStats} instance on
+     * every access. Engine measurements are read-only; {@link AppStats#user} holds writable
+     * application-defined counters. See {@link AppStats} for units, sampling and GPU profiling setup.
+     *
+     * @type {AppStats}
+     */
+    get stats() {
+        return this._stats;
     }
 
     /**
@@ -770,6 +806,11 @@ class AppBase extends EventHandler {
 
     /**
      * Load all assets in the asset registry that are marked as 'preload'.
+     *
+     * Container-backed render assets wait for their referenced containers to be registered and
+     * loaded. If a preloaded render asset's `data.containerAsset` refers to a container that is
+     * never registered, this method never calls its callback or fires `preload:end`. Debug builds
+     * warn when a render asset starts waiting for an unregistered container.
      *
      * @param {PreloadAppCallback} callback - Function called when all assets are loaded.
      */
@@ -1029,6 +1070,9 @@ class AppBase extends EventHandler {
      * This function is called internally by PlayCanvas applications made in the Editor but you
      * will need to call start yourself if you are using the engine stand-alone.
      *
+     * The main loop is driven by `requestAnimationFrame`. Where that is unavailable, such as in
+     * Node.js, no loop runs, so call {@link update} yourself at the rate you need.
+     *
      * @example
      * app.start();
      */
@@ -1069,7 +1113,12 @@ class AppBase extends EventHandler {
         if (this.xr?.session) {
             this.frameRequestId = this.xr.session.requestAnimationFrame(this.tick);
         } else {
-            this.frameRequestId = platform.browser || platform.worker ? requestAnimationFrame(this.tick) : null;
+            // without requestAnimationFrame, as in Node.js (even with jsdom), there is no main
+            // loop and the application is driven by calling update directly. A pending frame is
+            // cancelled on each tick and on destroy, so both functions are required.
+            const hasFrameLoop = typeof requestAnimationFrame === 'function' &&
+                typeof cancelAnimationFrame === 'function';
+            this.frameRequestId = hasFrameLoop ? requestAnimationFrame(this.tick) : null;
         }
     }
 
@@ -1095,9 +1144,12 @@ class AppBase extends EventHandler {
      * Update the application. This function will call the update functions and then the postUpdate
      * functions of all enabled components. It will then update the current state of all connected
      * input devices. This function is called internally in the application's main loop and does
-     * not need to be called explicitly.
+     * not need to be called explicitly, except where there is no main loop, such as in Node.js.
      *
      * @param {number} dt - The time delta in seconds since the last frame.
+     * @example
+     * // run a Node.js server at 20 updates per second
+     * setInterval(() => app.update(1 / 20), 50);
      */
     update(dt) {
         this.frame++;
@@ -1108,9 +1160,7 @@ class AppBase extends EventHandler {
 
         this.graphicsDevice.update();
 
-        // #if _PROFILER
         this.stats.frame.updateStart = now();
-        // #endif
 
         // script update
         this.stats.frame.scriptUpdateStart = now();
@@ -1133,9 +1183,7 @@ class AppBase extends EventHandler {
         // update input devices
         this.inputUpdate(dt);
 
-        // #if _PROFILER
         this.stats.frame.updateTime = now() - this.stats.frame.updateStart;
-        // #endif
     }
 
     /**
@@ -1150,9 +1198,7 @@ class AppBase extends EventHandler {
 
         this.graphicsDevice.frameStart();
 
-        // #if _PROFILER
         this.stats.frame.renderStart = now();
-        // #endif
 
         this.fire('prerender');
         this.root.syncHierarchy();
@@ -1457,11 +1503,11 @@ class AppBase extends EventHandler {
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @param {boolean} [settings.render.gsplatRadialSorting] - Enables radial sorting of Gaussian splats. Defaults to false.
      * @param {number} [settings.render.gsplatLodUpdateDistance] - Distance threshold in world units to trigger gsplat LOD updates. Defaults to 1.
-     * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 0.
-     * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.
+     * @param {number} [settings.render.gsplatLodUpdateAngle] - Angle threshold in degrees to trigger gsplat LOD updates based on camera rotation. Defaults to 90.
+     * @param {number} [settings.render.gsplatLodBehindPenalty] - Multiplier applied to effective distance for gsplat nodes behind the camera. Defaults to 1.5.
      * @param {number} [settings.render.gsplatLodUnderfillLimit] - Maximum number of gsplat LOD levels allowed below the optimal level when optimal data is not resident. Defaults to 0.
-     * @param {number} [settings.render.gsplatSplatBudget] - Target number of splats across all GSplats in the scene. LOD levels are chosen globally to stay within it; a non-positive value is not a way to disable this and the default is used instead. Defaults to 1000000.
-     * @param {string} [settings.render.gsplatLodMode] - How LOD levels are chosen for streamed GSplats: 'error' (default) spends the budget by measured approximation error, 'distance' orders detail by camera distance alone and ignores error metadata.
+     * @param {number} [settings.render.gsplatSplatBudget] - Number of splats across all GSplats in the scene, used as set by `gsplatSplatBudgetMode`. 0 means no budget. Defaults to 1000000.
+     * @param {string} [settings.render.gsplatSplatBudgetMode] - How the splat budget is used for streamed GSplats: 'target' (default) raises detail until the budget is used up; 'limit' lets the LOD distances of each GSplat decide the detail and only lowers it when they would exceed the budget.
      * @param {number} [settings.render.gsplatAlphaClip] - Alpha threshold for gsplat shadow, pick, and prepass rendering. Defaults to 0.3.
      * @param {number} [settings.render.gsplatAlphaClipForward] - Alpha threshold for the forward gsplat rendering pass. Defaults to 1 / 255.
      * @param {number} [settings.render.gsplatMinPixelSize] - Minimum screen-space pixel size below which splats are discarded. Defaults to 2.
@@ -1736,109 +1782,24 @@ class AppBase extends EventHandler {
         Debug.removed('AppBase#drawWireAlignedBox is removed. Use WireRenderer#boxMinMax instead.');
     }
 
-    /**
-     * Draw meshInstance at this frame
-     *
-     * @param {MeshInstance} meshInstance - The mesh instance
-     * to draw.
-     * @param {Layer} [layer] - The layer to render the mesh instance into. Defaults to
-     * {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawMeshInstance(meshInstance, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
+    drawMeshInstance() {
+        Debug.removed('AppBase#drawMeshInstance is removed. Use Layer#addMeshInstances instead.');
     }
 
-    /**
-     * Draw mesh at this frame.
-     *
-     * @param {Mesh} mesh - The mesh to draw.
-     * @param {Material} material - The material to use to render the mesh.
-     * @param {Mat4} matrix - The matrix to use to render the mesh.
-     * @param {Layer} [layer] - The layer to render the mesh into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawMesh(mesh, material, matrix, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
+    drawMesh() {
+        Debug.removed('AppBase#drawMesh is removed. Create a MeshInstance and use Layer#addMeshInstances instead.');
     }
 
-    /**
-     * Draw quad of size [-0.5, 0.5] at this frame.
-     *
-     * @param {Mat4} matrix - The matrix to use to render the quad.
-     * @param {Material} material - The material to use to render the quad.
-     * @param {Layer} [layer] - The layer to render the quad into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawQuad(matrix, material, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawMesh(material, matrix, this.scene.immediate.getQuadMesh(), null, layer);
+    drawQuad() {
+        Debug.removed('AppBase#drawQuad is removed. Create a quad MeshInstance and use Layer#addMeshInstances, or use TextureRenderer#draw for texture previews.');
     }
 
-    /**
-     * Draws a texture at [x, y] position on screen, with size [width, height]. The origin of the
-     * screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
-     *
-     * @param {number} x - The x coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
-     * range [0, 2].
-     * @param {number} height - The height of the rectangle of the rendered texture. Should be in
-     * the range [0, 2].
-     * @param {Texture} texture - The texture to render.
-     * @param {Material} material - The material used when rendering the texture.
-     * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @param {boolean} [filterable] - Indicate if the texture can be sampled using filtering.
-     * Passing false uses unfiltered sampling, allowing a depth texture to be sampled on WebGPU.
-     * Defaults to true.
-     * @ignore
-     */
-    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer, filterable = true) {
-
-        // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
-        // map to be fetched (without filtering) and rendered
-        if (filterable === false && !this.graphicsDevice.isWebGPU) {
-            return;
-        }
-
-        // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
-        const matrix = new Mat4();
-        matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, -height, 0.0));
-
-        if (!material) {
-            material = new ShaderMaterial();
-            material.cull = CULLFACE_NONE;
-            material.setParameter('colorMap', texture);
-            material.shaderDesc = filterable ? this.scene.immediate.getTextureShaderDesc(texture.encoding) : this.scene.immediate.getUnfilterableTextureShaderDesc();
-            material.update();
-        }
-
-        this.drawQuad(matrix, material, layer);
+    drawTexture() {
+        Debug.removed('AppBase#drawTexture is removed. Use TextureRenderer#draw instead.');
     }
 
-    /**
-     * Draws a depth texture at [x, y] position on screen, with size [width, height]. The origin of
-     * the screen is top-left [0, 0]. Coordinates and sizes are in projected space (-1 .. 1).
-     *
-     * @param {number} x - The x coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} y - The y coordinate on the screen of the center of the texture.
-     * Should be in the range [-1, 1].
-     * @param {number} width - The width of the rectangle of the rendered texture. Should be in the
-     * range [0, 2].
-     * @param {number} height - The height of the rectangle of the rendered texture. Should be in
-     * the range [0, 2].
-     * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
-     * @ignore
-     */
-    drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
-        const material = new ShaderMaterial();
-        material.cull = CULLFACE_NONE;
-        material.shaderDesc = this.scene.immediate.getDepthTextureShaderDesc();
-        material.update();
-
-        this.drawTexture(x, y, width, height, null, material, layer);
+    drawDepthTexture() {
+        Debug.removed('AppBase#drawDepthTexture is removed. Use TextureRenderer#sceneDepth instead.');
     }
 
     /**
@@ -1853,6 +1814,16 @@ class AppBase extends EventHandler {
         if (this._inFrameUpdate) {
             this._destroyRequested = true;
             return;
+        }
+
+        // only an app that announced itself withdraws
+        if (this._devtoolsRegistered) {
+            this._devtoolsRegistered = false;
+            try {
+                globalThis[Symbol.for('playcanvas.inspector')]?.unregister?.(this);
+            } catch (e) {
+                Debug.warn('The devtools hook failed to unregister the app.', e);
+            }
         }
 
         const canvasId = this.graphicsDevice.canvas.id;

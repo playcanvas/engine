@@ -1,5 +1,5 @@
 import { Debug } from '../../../core/debug.js';
-import { LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
+import { LAYERID_UI, LAYERID_DEPTH, SHADER_FORWARD } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
 import { ShaderPass } from '../../../scene/shader-pass.js';
 import { Component } from '../component.js';
@@ -209,7 +209,9 @@ class CameraComponent extends Component {
         }) : null;
         this._camera.shaderPassInfo = shaderPassInfo;
 
-        return shaderPassInfo.index;
+        // without a name the camera renders the forward pass, which is also the index the
+        // renderer falls back to for a camera with no shader pass info
+        return shaderPassInfo?.index ?? SHADER_FORWARD;
     }
 
     /**
@@ -246,7 +248,7 @@ class CameraComponent extends Component {
 
     /**
      * @type {FramePass[]|null}
-     * @deprecated Use {@link framePasses} instead.
+     * @deprecated Use `framePasses` instead.
      * @ignore
      */
     set renderPasses(passes) {
@@ -256,7 +258,7 @@ class CameraComponent extends Component {
 
     /**
      * @type {FramePass[]}
-     * @deprecated Use {@link framePasses} instead.
+     * @deprecated Use `framePasses` instead.
      * @ignore
      */
     get renderPasses() {
@@ -469,7 +471,10 @@ class CameraComponent extends Component {
     }
 
     /**
-     * Sets the camera component's clear color. Defaults to `[0.75, 0.75, 0.75, 1]`.
+     * Sets the camera component's clear color. Defaults to `[0.75, 0.75, 0.75, 1]`. When the camera
+     * renders to a {@link RenderTarget} with multiple color buffers, this is the clear color of
+     * the color attachment 0, and also of the other attachments unless they are given their own
+     * using {@link CameraComponent#setClearColor}.
      *
      * @type {Color}
      */
@@ -484,6 +489,35 @@ class CameraComponent extends Component {
      */
     get clearColor() {
         return this._camera.clearColor;
+    }
+
+    /**
+     * Sets the clear color of a color attachment of the camera's render target, which allows the
+     * color buffers of a {@link RenderTarget} with multiple color buffers to clear to different
+     * colors. The attachment 0 clears to {@link CameraComponent#clearColor}, and the other
+     * attachments clear to the same color unless given their own here. Pass null to remove the
+     * color of an attachment, so that it clears to the attachment 0 color again. The components
+     * of the clear color of an integer format attachment are the integer values to clear to.
+     *
+     * @param {number} index - The index of the color attachment.
+     * @param {Color|null} color - The clear color, specified in sRGB space, or null to clear to
+     * the color of the attachment 0.
+     * @example
+     * // clear the second color buffer of the render target to a different color
+     * entity.camera.setClearColor(1, new pc.Color(0.5, 0.5, 1, 1));
+     */
+    setClearColor(index, color) {
+        this._camera.setClearColor(index, color);
+    }
+
+    /**
+     * Gets the clear color of a color attachment of the camera's render target.
+     *
+     * @param {number} index - The index of the color attachment.
+     * @returns {Color} The clear color of the attachment.
+     */
+    getClearColor(index) {
+        return this._camera.getClearColor(index);
     }
 
     /**
@@ -611,6 +645,7 @@ class CameraComponent extends Component {
      */
     set farClip(value) {
         this._camera.farClip = value;
+        this.fire('set:farClip', value);
     }
 
     /**
@@ -783,6 +818,7 @@ class CameraComponent extends Component {
      */
     set nearClip(value) {
         this._camera.nearClip = value;
+        this.fire('set:nearClip', value);
     }
 
     /**
@@ -914,6 +950,10 @@ class CameraComponent extends Component {
     /**
      * Sets the rendering rectangle for the camera. This controls where on the screen the camera
      * will render in normalized screen coordinates. Defaults to `[0, 0, 1, 1]`.
+     *
+     * The rectangle can extend past the render target bounds, for example `[-0.5, 0, 1.5, 1]`,
+     * with only its overlapping part being rendered. This is supported on WebGL2, and on WebGPU
+     * on platforms that allow viewports extending past the render target bounds.
      *
      * @type {Vec4}
      */
@@ -1082,7 +1122,7 @@ class CameraComponent extends Component {
     /**
      * Request the scene to generate a texture containing the scene color map. Note that this call
      * is accumulative, and for each enable request, a disable request need to be called. Note that
-     * this setting is ignored when {@link framePasses} is used.
+     * this setting is ignored when `framePasses` is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -1101,7 +1141,7 @@ class CameraComponent extends Component {
     /**
      * Request the scene to generate a texture containing the scene depth map. Note that this call
      * is accumulative, and for each enable request, a disable request need to be called. Note that
-     * this setting is ignored when {@link framePasses} is used.
+     * this setting is ignored when `framePasses` is used.
      *
      * @param {boolean} enabled - True to request the generation, false to disable it.
      */
@@ -1139,9 +1179,10 @@ class CameraComponent extends Component {
      * const end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
      *
      * // Use the ray coordinates to perform a raycast
-     * app.systems.rigidbody.raycastFirst(start, end, function (result) {
-     *     console.log("Entity " + result.entity.name + " was selected");
-     * });
+     * const result = app.systems.rigidbody.raycastFirst(start, end);
+     * if (result) {
+     *     console.log(`Entity ${result.entity.name} was selected`);
+     * }
      * @returns {Vec3} The world space coordinate.
      */
     screenToWorld(screenx, screeny, cameraz, worldCoord) {
@@ -1402,6 +1443,8 @@ class CameraComponent extends Component {
         this.calculateProjection = source.calculateProjection;
         this.calculateTransform = source.calculateTransform;
         this.clearColor = source.clearColor;
+        this._camera._clearColors = null;
+        source._camera._clearColors?.forEach((color, index) => this.setClearColor(index, color));
         this.clearColorBuffer = source.clearColorBuffer;
         this.clearDepthBuffer = source.clearDepthBuffer;
         this.clearStencilBuffer = source.clearStencilBuffer;

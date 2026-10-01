@@ -6,6 +6,10 @@ export default /* wgsl */`
         uniform animTexIndexParams: vec2f;
     #endif
 
+    #ifdef SCREEN_SPACE
+        uniform viewport_size: vec4f; // viewport width, height, 1/width, 1/height
+    #endif
+
     #if NORMAL == MAP
         varying ParticleMat0: vec3f;
         varying ParticleMat1: vec3f;

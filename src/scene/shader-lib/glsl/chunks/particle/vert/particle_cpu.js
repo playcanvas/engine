@@ -89,6 +89,12 @@ void main(void)
     inVel = mat3(matrix_model) * inVel;
 #endif
     vec2 velocityV = normalize((mat3(matrix_view) * inVel).xy); // should be removed by compiler if align/stretch is not used
+#ifdef SCREEN_SPACE
+    // particle_cpu_endVS scales the offset x by height / width, so measure the direction of
+    // motion in the same units to keep the particle aligned with its motion on screen
+    velocityV.x *= viewport_size.x * viewport_size.w;
+    velocityV = normalize(velocityV);
+#endif
 
     vec2 quadXY = vertPos.xy;
 

@@ -1,12 +1,13 @@
 /**
  * @import { Observer } from '@playcanvas/observer'
- * @import { DEVICETYPE_NULL, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE } from './constants.mjs'
+ * @import { DEVICETYPE_NULL, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL2_BARE, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGPU_BARE } from './constants.mjs'
  */
 
 /**
  * @typedef {object} LoadingEventDetail
  * @property {boolean} showDeviceSelector - Show device selector
  * @property {boolean} showMiniStats - Show the MiniStats toggle
+ * @property {boolean} showInspector - Show the Inspector toggle
  *
  * @typedef {CustomEvent<LoadingEventDetail>} LoadingEvent.
  */
@@ -29,7 +30,7 @@
 
 /**
  * @typedef {object} DeviceEventDetail
- * @property {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGPU_BARE | DEVICETYPE_WEBGL2 | DEVICETYPE_NULL} deviceType - The device type.
+ * @property {DEVICETYPE_WEBGPU | DEVICETYPE_WEBGPU_BARE | DEVICETYPE_WEBGL2 | DEVICETYPE_WEBGL2_BARE | DEVICETYPE_NULL} deviceType - The device type.
  *
  * @typedef {CustomEvent<DeviceEventDetail>} DeviceEvent
  */

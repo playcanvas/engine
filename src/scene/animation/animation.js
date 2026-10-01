@@ -12,7 +12,7 @@ class AnimationKey {
  * over time. Typically, an {@link Animation} maintains a collection of AnimationNodes, one for
  * each GraphNode in a {@link Skeleton}.
  *
- * @category Animation
+ * @category Animation (Legacy)
  */
 class AnimationNode {
     /**
@@ -31,7 +31,7 @@ class AnimationNode {
  *
  * An Animation can be played back by an {@link AnimationComponent}.
  *
- * @category Animation
+ * @category Animation (Legacy)
  */
 class Animation {
     /**

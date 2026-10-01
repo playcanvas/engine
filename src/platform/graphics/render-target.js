@@ -245,7 +245,7 @@ class RenderTarget {
      *
      * Defaults to {@link DEPTHRESOLVE_MIN}. Ignored on WebGL2, where the sample selection of the
      * depth resolve is defined by the implementation. Can also be changed at any time using the
-     * {@link depthResolveMode} property.
+     * {@link RenderTarget#depthResolveMode} property.
      * @param {Texture} [options.colorBuffer] - The texture that this render target will treat as a
      * rendering surface. This can be a multisampled texture (a texture created with `samples` > 1,
      * WebGPU only), in which case the render target renders directly into its samples, the sample
@@ -770,7 +770,7 @@ class RenderTarget {
     /**
      * If samples > 1, resolves the anti-aliased render target (WebGL2 only). When you're rendering
      * to an anti-aliased render target, pixels aren't written directly to the readable texture.
-     * Instead, they're first written to a MSAA buffer, where each sample for each pixel is stored
+     * Instead, they're first written to an MSAA buffer, where each sample for each pixel is stored
      * independently. In order to read the results, you first need to 'resolve' the buffer - to
      * average all samples and create a simple texture with one color per pixel. This function
      * performs this averaging and updates the colorBuffer and the depthBuffer. If autoResolve is

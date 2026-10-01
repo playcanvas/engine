@@ -11,10 +11,32 @@ import { ElementComponent } from './component.js';
 
 /**
  * @import { AppBase } from '../../app-base.js'
+ * @import { Entity } from '../../entity.js'
  */
 
 /**
- * Manages creation of {@link ElementComponent}s.
+ * Options of the `element` component accepted by {@link ElementComponentSystem} that differ from
+ * the properties of {@link ElementComponent}. Each replaces the same-named property of the options
+ * that {@link Entity#addComponent} derives from the component class; see
+ * {@link ComponentOptionsOverrides}.
+ *
+ * @typedef {object} ElementComponentOptionsOverrides
+ * @property {Vec4 | number[]} [anchor] - Same as {@link ElementComponent#anchor}, also accepting an
+ * `[x, y, z, w]` array.
+ * @property {number | null} [batchGroupId] - Same as {@link ElementComponent#batchGroupId}. `null`
+ * selects no batch group.
+ * @property {Color | number[]} [color] - Same as {@link ElementComponent#color}, also accepting an
+ * `[r, g, b]` array.
+ * @property {Vec4 | number[]} [margin] - Same as {@link ElementComponent#margin}, also accepting an
+ * `[x, y, z, w]` array.
+ * @property {Vec2 | number[]} [pivot] - Same as {@link ElementComponent#pivot}, also accepting an
+ * `[x, y]` array.
+ * @ignore
+ */
+
+/**
+ * Manages the {@link ElementComponent}s of an application. Reach it through `app.systems.element`;
+ * components are created with {@link Entity#addComponent}, never by calling the system directly.
  *
  * @category User Interface
  */
@@ -101,6 +123,23 @@ class ElementComponentSystem extends ComponentSystem {
 
         const splitHorAnchors = Math.abs(component.anchor.x - component.anchor.z) > 0.001;
         const splitVerAnchors = Math.abs(component.anchor.y - component.anchor.w) > 0.001;
+
+        // On an axis where the anchor is a point, the entity's position places the element, so
+        // unless margins are given for that axis, derive them from the position, as setting a new
+        // size does. Do it first: applying the margins given for the other axis, or binding to a
+        // screen, places the element on both axes, and would move an entity that is already under
+        // a screen to wherever the default margins put it.
+        const position = component.entity.getLocalPosition();
+        const noMargin = data.margin === undefined;
+        if (!splitHorAnchors && noMargin && data.left === undefined && data.right === undefined) {
+            component._margin.x = position.x - component._calculatedWidth * component._pivot.x;
+            component._margin.z = -component._calculatedWidth - component._margin.x;
+        }
+        if (!splitVerAnchors && noMargin && data.bottom === undefined && data.top === undefined) {
+            component._margin.y = position.y - component._calculatedHeight * component._pivot.y;
+            component._margin.w = -component._calculatedHeight - component._margin.y;
+        }
+
         let _marginChange = false;
         let color;
 
@@ -333,10 +372,10 @@ class ElementComponentSystem extends ComponentSystem {
         return this.addComponent(clone, data);
     }
 
-    getTextElementMaterial(screenSpace, msdf, textAttibutes) {
+    getTextElementMaterial(screenSpace, msdf, textAttributes) {
         const hash = (screenSpace && (1 << 0)) |
                           (msdf && (1 << 1)) |
-                 (textAttibutes && (1 << 2));
+                 (textAttributes && (1 << 2));
 
         let material = this._defaultTextMaterials[hash];
 
@@ -347,10 +386,11 @@ class ElementComponentSystem extends ComponentSystem {
         let name = 'TextMaterial';
 
         material = new StandardMaterial();
+        material.setDefine('MESH_COLOR', true);
 
         if (msdf) {
             material.msdfMap = this._defaultTexture;
-            material.msdfTextAttribute = textAttibutes;
+            material.msdfTextAttribute = textAttributes;
             material.emissive.set(1, 1, 1);
         } else {
             name = `Bitmap${name}`;
@@ -376,7 +416,6 @@ class ElementComponentSystem extends ComponentSystem {
         material.useFog = false;
         material.useSkybox = false;
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
-        material.opacity = 0.5;
         material.blendType = BLEND_PREMULTIPLIED;
         material.depthWrite = false;
         material.emissiveVertexColor = true;
@@ -389,6 +428,7 @@ class ElementComponentSystem extends ComponentSystem {
 
     _createBaseImageMaterial() {
         const material = new StandardMaterial();
+        material.setDefine('MESH_COLOR', true);
 
         material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
         material.emissive.set(1, 1, 1);

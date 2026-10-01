@@ -185,7 +185,7 @@ class GltfAccessor {
             if (gltfAccessor.hasOwnProperty('bufferView')) {
                 const bufferView = bufferViews[gltfAccessor.bufferView];
                 if (flatten && bufferView.hasOwnProperty('byteStride')) {
-                    // flatten stridden data
+                    // flatten strided data
                     const bytesPerElement = numComponents * dataType.BYTES_PER_ELEMENT;
                     const storage = new ArrayBuffer(gltfAccessor.count * bytesPerElement);
                     const tmpArray = new Uint8Array(storage);

@@ -1,26 +1,55 @@
 import { Debug } from '../../../core/debug.js';
 import { Vec3 } from '../../../core/math/vec3.js';
-import {
-    BODYFLAG_KINEMATIC_OBJECT, BODYFLAG_NORESPONSE_OBJECT,
-    BODYSTATE_ACTIVE_TAG, BODYSTATE_DISABLE_DEACTIVATION, BODYSTATE_DISABLE_SIMULATION,
-    BODYTYPE_KINEMATIC
-} from '../../components/rigid-body/constants.js';
+import { BODYTYPE_KINEMATIC } from '../../components/rigid-body/constants.js';
 import { RaycastResult } from '../../components/rigid-body/raycast-result.js';
 import { PhysicsWorld } from '../physics-world.js';
 import { AmmoPhysicsBody } from './ammo-physics-body.js';
 import { createJoint, destroyJoint, destroyFixedBody } from './ammo-physics-joint.js';
+import {
+    ACTIVE_TAG, CF_KINEMATIC_OBJECT, CF_NO_CONTACT_RESPONSE, DISABLE_DEACTIVATION,
+    DISABLE_SIMULATION
+} from './constants.js';
 
 /**
  * @import { AmmoPhysicsJoint } from './ammo-physics-joint.js'
  */
 import {
-    createShape, destroyShape, addCompoundChild, updateCompoundChild, removeCompoundChild
+    createShape, destroyShape, releaseUnusedTriMeshShapes, addCompoundChild, updateCompoundChild,
+    removeCompoundChild
 } from './ammo-physics-shape.js';
 
 /**
  * @import { ContactPoint } from '../../components/rigid-body/contact-point.js'
  * @import { PhysicsBodyDesc, PhysicsJointDesc, PhysicsShapeDesc } from '../physics-world.js'
  */
+
+// btTriangleRaycastCallback::kF_FilterBackfaces
+const RAYFLAG_FILTER_BACKFACES = 1;
+
+/**
+ * Applies the raycast options shared by all ray queries to a native ray result callback.
+ *
+ * @param {object} rayCallback - The native ray result callback.
+ * @param {object} options - The raycast options.
+ */
+function applyRayOptions(rayCallback, options) {
+    if (typeof options.filterCollisionGroup === 'number') {
+        rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
+    }
+
+    if (typeof options.filterCollisionMask === 'number') {
+        rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
+    }
+
+    if (options.hitBackFaces === false) {
+        if (typeof rayCallback.set_m_flags === 'function') {
+            rayCallback.set_m_flags(RAYFLAG_FILTER_BACKFACES);
+        } else {
+            Debug.warnOnce('AmmoPhysicsWorld: this Ammo.js build does not expose ray callback ' +
+                'flags, so the hitBackFaces raycast option is ignored. Update Ammo.js.');
+        }
+    }
+}
 
 /**
  * The reused contact pair reported to the contact listener. Reads contact point data straight
@@ -69,6 +98,46 @@ class AmmoContactPair {
 }
 
 /**
+ * The internal tick callback registered with each Ammo module instance, and the worlds it routes
+ * to by the native world pointer Bullet passes as the callback's first argument.
+ *
+ * Emscripten's addFunction hands out a function table slot that is never released (removeFunction
+ * is not exported by the shipped builds) and it identity-caches the function it is given. A
+ * closure per world would therefore keep the world, its contact listener and through that the
+ * whole application reachable for the life of the page. One dispatcher per module captures
+ * nothing but this registry, so an entry lives exactly as long as its world and the table grows
+ * by a single slot however many worlds come and go.
+ *
+ * @type {WeakMap<object, { pointer: number, worlds: Map<number, AmmoPhysicsWorld> }>}
+ */
+const tickDispatchers = new WeakMap();
+
+/**
+ * Returns the tick dispatcher for an Ammo module instance, registering it on first use.
+ *
+ * @param {object} ammo - The Ammo module.
+ * @returns {{ pointer: number, worlds: Map<number, AmmoPhysicsWorld> }} The dispatcher.
+ */
+function getTickDispatcher(ammo) {
+    let dispatcher = tickDispatchers.get(ammo);
+    if (!dispatcher) {
+        const worlds = new Map();
+        const pointer = ammo.addFunction((worldPointer) => {
+            const world = worlds.get(worldPointer);
+            if (world) {
+                world._walkContacts();
+            } else {
+                // only the miss builds a message: this runs every substep in debug builds
+                Debug.assert(false, `AmmoPhysicsWorld: internal tick callback for an unknown world ${worldPointer}.`);
+            }
+        }, 'vif');
+        dispatcher = { pointer, worlds };
+        tickDispatchers.set(ammo, dispatcher);
+    }
+    return dispatcher;
+}
+
+/**
  * The Ammo.js (Bullet) physics backend. The `Ammo` global must be available when the world is
  * constructed - load the library first, then supply the backend to the application:
  *
@@ -93,17 +162,36 @@ class AmmoContactPair {
  * @alpha
  */
 class AmmoPhysicsWorld extends PhysicsWorld {
-    /** @private */
-    _gravityFloat32 = new Float32Array(3);
-
     /**
      * Built triangle data cached per geometry source id, shared by all mesh shapes created
-     * from the same geometry. Entries live until the world is destroyed.
+     * from the same geometry. Each entry holds the btTriangleMesh, which lives until the world
+     * is destroyed, and the unit-scale btBvhTriangleMeshShape that every instance wraps in its
+     * own btScaledBvhTriangleMeshShape, reference counted by those wrappers and released at the
+     * end of a step once none is left.
      *
-     * @type {Map<number, object>}
+     * @type {Map<number, { triMesh: object, bvhShape: object|null, refCount: number }>}
      * @ignore
      */
     _triMeshCache = new Map();
+
+    /**
+     * Cache entries whose reference count dropped to zero since the last step. Their BVH shapes
+     * are released at the end of the step if still unused.
+     *
+     * @type {Set<object>}
+     * @ignore
+     */
+    _unusedTriMeshEntries = new Set();
+
+    /**
+     * Whether this Ammo build exposes btScaledBvhTriangleMeshShape, which lets mesh shape
+     * instances share one BVH while carrying their own scale. Older builds fall back to baking
+     * the scale into the shared triangle data.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    _hasScaledTriMesh = false;
 
     /**
      * The shared static body world-pinned joints attach to, lazily created.
@@ -156,6 +244,18 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     _useTickCallback = false;
 
     /**
+     * The tick dispatcher this world is registered with, and the native world pointer it is
+     * registered under. Null when the build has no internal tick callback.
+     *
+     * @type {{ pointer: number, worlds: Map<number, AmmoPhysicsWorld> }|null}
+     * @private
+     */
+    _tickDispatcher = null;
+
+    /** @private */
+    _nativeWorldPointer = 0;
+
+    /**
      * The reused contact pair driven through the contact listener.
      *
      * @private
@@ -189,6 +289,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
 
         Debug.assert(typeof Ammo !== 'undefined', 'AmmoPhysicsWorld: the Ammo.js library must be loaded before the Ammo backend is constructed.');
 
+        this._hasScaledTriMesh = typeof Ammo.btScaledBvhTriangleMeshShape === 'function';
+
         this.collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
         this.dispatcher = new Ammo.btCollisionDispatcher(this.collisionConfiguration);
         this.overlappingPairCache = new Ammo.btDbvtBroadphase();
@@ -199,8 +301,12 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         // otherwise defer to flushContacts()
         this._useTickCallback = !!this.nativeWorld.setInternalTickCallback;
         if (this._useTickCallback) {
-            const checkForCollisionsPointer = Ammo.addFunction(() => this._walkContacts(), 'vif');
-            this.nativeWorld.setInternalTickCallback(checkForCollisionsPointer);
+            // one callback per module, routed by world pointer - see tickDispatchers
+            const dispatcher = getTickDispatcher(Ammo);
+            this._nativeWorldPointer = Ammo.getPointer(this.nativeWorld);
+            dispatcher.worlds.set(this._nativeWorldPointer, this);
+            this._tickDispatcher = dispatcher;
+            this.nativeWorld.setInternalTickCallback(dispatcher.pointer);
         } else {
             Debug.warn('WARNING: This version of ammo.js can potentially fail to report contacts. Please update it to the latest version.');
         }
@@ -217,8 +323,14 @@ class AmmoPhysicsWorld extends PhysicsWorld {
     }
 
     destroy() {
-        this._triMeshCache.forEach(triMesh => Ammo.destroy(triMesh));
+        this._triMeshCache.forEach((entry) => {
+            if (entry.bvhShape) {
+                Ammo.destroy(entry.bvhShape);
+            }
+            Ammo.destroy(entry.triMesh);
+        });
         this._triMeshCache.clear();
+        this._unusedTriMeshEntries.clear();
 
         destroyFixedBody(this);
 
@@ -234,6 +346,13 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this._btTransform = null;
         this._btRayStart = null;
         this._btRayEnd = null;
+
+        // unregister before the native world is freed: the next world may be allocated at the
+        // same address
+        if (this._tickDispatcher) {
+            this._tickDispatcher.worlds.delete(this._nativeWorldPointer);
+            this._tickDispatcher = null;
+        }
 
         Ammo.destroy(this.nativeWorld);
         Ammo.destroy(this.solver);
@@ -273,11 +392,11 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         Ammo.destroy(localInertia);
 
         if (type === BODYTYPE_KINEMATIC) {
-            nativeBody.setCollisionFlags(nativeBody.getCollisionFlags() | BODYFLAG_KINEMATIC_OBJECT);
-            nativeBody.setActivationState(BODYSTATE_DISABLE_DEACTIVATION);
+            nativeBody.setCollisionFlags(nativeBody.getCollisionFlags() | CF_KINEMATIC_OBJECT);
+            nativeBody.setActivationState(DISABLE_DEACTIVATION);
         }
         if (noContactResponse) {
-            nativeBody.setCollisionFlags(nativeBody.getCollisionFlags() | BODYFLAG_NORESPONSE_OBJECT);
+            nativeBody.setCollisionFlags(nativeBody.getCollisionFlags() | CF_NO_CONTACT_RESPONSE);
         }
 
         // entity back-reference on the native body: read by the raycast and manifold walks,
@@ -307,18 +426,20 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         } else {
             this.nativeWorld.addRigidBody(nativeBody);
         }
+        body._inWorld = true;
 
         // kinematic bodies must never deactivate, everything else enters the active state
-        nativeBody.forceActivationState(body._type === BODYTYPE_KINEMATIC ? BODYSTATE_DISABLE_DEACTIVATION : BODYSTATE_ACTIVE_TAG);
+        nativeBody.forceActivationState(body._type === BODYTYPE_KINEMATIC ? DISABLE_DEACTIVATION : ACTIVE_TAG);
     }
 
     removeBody(body) {
         const nativeBody = body.nativeBody;
         this.nativeWorld.removeRigidBody(nativeBody);
+        body._inWorld = false;
 
         // set activation state to disable simulation so isActive() does not return true even
         // though the body is no longer in the world
-        nativeBody.forceActivationState(BODYSTATE_DISABLE_SIMULATION);
+        nativeBody.forceActivationState(DISABLE_SIMULATION);
     }
 
     /**
@@ -330,8 +451,12 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         return createShape(this, desc);
     }
 
+    get supportsMeshScaling() {
+        return this._hasScaledTriMesh;
+    }
+
     destroyShape(shape) {
-        destroyShape(shape);
+        destroyShape(this, shape);
     }
 
     addCompoundChild(compound, child, position, rotation) {
@@ -368,26 +493,15 @@ class AmmoPhysicsWorld extends PhysicsWorld {
      * @ignore
      */
     setGravity(gravity) {
-        // downcast gravity to float32 so we can accurately compare with existing gravity set
-        // in the world
-        this._gravityFloat32[0] = gravity.x;
-        this._gravityFloat32[1] = gravity.y;
-        this._gravityFloat32[2] = gravity.z;
-
-        // compare against the world's own value so writes through the native escape hatch are
-        // still detected
-        const current = this.nativeWorld.getGravity();
-        if (current.x() !== this._gravityFloat32[0] ||
-            current.y() !== this._gravityFloat32[1] ||
-            current.z() !== this._gravityFloat32[2]) {
-            current.setValue(gravity.x, gravity.y, gravity.z);
-            this.nativeWorld.setGravity(current);
-        }
+        this._btVec1.setValue(gravity.x, gravity.y, gravity.z);
+        this.nativeWorld.setGravity(this._btVec1);
     }
 
     step(dt, maxSubSteps, fixedTimeStep) {
         this._fixedTimeStep = fixedTimeStep;
         this.nativeWorld.stepSimulation(dt, maxSubSteps, fixedTimeStep);
+
+        releaseUnusedTriMeshShapes(this);
     }
 
     flushContacts() {
@@ -434,8 +548,8 @@ class AmmoPhysicsWorld extends PhysicsWorld {
             if (numContacts > 0) {
                 pair.entityA = e0;
                 pair.entityB = e1;
-                pair.triggerA = (wb0.getCollisionFlags() & BODYFLAG_NORESPONSE_OBJECT) !== 0;
-                pair.triggerB = (wb1.getCollisionFlags() & BODYFLAG_NORESPONSE_OBJECT) !== 0;
+                pair.triggerA = (wb0.getCollisionFlags() & CF_NO_CONTACT_RESPONSE) !== 0;
+                pair.triggerB = (wb1.getCollisionFlags() & CF_NO_CONTACT_RESPONSE) !== 0;
                 pair.contactCount = numContacts;
                 pair._manifold = manifold;
 
@@ -456,14 +570,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this._btRayStart.setValue(start.x, start.y, start.z);
         this._btRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.ClosestRayResultCallback(this._btRayStart, this._btRayEnd);
-
-        if (typeof options.filterCollisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
-        }
-
-        if (typeof options.filterCollisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
-        }
+        applyRayOptions(rayCallback, options);
 
         this.nativeWorld.rayTest(this._btRayStart, this._btRayEnd, rayCallback);
         if (rayCallback.hasHit()) {
@@ -496,14 +603,7 @@ class AmmoPhysicsWorld extends PhysicsWorld {
         this._btRayStart.setValue(start.x, start.y, start.z);
         this._btRayEnd.setValue(end.x, end.y, end.z);
         const rayCallback = new Ammo.AllHitsRayResultCallback(this._btRayStart, this._btRayEnd);
-
-        if (typeof options.filterCollisionGroup === 'number') {
-            rayCallback.set_m_collisionFilterGroup(options.filterCollisionGroup);
-        }
-
-        if (typeof options.filterCollisionMask === 'number') {
-            rayCallback.set_m_collisionFilterMask(options.filterCollisionMask);
-        }
+        applyRayOptions(rayCallback, options);
 
         this.nativeWorld.rayTest(this._btRayStart, this._btRayEnd, rayCallback);
         if (rayCallback.hasHit()) {

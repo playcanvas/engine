@@ -1,95 +1,29 @@
 import { expect } from 'chai';
 
-import { GSPLAT_LODMODE_DISTANCE } from '../../../src/scene/constants.js';
 import { GSplatLodTable } from '../../../src/scene/gsplat-unified/gsplat-lod-table.js';
 import { GSplatOctree } from '../../../src/scene/gsplat-unified/gsplat-octree.js';
 
-// A single-leaf streamed SOG manifest with `levels` LOD levels, so a test only has to state the
-// per-level counts and, optionally, the error table and its header flag.
-const makeOctree = (counts, errors, lodErrors) => new GSplatOctree('/scene/lod-meta.json', {
+// A single-leaf streamed SOG manifest with one LOD level per count, so a test only has to state
+// the per-level counts. A count of 0 lists the level with no splats.
+const makeOctree = counts => new GSplatOctree('/scene/lod-meta.json', {
     lodLevels: counts.length,
-    lodErrors,
     filenames: counts.map((_, i) => `${i}/meta.json`),
     tree: {
         bound: { min: [0, 0, 0], max: [1, 1, 1] },
-        errors,
         lods: Object.fromEntries(counts.map((count, i) => [i, { file: i, offset: 0, count }]))
     }
 });
 
-// The chain a node offers, coarsest first: [startLod, ...upgradeToLod].
-const chainOf = (table, node = 0) => {
-    const chain = [table.startLod[node]];
-    for (let k = table.firstUpgrade[node]; k < table.firstUpgrade[node + 1]; k++) {
-        chain.push(table.upgradeToLod[k]);
-    }
-    return chain;
-};
+// The level a node renders for each band of the table, finest band first.
+const bandsOf = (table, node = 0) => Array.from(table.bandLod.subarray(node * table.span, (node + 1) * table.span));
+const countsOf = (table, node = 0) => Array.from(table.bandCount.subarray(node * table.span, (node + 1) * table.span));
 
-const upgradesOf = (table, node = 0) => {
-    const out = [];
-    for (let k = table.firstUpgrade[node]; k < table.firstUpgrade[node + 1]; k++) {
-        out.push({ toLod: table.upgradeToLod[k], cost: table.upgradeCost[k], ratio: table.upgradeRatio[k] });
-    }
-    return out;
-};
-
-describe('GSplatOctree LOD errors', function () {
-
-    it('reads per-level errors from the manifest when it declares them', function () {
-        const octree = makeOctree([10, 5], [0, 12.5], true);
-        expect(octree.lodErrorSource).to.equal('file');
-        expect(octree.nodes[0].lods.map(lod => lod.error)).to.deep.equal([0, 12.5]);
-    });
-
-    it('derives errors when the manifest does not declare them', function () {
-        // pre-3.3 manifests carry no lodErrors header, so any values present are not trusted
-        const octree = makeOctree([8, 1], [0, 12.5], undefined);
-        expect(octree.lodErrorSource).to.equal('derived');
-        // the derived measure is the log of the decimation factor, so 8 splats down to 1 is ln(8)
-        expect(octree.nodes[0].lods[0].error).to.equal(0);
-        expect(octree.nodes[0].lods[1].error).to.be.closeTo(Math.log(8), 1e-6);
-    });
-
-    it('derives equal error steps for equal decimation ratios', function () {
-        // each level halves, so a log measure gives a constant step per level - which is what makes
-        // it track how the levels were actually produced
-        const octree = makeOctree([80, 40, 20, 10], undefined, undefined);
-        const errors = octree.nodes[0].lods.map(lod => lod.error);
-        for (let i = 1; i < errors.length; i++) {
-            expect(errors[i] - errors[i - 1]).to.be.closeTo(Math.log(2), 1e-6);
-        }
-    });
-
-    it('derives errors when a declared error is not finite', function () {
-        expect(makeOctree([10, 5], [0, null], true).lodErrorSource).to.equal('derived');
-        expect(makeOctree([10, 5], [0], true).lodErrorSource).to.equal('derived');
-    });
-
-    it('derives errors when a declared error is negative', function () {
-        // errors are magnitudes relative to the finest level; a negative one would let a coarse
-        // level dominate every finer level on the frontier and pin the node there at any budget
-        expect(makeOctree([10, 5], [0, -3], true).lodErrorSource).to.equal('derived');
-    });
-
-    it('ignores declared errors on levels that hold no splats', function () {
-        expect(makeOctree([10, 0], [0, null], true).lodErrorSource).to.equal('file');
-    });
-
-    it('clamps derived errors monotone across levels', function () {
-        // level 3 holds fewer splats than level 4, so the raw ratio would rank the coarser level
-        // as the better one
-        const octree = makeOctree([78, 38, 19, 6, 7], undefined, undefined);
-        const errors = octree.nodes[0].lods.map(lod => lod.error);
-        for (let i = 1; i < errors.length; i++) {
-            expect(errors[i]).to.be.at.least(errors[i - 1]);
-        }
-    });
+describe('GSplatOctree LOD tables', function () {
 
     it('keeps a table per live range so differing instances do not rebuild each other', function () {
         // lodRangeMin/Max are per placement, so two instances of one octree can differ. Holding
         // only the most recent range would make each request rebuild the other's table.
-        const octree = makeOctree([10, 5, 2], [0, 1, 2], true);
+        const octree = makeOctree([10, 5, 2]);
         const a = octree.acquireLodTable(0, 2);
         const b = octree.acquireLodTable(1, 2);
 
@@ -104,7 +38,7 @@ describe('GSplatOctree LOD errors', function () {
     });
 
     it('keeps a table alive while any reference is held, then drops it', function () {
-        const octree = makeOctree([10, 5, 2], [0, 1, 2], true);
+        const octree = makeOctree([10, 5, 2]);
         const a = octree.acquireLodTable(0, 2);
         const alsoA = octree.acquireLodTable(0, 2);
         expect(alsoA).to.equal(a);
@@ -123,28 +57,15 @@ describe('GSplatOctree LOD errors', function () {
         expect(octree.acquireLodTable(0, 2)).to.not.equal(a);
     });
 
-    it('retains every live range however many there are', function () {
-        // a fixed cap would evict a range still in use here, rebuilding all of them every pass
-        const octree = makeOctree([100, 50, 20, 10, 5], [0, 1, 2, 3, 4], true);
-        const ranges = [[0, 4], [1, 4], [2, 4], [3, 4], [0, 3], [1, 3]];
-        const held = ranges.map(([lo, hi]) => octree.acquireLodTable(lo, hi));
-
-        ranges.forEach(([lo, hi], i) => {
-            expect(octree.acquireLodTable(lo, hi)).to.equal(held[i]);
-        });
-    });
-
     it('keeps ranges distinct beyond any packing base', function () {
         // nothing bounds lodLevels or the configured range, and a packed numeric key would alias
         // pairs like [0, 300] and [1, 44] - handing an instance a table for the wrong range
-        const octree = makeOctree(Array.from({ length: 301 }, (_, i) => 301 - i), undefined, undefined);
+        const octree = makeOctree(Array.from({ length: 301 }, (_, i) => 301 - i));
         const a = octree.acquireLodTable(0, 300);
         const b = octree.acquireLodTable(1, 44);
 
         expect(b).to.not.equal(a);
-        expect(a.rangeMin).to.equal(0);
         expect(a.rangeMax).to.equal(300);
-        expect(b.rangeMin).to.equal(1);
         expect(b.rangeMax).to.equal(44);
 
         // and releasing one leaves the other untouched
@@ -153,117 +74,72 @@ describe('GSplatOctree LOD errors', function () {
     });
 
     it('tolerates releasing null', function () {
-        const octree = makeOctree([10, 5], [0, 1], true);
+        const octree = makeOctree([10, 5]);
         expect(() => octree.releaseLodTable(null)).to.not.throw();
     });
 });
 
 describe('GSplatLodTable', function () {
 
-    it('orders a node chain cheapest level first', function () {
-        const octree = makeOctree([100, 50, 20], [0, 1, 3], true);
-        const table = new GSplatLodTable(octree, 0, 2);
-
-        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
-        expect(table.startCount[0]).to.equal(20);
-        expect(table.totalStartCount).to.equal(20);
+    it('renders each band at its own level', function () {
+        const table = new GSplatLodTable(makeOctree([100, 50, 20]), 0, 2);
+        expect(bandsOf(table)).to.deep.equal([0, 1, 2]);
+        expect(countsOf(table)).to.deep.equal([100, 50, 20]);
         expect(table.totalFinestCount).to.equal(100);
-        expect(upgradesOf(table).map(u => u.cost)).to.deep.equal([30, 50]);
+        expect(table.totalCoarsestCount).to.equal(20);
     });
 
-    it('drops levels dominated in both count and error', function () {
-        // level 1 costs more than level 2 and looks worse - nothing would ever pick it
-        const octree = makeOctree([100, 50, 20], [0, 4, 3], true);
-        const table = new GSplatLodTable(octree, 0, 2);
-
-        expect(chainOf(table)).to.deep.equal([2, 0]);
+    it('keeps levels that barely differ, or grow, in splat count', function () {
+        // a region the decimator left alone: every level stays, so the node follows its band and
+        // shares files with its neighbors rather than being pinned to one level
+        const table = new GSplatLodTable(makeOctree([930, 926, 926, 925, 926]), 0, 4);
+        expect(bandsOf(table)).to.deep.equal([0, 1, 2, 3, 4]);
+        expect(countsOf(table)).to.deep.equal([930, 926, 926, 925, 926]);
     });
 
-    it('drops a level duplicated in both count and error, so no upgrade is free', function () {
-        // a zero-cost upgrade would carry a 0/0 ratio, and because ratios accumulate through
-        // Math.min that NaN would demote every later upgrade on the node
-        const octree = makeOctree([100, 50, 50], [0, 5, 5], true);
-        const table = new GSplatLodTable(octree, 0, 2);
-
-        expect(chainOf(table)).to.deep.equal([2, 0]);
-        for (const upgrade of upgradesOf(table)) {
-            expect(upgrade.cost).to.be.above(0);
-            expect(Number.isFinite(upgrade.ratio)).to.equal(true);
-        }
+    it('fills a gap with the next finer level holding data', function () {
+        const table = new GSplatLodTable(makeOctree([100, 0, 20, 10]), 0, 3);
+        expect(bandsOf(table)).to.deep.equal([0, 0, 2, 3]);
     });
 
-    it('prices a step by the best run it opens, keeping every level', function () {
-        // 20 -> 90 is a poor step on its own - 2 error for 70 splats - but it opens the way to 100,
-        // which removes 10 for 80 (0.125). Pricing it locally would make the node look worthless.
-        // The middle level still has to survive: it is a real improvement, and both streaming and
-        // underfill step through it.
-        const octree = makeOctree([100, 90, 20], [0, 8, 10], true);
-        const table = new GSplatLodTable(octree, 0, 2);
-
-        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
-        const upgrades = upgradesOf(table);
-        expect(upgrades.length).to.equal(2);
-
-        expect(upgrades[0].cost).to.equal(70);
-        expect(upgrades[0].ratio).to.be.closeTo(0.125, 1e-6);
-
-        expect(upgrades[1].cost).to.equal(10);
-        expect(upgrades[1].ratio).to.be.closeTo(0.8, 1e-6);
+    it('fills a gap at the finest end with the next coarser level holding data', function () {
+        const table = new GSplatLodTable(makeOctree([0, 0, 20, 10]), 0, 3);
+        expect(bandsOf(table)).to.deep.equal([2, 2, 2, 3]);
     });
 
-    it('prices a step by its own slope when nothing further beats it', function () {
-        // returns already fall towards the finest here, so each step is its own best deal
-        const octree = makeOctree([100, 50, 20], [0, 1, 5], true);
-        const table = new GSplatLodTable(octree, 0, 2);
-
-        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
-        const ratios = upgradesOf(table).map(u => u.ratio);
-        expect(ratios.length).to.equal(2);
-        expect(ratios[0]).to.be.closeTo(4 / 30, 1e-6);
-        expect(ratios[1]).to.be.closeTo(1 / 50, 1e-6);
+    it('gives the bands past a node\'s coarsest data its empty level', function () {
+        // data stops at level 1, so level 2 is the empty level: no splats and no file, and every
+        // band from there on draws nothing rather than pinning the node to finer data
+        const octree = makeOctree([100, 40, 0, 0]);
+        const table = new GSplatLodTable(octree, 0, 3);
+        expect(bandsOf(table)).to.deep.equal([0, 1, 2, 2]);
+        expect(countsOf(table)).to.deep.equal([100, 40, 0, 0]);
+        expect(octree.nodes[0].lods[2].fileIndex).to.equal(-1);
     });
 
-    it('skips levels with no splats', function () {
-        const octree = makeOctree([100, 0, 20], [0, 0, 3], true);
-        const table = new GSplatLodTable(octree, 0, 2);
-
-        expect(chainOf(table)).to.deep.equal([2, 0]);
+    it('adds no empty level when the coarsest data already sits at rangeMax', function () {
+        const table = new GSplatLodTable(makeOctree([100, 40, 0, 0]), 0, 1);
+        expect(bandsOf(table)).to.deep.equal([0, 1]);
     });
 
-    it('marks a node with nothing renderable as having no start level', function () {
-        const octree = makeOctree([0, 0], [0, 0], true);
-        const table = new GSplatLodTable(octree, 0, 1);
-
-        expect(table.startLod[0]).to.equal(-1);
-        expect(table.firstUpgrade[1]).to.equal(table.firstUpgrade[0]);
-        expect(table.totalStartCount).to.equal(0);
+    it('marks a node with nothing renderable in range', function () {
+        const table = new GSplatLodTable(makeOctree([100, 0, 0]), 1, 2);
+        expect(bandsOf(table)).to.deep.equal([-1, -1]);
+        expect(table.totalFinestCount).to.equal(0);
     });
 
-    it('honours the LOD range', function () {
-        const octree = makeOctree([100, 50, 20, 8], [0, 1, 2, 3], true);
-        const table = new GSplatLodTable(octree, 1, 2);
-
-        expect(chainOf(table)).to.deep.equal([2, 1]);
-        expect(table.totalStartCount).to.equal(20);
+    it('honors the LOD range', function () {
+        const table = new GSplatLodTable(makeOctree([100, 50, 20, 10]), 1, 2);
+        expect(table.span).to.equal(2);
+        expect(bandsOf(table)).to.deep.equal([1, 2]);
         expect(table.totalFinestCount).to.equal(50);
-    });
-
-    it('builds a sub-range frontier from that range alone, not the full one', function () {
-        // Level 2 is dominated across the full range (level 3 is cheaper at equal error), but with
-        // rangeMax 2 it is the cheapest level the node has - so filtering the full frontier down to
-        // the sub-range would leave this node with nothing to start from.
-        const octree = makeOctree([100, 50, 20, 20], [0, 1, 5, 5], true);
-
-        expect(chainOf(new GSplatLodTable(octree, 0, 3))).to.deep.equal([3, 1, 0]);
-        expect(chainOf(new GSplatLodTable(octree, 0, 2))).to.deep.equal([2, 1, 0]);
+        expect(table.totalCoarsestCount).to.equal(20);
     });
 
     describe('chain navigation', function () {
 
-        it('steps coarser and finer along the chain, not over raw LOD indices', function () {
-            // level 1 is dominated, so the chain is 2 -> 0 and stepping must skip level 1
-            const octree = makeOctree([100, 50, 20], [0, 4, 3], true);
-            const table = new GSplatLodTable(octree, 0, 2);
+        it('steps coarser and finer along the chain, skipping levels without data', function () {
+            const table = new GSplatLodTable(makeOctree([100, 0, 20]), 0, 2);
 
             expect(table.coarserOnChain(0, 0)).to.equal(2);
             expect(table.coarserOnChain(0, 2)).to.equal(-1);
@@ -271,9 +147,15 @@ describe('GSplatLodTable', function () {
             expect(table.finerOnChain(0, 0)).to.equal(-1);
         });
 
+        it('steps onto and off the empty level', function () {
+            const table = new GSplatLodTable(makeOctree([100, 40, 0]), 0, 2);
+
+            expect(table.coarserOnChain(0, 1)).to.equal(2);
+            expect(table.finerOnChain(0, 2)).to.equal(1);
+        });
+
         it('finds the finest accepted level within a window of coarser chain steps', function () {
-            const octree = makeOctree([100, 50, 20], [0, 1, 3], true);
-            const table = new GSplatLodTable(octree, 0, 2);
+            const table = new GSplatLodTable(makeOctree([100, 50, 20]), 0, 2);
 
             // nothing accepted
             expect(table.findCoarserAccepted(0, 0, 2, () => false)).to.equal(-1);
@@ -286,71 +168,11 @@ describe('GSplatLodTable', function () {
             expect(table.findCoarserAccepted(0, 0, 2, lod => lod === 2)).to.equal(2);
         });
 
-        it('never steps coarser to a level holding more splats', function () {
-            // level 3 holds fewer splats than level 4, an inversion real captures do contain
-            const octree = makeOctree([78, 38, 19, 6, 7], undefined, undefined);
-            const table = new GSplatLodTable(octree, 0, 4);
-            const lods = octree.nodes[0].lods;
-
-            let lod = table.startLod[0];
-            let previous = 0;
-            while (lod >= 0) {
-                expect(lods[lod].count).to.be.above(previous);
-                previous = lods[lod].count;
-                lod = table.finerOnChain(0, lod);
-            }
+        it('counts window steps over distinct chain entries, not bands', function () {
+            // bands 0 and 1 both render level 0, so one step coarser from 0 is level 2
+            const table = new GSplatLodTable(makeOctree([100, 0, 20, 10]), 0, 3);
+            expect(table.findCoarserAccepted(0, 0, 1, lod => lod === 2)).to.equal(2);
+            expect(table.findCoarserAccepted(0, 0, 1, lod => lod === 3)).to.equal(-1);
         });
-    });
-});
-
-describe('GSplatLodTable distance mode', function () {
-
-    const distanceTable = octree => octree.acquireLodTable(0, octree.lodLevels - 1, GSPLAT_LODMODE_DISTANCE);
-
-    it('prices every step by the per-level band weight, whatever the node holds', function () {
-        // step to the finer of levels (i, i-1) costs error dCost * 3^(2*(i-1)), so error-per-splat
-        // is exactly 3^(2*(i-1)) - node content cancels and the ranking is pure coverage,
-        // which is what guarantees the coarser-with-distance progression
-        const a = distanceTable(makeOctree([100, 50, 20], [0, 1, 3], true));
-        const b = distanceTable(makeOctree([1000, 300, 7], [0, 900, 901], true));
-
-        for (const table of [a, b]) {
-            const ratios = upgradesOf(table).map(u => u.ratio);
-            expect(ratios.length).to.equal(2);
-            expect(ratios[0]).to.be.closeTo(9, 1e-6);   // step to lod1, weight 3^2
-            expect(ratios[1]).to.be.closeTo(1, 1e-6);   // step to lod0, weight 3^0
-        }
-    });
-
-    it('ignores authored error tables', function () {
-        // these errors would reorder the frontier in error mode; distance mode never reads them
-        const octree = makeOctree([100, 50, 20], [0, 40, 3], true);
-        const table = distanceTable(octree);
-
-        expect(chainOf(table)).to.deep.equal([2, 1, 0]);
-    });
-
-    it('still drops levels dominated by count inversions', function () {
-        // level 4 holds more splats than level 3 for the same or worse band error
-        const octree = makeOctree([78, 38, 19, 6, 7], undefined, undefined);
-        const table = distanceTable(octree);
-
-        expect(chainOf(table)).to.not.include(4);
-    });
-
-    it('is cached separately from the error-mode table of the same range', function () {
-        const octree = makeOctree([100, 50, 20], [0, 1, 3], true);
-        const error = octree.acquireLodTable(0, 2);
-        const distance = distanceTable(octree);
-
-        expect(distance).to.not.equal(error);
-        expect(octree.acquireLodTable(0, 2)).to.equal(error);
-        expect(distanceTable(octree)).to.equal(distance);
-
-        // releasing one mode leaves the other alone
-        octree.releaseLodTable(distance);
-        octree.releaseLodTable(distance);
-        expect(octree.acquireLodTable(0, 2)).to.equal(error);
-        expect(distanceTable(octree)).to.not.equal(distance);
     });
 });

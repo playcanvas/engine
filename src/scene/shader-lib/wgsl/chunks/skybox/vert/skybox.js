@@ -10,10 +10,11 @@ export default /* wgsl */`
 
     #ifdef SKY_FISHEYE
         varying vClipXYW : vec3f;
+        uniform projectionFlipY : f32;
     #endif
 
-    #ifdef PREPASS_PASS
-        // when skydome renders depth during prepass, generate linear depth
+    #if defined(PREPASS_PASS) || (defined(SCENE_TEXTURE_DEPTH) && defined(SKYMESH))
+        // Depth-based effects can use either the prepass or the scene pass depth output.
         varying vLinearDepth: f32;
     #endif
 
@@ -34,7 +35,7 @@ export default /* wgsl */`
             output.vWorldPos = worldPos.xyz;
             output.position = uniform.matrix_projectionSkybox * (view * worldPos);
 
-            #ifdef PREPASS_PASS
+            #if defined(PREPASS_PASS) || defined(SCENE_TEXTURE_DEPTH)
                 // linear depth from the worldPosition, see getLinearDepth
                 output.vLinearDepth = -(uniform.matrix_view * vec4f(worldPos.xyz, 1.0)).z;
             #endif
@@ -52,8 +53,11 @@ export default /* wgsl */`
                 // screen. The fragment shader recomputes view direction from screen
                 // coordinates, so only rasterization coverage matters here.
                 var viewPos : vec4f = view * input.aPosition;
-                output.position = vec4f(viewPos.xy, 0.0, -viewPos.z);
-                output.vClipXYW = vec3f(output.position.xy, output.position.w);
+                output.vClipXYW = vec3f(viewPos.xy, -viewPos.z);
+
+                // apply the per-pass target flip, so the rasterized position (and winding, which the
+                // renderer compensates for) matches the target orientation
+                output.position = vec4f(viewPos.x, viewPos.y * uniform.projectionFlipY, 0.0, -viewPos.z);
             #else
                 output.position = uniform.matrix_projectionSkybox * (view * input.aPosition);
             #endif

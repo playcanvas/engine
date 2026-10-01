@@ -59,9 +59,6 @@ class WebglShader {
 
         // kick off linking, as this is non-blocking too
         this.link(shader.device, shader);
-
-        // add it to a device list of all shaders
-        shader.device.shaders.push(shader);
     }
 
     /**
@@ -525,6 +522,19 @@ class WebglShader {
 
         return [code, error];
     }
+
+    // #if _DEBUG
+    /**
+     * See {@link Shader#debugReadsUniform}.
+     *
+     * @param {Shader} shader - The shader.
+     * @param {string} name - The name of the uniform.
+     * @returns {boolean} Whether the linked program has the uniform active.
+     */
+    debugReadsUniform(shader, name) {
+        return this.uniforms.some(uniform => uniform.scopeId.name === name);
+    }
+    // #endif
 }
 
 export { WebglShader };

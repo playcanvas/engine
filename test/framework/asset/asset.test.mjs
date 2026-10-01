@@ -21,7 +21,7 @@ describe('Asset', function () {
 
     const DEFAULT_LOCALE_FALLBACKS = {
         'en': 'en-US',
-        'es': 'en-ES',
+        'es': 'es-ES',
         'zh': 'zh-CN',
         'fr': 'fr-FR',
         'de': 'de-DE',
@@ -123,6 +123,15 @@ describe('Asset', function () {
             asset.addLocalizedAssetId('zh-TW', 2);
 
             expect(asset.getLocalizedAssetId('zh-SG')).to.equal(2);
+        });
+
+        it('es-MX should fallback to es-ES', function () {
+            const asset = new Asset('asset', 'font');
+
+            asset.addLocalizedAssetId('en-US', 1);
+            asset.addLocalizedAssetId('es-ES', 2);
+
+            expect(asset.getLocalizedAssetId('es-MX')).to.equal(2);
         });
 
     });

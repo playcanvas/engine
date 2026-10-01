@@ -26,6 +26,7 @@ import {
     TEXTURETYPE_RGBP,
     TONEMAP_ACES,
     TextureHandler,
+    TextureRenderer,
     Vec3,
     createGraphicsDevice
 } from 'playcanvas';
@@ -71,6 +72,8 @@ createOptions.resourceHandlers = [TextureHandler, CubemapHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
+
+const textures = new TextureRenderer(app);
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
@@ -243,6 +246,5 @@ app.on('update', (dt) => {
     }
 
     // Draw the texture we render decals to for demonstration purposes
-    // @ts-ignore engine-tsd
-    app.drawTexture(0, -0.6, 1.4, 0.6, texture);
+    textures.draw(texture, 0.15, 0.65, 0.7, 0.3);
 });

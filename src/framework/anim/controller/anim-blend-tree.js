@@ -11,6 +11,13 @@ import { AnimNode } from './anim-node.js';
  * blend type as an argument which defines which function should be used to determine the weights
  * of each of its children, based on the current parameter value.
  *
+ * The blend type is one of {@link ANIM_BLEND_1D}, {@link ANIM_BLEND_2D_DIRECTIONAL},
+ * {@link ANIM_BLEND_2D_CARTESIAN} and {@link ANIM_BLEND_DIRECT}, each implemented by a subclass.
+ * Every child sits at a point on the parameter axis or plane, and the tree weights the children by
+ * where the current parameter values fall among those points. With `syncAnimations` set, the
+ * children's playback speeds are synchronized so that a walk and a run cycle stay in step while
+ * blending. Blend trees are described in the {@link AnimStateGraph} and built when it loads.
+ *
  * @category Animation
  */
 class AnimBlendTree extends AnimNode {

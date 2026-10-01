@@ -76,7 +76,7 @@ class Texture {
      * @param {number} width - The width of the texture in pixels.
      * @param {number} height - The height of the texture in pixels.
      * @param {number} format - The pixel format of the texture.
-     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
+     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [levels]
      * - Optional initial mip level data.
      * @returns {Texture} The created texture.
      * @ignore
@@ -259,7 +259,7 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
+     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
      * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
@@ -1216,20 +1216,27 @@ class Texture {
             this
         );
 
-        this._lockedMode = options.mode;
-        this._lockedLevel = options.level;
-
-        const levels = this.cubemap ? this._levels[options.face] : this._levels;
-        if (!levels[options.level]) {
+        // cubemap levels are stored as [mip][face]
+        const levels = this._cubemap ? (this._levels[options.level] ??= [null, null, null, null, null, null]) : this._levels;
+        const index = this._cubemap ? options.face : options.level;
+        if (!levels[index]) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
             const depth = Math.max(1, this._depth >> options.level);
             const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, depth, this._format));
-            levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
+            levels[index] = new (getPixelFormatArrayType(this._format))(data);
         }
 
-        return levels[options.level];
+        // WebGL only re-uploads the cubemap faces flagged as updated
+        if (this._cubemap && options.mode === TEXTURELOCK_WRITE) {
+            this._levelsUpdated[0][options.face] = true;
+        }
+
+        this._lockedMode = options.mode;
+        this._lockedLevel = options.level;
+
+        return levels[index];
     }
 
     /**
@@ -1304,7 +1311,7 @@ class Texture {
                     this._levelsUpdated[mipLevel] = true;
                 }
 
-                if (source instanceof HTMLVideoElement) {
+                if (typeof HTMLVideoElement !== 'undefined' && source instanceof HTMLVideoElement) {
                     width = source.videoWidth;
                     height = source.videoHeight;
                 } else if (this.device._isHTMLElementInterface(source)) {

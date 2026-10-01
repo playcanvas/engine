@@ -237,6 +237,7 @@ export * from './framework/constants.js';
 export { script } from './framework/script.js';
 export { AppBase, app } from './framework/app-base.js';
 export { AppOptions } from './framework/app-options.js';
+export { AppStats } from './framework/app-stats.js';
 export { Application } from './framework/application.js';
 export { AmmoPhysicsWorld } from './framework/physics/ammo/ammo-physics-world.js';
 export { AnimationComponent } from './framework/components/animation/component.js';
@@ -260,7 +261,7 @@ export * from './framework/components/element/constants.js';
 export { ElementComponent } from './framework/components/element/component.js';
 export { ElementComponentSystem } from './framework/components/element/system.js';
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
-export { Entity } from './framework/entity.js';
+export * from './framework/entity.js';
 export { GSplatComponent } from './framework/components/gsplat/component.js';
 export { GSplatComponentSystem } from './framework/components/gsplat/system.js';
 export { ImageElement } from './framework/components/element/image-element.js';
@@ -334,7 +335,7 @@ export { AnimStateGraph } from './framework/anim/state-graph/anim-state-graph.js
 
 // FRAMEWORK / ASSETS
 export * from './framework/asset/constants.js';
-export { Asset } from './framework/asset/asset.js';
+export * from './framework/asset/asset.js';
 export { AssetListLoader } from './framework/asset/asset-list-loader.js';
 export { AssetReference } from './framework/asset/asset-reference.js';
 export { AssetRegistry } from './framework/asset/asset-registry.js';

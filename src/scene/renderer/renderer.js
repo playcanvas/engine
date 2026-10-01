@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 import { Vec2 } from '../../core/math/vec2.js';
@@ -11,19 +11,20 @@ import {
     BINDGROUP_MESH, BINDGROUP_VIEW,
     UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC4, UNIFORMTYPE_VEC3, UNIFORMTYPE_IVEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT, UNIFORMTYPE_UINT,
     CULLFACE_NONE,
-    BINDGROUP_MESH_UB,
+    BINDGROUP_MESH_UB, BINDGROUP_MATERIAL,
     FRONTFACE_CCW,
     FRONTFACE_CW
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
-import { DynamicBindGroup } from '../../platform/graphics/bind-group.js';
+import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
 import { UniformFormat, UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import {
     VIEW_CENTER, LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE
 } from '../constants.js';
 import { LightCube } from '../graphics/light-cube.js';
 import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
+import { LightSlotUniforms } from '../lighting/light-slot-uniforms.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
 import { ShadowMapCache } from './shadow-map-cache.js';
@@ -36,16 +37,18 @@ import { Culler } from './culler.js';
 import { Camera } from '../camera.js';
 
 /**
- * @import { BindGroup } from '../../platform/graphics/bind-group.js'
+ * @import { BindGroupFormat } from '../../platform/graphics/bind-group-format.js'
  * @import { CulledInstances } from '../layer.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { RenderView } from '../render-view.js'
  * @import { Layer } from '../layer.js'
  * @import { LayerComposition } from '../composition/layer-composition.js'
  * @import { Light } from '../light.js'
+ * @import { LightList } from '../lighting/light-list.js'
  * @import { MeshInstance } from '../mesh-instance.js'
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Scene } from '../scene.js'
+ * @import { Shader } from '../../platform/graphics/shader.js'
  * @import { GSplatDirector } from '../gsplat-unified/gsplat-director.js'
  */
 
@@ -98,6 +101,54 @@ const _tempMeshInstances = [];
 const _tempMeshInstancesSkinned = [];
 
 /**
+ * A view bind group holding textures, see {@link Renderer#setupViewBindGroup}.
+ *
+ * @ignore
+ */
+class ViewTextureBindGroup {
+    /** @type {BindGroup} */
+    bindGroup;
+
+    /**
+     * The pass the bind group was last updated in, see {@link Renderer#_viewPass}.
+     *
+     * @type {number}
+     */
+    pass = -1;
+
+    /**
+     * @param {BindGroup} bindGroup - The bind group.
+     */
+    constructor(bindGroup) {
+        this.bindGroup = bindGroup;
+    }
+}
+
+/**
+ * A view uniform buffer, together with the view bind groups holding it with textures.
+ *
+ * @ignore
+ */
+class ViewUniformBuffer {
+    /** @type {UniformBuffer} */
+    uniformBuffer;
+
+    /**
+     * The view bind groups holding textures, by their format.
+     *
+     * @type {Map<BindGroupFormat, ViewTextureBindGroup>}
+     */
+    textureBindGroups = new Map();
+
+    /**
+     * @param {UniformBuffer} uniformBuffer - The view uniform buffer.
+     */
+    constructor(uniformBuffer) {
+        this.uniformBuffer = uniformBuffer;
+    }
+}
+
+/**
  * The base renderer functionality to allow implementation of specialized renderers.
  *
  * @ignore
@@ -139,12 +190,91 @@ class Renderer {
     localLights = [];
 
     /**
-     * Shared non-persistent view uniform buffers, keyed by their uniform format. Reused every frame,
-     * with the bind group and dynamic offset sourced from the dynamic buffer system.
+     * Formats of the view uniform buffer, by clustered lighting mode and then by the light layout
+     * of the pass they serve. See {@link Renderer#getViewUniformFormat}.
      *
-     * @type {WeakMap<UniformBufferFormat, UniformBuffer>}
+     * @type {Map<string, UniformBufferFormat>[]}
+     */
+    _viewUniformFormats = [new Map(), new Map()];
+
+    /**
+     * The uniforms of each light slot, by slot index. See {@link Renderer#getLightSlotUniforms}.
+     *
+     * @type {LightSlotUniforms[]}
+     */
+    _lightSlotUniforms = [];
+
+    /**
+     * Shared non-persistent view uniform buffers, keyed by their uniform format, one per view
+     * index. Reused every frame, with the storage sourced from the dynamic buffer system. A
+     * multiview pass fills one per view, as the view bind groups holding textures hold the buffer
+     * of their view.
+     *
+     * @type {WeakMap<UniformBufferFormat, ViewUniformBuffer[]>}
      */
     _viewUniformBuffers = new WeakMap();
+
+    /**
+     * All view bind groups holding textures, destroyed with the renderer.
+     *
+     * @type {BindGroup[]}
+     */
+    _viewTextureBindGroups = [];
+
+    /**
+     * Counts the passes set up by {@link Renderer#setupViewUniformBuffers}, so that a view bind
+     * group holding textures updates once per pass.
+     *
+     * @type {number}
+     */
+    _viewPass = 0;
+
+    /**
+     * The number of views of the current pass, or 0 when it is not multiview.
+     *
+     * @type {number}
+     */
+    _passViewCount = 0;
+
+    /**
+     * The view uniform buffers of the current pass, one per view.
+     *
+     * @type {ViewUniformBuffer[]}
+     */
+    _passViewUniformBuffers = [];
+
+    /**
+     * The format of the view bind group bound by the current pass, or null for the bind group of
+     * just the view uniform buffer.
+     *
+     * @type {BindGroupFormat|null}
+     */
+    _boundViewBindGroupFormat = null;
+
+    /**
+     * True when the current pass has bound the empty bind group at the mesh bind group index.
+     *
+     * @type {boolean}
+     */
+    _emptyMeshBindGroupBound = false;
+
+    /**
+     * True when the current pass has bound a mesh uniform buffer of a shader without mesh uniforms,
+     * which the draws of such shaders then share, see {@link Shader#meshUniformBufferEmpty}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _emptyMeshUniformBufferBound = false;
+
+    /**
+     * The version of the mesh instance storage the view bind groups of the current pass were updated
+     * with, see {@link Renderer#updateStorageSlot}.
+     *
+     * @type {number}
+     * @private
+     */
+    _meshInstanceStorageVersion = -1;
 
     /**
      * Reusable receiver for a view uniform buffer's dynamic bind group + offset.
@@ -154,8 +284,20 @@ class Renderer {
     _dynamicViewBindGroup = new DynamicBindGroup();
 
     /**
-     * Per-view dynamic bind groups, captured during multiview view-uniform setup (allocations may
-     * span dynamic buffers, so the bind group is captured per view alongside its offset).
+     * The dynamic bind group of just the view uniform buffer, of each view of the current multiview
+     * pass (allocations may span dynamic buffers, so the bind group is captured per view alongside
+     * its offset).
+     *
+     * @type {BindGroup[]}
+     */
+    _passDynamicViewBindGroups = [];
+
+    /** @type {number[]} */
+    _passDynamicViewOffsets = [];
+
+    /**
+     * The view bind group of each view of the current multiview pass, for the shader set last,
+     * which the forward render loop binds per view.
      *
      * @type {BindGroup[]}
      */
@@ -166,11 +308,11 @@ class Renderer {
 
     /**
      * Reused single-element array passed as the dynamic offsets to per-view setBindGroup, to avoid
-     * per-draw allocation.
+     * per-draw allocation. A typed array, as the device passes it to WebGPU without conversion.
      *
-     * @type {number[]}
+     * @type {Uint32Array}
      */
-    _viewOffsetScratch = [0];
+    _viewOffsetScratch = new Uint32Array(1);
 
     blueNoise = new BlueNoise(123);
 
@@ -211,9 +353,6 @@ class Renderer {
             this._renderPassUpdateClustered = new FramePassUpdateClustered(this.device, this, this.shadowRenderer,
                 this._shadowRendererLocal, this.lightTextureAtlas);
         }
-
-        // format of the view uniform buffer
-        this.viewUniformFormat = null;
 
         // timing
         this._skinTime = 0;
@@ -263,7 +402,6 @@ class Renderer {
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
 
         this.alphaTestId = scope.resolve('alpha_ref');
-        this.opacityMapId = scope.resolve('texture_opacityMap');
 
         this.exposureId = scope.resolve('exposure');
 
@@ -287,11 +425,14 @@ class Renderer {
         this._renderPassUpdateClustered?.destroy();
         this._renderPassUpdateClustered = null;
 
+        this.worldClustersAllocator.destroy();
+        this.worldClustersAllocator = null;
+
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
 
-        this.gsplatDirector?.destroy();
-        this.gsplatDirector = null;
+        this._viewTextureBindGroups.forEach(bindGroup => bindGroup.destroy());
+        this._viewTextureBindGroups.length = 0;
     }
 
     /**
@@ -380,13 +521,6 @@ class Renderer {
                 }
             }
 
-            const jitterVec = jitter > 0 ? this.blueNoiseJitterVec : Vec4.ZERO;
-            this.blueNoiseJitterData[0] = jitterVec.x;
-            this.blueNoiseJitterData[1] = jitterVec.y;
-            this.blueNoiseJitterData[2] = jitterVec.z;
-            this.blueNoiseJitterData[3] = jitterVec.w;
-            this.blueNoiseJitterId.setValue(this.blueNoiseJitterData);
-
             this.projId.setValue(projMat.data);
             this.projSkyboxId.setValue(projMatSkybox.data);
 
@@ -430,6 +564,15 @@ class Renderer {
         // flip because screen-space dpdy has the opposite sign to WebGL's dFdy (framebuffer space is
         // Y-down), so the backend is XORed into the sign to keep normal mapping consistent (#5735).
         this.tbnBasis.setValue((this.device.isWebGPU !== !!flipY) ? -1 : 1);
+
+        // blue noise jitter, zero unless the camera jitters, which it does not in XR - set for all
+        // passes including XR, as it is part of the view uniform buffer
+        const jitterVec = (!camera.xrActive && camera.jitter > 0) ? this.blueNoiseJitterVec : Vec4.ZERO;
+        this.blueNoiseJitterData[0] = jitterVec.x;
+        this.blueNoiseJitterData[1] = jitterVec.y;
+        this.blueNoiseJitterData[2] = jitterVec.z;
+        this.blueNoiseJitterData[3] = jitterVec.w;
+        this.blueNoiseJitterId.setValue(this.blueNoiseJitterData);
 
         // camera params
         this.cameraParamsId.setValue(camera.fillShaderParams(this.cameraParams));
@@ -476,6 +619,8 @@ class Renderer {
             const device = this.device;
             DebugGraphics.pushGpuMarker(device, 'CLEAR');
 
+            // this clear is not attachment aware, and clears all the color attachments of the
+            // render target to the color of the attachment 0
             const c = camera._clearColor;
             _tempClearColor[0] = c.r;
             _tempClearColor[1] = c.g;
@@ -506,23 +651,6 @@ class Renderer {
     setupCullMode(cullFaces, flipFactor, drawCall) {
         Debug.deprecated('Renderer.setupCullMode is deprecated. Use \'Renderer.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);\' format instead.');
         this.setupCullModeAndFrontFace(cullFaces, flipFactor, drawCall);
-    }
-
-    setBaseConstants(device, material) {
-
-        // Cull mode
-        device.setCullMode(material.cull);
-
-        // Front face
-        device.setFrontFace(material.frontFace);
-
-        // Alpha test
-        if (material.opacityMap) {
-            this.opacityMapId.setValue(material.opacityMap);
-        }
-        if (material.opacityMap || material.alphaTest > 0) {
-            this.alphaTestId.setValue(material.alphaTest);
-        }
     }
 
     updateCpuSkinMatrices(drawCalls) {
@@ -666,14 +794,25 @@ class Renderer {
         this.viewPosId.setValue(vp);
     }
 
-    initViewUniformFormat(isClustered) {
+    /**
+     * Returns the format of the view uniform buffer of a pass: the view uniforms, the clustered
+     * lighting parameters when enabled, and the uniforms of the lights of the pass. A light's
+     * uniforms are the same for every mesh instance drawn, so they travel with the view, uploaded
+     * once per pass, instead of in the per-draw mesh uniform buffer. The formats are cached by the
+     * light layout, which the light list key identifies - as does the shader variant, so a shader is
+     * only ever processed against the format of the passes it draws in.
+     *
+     * @param {boolean} isClustered - Whether clustered lighting is enabled.
+     * @param {LightList} lightList - The lights of the pass.
+     * @returns {UniformBufferFormat} The format.
+     */
+    getViewUniformFormat(isClustered, lightList) {
 
-        // view uniforms always go through a uniform buffer (on all backends)
-        if (!this.viewUniformFormat) {
+        // the list key is built when the lights change, so this allocates nothing per pass
+        const formats = this._viewUniformFormats[isClustered ? 1 : 0];
+        let format = formats.get(lightList.key);
+        if (!format) {
 
-            // format of the view uniform buffer
-            // note: 'textureBias' is deliberately not part of this, as the tiled nine-slice mode
-            // declares a global constant of that name in the shader, which would collide with it
             const uniforms = [
                 new UniformFormat('matrix_view', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_viewInverse', UNIFORMTYPE_MAT4),
@@ -683,28 +822,65 @@ class Renderer {
                 new UniformFormat('matrix_view3', UNIFORMTYPE_MAT3),
                 new UniformFormat('cubeMapRotationMatrix', UNIFORMTYPE_MAT3),
                 new UniformFormat('view_position', UNIFORMTYPE_VEC3),
-                new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
                 new UniformFormat('skyboxIntensity', UNIFORMTYPE_FLOAT),
+                new UniformFormat('viewport_size', UNIFORMTYPE_VEC4),
+                new UniformFormat('screen_size', UNIFORMTYPE_VEC4),
+                new UniformFormat('camera_params', UNIFORMTYPE_VEC4),
+                new UniformFormat('blueNoiseJitter', UNIFORMTYPE_VEC4),
                 new UniformFormat('exposure', UNIFORMTYPE_FLOAT),
-                new UniformFormat('view_index', UNIFORMTYPE_UINT)
+                new UniformFormat('view_index', UNIFORMTYPE_UINT),
+                new UniformFormat('light_globalAmbient', UNIFORMTYPE_VEC3),
+                new UniformFormat('textureBias', UNIFORMTYPE_FLOAT),
+                new UniformFormat('projectionFlipY', UNIFORMTYPE_FLOAT),
+                new UniformFormat('tbnBasis', UNIFORMTYPE_FLOAT),
+
+                // the fog of the camera or the scene, set per layer
+                new UniformFormat('fog_color', UNIFORMTYPE_VEC3),
+                new UniformFormat('fog_start', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fog_end', UNIFORMTYPE_FLOAT),
+                new UniformFormat('fog_density', UNIFORMTYPE_FLOAT)
             ];
 
             if (isClustered) {
+                // Fill the common uniforms' trailing 8 bytes, then pair vec3s with scalars.
                 uniforms.push(...[
-                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
-                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
-                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3),
                     new UniformFormat('shadowAtlasParams', UNIFORMTYPE_VEC2),
+                    new UniformFormat('clusterCellsCountByBoundsSize', UNIFORMTYPE_VEC3),
                     new UniformFormat('clusterMaxCells', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterBoundsMin', UNIFORMTYPE_VEC3),
                     new UniformFormat('numClusteredLights', UNIFORMTYPE_INT),
-                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT)
+                    new UniformFormat('clusterBoundsDelta', UNIFORMTYPE_VEC3),
+                    new UniformFormat('clusterTextureWidth', UNIFORMTYPE_INT),
+                    new UniformFormat('clusterCellsDot', UNIFORMTYPE_IVEC3),
+                    new UniformFormat('clusterCellsMax', UNIFORMTYPE_IVEC3)
                 ]);
             }
 
-            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
+            // the lights of the pass, each at its light slot
+            const slots = lightList.slots;
+            for (let i = 0; i < slots.length; i++) {
+                this.getLightSlotUniforms(i).appendFormats(uniforms, slots[i]);
+            }
+
+            format = new UniformBufferFormat(this.device, uniforms, { pack: true });
+            formats.set(lightList.key, format);
         }
+
+        return format;
+    }
+
+    /**
+     * Returns the uniforms of a light slot - `light<slot>_*` - creating them on first use. A slot
+     * is a position in the light list of a pass rather than a light, so the instances are few and
+     * live as long as the renderer: the view uniform format declares from them whatever the light
+     * holding the slot needs, and the light dispatch writes its values through them.
+     *
+     * @param {number} slot - The light slot.
+     * @returns {LightSlotUniforms} The uniforms of the slot.
+     */
+    getLightSlotUniforms(slot) {
+        const slots = this._lightSlotUniforms;
+        return slots[slot] ?? (slots[slot] = new LightSlotUniforms(this.device, slot));
     }
 
     /**
@@ -712,7 +888,7 @@ class Renderer {
      */
     setupViewUniforms(view, index) {
 
-        // any view uniforms need to be part of the view uniform buffer, see initViewUniformFormat
+        // any view uniforms need to be part of the view uniform buffer, see getViewUniformFormat
         this.projId.setValue(view.projMat.data);
         this.projSkyboxId.setValue(view.projMat.data);
         this.viewId.setValue(view.viewOffMat.data);
@@ -724,26 +900,34 @@ class Renderer {
     }
 
     /**
-     * Returns the shared non-persistent view uniform buffer for the given format, creating it on
-     * first use. It is bound via the dynamic buffer system, so it needs no explicit bind group.
+     * Returns the shared non-persistent view uniform buffer for the given format and view index,
+     * creating it on first use.
      *
      * @param {UniformBufferFormat} viewUniformFormat - The view uniform buffer format.
-     * @returns {UniformBuffer} The shared view uniform buffer.
+     * @param {number} viewIndex - The index of the view, 0 when the pass is not multiview.
+     * @returns {ViewUniformBuffer} The shared view uniform buffer.
      */
-    getViewUniformBuffer(viewUniformFormat) {
-        let ub = this._viewUniformBuffers.get(viewUniformFormat);
-        if (!ub) {
-            ub = new UniformBuffer(this.device, viewUniformFormat, false);
-            this._viewUniformBuffers.set(viewUniformFormat, ub);
+    getViewUniformBuffer(viewUniformFormat, viewIndex) {
+        let buffers = this._viewUniformBuffers.get(viewUniformFormat);
+        if (!buffers) {
+            buffers = [];
+            this._viewUniformBuffers.set(viewUniformFormat, buffers);
         }
-        return ub;
+        let buffer = buffers[viewIndex];
+        if (!buffer) {
+            buffer = new ViewUniformBuffer(new UniformBuffer(this.device, viewUniformFormat, false));
+            buffers[viewIndex] = buffer;
+        }
+        return buffer;
     }
 
     /**
-     * Sets up the shared (per-format) view uniform buffer for the current camera. For a single view
-     * it updates the buffer and binds it immediately; for multiview (XR) it updates the buffer per
-     * view and captures the per-view bind group and dynamic offset, which the forward render loop
-     * then binds per draw. The bind group and dynamic offset come from the dynamic buffer system.
+     * Sets up the shared (per-format) view uniform buffer for the current camera, which starts a
+     * pass. For a single view it updates the buffer and binds it immediately; for multiview (XR)
+     * it updates a buffer per view and captures the per-view bind group and dynamic offset, which
+     * the forward render loop then binds per draw. The bind group and dynamic offset come from the
+     * dynamic buffer system. A shader reading textures in the view bind group binds its own group
+     * at the shader switch, see {@link Renderer#setupViewBindGroup}.
      *
      * @param {UniformBufferFormat} viewUniformFormat - The view uniform buffer format.
      * @param {RenderView[]|null} viewList - The list of XR views for multiview, or null for a
@@ -753,42 +937,294 @@ class Renderer {
 
         Debug.assert(viewUniformFormat);
         const { device } = this;
-        const ub = this.getViewUniformBuffer(viewUniformFormat);
+
+        // a new pass: the view bind groups holding textures update on their first use in it, and
+        // nothing is bound at the mesh bind group index yet
+        this._viewPass++;
+        this._boundViewBindGroupFormat = null;
+        this._emptyMeshBindGroupBound = false;
+        this._emptyMeshUniformBufferBound = false;
+        this._meshInstanceStorageVersion = device.meshInstanceStorage?.version ?? -1;
+
+        // start the pass with the empty bind group at the material index, so the pipeline layout has
+        // no gap for draws whose material has no uniform buffer; materials bind their own per draw
+        this._boundMaterialBindGroup = null;
+        if (device.usesMeshBindGroups) {
+            device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
+            this._boundMaterialBindGroup = device.emptyBindGroup;
+        }
+
+        const viewCount = viewList ? viewList.length : 0;
+        this._passViewCount = viewCount;
 
         if (viewList) {
 
-            // multiview: set up a dynamic bind group + offset per view, captured for per-view
-            // binding in the render loop (allocations may span dynamic buffers, so capture both)
-            const viewCount = viewList.length;
+            // multiview: set up a buffer per view, and capture its dynamic bind group + offset for
+            // per-view binding in the render loop (allocations may span dynamic buffers, so capture
+            // both)
             for (let i = 0; i < viewCount; i++) {
                 this.setupViewUniforms(viewList[i], i);
-                ub.update(this._dynamicViewBindGroup);
-                this._viewBindGroups[i] = this._dynamicViewBindGroup.bindGroup;
-                this._viewBindGroupOffsets[i] = this._dynamicViewBindGroup.offsets[0];
+                const viewUniformBuffer = this.getViewUniformBuffer(viewUniformFormat, i);
+                this._passViewUniformBuffers[i] = viewUniformBuffer;
+                viewUniformBuffer.uniformBuffer.update(this._dynamicViewBindGroup);
+                this._passDynamicViewBindGroups[i] = this._viewBindGroups[i] = this._dynamicViewBindGroup.bindGroup;
+                this._passDynamicViewOffsets[i] = this._viewBindGroupOffsets[i] = this._dynamicViewBindGroup.offsets[0];
             }
 
         } else {
 
             // single view: uniforms were set by setCameraUniforms; update the buffer and bind
-            ub.update(this._dynamicViewBindGroup);
+            const viewUniformBuffer = this.getViewUniformBuffer(viewUniformFormat, 0);
+            this._passViewUniformBuffers[0] = viewUniformBuffer;
+            viewUniformBuffer.uniformBuffer.update(this._dynamicViewBindGroup);
             device.setBindGroup(BINDGROUP_VIEW, this._dynamicViewBindGroup.bindGroup, this._dynamicViewBindGroup.offsets);
         }
     }
 
+    /**
+     * Binds the view bind group a shader expects, called after each shader switch. The textures
+     * the renderer supplies per pass are in the view bind group of a shader reading them,
+     * following the view uniform buffer - one bind group per format and view, updated once per
+     * pass, see {@link ShaderProcessorOptions#viewTextures}. Other shaders use the bind group of
+     * just the view uniform buffer. Rebinds only when the format differs from the one bound.
+     *
+     * @param {Shader} shader - The shader set on the device.
+     * @param {boolean} [force] - True to bind the view bind group even when its format is bound,
+     * used when the resources it holds changed. Defaults to false.
+     */
+    setupViewBindGroup(shader, force = false) {
+
+        // always null on WebGL, where the textures are not in bind groups
+        const format = shader.viewBindGroupFormat;
+        if (format === this._boundViewBindGroupFormat && !force) {
+            return;
+        }
+        this._boundViewBindGroupFormat = format;
+
+        const device = this.device;
+        const viewCount = this._passViewCount;
+
+        if (format) {
+
+            const pass = this._viewPass;
+            const buffers = this._passViewUniformBuffers;
+            for (let i = 0; i < (viewCount || 1); i++) {
+                const bindGroup = this.getViewTextureBindGroup(buffers[i], format, pass);
+                if (viewCount) {
+                    this._viewBindGroups[i] = bindGroup;
+                    this._viewBindGroupOffsets[i] = bindGroup.uniformBufferOffsets[0];
+                } else {
+                    device.setBindGroup(BINDGROUP_VIEW, bindGroup);
+                }
+            }
+
+        } else if (viewCount) {
+
+            for (let i = 0; i < viewCount; i++) {
+                this._viewBindGroups[i] = this._passDynamicViewBindGroups[i];
+                this._viewBindGroupOffsets[i] = this._passDynamicViewOffsets[i];
+            }
+
+        } else {
+            device.setBindGroup(BINDGROUP_VIEW, this._dynamicViewBindGroup.bindGroup, this._dynamicViewBindGroup.offsets);
+        }
+    }
+
+    /**
+     * Returns the view bind group of a view uniform buffer holding the textures of a format,
+     * creating it on first use, and updated once per pass: the textures are taken from the scope
+     * and the uniform buffer offset from its allocation for the pass.
+     *
+     * @param {ViewUniformBuffer} viewUniformBuffer - The view uniform buffer.
+     * @param {BindGroupFormat} format - The format of the view bind group.
+     * @param {number} pass - The current pass.
+     * @returns {BindGroup} The bind group.
+     * @private
+     */
+    getViewTextureBindGroup(viewUniformBuffer, format, pass) {
+        let entry = viewUniformBuffer.textureBindGroups.get(format);
+        if (!entry) {
+            const bindGroup = new BindGroup(this.device, format, viewUniformBuffer.uniformBuffer);
+            DebugHelper.setName(bindGroup, `ViewTextureBindGroup_${bindGroup.id}`);
+            this._viewTextureBindGroups.push(bindGroup);
+            entry = new ViewTextureBindGroup(bindGroup);
+            viewUniformBuffer.textureBindGroups.set(format, entry);
+        }
+        if (entry.pass !== pass) {
+            entry.pass = pass;
+            entry.bindGroup.update();
+        }
+        return entry.bindGroup;
+    }
+
+    /**
+     * The bind group bound at the material bind group index by the current pass, or null.
+     *
+     * @type {BindGroup|null}
+     * @private
+     */
+    _boundMaterialBindGroup = null;
+
+    /**
+     * Binds the bind group of a material at the material bind group index, or the empty bind group
+     * for a material without one so the pipeline layout has no gap. Called at a material switch,
+     * and again after a draw that bound a mesh instance's copy of the material uniform buffer.
+     * Rebinds only when the group differs from the one bound by the previous draw.
+     *
+     * @param {Material} material - The material.
+     */
+    setupMaterialBindGroup(material) {
+        const device = this.device;
+        let bindGroup = material.uniformBufferBindGroup;
+        if (!bindGroup && device.usesMeshBindGroups) {
+            bindGroup = device.emptyBindGroup;
+        }
+        if (bindGroup && bindGroup !== this._boundMaterialBindGroup) {
+            device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
+            this._boundMaterialBindGroup = bindGroup;
+        }
+    }
+
+    /**
+     * Binds a mesh instance's copy of the material uniform buffer, with the uniforms it overrides
+     * applied, at the material bind group index. Only called for a mesh instance that overrides
+     * some of them, or whose parameters need splitting against a changed material layout, see
+     * {@link Renderer#needsMaterialOverrideBindGroup}.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     */
+    setupMaterialOverrideBindGroup(meshInstance) {
+        const device = this.device;
+        const bindGroup = meshInstance.getMaterialBindGroup(device);
+        if (bindGroup && bindGroup !== this._boundMaterialBindGroup) {
+            device.setBindGroup(BINDGROUP_MATERIAL, bindGroup);
+            this._boundMaterialBindGroup = bindGroup;
+        }
+    }
+
+    /**
+     * Unsets the overrides of a mesh instance back to the values of its material, after its draw
+     * when the next draw uses the same material, which then keeps the state the material switch
+     * set: the material bind group when the mesh instance bound its copy of it, and the scope
+     * parameters. The alpha test reference is set from the material by the renderer rather than
+     * being a material parameter, so it is restored with them.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance drawn.
+     * @param {Material} material - Its material.
+     */
+    restoreMaterialOverrides(meshInstance, material) {
+        if (this.hasMaterialOverrides(meshInstance)) {
+            this.setupMaterialBindGroup(material);
+        }
+        if (meshInstance._scopeParameters.length > 0) {
+            material.setParameters(this.device, meshInstance._scopeParameters);
+            this.alphaTestId.setValue(material.alphaTest);
+        }
+    }
+
+    /**
+     * True when this mesh instance overrides something in the material's bind group, and so a draw
+     * of it binds its own copy of that group. Kept to field reads, as this runs for every draw.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @returns {boolean} True when the mesh instance overrides a uniform or a texture.
+     */
+    hasMaterialOverrides(meshInstance) {
+        return meshInstance._materialOverrides.length > 0 ||
+            meshInstance._materialTextureOverrides.length > 0;
+    }
+
+    /**
+     * True when a draw of this mesh instance needs its own copy of the material's bind group: it
+     * overrides something in it, or the set of typed properties of the material changed and its
+     * parameters need splitting against the new layout again. Kept to field reads, as this runs for
+     * every draw.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @param {Material} material - Its material.
+     * @returns {boolean} True when the copy is needed.
+     */
+    needsMaterialOverrideBindGroup(meshInstance, material) {
+        return this.hasMaterialOverrides(meshInstance) ||
+            meshInstance._materialLayoutVersion !== material._layoutVersion;
+    }
+
+    // Updates and binds the mesh bind group and the mesh uniform buffer of a draw. A shader without
+    // mesh bind group resources - the textures the renderer supplies per pass are in the view bind
+    // group - binds the empty bind group instead, once per pass.
     setupMeshUniformBuffers(shaderInstance) {
 
         const device = this.device;
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
 
             // update mesh bind group / uniform buffer
-            const meshBindGroup = shaderInstance.getBindGroup(device);
-            meshBindGroup.update();
-            device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
+            if (shaderInstance.shader.meshBindGroupFormat.empty) {
+                if (!this._emptyMeshBindGroupBound) {
+                    this._emptyMeshBindGroupBound = true;
+                    device.setBindGroup(BINDGROUP_MESH, device.emptyBindGroup);
+                }
+            } else {
+                this._emptyMeshBindGroupBound = false;
+                const meshBindGroup = shaderInstance.getBindGroup(device);
+                meshBindGroup.update();
+                device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
+            }
+
+            // a shader without mesh uniforms reads nothing from the buffer, so its draws share the
+            // one bound by the first of them in the pass
+            if (shaderInstance.shader.meshUniformBufferEmpty) {
+                if (this._emptyMeshUniformBufferBound) {
+                    return;
+                }
+                this._emptyMeshUniformBufferBound = true;
+            } else {
+                this._emptyMeshUniformBufferBound = false;
+            }
 
             const meshUniformBuffer = shaderInstance.getUniformBuffer(device);
             meshUniformBuffer.update(_dynamicBindGroup);
             device.setBindGroup(BINDGROUP_MESH_UB, _dynamicBindGroup.bindGroup, _dynamicBindGroup.offsets);
         }
+    }
+
+    /**
+     * Returns the slot of a mesh instance in the mesh instance storage of the device, for a draw
+     * with a shader reading it, which passes the slot as the first instance of the draw, see
+     * {@link Shader#usesMeshInstanceStorage}. The slot is allocated on the first such draw, and its
+     * matrices are written when the transform of the node changed since they were last written, or
+     * when the mesh instance was given a different node. When the allocation grows the storage, the
+     * view bind group of the shader, which holds the storage, is updated and bound again.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @param {Shader} shader - The shader of the draw, set on the device.
+     * @returns {number} The slot.
+     */
+    updateStorageSlot(meshInstance, shader) {
+
+        const meshInstanceStorage = this.device.meshInstanceStorage;
+        let slot = meshInstance.storageSlot;
+        if (slot < 0) {
+            slot = meshInstanceStorage.allocate();
+            meshInstance.storageSlot = slot;
+            meshInstance.storageSlotVersion = -1;
+
+            // the storage grew into a new buffer
+            if (meshInstanceStorage.version !== this._meshInstanceStorageVersion) {
+                this._meshInstanceStorageVersion = meshInstanceStorage.version;
+                this._viewPass++;
+                this.setupViewBindGroup(shader, true);
+            }
+        }
+
+        // a node marked dirty after the transforms were updated this frame is written again the next
+        // frame, once its transform is updated
+        const node = meshInstance.node;
+        if (meshInstance.storageSlotVersion !== node._aabbVer) {
+            meshInstance.storageSlotVersion = node._dirtyWorld ? -1 : node._aabbVer;
+            meshInstanceStorage.write(slot, node.worldTransform.data, node.normalMatrix.data);
+        }
+
+        return slot;
     }
 
     setMeshInstanceMatrices(meshInstance, setNormalMatrix = false) {
@@ -982,7 +1418,6 @@ class Renderer {
             const layer = comp.layerList[i];
             layer._shaderVersion = shaderVersion;
             // #if _PROFILER
-            layer._skipRenderCounter = 0;
             layer._forwardDrawCalls = 0;
             layer._shadowDrawCalls = 0;
             layer._renderTime = 0;
@@ -1000,8 +1435,6 @@ class Renderer {
     frameUpdate() {
 
         this.clustersDebugRendered = false;
-
-        this.initViewUniformFormat(this.scene.clusteredLightingEnabled);
 
         // no valid shadows at the start of the frame
         this.culler.dirLightShadows.clear();

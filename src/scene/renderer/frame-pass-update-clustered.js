@@ -12,7 +12,13 @@ class FramePassUpdateClustered extends FramePass {
     constructor(device, renderer, shadowRenderer, shadowRendererLocal, lightTextureAtlas) {
         super(device);
         this.renderer = renderer;
-        this.frameGraph = null;
+
+        // Create the shared empty (no-lights) world cluster now. This constructor runs once, only in
+        // clustered mode, and outside any render pass - so render-time consumers (layers with no
+        // clustered lights, via the forward renderer's `?? empty` fallback, and the picker) get a
+        // cached instance. Creating it lazily during rendering would upload its texture inside a
+        // render pass, which WebGPU disallows.
+        renderer.worldClustersAllocator.createEmpty();
 
         // render cookies for all local visible lights
         this.cookiesRenderPass = RenderPassCookieRenderer.create(lightTextureAtlas.cookieRenderTarget, lightTextureAtlas.cubeSlotsOffsets);
@@ -23,9 +29,11 @@ class FramePassUpdateClustered extends FramePass {
         this.beforePasses.push(this.shadowRenderPass);
     }
 
-    update(frameGraph, shadowsEnabled, cookiesEnabled, lights, localLights) {
+    update(shadowsEnabled, cookiesEnabled, lights, localLights) {
 
-        this.frameGraph = frameGraph;
+        // discard the previous frame's cluster requests before the render passes re-request them
+        // during frame graph build; the requests are resolved and uploaded in execute()
+        this.renderer.worldClustersAllocator.reset();
 
         this.cookiesRenderPass.enabled = cookiesEnabled;
         if (cookiesEnabled) {
@@ -50,8 +58,7 @@ class FramePassUpdateClustered extends FramePass {
         // #endif
 
         const { renderer } = this;
-        const { scene } = renderer;
-        renderer.worldClustersAllocator.update(this.frameGraph.renderPasses, scene.lighting);
+        renderer.worldClustersAllocator.upload(renderer.scene.lighting);
 
         // #if _PROFILER
         renderer._lightClustersTime += now() - startTime;

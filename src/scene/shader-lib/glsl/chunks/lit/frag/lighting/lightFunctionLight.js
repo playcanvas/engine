@@ -123,6 +123,13 @@ void evaluateLight{i}(
             float shadow = getShadow{i}(lightDirW);
         #endif
 
+        #ifdef LIGHT{i}_SHADOW_CASCADE_BLEND
+            // Fade to fully lit at the shadow distance without sampling another cascade.
+            float shadowDistance = light{i}_shadowCascadeDistances.w;
+            float shadowFade = smoothstep(light{i}_shadowCascadeBlend * shadowDistance, shadowDistance, 1.0 / gl_FragCoord.w);
+            shadow = mix(shadow, 1.0, shadowFade);
+        #endif
+
         // Apply shadow intensity to the shadow value
         shadow = mix(1.0, shadow, light{i}_shadowIntensity);
 

@@ -958,7 +958,7 @@ class ModelComponent extends Component {
         }
 
         if (materialAsset.resource) {
-            meshInstance.material = materialAsset.resource;
+            meshInstance.material = /** @type {Material} */ (materialAsset.resource);
 
             this._setMaterialEvent(index, 'remove', materialAsset.id, function () {
                 meshInstance.material = this.system.defaultMaterial;
@@ -1146,7 +1146,7 @@ class ModelComponent extends Component {
      * @private
      */
     _onMaterialAssetLoad(asset) {
-        this._setMaterial(asset.resource);
+        this._setMaterial(/** @type {Material} */ (asset.resource));
     }
 
     /**
@@ -1221,7 +1221,7 @@ class ModelComponent extends Component {
      * @private
      */
     _onModelAssetLoad(asset) {
-        this.model = asset.resource.clone();
+        this.model = /** @type {Model} */ (asset.resource).clone();
         this._clonedModel = true;
     }
 

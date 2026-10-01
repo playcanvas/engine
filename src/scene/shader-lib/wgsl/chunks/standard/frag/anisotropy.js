@@ -14,7 +14,7 @@ fn getAnisotropy() {
 #endif
 
 #ifdef STD_ANISOTROPY_TEXTURE
-    let anisotropyTex: vec3f = textureSampleBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_NAME}Sampler, {STD_ANISOTROPY_TEXTURE_UV}, uniform.textureBias).rgb;
+    let anisotropyTex: vec3f = textureSampleBias({STD_ANISOTROPY_TEXTURE_NAME}, {STD_ANISOTROPY_TEXTURE_NAME}Sampler, {STD_ANISOTROPY_TEXTURE_UV}, {STD_TEXTURE_BIAS}).rgb;
     dAnisotropy *= anisotropyTex.b;
 
     let anisotropyRotationFromTex: vec2f = anisotropyTex.rg * 2.0 - vec2f(1.0);

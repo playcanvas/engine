@@ -12,7 +12,7 @@ import {
     CULLFACE_BACK, CULLFACE_NONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     INDEXFORMAT_UINT16,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32,
+    SEMANTIC_POSITION, TYPE_FLOAT32,
     PIXELFORMAT_111110F, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RG16F, PIXELFORMAT_RG32F,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     DISPLAYFORMAT_LDR,
@@ -20,6 +20,7 @@ import {
     FRONTFACE_CCW
 } from './constants.js';
 import { BlendState } from './blend-state.js';
+import { BuiltInTextures } from './built-in-textures.js';
 import { DepthState } from './depth-state.js';
 import { IndexBuffer } from './index-buffer.js';
 import { ScopeSpace } from './scope-space.js';
@@ -28,12 +29,14 @@ import { VertexFormat } from './vertex-format.js';
 import { StencilParameters } from './stencil-parameters.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { StorageBuffer } from './storage-buffer.js';
+import { UniformBuffer } from './uniform-buffer.js';
 
 /**
  * @import { Compute } from './compute.js'
  * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
  * @import { DynamicBuffers } from './dynamic-buffers.js'
  * @import { GpuProfiler } from './gpu-profiler.js'
+ * @import { MeshInstanceStorage } from './mesh-instance-storage.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
@@ -194,7 +197,7 @@ class GraphicsDevice extends EventHandler {
     maxColorAttachments = 1;
 
     /**
-     * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
+     * The highest shader precision supported by this graphics device. Can be 'highp', 'mediump' or
      * 'lowp'.
      *
      * @type {string}
@@ -231,6 +234,36 @@ class GraphicsDevice extends EventHandler {
      * WebGL2 is optional, but pretty common.
      */
     supportsMultiDraw = true;
+
+    /**
+     * True if the device supports indirect draw calls, where the draw parameters are sourced from
+     * a GPU buffer instead of being supplied by the CPU (WebGPU only). Also see
+     * {@link MeshInstance#setIndirect}.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    supportsIndirectDraw = false;
+
+    /**
+     * True if the vertex shaders can read the model and normal matrices of a mesh instance from
+     * a storage buffer the device holds, see {@link GraphicsDevice#meshInstanceStorage} (WebGPU
+     * only).
+     *
+     * @type {boolean}
+     * @readonly
+     * @ignore
+     */
+    supportsMeshInstanceStorage = false;
+
+    /**
+     * The storage of the per mesh instance data read by the vertex shaders, or null when not
+     * supported, see {@link GraphicsDevice#supportsMeshInstanceStorage}.
+     *
+     * @type {MeshInstanceStorage|null}
+     * @ignore
+     */
+    meshInstanceStorage = null;
 
     /**
      * True if the device supports compute shaders.
@@ -437,17 +470,20 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      * @ignore
      */
-    renderPassIndex;
+    renderPassIndex = 0;
 
     /** @type {boolean} */
     insideRenderPass = false;
 
     /**
-     * True if the device supports uniform buffers.
+     * True if the device binds the mesh resources through bind groups: the textures and samplers
+     * in the mesh bind group and the per-draw mesh uniforms in a dynamic uniform buffer (WebGPU).
+     * Otherwise they are set individually through the scope. Uniform buffers for the view and the
+     * materials are used on every device.
      *
      * @ignore
      */
-    supportsUniformBuffers = false;
+    usesMeshBindGroups = false;
 
     /**
      * True if the device supports clip distances (WebGPU only). Clip distances allow you to restrict
@@ -468,22 +504,24 @@ class GraphicsDevice extends EventHandler {
     supportsTransientAttachments = false;
 
     /**
-     * True if the device supports WebGPU texture format tier 1 capabilities. When enabled, a wider
-     * set of normalized texture formats can be used as render targets and storage textures.
+     * True if the device supports the WebGPU 'texture-formats-tier1' feature (WebGPU only). When
+     * available, 16-bit unorm and snorm texture formats become usable, the 8-bit snorm formats
+     * become renderable, blendable and multisample-capable, and a wider set of 8-bit and 16-bit
+     * formats can be bound as storage textures. Implied by {@link supportsTextureFormatsTier2}.
      *
      * @type {boolean}
      * @readonly
      */
-    supportsTextureFormatTier1 = false;
+    supportsTextureFormatsTier1 = false;
 
     /**
-     * True if the device supports WebGPU texture format tier 2 capabilities. This extends tier 1
-     * and enables read-write storage access for selected texture formats.
+     * True if the device supports the WebGPU 'texture-formats-tier2' feature (WebGPU only). This
+     * extends tier 1 and enables read-write storage access for additional texture formats.
      *
      * @type {boolean}
      * @readonly
      */
-    supportsTextureFormatTier2 = false;
+    supportsTextureFormatsTier2 = false;
 
     /**
      * True if the device supports primitive index in fragment shaders (WebGPU only). When
@@ -597,6 +635,14 @@ class GraphicsDevice extends EventHandler {
     quadIndexBuffer;
 
     /**
+     * The textures the engine binds in place of a texture it was not given.
+     *
+     * @type {BuiltInTextures}
+     * @ignore
+     */
+    builtInTextures;
+
+    /**
      * An object representing current blend state
      *
      * @ignore
@@ -683,12 +729,12 @@ class GraphicsDevice extends EventHandler {
     capsDefines = new Map();
 
     /**
-     * A set of maps to clear at the end of the frame.
+     * A version number incremented at the end of every frame. Frame-scoped draw commands are
+     * stamped with it, see {@link DrawCommands#validUntilVersion}.
      *
-     * @type {Set<Map>}
      * @ignore
      */
-    mapsToClear = new Set();
+    drawCommandsVersion = 0;
 
     static EVENT_RESIZE = 'resizecanvas';
 
@@ -747,10 +793,7 @@ class GraphicsDevice extends EventHandler {
         this._drawCallsPerFrame = 0;
         this._shaderSwitchesPerFrame = 0;
 
-        this._primsPerFrame = [];
-        for (let i = PRIMITIVE_POINTS; i <= PRIMITIVE_TRIFAN; i++) {
-            this._primsPerFrame[i] = 0;
-        }
+        this._primitiveCount = 0;
         this._renderTargetCreationTime = 0;
 
         // Create the ScopeNamespace for shader attributes and variables
@@ -783,6 +826,10 @@ class GraphicsDevice extends EventHandler {
         // create quad index buffer for indexed triangle list (two triangles forming a quad)
         const indices = new Uint16Array([0, 1, 2, 2, 1, 3]);
         this.quadIndexBuffer = new IndexBuffer(this, INDEXFORMAT_UINT16, 6, BUFFER_STATIC, indices.buffer);
+
+        // create the substitute textures the rendering falls back on, which cannot be created
+        // while rendering (see BuiltInTextures)
+        this.builtInTextures = new BuiltInTextures(this);
     }
 
     /**
@@ -817,6 +864,35 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Samples existing resource registries for diagnostic overlays. Counts include internal
+     * resources; dynamic uniform buffers count backing GPU buffers, not suballocations or staging
+     * buffers. This walks the buffer registry and should only be called at diagnostic refresh rates.
+     *
+     * @param {Map<string, number>} counts - Receives the current counts, replacing previous values.
+     * @ignore
+     */
+    getResourceCounts(counts) {
+        let vertexBuffers = 0;
+        let indexBuffers = 0;
+        let uniformBuffers = this.dynamicBuffers?.bufferCount ?? 0;
+        let storageBuffers = 0;
+        for (const buffer of this.buffers) {
+            if (buffer instanceof VertexBuffer) vertexBuffers++;
+            else if (buffer instanceof IndexBuffer) indexBuffers++;
+            else if (buffer instanceof UniformBuffer) uniformBuffers++;
+            else if (buffer instanceof StorageBuffer) storageBuffers++;
+            else Debug.assert(false);
+        }
+        counts.set('vertexBuffers', vertexBuffers);
+        counts.set('indexBuffers', indexBuffers);
+        counts.set('uniformBuffers', uniformBuffers);
+        counts.set('storageBuffers', storageBuffers);
+        counts.set('textures', this.textures.size);
+        counts.set('renderTargets', this.targets.size);
+        counts.set('shaders', this.shaders.length);
+    }
+
+    /**
      * Destroy the graphics device.
      */
     destroy() {
@@ -830,11 +906,18 @@ class GraphicsDevice extends EventHandler {
         this.quadIndexBuffer?.destroy();
         this.quadIndexBuffer = null;
 
+        this.builtInTextures?.destroy();
+        this.builtInTextures = null;
+
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        // after the destroy event, whose listeners may free the slots of their mesh instances
+        this.meshInstanceStorage?.destroy();
+        this.meshInstanceStorage = null;
 
         this._destroyed = true;
     }
@@ -920,6 +1003,32 @@ class GraphicsDevice extends EventHandler {
         }
 
         this.gpuProfiler?.restoreContext?.();
+    }
+
+    /**
+     * Reports whether the device is lost or destroyed, including a native loss whose event has not
+     * arrived yet.
+     *
+     * @returns {boolean} Whether the device is lost or destroyed.
+     * @ignore
+     */
+    isContextLost() {
+        return !!this.contextLost || this._destroyed;
+    }
+
+    /**
+     * Forces an actual graphics context or device loss for testing, then attempts recovery after
+     * the specified delay. Only has an effect in debug builds on WebGL and WebGPU. Calls made while
+     * a loss or recovery is pending are ignored. Recovery is asynchronous and is not guaranteed
+     * to succeed. Listen for `devicelost` and `devicerestored` to observe the recovery lifecycle.
+     *
+     * @param {number} [delay] - Delay in milliseconds after loss is observed before attempting
+     * recovery. Defaults to 100.
+     * @ignore
+     * @example
+     * app.graphicsDevice.debugLoseContext(1000);
+     */
+    debugLoseContext(delay = 100) {
     }
 
     // don't stringify GraphicsDevice to JSON by JSON.stringify
@@ -1338,7 +1447,12 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     clearVertexBuffer() {
-        this.vertexBuffers.length = 0;
+        // Popped rather than assigning a zero length, which releases the array's backing store,
+        // so that the next setVertexBuffer - on the next draw - would allocate a new one
+        const vertexBuffers = this.vertexBuffers;
+        while (vertexBuffers.length > 0) {
+            vertexBuffers.pop();
+        }
     }
 
     /**
@@ -1347,6 +1461,9 @@ class GraphicsDevice extends EventHandler {
      * parameters and by {@link MeshInstance#setIndirect} to configure indirect draw calls.
      *
      * When reserving multiple consecutive slots, specify the optional `count` parameter.
+     *
+     * Only available on WebGPU, see {@link GraphicsDevice#supportsIndirectDraw}. Returns 0 on
+     * other platforms.
      *
      * @param {number} [count] - Number of consecutive slots to reserve. Defaults to 1.
      * @returns {number} - The first reserved slot index used for indirect rendering.
@@ -1464,6 +1581,8 @@ class GraphicsDevice extends EventHandler {
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is cleared. Defaults to true.
+     * @param {number} [firstInstance] - The first instance of a draw without draw commands,
+     * which offsets the instance index of the vertex shader. Ignored on WebGL. Defaults to 0.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
@@ -1475,7 +1594,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true, firstInstance = 0) {
         Debug.assert(false);
     }
 
@@ -1733,9 +1852,8 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
-        // clear all maps scheduled for end of frame clearing
-        this.mapsToClear.forEach(map => map.clear());
-        this.mapsToClear.clear();
+        // expire frame-scoped draw commands - the indirect draw slots they reference are recycled
+        this.drawCommandsVersion++;
     }
 
     /**

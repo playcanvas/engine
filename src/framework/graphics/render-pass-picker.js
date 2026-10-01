@@ -14,7 +14,6 @@ import { SHADER_PICK, SHADER_DEPTH_PICK } from '../../scene/constants.js';
  */
 
 const tempMeshInstances = [];
-const lights = [[], [], []];
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
@@ -67,7 +66,7 @@ class RenderPassPicker extends RenderPass {
             this._viewUniformFormat = new UniformBufferFormat(this.device, [
                 new UniformFormat('matrix_viewProjection', UNIFORMTYPE_MAT4),
                 new UniformFormat('matrix_view', UNIFORMTYPE_MAT4)
-            ]);
+            ], { pack: true });
         }
         return this._viewUniformFormat;
     }
@@ -173,7 +172,7 @@ class RenderPassPicker extends RenderPass {
             // Process gsplat placements when ID is enabled
             // The gsplat unified mesh instance is already handled above (added to layer.meshInstances)
             // Here we just need to add the placement ID -> component mapping
-            if (scene.gsplat.enableIds) {
+            if (scene.getGsplatParams()?.enableIds) {
                 const placements = srcLayer.gsplatPlacements;
                 for (let j = 0; j < placements.length; j++) {
                     const placement = placements[j];
@@ -192,7 +191,6 @@ class RenderPassPicker extends RenderPass {
                 const shaderPass = this.depth ? SHADER_DEPTH_PICK : SHADER_PICK;
                 renderer.renderForwardLayer(camera.camera, renderTarget, null, undefined, shaderPass, {
                     meshInstances: tempMeshInstances,
-                    splitLights: lights,
                     lightClusters: this.emptyWorldClusters,
                     viewUniformFormat: this.getViewUniformFormat(),
                     drawCallback: () => device.setBlendState(this.blendState)

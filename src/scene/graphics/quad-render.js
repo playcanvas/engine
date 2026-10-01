@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { BindGroup, DynamicBindGroup } from '../../platform/graphics/bind-group.js';
-import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_VIEW, PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
+import { BINDGROUP_MESH, BINDGROUP_MESH_UB, BINDGROUP_MATERIAL, BINDGROUP_VIEW, PRIMITIVE_TRIANGLES } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -75,7 +75,7 @@ class QuadRender {
         this.shader = shader;
         Debug.assert(shader);
 
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
 
             // add uniform buffer support to shader
             const processingOptions = new ShaderProcessorOptions();
@@ -142,10 +142,13 @@ class QuadRender {
         const shader = this.shader;
         device.setShader(shader);
 
-        if (device.supportsUniformBuffers) {
+        if (device.usesMeshBindGroups) {
 
             // not using view bind group
             device.setBindGroup(BINDGROUP_VIEW, device.emptyBindGroup);
+
+            // not using material bind group
+            device.setBindGroup(BINDGROUP_MATERIAL, device.emptyBindGroup);
 
             // mesh bind group
             const bindGroup = this.bindGroup;

@@ -16,7 +16,7 @@ import { ComputeRadixSortBase } from './compute-radix-sort-base.js';
  */
 
 // Workgroup / batching constants. The reorder shader processes ELEMENTS_PER_THREAD
-// keys per thread to amortise shared-memory bitmask traffic.
+// keys per thread to amortize shared-memory bitmask traffic.
 const WORKGROUP_SIZE_X = 16;
 const WORKGROUP_SIZE_Y = 16;
 const THREADS_PER_WORKGROUP = WORKGROUP_SIZE_X * WORKGROUP_SIZE_Y; // 256
@@ -78,8 +78,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
     _workgroupCount = 0;
 
     /**
-     * Allocated workgroup capacity (buffer sizing). Buffers are only
-     * reallocated when this value changes. Always `>= _workgroupCount`.
+     * Allocated workgroup capacity (sizes `_blockSums`). Always `>= _workgroupCount`.
      */
     _allocatedWorkgroupCount = 0;
 
@@ -196,6 +195,8 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
      */
     _destroyPasses() {
         for (const pass of this._passes) {
+            pass.histogramCompute.destroy();
+            pass.reorderCompute.destroy();
             pass.histogramCompute.shader?.destroy();
             pass.reorderCompute.shader?.destroy();
         }
@@ -300,7 +301,13 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
         const allocWorkgroupCount = Math.ceil(effectiveCount / ELEMENTS_PER_WORKGROUP);
         const currentWorkgroupCount = Math.max(1, Math.ceil(elementCount / ELEMENTS_PER_WORKGROUP));
 
-        const buffersNeedRealloc = forceRealloc || allocWorkgroupCount !== this._allocatedWorkgroupCount || !this._keys0;
+        // The ping-pong buffers hold exactly _allocatedElementCount entries, so any growth of the
+        // effective count must reallocate, even within the same workgroup partition. Shrinking only
+        // reallocates when a lowered capacity drops the workgroup count, which releases memory
+        // without churning on frame-to-frame count changes.
+        const buffersNeedRealloc = forceRealloc || !this._keys0 ||
+            effectiveCount > this._allocatedElementCount ||
+            allocWorkgroupCount < this._allocatedWorkgroupCount;
 
         // Recreate passes when numBits, initial-values mode, or key-write mode changes
         const passesNeedRecreate = numBits !== this._numBits ||
@@ -313,7 +320,7 @@ class ComputeRadixSortMultipass extends ComputeRadixSortBase {
 
             // Store the new capacity
             this._allocatedWorkgroupCount = allocWorkgroupCount;
-            this.capacity = effectiveCount;
+            this._capacity = effectiveCount;
 
             const blockSumSize = BUCKET_COUNT * allocWorkgroupCount * 4;
 

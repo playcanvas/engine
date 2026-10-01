@@ -32,7 +32,6 @@ import {
     GSPLATDATA_COMPACT,
     GSPLAT_DEBUG_LOD,
     GSPLAT_DEBUG_NONE,
-    GSPLAT_LODMODE_ERROR,
     GSPLAT_RENDERER_RASTER_CPU_SORT,
     GSPLAT_RENDERER_RASTER_GPU_SORT,
     GSplatComponentSystem,
@@ -161,16 +160,6 @@ app.scene.gsplat.alphaClipForward = 1 / 255;
 app.scene.gsplat.minContribution = 3;
 app.scene.gsplat.dataFormat = GSPLATDATA_COMPACT;
 
-// How the splat budget picks LOD levels: 'error' spends it where the bundle's per-node error
-// metadata says detail is worth most; 'distance' orders detail by camera distance alone and
-// ignores that metadata. Error is the default and the reason the bundle carries the metrics.
-data.set('lodMode', GSPLAT_LODMODE_ERROR);
-const applyLodMode = () => {
-    app.scene.gsplat.lodMode = data.get('lodMode');
-};
-applyLodMode();
-data.on('lodMode:set', applyLodMode);
-
 // Colorize LODs debug toggle (off by default)
 data.set('colorizeLods', false);
 const applyColorizeLods = () => {
@@ -223,7 +212,21 @@ let revealStarted = false;
 // scene.envAtlas — the splats are pre-lit, so the sky contributes no lighting, just a backdrop.
 // Generated up front but revealed together with the scene (on frame:ready), so it doesn't pop
 // in before the splats.
-const skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+let skyboxCubemap;
+const applyHdri = () => {
+    const oldSkybox = skyboxCubemap;
+    skyboxCubemap = EnvLighting.generateSkyboxCubemap(assets.sky.resource, 1024);
+    // Keep the backdrop hidden until the first splat frame is ready.
+    if (oldSkybox && app.scene.skybox === oldSkybox) {
+        app.scene.skybox = skyboxCubemap;
+    }
+    oldSkybox?.destroy();
+    app.renderNextFrame = true;
+};
+
+// The skybox is generated on the GPU and needs rebuilding after device loss.
+device.on('devicerestored', applyHdri);
+applyHdri();
 app.scene.sky.type = SKYTYPE_INFINITE;
 
 // Start with the 4 lowest (coarsest) LODs for a fast initial display that still gets some

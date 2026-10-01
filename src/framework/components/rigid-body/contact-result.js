@@ -16,6 +16,10 @@
  * objects provide information about collision from the perspective of one entity, with
  * information about which other entity was involved and all points of contact.
  *
+ * Contact results are pooled and reused by the physics system, so a result and its contact
+ * points are only valid inside the event handler that receives them. Copy any values that are
+ * needed later.
+ *
  * Please refer to the following event documentation for more information:
  *
  * - {@link CollisionComponent.EVENT_CONTACT}

@@ -64,7 +64,7 @@ const assets = {
     orbit: new Asset('script', 'script', { url: './scripts/camera/orbit-camera.js' }),
     platform: new Asset('statue', 'container', { url: './assets/models/scifi-platform.glb' }),
     mosquito: new Asset('mosquito', 'container', { url: './assets/models/MosquitoInAmber.glb' }),
-    font: new Asset('font', 'font', { url: './assets/fonts/arial.json' }),
+    font: new Asset('font', 'font', { url: './assets/fonts/roboto-regular.json' }),
     helipad: new Asset(
         'helipad-env-atlas',
         'texture',
@@ -259,7 +259,7 @@ addLabel('WorldUI', 'Text on the World layer affected by post-processing', 0.1, 
 
 // Add a label on the UI layer, which will be rendered after the post-processing
 const uiLayer = app.scene.layers.getLayerById(LAYERID_UI);
-addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
+addLabel('TopUI', 'Text on the UI layer after the post-processing', 0.1, 0.1, uiLayer);
 
 // ------ Custom render passes set up ------
 
