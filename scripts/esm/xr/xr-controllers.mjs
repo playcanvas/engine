@@ -42,11 +42,11 @@ class XrControllers extends Script {
     basePath = 'https://cdn.jsdelivr.net/npm/@webxr-input-profiles/assets/dist/profiles';
 
     /**
-     * Map of input sources to their controller data (entity, joint mappings, asset, and whether its
-     * pose is tracked). The asset is owned by the script and shared by every input source that uses
-     * the same model.
+     * Map of input sources to their controller data (entity, joint mappings, asset, whether its
+     * pose is tracked, and the enabled state its entity returns to once tracking resumes). The asset
+     * is owned by the script and shared by every input source that uses the same model.
      *
-     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset<'container'>, tracked: boolean }>}
+     * @type {Map<XrInputSource, { entity: import('playcanvas').Entity, jointMap: Map, asset: import('playcanvas').Asset<'container'>, tracked: boolean, enabledWhenTracked: boolean }>}
      */
     controllers = new Map();
 
@@ -246,7 +246,7 @@ class XrControllers extends Script {
                 }
             }
 
-            this.controllers.set(inputSource, { entity, jointMap, asset, tracked: true });
+            this.controllers.set(inputSource, { entity, jointMap, asset, tracked: true, enabledWhenTracked: true });
 
             // Fire event for other scripts to coordinate
             this.app.fire('xr:controller:add', inputSource, entity);
@@ -357,7 +357,12 @@ class XrControllers extends Script {
         this._visible = value;
 
         for (const [, controller] of this.controllers) {
-            controller.entity.enabled = value && controller.tracked;
+            // a model hidden while untracked takes the new state once tracking resumes
+            if (controller.tracked) {
+                controller.entity.enabled = value;
+            } else {
+                controller.enabledWhenTracked = value;
+            }
         }
     }
 
@@ -378,12 +383,17 @@ class XrControllers extends Script {
         const sessionVisible = this.app.xr.visibilityState === 'visible';
 
         for (const [inputSource, controller] of this.controllers) {
-            // a hand also loses tracking when it leaves the view of the headset. The model is only
-            // shown or hidden as that changes, leaving its state to the app otherwise
+            // a hand also loses tracking when it leaves the view of the headset. A model hidden
+            // while untracked gets back the enabled state it had, so one the app hid stays hidden
             const tracked = sessionVisible && (!inputSource.hand || inputSource.hand.tracking);
             if (controller.tracked !== tracked) {
                 controller.tracked = tracked;
-                controller.entity.enabled = tracked;
+                if (tracked) {
+                    controller.entity.enabled = controller.enabledWhenTracked;
+                } else {
+                    controller.enabledWhenTracked = controller.entity.enabled;
+                    controller.entity.enabled = false;
+                }
             }
             if (!tracked) continue;
 
