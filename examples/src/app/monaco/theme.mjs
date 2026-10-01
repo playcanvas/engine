@@ -11,6 +11,6 @@ export const playcanvasTheme = {
         }
     ],
     colors: {
-        'editor.background': '#1d292c'
+        'editor.background': '#161c1e'
     }
 };

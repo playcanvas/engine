@@ -1,5 +1,5 @@
 import { Observer } from '@playcanvas/observer';
-import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
+import { Container, Label, Panel, TextInput } from '@playcanvas/pcui/react';
 import { Component } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -9,6 +9,7 @@ import { VERSION } from '../constants.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { thumbnailPath } from '../paths.mjs';
+import { toDisplayName } from '../strings.mjs';
 import { patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
 
@@ -246,6 +247,8 @@ class SideBar extends TypedComponent {
         if (sideBarHeader) {
             sideBarHeader.onclick = layout === 'mobile' ? null : () => this.toggleCollapse();
             sideBarHeader.onpointerdown = null;
+            // shown as a badge next to the title by the stylesheet
+            sideBarHeader.querySelector('.pcui-panel-header-title')?.setAttribute('data-version', `v${VERSION}`);
         }
         this.setupControlPanelToggleButton();
     }
@@ -323,26 +326,24 @@ class SideBar extends TypedComponent {
     }
 
     _onLargeThumbnailsSet() {
-        patchState({ ui: { largeThumbnails: this.state.observer.get('largeThumbnails') === true } });
+        const large = this.state.observer.get('largeThumbnails') === true;
+        patchState({ ui: { largeThumbnails: large } });
         const sideBar = document.getElementById('sideBar');
-        if (!sideBar) {
+        const contents = document.getElementById('sideBar-contents');
+        if (!sideBar || !contents) {
             return;
         }
-        let minTopNavItemDistance = Number.MAX_VALUE;
 
+        // keep the item at the top of the list in view across the size change
+        const top = contents.getBoundingClientRect().top;
         const navItems = /** @type {NodeListOf<HTMLElement>} */ (
-            /** @type {unknown} */ (document.querySelectorAll('.nav-item'))
+            /** @type {unknown} */ (contents.querySelectorAll('.nav-item'))
         );
-        for (let i = 0; i < navItems.length; i++) {
-            const nav = navItems[i];
-            const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
-            if (navItemDistance < minTopNavItemDistance) {
-                minTopNavItemDistance = navItemDistance;
-                sideBar.classList.toggle('small-thumbnails');
-                nav.scrollIntoView();
-                break;
-            }
-        }
+        const topItem = Array.from(navItems).find((nav) => {
+            return !nav.closest('.pcui-collapsed') && nav.getBoundingClientRect().bottom > top;
+        });
+        sideBar.classList.toggle('small-thumbnails', !large);
+        topItem?.scrollIntoView();
     }
 
     setupControlPanelToggleButton() {
@@ -405,6 +406,55 @@ class SideBar extends TypedComponent {
 
     clearFilter() {
         this.onChangeFilter('');
+    }
+
+    /**
+     * @param {boolean} value - Show large thumbnails.
+     */
+    setLargeThumbnails(value) {
+        this.state.observer.set('largeThumbnails', value);
+    }
+
+    renderToolbar() {
+        const categories = this.state.filteredCategories || this.state.defaultCategories;
+        let count = 0;
+        for (const category of Object.values(categories)) {
+            count += Object.keys(category.examples).length;
+        }
+        const icon = (/** @type {string} */ d) => jsx('svg', {
+            viewBox: '0 0 24 24',
+            fill: 'none',
+            stroke: 'currentColor',
+            strokeWidth: 2,
+            strokeLinecap: 'round',
+            strokeLinejoin: 'round',
+            width: 14,
+            height: 14,
+            'aria-hidden': true
+        }, jsx('path', { d }));
+        return jsx(
+            'div',
+            { className: 'sideBar-toolbar' },
+            jsx('span', { className: 'sideBar-count' }, `${count} ${count === 1 ? 'example' : 'examples'}`),
+            jsx(
+                'div',
+                { className: 'thumb-mode' },
+                jsx('button', {
+                    type: 'button',
+                    className: 'thumb-mode-list',
+                    title: 'List view',
+                    'aria-label': 'List view',
+                    onClick: () => this.setLargeThumbnails(false)
+                }, icon('M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01')),
+                jsx('button', {
+                    type: 'button',
+                    className: 'thumb-mode-large',
+                    title: 'Large thumbnails',
+                    'aria-label': 'Large thumbnails',
+                    onClick: () => this.setLargeThumbnails(true)
+                }, icon('M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z'))
+            )
+        );
     }
 
     /**
@@ -475,7 +525,7 @@ class SideBar extends TypedComponent {
                                     {
                                         className: 'nav-item-text'
                                     },
-                                    example.split('-').join(' ').toUpperCase()
+                                    toDisplayName(example)
                                 )
                             )
                         );
@@ -490,7 +540,8 @@ class SideBar extends TypedComponent {
         const layout = this.props.layout ?? this.state.layout;
         const smallThumbnails = observer.get('largeThumbnails') !== true;
         const panelOptions = {
-            headerText: `EXAMPLES - v${VERSION}`,
+            headerText: 'Examples',
+            headerSize: 44,
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
@@ -500,7 +551,6 @@ class SideBar extends TypedComponent {
             if (this.props.mobilePanel !== 'examples') {
                 return null;
             }
-            panelOptions.headerText = `EXAMPLES - v${VERSION}`;
             panelOptions.class = ['mobile-sheet', 'small-thumbnails'];
             panelOptions.collapsible = false;
             panelOptions.collapsed = false;
@@ -515,7 +565,7 @@ class SideBar extends TypedComponent {
                 jsx(/** @type {any} */ (TextInput), {
                     class: 'filter-input',
                     keyChange: true,
-                    placeholder: 'Filter, category:, example:',
+                    placeholder: 'Search, category:, example:',
                     value: this.state.filterText,
                     onChange: this.onChangeFilter.bind(this)
                 }),
@@ -528,15 +578,7 @@ class SideBar extends TypedComponent {
                     '\u2715'
                 ) : null
             ),
-            layout !== 'mobile' && jsx(
-                LabelGroup,
-                { text: 'Large thumbnails:' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'largeThumbnails' }
-                })
-            ),
+            layout !== 'mobile' && this.renderToolbar(),
             jsx(Container, { id: 'sideBar-contents' }, this.renderContents())
         );
     }
