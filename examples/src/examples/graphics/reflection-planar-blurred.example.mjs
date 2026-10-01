@@ -150,11 +150,6 @@ const applySettings = () => {
     reflectionScript.heightRange = data.get('data.heightRange');
 };
 
-// Listen for UI changes
-data.on('*:set', () => {
-    applySettings();
-});
-
 // Set initial data values
 data.set('data', {
     resolution: 1.0,
@@ -164,3 +159,10 @@ data.set('data', {
     angleFade: 0.5,
     heightRange: 0.07
 });
+
+// Listen for UI changes. This is registered after the initial values are set, as setting them
+// fires an event for each value while the remaining values are still undefined.
+data.on('*:set', () => {
+    applySettings();
+});
+applySettings();

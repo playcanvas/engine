@@ -163,7 +163,21 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// Apply UI changes
+// Set initial values
+data.set('data', {
+    scene: {
+        scale: 1,
+        bloom: true,
+        sharpness: 1
+    },
+    taa: {
+        enabled: true,
+        jitter: 1
+    }
+});
+
+// Apply UI changes. This is registered after the initial values are set, as setting them fires an
+// event for each value while the remaining values are still undefined.
 data.on('*:set', (/** @type {string} */ path, value) => {
     applySettings();
 
@@ -173,19 +187,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         data.set('data.scene.sharpness', value ? 1 : 0);
     }
 });
-
-// Set initial values
-data.set('data', {
-    scene: {
-        scale: 1,
-        bloom: true,
-        sharpness: 0.5
-    },
-    taa: {
-        enabled: true,
-        jitter: 1
-    }
-});
+applySettings();
 
 let time = 0;
 app.on('update', (/** @type {number} */ dt) => {
