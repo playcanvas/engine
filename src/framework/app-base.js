@@ -1,6 +1,4 @@
-// #if _DEBUG
 import { version, revision } from '../core/core.js';
-// #endif
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
