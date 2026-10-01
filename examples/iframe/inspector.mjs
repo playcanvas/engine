@@ -8,10 +8,6 @@ const params = getQueryParams(window.location.href);
 // keeps the docked panel clear of the toolbar buttons the app floats over the top-left corner
 const TOOLBAR_INSET = 52;
 
-// where the inspector package is served. Imported through a variable so the dev server leaves the
-// import alone: it would otherwise bundle the package with an engine of its own
-const PACKAGE_URL = new URL('../modules/inspector/index.js', import.meta.url).href;
-
 export default class Inspector {
     /**
      * The Inspector class of the `@playcanvas/inspector` package, once loaded.
@@ -28,13 +24,13 @@ export default class Inspector {
     static _loading = null;
 
     /**
-     * Loads the inspector package. It imports the engine through the page's import map, so it
-     * works on the same engine instance as the example.
+     * Loads the inspector package. The page's import map resolves both the package and the engine
+     * it imports, so it works on the same engine instance as the example.
      *
      * @returns {Promise<void>} Resolves once loaded, or once loading failed.
      */
     static load() {
-        Inspector._loading ??= import(PACKAGE_URL).then((module) => {
+        Inspector._loading ??= import('@playcanvas/inspector').then((module) => {
             Inspector._class = module.Inspector;
         }, (e) => {
             console.warn('The inspector package could not be loaded', e);
