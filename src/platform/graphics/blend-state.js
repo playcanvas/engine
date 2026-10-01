@@ -306,7 +306,14 @@ class BlendState {
         Debug.assert(!src || (src.attachment0 & stateMask) !== 0,
             'BlendState#setAttachment source must not be a blend state with all properties set to zero, as this value is reserved to mean the attachment follows attachment 0.');
 
-        this._attachments ??= new Int32Array(maxAttachments);
+        if (!this._attachments) {
+            this._attachments = new Int32Array(maxAttachments);
+        } else if (!this.hasAttachmentOverrides) {
+            // without the overrides flag the per-attachment values can be stale, left behind by a
+            // copy from a state which has no overrides - discard them, so they are not revived
+            this._attachments.fill(0);
+        }
+
         this._attachments[index] = src ? (src.attachment0 & stateMask) : 0;
         this._attachmentsUpdated();
     }
@@ -411,7 +418,8 @@ class BlendState {
         this.attachment0 = rhs.attachment0;
 
         // per-attachment states are only copied when the source has them - the overrides flag is the
-        // authority on whether they are used, and so stale values are harmless
+        // authority on whether they are used, and so stale values are ignored until setAttachment
+        // discards them
         if (rhs.hasAttachmentOverrides) {
             this._attachments ??= new Int32Array(maxAttachments);
             this._attachments.set(rhs._attachments);

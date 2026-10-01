@@ -317,6 +317,34 @@ describe('BlendState', function () {
             expect(dst.equals(src)).to.equal(true);
         });
 
+        it('does not revive the overrides it cleared when a new override is set', function () {
+            const dst = createBase();
+            dst.setAttachment(1, new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE));
+
+            dst.copy(createBase());
+            const max = new BlendState(true, BLENDEQUATION_MAX, BLENDMODE_ONE, BLENDMODE_ONE);
+            dst.setAttachment(2, max);
+
+            expectSameState(dst.getAttachment(1, scratch), createBase());
+            expectSameState(dst.getAttachment(2, scratch), max);
+
+            const expected = createBase();
+            expected.setAttachment(2, max);
+            expect(dst.equals(expected)).to.equal(true);
+        });
+
+        it('does not revive the overrides it cleared when an attachment is cleared', function () {
+            const dst = createBase();
+            dst.setAttachment(1, new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE));
+
+            dst.copy(createBase());
+            dst.clearAttachment(2);
+
+            expect(dst.hasAttachmentOverrides).to.equal(false);
+            expectSameState(dst.getAttachment(1, scratch), createBase());
+            expect(dst.equals(createBase())).to.equal(true);
+        });
+
     });
 
     describe('#clone', function () {

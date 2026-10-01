@@ -171,9 +171,10 @@ class ElementComponent extends Component {
     static EVENT_MOUSEWHEEL = 'mousewheel';
 
     /**
-     * Fired when the mouse is pressed and released on the component or when a touch starts and
-     * ends on the component. Only fired when useInput is true. The handler is passed an
-     * {@link ElementMouseEvent} or {@link ElementTouchEvent}.
+     * Fired when the mouse is pressed and released on the component, when a touch starts and ends
+     * on the component, or when an XR input source starts and ends a select action on the
+     * component. Only fired when useInput is true. The handler is passed an
+     * {@link ElementMouseEvent}, {@link ElementTouchEvent} or {@link ElementSelectEvent}.
      *
      * @event
      * @example
@@ -230,6 +231,72 @@ class ElementComponent extends Component {
      * });
      */
     static EVENT_TOUCHCANCEL = 'touchcancel';
+
+    /**
+     * Fired when an XR input source starts a select action, such as pulling a controller trigger
+     * or pinching, while its ray points at the component. Only fired when useInput is true and
+     * the input source's {@link XrInputSource#elementInput} is true. The handler is passed an
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('selectstart', (event) => {
+     *     console.log(`Select start event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTSTART = 'selectstart';
+
+    /**
+     * Fired when an XR input source ends a select action that started on the component, even if
+     * its ray no longer points at the component. Only fired when useInput is true. The handler is
+     * passed an {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('selectend', (event) => {
+     *     console.log(`Select end event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTEND = 'selectend';
+
+    /**
+     * Fired when the ray of an XR input source starts pointing at the component. Only fired when
+     * useInput is true and the input source's {@link XrInputSource#elementInput} is true. The
+     * handler is passed an {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('selectenter', (event) => {
+     *     console.log(`Select enter event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTENTER = 'selectenter';
+
+    /**
+     * Fired when the ray of an XR input source stops pointing at the component, or when the input
+     * source is removed while its ray points at the component. Only fired when useInput is true.
+     * The handler is passed an {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('selectleave', (event) => {
+     *     console.log(`Select leave event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTLEAVE = 'selectleave';
+
+    /**
+     * Fired every XR frame while an XR input source holds a select action that started on the
+     * component, even if its ray no longer points at the component. Only fired when useInput is
+     * true. The handler is passed an {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('selectmove', (event) => {
+     *     console.log(`Select move event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTMOVE = 'selectmove';
 
     /**
      * @type {EventHandle|null}

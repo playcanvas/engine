@@ -1,7 +1,7 @@
 import MonacoEditor, { loader } from '@monaco-editor/react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 
-import { CodeEditorBase } from './CodeEditorBase.mjs';
+import { CodeEditorBase, getShowMinimap } from './CodeEditorBase.mjs';
 import { getFirstExample } from '../../categories.mjs';
 import { downloadExampleProject } from '../../download-project.mjs';
 import { iframe } from '../../iframe.mjs';
@@ -31,14 +31,6 @@ const tryCatchAsync = async (task) => {
         return [err, null];
     }
 };
-
-function getShowMinimap() {
-    let showMinimap = true;
-    if (localStorage.getItem('showMinimap')) {
-        showMinimap = localStorage.getItem('showMinimap') === 'true';
-    }
-    return showMinimap;
-}
 
 /**
  * @type {Record<string, string>}
