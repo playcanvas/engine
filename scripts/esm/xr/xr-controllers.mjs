@@ -62,7 +62,7 @@ class XrControllers extends Script {
      * destroyed: unloading it as one input source went away would take it from any other input
      * source using it, or still waiting for it to load.
      *
-     * @type {Map<string, Promise<import('playcanvas').Asset<'container'>>>}
+     * @type {Map<string, { load: Promise<import('playcanvas').Asset<'container'>>, asset: import('playcanvas').Asset<'container'> | null }>}
      * @private
      */
     _models = new Map();
@@ -127,12 +127,14 @@ class XrControllers extends Script {
         this._handlers = null;
         this._pendingInputSources.clear();
 
-        // Release the models, including those still loading once they land
-        for (const load of this._models.values()) {
-            load.then((asset) => {
-                this.app.assets.remove(asset);
-                asset.unload();
-            }, () => {});
+        // Release the models now, as an application being destroyed drops its asset registry next,
+        // and those still loading once they land
+        for (const model of this._models.values()) {
+            if (model.asset) {
+                this._releaseModel(model.asset);
+            } else {
+                model.load.then(asset => this._releaseModel(asset), () => {});
+            }
         }
         this._models.clear();
     }
@@ -291,22 +293,43 @@ class XrControllers extends Script {
      * @private
      */
     _loadModel(url) {
-        let load = this._models.get(url);
-        if (!load) {
-            load = new Promise((resolve, reject) => {
+        const existing = this._models.get(url);
+        if (existing) return existing.load;
+
+        const model = {
+            load: new Promise((resolve, reject) => {
                 this.app.assets.loadFromUrl(url, 'container', (err, asset) => {
                     if (err) reject(err);
                     else resolve(asset);
                 });
-            });
-            this._models.set(url, load);
+            }),
+            asset: null
+        };
+        this._models.set(url, model);
 
+        model.load.then((asset) => {
+            model.asset = asset;
+        }, () => {
             // forget a failed load, so a later input source can try again
-            load.catch(() => {
-                if (this._models.get(url) === load) this._models.delete(url);
-            });
-        }
-        return load;
+            if (this._models.get(url) === model) this._models.delete(url);
+        });
+
+        return model.load;
+    }
+
+    /**
+     * Removes a model from the asset registry and unloads it.
+     *
+     * @param {import('playcanvas').Asset<'container'>} asset - The model asset.
+     * @private
+     */
+    _releaseModel(asset) {
+        // a destroyed application has unloaded its assets and dropped its registry
+        const { assets } = this.app;
+        if (!assets) return;
+
+        assets.remove(asset);
+        asset.unload();
     }
 
     /**
