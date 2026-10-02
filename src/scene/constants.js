@@ -754,7 +754,7 @@ export const ambientSrcNames = {
     [AMBIENTSRC_CONSTANT]: 'CONSTANT'
 };
 
-// the shader defines of a mesh instance: flags in the lowest 24 bits, see SHADERDEF_MASK_SHIFT
+// the shader defines of a mesh instance
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;
 export const SHADERDEF_UV0 = 4;
@@ -772,8 +772,18 @@ export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
 export const SHADERDEF_BATCH = 16384;
 export const SHADERDEF_INSTANCEINDEX = 32768; // the draws use the instance index themselves
 
-// the shift of the light mask of a mesh instance, in the top 8 bits of its shader defines
-export const SHADERDEF_MASK_SHIFT = 24;
+// the light mask of a mesh instance, a flag for each of its values, see MeshInstance#mask
+export const SHADERDEF_AFFECT_DYNAMIC = 65536;
+export const SHADERDEF_AFFECT_LIGHTMAPPED = 131072;
+export const SHADERDEF_BAKE = 262144;
+
+// the texture coordinate sets of the mesh above SHADERDEF_UV0 and SHADERDEF_UV1
+export const SHADERDEF_UV2 = 524288;
+export const SHADERDEF_UV3 = 1048576;
+export const SHADERDEF_UV4 = 2097152;
+export const SHADERDEF_UV5 = 4194304;
+export const SHADERDEF_UV6 = 8388608;
+export const SHADERDEF_UV7 = 16777216;
 
 /**
  * The shadow map is not to be updated.
