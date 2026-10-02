@@ -1,6 +1,7 @@
-function UnifiedSortWorker() {
-
-    const myself = (typeof self !== 'undefined' && self) || (require('node:worker_threads').parentPort);
+// `myself` is the worker's message port: `self` in a web worker, or the parentPort of a Node
+// worker_threads worker. The creator passes it in as source text, so that bundlers never see the
+// Node-only require.
+function UnifiedSortWorker(myself) {
 
     // cache of centers for each splat id
     const centersMap = new Map();

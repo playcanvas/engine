@@ -49,9 +49,10 @@ class GSplatUnifiedSorter extends EventHandler {
         this.scene = scene ?? null;
 
         // Build worker source with GSplatSortBinWeights class injected via stringification.
+        const workerPort = platform.environment === 'node' ? 'require("node:worker_threads").parentPort' : 'self';
         const workerSource = `
             const GSplatSortBinWeights = ${GSplatSortBinWeights.toString()};
-            (${UnifiedSortWorker.toString()})()
+            (${UnifiedSortWorker.toString()})(${workerPort})
         `;
 
         if (platform.environment === 'node') {
