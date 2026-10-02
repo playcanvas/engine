@@ -421,7 +421,7 @@ class CameraComponent extends Component {
      *
      * Left and right are only used in stereo rendering.
      *
-     * @type {CalculateMatrixCallback}
+     * @type {CalculateMatrixCallback|null}
      */
     set calculateProjection(value) {
         this._camera.calculateProjection = value;
@@ -430,7 +430,7 @@ class CameraComponent extends Component {
     /**
      * Gets the custom function to calculate the camera projection matrix manually.
      *
-     * @type {CalculateMatrixCallback}
+     * @type {CalculateMatrixCallback|null}
      */
     get calculateProjection() {
         return this._camera.calculateProjection;
@@ -445,7 +445,7 @@ class CameraComponent extends Component {
      *
      * Left and right are only used in stereo rendering.
      *
-     * @type {CalculateMatrixCallback}
+     * @type {CalculateMatrixCallback|null}
      */
     set calculateTransform(value) {
         this._camera.calculateTransform = value;
@@ -454,7 +454,7 @@ class CameraComponent extends Component {
     /**
      * Gets the custom function to calculate the camera transformation matrix manually.
      *
-     * @type {CalculateMatrixCallback}
+     * @type {CalculateMatrixCallback|null}
      */
     get calculateTransform() {
         return this._camera.calculateTransform;
@@ -1003,7 +1003,7 @@ class CameraComponent extends Component {
      * Sets the render target to which rendering of the camera is performed. If not set, it will
      * render simply to the screen.
      *
-     * @type {RenderTarget}
+     * @type {RenderTarget|null}
      */
     set renderTarget(value) {
 
@@ -1020,7 +1020,7 @@ class CameraComponent extends Component {
     /**
      * Gets the render target to which rendering of the camera is performed.
      *
-     * @type {RenderTarget}
+     * @type {RenderTarget|null}
      */
     get renderTarget() {
         return this._camera.renderTarget;

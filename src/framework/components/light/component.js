@@ -830,11 +830,11 @@ class LightComponent extends Component {
     }
 
     /**
-     * Sets the id of the texture asset to be used as the cookie for this light. Only spot and
+     * Sets the texture asset, or its id, to be used as the cookie for this light. Only spot and
      * omni lights can have cookies. Spot lights expect a 2D texture; omni lights expect a
      * cubemap. Defaults to null.
      *
-     * @type {number|null}
+     * @param {Asset|number|null} value - The texture asset, its id, or null for no cookie.
      */
     set cookieAsset(value) {
         if (
