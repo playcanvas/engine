@@ -138,7 +138,7 @@ class ShaderUtils {
      *
      * @param {Material} material - The material to create the shader defines for.
      * @param {ShaderVariantParams} params - The shader variant parameters.
-     * @returns {Map<string, string|boolean>} The map of shader defines.
+     * @returns {Map<string, string|number|boolean>} The map of shader defines.
      * @ignore
      */
     static getCoreDefines(material, params) {

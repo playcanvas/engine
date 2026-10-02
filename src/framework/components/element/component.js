@@ -1528,7 +1528,7 @@ class ElementComponent extends Component {
      * `[0, 0]` is the bottom left and `[1, 1]` is the top right. Only works for
      * {@link ELEMENTTYPE_TEXT} elements.
      *
-     * @type {Vec2}
+     * @param {Vec2|number[]} arg - The alignment, as a Vec2 or an array of 2 numbers.
      */
     set alignment(arg) {
         this._setValue('alignment', arg);

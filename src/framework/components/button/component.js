@@ -489,7 +489,7 @@ class ButtonComponent extends Component {
      * Sets the padding to be used in hit-test calculations. Can be used to expand the bounding box
      * so that the button is easier to tap. Defaults to `[0, 0, 0, 0]`.
      *
-     * @type {Vec4}
+     * @param {Vec4|number[]} arg - The padding, as a Vec4 or an array of 4 numbers.
      */
     set hitPadding(arg) {
         // Mirror the old schema-driven `type: 'vec4'` conversion in

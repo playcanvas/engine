@@ -142,7 +142,7 @@ class Material {
      * {@link Material#setDefine} (or {@link Material#copy}); direct mutation bypasses the cached
      * {@link Material#definesKey}.
      *
-     * @type {Map<string, string|boolean>}
+     * @type {Map<string, string|number|boolean>}
      * @ignore
      */
     defines = new Map();
@@ -1514,8 +1514,8 @@ class Material {
      * parts of the shader code.
      *
      * @param {string} name - The name of the define to set.
-     * @param {string|undefined|boolean} value - The value of the define. If undefined or false, the
-     * define is removed.
+     * @param {string|number|boolean|undefined} value - The value of the define. If undefined or
+     * false, the define is removed.
      *
      * A simple example on how to set a custom shader define value used by the shader processor.
      *
