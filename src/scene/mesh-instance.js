@@ -12,11 +12,13 @@ import {
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_BATCH,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING, SHADERDEF_MORPH_TEXTURE_BASED_INT,
-    SHADERDEF_INSTANCEINDEX, SHADERDEF_MASK_SHIFT,
+    SHADERDEF_INSTANCEINDEX, SHADERDEF_AFFECT_DYNAMIC, SHADERDEF_AFFECT_LIGHTMAPPED, SHADERDEF_BAKE,
+    SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7,
     SHADOW_CASCADE_ALL,
     instanceLightmapUniformNames
 } from './constants.js';
 import { GraphNode } from './graph-node.js';
+import { lightMaskToShaderDefs, shaderDefsToLightMask } from './light-mask.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { getMutatedOverrides, initMeshInstanceDebug, recordAppliedOverrides, warnMutatedOverrides } from './materials/material-debug.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
@@ -69,7 +71,42 @@ const _tempBoneAabb = new BoundingBox();
 const _meshSet = new Set();
 
 // internal array used to evaluate the hash for the shader instance
-const lookupHashes = new Uint32Array(5);
+const lookupHashes = new Uint32Array(4);
+
+// the shader define of each texture coordinate set of the mesh, by set index
+const uvShaderDefs = [SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_UV2, SHADERDEF_UV3, SHADERDEF_UV4, SHADERDEF_UV5, SHADERDEF_UV6, SHADERDEF_UV7];
+
+// the shader defines that follow the vertex format of the mesh
+const FORMAT_SHADERDEFS = SHADERDEF_UV0 | SHADERDEF_UV1 | SHADERDEF_UV2 | SHADERDEF_UV3 | SHADERDEF_UV4 |
+    SHADERDEF_UV5 | SHADERDEF_UV6 | SHADERDEF_UV7 | SHADERDEF_VCOLOR | SHADERDEF_TANGENTS;
+
+/**
+ * Returns the shader defines that follow the vertex format of a mesh: the texture coordinate sets,
+ * vertex colors and tangents it provides.
+ *
+ * @param {VertexBuffer|null} vertexBuffer - The vertex buffer of the mesh.
+ * @returns {number} The shader defines.
+ */
+const getFormatShaderDefs = (vertexBuffer) => {
+    let shaderDefs = 0;
+    const format = vertexBuffer?.format;
+    if (format) {
+        for (let i = 0; i < uvShaderDefs.length; i++) {
+            if (format.hasUv(i)) {
+                shaderDefs |= uvShaderDefs[i];
+            }
+        }
+        shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
+        shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
+    }
+    return shaderDefs;
+};
+
+// the shader defines that hold the light mask
+const LIGHTMASK_SHADERDEFS = SHADERDEF_AFFECT_DYNAMIC | SHADERDEF_AFFECT_LIGHTMAPPED | SHADERDEF_BAKE;
+
+// the values of a light mask
+const LIGHTMASK_ALL = MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED | MASK_BAKE;
 
 /**
  * Internal data structure used to store data used by hardware instancing.
@@ -635,12 +672,12 @@ class MeshInstance {
     _shaderCache = new Map();
 
     /**
-     * The shader defines: 24 bits of flags, and the light mask in the top 8 bits, see
-     * SHADERDEF_MASK_SHIFT. Defaults to no flags and a mask of MASK_AFFECT_DYNAMIC.
+     * The shader defines, a combination of the SHADERDEF_ flags. Defaults to the flag of a light
+     * mask of MASK_AFFECT_DYNAMIC.
      *
      * @private
      */
-    _shaderDefs = MASK_AFFECT_DYNAMIC << SHADERDEF_MASK_SHIFT;
+    _shaderDefs = SHADERDEF_AFFECT_DYNAMIC;
 
     /**
      * @type {CalculateSortDistanceCallback|null}
@@ -680,13 +717,7 @@ class MeshInstance {
         mesh.incRefCount();
         this.material = material;   // The material with which to render this instance
 
-        if (mesh.vertexBuffer) {
-            const format = mesh.vertexBuffer.format;
-            this._shaderDefs |= format.hasUv(0) ? SHADERDEF_UV0 : 0;
-            this._shaderDefs |= format.hasUv(1) ? SHADERDEF_UV1 : 0;
-            this._shaderDefs |= format.hasColor ? SHADERDEF_VCOLOR : 0;
-            this._shaderDefs |= format.hasTangents ? SHADERDEF_TANGENTS : 0;
-        }
+        this._updateFormatShaderDefs(mesh.vertexBuffer);
 
         // 64-bit integer key that defines render order of this mesh instance
         this.updateKey();
@@ -771,33 +802,40 @@ class MeshInstance {
     }
 
     /**
-     * Sets the graphics mesh being instanced.
+     * Sets the graphics mesh being instanced. The shaders of the mesh instance are set up for the
+     * vertex streams the mesh has when it is assigned, so assign the mesh again, even when it is
+     * already set, after {@link Mesh#update} adds or removes one of its vertex streams.
      *
      * @type {Mesh|null}
      */
     set mesh(mesh) {
 
-        if (mesh === this._mesh) {
-            return;
-        }
+        if (mesh !== this._mesh) {
 
-        if (this._mesh) {
+            if (this._mesh) {
 
-            // a mesh instance without a mesh is not drawn, so it releases its slot in the mesh
-            // instance storage, and gets a new one when drawn with a mesh again. Owners dropping a
-            // mesh instance without destroying it, such as the sprite component, clear its mesh
-            if (!mesh && this.storageSlot >= 0) {
-                this._mesh.device.meshInstanceStorage?.free(this.storageSlot);
-                this.storageSlot = -1;
+                // a mesh instance without a mesh is not drawn, so it releases its slot in the mesh
+                // instance storage, and gets a new one when drawn with a mesh again. Owners dropping
+                // a mesh instance without destroying it, such as the sprite component, clear its mesh
+                if (!mesh && this.storageSlot >= 0) {
+                    this._mesh.device.meshInstanceStorage?.free(this.storageSlot);
+                    this.storageSlot = -1;
+                }
+
+                this._mesh.decRefCount();
             }
 
-            this._mesh.decRefCount();
+            this._mesh = mesh;
+
+            if (mesh) {
+                mesh.incRefCount();
+            }
         }
 
-        this._mesh = mesh;
-
+        // the shader defines follow the vertex format of the mesh, so assigning the same mesh again
+        // updates them to a vertex buffer it got since
         if (mesh) {
-            mesh.incRefCount();
+            this._updateFormatShaderDefs(mesh.vertexBuffer);
         }
     }
 
@@ -932,6 +970,19 @@ class MeshInstance {
      */
     getShaderInstance(shaderPass, lightList, scene, cameraShaderParams, viewUniformFormat) {
 
+        Debug.call(() => {
+            // the shader defines follow the vertex format of the mesh only when it is assigned, so
+            // a mesh whose update added or removed a vertex stream needs to be assigned again, see
+            // Mesh#update
+            const vertexBuffer = this._mesh.vertexBuffer;
+            if (vertexBuffer !== this._debugFormatVertexBuffer) {
+                this._debugFormatVertexBuffer = vertexBuffer;
+                if (getFormatShaderDefs(vertexBuffer) !== (this._shaderDefs & FORMAT_SHADERDEFS)) {
+                    Debug.warnOnce(`The mesh of mesh instance ${this.node?.name ?? ''} has vertex streams its shaders are not set up for: an update added or removed one. Assign the mesh to the mesh instance again: meshInstance.mesh = mesh. See Mesh#update.`);
+                }
+            }
+        });
+
         const shaderDefs = this._shaderDefs;
 
         // unique hash for the required shader
@@ -939,9 +990,6 @@ class MeshInstance {
         lookupHashes[1] = lightList.hash;
         lookupHashes[2] = shaderDefs;
         lookupHashes[3] = cameraShaderParams.hash;
-
-        // the uv sets the mesh provides decide which of the material's maps the shader samples
-        lookupHashes[4] = this.mesh.vertexBuffer?.format.uvMask ?? 0;
         const hash = hash32Fnv1a(lookupHashes);
 
         // look up the cache
@@ -1049,6 +1097,19 @@ class MeshInstance {
             this._shaderDefs = shaderDefs;
             this.clearShaders();
         }
+    }
+
+    /**
+     * Takes the shader defines that follow the vertex format of the mesh from its vertex buffer.
+     *
+     * @param {VertexBuffer|null} vertexBuffer - The vertex buffer of the mesh.
+     * @private
+     */
+    _updateFormatShaderDefs(vertexBuffer) {
+        Debug.call(() => {
+            this._debugFormatVertexBuffer = vertexBuffer;
+        });
+        this._updateShaderDefs((this._shaderDefs & ~FORMAT_SHADERDEFS) | getFormatShaderDefs(vertexBuffer));
     }
 
     /**
@@ -1165,15 +1226,14 @@ class MeshInstance {
 
     /**
      * Sets the light mask of this mesh instance: which {@link LightComponent}s light it. The value
-     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`, and
-     * only its lowest 8 bits are used. Defaults to `MASK_AFFECT_DYNAMIC`.
+     * is a combination of `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and `MASK_BAKE`; other
+     * bits are ignored. Defaults to `MASK_AFFECT_DYNAMIC`.
      *
      * @type {number}
      */
     set mask(val) {
-        Debug.assert((val & ~0xff) === 0, `MeshInstance#mask ${val} does not fit the 8 bits of the light mask`);
-        const flags = this._shaderDefs & ((1 << SHADERDEF_MASK_SHIFT) - 1);
-        this._updateShaderDefs(flags | ((val & 0xff) << SHADERDEF_MASK_SHIFT));
+        Debug.assert((val & ~LIGHTMASK_ALL) === 0, `MeshInstance#mask ${val} has bits other than MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED and MASK_BAKE`);
+        this._updateShaderDefs((this._shaderDefs & ~LIGHTMASK_SHADERDEFS) | lightMaskToShaderDefs(val));
     }
 
     /**
@@ -1182,7 +1242,7 @@ class MeshInstance {
      * @type {number}
      */
     get mask() {
-        return this._shaderDefs >>> SHADERDEF_MASK_SHIFT;
+        return shaderDefsToLightMask(this._shaderDefs);
     }
 
     /**

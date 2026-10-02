@@ -902,6 +902,11 @@ class Mesh extends RefCountedObject {
      * {@link vertexBuffer} or {@link indexBuffer} to fit all provided vertices and indices, and
      * fills them with data.
      *
+     * A {@link MeshInstance} sets up its shaders for the vertex streams its mesh has when the mesh
+     * is assigned to it. If an update adds or removes a vertex stream of a mesh already assigned to
+     * mesh instances, such as texture coordinates, colors or tangents, assign the mesh to them
+     * again (`meshInstance.mesh = mesh`) so that their shaders use the new streams.
+     *
      * @param {number} [primitiveType] - The type of primitive to render. Can be:
      *
      * - {@link PRIMITIVE_POINTS}

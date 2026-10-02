@@ -12,7 +12,7 @@ import {
     DITHER_NONE,
     PARALLAX_OCCLUSION,
     PARALLAX_OFFSET,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH, SHADERDEF_MASK_SHIFT,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_BATCH,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP, REFLECTIONSRC_SPHEREMAP,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
@@ -20,6 +20,7 @@ import {
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
+import { shaderDefsToLightMask } from '../light-mask.js';
 
 const notBlack = (color) => {
     return color.r !== 0 || color.g !== 0 || color.b !== 0;
@@ -397,7 +398,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         if (stdMat.useLighting) {
-            const mask = objDefs ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? shaderDefsToLightMask(objDefs) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);

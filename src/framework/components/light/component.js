@@ -1057,7 +1057,7 @@ class LightComponent extends Component {
     /**
      * Sets the bitmask that determines which {@link MeshInstance}s are lit by this light. The
      * value is composed from `MASK_AFFECT_DYNAMIC`, `MASK_AFFECT_LIGHTMAPPED` and
-     * `MASK_BAKE`, and only its lowest 8 bits are used. The {@link affectDynamic},
+     * `MASK_BAKE`; other bits are ignored. The {@link affectDynamic},
      * {@link affectLightmapped} and {@link bake} helpers write to the same underlying mask but
      * maintain their own state and are not recomputed from `mask`, so writing `mask` directly
      * will not update those helpers (and a subsequent write to a helper may overwrite bits set via

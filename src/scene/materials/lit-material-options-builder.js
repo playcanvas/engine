@@ -3,12 +3,13 @@ import {
     MASK_AFFECT_DYNAMIC, TONEMAP_NONE, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL,
     SHADERDEF_MORPH_POSITION, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN,
     SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPRITE_RENDERMODE_SIMPLE,
-    SHADERDEF_MORPH_TEXTURE_BASED_INT, SHADERDEF_MASK_SHIFT,
+    SHADERDEF_MORPH_TEXTURE_BASED_INT,
     FOG_NONE,
     REFLECTIONSRC_NONE, REFLECTIONSRC_ENVATLAS, REFLECTIONSRC_ENVATLASHQ, REFLECTIONSRC_CUBEMAP,
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
     SHADER_PREPASS, SCENETEXTURE_DEPTH
 } from '../constants.js';
+import { shaderDefsToLightMask } from '../light-mask.js';
 
 /**
  * @import { Light } from '../light.js'
@@ -144,7 +145,7 @@ class LitMaterialOptionsBuilder {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
-            const mask = objDefs ? (objDefs >>> SHADERDEF_MASK_SHIFT) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? shaderDefsToLightMask(objDefs) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
