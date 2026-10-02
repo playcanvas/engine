@@ -84,7 +84,8 @@ class GSplatSorter extends EventHandler {
             this.fire('updated');
         };
 
-        const workerSource = `(${SortWorker.toString()})()`;
+        const workerPort = platform.environment === 'node' ? 'require("node:worker_threads").parentPort' : 'self';
+        const workerSource = `(${SortWorker.toString()})(${workerPort})`;
 
         if (platform.environment === 'node') {
             this.worker = new Worker(workerSource, {

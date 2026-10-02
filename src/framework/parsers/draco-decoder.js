@@ -204,18 +204,19 @@ const initializeWorkers = (config) => {
     // worker urls must be absolute
     Promise.all([downloadScript(config.jsUrl), compileModule(config.wasmUrl)])
     .then(([dracoSource, dracoModule]) => {
+        // Node uses worker_threads (no Blob/URL.createObjectURL), passing the worker source as
+        // an eval string; the browser builds a blob URL and spawns a web worker from it.
+        const isNode = platform.environment === 'node';
+
         // build worker source
+        const workerPort = isNode ? 'require("node:worker_threads").parentPort' : 'self';
         const code = [
             '/* draco */',
             dracoSource,
             '/* worker */',
-            `(\n${DracoWorker.toString()}\n)()\n\n`
+            `(\n${DracoWorker.toString()}\n)(${workerPort})\n\n`
         ].join('\n');
         const numWorkers = Math.max(1, Math.min(16, config.numWorkers || defaultNumWorkers));
-
-        // Node uses worker_threads (no Blob/URL.createObjectURL), passing the worker source as
-        // an eval string; the browser builds a blob URL and spawns a web worker from it.
-        const isNode = platform.environment === 'node';
         const workerUrl = isNode ? null : URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
 
         // create worker instances
