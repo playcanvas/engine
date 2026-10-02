@@ -75,6 +75,8 @@ class LitMaterial extends Material {
 
     hasLighting = false;
 
+    dirLightMap = false;
+
     hasHeights = false;
 
     hasNormals = false;
