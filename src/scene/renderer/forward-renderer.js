@@ -133,6 +133,9 @@ class ForwardRenderer extends Renderer {
         this.screenSizeLegacyId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
 
+        // mesh ID - used by the picker
+        this.meshInstanceIdId = scope.resolve('meshInstanceId');
+
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
 
@@ -360,7 +363,7 @@ class ForwardRenderer extends Renderer {
             Debug.call(() => warnViewUniformMeshInstanceParameters(drawCall, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
             // mesh ID - used by the picker
-            device.scope.resolve('meshInstanceId').setValue(drawCall.id);
+            this.meshInstanceIdId.setValue(drawCall.id);
 
             const mesh = drawCall.mesh;
             this.setVertexBuffers(device, mesh);
