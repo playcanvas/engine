@@ -274,12 +274,12 @@ Tween.prototype.start = function (idx) {
     .to(endValue, tween.duration)
     .easing(easingFunc)
     .onStart((obj) => {
-        if (tween.startEvent !== '') {
+        if (tween.startEvent) {
             app.fire(tween.startEvent);
         }
     })
     .onStop((obj) => {
-        if (tween.stopEvent !== '') {
+        if (tween.stopEvent) {
             app.fire(tween.stopEvent);
         }
         tweenInstances[idx] = null;
@@ -287,18 +287,18 @@ Tween.prototype.start = function (idx) {
     .onUpdate((obj) => {
         updateProperty(obj);
 
-        if (tween.updateEvent !== '') {
+        if (tween.updateEvent) {
             app.fire(tween.updateEvent);
         }
     })
     .onComplete((obj) => {
-        if (tween.completeEvent !== '') {
+        if (tween.completeEvent) {
             app.fire(tween.completeEvent);
         }
         tweenInstances[idx] = null;
     })
     .onRepeat((obj) => {
-        if (tween.repeatEvent !== '') {
+        if (tween.repeatEvent) {
             app.fire(tween.repeatEvent);
         }
     })
