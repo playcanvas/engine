@@ -4,6 +4,7 @@ import {
     PIXELFORMAT_111110F, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT1_SRGB,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, TEXTURELOCK_READ, isMultisampleCapablePixelFormat
 } from '../../../src/platform/graphics/constants.js';
+import { TextureUtils } from '../../../src/platform/graphics/texture-utils.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
@@ -146,6 +147,35 @@ describe('Texture', function () {
             } finally {
                 console.error = error;
             }
+        });
+    });
+
+    describe('#upload: compressed formats', function () {
+
+        it('uploads levels whose size is not a multiple of the block size', function () {
+            // levels 12x24, 6x12, 3x6, 1x3 and 1x1: whole blocks, then levels with a partial
+            // block in either dimension, then levels smaller than a block
+            const width = 12;
+            const height = 24;
+            const levels = [];
+            for (let i = 0; i < TextureUtils.calcMipLevelsCount(width, height); i++) {
+                const w = TextureUtils.calcLevelDimension(width, i);
+                const h = TextureUtils.calcLevelDimension(height, i);
+                levels.push(new Uint8Array(TextureUtils.calcLevelGpuSize(w, h, 1, PIXELFORMAT_DXT1)));
+            }
+
+            const texture = new Texture(device, {
+                name: 'test',
+                width,
+                height,
+                format: PIXELFORMAT_DXT1,
+                mipmaps: true,
+                levels
+            });
+            texture.upload();
+
+            expect(texture.numLevels).to.equal(5);
+            texture.destroy();
         });
     });
 
