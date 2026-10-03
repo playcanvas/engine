@@ -22,6 +22,17 @@ const _localCameraFwd = new Vec3();
 
 const _tempCompletedUrls = [];
 const _tempDebugAabb = new BoundingBox();
+const _tempDebugBox = new BoundingBox();
+const _tempDebugMin = new Vec3();
+const _tempDebugMax = new Vec3();
+
+// Bounds on how many splats one LOD group may hold in any band, as a share of the splat budget.
+// The allocator fits the budget by switching nodes whole, and stops at the first switch that does
+// not fit, so a group large against the budget would leave budget unspent. See
+// evaluateNodeDistances.
+const GROUP_BUDGET_SHARE = 1 / 16;
+const GROUP_MIN_SPLATS = 16384;
+const GROUP_MAX_SPLATS = 262144;
 
 // tan(22.5deg) for the engine's default 45-degree vertical FOV, used as the FOV compensation reference
 const REF_TAN_HALF_FOV = Math.tan(22.5 * math.DEG_TO_RAD);
@@ -174,6 +185,84 @@ class GSplatOctreeInstance {
     lodTable = null;
 
     /**
+     * The nodes of {@link GSplatOctree#tree} that choose a LOD band in this update when LOD grouping
+     * is on (see GSplatParams#lodGroupThreshold) - the cut through the tree: every leaf near the
+     * camera, and one node for each distant subtree, whose leaves all render their own level for
+     * the band it chooses. The first {@link GSplatOctreeInstance#lodUnitCount} entries are valid.
+     * Null when every leaf chooses its own level.
+     *
+     * @type {Int32Array|null}
+     */
+    lodUnits = null;
+
+    /**
+     * Number of valid entries in {@link GSplatOctreeInstance#lodUnits}.
+     */
+    lodUnitCount = 0;
+
+    /**
+     * Per LOD unit, its squared world distance from the camera - see
+     * {@link NodeInfo#worldDistanceSq}.
+     *
+     * @type {Float64Array}
+     */
+    lodUnitDistanceSq = new Float64Array(0);
+
+    /**
+     * Per LOD unit, the band the budget allocator chose for it, relative to the LOD range - band
+     * `b` is LOD index `rangeMin + b` - or -1 when nothing in it is renderable in range.
+     *
+     * @type {Int16Array}
+     */
+    lodUnitBand = new Int16Array(0);
+
+    /**
+     * Traversal stack for the grouping walk, sized to the tree.
+     *
+     * @type {Int32Array}
+     * @private
+     */
+    _cutStack = new Int32Array(0);
+
+    /**
+     * Backing storage for {@link GSplatOctreeInstance#lodUnits}, kept while grouping is off so
+     * turning it back on does not reallocate.
+     *
+     * @type {Int32Array}
+     * @private
+     */
+    _lodUnitStorage = new Int32Array(0);
+
+    /**
+     * Per leaf, 1 while {@link GSplatOctreeInstance#applyLodChanges} has to evaluate it: its target
+     * level changed, or it is still on its way there. A leaf that shows its target and waits for
+     * nothing does nothing in that pass, so it is skipped until its target changes again - which
+     * keeps the pass proportional to what changes rather than to the size of the octree.
+     *
+     * @type {Uint8Array}
+     * @private
+     */
+    _leafDirty;
+
+    /**
+     * Per leaf, the target level the last {@link GSplatOctreeInstance#applyLodChanges} saw, to
+     * detect which targets the allocator changed since.
+     *
+     * @type {Int16Array}
+     * @private
+     */
+    _leafTarget;
+
+    /**
+     * Work-buffer allocation ids of draw ranges, per leaf and LOD level - see
+     * {@link GSplatOctreeInstance#rangeAllocId}. -1 until first used. Created on first use.
+     *
+     * @type {Int32Array|null}
+     * @private
+     */
+    _rangeAllocIds = null;
+
+    /**
      * Previous node position at which LOD was last updated. This is used to determine if LOD needs
      * to be updated as the octree splat moves.
      */
@@ -259,6 +348,8 @@ class GSplatOctreeInstance {
 
             this.nodeInfos[i] = nodeInfo;
         }
+        this._leafDirty = new Uint8Array(octree.nodes.length).fill(1);
+        this._leafTarget = new Int16Array(octree.nodes.length).fill(-1);
 
         // Initialize file placements array
         const numFiles = octree.files.length;
@@ -293,6 +384,7 @@ class GSplatOctreeInstance {
             this.octree.removeRequests(this, !skipRefCounting);
         }
         this.lodTable = null;
+        this.lodUnits = null;
         this._fileRequests.clear();
 
         if (!skipRefCounting && this.octree && !this.octree.destroyed) {
@@ -346,10 +438,12 @@ class GSplatOctreeInstance {
         this.prefetchPending.clear();
         this.pendingVisibleAdds.clear();
 
-        // Reset all nodes to invisible
+        // Reset all nodes to invisible, and have the next LOD update evaluate every one of them
         for (const nodeInfo of this.nodeInfos) {
             nodeInfo.resetLod();
         }
+        this._leafDirty.fill(1);
+        this._leafTarget.fill(-1);
 
         // Clean up environment if present
         if (this.environmentPlacement) {
@@ -362,6 +456,32 @@ class GSplatOctreeInstance {
         this.dirtyModifiedPlacements = true;
         this.dirtyPlacementSetChanged = true;
         this.needsLodUpdate = true;
+    }
+
+    /**
+     * Returns the work-buffer allocation id of a draw range that starts at a leaf's data in one LOD
+     * level. A range is a leaf, or several consecutive leaves of the same LOD file, so the leaf and
+     * level it starts at fix its first splat, and its size fixes the rest: a range whose contents
+     * change always arrives with a different id or a different size, which is what makes the world
+     * state copy it into the work buffer again. Stable while the range is unchanged, so an unchanged
+     * range keeps its allocation and is not copied again.
+     *
+     * @param {number} leaf - Index of the range's first leaf.
+     * @param {number} level - The LOD level the range is drawn at.
+     * @returns {number} The allocation id.
+     */
+    rangeAllocId(leaf, level) {
+        const levels = this.octree.lodLevels;
+        if (!this._rangeAllocIds) {
+            this._rangeAllocIds = new Int32Array(this.octree.nodes.length * levels).fill(-1);
+        }
+        const key = leaf * levels + level;
+        let id = this._rangeAllocIds[key];
+        if (id < 0) {
+            id = GsplatAllocId.get();
+            this._rangeAllocIds[key] = id;
+        }
+        return id;
     }
 
     /**
@@ -558,6 +678,16 @@ class GSplatOctreeInstance {
         const fwy = localCameraForward.y;
         const fwz = localCameraForward.z;
 
+        // LOD grouping: evaluate a cut through the octree's tree rather than every leaf
+        const groupThreshold = Math.min(params.lodGroupThreshold ?? 0, 0.99);
+        const tree = this.octree.tree;
+        if (groupThreshold > 0 && this.lodTable && tree.count > nodes.length) {
+            this._evaluateGroups(px, py, pz, fwx, fwy, fwz, fovScale * fovScale, distanceScaleSq, penalty, shrink, groupThreshold, params.splatBudget);
+            return;
+        }
+        this.lodUnits = null;
+        this.lodUnitCount = 0;
+
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
             const nodeInfo = nodeInfos[nodeIndex];
 
@@ -617,6 +747,164 @@ class GSplatOctreeInstance {
     }
 
     /**
+     * The LOD grouping variant of {@link GSplatOctreeInstance#evaluateNodeDistances}: evaluates a
+     * cut through the octree's tree instead of every leaf, leaving it in
+     * {@link GSplatOctreeInstance#lodUnits} for the budget allocator.
+     *
+     * Walking down from the root, a node is split into its children while its projected size - its
+     * radius over its distance, `r / (r + d)` - exceeds the threshold, so the walk reaches single
+     * leaves near the camera and stops at whole subtrees far from it. Every leaf of a subtree lies
+     * within about twice that fraction of the subtree's distance, so they nearly always share the
+     * distance band it gets, while a LOD update costs as many nodes as the cut holds rather than as
+     * many as the octree has leaves. A node is also split while it holds more splats in some band
+     * than a small share of the budget, as the allocator switches groups whole.
+     *
+     * A node's distance is measured exactly as a leaf's is in the per-leaf pass, to its box from
+     * {@link GSplatOctree#getTreeDistanceBounds} - a leaf's own shrunk bounds, or the union of its
+     * leaves' - so a cut down to every leaf reproduces the ungrouped distances exactly.
+     *
+     * @param {number} px - Camera x in octree local space.
+     * @param {number} py - Camera y in octree local space.
+     * @param {number} pz - Camera z in octree local space.
+     * @param {number} fwx - Camera forward x in octree local space.
+     * @param {number} fwy - Camera forward y in octree local space.
+     * @param {number} fwz - Camera forward z in octree local space.
+     * @param {number} fovScaleSq - Squared FOV compensation.
+     * @param {number} distanceScaleSq - Squared scale from local to compensated world distance.
+     * @param {number} penalty - Behind-camera penalty, 0 for none.
+     * @param {number} shrink - GSplatParams#lodDistanceShrink.
+     * @param {number} threshold - GSplatParams#lodGroupThreshold, in (0, 1).
+     * @param {number} splatBudget - GSplatParams#splatBudget.
+     * @private
+     */
+    _evaluateGroups(px, py, pz, fwx, fwy, fwz, fovScaleSq, distanceScaleSq, penalty, shrink, threshold, splatBudget) {
+        const tree = this.octree.tree;
+        this._ensureLodUnitCapacity(tree.count);
+        const units = /** @type {Int32Array} */ (this.lodUnits);
+        const unitDistanceSq = this.lodUnitDistanceSq;
+        const stack = this._cutStack;
+        const { childStart, childCount, children } = tree;
+        const { boundsMinMax, radius } = this.octree.getTreeDistanceBounds(shrink);
+        const { maxCount } = /** @type {import('./gsplat-lod-table.js').GSplatLodTable} */ (this.lodTable).getGroupCounts(tree);
+
+        // projected size above the threshold, r / (r + d) > t, is d < r (1 - t) / t
+        const splitScale = (1 - threshold) / threshold;
+        const budget = splatBudget > 0 && Number.isFinite(splatBudget) ? splatBudget : GROUP_MAX_SPLATS / GROUP_BUDGET_SHARE;
+        const maxGroupSplats = Math.min(GROUP_MAX_SPLATS, Math.max(GROUP_MIN_SPLATS, budget * GROUP_BUDGET_SHARE));
+
+        // Depth-first, children pushed in reverse so leaves are reached in index order.
+        let count = 0;
+        let top = 0;
+        stack[top++] = 0;
+        while (top > 0) {
+            const n = stack[--top];
+
+            // distance terms exactly as in the per-leaf loop of evaluateNodeDistances
+            const b = n * 6;
+            let qx = px;
+            const minX = boundsMinMax[b];
+            const maxX = boundsMinMax[b + 3];
+            if (qx < minX) qx = minX;
+            else if (qx > maxX) qx = maxX;
+
+            let qy = py;
+            const minY = boundsMinMax[b + 1];
+            const maxY = boundsMinMax[b + 4];
+            if (qy < minY) qy = minY;
+            else if (qy > maxY) qy = maxY;
+
+            let qz = pz;
+            const minZ = boundsMinMax[b + 2];
+            const maxZ = boundsMinMax[b + 5];
+            if (qz < minZ) qz = minZ;
+            else if (qz > maxZ) qz = maxZ;
+
+            const dx = qx - px;
+            const dy = qy - py;
+            const dz = qz - pz;
+            const distanceSq = dx * dx + dy * dy + dz * dz;
+
+            let penaltyFactor = 1;
+            if (penalty > 0 && distanceSq > 0.0001) {
+                const dot = fwx * dx + fwy * dy + fwz * dz;
+                if (dot < 0) {
+                    const t = -dot / Math.sqrt(distanceSq);
+                    penaltyFactor = 1 + t * penalty;
+                }
+            }
+            const penaltySq = penaltyFactor * penaltyFactor;
+
+            const nodeChildren = childCount[n];
+            if (nodeChildren > 0) {
+                const split = radius[n] * splitScale;
+                if (distanceSq * penaltySq * fovScaleSq < split * split || maxCount[n] > maxGroupSplats) {
+                    const first = childStart[n];
+                    for (let k = nodeChildren - 1; k >= 0; k--) {
+                        stack[top++] = children[first + k];
+                    }
+                    continue;
+                }
+            }
+
+            // multiplied in the per-leaf pass's order, so a leaf unit's value is bit-identical
+            units[count] = n;
+            unitDistanceSq[count] = distanceSq * penaltyFactor * penaltyFactor * distanceScaleSq;
+            count++;
+        }
+        this.lodUnitCount = count;
+    }
+
+    /**
+     * Makes sure the LOD unit arrays can hold a cut through a tree of the given size, and marks
+     * this update as grouped.
+     *
+     * @param {number} capacity - Number of nodes in the tree.
+     * @private
+     */
+    _ensureLodUnitCapacity(capacity) {
+        if (this._cutStack.length < capacity) {
+            this._cutStack = new Int32Array(capacity);
+            this._lodUnitStorage = new Int32Array(capacity);
+            this.lodUnitDistanceSq = new Float64Array(capacity);
+            this.lodUnitBand = new Int16Array(capacity);
+        }
+        this.lodUnits = this._lodUnitStorage;
+    }
+
+    /**
+     * Hands the band each LOD unit was given to all the leaves under it: each leaf takes its own
+     * level for that band, with its own gaps and empty level resolved, along with the unit's
+     * distance, which orders the leaves' loads and paces their color updates. Everything downstream
+     * - placements, streaming, underfill - then works per leaf exactly as ungrouped. Flags the
+     * leaves whose target changed for {@link GSplatOctreeInstance#applyLodChanges}.
+     *
+     * @private
+     */
+    _spreadLodUnits() {
+        const { leafStart, leafEnd } = this.octree.tree;
+        const { bandLod, span } = /** @type {import('./gsplat-lod-table.js').GSplatLodTable} */ (this.lodTable);
+        const units = /** @type {Int32Array} */ (this.lodUnits);
+        const nodeInfos = this.nodeInfos;
+        const leafTarget = this._leafTarget;
+        const leafDirty = this._leafDirty;
+        for (let u = 0; u < this.lodUnitCount; u++) {
+            const n = units[u];
+            const band = this.lodUnitBand[u];
+            const distanceSq = this.lodUnitDistanceSq[u];
+            for (let leaf = leafStart[n], end = leafEnd[n]; leaf < end; leaf++) {
+                const target = band >= 0 ? bandLod[leaf * span + band] : -1;
+                const info = nodeInfos[leaf];
+                info.optimalLod = target;
+                info.worldDistanceSq = distanceSq;
+                if (leafTarget[leaf] !== target) {
+                    leafTarget[leaf] = target;
+                    leafDirty[leaf] = 1;
+                }
+            }
+        }
+    }
+
+    /**
      * Applies calculated LOD changes and manages file placements.
      * This is Pass 2 of the LOD update process. Reads the levels the budget allocator wrote into
      * the nodeInfos array.
@@ -635,13 +923,31 @@ class GSplatOctreeInstance {
         const octree = this.octree;
         const nodes = octree.nodes;
         const { lodUnderfillLimit = 0 } = params;
+        const leafDirty = this._leafDirty;
 
-        // rebuilt below from what the nodes still want, so a file nothing wants any more stops
-        // being requested and tracked
+        // Flag the leaves whose target the allocator changed. With LOD grouping the targets were
+        // chosen per group and reach the leaves here, which flags them on the way.
+        if (this.lodUnits) {
+            this._spreadLodUnits();
+        } else {
+            const leafTarget = this._leafTarget;
+            for (let i = 0; i < nodes.length; i++) {
+                const target = this.nodeInfos[i].optimalLod;
+                if (leafTarget[i] !== target) {
+                    leafTarget[i] = target;
+                    leafDirty[i] = 1;
+                }
+            }
+        }
+
+        // Rebuilt below from what the nodes still want, so a file nothing wants any more stops
+        // being requested and tracked. Only flagged leaves can want anything: a settled leaf's file
+        // is loaded and it has nothing to prefetch.
         this.prefetchPending.clear();
         this._fileRequests.clear();
 
         for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
+            if (!leafDirty[nodeIndex]) continue;
             const node = nodes[nodeIndex];
             const nodeInfo = this.nodeInfos[nodeIndex];
 
@@ -760,6 +1066,15 @@ class GSplatOctreeInstance {
 
             // Prefetch loading: request only the next-better LOD toward optimal
             this.prefetchNextLod(nodeIndex, desiredLodIndex, optimalLodIndex, LOAD_TIER_PREFETCH + rank);
+
+            // Settled once it shows its target - or shows nothing, for a target with nothing to
+            // draw - and waits for no file. Its target's file is then loaded, so it has nothing to
+            // switch, request or prefetch, and later updates skip it until the target changes.
+            const targetVisible = optimalLodIndex >= 0 && node.lods[optimalLodIndex].fileIndex !== -1;
+            if ((targetVisible ? nodeInfo.currentLod === optimalLodIndex : nodeInfo.currentLod === -1) &&
+                visibleAddFi === undefined && pendingSwitch === undefined) {
+                leafDirty[nodeIndex] = 0;
+            }
         }
 
         // Every placement still waiting for its file must stay requested, or flushRequests would
@@ -1017,6 +1332,25 @@ class GSplatOctreeInstance {
         Debug.call(() => {
             if (scene.gsplat.debug === GSPLAT_DEBUG_NODE_AABBS) {
                 const modelMat = this.placement.node.getWorldTransform();
+
+                // with LOD grouping, show the groups - the cut the allocator chose bands on
+                if (this.lodUnits) {
+                    const { boundsMinMax } = this.octree.tree;
+                    const rangeMin = this.lodTable?.rangeMin ?? 0;
+                    for (let u = 0; u < this.lodUnitCount; u++) {
+                        const band = this.lodUnitBand[u];
+                        if (band < 0) continue;
+                        const b = this.lodUnits[u] * 6;
+                        _tempDebugMin.set(boundsMinMax[b], boundsMinMax[b + 1], boundsMinMax[b + 2]);
+                        _tempDebugMax.set(boundsMinMax[b + 3], boundsMinMax[b + 4], boundsMinMax[b + 5]);
+                        _tempDebugBox.setMinMax(_tempDebugMin, _tempDebugMax);
+                        _tempDebugAabb.setFromTransformedAabb(_tempDebugBox, modelMat);
+                        const color = _lodColors[Math.min(rangeMin + band, _lodColors.length - 1)];
+                        scene.immediate.drawWireAlignedBox(_tempDebugAabb.getMin(), _tempDebugAabb.getMax(), color, true, scene.defaultDrawLayer);
+                    }
+                    return;
+                }
+
                 const nodes = this.octree.nodes;
                 for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
                     const lodIndex = this.nodeInfos[nodeIndex].currentLod;

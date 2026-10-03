@@ -247,6 +247,14 @@ data.on('alphaClipForward:set', () => {
 data.on('minContribution:set', () => {
     app.scene.gsplat.minContribution = data.get('minContribution');
 });
+// LOD grouping: distant subtrees choose one LOD band together. 0 evaluates every octree node.
+data.on('lodGroupThreshold:set', () => {
+    app.scene.gsplat.lodGroupThreshold = data.get('lodGroupThreshold');
+});
+// Draw range merging: neighboring leaves drawn from the same LOD file render as one range. 1 disables.
+data.on('lodRangeMerge:set', () => {
+    app.scene.gsplat.lodRangeMerge = data.get('lodRangeMerge');
+});
 data.on('debug:set', () => {
     app.scene.gsplat.debug = data.get('debug');
 });
@@ -279,6 +287,8 @@ data.set('lodBaseDistance', 5);
 data.set('lodMultiplier', 3);
 // Experimental: shrink each LOD node's bounds towards its center before measuring its distance
 data.set('lodDistanceShrink', 0.75);
+data.set('lodGroupThreshold', app.scene.gsplat.lodGroupThreshold);
+data.set('lodRangeMerge', app.scene.gsplat.lodRangeMerge);
 data.set('splatBudget', platform.mobile ? 1 : 4);
 data.set('environment', 'none');
 data.set('fogDensity', 0);
@@ -638,6 +648,9 @@ app.on('update', () => {
     logBuffersRequested = false;
 
     data.set('data.stats.gsplats', app.stats.frame.gsplats.toLocaleString());
+    data.set('data.stats.lodNodes', app.stats.frame.gsplatLodNodes.toLocaleString());
+    data.set('data.stats.lodTime', `${app.stats.frame.gsplatLodTime.toFixed(2)} ms`);
+    data.set('data.stats.drawRanges', app.stats.frame.gsplatDrawRanges.toLocaleString());
     const bb = app.graphicsDevice.backBufferSize;
     data.set('data.stats.resolution', `${bb.x} x ${bb.y}`);
 });

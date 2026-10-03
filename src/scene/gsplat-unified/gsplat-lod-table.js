@@ -1,5 +1,18 @@
 /**
- * @import { GSplatOctree } from './gsplat-octree.js'
+ * @import { GSplatOctree, GSplatOctreeTree } from './gsplat-octree.js'
+ */
+
+/**
+ * Per node of an octree's tree, its band splat counts for LOD grouping - see
+ * {@link GSplatLodTable#getGroupCounts}.
+ *
+ * @typedef {object} GSplatLodGroupCounts
+ * @property {Float64Array} bandCount - Per tree node and band, the splat count its leaves render
+ * together for that band, laid out like GSplatLodTable#bandCount.
+ * @property {Uint8Array} renderable - Per tree node, 1 when any of its leaves has something
+ * renderable in range.
+ * @property {Float64Array} maxCount - Per tree node, its largest splat count over the bands.
+ * @ignore
  */
 
 /**
@@ -76,6 +89,15 @@ class GSplatLodTable {
      * @type {Int32Array}
      */
     bandCount;
+
+    /**
+     * Band splat counts of the octree's tree nodes, built on first use by
+     * {@link GSplatLodTable#getGroupCounts}.
+     *
+     * @type {GSplatLodGroupCounts|null}
+     * @private
+     */
+    _groupCounts = null;
 
     /**
      * Sum of the coarsest band's splat count over all nodes - the splat cost of the whole octree at
@@ -168,6 +190,52 @@ class GSplatLodTable {
         this.bandCount = bandCount;
         this.totalCoarsestCount = totalCoarsestCount;
         this.totalFinestCount = totalFinestCount;
+    }
+
+    /**
+     * Returns the band splat counts of every node of the octree's tree, for LOD grouping: a group
+     * chooses one band for all its leaves, and each leaf then renders its own level for that band -
+     * its own entry in {@link GSplatLodTable#bandLod}, with its own gaps and empty level resolved.
+     * So a group's count for a band is the sum of its leaves' counts for it, taken from this table,
+     * and a leaf's row is exactly its own. Built on first use.
+     *
+     * @param {GSplatOctreeTree} tree - The octree's tree.
+     * @returns {GSplatLodGroupCounts} The counts.
+     */
+    getGroupCounts(tree) {
+        if (this._groupCounts) return this._groupCounts;
+
+        const span = this.span;
+        const { childStart, childCount, children, leafStart, leafEnd } = tree;
+        const bandCount = new Float64Array(tree.count * span);
+        const renderable = new Uint8Array(tree.count);
+        const maxCount = new Float64Array(tree.count);
+
+        // children before parents - in depth-first order every child has a higher index
+        for (let i = tree.count - 1; i >= 0; i--) {
+            const row = i * span;
+            if (childCount[i] === 0) {
+                const leaf = leafStart[i];
+                if (leaf < leafEnd[i] && this.bandLod[leaf * span] >= 0) {
+                    renderable[i] = 1;
+                    for (let b = 0; b < span; b++) bandCount[row + b] = this.bandCount[leaf * span + b];
+                }
+            } else {
+                for (let k = 0; k < childCount[i]; k++) {
+                    const child = children[childStart[i] + k];
+                    if (!renderable[child]) continue;
+                    renderable[i] = 1;
+                    const childRow = child * span;
+                    for (let b = 0; b < span; b++) bandCount[row + b] += bandCount[childRow + b];
+                }
+            }
+            let largest = 0;
+            for (let b = 0; b < span; b++) largest = Math.max(largest, bandCount[row + b]);
+            maxCount[i] = largest;
+        }
+
+        this._groupCounts = { bandCount, renderable, maxCount };
+        return this._groupCounts;
     }
 
     /**

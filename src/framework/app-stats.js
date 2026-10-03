@@ -96,6 +96,9 @@ class AppStats {
             gsplats: 0,
             gsplatSort: 0,
             gsplatBufferCopy: 0,
+            gsplatLodNodes: 0,
+            gsplatLodTime: 0,
+            gsplatDrawRanges: 0,
             shaders: 0,
             materials: 0,
             cameras: 0,
@@ -414,6 +417,9 @@ class AppStats {
 
         stats.gsplats = renderer._gsplatCount;
         stats.gsplatBufferCopy = renderer._gsplatBufferCopy ?? 0;
+        stats.gsplatLodNodes = renderer._gsplatLodNodes ?? 0;
+        stats.gsplatLodTime = renderer._gsplatLodTime ?? 0;
+        stats.gsplatDrawRanges = renderer._gsplatDrawRanges ?? 0;
     }
 
     /**
