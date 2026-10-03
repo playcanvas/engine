@@ -30,6 +30,8 @@ import debugProcessFrontendPS from '../chunks/lit/frag/debug-process-frontend.js
 import decodePS from '../chunks/common/frag/decode.js';
 import detailModesPS from '../chunks/standard/frag/detailModes.js';
 import diffusePS from '../chunks/standard/frag/diffuse.js';
+import diffuseTransmissionPS from '../chunks/standard/frag/diffuseTransmission.js';
+import diffuseTransmissionColorPS from '../chunks/standard/frag/diffuseTransmissionColor.js';
 import emissivePS from '../chunks/standard/frag/emissive.js';
 import encodePS from '../chunks/common/frag/encode.js';
 import endPS from '../chunks/lit/frag/end.js';
@@ -198,6 +200,8 @@ const shaderChunksGLSL = {
     debugProcessFrontendPS,
     detailModesPS,
     diffusePS,
+    diffuseTransmissionPS,
+    diffuseTransmissionColorPS,
     decodePS,
     emissivePS,
     encodePS,

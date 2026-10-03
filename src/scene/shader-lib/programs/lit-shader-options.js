@@ -191,6 +191,12 @@ class LitShaderOptions {
     useIridescence = false;
 
     /**
+     * If some of the diffuse light is transmitted through the surface. See
+     * {@link StandardMaterial#diffuseTransmission}.
+     */
+    useDiffuseTransmission = false;
+
+    /**
      * The value of {@link StandardMaterial#useMetalness}.
      */
     useMetalness = false;

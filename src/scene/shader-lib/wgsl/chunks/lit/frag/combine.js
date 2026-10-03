@@ -7,6 +7,9 @@ fn combineColor(albedo: vec3f, sheenSpecularity: vec3f, clearcoatSpecularity: f3
     #else
         ret = ret + (albedo * dDiffuseLight);
     #endif // LIT_OLD_AMBIENT
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        ret = ret + (litArgs_diffuseTransmission_color * dDiffuseTransmissionLight);
+    #endif // LIT_DIFFUSE_TRANSMISSION
     #ifdef LIT_SPECULAR
         ret = ret + dSpecularLight;
     #endif // LIT_SPECULAR
