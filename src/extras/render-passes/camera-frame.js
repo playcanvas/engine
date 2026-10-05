@@ -4,15 +4,26 @@ import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { SSAOTYPE_NONE } from './constants.js';
+import { GradingEffect } from './effects/grading-effect.js';
+import { VignetteEffect } from './effects/vignette-effect.js';
 import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
 
 /**
+ * @import { CameraFrameEffect } from './camera-frame-effect.js'
  * @import { AppBase } from '../../framework/app-base.js'
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LightComponent } from '../../framework/components/light/component.js'
  * @import { Texture } from '../../platform/graphics/texture.js'
  */
+
+/**
+ * The debug views the composition implements itself, which an effect's debug views must not
+ * shadow - see the DEBUG_COMPOSE handling in the compose shader chunk.
+ *
+ * @type {string[]}
+ */
+const builtinDebugViews = ['scene', 'ssao', 'bloom', 'dofcoc', 'dofblur', 'depth', 'depthmissing'];
 
 /**
  * @typedef {Object} Rendering
@@ -97,18 +108,6 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  */
 
 /**
- * @typedef {Object} Grading
- * Properties related to the color grading effect, a postprocessing technique used to adjust and the
- * visual tone of an image. This effect modifies brightness, contrast, saturation, and overall color
- * balance to achieve a specific aesthetic or mood.
- * @property {boolean} enabled - Whether grading is enabled. Defaults to false.
- * @property {number} brightness - The brightness of the grading effect, 0-3 range. Defaults to 1.
- * @property {number} contrast - The contrast of the grading effect, 0.5-1.5 range. Defaults to 1.
- * @property {number} saturation - The saturation of the grading effect, 0-2 range. Defaults to 1.
- * @property {Color} tint - The tint color of the grading effect. Defaults to white.
- */
-
-/**
  * @typedef {Object} ColorLUT
  * Properties related to the color lookup table (LUT) effect, a postprocessing technique used to
  * apply a color transformation to the image. Two LUT slots are supported, which makes it easy to
@@ -133,29 +132,6 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  * @property {number} blend - Crossfade between the two graded results, 0-1 range. 0 shows only the
  * primary LUT, 1 shows only the secondary LUT, intermediate values produce a linear-space mix.
  * Only used when `texture2` is set. Defaults to 0.
- */
-
-/**
- * @typedef {Object} Vignette
- * Properties related to the vignette effect, a postprocessing technique that darkens the image
- * edges, creating a gradual falloff in brightness from the center outward. The effect can be also
- * reversed, making the center of the image darker than the edges, by specifying the outer distance
- * smaller than the inner distance.
- * @property {number} intensity - The intensity of the vignette effect, 0-1 range. Defaults to 0,
- * making it disabled.
- * @property {number} inner - The inner distance of the vignette effect measured from the center of
- * the screen, 0-3 range. This is where the vignette effect starts. Value larger than 1 represents
- * the value off screen, which allows more control. Defaults to 0.5, representing half the distance
- * from center.
- * @property {number} outer - The outer distance of the vignette effect measured from the center of
- * the screen, 0-3 range. This is where the vignette reaches full intensity. Value larger than 1
- * represents the value off screen, which allows more control. Defaults to 1, representing the full
- * screen.
- * @property {number} curvature - The curvature of the vignette effect, 0.01-10 range. The vignette
- * is rendered using a rectangle with rounded corners, and this parameter controls the curvature of
- * the corners. Value of 1 represents a circle. Smaller values make the corners more square, while
- * larger values make them more rounded. Defaults to 0.5.
- * @property {Color} color - The color of the vignette effect. Defaults to black.
  */
 
 /**
@@ -346,17 +322,12 @@ class CameraFrame {
     };
 
     /**
-     * Grading settings.
+     * The color grading effect. A {@link CameraFrameEffect} registered with this camera frame -
+     * its parameters are assigned directly.
      *
-     * @type {Grading}
+     * @type {GradingEffect}
      */
-    grading = {
-        enabled: false,
-        brightness: 1,
-        contrast: 1,
-        saturation: 1,
-        tint: new Color(1, 1, 1, 1)
-    };
+    grading;
 
     /**
      * Color LUT settings.
@@ -372,17 +343,30 @@ class CameraFrame {
     };
 
     /**
-     * Vignette settings.
+     * The vignette effect. A {@link CameraFrameEffect} registered with this camera frame - its
+     * parameters are assigned directly.
      *
-     * @type {Vignette}
+     * @type {VignetteEffect}
      */
-    vignette = {
-        intensity: 0,
-        inner: 0.5,
-        outer: 1,
-        curvature: 0.5,
-        color: new Color(0, 0, 0)
-    };
+    vignette;
+
+    /**
+     * The effects registered with this camera frame, in the order they are applied within their
+     * compose slot. The built-in effects are registered by the constructor; add your own with
+     * {@link CameraFrame#addEffect}.
+     *
+     * @type {CameraFrameEffect[]}
+     * @ignore
+     */
+    effects = [];
+
+    /**
+     * The built-in effects this camera frame constructed, and so destroys.
+     *
+     * @type {CameraFrameEffect[]}
+     * @private
+     */
+    _builtInEffects = [];
 
     /**
      * Taa settings.
@@ -488,6 +472,14 @@ class CameraFrame {
         this.cameraComponent = cameraComponent;
         Debug.assert(cameraComponent, 'CameraFrame: cameraComponent must be defined');
 
+        // the built-in effects, registered in the order they are applied within their slot. The
+        // camera frame constructs them and so destroys them, unlike the effects added to it.
+        const device = app.graphicsDevice;
+        this.grading = new GradingEffect(device);
+        this.vignette = new VignetteEffect(device);
+        this._builtInEffects = [this.grading, this.vignette];
+        this._builtInEffects.forEach(effect => this.addEffect(effect));
+
         this.updateOptions();
         this.enable();
 
@@ -503,7 +495,134 @@ class CameraFrame {
     destroy() {
         this.disable();
 
+        // the built-in effects are ours to destroy; effects added by the user are theirs, and are
+        // only detached
+        this._builtInEffects.forEach(effect => effect.destroy());
+        this.effects.forEach(effect => effect._detach());
+        this.effects.length = 0;
+
         this.cameraLayersChanged.off();
+    }
+
+    /**
+     * The graphics device.
+     *
+     * @type {GraphicsDevice}
+     * @ignore
+     */
+    get device() {
+        return this.app.graphicsDevice;
+    }
+
+    /**
+     * The format of the render target the scene is rendered to, or undefined before the frame
+     * passes exist. {@link PIXELFORMAT_RGBA8} when no HDR format is available.
+     *
+     * @type {number|undefined}
+     * @ignore
+     */
+    get hdrFormat() {
+        return this.renderPassCamera?.hdrFormat;
+    }
+
+    /**
+     * Registers an effect with this camera frame. The effect is applied at the compose slot it
+     * declares, after any effect already registered to that slot.
+     *
+     * @param {CameraFrameEffect} effect - The effect to add.
+     * @ignore
+     */
+    addEffect(effect) {
+        this.insertEffect(effect, this.effects.length);
+    }
+
+    /**
+     * Registers an effect with this camera frame, applying it before another registered effect
+     * when both share a compose slot.
+     *
+     * @param {CameraFrameEffect} effect - The effect to add.
+     * @param {CameraFrameEffect|string} before - The effect, or the id of the effect, to apply
+     * this one before.
+     * @ignore
+     */
+    insertEffectBefore(effect, before) {
+        const index = this.effects.findIndex(other => other === before || other.id === before);
+        Debug.assert(index >= 0, `CameraFrame#insertEffectBefore: no effect '${before?.id ?? before}' is registered.`);
+        this.insertEffect(effect, index >= 0 ? index : this.effects.length);
+    }
+
+    /**
+     * Registers an effect at the given position of the effect list.
+     *
+     * @param {CameraFrameEffect} effect - The effect to add.
+     * @param {number} index - The position.
+     * @private
+     */
+    insertEffect(effect, index) {
+        Debug.assert(effect, 'CameraFrame#addEffect: effect must be defined');
+        Debug.assert(effect.device === this.device, `CameraFrame#addEffect: effect '${effect?.id}' was created on a different graphics device.`);
+        Debug.assert(!this.effects.includes(effect), `CameraFrame#addEffect: effect '${effect.id}' is already registered.`);
+
+        // effects and their debug views are looked up by name, so both must be unique among the
+        // registered effects. The common way to trip this is adding a subclass of a built-in
+        // effect alongside the built-in without giving the subclass its own id.
+        Debug.call(() => {
+            const sameId = this.effects.find(other => other.id === effect.id);
+            Debug.assert(!sameId, `CameraFrame#addEffect: an effect with id '${effect.id}' is already registered. ` +
+                'When adding a subclass of a built-in effect alongside it, give the subclass its own static id.');
+
+            for (const view of effect.debugViews) {
+                Debug.assert(!builtinDebugViews.includes(view),
+                    `CameraFrame#addEffect: debug view '${view}' of effect '${effect.id}' shadows a built-in debug view.`);
+
+                const owner = this.effects.find(other => other.debugViews.includes(view));
+                Debug.assert(!owner, `CameraFrame#addEffect: debug view '${view}' of effect '${effect.id}' ` +
+                    `is already provided by effect '${owner?.id}'.`);
+            }
+        });
+
+        this.effects.splice(index, 0, effect);
+        effect._attach(this);
+        this._syncEffects();
+    }
+
+    /**
+     * Removes an effect from this camera frame.
+     *
+     * @param {CameraFrameEffect} effect - The effect to remove.
+     * @ignore
+     */
+    removeEffect(effect) {
+        const index = this.effects.indexOf(effect);
+        if (index >= 0) {
+            this.effects.splice(index, 1);
+            effect._detach();
+            this._syncEffects();
+        }
+    }
+
+    /**
+     * Returns the registered effect with the given id, or undefined when no effect of that type is
+     * registered.
+     *
+     * @param {string} id - The id the effect was constructed with, for example `'vignette'`.
+     * @returns {CameraFrameEffect|undefined} The effect.
+     * @ignore
+     */
+    getEffect(id) {
+        return this.effects.find(effect => effect.id === id);
+    }
+
+    /**
+     * Republishes the effects to the composition, which assembles its shader from them.
+     *
+     * @private
+     */
+    _syncEffects() {
+        const composePass = this.renderPassCamera?.composePass;
+        if (composePass) {
+            composePass.effects = this.effects;
+        }
     }
 
     enable() {
@@ -639,7 +758,7 @@ class CameraFrame {
         if (!this._enabled) return;
 
         const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, bloom, grading, colorEnhance, vignette, fringing, taa, ssao } = this;
+        const { options, renderPassCamera, rendering, bloom, colorEnhance, fringing, taa, ssao } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
@@ -697,28 +816,11 @@ class CameraFrame {
             ssaoPass.randomize = ssao.randomize;
         }
 
-        composePass.gradingEnabled = grading.enabled;
-        if (grading.enabled) {
-            composePass.gradingSaturation = grading.saturation;
-            composePass.gradingBrightness = grading.brightness;
-            composePass.gradingContrast = grading.contrast;
-            composePass.gradingTint = grading.tint;
-        }
-
         composePass.colorLUT = this.colorLUT.texture;
         composePass.colorLUTIntensity = this.colorLUT.intensity;
         composePass.colorLUT2 = this.colorLUT.texture2;
         composePass.colorLUT2Intensity = this.colorLUT.intensity2;
         composePass.colorLUTBlend = this.colorLUT.blend;
-
-        composePass.vignetteEnabled = vignette.intensity > 0;
-        if (composePass.vignetteEnabled) {
-            composePass.vignetteInner = vignette.inner;
-            composePass.vignetteOuter = vignette.outer;
-            composePass.vignetteCurvature = vignette.curvature;
-            composePass.vignetteIntensity = vignette.intensity;
-            composePass.vignetteColor.copy(vignette.color);
-        }
 
         composePass.fringingEnabled = fringing.intensity > 0;
         if (composePass.fringingEnabled) {
@@ -740,7 +842,10 @@ class CameraFrame {
         // debug rendering
         composePass.debug = this.debug;
         if (composePass.debug === 'ssao' && options.ssaoType === SSAOTYPE_NONE) composePass.debug = null;
-        if (composePass.debug === 'vignette' && !composePass.vignetteEnabled) composePass.debug = null;
+
+        // a debug view owned by an effect is only available while that effect is active
+        const debugOwner = this.effects.find(effect => effect.debugViews.includes(composePass.debug));
+        if (debugOwner && !debugOwner.active) composePass.debug = null;
     }
 }
 

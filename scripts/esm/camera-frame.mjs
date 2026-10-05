@@ -776,6 +776,14 @@ class CameraFrame extends Script {
      */
     volumetricFog = new VolumetricFog();
 
+    /**
+     * The engine {@link EngineCameraFrame | CameraFrame} this script drives. Created in
+     * `initialize`, so it is undefined until the script is first enabled. This is the handle other
+     * scripts on the entity use to register their own effects with the frame - look the script up by
+     * type, `entity.script.get(CameraFrame)`, and call `addEffect` on this.
+     *
+     * @type {EngineCameraFrame}
+     */
     engineCameraFrame;
 
     initialize() {
