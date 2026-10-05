@@ -498,7 +498,7 @@ class ForwardRenderer extends Renderer {
             const sortTime = now();
             // #endif
 
-            layer.sortVisible(camera, transparent);
+            layer.sortVisible(camera, transparent, this.meshInstanceSorter);
 
             // #if _PROFILER
             this._sortTime += now() - sortTime;

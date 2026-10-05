@@ -34,6 +34,7 @@ import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 import { Culler } from './culler.js';
+import { MeshInstanceSorter } from './mesh-instance-sorter.js';
 import { Camera } from '../camera.js';
 
 /**
@@ -168,6 +169,15 @@ class Renderer {
      * @ignore
      */
     culler;
+
+    /**
+     * Sorts the mesh instances of the forward and the shadow passes. A single instance shares its
+     * buffers between all of them.
+     *
+     * @type {MeshInstanceSorter}
+     * @ignore
+     */
+    meshInstanceSorter = new MeshInstanceSorter();
 
     /**
      * @type {WorldClustersAllocator}
@@ -433,6 +443,8 @@ class Renderer {
 
         this._viewTextureBindGroups.forEach(bindGroup => bindGroup.destroy());
         this._viewTextureBindGroups.length = 0;
+
+        this.meshInstanceSorter = null;
     }
 
     /**

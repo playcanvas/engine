@@ -610,14 +610,6 @@ class MeshInstance {
     _updateAabbFunc = null;
 
     /**
-     * The internal sorting key used by the shadow renderer: the id of the shadow shader the mesh
-     * instance was last rendered with, scaled above the 22 bits of the id of its material.
-     *
-     * @ignore
-     */
-    _sortKeyShadow = 0;
-
-    /**
      * The internal sorting key used by the forward renderer, in case SORTMODE_MATERIALMESH sorting
      * is used.
      *

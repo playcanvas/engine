@@ -215,8 +215,8 @@ class ShadowRenderer {
             this._cullShadowCastersInternal(casterLists[i], visible, camera);
         }
 
-        // this sorts the shadow casters by the shader and the material
-        visible.sort(this.sortCompareShader);
+        // group the shadow casters by material and mesh, as the forward renderer does
+        this.renderer.meshInstanceSorter.sortMaterialMesh(visible);
 
         // event after culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
@@ -452,9 +452,10 @@ class ShadowRenderer {
             }
         }
 
-        // this sorts the shadow casters by the shader and the material
+        // group the shadow casters by material and mesh, as the forward renderer does
+        const sorter = this.renderer.meshInstanceSorter;
         for (let face = 0; face < 6; face++) {
-            _faceLists[face].sort(this.sortCompareShader);
+            sorter.sortMaterialMesh(_faceLists[face]);
             _faceLists[face] = null;
             _faceCameras[face] = null;
         }
@@ -462,26 +463,6 @@ class ShadowRenderer {
         // event after culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
         this.renderer.scene?.fire(EVENT_POSTCULL, null);
-    }
-
-    /**
-     * Orders shadow casters by their shader, then their material, then their mesh, so that the
-     * casters sharing a shader, a material and the vertex buffers are submitted together. See
-     * {@link MeshInstance#_sortKeyShadow}.
-     *
-     * @param {MeshInstance} drawCallA - The first mesh instance.
-     * @param {MeshInstance} drawCallB - The second mesh instance.
-     * @returns {number} The sort order.
-     */
-    sortCompareShader(drawCallA, drawCallB) {
-        const keyA = drawCallA._sortKeyShadow;
-        const keyB = drawCallB._sortKeyShadow;
-
-        if (keyA === keyB) {
-            return drawCallB.mesh.id - drawCallA.mesh.id;
-        }
-
-        return keyB - keyA;
     }
 
     setupRenderState(device, light) {
@@ -644,10 +625,6 @@ class ShadowRenderer {
                 DebugGraphics.popGpuMarker(device);
                 continue;
             }
-
-            // sort shadow casters by shader, and then by material - the material id takes the low
-            // 22 bits, as in the forward sort key, and the key stays an exact integer
-            meshInstance._sortKeyShadow = shadowShader.id * 0x400000 + (material.id & 0x3fffff);
 
             device.setShader(shadowShader);
             renderer.setupViewBindGroup(shadowShader);
