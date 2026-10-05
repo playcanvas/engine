@@ -322,8 +322,8 @@ class CameraFrame {
     };
 
     /**
-     * The color grading effect. A {@link CameraFrameEffect} registered with this camera frame -
-     * its parameters are assigned directly.
+     * The color grading effect, registered with this camera frame. Its parameters are assigned
+     * directly.
      *
      * @type {GradingEffect}
      */
@@ -343,8 +343,8 @@ class CameraFrame {
     };
 
     /**
-     * The vignette effect. A {@link CameraFrameEffect} registered with this camera frame - its
-     * parameters are assigned directly.
+     * The vignette effect, registered with this camera frame. Its parameters are assigned
+     * directly.
      *
      * @type {VignetteEffect}
      */
