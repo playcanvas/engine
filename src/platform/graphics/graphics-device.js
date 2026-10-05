@@ -1645,7 +1645,8 @@ class GraphicsDevice extends EventHandler {
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
      * specified width and height values will be multiplied by the value of {@link maxPixelRatio}
-     * to give the final resultant width and height for the canvas.
+     * to give the final resultant width and height for the canvas. A resultant width or height of
+     * zero is ignored and the current resolution is kept.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -1655,6 +1656,15 @@ class GraphicsDevice extends EventHandler {
         const pixelRatio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
         const w = Math.floor(width * pixelRatio);
         const h = Math.floor(height * pixelRatio);
+
+        // a hidden or collapsed canvas reports a zero client size, which browsers can also do
+        // briefly during a layout change. Nothing can be rendered at that size: WebGPU cannot
+        // create a zero-size swapchain texture or render target, and WebGL framebuffers become
+        // incomplete. Keep the current resolution until a real size arrives.
+        if (w === 0 || h === 0) {
+            return;
+        }
+
         if (w !== this.canvas.width || h !== this.canvas.height) {
             this.setResolution(w, h);
         }
