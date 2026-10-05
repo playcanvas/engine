@@ -2,7 +2,8 @@
 //
 // A level select screen whose art comes in four shapes. The cards **Cover** their squares, cropped by
 // a mask, and each card's pivot picks the part that stays in view. The preview shows the whole
-// picture with **Contain**, and the map shows part of a texture with **rect**. Tap a card.
+// picture with **Contain**. The map shows part of the world map with **rect**, the part around the
+// level, and glides to the next one. Tap a card.
 
 import {
     AppBase,
@@ -42,10 +43,10 @@ window.focus();
 // The levels: the name, the art, the pivot the art is placed at when it covers a card, and where
 // the level is on the world map, in fractions of the map from its bottom-left corner
 const LEVELS = [
-    { name: 'Sunken Crypt', url: './assets/ui/level-crypt.png', pivot: [0.5, 0], map: [0.71, 0.31] },
-    { name: 'Emerald Forest', url: './assets/ui/level-forest.png', pivot: [0.8, 0.5], map: [0.27, 0.37] },
-    { name: 'Dune Sea', url: './assets/ui/level-desert.png', pivot: [0.7, 0.5], map: [0.7, 0.68] },
-    { name: 'Frost Peak', url: './assets/ui/level-peak.png', pivot: [0.5, 0.5], map: [0.34, 0.68] }
+    { name: 'Sunken Crypt', url: './assets/ui/level-crypt.png', pivot: [0.5, 0], map: new Vec2(0.71, 0.3) },
+    { name: 'Emerald Forest', url: './assets/ui/level-forest.png', pivot: [0.8, 0.5], map: new Vec2(0.27, 0.37) },
+    { name: 'Dune Sea', url: './assets/ui/level-desert.png', pivot: [0.7, 0.5], map: new Vec2(0.7, 0.7) },
+    { name: 'Frost Peak', url: './assets/ui/level-peak.png', pivot: [0.5, 0.5], map: new Vec2(0.3, 0.7) }
 ];
 
 const assets = {
@@ -115,8 +116,8 @@ const outline = new Sprite(device, {
     pixelsPerUnit: 2,
     renderMode: SPRITE_RENDERMODE_SLICED
 });
-const circle = new Sprite(device, { atlas, frameKeys: ['circle'] });
-app.on('destroy', () => [panel, outline, circle].forEach((sprite) => sprite.destroy()));
+const pin = new Sprite(device, { atlas, frameKeys: ['icon-pin'] });
+app.on('destroy', () => [panel, outline, pin].forEach((sprite) => sprite.destroy()));
 
 /**
  * Create an element, centered on its parent unless the properties say otherwise.
@@ -144,7 +145,7 @@ const fill = { anchor: [0, 0, 1, 1], margin: [0, 0, 0, 0] };
 const title = createElement(screen, 'title', { type: ELEMENTTYPE_TEXT, text: 'Choose a level', fontSize: 40 });
 
 // The preview: the whole of the level's art, contained in a 16:9 frame, whatever its shape
-const preview = createElement(screen, 'preview', { sprite: panel, color: PANEL, width: 560, height: 315 });
+const preview = createElement(screen, 'preview', { sprite: panel, color: PANEL });
 const picture = createElement(preview, 'picture', { ...fill, margin: [12, 12, 12, 12], fitMode: FITMODE_CONTAIN });
 const caption = createElement(preview, 'caption', {
     type: ELEMENTTYPE_TEXT,
@@ -154,28 +155,20 @@ const caption = createElement(preview, 'caption', {
 });
 caption.setLocalPosition(4, -16, 0);
 
-// The map: a round mask over the world map, which shows the part of it around the level. The map
-// is 4:3, so a part 0.3 of its width and 0.4 of its height is square
-const inset = createElement(preview, 'inset', {
-    sprite: circle,
-    width: 150,
-    height: 150,
-    anchor: [1, 0, 1, 0],
-    mask: true
+// The map: a square of the world map, with a pin in the middle that marks the level. The pin's
+// pivot is its tip, near the bottom of the icon
+const mapPanel = createElement(screen, 'map', { sprite: panel, color: PANEL, width: 270, height: 270 });
+const worldMap = createElement(mapPanel, 'world map', {
+    ...fill,
+    margin: [12, 12, 12, 12],
+    texture: assets.map.resource
 });
-const map = createElement(inset, 'map', { ...fill, texture: assets.map.resource });
-createElement(inset, 'you', { sprite: circle, color: ORANGE, width: 18, height: 18 });
+createElement(worldMap, 'pin', { sprite: pin, color: ORANGE, width: 44, height: 44, pivot: [0.5, 0.08] });
 
 // The cards: each level's art covers a square, and the card, a mask, crops what overflows. The art
 // is placed at its pivot: the crypt keeps its door in view, and the dunes their pyramid
 const cards = LEVELS.map((level, i) => {
-    const card = createElement(screen, level.name, {
-        sprite: panel,
-        width: 170,
-        height: 170,
-        mask: true,
-        useInput: true
-    });
+    const card = createElement(screen, level.name, { sprite: panel, mask: true, useInput: true });
     const cover = createElement(card, 'art', {
         ...fill,
         texture: art[i].resource,
@@ -193,34 +186,50 @@ const cards = LEVELS.map((level, i) => {
 });
 
 // The ring around the chosen card is drawn over the cards, so it is not cropped by their masks
-const ring = createElement(screen, 'ring', { sprite: outline, color: ORANGE, width: 186, height: 186 });
+const ring = createElement(screen, 'ring', { sprite: outline, color: ORANGE });
 
-// Choosing a level shows its art and name, and moves the map to the level and the ring to its card
+// Choosing a level shows its art and name, and moves the ring to its card
 let chosen = 0;
 const choose = (/** @type {number} */ i) => {
     chosen = i;
-    const level = LEVELS[i];
     picture.element.texture = art[i].resource;
-    caption.element.text = level.name;
-    map.element.rect = new Vec4(level.map[0] - 0.15, level.map[1] - 0.2, 0.3, 0.4);
+    caption.element.text = LEVELS[i].name;
     ring.setLocalPosition(cards[i].getLocalPosition());
 };
 cards.forEach((card, i) => card.button.on('click', () => choose(i)));
-// The cards in a row under the preview on landscape canvases, and in a square on portrait ones
+
+// The map shows the part of the world map around the chosen level: 0.375 of its width and 0.5 of
+// its height, which is square as the map is 4:3. Each frame the part moves some of the way to the
+// level, so the map glides from one to the next
+const view = LEVELS[chosen].map.clone();
+const rect = new Vec4(0, 0, 0.375, 0.5);
+app.on('update', (dt) => {
+    view.lerp(view, LEVELS[chosen].map, Math.min(1, dt * 8));
+    rect.x = view.x - rect.z / 2;
+    rect.y = view.y - rect.w / 2;
+    worldMap.element.rect = rect;
+});
+
+// The preview and the map side by side over a row of cards on landscape canvases, and one under
+// the other on portrait ones, over smaller cards
 const layout = () => {
     const portrait = device.height > device.width;
     const reference = portrait ? new Vec2(540, 960) : new Vec2(1280, 720);
     screen.screen.referenceResolution = reference;
     screen.screen.scaleBlend = device.width / reference.x > device.height / reference.y ? 1 : 0;
-    title.setLocalPosition(0, portrait ? 390 : 305, 0);
-    preview.element.width = portrait ? 500 : 560;
-    preview.element.height = portrait ? 281 : 315;
-    preview.setLocalPosition(0, portrait ? 190 : 100, 0);
-    inset.setLocalPosition(portrait ? -85 : -20, portrait ? 85 : 20, 0);
+    title.setLocalPosition(0, portrait ? 396 : 300, 0);
+    preview.element.width = portrait ? 500 : 480;
+    preview.element.height = portrait ? 281 : 270;
+    preview.setLocalPosition(portrait ? 0 : -145, portrait ? 210 : 115, 0);
+    mapPanel.setLocalPosition(portrait ? 0 : 250, portrait ? -136 : 115, 0);
+    const size = portrait ? 113 : 170;
     cards.forEach((card, i) => {
-        const x = portrait ? ((i % 2) - 0.5) * 200 : (i - 1.5) * 200;
-        card.setLocalPosition(x, portrait ? -130 - Math.floor(i / 2) * 200 : -235, 0);
+        card.element.width = size;
+        card.element.height = size;
+        card.setLocalPosition((i - 1.5) * (portrait ? 129 : 200), portrait ? -360 : -230, 0);
     });
+    ring.element.width = size + 16;
+    ring.element.height = size + 16;
     choose(chosen);
 };
 device.on('resizecanvas', layout);
