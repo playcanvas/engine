@@ -15,6 +15,7 @@ import { Material } from './materials/material.js';
  * @import { MeshInstance } from './mesh-instance.js'
  * @import { Vec3 } from '../core/math/vec3.js'
  * @import { GSplatPlacement } from './gsplat-unified/gsplat-placement.js'
+ * @import { MeshInstanceSorter } from './renderer/mesh-instance-sorter.js'
  */
 
 // Layers
@@ -27,15 +28,6 @@ function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
 }
 
-function sortMaterialMesh(drawCallA, drawCallB) {
-    const keyA = drawCallA._sortKeyForward;
-    const keyB = drawCallB._sortKeyForward;
-    if (keyA === keyB) {
-        return drawCallB.mesh.id - drawCallA.mesh.id;
-    }
-    return keyB - keyA;
-}
-
 function sortBackToFront(drawCallA, drawCallB) {
     return drawCallB._sortKeyDynamic - drawCallA._sortKeyDynamic;
 }
@@ -44,7 +36,9 @@ function sortFrontToBack(drawCallA, drawCallB) {
     return drawCallA._sortKeyDynamic - drawCallB._sortKeyDynamic;
 }
 
-const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
+// the comparators of the sort modes, SORTMODE_MATERIALMESH sorting with the radix sort of the
+// MeshInstanceSorter instead
+const sortCallbacks = [null, sortManual, null, sortBackToFront, sortFrontToBack];
 
 class CulledInstances {
     /**
@@ -1014,9 +1008,11 @@ class Layer {
     /**
      * @param {Camera} camera - The camera to sort the visible mesh instances for.
      * @param {boolean} transparent - True if transparent sorting should be used.
+     * @param {MeshInstanceSorter} sorter - The sorter of the renderer, used by
+     * SORTMODE_MATERIALMESH.
      * @ignore
      */
-    sortVisible(camera, transparent) {
+    sortVisible(camera, transparent, sorter) {
 
         const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
         if (sortMode === SORTMODE_NONE) {
@@ -1044,7 +1040,11 @@ class Layer {
                 this._calculateSortDistances(instances, sortPos, sortDir);
             }
 
-            instances.sort(sortCallbacks[sortMode]);
+            if (sortMode === SORTMODE_MATERIALMESH) {
+                sorter.sortMaterialMesh(instances);
+            } else {
+                instances.sort(sortCallbacks[sortMode]);
+            }
         }
     }
 }
