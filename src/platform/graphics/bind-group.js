@@ -2,6 +2,8 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_BINDGROUP_ALLOC } from '../../core/constants.js';
 import { UNIFORM_BUFFER_DEFAULT_SLOT_NAME } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
+import { SceneColorMapHandle } from './scene-color-map-handle.js';
+import { SceneDepthMapHandle } from './scene-depth-map-handle.js';
 import { TextureView } from './texture-view.js';
 
 /**
@@ -324,9 +326,9 @@ class BindGroup {
 
         Debug.call(() => {
             const name = textureFormat.name;
-            if (name === 'uSceneDepthMap') {
+            if (name === SceneDepthMapHandle.uniformName) {
                 Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
-            } else if (name === 'uSceneColorMap') {
+            } else if (name === SceneColorMapHandle.uniformName) {
                 Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
             } else {
                 Debug.errorOnce(`Texture ${name} is required for rendering but was not set. Rendering [${DebugGraphics.toString()}]`);

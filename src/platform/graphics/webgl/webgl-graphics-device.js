@@ -38,6 +38,8 @@ import { WebglShader } from './webgl-shader.js';
 import { WebglUniformBuffer } from './webgl-uniform-buffer.js';
 import { WebglBindGroup } from './webgl-bind-group.js';
 import { WebglBindGroupFormat } from './webgl-bind-group-format.js';
+import { SceneColorMapHandle } from '../scene-color-map-handle.js';
+import { SceneDepthMapHandle } from '../scene-depth-map-handle.js';
 import { WebglDynamicBuffers } from './webgl-dynamic-buffers.js';
 import { WebglDrawCommands } from './webgl-draw-commands.js';
 import { WebglTexture } from './webgl-texture.js';
@@ -2183,11 +2185,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         Debug.assert(samplerName !== 'texture_grabPass', 'Engine provided texture with sampler name \'texture_grabPass\' is not longer supported, use \'uSceneColorMap\' instead');
                         Debug.assert(samplerName !== 'uDepthMap', 'Engine provided texture with sampler name \'uDepthMap\' is not longer supported, use \'uSceneDepthMap\' instead');
 
-                        if (samplerName === 'uSceneDepthMap') {
+                        if (samplerName === SceneDepthMapHandle.uniformName) {
                             Debug.errorOnce(`A uSceneDepthMap texture is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component / CameraFrame.rendering.sceneDepthMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = this.builtInTextures.white;
                         }
-                        if (samplerName === 'uSceneColorMap') {
+                        if (samplerName === SceneColorMapHandle.uniformName) {
                             Debug.errorOnce(`A uSceneColorMap texture is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component / CameraFrame.rendering.sceneColorMap to enable it. Rendering [${DebugGraphics.toString()}]`);
                             samplerValue = this.builtInTextures.pink;
                         }
