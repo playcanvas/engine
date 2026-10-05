@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 
-import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP } from '../../../src/platform/graphics/constants.js';
+import { DEPTHRESOLVE_MAX, DEPTHRESOLVE_MIN, DEPTHRESOLVE_SAMPLE0, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA8, RENDERTARGET_ORIGIN_BOTTOM, RENDERTARGET_ORIGIN_NATIVE, RENDERTARGET_ORIGIN_TOP, pixelFormatInfo } from '../../../src/platform/graphics/constants.js';
+import { RenderPass } from '../../../src/platform/graphics/render-pass.js';
 import { RenderTarget } from '../../../src/platform/graphics/render-target.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { createGraphicsDevice } from '../../device.mjs';
@@ -438,6 +439,29 @@ describe('RenderTarget', function () {
             expect(resolve.width).to.equal(8);
             rt.destroyTextureBuffers();
             rt.destroy();
+        });
+    });
+
+    describe('#constructor: cubemap depth buffer', function () {
+
+        // each face is a separate render target, which WebGPU must attach as a single layer view
+        [PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL].forEach((format) => {
+            it(`clears each face of a ${pixelFormatInfo.get(format).name} cubemap`, function () {
+                const depthBuffer = new Texture(device, { width: 4, height: 4, format, cubemap: true, mipmaps: false });
+                device.frameStart();
+                for (let face = 0; face < 6; face++) {
+                    const rt = new RenderTarget({ name: `depth-face-${face}`, depthBuffer, face });
+                    expect(rt.face).to.equal(face);
+                    const pass = new RenderPass(device);
+                    pass.init(rt);
+                    pass.setClearDepth(face / 6);
+                    pass.render();
+                    pass.destroy();
+                    rt.destroy();
+                }
+                device.frameEnd();
+                depthBuffer.destroy();
+            });
         });
     });
 

@@ -100,3 +100,62 @@ describe('WebgpuRenderTarget#initColor', function () {
         expect(colorAttachment.resolveTarget).to.equal(msView);
     });
 });
+
+describe('WebgpuRenderTarget#initDepthStencil', function () {
+
+    const createDepthMocks = ({ cubemap }) => {
+        const views = [];
+        const gpuTexture = {};
+        const depthBuffer = {
+            cubemap,
+            samples: 1,
+            impl: {
+                format: 'depth24plus-stencil8',
+                gpuTexture,
+                createView(desc) {
+                    views.push(desc);
+                    return { desc };
+                }
+            }
+        };
+        const renderTarget = {
+            samples: 1,
+            width: 4,
+            height: 4,
+            depth: true,
+            depthBuffer,
+            face: 3,
+            name: 'depth-rt'
+        };
+        return { views, gpuTexture, renderTarget };
+    };
+
+    it('attaches a single face of a cubemap depth buffer', function () {
+        const { views, gpuTexture, renderTarget } = createDepthMocks({ cubemap: true });
+        const impl = new WebgpuRenderTarget(renderTarget);
+        impl.initDepthStencil({}, {}, renderTarget);
+
+        expect(views).to.deep.equal([{
+            dimension: '2d',
+            baseArrayLayer: 3,
+            arrayLayerCount: 1,
+            mipLevelCount: 1,
+            baseMipLevel: 0
+        }]);
+        expect(impl.renderPassDescriptor.depthStencilAttachment.view.desc).to.equal(views[0]);
+        expect(impl.depthAttachment.depthTexture).to.equal(gpuTexture);
+        expect(impl.depthAttachment.hasStencil).to.equal(true);
+    });
+
+    it('attaches mip level 0 of a 2d depth buffer', function () {
+        const { views, renderTarget } = createDepthMocks({ cubemap: false });
+        const impl = new WebgpuRenderTarget(renderTarget);
+        impl.initDepthStencil({}, {}, renderTarget);
+
+        expect(views).to.deep.equal([{
+            mipLevelCount: 1,
+            baseMipLevel: 0
+        }]);
+        expect(impl.renderPassDescriptor.depthStencilAttachment.view.desc).to.equal(views[0]);
+    });
+});
