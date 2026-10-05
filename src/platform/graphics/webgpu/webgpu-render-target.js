@@ -434,10 +434,27 @@ class WebgpuRenderTarget {
                 } else {
 
                     // use provided depth buffer
-                    const depthTexture = depthBuffer.impl.gpuTexture;
-                    this.depthAttachment.depthTexture = depthTexture;
+                    this.depthAttachment.depthTexture = depthBuffer.impl.gpuTexture;
 
-                    renderingView = depthTexture.createView();
+                    // render to mip level 0, as a render target with a depth buffer does not
+                    // support rendering to a mip level
+                    const mipLevelCount = 1;
+
+                    // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
+                    if (depthBuffer.cubemap) {
+                        renderingView = depthBuffer.impl.createView({
+                            dimension: '2d',
+                            baseArrayLayer: renderTarget.face,
+                            arrayLayerCount: 1,
+                            mipLevelCount,
+                            baseMipLevel: 0
+                        });
+                    } else {
+                        renderingView = depthBuffer.impl.createView({
+                            mipLevelCount,
+                            baseMipLevel: 0
+                        });
+                    }
                     DebugHelper.setLabel(renderingView, `${renderTarget.name}.depthView`);
                 }
             }

@@ -765,8 +765,11 @@ class FramePassCameraFrame extends FramePass {
         // grab pass allowing us to copy the render scene into a texture and use for refraction
         // the source for the copy is the texture we render the scene to
         if (options.sceneColorMap) {
-            this.colorGrabPass = new FramePassColorGrab(device);
+            this.colorGrabPass = new FramePassColorGrab(device, this.cameraComponent.camera);
             this.colorGrabPass.source = this.rt;
+
+            // the scene passes render the color linear, see setupScenePassSettings
+            this.colorGrabPass.gammaCorrection = GAMMA_NONE;
 
             // if grab pass is used, render the layers after it (otherwise they were already rendered)
             this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);

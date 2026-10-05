@@ -206,7 +206,7 @@ const composeMaterial = new ShaderMaterial({
 
         var msColor: texture_multisampled_2d<f32>;
         var msDepth: texture_depth_multisampled_2d;
-        var resolvedDepth: texture_2d<f32>;
+        var resolvedDepth: texture_2d<uff>;
         uniform uSplit: f32;
         uniform uPixelScale: f32;
         uniform uDensity: f32;

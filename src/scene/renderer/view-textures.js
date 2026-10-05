@@ -1,3 +1,6 @@
+import { SceneColorMapHandle } from '../../platform/graphics/scene-color-map-handle.js';
+import { SceneDepthMapHandle } from '../../platform/graphics/scene-depth-map-handle.js';
+
 /**
  * @import { UniformBufferFormat } from '../../platform/graphics/uniform-buffer-format.js'
  */
@@ -22,7 +25,7 @@ const viewTextureNames = [
     'blueNoiseTex32',
 
     // scene textures
-    'uSceneDepthMap', 'uSceneColorMap',
+    SceneDepthMapHandle.uniformName, SceneColorMapHandle.uniformName,
 
     // ambient occlusion applied in lighting
     'ssaoTexture'
