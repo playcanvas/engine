@@ -229,7 +229,6 @@ class MiniStats {
             dragging = true;
         });
 
-        this.device.on('resizecanvas', this.updateDiv, this);
         this.device.on('losecontext', this.loseContext, this);
         app.on('frameupdate', this.update, this);
         app.on('prerender', this.render2d.frameUpdate, this.render2d);
@@ -249,7 +248,6 @@ class MiniStats {
     destroy() {
         if (this._destroyed) return;
         this._destroyed = true;
-        this.device.off('resizecanvas', this.updateDiv, this);
         this.device.off('losecontext', this.loseContext, this);
         this.app.off('frameupdate', this.update, this);
         this.app.off('prerender', this.render2d.frameUpdate, this.render2d);
@@ -756,6 +754,10 @@ class MiniStats {
 
     /** @private */
     render() {
+        // the layout is in css pixels, which can change without a resizecanvas event, e.g. a
+        // window resize with RESOLUTION_FIXED; the device measures the canvas every frame
+        const { width, height } = this.device.clientRect;
+        if (width !== this.render2d.targetWidth || height !== this.render2d.targetHeight) this._layoutDirty = true;
         if (this._layoutDirty) this.updateDiv();
         if (this._geometryDirty) {
             this.rebuildGeometry();
