@@ -222,6 +222,16 @@ const applyColorizeLods = () => {
 applyColorizeLods();
 data.on('colorizeLods:set', applyColorizeLods);
 
+// Legend for the LOD colors, as CSS colors indexed by LOD level
+const toHex = (/** @type {number} */ v) =>
+    Math.round(v * 255)
+        .toString(16)
+        .padStart(2, '0');
+data.set(
+    'data.lodColors',
+    app.scene.gsplat.debugLodColors.map(([r, g, b]) => `#${toHex(r)}${toHex(g)}${toHex(b)}`)
+);
+
 // Renderer: CPU-sort raster on WebGL, GPU-sort raster on WebGPU
 app.scene.gsplat.renderer = device.isWebGPU ? GSPLAT_RENDERER_RASTER_GPU_SORT : GSPLAT_RENDERER_RASTER_CPU_SORT;
 
@@ -243,7 +253,21 @@ const numSplatsPerInstance = /** @type {any} */ (assets.scene.resource).numSplat
 const toM = (v) => `${(v / 1e6).toFixed(1)}M`;
 const toB = (v) => `${(v / 1e9).toFixed(1)}B`;
 
-// --- LOD tuning (temporary): seed defaults and live-apply on change ---
+// --- LOD falloff ---
+// How fast detail falls off with distance: each LOD level is half the splats of the one before, so
+// a band one multiplier further out covers multiplier^2 more ground at half the density. At the
+// default of 3 that makes every band ~4.5x the cost of the one inside it, and the budget goes to
+// the horizon; ~1.41 (sqrt 2) costs each band the same. 1.5 keeps nearby detail high while the
+// distant tiles still refine a little. The base distance is left at its default: every tile shares
+// it and the target budget rescales all LOD distances together, so only the multiplier matters.
+data.set('lodMultiplier', 1.5);
+const applyLodMultiplier = () => {
+    const multiplier = data.get('lodMultiplier');
+    gsInstances.forEach((gs) => {
+        gs.lodMultiplier = multiplier;
+    });
+};
+data.on('lodMultiplier:set', applyLodMultiplier);
 
 // Each instance's grid slot is a fixed function of its index — independent of the current
 // instance count — so changing the count never moves (and never re-streams) the tiles we
@@ -328,6 +352,7 @@ const rebuildInstances = () => {
         const gs = /** @type {any} */ (entity.gsplat);
         gs.lodRangeMin = lodRange.min;
         gs.lodRangeMax = lodRange.max;
+        gs.lodMultiplier = data.get('lodMultiplier');
         gsInstances.push(gs);
     }
     while (instanceEntities.length > N) {

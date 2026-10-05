@@ -6,6 +6,7 @@ import {
 import { ShaderMaterial } from '../materials/shader-material.js';
 import { GSplatFormat } from '../gsplat/gsplat-format.js';
 import { GSplatVaryings } from './gsplat-varyings.js';
+import { LOD_DEBUG_COLORS } from './gsplat-lod-colors.js';
 import {
     DITHER_BLUENOISE,
     GSPLATDATA_COMPACT,
@@ -301,6 +302,17 @@ class GSplatParams {
      */
     get debug() {
         return this._debug;
+    }
+
+    /**
+     * The colors {@link GSPLAT_DEBUG_LOD} tints splats with, as RGB arrays indexed by LOD level,
+     * for drawing a legend. Levels past the end share the last color.
+     *
+     * @type {number[][]}
+     * @ignore
+     */
+    get debugLodColors() {
+        return LOD_DEBUG_COLORS;
     }
 
     /**

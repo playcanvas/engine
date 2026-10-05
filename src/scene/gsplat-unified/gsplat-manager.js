@@ -15,7 +15,7 @@ import {
     GSPLAT_SHADOW,
     GSPLAT_DEBUG_AABBS
 } from '../constants.js';
-import { Color } from '../../core/math/color.js';
+import { getLodDebugColors, lodDebugColorIndex } from './gsplat-lod-colors.js';
 
 /**
  * @import { EventHandle } from '../../core/event-handle.js'
@@ -35,18 +35,6 @@ const cameraDirection = new Vec3();
 const translation = new Vec3();
 const splatAxis = new Vec3();
 const invModelMat = new Mat4();
-
-// Color instances used by debug wireframe rendering (GSPLAT_DEBUG_AABBS)
-const _lodColors = [
-    new Color(1, 0, 0),
-    new Color(0, 1, 0),
-    new Color(0, 0, 1),
-    new Color(1, 1, 0),
-    new Color(1, 0, 1),
-    new Color(0, 1, 1),
-    new Color(1, 0.5, 0),
-    new Color(0.5, 0, 1)
-];
 
 /**
  * GSplatManager manages the rendering of splats using a work buffer, where all active splats are
@@ -677,9 +665,10 @@ class GSplatManager {
                 if (this.gsplat.debug === GSPLAT_DEBUG_AABBS) {
                     const tempAabb = new BoundingBox();
                     const scene = this.scene;
+                    const lodColors = getLodDebugColors();
                     lastState.splats.forEach((splat) => {
                         tempAabb.setFromTransformedAabb(splat.aabb, splat.node.getWorldTransform());
-                        scene.immediate.drawWireAlignedBox(tempAabb.getMin(), tempAabb.getMax(), _lodColors[splat.lodIndex], true, scene.defaultDrawLayer);
+                        scene.immediate.drawWireAlignedBox(tempAabb.getMin(), tempAabb.getMax(), lodColors[lodDebugColorIndex(splat.lodIndex)], true, scene.defaultDrawLayer);
                     });
                 }
             });
