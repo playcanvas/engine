@@ -9,6 +9,7 @@ import { PIXELFORMAT_RGBA32U } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 import { PROJECTION_ORTHOGRAPHIC } from '../constants.js';
+import { lodDebugColorIndex } from './gsplat-lod-colors.js';
 
 /**
  * @import { GSplatInfo } from './gsplat-info.js'
@@ -290,8 +291,8 @@ class GSplatWorkBufferRenderPass extends RenderPass {
         // Assign material properties to scope
         workBufferRenderInfo.material.setParameters(device);
 
-        // Colorize by LOD using provided colors; use index 0 as fallback for non-LOD splats
-        const color = this.colorsByLod?.[splatInfo.lodIndex] ?? this.colorsByLod?.[0] ?? _whiteColor;
+        // Colorize by LOD using provided colors; levels past the palette share its last color
+        const color = this.colorsByLod?.[lodDebugColorIndex(splatInfo.lodIndex)] ?? _whiteColor;
         scope.resolve('uColorMultiply').setValue(color);
 
         // Decompose model matrix into scale and rotation

@@ -4,9 +4,9 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { Color } from '../../core/math/color.js';
 import { GSplatPlacement } from './gsplat-placement.js';
 import { GsplatAllocId } from './gsplat-alloc-id.js';
+import { getLodDebugColors, lodDebugColorIndex } from './gsplat-lod-colors.js';
 import { GSPLAT_DEBUG_NODE_AABBS, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
@@ -31,15 +31,6 @@ const REF_TAN_HALF_FOV = Math.tan(22.5 * math.DEG_TO_RAD);
 const LOAD_TIER_PREFETCH = 0;
 const LOAD_TIER_SWITCH = 1;
 const LOAD_TIER_VISIBLE = 2;
-
-// Color instances used by debug wireframe rendering for LOD visualization
-const _lodColors = [
-    new Color(1, 0, 0),
-    new Color(0, 1, 0),
-    new Color(0, 0, 1),
-    new Color(1, 1, 0),
-    new Color(1, 0, 1)
-];
 
 /**
  * Stores LOD state for a single octree node.
@@ -1018,10 +1009,11 @@ class GSplatOctreeInstance {
             if (scene.gsplat.debug === GSPLAT_DEBUG_NODE_AABBS) {
                 const modelMat = this.placement.node.getWorldTransform();
                 const nodes = this.octree.nodes;
+                const lodColors = getLodDebugColors();
                 for (let nodeIndex = 0; nodeIndex < nodes.length; nodeIndex++) {
                     const lodIndex = this.nodeInfos[nodeIndex].currentLod;
                     if (lodIndex >= 0) {
-                        const color = _lodColors[Math.min(lodIndex, _lodColors.length - 1)];
+                        const color = lodColors[lodDebugColorIndex(lodIndex)];
                         _tempDebugAabb.setFromTransformedAabb(nodes[nodeIndex].bounds, modelMat);
                         scene.immediate.drawWireAlignedBox(_tempDebugAabb.getMin(), _tempDebugAabb.getMax(), color, true, scene.defaultDrawLayer);
                     }

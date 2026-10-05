@@ -11,6 +11,7 @@ import { GSplatOctreeResource } from './gsplat-octree.resource.js';
 import { GSplatWorldState } from './gsplat-world-state.js';
 import { GSplatPlacementStateTracker } from './gsplat-placement-state-tracker.js';
 import { GSplatBudgetBalancer } from './gsplat-budget-balancer.js';
+import { LOD_DEBUG_COLORS } from './gsplat-lod-colors.js';
 import { GSPLAT_BUDGET_LIMIT, GSPLAT_DEBUG_LOD, GSPLAT_DEBUG_SH_UPDATE, PROJECTION_ORTHOGRAPHIC } from '../constants.js';
 
 /**
@@ -37,17 +38,6 @@ const _splatsWithSH = [];
 const _changedColorAllocIds = new Set();
 const tempNonOctreePlacements = new Set();
 const tempOctreePlacements = new Set();
-
-const _lodColorsRaw = [
-    [1, 0, 0],  // red
-    [0, 1, 0],  // green
-    [0, 0, 1],  // blue
-    [1, 1, 0],  // yellow
-    [1, 0, 1],  // magenta
-    [0, 1, 1],  // cyan
-    [1, 0.5, 0],  // orange
-    [0.5, 0, 1]   // purple
-];
 
 let _randomColorRaw = null;
 
@@ -1123,7 +1113,7 @@ class GSplatWorld {
             const r = Math.random();
             const g = Math.random();
             const b = Math.random();
-            for (let i = 0; i < _lodColorsRaw.length; i++) {
+            for (let i = 0; i < LOD_DEBUG_COLORS.length; i++) {
                 _randomColorRaw[i] ??= [0, 0, 0];
                 _randomColorRaw[i][0] = r;
                 _randomColorRaw[i][1] = g;
@@ -1131,7 +1121,7 @@ class GSplatWorld {
             }
             return _randomColorRaw;
         } else if (debug === GSPLAT_DEBUG_LOD) {
-            return _lodColorsRaw;
+            return LOD_DEBUG_COLORS;
         }
         return undefined;
     }
