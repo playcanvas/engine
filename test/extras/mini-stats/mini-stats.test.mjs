@@ -660,6 +660,10 @@ describe('MiniStats', function () {
     it('renders one overlay per frame through the application pipeline across cameras', function () {
         const renderApp = createApp();
         try {
+            const renderDevice = renderApp.graphicsDevice;
+            // an unsized canvas lays out no quads, which leaves the overlay with nothing to draw
+            stub(renderDevice.canvas, 'getBoundingClientRect').returns({ left: 0, bottom: 720, width: 1280, height: 720 });
+            renderDevice.update();
             stats = new MiniStats(renderApp);
             const left = new Entity('Left');
             left.addComponent('camera', { priority: 0 });
@@ -700,6 +704,16 @@ describe('MiniStats', function () {
             left.enabled = false;
             expect(renderFrame()).to.deep.equal([]);
             left.enabled = true;
+            expect(renderFrame()).to.deep.equal(['Left']);
+
+            // a zero-size canvas lays out no quads, so the overlay skips the empty draw
+            renderDevice.canvas.getBoundingClientRect.returns({ left: 0, bottom: 0, width: 0, height: 0 });
+            renderDevice.update();
+            expect(renderFrame()).to.deep.equal(['Left']);
+            expect(renderFrame()).to.deep.equal([]);
+            renderDevice.canvas.getBoundingClientRect.returns({ left: 0, bottom: 720, width: 1280, height: 720 });
+            renderDevice.update();
+            expect(renderFrame()).to.deep.equal([]);
             expect(renderFrame()).to.deep.equal(['Left']);
             expect(stats.drawLayer.meshInstances).to.deep.equal([meshInstance]);
         } finally {

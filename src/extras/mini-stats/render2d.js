@@ -269,9 +269,10 @@ class Render2d {
     }
 
     onPreRenderLayer(camera, layer, transparent) {
-        if (!this.rendered && layer === this.layer && transparent === this.meshInstance.transparent) {
+        if (!this.rendered && this.prim.count > 0 && layer === this.layer && transparent === this.meshInstance.transparent) {
             // Cameras already have their culled lists. The pass mask suppresses later draws
-            // without removing the overlay from its layer or changing those lists.
+            // without removing the overlay from its layer or changing those lists. No quads,
+            // e.g. a zero-size canvas, leaves it masked so no empty draw is issued.
             this.meshInstance.shaderPassMask = 0xFFFFFFFF;
             this.rendered = true;
         }
