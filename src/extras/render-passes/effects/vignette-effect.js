@@ -2,11 +2,11 @@ import { Color } from '../../../core/math/color.js';
 import glslComposeVignettePS from '../../../scene/shader-lib/glsl/chunks/render-pass/frag/compose/compose-vignette.js';
 import wgslComposeVignettePS from '../../../scene/shader-lib/wgsl/chunks/render-pass/frag/compose/compose-vignette.js';
 import { CameraFrameEffect } from '../camera-frame-effect.js';
+import { COMPOSESLOT_LDR } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
-import { COMPOSESLOT_LDR } from '../constants.js';
 
 /**
  * The vignette effect, a postprocessing technique that darkens the image edges, creating a gradual
@@ -17,7 +17,9 @@ import { COMPOSESLOT_LDR } from '../constants.js';
  * Applied in display-referred space, after tone mapping, so that the vignette colour is reached
  * exactly regardless of the tone mapping in use.
  *
- * @ignore
+ * Every {@link CameraFrame} constructs and registers one, available as {@link CameraFrame#vignette}.
+ *
+ * @category Graphics
  */
 class VignetteEffect extends CameraFrameEffect {
     /**

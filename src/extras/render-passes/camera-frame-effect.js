@@ -13,41 +13,37 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
 
 /**
  * Base class of an effect registered with a {@link CameraFrame}. An effect is constructed with the
- * graphics device, its id and its declarations - the compose slot it applies at, its shader chunk,
- * the frame resources and stage of the passes it owns - and exposes its parameters as fields.
- * Declarations are fixed for the life of the effect; anything that depends on a parameter is a
- * getter instead, like {@link CameraFrameEffect#active}.
+ * graphics device, its id and its declarations - the compose slot it applies at and its shader
+ * chunk - and exposes its parameters as fields. Declarations are fixed for the life of the effect;
+ * anything that depends on a parameter is a getter instead, like {@link CameraFrameEffect#active}.
  *
- * An effect can do two kinds of work, both optional: a **compose contribution** - a shader chunk
- * whose entry function the composition calls at the effect's slot - and **passes** it owns, which
- * carry their own shaders.
- *
- * For the compose contribution, you supply the shader chunk (GLSL and WGSL) and write its entry
- * function under a conventional name, `apply<Id>`. The camera frame generates the call to that
- * function at the effect's slot, and rebuilds the compose shader whenever an effect becomes active
- * or inactive, or changes one of its defines. The chunk is only included while the effect is
+ * An effect contributes to the composition: you supply its shader chunk (GLSL and WGSL) and write
+ * its entry function under a conventional name, `apply<Id>`. The camera frame generates the call to
+ * that function at the effect's slot, and rebuilds the compose shader whenever an effect becomes
+ * active or inactive, or changes one of its defines. The chunk is only included while the effect is
  * active, so it needs no `#ifdef` guard of its own - defines are for an effect's own variants, set
  * with {@link CameraFrameEffect#setDefine}. The chunk is registered under `compose<Id>PS` so it can
  * be overridden by name like the built-in chunks, and `<ID>` (the id in upper snake case) is
- * defined while the effect is active, should another chunk need to know. Each debug view `name`
- * the effect lists is backed the same way as the entry function, by a `debug<Name>()` function in
- * the chunk.
+ * defined while the effect is active, should another chunk need to know. Each debug view `name` the
+ * effect lists is backed the same way as the entry function, by a `debug<Name>()` function in the
+ * chunk.
  *
  * All effects registered to a compose slot are called in registration order from within the single
  * compose pass, so an effect never costs an additional full-screen pass.
  *
- * Lifetime - an effect's resources have one of two lifetimes:
+ * Lifetime:
  *
  * - **Construct** - pass the device, the id and the declarations to the constructor; declare the
  *   parameters as fields. Resources the effect keeps for its whole life - a lookup texture, a noise
- *   texture - are created here, and fixed defines can be set with {@link CameraFrameEffect#setDefine}.
- * - **Each frame while {@link CameraFrameEffect#active}** - {@link CameraFrameEffect#update} is
- *   called to assign the uniforms - through {@link ScopeId}s resolved once in the constructor, as
- *   the passes do - and any defines that depend on the effect's state.
- * - **When the frame graph is built** - for effects owning passes, {@link CameraFrameEffect#createPasses}
- *   is called with the resources the effect requires, and {@link CameraFrameEffect#destroyPasses}
- *   when the graph is torn down. Passes and render targets which follow the frame live here, and
- *   are recreated whenever the graph is.
+ *   texture - are created here, the {@link ScopeId}s of its uniforms are resolved here, and fixed
+ *   defines can be set with {@link CameraFrameEffect#setDefine}.
+ * - **Each frame while {@link CameraFrameEffect#active}, preparing** -
+ *   {@link CameraFrameEffect#frameUpdate} is called while the frame is prepared, before anything
+ *   renders, for changes that decide what is rendered, such as defines. Most effects do not need
+ *   it.
+ * - **Each frame while {@link CameraFrameEffect#active}, rendering** -
+ *   {@link CameraFrameEffect#update} is called right before the compose pass renders the camera,
+ *   to write the uniforms the chunk reads.
  * - **Destroy** - {@link CameraFrameEffect#destroy} releases what the constructor created. Whoever
  *   constructs an effect destroys it: the camera frame destroys its built-in effects, and an effect
  *   you add is yours to destroy.
@@ -89,7 +85,7 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  * const tintColorId = app.graphicsDevice.scope.resolve('tintColor');
  * tint.update = () => tintColorId.setValue([1, 0.9, 0.8]);
  * cameraFrame.addEffect(tint);
- * @ignore
+ * @category Graphics
  */
 class CameraFrameEffect {
     /**
@@ -120,6 +116,7 @@ class CameraFrameEffect {
      * otherwise.
      *
      * @type {object|null}
+     * @ignore
      */
     resources = null;
 
@@ -185,10 +182,6 @@ class CameraFrameEffect {
      * should differ from the derived `compose<Id>PS`.
      * @param {string} [options.entryPoint] - The name of the function the composition calls, when it
      * should differ from the derived `apply<Id>`.
-     * @param {string[]} [options.requires] - The frame resources the effect's passes need,
-     * FRAMERESOURCE_* constants. The camera frame provisions them.
-     * @param {string} [options.stage] - The stage the effect's passes run at, a FRAMESTAGE_*
-     * constant.
      */
     constructor(device, id, options = {}) {
         Debug.assert(device, 'CameraFrameEffect: a graphics device is required.');
@@ -201,8 +194,14 @@ class CameraFrameEffect {
         this._debugViews = options.debugViews ?? [];
         this._chunkName = options.chunkName ?? null;
         this._entryPoint = options.entryPoint ?? null;
-        this._requires = options.requires ?? [];
-        this._stage = options.stage ?? null;
+
+        // the declarations of an effect owning passes - the frame resources they need and the
+        // stage they run at - are accepted but not documented until pass ownership is complete
+        const passOptions = /** @type {{ requires?: string[], stage?: string }} */ (
+            /** @type {object} */ (options)
+        );
+        this._requires = passOptions.requires ?? [];
+        this._stage = passOptions.stage ?? null;
     }
 
     /**
@@ -289,6 +288,7 @@ class CameraFrameEffect {
      * depends on a parameter.
      *
      * @type {string[]}
+     * @ignore
      */
     get requires() {
         return this._requires;
@@ -299,6 +299,7 @@ class CameraFrameEffect {
      * when the stage depends on a parameter.
      *
      * @type {string|null}
+     * @ignore
      */
     get stage() {
         return this._stage;
@@ -327,8 +328,8 @@ class CameraFrameEffect {
     /**
      * Sets a define on the compose shader. The define persists until changed, so fixed defines
      * can be set once in the constructor and state-dependent ones from
-     * {@link CameraFrameEffect#update}. A value of false, null or undefined removes it. Changing a
-     * define rebuilds the compose shader.
+     * {@link CameraFrameEffect#frameUpdate}. A value of false, null or undefined removes it.
+     * Changing a define rebuilds the compose shader.
      *
      * @param {string} name - The define name.
      * @param {*} value - The value.
@@ -350,6 +351,7 @@ class CameraFrameEffect {
      *
      * @param {object} resources - The provisioned frame resources.
      * @returns {FramePass[]} The passes, in execution order.
+     * @ignore
      */
     createPasses(resources) {
         return [];
@@ -358,6 +360,8 @@ class CameraFrameEffect {
     /**
      * Destroys the passes and any resources {@link CameraFrameEffect#createPasses} created. Called
      * when the frame graph is torn down.
+     *
+     * @ignore
      */
     destroyPasses() {
     }
@@ -368,15 +372,29 @@ class CameraFrameEffect {
      * implement this.
      *
      * @returns {string} The key.
+     * @ignore
      */
     buildKey() {
         return '';
     }
 
     /**
-     * Called each frame the effect is active, before any pass runs. Assign the uniforms here -
-     * through {@link ScopeId}s resolved once in the constructor - and any defines that depend on
-     * the effect's state.
+     * Called every frame while the effect is active, while the frame is being prepared and before
+     * any pass renders. Use it for changes that decide what is rendered, such as defines set with
+     * {@link CameraFrameEffect#setDefine}; changes made here apply to this frame.
+     *
+     * Do not write uniforms here: every camera is prepared before any camera renders, so a uniform
+     * written here is overwritten by the next camera. Write them in
+     * {@link CameraFrameEffect#update} instead. Most effects do not need this method.
+     */
+    frameUpdate() {
+    }
+
+    /**
+     * Called every frame while the effect is active, right before the compose pass renders the
+     * camera. Write the uniforms the effect's shader chunk reads here, using the {@link ScopeId}s
+     * resolved in the constructor. It runs once per camera, so each camera renders with its own
+     * values.
      */
     update() {
     }

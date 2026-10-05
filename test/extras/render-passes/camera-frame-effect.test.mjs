@@ -11,6 +11,7 @@ import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
+import { RenderPassShaderQuad } from '../../../src/scene/graphics/render-pass-shader-quad.js';
 import { setProgramLibrary } from '../../../src/scene/shader-lib/get-program-library.js';
 import { shaderChunksGLSL } from '../../../src/scene/shader-lib/glsl/collections/shader-chunks-glsl.js';
 import { ProgramLibrary } from '../../../src/scene/shader-lib/program-library.js';
@@ -426,6 +427,57 @@ describe('CameraFrameEffect', function () {
             // the active effects are legible in the key (it names the shader), the rest is hashed
             expect(key1).to.include('-fx:vignette-');
             expect(key1).to.not.match(/[{}=]/);
+        });
+
+        it('provides empty per-frame hooks', function () {
+            const effect = createEffect('tint', COMPOSESLOT_LDR);
+            expect(effect.frameUpdate()).to.equal(undefined);
+            expect(effect.update()).to.equal(undefined);
+        });
+
+        it('writes the uniforms of active effects when it draws, not while the frame is prepared', function () {
+            stub(RenderPassShaderQuad.prototype, 'execute');
+            const pass = createPass();
+            pass.sceneTexture = { width: 4, height: 4 };
+            const vignette = new VignetteEffect(device);
+            const grading = new GradingEffect(device);
+            pass.effects = [vignette, grading];
+            vignette.intensity = 0.5;
+            const vignetteUpdate = spy(vignette, 'update');
+            const gradingUpdate = spy(grading, 'update');
+
+            pass.frameUpdate();
+            expect(vignetteUpdate.callCount).to.equal(0);
+
+            pass.execute();
+            expect(vignetteUpdate.callCount).to.equal(1);
+            expect(vignetteUpdate.calledBefore(RenderPassShaderQuad.prototype.execute)).to.equal(true);
+
+            // grading is disabled, so inactive, and leaves the uniforms alone
+            expect(gradingUpdate.callCount).to.equal(0);
+        });
+
+        it('renders each camera with its own effect values', function () {
+            // the frame graph prepares every camera before any of them renders, and the cameras
+            // share the device's uniforms - each must still draw with the values of its own effect
+            const drawn = [];
+            stub(RenderPassShaderQuad.prototype, 'execute').callsFake(() => {
+                drawn.push(device.scope.resolve('vignetterParams').value[3]);
+            });
+
+            const passes = [0.25, 0.75].map((intensity) => {
+                const pass = createPass();
+                pass.sceneTexture = { width: 4, height: 4 };
+                const vignette = new VignetteEffect(device);
+                vignette.intensity = intensity;
+                pass.effects = [vignette];
+                return pass;
+            });
+
+            passes.forEach(pass => pass.frameUpdate());
+            passes.forEach(pass => pass.execute());
+
+            expect(drawn).to.deep.equal([0.25, 0.75]);
         });
 
         it('warns when two effects supply the same chunk name', function () {

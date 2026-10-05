@@ -673,6 +673,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
             this.sharpnessId.setValue(math.lerp(-0.125, -0.2, this.sharpness));
         }
 
+        // the effects write their uniforms right before the draw, not while the frame is prepared:
+        // every camera is prepared before any of them renders, and the uniforms are shared, so a
+        // value written earlier would be the last camera's
+        const effects = this._effects;
+        for (let i = 0; i < effects.length; i++) {
+            const effect = effects[i];
+            if (effect.active) {
+                effect.update();
+            }
+        }
+
         super.execute();
     }
 }

@@ -963,15 +963,17 @@ class FramePassCameraFrame extends FramePass {
         this.scenePassHalf?.setSourceTexture(sceneTexture);
         this.dofPass?.setSceneTexture(sceneTexture);
 
-        // The active effects update their per-frame state - uniforms, defines, the parameters of
-        // their passes. This runs before any pass they contribute to updates itself, as the frame
-        // graph updates a parent before its children, and after the TAA history was assigned above,
-        // so an effect reading the resolved scene colour sees this frame's.
+        // The active effects prepare the frame - defines, and anything else deciding what renders.
+        // This runs before any pass they contribute to updates itself, as the frame graph updates a
+        // parent before its children, so the compose shader picks up a define changed here this
+        // frame; and after the TAA history was assigned above, so an effect reading the resolved
+        // scene colour sees this frame's. Their uniforms are written later, by the compose pass
+        // right before it draws.
         const { effects } = this.cameraFrame;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
             if (effect.active) {
-                effect.update();
+                effect.frameUpdate();
             }
         }
     }

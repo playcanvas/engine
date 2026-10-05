@@ -2,11 +2,11 @@ import { Color } from '../../../core/math/color.js';
 import glslComposeGradingPS from '../../../scene/shader-lib/glsl/chunks/render-pass/frag/compose/compose-grading.js';
 import wgslComposeGradingPS from '../../../scene/shader-lib/wgsl/chunks/render-pass/frag/compose/compose-grading.js';
 import { CameraFrameEffect } from '../camera-frame-effect.js';
+import { COMPOSESLOT_HDR } from '../constants.js';
 
 /**
  * @import { GraphicsDevice } from '../../../platform/graphics/graphics-device.js'
  */
-import { COMPOSESLOT_HDR } from '../constants.js';
 
 /**
  * The color grading effect, a postprocessing technique used to adjust the visual tone of an image.
@@ -15,7 +15,9 @@ import { COMPOSESLOT_HDR } from '../constants.js';
  *
  * Applied in linear HDR space, before tone mapping.
  *
- * @ignore
+ * Every {@link CameraFrame} constructs and registers one, available as {@link CameraFrame#grading}.
+ *
+ * @category Graphics
  */
 class GradingEffect extends CameraFrameEffect {
     /**

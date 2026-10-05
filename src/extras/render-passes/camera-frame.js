@@ -353,10 +353,10 @@ class CameraFrame {
     /**
      * The effects registered with this camera frame, in the order they are applied within their
      * compose slot. The built-in effects are registered by the constructor; add your own with
-     * {@link CameraFrame#addEffect}.
+     * {@link CameraFrame#addEffect}. Treat the array as read-only; use the methods of the camera
+     * frame to change it.
      *
      * @type {CameraFrameEffect[]}
-     * @ignore
      */
     effects = [];
 
@@ -527,10 +527,13 @@ class CameraFrame {
 
     /**
      * Registers an effect with this camera frame. The effect is applied at the compose slot it
-     * declares, after any effect already registered to that slot.
+     * declares, after any effect already registered to that slot. The effect stays owned by the
+     * caller: removing it or destroying the camera frame does not destroy it.
      *
      * @param {CameraFrameEffect} effect - The effect to add.
-     * @ignore
+     * @example
+     * const tint = new TintEffect(app.graphicsDevice);
+     * cameraFrame.addEffect(tint);
      */
     addEffect(effect) {
         this.insertEffect(effect, this.effects.length);
@@ -543,7 +546,9 @@ class CameraFrame {
      * @param {CameraFrameEffect} effect - The effect to add.
      * @param {CameraFrameEffect|string} before - The effect, or the id of the effect, to apply
      * this one before.
-     * @ignore
+     * @example
+     * // apply the tint before the built-in vignette, which also runs at COMPOSESLOT_LDR
+     * cameraFrame.insertEffectBefore(tint, 'vignette');
      */
     insertEffectBefore(effect, before) {
         const index = this.effects.findIndex(other => other === before || other.id === before);
@@ -569,7 +574,7 @@ class CameraFrame {
         Debug.call(() => {
             const sameId = this.effects.find(other => other.id === effect.id);
             Debug.assert(!sameId, `CameraFrame#addEffect: an effect with id '${effect.id}' is already registered. ` +
-                'When adding a subclass of a built-in effect alongside it, give the subclass its own static id.');
+                'When adding a subclass of a built-in effect alongside it, give the subclass its own id.');
 
             for (const view of effect.debugViews) {
                 Debug.assert(!builtinDebugViews.includes(view),
@@ -590,7 +595,6 @@ class CameraFrame {
      * Removes an effect from this camera frame.
      *
      * @param {CameraFrameEffect} effect - The effect to remove.
-     * @ignore
      */
     removeEffect(effect) {
         const index = this.effects.indexOf(effect);
@@ -607,7 +611,6 @@ class CameraFrame {
      *
      * @param {string} id - The id the effect was constructed with, for example `'vignette'`.
      * @returns {CameraFrameEffect|undefined} The effect.
-     * @ignore
      */
     getEffect(id) {
         return this.effects.find(effect => effect.id === id);
