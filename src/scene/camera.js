@@ -6,6 +6,8 @@ import { Vec3 } from '../core/math/vec3.js';
 import { Vec4 } from '../core/math/vec4.js';
 import { math } from '../core/math/math.js';
 import { Frustum } from '../core/shape/frustum.js';
+import { SceneColorMapHandle } from '../platform/graphics/scene-color-map-handle.js';
+import { SceneDepthMapHandle } from '../platform/graphics/scene-depth-map-handle.js';
 import {
     VIEW_CENTER, ASPECT_AUTO, PROJECTION_PERSPECTIVE, PROJECTION_ORTHOGRAPHIC,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
@@ -135,23 +137,23 @@ class Camera {
     beforePasses = [];
 
     /**
-     * The scene depth texture most recently published for this camera, or null. The uniform it is
-     * published to is global - the last camera to render owns it - so anything wanting the depth of
-     * one camera in particular reads it from here instead. See {@link SceneDepthReader}.
+     * The handle to the scene depth map most recently published for this camera. The uniform the
+     * depth map is published to is global - the last camera to render owns it - so anything wanting
+     * the depth of one camera in particular reads it from here instead. See {@link SceneDepthReader}.
      *
-     * @type {Texture|null}
+     * @type {SceneDepthMapHandle}
      * @ignore
      */
-    sceneDepthMap = null;
+    sceneDepthMapHandle = new SceneDepthMapHandle();
 
     /**
-     * The render version {@link Camera#sceneDepthMap} was published in, so a consumer can tell a
-     * texture rendered this frame from one left over from an earlier one.
+     * The handle to the scene color map most recently published for this camera. The uniform the
+     * color map is published to is global, the same as for the depth map.
      *
-     * @type {number}
+     * @type {SceneColorMapHandle}
      * @ignore
      */
-    sceneDepthMapVersion = -1;
+    sceneColorMapHandle = new SceneColorMapHandle();
 
     /** @type {number} */
     jitter = 0;
@@ -260,20 +262,61 @@ class Camera {
 
         this.framePasses.length = 0;
         this.beforePasses.length = 0;
-        this.sceneDepthMap = null;
+
+        // the handles can outlive the camera, held by whatever consumes the maps, so they record that
+        // their camera is gone instead of just being dropped
+        const depthHandle = this.sceneDepthMapHandle;
+        depthHandle.texture = null;
+        depthHandle.destroyed = true;
+
+        const colorHandle = this.sceneColorMapHandle;
+        colorHandle.texture = null;
+        colorHandle.destroyed = true;
     }
 
     /**
-     * Records the scene depth texture a producer has published for this camera, alongside the render
-     * version it was published in.
+     * Publishes the scene depth texture a producer has rendered for this camera, together with how
+     * it is encoded. Each producer passes its own encoding, as different producers store the depth
+     * differently. The camera parameters the depth was rendered with are captured as well. The
+     * texture is recorded on the handle of this camera, and also set to the global uniform, which
+     * holds the depth of whichever camera published last.
      *
      * @param {Texture} texture - The texture the depth was rendered to.
      * @param {number} renderVersion - The render version it was rendered in.
+     * @param {boolean} linear - True when the texture stores the linear camera depth, false when it
+     * stores the depth buffer values.
+     * @param {boolean} packed - True when each linear depth is bit-packed into an RGBA8 texel.
+     * @param {boolean} reciprocal - True when the texture stores the reciprocals of the linear
+     * depths.
      * @ignore
      */
-    publishSceneDepthMap(texture, renderVersion) {
-        this.sceneDepthMap = texture;
-        this.sceneDepthMapVersion = renderVersion;
+    publishSceneDepthMap(texture, renderVersion, linear, packed, reciprocal) {
+        const handle = this.sceneDepthMapHandle;
+        handle.texture = texture;
+        handle.renderVersion = renderVersion;
+        handle.linear = linear;
+        handle.packed = linear && packed;
+        handle.reciprocal = linear && reciprocal;
+        this.fillShaderParams(handle.cameraParams);
+
+        SceneDepthMapHandle.setUniform(this.device, texture);
+    }
+
+    /**
+     * Publishes the scene color texture a producer has rendered for this camera, together with how
+     * it is encoded. The texture is recorded on the handle of this camera, and also set to the
+     * global uniform, which holds the color of whichever camera published last.
+     *
+     * @param {Texture} texture - The texture the color was rendered to.
+     * @param {boolean} gamma - True when the texture stores gamma encoded colors.
+     * @ignore
+     */
+    publishSceneColorMap(texture, gamma) {
+        const handle = this.sceneColorMapHandle;
+        handle.texture = texture;
+        handle.gamma = gamma;
+
+        SceneColorMapHandle.setUniform(this.device, texture);
     }
 
     /**
@@ -779,7 +822,7 @@ class Camera {
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
             if (!this.renderPassColorGrab) {
-                this.renderPassColorGrab = new FramePassColorGrab(device);
+                this.renderPassColorGrab = new FramePassColorGrab(device, this);
             }
         } else {
             this.renderPassColorGrab?.destroy();

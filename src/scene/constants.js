@@ -1,4 +1,5 @@
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import { SceneDepthMapHandle } from '../platform/graphics/scene-depth-map-handle.js';
 
 /**
  * Subtract the color of the source fragment from the destination fragment and write the result to
@@ -1444,7 +1445,7 @@ export const SCENETEXTURE_DEPTH = 'depth';
  * @ignore
  */
 export const sceneTextureUniformNames = {
-    [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
+    [SCENETEXTURE_DEPTH]: SceneDepthMapHandle.uniformName
 };
 
 /**

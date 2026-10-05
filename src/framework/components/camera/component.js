@@ -16,6 +16,8 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * @import { Mat4 } from '../../../core/math/mat4.js'
  * @import { FramePass } from '../../../platform/graphics/frame-pass.js'
  * @import { RenderTarget } from '../../../platform/graphics/render-target.js'
+ * @import { SceneColorMapHandle } from '../../../platform/graphics/scene-color-map-handle.js'
+ * @import { SceneDepthMapHandle } from '../../../platform/graphics/scene-depth-map-handle.js'
  * @import { FogParams } from '../../../scene/fog-params.js'
  * @import { Vec2 } from '../../../core/math/vec2.js'
  * @import { Vec3 } from '../../../core/math/vec3.js'
@@ -997,6 +999,30 @@ class CameraComponent extends Component {
 
     get renderSceneDepthMap() {
         return this._renderSceneDepthMap > 0;
+    }
+
+    /**
+     * Gets the handle to the scene depth map of this camera. The handle is the same object for the
+     * lifetime of the camera, and identifies the depth map the camera rendered most recently. The
+     * camera only renders the depth map when requested, see {@link CameraComponent#requestSceneDepthMap},
+     * or when its {@link CameraFrame} is configured to.
+     *
+     * @type {SceneDepthMapHandle}
+     */
+    get sceneDepthMapHandle() {
+        return this._camera.sceneDepthMapHandle;
+    }
+
+    /**
+     * Gets the handle to the scene color map of this camera. The handle is the same object for the
+     * lifetime of the camera, and identifies the color map the camera rendered most recently. The
+     * camera only renders the color map when requested, see {@link CameraComponent#requestSceneColorMap},
+     * or when its {@link CameraFrame} is configured to.
+     *
+     * @type {SceneColorMapHandle}
+     */
+    get sceneColorMapHandle() {
+        return this._camera.sceneColorMapHandle;
     }
 
     /**

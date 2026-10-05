@@ -2,10 +2,8 @@ import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from '.
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { SceneDepthMapHandle } from '../../platform/graphics/scene-depth-map-handle.js';
 import { Texture } from '../../platform/graphics/texture.js';
-
-// uniform name
-const _depthUniformName = 'uSceneDepthMap';
 
 /**
  * A render pass implementing grab of a depth buffer, used on WebGL 2 and WebGPU devices.
@@ -40,7 +38,7 @@ class FramePassDepthGrab extends FramePass {
         // allocate texture buffer
         const texture = Texture.createDataTexture2D(
             device,
-            _depthUniformName,
+            SceneDepthMapHandle.uniformName,
             sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
             sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
             format
@@ -113,10 +111,10 @@ class FramePassDepthGrab extends FramePass {
             this.depthRenderTarget = this.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer);
         }
 
-        // assign uniform, and record it on the camera - see RenderPassPrepass for why both
+        // publish the depth texture - the grab copies (or resolves) the depth buffer values as they
+        // are, which are not linear
         const colorBuffer = useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer;
-        device.scope.resolve(_depthUniformName).setValue(colorBuffer);
-        camera.publishSceneDepthMap(colorBuffer, device.renderVersion);
+        camera.publishSceneDepthMap(colorBuffer, device.renderVersion, false, false, false);
     }
 
     execute() {

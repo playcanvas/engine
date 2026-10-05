@@ -98,6 +98,8 @@ export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
 export { RenderPass } from './platform/graphics/render-pass.js';
+export { SceneColorMapHandle } from './platform/graphics/scene-color-map-handle.js';
+export { SceneDepthMapHandle } from './platform/graphics/scene-depth-map-handle.js';
 export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';

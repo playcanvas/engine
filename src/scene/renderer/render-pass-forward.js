@@ -4,6 +4,7 @@ import { now } from '../../core/time.js';
 import { Tracing } from '../../core/tracing.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { SceneDepthMapHandle } from '../../platform/graphics/scene-depth-map-handle.js';
 import { LayerRenderStep } from './layer-render-step.js';
 import { EVENT_POSTRENDER, EVENT_POSTRENDER_LAYER, EVENT_PRERENDER, EVENT_PRERENDER_LAYER, SCENETEXTURE_DEPTH, SHADER_FORWARD, sceneTextureUniformNames } from '../constants.js';
 
@@ -265,9 +266,13 @@ class RenderPassForward extends RenderPass {
         // camera published earlier in the frame. Only the first pass rendering to the render target they
         // are attached to does this, and only when no depth prepass published to those uniforms before it.
         if (this.clearSceneTextures) {
-            const { scope } = this.device;
+            const { device } = this;
             this.sceneTextures.forEach((name) => {
-                scope.resolve(sceneTextureUniformNames[name]).setValue(null);
+                if (name === SCENETEXTURE_DEPTH) {
+                    SceneDepthMapHandle.setUniform(device, null);
+                } else {
+                    device.scope.resolve(sceneTextureUniformNames[name]).setValue(null);
+                }
             });
         }
 
@@ -314,15 +319,17 @@ class RenderPassForward extends RenderPass {
                 'The render target of a pass rendering the scene textures needs an attachment for each of them, in addition to the one holding the scene color.');
 
             for (let i = 0; i < sceneTextures.length; i++) {
-                const uniformName = sceneTextureUniformNames[sceneTextures[i]];
-                Debug.assert(uniformName, `Scene texture '${sceneTextures[i]}' has no uniform to be published under, see sceneTextureUniformNames.`);
+                const name = sceneTextures[i];
                 const texture = renderTarget.getColorBuffer(i + 1);
-                this.device.scope.resolve(uniformName).setValue(texture);
 
-                // the uniforms are global, so the depth is recorded on the camera as well - that is what
-                // anything wanting this camera's depth in particular reads, see SceneDepthReader
-                if (sceneTextures[i] === SCENETEXTURE_DEPTH) {
-                    this.sceneTexturesCamera.publishSceneDepthMap(texture, this.device.renderVersion);
+                if (name === SCENETEXTURE_DEPTH) {
+                    // the depth is published for the camera, as well as to the global uniform. The
+                    // sceneTexturesPS chunk always writes the reciprocal of the linear depth
+                    this.sceneTexturesCamera.publishSceneDepthMap(texture, this.device.renderVersion, true, false, true);
+                } else {
+                    const uniformName = sceneTextureUniformNames[name];
+                    Debug.assert(uniformName, `Scene texture '${name}' has no uniform to be published under, see sceneTextureUniformNames.`);
+                    this.device.scope.resolve(uniformName).setValue(texture);
                 }
             }
         }
