@@ -43,6 +43,9 @@ describe('TextureRenderer', function () {
         jsdomTeardown();
     });
 
+    // the material defines selecting the shader variant of a preview
+    const definesOf = material => Object.fromEntries(material.defines);
+
     it('places a depth-independent quad using normalized top-left coordinates', function () {
         renderer.draw(texture, 0.25, 0.125, 0.5, 0.25);
         const [instance] = layer.meshInstances;
@@ -234,14 +237,15 @@ describe('TextureRenderer', function () {
     it('can reuse a color slot for scene depth and back again', function () {
         renderer.draw(texture, 0, 0, 1, 1);
         const [instance] = layer.meshInstances;
-        const colorDesc = instance.material.shaderDesc;
+        const colorDefines = definesOf(instance.material);
         app.fire('postrender');
         renderer.sceneDepth(0, 0, 1, 1);
-        expect(instance.material.shaderDesc.uniqueName).to.include('scene-depth');
+        expect(instance.material.shaderDesc.uniqueName).to.equal('TextureRenderer-SceneDepth');
         expect(instance.material.getParameter('colorMap').data).to.equal(null);
         app.fire('postrender');
         renderer.draw(texture, 0, 0, 1, 1);
-        expect(instance.material.shaderDesc.uniqueName).to.equal(colorDesc.uniqueName);
+        expect(instance.material.shaderDesc.uniqueName).to.equal('TextureRenderer');
+        expect(definesOf(instance.material)).to.deep.equal(colorDefines);
         expect(layer.meshInstances).to.have.length(1);
     });
 
@@ -249,13 +253,30 @@ describe('TextureRenderer', function () {
         app.graphicsDevice.textureFloatFilterable = false;
         const filter = other.minFilter;
         renderer.draw(other, 0, 0, 1, 1);
-        expect(layer.meshInstances[0].material.shaderDesc.uniqueName).to.include('unfilterable');
+        expect(definesOf(layer.meshInstances[0].material)).to.deep.equal({ UNFILTERABLE_SOURCE: true, RAW_CHANNELS: true });
         expect(other.minFilter).to.equal(filter);
         const depth = new Texture(app.graphicsDevice, { format: PIXELFORMAT_DEPTH, compareOnRead: true });
         renderer.draw(depth, 0, 0, 1, 1);
-        expect(layer.meshInstances[1].material.shaderDesc.uniqueName).to.include('depth');
+        expect(definesOf(layer.meshInstances[1].material)).to.deep.equal({ DEPTH_SOURCE: true });
         expect(depth.compareOnRead).to.equal(true);
         depth.destroy();
+    });
+
+    it('switches a slot between 2D and cubemap shaders of the same mode and encoding', function () {
+        const cube = new Texture(app.graphicsDevice, { width: 4, height: 4, format: PIXELFORMAT_RGBA8, cubemap: true });
+        renderer.draw(texture, 0, 0, 1, 1);
+        const [instance] = layer.meshInstances;
+        const flatDefines = definesOf(instance.material);
+        app.fire('postrender');
+        renderer.draw(cube, 0, 0, 1, 0.75);
+        expect(layer.meshInstances).to.have.length(1);
+        expect(instance.visible).to.equal(true);
+        expect(definesOf(instance.material)).to.deep.equal({ ...flatDefines, CUBEMAP_SOURCE: true });
+        expect(instance.material.getParameter('colorMap').data).to.equal(cube);
+        app.fire('postrender');
+        renderer.draw(texture, 0, 0, 1, 1);
+        expect(definesOf(instance.material)).to.deep.equal(flatDefines);
+        cube.destroy();
     });
 
     it('diagnoses invalid WebGL sampler states without changing the caller texture', function () {
@@ -289,11 +310,11 @@ describe('TextureRenderer', function () {
         const [first, second] = layer.meshInstances;
         expect(Array.from(first.material.getParameter('textureChannels').data)).to.deep.equal([0, 0, 0]);
         expect(Array.from(second.material.getParameter('textureChannels').data)).to.deep.equal([3, 3, 3]);
-        expect(first.material.shaderDesc.uniqueName).to.equal('TextureRenderer-filtered-raw');
+        expect(definesOf(first.material)).to.deep.equal({ RAW_CHANNELS: true });
         app.fire('postrender');
         renderer.channels = 'rgb';
         renderer.draw(texture, 0, 0, 1, 1);
-        expect(first.material.shaderDesc.uniqueName).to.equal('TextureRenderer-filtered-srgb');
+        expect(definesOf(first.material)).to.deep.equal({ '{DECODE_FUNC}': 'decodeGamma' });
     });
 
     it('shows single-channel formats as grayscale with the default selection', function () {
@@ -301,9 +322,9 @@ describe('TextureRenderer', function () {
         renderer.draw(single, 0, 0, 0.5, 1);
         renderer.draw(texture, 0.5, 0, 0.5, 1);
         const [gray, color] = layer.meshInstances;
-        expect(gray.material.shaderDesc.uniqueName).to.equal('TextureRenderer-filtered-raw');
+        expect(definesOf(gray.material)).to.deep.equal({ RAW_CHANNELS: true });
         expect(Array.from(gray.material.getParameter('textureChannels').data)).to.deep.equal([0, 0, 0]);
-        expect(color.material.shaderDesc.uniqueName).to.equal('TextureRenderer-filtered-srgb');
+        expect(definesOf(color.material)).to.deep.equal({ '{DECODE_FUNC}': 'decodeGamma' });
 
         // an explicit selection still wins
         app.fire('postrender');
@@ -328,8 +349,9 @@ describe('TextureRenderer', function () {
         renderer.channels = 'aaa';
         renderer.draw(depth, 0, 0, 1, 1);
         renderer.sceneDepth(0, 0, 1, 1);
-        expect(layer.meshInstances[0].material.shaderDesc.uniqueName).to.equal('TextureRenderer-depth-linear');
-        expect(layer.meshInstances[1].material.shaderDesc.uniqueName).to.equal('TextureRenderer-scene-depth-linear');
+        expect(definesOf(layer.meshInstances[0].material)).to.deep.equal({ DEPTH_SOURCE: true });
+        expect(layer.meshInstances[1].material.shaderDesc.uniqueName).to.equal('TextureRenderer-SceneDepth');
+        expect(definesOf(layer.meshInstances[1].material)).to.deep.equal({});
         depth.destroy();
     });
 
