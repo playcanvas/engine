@@ -71,6 +71,45 @@ describe('GraphicsDevice', function () {
 
     });
 
+    describe('#resizeCanvas', function () {
+
+        it('resizes the canvas and fires resizecanvas', function () {
+            const device = createGraphicsDevice({ width: 300, height: 150 });
+            const sizes = [];
+            device.on('resizecanvas', (w, h) => sizes.push([w, h]));
+
+            device.resizeCanvas(640, 480);
+
+            expect(device.canvas.width).to.equal(640);
+            expect(device.canvas.height).to.equal(480);
+            expect(sizes).to.deep.equal([[640, 480]]);
+            device.destroy();
+        });
+
+        it('keeps the current resolution when the size is zero', function () {
+            const device = createGraphicsDevice({ width: 300, height: 150 });
+            device.resizeCanvas(640, 480);
+            const sizes = [];
+            device.on('resizecanvas', (w, h) => sizes.push([w, h]));
+
+            device.resizeCanvas(0, 0);
+            device.resizeCanvas(0, 480);
+            device.resizeCanvas(640, 0);
+            device.resizeCanvas(0.4, 480);
+
+            expect(device.canvas.width).to.equal(640);
+            expect(device.canvas.height).to.equal(480);
+            expect(sizes).to.have.lengthOf(0);
+
+            device.resizeCanvas(800, 600);
+
+            expect(device.canvas.width).to.equal(800);
+            expect(device.canvas.height).to.equal(600);
+            expect(sizes).to.deep.equal([[800, 600]]);
+            device.destroy();
+        });
+    });
+
     describe('#isContextLost', function () {
 
         it('reports a destroyed device as lost without a context loss event', function () {
