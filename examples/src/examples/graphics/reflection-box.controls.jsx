@@ -1,4 +1,11 @@
-import { BindingTwoWay, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import {
+    BindingTwoWay,
+    BooleanInput,
+    LabelGroup,
+    Panel,
+    SelectInput,
+    SliderInput
+} from '@playcanvas/pcui/react';
 
 /**
  * @import { Observer } from '@playcanvas/observer'
@@ -60,6 +67,16 @@ export function Controls({ observer }) {
                         min={0}
                         max={1}
                         precision={2}
+                    />
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='Debug'>
+                <LabelGroup text='Show cubemap'>
+                    <BooleanInput
+                        type='toggle'
+                        binding={new BindingTwoWay()}
+                        link={{ observer, path: 'settings.showCubemap' }}
+                        value={observer.get('settings.showCubemap')}
                     />
                 </LabelGroup>
             </Panel>

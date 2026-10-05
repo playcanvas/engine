@@ -9,7 +9,8 @@ import { GraphNode } from '../../scene/graph-node.js';
 import { ShaderMaterial } from '../../scene/materials/shader-material.js';
 import { Mesh } from '../../scene/mesh.js';
 import { MeshInstance } from '../../scene/mesh-instance.js';
-import { createTextureShaderDesc } from './texture-renderer-shaders.js';
+import { ChunkUtils } from '../../scene/shader-lib/chunk-utils.js';
+import { sceneDepthShaderDesc, textureShaderDesc } from './texture-renderer-shaders.js';
 
 // the red channel replicated, for single-channel formats shown with the default selection
 const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
@@ -21,7 +22,6 @@ const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
  * @import { RenderTarget } from '../../platform/graphics/render-target.js'
  * @import { Camera } from '../../scene/camera.js'
  * @import { Layer } from '../../scene/layer.js'
- * @import { ShaderDesc } from '../../scene/materials/shader-material.js'
  */
 
 /**
@@ -30,6 +30,7 @@ const SINGLE_CHANNEL_INDICES = new Int32Array([0, 0, 0]);
  * @property {ShaderMaterial} material - Material owned by this slot.
  * @property {string} mode - The last sampling mode.
  * @property {string} encoding - The last source encoding.
+ * @property {boolean} cube - Whether the last source was a cubemap.
  * @property {Int32Array} channelIndices - Channels selected for this preview.
  * @property {Texture|null} texture - The texture shown this frame, or null.
  * @ignore
@@ -63,18 +64,23 @@ function rendersInto(rt, texture) {
  * is bottom-right. Width and height are fractions of the viewport; a rectangle of (0, 0, 1, 1)
  * fills it. Signed sizes can flip a preview, and rectangles can extend outside the viewport.
  *
- * Supports 2D color textures in normalized, floating-point and device-supported compressed
- * formats. Linear and sRGB color, and RGBM, RGBE and RGBP encoded HDR color, are detected
- * automatically with the default {@link channels} selection, and single-channel formats such as
- * {@link PIXELFORMAT_R8} display their channel as grayscale. Other selections display stored
- * channel values, including alpha, as opaque previews.
+ * Supports 2D and cubemap color textures in normalized, floating-point and device-supported
+ * compressed formats. Linear and sRGB color, and RGBM, RGBE and RGBP encoded HDR color, are
+ * detected automatically with the default {@link channels} selection, and single-channel formats
+ * such as {@link PIXELFORMAT_R8} display their channel as grayscale. Other selections display
+ * stored channel values, including alpha, as opaque previews.
  *
  * Depth textures using {@link PIXELFORMAT_DEPTH}, {@link PIXELFORMAT_DEPTH16} or
  * {@link PIXELFORMAT_DEPTHSTENCIL} are displayed as raw grayscale values. Use {@link sceneDepth}
  * to display the rendering camera's scene depth, linearized and normalized by its far clip
  * distance. The camera must have scene depth capture enabled.
  *
- * Cube, volume, array, integer and multisampled textures are not supported. On WebGL2, raw depth
+ * Cubemaps are displayed as a 4x3 horizontal cross, with each face as stored and its first row at
+ * the top. The middle row shows the -X, +Z, +X and -Z faces, with +Y above and -Y below +Z, so a
+ * rectangle with a 4:3 pixel aspect ratio displays square faces. Cells outside the cross are
+ * transparent.
+ *
+ * Volume, array, integer and multisampled textures are not supported. On WebGL2, raw depth
  * textures must have comparison sampling disabled, and both raw depth and non-filterable float
  * textures require nearest minification and magnification filters. WebGPU supports these textures
  * regardless of their filtering and comparison sampler settings.
@@ -82,11 +88,11 @@ function rendersInto(rt, texture) {
  * Resources are released automatically when the application is destroyed, or earlier by calling
  * {@link destroy}. Supplied textures are never destroyed by this helper.
  *
- * Previews produce fully opaque pixels but are drawn as alpha-blended instances, so they render in
- * layers that only draw their transparent sub-layer, such as the default UI layer, which is also
- * where they escape a camera frame's post-processing. They do not write or test depth and do not
- * cast shadows. Ordering against other transparent geometry follows the destination layer's
- * transparent sort mode.
+ * Previews produce fully opaque pixels, apart from the empty cells of a cubemap cross, but are
+ * drawn as alpha-blended instances, so they render in layers that only draw their transparent
+ * sub-layer, such as the default UI layer, which is also where they escape a camera frame's
+ * post-processing. They do not write or test depth and do not cast shadows. Ordering against other
+ * transparent geometry follows the destination layer's transparent sort mode.
  *
  * Every camera rendering the destination layer draws the previews, including cameras rendering
  * into a texture. Set {@link camera} to limit them to a single camera, typically the one rendering
@@ -100,6 +106,13 @@ function rendersInto(rt, texture) {
  * const textures = new TextureRenderer(app);
  * app.on('update', () => {
  *     textures.draw(texture, 0.7, 0.7, 0.25, 0.25);
+ * });
+ * @example
+ * // a 4:3 cross of the cubemap faces, 40% of the viewport wide
+ * const textures = new TextureRenderer(app);
+ * app.on('update', () => {
+ *     const aspect = app.graphicsDevice.width / app.graphicsDevice.height;
+ *     textures.draw(cubemap, 0, 0, 0.4, 0.4 * 0.75 * aspect);
  * });
  * @example
  * // camera is an entity with a camera component.
@@ -170,12 +183,6 @@ class TextureRenderer {
     _pools = new Map();
 
     /**
-     * @type {Map<string, ShaderDesc>}
-     * @private
-     */
-    _shaderDescs = new Map();
-
-    /**
      * @type {Mesh|null}
      * @private
      */
@@ -199,14 +206,15 @@ class TextureRenderer {
     }
 
     /**
-     * Displays a 2D color or depth texture for this frame. Color encoding and supported filtering
-     * are detected automatically when {@link channels} is 'rgb'. Other selections display stored
-     * channel values. Raw depth is shown as grayscale without
+     * Displays a 2D or cubemap color or depth texture for this frame. Color encoding and supported
+     * filtering are detected automatically when {@link channels} is 'rgb'. Other selections display
+     * stored channel values. Raw depth is shown as grayscale without
      * projection-dependent linearization; use {@link sceneDepth} for camera depth. Texture row 0
-     * is displayed at the top. For rendered textures, use {@link RENDERTARGET_ORIGIN_TOP} on their
-     * render target for consistent orientation across backends.
+     * is displayed at the top. For rendered 2D textures, use {@link RENDERTARGET_ORIGIN_TOP} on
+     * their render target for consistent orientation across backends. Cubemaps are displayed as a
+     * 4x3 cross of their faces, best shown in a rectangle with a 4:3 pixel aspect ratio.
      *
-     * Cube, volume, array, integer and multisampled textures are not supported. On WebGL2,
+     * Volume, array, integer and multisampled textures are not supported. On WebGL2,
      * depth textures must have comparison sampling disabled. Raw depth and non-filterable float
      * textures must use nearest minification and magnification filters on WebGL2. WebGPU samples
      * these textures independently of their filtering and comparison sampler settings.
@@ -220,9 +228,9 @@ class TextureRenderer {
     draw(texture, x, y, width, height) {
         if (!this._app) return;
         const device = this._app.graphicsDevice;
-        if (!texture || texture.device !== device || texture.cubemap || texture.volume ||
+        if (!texture || texture.device !== device || texture.volume ||
             texture.arrayLength || texture.samples > 1 || isIntegerPixelFormat(texture.format)) {
-            Debug.warnOnce('TextureRenderer.draw requires a non-multisampled 2D color or depth texture from the same graphics device.');
+            Debug.warnOnce('TextureRenderer.draw requires a non-multisampled 2D or cubemap color or depth texture from the same graphics device.');
             return;
         }
 
@@ -252,7 +260,7 @@ class TextureRenderer {
         const encoding = depth ? 'linear' : decoded ? texture.encoding :
             isSrgbPixelFormat(format) ? 'raw-srgb' : 'raw';
         this._draw(texture, depth ? 'depth' : unfilterable ? 'unfilterable' : 'filtered',
-            encoding, x, y, width, height, channelIndices);
+            encoding, texture.cubemap, x, y, width, height, channelIndices);
     }
 
     /**
@@ -266,13 +274,14 @@ class TextureRenderer {
      * @param {number} height - Height as a fraction of the camera viewport height.
      */
     sceneDepth(x, y, width, height) {
-        this._draw(null, 'scene-depth', 'linear', x, y, width, height, SINGLE_CHANNEL_INDICES);
+        this._draw(null, 'scene-depth', 'linear', false, x, y, width, height, SINGLE_CHANNEL_INDICES);
     }
 
     /**
      * @param {Texture|null} texture - Source texture, or null for scene depth.
      * @param {string} mode - Sampling mode.
      * @param {string} encoding - Source encoding.
+     * @param {boolean} cube - Whether the source is a cubemap.
      * @param {number} x - Normalized left edge.
      * @param {number} y - Normalized top edge.
      * @param {number} width - Normalized width.
@@ -280,7 +289,7 @@ class TextureRenderer {
      * @param {Int32Array} channelIndices - The channels shown by a raw encoding.
      * @private
      */
-    _draw(texture, mode, encoding, x, y, width, height, channelIndices) {
+    _draw(texture, mode, encoding, cube, x, y, width, height, channelIndices) {
         if (!this._app || !Number.isFinite(x) || !Number.isFinite(y) ||
             !Number.isFinite(width) || !Number.isFinite(height) || width === 0 || height === 0) return;
 
@@ -311,23 +320,27 @@ class TextureRenderer {
             meshInstance.pick = false;
             meshInstance.cull = false;
             meshInstance.shaderPassMask = 0;
-            slot = { meshInstance, material, mode: '', encoding: '', channelIndices: new Int32Array(3), texture: null };
+            slot = { meshInstance, material, mode: '', encoding: '', cube: false, channelIndices: new Int32Array(3), texture: null };
             pool.slots.push(slot);
             pool.meshInstances.push(meshInstance);
             layer.addMeshInstances([meshInstance], true);
         }
 
-        if (slot.mode !== mode || slot.encoding !== encoding) {
-            const key = `${mode}-${encoding}`;
-            let desc = this._shaderDescs.get(key);
-            if (!desc) {
-                desc = createTextureShaderDesc(mode, encoding);
-                this._shaderDescs.set(key, desc);
-            }
-            slot.material.shaderDesc = desc;
-            slot.material.update();
+        if (slot.mode !== mode || slot.encoding !== encoding || slot.cube !== cube) {
+            const material = slot.material;
+            const raw = encoding === 'raw' || encoding === 'raw-srgb';
+            const decoded = !raw && (mode === 'filtered' || mode === 'unfilterable');
+            material.shaderDesc = mode === 'scene-depth' ? sceneDepthShaderDesc : textureShaderDesc;
+            material.setDefine('CUBEMAP_SOURCE', cube);
+            material.setDefine('UNFILTERABLE_SOURCE', mode === 'unfilterable');
+            material.setDefine('DEPTH_SOURCE', mode === 'depth');
+            material.setDefine('RAW_CHANNELS', raw);
+            material.setDefine('RAW_SRGB', encoding === 'raw-srgb');
+            material.setDefine('{DECODE_FUNC}', decoded ? ChunkUtils.decodeFunc(encoding) : undefined);
+            material.update();
             slot.mode = mode;
             slot.encoding = encoding;
+            slot.cube = cube;
         }
         if (encoding === 'raw' || encoding === 'raw-srgb') {
             slot.channelIndices.set(channelIndices);
@@ -425,7 +438,6 @@ class TextureRenderer {
             }
         }
         this._pools.clear();
-        this._shaderDescs.clear();
         // MeshInstance.destroy releases the shared mesh when its last instance is destroyed.
         this._mesh = null;
         this._app = null;
