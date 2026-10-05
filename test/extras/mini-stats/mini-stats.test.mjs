@@ -581,6 +581,43 @@ describe('MiniStats', function () {
         expect(stats._scroll).to.equal(0);
     });
 
+    it('follows canvas size changes that fire no resizecanvas event', function () {
+        stats = new MiniStats(app);
+        stats.postRender();
+        // e.g. app.resizeCanvas() with RESOLUTION_FIXED, which only changes the css size
+        canvas.getBoundingClientRect.returns({ left: 0, bottom: 360, width: 640, height: 360 });
+        device.update();
+        stats.postRender();
+        expect(stats.render2d.targetWidth).to.equal(640);
+        expect(stats.render2d.targetHeight).to.equal(360);
+        // the panel background keeps its configured width on screen
+        const xs = [0, 8, 16, 24].map(i => stats.render2d.data[i] * 640);
+        expect(Math.max(...xs) - Math.min(...xs)).to.be.closeTo(128, 1e-3);
+    });
+
+    it('follows a resize in a host that renders without updating the device', function () {
+        stats = new MiniStats(app);
+        stats.postRender();
+        // the device's cached client rect stays at 1280x720, since nothing calls device.update()
+        canvas.getBoundingClientRect.returns({ left: 0, bottom: 360, width: 640, height: 360 });
+        device.setResolution(640, 360);
+        stats.postRender();
+        stats.postRender();
+        expect(stats.render2d.targetWidth).to.equal(640);
+        expect(stats.render2d.targetHeight).to.equal(360);
+        const xs = [0, 8, 16, 24].map(i => stats.render2d.data[i] * 640);
+        expect(Math.max(...xs) - Math.min(...xs)).to.be.closeTo(128, 1e-3);
+    });
+
+    it('measures the canvas only when its size changes', function () {
+        stats = new MiniStats(app);
+        stats.postRender();
+        canvas.getBoundingClientRect.resetHistory();
+        stats.postRender();
+        stats.postRender();
+        expect(canvas.getBoundingClientRect.called).to.equal(false);
+    });
+
     it('stops sampling and hit testing while disabled, and keeps history off on re-enable', function () {
         stats = new MiniStats(app);
         stats.activeSizeIndex = 1;
