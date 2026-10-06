@@ -449,7 +449,10 @@ class CameraFrame {
      * generate simply displays nothing: 'depth' renders black when no effect has produced the scene
      * depth, and the modes of a disabled effect are ignored. Set to null to disable.
      *
-     * @type {null|'scene'|'ssao'|'bloom'|'vignette'|'dofcoc'|'dofblur'|'depth'}
+     * Besides the built-in modes, this accepts the name of a debug view provided by an effect
+     * registered with this camera frame, see {@link CameraFrameEffect#debugViews}.
+     *
+     * @type {null|'scene'|'ssao'|'bloom'|'vignette'|'dofcoc'|'dofblur'|'depth'|(string & {})}
      */
     debug = null;
 

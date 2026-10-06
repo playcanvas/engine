@@ -6,6 +6,7 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @import { FramePass } from '../../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { ScopeId } from '../../platform/graphics/scope-id.js'
+ * @import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js'
  */
 
 // capitalizes the first character of a name, to derive the identifiers an effect's chunk uses
@@ -22,11 +23,11 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  * that function at the effect's slot, and rebuilds the compose shader whenever an effect becomes
  * active or inactive, or changes one of its defines. The chunk is only included while the effect is
  * active, so it needs no `#ifdef` guard of its own - defines are for an effect's own variants, set
- * with {@link CameraFrameEffect#setDefine}. The chunk is registered under `compose<Id>PS` so it can
- * be overridden by name like the built-in chunks, and `<ID>` (the id in upper snake case) is
- * defined while the effect is active, should another chunk need to know. Each debug view `name` the
- * effect lists is backed the same way as the entry function, by a `debug<Name>()` function in the
- * chunk.
+ * with {@link CameraFrameEffect#setDefine}. The chunk can be overridden by name like the built-in
+ * chunks: a chunk set in {@link ShaderChunks} under `compose<Id>PS` replaces the effect's own
+ * source. `<ID>` (the id in upper snake case) is defined while the effect is active, should
+ * another chunk need to know. Each debug view `name` the effect lists is backed the same way as
+ * the entry function, by a `debug<Name>()` function in the chunk.
  *
  * All effects registered to a compose slot are called in registration order from within the single
  * compose pass, so an effect never costs an additional full-screen pass.
@@ -178,8 +179,8 @@ class CameraFrameEffect {
      * @param {string[]} [options.debugViews] - The names of the debug views the chunk provides. Each
      * view `name` requires the chunk to declare a `vec3 debug<Name>()` function, and is available
      * while the effect is active.
-     * @param {string} [options.chunkName] - The name the compose chunk is registered under, when it
-     * should differ from the derived `compose<Id>PS`.
+     * @param {string} [options.chunkName] - The name the compose chunk can be overridden under, when
+     * it should differ from the derived `compose<Id>PS`.
      * @param {string} [options.entryPoint] - The name of the function the composition calls, when it
      * should differ from the derived `apply<Id>`.
      */
@@ -251,9 +252,8 @@ class CameraFrameEffect {
     }
 
     /**
-     * Gets the name the compose chunk is registered under. Derived from the id as `compose<Id>PS`
-     * unless given, so that the chunk can be overridden by name the same way as the built-in
-     * chunks.
+     * Gets the name the compose chunk can be overridden under in {@link ShaderChunks}, the same
+     * way as the built-in chunks. Derived from the id as `compose<Id>PS` unless given.
      *
      * @type {string}
      */

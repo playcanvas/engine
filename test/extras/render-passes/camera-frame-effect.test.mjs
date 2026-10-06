@@ -313,15 +313,85 @@ describe('CameraFrameEffect', function () {
 
         const createPass = () => new RenderPassCompose(device, { shaderParams: new CameraShaderParams() });
 
-        it('registers the chunks of its effects without overwriting a user override', function () {
+        // the declarations the composition assembles from its active effects
+        const declarationsOf = (pass) => {
+            return pass._buildEffectChunks(SHADERLANGUAGE_GLSL, new Map()).get('composeEffectDeclarationsPS');
+        };
+
+        it('uses a user override of an effect chunk, and the effect source otherwise', function () {
             const chunks = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
             chunks.set('composeVignettePS', 'vec3 applyVignette(vec3 c, vec2 uv) { return c * 0.5; }');
 
             const pass = createPass();
-            pass.effects = [new VignetteEffect(device)];
+            const vignette = new VignetteEffect(device);
+            const grading = new GradingEffect(device);
+            vignette.intensity = 0.5;
+            grading.enabled = true;
+            pass.effects = [vignette, grading];
 
-            expect(chunks.get('composeVignettePS')).to.include('return c * 0.5');
+            const declarations = declarationsOf(pass);
+            expect(declarations).to.include('return c * 0.5');
+            expect(declarations).to.include(grading.glsl);
+
+            // the effect sources stay with the effects - the chunk map only holds overrides
             expect(chunks.get('composeGradingPS')).to.equal(undefined);
+        });
+
+        it('uses the source of an effect replacing one with the same id', function () {
+            const red = createEffect('swap', COMPOSESLOT_LDR, { glsl: 'vec3 applySwap(vec3 c, vec2 uv) { return vec3(1, 0, 0); }' });
+            const blue = createEffect('swap', COMPOSESLOT_LDR, { glsl: 'vec3 applySwap(vec3 c, vec2 uv) { return vec3(0, 0, 1); }' });
+
+            const pass = createPass();
+            pass.effects = [red];
+            const redKey = pass.getShaderVariant(SHADERLANGUAGE_GLSL).key;
+
+            red.destroy();
+            pass.effects = [blue];
+
+            expect(declarationsOf(pass)).to.include('vec3(0, 0, 1)');
+            expect(declarationsOf(pass)).to.not.include('vec3(1, 0, 0)');
+            expect(pass.getShaderVariant(SHADERLANGUAGE_GLSL).key).to.not.equal(redKey);
+        });
+
+        it('uses the own source of each camera\'s effect when their ids match', function () {
+            const passes = ['vec3(1, 0, 0)', 'vec3(0, 0, 1)'].map((color) => {
+                const pass = createPass();
+                pass.effects = [createEffect('tint', COMPOSESLOT_LDR, { glsl: `vec3 applyTint(vec3 c, vec2 uv) { return ${color}; }` })];
+                return pass;
+            });
+
+            expect(declarationsOf(passes[0])).to.include('vec3(1, 0, 0)');
+            expect(declarationsOf(passes[1])).to.include('vec3(0, 0, 1)');
+        });
+
+        it('rebuilds the shader when an override is set or removed after the effect is registered', function () {
+            const chunks = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
+            const pass = createPass();
+            const vignette = new VignetteEffect(device);
+            vignette.intensity = 0.5;
+            pass.effects = [vignette];
+
+            pass.frameUpdate();
+            const ownKey = pass._key;
+
+            chunks.set('composeVignettePS', 'vec3 applyVignette(vec3 c, vec2 uv) { return c; }');
+            pass.frameUpdate();
+            const overrideKey = pass._key;
+
+            chunks.delete('composeVignettePS');
+            pass.frameUpdate();
+
+            expect(overrideKey).to.not.equal(ownKey);
+            expect(pass._key).to.equal(ownKey);
+        });
+
+        it('stops tracking the chunks of effects no longer registered', function () {
+            const pass = createPass();
+            pass.effects = [new VignetteEffect(device)];
+            expect([...pass._customComposeChunks.keys()]).to.include('composeVignettePS');
+
+            pass.effects = [];
+            expect([...pass._customComposeChunks.keys()]).to.deep.equal(['composeDeclarationsPS', 'composeMainStartPS', 'composeMainEndPS']);
         });
 
         it('contributes nothing but zero counts for inactive effects', function () {
@@ -488,7 +558,7 @@ describe('CameraFrameEffect', function () {
             })];
 
             expect(Debug.warnOnce.callCount).to.equal(1);
-            expect(Debug.warnOnce.firstCall.args[0]).to.include('both supply the shader chunk \'composeVignettePS\'');
+            expect(Debug.warnOnce.firstCall.args[0]).to.include('both use the shader chunk name \'composeVignettePS\'');
         });
     });
 });

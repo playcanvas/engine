@@ -18,6 +18,9 @@ import { composeSlots } from './constants.js';
  * @import { CameraFrameEffect } from './camera-frame-effect.js';
  */
 
+// the empty compose chunks users override to add their own code, always tracked for changes
+const legacyComposeChunks = ['composeDeclarationsPS', 'composeMainStartPS', 'composeMainEndPS'];
+
 /**
  * Render pass implementation of the final post-processing composition.
  *
@@ -92,12 +95,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _sceneDepthAvailable = false;
 
-    // track user-provided custom compose chunks
-    _customComposeChunks = new Map([
-        ['composeDeclarationsPS', ''],
-        ['composeMainStartPS', ''],
-        ['composeMainEndPS', '']
-    ]);
+    // track user-provided custom compose chunks: the legacy hooks, and the override names of the
+    // registered effects' chunks
+    _customComposeChunks = new Map(legacyComposeChunks.map(name => [name, '']));
 
     /**
      * The effects contributing to the composition, in the order they are applied within their
@@ -154,15 +154,15 @@ class RenderPassCompose extends RenderPassShaderQuad {
     }
 
     /**
-     * Sets the effects contributing to the composition. Their chunks are registered with the
-     * device's shader chunks without overwriting chunks already provided, so each remains
-     * overridable by name.
+     * Sets the effects contributing to the composition. Each effect's chunk can be overridden by
+     * its chunk name in the device's shader chunks; without an override the effect's own source
+     * is used.
      *
      * @type {CameraFrameEffect[]}
      */
     set effects(value) {
         this._effects = value ?? [];
-        this._registerEffectChunks();
+        this._trackEffectChunks();
         this._shaderDirty = true;
     }
 
@@ -171,29 +171,42 @@ class RenderPassCompose extends RenderPassShaderQuad {
     }
 
     /**
-     * Registers the chunks of all effects, and starts tracking them for user overrides alongside
-     * the custom compose chunks.
+     * Tracks the override names of the effects' chunks for changes, alongside the custom compose
+     * chunks, so that setting or removing an override rebuilds the shader.
+     *
+     * An effect's own source is deliberately never put into the device's shader chunks: the map is
+     * shared by everything on the device, so the first source registered under a name would stay
+     * there, and a later effect with the same id - a replacement, a hot-reloaded script, the effect
+     * of another camera - would silently render it instead of its own. An entry in the map under an
+     * effect's chunk name is therefore always a user override.
      *
      * @private
      */
-    _registerEffectChunks() {
+    _trackEffectChunks() {
 
-        const activeLanguage = this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const shaderLanguage = this.device.isWebGPU ? SHADERLANGUAGE_WGSL : SHADERLANGUAGE_GLSL;
+        const shaderChunks = ShaderChunks.get(this.device, shaderLanguage);
 
-        // chunks are registered by name into the device-wide chunk map, and resolved through it so
-        // that a user override wins. The flip side is that two effects supplying the same chunk
-        // name both resolve to whichever registered first, silently - the second effect's shader
-        // is never used. Catch that among the effects of this composition.
+        // stop tracking the chunks of effects which are no longer registered
+        const tracked = this._customComposeChunks;
+        for (const name of tracked.keys()) {
+            if (!legacyComposeChunks.includes(name)) {
+                tracked.delete(name);
+            }
+        }
+
+        // an override is looked up by chunk name, so one set for a name two effects share would
+        // replace the shader of both. Catch that among the effects of this composition.
         Debug.call(() => {
             const owners = new Map();
             for (const effect of this._effects) {
-                if (effect.getChunk(activeLanguage)) {
+                if (effect.getChunk(shaderLanguage)) {
                     const name = effect.chunkName;
                     const owner = owners.get(name);
                     if (owner && owner !== effect) {
-                        Debug.warnOnce(`RenderPassCompose: effects '${owner.id}' and '${effect.id}' both supply the shader chunk '${name}'. ` +
-                            `Chunk names are shared by all effects, and '${effect.id}' resolves to the chunk of '${owner.id}' - ` +
-                            'give the chunk a unique name, or leave the name to be derived from a unique effect id.');
+                        Debug.warnOnce(`RenderPassCompose: effects '${owner.id}' and '${effect.id}' both use the shader chunk name '${name}'. ` +
+                            'An override of that chunk would replace the shader of both - give the chunk a unique name, or leave the ' +
+                            'name to be derived from a unique effect id.');
                     } else {
                         owners.set(name, effect);
                     }
@@ -201,20 +214,11 @@ class RenderPassCompose extends RenderPassShaderQuad {
             }
         });
 
-        for (const shaderLanguage of [SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL]) {
-            const shaderChunks = ShaderChunks.get(this.device, shaderLanguage);
-            for (const effect of this._effects) {
-                const source = effect.getChunk(shaderLanguage);
-                if (source) {
-                    const name = effect.chunkName;
-                    shaderChunks.add({ [name]: source }, false);
-
-                    // track for override detection, seeded with the resolved value so that
-                    // registering does not by itself count as a change
-                    if (shaderLanguage === activeLanguage) {
-                        this._customComposeChunks.set(name, shaderChunks.get(name));
-                    }
-                }
+        // seeded with the current value, so that starting to track a name is not itself a change
+        for (const effect of this._effects) {
+            if (effect.getChunk(shaderLanguage)) {
+                const name = effect.chunkName;
+                tracked.set(name, shaderChunks.get(name));
             }
         }
     }
@@ -245,7 +249,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
             defines.set(effect.defineName, true);
             effect._defines.forEach((value, name) => defines.set(name, value));
 
-            // the chunk, resolved through the chunk map so that a user override of it wins
+            // the effect's chunk, unless the user overrode it by name in the chunk map
             const source = effect.getChunk(shaderLanguage);
             if (source) {
                 declarations.push(shaderChunks.get(effect.chunkName) ?? source);
