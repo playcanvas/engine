@@ -10,10 +10,6 @@ export default /* glsl */`
     #include "composeBloomPS"
     #include "composeDofPS"
     #include "composeSsaoPS"
-    #include "composeColorEnhancePS"
-    #include "composeFringingPS"
-    #include "composeCasPS"
-    #include "composeColorLutPS"
 
     // The depth debug mode displays a depth some other pass in this frame has already produced - the
     // debug modes never turn any rendering on, so the mode is switched to depthmissing when nothing
@@ -43,11 +39,6 @@ export default /* glsl */`
 
         vec3 result = scene.rgb;
 
-        // Apply CAS
-        #ifdef CAS
-            result = applyCas(result, uv, sharpness);
-        #endif
-
         // Apply DOF
         #ifdef DOF
             result = applyDof(result, uv);
@@ -58,19 +49,9 @@ export default /* glsl */`
             result = applySsao(result, uv);
         #endif
 
-        // Apply Fringing
-        #ifdef FRINGING
-            result = applyFringing(result, uv);
-        #endif
-
         // Apply Bloom
         #ifdef BLOOM
             result = applyBloom(result, uv);
-        #endif
-
-        // Apply Color Enhancement (shadows, highlights, vibrance)
-        #ifdef COLOR_ENHANCE
-            result = applyColorEnhance(result);
         #endif
 
         // COMPOSESLOT_HDR effects - linear, scene-referred colour
@@ -78,11 +59,6 @@ export default /* glsl */`
 
         // Apply Tone Mapping
         result = toneMap(max(vec3(0.0), result));
-
-        // Apply Color LUT after tone mapping, in LDR space
-        #ifdef COLOR_LUT
-            result = applyColorLUT(result);
-        #endif
 
         // COMPOSESLOT_LDR effects - display-referred colour, before gamma correction
         #include "composeSlotLdrCallPS, COMPOSE_LDR_COUNT"
@@ -92,7 +68,8 @@ export default /* glsl */`
         // Debug output handling in one centralized location
         #ifdef DEBUG_COMPOSE
             #if DEBUG_COMPOSE == scene
-                result = scene.rgb;
+                // the scene texture itself, before any effect, those at COMPOSESLOT_SCENE included
+                result = texture2DLod(sceneTexture, uv, 0.0).rgb;
             #elif defined(BLOOM) && DEBUG_COMPOSE == bloom
                 result = dBloom * bloomIntensity;
             #elif defined(DOF) && DEBUG_COMPOSE == dofcoc
