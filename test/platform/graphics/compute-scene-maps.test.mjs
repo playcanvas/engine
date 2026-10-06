@@ -227,6 +227,92 @@ describe('Compute', function () {
             expect(variant.computeDefinition.cdefines.has('SCENE_DEPTHMAP_RECIPROCAL')).to.equal(true);
         });
 
+        describe('with a camera rendering to a part of its target', function () {
+
+            const viewportSource = /* wgsl */`
+                #include "sceneDepthCS"
+                var<storage, read_write> result: array<vec4f>;
+
+                @compute @workgroup_size(1)
+                fn main(@builtin(global_invocation_id) id: vec3u) {
+                    let viewport = sceneDepthViewport();
+                    let texel = vec2i(viewport.xy + vec2u(id.x % viewport.z, id.x / viewport.z));
+                    result[id.x] = vec4f(sceneDepthWorldPosition(texel), sceneDepthLinear(texel));
+                }
+            `;
+
+            // an 8 x 4 depth map, the camera rendering to its right half and the upper half of the
+            // target, a 4 x 2 viewport with the aspect ratio of the projection
+            const width = 8;
+            const height = 4;
+            const viewportWidth = 4;
+            const viewportHeight = 2;
+            const viewportDepths = [1, 3, 9, 27, 2, 6, 18, 54];
+
+            const run = async (flipY) => {
+                const camera = createCamera();
+                camera.rect = new Vec4(0.5, 0.5, 0.5, 0.5);
+
+                // the target places the upper half in the first rows, unless its rows are flipped
+                const firstRow = flipY ? 2 : 0;
+                const values = new Float32Array(width * height);
+                viewportDepths.forEach((depth, i) => {
+                    const x = 4 + (i % viewportWidth);
+                    const y = firstRow + Math.floor(i / viewportWidth);
+                    values[y * width + x] = depth;
+                });
+                const texture = new Texture(device, {
+                    width, height, format: PIXELFORMAT_R32F, mipmaps: false, levels: [values]
+                });
+                camera.publishSceneDepthMap(texture, device.renderVersion, true, false, false, flipY);
+                expect(Array.from(camera.sceneDepthMapHandle.viewport)).to.deep.equal([4, firstRow, viewportWidth, viewportHeight]);
+
+                const compute = createCompute(viewportSource);
+                const results = new StorageBuffer(device, viewportDepths.length * 16, BUFFERUSAGE_COPY_SRC);
+                compute.setParameter('result', results);
+                compute.setSceneDepthMap(camera.sceneDepthMapHandle);
+                const data = await dispatch(compute, viewportDepths.length, results, viewportDepths.length * 4);
+
+                compute.destroy();
+                results.destroy();
+                texture.destroy();
+                camera.destroy();
+                return data;
+            };
+
+            // the world position of each texel of the viewport, from the depth along its ray
+            const check = (data) => {
+                if (!executesGpuWork) return;
+                viewportDepths.forEach((depth, i) => {
+                    const ndcX = (((i % viewportWidth) + 0.5) / viewportWidth) * 2 - 1;
+                    const ndcY = 1 - ((Math.floor(i / viewportWidth) + 0.5) / viewportHeight) * 2;
+                    const nearPoint = viewProjectionInverse.transformVec4(new Vec4(ndcX, ndcY, 0, 1), new Vec4());
+                    const farPoint = viewProjectionInverse.transformVec4(new Vec4(ndcX, ndcY, 1, 1), new Vec4());
+                    nearPoint.mulScalar(1 / nearPoint.w);
+                    farPoint.mulScalar(1 / farPoint.w);
+                    const t = (depth - near) / (far - near);
+                    const expected = [
+                        nearPoint.x + (farPoint.x - nearPoint.x) * t,
+                        nearPoint.y + (farPoint.y - nearPoint.y) * t,
+                        nearPoint.z + (farPoint.z - nearPoint.z) * t
+                    ];
+
+                    expect(data[i * 4 + 3]).to.be.closeTo(depth, depth * 1e-3);
+                    for (let c = 0; c < 3; c++) {
+                        expect(data[i * 4 + c]).to.be.closeTo(expected[c], Math.max(1e-3, depth * 1e-3));
+                    }
+                });
+            };
+
+            it('reconstructs the world positions within its viewport', async function () {
+                check(await run(false));
+            });
+
+            it('reconstructs the world positions within its viewport on a target with flipped rows', async function () {
+                check(await run(true));
+            });
+        });
+
         it('reads the depth map the handle identifies when the compute is dispatched', async function () {
             const camera = createCamera();
             const first = new Texture(device, { width: depths.length, height: 1, format: PIXELFORMAT_R32F, mipmaps: false, levels: [new Float32Array(depths.map(d => d * 2))] });

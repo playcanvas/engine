@@ -108,6 +108,17 @@ class SceneDepthMapHandle {
     viewProjectionInverse = new Mat4();
 
     /**
+     * The viewport the camera rendered the depth map with, in texels of the depth map as a compute
+     * shader addresses them: the x and y of its first texel, and its width and height. Outside of
+     * it, the depth map holds what the camera did not render, such as the views of other cameras
+     * rendering to the same target.
+     *
+     * @type {Uint32Array}
+     * @ignore
+     */
+    viewport = new Uint32Array(4);
+
+    /**
      * True once the camera the handle belongs to has been destroyed.
      *
      * @type {boolean}

@@ -277,10 +277,10 @@ class Camera {
     /**
      * Publishes the scene depth texture a producer has rendered for this camera, together with how
      * it is encoded. Each producer passes its own encoding, as different producers store the depth
-     * differently. The camera parameters and the inverse view projection matrix the depth was
-     * rendered with are captured as well. The
-     * texture is recorded on the handle of this camera, and also set to the global uniform, which
-     * holds the depth of whichever camera published last.
+     * differently. The camera parameters, the inverse view projection matrix and the viewport the
+     * depth was rendered with are captured as well. The texture is recorded on the handle of this
+     * camera, and also set to the global uniform, which holds the depth of whichever camera
+     * published last.
      *
      * @param {Texture} texture - The texture the depth was rendered to.
      * @param {number} renderVersion - The render version it was rendered in.
@@ -289,9 +289,11 @@ class Camera {
      * @param {boolean} packed - True when each linear depth is bit-packed into an RGBA8 texel.
      * @param {boolean} reciprocal - True when the texture stores the reciprocals of the linear
      * depths.
+     * @param {boolean} [flipY] - The flipY of the render target the camera rendered the depth with,
+     * which the texture matches the layout of. Defaults to false.
      * @ignore
      */
-    publishSceneDepthMap(texture, renderVersion, linear, packed, reciprocal) {
+    publishSceneDepthMap(texture, renderVersion, linear, packed, reciprocal, flipY = false) {
         const handle = this.sceneDepthMapHandle;
         handle.texture = texture;
         handle.renderVersion = renderVersion;
@@ -303,6 +305,18 @@ class Camera {
         // the matrices the shaders were given this frame, captured when the camera first rendered
         // in it - see Camera#_storeShaderMatrices
         handle.viewProjectionInverse.copy(this._viewProjInverse);
+
+        // the viewport the camera rendered to, the way Renderer#setupViewport sets it. WebGPU places
+        // it from the top of the target, unless the target stores its rows from the bottom
+        // (RENDERTARGET_ORIGIN_BOTTOM), as its flipY reflects
+        const { width, height } = texture;
+        const rect = this._rect;
+        const viewport = handle.viewport;
+        const y = Math.floor(rect.y * height);
+        viewport[0] = Math.floor(rect.x * width);
+        viewport[2] = Math.floor(rect.z * width);
+        viewport[3] = Math.floor(rect.w * height);
+        viewport[1] = flipY ? y : height - y - viewport[3];
 
         SceneDepthMapHandle.setUniform(this.device, texture);
     }

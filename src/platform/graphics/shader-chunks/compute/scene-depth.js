@@ -6,6 +6,7 @@
  *
  * Provides:
  * - sceneDepthSize() -> vec2u: the dimensions of the depth map.
+ * - sceneDepthViewport() -> vec4u: the viewport the camera rendered the depth map with, in texels.
  * - sceneDepthNearClip() -> f32, sceneDepthFarClip() -> f32: the clip planes the depth map was
  * rendered with.
  * - sceneDepthLinear(texel: vec2i) -> f32: the linear camera depth, in world units.
@@ -27,8 +28,15 @@ uniform computeSceneDepthCameraParams: vec4f;
 // the inverse of the view projection matrix the depth map was rendered with
 uniform computeSceneDepthViewProjectionInverse: mat4x4f;
 
+// the viewport the depth map was rendered with, in texels: x and y of its first texel, width and height
+uniform computeSceneDepthViewport: vec4u;
+
 fn sceneDepthSize() -> vec2u {
     return textureDimensions(computeSceneDepthMap, 0);
+}
+
+fn sceneDepthViewport() -> vec4u {
+    return uniform.computeSceneDepthViewport;
 }
 
 fn sceneDepthNearClip() -> f32 {
@@ -65,7 +73,9 @@ fn sceneDepthUnproject(ndc: vec3f) -> vec3f {
 }
 
 fn sceneDepthWorldPosition(texel: vec2i) -> vec3f {
-    let uv = (vec2f(texel) + 0.5) / vec2f(sceneDepthSize());
+    // the position of the texel within the viewport the camera rendered to
+    let viewport = vec4f(uniform.computeSceneDepthViewport);
+    let uv = (vec2f(texel) + 0.5 - viewport.xy) / viewport.zw;
     let ndc = vec2f(uv.x * 2.0 - 1.0, 1.0 - uv.y * 2.0);
 
     #ifdef SCENE_DEPTHMAP_LINEAR

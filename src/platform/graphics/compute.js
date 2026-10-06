@@ -19,10 +19,11 @@ import { Shader } from './shader.js';
 const DEPTH_MAP = 'computeSceneDepthMap';
 const DEPTH_CAMERA_PARAMS = 'computeSceneDepthCameraParams';
 const DEPTH_VIEW_PROJECTION_INVERSE = 'computeSceneDepthViewProjectionInverse';
+const DEPTH_VIEWPORT = 'computeSceneDepthViewport';
 const COLOR_MAP = 'computeSceneColorMap';
 
 const isSceneMapName = name => name === DEPTH_MAP || name === DEPTH_CAMERA_PARAMS ||
-    name === DEPTH_VIEW_PROJECTION_INVERSE || name === COLOR_MAP;
+    name === DEPTH_VIEW_PROJECTION_INVERSE || name === DEPTH_VIEWPORT || name === COLOR_MAP;
 
 // The bits of the key of the shader variant compiled for the attached scene maps, each matching a
 // define the chunks are compiled with.
@@ -261,11 +262,14 @@ class Compute {
      * includes:
      *
      * - `sceneDepthSize() -> vec2u`: the dimensions of the depth map.
+     * - `sceneDepthViewport() -> vec4u`: the viewport the camera rendered the depth map with, in
+     * texels: the x and y of its first texel, and its width and height. A camera rendering to only a
+     * part of its target, see {@link CameraComponent#rect}, covers only this part of the depth map.
      * - `sceneDepthNearClip() -> f32`, `sceneDepthFarClip() -> f32`: the clip planes the depth map
      * was rendered with.
      * - `sceneDepthLinear(texel: vec2i) -> f32`: the linear camera depth, in world units.
      * - `sceneDepthWorldPosition(texel: vec2i) -> vec3f`: the world position of the surface at the
-     * texel.
+     * texel, which needs to be within the viewport.
      *
      * The handle is kept, and the depth map it identifies is read each time the compute is
      * dispatched, so this only needs to be called once. A dispatch uses the depth map the camera
@@ -294,6 +298,7 @@ class Compute {
             this.deleteParameter(DEPTH_MAP);
             this.deleteParameter(DEPTH_CAMERA_PARAMS);
             this.deleteParameter(DEPTH_VIEW_PROJECTION_INVERSE);
+            this.deleteParameter(DEPTH_VIEWPORT);
         }
     }
 
@@ -390,6 +395,7 @@ class Compute {
             this._setParameter(DEPTH_MAP, this._sceneMapTexture(depthHandle, 'depth', 'white'));
             this._setParameter(DEPTH_CAMERA_PARAMS, depthHandle.cameraParams);
             this._setParameter(DEPTH_VIEW_PROJECTION_INVERSE, depthHandle.viewProjectionInverse.data);
+            this._setParameter(DEPTH_VIEWPORT, depthHandle.viewport);
         }
 
         if (colorHandle) {
