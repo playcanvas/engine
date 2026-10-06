@@ -26,9 +26,6 @@ class FringingEffect extends CameraFrameEffect {
      */
     intensity = 0;
 
-    /** @private */
-    _intensityId;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      */
@@ -39,7 +36,6 @@ class FringingEffect extends CameraFrameEffect {
             wgsl: wgslComposeFringingPS
         });
 
-        this._intensityId = device.scope.resolve('fringingIntensity');
     }
 
     /**
@@ -54,7 +50,7 @@ class FringingEffect extends CameraFrameEffect {
 
     update() {
         // relative to a fixed texture resolution, so the separation is the same at any resolution
-        this._intensityId.setValue(this.intensity / 1024);
+        this.setUniform('fringingIntensity', this.intensity / 1024);
     }
 }
 

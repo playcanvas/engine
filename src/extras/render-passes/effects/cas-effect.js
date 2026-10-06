@@ -29,9 +29,6 @@ class CasEffect extends CameraFrameEffect {
      */
     sharpness = 0;
 
-    /** @private */
-    _sharpnessId;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      */
@@ -42,7 +39,6 @@ class CasEffect extends CameraFrameEffect {
             wgsl: wgslComposeCasPS
         });
 
-        this._sharpnessId = device.scope.resolve('sharpness');
 
         // CAS works on an LDR image; until the scene format is known, assume an HDR one
         this.setDefine('CAS_HDR', true);
@@ -58,16 +54,14 @@ class CasEffect extends CameraFrameEffect {
         return this.enabled && this.sharpness > 0;
     }
 
-    frameUpdate() {
+    update() {
         // an HDR scene is mapped to LDR around the sharpening
         const format = this.cameraFrame?.hdrFormat;
         if (format !== undefined) {
             this.setDefine('CAS_HDR', format !== PIXELFORMAT_RGBA8);
         }
-    }
 
-    update() {
-        this._sharpnessId.setValue(math.lerp(-0.125, -0.2, this.sharpness));
+        this.setUniform('sharpness', math.lerp(-0.125, -0.2, this.sharpness));
     }
 }
 

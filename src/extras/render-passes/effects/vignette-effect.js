@@ -71,12 +71,6 @@ class VignetteEffect extends CameraFrameEffect {
     /** @private */
     _color = new Float32Array(3);
 
-    /** @private */
-    _paramsId;
-
-    /** @private */
-    _colorId;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      */
@@ -88,9 +82,6 @@ class VignetteEffect extends CameraFrameEffect {
             debugViews: ['vignette']
         });
 
-        const { scope } = device;
-        this._paramsId = scope.resolve('vignetterParams');
-        this._colorId = scope.resolve('vignetteColor');
     }
 
     /**
@@ -109,13 +100,13 @@ class VignetteEffect extends CameraFrameEffect {
         params[1] = this.outer;
         params[2] = this.curvature;
         params[3] = this.intensity;
-        this._paramsId.setValue(params);
+        this.setUniform('vignetterParams', params);
 
         const { color, _color } = this;
         _color[0] = color.r;
         _color[1] = color.g;
         _color[2] = color.b;
-        this._colorId.setValue(_color);
+        this.setUniform('vignetteColor', _color);
     }
 }
 

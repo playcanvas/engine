@@ -63,8 +63,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
     _customComposeChunks = new Map(legacyComposeChunks.map(name => [name, '']));
 
     /**
-     * The effects contributing to the composition, in the order they are applied within their
-     * slot.
+     * The effects taking part in the composition, in the order they are applied within their
+     * slot - the active ones as of the last CameraFrame#update.
      *
      * @type {CameraFrameEffect[]}
      * @private
@@ -72,13 +72,13 @@ class RenderPassCompose extends RenderPassShaderQuad {
     _effects = [];
 
     /**
-     * The per-frame state of the effects the shader was last built for - which are active, and
-     * the version of their defines. Tracked outside the shader rebuild so that an effect becoming
-     * active or changing a define is detected without the effect needing property setters.
+     * The version of the defines of each of the effects the shader was last built for, so that a
+     * define an update changed is detected without the effects needing property setters.
      *
+     * @type {number[]}
      * @private
      */
-    _effectsState = '';
+    _effectVersions = [];
 
     /**
      * @param {GraphicsDevice} graphicsDevice - The graphics device.
@@ -109,16 +109,31 @@ class RenderPassCompose extends RenderPassShaderQuad {
     }
 
     /**
-     * Sets the effects contributing to the composition. Each effect's chunk can be overridden by
-     * its chunk name in the device's shader chunks; without an override the effect's own source
-     * is used.
+     * Sets the effects taking part in the composition, all of which it composes. Each effect's
+     * chunk can be overridden by its chunk name in the device's shader chunks; without an override
+     * the effect's own source is used. Assigned on every CameraFrame#update - which can run every
+     * frame - so assigning the same effects with unchanged defines costs only the comparison.
      *
      * @type {CameraFrameEffect[]}
      */
     set effects(value) {
-        this._effects = value ?? [];
-        this._trackEffectChunks();
-        this._shaderDirty = true;
+        const effects = this._effects;
+        const versions = this._effectVersions;
+        let changed = effects.length !== value.length;
+        for (let i = 0; !changed && i < value.length; i++) {
+            changed = effects[i] !== value[i] || versions[i] !== value[i]._definesVersion;
+        }
+
+        if (changed) {
+            effects.length = 0;
+            versions.length = 0;
+            for (let i = 0; i < value.length; i++) {
+                effects.push(value[i]);
+                versions.push(value[i]._definesVersion);
+            }
+            this._trackEffectChunks();
+            this._shaderDirty = true;
+        }
     }
 
     get effects() {
@@ -197,7 +212,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const debugMode = this._debugMode;
 
         for (const effect of this._effects) {
-            if (!effect.active) continue;
 
             // the define marking the effect active, for chunks which test for it, and any the
             // effect set itself
@@ -364,18 +378,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
             }
         }
 
-        // detect an effect becoming active, or changing its defines
-        let effectsState = '';
-        for (const effect of this._effects) {
-            if (effect.active) {
-                effectsState += `${effect.id}:${effect._definesVersion};`;
-            }
-        }
-        if (this._effectsState !== effectsState) {
-            this._effectsState = effectsState;
-            this._shaderDirty = true;
-        }
-
         // need to rebuild shader
         if (this._shaderDirty) {
             this._shaderDirty = false;
@@ -454,9 +456,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         let effectIds = '';
         let effectsHash = 0;
         for (const effect of this._effects) {
-            if (effect.active) {
-                effectIds += `${effectIds ? ',' : ''}${effect.id}`;
-            }
+            effectIds += `${effectIds ? ',' : ''}${effect.id}`;
         }
         effectDefines.forEach((value, name) => {
             defines.set(name, value);
@@ -502,15 +502,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
             this.ssaoTextureId.setValue(this._ssaoTexture);
         }
 
-        // the effects write their uniforms right before the draw, not while the frame is prepared:
+        // the uniform values of the effects are bound right before the draw, not when they are set:
         // every camera is prepared before any of them renders, and the uniforms are shared, so a
-        // value written earlier would be the last camera's
+        // value bound earlier would be the last camera's
         const effects = this._effects;
         for (let i = 0; i < effects.length; i++) {
-            const effect = effects[i];
-            if (effect.active) {
-                effect.update();
-            }
+            effects[i]._bindUniforms();
         }
 
         super.execute();

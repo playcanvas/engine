@@ -6,7 +6,19 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * @import { FramePass } from '../../platform/graphics/frame-pass.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { ScopeId } from '../../platform/graphics/scope-id.js'
+ * @import { Texture } from '../../platform/graphics/texture.js'
  * @import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js'
+ */
+
+/**
+ * The context handed to {@link CameraFrameEffect#frameUpdate} by the camera frame the effect is
+ * registered with: the values of the frame being prepared. Valid only for the duration of that
+ * call - the object is reused, and its contents change from frame to frame.
+ *
+ * @typedef {object} CameraFrameEffectContext
+ * @property {Texture} sceneTexture - The scene color the composition reads this frame: the output
+ * of the temporal anti-aliasing when it is enabled, which alternates between two textures from
+ * frame to frame, and the scene render target's color otherwise.
  */
 
 // capitalizes the first character of a name, to derive the identifiers an effect's chunk uses
@@ -20,8 +32,8 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  *
  * An effect contributes to the composition: you supply its shader chunk (GLSL and WGSL) and write
  * its entry function under a conventional name, `apply<Id>`. The camera frame generates the call to
- * that function at the effect's slot, and rebuilds the compose shader whenever an effect becomes
- * active or inactive, or changes one of its defines. The chunk is only included while the effect is
+ * that function at the effect's slot, and rebuilds the compose shader when an effect becomes active
+ * or inactive, or changes one of its defines. The chunk is only included while the effect is
  * active, so it needs no `#ifdef` guard of its own - defines are for an effect's own variants, set
  * with {@link CameraFrameEffect#setDefine}. The chunk can be overridden by name like the built-in
  * chunks: a chunk set in {@link ShaderChunks} under `compose<Id>PS` replaces the effect's own
@@ -32,19 +44,22 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  * All effects registered to a compose slot are called in registration order from within the single
  * compose pass, so an effect never costs an additional full-screen pass.
  *
+ * Like the rest of the camera frame, an effect is configured when {@link CameraFrame#update} is
+ * called: changes to its parameters take effect at the next update, and every frame rendered after
+ * it uses exactly what the update applied.
+ *
  * Lifetime:
  *
  * - **Construct** - pass the device, the id and the declarations to the constructor; declare the
  *   parameters as fields. Resources the effect keeps for its whole life - a lookup texture, a noise
- *   texture - are created here, the {@link ScopeId}s of its uniforms are resolved here, and fixed
- *   defines can be set with {@link CameraFrameEffect#setDefine}.
- * - **Each frame while {@link CameraFrameEffect#active}, preparing** -
- *   {@link CameraFrameEffect#frameUpdate} is called while the frame is prepared, before anything
- *   renders, for changes that decide what is rendered, such as defines. Most effects do not need
- *   it.
- * - **Each frame while {@link CameraFrameEffect#active}, rendering** -
- *   {@link CameraFrameEffect#update} is called right before the compose pass renders the camera,
- *   to write the uniforms the chunk reads.
+ *   texture - are created here, and fixed defines can be set with
+ *   {@link CameraFrameEffect#setDefine}.
+ * - **On {@link CameraFrame#update}, while {@link CameraFrameEffect#active}** -
+ *   {@link CameraFrameEffect#update} applies the parameters: the values of the uniforms with
+ *   {@link CameraFrameEffect#setUniform}, and the defines that depend on them.
+ * - **Each frame while it takes part** - {@link CameraFrameEffect#frameUpdate} is called with the
+ *   values of the frame being prepared, for the few effects which depend on them. Most effects do
+ *   not need it.
  * - **Destroy** - {@link CameraFrameEffect#destroy} releases what the constructor created. Whoever
  *   constructs an effect destroys it: the camera frame destroys its built-in effects, and an effect
  *   you add is yours to destroy.
@@ -54,6 +69,8 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  * // entry function applyTint, which the composition calls as `result = applyTint(result, uv)`.
  * class TintEffect extends CameraFrameEffect {
  *     color = new Color(1, 0.9, 0.8);
+ *
+ *     tintColor = new Float32Array(3);
  *
  *     constructor(device) {
  *         super(device, 'tint', {
@@ -71,11 +88,13 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  *                 }
  *             `
  *         });
- *         this.tintColorId = device.scope.resolve('tintColor');
  *     }
  *
  *     update() {
- *         this.tintColorId.setValue([this.color.r, this.color.g, this.color.b]);
+ *         this.tintColor[0] = this.color.r;
+ *         this.tintColor[1] = this.color.g;
+ *         this.tintColor[2] = this.color.b;
+ *         this.setUniform('tintColor', this.tintColor);
  *     }
  * }
  *
@@ -83,8 +102,7 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  *
  * // The same effect without a class, for effects driven by data
  * const tint = new CameraFrameEffect(app.graphicsDevice, 'tint', { slot: COMPOSESLOT_LDR, glsl, wgsl });
- * const tintColorId = app.graphicsDevice.scope.resolve('tintColor');
- * tint.update = () => tintColorId.setValue([1, 0.9, 0.8]);
+ * tint.setUniform('tintColor', new Float32Array([1, 0.9, 0.8]));
  * cameraFrame.addEffect(tint);
  * @category Graphics
  */
@@ -163,6 +181,15 @@ class CameraFrameEffect {
      * @ignore
      */
     _definesVersion = 0;
+
+    /**
+     * The uniform values set with {@link CameraFrameEffect#setUniform}, bound right before the
+     * compose pass renders.
+     *
+     * @type {Map<string, { scopeId: ScopeId, value: * }>}
+     * @private
+     */
+    _uniforms = new Map();
 
     /**
      * Creates a new effect.
@@ -327,9 +354,9 @@ class CameraFrameEffect {
 
     /**
      * Sets a define on the compose shader. The define persists until changed, so fixed defines
-     * can be set once in the constructor and state-dependent ones from
-     * {@link CameraFrameEffect#frameUpdate}. A value of false, null or undefined removes it.
-     * Changing a define rebuilds the compose shader.
+     * can be set once in the constructor and those depending on the parameters from
+     * {@link CameraFrameEffect#update}. A value of false, null or undefined removes it. Changing a
+     * define rebuilds the compose shader.
      *
      * @param {string} name - The define name.
      * @param {*} value - The value.
@@ -379,24 +406,53 @@ class CameraFrameEffect {
     }
 
     /**
-     * Called every frame while the effect is active, while the frame is being prepared and before
-     * any pass renders. Use it for changes that decide what is rendered, such as defines set with
-     * {@link CameraFrameEffect#setDefine}; changes made here apply to this frame.
+     * Sets the value of a uniform the effect's shader chunk reads. Like a material parameter, the
+     * value is stored by reference, so an array or a texture can be updated in place. Set the
+     * values in {@link CameraFrameEffect#update}, or in {@link CameraFrameEffect#frameUpdate} for
+     * a value which changes every frame.
      *
-     * Do not write uniforms here: every camera is prepared before any camera renders, so a uniform
-     * written here is overwritten by the next camera. Write them in
-     * {@link CameraFrameEffect#update} instead. Most effects do not need this method.
+     * @param {string} name - The name of the uniform, as declared in the chunk.
+     * @param {number|number[]|ArrayBufferView|Texture} value - The value.
      */
-    frameUpdate() {
+    setUniform(name, value) {
+        let uniform = this._uniforms.get(name);
+        if (!uniform) {
+            uniform = { scopeId: this.device.scope.resolve(name), value: null };
+            this._uniforms.set(name, uniform);
+        }
+        uniform.value = value;
     }
 
     /**
-     * Called every frame while the effect is active, right before the compose pass renders the
-     * camera. Write the uniforms the effect's shader chunk reads here, using the {@link ScopeId}s
-     * resolved in the constructor. It runs once per camera, so each camera renders with its own
-     * values.
+     * Binds the uniform values, right before the compose pass renders.
+     *
+     * @ignore
+     */
+    _bindUniforms() {
+        for (const uniform of this._uniforms.values()) {
+            uniform.scopeId.setValue(uniform.value);
+        }
+    }
+
+    /**
+     * Applies the effect's parameters. Called by {@link CameraFrame#update} while the effect is
+     * active, and when it is added to a camera frame: set the uniform values with
+     * {@link CameraFrameEffect#setUniform} here, and the defines which depend on the parameters.
+     * Everything it sets is what the frames rendered until the next update use.
      */
     update() {
+    }
+
+    /**
+     * Called every frame while the effect takes part in the frame, while the frame is being
+     * prepared and before any pass renders, with the values of that frame. Most effects do not
+     * need it: their configuration belongs in {@link CameraFrameEffect#update}, which runs only
+     * when the camera frame is updated.
+     *
+     * @param {CameraFrameEffectContext} frame - The values of this frame. Read them during this
+     * call only.
+     */
+    frameUpdate(frame) {
     }
 
     /**

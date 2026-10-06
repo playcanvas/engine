@@ -88,15 +88,6 @@ class ColorLutEffect extends CameraFrameEffect {
     /** @private */
     _params = new Float32Array(3);
 
-    /** @private */
-    _paramsId;
-
-    /** @private */
-    _textureId;
-
-    /** @private */
-    _texture2Id;
-
     /**
      * The textures last validated, so each is checked once when assigned. Debug builds only.
      *
@@ -114,10 +105,6 @@ class ColorLutEffect extends CameraFrameEffect {
             wgsl: wgslComposeColorLutPS
         });
 
-        const { scope } = device;
-        this._paramsId = scope.resolve('colorLUTParams');
-        this._textureId = scope.resolve('colorLUT');
-        this._texture2Id = scope.resolve('colorLUT2');
     }
 
     /**
@@ -130,7 +117,7 @@ class ColorLutEffect extends CameraFrameEffect {
         return this.enabled && !!this.texture;
     }
 
-    frameUpdate() {
+    update() {
         // the secondary LUT is a variant of the shader, sampled only while assigned
         this.setDefine('COLOR_LUT2', !!this.texture2);
 
@@ -143,17 +130,15 @@ class ColorLutEffect extends CameraFrameEffect {
                 this._validated[index] = texture;
             });
         });
-    }
 
-    update() {
         const params = this._params;
         params[0] = this.intensity;
         params[1] = this.intensity2;
         params[2] = this.blend;
-        this._paramsId.setValue(params);
-        this._textureId.setValue(this.texture);
+        this.setUniform('colorLUTParams', params);
+        this.setUniform('colorLUT', this.texture);
         if (this.texture2) {
-            this._texture2Id.setValue(this.texture2);
+            this.setUniform('colorLUT2', this.texture2);
         }
     }
 }

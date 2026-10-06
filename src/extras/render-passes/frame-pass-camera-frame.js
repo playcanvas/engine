@@ -20,6 +20,7 @@ import { Color } from '../../core/math/color.js';
 
 /**
  * @import { CameraFrame } from './camera-frame.js'
+ * @import { CameraFrameEffectContext } from './camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
@@ -107,6 +108,15 @@ class FramePassCameraFrame extends FramePass {
     dofPass;
 
     volumetricFogPass;
+
+    /**
+     * The values of the frame being prepared, handed to the effects - one object, refilled every
+     * frame.
+     *
+     * @type {CameraFrameEffectContext}
+     * @private
+     */
+    _effectContext = { sceneTexture: null };
 
     _renderTargetScale = 1;
 
@@ -876,7 +886,7 @@ class FramePassCameraFrame extends FramePass {
         this.composePass = new RenderPassCompose(this.device, this.cameraComponent);
 
         // the composition assembles its shader from the effects registered with the camera frame
-        this.composePass.effects = this.cameraFrame.effects;
+        this.composePass.effects = this.cameraFrame._activeEffects;
 
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.taaEnabled = options.taaEnabled;
@@ -965,18 +975,17 @@ class FramePassCameraFrame extends FramePass {
         this.scenePassHalf?.setSourceTexture(sceneTexture);
         this.dofPass?.setSceneTexture(sceneTexture);
 
-        // The active effects prepare the frame - defines, and anything else deciding what renders.
-        // This runs before any pass they contribute to updates itself, as the frame graph updates a
-        // parent before its children, so the compose shader picks up a define changed here this
-        // frame; and after the TAA history was assigned above, so an effect reading the resolved
-        // scene colour sees this frame's. Their uniforms are written later, by the compose pass
-        // right before it draws.
-        const { effects } = this.cameraFrame;
+        // The effects taking part get the values of this frame. This runs before any pass they
+        // contribute to updates itself, as the frame graph updates a parent before its children,
+        // and after the TAA history was assigned above, so the scene texture handed to them is this
+        // frame's. Their configuration was applied by CameraFrame#update, and the compose pass binds
+        // their uniform values right before it draws.
+        const context = this._effectContext;
+        context.sceneTexture = sceneTexture;
+
+        const effects = this.cameraFrame._activeEffects;
         for (let i = 0; i < effects.length; i++) {
-            const effect = effects[i];
-            if (effect.active) {
-                effect.frameUpdate();
-            }
+            effects[i].frameUpdate(context);
         }
     }
 }

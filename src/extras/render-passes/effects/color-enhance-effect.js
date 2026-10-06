@@ -74,12 +74,6 @@ class ColorEnhanceEffect extends CameraFrameEffect {
     /** @private */
     _params = new Float32Array(4);
 
-    /** @private */
-    _paramsId;
-
-    /** @private */
-    _midtonesId;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      */
@@ -90,9 +84,6 @@ class ColorEnhanceEffect extends CameraFrameEffect {
             wgsl: wgslComposeColorEnhancePS
         });
 
-        const { scope } = device;
-        this._paramsId = scope.resolve('colorEnhanceParams');
-        this._midtonesId = scope.resolve('colorEnhanceMidtones');
     }
 
     update() {
@@ -101,8 +92,8 @@ class ColorEnhanceEffect extends CameraFrameEffect {
         params[1] = this.highlights;
         params[2] = this.vibrance;
         params[3] = this.dehaze;
-        this._paramsId.setValue(params);
-        this._midtonesId.setValue(this.midtones);
+        this.setUniform('colorEnhanceParams', params);
+        this.setUniform('colorEnhanceMidtones', this.midtones);
     }
 }
 
