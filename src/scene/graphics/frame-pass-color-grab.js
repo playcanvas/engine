@@ -152,21 +152,13 @@ class FramePassColorGrab extends FramePass {
         const device = this.device;
         DebugGraphics.pushGpuMarker(device, 'GRAB-COLOR');
 
-        const sourceRt = this.source;
         const colorBuffer = this.colorRenderTarget.colorBuffer;
+        device.copyRenderTarget(this.source, this.colorRenderTarget, true, false);
 
+        // generate mipmaps, which the null device has no data for
         if (device.isWebGPU) {
-
-            device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
-
-            // generate mipmaps
-            device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
-
-        } else {
-
-            device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
-
-            // generate mipmaps
+            device.mipmapRenderer.generate(colorBuffer.impl);
+        } else if (device.isWebGL2) {
             device.activeTexture(device.maxCombinedTextures - 1);
             device.bindTexture(colorBuffer);
             device.gl.generateMipmap(colorBuffer.impl._glTarget);
