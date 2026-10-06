@@ -53,12 +53,6 @@ var<private> sSpecularLight: vec3f;
     #include "lightDeclarationPS, LIGHT_COUNT"
 #endif
 
-#ifdef LIT_SPECULAR
-    #if LIT_FRESNEL_MODEL == NONE && !defined(LIT_REFLECTIONS) && !defined(LIT_DIFFUSE_MAP) 
-        #define LIT_OLD_AMBIENT
-    #endif
-#endif
-
 // lightmap baking
 #ifdef STD_LIGHTMAP_DIR
     uniform bakeDir: f32;
