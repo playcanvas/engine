@@ -225,14 +225,6 @@ const applySettings = () => {
     cameraFrame.update();
 };
 
-// Apply UI changes
-data.on('*:set', (/** @type {string} */ path) => {
-    const pathArray = path.split('.');
-    if (pathArray[1] !== 'stats') {
-        applySettings();
-    }
-});
-
 // Set initial values
 data.set('data', {
     scene: {
@@ -253,3 +245,13 @@ data.set('data', {
         highQuality: true
     }
 });
+
+// Apply UI changes. This is registered after the initial values are set, as setting them fires an
+// event for each value while the remaining values are still undefined.
+data.on('*:set', (/** @type {string} */ path) => {
+    const pathArray = path.split('.');
+    if (pathArray[1] !== 'stats') {
+        applySettings();
+    }
+});
+applySettings();
