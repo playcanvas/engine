@@ -28,6 +28,8 @@ describe('RenderPassCompose', function () {
         pass._gammaCorrection = GAMMA_SRGB;
         pass._shaderDirty = false;
         pass._customComposeChunks = new Map();
+        pass._effects = [];
+        pass._effectsState = '';
         pass.options = options;
         return { pass, getResized: () => resized };
     };

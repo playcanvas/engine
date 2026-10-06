@@ -10,9 +10,7 @@ export default /* glsl */`
     #include "composeBloomPS"
     #include "composeDofPS"
     #include "composeSsaoPS"
-    #include "composeGradingPS"
     #include "composeColorEnhancePS"
-    #include "composeVignettePS"
     #include "composeFringingPS"
     #include "composeCasPS"
     #include "composeColorLutPS"
@@ -25,6 +23,9 @@ export default /* glsl */`
         #include "screenDepthPS"
     #endif
 
+    // declarations of the effects registered with the CameraFrame, assembled by RenderPassCompose
+    #include "composeEffectDeclarationsPS"
+
     #include "composeDeclarationsPS"
 
     void main() {
@@ -36,6 +37,10 @@ export default /* glsl */`
         vec2 uv = vec2(uv0.x, mix(uv0.y, 1.0 - uv0.y, composeTargetFlipY));
 
         vec4 scene = texture2DLod(sceneTexture, uv, 0.0);
+
+        // COMPOSESLOT_SCENE effects - operate on the sampled scene colour including its alpha
+        #include "composeSlotSceneCallPS, COMPOSE_SCENE_COUNT"
+
         vec3 result = scene.rgb;
 
         // Apply CAS
@@ -68,10 +73,8 @@ export default /* glsl */`
             result = applyColorEnhance(result);
         #endif
 
-        // Apply Color Grading
-        #ifdef GRADING
-            result = applyGrading(result);
-        #endif
+        // COMPOSESLOT_HDR effects - linear, scene-referred colour
+        #include "composeSlotHdrCallPS, COMPOSE_HDR_COUNT"
 
         // Apply Tone Mapping
         result = toneMap(max(vec3(0.0), result));
@@ -81,10 +84,8 @@ export default /* glsl */`
             result = applyColorLUT(result);
         #endif
 
-        // Apply Vignette
-        #ifdef VIGNETTE
-            result = applyVignette(result, uv);
-        #endif
+        // COMPOSESLOT_LDR effects - display-referred colour, before gamma correction
+        #include "composeSlotLdrCallPS, COMPOSE_LDR_COUNT"
 
         #include "composeMainEndPS"
 
@@ -100,8 +101,6 @@ export default /* glsl */`
                 result = dBlur;
             #elif defined(SSAO_TEXTURE) && DEBUG_COMPOSE == ssao
                 result = vec3(dSsao);
-            #elif defined(VIGNETTE) && DEBUG_COMPOSE == vignette
-                result = vec3(dVignette);
             #elif DEBUG_COMPOSE == depth
                 // a linear ramp over the camera clip range
                 float dDepth = getLinearScreenDepth(uv);
@@ -110,10 +109,17 @@ export default /* glsl */`
                 // the depth was asked for while nothing in this frame produces it
                 result = vec3(0.0);
             #endif
+
+            // the debug view of the registered effect providing the active one, selected by
+            // RenderPassCompose through the COMPOSE_EFFECT_DEBUG define
+            #include "composeEffectDebugPS"
         #endif
 
         // Apply gamma correction
         result = gammaCorrectOutput(result);
+
+        // COMPOSESLOT_OUTPUT effects - final output values, after gamma correction
+        #include "composeSlotOutputCallPS, COMPOSE_OUTPUT_COUNT"
 
         gl_FragColor = vec4(result, scene.a);
     }

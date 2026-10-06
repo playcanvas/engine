@@ -874,6 +874,10 @@ class FramePassCameraFrame extends FramePass {
 
         // create a compose pass, which combines the results of the scene and other passes
         this.composePass = new RenderPassCompose(this.device, this.cameraComponent);
+
+        // the composition assembles its shader from the effects registered with the camera frame
+        this.composePass.effects = this.cameraFrame.effects;
+
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.hdrScene = this.hdrFormat !== PIXELFORMAT_RGBA8;
         this.composePass.taaEnabled = options.taaEnabled;
@@ -961,6 +965,20 @@ class FramePassCameraFrame extends FramePass {
         this.composePass.sceneTexture = sceneTexture;
         this.scenePassHalf?.setSourceTexture(sceneTexture);
         this.dofPass?.setSceneTexture(sceneTexture);
+
+        // The active effects prepare the frame - defines, and anything else deciding what renders.
+        // This runs before any pass they contribute to updates itself, as the frame graph updates a
+        // parent before its children, so the compose shader picks up a define changed here this
+        // frame; and after the TAA history was assigned above, so an effect reading the resolved
+        // scene colour sees this frame's. Their uniforms are written later, by the compose pass
+        // right before it draws.
+        const { effects } = this.cameraFrame;
+        for (let i = 0; i < effects.length; i++) {
+            const effect = effects[i];
+            if (effect.active) {
+                effect.frameUpdate();
+            }
+        }
     }
 }
 
