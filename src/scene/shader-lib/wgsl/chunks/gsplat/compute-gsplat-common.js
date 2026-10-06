@@ -32,6 +32,29 @@ struct SplatCov2D {
     #endif
 }
 
+// The quad renderers (gsplatCorner) draw a splat whose screen covariance is [a b; b c] as an
+// ellipse reaching 2 * sqrt(2) standard deviations: its semi-axes are 2 * sqrt(2 * lambda),
+// lambda being the eigenvalues of the covariance, each capped at 2 * vmin. The two helpers
+// below measure that same footprint, so the culls here drop exactly the splats a quad
+// renderer would not draw.
+
+// Half-size of the footprint's axis-aligned bounding box. An ellipse spans sqrt(a) and sqrt(c)
+// per standard deviation along x and y, so this is 2 * sqrt(2 * (a, c)), capped like the quad.
+fn splatFootprintHalfSize(a: f32, c: f32, vmin: f32) -> vec2f {
+    return 2.0 * min(sqrt(2.0 * vec2f(a, c)), vec2f(vmin));
+}
+
+// Whether the footprint's major axis is shorter than size, i.e. 2 * sqrt(2 * lambda1) < size
+// with lambda1 = 0.5 * (a + c) + length(vec2f(0.5 * (a - c), b)). Equivalent to computing that
+// and comparing, without square roots: the inequality is lambda1 < size^2 / 8, and a value t
+// exceeds lambda1 exactly when it lies above the midpoint of the eigenvalues and the
+// characteristic polynomial (t - a)(t - c) - b^2 is positive. The cap is left out: it only
+// matters on a viewport smaller than size / 2 pixels.
+fn splatFootprintSmallerThan(a: f32, b: f32, c: f32, size: f32) -> bool {
+    let t = size * size * 0.125;
+    return t > 0.5 * (a + c) && (t - a) * (t - c) > b * b;
+}
+
 fn computeSplatCov(
     worldCenter: vec3f,
     rotation: half4,
@@ -216,29 +239,25 @@ fn computeSplatCov(
     }
 
     let vmin = min(1024.0, min(viewportWidth, viewportHeight));
-    let maxRadius = vmin;
-    let radiusXUncapped = sqrt(2.0 * a);
-    let radiusYUncapped = sqrt(2.0 * c);
-    let radiusX = min(radiusXUncapped, maxRadius);
-    let radiusY = min(radiusYUncapped, maxRadius);
 
-    if (max(radiusX, radiusY) < minPixelSize) {
+    if (splatFootprintSmallerThan(a, b, c, minPixelSize)) {
         return result;
     }
 
     // Frustum cull: reject splats entirely off-screen
+    let halfSize = splatFootprintHalfSize(a, c, vmin);
     #ifdef GSPLAT_XR
         // Stereo union: reject only when off-screen in BOTH eyes, otherwise splats visible only
         // near one eye's edge (e.g. the right edge of the right eye) would be missing.
-        if ((screen.x + radiusX < 0.0 || screen.x - radiusX > viewportWidth ||
-             screen.y + radiusY < 0.0 || screen.y - radiusY > viewportHeight) &&
-            (screen1.x + radiusX < 0.0 || screen1.x - radiusX > viewportWidth ||
-             screen1.y + radiusY < 0.0 || screen1.y - radiusY > viewportHeight)) {
+        if ((screen.x + halfSize.x < 0.0 || screen.x - halfSize.x > viewportWidth ||
+             screen.y + halfSize.y < 0.0 || screen.y - halfSize.y > viewportHeight) &&
+            (screen1.x + halfSize.x < 0.0 || screen1.x - halfSize.x > viewportWidth ||
+             screen1.y + halfSize.y < 0.0 || screen1.y - halfSize.y > viewportHeight)) {
             return result;
         }
     #else
-        if (screen.x + radiusX < 0.0 || screen.x - radiusX > viewportWidth ||
-            screen.y + radiusY < 0.0 || screen.y - radiusY > viewportHeight) {
+        if (screen.x + halfSize.x < 0.0 || screen.x - halfSize.x > viewportWidth ||
+            screen.y + halfSize.y < 0.0 || screen.y - halfSize.y > viewportHeight) {
             return result;
         }
     #endif
@@ -247,7 +266,8 @@ fn computeSplatCov(
     // so the Gaussian reaches its cutoff at the capped boundary. Without this,
     // the Gaussian is still opaque at the boundary, creating hard rectangular
     // edges. This matches the quad renderer's implicit UV renormalization.
-    let capScale = max(1.0, max(radiusXUncapped, radiusYUncapped) / maxRadius);
+    // max(sqrt(2a), sqrt(2c)) taken as one square root.
+    let capScale = max(1.0, sqrt(2.0 * max(a, c)) / vmin);
     let invCapScale2 = 1.0 / (capScale * capScale);
 
     result.screen = screen;
