@@ -27,10 +27,6 @@ var<private> sSpecularLight: vec3f;
 
 // FRAGMENT SHADER INPUTS: UNIFORMS
 
-#ifdef LIT_DISPERSION
-    uniform material_dispersion: f32;
-#endif
-
 #ifndef LIT_OPACITY_FADES_SPECULAR
     uniform material_alphaFade: f32;
 #endif

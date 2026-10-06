@@ -28,6 +28,10 @@ export default /* glsl */`
         // the ambient color of the material
         uniform vec3 material_ambient;
 
+        #ifdef LIT_DISPERSION
+            uniform float material_dispersion;
+        #endif
+
         #ifdef LIT_REFRACTION
             float dTransmission;
             float dThickness;
