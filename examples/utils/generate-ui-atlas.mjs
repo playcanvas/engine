@@ -257,18 +257,53 @@ const TEXTURES = [
         <path d="M150 60 L125 100 L140 95 L150 108 L162 94 L178 96 Z" fill="#fff"/>
         <path d="M70 110 L58 124 L70 120 L80 128 Z" fill="#fff"/>
         <path d="M0 205 C60 195 120 210 240 198 V240 H0 Z" fill="#4f6b8c"/>`),
-    // a map of the world the levels are in, for showing part of a texture
+    // a map of the world the levels are in, for showing part of a texture: an island with a
+    // landmark for each level, the paths between them, and a compass. The levels are at the
+    // mountain's summit, the pyramid's tip, the tallest pine and the top of the crypt's arch.
     frame('world-map', 400, 300, `
         <rect width="400" height="300" fill="#2e5d8a"/>
-        <path d="M40 150 C40 80 120 40 200 50 C290 60 360 90 360 150 C360 220 290 265 200 260
-            C110 255 40 220 40 150 Z" fill="#d8c99a"/>
-        <path d="M70 180 C80 150 130 145 150 170 C165 195 140 230 105 228 C80 226 64 205 70 180 Z"
-            fill="#4f8a4f"/>
-        <path d="M90 110 L115 75 L140 110 Z M120 115 L150 70 L180 115 Z" fill="#8a93a6"/>
-        <path d="M108 85 L115 75 L122 85 Z M142 82 L150 70 L158 82 Z" fill="#f2f4f8"/>
-        <path d="M230 80 C260 70 310 80 330 110 C300 115 260 112 230 80 Z" fill="#e3a35a"/>
-        <path d="M250 190 C270 170 320 175 325 205 C320 232 280 240 255 225 C240 215 240 200 250 190 Z"
-            fill="#4a4a6a"/>`),
+        <path d="M18 26 q4 -4 8 0 q4 4 8 0 M52 40 q4 -4 8 0 q4 4 8 0 M232 18 q4 -4 8 0 q4 4 8 0
+            M300 28 q4 -4 8 0 q4 4 8 0 M372 50 q4 -4 8 0 q4 4 8 0 M378 124 q4 -4 8 0 q4 4 8 0
+            M380 196 q4 -4 8 0 q4 4 8 0 M302 284 q4 -4 8 0 q4 4 8 0 M222 286 q4 -4 8 0 q4 4 8 0
+            M98 280 q4 -4 8 0 q4 4 8 0 M16 120 q4 -4 8 0 q4 4 8 0 M22 206 q4 -4 8 0 q4 4 8 0" fill="none"
+            stroke="#4d7fae" stroke-width="2" stroke-linecap="round"/>
+        <defs><path id="land" d="M40 152 C41 140 44 125 50 114 C56 103 64 92 74 84 C84 76 96 69 108 64
+            C120 59 135 55 148 54 C161 53 173 61 184 60 C195 59 202 50 214 48 C226 46 241 47 254 48
+            C267 49 282 52 294 56 C306 60 318 66 328 74 C338 82 346 92 352 102 C358 112 361 124 362 136
+            C363 148 361 160 358 172 C355 184 350 196 344 206 C338 216 329 226 320 234 C311 242 299 248 288 252
+            C277 256 263 260 252 260 C241 260 232 253 222 254 C212 255 205 263 194 264 C183 265 170 264 158 262
+            C146 260 132 256 120 252 C108 248 96 243 86 236 C76 229 67 221 60 212 C53 203 47 194 44 184
+            C41 174 39 164 40 152 Z M352 262 C354 258 361 251 366 250 C371 249 379 252 382 256
+            C385 260 386 268 384 272 C382 276 373 280 368 280 C363 280 357 277 354 274 C351 271 350 266 352 262 Z"/>
+        </defs>
+        <use href="#land" fill="none" stroke="#3b6e9c" stroke-width="16" stroke-linejoin="round"/>
+        <use href="#land" fill="#ddcd9c" stroke="#b39c66" stroke-width="2.5"/>
+        <path d="M178 146 C181 141 189 137 196 136 C203 135 214 137 220 140 C226 143 230 151 230 156
+            C230 161 224 169 218 172 C212 175 201 175 194 174 C187 173 181 169 178 164 C175 159 175 151 178 146 Z"
+            fill="#4a7fae" stroke="#3b6e9c" stroke-width="2"/>
+        <path d="M110 180 C104 162 108 146 116 134 M158 120 C192 130 228 128 258 116 M292 120 C306 148 306 178 292 204
+            M262 238 C222 252 172 250 134 234" fill="none" stroke="#9c7f52" stroke-width="2.4"
+            stroke-dasharray="5 5" stroke-linecap="round"/>
+        <ellipse cx="106" cy="214" rx="40" ry="26" fill="#7aae64"/>
+        <path d="M100 222 L108 189 L116 222 Z M82 226 L90 204 L98 226 Z M118 230 L126 206 L134 230 Z
+            M90 240 L97 220 L104 240 Z M110 242 L117 222 L124 242 Z" fill="#2f6b3c"/>
+        <path d="M78 130 L101 102 L122 130 Z M140 130 L158 106 L178 130 Z" fill="#7f899e"/>
+        <path d="M94 130 L120 90 L148 130 Z" fill="#949eb2"/>
+        <path d="M120 90 L111 104 L116 101 L121 106 L126 101 L131 105 Z M158 106 L152 114 L158 112 L163 115 Z"
+            fill="#f4f6fa"/>
+        <ellipse cx="282" cy="112" rx="46" ry="20" fill="#eab86e"/>
+        <path d="M244 124 q12 -7 24 0 M290 126 q14 -8 28 0" fill="none" stroke="#cf9450" stroke-width="2.4"
+            stroke-linecap="round"/>
+        <path d="M262 114 L280 90 L298 114 Z" fill="#c9824a"/>
+        <path d="M280 90 L298 114 H287 Z" fill="#a5663a"/>
+        <ellipse cx="286" cy="232" rx="40" ry="18" fill="#6c6a86"/>
+        <path d="M270 240 V222 C270 214 276 210 284 210 C292 210 298 214 298 222 V240 Z" fill="#4c4966"/>
+        <path d="M277 240 V226 C277 221 280 218 284 218 C288 218 291 221 291 226 V240 Z" fill="#f29a4a"/>
+        <path d="M306 236 V229 A4 4 0 0 1 314 229 V236 Z M254 238 V232 A3.5 3.5 0 0 1 261 232 V238 Z"
+            fill="#8d8aa6"/>
+        <path d="M36 242 L41 262 L36 282 L31 262 Z" fill="#e9dcb4"/>
+        <path d="M36 242 L41 262 H31 Z" fill="#f29a4a"/>
+        <path d="M16 262 L36 258 L56 262 L36 266 Z" fill="#c9bb8c"/>`),
     // the background of XrMenu buttons, stretched to each button
     frame('menu-button', 170, 54, `
         <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
