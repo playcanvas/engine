@@ -4,6 +4,7 @@ import path from 'node:path';
 
 import {
     createExampleHtml,
+    createRedirectHtml,
     createShareHtml,
     exampleMetaData,
     getEnginePath,
@@ -11,6 +12,8 @@ import {
     getExample,
     getExamplePath,
     getFiles,
+    getRedirect,
+    getRedirects,
     loadExampleMetaData,
     readExampleConfig,
     slash,
@@ -474,7 +477,7 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
     // mode can serve the same crawler-friendly wrapper as prod without writing dist/.
     if (url.startsWith('/share/')) {
         const slug = url.slice('/share/'.length).replace(/\/(index\.html)?$/, '');
-        const item = slug ? getExample(slug) : undefined;
+        const item = slug ? getExample(slug) ?? getRedirect(slug) : undefined;
         if (item) {
             const host = req.headers.host ?? 'localhost';
             const proto = req.headers['x-forwarded-proto'] ?? (req.socket?.encrypted ? 'https' : 'http');
@@ -518,6 +521,11 @@ const handle = async (server, req, res, engineInfo, engineStamp) => {
             }), 'text/html; charset=utf-8');
             return true;
         }
+        const redirect = getRedirect(name);
+        if (redirect) {
+            sendText(res, createRedirectHtml(redirect), 'text/html; charset=utf-8');
+            return true;
+        }
     }
 
     if (url.startsWith(IFRAME_PREFIX)) {
@@ -545,6 +553,14 @@ export const examplesDevServer = ({ hmr = true } = {}) => {
          */
         async configureServer(server) {
             await loadExampleMetaData();
+
+            // reported rather than thrown, unlike in the production build, so a stale redirect
+            // does not take the dev server down
+            try {
+                getRedirects();
+            } catch (err) {
+                server.config.logger.error(err.message);
+            }
             const types = createTypesBuilder(server.config.logger);
             const roots = [
                 path.resolve('src/examples'),

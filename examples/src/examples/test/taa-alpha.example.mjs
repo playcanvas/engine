@@ -268,7 +268,7 @@ cameraFrame.taa.jitter = 1;
 const applySettings = () => {
     cameraFrame.taa.enabled = data.get('data.taa.enabled');
     cameraFrame.rendering.renderTargetScale = data.get('data.scene.scale');
-    // Sharpen when TAA is on (same idea as graphics/taa.example.mjs); CameraFrame stays active when TAA is off.
+    // Sharpen when TAA is on (same idea as camera-frame/taa.example.mjs); CameraFrame stays active when TAA is off.
     cameraFrame.rendering.sharpness = data.get('data.taa.enabled') ? 1 : 0;
     cameraFrame.update();
 };

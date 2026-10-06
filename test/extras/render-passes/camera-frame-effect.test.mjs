@@ -5,10 +5,14 @@ import { Debug } from '../../../src/core/debug.js';
 import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import { COMPOSESLOT_HDR, COMPOSESLOT_LDR, COMPOSESLOT_SCENE } from '../../../src/extras/render-passes/constants.js';
+import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
+import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
+import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
+import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
-import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA8, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../../src/platform/graphics/constants.js';
 import { NullGraphicsDevice } from '../../../src/platform/graphics/null/null-graphics-device.js';
 import { CameraShaderParams } from '../../../src/scene/camera-shader-params.js';
 import { RenderPassShaderQuad } from '../../../src/scene/graphics/render-pass-shader-quad.js';
@@ -122,11 +126,22 @@ describe('CameraFrameEffect', function () {
             expect(new CameraFrameEffect(device, 'x').device).to.equal(device);
         });
 
-        it('is used by the built-in effects', function () {
-            expect(new VignetteEffect(device).id).to.equal('vignette');
-            expect(new VignetteEffect(device).slot).to.equal(COMPOSESLOT_LDR);
-            expect(new GradingEffect(device).id).to.equal('grading');
-            expect(new GradingEffect(device).slot).to.equal(COMPOSESLOT_HDR);
+        it('is used by the built-in effects, each at the slot matching its place in the composition', function () {
+            const builtIns = [
+                [CasEffect, 'cas', COMPOSESLOT_SCENE],
+                [FringingEffect, 'fringing', COMPOSESLOT_SCENE],
+                [ColorEnhanceEffect, 'colorEnhance', COMPOSESLOT_HDR],
+                [GradingEffect, 'grading', COMPOSESLOT_HDR],
+                [ColorLutEffect, 'colorLut', COMPOSESLOT_LDR],
+                [VignetteEffect, 'vignette', COMPOSESLOT_LDR]
+            ];
+            for (const [EffectClass, id, slot] of builtIns) {
+                const effect = new EffectClass(device);
+                expect(effect.id).to.equal(id);
+                expect(effect.slot).to.equal(slot);
+                expect(effect.glsl).to.be.a('string');
+                expect(effect.wgsl).to.be.a('string');
+            }
         });
     });
 
@@ -148,6 +163,20 @@ describe('CameraFrameEffect', function () {
             expect(new VignetteEffect(device).entryPoint).to.equal('applyVignette');
             expect(new GradingEffect(device).chunkName).to.equal('composeGradingPS');
             expect(new GradingEffect(device).defineName).to.equal('GRADING');
+            expect(new CasEffect(device).chunkName).to.equal('composeCasPS');
+            expect(new CasEffect(device).defineName).to.equal('CAS');
+            expect(new FringingEffect(device).chunkName).to.equal('composeFringingPS');
+            expect(new ColorEnhanceEffect(device).chunkName).to.equal('composeColorEnhancePS');
+            expect(new ColorLutEffect(device).chunkName).to.equal('composeColorLutPS');
+            expect(new ColorLutEffect(device).defineName).to.equal('COLOR_LUT');
+        });
+
+        it('names an entry function each built-in chunk declares', function () {
+            for (const EffectClass of [CasEffect, FringingEffect, ColorEnhanceEffect, GradingEffect, ColorLutEffect, VignetteEffect]) {
+                const effect = new EffectClass(device);
+                expect(effect.glsl, effect.id).to.include(` ${effect.entryPoint}(`);
+                expect(effect.wgsl, effect.id).to.include(`fn ${effect.entryPoint}(`);
+            }
         });
 
         it('lets the derived names be given explicitly', function () {
@@ -175,11 +204,78 @@ describe('CameraFrameEffect', function () {
             expect(effect.active).to.equal(false);
         });
 
-        it('is off by default for grading', function () {
-            const effect = new GradingEffect(device);
-            expect(effect.active).to.equal(false);
-            effect.enabled = true;
-            expect(effect.active).to.equal(true);
+        it('is off by default for grading and color enhancement', function () {
+            for (const EffectClass of [GradingEffect, ColorEnhanceEffect]) {
+                const effect = new EffectClass(device);
+                expect(effect.active).to.equal(false);
+                effect.enabled = true;
+                expect(effect.active).to.equal(true);
+            }
+        });
+
+        it('is gated on the intensity for fringing and the sharpness for CAS', function () {
+            const fringing = new FringingEffect(device);
+            expect(fringing.active).to.equal(false);
+            fringing.intensity = 10;
+            expect(fringing.active).to.equal(true);
+
+            const cas = new CasEffect(device);
+            expect(cas.active).to.equal(false);
+            cas.sharpness = 0.5;
+            expect(cas.active).to.equal(true);
+            cas.enabled = false;
+            expect(cas.active).to.equal(false);
+        });
+
+        it('is gated on the primary texture for the color LUT', function () {
+            const lut = new ColorLutEffect(device);
+            expect(lut.active).to.equal(false);
+            lut.texture2 = /** @type {any} */ ({});
+            expect(lut.active).to.equal(false);
+            lut.texture = /** @type {any} */ ({});
+            expect(lut.active).to.equal(true);
+        });
+    });
+
+    describe('frameUpdate of the built-in effects', function () {
+
+        it('maps an HDR scene to LDR around the sharpening, from the scene format of the camera frame', function () {
+            const cas = new CasEffect(device);
+            expect(cas._defines.get('CAS_HDR')).to.equal(true);
+
+            cas.cameraFrame = /** @type {any} */ ({ hdrFormat: PIXELFORMAT_RGBA8 });
+            cas.frameUpdate();
+            expect(cas._defines.has('CAS_HDR')).to.equal(false);
+
+            cas.cameraFrame = /** @type {any} */ ({ hdrFormat: PIXELFORMAT_RGBA16F });
+            cas.frameUpdate();
+            expect(cas._defines.get('CAS_HDR')).to.equal(true);
+        });
+
+        it('samples the secondary LUT only while one is assigned', function () {
+            const lut = new ColorLutEffect(device);
+            lut.texture = /** @type {any} */ ({ width: 256, height: 16, srgb: true });
+            lut.frameUpdate();
+            expect(lut._defines.has('COLOR_LUT2')).to.equal(false);
+
+            lut.texture2 = lut.texture;
+            lut.frameUpdate();
+            expect(lut._defines.get('COLOR_LUT2')).to.equal(true);
+
+            lut.texture2 = null;
+            lut.frameUpdate();
+            expect(lut._defines.has('COLOR_LUT2')).to.equal(false);
+        });
+
+        it('warns once about a LUT texture configured differently from how it is sampled', function () {
+            const lut = new ColorLutEffect(device);
+            lut.texture = /** @type {any} */ ({ name: 'badLut', width: 64, height: 64, srgb: false, mipmaps: true });
+            lut.frameUpdate();
+            lut.frameUpdate();
+
+            expect(Debug.warnOnce.callCount).to.equal(1);
+            expect(Debug.warnOnce.firstCall.args[0]).to.include('CameraFrame.colorLUT.texture: texture \'badLut\'');
+            expect(Debug.warnOnce.firstCall.args[0]).to.include('size: 256x16');
         });
     });
 

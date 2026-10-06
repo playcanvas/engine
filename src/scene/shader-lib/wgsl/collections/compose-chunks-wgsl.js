@@ -2,20 +2,12 @@ import composePS from '../chunks/render-pass/frag/compose/compose.js';
 import composeBloomPS from '../chunks/render-pass/frag/compose/compose-bloom.js';
 import composeDofPS from '../chunks/render-pass/frag/compose/compose-dof.js';
 import composeSsaoPS from '../chunks/render-pass/frag/compose/compose-ssao.js';
-import composeColorEnhancePS from '../chunks/render-pass/frag/compose/compose-color-enhance.js';
-import composeFringingPS from '../chunks/render-pass/frag/compose/compose-fringing.js';
-import composeCasPS from '../chunks/render-pass/frag/compose/compose-cas.js';
-import composeColorLutPS from '../chunks/render-pass/frag/compose/compose-color-lut.js';
 
 export const composeChunksWGSL = {
     composePS,
     composeBloomPS,
     composeDofPS,
     composeSsaoPS,
-    composeColorEnhancePS,
-    composeFringingPS,
-    composeCasPS,
-    composeColorLutPS,
 
     // empty chunks for user customizations
     composeDeclarationsPS: '',

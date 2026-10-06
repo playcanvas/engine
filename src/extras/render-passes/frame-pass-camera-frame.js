@@ -879,7 +879,6 @@ class FramePassCameraFrame extends FramePass {
         this.composePass.effects = this.cameraFrame.effects;
 
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
-        this.composePass.hdrScene = this.hdrFormat !== PIXELFORMAT_RGBA8;
         this.composePass.taaEnabled = options.taaEnabled;
         this.composePass.cocTexture = this.dofPass?.cocTexture;
         this.composePass.blurTexture = this.dofPass?.blurTexture;
