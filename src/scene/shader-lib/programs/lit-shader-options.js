@@ -96,8 +96,6 @@ class LitShaderOptions {
 
     useAo = false;
 
-    diffuseMapEnabled = false;
-
     pixelSnap = false;
 
     /**

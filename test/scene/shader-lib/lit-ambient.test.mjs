@@ -110,14 +110,17 @@ describe('Lit shader ambient tint', function () {
         expect(forwardShader(lit).definition.fshader).to.match(/litArgs_ambient = vec3f?\(1\.0, 0\.0, 0\.0\);/);
     });
 
-    it('tints the legacy ambient lighting of a LitMaterial without a Fresnel model', function () {
+    it('tints the ambient lighting of a LitMaterial without a Fresnel model like any other', function () {
         const material = litMaterial(true);
         material.fresnelModel = FRESNEL_NONE;
         material.hasSpecular = true;
         const lit = addBox(material, 0);
         app.render();
 
-        // the legacy combine replaces the albedo of the ambient lighting by the tint
-        expect(forwardShader(lit).definition.fshader).to.match(/\(dDiffuseLight - \S*light_globalAmbient\) \* albedo \+ litArgs_ambient \* \S*light_globalAmbient/);
+        // the tint multiplies the diffuse lighting, which is then multiplied by the albedo, rather
+        // than replacing the albedo of the ambient lighting as the removed legacy combine did
+        const source = forwardShader(lit).definition.fshader;
+        expect(source).to.match(/dDiffuseLight (\*= |= dDiffuseLight \* )litArgs_ambient;/);
+        expect(source).not.to.match(/\(dDiffuseLight - \S*light_globalAmbient\) \* albedo/);
     });
 });

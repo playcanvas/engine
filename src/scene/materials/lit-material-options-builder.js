@@ -100,7 +100,6 @@ class LitMaterialOptionsBuilder {
         litOptions.useNormals = material.hasNormals;
         litOptions.useClearCoatNormals = material.hasClearCoatNormals;
         litOptions.useAo = material.hasAo;
-        litOptions.diffuseMapEnabled = material.hasDiffuseMap;
     }
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {

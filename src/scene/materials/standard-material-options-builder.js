@@ -140,7 +140,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useNormals = options.normalMap;
         options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
         options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.litOptions.ssao;
-        options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
     _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, textureIdentifiers) {

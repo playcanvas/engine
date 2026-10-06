@@ -2,11 +2,7 @@ export default /* wgsl */`
 fn combineColor(albedo: vec3f, sheenSpecularity: vec3f, clearcoatSpecularity: f32) -> vec3f {
     var ret: vec3f = vec3f(0.0);
 
-    #ifdef LIT_OLD_AMBIENT
-        ret = ret + ((dDiffuseLight - uniform.light_globalAmbient) * albedo + litArgs_ambient * uniform.light_globalAmbient);
-    #else
-        ret = ret + (albedo * dDiffuseLight);
-    #endif // LIT_OLD_AMBIENT
+    ret = ret + (albedo * dDiffuseLight);
     #ifdef LIT_SPECULAR
         ret = ret + dSpecularLight;
     #endif // LIT_SPECULAR
