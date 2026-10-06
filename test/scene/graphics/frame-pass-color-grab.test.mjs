@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 
+import { Entity } from '../../../src/framework/entity.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { Camera } from '../../../src/scene/camera.js';
 import { GAMMA_NONE, GAMMA_SRGB } from '../../../src/scene/constants.js';
@@ -116,5 +117,15 @@ describe('FramePassColorGrab', function () {
 
         grab.destroy();
         camera.destroy();
+    });
+
+    it('grabs the color of a camera which requests the scene color map', function () {
+        const camera = new Entity('camera');
+        camera.addComponent('camera');
+        camera.camera.requestSceneColorMap(true);
+        app.root.addChild(camera);
+
+        expect(() => app.render()).to.not.throw();
+        expect(camera.camera.camera.sceneColorMapHandle.texture).to.not.equal(null);
     });
 });
