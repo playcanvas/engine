@@ -241,12 +241,16 @@ const rightOnly = new Set(['alphaDither']);
 // Handle UI changes
 data.on('*:set', (/** @type {string} */ path, value) => {
     const propertyName = path.split('.')[1];
-    const targets = rightOnly.has(propertyName) ? rightMaterials : [...leftMaterials, ...rightMaterials];
 
-    targets.forEach((material) => {
-        material[propertyName] = value;
-        material.update();
-    });
+    // only the material properties: taa is a camera setting, and the initial values also fire an
+    // event for the whole data, which has no property name
+    if (propertyName && propertyName !== 'taa') {
+        const targets = rightOnly.has(propertyName) ? rightMaterials : [...leftMaterials, ...rightMaterials];
+        targets.forEach((material) => {
+            material[propertyName] = value;
+            material.update();
+        });
+    }
 
     applySettings();
 });
