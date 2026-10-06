@@ -91,7 +91,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useIridescence = material.hasIridescence;
         litOptions.useMetalness = material.hasMetalness;
         litOptions.useDynamicRefraction = material.dynamicRefraction;
-        litOptions.dispersion = material.dispersion > 0;
+        litOptions.dispersion = material.hasDispersion;
 
         litOptions.vertexColors = false;
         litOptions.lightMapEnabled = material.hasLighting;

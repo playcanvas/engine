@@ -85,6 +85,8 @@ class LitMaterial extends Material {
 
     hasRefraction = false;
 
+    hasDispersion = false;
+
     hasIridescence = false;
 
     hasMetalness = false;
