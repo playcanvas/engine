@@ -164,11 +164,12 @@ class BindGroup {
     }
 
     /**
-     * Assign a storage buffer to a slot, given its index in the format's storage buffers.
+     * Assign a storage buffer to a slot, given its index in the format's storage buffers. See
+     * {@link BindGroup#setTextureAt}.
      *
      * @param {number} index - The index of the storage buffer slot.
      * @param {StorageBuffer} storageBuffer - The storage buffer to assign to the slot.
-     * @private
+     * @ignore
      */
     setStorageBufferAt(index, storageBuffer) {
         if (this.storageBuffers[index] !== storageBuffer) {
@@ -229,11 +230,12 @@ class BindGroup {
     }
 
     /**
-     * Assign a storage texture to a slot, given its index in the format's storage textures.
+     * Assign a storage texture to a slot, given its index in the format's storage textures. See
+     * {@link BindGroup#setTextureAt}.
      *
      * @param {number} index - The index of the storage texture slot.
      * @param {Texture|TextureView} value - Texture or TextureView to assign to the slot.
-     * @private
+     * @ignore
      */
     setStorageTextureAt(index, value) {
 

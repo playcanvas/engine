@@ -325,7 +325,7 @@ class RenderPassForward extends RenderPass {
                 if (name === SCENETEXTURE_DEPTH) {
                     // the depth is published for the camera, as well as to the global uniform. The
                     // sceneTexturesPS chunk always writes the reciprocal of the linear depth
-                    this.sceneTexturesCamera.publishSceneDepthMap(texture, this.device.renderVersion, true, false, true);
+                    this.sceneTexturesCamera.publishSceneDepthMap(texture, this.device.renderVersion, true, false, true, renderTarget.flipY);
                 } else {
                     const uniformName = sceneTextureUniformNames[name];
                     Debug.assert(uniformName, `Scene texture '${name}' has no uniform to be published under, see sceneTextureUniformNames.`);

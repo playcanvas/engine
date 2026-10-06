@@ -6,6 +6,8 @@ import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from './constants.js';
 import { DebugGraphics } from './debug-graphics.js';
 import { ShaderDefinitionUtils } from './shader-definition-utils.js';
 import halfTypes from './shader-chunks/frag/half-types.js';
+import sceneColorCS from './shader-chunks/compute/scene-color.js';
+import sceneDepthCS from './shader-chunks/compute/scene-depth.js';
 
 /**
  * @import { BindGroupFormat } from './bind-group-format.js'
@@ -27,6 +29,16 @@ let id = 0;
  * @category Graphics
  */
 class Shader {
+    /**
+     * The definition of a compute shader as supplied, before its source is pre-processed, or null
+     * for a vertex and fragment shader. Variants of the compute shader, compiled with additional
+     * defines, are created from it.
+     *
+     * @type {object|null}
+     * @ignore
+     */
+    computeDefinition = null;
+
     /**
      * Format of the uniform buffer for mesh bind group.
      *
@@ -195,6 +207,10 @@ class Shader {
             Debug.assert(graphicsDevice.supportsCompute, 'Compute shaders are not supported on this device.');
             Debug.assert(!definition.vshader && !definition.fshader, 'Vertex and fragment shaders are not supported when creating a compute shader.');
 
+            // the definition as supplied, before its source is pre-processed, which variants
+            // compiled with additional defines are created from
+            this.computeDefinition = { ...definition };
+
             // keep reference to unmodified shader in debug mode
             Debug.call(() => {
                 this.cUnmodified = definition.cshader;
@@ -206,11 +222,17 @@ class Shader {
 
             const cshader = enablesCode + definesCode + definition.cshader;
 
-            // Add built-in halfTypesCS include for compute shaders (if not already provided by
-            // user). Note this copies the supplied map, which must not be modified.
+            // Add the built-in includes for compute shaders (if not already provided by user). Note
+            // this copies the supplied map, which must not be modified.
             const cincludes = new Map(definition.cincludes);
             if (!cincludes.has('halfTypesCS')) {
                 cincludes.set('halfTypesCS', halfTypes);
+            }
+            if (!cincludes.has('sceneDepthCS')) {
+                cincludes.set('sceneDepthCS', sceneDepthCS);
+            }
+            if (!cincludes.has('sceneColorCS')) {
+                cincludes.set('sceneColorCS', sceneColorCS);
             }
 
             // pre-process compute shader source

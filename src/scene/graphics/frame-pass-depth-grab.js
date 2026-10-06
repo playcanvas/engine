@@ -114,7 +114,7 @@ class FramePassDepthGrab extends FramePass {
         // publish the depth texture - the grab copies (or resolves) the depth buffer values as they
         // are, which are not linear
         const colorBuffer = useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer;
-        camera.publishSceneDepthMap(colorBuffer, device.renderVersion, false, false, false);
+        camera.publishSceneDepthMap(colorBuffer, device.renderVersion, false, false, false, destinationRt.flipY);
     }
 
     execute() {

@@ -1769,13 +1769,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     computeDispatch(computes, name = 'Unnamed') {
 
+        // read the attached scene maps, before the pass starts, as this can switch a compute to a
+        // different shader variant, which creates its pipeline and bind groups
+        for (let i = 0; i < computes.length; i++) {
+            computes[i].prepareDispatch();
+        }
+
         this.startComputePass(name);
 
         // update uniform buffers and bind groups
         for (let i = 0; i < computes.length; i++) {
-            const compute = computes[i];
-            compute.applyParameters();
-            compute.impl.updateBindGroup();
+            computes[i].impl.updateBindGroup();
         }
 
         // dispatch

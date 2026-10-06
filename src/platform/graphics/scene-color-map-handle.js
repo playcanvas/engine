@@ -9,6 +9,9 @@
  * the camera, and always identifies the color map the camera rendered most recently, together with
  * how it is encoded, even as the camera renders it to a different texture.
  *
+ * Pass the handle to {@link Compute#setSceneColorMap} to make the color map available to a compute
+ * shader.
+ *
  * @hideconstructor
  * @category Graphics
  */

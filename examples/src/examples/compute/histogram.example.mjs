@@ -14,9 +14,6 @@ import {
     AssetListLoader,
     BUFFERUSAGE_COPY_DST,
     BUFFERUSAGE_COPY_SRC,
-    BindGroupFormat,
-    BindStorageBufferFormat,
-    BindTextureFormat,
     CameraComponentSystem,
     Color,
     Compute,
@@ -27,7 +24,6 @@ import {
     RESOLUTION_AUTO,
     RenderComponentSystem,
     SHADERLANGUAGE_WGSL,
-    SHADERSTAGE_COMPUTE,
     ScriptComponentSystem,
     Shader,
     StorageBuffer,
@@ -110,8 +106,8 @@ camera.addComponent('camera', {
 app.root.addChild(camera);
 camera.setPosition(0, 0, 5);
 
-// Enable the camera to render the scene's color map, available as uSceneColorMap in the shaders.
-// This allows us to use the rendered scene as an input for the histogram compute shader.
+// Enable the camera to render the scene's color map. This allows us to use the rendered scene as an
+// input for the histogram compute shader.
 camera.camera.requestSceneColorMap(true);
 
 // Create directional light entity
@@ -130,20 +126,13 @@ Rotator.prototype.update = function (/** @type {number} */ dt) {
     this.entity.rotate(5 * dt, 10 * dt, -15 * dt);
 };
 
-// A compute shader that will compute the histogram of the input texture and write the result to the storage buffer
+// A compute shader that will compute the histogram of the scene color map and write the result to
+// the storage buffer. Its resources use the simplified WGSL syntax, and are reflected automatically.
 const shader = device.supportsCompute
     ? new Shader(device, {
           name: 'ComputeShader',
           shaderLanguage: SHADERLANGUAGE_WGSL,
-          cshader: computeShaderWgsl,
-
-          // Format of a bind group, providing resources for the compute shader
-          computeBindGroupFormat: new BindGroupFormat(device, [
-              // Input texture - the scene color map, without a sampler
-              new BindTextureFormat('uSceneColorMap', SHADERSTAGE_COMPUTE, undefined, undefined, false),
-              // Output storage buffer
-              new BindStorageBufferFormat('outBuffer', SHADERSTAGE_COMPUTE)
-          ])
+          cshader: computeShaderWgsl
       })
     : null;
 
@@ -156,10 +145,12 @@ const histogramStorageBuffer = new StorageBuffer(
         BUFFERUSAGE_COPY_DST // needed for clearing the buffer
 );
 
-// Create an instance of the compute shader, and set the input and output data. Note that we do
-// Not provide a value for `uSceneColorMap` as this is done by the engine internally.
+// Create an instance of the compute shader, and set the input and output data. The scene color map
+// of the camera is attached once - each dispatch then reads the color map the camera rendered most
+// recently.
 const compute = new Compute(device, shader, 'ComputeHistogram');
-compute.setParameter('outBuffer', histogramStorageBuffer);
+compute.setSceneColorMap(camera.camera.sceneColorMapHandle);
+compute.setParameter('bins', histogramStorageBuffer);
 
 // Instantiate the spinning mesh
 const solid = assets.solid.resource.instantiateRenderEntity();
