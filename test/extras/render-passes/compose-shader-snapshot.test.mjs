@@ -7,6 +7,10 @@ import { expect } from 'chai';
 
 import { MapUtils } from '../../../src/core/map-utils.js';
 import { Preprocessor } from '../../../src/core/preprocessor.js';
+import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
+import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
+import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
+import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
@@ -98,11 +102,20 @@ describe('RenderPassCompose shader snapshot', function () {
         pass._gammaCorrection = GAMMA_SRGB;
 
         // the built-in effects a CameraFrame registers, in the order it registers them. The
-        // combinations drive their state; only getShaderVariant is exercised, which needs no
-        // CameraFrame behind the effects.
+        // combinations drive their state; only getShaderVariant is exercised, so the camera frame
+        // behind the effects is a stub supplying the scene format the sharpening reads
+        pass.cas = new CasEffect(device);
+        pass.fringing = new FringingEffect(device);
+        pass.colorEnhance = new ColorEnhanceEffect(device);
         pass.grading = new GradingEffect(device);
+        pass.colorLut = new ColorLutEffect(device);
         pass.vignette = new VignetteEffect(device);
-        pass.effects = [pass.grading, pass.vignette];
+        const effects = [pass.cas, pass.fringing, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F };
+        effects.forEach((effect) => {
+            effect.cameraFrame = cameraFrame;
+        });
+        pass.effects = effects;
         return pass;
     };
 
@@ -113,14 +126,13 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.blurTextureUpscale = true;
         pass.ssaoTexture = textures.ssao;
         pass.grading.enabled = true;
-        pass.colorEnhanceEnabled = true;
-        pass.colorLUT = textures.lut;
-        pass.colorLUT2 = textures.lut2;
+        pass.colorEnhance.enabled = true;
+        pass.colorLut.texture = textures.lut;
+        pass.colorLut.texture2 = textures.lut2;
         pass.vignette.intensity = 0.3;
-        pass.fringingEnabled = true;
+        pass.fringing.intensity = 10;
         pass.taaEnabled = true;
-        pass.sharpness = 0.5;
-        pass.hdrScene = true;
+        pass.cas.sharpness = 0.5;
     };
 
     const withDepth = (pass, available) => {
@@ -150,14 +162,26 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'dof-upscale', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur, blurTextureUpscale: true }) },
         { name: 'ssao', set: (pass, t) => ({ ssaoTexture: t.ssao }) },
         { name: 'grading', set: pass => (pass.grading.enabled = true) },
-        { name: 'color-enhance', set: () => ({ colorEnhanceEnabled: true }) },
-        { name: 'color-lut', set: (pass, t) => ({ colorLUT: t.lut }) },
-        { name: 'color-lut2', set: (pass, t) => ({ colorLUT: t.lut, colorLUT2: t.lut2 }) },
+        { name: 'color-enhance', set: pass => (pass.colorEnhance.enabled = true) },
+        { name: 'color-lut', set: (pass, t) => (pass.colorLut.texture = t.lut) },
+        {
+            name: 'color-lut2',
+            set: (pass, t) => {
+                pass.colorLut.texture = t.lut;
+                pass.colorLut.texture2 = t.lut2;
+            }
+        },
         { name: 'vignette', set: pass => (pass.vignette.intensity = 0.3) },
-        { name: 'fringing', set: () => ({ fringingEnabled: true }) },
+        { name: 'fringing', set: pass => (pass.fringing.intensity = 10) },
         { name: 'taa', set: () => ({ taaEnabled: true }) },
-        { name: 'cas-hdr', set: () => ({ sharpness: 0.5, hdrScene: true }) },
-        { name: 'cas-ldr', set: () => ({ sharpness: 0.5, hdrScene: false }) },
+        { name: 'cas-hdr', set: pass => (pass.cas.sharpness = 0.5) },
+        {
+            name: 'cas-ldr',
+            set: (pass) => {
+                pass.cas.sharpness = 0.5;
+                pass.cas.cameraFrame.hdrFormat = PIXELFORMAT_RGBA8;
+            }
+        },
         { name: 'all', all: true },
         { name: 'all-gamma-none', all: true, set: () => ({ _gammaCorrection: GAMMA_NONE }) },
         ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL].map(toneMapping => ({
@@ -178,6 +202,10 @@ describe('RenderPassCompose shader snapshot', function () {
             const properties = combination.set(pass, textures);
             if (properties && typeof properties === 'object') Object.assign(pass, properties);
         }
+        // the frame preparation FramePassCameraFrame runs, through which effects set their defines
+        pass.effects.forEach((effect) => {
+            if (effect.active) effect.frameUpdate();
+        });
         if (combination.customChunks) {
             // the documented customisation path: user chunks at the three legacy injection points
             pass._customComposeChunks.set('composeDeclarationsPS', 'uniform float custom;');

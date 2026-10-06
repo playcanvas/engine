@@ -1,11 +1,10 @@
-import { math } from '../../core/math/math.js';
 import { Color } from '../../core/math/color.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
 import { GAMMA_NONE, GAMMA_SRGB, gammaNames, TONEMAP_LINEAR, tonemapNames } from '../../scene/constants.js';
 import { ShaderChunks } from '../../scene/shader-lib/shader-chunks.js';
 import { hashCode } from '../../core/hash.js';
-import { FILTER_LINEAR, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
+import { SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderUtils } from '../../scene/shader-lib/shader-utils.js';
 import { composeChunksGLSL } from '../../scene/shader-lib/glsl/collections/compose-chunks-glsl.js';
 import { composeChunksWGSL } from '../../scene/shader-lib/wgsl/collections/compose-chunks-wgsl.js';
@@ -49,45 +48,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _shaderDirty = true;
 
-    _fringingEnabled = false;
-
-    fringingIntensity = 10;
-
-    _colorEnhanceEnabled = false;
-
-    colorEnhanceShadows = 0;
-
-    colorEnhanceHighlights = 0;
-
-    colorEnhanceVibrance = 0;
-
-    colorEnhanceDehaze = 0;
-
-    colorEnhanceMidtones = 0;
-
     _taaEnabled = false;
 
-    _hdrScene = true;
-
-    _sharpness = 0.5;
-
     _gammaCorrection = GAMMA_SRGB;
-
-    /**
-     * @type {Texture|null}
-     */
-    _colorLUT = null;
-
-    /**
-     * @type {Texture|null}
-     */
-    _colorLUT2 = null;
-
-    colorLUTIntensity = 1;
-
-    colorLUT2Intensity = 1;
-
-    colorLUTBlend = 0;
 
     _key = '';
 
@@ -138,16 +101,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.ssaoTextureId = scope.resolve('ssaoTexture');
         this.blurTextureId = scope.resolve('blurTexture');
         this.bloomIntensityId = scope.resolve('bloomIntensity');
-        this.fringingIntensityId = scope.resolve('fringingIntensity');
         this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
         this.sceneTextureInvResValue = new Float32Array(2);
-        this.sharpnessId = scope.resolve('sharpness');
-        this.colorLUTId = scope.resolve('colorLUT');
-        this.colorLUT2Id = scope.resolve('colorLUT2');
-        this.colorLUTParams = new Float32Array(3);
-        this.colorLUTParamsId = scope.resolve('colorLUTParams');
-        this.colorEnhanceParamsId = scope.resolve('colorEnhanceParams');
-        this.colorEnhanceMidtonesId = scope.resolve('colorEnhanceMidtones');
         this.composeTargetFlipYId = scope.resolve('composeTargetFlipY');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
@@ -321,48 +276,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._debug;
     }
 
-    set colorLUT(value) {
-        if (this._colorLUT !== value) {
-            this._colorLUT = value;
-            this._shaderDirty = true;
-            this._validateColorLUT(value, 'colorLUT');
-        }
-    }
-
-    get colorLUT() {
-        return this._colorLUT;
-    }
-
-    set colorLUT2(value) {
-        if (this._colorLUT2 !== value) {
-            this._colorLUT2 = value;
-            this._shaderDirty = true;
-            this._validateColorLUT(value, 'colorLUT2');
-        }
-    }
-
-    get colorLUT2() {
-        return this._colorLUT2;
-    }
-
-    // Validate that a LUT texture is configured as a 256x16 sRGB strip with no mipmaps and
-    // linear filtering. Stripped in release builds.
-    _validateColorLUT(value, slotName) {
-        Debug.call(() => {
-            if (value) {
-                const required = [];
-                if (value.width !== 256 || value.height !== 16) required.push('size: 256x16');
-                if (!value.srgb) required.push('srgb: true');
-                if (value.mipmaps) required.push('mipmaps: false');
-                if (value.minFilter !== FILTER_LINEAR) required.push('minFilter: FILTER_LINEAR');
-                if (value.magFilter !== FILTER_LINEAR) required.push('magFilter: FILTER_LINEAR');
-                if (required.length) {
-                    Debug.warnOnce(`CameraFrame.${slotName}: texture '${value.name ?? ''}' should be configured with: ${required.join('; ')}.`, value);
-                }
-            }
-        });
-    }
-
     set bloomTexture(value) {
         if (this._bloomTexture !== value) {
             this._bloomTexture = value;
@@ -407,28 +320,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._taaEnabled;
     }
 
-    set fringingEnabled(value) {
-        if (this._fringingEnabled !== value) {
-            this._fringingEnabled = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get fringingEnabled() {
-        return this._fringingEnabled;
-    }
-
-    set colorEnhanceEnabled(value) {
-        if (this._colorEnhanceEnabled !== value) {
-            this._colorEnhanceEnabled = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get colorEnhanceEnabled() {
-        return this._colorEnhanceEnabled;
-    }
-
     set toneMapping(value) {
         if (this._toneMapping !== value) {
             this._toneMapping = value;
@@ -438,32 +329,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get toneMapping() {
         return this._toneMapping;
-    }
-
-    set sharpness(value) {
-        if (this._sharpness !== value) {
-            this._sharpness = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get sharpness() {
-        return this._sharpness;
-    }
-
-    get isSharpnessEnabled() {
-        return this._sharpness > 0;
-    }
-
-    set hdrScene(value) {
-        if (this._hdrScene !== value) {
-            this._hdrScene = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get hdrScene() {
-        return this._hdrScene;
     }
 
     postInit() {
@@ -566,12 +431,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
             `-${this.cocTexture ? 'dof' : 'nodof'}` +
             `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
             `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
-            `-${this.colorEnhanceEnabled ? 'colorenhance' : 'nocolorenhance'}` +
-            `-${this.colorLUT ? 'colorlut' : 'nocolorlut'}` +
-            `-${this.colorLUT2 ? 'colorlut2' : 'nocolorlut2'}` +
-            `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
             `-${this.taaEnabled ? 'taa' : 'notaa'}` +
-            `-${this.isSharpnessEnabled ? (this._hdrScene ? 'cashdr' : 'cas') : 'nocas'}` +
             `-${debugMode ?? ''}${depthKey}` +
             `-decl${declHash}-start${startHash}-end${endHash}`;
 
@@ -582,15 +442,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this.cocTexture) defines.set('DOF', true);
         if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
         if (this.ssaoTexture) defines.set('SSAO', true);
-        if (this.colorEnhanceEnabled) defines.set('COLOR_ENHANCE', true);
-        if (this.colorLUT) defines.set('COLOR_LUT', true);
-        if (this.colorLUT && this.colorLUT2) defines.set('COLOR_LUT2', true);
-        if (this.fringingEnabled) defines.set('FRINGING', true);
         if (this.taaEnabled) defines.set('TAA', true);
-        if (this.isSharpnessEnabled) {
-            defines.set('CAS', true);
-            if (this._hdrScene) defines.set('CAS_HDR', true);
-        }
         if (debugMode) defines.set('DEBUG_COMPOSE', debugMode);
         depthDefines.forEach((value, name) => defines.set(name, value));
 
@@ -648,33 +500,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         if (this._ssaoTexture) {
             this.ssaoTextureId.setValue(this._ssaoTexture);
-        }
-
-        if (this._colorEnhanceEnabled) {
-            this.colorEnhanceParamsId.setValue([this.colorEnhanceShadows, this.colorEnhanceHighlights, this.colorEnhanceVibrance, this.colorEnhanceDehaze]);
-            this.colorEnhanceMidtonesId.setValue(this.colorEnhanceMidtones);
-        }
-
-        const lutTexture = this._colorLUT;
-        if (lutTexture) {
-            this.colorLUTParams[0] = this.colorLUTIntensity;
-            this.colorLUTParams[1] = this.colorLUT2Intensity;
-            this.colorLUTParams[2] = this.colorLUTBlend;
-            this.colorLUTParamsId.setValue(this.colorLUTParams);
-            this.colorLUTId.setValue(lutTexture);
-
-            if (this._colorLUT2) {
-                this.colorLUT2Id.setValue(this._colorLUT2);
-            }
-        }
-
-        if (this._fringingEnabled) {
-            // relative to a fixed texture resolution to preserve size regardless of the resolution
-            this.fringingIntensityId.setValue(this.fringingIntensity / 1024);
-        }
-
-        if (this.isSharpnessEnabled) {
-            this.sharpnessId.setValue(math.lerp(-0.125, -0.2, this.sharpness));
         }
 
         // the effects write their uniforms right before the draw, not while the frame is prepared:

@@ -4,6 +4,10 @@ import { math } from '../../core/math/math.js';
 import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { SSAOTYPE_NONE } from './constants.js';
+import { CasEffect } from './effects/cas-effect.js';
+import { ColorEnhanceEffect } from './effects/color-enhance-effect.js';
+import { ColorLutEffect } from './effects/color-lut-effect.js';
+import { FringingEffect } from './effects/fringing-effect.js';
 import { GradingEffect } from './effects/grading-effect.js';
 import { VignetteEffect } from './effects/vignette-effect.js';
 import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-frame.js';
@@ -14,7 +18,6 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  * @import { CameraComponent } from '../../framework/components/camera/component.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  * @import { LightComponent } from '../../framework/components/light/component.js'
- * @import { Texture } from '../../platform/graphics/texture.js'
  */
 
 /**
@@ -105,63 +108,6 @@ const builtinDebugViews = ['scene', 'ssao', 'bloom', 'dofcoc', 'dofblur', 'depth
  * threshold. The value is in the scene-referred units the scene is rendered in, before the
  * exposure and tone mapping applied when the bloom is composited, so a scene lit for an exposure
  * far from 1 needs the threshold scaled to match.
- */
-
-/**
- * @typedef {Object} ColorLUT
- * Properties related to the color lookup table (LUT) effect, a postprocessing technique used to
- * apply a color transformation to the image. Two LUT slots are supported, which makes it easy to
- * crossfade between two graded looks.
- * @property {Texture|null} texture - The primary LUT texture. This must be a 256×16 2D "horizontal
- * strip" texture representing an unwrapped 16×16×16 3D LUT in Unreal Engine layout: 16 horizontal
- * slices along the blue axis, with each slice mapping red to the X-axis and green to the Y-axis.
- * Note that HALD LUTs (e.g. from ImageMagick) and Unity LUTs use different layouts and are not
- * compatible. The texture must be loaded with `srgb: true` (LUTs are authored in sRGB display
- * space — the Unreal / Photoshop workflow stores sRGB-encoded values indexed by sRGB-encoded
- * coordinates), `mipmaps: false` (sampled at LOD 0 only), and `minFilter: FILTER_LINEAR` /
- * `magFilter: FILTER_LINEAR` (bilinear filtering between LUT entries is required to avoid
- * visible banding). The engine emits a debug-build warning if any of these are misconfigured.
- * Defaults to null.
- * @property {number} intensity - The strength of the primary LUT, blended against the original
- * color, 0-1 range. Defaults to 1.
- * @property {Texture|null} texture2 - The optional secondary LUT texture, same format and
- * requirements as `texture`. When set, both LUTs are sampled and the two graded results are
- * crossfaded according to `blend`. Defaults to null.
- * @property {number} intensity2 - The strength of the secondary LUT, blended against the original
- * color, 0-1 range. Only used when `texture2` is set. Defaults to 1.
- * @property {number} blend - Crossfade between the two graded results, 0-1 range. 0 shows only the
- * primary LUT, 1 shows only the secondary LUT, intermediate values produce a linear-space mix.
- * Only used when `texture2` is set. Defaults to 0.
- */
-
-/**
- * @typedef {Object} Fringing
- * Properties related to the fringing effect, a chromatic aberration phenomenon where the red, green,
- * and blue color channels diverge increasingly with greater distance from the center of the screen.
- * @property {number} intensity - The intensity of the fringing effect, 0-100 range. Defaults to 0,
- * making it disabled.
- */
-
-/**
- * @typedef {Object} ColorEnhance
- * Properties related to the color enhancement effect, a postprocessing technique that provides
- * HDR-aware adjustments for shadows, highlights, vibrance, and dehaze. Shadows and highlights allow
- * selective adjustment of dark and bright areas of the image, vibrance is a smart saturation
- * that boosts less-saturated colors more than already-saturated ones, and dehaze removes atmospheric
- * haze to increase clarity and contrast.
- * @property {boolean} enabled - Whether color enhancement is enabled. Defaults to false.
- * @property {number} shadows - The shadow adjustment, -3 to 3 range. Uses an exponential curve where
- * -3 gives 0.125x, 0 gives 1x, and +3 gives 8x brightness on dark areas. Defaults to 0.
- * @property {number} highlights - The highlight adjustment, -3 to 3 range. Uses an exponential curve
- * where -3 gives 0.125x, 0 gives 1x, and +3 gives 8x brightness on bright areas. Defaults to 0.
- * @property {number} vibrance - The vibrance (smart saturation), -1 to 1 range. Positive values boost
- * saturation of less-saturated colors more than already-saturated ones. Negative values desaturate.
- * Defaults to 0.
- * @property {number} midtones - The midtone adjustment, -1 to 1 range. Positive values brighten
- * midtones, negative values darken midtones, with shadows and highlights more strongly preserved
- * than by a linear exposure change. Defaults to 0.
- * @property {number} dehaze - The dehaze adjustment, -1 to 1 range. Positive values remove atmospheric
- * haze, increasing clarity and contrast. Negative values add a haze effect. Defaults to 0.
  */
 
 /**
@@ -262,11 +208,9 @@ const builtinDebugViews = ['scene', 'ssao', 'bloom', 'dofcoc', 'dofblur', 'depth
  * @example
  * // Provide custom compose chunk(s) before constructing CameraFrame
  * ShaderChunks.get(graphicsDevice, SHADERLANGUAGE_GLSL).set('composeVignettePS', `
- *     #ifdef VIGNETTE
- *         vec3 applyVignette(vec3 color, vec2 uv) {
- *             return color * uv.u;
- *         }
- *     #endif
+ *     vec3 applyVignette(vec3 color, vec2 uv) {
+ *         return color * uv.x;
+ *     }
  * `);
  *
  * // For WebGPU, use SHADERLANGUAGE_WGSL instead.
@@ -330,17 +274,12 @@ class CameraFrame {
     grading;
 
     /**
-     * Color LUT settings.
+     * The color lookup table (LUT) effect, registered with this camera frame. Its parameters are
+     * assigned directly.
      *
-     * @type {ColorLUT}
+     * @type {ColorLutEffect}
      */
-    colorLUT = {
-        texture: null,
-        intensity: 1,
-        texture2: null,
-        intensity2: 1,
-        blend: 0
-    };
+    colorLUT;
 
     /**
      * The vignette effect, registered with this camera frame. Its parameters are assigned
@@ -369,6 +308,14 @@ class CameraFrame {
     _builtInEffects = [];
 
     /**
+     * The sharpening effect, whose sharpness is exposed as `rendering.sharpness`.
+     *
+     * @type {CasEffect}
+     * @private
+     */
+    _cas;
+
+    /**
      * Taa settings.
      *
      * @type {Taa}
@@ -379,27 +326,20 @@ class CameraFrame {
     };
 
     /**
-     * Fringing settings.
+     * The fringing effect, registered with this camera frame. Its parameters are assigned
+     * directly.
      *
-     * @type {Fringing}
+     * @type {FringingEffect}
      */
-    fringing = {
-        intensity: 0
-    };
+    fringing;
 
     /**
-     * Color enhancement settings.
+     * The color enhancement effect, registered with this camera frame. Its parameters are
+     * assigned directly.
      *
-     * @type {ColorEnhance}
+     * @type {ColorEnhanceEffect}
      */
-    colorEnhance = {
-        enabled: false,
-        shadows: 0,
-        highlights: 0,
-        vibrance: 0,
-        midtones: 0,
-        dehaze: 0
-    };
+    colorEnhance;
 
     /**
      * DoF settings.
@@ -478,10 +418,25 @@ class CameraFrame {
         // the built-in effects, registered in the order they are applied within their slot. The
         // camera frame constructs them and so destroys them, unlike the effects added to it.
         const device = app.graphicsDevice;
+        this._cas = new CasEffect(device);
+        this.fringing = new FringingEffect(device);
+        this.colorEnhance = new ColorEnhanceEffect(device);
         this.grading = new GradingEffect(device);
+        this.colorLUT = new ColorLutEffect(device);
         this.vignette = new VignetteEffect(device);
-        this._builtInEffects = [this.grading, this.vignette];
+        this._builtInEffects = [this._cas, this.fringing, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
+
+        // rendering.sharpness is the sharpening effect's parameter, forwarded so that it applies
+        // without CameraFrame#update, like the parameters of the other effects
+        const cas = this._cas;
+        Object.defineProperty(this.rendering, 'sharpness', {
+            get: () => cas.sharpness,
+            set: (value) => {
+                cas.sharpness = value;
+            },
+            enumerable: true
+        });
 
         this.updateOptions();
         this.enable();
@@ -764,7 +719,7 @@ class CameraFrame {
         if (!this._enabled) return;
 
         const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, bloom, colorEnhance, fringing, taa, ssao } = this;
+        const { options, renderPassCamera, rendering, bloom, taa, ssao } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
@@ -775,7 +730,6 @@ class CameraFrame {
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
-        composePass.sharpness = rendering.sharpness;
 
         if (options.bloomEnabled && bloomPass) {
             composePass.bloomIntensity = bloom.intensity;
@@ -820,26 +774,6 @@ class CameraFrame {
             ssaoPass.minAngle = ssao.minAngle;
             ssaoPass.scale = ssao.scale;
             ssaoPass.randomize = ssao.randomize;
-        }
-
-        composePass.colorLUT = this.colorLUT.texture;
-        composePass.colorLUTIntensity = this.colorLUT.intensity;
-        composePass.colorLUT2 = this.colorLUT.texture2;
-        composePass.colorLUT2Intensity = this.colorLUT.intensity2;
-        composePass.colorLUTBlend = this.colorLUT.blend;
-
-        composePass.fringingEnabled = fringing.intensity > 0;
-        if (composePass.fringingEnabled) {
-            composePass.fringingIntensity = fringing.intensity;
-        }
-
-        composePass.colorEnhanceEnabled = colorEnhance.enabled;
-        if (colorEnhance.enabled) {
-            composePass.colorEnhanceShadows = colorEnhance.shadows;
-            composePass.colorEnhanceHighlights = colorEnhance.highlights;
-            composePass.colorEnhanceVibrance = colorEnhance.vibrance;
-            composePass.colorEnhanceMidtones = colorEnhance.midtones;
-            composePass.colorEnhanceDehaze = colorEnhance.dehaze;
         }
 
         // enable camera jitter if taa is enabled
