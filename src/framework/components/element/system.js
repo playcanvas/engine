@@ -21,6 +21,8 @@ import { ElementComponent } from './component.js';
  * {@link ComponentOptionsOverrides}.
  *
  * @typedef {object} ElementComponentOptionsOverrides
+ * @property {Vec2 | number[]} [alignment] - Same as {@link ElementComponent#alignment}, also
+ * accepting an `[x, y]` array.
  * @property {Vec4 | number[]} [anchor] - Same as {@link ElementComponent#anchor}, also accepting an
  * `[x, y, z, w]` array.
  * @property {number | null} [batchGroupId] - Same as {@link ElementComponent#batchGroupId}. `null`
