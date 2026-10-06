@@ -927,7 +927,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 return;
             }
 
-            await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
+            // Recreate the WebGPU device and associated resources after device loss. This fails when
+            // the browser cannot provide another device, for example when it blocks GPU access after
+            // repeated GPU process crashes. The device then stays lost.
+            try {
+                await this.createDevice();
+            } catch (error) {
+                if (!this._destroyed) {
+                    Debug.error('WebGPU device could not be restored after it was lost', error);
+                    this.fire('devicerestorefailed', error);
+                }
+                return;
+            }
 
             if (this._destroyed) {
                 return;
