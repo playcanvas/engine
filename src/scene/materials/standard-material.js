@@ -2003,10 +2003,11 @@ class StandardMaterial extends Material {
         // standard material can overwrite camera's fog setting
         if (!this.useFog) options.defines.set('FOG', 'NONE');
 
-        // standard material can overwrite camera's tonemapping setting. The outline color is not
-        // tone mapped. This is set on the define rather than the options, which the minimal passes
-        // share.
-        options.defines.set('TONEMAP', tonemapNames[outlinePass ? TONEMAP_NONE : options.litOptions.toneMap]);
+        // standard material can overwrite camera's tonemapping setting. The minimal passes output no
+        // lit color - depth, shadow, picking or the outline color - so they are not tone mapped, and
+        // do not set the tone mapping option either. This is set on the define rather than the
+        // options, which the minimal passes share.
+        options.defines.set('TONEMAP', tonemapNames[minimalOptions ? TONEMAP_NONE : options.litOptions.toneMap]);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {

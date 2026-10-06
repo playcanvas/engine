@@ -5,6 +5,7 @@ import {
     RENDERTARGET_ORIGIN_BOTTOM, SEMANTIC_POSITION, SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL
 } from '../../platform/graphics/constants.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { SceneDepthMapHandle } from '../../platform/graphics/scene-depth-map-handle.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { EVENT_POSTRENDER } from '../../scene/constants.js';
 import { RenderPassShaderQuad } from '../../scene/graphics/render-pass-shader-quad.js';
@@ -149,9 +150,6 @@ class SceneDepthReader {
     emptyId;
 
     /** @private */
-    depthMapId;
-
-    /** @private */
     cameraParamsId;
 
     /** @private */
@@ -180,7 +178,6 @@ class SceneDepthReader {
         this.gridValue = new Float32Array(2);
         this.farId = scope.resolve('uDepthReadFar');
         this.emptyId = scope.resolve('uDepthReadEmpty');
-        this.depthMapId = scope.resolve('uSceneDepthMap');
         this.cameraParamsId = scope.resolve('camera_params');
         this.cameraParams = new Float32Array(4);
 
@@ -272,10 +269,10 @@ class SceneDepthReader {
     _process() {
 
         const { camera, device, _requests: requests } = this;
-        const internal = camera.camera;
+        const depthHandle = camera.camera.sceneDepthMapHandle;
 
         // the camera has just finished, so its record is this frame's if it rendered a depth at all
-        this._depthRendered = !!internal.sceneDepthMap && internal.sceneDepthMapVersion === device.renderVersion;
+        this._depthRendered = !!depthHandle.texture && depthHandle.renderVersion === device.renderVersion;
 
         if (requests.length === 0) {
             return;
@@ -328,14 +325,15 @@ class SceneDepthReader {
         gridValue[1] = height;
         this.gridId.setValue(gridValue);
 
-        const halfFloat = internal.sceneDepthMap.format === PIXELFORMAT_R16F;
+        const depthMap = internal.sceneDepthMapHandle.texture;
+        const halfFloat = depthMap.format === PIXELFORMAT_R16F;
         this.farId.setValue(internal.farClip * (halfFloat ? _farLimitFractionHalf : _farLimitFractionFull));
         this.emptyId.setValue(Infinity);
         this.cameraParamsId.setValue(internal.fillShaderParams(this.cameraParams));
 
         // this camera's own depth, rather than whatever the global uniform happens to hold - with more
         // than one camera rendering a depth, the last one to render owns that uniform
-        this.depthMapId.setValue(internal.sceneDepthMap);
+        SceneDepthMapHandle.setUniform(this.device, depthMap);
 
         // only the region the samples land in is rendered, as the target is sized to the largest read
         this.pass.viewport = this.viewport.set(0, 0, width, height);

@@ -40,10 +40,6 @@ fn sourceTotalPixels() -> f32 { return uniform.params.z; }
 
 const PI: f32 = 3.141592653589793;
 
-fn saturate(x: f32) -> f32 {
-    return clamp(x, 0.0, 1.0);
-}
-
 #include "decodePS"
 #include "encodePS"
 

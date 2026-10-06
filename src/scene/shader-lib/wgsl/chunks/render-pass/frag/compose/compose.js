@@ -11,12 +11,6 @@ export default /* wgsl */`
     #include "composeBloomPS"
     #include "composeDofPS"
     #include "composeSsaoPS"
-    #include "composeGradingPS"
-    #include "composeColorEnhancePS"
-    #include "composeVignettePS"
-    #include "composeFringingPS"
-    #include "composeCasPS"
-    #include "composeColorLutPS"
 
     // The depth debug mode displays a depth some other pass in this frame has already produced - the
     // debug modes never turn any rendering on, so the mode is switched to depthmissing when nothing
@@ -25,6 +19,9 @@ export default /* wgsl */`
     #if DEBUG_COMPOSE == depth
         #include "screenDepthPS"
     #endif
+
+    // declarations of the effects registered with the CameraFrame, assembled by RenderPassCompose
+    #include "composeEffectDeclarationsPS"
 
     #include "composeDeclarationsPS"
 
@@ -39,13 +36,12 @@ export default /* wgsl */`
         // that the natively-oriented output of the scene pass chain lands in the requested row order
         var uv = vec2f(uv0.x, mix(uv0.y, 1.0 - uv0.y, uniform.composeTargetFlipY));
 
-        let scene = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0);
-        var result = scene.rgb;
+        var scene = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0);
 
-        // Apply CAS
-        #ifdef CAS
-            result = applyCas(result, uv, uniform.sharpness);
-        #endif
+        // COMPOSESLOT_SCENE effects - operate on the sampled scene colour including its alpha
+        #include "composeSlotSceneCallPS, COMPOSE_SCENE_COUNT"
+
+        var result = scene.rgb;
 
         // Apply DOF
         #ifdef DOF
@@ -57,45 +53,27 @@ export default /* wgsl */`
             result = applySsao(result, uv);
         #endif
 
-        // Apply Fringing
-        #ifdef FRINGING
-            result = applyFringing(result, uv);
-        #endif
-
         // Apply Bloom
         #ifdef BLOOM
             result = applyBloom(result, uv);
         #endif
 
-        // Apply Color Enhancement (shadows, highlights, vibrance)
-        #ifdef COLOR_ENHANCE
-            result = applyColorEnhance(result);
-        #endif
-
-        // Apply Color Grading
-        #ifdef GRADING
-            result = applyGrading(result);
-        #endif
+        // COMPOSESLOT_HDR effects - linear, scene-referred colour
+        #include "composeSlotHdrCallPS, COMPOSE_HDR_COUNT"
 
         // Apply Tone Mapping
         result = toneMap(max(vec3f(0.0), result));
 
-        // Apply Color LUT after tone mapping, in LDR space
-        #ifdef COLOR_LUT
-            result = applyColorLUT(result);
-        #endif
-
-        // Apply Vignette
-        #ifdef VIGNETTE
-            result = applyVignette(result, uv);
-        #endif
+        // COMPOSESLOT_LDR effects - display-referred colour, before gamma correction
+        #include "composeSlotLdrCallPS, COMPOSE_LDR_COUNT"
 
         #include "composeMainEndPS"
 
         // Debug output handling in one centralized location
         #ifdef DEBUG_COMPOSE
             #if DEBUG_COMPOSE == scene
-                result = scene.rgb;
+                // the scene texture itself, before any effect, those at COMPOSESLOT_SCENE included
+                result = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0).rgb;
             #elif defined(BLOOM) && DEBUG_COMPOSE == bloom
                 result = dBloom * uniform.bloomIntensity;
             #elif defined(DOF) && DEBUG_COMPOSE == dofcoc
@@ -104,8 +82,6 @@ export default /* wgsl */`
                 result = dBlur;
             #elif defined(SSAO_TEXTURE) && DEBUG_COMPOSE == ssao
                 result = vec3f(dSsao);
-            #elif defined(VIGNETTE) && DEBUG_COMPOSE == vignette
-                result = vec3f(dVignette);
             #elif DEBUG_COMPOSE == depth
                 // a linear ramp over the camera clip range
                 let dDepth = getLinearScreenDepth(uv);
@@ -114,10 +90,17 @@ export default /* wgsl */`
                 // the depth was asked for while nothing in this frame produces it
                 result = vec3f(0.0);
             #endif
+
+            // the debug view of the registered effect providing the active one, selected by
+            // RenderPassCompose through the COMPOSE_EFFECT_DEBUG define
+            #include "composeEffectDebugPS"
         #endif
 
         // Apply gamma correction
         result = gammaCorrectOutput(result);
+
+        // COMPOSESLOT_OUTPUT effects - final output values, after gamma correction
+        #include "composeSlotOutputCallPS, COMPOSE_OUTPUT_COUNT"
 
         output.color = vec4f(result, scene.a);
         return output;

@@ -34,6 +34,7 @@ import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { FramePassUpdateClustered } from './frame-pass-update-clustered.js';
 import { Culler } from './culler.js';
+import { MeshInstanceSorter } from './mesh-instance-sorter.js';
 import { Camera } from '../camera.js';
 
 /**
@@ -170,6 +171,15 @@ class Renderer {
     culler;
 
     /**
+     * Sorts the mesh instances of the forward and the shadow passes. A single instance shares its
+     * buffers between all of them.
+     *
+     * @type {MeshInstanceSorter}
+     * @ignore
+     */
+    meshInstanceSorter = new MeshInstanceSorter();
+
+    /**
      * @type {WorldClustersAllocator}
      * @ignore
      */
@@ -257,6 +267,24 @@ class Renderer {
      * @type {boolean}
      */
     _emptyMeshBindGroupBound = false;
+
+    /**
+     * True when the current pass has bound a mesh uniform buffer of a shader without mesh uniforms,
+     * which the draws of such shaders then share, see {@link Shader#meshUniformBufferEmpty}.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _emptyMeshUniformBufferBound = false;
+
+    /**
+     * The version of the mesh instance storage the view bind groups of the current pass were updated
+     * with, see {@link Renderer#updateStorageSlot}.
+     *
+     * @type {number}
+     * @private
+     */
+    _meshInstanceStorageVersion = -1;
 
     /**
      * Reusable receiver for a view uniform buffer's dynamic bind group + offset.
@@ -415,6 +443,8 @@ class Renderer {
 
         this._viewTextureBindGroups.forEach(bindGroup => bindGroup.destroy());
         this._viewTextureBindGroups.length = 0;
+
+        this.meshInstanceSorter = null;
     }
 
     /**
@@ -925,6 +955,8 @@ class Renderer {
         this._viewPass++;
         this._boundViewBindGroupFormat = null;
         this._emptyMeshBindGroupBound = false;
+        this._emptyMeshUniformBufferBound = false;
+        this._meshInstanceStorageVersion = device.meshInstanceStorage?.version ?? -1;
 
         // start the pass with the empty bind group at the material index, so the pipeline layout has
         // no gap for draws whose material has no uniform buffer; materials bind their own per draw
@@ -969,12 +1001,14 @@ class Renderer {
      * just the view uniform buffer. Rebinds only when the format differs from the one bound.
      *
      * @param {Shader} shader - The shader set on the device.
+     * @param {boolean} [force] - True to bind the view bind group even when its format is bound,
+     * used when the resources it holds changed. Defaults to false.
      */
-    setupViewBindGroup(shader) {
+    setupViewBindGroup(shader, force = false) {
 
         // always null on WebGL, where the textures are not in bind groups
         const format = shader.viewBindGroupFormat;
-        if (format === this._boundViewBindGroupFormat) {
+        if (format === this._boundViewBindGroupFormat && !force) {
             return;
         }
         this._boundViewBindGroupFormat = format;
@@ -1148,10 +1182,61 @@ class Renderer {
                 device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
             }
 
+            // a shader without mesh uniforms reads nothing from the buffer, so its draws share the
+            // one bound by the first of them in the pass
+            if (shaderInstance.shader.meshUniformBufferEmpty) {
+                if (this._emptyMeshUniformBufferBound) {
+                    return;
+                }
+                this._emptyMeshUniformBufferBound = true;
+            } else {
+                this._emptyMeshUniformBufferBound = false;
+            }
+
             const meshUniformBuffer = shaderInstance.getUniformBuffer(device);
             meshUniformBuffer.update(_dynamicBindGroup);
             device.setBindGroup(BINDGROUP_MESH_UB, _dynamicBindGroup.bindGroup, _dynamicBindGroup.offsets);
         }
+    }
+
+    /**
+     * Returns the slot of a mesh instance in the mesh instance storage of the device, for a draw
+     * with a shader reading it, which passes the slot as the first instance of the draw, see
+     * {@link Shader#usesMeshInstanceStorage}. The slot is allocated on the first such draw, and its
+     * matrices are written when the transform of the node changed since they were last written, or
+     * when the mesh instance was given a different node. When the allocation grows the storage, the
+     * view bind group of the shader, which holds the storage, is updated and bound again.
+     *
+     * @param {MeshInstance} meshInstance - The mesh instance being drawn.
+     * @param {Shader} shader - The shader of the draw, set on the device.
+     * @returns {number} The slot.
+     */
+    updateStorageSlot(meshInstance, shader) {
+
+        const meshInstanceStorage = this.device.meshInstanceStorage;
+        let slot = meshInstance.storageSlot;
+        if (slot < 0) {
+            slot = meshInstanceStorage.allocate();
+            meshInstance.storageSlot = slot;
+            meshInstance.storageSlotVersion = -1;
+
+            // the storage grew into a new buffer
+            if (meshInstanceStorage.version !== this._meshInstanceStorageVersion) {
+                this._meshInstanceStorageVersion = meshInstanceStorage.version;
+                this._viewPass++;
+                this.setupViewBindGroup(shader, true);
+            }
+        }
+
+        // a node marked dirty after the transforms were updated this frame is written again the next
+        // frame, once its transform is updated
+        const node = meshInstance.node;
+        if (meshInstance.storageSlotVersion !== node._aabbVer) {
+            meshInstance.storageSlotVersion = node._dirtyWorld ? -1 : node._aabbVer;
+            meshInstanceStorage.write(slot, node.worldTransform.data, node.normalMatrix.data);
+        }
+
+        return slot;
     }
 
     setMeshInstanceMatrices(meshInstance, setNormalMatrix = false) {

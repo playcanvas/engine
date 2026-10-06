@@ -6,10 +6,6 @@ fn unpack3NFloats(src: f32) -> vec3f {
     return vec3f(r, g, b);
 }
 
-fn saturate(x: f32) -> f32 {
-    return clamp(x, 0.0, 1.0);
-}
-
 struct TexLerpUnpackResult {
     result: vec4f,
     unpacked: vec3f
@@ -85,7 +81,13 @@ fn vertexMain(input: VertexInput) -> VertexOutput {
         inVel = modelRotation * inVel;
     #endif
     let viewRotation = mat3x3f(uniform.matrix_view[0].xyz, uniform.matrix_view[1].xyz, uniform.matrix_view[2].xyz);
-    let velocityV = safeNormalize((viewRotation * inVel).xy);
+    var velocityV = safeNormalize((viewRotation * inVel).xy);
+    #ifdef SCREEN_SPACE
+        // particle_endVS scales the offset x by height / width, so measure the direction of
+        // motion in the same units to keep the particle aligned with its motion on screen
+        velocityV.x *= uniform.viewport_size.x * uniform.viewport_size.w;
+        velocityV = safeNormalize(velocityV);
+    #endif
 
     let particleLifetime = uniform.lifetime;
 

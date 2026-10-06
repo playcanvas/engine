@@ -32,10 +32,6 @@ vec3 sSpecularLight;
 
 // FRAGMENT SHADER INPUTS: UNIFORMS
 
-#ifdef LIT_DISPERSION
-    uniform float material_dispersion;
-#endif
-
 #ifndef LIT_OPACITY_FADES_SPECULAR
     uniform float material_alphaFade;
 #endif
@@ -55,12 +51,6 @@ vec3 sSpecularLight;
 // LOOP - uniform declarations for all non-clustered lights
 #if LIGHT_COUNT > 0
     #include "lightDeclarationPS, LIGHT_COUNT"
-#endif
-
-#ifdef LIT_SPECULAR
-    #if LIT_FRESNEL_MODEL == NONE && !defined(LIT_REFLECTIONS) && !defined(LIT_DIFFUSE_MAP) && !defined(LIT_DIFFUSE_TRANSMISSION)
-        #define LIT_OLD_AMBIENT
-    #endif
 #endif
 
 // lightmap baking

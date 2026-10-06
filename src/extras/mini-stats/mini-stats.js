@@ -160,6 +160,8 @@ class MiniStats {
         this._destroyed = false;
         this._geometryDirty = true;
         this._layoutDirty = true;
+        this._clientWidth = -1;
+        this._clientHeight = -1;
         this._scroll = 0;
         this._maxScroll = 0;
         this._overallHeight = 0;
@@ -756,6 +758,16 @@ class MiniStats {
 
     /** @private */
     render() {
+        // the layout is in css pixels, which can change without a resizecanvas event, e.g. a
+        // window resize with RESOLUTION_FIXED; the device measures the canvas in update(). Compared
+        // with its last value rather than the layout's size, as a host that only renders never
+        // refreshes it (resizecanvas covers that host)
+        const { width, height } = this.device.clientRect;
+        if (width !== this._clientWidth || height !== this._clientHeight) {
+            this._clientWidth = width;
+            this._clientHeight = height;
+            this._layoutDirty = true;
+        }
         if (this._layoutDirty) this.updateDiv();
         if (this._geometryDirty) {
             this.rebuildGeometry();

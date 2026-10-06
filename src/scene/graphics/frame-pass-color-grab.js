@@ -2,10 +2,14 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR } fro
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { SceneColorMapHandle } from '../../platform/graphics/scene-color-map-handle.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { GAMMA_SRGB } from '../constants.js';
 
-// uniform name
-const _colorUniformName = 'uSceneColorMap';
+/**
+ * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
+ * @import { Camera } from '../camera.js'
+ */
 
 /**
  * A render pass implementing grab of a color buffer.
@@ -21,6 +25,30 @@ class FramePassColorGrab extends FramePass {
      * @type {RenderTarget|null}
      */
     source = null;
+
+    /**
+     * The camera the grabbed color is published for.
+     *
+     * @type {Camera}
+     */
+    camera;
+
+    /**
+     * The gamma correction the grabbed color was rendered with, when the passes rendering it
+     * override the gamma correction of the camera. Undefined when they use the camera's own.
+     *
+     * @type {number|undefined}
+     */
+    gammaCorrection;
+
+    /**
+     * @param {GraphicsDevice} device - The graphics device.
+     * @param {Camera} camera - The camera the grabbed color is published for.
+     */
+    constructor(device, camera) {
+        super(device);
+        this.camera = camera;
+    }
 
     destroy() {
         super.destroy();
@@ -45,7 +73,7 @@ class FramePassColorGrab extends FramePass {
 
         // allocate texture buffer
         const texture = new Texture(device, {
-            name: _colorUniformName,
+            name: SceneColorMapHandle.uniformName,
             format,
             width: sourceRenderTarget ? sourceRenderTarget.colorBuffer.width : device.width,
             height: sourceRenderTarget ? sourceRenderTarget.colorBuffer.height : device.height,
@@ -103,10 +131,19 @@ class FramePassColorGrab extends FramePass {
             this.releaseRenderTarget(this.colorRenderTarget);
             this.colorRenderTarget = this.allocateRenderTarget(this.colorRenderTarget, sourceRt, device, sourceFormat);
         }
+    }
 
-        // assign uniform
+    before() {
+
+        // Publish the grabbed color. This is done when the grab executes, not when the frame graph is
+        // built, which happens for all cameras before any of them renders - so the global uniform
+        // would hold the last camera's grab during all of them.
         const colorBuffer = this.colorRenderTarget.colorBuffer;
-        device.scope.resolve(_colorUniformName).setValue(colorBuffer);
+        const camera = this.camera;
+        const gamma = this.gammaCorrection !== undefined ?
+            this.gammaCorrection === GAMMA_SRGB :
+            camera.shaderParams.shaderOutputGamma === GAMMA_SRGB;
+        camera.publishSceneColorMap(colorBuffer, gamma);
     }
 
     execute() {

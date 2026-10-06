@@ -129,6 +129,11 @@ void main(void) {
         vLinearDepth = -(matrix_view * vec4(vPositionW, 1.0)).z;
     #endif
 
+    #ifdef LIT_DYNAMIC_REFRACTION
+        // the scale of the model matrix, which scales the thickness of the refraction
+        vModelScale = vec3(length(dModelMatrix[0].xyz), length(dModelMatrix[1].xyz), length(dModelMatrix[2].xyz));
+    #endif
+
     #ifdef MSDF
         unpackMsdfParams();
     #endif

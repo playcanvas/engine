@@ -165,10 +165,10 @@ const renderInlineMarkdown = (text) => {
 
 /** @type {Record<string, string>} */
 const MOBILE_PANEL_TITLES = {
-    examples: 'EXAMPLES',
-    code: 'SOURCE',
-    controls: 'CONTROLS',
-    description: 'INFO'
+    examples: 'Examples',
+    code: 'Source',
+    controls: 'Controls',
+    description: 'Info'
 };
 
 const createState = () => {
@@ -220,6 +220,7 @@ const createState = () => {
  * @property {null|'examples'|'code'|'controls'|'description'} [mobilePanel] - Active mobile panel.
  * @property {(mobilePanel: null|'examples'|'code'|'controls'|'description') => void} [setMobilePanel] - Set active mobile panel.
  * @property {boolean} [showCredits] - Whether the desktop credits overlay is visible.
+ * @property {boolean} [hideDescription] - Hide the desktop description, e.g. while the inspector panel is shown.
  * @property {(event: PointerEvent | import('react').PointerEvent<HTMLElement>) => void} [onMobilePanelDragStart] - Start mobile panel drag.
  */
 
@@ -710,7 +711,7 @@ class Example extends TypedComponent {
 
     renderDescription() {
         const { exampleLoaded, description } = this.state;
-        if (!exampleLoaded || !description || !iframe.ready) {
+        if (!exampleLoaded || !description || !iframe.ready || this.props.hideDescription) {
             return null;
         }
         return jsx(
@@ -961,6 +962,7 @@ class Example extends TypedComponent {
                     id: 'controlPanel',
                     class: ['mobile', `${activePanel}-sheet`],
                     headerText: MOBILE_PANEL_TITLES[activePanel],
+                    headerSize: 44,
                     collapsible: false
                 },
                 this.renderMobilePanel()
@@ -985,7 +987,8 @@ class Example extends TypedComponent {
                         id: 'controlPanel',
                         class: ['desktop'],
                         resizable: 'top',
-                        headerText: 'CONTROLS',
+                        headerText: 'Controls',
+                        headerSize: 40,
                         collapsible: true,
                         collapsed
                     },
@@ -1032,7 +1035,7 @@ class Example extends TypedComponent {
                         jsx('div', { className: 'example-loading-message' }, error.message)
                     ) : fragment(
                         jsx(Spinner, { size: 34 }),
-                        jsx('div', { className: 'example-loading-title' }, 'LOADING')
+                        jsx('div', { className: 'example-loading-title' }, 'Loading')
                     )
                 )
             ),

@@ -134,7 +134,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true, firstInstance = 0) {
     }
 
     setShader(shader, asyncCompile = false) {

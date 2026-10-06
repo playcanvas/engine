@@ -1,4 +1,4 @@
-import { Color, Quat, Script, Vec3, LAYERID_SKYBOX } from 'playcanvas';
+import { Color, Quat, Script, Vec3, LAYERID_SKYBOX, math } from 'playcanvas';
 
 /** @import { Entity } from 'playcanvas' */
 
@@ -210,9 +210,19 @@ class XrSession extends Script {
         // Place root at camera position, but reset orientation to horizontal
         this.entity.setPosition(this._positionCamera.x, 0, this._positionCamera.z);
 
-        // Only preserve Y-axis rotation (yaw), reset pitch and roll for VR
-        const eulerAngles = this._rotationCamera.getEulerAngles();
-        this.entity.setEulerAngles(0, eulerAngles.y, 0);
+        // Keep the heading of the camera, with pitch and roll reset: face where it looks across
+        // the ground, or where the top of its view points when it looks straight up or down.
+        // The yaw of getEulerAngles() only covers -90 to 90 degrees, so it can't be used.
+        const forward = this._cameraEntity.forward;
+        let x = forward.x;
+        let z = forward.z;
+        if (x * x + z * z < 1e-6) {
+            const up = this._cameraEntity.up;
+            const sign = forward.y < 0 ? 1 : -1;
+            x = up.x * sign;
+            z = up.z * sign;
+        }
+        this.entity.setEulerAngles(0, Math.atan2(-x, -z) * math.RAD_TO_DEG, 0);
 
         if (this.app.xr.type === 'immersive-ar') {
             // Make camera background transparent and hide the sky

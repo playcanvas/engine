@@ -188,7 +188,7 @@ app.root.addChild(camera);
 // Setup bloom post-processing
 if (camera.camera) {
     const cameraFrame = new CameraFrame(app, camera.camera);
-    cameraFrame.rendering.samples = 4;
+    cameraFrame.rendering.samples = 1;
     cameraFrame.rendering.toneMapping = TONEMAP_ACES;
     cameraFrame.bloom.intensity = 0.03;
     cameraFrame.bloom.blurLevel = 6;

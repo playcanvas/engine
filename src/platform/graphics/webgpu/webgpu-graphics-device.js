@@ -33,6 +33,7 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
 import { WebgpuBuffer } from './webgpu-buffer.js';
 import { StorageBuffer } from '../storage-buffer.js';
+import { MeshInstanceStorage } from '../mesh-instance-storage.js';
 import { WebgpuDrawCommands } from './webgpu-draw-commands.js';
 import { WebgpuUploadStream } from './webgpu-upload-stream.js';
 import { WebgpuXrBridge } from './webgpu-xr-bridge.js';
@@ -560,6 +561,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsGpuParticles = true;
         this.supportsCompute = true;
         this.supportsIndirectDraw = true;
+
+        // the vertex shaders read the per mesh instance data from a storage buffer
+        this.supportsMeshInstanceStorage = (limits.maxStorageBuffersInVertexStage ?? limits.maxStorageBuffersPerShaderStage) > 0;
         this.textureFloatRenderable = true;
         this.textureHalfFloatRenderable = true;
         // ImageBitmap decoding is used for texture loading when the host provides it (browsers and
@@ -640,12 +644,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             return null;
         }
 
+        // no adapter is available, for example when WebGPU is disabled or the GPU is blocklisted.
+        // Throw rather than return null, so that device loss recovery does not restore the context
+        // without a device
+        if (!gpuAdapter) {
+            throw new Error('Unable to retrieve a WebGPU adapter');
+        }
+
         // Imagination PowerVR GPUs (Pixel 10 / Tensor G5) have buggy WebGPU drivers (broken
         // compute, shader miscompiles), so fail device creation here to let createGraphicsDevice
         // fall back to WebGL2. Remove when fixed: https://github.com/playcanvas/engine/issues/8874
         if (gpuAdapter?.info?.vendor === 'img-tec') {
-            Debug.warn('WebGPU is disabled on Imagination PowerVR GPUs due to driver issues, falling back to WebGL2. See https://github.com/playcanvas/engine/issues/8874');
-            return null;
+            throw new Error('WebGPU is disabled on Imagination PowerVR GPUs due to driver issues. See https://github.com/playcanvas/engine/issues/8874');
         }
 
         const bare = this.initOptions.featureLevel === 'bare';
@@ -917,7 +927,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 return;
             }
 
-            await this.createDevice(); // Recreate the WebGPU device and associated resources after device loss.
+            // Recreate the WebGPU device and associated resources after device loss. This fails when
+            // the browser cannot provide another device, for example when it blocks GPU access after
+            // repeated GPU process crashes. The device then stays lost.
+            try {
+                await this.createDevice();
+            } catch (error) {
+                if (!this._destroyed) {
+                    Debug.error('WebGPU device could not be restored after it was lost', error);
+                    this.fire('devicerestorefailed', error);
+                }
+                return;
+            }
 
             if (this._destroyed) {
                 return;
@@ -982,6 +1003,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         for (const drawCommands of this._drawCommands) {
             drawCommands.restoreContext();
         }
+
+        // and the mesh instance storage, from its CPU copy
+        this.meshInstanceStorage?.restoreContext();
     }
 
     postInit() {
@@ -998,6 +1022,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // empty bind group
         this.emptyBindGroup = new BindGroup(this, new BindGroupFormat(this, []));
         this.emptyBindGroup.update();
+
+        // created once, and kept across a device loss, when this runs again
+        if (this.supportsMeshInstanceStorage && !this.meshInstanceStorage) {
+            this.meshInstanceStorage = new MeshInstanceStorage(this);
+        }
     }
 
     createBackbuffer() {
@@ -1318,7 +1347,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
     // #endif
 
-    draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances = 1, drawCommands, first = true, last = true, firstInstance = 0) {
 
         if (this.shader.ready && !this.shader.failed) {
 
@@ -1413,9 +1442,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             } else { // single draw path
 
                 if (indexBuffer) {
-                    passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, 0);
+                    passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, primitive.baseVertex ?? 0, firstInstance);
                 } else {
-                    passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
+                    passEncoder.draw(primitive.count, numInstances, primitive.base, firstInstance);
                 }
             }
 
@@ -1806,6 +1835,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // copy dynamic buffers data to the GPU (this schedules the copy CB to run before all other CBs)
             this.dynamicBuffers.submit();
+
+            // upload the mesh instance storage written by the recorded draws, which the queue runs
+            // before them
+            this.meshInstanceStorage?.upload();
 
             // trace all scheduled command buffers
             Debug.call(() => {

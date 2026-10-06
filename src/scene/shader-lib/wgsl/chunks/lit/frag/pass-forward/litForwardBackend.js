@@ -71,12 +71,10 @@ fn evaluateBackend() -> FragmentOutput {
         #endif
     #endif
 
-    #ifndef LIT_OLD_AMBIENT
-        dDiffuseLight = dDiffuseLight * litArgs_ambient;
+    dDiffuseLight = dDiffuseLight * litArgs_ambient;
 
-        #ifdef LIT_DIFFUSE_TRANSMISSION
-            dDiffuseTransmissionLight = dDiffuseTransmissionLight * litArgs_ambient;
-        #endif
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        dDiffuseTransmissionLight = dDiffuseTransmissionLight * litArgs_ambient;
     #endif
 
     #ifdef LIT_AO

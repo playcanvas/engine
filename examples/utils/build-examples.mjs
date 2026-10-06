@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { isModuleWithExternalDependencies, parseConfig, stripConfig } from './example-source.mjs';
+import { exampleRedirects } from '../src/app/redirects.mjs';
 
 /**
  * @import { ExampleConfig } from './example-source.mjs'
@@ -28,11 +29,18 @@ import { isModuleWithExternalDependencies, parseConfig, stripConfig } from './ex
  */
 
 /**
+ * @typedef {object} ExampleRedirect
+ * @property {string} name - target name of the old example path.
+ * @property {ExampleMetadata} item - example the old path redirects to.
+ */
+
+/**
  * @typedef {object} ExampleTargets
  * @property {CopyTarget[]} sources - transformed source files.
  * @property {CopyTarget[]} assets - copied asset files.
  * @property {ExampleHtmlTarget[]} html - iframe html targets.
  * @property {ExampleMetadata[]} share - share page targets.
+ * @property {ExampleRedirect[]} redirects - old example paths.
  */
 
 /**
@@ -71,7 +79,8 @@ export const STATIC_TARGETS = [
         dest: 'dist/iframe/playcanvas-observer.mjs'
     },
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
+    { src: './node_modules/@playcanvas/inspector/src', dest: 'dist/modules/inspector' }
 ];
 /**
  * @returns {Promise<ExampleMetadata[]>} loaded metadata.
@@ -278,6 +287,72 @@ export const writeShareHtml = async (item) => {
 };
 
 /**
+ * @param {string} name - target name of an old example path.
+ * @returns {ExampleMetadata | undefined} example the old path redirects to.
+ */
+export const getRedirect = (name) => {
+    const from = name.replace('_', '/');
+    return Object.hasOwn(exampleRedirects, from) ? getExample(exampleRedirects[from].replace('/', '_')) : undefined;
+};
+
+/**
+ * Resolves every redirect, failing on one that points at no example or hides an existing one, so
+ * the redirect table cannot silently go stale.
+ *
+ * @returns {ExampleRedirect[]} redirects.
+ */
+export const getRedirects = () => {
+    return Object.keys(exampleRedirects).map((from) => {
+        const name = from.replace('/', '_');
+        const item = getRedirect(name);
+        if (!item) {
+            throw new Error(`Redirect from ${from} points to ${exampleRedirects[from]}, which is not an example`);
+        }
+        if (getExample(name)) {
+            throw new Error(`Redirect from ${from} hides the example at that path`);
+        }
+        return { name, item };
+    });
+};
+
+/**
+ * @param {ExampleMetadata} item - example the old path redirects to.
+ * @returns {string} iframe html forwarding to the example, keeping the query.
+ */
+export const createRedirectHtml = item => `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script>location.replace('${targetName(item)}.html' + location.search + location.hash);</script>
+</head>
+</html>
+`;
+
+/**
+ * Writes the iframe page, share page and thumbnails of an old example path, for sites that embed
+ * or link to those directly.
+ *
+ * @param {ExampleRedirect} redirect - redirect.
+ * @returns {Promise<void>} completion promise.
+ */
+export const writeRedirect = async ({ name, item }) => {
+    await fs.promises.mkdir(IFRAME_DIR, { recursive: true });
+    await fs.promises.writeFile(`${IFRAME_DIR}/${name}.html`, createRedirectHtml(item));
+
+    const dir = `dist/share/${name}`;
+    await fs.promises.mkdir(dir, { recursive: true });
+    await fs.promises.writeFile(`${dir}/index.html`, await createShareHtml(item));
+
+    // an image cannot redirect, so the thumbnails are copied under the old name
+    await Promise.all(['large', 'small'].map(async (size) => {
+        const src = `thumbnails/${targetName(item)}_${size}.webp`;
+        if (await exists(src)) {
+            await copyFile({ src, dest: `dist/thumbnails/${name}_${size}.webp` });
+        }
+    }));
+};
+
+/**
  * @returns {ExampleTargets} example build targets.
  */
 export const getExampleTargets = () => {
@@ -305,7 +380,7 @@ export const getExampleTargets = () => {
         }
     }
 
-    return { sources, assets, html, share };
+    return { sources, assets, html, share, redirects: getRedirects() };
 };
 
 /**

@@ -70,6 +70,9 @@ const FRAGMENT_BUILTINS = [
     { wgslName: 'primitiveIndex', wgslType: 'u32', wgslBuiltin: 'primitive_index', pcName: 'pcPrimitiveIndex', requiresFeature: 'supportsPrimitiveIndex' }
 ];
 
+// the name of the storage buffer of the per mesh instance data, see MeshInstanceStorage
+const MESH_INSTANCE_STORAGE_NAME = 'meshInstanceStorage';
+
 const VERTEX_BUILTINS = [
     { wgslName: 'vertexIndex', wgslType: 'u32', wgslBuiltin: 'vertex_index', pcName: 'pcVertexIndex', isFallback: true },
     { wgslName: 'instanceIndex', wgslType: 'u32', wgslBuiltin: 'instance_index', pcName: 'pcInstanceIndex' }
@@ -554,8 +557,10 @@ class WebgpuShaderProcessorWGSL {
             fshader: fshader,
             attributes: attributesMap,
             meshUniformBufferFormat: uniformsData.meshUniformBufferFormat,
+            meshUniformBufferEmpty: uniformsData.meshUniformBufferEmpty,
             meshBindGroupFormat: resourcesData.meshBindGroupFormat,
-            viewBindGroupFormat: resourcesData.viewBindGroupFormat
+            viewBindGroupFormat: resourcesData.viewBindGroupFormat,
+            usesMeshInstanceStorage: resourcesData.usesMeshInstanceStorage
         };
     }
 
@@ -733,7 +738,8 @@ class WebgpuShaderProcessorWGSL {
 
         // if we don't have any uniform, add a dummy uniform to avoid empty uniform buffer - WebGPU rendering does not
         // support rendering will NULL bind group as binding a null buffer changes placement of other bindings
-        if (meshUniforms.length === 0) {
+        const meshUniformBufferEmpty = meshUniforms.length === 0;
+        if (meshUniformBufferEmpty) {
             meshUniforms.push(new UniformFormat(UNUSED_UNIFORM_NAME, UNIFORMTYPE_FLOAT));
         }
 
@@ -754,7 +760,8 @@ class WebgpuShaderProcessorWGSL {
 
         return {
             code,
-            meshUniformBufferFormat
+            meshUniformBufferFormat,
+            meshUniformBufferEmpty
         };
     }
 
@@ -913,13 +920,15 @@ class WebgpuShaderProcessorWGSL {
     }
 
     /**
-     * Splits the textures the renderer supplies per pass, together with their samplers, off the
-     * resources of the mesh bind group, see {@link ShaderProcessorOptions#viewTextures}.
+     * Splits the resources the renderer supplies per pass off the resources of the mesh bind group:
+     * the view textures together with their samplers, see
+     * {@link ShaderProcessorOptions#viewTextures}, and the mesh instance storage, see
+     * {@link GraphicsDevice#meshInstanceStorage}.
      *
      * @param {ResourceLine[]} resources - The resources of the mesh bind group, which are left
      * with the rest.
-     * @param {Set<string>} viewTextures - The names of the view textures.
-     * @returns {ResourceLine[]} The resources of the view textures.
+     * @param {Set<string>|null} viewTextures - The names of the view textures.
+     * @returns {ResourceLine[]} The resources of the view bind group.
      */
     static splitViewResources(resources, viewTextures) {
 
@@ -927,13 +936,15 @@ class WebgpuShaderProcessorWGSL {
         let count = 0;
         for (let i = 0; i < resources.length; i++) {
             const resource = resources[i];
-            if (resource.isTexture && viewTextures.has(resource.name)) {
+            if (resource.isTexture && viewTextures?.has(resource.name)) {
 
                 // the sampler of a texture follows it
                 viewResources.push(resource);
                 if (resources[i + 1]?.isSampler) {
                     viewResources.push(resources[++i]);
                 }
+            } else if (resource.isStorageBuffer && resource.name === MESH_INSTANCE_STORAGE_NAME) {
+                viewResources.push(resource);
             } else {
                 resources[count++] = resource;
             }
@@ -949,16 +960,19 @@ class WebgpuShaderProcessorWGSL {
         // below, and so are not part of the mesh bind group
         const meshResources = WebgpuShaderProcessorWGSL.filterSuppliedResources(resources, processingOptions, shader);
 
-        // the textures the renderer supplies per pass follow the view uniform buffer in its group
+        // the resources the renderer supplies per pass follow the view uniform buffer in its group
         let viewBindGroupFormat = null;
-        const viewTextures = processingOptions?.viewTextures;
-        if (viewTextures) {
-            const viewResources = WebgpuShaderProcessorWGSL.splitViewResources(meshResources, viewTextures);
+        if (processingOptions?.uniformFormats[BINDGROUP_VIEW]) {
+            const viewResources = WebgpuShaderProcessorWGSL.splitViewResources(meshResources, processingOptions.viewTextures);
             if (viewResources.length) {
-                const viewTextureFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(viewResources, visibility, shader);
-                viewBindGroupFormat = getViewBindGroupFormat(device, viewTextureFormats);
+                const viewResourceFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(viewResources, visibility, shader);
+                viewBindGroupFormat = getViewBindGroupFormat(device, viewResourceFormats);
             }
         }
+
+        // the draws of a shader reading the mesh instance storage pass the slot of the mesh
+        // instance as the first instance
+        const usesMeshInstanceStorage = resources.some(resource => resource.isStorageBuffer && resource.name === MESH_INSTANCE_STORAGE_NAME);
 
         // build mesh bind group format - this contains the textures, but not the uniform buffer as that is a separate binding
         const textureFormats = WebgpuShaderProcessorWGSL.buildResourceFormats(meshResources, visibility, shader);
@@ -983,7 +997,8 @@ class WebgpuShaderProcessorWGSL {
         return {
             code,
             meshBindGroupFormat,
-            viewBindGroupFormat
+            viewBindGroupFormat,
+            usesMeshInstanceStorage
         };
     }
 

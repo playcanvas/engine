@@ -1,6 +1,6 @@
 import { Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
@@ -8,8 +8,13 @@ import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
+import { exampleRedirects } from '../redirects.mjs';
 import { patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
+
+/**
+ * @import { ReactElement } from 'react'
+ */
 
 const MOBILE_DOCK_HEIGHT = 48;
 const MOBILE_DOCK_WIDTH = 48;
@@ -68,6 +73,18 @@ function getDefaultMobilePanelWidth() {
     ));
 }
 
+/**
+ * Sends the old path of a moved example to its current one, keeping the query so the state of a
+ * shared link survives the redirect.
+ *
+ * @param {{ to: string }} props - Component properties.
+ * @returns {ReactElement} The redirect.
+ */
+function Redirect({ to }) {
+    const { search } = useLocation();
+    return jsx(Navigate, { to: { pathname: to, search }, replace: true });
+}
+
 // eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} Props
@@ -81,6 +98,7 @@ function getDefaultMobilePanelWidth() {
  * @property {number} mobilePanelHeight - Active mobile panel height.
  * @property {number} mobilePanelWidth - Active mobile panel width.
  * @property {boolean} showCredits - Whether the desktop credits overlay is visible.
+ * @property {boolean} showInspector - Whether the inspector panel is shown, which hides the desktop description.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -101,7 +119,8 @@ class MainLayout extends TypedComponent {
             mobilePanel: getInitialMobilePanel(layout, panel),
             mobilePanelHeight: getMobilePanelHeight(height),
             mobilePanelWidth: getMobilePanelWidth(width),
-            showCredits: localStorage.getItem('showCredits') !== 'false'
+            showCredits: localStorage.getItem('showCredits') !== 'false',
+            showInspector: false
         };
     })();
 
@@ -242,12 +261,14 @@ class MainLayout extends TypedComponent {
     componentDidMount() {
         window.addEventListener('resize', this._onLayoutChange);
         window.addEventListener('orientationchange', this._onLayoutChange);
+        window.addEventListener('inspector', this._handleInspector);
     }
 
     componentWillUnmount() {
         this.stopMobilePanelDrag();
         window.removeEventListener('resize', this._onLayoutChange);
         window.removeEventListener('orientationchange', this._onLayoutChange);
+        window.removeEventListener('inspector', this._handleInspector);
     }
 
     /**
@@ -255,6 +276,22 @@ class MainLayout extends TypedComponent {
      */
     updateShowMiniStats = (value) => {
         iframe.fire('stats', { state: value });
+    };
+
+    /**
+     * @param {boolean} value - Show Inspector state.
+     */
+    updateShowInspector = (value) => {
+        this.setState({ showInspector: value });
+        iframe.fire('inspector', { state: value });
+    };
+
+    /**
+     * @param {Event} event - Inspector state event from the iframe, carrying the resolved state.
+     */
+    _handleInspector = (event) => {
+        const customEvent = /** @type {CustomEvent<{ state: boolean }>} */ (event);
+        this.setState({ showInspector: !!customEvent.detail.state });
     };
 
     /**
@@ -266,7 +303,7 @@ class MainLayout extends TypedComponent {
     };
 
     render() {
-        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth, showCredits } = this.state;
+        const { layout, mobileOrientation, mobilePanel, mobilePanelHeight, mobilePanelWidth, showCredits, showInspector } = this.state;
         return jsx(
             'div',
             {
@@ -287,6 +324,11 @@ class MainLayout extends TypedComponent {
                         path: '/',
                         element: jsx(Navigate, { to: '/misc/hello-world', replace: true })
                     }),
+                    Object.entries(exampleRedirects).map(([from, to]) => jsx(Route, {
+                        key: from,
+                        path: `/${from}`,
+                        element: jsx(Redirect, { to: `/${to}` })
+                    })),
                     jsx(Route, {
                         path: '/:category/:example?',
                         element: jsx(
@@ -304,6 +346,7 @@ class MainLayout extends TypedComponent {
                                 jsx(Menu, {
                                     layout,
                                     setShowMiniStats: this.updateShowMiniStats.bind(this),
+                                    setShowInspector: this.updateShowInspector,
                                     showCredits,
                                     setShowCredits: this.setShowCredits
                                 }),
@@ -316,6 +359,7 @@ class MainLayout extends TypedComponent {
                                         mobilePanel,
                                         setMobilePanel: this.setMobilePanel,
                                         showCredits,
+                                        hideDescription: showInspector,
                                         onMobilePanelDragStart: this.startMobilePanelDrag
                                     })
                                 )

@@ -75,6 +75,8 @@ class LitMaterial extends Material {
 
     hasLighting = false;
 
+    dirLightMap = false;
+
     hasHeights = false;
 
     hasNormals = false;
@@ -82,6 +84,8 @@ class LitMaterial extends Material {
     hasSheen = false;
 
     hasRefraction = false;
+
+    hasDispersion = false;
 
     hasIridescence = false;
 

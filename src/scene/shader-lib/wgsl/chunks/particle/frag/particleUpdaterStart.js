@@ -1,8 +1,4 @@
 export default /* wgsl */`
-fn saturate(x: f32) -> f32 {
-    return clamp(x, 0.0, 1.0);
-}
-
 fn unpack3NFloats(src: f32) -> vec3f {
     let r = fract(src);
     let g = fract(src * 256.0);

@@ -13,6 +13,7 @@ import { LayerRenderStep } from './layer-render-step.js';
 import { FramePassPostprocessing } from './frame-pass-postprocessing.js';
 import { BINDGROUP_VIEW } from '../../platform/graphics/constants.js';
 import { getSingleAttachmentBlendState } from '../../platform/graphics/blend-state-utils.js';
+import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
 
 /**
  * @import { Camera } from '../camera.js'
@@ -131,6 +132,9 @@ class ForwardRenderer extends Renderer {
         this.screenSizeId = scope.resolve('screen_size');
         this.screenSizeLegacyId = scope.resolve('uScreenSize');
         this._screenSize = new Float32Array(4);
+
+        // mesh ID - used by the picker
+        this.meshInstanceIdId = scope.resolve('meshInstanceId');
 
         this.fogColor = new Float32Array(3);
         this.ambientColor = new Float32Array(3);
@@ -331,6 +335,7 @@ class ForwardRenderer extends Renderer {
                 // Uniforms II: material - on the scope, and through the material bind group
                 material.setParameters(device);
                 this.setupMaterialBindGroup(material);
+                Debug.call(() => warnViewUniformMaterialParameters(material, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
                 this.alphaTestId.setValue(material.alphaTest);
 
@@ -355,9 +360,10 @@ class ForwardRenderer extends Renderer {
                 this.setupMaterialOverrideBindGroup(drawCall);
             }
             drawCall.setParameters(device);
+            Debug.call(() => warnViewUniformMeshInstanceParameters(drawCall, this._passViewUniformBuffers[0]?.uniformBuffer.format));
 
             // mesh ID - used by the picker
-            device.scope.resolve('meshInstanceId').setValue(drawCall.id);
+            this.meshInstanceIdId.setValue(drawCall.id);
 
             const mesh = drawCall.mesh;
             this.setVertexBuffers(device, mesh);
@@ -369,8 +375,12 @@ class ForwardRenderer extends Renderer {
                 device.setVertexBuffer(instancingData.vertexBuffer);
             }
 
-            // mesh / mesh normal matrix
+            // mesh / mesh normal matrix - on the scope, or in the mesh instance storage for a shader
+            // reading it, which the draw indexes by its first instance. The scope is set for it too,
+            // as a fragment shader can still read the matrix_model uniform
             this.setMeshInstanceMatrices(drawCall, true);
+            const shader = shaderInstance.shader;
+            const firstInstance = shader.usesMeshInstanceStorage ? this.updateStorageSlot(drawCall, shader) : 0;
 
             this.setupMeshUniformBuffers(shaderInstance);
 
@@ -395,7 +405,7 @@ class ForwardRenderer extends Renderer {
 
                     const first = v === viewListStart;
                     const last = v === viewListEnd - 1;
-                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last);
+                    device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, first, last, firstInstance);
 
                     this._forwardDrawCalls++;
                     if (drawCall.instancingData) {
@@ -403,7 +413,7 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             } else {
-                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData);
+                device.draw(mesh.primitive[style], indexBuffer, instancingData?.count, indirectData, true, true, firstInstance);
 
                 this._forwardDrawCalls++;
                 if (drawCall.instancingData) {
@@ -488,7 +498,7 @@ class ForwardRenderer extends Renderer {
             const sortTime = now();
             // #endif
 
-            layer.sortVisible(camera, transparent);
+            layer.sortVisible(camera, transparent, this.meshInstanceSorter);
 
             // #if _PROFILER
             this._sortTime += now() - sortTime;

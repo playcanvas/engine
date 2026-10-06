@@ -26,6 +26,7 @@ import { ShaderUtils } from '../shader-lib/shader-utils.js';
 import { LightList } from '../lighting/light-list.js';
 import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
+import { warnViewUniformMaterialParameters, warnViewUniformMeshInstanceParameters } from '../materials/material-debug.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 
 /**
@@ -180,7 +181,8 @@ class ShadowRenderer {
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
 
-            if (meshInstance.castShadow) {
+            // test visible here, as _isVisible, which also tests it, is skipped when culling is off
+            if (meshInstance.castShadow && meshInstance.visible) {
                 if (!meshInstance.cull || meshInstance._isVisible(camera)) {
                     meshInstance.visibleThisFrame = true;
                     visible.push(meshInstance);
@@ -213,8 +215,8 @@ class ShadowRenderer {
             this._cullShadowCastersInternal(casterLists[i], visible, camera);
         }
 
-        // this sorts the shadow casters by the shader and the material
-        visible.sort(this.sortCompareShader);
+        // group the shadow casters by material and mesh, as the forward renderer does
+        this.renderer.meshInstanceSorter.sortMaterialMesh(visible);
 
         // event after culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
@@ -345,7 +347,7 @@ class ShadowRenderer {
             for (let i = 0; i < numInstances; i++) {
 
                 const meshInstance = meshInstances[i];
-                if (!meshInstance.castShadow) {
+                if (!meshInstance.castShadow || !meshInstance.visible) {
                     continue;
                 }
 
@@ -358,10 +360,6 @@ class ShadowRenderer {
                             _faceLists[face].push(meshInstance);
                         }
                     }
-                    continue;
-                }
-
-                if (!meshInstance.visible) {
                     continue;
                 }
 
@@ -454,9 +452,10 @@ class ShadowRenderer {
             }
         }
 
-        // this sorts the shadow casters by the shader and the material
+        // group the shadow casters by material and mesh, as the forward renderer does
+        const sorter = this.renderer.meshInstanceSorter;
         for (let face = 0; face < 6; face++) {
-            _faceLists[face].sort(this.sortCompareShader);
+            sorter.sortMaterialMesh(_faceLists[face]);
             _faceLists[face] = null;
             _faceCameras[face] = null;
         }
@@ -464,26 +463,6 @@ class ShadowRenderer {
         // event after culling - the camera is null as this is internal (shadow) culling rather
         // than culling for a user camera
         this.renderer.scene?.fire(EVENT_POSTCULL, null);
-    }
-
-    /**
-     * Orders shadow casters by their shader, then their material, then their mesh, so that the
-     * casters sharing a shader, a material and the vertex buffers are submitted together. See
-     * {@link MeshInstance#_sortKeyShadow}.
-     *
-     * @param {MeshInstance} drawCallA - The first mesh instance.
-     * @param {MeshInstance} drawCallB - The second mesh instance.
-     * @returns {number} The sort order.
-     */
-    sortCompareShader(drawCallA, drawCallB) {
-        const keyA = drawCallA._sortKeyShadow;
-        const keyB = drawCallB._sortKeyShadow;
-
-        if (keyA === keyB) {
-            return drawCallB.mesh.id - drawCallA.mesh.id;
-        }
-
-        return keyB - keyA;
     }
 
     setupRenderState(device, light) {
@@ -616,6 +595,7 @@ class ShadowRenderer {
                 material.setParameters(device);
                 renderer.setupMaterialBindGroup(material);
                 renderer.alphaTestId.setValue(material.alphaTest);
+                Debug.call(() => warnViewUniformMaterialParameters(material, this.viewUniformFormat));
 
             } else {
 
@@ -630,6 +610,7 @@ class ShadowRenderer {
                 renderer.setupMaterialOverrideBindGroup(meshInstance);
             }
             meshInstance.setParameters(device);
+            Debug.call(() => warnViewUniformMeshInstanceParameters(meshInstance, this.viewUniformFormat));
             prevMeshInstance = meshInstance;
 
             const shaderInstance = meshInstance.getShaderInstance(shadowPass, _noLights, scene,
@@ -645,10 +626,6 @@ class ShadowRenderer {
                 continue;
             }
 
-            // sort shadow casters by shader, and then by material - the material id takes the low
-            // 22 bits, as in the forward sort key, and the key stays an exact integer
-            meshInstance._sortKeyShadow = shadowShader.id * 0x400000 + (material.id & 0x3fffff);
-
             device.setShader(shadowShader);
             renderer.setupViewBindGroup(shadowShader);
 
@@ -660,15 +637,17 @@ class ShadowRenderer {
                 device.setVertexBuffer(instancingData.vertexBuffer);
             }
 
-            // mesh / mesh normal matrix
+            // mesh / mesh normal matrix - on the scope, or in the mesh instance storage for a shader
+            // reading it, which the draw indexes by its first instance
             renderer.setMeshInstanceMatrices(meshInstance);
+            const firstInstance = shadowShader.usesMeshInstanceStorage ? renderer.updateStorageSlot(meshInstance, shadowShader) : 0;
 
             renderer.setupMeshUniformBuffers(shaderInstance);
 
             // draw
             const style = meshInstance.renderStyle;
             const indirectData = meshInstance.getDrawCommands(camera);
-            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData);
+            device.draw(mesh.primitive[style], mesh.indexBuffer[style], instancingData?.count, indirectData, true, true, firstInstance);
 
             // the parameters its material does not have are restored to the values they replaced,
             // such as global ones, whatever the next caster - no material sets them again

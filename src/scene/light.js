@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { math } from '../core/math/math.js';
 import { Color } from '../core/math/color.js';
 import { Mat4 } from '../core/math/mat4.js';
@@ -420,6 +421,13 @@ class Light {
     }
 
     set mask(value) {
+
+        // a mesh instance only holds these values of a mask, so only they can match, see
+        // MeshInstance#mask
+        const all = MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED | MASK_BAKE;
+        Debug.assert((value & ~all) === 0, `Light#mask ${value} has bits other than MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED and MASK_BAKE`);
+        value &= all;
+
         if (this._mask !== value) {
             this._mask = value;
             this.updateKey();

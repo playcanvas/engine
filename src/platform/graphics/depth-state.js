@@ -59,14 +59,18 @@ class DepthState {
     /**
      * Sets whether depth testing is performed. If true, a shader fragment is only written to the
      * current render target if it passes the depth test. If false, it is written regardless of
-     * what is in the depth buffer. Note that when depth testing is disabled, writes to the depth
-     * buffer are also disabled. Defaults to true.
+     * what is in the depth buffer. Disabling the test sets {@link DepthState#func} to
+     * {@link FUNC_ALWAYS}, and enabling it sets {@link FUNC_LESSEQUAL} - unless the test is
+     * already enabled, in which case the current depth testing function is kept. Depth writes are
+     * controlled independently by {@link DepthState#write}, so a fragment still writes its depth
+     * when the test is disabled. Defaults to true.
      *
      * @type {boolean}
      */
     set test(value) {
-        this.func = value ? FUNC_LESSEQUAL : FUNC_ALWAYS;
-        this.updateKey();
+        if (value !== this.test) {
+            this.func = value ? FUNC_LESSEQUAL : FUNC_ALWAYS;
+        }
     }
 
     /**

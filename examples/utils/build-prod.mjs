@@ -18,6 +18,7 @@ import {
     slash,
     transformSource,
     writeExampleHtml,
+    writeRedirect,
     writeShareHtml
 } from './build-examples.mjs';
 import { createdLog, failedLog, startLog } from './log.mjs';
@@ -76,7 +77,7 @@ const writeSources = async (sources) => {
  * @returns {Promise<void>} completion promise.
  */
 const buildExampleSupport = async () => {
-    const { sources, assets, html, share } = getExampleTargets();
+    const { sources, assets, html, share, redirects } = getExampleTargets();
     const tasks = [
         timed('src/examples sources', `${IFRAME_DIR} source files`, () => writeSources(sources)),
         timed('src/examples assets', `${IFRAME_DIR} assets`, () => copyTargets(assets)),
@@ -84,7 +85,8 @@ const buildExampleSupport = async () => {
             nodeEnv: NODE_ENV,
             enginePath: ENGINE_PATH
         })))),
-        timed('templates/share.html', 'dist/share pages', () => Promise.all(share.map(writeShareHtml)))
+        timed('templates/share.html', 'dist/share pages', () => Promise.all(share.map(writeShareHtml))),
+        timed('src/app/redirects.mjs', 'moved example pages', () => Promise.all(redirects.map(writeRedirect)))
     ];
     await Promise.all(tasks);
 };

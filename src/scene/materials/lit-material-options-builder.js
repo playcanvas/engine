@@ -9,6 +9,7 @@ import {
     AMBIENTSRC_AMBIENTSH, AMBIENTSRC_ENVALATLAS, AMBIENTSRC_CONSTANT,
     SHADER_PREPASS, SCENETEXTURE_DEPTH
 } from '../constants.js';
+import { shaderDefsToLightMask } from '../light-mask.js';
 
 /**
  * @import { Light } from '../light.js'
@@ -91,7 +92,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useDiffuseTransmission = material.hasDiffuseTransmission;
         litOptions.useMetalness = material.hasMetalness;
         litOptions.useDynamicRefraction = material.dynamicRefraction;
-        litOptions.dispersion = material.dispersion > 0;
+        litOptions.dispersion = material.hasDispersion;
 
         litOptions.vertexColors = false;
         litOptions.lightMapEnabled = material.hasLighting;
@@ -100,7 +101,6 @@ class LitMaterialOptionsBuilder {
         litOptions.useNormals = material.hasNormals;
         litOptions.useClearCoatNormals = material.hasClearCoatNormals;
         litOptions.useAo = material.hasAo;
-        litOptions.diffuseMapEnabled = material.hasDiffuseMap;
     }
 
     static updateEnvOptions(litOptions, material, scene, renderParams) {
@@ -145,7 +145,7 @@ class LitMaterialOptionsBuilder {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
-            const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? shaderDefsToLightMask(objDefs) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);

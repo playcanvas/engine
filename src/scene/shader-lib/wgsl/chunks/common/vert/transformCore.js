@@ -3,7 +3,13 @@ export default /* wgsl */`
     attribute vertex_position: vec4f;
 
     uniform matrix_viewProjection: mat4x4f;
-    uniform matrix_model: mat4x4f;
+
+    // the model matrix is read from the mesh instance storage, or else from the matrix_model uniform,
+    // declared only where it is read, so that it is not in the mesh uniform buffer of the shaders
+    // reading the storage
+    #ifdef MESH_INSTANCE_STORAGE
+        #include "meshInstanceStorageVS"
+    #endif
     
     #ifdef MORPHING
 
@@ -40,16 +46,32 @@ export default /* wgsl */`
 
     #elif defined(SKIN)
         #include "skinVS"
-        fn getModelMatrix() -> mat4x4f {
-            return uniform.matrix_model * getSkinMatrix(vertex_boneIndices, vertex_boneWeights);
-        }
+
+        #ifdef MESH_INSTANCE_STORAGE
+            fn getModelMatrix() -> mat4x4f {
+                return getStoredModelMatrix() * getSkinMatrix(vertex_boneIndices, vertex_boneWeights);
+            }
+        #else
+            uniform matrix_model: mat4x4f;
+            fn getModelMatrix() -> mat4x4f {
+                return uniform.matrix_model * getSkinMatrix(vertex_boneIndices, vertex_boneWeights);
+            }
+        #endif
 
     #elif defined(INSTANCING)
 
+        uniform matrix_model: mat4x4f;
         #include "transformInstancingVS"
+
+    #elif defined(MESH_INSTANCE_STORAGE)
+
+        fn getModelMatrix() -> mat4x4f {
+            return getStoredModelMatrix();
+        }
 
     #else
 
+        uniform matrix_model: mat4x4f;
         fn getModelMatrix() -> mat4x4f {
             return uniform.matrix_model;
         }

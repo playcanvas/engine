@@ -9,7 +9,7 @@ fn getDiffuseTransmissionColor() {
     #endif
 
     #ifdef STD_DIFFUSETRANSMISSIONCOLOR_VERTEX
-    diffuseTransmissionColor = diffuseTransmissionColor * saturate3(vVertexColor.{STD_DIFFUSETRANSMISSIONCOLOR_VERTEX_CHANNEL});
+    diffuseTransmissionColor = diffuseTransmissionColor * saturate(vVertexColor.{STD_DIFFUSETRANSMISSIONCOLOR_VERTEX_CHANNEL});
     #endif
 
     dDiffuseTransmissionColor = diffuseTransmissionColor;

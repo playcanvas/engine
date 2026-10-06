@@ -5,7 +5,7 @@ import { Color } from '../../../src/core/math/color.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { PIXELFORMAT_RGBA8, PIXELFORMAT_SRGBA8 } from '../../../src/platform/graphics/constants.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
-import { FRESNEL_NONE, LIGHTSHAPE_RECT } from '../../../src/scene/constants.js';
+import { LIGHTSHAPE_RECT } from '../../../src/scene/constants.js';
 import { LitMaterial } from '../../../src/scene/materials/lit-material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
 import { MeshInstance } from '../../../src/scene/mesh-instance.js';
@@ -95,11 +95,10 @@ describe('Lit shader diffuse transmission', function () {
         return new Texture(app.graphicsDevice, { width: 4, height: 4, format, mipmaps: false });
     };
 
-    // a LitMaterial front end setting the diffuse transmission arguments, and optionally specular
-    const litMaterial = (specular = false) => {
+    // a LitMaterial front end setting the diffuse transmission arguments
+    const litMaterial = () => {
         const material = new LitMaterial();
         material.hasDiffuseTransmission = true;
-        material.hasSpecular = specular;
         material.shaderChunkGLSL = `
             #include "litShaderCorePS"
             void evaluateFrontend() {
@@ -108,7 +107,6 @@ describe('Lit shader diffuse transmission', function () {
                 litArgs_worldNormal = dVertexNormalW;
                 litArgs_diffuseTransmission_intensity = 0.5;
                 litArgs_diffuseTransmission_color = vec3(1.0, 0.5, 0.25);
-                ${specular ? 'litArgs_specularity = vec3(0.5); litArgs_gloss = 0.5;' : ''}
             }`;
         material.shaderChunkWGSL = `
             #include "litShaderCorePS"
@@ -118,7 +116,6 @@ describe('Lit shader diffuse transmission', function () {
                 litArgs_worldNormal = dVertexNormalW;
                 litArgs_diffuseTransmission_intensity = 0.5;
                 litArgs_diffuseTransmission_color = vec3f(1.0, 0.5, 0.25);
-                ${specular ? 'litArgs_specularity = vec3f(0.5); litArgs_gloss = 0.5;' : ''}
             }`;
         return material;
     };
@@ -255,18 +252,6 @@ describe('Lit shader diffuse transmission', function () {
         expect(source).to.contain(modulate);
     });
 
-    it('does not use the legacy ambient combine', function () {
-        addLight({ type: 'directional' });
-        const material = litMaterial(true);
-        material.fresnelModel = FRESNEL_NONE;
-        const source = forwardShader(addBox(material));
-
-        // the legacy combine has no room for the transmission
-        expect(source).not.to.contain('light_globalAmbient) * albedo');
-        expect(source).to.contain(lang('ret += albedo * dDiffuseLight;',
-            'ret = ret + (albedo * dDiffuseLight);'));
-    });
-
     it('samples the transmission from its map and the color from its map', function () {
         addLight({ type: 'directional' });
         const material = transmissive();
@@ -292,7 +277,7 @@ describe('Lit shader diffuse transmission', function () {
         expect(source).to.contain(lang('diffuseTransmission *= saturate(vVertexColor.r);',
             'diffuseTransmission = diffuseTransmission * saturate(vVertexColor.r);'));
         expect(source).to.contain(lang('diffuseTransmissionColor *= saturate(vVertexColor.rgb);',
-            'diffuseTransmissionColor = diffuseTransmissionColor * saturate3(vVertexColor.rgb);'));
+            'diffuseTransmissionColor = diffuseTransmissionColor * saturate(vVertexColor.rgb);'));
     });
 
     it('supports a LitMaterial front end', function () {

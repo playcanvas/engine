@@ -1,6 +1,4 @@
-// #if _DEBUG
 import { version, revision } from '../core/core.js';
-// #endif
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
 import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
@@ -90,6 +88,19 @@ import { ShaderChunks } from '../scene/shader-lib/shader-chunks.js';
 let app = null;
 
 /**
+ * The version of the contract under which an app announces itself to a devtools hook, defined on
+ * the global object under `Symbol.for('playcanvas.inspector')`. The hook's `register(app, info)` is
+ * called once an app is initialized, with its graphics device, scene, root entity and component
+ * systems in place, and `unregister(app)` as it is destroyed. An app created with
+ * {@link AppOptions#devtools} set to false does neither. The symbol is looked up at those two
+ * points only, not when the module loads, so the module stays free of side effects.
+ *
+ * @type {number}
+ * @ignore
+ */
+const DEVTOOLS_PROTOCOL = 1;
+
+/**
  * AppBase represents the base functionality for all PlayCanvas applications. It is responsible for
  * initializing and managing the application lifecycle. It coordinates core engine systems such
  * as:
@@ -130,6 +141,13 @@ class AppBase extends EventHandler {
 
     /** @private */
     _inFrameUpdate = false;
+
+    /**
+     * Whether the app announced itself to a devtools hook, and so withdraws on destroy.
+     *
+     * @private
+     */
+    _devtoolsRegistered = false;
 
     /** @private */
     _librariesLoaded = false;
@@ -648,6 +666,20 @@ class AppBase extends EventHandler {
 
         if (typeof document !== 'undefined') {
             document.addEventListener('visibilitychange', this._visibilityChangeHandler, false);
+        }
+
+        // announce the initialized app to a devtools extension, such as the PlayCanvas Inspector,
+        // which defines this hook before the page runs, unless the app opted out. Without the hook
+        // this is a single lookup. A broken or outdated extension must not break the app, so its
+        // failures are contained
+        const hook = appOptions.devtools !== false ? globalThis[Symbol.for('playcanvas.inspector')] : undefined;
+        if (hook?.register) {
+            this._devtoolsRegistered = true;
+            try {
+                hook.register(this, { version, revision, protocol: DEVTOOLS_PROTOCOL });
+            } catch (e) {
+                Debug.warn('The devtools hook failed to register the app.', e);
+            }
         }
     }
 
@@ -1780,6 +1812,16 @@ class AppBase extends EventHandler {
         if (this._inFrameUpdate) {
             this._destroyRequested = true;
             return;
+        }
+
+        // only an app that announced itself withdraws
+        if (this._devtoolsRegistered) {
+            this._devtoolsRegistered = false;
+            try {
+                globalThis[Symbol.for('playcanvas.inspector')]?.unregister?.(this);
+            } catch (e) {
+                Debug.warn('The devtools hook failed to unregister the app.', e);
+            }
         }
 
         const canvasId = this.graphicsDevice.canvas.id;

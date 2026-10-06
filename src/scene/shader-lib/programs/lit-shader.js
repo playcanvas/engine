@@ -75,14 +75,14 @@ class LitShader {
     /**
      * The vertex shader defines needed for the shader compilation.
      *
-     * @type {Map<string, string>}
+     * @type {Map<string, string|number|boolean>}
      */
     vDefines = new Map();
 
     /**
      * The fragment shader defines needed for the shader compilation.
      *
-     * @type {Map<string, string>}
+     * @type {Map<string, string|number|boolean>}
      */
     fDefines = new Map();
 
@@ -207,7 +207,7 @@ class LitShader {
      *
      * @param {boolean} condition - The define is added if the condition is true.
      * @param {string} name - The define name.
-     * @param {string} [value] - The define value.
+     * @param {string|boolean} [value] - The define value.
      */
     sharedDefineSet(condition, name, value = '') {
         if (condition) {
@@ -240,6 +240,13 @@ class LitShader {
         if (this.options.linearDepth) {
             vDefines.set('LINEAR_DEPTH', true);
             varyings.set('vLinearDepth', 'float');
+        }
+
+        // dynamic refraction, evaluated by the forward pass, scales the refraction by the scale of
+        // the model matrix
+        if (options.useRefraction && options.useDynamicRefraction && this.shaderPassInfo.isForward) {
+            vDefines.set('LIT_DYNAMIC_REFRACTION', true);
+            varyings.set('vModelScale', 'vec3');
         }
 
         if (this.needsNormal) vDefines.set('NORMALS', true);
@@ -556,7 +563,6 @@ class LitShader {
         this.fDefineSet(options.useAo, 'LIT_AO');
         this.fDefineSet(options.occludeDirect, 'LIT_OCCLUDE_DIRECT');
         this.fDefineSet(options.msdfTextAttribute, 'LIT_MSDF_TEXT_ATTRIBUTE');
-        this.fDefineSet(options.diffuseMapEnabled, 'LIT_DIFFUSE_MAP');
         this.fDefineSet(options.shadowCatcher, 'LIT_SHADOW_CATCHER');
         this.fDefineSet(true, 'LIT_FRESNEL_MODEL', fresnelNames[options.fresnelModel]);
         this.fDefineSet(true, 'LIT_NONE_SLICE_MODE', spriteRenderModeNames[options.nineSlicedMode]);

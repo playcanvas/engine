@@ -103,7 +103,8 @@ class ResourceLoader {
      * for the specified type. When loaded and parsed, use the callback to return an instance of
      * the resource.
      *
-     * @param {string} url - The URL of the resource to load.
+     * @param {string|null} url - The URL of the resource to load. Can be null for an asset that is
+     * not loaded from a file of its own, such as a cubemap loaded from its face assets.
      * @param {string} type - The type of resource expected.
      * @param {ResourceLoaderCallback} callback - The callback used when the resource is loaded or
      * an error occurs. Passed (err, resource) where err is null if there are no errors.

@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { restore, spy } from 'sinon';
 
 import { platform } from '../../../src/core/platform.js';
 import { Application } from '../../../src/framework/application.js';
@@ -6,8 +7,10 @@ import { Entity } from '../../../src/framework/entity.js';
 import {
     ElementInput, ElementMouseEvent, ElementTouchEvent
 } from '../../../src/framework/input/element-input.js';
+import { XRSPACE_LOCALFLOOR, XRTYPE_VR } from '../../../src/framework/xr/constants.js';
 import { createGraphicsDevice } from '../../device.mjs';
 import { jsdomSetup, jsdomTeardown } from '../../jsdom.mjs';
+import { FakeXRSystem } from '../xr/fake-webxr.mjs';
 
 describe('ElementInput', function () {
     let app;
@@ -93,5 +96,67 @@ describe('ElementInput', function () {
 
         expect(received).to.be.an.instanceof(ElementMouseEvent);
         expect(received.event).to.equal(mouseEvent);
+    });
+
+    describe('in XR sessions', function () {
+        let xr;
+
+        beforeEach(function () {
+            xr = new FakeXRSystem();
+            Object.defineProperty(navigator, 'xr', { value: xr, configurable: true });
+
+            // XR is only supported and available in a browser, and the null graphics device has no
+            // XR presentation backend, so provide one that presents nothing
+            app.xr._supported = true;
+            app.xr._available[XRTYPE_VR] = true;
+            app.graphicsDevice.createXrBridgeImpl = () => ({
+                attachPresentation: () => {},
+                releasePresentation: () => {},
+                endFrame: () => {},
+                destroy: () => {}
+            });
+
+            // the element input listens for XR sessions once XR is supported
+            app.elementInput.attachSelectEvents();
+        });
+
+        afterEach(async function () {
+            restore();
+
+            // end any session a test left running, so its end event fires before teardown
+            if (app.xr.active) {
+                app.xr.end();
+            }
+            await Promise.all(xr.sessions.map(session => session.endEventFired));
+
+            delete navigator.xr;
+        });
+
+        /**
+         * Starts an immersive VR session on the test camera, then ends it.
+         *
+         * @returns {Promise<void>} Resolves once the end event of the session has fired.
+         */
+        const runSession = async () => {
+            const camera = app.root.findByName('camera');
+            await new Promise((resolve) => {
+                app.xr.start(camera.camera, XRTYPE_VR, XRSPACE_LOCALFLOOR, { callback: resolve });
+            });
+
+            const session = app.xr.session;
+            app.xr.end();
+            await session.endEventFired;
+        };
+
+        it('stops listening for the end of a session once it has ended', async function () {
+            const onXrEnd = spy(app.elementInput, '_onXrEnd');
+
+            await runSession();
+            await runSession();
+            await runSession();
+
+            // once per session, rather than once more for every session before it
+            expect(onXrEnd.callCount).to.equal(3);
+        });
     });
 });

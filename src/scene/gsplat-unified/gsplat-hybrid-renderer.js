@@ -601,10 +601,7 @@ class GSplatHybridRenderer extends GSplatRenderer {
         const xrViews = sceneCamera.xrViews;
         if (xrViews?.length) {
             // XR: cull against the combined frustum of all views, so splats visible only near
-            // one eye's edge (e.g. the right edge of the right eye) are not dropped. The per-view
-            // "off" matrices are refreshed at render time by setCameraUniforms, which runs AFTER
-            // this culling, so refresh them here (mirrors the projector dispatch).
-            sceneCamera.updateViewTransforms();
+            // one eye's edge (e.g. the right edge of the right eye) are not dropped
             sceneCamera.updateXrFrustum();
             world.workBuffer.frustumCuller.setFrustumPlanes(sceneCamera.frustum);
         } else {

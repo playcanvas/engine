@@ -251,7 +251,7 @@ cameraFrame.volumetricFog.tint.set(1, 0.93, 0.83);
 cameraFrame.volumetricFog.ambientColor.set(0.55, 0.68, 0.9);
 cameraFrame.volumetricFog.ambientIntensity = 0.02;
 
-// the DOF settings which are not exposed as controls, see graphics/depth-of-field for those
+// the DOF settings which are not exposed as controls, see camera-frame/depth-of-field for those
 cameraFrame.dof.nearBlur = true;
 cameraFrame.dof.blurRings = 4;
 cameraFrame.dof.blurRingPoints = 5;

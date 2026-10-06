@@ -25,6 +25,15 @@ import { DEVICETYPE_WEBGPU } from '../../platform/graphics/constants.js';
  * @import { Entity } from '../entity.js'
  */
 
+// camera properties derived from the projection of the XR views, reused to avoid allocations
+const xrProperties = {
+    aspectRatio: 1,
+    farClip: 1000,
+    fov: 90,
+    horizontalFov: false,
+    nearClip: 0.1
+};
+
 /**
  * @callback XrErrorCallback
  * Callback used by {@link XrManager#start} and {@link XrManager#end}.
@@ -91,7 +100,9 @@ class XrManager extends EventHandler {
     static EVENT_START = 'start';
 
     /**
-     * Fired when XR session is ended.
+     * Fired when XR session is ended. While the handlers run, {@link XrManager#camera},
+     * {@link XrManager#type} and {@link XrManager#spaceType} still describe the session that has
+     * ended, and they are reset once all handlers have run.
      *
      * @event
      * @example
@@ -146,6 +157,14 @@ class XrManager extends EventHandler {
     _available = {};
 
     /**
+     * Listener for the `devicechange` event of `navigator.xr`, which is removed on destroy.
+     *
+     * @type {Function|null}
+     * @private
+     */
+    _onDeviceChange = null;
+
+    /**
      * @type {string|null}
      * @private
      */
@@ -162,6 +181,14 @@ class XrManager extends EventHandler {
      * @private
      */
     _session = null;
+
+    /**
+     * True while a session requested by {@link XrManager#start} is pending.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _starting = false;
 
     /**
      * Graphics-backend XR glue for the active session.
@@ -293,6 +320,14 @@ class XrManager extends EventHandler {
     _framebufferScaleFactor = 1.0;
 
     /**
+     * Projection matrix of the first view, which the camera properties were last derived from.
+     *
+     * @type {Mat4}
+     * @private
+     */
+    _xrPropertiesProjMat = new Mat4();
+
+    /**
      * Create a new XrManager instance.
      *
      * @param {AppBase} app - The main application.
@@ -324,9 +359,10 @@ class XrManager extends EventHandler {
         // 3. Controllers class
 
         if (this._supported && XrManager._allowsSpatialTracking()) {
-            navigator.xr.addEventListener('devicechange', () => {
+            this._onDeviceChange = () => {
                 this._deviceAvailabilityCheck();
-            });
+            };
+            navigator.xr.addEventListener('devicechange', this._onDeviceChange);
             this._deviceAvailabilityCheck();
         }
     }
@@ -409,6 +445,12 @@ class XrManager extends EventHandler {
      * @ignore
      */
     destroy() {
+        // navigator.xr outlives the application, which its listener would otherwise keep alive
+        if (this._onDeviceChange) {
+            navigator.xr.removeEventListener('devicechange', this._onDeviceChange);
+            this._onDeviceChange = null;
+        }
+
         if (this.xrBridge) {
             this.xrBridge.destroy();
             this.xrBridge = null;
@@ -508,6 +550,11 @@ class XrManager extends EventHandler {
             return;
         }
 
+        if (this._starting) {
+            if (callback) callback(new Error('XR session is already starting'));
+            return;
+        }
+
         this._camera = camera;
         this._type = type;
         this._spaceType = spaceType;
@@ -599,11 +646,14 @@ class XrManager extends EventHandler {
             opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
         }
 
+        // the session is requested asynchronously, so refuse other starts until it is granted or
+        // fails to start
+        this._starting = true;
+
         if (this.imageTracking.supported && this.imageTracking.images.length) {
             this.imageTracking.prepareImages((err, trackedImages) => {
                 if (err) {
-                    if (callback) callback(err);
-                    this.fire('error', err);
+                    this._onStartFailed(err, callback);
                     return;
                 }
 
@@ -626,16 +676,31 @@ class XrManager extends EventHandler {
      * @private
      */
     _onStartOptionsReady(type, spaceType, options, callback) {
+        // only a rejected request is handled here, as once granted, _onSessionStart ends a session
+        // that fails to start
         navigator.xr.requestSession(type, options).then((session) => {
             this._onSessionStart(session, spaceType, callback);
-        }).catch((ex) => {
-            this._camera = null;
-            this._type = null;
-            this._spaceType = null;
-
-            if (callback) callback(ex);
-            this.fire('error', ex);
+        }, (ex) => {
+            this._onStartFailed(ex, callback);
         });
+    }
+
+    /**
+     * Resets the state set by {@link XrManager#start} when no session could be requested, and
+     * reports the error.
+     *
+     * @param {Error} err - The error that stopped the session from starting.
+     * @param {XrErrorCallback} callback - Error callback.
+     * @private
+     */
+    _onStartFailed(err, callback) {
+        this._starting = false;
+        this._camera = null;
+        this._type = null;
+        this._spaceType = null;
+
+        if (callback) callback(err);
+        this.fire('error', err);
     }
 
     /**
@@ -785,23 +850,21 @@ class XrManager extends EventHandler {
     _onSessionStart(session, spaceType, callback) {
         let failed = false;
 
+        this._starting = false;
         this._session = session;
-
-        // hand the scene camera the per-view data it needs for rendering, now that the session is
-        // established. `views.list` is a stable array the manager mutates in place each frame, so
-        // the camera tracks it by reference; assigning it marks the camera XR-active (cleared on
-        // session end). Deferred to here rather than start() so the camera stays on the mono path
-        // during the asynchronous session request.
-        this._camera.camera.xrViews = this.views.list;
-
-        this.xrBridge = new XrBridge(this.app.graphicsDevice, this);
 
         const onVisibilityChange = () => {
             this.fire('visibility:change', session.visibilityState);
         };
 
-        const onClipPlanesChange = () => {
-            this._setClipPlanes(this._camera.nearClip, this._camera.farClip);
+        // while the session runs, the camera reports the clip planes of the XR views, so follow the
+        // values set on it
+        const onNearClipChange = (nearClip) => {
+            this._setClipPlanes(nearClip, this._depthFar);
+        };
+
+        const onFarClipChange = (farClip) => {
+            this._setClipPlanes(this._depthNear, farClip);
         };
 
         const onFrameRateChange = () => {
@@ -810,68 +873,108 @@ class XrManager extends EventHandler {
 
         // clean up once session is ended
         const onEnd = () => {
-            if (this._camera) {
-                this._camera.off('set_nearClip', onClipPlanesChange);
-                this._camera.off('set_farClip', onClipPlanesChange);
-                this._camera.camera.xrViews = null;
-                this._camera = null;
-            }
-
             session.removeEventListener('end', onEnd);
             session.removeEventListener('visibilitychange', onVisibilityChange);
             session.removeEventListener('frameratechange', onFrameRateChange);
 
-            if (!failed) this.fire('end');
+            try {
+                // fired before the session state is reset, so that its handlers, including those
+                // of the input sources removed as it ends, can still use the camera
+                if (!failed) this.fire('end');
+            } finally {
+                // reset even when a handler throws, which would otherwise leave the manager active
+                // with no frames to drive the application
+                if (this._camera) {
+                    this._camera.off('set:nearClip', onNearClipChange);
+                    this._camera.off('set:farClip', onFarClipChange);
+                    this._camera.camera.xrViews = null;
+                    this._camera = null;
+                }
 
-            if (this.xrBridge) {
-                this.xrBridge.destroy();
-                this.xrBridge = null;
-            }
+                if (this.xrBridge) {
+                    this.xrBridge.destroy();
+                    this.xrBridge = null;
+                }
 
-            this._session = null;
-            this._referenceSpace = null;
-            this._width = 0;
-            this._height = 0;
-            this._type = null;
-            this._spaceType = null;
+                this._session = null;
+                this._referenceSpace = null;
+                this._width = 0;
+                this._height = 0;
+                this._type = null;
+                this._spaceType = null;
 
-            // old requestAnimationFrame will never be triggered,
-            // so queue up new tick
-            if (this.app.systems) {
-                this.app.requestAnimationFrame();
+                // the next session, possibly on another camera, derives its camera properties on
+                // its first frame
+                this._xrPropertiesProjMat.setIdentity();
+
+                // old requestAnimationFrame will never be triggered,
+                // so queue up new tick
+                if (this.app.systems) {
+                    this.app.requestAnimationFrame();
+                }
             }
         };
 
-        session.addEventListener('end', onEnd);
-        session.addEventListener('visibilitychange', onVisibilityChange);
+        // end a session that fails to start and clean it up at once, so the manager is inactive when
+        // the error is reported, unless the session has already ended. 'end' is not fired, as
+        // 'start' was not.
+        const abortStart = (ex) => {
+            failed = true;
 
-        this._camera.on('set_nearClip', onClipPlanesChange);
-        this._camera.on('set_farClip', onClipPlanesChange);
-
-        // A framebufferScaleFactor scale of 1 is the full resolution of the display
-        // so we need to calculate this based on devicePixelRatio of the display and what
-        // we've set this in the graphics device
-        Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
-
-        const gd = this.app.graphicsDevice;
-        const framebufferScaleFactor = (gd.maxPixelRatio / window.devicePixelRatio) * this._framebufferScaleFactor;
-
-        this.xrBridge.attachPresentation(this._session, {
-            framebufferScaleFactor,
-            depthNear: this._depthNear,
-            depthFar: this._depthFar,
-            onBindingError: (ex) => {
-                this.fire('error', ex);
+            if (this._session === session) {
+                session.end();
+                onEnd();
             }
-        });
 
-        if (this.session.supportedFrameRates) {
-            this._supportedFrameRates = Array.from(this.session.supportedFrameRates);
-        } else {
-            this._supportedFrameRates = null;
+            if (callback) callback(ex);
+            this.fire('error', ex);
+        };
+
+        session.addEventListener('end', onEnd);
+
+        try {
+            // hand the scene camera the per-view data it needs for rendering, now that the session
+            // is established. `views.list` is a stable array the manager mutates in place each
+            // frame, so the camera tracks it by reference; assigning it marks the camera XR-active
+            // (cleared on session end). Deferred to here rather than start() so the camera stays
+            // on the mono path during the asynchronous session request.
+            this._camera.camera.xrViews = this.views.list;
+
+            this.xrBridge = new XrBridge(this.app.graphicsDevice, this);
+
+            session.addEventListener('visibilitychange', onVisibilityChange);
+
+            this._camera.on('set:nearClip', onNearClipChange);
+            this._camera.on('set:farClip', onFarClipChange);
+
+            // A framebufferScaleFactor scale of 1 is the full resolution of the display
+            // so we need to calculate this based on devicePixelRatio of the display and what
+            // we've set this in the graphics device
+            Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
+
+            const gd = this.app.graphicsDevice;
+            const framebufferScaleFactor = (gd.maxPixelRatio / window.devicePixelRatio) * this._framebufferScaleFactor;
+
+            this.xrBridge.attachPresentation(this._session, {
+                framebufferScaleFactor,
+                depthNear: this._depthNear,
+                depthFar: this._depthFar,
+                onBindingError: (ex) => {
+                    this.fire('error', ex);
+                }
+            });
+
+            if (this.session.supportedFrameRates) {
+                this._supportedFrameRates = Array.from(this.session.supportedFrameRates);
+            } else {
+                this._supportedFrameRates = null;
+            }
+
+            this._session.addEventListener('frameratechange', onFrameRateChange);
+        } catch (ex) {
+            abortStart(ex);
+            return;
         }
-
-        this._session.addEventListener('frameratechange', onFrameRateChange);
 
         // request reference space
         session.requestReferenceSpace(spaceType).then((referenceSpace) => {
@@ -883,12 +986,7 @@ class XrManager extends EventHandler {
 
             if (callback) callback(null);
             this.fire('start');
-        }).catch((ex) => {
-            failed = true;
-            session.end();
-            if (callback) callback(ex);
-            this.fire('error', ex);
-        });
+        }).catch(abortStart);
     }
 
     /**
@@ -938,8 +1036,6 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
-        const lengthOld = this.views.list.length;
-
         // add views
         this.views.update(frame, pose.views);
 
@@ -949,28 +1045,19 @@ class XrManager extends EventHandler {
         this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
         this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
-        // update the camera fov properties only when we had 0 views
-        if (lengthOld === 0 && this.views.list.length > 0) {
-            const viewProjMat = new Mat4();
-            const view = this.views.list[0];
+        // derive the camera properties from the projection of the first view whenever it changes,
+        // as on the first frame, or once a change to the depth range of the session is applied
+        const view = this.views.list[0];
+        if (view && !view.projMat.equals(this._xrPropertiesProjMat)) {
+            this._xrPropertiesProjMat.copy(view.projMat);
+            const data = view.projMat.data;
 
-            viewProjMat.copy(view.projMat);
-            const data = viewProjMat.data;
+            xrProperties.fov = (2.0 * Math.atan(1.0 / data[5]) * 180.0) / Math.PI;
+            xrProperties.aspectRatio = data[5] / data[0];
+            xrProperties.farClip = data[14] / (data[10] + 1);
+            xrProperties.nearClip = data[14] / (data[10] - 1);
 
-            const fov = (2.0 * Math.atan(1.0 / data[5]) * 180.0) / Math.PI;
-            const aspectRatio = data[5] / data[0];
-            const farClip = data[14] / (data[10] + 1);
-            const nearClip = data[14] / (data[10] - 1);
-            const horizontalFov = false;
-
-            const camera = this._camera.camera;
-            camera.setXrProperties({
-                aspectRatio,
-                farClip,
-                fov,
-                horizontalFov,
-                nearClip
-            });
+            this._camera.camera.setXrProperties(xrProperties);
         }
 
         // position and rotate camera based on calculated vectors

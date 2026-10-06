@@ -69,12 +69,10 @@ void evaluateBackend() {
         #endif
     #endif
 
-    #ifndef LIT_OLD_AMBIENT
-        dDiffuseLight *= litArgs_ambient;
+    dDiffuseLight *= litArgs_ambient;
 
-        #ifdef LIT_DIFFUSE_TRANSMISSION
-            dDiffuseTransmissionLight *= litArgs_ambient;
-        #endif
+    #ifdef LIT_DIFFUSE_TRANSMISSION
+        dDiffuseTransmissionLight *= litArgs_ambient;
     #endif
 
     #ifdef LIT_AO

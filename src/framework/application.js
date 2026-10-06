@@ -152,6 +152,9 @@ class Application extends AppBase {
      * @param {PhysicsWorld} [options.physicsWorld] - The physics backend used to simulate rigid
      * bodies, collisions and joints. When omitted, the Ammo.js backend is created automatically if
      * the Ammo library is loaded. See {@link AppOptions#physicsWorld}.
+     * @param {boolean} [options.devtools] - Whether the app announces itself to developer tools,
+     * such as the PlayCanvas Inspector browser extension. Defaults to true. See
+     * {@link AppOptions#devtools}.
      * @example
      * // Engine-only example: create the application manually
      * const app = new Application(canvas, options);
@@ -179,6 +182,7 @@ class Application extends AppBase {
         appOptions.scriptsOrder = options.scriptsOrder;
 
         appOptions.physicsWorld = options.physicsWorld;
+        appOptions.devtools = options.devtools ?? true;
 
         appOptions.soundManager = new SoundManager();
         appOptions.lightmapper = Lightmapper;

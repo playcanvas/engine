@@ -26,6 +26,7 @@ import {
     TEXTURETYPE_RGBM,
     Texture,
     TextureHandler,
+    TextureRenderer,
     TouchDevice,
     Vec3,
     createGraphicsDevice
@@ -69,6 +70,8 @@ createOptions.resourceHandlers = [ScriptHandler, TextureHandler, ContainerHandle
 const app = new AppBase(canvas);
 app.init(createOptions);
 
+const textures = new TextureRenderer(app);
+
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -91,12 +94,16 @@ data.set('settings', {
     gloss: 0.8,
     metalness: 0.9,
     bumpiness: 0.2,
-    reflectivity: 0.5
+    reflectivity: 0.5,
+    showCubemap: false
 });
 
 // Get existing layers
 const worldLayer = app.scene.layers.getLayerByName('World');
 const uiLayer = app.scene.layers.getLayerByName('UI');
+
+// Draw the debug cubemap preview in the UI layer, which only the main camera renders
+textures.layer = uiLayer;
 
 // Create a layer for object that do not render into reflection cubemap
 const excludedLayer = new Layer({ name: 'Excluded' });
@@ -392,4 +399,14 @@ app.on('update', (/** @type {number} */ dt) => {
     sphereMaterial.bumpiness = bumpiness;
     sphereMaterial.reflectivity = reflectivity;
     sphereMaterial.update();
+
+    // Debug: display the faces of the dynamic cubemap as a 4:3 cross in the bottom left corner
+    // @ts-ignore
+    const cubeMap = probe.script.cubemapRenderer?.cubeMap;
+    if (data.get('settings.showCubemap') && cubeMap) {
+        const aspect = app.graphicsDevice.width / app.graphicsDevice.height;
+        const width = 0.4;
+        const height = width * 0.75 * aspect;
+        textures.draw(cubeMap, 0.02, 0.98 - height, width, height);
+    }
 });

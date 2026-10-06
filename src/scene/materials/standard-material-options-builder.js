@@ -20,6 +20,7 @@ import {
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
+import { shaderDefsToLightMask } from '../light-mask.js';
 
 const notBlack = (color) => {
     return color.r !== 0 || color.g !== 0 || color.b !== 0;
@@ -126,7 +127,7 @@ class StandardMaterialOptionsBuilder {
         options.useAO = options.litOptions.ssao;
 
         // All texture related lit options
-        options.litOptions.lightMapEnabled = options.lightMap;
+        options.litOptions.lightMapEnabled = options.lightMap || options.lightVertexColor;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
         options.litOptions.useHeights = options.heightMap;
 
@@ -139,7 +140,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useNormals = options.normalMap;
         options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
         options.litOptions.useAo = options.aoMap || options.aoVertexColor || options.litOptions.ssao;
-        options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
     _updateTexOptions(options, stdMat, p, vertexFormat, hasVcolor, minimalOptions, textureIdentifiers) {
@@ -399,7 +399,7 @@ class StandardMaterialOptionsBuilder {
         }
 
         if (stdMat.useLighting) {
-            const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
+            const mask = objDefs ? shaderDefsToLightMask(objDefs) : MASK_AFFECT_DYNAMIC;
 
             // mask to select lights (dynamic vs lightmapped) when using clustered lighting
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);

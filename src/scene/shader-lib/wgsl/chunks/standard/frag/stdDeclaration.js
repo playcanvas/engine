@@ -29,6 +29,10 @@ export default /* wgsl */`
         // the ambient color of the material
         uniform material_ambient: vec3f;
 
+        #ifdef LIT_DISPERSION
+            uniform material_dispersion: f32;
+        #endif
+
         #ifdef LIT_REFRACTION
             var<private> dTransmission: f32;
             var<private> dThickness: f32;
@@ -50,7 +54,6 @@ export default /* wgsl */`
 
         #ifdef LIT_TRANSFORMS
             var<private> matrix_viewProjection: mat4x4f;
-            var<private> matrix_model: mat4x4f;
         #endif
 
         // parallax

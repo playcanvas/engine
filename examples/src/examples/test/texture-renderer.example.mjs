@@ -1,7 +1,9 @@
 // @config
 //
 // GPU regression test for TextureRenderer. Compares rendered pixels against CPU reference values
-// for every reachable shader description, output gamma, channel selection, raw depth and scene-depth encoding.
+// for every reachable shader variant, output gamma, channel selection, raw depth and scene-depth encoding.
+// Cubemaps are checked for their cross layout, face orientation, mip selection along cell edges, raw
+// channels, unfilterable float and depth sampling.
 // Also creates and removes textures every three frames, checking slot reuse and resource counts.
 // Live output and a gallery show the actual framebuffer pixels alongside the test report.
 // Select WebGL2, WebGPU or WebGPU (Bare) to run the tests on that backend.
@@ -16,6 +18,7 @@ import {
     Color,
     Entity,
     FILTER_LINEAR,
+    FILTER_LINEAR_MIPMAP_LINEAR,
     FILTER_NEAREST,
     GAMMA_NONE,
     GAMMA_SRGB,
@@ -76,6 +79,8 @@ app.root.addChild(camera);
 const serial = (values, fn) => values.reduce((previous, value) => previous.then(() => fn(value)), Promise.resolve());
 const passed = [];
 const variants = new Set();
+// the depth cube variant is only exercised on WebGL2, see the cubemap tests
+const expectedVariants = device.isWebGPU ? 17 : 18;
 let lifecycleFrames = 0;
 // Show the actual pixels read from the test target. A separate canvas keeps presentation from
 // adding textures, materials or layers to the resource counts being checked below.
@@ -114,15 +119,18 @@ report.style.cssText =
 dashboard.append(visual, report);
 document.body.appendChild(dashboard);
 
+// The shader variant of the first preview, named by its shader and the defines selecting it.
+const variantName = () => {
+    const { material } = app.scene.defaultDrawLayer.meshInstances[0];
+    const defines = Array.from(material.defines, ([key, value]) => (value === true ? key : value)).sort();
+    return [material.shaderDesc.uniqueName.replace(/^TextureRenderer-?/, ''), ...defines].filter(Boolean).join(' ');
+};
 const showPixels = (pixels, updateGallery) => {
     const lastPixels = new ImageData(new Uint8ClampedArray(pixels), 64, 64);
     liveContext.putImageData(lastPixels, 0, 0);
     if (!lifecycle && updateGallery) {
-        let name = app.scene.defaultDrawLayer.meshInstances[0].material.shaderDesc.uniqueName.replace(
-            'TextureRenderer-',
-            ''
-        );
-        if (name.endsWith('raw') || name.endsWith('raw-srgb')) name += ` / ${renderer.channels}`;
+        let name = variantName();
+        if (name.includes('RAW_CHANNELS')) name += ` / ${renderer.channels}`;
         let thumbnail = thumbnails.get(name);
         if (!thumbnail) {
             const card = document.createElement('div');
@@ -144,7 +152,7 @@ const showReport = (status) => {
     report.dataset.status = status;
     report.textContent = [
         `TextureRenderer — ${deviceType} — ${status.toUpperCase()}`,
-        `${variants.size}/14 shader descriptions | ${passed.length} pixel checks | ${lifecycleFrames}/72 lifecycle frames`,
+        `${variants.size}/${expectedVariants} shader variants | ${passed.length} pixel checks | ${lifecycleFrames}/72 lifecycle frames`,
         '',
         ...passed
     ].join('\n');
@@ -253,7 +261,7 @@ async function runTests() {
                         const { texture, raw } = makeSource(format, type, zeroExponent);
                         const label = `${mode}/${texture.encoding}/gamma-${gamma}/zero-${zeroExponent}`;
                         renderer.draw(texture, 0, 0, 1, 1);
-                        variants.add(app.scene.defaultDrawLayer.meshInstances[0].material.shaderDesc.uniqueName);
+                        variants.add(variantName());
                         // Keep the representative RGBE sample in the gallery. The zero-exponent
                         // case still appears live and is checked and recorded in the report.
                         const pixels = await read(!zeroExponent);
@@ -291,7 +299,7 @@ async function runTests() {
                 await serial(selections, async (channels) => {
                     renderer.channels = channels;
                     renderer.draw(texture, 0, 0, 1, 1);
-                    variants.add(app.scene.defaultDrawLayer.meshInstances[0].material.shaderDesc.uniqueName);
+                    variants.add(variantName());
                     const label = `channels/${channels}/format-${format}/gamma-${gamma}`;
                     pixel(
                         await read(['rrr', 'aaa', 'bgr'].includes(channels)),
@@ -358,7 +366,7 @@ async function runTests() {
                 clear.setClearDepth(0.35);
                 clear.render();
                 renderer.draw(depth, 0, 0, 1, 1);
-                variants.add(app.scene.defaultDrawLayer.meshInstances[0].material.shaderDesc.uniqueName);
+                variants.add(variantName());
                 pixel(
                     await read(),
                     32,
@@ -414,7 +422,7 @@ async function runTests() {
                         params.sceneDepthMapReciprocal = encoding.startsWith('reciprocal');
                         device.scope.resolve('uSceneDepthMap').setValue(depth);
                         renderer.sceneDepth(0, 0, 1, 1);
-                        variants.add(app.scene.defaultDrawLayer.meshInstances[0].material.shaderDesc.uniqueName);
+                        variants.add(variantName());
                         const label = `scene-depth/${encoding}/projection-${projection}/gamma-${gamma}`;
                         const normalized = encoding === 'reciprocal-empty' ? 1 : 0.4;
                         pixel(await read(), 32, 32, encodeOutput([normalized, normalized, normalized], gamma), label);
@@ -426,6 +434,170 @@ async function runTests() {
             });
         });
         device.scope.resolve('uSceneDepthMap').setValue(null);
+
+        // Cubemaps display as a 4x3 cross of 16x16 pixel cells. The preview is offset by one pixel,
+        // so cell edges fall inside 2x2 pixel quads and implicit derivatives would span two faces.
+        // Cells hold the faces in order +X, -X, +Y, -Y, +Z, -Z.
+        setGamma(GAMMA_NONE);
+        renderer.channels = 'rgb';
+        const crossCells = [
+            [2, 1],
+            [0, 1],
+            [1, 0],
+            [1, 2],
+            [1, 1],
+            [3, 1]
+        ];
+        const emptyCells = [
+            [0, 0],
+            [2, 0],
+            [3, 0],
+            [0, 2],
+            [2, 2],
+            [3, 2]
+        ];
+        const faceColors = [
+            [1, 0, 0],
+            [0, 1, 0],
+            [0, 0, 1],
+            [1, 1, 0],
+            [1, 0, 1],
+            [0, 1, 1]
+        ];
+        const cellPixel = ([column, row], x, y) => [1 + column * 16 + x, 1 + row * 16 + y];
+        const drawCube = (texture) => {
+            renderer.draw(texture, 1 / 64, 1 / 64, 1, 0.75);
+            variants.add(variantName());
+        };
+        // Each 8x8 face is a solid color with a half-intensity top-left quadrant marking its
+        // orientation. Smaller mip levels are gray, exposing a level selected from the derivatives
+        // of the direction instead of the preview.
+        const makeCube = (format, mipmaps) => {
+            const float = format === PIXELFORMAT_RGBA32F;
+            const levels = [];
+            for (let size = 8; size >= (mipmaps ? 1 : 8); size >>= 1) {
+                levels.push(
+                    faceColors.map((color) => {
+                        const values = float ? new Float32Array(size * size * 4) : new Uint8Array(size * size * 4);
+                        for (let y = 0; y < size; y++) {
+                            for (let x = 0; x < size; x++) {
+                                const marker = x < 4 && y < 4;
+                                const texel = size === 8 ? color.map((v) => (marker ? v * 0.5 : v)) : [0.5, 0.5, 0.5];
+                                for (let channel = 0; channel < 4; channel++) {
+                                    const value = channel === 3 ? 1 : texel[channel];
+                                    values[(y * size + x) * 4 + channel] = float ? value : Math.round(value * 255);
+                                }
+                            }
+                        }
+                        return values;
+                    })
+                );
+            }
+            return track(
+                new Texture(device, {
+                    width: 8,
+                    height: 8,
+                    format,
+                    cubemap: true,
+                    mipmaps,
+                    minFilter: mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_NEAREST,
+                    magFilter: FILTER_NEAREST,
+                    levels
+                })
+            );
+        };
+        // stored values are decoded by the source encoding, raw channel selections show them as is
+        const checkCross = (pixels, label, faceColor, encoding) => {
+            const toBytes = (color) => encodeOutput(decode([...color, 1], encoding, false), GAMMA_NONE);
+            crossCells.forEach((cell, face) => {
+                const color = faceColor(face);
+                pixel(pixels, ...cellPixel(cell, 12, 12), toBytes(color), `${label}/face-${face}`);
+                pixel(
+                    pixels,
+                    ...cellPixel(cell, 3, 3),
+                    toBytes(color.map((v) => v * 0.5)),
+                    `${label}/face-${face}/orientation`
+                );
+            });
+            // the pixels on both sides of every edge between neighboring faces
+            const edgePixel = (cell, x, y) => {
+                const face = crossCells.findIndex(([column, row]) => column === cell[0] && row === cell[1]);
+                pixel(pixels, ...cellPixel(cell, x, y), toBytes(faceColor(face)), `${label}/edge-${face}-${x}-${y}`);
+            };
+            for (let column = 0; column < 3; column++) {
+                edgePixel([column, 1], 15, 12);
+                edgePixel([column + 1, 1], 0, 12);
+            }
+            for (let row = 0; row < 2; row++) {
+                edgePixel([1, row], 12, 15);
+                edgePixel([1, row + 1], 12, 0);
+            }
+            emptyCells.forEach((cell) => {
+                pixel(pixels, ...cellPixel(cell, 8, 8), [0, 0, 0, 255], `${label}/empty-${cell}`);
+            });
+            passed.push(label);
+            showReport('running');
+        };
+
+        const colorCube = makeCube(PIXELFORMAT_RGBA8, true);
+        drawCube(colorCube);
+        checkCross(await read(), 'cube/filtered', (face) => faceColors[face], colorCube.encoding);
+        renderer.channels = 'bgr';
+        drawCube(colorCube);
+        checkCross(await read(), 'cube/channels-bgr', (face) => faceColors[face].slice().reverse(), 'linear');
+        renderer.channels = 'rgb';
+        release(colorCube);
+
+        setFiltering(false);
+        const floatCube = makeCube(PIXELFORMAT_RGBA32F, false);
+        drawCube(floatCube);
+        checkCross(await read(), 'cube/unfilterable', (face) => faceColors[face], floatCube.encoding);
+        release(floatCube);
+        setFiltering(originalFilterable);
+
+        // Depth cubes show each face's cleared depth. The fixture clears one face per render target,
+        // which WebGPU depth-only targets do not support, so this runs on WebGL2 only.
+        await serial(
+            device.isWebGPU ? [] : [PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_DEPTHSTENCIL],
+            async (format) => {
+                await serial(samplers, async ({ compareOnRead, filter }) => {
+                    const depth = track(
+                        new Texture(device, {
+                            width: 8,
+                            height: 8,
+                            format,
+                            cubemap: true,
+                            compareOnRead,
+                            mipmaps: false,
+                            minFilter: filter,
+                            magFilter: filter
+                        })
+                    );
+                    for (let face = 0; face < 6; face++) {
+                        const faceTarget = track(new RenderTarget({ depthBuffer: depth, face }));
+                        const clear = track(new RenderPass(device));
+                        clear.init(faceTarget);
+                        clear.setClearDepth(0.1 + face * 0.15);
+                        clear.render();
+                        release(clear);
+                        release(faceTarget);
+                    }
+                    drawCube(depth);
+                    const pixels = await read();
+                    const label = `cube/raw-depth/${format}/compare-${compareOnRead}/filter-${filter}`;
+                    crossCells.forEach((cell, face) => {
+                        const value = Math.round((0.1 + face * 0.15) * 255);
+                        pixel(pixels, ...cellPixel(cell, 8, 8), [value, value, value, 255], `${label}/face-${face}`);
+                    });
+                    emptyCells.forEach((cell) => {
+                        pixel(pixels, ...cellPixel(cell, 8, 8), [0, 0, 0, 255], `${label}/empty-${cell}`);
+                    });
+                    passed.push(label);
+                    showReport('running');
+                    release(depth);
+                });
+            }
+        );
 
         // Every three frames, replace all sources and change the preview count. This
         // includes empty frames, shrink/grow, encoding changes and immediate destruction.
@@ -487,10 +659,13 @@ async function runTests() {
                 );
             }
         });
-        check(variants.size === 14, `Expected 14 shader descriptions, exercised ${variants.size}`);
+        check(
+            variants.size === expectedVariants,
+            `Expected ${expectedVariants} shader variants, exercised ${variants.size}`
+        );
         showReport('passed');
         // Leave a useful result visible after the final empty lifecycle frame.
-        const overview = thumbnails.get('filtered-srgb');
+        const overview = thumbnails.get('decodeGamma');
         liveContext.drawImage(overview, 0, 0);
         caption.textContent =
             'Tests complete. Gallery shows the rendered shader variants; the lifecycle test ended with no active textures.';

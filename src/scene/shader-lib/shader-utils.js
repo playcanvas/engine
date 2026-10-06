@@ -4,6 +4,7 @@ import { getProgramLibrary } from './get-program-library.js';
 import { Debug } from '../../core/debug.js';
 import { ShaderGenerator } from './programs/shader-generator.js';
 import { ShaderPass } from '../shader-pass.js';
+import { SHADERDEF_BATCH, SHADERDEF_INSTANCEINDEX, SHADERDEF_INSTANCING } from '../constants.js';
 import { SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
 import { ShaderChunks } from './shader-chunks.js';
 import { MapUtils } from '../../core/map-utils.js';
@@ -73,15 +74,15 @@ class ShaderUtils {
      * @param {Map<string, string>} [options.vertexIncludes] - A map containing key-value pairs of
      * include names and their content. These are used for resolving #include directives in the
      * vertex shader source.
-     * @param {Map<string, string>} [options.vertexDefines] - A map containing key-value pairs of
-     * define names and their values. These are used for resolving #ifdef style of directives in the
-     * vertex code.
+     * @param {Map<string, string|number|boolean>} [options.vertexDefines] - A map containing
+     * key-value pairs of define names and their values. These are used for resolving #ifdef style
+     * of directives in the vertex code.
      * @param {Map<string, string>} [options.fragmentIncludes] - A map containing key-value pairs
      * of include names and their content. These are used for resolving #include directives in the
      * fragment shader source.
-     * @param {Map<string, string>} [options.fragmentDefines] - A map containing key-value pairs of
-     * define names and their values. These are used for resolving #ifdef style of directives in the
-     * fragment code.
+     * @param {Map<string, string|number|boolean>} [options.fragmentDefines] - A map containing
+     * key-value pairs of define names and their values. These are used for resolving #ifdef style
+     * of directives in the fragment code.
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
      * which default to vec4. Passing a string will set the output type for all color attachments.
      * Passing an array will set the output type for each color attachment.
@@ -137,7 +138,7 @@ class ShaderUtils {
      *
      * @param {Material} material - The material to create the shader defines for.
      * @param {ShaderVariantParams} params - The shader variant parameters.
-     * @returns {Map<string, string>} The map of shader defines.
+     * @returns {Map<string, string|number|boolean>} The map of shader defines.
      * @ignore
      */
     static getCoreDefines(material, params) {
@@ -149,6 +150,13 @@ class ShaderUtils {
         // add pass defines
         const shaderPassInfo = ShaderPass.get(params.device).getByIndex(params.pass);
         shaderPassInfo.defines.forEach((value, key) => defines.set(key, value));
+
+        // the model and normal matrices are read from the mesh instance storage, indexed by the first
+        // instance of the draw - unless the draws use the instance index for their own data, and
+        // batching reads the matrices of its bones instead
+        if (params.device.supportsMeshInstanceStorage && (params.objDefs & (SHADERDEF_INSTANCING | SHADERDEF_BATCH | SHADERDEF_INSTANCEINDEX)) === 0) {
+            defines.set('MESH_INSTANCE_STORAGE', '');
+        }
 
         return defines;
     }

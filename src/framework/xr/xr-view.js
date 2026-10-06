@@ -4,6 +4,7 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, FILTER_NEAREST, PIXELFORMAT_RGB8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
+ * @import { EventHandle } from '../../core/event-handle.js'
  * @import { XrManager } from './xr-manager.js'
  */
 
@@ -63,6 +64,12 @@ class XrView extends RenderView {
      * @private
      */
     _depthInfo = null;
+
+    /**
+     * @type {EventHandle|null}
+     * @private
+     */
+    _evtDeviceLost = null;
 
     /**
      * @type {Uint8Array}
@@ -132,7 +139,7 @@ class XrView extends RenderView {
         }
 
         if (this._textureColor || this._textureDepth) {
-            device.on('devicelost', this._onDeviceLost, this);
+            this._evtDeviceLost = device.on('devicelost', this._onDeviceLost, this);
         }
     }
 
@@ -365,6 +372,10 @@ class XrView extends RenderView {
     /** @ignore */
     destroy() {
         this._depthInfo = null;
+
+        // the graphics device outlives the view, which its listener would otherwise keep alive
+        this._evtDeviceLost?.off();
+        this._evtDeviceLost = null;
 
         if (this._textureColor) {
             this._textureColor.destroy();

@@ -3,7 +3,7 @@ import sinon from 'sinon';
 
 import { Debug } from '../../../src/core/debug.js';
 import { Entity } from '../../../src/framework/entity.js';
-import { SEMANTIC_POSITION } from '../../../src/platform/graphics/constants.js';
+import { SEMANTIC_POSITION, UNUSED_UNIFORM_NAME } from '../../../src/platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../../src/platform/graphics/shader-processor-options.js';
 import { Texture } from '../../../src/platform/graphics/texture.js';
 import { WebgpuShaderProcessorWGSL } from '../../../src/platform/graphics/webgpu/webgpu-shader-processor-wgsl.js';
@@ -162,7 +162,9 @@ describe('View uniform pass constants', function () {
         expect(shaders.length).to.be.at.least(4);
         for (const shader of shaders) {
             const names = shader.meshUniformBufferFormat.uniforms.map(uniform => uniform.name);
-            const expected = shader.label.includes('forward') ? ['matrix_model', 'matrix_normal'] : ['matrix_model'];
+            // on WebGPU the matrices are in the mesh instance storage, see MeshInstanceStorage
+            const expected = shader.usesMeshInstanceStorage ? [UNUSED_UNIFORM_NAME] :
+                (shader.label.includes('forward') ? ['matrix_model', 'matrix_normal'] : ['matrix_model']);
             expect(names.sort(), shader.label).to.deep.equal(expected.sort());
         }
     });

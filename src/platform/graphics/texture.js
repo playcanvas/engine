@@ -259,9 +259,9 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
+     * @param {Uint8Array[]|Uint8ClampedArray[]|Uint16Array[]|Uint32Array[]|Float32Array[]|HTMLCanvasElement[]|HTMLImageElement[]|ImageBitmap[]|HTMLVideoElement[]|Uint8Array[][]|Uint8ClampedArray[][]|Uint16Array[][]|Uint32Array[][]|Float32Array[][]} [options.levels]
      * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
-     * of Uint8Array if options.arrayLength is defined and greater than zero.
+     * of Uint8Array or other typed array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
      * @param {number} [options.samples] - The number of MSAA samples. A value greater than 1
@@ -1216,32 +1216,40 @@ class Texture {
             this
         );
 
-        this._lockedMode = options.mode;
-        this._lockedLevel = options.level;
-
-        const levels = this.cubemap ? this._levels[options.face] : this._levels;
-        if (!levels[options.level]) {
+        // cubemap levels are stored as [mip][face]
+        const levels = this._cubemap ? (this._levels[options.level] ??= [null, null, null, null, null, null]) : this._levels;
+        const index = this._cubemap ? options.face : options.level;
+        if (!levels[index]) {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
             const depth = Math.max(1, this._depth >> options.level);
             const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, depth, this._format));
-            levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
+            levels[index] = new (getPixelFormatArrayType(this._format))(data);
         }
 
-        return levels[options.level];
+        // WebGL only re-uploads the cubemap faces flagged as updated
+        if (this._cubemap && options.mode === TEXTURELOCK_WRITE) {
+            this._levelsUpdated[0][options.face] = true;
+        }
+
+        this._lockedMode = options.mode;
+        this._lockedLevel = options.level;
+
+        return levels[index];
     }
 
     /**
-     * Set the pixel data of the texture from a canvas, image, video, or HTML DOM element. If the
-     * texture is a cubemap, the supplied source must be an array of 6 canvases, images or videos.
+     * Set the pixel data of the texture from a canvas, image, image bitmap, video, or HTML DOM
+     * element. If the texture is a cubemap, the supplied source must be an array of 6 canvases,
+     * images, image bitmaps or videos.
      *
      * Note: using an HTML element (e.g. `<div>`) as a source requires
      * {@link GraphicsDevice#supportsHtmlTextures} to be true.
      *
-     * @param {HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|HTMLElement[]} source - A
-     * canvas, image, video, or HTML element, or an array of 6 canvas, image, video, or HTML
-     * elements.
+     * @param {HTMLCanvasElement|HTMLImageElement|ImageBitmap|HTMLVideoElement|HTMLElement|HTMLCanvasElement[]|HTMLImageElement[]|ImageBitmap[]|HTMLVideoElement[]|HTMLElement[]} source - A
+     * canvas, image, image bitmap, video, or HTML element, or an array of 6 canvas, image, image
+     * bitmap, video, or HTML elements.
      * @param {number} [mipLevel] - A non-negative integer specifying the image level of detail.
      * Defaults to 0, which represents the base image source. A level value of N, that is greater
      * than 0, represents the image source for the Nth mipmap reduction level.

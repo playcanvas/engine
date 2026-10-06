@@ -131,6 +131,11 @@ fn vertexMain(input : VertexInput) -> VertexOutput {
         output.vLinearDepth = -(uniform.matrix_view * vec4f(output.vPositionW, 1.0)).z;
     #endif
 
+    #ifdef LIT_DYNAMIC_REFRACTION
+        // the scale of the model matrix, which scales the thickness of the refraction
+        output.vModelScale = vec3f(length(dModelMatrix[0].xyz), length(dModelMatrix[1].xyz), length(dModelMatrix[2].xyz));
+    #endif
+
     #ifdef MSDF
         unpackMsdfParams();
 

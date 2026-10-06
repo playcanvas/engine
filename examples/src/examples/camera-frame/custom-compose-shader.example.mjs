@@ -1,8 +1,9 @@
 // @config
 //
-// This example shows how to customize the final compose pass by injecting a simple pixelation
-// post-effect. Useful if no additional render passes are needed. Changes are applied globally to all
-// CameraFrames.
+// This example shows how to add a custom post-effect to a CameraFrame with CameraFrameEffect. A
+// pixelation effect is written as a shader chunk whose entry function the single compose pass calls,
+// so no additional full-screen pass is needed. The effect is an instance registered with one
+// CameraFrame, and its parameters are updated per frame like those of the built-in effects.
 //
 // @credit
 // title: Mirror's Edge Apartment - Interior Scene
@@ -21,8 +22,10 @@ import {
     AppOptions,
     Asset,
     AssetListLoader,
+    COMPOSESLOT_LDR,
     CameraComponentSystem,
     CameraFrame,
+    CameraFrameEffect,
     Color,
     ContainerHandler,
     Entity,
@@ -32,11 +35,8 @@ import {
     Mouse,
     RESOLUTION_AUTO,
     RenderComponentSystem,
-    SHADERLANGUAGE_GLSL,
-    SHADERLANGUAGE_WGSL,
     ScriptComponentSystem,
     ScriptHandler,
-    ShaderChunks,
     TEXTURETYPE_RGBP,
     TONEMAP_NEUTRAL,
     TextureHandler,
@@ -163,71 +163,75 @@ cameraEntity.setLocalPosition(-50, 100, 220);
 cameraEntity.lookAt(0, 0, 100);
 app.root.addChild(cameraEntity);
 
-// ------ Custom shader chunks for the camera frame ------
-
-// Note: Override these empty chunks with your own custom code. Available chunk names:
-// - composeDeclarationsPS: declarations for your custom code
-// - composeMainStartPS: code to run at the start of the compose code
-// - composeMainEndPS: code to run at the end of the compose code
+// ------ Custom compose effect ------
 
 // Pixelation shader is based on this shadertoy shader: https://www.shadertoy.com/view/4dsXWs
 
-// Define the pixelation helper in declarations so it's available in main
-ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set(
-    'composeDeclarationsPS',
-    `
-        uniform float pixelationTilePixels;
-        uniform float pixelationIntensity;
-        vec3 pixelateResult(vec3 color, vec2 uv, vec2 invRes) {
-            vec2 tileUV = vec2(pixelationTilePixels, pixelationTilePixels) * invRes;
-            vec2 centerUv = (floor(uv / tileUV) + 0.5) * tileUV;
+// A CameraFrameEffect contributes a shader chunk to the compose pass. The chunk declares its uniforms
+// and an entry function named apply<Id>, which the compose shader calls for the effect's slot as
+// `result = applyPixelation(result, uv)`. COMPOSESLOT_LDR runs after tone mapping, so the dots are
+// drawn in display space. The uniforms are set once per frame from the effect's fields in update().
+class PixelationEffect extends CameraFrameEffect {
+    // Size of one pixelation tile in screen pixels
+    tilePixels = 8;
 
-            vec2 local = (uv - centerUv) / tileUV;
-            float dist = length(local);
-            float radius = 0.35;
-            float edge = fwidth(dist) * 1.5;
-            float mask = 1.0 - smoothstep(radius, radius + edge, dist);
-            vec3 dotResult = mix(vec3(0.0), color, mask);
-            return mix(color, dotResult, pixelationIntensity);
-        }
-    `
-);
+    // Blend between the original image (0) and the pixelated result (1)
+    intensity = 0.5;
 
-// WGSL equivalent declarations
-ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set(
-    'composeDeclarationsPS',
-    `
-        uniform pixelationTilePixels: f32;
-        uniform pixelationIntensity: f32;
-        fn pixelateResult(color: vec3f, uv: vec2f, invRes: vec2f) -> vec3f {
-            let tileUV = vec2f(uniform.pixelationTilePixels, uniform.pixelationTilePixels) * invRes;
-            let centerUv = (floor(uv / tileUV) + vec2f(0.5, 0.5)) * tileUV;
-            let local = (uv - centerUv) / tileUV;
-            let dist = length(local);
-            let radius: f32 = 0.35;
-            let edge: f32 = fwidth(dist) * 1.5;
-            let mask: f32 = 1.0 - smoothstep(radius, radius + edge, dist);
-            let dotResult = vec3f(0.0) * (1.0 - mask) + color * mask;
-            return mix(color, dotResult, uniform.pixelationIntensity);
-        }
-    `
-);
+    constructor(device) {
+        super(device, 'pixelation', {
+            slot: COMPOSESLOT_LDR,
+            glsl: /* glsl */ `
+                uniform float pixelationTilePixels;
+                uniform float pixelationIntensity;
 
-// Call the helper at the end of compose to apply on top of previous effects
-ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set(
-    'composeMainEndPS',
-    `
-        result = pixelateResult(result, uv, sceneTextureInvRes);
-    `
-);
+                vec3 applyPixelation(vec3 color, vec2 uv) {
+                    vec2 tileUV = vec2(pixelationTilePixels) * sceneTextureInvRes;
+                    vec2 centerUv = (floor(uv / tileUV) + 0.5) * tileUV;
 
-// WGSL equivalent call
-ShaderChunks.get(device, SHADERLANGUAGE_WGSL).set(
-    'composeMainEndPS',
-    `
-        result = pixelateResult(result, uv, uniform.sceneTextureInvRes);
-    `
-);
+                    vec2 local = (uv - centerUv) / tileUV;
+                    float dist = length(local);
+                    float radius = 0.35;
+                    float edge = fwidth(dist) * 1.5;
+                    float mask = 1.0 - smoothstep(radius, radius + edge, dist);
+                    vec3 dotResult = mix(vec3(0.0), color, mask);
+                    return mix(color, dotResult, pixelationIntensity);
+                }
+            `,
+            wgsl: /* wgsl */ `
+                uniform pixelationTilePixels: f32;
+                uniform pixelationIntensity: f32;
+
+                fn applyPixelation(color: vec3f, uv: vec2f) -> vec3f {
+                    let tileUV = vec2f(uniform.pixelationTilePixels) * uniform.sceneTextureInvRes;
+                    let centerUv = (floor(uv / tileUV) + vec2f(0.5, 0.5)) * tileUV;
+
+                    let local = (uv - centerUv) / tileUV;
+                    let dist = length(local);
+                    let radius: f32 = 0.35;
+                    let edge: f32 = fwidth(dist) * 1.5;
+                    let mask: f32 = 1.0 - smoothstep(radius, radius + edge, dist);
+                    let dotResult = color * mask;
+                    return mix(color, dotResult, uniform.pixelationIntensity);
+                }
+            `
+        });
+
+        // uniforms are resolved once, and written every frame in update()
+        this.tilePixelsId = device.scope.resolve('pixelationTilePixels');
+        this.intensityId = device.scope.resolve('pixelationIntensity');
+    }
+
+    // At zero intensity the effect would leave the image untouched, so it is left out of the shader
+    get active() {
+        return this.enabled && this.intensity > 0;
+    }
+
+    update() {
+        this.tilePixelsId.setValue(this.tilePixels);
+        this.intensityId.setValue(this.intensity);
+    }
+}
 
 // ------ Custom render passes set up ------
 
@@ -240,6 +244,11 @@ cameraFrame.vignette.outer = 1;
 cameraFrame.vignette.curvature = 0.5;
 cameraFrame.vignette.intensity = 0.8;
 
+// Register the effect with this camera frame. Effects sharing a slot run in registration order, so
+// the pixelation is applied after the built-in vignette.
+const pixelation = new PixelationEffect(device);
+cameraFrame.addEffect(pixelation);
+
 cameraFrame.update();
 
 // Apply UI changes (tone mapping only)
@@ -251,12 +260,11 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 
     if (path === 'data.pixelSize') {
-        // Global uniform for pixelation tile size
-        device.scope.resolve('pixelationTilePixels').setValue(value);
+        pixelation.tilePixels = value;
     }
 
     if (path === 'data.pixelationIntensity') {
-        device.scope.resolve('pixelationIntensity').setValue(value);
+        pixelation.intensity = value;
     }
 });
 

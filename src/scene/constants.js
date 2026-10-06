@@ -1,4 +1,5 @@
 import { PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTH16, PIXELFORMAT_R32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../platform/graphics/constants.js';
+import { SceneDepthMapHandle } from '../platform/graphics/scene-depth-map-handle.js';
 
 /**
  * Subtract the color of the source fragment from the destination fragment and write the result to
@@ -754,7 +755,7 @@ export const ambientSrcNames = {
     [AMBIENTSRC_CONSTANT]: 'CONSTANT'
 };
 
-// 16 bits for shader defs
+// the shader defines of a mesh instance
 export const SHADERDEF_NOSHADOW = 1;
 export const SHADERDEF_SKIN = 2;
 export const SHADERDEF_UV0 = 4;
@@ -770,6 +771,20 @@ export const SHADERDEF_MORPH_NORMAL = 2048;
 export const SHADERDEF_LMAMBIENT = 4096; // lightmaps contain ambient
 export const SHADERDEF_MORPH_TEXTURE_BASED_INT = 8192;
 export const SHADERDEF_BATCH = 16384;
+export const SHADERDEF_INSTANCEINDEX = 32768; // the draws use the instance index themselves
+
+// the light mask of a mesh instance, a flag for each of its values, see MeshInstance#mask
+export const SHADERDEF_AFFECT_DYNAMIC = 65536;
+export const SHADERDEF_AFFECT_LIGHTMAPPED = 131072;
+export const SHADERDEF_BAKE = 262144;
+
+// the texture coordinate sets of the mesh above SHADERDEF_UV0 and SHADERDEF_UV1
+export const SHADERDEF_UV2 = 524288;
+export const SHADERDEF_UV3 = 1048576;
+export const SHADERDEF_UV4 = 2097152;
+export const SHADERDEF_UV5 = 4194304;
+export const SHADERDEF_UV6 = 8388608;
+export const SHADERDEF_UV7 = 16777216;
 
 /**
  * The shadow map is not to be updated.
@@ -1430,7 +1445,7 @@ export const SCENETEXTURE_DEPTH = 'depth';
  * @ignore
  */
 export const sceneTextureUniformNames = {
-    [SCENETEXTURE_DEPTH]: 'uSceneDepthMap'
+    [SCENETEXTURE_DEPTH]: SceneDepthMapHandle.uniformName
 };
 
 /**

@@ -38,6 +38,20 @@ describe('Normal core vertex chunk', function () {
                 });
             }
         }
+
+        it('returns the normal matrix of the mesh instance storage, in every pass, in WGSL', function () {
+            for (const defines of ['#define MESH_INSTANCE_STORAGE', '#define MESH_INSTANCE_STORAGE\n#define SHADOW_PASS']) {
+                const source = Preprocessor.run(`${defines}\n${normalCoreWGSL}`);
+                expect(source).not.to.contain('matrix_normal');
+                expect(source).to.contain('getStoredNormalMatrix()');
+            }
+        });
+
+        it('returns the upper 3x3 of the skinned model matrix with the mesh instance storage, in WGSL', function () {
+            const source = Preprocessor.run(`#define MESH_INSTANCE_STORAGE\n#define SKIN\n${normalCoreWGSL}`);
+            expect(source).not.to.contain('getStoredNormalMatrix()');
+            expect(source).to.contain('mat3x3f(modelMatrix[0].xyz');
+        });
     });
 
     describe('ShaderMaterial', function () {
@@ -133,7 +147,15 @@ describe('Normal core vertex chunk', function () {
             for (const shader of shaders) {
                 expect(shader.failed, shader.label).to.equal(false);
             }
-            expect(forward[0].definition.vshader).to.contain('matrix_normal');
+            // on WebGPU the forward pass reads the normal matrix of the mesh instance storage instead
+            const meshInstanceStorage = forward[0].usesMeshInstanceStorage;
+            expect(meshInstanceStorage).to.equal(app.graphicsDevice.supportsMeshInstanceStorage);
+            if (meshInstanceStorage) {
+                expect(forward[0].definition.vshader).not.to.contain('matrix_normal');
+                expect(forward[0].definition.vshader).to.contain('getStoredNormalMatrix');
+            } else {
+                expect(forward[0].definition.vshader).to.contain('matrix_normal');
+            }
             for (const shader of shadow) {
                 expect(shader.definition.vshader, shader.label).not.to.contain('matrix_normal');
             }
@@ -141,7 +163,7 @@ describe('Normal core vertex chunk', function () {
             // the debug check knows it on WebGPU, which reflects the declared uniforms, and not on the
             // null device
             const known = app.graphicsDevice.isWebGPU;
-            expect(forward[0].debugReadsUniform('matrix_normal')).to.equal(known ? true : null);
+            expect(forward[0].debugReadsUniform('matrix_normal')).to.equal(known ? !meshInstanceStorage : null);
             for (const shader of shadow) {
                 expect(shader.debugReadsUniform('matrix_normal'), shader.label).to.equal(known ? false : null);
                 expect(shader._debugNormalMatrixChecked, shader.label).to.equal(known);

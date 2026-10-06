@@ -36,6 +36,7 @@ import { UniformBuffer } from './uniform-buffer.js';
  * @import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from './constants.js'
  * @import { DynamicBuffers } from './dynamic-buffers.js'
  * @import { GpuProfiler } from './gpu-profiler.js'
+ * @import { MeshInstanceStorage } from './mesh-instance-storage.js'
  * @import { RenderTarget } from './render-target.js'
  * @import { Shader } from './shader.js'
  * @import { Texture } from './texture.js'
@@ -65,6 +66,49 @@ class GraphicsDevice extends EventHandler {
      *     console.log(`The canvas was resized to ${width}x${height}`);
      * });
      */
+
+    /**
+     * Fired when the graphics context or device is lost, for example after a GPU driver reset or
+     * a GPU process crash. Rendering is paused while the device is lost, and the engine attempts
+     * to restore it. Stop application-owned GPU work, and do not assume that the `devicerestored`
+     * event follows, as recovery is not guaranteed.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('devicelost', () => {
+     *     console.log('The graphics device was lost');
+     * });
+     */
+    static EVENT_DEVICELOST = 'devicelost';
+
+    /**
+     * Fired when the graphics context or device has been restored after a loss, and rendering
+     * resumes. The engine recreates its GPU resources, but content generated on the GPU, such as
+     * the contents of render targets and storage buffers, or runtime baked lightmaps, is lost and
+     * needs to be generated again.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('devicerestored', () => {
+     *     // regenerate the content generated on the GPU
+     * });
+     */
+    static EVENT_DEVICERESTORED = 'devicerestored';
+
+    /**
+     * Fired when the graphics device could not be restored after a loss, for example when the
+     * browser blocks access to the GPU after repeated GPU process crashes. The device stays lost,
+     * and the `devicerestored` event does not follow. The handler is passed the error that caused
+     * the failure. Only fired by a WebGPU device, as the browser does not report a WebGL context
+     * that cannot be restored.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('devicerestorefailed', (error) => {
+     *     console.error(`The graphics device could not be restored: ${error.message}`);
+     * });
+     */
+    static EVENT_DEVICERESTOREFAILED = 'devicerestorefailed';
 
     /**
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
@@ -243,6 +287,26 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     supportsIndirectDraw = false;
+
+    /**
+     * True if the vertex shaders can read the model and normal matrices of a mesh instance from
+     * a storage buffer the device holds, see {@link GraphicsDevice#meshInstanceStorage} (WebGPU
+     * only).
+     *
+     * @type {boolean}
+     * @readonly
+     * @ignore
+     */
+    supportsMeshInstanceStorage = false;
+
+    /**
+     * The storage of the per mesh instance data read by the vertex shaders, or null when not
+     * supported, see {@link GraphicsDevice#supportsMeshInstanceStorage}.
+     *
+     * @type {MeshInstanceStorage|null}
+     * @ignore
+     */
+    meshInstanceStorage = null;
 
     /**
      * True if the device supports compute shaders.
@@ -449,7 +513,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      * @ignore
      */
-    renderPassIndex;
+    renderPassIndex = 0;
 
     /** @type {boolean} */
     insideRenderPass = false;
@@ -893,6 +957,10 @@ class GraphicsDevice extends EventHandler {
 
         this.gpuProfiler?.destroy();
         this.gpuProfiler = null;
+
+        // after the destroy event, whose listeners may free the slots of their mesh instances
+        this.meshInstanceStorage?.destroy();
+        this.meshInstanceStorage = null;
 
         this._destroyed = true;
     }
@@ -1556,6 +1624,8 @@ class GraphicsDevice extends EventHandler {
      * When set to true, vertex and index buffers related state is set up. Defaults to true.
      * @param {boolean} [last] - True if this is the last draw call in a sequence of draw calls.
      * When set to true, vertex and index buffers related state is cleared. Defaults to true.
+     * @param {number} [firstInstance] - The first instance of a draw without draw commands,
+     * which offsets the instance index of the vertex shader. Ignored on WebGL. Defaults to 0.
      * @example
      * // Render a single, unindexed triangle
      * device.draw({
@@ -1567,7 +1637,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true) {
+    draw(primitive, indexBuffer, numInstances, drawCommands, first = true, last = true, firstInstance = 0) {
         Debug.assert(false);
     }
 
@@ -1618,7 +1688,8 @@ class GraphicsDevice extends EventHandler {
     /**
      * Sets the width and height of the canvas, then fires the `resizecanvas` event. Note that the
      * specified width and height values will be multiplied by the value of {@link maxPixelRatio}
-     * to give the final resultant width and height for the canvas.
+     * to give the final resultant width and height for the canvas. A resultant width or height of
+     * zero is ignored and the current resolution is kept.
      *
      * @param {number} width - The new width of the canvas.
      * @param {number} height - The new height of the canvas.
@@ -1628,6 +1699,15 @@ class GraphicsDevice extends EventHandler {
         const pixelRatio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
         const w = Math.floor(width * pixelRatio);
         const h = Math.floor(height * pixelRatio);
+
+        // a hidden or collapsed canvas reports a zero client size, which browsers can also do
+        // briefly during a layout change. Nothing can be rendered at that size: WebGPU cannot
+        // create a zero-size swapchain texture or render target, and WebGL framebuffers become
+        // incomplete. Keep the current resolution until a real size arrives.
+        if (w === 0 || h === 0) {
+            return;
+        }
+
         if (w !== this.canvas.width || h !== this.canvas.height) {
             this.setResolution(w, h);
         }

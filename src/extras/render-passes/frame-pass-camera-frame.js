@@ -77,8 +77,6 @@ class CameraFrameOptions {
     volumetricFogEnabled = false;
 }
 
-const _defaultOptions = new CameraFrameOptions();
-
 // the formats the scene depth can be rendered to, in the order of preference
 const _sceneDepthFormats = [PIXELFORMAT_R32F, PIXELFORMAT_R16F];
 
@@ -250,7 +248,7 @@ class FramePassCameraFrame extends FramePass {
     }
 
     sanitizeOptions(options) {
-        options = Object.assign({}, _defaultOptions, options);
+        options = Object.assign(new CameraFrameOptions(), options);
 
         // depth consumed by the passes running after the scene pass. SSAO belongs here when the compose
         // pass is what applies it, as it is then free to run after the scene - see collectPasses.
@@ -767,8 +765,11 @@ class FramePassCameraFrame extends FramePass {
         // grab pass allowing us to copy the render scene into a texture and use for refraction
         // the source for the copy is the texture we render the scene to
         if (options.sceneColorMap) {
-            this.colorGrabPass = new FramePassColorGrab(device);
+            this.colorGrabPass = new FramePassColorGrab(device, this.cameraComponent.camera);
             this.colorGrabPass.source = this.rt;
+
+            // the scene passes render the color linear, see setupScenePassSettings
+            this.colorGrabPass.gammaCorrection = GAMMA_NONE;
 
             // if grab pass is used, render the layers after it (otherwise they were already rendered)
             this.scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
@@ -873,8 +874,11 @@ class FramePassCameraFrame extends FramePass {
 
         // create a compose pass, which combines the results of the scene and other passes
         this.composePass = new RenderPassCompose(this.device, this.cameraComponent);
+
+        // the composition assembles its shader from the effects registered with the camera frame
+        this.composePass.effects = this.cameraFrame.effects;
+
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
-        this.composePass.hdrScene = this.hdrFormat !== PIXELFORMAT_RGBA8;
         this.composePass.taaEnabled = options.taaEnabled;
         this.composePass.cocTexture = this.dofPass?.cocTexture;
         this.composePass.blurTexture = this.dofPass?.blurTexture;
@@ -960,6 +964,20 @@ class FramePassCameraFrame extends FramePass {
         this.composePass.sceneTexture = sceneTexture;
         this.scenePassHalf?.setSourceTexture(sceneTexture);
         this.dofPass?.setSceneTexture(sceneTexture);
+
+        // The active effects prepare the frame - defines, and anything else deciding what renders.
+        // This runs before any pass they contribute to updates itself, as the frame graph updates a
+        // parent before its children, so the compose shader picks up a define changed here this
+        // frame; and after the TAA history was assigned above, so an effect reading the resolved
+        // scene colour sees this frame's. Their uniforms are written later, by the compose pass
+        // right before it draws.
+        const { effects } = this.cameraFrame;
+        for (let i = 0; i < effects.length; i++) {
+            const effect = effects[i];
+            if (effect.active) {
+                effect.frameUpdate();
+            }
+        }
     }
 }
 
