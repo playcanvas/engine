@@ -1,6 +1,6 @@
 import { Container } from '@playcanvas/pcui/react';
 import { Component } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 import { CodeEditorDesktop } from './code-editor/CodeEditorDesktop.mjs';
 import { Example } from './Example.mjs';
@@ -8,8 +8,13 @@ import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
+import { exampleRedirects } from '../redirects.mjs';
 import { patchState, readState } from '../url-state.mjs';
 import { getLayout } from '../utils.mjs';
+
+/**
+ * @import { ReactElement } from 'react'
+ */
 
 const MOBILE_DOCK_HEIGHT = 48;
 const MOBILE_DOCK_WIDTH = 48;
@@ -66,6 +71,18 @@ function getDefaultMobilePanelWidth() {
         MOBILE_PANEL_DEFAULT_MAX_WIDTH,
         Math.max(MOBILE_PANEL_DEFAULT_MIN_WIDTH, window.innerWidth * MOBILE_PANEL_DEFAULT_WIDTH_SCALE)
     ));
+}
+
+/**
+ * Sends the old path of a moved example to its current one, keeping the query so the state of a
+ * shared link survives the redirect.
+ *
+ * @param {{ to: string }} props - Component properties.
+ * @returns {ReactElement} The redirect.
+ */
+function Redirect({ to }) {
+    const { search } = useLocation();
+    return jsx(Navigate, { to: { pathname: to, search }, replace: true });
 }
 
 // eslint-disable-next-line jsdoc/require-property
@@ -307,6 +324,11 @@ class MainLayout extends TypedComponent {
                         path: '/',
                         element: jsx(Navigate, { to: '/misc/hello-world', replace: true })
                     }),
+                    Object.entries(exampleRedirects).map(([from, to]) => jsx(Route, {
+                        key: from,
+                        path: `/${from}`,
+                        element: jsx(Redirect, { to: `/${to}` })
+                    })),
                     jsx(Route, {
                         path: '/:category/:example?',
                         element: jsx(
