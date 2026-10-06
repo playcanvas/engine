@@ -3,8 +3,33 @@ import { BindGroup } from '../bind-group.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { UniformBuffer } from '../uniform-buffer.js';
 
+/**
+ * @import { Compute } from '../compute.js'
+ */
+
 // size of indirect dispatch entry in bytes, 3 x 32bit (x, y, z workgroup counts)
 const _indirectDispatchEntryByteSize = 3 * 4;
+
+/**
+ * The parameters of the slots of a bind group, in the order of the slots of its format, looked up
+ * once instead of by name on each dispatch. Entries are undefined for slots without a parameter.
+ *
+ * @ignore
+ */
+class SlotParameters {
+    textures = [];
+
+    storageTextures = [];
+
+    storageBuffers = [];
+
+    /**
+     * The parameters of the uniforms of each uniform buffer of the bind group.
+     *
+     * @type {Array<Array<object|undefined>>}
+     */
+    uniforms = [];
+}
 
 /**
  * A WebGPU implementation of the Compute.
@@ -24,10 +49,34 @@ class WebgpuCompute {
      */
     bindGroups = [];
 
+    /**
+     * The parameters of the slots of each bind group, see {@link SlotParameters}.
+     *
+     * @type {SlotParameters[]}
+     */
+    slotParameters = [];
+
+    /**
+     * The version of the parameters of the compute the slot parameters were looked up for.
+     *
+     * @type {number}
+     */
+    slotParametersVersion = -1;
+
+    /**
+     * The names of the missing parameters already reported, so that each is reported once.
+     *
+     * @type {Set<string>|null}
+     */
+    reportedMissing = null;
+
+    /**
+     * @param {Compute} compute - The compute instance.
+     */
     constructor(compute) {
         this.compute = compute;
 
-        const { device, shader } = compute;
+        const { device, activeShader: shader } = compute;
 
         DebugGraphics.pushGpuMarker(device, `Compute:${compute.name}`);
 
@@ -103,17 +152,116 @@ class WebgpuCompute {
     }
 
     restoreContext() {
-        const { device, shader } = this.compute;
-        this.pipeline = device.computePipeline.get(shader, this.bindGroups.map(bindGroup => bindGroup.format));
+        const { device, activeShader } = this.compute;
+        this.pipeline = device.computePipeline.get(activeShader, this.bindGroups.map(bindGroup => bindGroup.format));
+    }
+
+    /**
+     * Looks up the parameters of the slots of the bind groups.
+     *
+     * @private
+     */
+    _lookUpSlotParameters() {
+        const { parameters } = this.compute;
+        this.slotParameters.length = 0;
+        for (let i = 0; i < this.bindGroups.length; i++) {
+            const bindGroup = this.bindGroups[i];
+            const { textureFormats, storageTextureFormats, storageBufferFormats } = bindGroup.format;
+            const slots = new SlotParameters();
+            slots.textures = textureFormats.map(format => parameters.get(format.name));
+            slots.storageTextures = storageTextureFormats.map(format => parameters.get(format.name));
+            slots.storageBuffers = storageBufferFormats.map(format => parameters.get(format.name));
+            slots.uniforms = bindGroup.uniformBuffers.map(ub => ub.format.uniforms.map(uniform => parameters.get(uniform.name)));
+            this.slotParameters.push(slots);
+        }
+        this.slotParametersVersion = this.compute.parametersVersion;
+    }
+
+    /**
+     * Reports a uniform or resource the shader declares, but the compute has no value for.
+     *
+     * @param {string} name - The name of the parameter.
+     * @private
+     */
+    _reportMissing(name) {
+        Debug.call(() => {
+            this.reportedMissing ??= new Set();
+            if (!this.reportedMissing.has(name)) {
+                this.reportedMissing.add(name);
+                const { compute } = this;
+                let hint = 'Set it using Compute#setParameter.';
+                if (name === 'uSceneColorMap' || name === 'uSceneDepthMap') {
+                    const kind = name === 'uSceneColorMap' ? 'Color' : 'Depth';
+                    hint = `A compute shader does not read the scene maps from the global scope - include the scene${kind}CS chunk and attach the map using Compute#setScene${kind}Map.`;
+                } else if (name === 'computeSceneDepthMap' || name === 'computeSceneDepthCameraParams' || name === 'computeSceneDepthViewProjectionInverse') {
+                    hint = 'The shader includes the sceneDepthCS chunk - attach a scene depth map using Compute#setSceneDepthMap.';
+                } else if (name === 'computeSceneColorMap') {
+                    hint = 'The shader includes the sceneColorCS chunk - attach a scene color map using Compute#setSceneColorMap.';
+                }
+                Debug.assert(false, `Compute ${compute.name}: the shader uses ${name}, which has no value. ${hint}`, compute);
+            }
+        });
     }
 
     updateBindGroup() {
 
-        // bind group data
+        const { compute } = this;
+        if (this.slotParametersVersion !== compute.parametersVersion) {
+            this._lookUpSlotParameters();
+        }
+
+        // the compute owns its bind groups, and assigns every slot from its own parameters
         for (let i = 0; i < this.bindGroups.length; i++) {
             const bindGroup = this.bindGroups[i];
-            bindGroup.updateUniformBuffers();
-            bindGroup.update();
+            const slots = this.slotParameters[i];
+            const { textureFormats, storageTextureFormats, storageBufferFormats } = bindGroup.format;
+
+            // uniform buffers
+            const uniformBuffers = bindGroup.uniformBuffers;
+            for (let u = 0; u < uniformBuffers.length; u++) {
+                const uniformBuffer = uniformBuffers[u];
+                const uniformFormats = uniformBuffer.format.uniforms;
+                const uniformParams = slots.uniforms[u];
+                uniformBuffer.startUpdate();
+                for (let k = 0; k < uniformFormats.length; k++) {
+                    const value = uniformParams[k]?.value;
+                    if (value !== undefined && value !== null) {
+                        uniformBuffer.setUniform(uniformFormats[k], value);
+                    } else {
+                        this._reportMissing(uniformFormats[k].name);
+                    }
+                }
+                uniformBuffer.endUpdate();
+            }
+
+            // textures, bound to a substitute when missing, to keep going
+            for (let k = 0; k < textureFormats.length; k++) {
+                let value = slots.textures[k]?.value;
+                if (!value) {
+                    this._reportMissing(textureFormats[k].name);
+                    value = compute.device.builtInTextures[textureFormats[k].substituteTexture];
+                }
+                bindGroup.setTextureAt(k, value);
+            }
+
+            for (let k = 0; k < storageTextureFormats.length; k++) {
+                const value = slots.storageTextures[k]?.value;
+                if (value) {
+                    bindGroup.setStorageTextureAt(k, value);
+                } else {
+                    this._reportMissing(storageTextureFormats[k].name);
+                }
+            }
+
+            for (let k = 0; k < storageBufferFormats.length; k++) {
+                const value = slots.storageBuffers[k]?.value;
+                if (!value) {
+                    this._reportMissing(storageBufferFormats[k].name);
+                }
+                bindGroup.setStorageBufferAt(k, value);
+            }
+
+            bindGroup.commit();
         }
     }
 

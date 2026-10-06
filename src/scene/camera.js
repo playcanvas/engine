@@ -277,7 +277,8 @@ class Camera {
     /**
      * Publishes the scene depth texture a producer has rendered for this camera, together with how
      * it is encoded. Each producer passes its own encoding, as different producers store the depth
-     * differently. The camera parameters the depth was rendered with are captured as well. The
+     * differently. The camera parameters and the inverse view projection matrix the depth was
+     * rendered with are captured as well. The
      * texture is recorded on the handle of this camera, and also set to the global uniform, which
      * holds the depth of whichever camera published last.
      *
@@ -298,6 +299,10 @@ class Camera {
         handle.packed = linear && packed;
         handle.reciprocal = linear && reciprocal;
         this.fillShaderParams(handle.cameraParams);
+
+        // the matrices the shaders were given this frame, captured when the camera first rendered
+        // in it - see Camera#_storeShaderMatrices
+        handle.viewProjectionInverse.copy(this._viewProjInverse);
 
         SceneDepthMapHandle.setUniform(this.device, texture);
     }
