@@ -90,14 +90,28 @@ class GSplatIntervalCompaction {
      */
     _uploadedVersion = -1;
 
-    /** @type {Compute|null} */
-    _cullComputePerspective = null;
+    /**
+     * The compute instances of the passes, indexed by the dispatch index, see
+     * {@link GSplatIntervalCompaction#dispatchCompact}. Created on first use, sharing the shaders.
+     *
+     * @type {Compute[]}
+     */
+    _cullComputesPerspective = [];
 
-    /** @type {Compute|null} */
-    _cullComputeFisheye = null;
+    /** @type {Compute[]} */
+    _cullComputesFisheye = [];
 
-    /** @type {Compute|null} */
-    _scatterCompute = null;
+    /** @type {Compute[]} */
+    _scatterComputes = [];
+
+    /** @type {Shader|null} */
+    _cullShaderPerspective = null;
+
+    /** @type {Shader|null} */
+    _cullShaderFisheye = null;
+
+    /** @type {Shader|null} */
+    _scatterShader = null;
 
     /**
      * Reused 2D dispatch size for the scatter pass. The scatter pass dispatches one workgroup per
@@ -148,7 +162,7 @@ class GSplatIntervalCompaction {
         this.prefixSumKernel = new PrefixSumKernel(device);
 
         this._createUniformBufferFormats();
-        this._createScatterCompute();
+        this._createScatterShader();
         this._createWriteIndirectArgsCompute();
     }
 
@@ -161,8 +175,9 @@ class GSplatIntervalCompaction {
         this.sortElementCountBuffer?.destroy();
 
         this._destroyCullPass();
-        this._scatterCompute?.destroy();
-        this._scatterCompute?.shader?.destroy();
+        this._scatterComputes.forEach(compute => compute.destroy());
+        this._scatterComputes.length = 0;
+        this._scatterShader?.destroy();
         this._scatterBindGroupFormat?.destroy();
         this._writeIndirectArgsCompute?.destroy();
         this._writeIndirectArgsCompute?.shader?.destroy();
@@ -174,7 +189,7 @@ class GSplatIntervalCompaction {
         this.prefixSumKernel = null;
         this.numSplatsBuffer = null;
         this.sortElementCountBuffer = null;
-        this._scatterCompute = null;
+        this._scatterShader = null;
         this._scatterBindGroupFormat = null;
         this._writeIndirectArgsCompute = null;
         this._writeArgsBindGroupFormat = null;
@@ -184,15 +199,17 @@ class GSplatIntervalCompaction {
 
     /** @private */
     _destroyCullPass() {
-        this._cullComputePerspective?.destroy();
-        this._cullComputePerspective?.shader?.destroy();
+        this._cullComputesPerspective.forEach(compute => compute.destroy());
+        this._cullComputesPerspective.length = 0;
+        this._cullShaderPerspective?.destroy();
         this._cullBindGroupFormatPerspective?.destroy();
-        this._cullComputePerspective = null;
+        this._cullShaderPerspective = null;
         this._cullBindGroupFormatPerspective = null;
-        this._cullComputeFisheye?.destroy();
-        this._cullComputeFisheye?.shader?.destroy();
+        this._cullComputesFisheye.forEach(compute => compute.destroy());
+        this._cullComputesFisheye.length = 0;
+        this._cullShaderFisheye?.destroy();
         this._cullBindGroupFormatFisheye?.destroy();
-        this._cullComputeFisheye = null;
+        this._cullShaderFisheye = null;
         this._cullBindGroupFormatFisheye = null;
     }
 
@@ -217,13 +234,13 @@ class GSplatIntervalCompaction {
     }
 
     /**
-     * Creates a cull compute pass for the given mode.
+     * Creates the cull shader for the given mode.
      *
      * @param {boolean} fisheye - Whether to create the fisheye (cone) variant.
-     * @returns {{ compute: Compute, bindGroupFormat: BindGroupFormat }} The created compute and bind group format.
+     * @returns {{ shader: Shader, bindGroupFormat: BindGroupFormat }} The created shader and bind group format.
      * @private
      */
-    _createCullPass(fisheye) {
+    _createCullShader(fisheye) {
         const device = this.device;
         const suffix = fisheye ? 'Fisheye' : '';
 
@@ -261,36 +278,39 @@ class GSplatIntervalCompaction {
             computeUniformBufferFormats: { uniforms: uniformBufferFormat }
         });
 
-        const compute = new Compute(device, shader, `GSplatIntervalCull${suffix}`);
-        return { compute, bindGroupFormat };
+        return { shader, bindGroupFormat };
     }
 
     /**
-     * Returns the cached cull Compute for the given mode, lazily creating it on first use.
+     * Returns the cull Compute for the given mode and dispatch index, lazily creating it, and the
+     * shader of the mode, on first use.
      *
      * @param {boolean} fisheye - Whether fisheye is active.
-     * @returns {Compute} The cached Compute instance.
+     * @param {number} index - The dispatch index.
+     * @returns {Compute} The cull Compute instance.
      * @private
      */
-    _getCullCompute(fisheye) {
+    _getCullCompute(fisheye, index) {
         if (fisheye) {
-            if (!this._cullComputeFisheye) {
-                const { compute, bindGroupFormat } = this._createCullPass(true);
-                this._cullComputeFisheye = compute;
+            if (!this._cullShaderFisheye) {
+                const { shader, bindGroupFormat } = this._createCullShader(true);
+                this._cullShaderFisheye = shader;
                 this._cullBindGroupFormatFisheye = bindGroupFormat;
             }
-            return this._cullComputeFisheye;
+            this._cullComputesFisheye[index] ??= new Compute(this.device, this._cullShaderFisheye, 'GSplatIntervalCullFisheye');
+            return this._cullComputesFisheye[index];
         }
-        if (!this._cullComputePerspective) {
-            const { compute, bindGroupFormat } = this._createCullPass(false);
-            this._cullComputePerspective = compute;
+        if (!this._cullShaderPerspective) {
+            const { shader, bindGroupFormat } = this._createCullShader(false);
+            this._cullShaderPerspective = shader;
             this._cullBindGroupFormatPerspective = bindGroupFormat;
         }
-        return this._cullComputePerspective;
+        this._cullComputesPerspective[index] ??= new Compute(this.device, this._cullShaderPerspective, 'GSplatIntervalCull');
+        return this._cullComputesPerspective[index];
     }
 
     /** @private */
-    _createScatterCompute() {
+    _createScatterShader() {
         const device = this.device;
 
         this._scatterBindGroupFormat = new BindGroupFormat(device, [
@@ -304,7 +324,7 @@ class GSplatIntervalCompaction {
             ['{WORKGROUP_SIZE}', WORKGROUP_SIZE.toString()]
         ]);
 
-        const shader = new Shader(device, {
+        this._scatterShader = new Shader(device, {
             name: 'GSplatIntervalScatter',
             shaderLanguage: SHADERLANGUAGE_WGSL,
             cshader: computeGsplatIntervalScatterSource,
@@ -312,8 +332,6 @@ class GSplatIntervalCompaction {
             computeBindGroupFormat: this._scatterBindGroupFormat,
             computeUniformBufferFormats: { uniforms: this._scatterUniformBufferFormat }
         });
-
-        this._scatterCompute = new Compute(device, shader, 'GSplatIntervalScatter');
     }
 
     /** @private */
@@ -414,13 +432,18 @@ class GSplatIntervalCompaction {
      * @param {number} numIntervals - Total number of intervals.
      * @param {number} totalActiveSplats - Total active splats across all intervals.
      * @param {boolean} fisheyeEnabled - Whether fisheye cone culling should be used instead of frustum planes.
+     * @param {number} [index] - The index of the dispatch in the frame. A compute instance is
+     * dispatched at most once in a frame, so each dispatch of the compaction in a frame, such as
+     * one for each shadow casting light, uses its own index, for which the compaction creates its
+     * own compute instances. They share the shaders and the buffers, as the dispatches execute in
+     * order. Defaults to 0.
      */
-    dispatchCompact(frustumCuller, numIntervals, totalActiveSplats, fisheyeEnabled) {
+    dispatchCompact(frustumCuller, numIntervals, totalActiveSplats, fisheyeEnabled, index = 0) {
         if (numIntervals === 0) return;
 
         this._ensureCapacity(numIntervals, totalActiveSplats);
 
-        const cullCompute = this._getCullCompute(fisheyeEnabled);
+        const cullCompute = this._getCullCompute(fisheyeEnabled, index);
 
         // --- Pass 1: Interval cull + count ---
         cullCompute.setParameter('intervals', this.intervalsBuffer);
@@ -445,10 +468,11 @@ class GSplatIntervalCompaction {
         // --- Pass 2: Prefix sum over numIntervals + 1 elements ---
         const prefixCount = numIntervals + 1;
         this.prefixSumKernel.resize(this.countBuffer, prefixCount);
-        this.prefixSumKernel.dispatch(this.device);
+        this.prefixSumKernel.dispatch(this.device, index);
 
         // --- Pass 3: Interval scatter ---
-        const scatterCompute = this._scatterCompute;
+        this._scatterComputes[index] ??= new Compute(this.device, this._scatterShader, 'GSplatIntervalScatter');
+        const scatterCompute = this._scatterComputes[index];
 
         scatterCompute.setParameter('intervals', this.intervalsBuffer);
         scatterCompute.setParameter('prefixSumBuffer', this.countBuffer);

@@ -93,8 +93,9 @@ describe('GSplatShadowRenderer#cull', function () {
         expect(renderer._syncUserModify.calledOnceWithExactly(params)).to.equal(true);
         expect(renderer._ensureCullShader.calledOnce).to.equal(true);
         expect(renderer._cullEntry.callCount).to.equal(2);
-        expect(renderer._cullEntry.firstCall.args).to.deep.equal([realtime, 2, 128, 16, params]);
-        expect(renderer._cullEntry.secondCall.args).to.deep.equal([once, 2, 128, 16, params]);
+        // each culled light dispatches the shared compaction with its own index
+        expect(renderer._cullEntry.firstCall.args).to.deep.equal([realtime, 2, 128, 16, params, 0]);
+        expect(renderer._cullEntry.secondCall.args).to.deep.equal([once, 2, 128, 16, params, 1]);
         // The renderer consumes this request later, after all cameras have prepared shadows.
         expect(once.light.shadowUpdateMode).to.equal(SHADOWUPDATE_THISFRAME);
     });

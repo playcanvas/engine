@@ -71,6 +71,14 @@ class WebgpuCompute {
     reportedMissing = null;
 
     /**
+     * The submit version of the device when the compute was last dispatched, to detect a second
+     * dispatch in the same submit. Debug only.
+     *
+     * @type {number}
+     */
+    dispatchSubmitVersion = -1;
+
+    /**
      * @param {Compute} compute - The compute instance.
      */
     constructor(compute) {
@@ -193,7 +201,7 @@ class WebgpuCompute {
                 if (name === 'uSceneColorMap' || name === 'uSceneDepthMap') {
                     const kind = name === 'uSceneColorMap' ? 'Color' : 'Depth';
                     hint = `A compute shader does not read the scene maps from the global scope - include the scene${kind}CS chunk and attach the map using Compute#setScene${kind}Map.`;
-                } else if (name === 'computeSceneDepthMap' || name === 'computeSceneDepthCameraParams' || name === 'computeSceneDepthViewProjectionInverse') {
+                } else if (name.startsWith('computeSceneDepth')) {
                     hint = 'The shader includes the sceneDepthCS chunk - attach a scene depth map using Compute#setSceneDepthMap.';
                 } else if (name === 'computeSceneColorMap') {
                     hint = 'The shader includes the sceneColorCS chunk - attach a scene color map using Compute#setSceneColorMap.';
@@ -263,6 +271,19 @@ class WebgpuCompute {
 
             bindGroup.commit();
         }
+
+        Debug.call(() => {
+            // the uniform buffers of a compute are uploaded when it is dispatched, and the GPU executes
+            // the dispatches after they are submitted, so a compute is dispatched at most once in a
+            // submit
+            const { compute } = this;
+            // @ts-ignore - submitVersion is available on WebgpuGraphicsDevice
+            const submitVersion = compute.device.submitVersion;
+            if (this.dispatchSubmitVersion === submitVersion) {
+                Debug.warnOnce(`Compute ${compute.name}: dispatched more than once in the same frame. A compute instance is dispatched at most once in a frame - use a separate compute instance for each dispatch, which can share the shader.`, compute);
+            }
+            this.dispatchSubmitVersion = submitVersion;
+        });
     }
 
     dispatch(x, y, z) {

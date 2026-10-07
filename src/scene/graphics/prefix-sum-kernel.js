@@ -32,9 +32,11 @@ class PrefixSumKernel {
     device;
 
     /**
-     * List of pipeline passes (scan + add_block for each level).
+     * List of pipeline passes (scan + add_block for each level). Each level holds the compute
+     * instances of each dispatch of the kernel in a frame, indexed by the dispatch index, see
+     * {@link PrefixSumKernel#dispatch}. Created on first use, sharing the shaders of the kernel.
      *
-     * @type {Array<{scanCompute: Compute, addBlockCompute: Compute|null, blockSumBuffer: StorageBuffer, dispatchX: number, dispatchY: number, count: number, allocatedCount: number}>}
+     * @type {Array<{dataBuffer: StorageBuffer, scanComputes: Compute[], addBlockComputes: Compute[]|null, blockSumBuffer: StorageBuffer, dispatchX: number, dispatchY: number, count: number, allocatedCount: number}>}
      */
     passes = [];
 
@@ -131,14 +133,10 @@ class PrefixSumKernel {
         const blockSumBuffer = new StorageBuffer(this.device, workgroupCount * 4);
         DebugHelper.setName(blockSumBuffer, 'PrefixSumKernel.blockSum');
 
-        // Create scan compute instance using shared shader
-        const scanCompute = new Compute(this.device, this._scanShader, 'PrefixSumScan');
-        scanCompute.setParameter('items', dataBuffer);
-        scanCompute.setParameter('blockSums', blockSumBuffer);
-
         const pass = {
-            scanCompute,
-            addBlockCompute: null,
+            dataBuffer,
+            scanComputes: [],
+            addBlockComputes: workgroupCount > 1 ? [] : null,
             blockSumBuffer,
             dispatchX,
             dispatchY,
@@ -151,14 +149,30 @@ class PrefixSumKernel {
         if (workgroupCount > 1) {
             // Recursively create prefix sum on block sums
             this.createPassesRecursive(blockSumBuffer, workgroupCount);
-
-            // Create add_block compute instance using shared shader
-            const addBlockCompute = new Compute(this.device, this._addBlockShader, 'PrefixSumAddBlock');
-            addBlockCompute.setParameter('items', dataBuffer);
-            addBlockCompute.setParameter('blockSums', blockSumBuffer);
-
-            pass.addBlockCompute = addBlockCompute;
         }
+    }
+
+    /**
+     * Returns the compute instance of a pass for a dispatch index, creating it using the shared
+     * shader on first use.
+     *
+     * @param {Compute[]} computes - The compute instances of the pass, by dispatch index.
+     * @param {number} index - The dispatch index.
+     * @param {Shader} shader - The shader of the compute instances.
+     * @param {string} name - The name of the compute instances.
+     * @param {{dataBuffer: StorageBuffer, blockSumBuffer: StorageBuffer}} pass - The pass.
+     * @returns {Compute} The compute instance.
+     * @private
+     */
+    _getCompute(computes, index, shader, name, pass) {
+        let compute = computes[index];
+        if (!compute) {
+            compute = new Compute(this.device, shader, name);
+            compute.setParameter('items', pass.dataBuffer);
+            compute.setParameter('blockSums', pass.blockSumBuffer);
+            computes[index] = compute;
+        }
+        return compute;
     }
 
     /**
@@ -251,8 +265,8 @@ class PrefixSumKernel {
      */
     destroyPasses() {
         for (const pass of this.passes) {
-            pass.scanCompute.destroy();
-            pass.addBlockCompute?.destroy();
+            pass.scanComputes.forEach(compute => compute.destroy());
+            pass.addBlockComputes?.forEach(compute => compute.destroy());
             pass.blockSumBuffer?.destroy();
         }
         this.passes.length = 0;
@@ -280,28 +294,36 @@ class PrefixSumKernel {
     /**
      * Dispatches all prefix sum passes.
      *
+     * A compute instance is dispatched at most once in a frame, so each dispatch of the kernel in
+     * a frame uses its own index, for which the kernel creates its own compute instances. They
+     * share the shaders and the block sum buffers, as the dispatches execute in order.
+     *
      * @param {GraphicsDevice} device - The graphics device.
+     * @param {number} [index] - The index of the dispatch in the frame. Defaults to 0.
      */
-    dispatch(device) {
+    dispatch(device, index = 0) {
         // Process all passes in order
         for (let i = 0; i < this.passes.length; i++) {
             const pass = this.passes[i];
+            const scanCompute = this._getCompute(pass.scanComputes, index, this._scanShader, 'PrefixSumScan', pass);
 
             // Set element count uniform for this pass level
-            pass.scanCompute.setParameter('elementCount', pass.count);
-            pass.scanCompute.setupDispatch(pass.dispatchX, pass.dispatchY, 1);
-            device.computeDispatch([pass.scanCompute], 'PrefixSumScan');
+            scanCompute.setParameter('elementCount', pass.count);
+            scanCompute.setupDispatch(pass.dispatchX, pass.dispatchY, 1);
+            device.computeDispatch([scanCompute], 'PrefixSumScan');
         }
 
         // Add block sums in reverse order (skip the last level which has no add_block)
         for (let i = this.passes.length - 1; i >= 0; i--) {
             const pass = this.passes[i];
 
-            if (pass.addBlockCompute) {
+            if (pass.addBlockComputes) {
+                const addBlockCompute = this._getCompute(pass.addBlockComputes, index, this._addBlockShader, 'PrefixSumAddBlock', pass);
+
                 // Set element count uniform for this pass level
-                pass.addBlockCompute.setParameter('elementCount', pass.count);
-                pass.addBlockCompute.setupDispatch(pass.dispatchX, pass.dispatchY, 1);
-                device.computeDispatch([pass.addBlockCompute], 'PrefixSumAddBlock');
+                addBlockCompute.setParameter('elementCount', pass.count);
+                addBlockCompute.setupDispatch(pass.dispatchX, pass.dispatchY, 1);
+                device.computeDispatch([addBlockCompute], 'PrefixSumAddBlock');
             }
         }
     }
