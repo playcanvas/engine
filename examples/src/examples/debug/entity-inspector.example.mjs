@@ -274,7 +274,11 @@ app.on('update', (dt) => {
     }
     for (const item of falling) item.age += dt;
     while (falling.length && (falling[0].age > DEBRIS_LIFETIME || falling.length > DEBRIS_MAX)) {
-        falling.shift().entity.destroy();
+        // destroying an entity leaves the materials it renders with alive, and each crate has its own
+        const { entity } = falling.shift();
+        const material = entity.render.material;
+        entity.destroy();
+        material.destroy();
     }
 });
 
