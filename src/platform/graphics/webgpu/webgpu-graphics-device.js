@@ -1717,11 +1717,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         }
 
-        // generate mipmaps using the same command buffer encoder
+        // generate mipmaps using the same command buffer encoder, only for the cubemap face or the
+        // array layer rendered to, as the mipmaps of the other faces / layers are not affected
         for (let i = 0; i < renderPass.colorArrayOps.length; i++) {
             const colorOps = renderPass.colorArrayOps[i];
             if (colorOps.genMipmaps) {
-                this.mipmapRenderer.generate(renderPass.renderTarget._colorBuffers[i].impl);
+                const renderTarget = renderPass.renderTarget;
+                this.mipmapRenderer.generate(renderTarget._colorBuffers[i].impl, renderTarget.layer);
             }
         }
 

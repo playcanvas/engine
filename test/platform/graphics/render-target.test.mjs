@@ -35,6 +35,34 @@ describe('RenderTarget', function () {
         colorBuffer.destroy();
     };
 
+    describe('#constructor: layer and face options', function () {
+
+        it('renders to the specified layer of a 2d array texture', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, arrayLength: 8, format: PIXELFORMAT_RGBA8 });
+            const rt = new RenderTarget({ colorBuffer, layer: 5 });
+            expect(rt.layer).to.equal(5);
+            expect(rt.face).to.equal(5);
+            rt.destroy();
+            colorBuffer.destroy();
+        });
+
+        it('renders to the specified face of a cubemap', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, cubemap: true, format: PIXELFORMAT_RGBA8 });
+            const rt = new RenderTarget({ colorBuffer, face: 2 });
+            expect(rt.face).to.equal(2);
+            expect(rt.layer).to.equal(2);
+            rt.destroy();
+            colorBuffer.destroy();
+        });
+
+        it('defaults to layer 0', function () {
+            const rt = createRenderTarget();
+            expect(rt.layer).to.equal(0);
+            expect(rt.face).to.equal(0);
+            destroyRenderTarget(rt);
+        });
+    });
+
     // origin resolution on a non-WebGPU device: 'top' flips, 'bottom' does not. isWebGPU is stubbed
     // so the tests behave the same on whichever device the suite runs on
     describe('#constructor: origin option', function () {

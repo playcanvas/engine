@@ -53,7 +53,7 @@ const createMocks = ({ msColorBuffer = true, resolveBuffer = false } = {}) => {
         width: 4,
         height: 4,
         mipLevel: 0,
-        face: 0,
+        layer: 0,
         name: 'msaa-rt',
         transientColor: false,
         getColorBuffer: () => colorBuffer,
@@ -103,11 +103,12 @@ describe('WebgpuRenderTarget#initColor', function () {
 
 describe('WebgpuRenderTarget#initDepthStencil', function () {
 
-    const createDepthMocks = ({ cubemap }) => {
+    const createDepthMocks = ({ cubemap, array = false }) => {
         const views = [];
         const gpuTexture = {};
         const depthBuffer = {
             cubemap,
+            array,
             samples: 1,
             impl: {
                 format: 'depth24plus-stencil8',
@@ -124,7 +125,7 @@ describe('WebgpuRenderTarget#initDepthStencil', function () {
             height: 4,
             depth: true,
             depthBuffer,
-            face: 3,
+            layer: 3,
             name: 'depth-rt'
         };
         return { views, gpuTexture, renderTarget };
@@ -145,6 +146,20 @@ describe('WebgpuRenderTarget#initDepthStencil', function () {
         expect(impl.renderPassDescriptor.depthStencilAttachment.view.desc).to.equal(views[0]);
         expect(impl.depthAttachment.depthTexture).to.equal(gpuTexture);
         expect(impl.depthAttachment.hasStencil).to.equal(true);
+    });
+
+    it('attaches a single layer of a 2d array depth buffer', function () {
+        const { views, renderTarget } = createDepthMocks({ cubemap: false, array: true });
+        const impl = new WebgpuRenderTarget(renderTarget);
+        impl.initDepthStencil({}, {}, renderTarget);
+
+        expect(views).to.deep.equal([{
+            dimension: '2d',
+            baseArrayLayer: 3,
+            arrayLayerCount: 1,
+            mipLevelCount: 1,
+            baseMipLevel: 0
+        }]);
     });
 
     it('attaches mip level 0 of a 2d depth buffer', function () {

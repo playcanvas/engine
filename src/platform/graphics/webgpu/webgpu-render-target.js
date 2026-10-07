@@ -440,11 +440,12 @@ class WebgpuRenderTarget {
                     // support rendering to a mip level
                     const mipLevelCount = 1;
 
-                    // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
-                    if (depthBuffer.cubemap) {
+                    // single layer view - a layer of a 2d array texture, or a cubemap face, which
+                    // is a 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
+                    if (depthBuffer.cubemap || depthBuffer.array) {
                         renderingView = depthBuffer.impl.createView({
                             dimension: '2d',
-                            baseArrayLayer: renderTarget.face,
+                            baseArrayLayer: renderTarget.layer,
                             arrayLayerCount: 1,
                             mipLevelCount,
                             baseMipLevel: 0
@@ -492,11 +493,12 @@ class WebgpuRenderTarget {
             // render to a single mip level
             const mipLevelCount = 1;
 
-            // cubemap face view - face is a single 2d array layer in order [+X, -X, +Y, -Y, +Z, -Z]
-            if (colorBuffer.cubemap) {
+            // single layer view - a layer of a 2d array texture, or a cubemap face, which is a 2d
+            // array layer in order [+X, -X, +Y, -Y, +Z, -Z]
+            if (colorBuffer.cubemap || colorBuffer.array) {
                 colorView = colorBuffer.impl.createView({
                     dimension: '2d',
-                    baseArrayLayer: renderTarget.face,
+                    baseArrayLayer: renderTarget.layer,
                     arrayLayerCount: 1,
                     mipLevelCount,
                     baseMipLevel: mipLevel

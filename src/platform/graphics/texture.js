@@ -960,7 +960,11 @@ class Texture {
 
     get gpuSize() {
         const mips = this._mipmaps && !(this._compressed && this._levels.length === 1);
-        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap) * this._samples;
+
+        // unlike the depth of a volume texture, the layers of a texture array are not reduced by
+        // the mip levels, and so each layer has a full mip chain
+        const layers = Math.max(this._arrayLength, 1);
+        return TextureUtils.calcGpuSize(this._width, this._height, this._depth, this._format, mips, this._cubemap) * layers * this._samples;
     }
 
     /**

@@ -1668,6 +1668,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                         DebugGraphics.pushGpuMarker(this, `MIPS${i}`);
 
+                        // TODO: this regenerates the mipmaps of all cubemap faces / array layers,
+                        // not only the one rendered to (#9688)
                         this.activeTexture(this.maxCombinedTextures - 1);
                         this.bindTexture(colorBuffer);
                         this.gl.generateMipmap(colorBuffer.impl._glTarget);
@@ -1748,8 +1750,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // If the active render target is auto-mipmapped, generate its mip chain
             const colorBuffer = target._colorBuffer;
             if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps) {
-                // FIXME: if colorBuffer is a cubemap currently we're re-generating mipmaps after
-                // updating each face!
+                // TODO: this regenerates the mipmaps of all cubemap faces / array layers, not only
+                // the one rendered to (#9688)
                 this.activeTexture(this.maxCombinedTextures - 1);
                 this.bindTexture(colorBuffer);
                 this.gl.generateMipmap(colorBuffer.impl._glTarget);
