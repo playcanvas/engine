@@ -36,6 +36,19 @@ vec3 sSpecularLight;
     uniform vec2 ssaoTextureSizeInv;
 #endif
 
+// dynamic refraction
+#ifdef LIT_SCENE_COLOR
+    uniform sampler2D uSceneColorMap;
+#endif
+
+#ifdef LIT_SCREEN_SIZE
+    uniform vec4 screen_size;
+#endif
+
+#ifdef LIT_TRANSFORMS
+    uniform mat4 matrix_viewProjection;
+#endif
+
 // lighting and shadowing declarations
 
 #ifdef LIT_SHADOW_CATCHER

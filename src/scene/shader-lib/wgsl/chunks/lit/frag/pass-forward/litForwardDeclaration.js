@@ -37,6 +37,16 @@ var<private> sSpecularLight: vec3f;
     uniform ssaoTextureSizeInv: vec2f;
 #endif
 
+// dynamic refraction (matrix_viewProjection comes from the view uniform buffer)
+#ifdef LIT_SCENE_COLOR
+    var uSceneColorMap : texture_2d<f32>;
+    var uSceneColorMapSampler : sampler;
+#endif
+
+#ifdef LIT_SCREEN_SIZE
+    uniform screen_size: vec4f;
+#endif
+
 // lighting and shadowing declarations
 
 #ifdef LIT_SHADOW_CATCHER
