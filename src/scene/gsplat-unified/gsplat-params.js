@@ -518,6 +518,66 @@ class GSplatParams {
     }
 
     /** @private */
+    _lodGroupThreshold = 0.05;
+
+    /**
+     * Groups distant parts of a streamed GSplat's octree for LOD selection. A subtree whose
+     * projected size - its bounding radius over its distance, `r / (r + d)` - is at most this value
+     * chooses one LOD band for all the leaves in it, rather than every leaf choosing its own.
+     * Leaves near the camera are still evaluated individually, and the leaves of a group lie at
+     * nearly the same distance, so the selection matches evaluating every leaf closely, while the
+     * cost of a LOD update follows the number of groups in view instead of the number of leaves in
+     * the octree. 0 disables grouping and evaluates every leaf. Defaults to 0.05.
+     *
+     * @type {number}
+     */
+    set lodGroupThreshold(value) {
+        if (this._lodGroupThreshold !== value) {
+            this._lodGroupThreshold = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the LOD grouping threshold.
+     *
+     * @type {number}
+     */
+    get lodGroupThreshold() {
+        return this._lodGroupThreshold;
+    }
+
+    /** @private */
+    _lodRangeMerge = 16;
+
+    /**
+     * Largest number of octree leaves a streamed GSplat draws as one range. Leaves that sit next
+     * to each other in the octree and are drawn from the same LOD file are merged into ranges of
+     * whole subtrees, each culled against its subtree's bounds, which cuts the per-range work of
+     * culling, compaction and sorting every frame. A range is copied to the work buffer whole, so
+     * when one leaf in it changes LOD the rest of it is copied again too - larger ranges trade that
+     * copying for fewer ranges. 1 disables merging and draws every leaf as its own range. Defaults
+     * to 16.
+     *
+     * @type {number}
+     */
+    set lodRangeMerge(value) {
+        if (this._lodRangeMerge !== value) {
+            this._lodRangeMerge = value;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Gets the largest number of octree leaves drawn as one range.
+     *
+     * @type {number}
+     */
+    get lodRangeMerge() {
+        return this._lodRangeMerge;
+    }
+
+    /** @private */
     _lodUnderfillLimit = 0;
 
     /**
@@ -1113,6 +1173,8 @@ class GSplatParams {
         this.lodUpdateAngle = render.gsplatLodUpdateAngle ?? this.lodUpdateAngle;
         this.lodBehindPenalty = render.gsplatLodBehindPenalty ?? this.lodBehindPenalty;
         this.lodUnderfillLimit = render.gsplatLodUnderfillLimit ?? this.lodUnderfillLimit;
+        this.lodGroupThreshold = render.gsplatLodGroupThreshold ?? this.lodGroupThreshold;
+        this.lodRangeMerge = render.gsplatLodRangeMerge ?? this.lodRangeMerge;
         this.splatBudget = render.gsplatSplatBudget ?? this.splatBudget;
         this.splatBudgetMode = render.gsplatSplatBudgetMode ?? this.splatBudgetMode;
 

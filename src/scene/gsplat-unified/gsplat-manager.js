@@ -323,6 +323,34 @@ class GSplatManager {
     }
 
     /**
+     * Number of nodes that chose a LOD level in the last LOD update (forwarded from the world for
+     * stats).
+     *
+     * @type {number}
+     */
+    get lodUpdateNodes() {
+        return this.world.lodUpdateNodes;
+    }
+
+    /**
+     * Duration of the last LOD update in milliseconds (forwarded from the world for stats).
+     *
+     * @type {number}
+     */
+    get lodUpdateTime() {
+        return this.world.lodUpdateTime;
+    }
+
+    /**
+     * Number of draw ranges in the newest world state (forwarded from the world for stats).
+     *
+     * @type {number}
+     */
+    get drawRanges() {
+        return this.world.drawRanges;
+    }
+
+    /**
      * True when the CPU sorter has a completed sort result waiting to be applied by a render. Used
      * by the director to request a render so the pending result is applied.
      *

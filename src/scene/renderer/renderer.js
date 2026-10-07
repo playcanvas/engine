@@ -381,6 +381,9 @@ class Renderer {
         this._camerasRendered = 0;
         this._lightClusters = 0;
         this._gsplatCount = 0;
+        this._gsplatLodNodes = 0;
+        this._gsplatLodTime = 0;
+        this._gsplatDrawRanges = 0;
 
         // Uniforms
         const scope = graphicsDevice.scope;

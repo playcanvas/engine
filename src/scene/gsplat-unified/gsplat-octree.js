@@ -18,6 +18,37 @@ const _requestPriority = new Map();
  * @import { GSplatAssetLoaderBase } from './gsplat-asset-loader-base.js'
  */
 
+/**
+ * The spatial tree of an octree's manifest - interior nodes as well as the leaves in
+ * {@link GSplatOctree#nodes} - packed for LOD grouping, which lets a whole subtree far from the
+ * camera choose one LOD band instead of every leaf in it choosing its own, and for merging leaves
+ * into draw ranges. Nodes are in depth-first order, so a node's leaves are the contiguous range
+ * `[leafStart, leafEnd)` of {@link GSplatOctree#nodes}, and node 0 is the root.
+ *
+ * @typedef {object} GSplatOctreeTree
+ * @property {number} count - Number of tree nodes.
+ * @property {Float32Array} boundsMinMax - Per node `[minX, minY, minZ, maxX, maxY, maxZ]` in
+ * octree local space: a leaf's own bounds, the union of its children's for an interior node.
+ * @property {Float64Array} radius - Per node, the radius of the bounding sphere of its bounds.
+ * @property {Int32Array} childStart - Per node, where its children begin in `children`.
+ * @property {Int32Array} childCount - Per node, its number of children. 0 for a leaf.
+ * @property {Int32Array} children - Child node indices.
+ * @property {Int32Array} leafStart - Per node, its first leaf, an index into GSplatOctree#nodes.
+ * @property {Int32Array} leafEnd - Per node, one past its last leaf.
+ * @ignore
+ */
+
+/**
+ * Per tree node, the box its distance to the camera is measured to - see
+ * {@link GSplatOctree#getTreeDistanceBounds}.
+ *
+ * @typedef {object} GSplatOctreeDistanceBounds
+ * @property {number} shrink - The GSplatParams#lodDistanceShrink the boxes were built for.
+ * @property {Float64Array} boundsMinMax - Per tree node `[minX, minY, minZ, maxX, maxY, maxZ]`.
+ * @property {Float64Array} radius - Per tree node, the radius of the bounding sphere of its box.
+ * @ignore
+ */
+
 class GSplatOctree {
     /**
      * @type {GSplatOctreeNode[]}
@@ -44,6 +75,22 @@ class GSplatOctree {
      * @type {Float32Array}
      */
     nodeBoundsExcess;
+
+    /**
+     * The manifest's spatial tree, for LOD grouping and draw range merging.
+     *
+     * @type {GSplatOctreeTree}
+     * @ignore
+     */
+    tree;
+
+    /**
+     * The tree's distance boxes for the last shrink they were requested with.
+     *
+     * @type {GSplatOctreeDistanceBounds|null}
+     * @private
+     */
+    _treeDistanceBounds = null;
 
     /**
      * @type {{ url: string, lodLevel: number }[]}
@@ -248,6 +295,150 @@ class GSplatOctree {
         }
         this.nodeBoundsMinMax = boundsFlat;
         this.nodeBoundsExcess = GSplatOctree._computeBoundsExcess(boundsFlat, nodeCount);
+
+        this.tree = this._buildTree(data.tree);
+    }
+
+    /**
+     * Packs the manifest's tree - see {@link GSplatOctreeTree}. Walks it in the same order as
+     * {@link GSplatOctree#_extractLeafNodes}, so a node's leaves are a contiguous range of
+     * {@link GSplatOctree#nodes}.
+     *
+     * @param {Object} root - The manifest's tree.
+     * @returns {GSplatOctreeTree} The packed tree.
+     * @private
+     */
+    _buildTree(root) {
+        // structure, depth-first, in the order the leaves were extracted
+        /** @type {number[][]} */
+        const childLists = [];
+        const leafOf = [];
+        const leafStartList = [];
+        const leafEndList = [];
+        let leafCounter = 0;
+        const visit = (node) => {
+            const id = childLists.length;
+            childLists.push([]);
+            leafOf.push(-1);
+            leafStartList.push(leafCounter);
+            leafEndList.push(0);
+            if (node.lods) {
+                leafOf[id] = leafCounter++;
+            } else if (node.children) {
+                for (const child of node.children) {
+                    childLists[id].push(visit(child));
+                }
+            }
+            leafEndList[id] = leafCounter;
+            return id;
+        };
+        visit(root);
+        Debug.assert(leafCounter === this.nodes.length, 'GSplatOctree: tree leaves do not match the extracted nodes.');
+
+        const count = childLists.length;
+        const childStart = new Int32Array(count);
+        const childCount = new Int32Array(count);
+        const children = new Int32Array(Math.max(0, count - 1));
+        let c = 0;
+        for (let i = 0; i < count; i++) {
+            childStart[i] = c;
+            childCount[i] = childLists[i].length;
+            for (const child of childLists[i]) children[c++] = child;
+        }
+
+        // Bounds and radius, children before parents - in depth-first order every child has a
+        // higher index than its parent. An interior node with no children covers nothing: empty
+        // bounds at the origin.
+        const boundsMinMax = new Float32Array(count * 6);
+        const radius = new Float64Array(count);
+        for (let i = count - 1; i >= 0; i--) {
+            const b = i * 6;
+            const leaf = leafOf[i];
+            if (leaf >= 0) {
+                boundsMinMax.set(this.nodeBoundsMinMax.subarray(leaf * 6, leaf * 6 + 6), b);
+                radius[i] = this.nodes[leaf].boundingSphere.w;
+                continue;
+            }
+            for (let k = 0; k < childCount[i]; k++) {
+                const cb = children[childStart[i] + k] * 6;
+                for (let a = 0; a < 3; a++) {
+                    boundsMinMax[b + a] = k === 0 ? boundsMinMax[cb + a] : Math.min(boundsMinMax[b + a], boundsMinMax[cb + a]);
+                    boundsMinMax[b + 3 + a] = k === 0 ? boundsMinMax[cb + 3 + a] : Math.max(boundsMinMax[b + 3 + a], boundsMinMax[cb + 3 + a]);
+                }
+            }
+            const hx = (boundsMinMax[b + 3] - boundsMinMax[b]) * 0.5;
+            const hy = (boundsMinMax[b + 4] - boundsMinMax[b + 1]) * 0.5;
+            const hz = (boundsMinMax[b + 5] - boundsMinMax[b + 2]) * 0.5;
+            radius[i] = Math.sqrt(hx * hx + hy * hy + hz * hz);
+        }
+
+        return {
+            count,
+            boundsMinMax,
+            radius,
+            childStart,
+            childCount,
+            children,
+            leafStart: Int32Array.from(leafStartList),
+            leafEnd: Int32Array.from(leafEndList)
+        };
+    }
+
+    /**
+     * Returns the box each tree node's distance to the camera is measured to, for LOD grouping.
+     * A leaf's is its bounds shrunk as the per-leaf distance pass shrinks them - see
+     * GSplatParams#lodDistanceShrink - computed the same way, so a cut down to every leaf measures
+     * exactly the distances the leaves would get on their own. An interior node's is the union of
+     * its leaves' boxes, so a group is never judged farther than its nearest leaf. Rebuilt when the
+     * shrink changes.
+     *
+     * @param {number} shrink - The distance shrink, GSplatParams#lodDistanceShrink.
+     * @returns {GSplatOctreeDistanceBounds} The distance boxes.
+     * @ignore
+     */
+    getTreeDistanceBounds(shrink) {
+        const cached = this._treeDistanceBounds;
+        if (cached && cached.shrink === shrink) return cached;
+
+        const tree = this.tree;
+        const { childStart, childCount, children } = tree;
+        const boundsFlat = this.nodeBoundsMinMax;
+        const excessFlat = this.nodeBoundsExcess;
+        const bounds = cached?.boundsMinMax ?? new Float64Array(tree.count * 6);
+        const radius = cached?.radius ?? new Float64Array(tree.count);
+
+        for (let i = tree.count - 1; i >= 0; i--) {
+            const b = i * 6;
+            if (childCount[i] === 0) {
+                const leaf = tree.leafStart[i];
+                if (leaf < tree.leafEnd[i]) {
+                    const lb = leaf * 6;
+                    const e = leaf * 3;
+                    for (let a = 0; a < 3; a++) {
+                        const s = shrink > 0 ? excessFlat[e + a] * shrink : 0;
+                        bounds[b + a] = boundsFlat[lb + a] + s;
+                        bounds[b + 3 + a] = boundsFlat[lb + 3 + a] - s;
+                    }
+                } else {
+                    bounds.fill(0, b, b + 6);
+                }
+            } else {
+                for (let k = 0; k < childCount[i]; k++) {
+                    const cb = children[childStart[i] + k] * 6;
+                    for (let a = 0; a < 3; a++) {
+                        bounds[b + a] = k === 0 ? bounds[cb + a] : Math.min(bounds[b + a], bounds[cb + a]);
+                        bounds[b + 3 + a] = k === 0 ? bounds[cb + 3 + a] : Math.max(bounds[b + 3 + a], bounds[cb + 3 + a]);
+                    }
+                }
+            }
+            const hx = (bounds[b + 3] - bounds[b]) * 0.5;
+            const hy = (bounds[b + 4] - bounds[b + 1]) * 0.5;
+            const hz = (bounds[b + 5] - bounds[b + 2]) * 0.5;
+            radius[i] = Math.sqrt(hx * hx + hy * hy + hz * hz);
+        }
+
+        this._treeDistanceBounds = { shrink, boundsMinMax: bounds, radius };
+        return this._treeDistanceBounds;
     }
 
     /**
@@ -287,6 +478,7 @@ class GSplatOctree {
 
         // Clear internal state
         this._lodTables.clear();
+        this._treeDistanceBounds = null;
         this.fileResources.clear();
         this.cooldowns.clear();
         this._requesters.clear();
