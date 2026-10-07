@@ -1443,6 +1443,9 @@ class Texture {
      * Defaults to 0.
      * @param {number} [options.layer] - If the texture is a 2D array texture, the array layer to
      * download. Defaults to 0.
+     * @param {number} [options.slice] - If the texture is a volume texture, the depth slice to
+     * download. When not specified, all depth slices of the mip level are downloaded, one after
+     * another, and the returned data holds `width * height * depth` pixels.
      * @param {Uint8Array|Uint16Array|Uint32Array|Float32Array} [options.data] - The data buffer to
      * write the pixel data to. If not provided, a new buffer will be created. The type of the buffer
      * must match the texture's format.
@@ -1459,6 +1462,13 @@ class Texture {
      */
     read(x, y, width, height, options = {}) {
         Debug.assert(this._samples === 1, 'Cannot read back a multisampled texture.', this);
+        Debug.call(() => {
+            if (options.slice !== undefined) {
+                const depth = TextureUtils.calcLevelDimension(this._depth, options.mipLevel ?? 0);
+                Debug.assert(this._volume, `Texture#read: the slice option only applies to volume textures, '${this.name}' is not one.`, this);
+                Debug.assert(options.slice >= 0 && options.slice < depth, `Texture#read: slice ${options.slice} is out of range of the ${depth} depth slices of '${this.name}'.`, this);
+            }
+        });
         return this.impl.read?.(x, y, width, height, options);
     }
 
@@ -1500,8 +1510,12 @@ class Texture {
             Debug.error('Texture#copy: copying compressed textures is not supported.');
             return false;
         }
-        if (source._volume || this._volume) {
-            Debug.error('Texture#copy: copying 3D (volume) textures is not supported.');
+        if (source._volume !== this._volume) {
+            Debug.error(`Texture#copy: a volume texture can only be copied to or from another volume texture (source '${source.name}', destination '${this.name}').`);
+            return false;
+        }
+        if (options.slice !== undefined && !source._volume) {
+            Debug.error('Texture#copy: the slice option only applies to volume textures.');
             return false;
         }
         if (source._samples !== this._samples) {
@@ -1531,6 +1545,21 @@ class Texture {
         if (layer < 0 || layer >= sourceLayers || layer >= destLayers) {
             Debug.error(`Texture#copy: face / layer ${layer} is out of range.`);
             return false;
+        }
+
+        // depth slices of volume textures - a single slice, or all slices of the source mip level
+        if (source._volume) {
+            const sourceDepth = Math.max(1, source.depth >> sourceMipLevel);
+            const destDepth = Math.max(1, this.depth >> destMipLevel);
+            if (options.slice !== undefined) {
+                if (options.slice < 0 || options.slice >= sourceDepth || options.slice >= destDepth) {
+                    Debug.error(`Texture#copy: slice ${options.slice} is out of range (source has ${sourceDepth} depth slices, destination has ${destDepth}).`);
+                    return false;
+                }
+            } else if (sourceDepth > destDepth) {
+                Debug.error(`Texture#copy: the ${sourceDepth} depth slices of the source do not fit into the ${destDepth} depth slices of the destination. Use the slice option to copy a single slice.`);
+                return false;
+            }
         }
 
         // region bounds, evaluated at the chosen mip levels
@@ -1577,6 +1606,10 @@ class Texture {
      * both source and destination). Defaults to 0.
      * @param {number} [options.layer] - If the textures are 2D array textures, the array layer to
      * copy (applies to both source and destination). Defaults to 0.
+     * @param {number} [options.slice] - If the textures are volume textures, the depth slice to
+     * copy (applies to both source and destination). When not specified, all depth slices of the
+     * source mip level are copied, which requires the destination mip level to have at least as
+     * many depth slices.
      * @param {number} [options.sourceX] - The left edge of the source region. Defaults to 0.
      * @param {number} [options.sourceY] - The top edge of the source region. Defaults to 0.
      * @param {number} [options.width] - The width of the copied region. Defaults to the full width

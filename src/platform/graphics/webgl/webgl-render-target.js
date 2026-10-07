@@ -15,17 +15,17 @@ const _validatedFboConfigs = new DeviceCache();
 
 /**
  * Attaches a single layer of a texture to the currently bound framebuffer - a face of a cubemap,
- * a layer of a 2D array texture, or a 2D texture.
+ * a layer of a 2D array texture, a depth slice of a volume texture, or a 2D texture.
  *
  * @param {WebGL2RenderingContext} gl - The WebGL2 context.
  * @param {number} attachment - The attachment point.
  * @param {Texture} texture - The texture to attach.
- * @param {number} layer - The cubemap face or the array layer.
+ * @param {number} layer - The cubemap face, the array layer or the depth slice.
  * @param {number} mipLevel - The mip level.
  */
 const attachTexture = (gl, attachment, texture, layer, mipLevel) => {
     const glTexture = texture.impl._glTexture;
-    if (texture.array) {
+    if (texture.array || texture.volume) {
         gl.framebufferTextureLayer(gl.FRAMEBUFFER, attachment, glTexture, mipLevel, layer);
     } else {
         gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment,

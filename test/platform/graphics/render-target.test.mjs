@@ -79,6 +79,24 @@ describe('RenderTarget', function () {
             depthBuffer.destroy();
         });
 
+        it('renders to the specified depth slice of a volume texture', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, depth: 8, volume: true, format: PIXELFORMAT_RGBA8 });
+            const error = console.error;
+            const errors = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+            try {
+                const rt = new RenderTarget({ colorBuffer, layer: 5, depth: false });
+                expect(errors).to.have.lengthOf(0);
+                expect(rt.getLayer(colorBuffer)).to.equal(5);
+                rt.destroy();
+            } finally {
+                console.error = error;
+            }
+            colorBuffer.destroy();
+        });
+
         it('defaults to layer 0', function () {
             const rt = createRenderTarget();
             expect(rt.layer).to.equal(0);

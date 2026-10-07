@@ -486,6 +486,7 @@ class WebgpuRenderTarget {
 
         const { samples, width, height, mipLevel } = renderTarget;
         const colorBuffer = renderTarget.getColorBuffer(index);
+        Debug.assert(!colorBuffer?.volume, `RenderTarget '${renderTarget.name}': rendering to a volume texture is not supported on WebGPU.`, renderTarget);
 
         // view used to write to the color buffer (either by rendering to it, or resolving to it)
         let colorView = null;
