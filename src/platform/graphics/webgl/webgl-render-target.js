@@ -302,7 +302,7 @@ class WebglRenderTarget {
 
                     // key for matching multi-sampled depth buffer - render targets rendering to
                     // different faces / layers of the depth buffer need their own
-                    key = `${depthBuffer.id}:${target.layer}:${target.width}:${target.height}:${target._samples}:${internalFormat}:${attachmentPoint}`;
+                    key = `${depthBuffer.id}:${target.getLayer(depthBuffer)}:${target.width}:${target.height}:${target._samples}:${internalFormat}:${attachmentPoint}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     this._glMsaaDepthBuffer = getMultisampledTextureCache(device).get(key); // this incRefs it if found

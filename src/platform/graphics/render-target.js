@@ -298,10 +298,11 @@ class RenderTarget {
      * @param {number} [options.layer] - If the colorBuffer or depthBuffer parameter is a 2D array
      * texture (a texture created with `arrayLength`), use this option to specify the layer of the
      * array to render to. To render to multiple layers, create a render target for each layer,
-     * sharing the same texture. Note that the texture cannot be sampled in the same render pass
-     * that renders to one of its layers. On WebGPU, a different layer can be sampled using a
-     * {@link TextureView} which excludes the rendered layer, see {@link Texture#getView}. Defaults
-     * to 0.
+     * sharing the same texture. The depth buffer can be a texture array as well, or a 2D texture
+     * shared by the render targets of all layers. Note that the texture cannot be sampled in the
+     * same render pass that renders to one of its layers. On WebGPU, a different layer can be
+     * sampled using a {@link TextureView} which excludes the rendered layer, see
+     * {@link Texture#getView}. Defaults to 0.
      *
      * When the color buffer has mipmaps, they are regenerated after rendering to a layer (or a
      * cubemap face). On WebGPU, this only regenerates the mipmaps of the rendered layer. On WebGL2,
@@ -742,19 +743,37 @@ class RenderTarget {
     validateLayer() {
         Debug.call(() => {
             const layer = this._layer;
+
+            // the face / layer applies to the cubemap and array buffers, a 2D buffer (for example a
+            // depth buffer shared by render targets rendering to different layers) ignores it
+            let layered = false;
             const buffers = [...(this._colorBuffers ?? []), this._depthBuffer];
             for (const buffer of buffers) {
                 if (!buffer) continue;
                 Debug.assert(!buffer.volume, `RenderTarget '${this.name}': rendering to a volume texture is not supported.`, this);
                 if (buffer.cubemap) {
+                    layered = true;
                     Debug.assert(layer >= 0 && layer < 6, `RenderTarget '${this.name}': face ${layer} is out of range for a cubemap.`, this);
                 } else if (buffer.array) {
+                    layered = true;
                     Debug.assert(layer >= 0 && layer < buffer.arrayLength, `RenderTarget '${this.name}': layer ${layer} is out of range for a texture array with ${buffer.arrayLength} layers.`, this);
-                } else {
-                    Debug.assert(layer === 0, `RenderTarget '${this.name}': face / layer ${layer} requires a cubemap or a 2D array texture, but '${buffer.name}' is neither.`, this);
                 }
             }
+            Debug.assert(layer === 0 || layered, `RenderTarget '${this.name}': face / layer ${layer} requires a cubemap or a 2D array texture color or depth buffer.`, this);
         });
+    }
+
+    /**
+     * Returns the cubemap face or the array layer of a texture this render target renders to. That
+     * is the {@link RenderTarget#layer} for a cubemap or a 2D array texture, and 0 for any other
+     * texture, such as a 2D depth buffer or the internally allocated depth buffer.
+     *
+     * @param {Texture|null|undefined} texture - The color or depth buffer of this render target.
+     * @returns {number} The face / layer of the texture.
+     * @ignore
+     */
+    getLayer(texture) {
+        return (texture?.cubemap || texture?.array) ? this._layer : 0;
     }
 
     /**

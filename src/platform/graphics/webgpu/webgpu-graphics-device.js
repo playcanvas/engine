@@ -1708,7 +1708,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                     // the face / layer of the depth buffer the render target renders to (a
                     // multisampled depth buffer has a single layer)
-                    const destLayer = explicitMsaa ? 0 : target.layer;
+                    const destLayer = explicitMsaa ? 0 : target.getLayer(target.depthBuffer);
 
                     // a transient (memoryless) depth buffer cannot be sampled, so it cannot be the
                     // source of a shader-based depth resolve (it has no TEXTURE_BINDING usage)
@@ -1727,7 +1727,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const colorOps = renderPass.colorArrayOps[i];
             if (colorOps.genMipmaps) {
                 const renderTarget = renderPass.renderTarget;
-                this.mipmapRenderer.generate(renderTarget._colorBuffers[i].impl, renderTarget.layer);
+                const colorBuffer = renderTarget._colorBuffers[i];
+                this.mipmapRenderer.generate(colorBuffer.impl, renderTarget.getLayer(colorBuffer));
             }
         }
 
@@ -2129,7 +2130,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: source ? source.mipLevel : 0,
-                origin: [0, 0, source ? source.layer : 0]
+                origin: [0, 0, source ? source.getLayer(source.colorBuffer) : 0]
             };
 
             // write to supplied render target, or to the framebuffer
@@ -2137,7 +2138,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
                 mipLevel: dest ? dest.mipLevel : 0,
-                origin: [0, 0, dest ? dest.layer : 0]
+                origin: [0, 0, dest ? dest.getLayer(dest.colorBuffer) : 0]
             };
 
             Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
@@ -2188,7 +2189,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     // resolve the depth to a color buffer of destination render target, using the
                     // resolve mode of the source render target
                     const destTexture = dest.colorBuffer.impl.gpuTexture;
-                    this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture, sourceRT.depthResolveMode, dest.layer);
+                    this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture, sourceRT.depthResolveMode, dest.getLayer(dest.colorBuffer));
                 }
 
             } else {
@@ -2196,13 +2197,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // write to supplied render target, or to the framebuffer
                 const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
                 const destMipLevel = dest ? dest.mipLevel : this.renderTarget.mipLevel;
-                const destLayer = dest ? dest.layer : this.renderTarget.layer;
+                // the face / layer of a supplied depth buffer - the internally allocated depth
+                // buffer has a single layer
+                const destLayer = dest ? dest.getLayer(dest.depthBuffer) : this.renderTarget.getLayer(this.renderTarget.depthBuffer);
 
                 /** @type {GPUTexelCopyTextureInfo} */
                 const copySrc = {
                     texture: sourceTexture,
                     mipLevel: sourceMipLevel,
-                    origin: [0, 0, sourceRT.layer]
+                    origin: [0, 0, sourceRT.getLayer(sourceRT.depthBuffer)]
                 };
 
                 /** @type {GPUTexelCopyTextureInfo} */

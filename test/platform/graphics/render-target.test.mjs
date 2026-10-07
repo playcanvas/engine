@@ -55,6 +55,30 @@ describe('RenderTarget', function () {
             colorBuffer.destroy();
         });
 
+        it('allows a 2D depth buffer shared by render targets rendering to different layers', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, arrayLength: 4, format: PIXELFORMAT_RGBA8 });
+            const depthBuffer = new Texture(device, { width: 4, height: 4, format: PIXELFORMAT_DEPTH });
+            const error = console.error;
+            const errors = [];
+            console.error = (...args) => {
+                errors.push(args.join(' '));
+            };
+            try {
+                const rt = new RenderTarget({ colorBuffer, depthBuffer, layer: 2 });
+                expect(errors).to.have.lengthOf(0);
+
+                // the layer applies to the color array, but not to the 2D depth buffer
+                expect(rt.getLayer(colorBuffer)).to.equal(2);
+                expect(rt.getLayer(depthBuffer)).to.equal(0);
+                expect(rt.getLayer(undefined)).to.equal(0);
+                rt.destroy();
+            } finally {
+                console.error = error;
+            }
+            colorBuffer.destroy();
+            depthBuffer.destroy();
+        });
+
         it('defaults to layer 0', function () {
             const rt = createRenderTarget();
             expect(rt.layer).to.equal(0);

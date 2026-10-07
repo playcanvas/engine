@@ -174,26 +174,41 @@ describe('WebgpuRenderTarget#initDepthStencil', function () {
                 };
             }
         };
-        const depthBuffer = {
-            id: 123456,
+        const createDepthBuffer = (id, array) => ({
+            id,
             cubemap: false,
-            array: true,
+            array,
             samples: 1,
             impl: { format: 'depth32float', gpuTexture: {} }
-        };
-        const init = (layer) => {
-            const renderTarget = { samples: 4, width: 4, height: 4, depth: true, depthBuffer, layer, name: `msaa-depth-${layer}` };
+        });
+        const init = (depthBuffer, layer) => {
+            const renderTarget = {
+                samples: 4,
+                width: 4,
+                height: 4,
+                depth: true,
+                depthBuffer,
+                layer,
+                name: `msaa-depth-${layer}`,
+                getLayer: texture => ((texture?.cubemap || texture?.array) ? layer : 0)
+            };
             const impl = new WebgpuRenderTarget(renderTarget);
             impl.initDepthStencil(device, wgpu, renderTarget);
             return impl.depthAttachment.multisampledDepthBuffer;
         };
 
-        const layer0 = init(0);
-        const layer1 = init(1);
-        const layer0Again = init(0);
-
+        // a depth array - each layer has its own multisampled depth buffer
+        const depthArray = createDepthBuffer(123456, true);
+        const layer0 = init(depthArray, 0);
+        const layer1 = init(depthArray, 1);
+        const layer0Again = init(depthArray, 0);
         expect(layer0).to.not.equal(layer1);
         expect(layer0Again).to.equal(layer0);
+
+        // a 2D depth buffer shared by render targets rendering to different color layers - the
+        // layer does not apply to it, and so the multisampled depth buffer is shared
+        const depth2d = createDepthBuffer(123457, false);
+        expect(init(depth2d, 0)).to.equal(init(depth2d, 1));
     });
 
     it('attaches mip level 0 of a 2d depth buffer', function () {

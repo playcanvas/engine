@@ -400,7 +400,7 @@ class WebgpuRenderTarget {
 
                     // key for matching multi-sampled depth buffer - render targets rendering to
                     // different faces / layers of the depth buffer need their own
-                    const key = `${depthBuffer.id}:${renderTarget.layer}:${width}:${height}:${samples}:${depthFormat}`;
+                    const key = `${depthBuffer.id}:${renderTarget.getLayer(depthBuffer)}:${width}:${height}:${samples}:${depthFormat}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     const msTextures = getMultisampledTextureCache(device);
