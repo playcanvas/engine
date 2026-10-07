@@ -3,7 +3,8 @@
 // This example shows how to add a custom post-effect to a CameraFrame with CameraFrameEffect. A
 // pixelation effect is written as a shader chunk whose entry function the single compose pass calls,
 // so no additional full-screen pass is needed. The effect is an instance registered with one
-// CameraFrame, and its parameters are updated per frame like those of the built-in effects.
+// CameraFrame, and its parameters are applied by cameraFrame.update(), like those of the built-in
+// effects.
 //
 // @credit
 // title: Mirror's Edge Apartment - Interior Scene
@@ -170,7 +171,7 @@ app.root.addChild(cameraEntity);
 // A CameraFrameEffect contributes a shader chunk to the compose pass. The chunk declares its uniforms
 // and an entry function named apply<Id>, which the compose shader calls for the effect's slot as
 // `result = applyPixelation(result, uv)`. COMPOSESLOT_LDR runs after tone mapping, so the dots are
-// drawn in display space. The uniforms are set once per frame from the effect's fields in update().
+// drawn in display space. update() hands the uniform values to the effect when cameraFrame.update() is called.
 class PixelationEffect extends CameraFrameEffect {
     // Size of one pixelation tile in screen pixels
     tilePixels = 8;
@@ -186,7 +187,7 @@ class PixelationEffect extends CameraFrameEffect {
                 uniform float pixelationIntensity;
 
                 vec3 applyPixelation(vec3 color, vec2 uv) {
-                    vec2 tileUV = vec2(pixelationTilePixels) * sceneTextureInvRes;
+                    vec2 tileUV = vec2(pixelationTilePixels) * sceneTextureSize.zw;
                     vec2 centerUv = (floor(uv / tileUV) + 0.5) * tileUV;
 
                     vec2 local = (uv - centerUv) / tileUV;
@@ -203,7 +204,7 @@ class PixelationEffect extends CameraFrameEffect {
                 uniform pixelationIntensity: f32;
 
                 fn applyPixelation(color: vec3f, uv: vec2f) -> vec3f {
-                    let tileUV = vec2f(uniform.pixelationTilePixels) * uniform.sceneTextureInvRes;
+                    let tileUV = vec2f(uniform.pixelationTilePixels) * uniform.sceneTextureSize.zw;
                     let centerUv = (floor(uv / tileUV) + vec2f(0.5, 0.5)) * tileUV;
 
                     let local = (uv - centerUv) / tileUV;
@@ -216,10 +217,6 @@ class PixelationEffect extends CameraFrameEffect {
                 }
             `
         });
-
-        // uniforms are resolved once, and written every frame in update()
-        this.tilePixelsId = device.scope.resolve('pixelationTilePixels');
-        this.intensityId = device.scope.resolve('pixelationIntensity');
     }
 
     // At zero intensity the effect would leave the image untouched, so it is left out of the shader
@@ -227,9 +224,10 @@ class PixelationEffect extends CameraFrameEffect {
         return this.enabled && this.intensity > 0;
     }
 
+    // called by cameraFrame.update(), the values apply to the frames rendered after it
     update() {
-        this.tilePixelsId.setValue(this.tilePixels);
-        this.intensityId.setValue(this.intensity);
+        this.setUniform('pixelationTilePixels', this.tilePixels);
+        this.setUniform('pixelationIntensity', this.intensity);
     }
 }
 
@@ -251,7 +249,7 @@ cameraFrame.addEffect(pixelation);
 
 cameraFrame.update();
 
-// Apply UI changes (tone mapping only)
+// Apply UI changes, applied by cameraFrame.update()
 data.on('*:set', (/** @type {string} */ path, value) => {
     if (path === 'data.sceneTonemapping') {
         // postprocessing tone mapping
@@ -261,10 +259,12 @@ data.on('*:set', (/** @type {string} */ path, value) => {
 
     if (path === 'data.pixelSize') {
         pixelation.tilePixels = value;
+        cameraFrame.update();
     }
 
     if (path === 'data.pixelationIntensity') {
         pixelation.intensity = value;
+        cameraFrame.update();
     }
 });
 

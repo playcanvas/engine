@@ -115,7 +115,7 @@ describe('RenderPassCompose shader snapshot', function () {
         effects.forEach((effect) => {
             effect.cameraFrame = cameraFrame;
         });
-        pass.effects = effects;
+        pass.builtInEffects = effects;
         return pass;
     };
 
@@ -202,10 +202,11 @@ describe('RenderPassCompose shader snapshot', function () {
             const properties = combination.set(pass, textures);
             if (properties && typeof properties === 'object') Object.assign(pass, properties);
         }
-        // the frame preparation FramePassCameraFrame runs, through which effects set their defines
-        pass.effects.forEach((effect) => {
-            if (effect.active) effect.frameUpdate();
-        });
+        // the effects applied the way CameraFrame#update applies them: the active ones take part,
+        // each applying its parameters, the defines among them
+        const active = pass.builtInEffects.filter(effect => effect.active);
+        active.forEach(effect => effect.update());
+        pass.effects = active;
         if (combination.customChunks) {
             // the documented customisation path: user chunks at the three legacy injection points
             pass._customComposeChunks.set('composeDeclarationsPS', 'uniform float custom;');

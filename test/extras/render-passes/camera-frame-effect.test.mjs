@@ -33,6 +33,7 @@ describe('CameraFrameEffect', function () {
         const cameraFrame = Object.create(CameraFrame.prototype);
         cameraFrame.app = { graphicsDevice: device };
         cameraFrame.effects = [];
+        cameraFrame._activeEffects = [];
         cameraFrame.renderPassCamera = null;
         return cameraFrame;
     };
@@ -237,41 +238,41 @@ describe('CameraFrameEffect', function () {
         });
     });
 
-    describe('frameUpdate of the built-in effects', function () {
+    describe('update of the built-in effects', function () {
 
         it('maps an HDR scene to LDR around the sharpening, from the scene format of the camera frame', function () {
             const cas = new CasEffect(device);
             expect(cas._defines.get('CAS_HDR')).to.equal(true);
 
             cas.cameraFrame = /** @type {any} */ ({ hdrFormat: PIXELFORMAT_RGBA8 });
-            cas.frameUpdate();
+            cas.update();
             expect(cas._defines.has('CAS_HDR')).to.equal(false);
 
             cas.cameraFrame = /** @type {any} */ ({ hdrFormat: PIXELFORMAT_RGBA16F });
-            cas.frameUpdate();
+            cas.update();
             expect(cas._defines.get('CAS_HDR')).to.equal(true);
         });
 
         it('samples the secondary LUT only while one is assigned', function () {
             const lut = new ColorLutEffect(device);
             lut.texture = /** @type {any} */ ({ width: 256, height: 16, srgb: true });
-            lut.frameUpdate();
+            lut.update();
             expect(lut._defines.has('COLOR_LUT2')).to.equal(false);
 
             lut.texture2 = lut.texture;
-            lut.frameUpdate();
+            lut.update();
             expect(lut._defines.get('COLOR_LUT2')).to.equal(true);
 
             lut.texture2 = null;
-            lut.frameUpdate();
+            lut.update();
             expect(lut._defines.has('COLOR_LUT2')).to.equal(false);
         });
 
         it('warns once about a LUT texture configured differently from how it is sampled', function () {
             const lut = new ColorLutEffect(device);
             lut.texture = /** @type {any} */ ({ name: 'badLut', width: 64, height: 64, srgb: false, mipmaps: true });
-            lut.frameUpdate();
-            lut.frameUpdate();
+            lut.update();
+            lut.update();
 
             expect(Debug.warnOnce.callCount).to.equal(1);
             expect(Debug.warnOnce.firstCall.args[0]).to.include('CameraFrame.colorLUT.texture: texture \'badLut\'');
@@ -305,6 +306,30 @@ describe('CameraFrameEffect', function () {
 
             effect.setDefine('B', false);
             expect(effect._definesVersion).to.equal(2);
+        });
+    });
+
+    describe('setUniform', function () {
+
+        it('stores a value by reference, bound when the composition draws', function () {
+            const effect = createEffect('tint', COMPOSESLOT_LDR);
+            const values = new Float32Array([1, 2, 3]);
+            effect.setUniform('tintColor', values);
+
+            // updated in place after it was set, as a material parameter can be
+            values[0] = 5;
+            effect._bindUniforms();
+            const bound = device.scope.resolve('tintColor').value;
+            expect(bound).to.equal(values);
+            expect(bound[0]).to.equal(5);
+        });
+
+        it('replaces the value set before under the same name', function () {
+            const effect = createEffect('tint', COMPOSESLOT_LDR);
+            effect.setUniform('tintAmount', 0.25);
+            effect.setUniform('tintAmount', 0.75);
+            effect._bindUniforms();
+            expect(device.scope.resolve('tintAmount').value).to.equal(0.75);
         });
     });
 
@@ -414,6 +439,14 @@ describe('CameraFrameEffect', function () {
             return pass._buildEffectChunks(SHADERLANGUAGE_GLSL, new Map()).get('composeEffectDeclarationsPS');
         };
 
+        // applies the effects to the composition the way CameraFrame#update does: the active ones
+        // take part, each applying its parameters first
+        const applyEffects = (pass, effects) => {
+            const active = effects.filter(effect => effect.active);
+            active.forEach(effect => effect.update());
+            pass.effects = active;
+        };
+
         it('uses a user override of an effect chunk, and the effect source otherwise', function () {
             const chunks = ShaderChunks.get(device, SHADERLANGUAGE_GLSL);
             chunks.set('composeVignettePS', 'vec3 applyVignette(vec3 c, vec2 uv) { return c * 0.5; }');
@@ -423,7 +456,7 @@ describe('CameraFrameEffect', function () {
             const grading = new GradingEffect(device);
             vignette.intensity = 0.5;
             grading.enabled = true;
-            pass.effects = [vignette, grading];
+            applyEffects(pass, [vignette, grading]);
 
             const declarations = declarationsOf(pass);
             expect(declarations).to.include('return c * 0.5');
@@ -438,11 +471,11 @@ describe('CameraFrameEffect', function () {
             const blue = createEffect('swap', COMPOSESLOT_LDR, { glsl: 'vec3 applySwap(vec3 c, vec2 uv) { return vec3(0, 0, 1); }' });
 
             const pass = createPass();
-            pass.effects = [red];
+            applyEffects(pass, [red]);
             const redKey = pass.getShaderVariant(SHADERLANGUAGE_GLSL).key;
 
             red.destroy();
-            pass.effects = [blue];
+            applyEffects(pass, [blue]);
 
             expect(declarationsOf(pass)).to.include('vec3(0, 0, 1)');
             expect(declarationsOf(pass)).to.not.include('vec3(1, 0, 0)');
@@ -452,7 +485,7 @@ describe('CameraFrameEffect', function () {
         it('uses the own source of each camera\'s effect when their ids match', function () {
             const passes = ['vec3(1, 0, 0)', 'vec3(0, 0, 1)'].map((color) => {
                 const pass = createPass();
-                pass.effects = [createEffect('tint', COMPOSESLOT_LDR, { glsl: `vec3 applyTint(vec3 c, vec2 uv) { return ${color}; }` })];
+                applyEffects(pass, [createEffect('tint', COMPOSESLOT_LDR, { glsl: `vec3 applyTint(vec3 c, vec2 uv) { return ${color}; }` })]);
                 return pass;
             });
 
@@ -465,7 +498,7 @@ describe('CameraFrameEffect', function () {
             const pass = createPass();
             const vignette = new VignetteEffect(device);
             vignette.intensity = 0.5;
-            pass.effects = [vignette];
+            applyEffects(pass, [vignette]);
 
             pass.frameUpdate();
             const ownKey = pass._key;
@@ -483,16 +516,18 @@ describe('CameraFrameEffect', function () {
 
         it('stops tracking the chunks of effects no longer registered', function () {
             const pass = createPass();
-            pass.effects = [new VignetteEffect(device)];
+            const vignette = new VignetteEffect(device);
+            vignette.intensity = 0.5;
+            applyEffects(pass, [vignette]);
             expect([...pass._customComposeChunks.keys()]).to.include('composeVignettePS');
 
-            pass.effects = [];
+            applyEffects(pass, []);
             expect([...pass._customComposeChunks.keys()]).to.deep.equal(['composeDeclarationsPS', 'composeMainStartPS', 'composeMainEndPS']);
         });
 
         it('contributes nothing but zero counts for inactive effects', function () {
             const pass = createPass();
-            pass.effects = [new VignetteEffect(device), new GradingEffect(device)];
+            applyEffects(pass, [new VignetteEffect(device), new GradingEffect(device)]);
 
             const defines = new Map();
             const includes = pass._buildEffectChunks(SHADERLANGUAGE_GLSL, defines);
@@ -511,7 +546,7 @@ describe('CameraFrameEffect', function () {
             vignette.intensity = 0.3;
             grading.enabled = true;
             grading.setDefine('GRADING_CUSTOM', 3);
-            pass.effects = [grading, vignette];
+            applyEffects(pass, [grading, vignette]);
             pass.debug = 'vignette';
 
             const defines = new Map();
@@ -539,7 +574,7 @@ describe('CameraFrameEffect', function () {
             const pass = createPass();
             const vignette = new VignetteEffect(device);
             vignette.intensity = 0.3;
-            pass.effects = [vignette];
+            applyEffects(pass, [vignette]);
             pass.debug = 'bloom';
 
             const defines = new Map();
@@ -551,9 +586,9 @@ describe('CameraFrameEffect', function () {
 
         it('operates on the scene sample for the scene slot', function () {
             const pass = createPass();
-            pass.effects = [createEffect('alpha', COMPOSESLOT_SCENE, {
+            applyEffects(pass, [createEffect('alpha', COMPOSESLOT_SCENE, {
                 glsl: 'vec4 applyAlpha(vec4 s, vec2 uv) { return s; }'
-            })];
+            })]);
 
             const defines = new Map();
             pass._buildEffectChunks(SHADERLANGUAGE_GLSL, defines);
@@ -563,10 +598,10 @@ describe('CameraFrameEffect', function () {
 
         it('calls the effects of a slot in registration order', function () {
             const pass = createPass();
-            pass.effects = [
+            applyEffects(pass, [
                 createEffect('b', COMPOSESLOT_HDR, { glsl: 'vec3 applyB(vec3 c, vec2 uv) { return c; }' }),
                 createEffect('a', COMPOSESLOT_HDR, { glsl: 'vec3 applyA(vec3 c, vec2 uv) { return c; }' })
-            ];
+            ]);
 
             const defines = new Map();
             pass._buildEffectChunks(SHADERLANGUAGE_GLSL, defines);
@@ -575,15 +610,20 @@ describe('CameraFrameEffect', function () {
             expect(defines.get('{COMPOSE_HDR_FN1}')).to.equal('applyA');
         });
 
-        it('changes the shader key when an effect becomes active, changes a define, or its chunk is overridden', function () {
+        it('changes the shader key when an applied effect becomes active, changes a define, or its chunk is overridden', function () {
             const pass = createPass();
             const vignette = new VignetteEffect(device);
-            pass.effects = [vignette];
-
+            applyEffects(pass, [vignette]);
             const key0 = pass.getShaderVariant(SHADERLANGUAGE_GLSL).key;
+
+            // a change takes part once the effects are applied, as CameraFrame#update does
             vignette.intensity = 0.5;
+            expect(pass.getShaderVariant(SHADERLANGUAGE_GLSL).key).to.equal(key0);
+            applyEffects(pass, [vignette]);
             const key1 = pass.getShaderVariant(SHADERLANGUAGE_GLSL).key;
+
             vignette.setDefine('VIGNETTE_SQUARE', true);
+            applyEffects(pass, [vignette]);
             const key2 = pass.getShaderVariant(SHADERLANGUAGE_GLSL).key;
             ShaderChunks.get(device, SHADERLANGUAGE_GLSL).set('composeVignettePS', 'vec3 applyVignette(vec3 c, vec2 uv) { return c; }');
             const key3 = pass.getShaderVariant(SHADERLANGUAGE_GLSL).key;
@@ -601,26 +641,46 @@ describe('CameraFrameEffect', function () {
             expect(effect.update()).to.equal(undefined);
         });
 
-        it('writes the uniforms of active effects when it draws, not while the frame is prepared', function () {
-            stub(RenderPassShaderQuad.prototype, 'execute');
+        it('rebuilds its shader only when the applied effects or their defines change', function () {
+            const pass = createPass();
+            const vignette = new VignetteEffect(device);
+            vignette.intensity = 0.5;
+            applyEffects(pass, [vignette]);
+            pass.frameUpdate();
+            expect(pass._shaderDirty).to.equal(false);
+
+            // applied again unchanged, as CameraFrame#update called every frame does
+            applyEffects(pass, [vignette]);
+            expect(pass._shaderDirty).to.equal(false);
+
+            vignette.setDefine('VIGNETTE_SQUARE', true);
+            applyEffects(pass, [vignette]);
+            expect(pass._shaderDirty).to.equal(true);
+        });
+
+        it('binds the uniform values of its effects when it draws', function () {
+            let drawn = null;
+            stub(RenderPassShaderQuad.prototype, 'execute').callsFake(() => {
+                drawn = device.scope.resolve('vignetterParams').value[3];
+            });
             const pass = createPass();
             pass.sceneTexture = { width: 4, height: 4 };
             const vignette = new VignetteEffect(device);
-            const grading = new GradingEffect(device);
-            pass.effects = [vignette, grading];
             vignette.intensity = 0.5;
-            const vignetteUpdate = spy(vignette, 'update');
-            const gradingUpdate = spy(grading, 'update');
+            applyEffects(pass, [vignette]);
 
-            pass.frameUpdate();
-            expect(vignetteUpdate.callCount).to.equal(0);
-
+            // the shared uniform written in between, as the effect of another camera would
+            device.scope.resolve('vignetterParams').setValue(new Float32Array(4));
             pass.execute();
-            expect(vignetteUpdate.callCount).to.equal(1);
-            expect(vignetteUpdate.calledBefore(RenderPassShaderQuad.prototype.execute)).to.equal(true);
+            expect(drawn).to.equal(0.5);
+        });
 
-            // grading is disabled, so inactive, and leaves the uniforms alone
-            expect(gradingUpdate.callCount).to.equal(0);
+        it('provides the size of the scene texture to the chunks', function () {
+            stub(RenderPassShaderQuad.prototype, 'execute');
+            const pass = createPass();
+            pass.sceneTexture = { width: 64, height: 32 };
+            pass.execute();
+            expect([...device.scope.resolve('sceneTextureSize').value]).to.deep.equal([64, 32, 1 / 64, 1 / 32]);
         });
 
         it('renders each camera with its own effect values', function () {
@@ -636,7 +696,7 @@ describe('CameraFrameEffect', function () {
                 pass.sceneTexture = { width: 4, height: 4 };
                 const vignette = new VignetteEffect(device);
                 vignette.intensity = intensity;
-                pass.effects = [vignette];
+                applyEffects(pass, [vignette]);
                 return pass;
             });
 
@@ -648,10 +708,12 @@ describe('CameraFrameEffect', function () {
 
         it('warns when two effects supply the same chunk name', function () {
             const pass = createPass();
-            pass.effects = [new VignetteEffect(device), createEffect('clash', COMPOSESLOT_LDR, {
+            const vignette = new VignetteEffect(device);
+            vignette.intensity = 0.5;
+            applyEffects(pass, [vignette, createEffect('clash', COMPOSESLOT_LDR, {
                 chunkName: 'composeVignettePS',
                 glsl: 'vec3 applyClash(vec3 c, vec2 uv) { return c; }'
-            })];
+            })]);
 
             expect(Debug.warnOnce.callCount).to.equal(1);
             expect(Debug.warnOnce.firstCall.args[0]).to.include('both use the shader chunk name \'composeVignettePS\'');

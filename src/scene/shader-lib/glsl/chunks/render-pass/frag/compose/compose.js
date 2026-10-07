@@ -4,7 +4,8 @@ export default /* glsl */`
 
     varying vec2 uv0;
     uniform sampler2D sceneTexture;
-    uniform vec2 sceneTextureInvRes;
+    // the size of the scene texture: width, height, 1 / width, 1 / height
+    uniform vec4 sceneTextureSize;
     uniform float composeTargetFlipY;
 
     #include "composeBloomPS"

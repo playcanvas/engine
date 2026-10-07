@@ -20,6 +20,7 @@ import { Color } from '../../core/math/color.js';
 
 /**
  * @import { CameraFrame } from './camera-frame.js'
+ * @import { CameraFrameEffectContext } from './camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
@@ -107,6 +108,15 @@ class FramePassCameraFrame extends FramePass {
     dofPass;
 
     volumetricFogPass;
+
+    /**
+     * The values of the frame being prepared, handed to the effects - one object, refilled every
+     * frame.
+     *
+     * @type {CameraFrameEffectContext}
+     * @private
+     */
+    _effectContext = { sceneTexture: null, sceneWidth: 0, sceneHeight: 0 };
 
     _renderTargetScale = 1;
 
@@ -876,7 +886,7 @@ class FramePassCameraFrame extends FramePass {
         this.composePass = new RenderPassCompose(this.device, this.cameraComponent);
 
         // the composition assembles its shader from the effects registered with the camera frame
-        this.composePass.effects = this.cameraFrame.effects;
+        this.composePass.effects = this.cameraFrame._activeEffects;
 
         this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.taaEnabled = options.taaEnabled;
@@ -930,21 +940,23 @@ class FramePassCameraFrame extends FramePass {
             }
         });
 
+        // The size the scene render target has this frame. The frame graph updates the passes this
+        // frame pass owns after it, so on the frame the canvas or the render target scale changes
+        // the render target still has the previous size - this evaluates the size the same way the
+        // scene pass does when it resizes it, for what needs it before that pass has updated.
+        const { scenePass } = this;
+        const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
+        const sceneWidth = Math.floor(resizeSource.width * scenePass.scaleX);
+        const sceneHeight = Math.floor(resizeSource.height * scenePass.scaleY);
+
         if (this.sceneDepthTexture) {
 
             // The alias of the scene color is not resized by a pass of its own, as it shares its
-            // texture with the scene render target, which the scene pass resizes. Its size is
-            // evaluated the same way that pass evaluates it, instead of read back from the render
-            // target - the frame graph updates the passes this frame pass owns after it, so on the
-            // frame the canvas resizes the render target is still the previous size. Reading it back
-            // would leave this alias attached to the texture the shared one has replaced, and the
-            // passes rendering into it writing to nothing for that frame.
-            const { scenePass } = this;
-            const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
-            this.rtSceneColor.resize(
-                Math.floor(resizeSource.width * scenePass.scaleX),
-                Math.floor(resizeSource.height * scenePass.scaleY)
-            );
+            // texture with the scene render target, which the scene pass resizes. It is resized to
+            // this frame's size rather than to the render target's - reading that back would leave
+            // this alias attached to the texture the shared one has replaced, and the passes
+            // rendering into it writing to nothing for that frame.
+            this.rtSceneColor.resize(sceneWidth, sceneHeight);
 
             // cleared to the reciprocal of the far clip, which makes the background a surface at
             // that distance taking part in the average the blended geometry accumulates - whatever
@@ -965,18 +977,19 @@ class FramePassCameraFrame extends FramePass {
         this.scenePassHalf?.setSourceTexture(sceneTexture);
         this.dofPass?.setSceneTexture(sceneTexture);
 
-        // The active effects prepare the frame - defines, and anything else deciding what renders.
-        // This runs before any pass they contribute to updates itself, as the frame graph updates a
-        // parent before its children, so the compose shader picks up a define changed here this
-        // frame; and after the TAA history was assigned above, so an effect reading the resolved
-        // scene colour sees this frame's. Their uniforms are written later, by the compose pass
-        // right before it draws.
-        const { effects } = this.cameraFrame;
+        // The effects taking part get the values of this frame. This runs before any pass they
+        // contribute to updates itself, as the frame graph updates a parent before its children,
+        // and after the TAA history was assigned above, so the scene texture handed to them is this
+        // frame's. Their configuration was applied by CameraFrame#update, and the compose pass binds
+        // their uniform values right before it draws.
+        const context = this._effectContext;
+        context.sceneTexture = sceneTexture;
+        context.sceneWidth = sceneWidth;
+        context.sceneHeight = sceneHeight;
+
+        const effects = this.cameraFrame._activeEffects;
         for (let i = 0; i < effects.length; i++) {
-            const effect = effects[i];
-            if (effect.active) {
-                effect.frameUpdate();
-            }
+            effects[i].frameUpdate(context);
         }
     }
 }

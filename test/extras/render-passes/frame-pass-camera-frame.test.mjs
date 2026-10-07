@@ -1,5 +1,7 @@
 import { expect } from 'chai';
+import { spy } from 'sinon';
 
+import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import { CameraFrame } from '../../../src/extras/render-passes/camera-frame.js';
 import { Entity } from '../../../src/framework/entity.js';
 import { createApp } from '../../app.mjs';
@@ -64,5 +66,76 @@ describe('FramePassCameraFrame', function () {
             expect(scenePassHalf.sourceTexture).to.equal(taaPass.historyTexture);
             expect(dofPass.farPass.sourceTexture).to.equal(framePass.sceneTextureHalf);
         }
+    });
+
+    describe('effects', function () {
+
+        it('applies a change to an effect when updated, rendering until then what the last update applied', function () {
+            cameraFrame.update();
+            const { vignette } = cameraFrame;
+            const composePass = () => cameraFrame.renderPassCamera.composePass;
+
+            vignette.intensity = 0.5;
+            cameraFrame.renderPassCamera.frameUpdate();
+            expect(cameraFrame._activeEffects).to.not.include(vignette);
+            expect(composePass()._effects).to.not.include(vignette);
+
+            cameraFrame.update();
+            expect(cameraFrame._activeEffects).to.include(vignette);
+            expect(composePass()._effects).to.include(vignette);
+        });
+
+        it('has the effects apply their parameters on an update, not every frame', function () {
+            cameraFrame.vignette.intensity = 0.5;
+            cameraFrame.update();
+            const update = spy(cameraFrame.vignette, 'update');
+            const framePass = cameraFrame.renderPassCamera;
+
+            framePass.frameUpdate();
+            framePass.frameUpdate();
+            expect(update.callCount).to.equal(0);
+
+            cameraFrame.update();
+            expect(update.callCount).to.equal(1);
+        });
+
+        it('hands the effects the scene texture of each frame, the TAA output alternating between frames', function () {
+            const effect = new CameraFrameEffect(app.graphicsDevice, 'probe');
+            const frameUpdate = spy(effect, 'frameUpdate');
+            cameraFrame.addEffect(effect);
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+
+            const seen = [];
+            for (let i = 0; i < 2; i++) {
+                framePass.frameUpdate();
+                const [frame] = frameUpdate.lastCall.args;
+                expect(frame.sceneTexture).to.equal(framePass.taaPass.historyTexture);
+                seen.push(frame.sceneTexture);
+            }
+            expect(seen[0]).to.not.equal(seen[1]);
+
+            // one object, refilled every frame
+            expect(frameUpdate.firstCall.args[0]).to.equal(frameUpdate.lastCall.args[0]);
+            cameraFrame.removeEffect(effect);
+        });
+
+        it('hands the effects the size of this frame\'s scene texture, before the texture is resized', function () {
+            const effect = new CameraFrameEffect(app.graphicsDevice, 'probe');
+            const frameUpdate = spy(effect, 'frameUpdate');
+            cameraFrame.addEffect(effect);
+            cameraFrame.rendering.renderTargetScale = 0.5;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+
+            // the scene pass resizes its render target when it updates, after the effects
+            framePass.frameUpdate();
+            const [frame] = frameUpdate.lastCall.args;
+            const { backBuffer } = app.graphicsDevice;
+            expect(frame.sceneWidth).to.equal(Math.floor(backBuffer.width * 0.5));
+            expect(frame.sceneHeight).to.equal(Math.floor(backBuffer.height * 0.5));
+            expect(frame.sceneWidth).to.not.equal(frame.sceneTexture.width);
+            cameraFrame.removeEffect(effect);
+        });
     });
 });

@@ -17,8 +17,8 @@ export default /* wgsl */`
     #endif
 
     fn applyCas(scene: vec4f, uv: vec2f) -> vec4f {
-        let x = uniform.sceneTextureInvRes.x;
-        let y = uniform.sceneTextureInvRes.y;
+        let x = uniform.sceneTextureSize.z;
+        let y = uniform.sceneTextureSize.w;
 
         // sample 4 neighbors around the already sampled pixel, and convert it to SDR
         let a: half3 = half3(toSDR(textureSampleLevel(sceneTexture, sceneTextureSampler, uv + vec2f(0.0, -y), 0.0).rgb));

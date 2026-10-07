@@ -5,7 +5,8 @@ export default /* wgsl */`
     varying uv0: vec2f;
     var sceneTexture: texture_2d<f32>;
     var sceneTextureSampler: sampler;
-    uniform sceneTextureInvRes: vec2f;
+    // the size of the scene texture: width, height, 1 / width, 1 / height
+    uniform sceneTextureSize: vec4f;
     uniform composeTargetFlipY: f32;
 
     #include "composeBloomPS"

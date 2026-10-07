@@ -61,12 +61,6 @@ class GradingEffect extends CameraFrameEffect {
     /** @private */
     _tint = new Float32Array(3);
 
-    /** @private */
-    _bcsId;
-
-    /** @private */
-    _tintId;
-
     /**
      * @param {GraphicsDevice} device - The graphics device.
      */
@@ -77,9 +71,6 @@ class GradingEffect extends CameraFrameEffect {
             wgsl: wgslComposeGradingPS
         });
 
-        const { scope } = device;
-        this._bcsId = scope.resolve('brightnessContrastSaturation');
-        this._tintId = scope.resolve('tint');
     }
 
     update() {
@@ -87,13 +78,13 @@ class GradingEffect extends CameraFrameEffect {
         bcs[0] = this.brightness;
         bcs[1] = this.contrast;
         bcs[2] = this.saturation;
-        this._bcsId.setValue(bcs);
+        this.setUniform('brightnessContrastSaturation', bcs);
 
         const { tint, _tint } = this;
         _tint[0] = tint.r;
         _tint[1] = tint.g;
         _tint[2] = tint.b;
-        this._tintId.setValue(_tint);
+        this.setUniform('tint', _tint);
     }
 }
 

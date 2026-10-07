@@ -308,6 +308,16 @@ class CameraFrame {
     _builtInEffects = [];
 
     /**
+     * The effects taking part in the frames, in registration order: the active ones, as of the
+     * last time the effects were applied - by {@link CameraFrame#update}, or by a change to the
+     * registered effects.
+     *
+     * @type {CameraFrameEffect[]}
+     * @ignore
+     */
+    _activeEffects = [];
+
+    /**
      * The sharpening effect, whose sharpness is exposed as `rendering.sharpness`.
      *
      * @type {CasEffect}
@@ -427,8 +437,8 @@ class CameraFrame {
         this._builtInEffects = [this._cas, this.fringing, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
 
-        // rendering.sharpness is the sharpening effect's parameter, forwarded so that it applies
-        // without CameraFrame#update, like the parameters of the other effects
+        // rendering.sharpness is the sharpening effect's parameter, forwarded to it so that the
+        // effect is its single home
         const cas = this._cas;
         Object.defineProperty(this.rendering, 'sharpness', {
             get: () => cas.sharpness,
@@ -546,7 +556,7 @@ class CameraFrame {
 
         this.effects.splice(index, 0, effect);
         effect._attach(this);
-        this._syncEffects();
+        this._applyEffects();
     }
 
     /**
@@ -559,7 +569,7 @@ class CameraFrame {
         if (index >= 0) {
             this.effects.splice(index, 1);
             effect._detach();
-            this._syncEffects();
+            this._applyEffects();
         }
     }
 
@@ -575,20 +585,38 @@ class CameraFrame {
     }
 
     /**
-     * Republishes the effects to the composition, which assembles its shader from them.
+     * Applies the effects: decides which take part in the frames rendered until they are next
+     * applied, has each of them apply its parameters, and hands them to the composition, which
+     * rebuilds its shader only when they or their defines changed. Called by
+     * {@link CameraFrame#update}, when the camera frame is enabled, and when an effect is added or
+     * removed.
      *
      * @private
      */
-    _syncEffects() {
+    _applyEffects() {
+
+        // the effects taking part until the effects are next applied, each applying its parameters
+        const active = this._activeEffects;
+        active.length = 0;
+        const { effects } = this;
+        for (let i = 0; i < effects.length; i++) {
+            const effect = effects[i];
+            if (effect.active) {
+                active.push(effect);
+                effect.update();
+            }
+        }
+
         const composePass = this.renderPassCamera?.composePass;
         if (composePass) {
-            composePass.effects = this.effects;
+            composePass.effects = active;
         }
     }
 
     enable() {
         this.renderPassCamera = this.createRenderPass();
         this.cameraComponent.framePasses = [this.renderPassCamera];
+        this._applyEffects();
     }
 
     disable() {
@@ -778,6 +806,9 @@ class CameraFrame {
 
         // enable camera jitter if taa is enabled
         cameraComponent.jitter = taa.enabled ? taa.jitter : 0;
+
+        // the effects apply their parameters, and the frames rendered from now use them
+        this._applyEffects();
 
         // debug rendering
         composePass.debug = this.debug;
