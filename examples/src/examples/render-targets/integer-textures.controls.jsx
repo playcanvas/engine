@@ -25,7 +25,7 @@ export function Controls({ observer }) {
                     <SelectInput
                         binding={new BindingTwoWay()}
                         link={{ observer, path: 'options.brush' }}
-                        type='string'
+                        type='number'
                         value={1}
                         options={[
                             { v: 1, t: 'Sand' },
