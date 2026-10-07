@@ -1706,12 +1706,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     const sourceTexture = explicitMsaa ? depthAttachment?.depthTexture : depthAttachment?.multisampledDepthBuffer;
                     const destTexture = explicitMsaa ? target.depthResolveBuffer?.impl.gpuTexture : target.depthBuffer.impl.gpuTexture;
 
+                    // the face / layer of the depth buffer the render target renders to (a
+                    // multisampled depth buffer has a single layer)
+                    const destLayer = explicitMsaa ? 0 : target.layer;
+
                     // a transient (memoryless) depth buffer cannot be sampled, so it cannot be the
                     // source of a shader-based depth resolve (it has no TEXTURE_BINDING usage)
                     if (depthAttachment?.transient) {
                         Debug.errorOnce(`Depth resolve is not possible on render target '${target.name}' because its depth is a transient (memoryless) attachment. Disable transientDepth to allow depth resolve.`);
                     } else if (sourceTexture && destTexture) {
-                        this.resolver.resolveDepth(this.commandEncoder, sourceTexture, destTexture, target.depthResolveMode);
+                        this.resolver.resolveDepth(this.commandEncoder, sourceTexture, destTexture, target.depthResolveMode, destLayer);
                     }
                 }
             }
@@ -2124,14 +2128,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             /** @type {GPUTexelCopyTextureInfo} */
             const copySrc = {
                 texture: source ? source.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: source ? source.mipLevel : 0
+                mipLevel: source ? source.mipLevel : 0,
+                origin: [0, 0, source ? source.layer : 0]
             };
 
             // write to supplied render target, or to the framebuffer
             /** @type {GPUTexelCopyTextureInfo} */
             const copyDst = {
                 texture: dest ? dest.colorBuffer.impl.gpuTexture : this.backBuffer.impl.assignedColorTexture,
-                mipLevel: dest ? dest.mipLevel : 0
+                mipLevel: dest ? dest.mipLevel : 0,
+                origin: [0, 0, dest ? dest.layer : 0]
             };
 
             Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
@@ -2182,7 +2188,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                     // resolve the depth to a color buffer of destination render target, using the
                     // resolve mode of the source render target
                     const destTexture = dest.colorBuffer.impl.gpuTexture;
-                    this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture, sourceRT.depthResolveMode);
+                    this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture, sourceRT.depthResolveMode, dest.layer);
                 }
 
             } else {
@@ -2190,17 +2196,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
                 // write to supplied render target, or to the framebuffer
                 const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthAttachment.depthTexture;
                 const destMipLevel = dest ? dest.mipLevel : this.renderTarget.mipLevel;
+                const destLayer = dest ? dest.layer : this.renderTarget.layer;
 
                 /** @type {GPUTexelCopyTextureInfo} */
                 const copySrc = {
                     texture: sourceTexture,
-                    mipLevel: sourceMipLevel
+                    mipLevel: sourceMipLevel,
+                    origin: [0, 0, sourceRT.layer]
                 };
 
                 /** @type {GPUTexelCopyTextureInfo} */
                 const copyDst = {
                     texture: destTexture,
-                    mipLevel: destMipLevel
+                    mipLevel: destMipLevel,
+                    origin: [0, 0, destLayer]
                 };
 
                 Debug.assert(copySrc.texture !== null && copyDst.texture !== null);

@@ -398,8 +398,9 @@ class WebgpuRenderTarget {
                     this.depthAttachment.format = depthFormat;
                     this.depthAttachment.hasStencil = depthFormat === 'depth24plus-stencil8';
 
-                    // key for matching multi-sampled depth buffer
-                    const key = `${depthBuffer.id}:${width}:${height}:${samples}:${depthFormat}`;
+                    // key for matching multi-sampled depth buffer - render targets rendering to
+                    // different faces / layers of the depth buffer need their own
+                    const key = `${depthBuffer.id}:${renderTarget.layer}:${width}:${height}:${samples}:${depthFormat}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     const msTextures = getMultisampledTextureCache(device);

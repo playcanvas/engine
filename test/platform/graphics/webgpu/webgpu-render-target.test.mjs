@@ -162,6 +162,40 @@ describe('WebgpuRenderTarget#initDepthStencil', function () {
         }]);
     });
 
+    it('allocates a separate multisampled depth buffer for each layer of a depth buffer', function () {
+        const device = { on() {} };
+        const wgpu = {
+            createTexture(desc) {
+                return {
+                    desc,
+                    createView() {
+                        return {};
+                    }
+                };
+            }
+        };
+        const depthBuffer = {
+            id: 123456,
+            cubemap: false,
+            array: true,
+            samples: 1,
+            impl: { format: 'depth32float', gpuTexture: {} }
+        };
+        const init = (layer) => {
+            const renderTarget = { samples: 4, width: 4, height: 4, depth: true, depthBuffer, layer, name: `msaa-depth-${layer}` };
+            const impl = new WebgpuRenderTarget(renderTarget);
+            impl.initDepthStencil(device, wgpu, renderTarget);
+            return impl.depthAttachment.multisampledDepthBuffer;
+        };
+
+        const layer0 = init(0);
+        const layer1 = init(1);
+        const layer0Again = init(0);
+
+        expect(layer0).to.not.equal(layer1);
+        expect(layer0Again).to.equal(layer0);
+    });
+
     it('attaches mip level 0 of a 2d depth buffer', function () {
         const { views, renderTarget } = createDepthMocks({ cubemap: false });
         const impl = new WebgpuRenderTarget(renderTarget);
