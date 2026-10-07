@@ -450,6 +450,7 @@ class GSplatShadowRenderer {
         const totalActiveSplats = worldState.totalActiveSplats;
         const textureSize = this.world.workBuffer.textureSize;
         let prepared = false;
+        let dispatchIndex = 0;
         const camera = this.cameraNode.camera?.camera;
 
         this.entries.forEach((entry) => {
@@ -481,7 +482,7 @@ class GSplatShadowRenderer {
                 this._ensureCullShader();
             }
 
-            this._cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams);
+            this._cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams, dispatchIndex++);
         });
     }
 
@@ -543,9 +544,11 @@ class GSplatShadowRenderer {
      * @param {number} totalActiveSplats - Max output index count.
      * @param {number} textureSize - Work buffer texture size.
      * @param {GSplatParams} gsplatParams - Scene gsplat params.
+     * @param {number} dispatchIndex - The index of the entry among the entries culled this frame,
+     * which the shared interval compaction is dispatched with.
      * @private
      */
-    _cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams) {
+    _cullEntry(entry, numIntervals, totalActiveSplats, textureSize, gsplatParams, dispatchIndex) {
         const device = this.device;
 
         // resolve the light's shadow camera (fitted during cullComposition) and the shared camera-
@@ -589,13 +592,14 @@ class GSplatShadowRenderer {
         // lights — lights are culled sequentially, so this light's pass 2 consumes it before the next
         // light's pass 1 overwrites it (compute passes are ordered). bounds/transforms are the shared
         // camera-independent buffers; only the planes are per-light, passed via a lightweight culler
-        // view so the forward culler's own planes are never mutated.
+        // view so the forward culler's own planes are never mutated. Each light dispatches the
+        // compaction with its own index, as a compute instance is dispatched at most once in a frame.
         const compaction = this._compaction;
         compaction.dispatchCompact({
             boundsBuffer: frustumCuller.boundsBuffer,
             transformsBuffer: frustumCuller.transformsBuffer,
             frustumPlanes: this._frustumPlanes
-        }, numIntervals, totalActiveSplats, false);
+        }, numIntervals, totalActiveSplats, false, dispatchIndex);
 
         // PASS 2 (fine): flat one-thread-per-candidate cull over the candidate list — read + apply the
         // vertex modify + opacity/size/frustum tests — compacting survivors into this light's final

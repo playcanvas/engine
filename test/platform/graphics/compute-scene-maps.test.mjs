@@ -119,6 +119,62 @@ describe('Compute', function () {
             results.destroy();
         });
 
+        describe('dispatched more than once in a submit', function () {
+
+            const captureWarnings = () => {
+                const messages = [];
+                const stub = sinon.stub(console, 'warn').callsFake((...args) => {
+                    messages.push(args.map(String).join(' '));
+                });
+                return { messages, restore: () => stub.restore() };
+            };
+
+            const createInstance = (shader, name, results) => {
+                const compute = new Compute(device, shader, name);
+                compute.setParameter('result', results);
+                compute.setParameter('value', 1);
+                compute.setupDispatch(1, 1, 1);
+                return compute;
+            };
+
+            // dispatches twice, alternating between the instances and submitting in between when
+            // asked to, and returns the warnings about the computes of the name
+            const run = async (name, instanceCount, submitBetween) => {
+                const shader = new Shader(device, { name, shaderLanguage: SHADERLANGUAGE_WGSL, cshader: source });
+                const results = new StorageBuffer(device, 16, BUFFERUSAGE_COPY_SRC);
+                const computes = [];
+                for (let i = 0; i < instanceCount; i++) {
+                    computes.push(createInstance(shader, name, results));
+                }
+
+                const warnings = captureWarnings();
+                device.computeDispatch([computes[0]], 'Test');
+                if (submitBetween) {
+                    await results.read(0, 4, new Float32Array(1), true);
+                }
+                device.computeDispatch([computes[1 % instanceCount]], 'Test');
+                await results.read(0, 4, new Float32Array(1), true);
+                warnings.restore();
+
+                computes.forEach(compute => compute.destroy());
+                shader.destroy();
+                results.destroy();
+                return warnings.messages.filter(message => message.includes(name) && message.includes('more than once'));
+            };
+
+            it('reports a compute instance dispatched twice', async function () {
+                expect(await run('TwiceDispatched', 1, false)).to.have.lengthOf(1);
+            });
+
+            it('does not report a compute instance dispatched in separate submits', async function () {
+                expect(await run('TwiceSubmitted', 1, true)).to.have.lengthOf(0);
+            });
+
+            it('does not report compute instances sharing a shader, each dispatched once', async function () {
+                expect(await run('TwoInstances', 2, false)).to.have.lengthOf(0);
+            });
+        });
+
         it('rejects the names the scene map chunks use', function () {
             const compute = createCompute(source);
             const errors = captureErrors();

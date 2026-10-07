@@ -74,6 +74,10 @@ class ComputeParameter {
  * device are not used. The scene depth and color maps of a camera are made available to the shader
  * using {@link Compute#setSceneDepthMap} and {@link Compute#setSceneColorMap}.
  *
+ * A compute instance is dispatched at most once in a frame. To dispatch a compute shader more than
+ * once in a frame, use a separate compute instance for each dispatch. The instances can share the
+ * shader, which is compiled only once.
+ *
  * Call {@link Compute#destroy} when no longer needed. The graphics device retains compute
  * instances for device recovery until they are explicitly destroyed.
  *
