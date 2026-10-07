@@ -8,15 +8,23 @@
  * @type {Record<string, string>}
  */
 export const exampleRedirects = {
+    'graphics-advanced/custom-msaa-resolve': 'render-targets/custom-msaa-resolve',
+    'graphics-advanced/msaa-depth-fog': 'render-targets/msaa-depth-fog',
     'graphics/ambient-occlusion': 'camera-frame/ambient-occlusion',
     'graphics/custom-compose-shader': 'camera-frame/custom-compose-shader',
     'graphics/depth-of-field': 'camera-frame/depth-of-field',
     'graphics/hdr': 'camera-frame/hdr',
+    'graphics/multi-render-targets': 'render-targets/multi-render-targets',
+    'graphics/painter': 'render-targets/painter',
     'graphics/post-processing': 'camera-frame/post-processing',
+    'graphics/render-pass': 'render-targets/render-pass',
+    'graphics/render-to-texture': 'render-targets/render-to-texture',
     'graphics/taa': 'camera-frame/taa',
     'graphics/volumetric-fog': 'camera-frame/volumetric-fog',
     'graphics/volumetric-fog-local-lights': 'camera-frame/volumetric-fog-local-lights',
-    'graphics/volumetric-fog-shafts': 'camera-frame/volumetric-fog-shafts'
+    'graphics/volumetric-fog-shafts': 'camera-frame/volumetric-fog-shafts',
+    'shaders/integer-textures': 'render-targets/integer-textures',
+    'shaders/paint-mesh': 'render-targets/paint-mesh'
 };
 
 /**
