@@ -641,7 +641,6 @@ class WebgpuTexture {
     read(x, y, width, height, options) {
 
         const mipLevel = options.mipLevel ?? 0;
-        const layer = options.layer ?? options.face ?? 0;
         const data = options.data ?? null;
         const immediate = options.immediate ?? false;
 
@@ -650,11 +649,16 @@ class WebgpuTexture {
         Debug.assert(formatInfo);
         Debug.assert(formatInfo.size);
 
+        // the cubemap face or array layer, or the depth slices of a volume texture - a single
+        // slice, or all slices of the mip level
+        const layer = texture.volume ? (options.slice ?? 0) : (options.layer ?? options.face ?? 0);
+        const layerCount = texture.volume && options.slice === undefined ? TextureUtils.calcLevelDimension(texture.depth, mipLevel) : 1;
+
         const bytesPerRow = width * formatInfo.size;
 
         // bytesPerRow must be a multiple of 256
         const paddedBytesPerRow = math.roundUp(bytesPerRow, 256);
-        const size = paddedBytesPerRow * height;
+        const size = paddedBytesPerRow * height * layerCount;
 
         // create a temporary staging buffer
         /** @type {WebgpuGraphicsDevice} */
@@ -671,13 +675,14 @@ class WebgpuTexture {
         const dst = {
             buffer: stagingBuffer.buffer,
             offset: 0,
-            bytesPerRow: paddedBytesPerRow
+            bytesPerRow: paddedBytesPerRow,
+            rowsPerImage: height
         };
 
         const copySize = {
             width,
             height,
-            depthOrArrayLayers: 1   // single layer
+            depthOrArrayLayers: layerCount
         };
 
         // copy the GPU texture to the staging buffer
@@ -689,11 +694,13 @@ class WebgpuTexture {
 
             // determine target buffer - use user's data buffer or allocate new
             const ArrayType = getPixelFormatArrayType(texture.format);
-            const targetBuffer = data?.buffer ?? new ArrayBuffer(height * bytesPerRow);
-            const target = new Uint8Array(targetBuffer, data?.byteOffset ?? 0, height * bytesPerRow);
+            const rowCount = height * layerCount;
+            const targetBuffer = data?.buffer ?? new ArrayBuffer(rowCount * bytesPerRow);
+            const target = new Uint8Array(targetBuffer, data?.byteOffset ?? 0, rowCount * bytesPerRow);
 
-            // remove the 256 alignment padding from the end of each row
-            for (let i = 0; i < height; i++) {
+            // remove the 256 alignment padding from the end of each row, the rows of the slices
+            // follow each other
+            for (let i = 0; i < rowCount; i++) {
                 const srcOffset = i * paddedBytesPerRow;
                 const dstOffset = i * bytesPerRow;
                 target.set(temp.subarray(srcOffset, srcOffset + bytesPerRow), dstOffset);
@@ -718,7 +725,11 @@ class WebgpuTexture {
 
         const sourceMipLevel = options.sourceMipLevel ?? 0;
         const destMipLevel = options.destMipLevel ?? 0;
-        const layer = options.layer ?? options.face ?? 0;
+
+        // the cubemap face or array layer, or the depth slices of volume textures - a single slice,
+        // or all slices of the source mip level
+        const layer = source.volume ? (options.slice ?? 0) : (options.layer ?? options.face ?? 0);
+        const layerCount = source.volume && options.slice === undefined ? TextureUtils.calcLevelDimension(source.depth, sourceMipLevel) : 1;
 
         const sx = options.sourceX ?? 0;
         const sy = options.sourceY ?? 0;
@@ -735,7 +746,7 @@ class WebgpuTexture {
         commandEncoder.copyTextureToTexture(
             { texture: source.impl.gpuTexture, mipLevel: sourceMipLevel, origin: [sx, sy, layer] },
             { texture: this.gpuTexture, mipLevel: destMipLevel, origin: [dx, dy, layer] },
-            { width: w, height: h, depthOrArrayLayers: 1 }
+            { width: w, height: h, depthOrArrayLayers: layerCount }
         );
 
         return true;

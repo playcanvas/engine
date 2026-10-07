@@ -1408,7 +1408,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const sourceMipLevel = options.sourceMipLevel ?? 0;
         const destMipLevel = options.destMipLevel ?? 0;
-        const layer = options.layer ?? options.face ?? 0;
+
+        // the cubemap face or array layer, or the depth slices of volume textures - a single slice,
+        // or all slices of the source mip level
+        const layer = source.volume ? (options.slice ?? 0) : (options.layer ?? options.face ?? 0);
+        const layerCount = source.volume && options.slice === undefined ? TextureUtils.calcLevelDimension(source.depth, sourceMipLevel) : 1;
 
         const sx = options.sourceX ?? 0;
         const sy = options.sourceY ?? 0;
@@ -1440,8 +1444,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.setTexture(dest, 0);
 
         // copy the source framebuffer region into the bound destination texture - into a layer of
-        // a texture array, a cubemap face, or a 2D texture
-        if (dest.array) {
+        // a texture array, the depth slices of a volume texture, a cubemap face, or a 2D texture
+        if (dest.volume) {
+
+            // each depth slice of the source is attached to the framebuffer in turn, and the first
+            // one is attached back after, for a render target the caller reuses
+            for (let i = 0; i < layerCount; i++) {
+                if (i > 0) {
+                    gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, source.impl._glTexture, sourceMipLevel, layer + i);
+                }
+                gl.copyTexSubImage3D(gl.TEXTURE_3D, destMipLevel, dx, dy, layer + i, sx, sy, w, h);
+            }
+            if (layerCount > 1) {
+                gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, source.impl._glTexture, sourceMipLevel, layer);
+            }
+        } else if (dest.array) {
             gl.copyTexSubImage3D(gl.TEXTURE_2D_ARRAY, destMipLevel, dx, dy, layer, sx, sy, w, h);
         } else {
             const destTarget = dest.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + layer : gl.TEXTURE_2D;
@@ -2509,9 +2526,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {boolean} [frequent] - Set for a read issued every frame or every few frames, which
      * runs the copy out of the pixel buffer at the start of the next frame instead of as soon as
      * the data is available. Defaults to false.
+     * @param {number} [sliceCount] - The number of slices to read, one after another into the
+     * pixels. Defaults to 1.
+     * @param {Function} [selectSlice] - Called with the index of each slice after the first, before
+     * it is read, to attach it to the current framebuffer.
      * @ignore
      */
-    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false, frequent = false) {
+    async readPixelsAsync(x, y, w, h, pixels, forceRgba = false, frequent = false, sliceCount = 1, selectSlice = null) {
         const gl = this.gl;
 
         let format, pixelType;
@@ -2528,7 +2549,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const buf = gl.createBuffer();
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
         gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
-        gl.readPixels(x, y, w, h, format, pixelType, 0);
+        const sliceBytes = pixels.byteLength / sliceCount;
+        for (let i = 0; i < sliceCount; i++) {
+            if (i > 0) {
+                selectSlice(i);
+            }
+            gl.readPixels(x, y, w, h, format, pixelType, i * sliceBytes);
+        }
         gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
         // async wait for previous read to finish
@@ -2620,8 +2647,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     readTextureAsync(texture, x, y, width, height, options) {
 
-        const layer = options.layer ?? options.face ?? 0;
         const mipLevel = options.mipLevel ?? 0;
+
+        // the cubemap face or array layer, or the depth slices of a volume texture - a single
+        // slice, or all slices of the mip level
+        const layer = texture.volume ? (options.slice ?? 0) : (options.layer ?? options.face ?? 0);
+        const layerCount = texture.volume && options.slice === undefined ? TextureUtils.calcLevelDimension(texture.depth, mipLevel) : 1;
 
         // create a temporary render target if needed
         const renderTarget = options.renderTarget ?? new RenderTarget({
@@ -2639,12 +2670,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Use caller's buffer or allocate output buffer in the user's expected format
         const ArrayType = getPixelFormatArrayType(texture._format);
         const outputData = options.data ?? new ArrayType(
-            TextureUtils.calcLevelGpuSize(width, height, 1, texture._format) / ArrayType.BYTES_PER_ELEMENT
+            TextureUtils.calcLevelGpuSize(width, height, layerCount, texture._format) / ArrayType.BYTES_PER_ELEMENT
         );
 
         // For formats requiring RGBA readback, allocate a larger RGBA buffer
         const readBuffer = needsRgbaReadback ?
-            new Uint8Array(width * height * 4) :
+            new Uint8Array(width * height * layerCount * 4) :
             outputData;
 
         this.setRenderTarget(renderTarget);
@@ -2673,9 +2704,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.on('destroy', release);
         }
 
+        // the depth slices after the first are read by attaching each to the framebuffer in turn,
+        // and the first one is attached back after, for a render target the caller reuses
+        const gl = this.gl;
+        const selectSlice = (slice) => {
+            gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture.impl._glTexture, mipLevel, layer + slice);
+        };
+
         return new Promise((resolve, reject) => {
             const readPromise = this.readPixelsAsync(x, y, width, height, readBuffer, needsRgbaReadback,
-                options.frequent ?? false);
+                options.frequent ?? false, layerCount, selectSlice);
+            if (layerCount > 1) {
+                selectSlice(0);
+            }
 
             readPromise.then((data) => {
 
@@ -2692,7 +2733,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
                 // Extract channels from RGBA data if needed
                 if (needsRgbaReadback) {
-                    const pixelCount = width * height;
+                    const pixelCount = width * height * layerCount;
                     for (let i = 0; i < pixelCount; i++) {
                         for (let c = 0; c < rgbaChannels; c++) {
                             outputData[i * rgbaChannels + c] = data[i * 4 + c];

@@ -89,12 +89,6 @@ describe('Texture#copy', function () {
         expect(dst.copy(src)).to.equal(false);
     });
 
-    it('returns false for volume textures', function () {
-        const src = makeTexture({ volume: true, depth: 4 });
-        const dst = makeTexture({ volume: true, depth: 4 });
-        expect(dst.copy(src)).to.equal(false);
-    });
-
     it('copies a layer of texture arrays successfully', function () {
         const src = makeTexture({ arrayLength: 3 });
         const dst = makeTexture({ arrayLength: 3 });
@@ -105,6 +99,42 @@ describe('Texture#copy', function () {
         const src = makeTexture({ arrayLength: 3 });
         const dst = makeTexture({ arrayLength: 2 });
         expect(dst.copy(src, { layer: 2 })).to.equal(false);
+    });
+
+    it('copies a slice of volume textures successfully', function () {
+        const src = makeTexture({ volume: true, depth: 4 });
+        const dst = makeTexture({ volume: true, depth: 4 });
+        expect(dst.copy(src, { slice: 3 })).to.equal(true);
+    });
+
+    it('copies all slices of volume textures successfully', function () {
+        const src = makeTexture({ volume: true, depth: 4 });
+        const dst = makeTexture({ volume: true, depth: 6 });
+        expect(dst.copy(src)).to.equal(true);
+    });
+
+    it('returns false when the slices of the source do not fit into the destination', function () {
+        const src = makeTexture({ volume: true, depth: 6 });
+        const dst = makeTexture({ volume: true, depth: 4 });
+        expect(dst.copy(src)).to.equal(false);
+    });
+
+    it('returns false for an out-of-range volume slice', function () {
+        const src = makeTexture({ volume: true, depth: 4 });
+        const dst = makeTexture({ volume: true, depth: 2 });
+        expect(dst.copy(src, { slice: 3 })).to.equal(false);
+    });
+
+    it('returns false when copying between a volume and a 2D texture', function () {
+        const src = makeTexture({ volume: true, depth: 4 });
+        const dst = makeTexture();
+        expect(dst.copy(src)).to.equal(false);
+    });
+
+    it('returns false for the slice option on 2D textures', function () {
+        const src = makeTexture();
+        const dst = makeTexture();
+        expect(dst.copy(src, { slice: 0 })).to.equal(false);
     });
 
     it('copies a face of cubemaps successfully', function () {

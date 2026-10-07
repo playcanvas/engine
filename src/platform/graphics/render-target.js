@@ -750,8 +750,11 @@ class RenderTarget {
             const buffers = [...(this._colorBuffers ?? []), this._depthBuffer];
             for (const buffer of buffers) {
                 if (!buffer) continue;
-                Debug.assert(!buffer.volume, `RenderTarget '${this.name}': rendering to a volume texture is not supported.`, this);
-                if (buffer.cubemap) {
+                if (buffer.volume) {
+                    layered = true;
+                    const depth = Math.max(1, buffer.depth >> this._mipLevel);
+                    Debug.assert(layer >= 0 && layer < depth, `RenderTarget '${this.name}': depth slice ${layer} is out of range for a volume texture with ${depth} depth slices.`, this);
+                } else if (buffer.cubemap) {
                     layered = true;
                     Debug.assert(layer >= 0 && layer < 6, `RenderTarget '${this.name}': face ${layer} is out of range for a cubemap.`, this);
                 } else if (buffer.array) {
@@ -764,16 +767,17 @@ class RenderTarget {
     }
 
     /**
-     * Returns the cubemap face or the array layer of a texture this render target renders to. That
-     * is the {@link RenderTarget#layer} for a cubemap or a 2D array texture, and 0 for any other
-     * texture, such as a 2D depth buffer or the internally allocated depth buffer.
+     * Returns the cubemap face, the array layer or the depth slice of a texture this render target
+     * renders to. That is the {@link RenderTarget#layer} for a cubemap, a 2D array or a volume
+     * texture, and 0 for any other texture, such as a 2D depth buffer or the internally allocated
+     * depth buffer.
      *
      * @param {Texture|null|undefined} texture - The color or depth buffer of this render target.
      * @returns {number} The face / layer of the texture.
      * @ignore
      */
     getLayer(texture) {
-        return (texture?.cubemap || texture?.array) ? this._layer : 0;
+        return (texture?.cubemap || texture?.array || texture?.volume) ? this._layer : 0;
     }
 
     /**
