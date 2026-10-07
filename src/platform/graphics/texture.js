@@ -575,7 +575,7 @@ class Texture {
 
     _updateNumLevels() {
 
-        const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
+        const maxLevels = this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height, this._volume ? this._depth : 1) : 1;
         const requestedLevels = this._numLevelsRequested;
         if (requestedLevels !== undefined && requestedLevels > maxLevels) {
             Debug.warn('Texture#numLevels: requested mip level count is greater than the maximum possible, will be clamped to', maxLevels, this);
