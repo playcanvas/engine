@@ -298,8 +298,10 @@ class RenderTarget {
      * @param {number} [options.layer] - If the colorBuffer or depthBuffer parameter is a 2D array
      * texture (a texture created with `arrayLength`), use this option to specify the layer of the
      * array to render to. To render to multiple layers, create a render target for each layer,
-     * sharing the same texture. Note that on WebGL2, the texture cannot be sampled while rendering
-     * to any of its layers. Defaults to 0.
+     * sharing the same texture. Note that the texture cannot be sampled in the same render pass
+     * that renders to one of its layers. On WebGPU, a different layer can be sampled using a
+     * {@link TextureView} which excludes the rendered layer, see {@link Texture#getView}. Defaults
+     * to 0.
      *
      * When the color buffer has mipmaps, they are regenerated after rendering to a layer (or a
      * cubemap face). On WebGPU, this only regenerates the mipmaps of the rendered layer. On WebGL2,

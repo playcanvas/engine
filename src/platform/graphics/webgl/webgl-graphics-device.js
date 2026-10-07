@@ -31,6 +31,7 @@ import { GraphicsDevice } from '../graphics-device.js';
 import { getPrimitiveCount } from '../primitive-utils.js';
 import { RenderTarget } from '../render-target.js';
 import { Texture } from '../texture.js';
+import { TextureView } from '../texture-view.js';
 import { DebugGraphics } from '../debug-graphics.js';
 import { WebglVertexBuffer } from './webgl-vertex-buffer.js';
 import { WebglIndexBuffer } from './webgl-index-buffer.js';
@@ -1407,7 +1408,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const sourceMipLevel = options.sourceMipLevel ?? 0;
         const destMipLevel = options.destMipLevel ?? 0;
-        const face = options.face ?? 0;
+        const layer = options.layer ?? options.face ?? 0;
 
         const sx = options.sourceX ?? 0;
         const sy = options.sourceY ?? 0;
@@ -1419,13 +1420,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, 'COPY-TEX');
 
         // wrap the source in a render target so it can be read from a framebuffer (mip level and
-        // face are selected by the render target). Reuse a caller-supplied one if provided, as an
+        // face / layer are selected by the render target). Reuse a caller-supplied one if provided, as an
         // optimization for high-frequency copies.
         const sourceRenderTarget = options.sourceRenderTarget ?? new RenderTarget({
             name: 'TextureCopySource',
             colorBuffer: source,
             depth: false,
-            face: face,
+            layer: layer,
             mipLevel: sourceMipLevel
         });
 
@@ -1438,11 +1439,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // ensure the destination texture is created / uploaded and bound on a texture unit
         this.setTexture(dest, 0);
 
-        // destination face / target (cubemap face selected explicitly, otherwise 2D)
-        const destTarget = dest.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + face : gl.TEXTURE_2D;
-
-        // copy the source framebuffer region into the bound destination texture
-        gl.copyTexSubImage2D(destTarget, destMipLevel, dx, dy, sx, sy, w, h);
+        // copy the source framebuffer region into the bound destination texture - into a layer of
+        // a texture array, a cubemap face, or a 2D texture
+        if (dest.array) {
+            gl.copyTexSubImage3D(gl.TEXTURE_2D_ARRAY, destMipLevel, dx, dy, layer, sx, sy, w, h);
+        } else {
+            const destTarget = dest.cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + layer : gl.TEXTURE_2D;
+            gl.copyTexSubImage2D(destTarget, destMipLevel, dx, dy, sx, sy, w, h);
+        }
 
         // destroy the temporary render target if we created it
         if (!options.sourceRenderTarget) {
@@ -2203,6 +2207,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         }
                     }
 
+                    // WebGL has no texture views, so the whole texture of a view is bound
+                    if (samplerValue instanceof TextureView) {
+                        Debug.warnOnce(`Texture view of texture ${samplerValue.texture.name} is bound to ${sampler.scopeId.name}. WebGL does not support texture views, and binds the whole texture instead.`);
+                        samplerValue = samplerValue.texture;
+                    }
+
                     if (samplerValue instanceof Texture) {
                         const texture = samplerValue;
                         this.setTexture(texture, textureUnit);
@@ -2610,14 +2620,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     readTextureAsync(texture, x, y, width, height, options) {
 
-        const face = options.face ?? 0;
+        const layer = options.layer ?? options.face ?? 0;
         const mipLevel = options.mipLevel ?? 0;
 
         // create a temporary render target if needed
         const renderTarget = options.renderTarget ?? new RenderTarget({
             colorBuffer: texture,
             depth: false,
-            face: face,
+            layer: layer,
             mipLevel: mipLevel
         });
         Debug.assert(renderTarget.colorBuffer === texture);

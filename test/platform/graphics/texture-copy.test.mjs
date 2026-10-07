@@ -94,4 +94,22 @@ describe('Texture#copy', function () {
         const dst = makeTexture({ volume: true, depth: 4 });
         expect(dst.copy(src)).to.equal(false);
     });
+
+    it('copies a layer of texture arrays successfully', function () {
+        const src = makeTexture({ arrayLength: 3 });
+        const dst = makeTexture({ arrayLength: 3 });
+        expect(dst.copy(src, { layer: 2 })).to.equal(true);
+    });
+
+    it('returns false for an out-of-range array layer', function () {
+        const src = makeTexture({ arrayLength: 3 });
+        const dst = makeTexture({ arrayLength: 2 });
+        expect(dst.copy(src, { layer: 2 })).to.equal(false);
+    });
+
+    it('copies a face of cubemaps successfully', function () {
+        const src = makeTexture({ cubemap: true });
+        const dst = makeTexture({ cubemap: true });
+        expect(dst.copy(src, { face: 5 })).to.equal(true);
+    });
 });
