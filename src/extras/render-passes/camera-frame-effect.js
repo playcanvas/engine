@@ -15,10 +15,16 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  * registered with: the values of the frame being prepared. Valid only for the duration of that
  * call - the object is reused, and its contents change from frame to frame.
  *
+ * The texture is this frame's, but its size is final only once the frame's passes are updated,
+ * after that call - when the canvas or the render target scale changes, it still has the size of
+ * the previous frame. Use the sizes in the context instead of the texture's own.
+ *
  * @typedef {object} CameraFrameEffectContext
  * @property {Texture} sceneTexture - The scene color the composition reads this frame: the output
  * of the temporal anti-aliasing when it is enabled, which alternates between two textures from
  * frame to frame, and the scene render target's color otherwise.
+ * @property {number} sceneWidth - The width of the scene texture this frame, in pixels.
+ * @property {number} sceneHeight - The height of the scene texture this frame, in pixels.
  */
 
 // capitalizes the first character of a name, to derive the identifiers an effect's chunk uses
@@ -43,6 +49,11 @@ const capitalize = name => name.charAt(0).toUpperCase() + name.slice(1);
  *
  * All effects registered to a compose slot are called in registration order from within the single
  * compose pass, so an effect never costs an additional full-screen pass.
+ *
+ * Every chunk can read what the composition provides: the scene color, `sceneTexture`, and
+ * `sceneTextureSize` - the width, height, 1 / width and 1 / height of the scene texture. Use the
+ * size for anything which depends on the resolution, such as texel offsets, pixel sizes or the
+ * aspect ratio, as it is always current for the camera being drawn.
  *
  * Like the rest of the camera frame, an effect is configured when {@link CameraFrame#update} is
  * called: changes to its parameters take effect at the next update, and every frame rendered after
@@ -447,7 +458,9 @@ class CameraFrameEffect {
      * Called every frame while the effect takes part in the frame, while the frame is being
      * prepared and before any pass renders, with the values of that frame. Most effects do not
      * need it: their configuration belongs in {@link CameraFrameEffect#update}, which runs only
-     * when the camera frame is updated.
+     * when the camera frame is updated. Values derived from the resolution, which can change
+     * without an update, are computed here from the sizes in the frame, or in the shader from
+     * `sceneTextureSize`.
      *
      * @param {CameraFrameEffectContext} frame - The values of this frame. Read them during this
      * call only.

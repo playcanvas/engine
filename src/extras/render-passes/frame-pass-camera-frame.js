@@ -116,7 +116,7 @@ class FramePassCameraFrame extends FramePass {
      * @type {CameraFrameEffectContext}
      * @private
      */
-    _effectContext = { sceneTexture: null };
+    _effectContext = { sceneTexture: null, sceneWidth: 0, sceneHeight: 0 };
 
     _renderTargetScale = 1;
 
@@ -940,21 +940,23 @@ class FramePassCameraFrame extends FramePass {
             }
         });
 
+        // The size the scene render target has this frame. The frame graph updates the passes this
+        // frame pass owns after it, so on the frame the canvas or the render target scale changes
+        // the render target still has the previous size - this evaluates the size the same way the
+        // scene pass does when it resizes it, for what needs it before that pass has updated.
+        const { scenePass } = this;
+        const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
+        const sceneWidth = Math.floor(resizeSource.width * scenePass.scaleX);
+        const sceneHeight = Math.floor(resizeSource.height * scenePass.scaleY);
+
         if (this.sceneDepthTexture) {
 
             // The alias of the scene color is not resized by a pass of its own, as it shares its
-            // texture with the scene render target, which the scene pass resizes. Its size is
-            // evaluated the same way that pass evaluates it, instead of read back from the render
-            // target - the frame graph updates the passes this frame pass owns after it, so on the
-            // frame the canvas resizes the render target is still the previous size. Reading it back
-            // would leave this alias attached to the texture the shared one has replaced, and the
-            // passes rendering into it writing to nothing for that frame.
-            const { scenePass } = this;
-            const resizeSource = scenePass.options.resizeSource ?? this.device.backBuffer;
-            this.rtSceneColor.resize(
-                Math.floor(resizeSource.width * scenePass.scaleX),
-                Math.floor(resizeSource.height * scenePass.scaleY)
-            );
+            // texture with the scene render target, which the scene pass resizes. It is resized to
+            // this frame's size rather than to the render target's - reading that back would leave
+            // this alias attached to the texture the shared one has replaced, and the passes
+            // rendering into it writing to nothing for that frame.
+            this.rtSceneColor.resize(sceneWidth, sceneHeight);
 
             // cleared to the reciprocal of the far clip, which makes the background a surface at
             // that distance taking part in the average the blended geometry accumulates - whatever
@@ -982,6 +984,8 @@ class FramePassCameraFrame extends FramePass {
         // their uniform values right before it draws.
         const context = this._effectContext;
         context.sceneTexture = sceneTexture;
+        context.sceneWidth = sceneWidth;
+        context.sceneHeight = sceneHeight;
 
         const effects = this.cameraFrame._activeEffects;
         for (let i = 0; i < effects.length; i++) {

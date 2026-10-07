@@ -17,8 +17,8 @@ export default /* glsl */`
     #endif
 
     vec4 applyCas(vec4 scene, vec2 uv) {
-        float x = sceneTextureInvRes.x;
-        float y = sceneTextureInvRes.y;
+        float x = sceneTextureSize.z;
+        float y = sceneTextureSize.w;
 
         // sample 4 neighbors around the already sampled pixel, and convert it to SDR
         vec3 a = toSDR(texture2DLod(sceneTexture, uv + vec2(0.0, -y), 0.0).rgb);

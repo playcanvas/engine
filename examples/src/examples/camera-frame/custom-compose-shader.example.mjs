@@ -187,7 +187,7 @@ class PixelationEffect extends CameraFrameEffect {
                 uniform float pixelationIntensity;
 
                 vec3 applyPixelation(vec3 color, vec2 uv) {
-                    vec2 tileUV = vec2(pixelationTilePixels) * sceneTextureInvRes;
+                    vec2 tileUV = vec2(pixelationTilePixels) * sceneTextureSize.zw;
                     vec2 centerUv = (floor(uv / tileUV) + 0.5) * tileUV;
 
                     vec2 local = (uv - centerUv) / tileUV;
@@ -204,7 +204,7 @@ class PixelationEffect extends CameraFrameEffect {
                 uniform pixelationIntensity: f32;
 
                 fn applyPixelation(color: vec3f, uv: vec2f) -> vec3f {
-                    let tileUV = vec2f(uniform.pixelationTilePixels) * uniform.sceneTextureInvRes;
+                    let tileUV = vec2f(uniform.pixelationTilePixels) * uniform.sceneTextureSize.zw;
                     let centerUv = (floor(uv / tileUV) + vec2f(0.5, 0.5)) * tileUV;
 
                     let local = (uv - centerUv) / tileUV;

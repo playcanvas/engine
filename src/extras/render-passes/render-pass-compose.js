@@ -101,8 +101,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.ssaoTextureId = scope.resolve('ssaoTexture');
         this.blurTextureId = scope.resolve('blurTexture');
         this.bloomIntensityId = scope.resolve('bloomIntensity');
-        this.sceneTextureInvResId = scope.resolve('sceneTextureInvRes');
-        this.sceneTextureInvResValue = new Float32Array(2);
+        this.sceneTextureSizeId = scope.resolve('sceneTextureSize');
+        this.sceneTextureSizeValue = new Float32Array(4);
         this.composeTargetFlipYId = scope.resolve('composeTargetFlipY');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
@@ -479,9 +479,12 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         const sceneTex = this.sceneTexture;
         this.sceneTextureId.setValue(sceneTex);
-        this.sceneTextureInvResValue[0] = 1.0 / sceneTex.width;
-        this.sceneTextureInvResValue[1] = 1.0 / sceneTex.height;
-        this.sceneTextureInvResId.setValue(this.sceneTextureInvResValue);
+        const size = this.sceneTextureSizeValue;
+        size[0] = sceneTex.width;
+        size[1] = sceneTex.height;
+        size[2] = 1.0 / sceneTex.width;
+        size[3] = 1.0 / sceneTex.height;
+        this.sceneTextureSizeId.setValue(size);
 
         // the scene chain renders with the API-native orientation - when the target render
         // target stores a flipped image, flip the sampling vertically so the composed result

@@ -675,6 +675,14 @@ describe('CameraFrameEffect', function () {
             expect(drawn).to.equal(0.5);
         });
 
+        it('provides the size of the scene texture to the chunks', function () {
+            stub(RenderPassShaderQuad.prototype, 'execute');
+            const pass = createPass();
+            pass.sceneTexture = { width: 64, height: 32 };
+            pass.execute();
+            expect([...device.scope.resolve('sceneTextureSize').value]).to.deep.equal([64, 32, 1 / 64, 1 / 32]);
+        });
+
         it('renders each camera with its own effect values', function () {
             // the frame graph prepares every camera before any of them renders, and the cameras
             // share the device's uniforms - each must still draw with the values of its own effect

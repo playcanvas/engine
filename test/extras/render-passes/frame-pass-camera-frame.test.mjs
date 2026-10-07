@@ -119,5 +119,23 @@ describe('FramePassCameraFrame', function () {
             expect(frameUpdate.firstCall.args[0]).to.equal(frameUpdate.lastCall.args[0]);
             cameraFrame.removeEffect(effect);
         });
+
+        it('hands the effects the size of this frame\'s scene texture, before the texture is resized', function () {
+            const effect = new CameraFrameEffect(app.graphicsDevice, 'probe');
+            const frameUpdate = spy(effect, 'frameUpdate');
+            cameraFrame.addEffect(effect);
+            cameraFrame.rendering.renderTargetScale = 0.5;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+
+            // the scene pass resizes its render target when it updates, after the effects
+            framePass.frameUpdate();
+            const [frame] = frameUpdate.lastCall.args;
+            const { backBuffer } = app.graphicsDevice;
+            expect(frame.sceneWidth).to.equal(Math.floor(backBuffer.width * 0.5));
+            expect(frame.sceneHeight).to.equal(Math.floor(backBuffer.height * 0.5));
+            expect(frame.sceneWidth).to.not.equal(frame.sceneTexture.width);
+            cameraFrame.removeEffect(effect);
+        });
     });
 });
