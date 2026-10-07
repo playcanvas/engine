@@ -2669,14 +2669,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Use caller's buffer or allocate output buffer in the user's expected format
         const ArrayType = getPixelFormatArrayType(texture._format);
-        const outputData = options.data ?? new ArrayType(
-            TextureUtils.calcLevelGpuSize(width, height, layerCount, texture._format) / ArrayType.BYTES_PER_ELEMENT
-        );
+        const byteSize = TextureUtils.calcLevelGpuSize(width, height, layerCount, texture._format);
+        const outputData = options.data ?? new ArrayType(byteSize / ArrayType.BYTES_PER_ELEMENT);
 
-        // For formats requiring RGBA readback, allocate a larger RGBA buffer
+        // For formats requiring RGBA readback, allocate a larger RGBA buffer. Otherwise read into a
+        // view of the exact size of the read, as the caller's buffer can be larger, and the slices
+        // are read one after another into it.
         const readBuffer = needsRgbaReadback ?
             new Uint8Array(width * height * layerCount * 4) :
-            outputData;
+            new Uint8Array(outputData.buffer, outputData.byteOffset, byteSize);
 
         this.setRenderTarget(renderTarget);
         this.initRenderTarget(renderTarget);
@@ -2741,7 +2742,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                     resolve(outputData);
                 } else {
-                    resolve(data);
+                    resolve(outputData);
                 }
             }).catch((error) => {
                 release();

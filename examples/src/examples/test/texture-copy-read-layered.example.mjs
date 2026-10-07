@@ -220,6 +220,12 @@ const read = (texture, w, h, options) => texture.read(0, 0, w, h, { immediate: t
     sliceReads.forEach((pixels, slice) => check(`volume: read slice ${slice}`, pixels, slices[slice]));
     check('volume: read all slices', await read(volume, size, size, {}), concat(slices));
 
+    // a reused output buffer larger than the read receives the slices packed at its start
+    const allSlices = concat(slices);
+    const oversized = new Uint8Array(allSlices.length * 2);
+    const oversizedRead = await read(volume, size, size, { data: oversized });
+    check('volume: read all slices into an oversized buffer', oversizedRead.subarray(0, allSlices.length), allSlices);
+
     // a single slice
     const dstSlices = [...Array(depth).keys()].map((slice) => layerPixels(size, size, slice, 9));
     const dst = createTexture({
@@ -296,6 +302,15 @@ const read = (texture, w, h, options) => texture.read(0, 0, w, h, { immediate: t
     });
     check('volume mips: 4 mip levels', [volume.numLevels], new Uint8Array([4]));
     check('volume mips: read all slices of mip 1', await read(volume, 4, 4, { mipLevel: 1 }), levels[1]);
+
+    // a buffer sized for the whole mip 0 reused for the smaller mip 1
+    const mip0Buffer = new Uint8Array(levels[0].length);
+    const mip1Read = await read(volume, 4, 4, { mipLevel: 1, data: mip0Buffer });
+    check(
+        'volume mips: read all slices of mip 1 into a mip 0 sized buffer',
+        mip1Read.subarray(0, levels[1].length),
+        levels[1]
+    );
     check(
         'volume mips: read slice 2 of mip 1',
         await read(volume, 4, 4, { mipLevel: 1, slice: 2 }),
