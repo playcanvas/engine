@@ -53,7 +53,7 @@ const createMocks = ({ msColorBuffer = true, resolveBuffer = false } = {}) => {
         width: 4,
         height: 4,
         mipLevel: 0,
-        face: 0,
+        layer: 0,
         name: 'msaa-rt',
         transientColor: false,
         getColorBuffer: () => colorBuffer,
@@ -103,11 +103,12 @@ describe('WebgpuRenderTarget#initColor', function () {
 
 describe('WebgpuRenderTarget#initDepthStencil', function () {
 
-    const createDepthMocks = ({ cubemap }) => {
+    const createDepthMocks = ({ cubemap, array = false }) => {
         const views = [];
         const gpuTexture = {};
         const depthBuffer = {
             cubemap,
+            array,
             samples: 1,
             impl: {
                 format: 'depth24plus-stencil8',
@@ -124,7 +125,7 @@ describe('WebgpuRenderTarget#initDepthStencil', function () {
             height: 4,
             depth: true,
             depthBuffer,
-            face: 3,
+            layer: 3,
             name: 'depth-rt'
         };
         return { views, gpuTexture, renderTarget };
@@ -145,6 +146,69 @@ describe('WebgpuRenderTarget#initDepthStencil', function () {
         expect(impl.renderPassDescriptor.depthStencilAttachment.view.desc).to.equal(views[0]);
         expect(impl.depthAttachment.depthTexture).to.equal(gpuTexture);
         expect(impl.depthAttachment.hasStencil).to.equal(true);
+    });
+
+    it('attaches a single layer of a 2d array depth buffer', function () {
+        const { views, renderTarget } = createDepthMocks({ cubemap: false, array: true });
+        const impl = new WebgpuRenderTarget(renderTarget);
+        impl.initDepthStencil({}, {}, renderTarget);
+
+        expect(views).to.deep.equal([{
+            dimension: '2d',
+            baseArrayLayer: 3,
+            arrayLayerCount: 1,
+            mipLevelCount: 1,
+            baseMipLevel: 0
+        }]);
+    });
+
+    it('allocates a separate multisampled depth buffer for each layer of a depth buffer', function () {
+        const device = { on() {} };
+        const wgpu = {
+            createTexture(desc) {
+                return {
+                    desc,
+                    createView() {
+                        return {};
+                    }
+                };
+            }
+        };
+        const createDepthBuffer = (id, array) => ({
+            id,
+            cubemap: false,
+            array,
+            samples: 1,
+            impl: { format: 'depth32float', gpuTexture: {} }
+        });
+        const init = (depthBuffer, layer) => {
+            const renderTarget = {
+                samples: 4,
+                width: 4,
+                height: 4,
+                depth: true,
+                depthBuffer,
+                layer,
+                name: `msaa-depth-${layer}`,
+                getLayer: texture => ((texture?.cubemap || texture?.array) ? layer : 0)
+            };
+            const impl = new WebgpuRenderTarget(renderTarget);
+            impl.initDepthStencil(device, wgpu, renderTarget);
+            return impl.depthAttachment.multisampledDepthBuffer;
+        };
+
+        // a depth array - each layer has its own multisampled depth buffer
+        const depthArray = createDepthBuffer(123456, true);
+        const layer0 = init(depthArray, 0);
+        const layer1 = init(depthArray, 1);
+        const layer0Again = init(depthArray, 0);
+        expect(layer0).to.not.equal(layer1);
+        expect(layer0Again).to.equal(layer0);
+
+        // a 2D depth buffer shared by render targets rendering to different color layers - the
+        // layer does not apply to it, and so the multisampled depth buffer is shared
+        const depth2d = createDepthBuffer(123457, false);
+        expect(init(depth2d, 0)).to.equal(init(depth2d, 1));
     });
 
     it('attaches mip level 0 of a 2d depth buffer', function () {

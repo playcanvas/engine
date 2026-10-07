@@ -628,7 +628,7 @@ class WebgpuTexture {
     read(x, y, width, height, options) {
 
         const mipLevel = options.mipLevel ?? 0;
-        const face = options.face ?? 0;
+        const layer = options.layer ?? options.face ?? 0;
         const data = options.data ?? null;
         const immediate = options.immediate ?? false;
 
@@ -652,7 +652,7 @@ class WebgpuTexture {
         const src = {
             texture: this.gpuTexture,
             mipLevel: mipLevel,
-            origin: [x, y, face]
+            origin: [x, y, layer]
         };
 
         const dst = {
@@ -705,7 +705,7 @@ class WebgpuTexture {
 
         const sourceMipLevel = options.sourceMipLevel ?? 0;
         const destMipLevel = options.destMipLevel ?? 0;
-        const face = options.face ?? 0;
+        const layer = options.layer ?? options.face ?? 0;
 
         const sx = options.sourceX ?? 0;
         const sy = options.sourceY ?? 0;
@@ -720,8 +720,8 @@ class WebgpuTexture {
 
         const commandEncoder = device.getCommandEncoder();
         commandEncoder.copyTextureToTexture(
-            { texture: source.impl.gpuTexture, mipLevel: sourceMipLevel, origin: [sx, sy, face] },
-            { texture: this.gpuTexture, mipLevel: destMipLevel, origin: [dx, dy, face] },
+            { texture: source.impl.gpuTexture, mipLevel: sourceMipLevel, origin: [sx, sy, layer] },
+            { texture: this.gpuTexture, mipLevel: destMipLevel, origin: [dx, dy, layer] },
             { width: w, height: h, depthOrArrayLayers: 1 }
         );
 

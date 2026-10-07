@@ -52,8 +52,10 @@ class WebgpuMipmapRenderer {
      * Generates mipmaps for the specified WebGPU texture.
      *
      * @param {WebgpuTexture} webgpuTexture - The texture to generate mipmaps for.
+     * @param {number} [layer] - The cubemap face or the array layer to generate the mipmaps for.
+     * When not specified, the mipmaps are generated for all faces / layers.
      */
-    generate(webgpuTexture) {
+    generate(webgpuTexture, layer) {
 
         // ignore texture with no mipmaps
         const textureDescr = webgpuTexture.desc;
@@ -100,15 +102,18 @@ class WebgpuMipmapRenderer {
 
         const texture = webgpuTexture.texture;
         const numFaces = texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1);
+        const firstFace = layer ?? 0;
+        const lastFace = layer === undefined ? numFaces : layer + 1;
+        Debug.assert(firstFace >= 0 && lastFace <= numFaces, `MipmapRenderer: layer ${layer} is out of range for texture ${texture.name}`);
 
         const srcViews = [];
-        for (let face = 0; face < numFaces; face++) {
-            srcViews.push(webgpuTexture.createView({
+        for (let face = firstFace; face < lastFace; face++) {
+            srcViews[face] = webgpuTexture.createView({
                 dimension: '2d',
                 baseMipLevel: 0,
                 mipLevelCount: 1,
                 baseArrayLayer: face
-            }));
+            });
         }
 
         // loop through each mip level and render the previous level's contents into it.
@@ -118,7 +123,7 @@ class WebgpuMipmapRenderer {
 
         for (let i = 1; i < textureDescr.mipLevelCount; i++) {
 
-            for (let face = 0; face < numFaces; face++) {
+            for (let face = firstFace; face < lastFace; face++) {
 
                 const dstView = webgpuTexture.createView({
                     dimension: '2d',

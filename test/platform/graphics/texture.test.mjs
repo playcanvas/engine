@@ -149,6 +149,25 @@ describe('Texture', function () {
         });
     });
 
+    describe('#gpuSize', function () {
+
+        it('accounts for all layers of a texture array', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 8, height: 8, arrayLength: 3, mipmaps: false });
+
+            // 8x8 * 4 bytes * 3 layers
+            expect(texture.gpuSize).to.equal(768);
+            texture.destroy();
+        });
+
+        it('gives each layer of a texture array a full mip chain', function () {
+            const texture = new Texture(device, { format: PIXELFORMAT_RGBA8, width: 8, height: 8, arrayLength: 3, mipmaps: true });
+
+            // (8x8 + 4x4 + 2x2 + 1x1) * 4 bytes * 3 layers
+            expect(texture.gpuSize).to.equal(1020);
+            texture.destroy();
+        });
+    });
+
     describe('#lock: cubemap', function () {
 
         const createCubemap = (options = {}) => new Texture(device, {

@@ -7,10 +7,32 @@ import { getMultisampledTextureCache } from '../multi-sampled-texture-cache.js';
 
 /**
  * @import { RenderTarget } from '../render-target.js'
+ * @import { Texture } from '../texture.js'
  * @import { WebglGraphicsDevice } from './webgl-graphics-device.js'
  */
 
 const _validatedFboConfigs = new DeviceCache();
+
+/**
+ * Attaches a single layer of a texture to the currently bound framebuffer - a face of a cubemap,
+ * a layer of a 2D array texture, or a 2D texture.
+ *
+ * @param {WebGL2RenderingContext} gl - The WebGL2 context.
+ * @param {number} attachment - The attachment point.
+ * @param {Texture} texture - The texture to attach.
+ * @param {number} layer - The cubemap face or the array layer.
+ * @param {number} mipLevel - The mip level.
+ */
+const attachTexture = (gl, attachment, texture, layer, mipLevel) => {
+    const glTexture = texture.impl._glTexture;
+    if (texture.array) {
+        gl.framebufferTextureLayer(gl.FRAMEBUFFER, attachment, glTexture, mipLevel, layer);
+    } else {
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment,
+            texture._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + layer : gl.TEXTURE_2D,
+            glTexture, mipLevel);
+    }
+};
 
 /**
  * A private class representing a pair of framebuffers, when MSAA is used.
@@ -181,13 +203,7 @@ class WebglRenderTarget {
                         device.setTexture(colorBuffer, 0);
                     }
                     // Attach the color buffer
-                    gl.framebufferTexture2D(
-                        gl.FRAMEBUFFER,
-                        attachmentBaseConstant + i,
-                        colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        colorBuffer.impl._glTexture,
-                        target.mipLevel
-                    );
+                    attachTexture(gl, attachmentBaseConstant + i, colorBuffer, target.layer, target.mipLevel);
 
                     buffers.push(attachmentBaseConstant + i);
                 }
@@ -210,9 +226,7 @@ class WebglRenderTarget {
                     }
 
                     // Attach
-                    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint,
-                        depthBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                        target._depthBuffer.impl._glTexture, target.mipLevel);
+                    attachTexture(gl, attachmentPoint, depthBuffer, target.layer, target.mipLevel);
 
                 } else {
                     // --- Init a new depth/stencil buffer (optional) ---
@@ -286,8 +300,9 @@ class WebglRenderTarget {
                 const depthBuffer = target._depthBuffer;
                 if (depthBuffer) {
 
-                    // key for matching multi-sampled depth buffer
-                    key = `${depthBuffer.id}:${target.width}:${target.height}:${target._samples}:${internalFormat}:${attachmentPoint}`;
+                    // key for matching multi-sampled depth buffer - render targets rendering to
+                    // different faces / layers of the depth buffer need their own
+                    key = `${depthBuffer.id}:${target.getLayer(depthBuffer)}:${target.width}:${target.height}:${target._samples}:${internalFormat}:${attachmentPoint}`;
 
                     // check if we have already allocated a multi-sampled depth buffer for the depth buffer
                     this._glMsaaDepthBuffer = getMultisampledTextureCache(device).get(key); // this incRefs it if found
@@ -355,11 +370,7 @@ class WebglRenderTarget {
             // dst
             const dstFramebuffer = gl.createFramebuffer();
             device.setFramebuffer(dstFramebuffer);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
-                colorBuffer._cubemap ? gl.TEXTURE_CUBE_MAP_POSITIVE_X + target._face : gl.TEXTURE_2D,
-                colorBuffer.impl._glTexture,
-                0
-            );
+            attachTexture(gl, gl.COLOR_ATTACHMENT0, colorBuffer, target.layer, 0);
 
             this.colorMrtFramebuffers[i] = new FramebufferPair(srcFramebuffer, dstFramebuffer);
 

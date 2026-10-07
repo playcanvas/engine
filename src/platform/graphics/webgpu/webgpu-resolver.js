@@ -121,13 +121,16 @@ class WebgpuResolver {
      * @param {GPUTexture} destinationTexture - Destination depth texture to resolve to.
      * @param {string} [mode] - The depth resolve mode (DEPTHRESOLVE_***). Defaults to
      * {@link DEPTHRESOLVE_MIN}.
+     * @param {number} [destinationLayer] - The first face / array layer of the destination texture
+     * to resolve to. Defaults to 0.
      * @private
      */
-    resolveDepth(commandEncoder, sourceTexture, destinationTexture, mode = DEPTHRESOLVE_MIN) {
+    resolveDepth(commandEncoder, sourceTexture, destinationTexture, mode = DEPTHRESOLVE_MIN, destinationLayer = 0) {
 
         Debug.assert(sourceTexture.sampleCount > 1);
         Debug.assert(destinationTexture.sampleCount === 1);
-        Debug.assert(sourceTexture.depthOrArrayLayers === destinationTexture.depthOrArrayLayers);
+        Debug.assert(destinationLayer + sourceTexture.depthOrArrayLayers <= destinationTexture.depthOrArrayLayers,
+            `Depth resolve of ${sourceTexture.depthOrArrayLayers} layers to layer ${destinationLayer} is out of range of the destination with ${destinationTexture.depthOrArrayLayers} layers`);
 
         const device = this.device;
         const wgpu = device.wgpu;
@@ -153,7 +156,7 @@ class WebgpuResolver {
                 dimension: '2d',
                 baseMipLevel: 0,
                 mipLevelCount: 1,
-                baseArrayLayer: face
+                baseArrayLayer: destinationLayer + face
             });
 
             const passEncoder = commandEncoder.beginRenderPass({
