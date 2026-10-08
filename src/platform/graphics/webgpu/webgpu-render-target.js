@@ -486,7 +486,6 @@ class WebgpuRenderTarget {
 
         const { samples, width, height, mipLevel } = renderTarget;
         const colorBuffer = renderTarget.getColorBuffer(index);
-        Debug.assert(!colorBuffer?.volume, `RenderTarget '${renderTarget.name}': rendering to a volume texture is not supported on WebGPU.`, renderTarget);
 
         // view used to write to the color buffer (either by rendering to it, or resolving to it)
         let colorView = null;
@@ -506,6 +505,7 @@ class WebgpuRenderTarget {
                     baseMipLevel: mipLevel
                 });
             } else {
+                // a 2d texture, or a volume texture, whose depth slice is selected by the attachment
                 colorView = colorBuffer.impl.createView({
                     mipLevelCount,
                     baseMipLevel: mipLevel
@@ -585,6 +585,11 @@ class WebgpuRenderTarget {
         } else {
 
             colorAttachment.view = colorView;
+
+            // a volume texture renders to a depth slice of its 3d view
+            if (colorBuffer?.volume) {
+                colorAttachment.depthSlice = renderTarget.slice;
+            }
         }
 
         return colorAttachment;

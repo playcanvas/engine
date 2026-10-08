@@ -309,6 +309,19 @@ class RenderTarget {
      * the mipmaps of all layers are regenerated, which is costly when rendering to many layers -
      * to generate them only once, pass the `mipLevel: 0` option to all render targets except the
      * one rendered last.
+     * @param {number} [options.slice] - If the colorBuffer parameter is a volume texture (a texture
+     * created with `volume: true`), use this option to specify the depth slice of the volume to
+     * render to. To render to multiple slices, create a render target for each slice, sharing the
+     * same texture. A volume texture cannot be a depth buffer, so the depth buffer needs to be a 2D
+     * texture, which can be shared by the render targets of all slices. Rendering to a volume
+     * texture does not support multisampling, and the `samples` option is ignored. Note that the
+     * texture cannot be sampled in the same render pass that renders to one of its slices.
+     * Defaults to 0.
+     *
+     * When the color buffer has mipmaps, the mipmaps of the whole volume are regenerated after
+     * rendering to a slice, as each mip level is filtered from several depth slices. To generate
+     * them only once when rendering to many slices, pass the `mipLevel: 0` option to all render
+     * targets except the one rendered last.
      * @param {string} [options.name] - The name of the render target.
      * @param {string} [options.origin] - Controls the vertical orientation of the image stored
      * in the render target. Choose based on how the texture is sampled. Can be:
@@ -405,6 +418,13 @@ class RenderTarget {
                 // WebGPU only supports values of 1 or 4 for samples
                 this._samples = this._samples > 1 ? maxSamples : 1;
             }
+
+            // rendering to a volume texture does not support multisampling - a multisampled
+            // rendering cannot be resolved into a depth slice on WebGPU
+            if (this._samples > 1 && suppliedColorBuffers?.some(colorBuffer => colorBuffer?.volume)) {
+                Debug.warnOnce(`RenderTarget '${options.name ?? suppliedColorBuffers[0].name}': rendering to a volume texture does not support multisampling, the samples option is ignored.`);
+                this._samples = 1;
+            }
         }
 
         // Use the single colorBuffer in the colorBuffers array. This allows us to always just use the array internally.
@@ -415,8 +435,8 @@ class RenderTarget {
 
         // Process optional arguments
         this._depthBuffer = options.depthBuffer;
-        Debug.assert(options.face === undefined || options.layer === undefined, 'When constructing RenderTarget, options.face and options.layer must not be used together.');
-        this._layer = options.layer ?? options.face ?? 0;
+        Debug.assert([options.face, options.layer, options.slice].filter(value => value !== undefined).length <= 1, 'When constructing RenderTarget, only one of the options face, layer and slice can be used.');
+        this._layer = options.slice ?? options.layer ?? options.face ?? 0;
 
         if (this._depthBuffer) {
             const format = this._depthBuffer._format;
@@ -751,6 +771,7 @@ class RenderTarget {
             for (const buffer of buffers) {
                 if (!buffer) continue;
                 if (buffer.volume) {
+                    Debug.assert(buffer !== this._depthBuffer, `RenderTarget '${this.name}': a volume texture cannot be used as a depth buffer.`, this);
                     layered = true;
                     const depth = Math.max(1, buffer.depth >> this._mipLevel);
                     Debug.assert(layer >= 0 && layer < depth, `RenderTarget '${this.name}': depth slice ${layer} is out of range for a volume texture with ${depth} depth slices.`, this);
@@ -762,7 +783,7 @@ class RenderTarget {
                     Debug.assert(layer >= 0 && layer < buffer.arrayLength, `RenderTarget '${this.name}': layer ${layer} is out of range for a texture array with ${buffer.arrayLength} layers.`, this);
                 }
             }
-            Debug.assert(layer === 0 || layered, `RenderTarget '${this.name}': face / layer ${layer} requires a cubemap or a 2D array texture color or depth buffer.`, this);
+            Debug.assert(layer === 0 || layered, `RenderTarget '${this.name}': face / layer ${layer} requires a cubemap, a 2D array or a volume texture color or depth buffer.`, this);
         });
     }
 
@@ -1094,6 +1115,16 @@ class RenderTarget {
      * @type {number}
      */
     get layer() {
+        return this._layer;
+    }
+
+    /**
+     * If the render target is bound to a volume texture, this property specifies which depth slice
+     * of the volume is rendered to.
+     *
+     * @type {number}
+     */
+    get slice() {
         return this._layer;
     }
 

@@ -1,7 +1,10 @@
 // @config
 //
-// Fills a 3D (volume) texture with colorful fog data on the CPU, and raymarches it over the scene
-// with a fullscreen quad, stopping at the scene geometry using the scene depth map.
+// Fills a 3D (volume) texture with colorful fog data, and raymarches it over the scene with a
+// fullscreen quad, stopping at the scene geometry using the scene depth map. The fog is either
+// static, filled on the CPU, or dynamic, rendered on the GPU every frame into each depth slice of
+// the volume using a render target per slice. The volume texture can have mipmaps, generated from
+// the uploaded data, or after the slices are rendered.
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
@@ -18,6 +21,7 @@ import {
     Entity,
     FILLMODE_FILL_WINDOW,
     FILTER_LINEAR,
+    FILTER_LINEAR_MIPMAP_LINEAR,
     Mat4,
     Mesh,
     MeshInstance,
@@ -26,17 +30,20 @@ import {
     Quat,
     RESOLUTION_AUTO,
     RenderComponentSystem,
+    RenderTarget,
     SEMANTIC_POSITION,
     ScriptComponentSystem,
     ScriptHandler,
     ShaderMaterial,
+    ShaderUtils,
     TEXTURETYPE_RGBP,
     TONEMAP_ACES,
     Texture,
     TextureHandler,
     TouchDevice,
     Vec3,
-    createGraphicsDevice
+    createGraphicsDevice,
+    drawQuadWithShader
 } from 'playcanvas';
 
 import { data, deviceType } from 'examples/context';
@@ -45,6 +52,8 @@ import shaderGlslFrag from './shader.glsl.frag';
 import shaderGlslVert from './shader.glsl.vert';
 import shaderWgslFrag from './shader.wgsl.frag';
 import shaderWgslVert from './shader.wgsl.vert';
+import sliceGlslFrag from './slice.glsl.frag';
+import sliceWgslFrag from './slice.wgsl.frag';
 
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById('application-canvas'));
 window.focus();
@@ -97,7 +106,10 @@ app.start();
 
 data.set('settings', {
     density: 0.1,
-    brightness: 1
+    brightness: 1,
+    dynamic: false,
+    mipmaps: false,
+    mipLevel: 0
 });
 
 // image based lighting only, no lights
@@ -127,10 +139,12 @@ const boxMin = terrainBounds.getMin().clone();
 const boxMax = terrainBounds.getMax().clone();
 boxMax.y = boxMin.y + (boxMax.y - boxMin.y) * 0.525;
 
-// the volume texture, rgb: fog color, a: fog density
+// the volume texture, rgb: fog color, a: fog density. Its width and height span the world x and z
+// axes, and its depth slices are stacked along the world height, so the dynamic fog renders a slice
+// for each of the 32 heights
 const volumeWidth = 128;
-const volumeHeight = 32;
-const volumeDepth = 128;
+const volumeHeight = 128;
+const volumeDepth = 32;
 
 // a fully saturated color of the specified hue (0..1)
 const hueToColor = (hue) => {
@@ -158,10 +172,10 @@ for (let i = 0; i < 12; i++) {
 const fillVolume = () => {
     const voxels = new Uint8Array(volumeWidth * volumeHeight * volumeDepth * 4);
     let offset = 0;
-    for (let z = 0; z < volumeDepth; z++) {
-        const w = (z + 0.5) / volumeDepth;
-        for (let y = 0; y < volumeHeight; y++) {
-            const v = (y + 0.5) / volumeHeight;
+    for (let slice = 0; slice < volumeDepth; slice++) {
+        const v = (slice + 0.5) / volumeDepth;
+        for (let row = 0; row < volumeHeight; row++) {
+            const w = (row + 0.5) / volumeHeight;
             for (let x = 0; x < volumeWidth; x++) {
                 const u = (x + 0.5) / volumeWidth;
 
@@ -197,20 +211,13 @@ const fillVolume = () => {
     return voxels;
 };
 
-const volumeTexture = new Texture(device, {
-    name: 'FogVolume',
-    width: volumeWidth,
-    height: volumeHeight,
-    depth: volumeDepth,
-    volume: true,
-    format: PIXELFORMAT_RGBA8,
-    mipmaps: false,
-    minFilter: FILTER_LINEAR,
-    magFilter: FILTER_LINEAR,
-    addressU: ADDRESS_CLAMP_TO_EDGE,
-    addressV: ADDRESS_CLAMP_TO_EDGE,
-    addressW: ADDRESS_CLAMP_TO_EDGE,
-    levels: [fillVolume()]
+// the shader rendering the dynamic fog into a depth slice of the volume
+const sliceShader = ShaderUtils.createShader(device, {
+    uniqueName: 'VolumeSliceShader',
+    attributes: { aPosition: SEMANTIC_POSITION },
+    vertexChunk: 'quadVS',
+    fragmentGLSL: sliceGlslFrag,
+    fragmentWGSL: sliceWgslFrag
 });
 
 // a fullscreen quad raymarching the volume, rendered with the transparent objects of the world
@@ -234,10 +241,99 @@ material.cull = CULLFACE_NONE;
 material.depthTest = false;
 material.depthWrite = false;
 material.blendType = BLEND_PREMULTIPLIED;
-material.setParameter('uVolume', volumeTexture);
 material.setParameter('uBoxMin', [boxMin.x, boxMin.y, boxMin.z]);
 material.setParameter('uBoxMax', [boxMax.x, boxMax.y, boxMax.z]);
 material.update();
+
+// the number of depth slices of the dynamic fog updated each frame, and the next slice to update
+const slicesPerFrame = 8;
+let nextSlice = 0;
+let renderAllSlices = false;
+
+// the volume texture and, for the dynamic fog, a render target for each of its depth slices
+/** @type {Texture|null} */
+let volumeTexture = null;
+/** @type {RenderTarget[]} */
+let sliceTargets = [];
+/** @type {Uint8Array|null} */
+let staticData = null;
+
+const createVolume = () => {
+    sliceTargets.forEach((renderTarget) => renderTarget.destroy());
+    sliceTargets = [];
+    volumeTexture?.destroy();
+
+    const dynamic = data.get('settings.dynamic');
+    const mipmaps = data.get('settings.mipmaps');
+
+    // the static fog is uploaded as the top mip level, and its other mip levels are generated
+    staticData ??= dynamic ? null : fillVolume();
+    volumeTexture = new Texture(device, {
+        name: 'FogVolume',
+        width: volumeWidth,
+        height: volumeHeight,
+        depth: volumeDepth,
+        volume: true,
+        format: PIXELFORMAT_RGBA8,
+        mipmaps: mipmaps,
+        minFilter: mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR,
+        magFilter: FILTER_LINEAR,
+        addressU: ADDRESS_CLAMP_TO_EDGE,
+        addressV: ADDRESS_CLAMP_TO_EDGE,
+        addressW: ADDRESS_CLAMP_TO_EDGE,
+        levels: dynamic ? undefined : [staticData]
+    });
+
+    if (dynamic) {
+        for (let slice = 0; slice < volumeDepth; slice++) {
+            sliceTargets.push(
+                new RenderTarget({
+                    name: `FogSlice${slice}`,
+                    colorBuffer: volumeTexture,
+                    slice: slice,
+                    depth: false,
+
+                    // a render target regenerates the mipmaps of the whole volume after it renders, so
+                    // only the last one of the slices rendered in a frame generates them
+                    mipLevel: (slice + 1) % slicesPerFrame === 0 ? undefined : 0
+                })
+            );
+        }
+    }
+
+    material.setParameter('uVolume', volumeTexture);
+
+    // render all slices of the new volume in its first frame
+    nextSlice = 0;
+    renderAllSlices = true;
+};
+createVolume();
+
+data.on('*:set', (/** @type {string} */ path) => {
+    if (path === 'settings.dynamic' || path === 'settings.mipmaps') {
+        createVolume();
+    }
+});
+
+// render the dynamic fog into the depth slices of the volume. Each frame updates only some of the
+// slices, in turn, as the fog changes slowly - which spreads the cost of the render passes
+let time = 0;
+app.on('update', (/** @type {number} */ dt) => {
+    // a sped up animation, to make the changes of the dynamic fog more obvious
+    time += dt * 4;
+
+    if (sliceTargets.length) {
+        device.scope.resolve('uTime').setValue(time);
+        const count = renderAllSlices ? volumeDepth : slicesPerFrame;
+        renderAllSlices = false;
+        for (let i = 0; i < count; i++) {
+            const slice = nextSlice;
+            nextSlice = (nextSlice + 1) % volumeDepth;
+            device.scope.resolve('uHeight').setValue((slice + 0.5) / volumeDepth);
+            drawQuadWithShader(device, sliceTargets[slice], sliceShader, undefined, undefined, 'RenderPassFogSlice');
+        }
+    }
+});
 
 const meshInstance = new MeshInstance(mesh, material);
 
@@ -284,4 +380,5 @@ app.on('framerender', () => {
     material.setParameter('uInvViewProjection', invViewProjection.data);
     material.setParameter('uDensity', data.get('settings.density'));
     material.setParameter('uBrightness', data.get('settings.brightness'));
+    material.setParameter('uLod', Math.min(data.get('settings.mipLevel'), volumeTexture.numLevels - 1));
 });

@@ -97,6 +97,35 @@ describe('RenderTarget', function () {
             colorBuffer.destroy();
         });
 
+        it('renders to the specified depth slice of a volume texture using the slice option', function () {
+            const colorBuffer = new Texture(device, { width: 4, height: 4, depth: 8, volume: true, format: PIXELFORMAT_RGBA8 });
+            const rt = new RenderTarget({ colorBuffer, slice: 6, depth: false });
+            expect(rt.slice).to.equal(6);
+            expect(rt.getLayer(colorBuffer)).to.equal(6);
+            rt.destroy();
+            colorBuffer.destroy();
+        });
+
+        it('ignores multisampling when rendering to a volume texture', function () {
+            device.isWebGPU = true;
+            device.maxSamples = 4;
+            const colorBuffer = new Texture(device, { width: 4, height: 4, depth: 8, volume: true, format: PIXELFORMAT_RGBA8 });
+            const warn = console.warn;
+            const messages = [];
+            console.warn = (...args) => {
+                messages.push(args.join(' '));
+            };
+            try {
+                const rt = new RenderTarget({ colorBuffer, slice: 1, depth: false, samples: 4 });
+                expect(rt.samples).to.equal(1);
+                expect(messages.some(m => m.includes('multisampling'))).to.be.true;
+                rt.destroy();
+            } finally {
+                console.warn = warn;
+            }
+            colorBuffer.destroy();
+        });
+
         it('defaults to layer 0', function () {
             const rt = createRenderTarget();
             expect(rt.layer).to.equal(0);
