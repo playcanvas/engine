@@ -137,6 +137,15 @@ class Camera {
     beforePasses = [];
 
     /**
+     * Frame passes that execute after everything this camera renders in the frame, including its
+     * frame passes when it uses those, and before the cameras rendering after it. When rendering
+     * multiple XR views, they execute once, after all the views.
+     *
+     * @type {FramePass[]}
+     */
+    afterPasses = [];
+
+    /**
      * The handle to the scene depth map most recently published for this camera. The uniform the
      * depth map is published to is global - the last camera to render owns it - so anything wanting
      * the depth of one camera in particular reads it from here instead. See {@link SceneDepthReader}.
@@ -262,6 +271,7 @@ class Camera {
 
         this.framePasses.length = 0;
         this.beforePasses.length = 0;
+        this.afterPasses.length = 0;
 
         // the handles can outlive the camera, held by whatever consumes the maps, so they record that
         // their camera is gone instead of just being dropped

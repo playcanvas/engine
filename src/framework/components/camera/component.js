@@ -249,6 +249,30 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Gets the frame passes which execute before the camera's main scene rendering, after its
+     * directional shadow passes. Add passes to the array, or remove them from it, to change them.
+     *
+     * @type {FramePass[]}
+     * @ignore
+     */
+    get beforePasses() {
+        return this._camera.beforePasses;
+    }
+
+    /**
+     * Gets the frame passes which execute after everything the camera renders in the frame,
+     * including its frame passes when it uses those, and before the cameras rendering after it.
+     * When rendering multiple XR views, they execute once, after all the views. Add passes to the
+     * array, or remove them from it, to change them.
+     *
+     * @type {FramePass[]}
+     * @ignore
+     */
+    get afterPasses() {
+        return this._camera.afterPasses;
+    }
+
+    /**
      * @type {FramePass[]|null}
      * @deprecated Use `framePasses` instead.
      * @ignore
