@@ -1486,15 +1486,37 @@ body {
     background-color: transparent;
 }
 
+/* same orange fade and accent bar as the sidebar category headers */
 #controlPanel .pcui-panel > .pcui-panel-header {
-    padding: 0 12px;
-    background-color: transparent;
+    --section-fade: rgba(255, 102, 0, 0.2);
+
+    position: relative;
+    padding: 0 12px 0 14px;
+    background: linear-gradient(90deg, var(--section-fade), rgba(255, 102, 0, 0.05) 60%, rgba(255, 102, 0, 0));
     border-top: 1px solid var(--pc-border);
-    color: var(--pc-text-muted);
+    color: #f6dccb;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    transition: color 100ms;
+}
+
+#controlPanel .pcui-panel > .pcui-panel-header::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background-color: var(--pc-accent);
+}
+
+#controlPanel .pcui-panel.pcui-collapsible > .pcui-panel-header:hover {
+    --section-fade: rgba(255, 102, 0, 0.3);
+
+    color: #fff;
 }
 
 #controlPanel .pcui-label {
