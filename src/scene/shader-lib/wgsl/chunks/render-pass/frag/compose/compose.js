@@ -11,11 +11,12 @@ export default /* wgsl */`
 
     #include "composeDofPS"
 
-    // The depth debug mode displays a depth some other pass in this frame has already produced - the
-    // debug modes never turn any rendering on, so the mode is switched to depthmissing when nothing
-    // did, see RenderPassCompose. That is also why this is included here rather than unconditionally:
-    // declaring the depth sampler in a frame with no depth to bind to it is an error.
-    #if DEBUG_COMPOSE == depth
+    // The scene depth, for the depth debug mode and the effects requiring the depth. The debug mode
+    // displays a depth some other pass in this frame has already produced - the debug modes never
+    // turn any rendering on, so the mode is switched to depthmissing when nothing did, see
+    // RenderPassCompose. That is also why this is included only when needed: declaring the depth
+    // sampler in a frame with no depth to bind to it is an error.
+    #ifdef COMPOSE_SCENE_DEPTH
         #include "screenDepthPS"
     #endif
 

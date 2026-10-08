@@ -107,7 +107,8 @@ let uid = 0;
  * Every chunk can read what the composition provides: the scene color, `sceneTexture`, and
  * `sceneTextureSize` - the width, height, 1 / width and 1 / height of the scene texture. Use the
  * size for anything which depends on the resolution, such as texel offsets, pixel sizes or the
- * aspect ratio, as it is always current for the camera being drawn.
+ * aspect ratio, as it is always current for the camera being drawn. An effect requiring the scene
+ * depth, see {@link CameraFrameEffect#requires}, can also read it with `getLinearScreenDepth(uv)`.
  *
  * Like the rest of the camera frame, an effect is configured when {@link CameraFrame#update} is
  * called: changes to its parameters, and adding or removing it, take effect at the next update,

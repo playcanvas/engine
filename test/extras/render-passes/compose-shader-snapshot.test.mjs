@@ -7,8 +7,10 @@ import { expect } from 'chai';
 
 import { MapUtils } from '../../../src/core/map-utils.js';
 import { Preprocessor } from '../../../src/core/preprocessor.js';
+import { CameraFrameEffect } from '../../../src/extras/render-passes/camera-frame-effect.js';
 import {
-    FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING
+    COMPOSESLOT_HDR, FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE,
+    SSAOTYPE_LIGHTING
 } from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
@@ -147,6 +149,26 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.passEffects.push(pass.ssao);
     };
 
+    // a composed effect reading the scene depth, with the depth stored the way the scene pass stores
+    // it - an average of the reciprocals - or the way the prepass does, outright. Its chunk can also
+    // include the depth chunk itself, which the composition includes for it too.
+    const addDepthEffect = (pass, { prepass = false, includeChunk = false } = {}) => {
+        const include = includeChunk ? '#include "screenDepthPS"\n' : '';
+        const effect = new CameraFrameEffect(device, 'depthTint', {
+            slot: COMPOSESLOT_HDR,
+            glsl: `${include}vec3 applyDepthTint(vec3 color, vec2 uv) { return color * fract(getLinearScreenDepth(uv)); }`,
+            wgsl: `${include}fn applyDepthTint(color: vec3f, uv: vec2f) -> vec3f { return color * fract(getLinearScreenDepth(uv)); }`,
+            requires: [prepass ? FRAMERESOURCE_PREPASSDEPTH : FRAMERESOURCE_DEPTH]
+        });
+        pass.builtInEffects.push(effect);
+
+        const { shaderParams } = pass.cameraComponent;
+        shaderParams.sceneDepthMapLinear = true;
+        shaderParams.sceneDepthMapPacked = false;
+        shaderParams.sceneDepthMapReciprocal = !prepass;
+        pass.sceneDepthAvailable = true;
+    };
+
     const enableAll = (pass) => {
         enableBloom(pass);
         enableSsao(pass, SSAOTYPE_COMBINE);
@@ -218,6 +240,9 @@ describe('RenderPassCompose shader snapshot', function () {
                 pass.cas.cameraFrame.hdrFormat = PIXELFORMAT_RGBA8;
             }
         },
+        { name: 'depth-effect-scene', set: pass => addDepthEffect(pass) },
+        { name: 'depth-effect-prepass', set: pass => addDepthEffect(pass, { prepass: true }) },
+        { name: 'depth-effect-double-include', set: pass => addDepthEffect(pass, { includeChunk: true }) },
         { name: 'all', all: true },
         { name: 'all-gamma-none', all: true, set: () => ({ _gammaCorrection: GAMMA_NONE }) },
         ...[TONEMAP_FILMIC, TONEMAP_HEJL, TONEMAP_ACES, TONEMAP_ACES2, TONEMAP_NEUTRAL].map(toneMapping => ({
@@ -278,6 +303,26 @@ describe('RenderPassCompose shader snapshot', function () {
 
     const normalise = source => source.replace(/\s+/g, ' ').trim();
     const digest = source => createHash('sha1').update(normalise(source)).digest('hex');
+
+    // the depth an effect reads is decoded the way the producer stored it, whichever that is, and the
+    // depth chunk is declared once however many times it is included
+    for (const shaderLanguage of [SHADERLANGUAGE_GLSL, SHADERLANGUAGE_WGSL]) {
+        it(`decodes the scene depth for an effect requiring it as its producer stores it, ${shaderLanguage}`, function () {
+            const glsl = shaderLanguage === SHADERLANGUAGE_GLSL;
+            const reciprocal = glsl ? 'recip > 0.0 ? 1.0 / recip' : 'select(uniform.camera_params.y, 1.0 / recip';
+            const sampler = glsl ? 'uniform highp sampler2D uSceneDepthMap;' : 'var uSceneDepthMap:';
+            const count = (source, text) => source.split(text).length - 1;
+
+            for (const [options, isReciprocal] of [[{}, true], [{ prepass: true }, false], [{ includeChunk: true }, true]]) {
+                const pass = createPass();
+                apply(pass, { name: 'depth', set: p => addDepthEffect(p, options) });
+                const source = preprocess(pass, shaderLanguage);
+                expect(source.includes(reciprocal), JSON.stringify(options)).to.equal(isReciprocal);
+                expect(count(source, sampler), JSON.stringify(options)).to.equal(1);
+                expect(source).to.include('applyDepthTint(result, uv)');
+            }
+        });
+    }
 
     const fixture = existsSync(fixturePath) ? JSON.parse(readFileSync(fixturePath, 'utf8')) : {};
     const actual = {};

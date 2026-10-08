@@ -636,6 +636,25 @@ describe('FramePassCameraFrame', function () {
             expect(cameraFrame.cameraComponent.shaderParams.ssaoEnabled).to.equal(true);
         });
 
+        it('sizes the occlusion on the first frame after the passes are built, in the lighting mode', function () {
+            cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
+            cameraFrame.update();
+            const framePass = cameraFrame.renderPassCamera;
+
+            // one frame of updates in the order the frame graph runs them, up to the scene pass - the
+            // occlusion is sized from the prepass depth, which the prepass resizes before it
+            framePass.frameUpdate();
+            for (const pass of framePass.beforePasses) {
+                pass.frameUpdate();
+                if (pass === framePass.scenePass) break;
+            }
+
+            const { width, height } = framePass.prePass.renderTarget;
+            expect(width).to.be.above(4);
+            expect(ssaoPass().renderTarget.width).to.equal(width);
+            expect(ssaoPass().renderTarget.height).to.equal(height);
+        });
+
         it('switches between the modes on update, the lit shaders applying it in the lighting mode only', function () {
             const { shaderParams } = cameraFrame.cameraComponent;
             cameraFrame.ssao.type = SSAOTYPE_LIGHTING;
