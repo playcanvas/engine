@@ -27,10 +27,11 @@ gpuAddressModes[ADDRESS_REPEAT] = 'repeat';
 gpuAddressModes[ADDRESS_CLAMP_TO_EDGE] = 'clamp-to-edge';
 gpuAddressModes[ADDRESS_MIRRORED_REPEAT] = 'mirror-repeat';
 
-// map of FILTER_*** to GPUFilterMode for level and mip sampling
+// map of FILTER_*** to GPUFilterMode for level and mip sampling, and whether only the base level
+// is sampled
 const gpuFilterModes = [];
-gpuFilterModes[FILTER_NEAREST] = { level: 'nearest', mip: 'nearest' };
-gpuFilterModes[FILTER_LINEAR] = { level: 'linear', mip: 'nearest' };
+gpuFilterModes[FILTER_NEAREST] = { level: 'nearest', mip: 'nearest', baseLevel: true };
+gpuFilterModes[FILTER_LINEAR] = { level: 'linear', mip: 'nearest', baseLevel: true };
 gpuFilterModes[FILTER_NEAREST_MIPMAP_NEAREST] = { level: 'nearest', mip: 'nearest' };
 gpuFilterModes[FILTER_NEAREST_MIPMAP_LINEAR] = { level: 'nearest', mip: 'linear' };
 gpuFilterModes[FILTER_LINEAR_MIPMAP_NEAREST] = { level: 'linear', mip: 'nearest' };
@@ -307,9 +308,18 @@ class WebgpuTexture {
                     desc.mipmapFilter = 'nearest';
                     label = 'Nearest';
                 } else {
+                    const minFilterMode = gpuFilterModes[texture.minFilter];
                     desc.magFilter = gpuFilterModes[texture.magFilter].level;
-                    desc.minFilter = gpuFilterModes[texture.minFilter].level;
-                    desc.mipmapFilter = gpuFilterModes[texture.minFilter].mip;
+                    desc.minFilter = minFilterMode.level;
+                    desc.mipmapFilter = minFilterMode.mip;
+
+                    // filters without mipmapping sample only the base level of a texture with
+                    // mipmaps, as on WebGL. A clamp just above zero, rather than zero, still selects
+                    // the min filter when the texture is minified
+                    if (minFilterMode.baseLevel) {
+                        desc.lodMaxClamp = 0.25;
+                    }
+
                     Debug.call(() => {
                         label = `Texture:${texture.magFilter}-${texture.minFilter}-${desc.mipmapFilter}`;
                     });
