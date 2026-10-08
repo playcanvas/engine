@@ -529,8 +529,9 @@ const mipSliceColor = (level, slice) => {
 // ----- mipmaps of 32-bit float textures -----
 // float32 formats are not filterable on all devices (for example WebGPU without float32-filterable,
 // as on the WebGPU Bare device), where their mipmaps are generated without filtering. The value of
-// each texel is a linear function of its position, so a mip level texel is the exact average of
-// the texels it is generated from.
+// each texel is a linear function of its position, so a mip level texel is the exact value at the
+// position the filtering samples at - including for odd sizes, where that position is not at the
+// corner of two texels.
 {
     /**
      * Compares float pixels against the expected values, within a small tolerance, and records it.
@@ -548,20 +549,23 @@ const mipSliceColor = (level, slice) => {
         console.log(`${passed ? 'PASS' : 'FAIL'}: ${label}`);
     };
 
+    // the size of a mip level
+    const mipSize = (size, level) => Math.max(1, size >> level);
+
     // the pixels of a mip level of a float texture, its texel values a linear function of the
     // position of the texel center in the coordinates of mip 0
-    const floatLevel = (size, depth, level) => {
-        const levelSize = size >> level;
-        const levelDepth = Math.max(1, depth >> level);
-        const scale = 1 << level;
-        const data = new Float32Array(levelSize * levelSize * levelDepth * 4);
+    const floatLevel = (width, height, depth, level) => {
+        const w = mipSize(width, level);
+        const h = mipSize(height, level);
+        const d = mipSize(depth, level);
+        const data = new Float32Array(w * h * d * 4);
         let offset = 0;
-        for (let z = 0; z < levelDepth; z++) {
-            for (let y = 0; y < levelSize; y++) {
-                for (let x = 0; x < levelSize; x++) {
-                    const cx = (x + 0.5) * scale - 0.5;
-                    const cy = (y + 0.5) * scale - 0.5;
-                    const cz = depth > 1 ? (z + 0.5) * scale - 0.5 : 0;
+        for (let z = 0; z < d; z++) {
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const cx = ((x + 0.5) * width) / w - 0.5;
+                    const cy = ((y + 0.5) * height) / h - 0.5;
+                    const cz = ((z + 0.5) * depth) / d - 0.5;
                     data.set([cx, cy * 10, cz * 100, 1], offset);
                     offset += 4;
                 }
@@ -570,35 +574,58 @@ const mipSliceColor = (level, slice) => {
         return data;
     };
 
-    const size = 8;
-    const texture2d = createTexture({
-        name: 'float-mips-2d',
-        width: size,
-        height: size,
-        format: PIXELFORMAT_RGBA32F,
-        mipmaps: true,
-        levels: [floatLevel(size, 1, 0)]
-    });
-    const volume = createTexture({
-        name: 'float-mips-volume',
-        width: size,
-        height: size,
-        depth: size,
-        volume: true,
-        format: PIXELFORMAT_RGBA32F,
-        mipmaps: true,
-        levels: [floatLevel(size, size, 0)]
-    });
+    // power of two sizes, and odd sizes, their mip positions chosen to need no more subtexel
+    // precision than the sampler has
+    const sizes = [
+        [8, 8, 8],
+        [5, 3, 3]
+    ];
     const levels = [1, 2];
-    const reads2d = await Promise.all(
-        levels.map((level) => read(texture2d, size >> level, size >> level, { mipLevel: level }))
-    );
-    const readsVolume = await Promise.all(
-        levels.map((level) => read(volume, size >> level, size >> level, { mipLevel: level }))
-    );
-    levels.forEach((level, i) => {
-        checkFloat(`float mips: 2D mip ${level}`, reads2d[i], floatLevel(size, 1, level));
-        checkFloat(`float mips: volume mip ${level}`, readsVolume[i], floatLevel(size, size, level));
+
+    // reads the mip levels of a 2D and a volume texture of the size
+    const readMips = ([width, height, depth]) => {
+        const name = `${width}x${height}`;
+        const texture2d = createTexture({
+            name: `float-mips-2d-${name}`,
+            width,
+            height,
+            format: PIXELFORMAT_RGBA32F,
+            mipmaps: true,
+            levels: [floatLevel(width, height, 1, 0)]
+        });
+        const volume = createTexture({
+            name: `float-mips-volume-${name}x${depth}`,
+            width,
+            height,
+            depth,
+            volume: true,
+            format: PIXELFORMAT_RGBA32F,
+            mipmaps: true,
+            levels: [floatLevel(width, height, depth, 0)]
+        });
+        return Promise.all(
+            levels.flatMap((level) =>
+                [texture2d, volume].map((texture) =>
+                    read(texture, mipSize(width, level), mipSize(height, level), { mipLevel: level })
+                )
+            )
+        );
+    };
+
+    const reads = await Promise.all(sizes.map(readMips));
+    sizes.forEach(([width, height, depth], s) => {
+        levels.forEach((level, i) => {
+            checkFloat(
+                `float mips: ${width}x${height} 2D mip ${level}`,
+                reads[s][i * 2],
+                floatLevel(width, height, 1, level)
+            );
+            checkFloat(
+                `float mips: ${width}x${height}x${depth} volume mip ${level}`,
+                reads[s][i * 2 + 1],
+                floatLevel(width, height, depth, level)
+            );
+        });
     });
 }
 

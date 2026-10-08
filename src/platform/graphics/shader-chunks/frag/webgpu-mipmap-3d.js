@@ -1,9 +1,9 @@
 // Shader used by WebgpuMipmapRenderer to generate the mipmaps of volume textures, by rendering the
 // previous mip level into each depth slice of the next one using a fullscreen quad. The depth slice
 // rendered to is the instance index of the draw. With UNFILTERABLE defined, for formats which cannot
-// be filtered, such as 32-bit float formats on devices without float32-filterable support, each
-// texel is instead the average of the 2x2x2 texels of the previous mip level it covers, read without
-// a sampler.
+// be filtered, such as 32-bit float formats on devices without float32-filterable support, the
+// texels of the previous mip level are read without a sampler and filtered in the shader, at the
+// same position as the sampler would.
 export default /* wgsl */`
 
     var<private> pos : array<vec2f, 4> = array<vec2f, 4>(
@@ -27,6 +27,10 @@ export default /* wgsl */`
 
     #ifdef UNFILTERABLE
         @group(0) @binding(0) var img : texture_3d<f32>;
+
+        fn texel(x : i32, y : i32, z : i32) -> vec4f {
+            return textureLoad(img, vec3i(x, y, z), 0);
+        }
     #else
         @group(0) @binding(0) var imgSampler : sampler;
         @group(0) @binding(1) var img : texture_3d<f32>;
@@ -35,17 +39,28 @@ export default /* wgsl */`
     @fragment
     fn fragmentMain(input : VertexOutput) -> @location(0) vec4f {
         #ifdef UNFILTERABLE
-            let base = vec3i(vec2i(input.position.xy), i32(input.slice)) * 2;
-            let last = vec3i(textureDimensions(img)) - 1;
-            var sum = vec4f(0.0);
-            for (var z = 0; z < 2; z++) {
-                for (var y = 0; y < 2; y++) {
-                    for (var x = 0; x < 2; x++) {
-                        sum += textureLoad(img, min(base + vec3i(x, y, z), last), 0);
-                    }
-                }
-            }
-            return sum * 0.125;
+            // the position the sampler samples at, in the texels of the previous mip level, which
+            // for an odd size is not at the corner of two texels
+            let srcSize = vec3f(textureDimensions(img));
+            let dstSize = max(vec3f(1.0), floor(srcSize * 0.5));
+            let pos = vec3f(input.position.xy, f32(input.slice) + 0.5) * srcSize / dstSize - 0.5;
+
+            // trilinear filtering of the 2x2x2 texels around it
+            let base = floor(pos);
+            let f = pos - base;
+            let i0 = vec3i(base);
+            let i1 = min(i0 + 1, vec3i(srcSize) - 1);
+            let slice0 = mix(
+                mix(texel(i0.x, i0.y, i0.z), texel(i1.x, i0.y, i0.z), f.x),
+                mix(texel(i0.x, i1.y, i0.z), texel(i1.x, i1.y, i0.z), f.x),
+                f.y
+            );
+            let slice1 = mix(
+                mix(texel(i0.x, i0.y, i1.z), texel(i1.x, i0.y, i1.z), f.x),
+                mix(texel(i0.x, i1.y, i1.z), texel(i1.x, i1.y, i1.z), f.x),
+                f.y
+            );
+            return mix(slice0, slice1, f.z);
         #else
             // the center of the destination depth slice, in the normalized coordinates shared by
             // all mip levels - the linear filtering then averages the two source slices it lies
