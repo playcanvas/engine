@@ -7,13 +7,16 @@ import { expect } from 'chai';
 
 import { MapUtils } from '../../../src/core/map-utils.js';
 import { Preprocessor } from '../../../src/core/preprocessor.js';
-import { FRAMERESOURCE_SCENECOLORHALF } from '../../../src/extras/render-passes/constants.js';
+import {
+    FRAMERESOURCE_DEPTH, FRAMERESOURCE_PREPASSDEPTH, FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING
+} from '../../../src/extras/render-passes/constants.js';
 import { BloomEffect } from '../../../src/extras/render-passes/effects/bloom-effect.js';
 import { CasEffect } from '../../../src/extras/render-passes/effects/cas-effect.js';
 import { ColorEnhanceEffect } from '../../../src/extras/render-passes/effects/color-enhance-effect.js';
 import { ColorLutEffect } from '../../../src/extras/render-passes/effects/color-lut-effect.js';
 import { FringingEffect } from '../../../src/extras/render-passes/effects/fringing-effect.js';
 import { GradingEffect } from '../../../src/extras/render-passes/effects/grading-effect.js';
+import { SsaoEffect } from '../../../src/extras/render-passes/effects/ssao-effect.js';
 import { VignetteEffect } from '../../../src/extras/render-passes/effects/vignette-effect.js';
 import { RenderPassCompose } from '../../../src/extras/render-passes/render-pass-compose.js';
 import {
@@ -105,16 +108,18 @@ describe('RenderPassCompose shader snapshot', function () {
 
         // the built-in effects a CameraFrame registers, in the order it registers them. The
         // combinations drive their state; only getShaderVariant is exercised, so the camera frame
-        // behind the effects is a stub supplying the scene format the sharpening reads
+        // behind the effects is a stub supplying the scene format the sharpening reads, and the
+        // camera the occlusion is generated for
         pass.cas = new CasEffect(device);
         pass.fringing = new FringingEffect(device);
+        pass.ssao = new SsaoEffect(device);
         pass.bloom = new BloomEffect(device);
         pass.colorEnhance = new ColorEnhanceEffect(device);
         pass.grading = new GradingEffect(device);
         pass.colorLut = new ColorLutEffect(device);
         pass.vignette = new VignetteEffect(device);
-        const effects = [pass.cas, pass.fringing, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
-        const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F };
+        const effects = [pass.cas, pass.fringing, pass.ssao, pass.bloom, pass.colorEnhance, pass.grading, pass.colorLut, pass.vignette];
+        const cameraFrame = { hdrFormat: PIXELFORMAT_RGBA16F, cameraComponent };
         effects.forEach((effect) => {
             effect.cameraFrame = cameraFrame;
         });
@@ -133,12 +138,21 @@ describe('RenderPassCompose shader snapshot', function () {
         pass.passEffects.push(pass.bloom);
     };
 
+    // the occlusion likewise, created over a stand-in scene depth
+    const enableSsao = (pass, type) => {
+        pass.ssao.type = type;
+        const depth = { texture: textures.ssao, defines: new Map(), key: '' };
+        const resources = { [FRAMERESOURCE_DEPTH]: depth, [FRAMERESOURCE_PREPASSDEPTH]: depth };
+        pass.ssao.createPasses(resources, { preScene: [], postOpaque: [], postScene: [], postTemporal: [] });
+        pass.passEffects.push(pass.ssao);
+    };
+
     const enableAll = (pass) => {
         enableBloom(pass);
+        enableSsao(pass, SSAOTYPE_COMBINE);
         pass.cocTexture = textures.coc;
         pass.blurTexture = textures.blur;
         pass.blurTextureUpscale = true;
-        pass.ssaoTexture = textures.ssao;
         pass.grading.enabled = true;
         pass.colorEnhance.enabled = true;
         pass.colorLut.texture = textures.lut;
@@ -174,7 +188,15 @@ describe('RenderPassCompose shader snapshot', function () {
         { name: 'bloom', set: pass => enableBloom(pass) },
         { name: 'dof', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur }) },
         { name: 'dof-upscale', set: (pass, t) => ({ cocTexture: t.coc, blurTexture: t.blur, blurTextureUpscale: true }) },
-        { name: 'ssao', set: (pass, t) => ({ ssaoTexture: t.ssao }) },
+        { name: 'ssao', set: pass => enableSsao(pass, SSAOTYPE_COMBINE) },
+        { name: 'ssao-lighting', set: pass => enableSsao(pass, SSAOTYPE_LIGHTING) },
+        {
+            name: 'ssao-lighting-debug',
+            set: (pass) => {
+                enableSsao(pass, SSAOTYPE_LIGHTING);
+                return { debug: 'ssao' };
+            }
+        },
         { name: 'grading', set: pass => (pass.grading.enabled = true) },
         { name: 'color-enhance', set: pass => (pass.colorEnhance.enabled = true) },
         { name: 'color-lut', set: (pass, t) => (pass.colorLut.texture = t.lut) },

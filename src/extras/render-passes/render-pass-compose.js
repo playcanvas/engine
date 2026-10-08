@@ -38,8 +38,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     blurTextureUpscale = false;
 
-    _ssaoTexture = null;
-
     _toneMapping = TONEMAP_LINEAR;
 
     _shaderDirty = true;
@@ -93,7 +91,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
         this.cocTextureId = scope.resolve('cocTexture');
-        this.ssaoTextureId = scope.resolve('ssaoTexture');
         this.blurTextureId = scope.resolve('blurTexture');
         this.sceneTextureSizeId = scope.resolve('sceneTextureSize');
         this.sceneTextureSizeValue = new Float32Array(4);
@@ -295,17 +292,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._cocTexture;
     }
 
-    set ssaoTexture(value) {
-        if (this._ssaoTexture !== value) {
-            this._ssaoTexture = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get ssaoTexture() {
-        return this._ssaoTexture;
-    }
-
     set taaEnabled(value) {
         if (this._taaEnabled !== value) {
             this._taaEnabled = value;
@@ -414,7 +400,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
             `-${gammaCorrectionName}` +
             `-${this.cocTexture ? 'dof' : 'nodof'}` +
             `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
-            `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
             `-${this.taaEnabled ? 'taa' : 'notaa'}` +
             `-${debugMode ?? ''}${depthKey}` +
             `-decl${declHash}-start${startHash}-end${endHash}`;
@@ -424,7 +409,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         defines.set('GAMMA', gammaCorrectionName);
         if (this.cocTexture) defines.set('DOF', true);
         if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
-        if (this.ssaoTexture) defines.set('SSAO', true);
         if (this.taaEnabled) defines.set('TAA', true);
         if (debugMode) defines.set('DEBUG_COMPOSE', debugMode);
         depthDefines.forEach((value, name) => defines.set(name, value));
@@ -475,10 +459,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._cocTexture) {
             this.cocTextureId.setValue(this._cocTexture);
             this.blurTextureId.setValue(this.blurTexture);
-        }
-
-        if (this._ssaoTexture) {
-            this.ssaoTextureId.setValue(this._ssaoTexture);
         }
 
         // the uniform values of the effects are bound right before the draw, not when they are set:

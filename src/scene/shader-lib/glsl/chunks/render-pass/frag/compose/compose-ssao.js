@@ -1,26 +1,26 @@
 export default /* glsl */`
-    #ifdef SSAO
-        #define SSAO_TEXTURE
-    #endif
+    uniform sampler2D ssaoTexture;
 
-    #if DEBUG_COMPOSE == ssao
-        #define SSAO_TEXTURE
-    #endif
+    // Global variable for debug
+    float dSsao;
 
-    #ifdef SSAO_TEXTURE
-        uniform sampler2D ssaoTexture;
-        
-        // Global variable for debug
-        float dSsao;
-        
-        vec3 applySsao(vec3 color, vec2 uv) {
-            dSsao = texture2DLod(ssaoTexture, uv, 0.0).r;
-            
-            #ifdef SSAO
-                return color * dSsao;
-            #else
-                return color;
+    vec3 applySsao(vec3 color, vec2 uv) {
+
+        // in the lighting mode the lit shaders apply the occlusion as the scene renders, and it is
+        // sampled here for the debug view only
+        #ifdef SSAO_LIGHTING
+            #if DEBUG_COMPOSE == ssao
+                dSsao = texture2DLod(ssaoTexture, uv, 0.0).r;
             #endif
-        }
-    #endif
+            return color;
+        #else
+            dSsao = texture2DLod(ssaoTexture, uv, 0.0).r;
+            return color * dSsao;
+        #endif
+    }
+
+    // the 'ssao' debug view, displaying the occlusion
+    vec3 debugSsao() {
+        return vec3(dSsao);
+    }
 `;

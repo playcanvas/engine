@@ -29,13 +29,29 @@ import { SHADERLANGUAGE_WGSL } from '../../platform/graphics/constants.js';
  */
 
 /**
+ * The scene depth handed to {@link CameraFrameEffect#createPasses}, for an effect requiring
+ * FRAMERESOURCE_DEPTH or FRAMERESOURCE_PREPASSDEPTH. How the depth is stored depends on what
+ * renders it, so shaders read it with the `getLinearScreenDepth` function of the `screenDepthPS`
+ * chunk, given the defines describing the storage, rather than sampling the texture.
+ *
+ * @typedef {object} CameraFrameEffectDepth
+ * @property {Texture} texture - The texture the depth is rendered to, the size of the scene - for
+ * sizing render targets.
+ * @property {Map<string, string>} defines - The defines a shader reading the depth with
+ * `getLinearScreenDepth` needs. Shared by the effects, so copy them rather than change them.
+ * @property {string} key - A key identifying those defines, to add to the unique name of such a
+ * shader, so that differently stored depths do not share a compiled shader.
+ * @ignore
+ */
+
+/**
  * The frame resources handed to {@link CameraFrameEffect#createPasses}: those the effect lists in
  * {@link CameraFrameEffect#requires}, under the values of the FRAMERESOURCE_* constants. Each
  * stays the same object for the life of the passes, and the textures are resized with the scene.
  *
  * @typedef {object} CameraFrameEffectResources
- * @property {Texture} [depth] - The scene depth, see FRAMERESOURCE_DEPTH.
- * @property {Texture} [prepassDepth] - The scene depth rendered by a prepass, see
+ * @property {CameraFrameEffectDepth} [depth] - The scene depth, see FRAMERESOURCE_DEPTH.
+ * @property {CameraFrameEffectDepth} [prepassDepth] - The scene depth rendered by a prepass, see
  * FRAMERESOURCE_PREPASSDEPTH.
  * @property {Texture} [sceneColorHalf] - The half resolution scene color, see
  * FRAMERESOURCE_SCENECOLORHALF.

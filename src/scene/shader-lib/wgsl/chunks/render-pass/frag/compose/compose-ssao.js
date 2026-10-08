@@ -1,27 +1,27 @@
 export default /* wgsl */`
-    #ifdef SSAO
-        #define SSAO_TEXTURE
-    #endif
+    var ssaoTexture: texture_2d<f32>;
+    var ssaoTextureSampler: sampler;
 
-    #if DEBUG_COMPOSE == ssao
-        #define SSAO_TEXTURE
-    #endif
+    // Global variable for debug
+    var<private> dSsao: f32;
 
-    #ifdef SSAO_TEXTURE
-        var ssaoTexture: texture_2d<f32>;
-        var ssaoTextureSampler: sampler;
-        
-        // Global variable for debug
-        var<private> dSsao: f32;
-        
-        fn applySsao(color: vec3f, uv: vec2f) -> vec3f {
-            dSsao = textureSampleLevel(ssaoTexture, ssaoTextureSampler, uv, 0.0).r;
-            
-            #ifdef SSAO
-                return color * dSsao;
-            #else
-                return color;
+    fn applySsao(color: vec3f, uv: vec2f) -> vec3f {
+
+        // in the lighting mode the lit shaders apply the occlusion as the scene renders, and it is
+        // sampled here for the debug view only
+        #ifdef SSAO_LIGHTING
+            #if DEBUG_COMPOSE == ssao
+                dSsao = textureSampleLevel(ssaoTexture, ssaoTextureSampler, uv, 0.0).r;
             #endif
-        }
-    #endif
+            return color;
+        #else
+            dSsao = textureSampleLevel(ssaoTexture, ssaoTextureSampler, uv, 0.0).r;
+            return color * dSsao;
+        #endif
+    }
+
+    // the 'ssao' debug view, displaying the occlusion
+    fn debugSsao() -> vec3f {
+        return vec3f(dSsao);
+    }
 `;

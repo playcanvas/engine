@@ -39,6 +39,7 @@ export { ColorEnhanceEffect } from './render-passes/effects/color-enhance-effect
 export { ColorLutEffect } from './render-passes/effects/color-lut-effect.js';
 export { FringingEffect } from './render-passes/effects/fringing-effect.js';
 export { GradingEffect } from './render-passes/effects/grading-effect.js';
+export { SsaoEffect } from './render-passes/effects/ssao-effect.js';
 export { VignetteEffect } from './render-passes/effects/vignette-effect.js';
 export { FramePassCameraFrame, CameraFrameOptions } from './render-passes/frame-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
