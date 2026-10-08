@@ -337,7 +337,12 @@ function basisTranscode(device, url, data, callback, options) {
 
     if (!deviceDetails) {
         deviceDetails = {
-            formats: getCompressionFormats(device)
+            formats: getCompressionFormats(device),
+
+            // WebGPU has no 16-bit uncompressed formats, and requires the dimensions of compressed
+            // textures to be multiples of the block size, unless it supports unaligned ones
+            webgpu: device.isWebGPU,
+            unalignedCompression: !!device.extCompressedTextureUnaligned
         };
     }
 

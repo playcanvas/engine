@@ -728,6 +728,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = has('texture-compression-etc2');
         this.extCompressedTextureASTC = has('texture-compression-astc');
         this.extCompressedTextureASTCSliced3D = has('texture-compression-astc-sliced-3d');
+        this.extCompressedTextureUnaligned = has('texture-compression-unaligned');
         this.supportsTimestampQuery = has('timestamp-query');
         this.supportsDepthClip = has('depth-clip-control');
         this.supportsDepth32Stencil = has('depth32float-stencil8');

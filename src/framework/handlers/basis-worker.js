@@ -159,25 +159,26 @@ function BasisWorker() {
     };
 
     // return true if the texture dimensions are valid for the target format
-    const dimensionsValid = (width, height, format) => {
+    const dimensionsValid = (width, height, format, deviceDetails) => {
+        const blockAligned = ((width & 0x3) === 0) && ((height & 0x3) === 0);
         switch (format) {
-            // etc1, 2
+            // etc1, 2, astc
             case BASIS_FORMAT.cTFETC1:
             case BASIS_FORMAT.cTFETC2:
-                // no size restrictions
-                return true;
+            case BASIS_FORMAT.cTFASTC_4x4:
+                // no size restrictions on WebGL, while WebGPU requires multiples of 4 unless it
+                // supports unaligned compressed textures
+                return blockAligned || !deviceDetails.webgpu || deviceDetails.unalignedCompression;
             // dxt1, 5
             case BASIS_FORMAT.cTFBC1:
             case BASIS_FORMAT.cTFBC3:
-                // width and height must be multiple of 4
-                return ((width & 0x3) === 0) && ((height & 0x3) === 0);
+                // width and height must be multiple of 4, unless WebGPU supports unaligned
+                // compressed textures
+                return blockAligned || deviceDetails.unalignedCompression;
             // pvrtc
             case BASIS_FORMAT.cTFPVRTC1_4_RGB:
             case BASIS_FORMAT.cTFPVRTC1_4_RGBA:
                 return isPOT(width, height);
-            // astc
-            case BASIS_FORMAT.cTFASTC_4x4:
-                return true;
             // atc
             case BASIS_FORMAT.cTFATC_RGB:
             case BASIS_FORMAT.cTFATC_RGBA_INTERPOLATED_ALPHA:
@@ -186,6 +187,22 @@ function BasisWorker() {
                 return true;
         }
         return false;
+    };
+
+    // select the basis format for the target format, falling back to an uncompressed format when
+    // the target does not support the image dimensions
+    const selectBasisFormat = (format, hasAlpha, width, height, deviceDetails) => {
+        let basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
+        if (!dimensionsValid(width, height, basisFormat, deviceDetails)) {
+            basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
+        }
+
+        // WebGPU has no 16-bit uncompressed formats
+        if (deviceDetails.webgpu && (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444)) {
+            basisFormat = BASIS_FORMAT.cTFRGBA32;
+        }
+
+        return basisFormat;
     };
 
     const transcodeKTX2 = (url, data, options) => {
@@ -223,13 +240,8 @@ function BasisWorker() {
             // in order to unswizzle we need gggr8888
             basisFormat = BASIS_FORMAT.cTFRGBA32;
         } else {
-            // select output format based on supported formats
-            basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
-
-            // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat)) {
-                basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
-            }
+            // select output format based on supported formats and the image dimensions
+            basisFormat = selectBasisFormat(format, hasAlpha, width, height, options.deviceDetails);
         }
 
         if (!basisFile.startTranscoding()) {
@@ -321,13 +333,8 @@ function BasisWorker() {
             // in order to unswizzle we need gggr8888
             basisFormat = BASIS_FORMAT.cTFRGBA32;
         } else {
-            // select output format based on supported formats
-            basisFormat = hasAlpha ? alphaMapping[format] : opaqueMapping[format];
-
-            // if image dimensions don't work on target, fall back to uncompressed
-            if (!dimensionsValid(width, height, basisFormat)) {
-                basisFormat = hasAlpha ? BASIS_FORMAT.cTFRGBA32 : BASIS_FORMAT.cTFRGB565;
-            }
+            // select output format based on supported formats and the image dimensions
+            basisFormat = selectBasisFormat(format, hasAlpha, width, height, options.deviceDetails);
         }
 
         if (!basisFile.startTranscoding()) {
