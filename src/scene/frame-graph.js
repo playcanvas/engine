@@ -28,7 +28,8 @@ class FrameGraph {
     /**
      * Active multi-view capture wrapper. When non-null, passes scheduled via
      * {@link FrameGraph#addRenderPass} are appended as children of this wrapper instead of being
-     * pushed directly into {@link FrameGraph#renderPasses}. Set/cleared via
+     * pushed directly into {@link FrameGraph#renderPasses}, except for the passes which do not
+     * render per view (see {@link FramePass#perView}). Set/cleared via
      * {@link FrameGraph#beginMultiView} / {@link FrameGraph#endMultiView}.
      *
      * @type {FramePassMultiView|null}
@@ -38,7 +39,10 @@ class FrameGraph {
     /**
      * Open a multi-view capture scope. Subsequent passes added through
      * {@link FrameGraph#addRenderPass} are captured as children of a single
-     * {@link FramePassMultiView} until {@link FrameGraph#endMultiView} is called.
+     * {@link FramePassMultiView} until {@link FrameGraph#endMultiView} is called. A pass which
+     * does not render per view (see {@link FramePass#perView}), such as the shadow pass of a
+     * directional light, is added to the frame directly instead, so it renders once. As the wrapper
+     * is only added when the scope closes, such a pass renders before all the captured passes.
      *
      * @param {GraphicsDevice} device - The graphics device used to construct the wrapper.
      */
@@ -77,7 +81,7 @@ class FrameGraph {
         }
 
         if (renderPass.enabled) {
-            if (this.multiview) {
+            if (this.multiview && renderPass.perView) {
                 this.multiview.addChild(renderPass);
             } else {
                 this.renderPasses.push(renderPass);
