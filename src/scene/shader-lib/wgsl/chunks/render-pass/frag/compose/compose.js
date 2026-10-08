@@ -9,7 +9,6 @@ export default /* wgsl */`
     uniform sceneTextureSize: vec4f;
     uniform composeTargetFlipY: f32;
 
-    #include "composeBloomPS"
     #include "composeDofPS"
     #include "composeSsaoPS"
 
@@ -54,11 +53,6 @@ export default /* wgsl */`
             result = applySsao(result, uv);
         #endif
 
-        // Apply Bloom
-        #ifdef BLOOM
-            result = applyBloom(result, uv);
-        #endif
-
         // COMPOSESLOT_HDR effects - linear, scene-referred colour
         #include "composeSlotHdrCallPS, COMPOSE_HDR_COUNT"
 
@@ -75,8 +69,6 @@ export default /* wgsl */`
             #if DEBUG_COMPOSE == scene
                 // the scene texture itself, before any effect, those at COMPOSESLOT_SCENE included
                 result = textureSampleLevel(sceneTexture, sceneTextureSampler, uv, 0.0).rgb;
-            #elif defined(BLOOM) && DEBUG_COMPOSE == bloom
-                result = dBloom * uniform.bloomIntensity;
             #elif defined(DOF) && DEBUG_COMPOSE == dofcoc
                 result = vec3f(dCoc, 0.0);
             #elif defined(DOF) && DEBUG_COMPOSE == dofblur

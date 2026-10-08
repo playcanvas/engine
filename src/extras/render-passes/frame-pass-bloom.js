@@ -49,6 +49,22 @@ class FramePassBloom extends FramePass {
     prefilterPass = null;
 
     /**
+     * The first downsample pass, which reads the source texture.
+     *
+     * @type {RenderPassDownsample|null}
+     * @private
+     */
+    _firstPass = null;
+
+    /**
+     * Whether the first downsample removes invalid pixels of the source.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _removeInvalid;
+
+    /**
      * Whether the existing passes were created with the high pass enabled.
      *
      * @type {boolean}
@@ -58,14 +74,19 @@ class FramePassBloom extends FramePass {
 
     /**
      * @param {GraphicsDevice} device - The graphics device.
-     * @param {Texture} sourceTexture - The source texture, usually at half the resolution of the
-     * render target getting blurred.
+     * @param {Texture|null} sourceTexture - The source texture, usually at half the resolution of the
+     * render target getting blurred. Null when it is set with {@link FramePassBloom#setSourceTexture}
+     * before the pass first updates.
      * @param {number} format - The texture format.
+     * @param {object} [options] - The options.
+     * @param {boolean} [options.removeInvalid] - Whether the first downsample removes invalid pixels
+     * of the source - for a source which is not already free of them, such as the scene itself.
      */
-    constructor(device, sourceTexture, format) {
+    constructor(device, sourceTexture, format, options = {}) {
         super(device);
         this._sourceTexture = sourceTexture;
         this.textureFormat = format;
+        this._removeInvalid = options.removeInvalid ?? false;
 
         this.bloomRenderTarget = this.createRenderTarget(0);
         this.bloomTexture = this.bloomRenderTarget.colorBuffer;
@@ -91,6 +112,17 @@ class FramePassBloom extends FramePass {
         }
         this.beforePasses.length = 0;
         this.prefilterPass = null;
+        this._firstPass = null;
+    }
+
+    /**
+     * Sets the texture the bloom is generated from, for a source which changes from frame to frame.
+     *
+     * @param {Texture} texture - The source texture.
+     */
+    setSourceTexture(texture) {
+        this._sourceTexture = texture;
+        this._firstPass?.setSourceTexture(texture);
     }
 
     createRenderTarget(index) {
@@ -136,7 +168,13 @@ class FramePassBloom extends FramePass {
         let passSourceTexture = this._sourceTexture;
         for (let i = 0; i < numPasses; i++) {
 
-            const pass = new RenderPassDownsample(device, passSourceTexture, { prefilter: prefilter && i === 0 });
+            const pass = new RenderPassDownsample(device, passSourceTexture, {
+                prefilter: prefilter && i === 0,
+                removeInvalid: this._removeInvalid && i === 0
+            });
+            if (i === 0) {
+                this._firstPass = pass;
+            }
             if (pass.prefilter) {
                 this.prefilterPass = pass;
             }

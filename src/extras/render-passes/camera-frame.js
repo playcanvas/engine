@@ -1,9 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 import { math } from '../../core/math/math.js';
-import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F } from '../../platform/graphics/constants.js';
+import { PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { PROJECTION_PERSPECTIVE } from '../../scene/constants.js';
 import { SSAOTYPE_NONE } from './constants.js';
+import { BloomEffect } from './effects/bloom-effect.js';
 import { CasEffect } from './effects/cas-effect.js';
 import { ColorEnhanceEffect } from './effects/color-enhance-effect.js';
 import { ColorLutEffect } from './effects/color-lut-effect.js';
@@ -26,7 +27,7 @@ import { CameraFrameOptions, FramePassCameraFrame } from './frame-pass-camera-fr
  *
  * @type {string[]}
  */
-const builtinDebugViews = ['scene', 'ssao', 'bloom', 'dofcoc', 'dofblur', 'depth', 'depthmissing'];
+const builtinDebugViews = ['scene', 'ssao', 'dofcoc', 'dofblur', 'depth', 'depthmissing'];
 
 /**
  * @typedef {Object} Rendering
@@ -90,24 +91,6 @@ const builtinDebugViews = ['scene', 'ssao', 'bloom', 'dofcoc', 'dofblur', 'depth
  * @property {number} power - The power of the SSAO effect, 0.1-10 range. Defaults to 6.
  * @property {number} minAngle - The minimum angle of the SSAO effect, 1-90 range. Defaults to 10.
  * @property {number} scale - The scale of the SSAO effect, 0.5-1 range. Defaults to 1.
- */
-
-/**
- * @typedef {Object} Bloom
- * Properties related to the HDR bloom effect, a postprocessing technique that simulates the natural
- * glow of bright light sources by spreading their intensity beyond their boundaries, creating a soft
- * and realistic blooming effect.
- * @property {number} intensity - The intensity of the bloom effect, 0-0.1 range. Defaults to 0,
- * making it disabled.
- * @property {number} blurLevel - The number of iterations for blurring the bloom effect, with each
- * level doubling the blur size. Once the blur size matches the dimensions of the render target,
- * further blur passes are skipped. The default value is 16.
- * @property {number} threshold - The brightness below which the scene does not contribute to
- * bloom. Zero, the default, blooms the whole scene, which is the physically based behaviour;
- * raising it restricts the glow to the brightest parts, with a soft transition below the
- * threshold. The value is in the scene-referred units the scene is rendered in, before the
- * exposure and tone mapping applied when the bloom is composited, so a scene lit for an exposure
- * far from 1 needs the threshold scaled to match.
  */
 
 /**
@@ -255,15 +238,11 @@ class CameraFrame {
     };
 
     /**
-     * Bloom settings.
+     * The bloom effect, registered with this camera frame. Its parameters are assigned directly.
      *
-     * @type {Bloom}
+     * @type {BloomEffect}
      */
-    bloom = {
-        intensity: 0,
-        blurLevel: 16,
-        threshold: 0
-    };
+    bloom;
 
     /**
      * The color grading effect, registered with this camera frame. Its parameters are assigned
@@ -308,9 +287,17 @@ class CameraFrame {
     _builtInEffects = [];
 
     /**
+     * The scene format, see {@link CameraFrame#hdrFormat}.
+     *
+     * @type {number}
+     * @private
+     */
+    _hdrFormat = PIXELFORMAT_RGBA8;
+
+    /**
      * The effects taking part in the frames, in registration order: the active ones, as of the
-     * last time the effects were applied - by {@link CameraFrame#update}, or by a change to the
-     * registered effects.
+     * last time the effects were applied by {@link CameraFrame#update}, or when the camera frame
+     * was enabled.
      *
      * @type {CameraFrameEffect[]}
      * @ignore
@@ -430,11 +417,12 @@ class CameraFrame {
         const device = app.graphicsDevice;
         this._cas = new CasEffect(device);
         this.fringing = new FringingEffect(device);
+        this.bloom = new BloomEffect(device);
         this.colorEnhance = new ColorEnhanceEffect(device);
         this.grading = new GradingEffect(device);
         this.colorLUT = new ColorLutEffect(device);
         this.vignette = new VignetteEffect(device);
-        this._builtInEffects = [this._cas, this.fringing, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
+        this._builtInEffects = [this._cas, this.fringing, this.bloom, this.colorEnhance, this.grading, this.colorLUT, this.vignette];
         this._builtInEffects.forEach(effect => this.addEffect(effect));
 
         // rendering.sharpness is the sharpening effect's parameter, forwarded to it so that the
@@ -461,11 +449,12 @@ class CameraFrame {
      * Destroys the camera frame, removing all render passes.
      */
     destroy() {
-        this.disable();
 
-        // the built-in effects are ours to destroy; effects added by the user are theirs, and are
-        // only detached
+        // the built-in effects are ours to destroy, which releases their passes and unregisters
+        // them; effects added by the user are theirs - the frame passes release the passes of those
+        // still registered, and they are then only detached
         this._builtInEffects.forEach(effect => effect.destroy());
+        this.disable();
         this.effects.forEach(effect => effect._detach());
         this.effects.length = 0;
 
@@ -483,25 +472,29 @@ class CameraFrame {
     }
 
     /**
-     * The format of the render target the scene is rendered to, or undefined before the frame
-     * passes exist. {@link PIXELFORMAT_RGBA8} when no HDR format is available.
+     * The format of the render target the scene is rendered to: the first of the preferred render
+     * formats the device can render to, or {@link PIXELFORMAT_RGBA8} when none of them is
+     * available. Chosen by {@link CameraFrame#update}, before the frame passes are built, so that
+     * the effects can depend on it.
      *
-     * @type {number|undefined}
+     * @type {number}
      * @ignore
      */
     get hdrFormat() {
-        return this.renderPassCamera?.hdrFormat;
+        return this._hdrFormat;
     }
 
     /**
      * Registers an effect with this camera frame. The effect is applied at the compose slot it
-     * declares, after any effect already registered to that slot. The effect stays owned by the
-     * caller: removing it or destroying the camera frame does not destroy it.
+     * declares, after any effect already registered to that slot, from the next call to
+     * {@link CameraFrame#update}. The effect stays owned by the caller: removing it or destroying
+     * the camera frame does not destroy it.
      *
      * @param {CameraFrameEffect} effect - The effect to add.
      * @example
      * const tint = new TintEffect(app.graphicsDevice);
      * cameraFrame.addEffect(tint);
+     * cameraFrame.update();
      */
     addEffect(effect) {
         this.insertEffect(effect, this.effects.length);
@@ -509,7 +502,8 @@ class CameraFrame {
 
     /**
      * Registers an effect with this camera frame, applying it before another registered effect
-     * when both share a compose slot.
+     * when both share a compose slot. The effect is applied from the next call to
+     * {@link CameraFrame#update}.
      *
      * @param {CameraFrameEffect} effect - The effect to add.
      * @param {CameraFrameEffect|string} before - The effect, or the id of the effect, to apply
@@ -556,20 +550,22 @@ class CameraFrame {
 
         this.effects.splice(index, 0, effect);
         effect._attach(this);
-        this._applyEffects();
     }
 
     /**
-     * Removes an effect from this camera frame.
+     * Removes an effect from this camera frame. The effect stops being applied from the next call
+     * to {@link CameraFrame#update}.
      *
      * @param {CameraFrameEffect} effect - The effect to remove.
+     * @example
+     * cameraFrame.removeEffect(tint);
+     * cameraFrame.update();
      */
     removeEffect(effect) {
         const index = this.effects.indexOf(effect);
         if (index >= 0) {
             this.effects.splice(index, 1);
             effect._detach();
-            this._applyEffects();
         }
     }
 
@@ -588,20 +584,21 @@ class CameraFrame {
      * Applies the effects: decides which take part in the frames rendered until they are next
      * applied, has each of them apply its parameters, and hands them to the composition, which
      * rebuilds its shader only when they or their defines changed. Called by
-     * {@link CameraFrame#update}, when the camera frame is enabled, and when an effect is added or
-     * removed.
+     * {@link CameraFrame#update} and when the camera frame is enabled, after the frame passes are
+     * built.
      *
      * @private
      */
     _applyEffects() {
 
-        // the effects taking part until the effects are next applied, each applying its parameters
+        // the effects taking part until the effects are next applied, each applying its parameters:
+        // the active ones, of which those owning passes only once the frame passes include theirs
         const active = this._activeEffects;
         active.length = 0;
-        const { effects } = this;
+        const { effects, renderPassCamera } = this;
         for (let i = 0; i < effects.length; i++) {
             const effect = effects[i];
-            if (effect.active) {
+            if (effect.active && (!effect._ownsPasses || renderPassCamera?.hasEffectPasses(effect))) {
                 active.push(effect);
                 effect.update();
             }
@@ -672,12 +669,11 @@ class CameraFrame {
 
     updateOptions() {
 
-        const { options, rendering, bloom, taa, ssao } = this;
+        const { options, rendering, taa, ssao } = this;
         options.stencil = rendering.stencil;
         options.samples = rendering.samples;
         options.sceneColorMap = rendering.sceneColorMap;
         options.prepassEnabled = rendering.sceneDepthMap;
-        options.bloomEnabled = bloom.intensity > 0;
         options.taaEnabled = taa.enabled;
         options.ssaoType = ssao.type;
         options.ssaoBlurEnabled = ssao.blurEnabled;
@@ -686,6 +682,22 @@ class CameraFrame {
         options.dofNearBlur = this.dof.nearBlur;
         options.dofHighQuality = this.dof.highQuality;
         options.volumetricFogEnabled = this._volumetricFogSupported();
+
+        // the scene format, chosen before the effects are asked whether they are active, as an
+        // effect can depend on an HDR scene
+        this._hdrFormat = this.device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
+
+        // the active registered effects owning passes, the resources they require and what else
+        // their passes depend on - the frame passes are rebuilt when this changes
+        let effectPasses = '';
+        const { effects } = this;
+        for (let i = 0; i < effects.length; i++) {
+            const effect = effects[i];
+            if (effect._ownsPasses && effect.active) {
+                effectPasses += `${effect.id}:${effect.requires}:${effect.buildKey()};`;
+            }
+        }
+        options.effectPasses = effectPasses;
     }
 
     /**
@@ -747,23 +759,17 @@ class CameraFrame {
         if (!this._enabled) return;
 
         const cameraComponent = this.cameraComponent;
-        const { options, renderPassCamera, rendering, bloom, taa, ssao } = this;
+        const { options, renderPassCamera, rendering, taa, ssao } = this;
 
         // options that can cause the passes to be re-created
         this.updateOptions();
         renderPassCamera.update(options);
 
         // update parameters of individual render passes
-        const { composePass, bloomPass, ssaoPass, dofPass, volumetricFogPass } = renderPassCamera;
+        const { composePass, ssaoPass, dofPass, volumetricFogPass } = renderPassCamera;
 
         renderPassCamera.renderTargetScale = math.clamp(rendering.renderTargetScale, 0.1, 1);
         composePass.toneMapping = rendering.toneMapping;
-
-        if (options.bloomEnabled && bloomPass) {
-            composePass.bloomIntensity = bloom.intensity;
-            bloomPass.blurLevel = bloom.blurLevel;
-            bloomPass.threshold = bloom.threshold;
-        }
 
         if (options.dofEnabled) {
             dofPass.focusDistance = this.dof.focusDistance;
@@ -814,9 +820,9 @@ class CameraFrame {
         composePass.debug = this.debug;
         if (composePass.debug === 'ssao' && options.ssaoType === SSAOTYPE_NONE) composePass.debug = null;
 
-        // a debug view owned by an effect is only available while that effect is active
+        // a debug view owned by an effect is only available while that effect takes part
         const debugOwner = this.effects.find(effect => effect.debugViews.includes(composePass.debug));
-        if (debugOwner && !debugOwner.active) composePass.debug = null;
+        if (debugOwner && !this._activeEffects.includes(debugOwner)) composePass.debug = null;
     }
 }
 

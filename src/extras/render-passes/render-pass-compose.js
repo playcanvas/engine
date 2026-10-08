@@ -32,10 +32,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
      */
     sceneTexture = null;
 
-    bloomIntensity = 0.01;
-
-    _bloomTexture = null;
-
     _cocTexture = null;
 
     blurTexture = null;
@@ -96,11 +92,9 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         const { scope } = graphicsDevice;
         this.sceneTextureId = scope.resolve('sceneTexture');
-        this.bloomTextureId = scope.resolve('bloomTexture');
         this.cocTextureId = scope.resolve('cocTexture');
         this.ssaoTextureId = scope.resolve('ssaoTexture');
         this.blurTextureId = scope.resolve('blurTexture');
-        this.bloomIntensityId = scope.resolve('bloomIntensity');
         this.sceneTextureSizeId = scope.resolve('sceneTextureSize');
         this.sceneTextureSizeValue = new Float32Array(4);
         this.composeTargetFlipYId = scope.resolve('composeTargetFlipY');
@@ -290,17 +284,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         return this._debug;
     }
 
-    set bloomTexture(value) {
-        if (this._bloomTexture !== value) {
-            this._bloomTexture = value;
-            this._shaderDirty = true;
-        }
-    }
-
-    get bloomTexture() {
-        return this._bloomTexture;
-    }
-
     set cocTexture(value) {
         if (this._cocTexture !== value) {
             this._cocTexture = value;
@@ -429,7 +412,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const key =
             `${this.toneMapping}` +
             `-${gammaCorrectionName}` +
-            `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
             `-${this.cocTexture ? 'dof' : 'nodof'}` +
             `-${this.blurTextureUpscale ? 'dofupscale' : ''}` +
             `-${this.ssaoTexture ? 'ssao' : 'nossao'}` +
@@ -440,7 +422,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         const defines = new Map();
         defines.set('TONEMAP', tonemapNames[this.toneMapping]);
         defines.set('GAMMA', gammaCorrectionName);
-        if (this.bloomTexture) defines.set('BLOOM', true);
         if (this.cocTexture) defines.set('DOF', true);
         if (this.blurTextureUpscale) defines.set('DOF_UPSCALE', true);
         if (this.ssaoTexture) defines.set('SSAO', true);
@@ -490,11 +471,6 @@ class RenderPassCompose extends RenderPassShaderQuad {
         // target stores a flipped image, flip the sampling vertically so the composed result
         // lands in the requested row order
         this.composeTargetFlipYId.setValue(this.renderTarget?.flipY ? 1 : 0);
-
-        if (this._bloomTexture) {
-            this.bloomTextureId.setValue(this._bloomTexture);
-            this.bloomIntensityId.setValue(this.bloomIntensity);
-        }
 
         if (this._cocTexture) {
             this.cocTextureId.setValue(this._cocTexture);

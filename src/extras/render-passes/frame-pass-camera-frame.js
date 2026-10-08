@@ -1,26 +1,25 @@
 import { LAYERID_SKYBOX, LAYERID_IMMEDIATE, TONEMAP_NONE, GAMMA_NONE, SCENETEXTURE_DEPTH } from '../../scene/constants.js';
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_R16F, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_R16F, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { FramePass } from '../../platform/graphics/frame-pass.js';
 import { FramePassColorGrab } from '../../scene/graphics/frame-pass-color-grab.js';
 import { RenderPassForward } from '../../scene/renderer/render-pass-forward.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 
-import { FramePassBloom } from './frame-pass-bloom.js';
 import { RenderPassCompose } from './render-pass-compose.js';
 import { RenderPassTAA } from './render-pass-taa.js';
 import { FramePassDof } from './frame-pass-dof.js';
 import { FramePassVolumetricFog } from './frame-pass-volumetric-fog.js';
 import { RenderPassPrepass } from './render-pass-prepass.js';
 import { RenderPassSsao } from './render-pass-ssao.js';
-import { SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
+import { FRAMERESOURCE_SCENECOLORHALF, SSAOTYPE_COMBINE, SSAOTYPE_LIGHTING, SSAOTYPE_NONE } from './constants.js';
 import { Debug } from '../../core/debug.js';
 import { RenderPassDownsample } from './render-pass-downsample.js';
 import { Color } from '../../core/math/color.js';
 
 /**
  * @import { CameraFrame } from './camera-frame.js'
- * @import { CameraFrameEffectContext } from './camera-frame-effect.js'
+ * @import { CameraFrameEffect, CameraFrameEffectContext, CameraFrameEffectPasses, CameraFrameEffectResources } from './camera-frame-effect.js'
  * @import { GraphicsDevice } from '../../platform/graphics/graphics-device.js'
  */
 
@@ -52,8 +51,9 @@ class CameraFrameOptions {
     // TAA
     taaEnabled = false;
 
-    // Bloom
-    bloomEnabled = false;
+    // The active registered effects owning passes, and what their passes depend on - see
+    // CameraFrame#updateOptions. A change rebuilds the passes.
+    effectPasses = '';
 
     // SSAO
     ssaoType = SSAOTYPE_NONE;
@@ -97,8 +97,6 @@ class FramePassCameraFrame extends FramePass {
 
     composePass;
 
-    bloomPass;
-
     ssaoPass;
 
     taaPass;
@@ -117,6 +115,23 @@ class FramePassCameraFrame extends FramePass {
      * @private
      */
     _effectContext = { sceneTexture: null, sceneWidth: 0, sceneHeight: 0 };
+
+    /**
+     * The registered effects owning passes which this frame created passes for, in registration
+     * order. The effects own those passes.
+     *
+     * @type {CameraFrameEffect[]}
+     * @private
+     */
+    _passEffects = [];
+
+    /**
+     * The passes the effects created, per stage of the frame, in the order of the effects.
+     *
+     * @type {CameraFrameEffectPasses}
+     * @private
+     */
+    _stagePasses = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
 
     _renderTargetScale = 1;
 
@@ -239,8 +254,28 @@ class FramePassCameraFrame extends FramePass {
             this.rtHalf = null;
         }
 
-        // destroy all passes we created
-        this.beforePasses.forEach(pass => pass.destroy());
+        // the effects own the passes they created: those registered release theirs, to create them
+        // again for the new passes. A removed effect is its owner's to destroy, with its passes.
+        const effectPasses = new Set();
+        for (const passes of Object.values(this._stagePasses)) {
+            passes.forEach(pass => effectPasses.add(pass));
+            passes.length = 0;
+        }
+        this._passEffects.length = 0;
+
+        const { effects } = this.cameraFrame;
+        for (let i = 0; i < effects.length; i++) {
+            if (effects[i]._ownsPasses) {
+                effects[i].destroyPasses();
+            }
+        }
+
+        // destroy all other passes we created
+        this.beforePasses.forEach((pass) => {
+            if (!effectPasses.has(pass)) {
+                pass.destroy();
+            }
+        });
         this.beforePasses.length = 0;
 
         this.prePass = null;
@@ -248,7 +283,6 @@ class FramePassCameraFrame extends FramePass {
         this.scenePassTransparent = null;
         this.colorGrabPass = null;
         this.composePass = null;
-        this.bloomPass = null;
         this.ssaoPass = null;
         this.taaPass = null;
         this.afterPass = null;
@@ -463,7 +497,7 @@ class FramePassCameraFrame extends FramePass {
             options.taaEnabled !== currentOptions.taaEnabled ||
             options.samples !== currentOptions.samples ||
             options.stencil !== currentOptions.stencil ||
-            options.bloomEnabled !== currentOptions.bloomEnabled ||
+            options.effectPasses !== currentOptions.effectPasses ||
             options.prepassEnabled !== currentOptions.prepassEnabled ||
             options.sceneTextureDepth !== currentOptions.sceneTextureDepth ||
             options.sceneColorMap !== currentOptions.sceneColorMap ||
@@ -522,13 +556,22 @@ class FramePassCameraFrame extends FramePass {
         const cameraComponent = this.cameraComponent;
         const targetRenderTarget = cameraComponent.renderTarget;
 
-        this.hdrFormat = device.getRenderableHdrFormat(options.formats, true, options.samples) || PIXELFORMAT_RGBA8;
+        // the scene format, which the camera frame chooses so that the effects can depend on it
+        // before the passes exist
+        this.hdrFormat = this.cameraFrame.hdrFormat;
 
-        // HDR bloom is not supported on RGBA8 format
-        this._bloomEnabled = options.bloomEnabled && this.hdrFormat !== PIXELFORMAT_RGBA8;
+        // the effects owning passes which take part - the active ones, which the camera frame keyed
+        // the rebuild on
+        const { effects } = this.cameraFrame;
+        for (let i = 0; i < effects.length; i++) {
+            const effect = effects[i];
+            if (effect._ownsPasses && effect.active) {
+                this._passEffects.push(effect);
+            }
+        }
 
-        // bloom and DOF needs half resolution scene texture
-        this._sceneHalfEnabled = this._bloomEnabled || options.dofEnabled;
+        // the effects and DOF can need the half resolution scene texture
+        this._sceneHalfEnabled = this.effectsRequire(FRAMERESOURCE_SCENECOLORHALF) || options.dofEnabled;
 
         // set up internal rendering parameters - this affect the shader generation to apply SSAO during forward pass
         cameraComponent.shaderParams.ssaoEnabled = options.ssaoType === SSAOTYPE_LIGHTING;
@@ -647,7 +690,9 @@ class FramePassCameraFrame extends FramePass {
             ssaoBeforeScene ? this.ssaoPass : null,
             this.scenePass, this.colorGrabPass, this.scenePassTransparent,
             ssaoBeforeScene ? null : this.ssaoPass,
-            this.volumetricFogPass, this.taaPass, this.scenePassHalf, this.bloomPass, this.dofPass, this.composePass, this.afterPass
+            this.volumetricFogPass, this.taaPass, this.scenePassHalf,
+            ...this._stagePasses.postTemporal,
+            this.dofPass, this.composePass, this.afterPass
         ];
     }
 
@@ -671,8 +716,8 @@ class FramePassCameraFrame extends FramePass {
         // downscale to half resolution
         this.setupSceneHalfPass(options, sceneTextureWithTaa);
 
-        // bloom
-        this.setupBloomPass(options, this.sceneTextureHalf);
+        // the passes of the effects owning them, once the resources they require exist
+        this.setupEffectPasses();
 
         this.setupDofPass(options, this.sceneTexture, this.sceneTextureHalf);
 
@@ -842,11 +887,56 @@ class FramePassCameraFrame extends FramePass {
         }
     }
 
-    setupBloomPass(options, inputTexture) {
+    /**
+     * Returns whether any of the effects owning passes requires a frame resource.
+     *
+     * @param {string} resource - The FRAMERESOURCE_* constant.
+     * @returns {boolean} True when an effect requires it.
+     * @private
+     */
+    effectsRequire(resource) {
+        return this._passEffects.some(effect => effect.requires.includes(resource));
+    }
 
-        if (this._bloomEnabled) {
-            // create a bloom pass, which generates bloom texture based on the provided texture
-            this.bloomPass = new FramePassBloom(this.device, inputTexture, this.hdrFormat);
+    /**
+     * Returns whether the frame passes include the passes of an effect.
+     *
+     * @param {CameraFrameEffect} effect - The effect.
+     * @returns {boolean} True when they do.
+     * @ignore
+     */
+    hasEffectPasses(effect) {
+        return this._passEffects.includes(effect);
+    }
+
+    /**
+     * Has the effects owning passes create them, handing each the frame resources it requires
+     * and an empty array for each stage of the frame, and collects the passes per stage, in the
+     * order of the effects. Runs once the resources exist, as passes can depend on them as they
+     * are constructed.
+     *
+     * @private
+     */
+    setupEffectPasses() {
+        const effects = this._passEffects;
+        for (let i = 0; i < effects.length; i++) {
+            const effect = effects[i];
+
+            /** @type {CameraFrameEffectResources} */
+            const resources = {};
+            for (const name of effect.requires) {
+                Debug.assert(name === FRAMERESOURCE_SCENECOLORHALF, `CameraFrame: effect '${effect.id}' requires the frame resource '${name}', which is not supported yet.`);
+                resources[name] = this.sceneTextureHalf;
+            }
+
+            /** @type {CameraFrameEffectPasses} */
+            const passes = { preScene: [], postOpaque: [], postScene: [], postTemporal: [] };
+            effect.createPasses(resources, passes);
+
+            for (const stage of ['preScene', 'postOpaque', 'postScene']) {
+                Debug.assert(passes[stage].length === 0, `CameraFrame: effect '${effect.id}' runs passes at the ${stage} stage, which is not supported yet.`);
+            }
+            this._stagePasses.postTemporal.push(...passes.postTemporal);
         }
     }
 
@@ -888,7 +978,6 @@ class FramePassCameraFrame extends FramePass {
         // the composition assembles its shader from the effects registered with the camera frame
         this.composePass.effects = this.cameraFrame._activeEffects;
 
-        this.composePass.bloomTexture = this.bloomPass?.bloomTexture;
         this.composePass.taaEnabled = options.taaEnabled;
         this.composePass.cocTexture = this.dofPass?.cocTexture;
         this.composePass.blurTexture = this.dofPass?.blurTexture;
@@ -926,6 +1015,14 @@ class FramePassCameraFrame extends FramePass {
         }
 
         super.frameUpdate();
+
+        // the passes of a destroyed effect stay in the frame until the camera frame next updates
+        Debug.call(() => {
+            const destroyed = this._passEffects.find(effect => !effect.device);
+            if (destroyed) {
+                Debug.errorOnce(`CameraFrame: effect '${destroyed.id}' was destroyed, but the frame still renders its passes. Call CameraFrame#update after removing or destroying an effect.`);
+            }
+        });
 
         // Whether the depth debug mode has a depth to display. Either producer publishes to the same
         // uniform, and both have run by the time the composition does. The mode does not request the

@@ -240,6 +240,7 @@ data.on('*:set', (/** @type {string} */ path, value) => {
     }
 
     if (path.startsWith('data.bloom.')) {
+        cameraFrame.bloom.enabled = data.get('data.bloom.enabled');
         cameraFrame.bloom.intensity = data.get('data.bloom.intensity');
         cameraFrame.bloom.blurLevel = data.get('data.bloom.blurLevel');
 
@@ -247,6 +248,12 @@ data.on('*:set', (/** @type {string} */ path, value) => {
         // units the scene is rendered in. 0 blooms the whole scene, the physically based
         // behavior; raise it to leave the lit interior alone and glow only the neon sign
         cameraFrame.bloom.threshold = data.get('data.bloom.threshold');
+
+        // generate the bloom from the full resolution scene, for a sharper and more stable glow
+        cameraFrame.bloom.highQuality = data.get('data.bloom.highQuality');
+
+        // display the bloom on its own, to compare its settings
+        cameraFrame.debug = data.get('data.bloom.debug') ? 'bloom' : null;
         cameraFrame.update();
     }
 });
@@ -258,8 +265,11 @@ data.set('data', {
     colorLutIntensity: 1.0,
     verticalCorrection: 0,
     bloom: {
+        enabled: true,
         intensity: 0.03,
         blurLevel: 7,
-        threshold: 0
+        threshold: 0,
+        highQuality: false,
+        debug: false
     }
 });
